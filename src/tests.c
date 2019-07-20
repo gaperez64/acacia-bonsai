@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include "rbtree.h"
 
 int main() {
@@ -31,4 +32,9 @@ int main() {
         tree = insertRBTree(tree, node);
     }
     return 0;
+    // we test isDominatedRBTree here
+    assert(isDominatedRBTree(tree, 17));
+    assert(isDominatedRBTree(tree, 7));
+    assert(!isDominatedRBTree(tree, 28));
+    assert(!isDominatedRBTree(tree, 100));
 }

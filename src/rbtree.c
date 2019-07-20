@@ -40,17 +40,17 @@ static inline RBTree* uncle(RBTree* n) {
     }
 }
 
-static void recursivePrintRBTree(RBTree* n, int h) {
+static void recursivePrint(RBTree* n, int h) {
     // Essentially: a DFS with in-order printing
     if (n == NULL)
         return;
-    recursivePrintRBTree(n->left, h + 1);
+    recursivePrint(n->left, h + 1);
     printf("%d:%d (%s) ", h, n->key, COLOR_STR(n->color));
-    recursivePrintRBTree(n->right, h + 1);
+    recursivePrint(n->right, h + 1);
 }
 
 void printRBTree(RBTree* n) {
-    recursivePrintRBTree(n, 0);
+    recursivePrint(n, 0);
 }
 
 static void recursiveInsert(RBTree* root, RBTree* n) {
@@ -174,4 +174,14 @@ RBTree* insertRBTree(RBTree* root, RBTree* n) {
     while (root->parent != NULL)
         root = root->parent;
     return root;
+}
+
+bool isDominatedRBTree(RBTree* root, int k) {
+    if (root == NULL) {
+        return false;
+    } else if (root->right != NULL && k <= root->key) {
+        return true;
+    } else {
+        return isDominatedRBTree(root->left, k);
+    }
 }

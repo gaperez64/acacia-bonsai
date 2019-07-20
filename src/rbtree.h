@@ -18,6 +18,8 @@
 
 #ifndef _RBTREE_H_
 
+#include <stdbool.h>
+
 enum NodeColor {BLACK, RED};
 
 typedef struct RBTree RBTree;
@@ -32,5 +34,6 @@ struct RBTree {
 
 RBTree* insertRBTree(RBTree* root, RBTree* n);
 void printRBTree(RBTree*);
+bool isDominatedRBTree(RBTree*, int);
 
 #endif
