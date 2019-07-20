@@ -16,20 +16,19 @@
  * along with Acacia bonsai. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _RBTREE_H_
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "rbtree.h"
 
-enum NodeColor {BLACK, RED};
-
-typedef struct RBTree RBTree;
-struct RBTree {
-    RBTree* parent;
-    RBTree* left;
-    RBTree* right;
-    enum NodeColor color;
-    int key;
-};
-
-RBTree* insertRBTree(RBTree* root, RBTree* n);
-void printRBTree(RBTree*);
-
-#endif
+int main() {
+    RBTree* tree = NULL;
+    RBTree* node;
+    int nodes[10] = {1, 27, 6, 8, 11, 13, 25, 17, 22, 15};
+    for (int i = 0; i < 10; i++) {
+        node = malloc(sizeof(RBTree));
+        node->key = nodes[i];
+        tree = insertRBTree(tree, node);
+    }
+    return 0;
+}

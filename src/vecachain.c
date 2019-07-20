@@ -20,38 +20,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "rbtree.h"
+#include "vecachain.h"
 
-#define COLOR_STR(c) (c == RED ? "red" : "black")
-
-static inline RBTree* sibling(RBTree* n) {
-    if (n->parent == NULL) {
-        return NULL;
-    } else {
-        return n == n->parent->left ? n->parent->right : n->parent->left;
-    }
-}
-
-static inline RBTree* uncle(RBTree* n) {
-    if (n->parent == NULL) {
-        return NULL;
-    } else {
-        return sibling(n->parent);
-    }
-}
-
-static void recursivePrintRBTree(RBTree* n, int h) {
-    assert(h < 10);
+static void recursivePrintVecAntichain(RBTree* t, int i, int dim, int** v) {
     // Essentially: a DFS with in-order printing
-    if (n == NULL)
+    if (t == NULL) {
+        printf("(%d", v[0]);
+        for (int i = 0; i < dim; i++)
+            printf(",%d", v[i]);
+        printf(")\n");        
         return;
-    recursivePrintRBTree(n->left, h + 1);
-    printf("%d:%d (%s) ", h, n->key, COLOR_STR(n->color));
-    recursivePrintRBTree(n->right, h + 1);
+    }
+    recursivePrintVecAntichain(t->left, i, dim, v);
+    v[i] = t->key;
+    recursivePrintVecAntichain(t->data, i + 1, dim, v);
+    recursivePrintVecAntichain(t->right, i, dim, v);
 }
 
-void printRBTree(RBTree* n) {
-    recursivePrintRBTree(n, 0);
+void printVecAntichain(VecAntichain* achain) {
+    int v[achain->dim];
+    recursivePrintVecAntichain(achain->tree, 0, achain->dim, &v);
 }
 
 static void recursiveInsert(RBTree* root, RBTree* n) {
