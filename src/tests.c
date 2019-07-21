@@ -24,17 +24,15 @@
 
 int main() {
     RBTree* tree = NULL;
-    RBTree* node;
-    int nodes[10] = {1, 27, 6, 8, 11, 13, 25, 17, 22, 15};
-    for (int i = 0; i < 10; i++) {
-        node = malloc(sizeof(RBTree));
-        node->key = nodes[i];
-        tree = insertRBTree(tree, node);
+    int nodes[] = {1, 27, 6, 8, 11, 13, 25, 17, 22, 15, 1};
+    for (int i = 0; i < 11; i++) {
+        tree = insertRBTree(tree, nodes[i], NULL);
     }
-    return 0;
+    printRBTree(tree);
     // we test isDominatedRBTree here
     assert(isDominatedRBTree(tree, 17));
     assert(isDominatedRBTree(tree, 7));
     assert(!isDominatedRBTree(tree, 28));
     assert(!isDominatedRBTree(tree, 100));
+    return 0;
 }

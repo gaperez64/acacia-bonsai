@@ -25,7 +25,8 @@ struct VecAntichain {
     int dim;
 };
 
-VecAntichain* insertVecAntichain(VecAntichain* achain, int**);
+VecAntichain* insertVecAntichain(VecAntichain*, int**);
 void printVecAntichain(VecAntichain*);
+bool isDominatedVecAntichain(VecAntichain*, int**);
 
 #endif

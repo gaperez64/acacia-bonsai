@@ -24,6 +24,12 @@
 
 #define COLOR_STR(c) (c == RED ? "red" : "black")
 
+static void removeCase2(RBTree*);
+static void removeCase3(RBTree*);
+static void removeCase4(RBTree*);
+static void removeCase5(RBTree*);
+static void removeCase6(RBTree*);
+
 static inline RBTree* sibling(RBTree* n) {
     if (n->parent == NULL) {
         return NULL;
@@ -51,24 +57,27 @@ static void recursivePrint(RBTree* n, int h) {
 
 void printRBTree(RBTree* n) {
     recursivePrint(n, 0);
+    printf("\n");
 }
 
-static void recursiveInsert(RBTree* root, RBTree* n) {
+static bool recursiveInsert(RBTree* root, RBTree* n) {
     // Essentially: go to the leaves and insert a new
     // red node
-    if (root != NULL && n->key < root->key) {
-        if (root->left != NULL) {
-            recursiveInsert(root->left, n);
-            return;
-        } else {
-            root->left = n;
-        }
-    } else if (root != NULL) {
-        if (root->right != NULL) {
-            recursiveInsert(root->right, n);
-            return;
-        } else {
-            root->right = n;
+    if (root != NULL) {
+        if (n->key < root->key) {
+            if (root->left != NULL) {
+                return recursiveInsert(root->left, n);
+            } else {
+                root->left = n;
+            }
+        } else if (n->key == root->key) {
+            return false;
+        } else { // the root's key is strictly larger
+            if (root->right != NULL) {
+                return recursiveInsert(root->right, n);
+            } else {
+                root->right = n;
+            }
         }
     }
     // insert n
@@ -77,7 +86,7 @@ static void recursiveInsert(RBTree* root, RBTree* n) {
     n->left = NULL;
     n->right = NULL;
     n->color = RED;
-    n->data = NULL;
+    return true;
 }
 
 static inline void attachToParent(RBTree* n, RBTree* p, RBTree* nnew) {
@@ -165,8 +174,17 @@ static void repairRBTree(RBTree* n) {
     }
 }
 
-RBTree* insertRBTree(RBTree* root, RBTree* n) {
-    recursiveInsert(root, n);
+RBTree* insertRBTree(RBTree* root, int key, void* data) {
+    RBTree* n;
+    n = malloc(sizeof(RBTree));
+    n->key = key;
+    n->data = data;
+    // the recursive insertion fails if a node with the
+    // same key exists already
+    if (!recursiveInsert(root, n)) {
+        free(n);
+        return root;
+    }
     // repair the tree to recover red-black properties
     repairRBTree(n);
     // find the new root
@@ -179,9 +197,194 @@ RBTree* insertRBTree(RBTree* root, RBTree* n) {
 bool isDominatedRBTree(RBTree* root, int k) {
     if (root == NULL) {
         return false;
-    } else if (root->right != NULL && k <= root->key) {
+    } else if (k <= root->key) {
         return true;
     } else {
-        return isDominatedRBTree(root->left, k);
+        return isDominatedRBTree(root->right, k);
     }
+}
+
+static RBTree* getMax(RBTree* n) {
+    if (n->right != NULL)
+        return getMax(n->right);
+    else
+        return n;
+}
+
+static RBTree* getMin(RBTree* n) {
+    if (n->left != NULL)
+        return getMin(n->left);
+    else
+        return n;
+}
+
+static inline void replace(RBTree* n, RBTree* child) {
+    if (child != NULL)
+        child->parent = n->parent;
+    if (n->parent != NULL) {
+        if (n == n->parent->left) {
+            n->parent->left = child;
+        } else {
+            n->parent->right = child;
+        }
+    }
+}
+
+static void removeCase1(RBTree* n) {
+    if (n->parent != NULL)
+        removeCase2(n);
+}
+
+static void removeCase2(RBTree* n) {
+    // NOTE: this function requires that n is not the root
+    assert(n->parent != NULL);
+    RBTree* s = sibling(n);
+
+    if (s->color == RED) {
+        n->parent->color = RED;
+        s->color = BLACK;
+        if (n == n->parent->left) {
+            rotateLeft(n->parent);
+        } else {
+            rotateRight(n->parent);
+        }
+    }
+    removeCase3(n);
+}
+
+static void removeCase3(RBTree* n) {
+    // NOTE: this function requires that n is not the root
+    assert(n->parent != NULL);
+    RBTree* s = sibling(n);
+  
+    if ((n->parent->color == BLACK) && (s->color == BLACK) &&
+        (s->left == NULL || s->left->color == BLACK) &&
+        (s->right == NULL || s->right->color == BLACK)) {
+        s->color = RED;
+        removeCase1(n->parent);
+    } else {
+        removeCase4(n);
+    }
+}
+
+static void removeCase4(RBTree* n) {
+    // NOTE: this function requires that n is not the root
+    assert(n->parent != NULL);
+    RBTree* s = sibling(n);
+
+    if ((n->parent->color == RED) && (s->color == BLACK) &&
+        (s->left == NULL || s->left->color == BLACK) && 
+        (s->right == NULL || s->right->color == BLACK)) {
+        s->color = RED;
+        n->parent->color = BLACK;
+    } else {
+        removeCase5(n);
+    }
+}
+
+static void removeCase5(RBTree* n) {
+    // NOTE: this function requires that n is not the root
+    assert(n->parent != NULL);
+    RBTree* s = sibling(n);
+
+    // even though case 2 changed the sibling to a sibling's child, the
+    // sibling's child can't be red, since no red parent can have a red
+    // child
+    assert(s->color == BLACK);
+    
+    // the following statements just force the red to be on the left of the
+    // left of the parent, or right of the right, so case six will rotate
+    // correctly
+    if ((n == n->parent->left) &&
+        (s->right != NULL) &&
+        (s->right->color == BLACK)) {
+        // this holds due to cases 2-4
+        assert(s->left != NULL && s->left->color == RED);
+        s->color = RED;
+        s->left->color = BLACK;
+        rotateRight(s);
+    } else if ((n == n->parent->right) &&
+               (s->left != NULL) &&
+               (s->left->color == BLACK)) {
+        // this holds due to cases 2-4
+        assert(s->right != NULL && s->right->color == RED);
+        s->color = RED;
+        s->right->color = BLACK;
+        rotateLeft(s);
+    }
+    removeCase6(n);
+}
+
+static void removeCase6(RBTree* n) {
+    // NOTE: this function requires that n is not the root
+    assert(n->parent != NULL);
+    RBTree* s = sibling(n);
+
+    s->color = n->parent->color;
+    n->parent->color = BLACK;
+
+    if (n == n->parent->left) {
+        s->right->color = BLACK;
+        rotateLeft(n->parent);
+    } else {
+        s->left->color = BLACK;
+        rotateRight(n->parent);
+    }
+}
+
+static RBTree* removeOneChild(RBTree* n) {
+    // NOTE: this function requires that n has at most one child
+    assert(n != NULL && (n->right == NULL || n->left == NULL));
+    RBTree* child = n->right == NULL ? n->right : n->left;
+
+    if (n->color == RED) {
+        // replacing is enough in this case
+        replace(n, child);
+    } else if (n->color == BLACK) {
+        // if child can be re-painted to black then we're done,
+        // otherwise things get messy
+        if (child != NULL && child->color == RED){
+            replace(n, child);
+            child->color = BLACK;
+        } else {
+            // if child is NULL it is important that we remove first
+            // and ONLY THEN replace (Essentially: we are using n
+            // as a phantom black leaf)
+            if (child == NULL) {
+                removeCase1(n);
+                replace(n, child);
+            } else {
+                replace(n, child);
+                removeCase1(child);
+            }
+        }
+    }
+    // before we free n, we find the new root from it
+    RBTree* root = n;
+    while (root->parent != NULL)
+        root = root->parent;
+    free(n);
+    return root;
+}
+
+RBTree* removeRBTree(RBTree* n) {
+    // ideally, the node we want to remove has at most one real child; to
+    // ensure this we look for the max on the left or the min on the right and
+    // copy its contents and key into n
+    RBTree* toRemove = NULL;
+    if (n == NULL) {
+        return NULL;
+    } else if (n->left != NULL) {
+        toRemove = getMax(n);
+    } else if (n->right != NULL) {
+        toRemove = getMin(n);
+    }
+    // it could be that n had no real child
+    if (toRemove == NULL) {
+        toRemove = n;
+    } else {
+        n->key = toRemove->key;
+        n->data = toRemove->data;
+    }
+    return removeOneChild(toRemove);
 }

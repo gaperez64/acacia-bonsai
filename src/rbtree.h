@@ -32,8 +32,10 @@ struct RBTree {
     void* data;
 };
 
-RBTree* insertRBTree(RBTree* root, RBTree* n);
+// insert to a NULL tree in order to create a new tree
+RBTree* insertRBTree(RBTree* root, int key, void* data);
 void printRBTree(RBTree*);
 bool isDominatedRBTree(RBTree*, int);
+RBTree* removeRBTree(RBTree*);
 
 #endif
