@@ -60,6 +60,21 @@ void printRBTree(RBTree* n) {
     printf("\n");
 }
 
+static void recursiveFree(RBTree* n) {
+    // Essentially: a DFS with in-order printing
+    if (n == NULL)
+        return;
+    recursiveFree(n->left);
+    if (n->data != NULL)
+        free(n->data);
+    free(n);
+    recursiveFree(n->right);
+}
+
+void freeRBTree(RBTree* n) {
+    recursiveFree(n);
+}
+
 static bool recursiveInsert(RBTree* root, RBTree* n) {
     // Essentially: go to the leaves and insert a new
     // red node

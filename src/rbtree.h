@@ -37,5 +37,6 @@ RBTree* insertRBTree(RBTree* root, int key, void* data);
 void printRBTree(RBTree*);
 bool isDominatedRBTree(RBTree*, int);
 RBTree* removeRBTree(RBTree*);
+void freeRBTree(RBTree*);
 
 #endif
