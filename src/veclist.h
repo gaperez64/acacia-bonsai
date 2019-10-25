@@ -19,28 +19,28 @@
 #ifndef _VECLIST_H_
 
 // A doubly-linked list to store int-array pointers
-typedef struct DLLNode;
+typedef struct DLLNode DLLNode;
 struct DLLNode {
     DLLNode* next;
     DLLNode* prev;
-    int** data;
+    int* data;
 };
 
 // creates a new node with the given data and sets
 // the next and prev pointers to NULL
-DLLNode* newNode(int**);
+DLLNode* newDLLNode(int*);
 // creates a new node with the given data, adds it
 // as the next of the given node, and returns a pointer
 // of the new one
-DLLNode* addNext(DLLNode*, int**);
+DLLNode* appendDLLNode(DLLNode*, int*);
 // deletes all next nodes and returns NULL,
 // WARNING: this will not delete the data vectors
-DLLNode* deleteTail(DLLnode*);
-// sorts the vector list based on the given dimension
-DLLNode* sort(DLLNode*, int);
+DLLNode* deleteDLList(DLLNode*);
+// sorts the vector list based on the given dimension index
+void sortDLList(DLLNode*, int);
 // creates a copy of the list and returns a pointer to it
-DLLNode* copyList(DLLNode*);
+DLLNode* copyDLList(DLLNode*);
 // print the list for debugging purposes
-void printList(DLLNode*, int);
+void printDLList(DLLNode*, int);
 
 #endif

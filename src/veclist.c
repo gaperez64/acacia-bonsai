@@ -21,9 +21,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "vecutil.h"
 #include "veclist.h"
 
-DLLNode* newNode(int** data) {
+DLLNode* newDLLNode(int* data) {
     DLLNode* n = malloc(sizeof(DLLNode));
     n->next = NULL;
     n->prev = NULL;
@@ -31,15 +32,15 @@ DLLNode* newNode(int** data) {
     return n;
 }
 
-DLLNode* addNext(DLLNode* n, int** data) {
+DLLNode* appendDLLNode(DLLNode* n, int* data) {
     assert(n != NULL);
-    DLLNode* m = newNode(data);
+    DLLNode* m = newDLLNode(data);
     n->next = m;
     m->prev = n;
     return m;
 }
 
-DLLNode* deleteTail(DLLnode* n) {
+DLLNode* deleteDLList(DLLNode* n) {
     for (DLLNode* start = n; start != NULL; start = start->next) {
         DLLNode* toRemove = start;
         free(toRemove);       
@@ -47,12 +48,12 @@ DLLNode* deleteTail(DLLnode* n) {
     return NULL;
 }
 
-static DLLNode* partition(DLLNode* list, DLLNode* first, DLLNode* last, int dim) {
-    int pivot = (last->data*)[dim];
+static DLLNode* partition(DLLNode* list, DLLNode* first, DLLNode* last, int idx) {
+    int pivot = last->data[idx];
     DLLNode* i = first;
-    int** temp;
+    int* temp;
     for (DLLNode* j = first; j != last; j = j->next) {
-        if ((j->data*)[dim] < pivot) {
+        if (j->data[idx] < pivot) {
             temp = i->data;
             i->data = j->data;
             j->data = temp;
@@ -65,55 +66,46 @@ static DLLNode* partition(DLLNode* list, DLLNode* first, DLLNode* last, int dim)
     return i;
 }
 
-static void quicksort(DLLNode* list, DLLNode* first, DLLNode* last, int dim) {
+static void quicksort(DLLNode* list, DLLNode* first, DLLNode* last, int idx) {
     if (first != last) {
-        DLLNode* p = partition(list, first, last, dim);
-        quicksort(list, first, p->prev, dim);
-        quicksort(list, p->next, last, dim);
+        DLLNode* p = partition(list, first, last, idx);
+        if (p != first)
+            quicksort(list, first, p->prev, idx);
+        if (p != last)
+            quicksort(list, p->next, last, idx);
     }
 }
 
-DLLNode* sort(DLLNode* first, int dim) {
+void sortDLList(DLLNode* first, int idx) {
     if (first == NULL || first->next == NULL)
-        return first;
+        return;
     DLLNode* last = first;
     while (last->next != NULL) {
         last = last->next;
     }
-    quicksort(first, first, last, dim);
-    // sorting is in place, so we return the same address as was given
-    return first;
+    quicksort(first, first, last, idx);
 }
 
-DLLNode* copyList(DLLNode* original) {
+DLLNode* copyDLList(DLLNode* original) {
     if (original == NULL)
         return NULL;
-    DLLNode* last = newNode(original->data);
+    DLLNode* last = newDLLNode(original->data);
     DLLNode* list = last;
     DLLNode* originalNext = original->next;
-    while (DLLNode* originalNext = original->next; next != NULL;
+    for (DLLNode* originalNext = original->next; originalNext != NULL;
            originalNext = originalNext->next) {
-        last = addNext(last, originalNext->data);
+        last = appendDLLNode(last, originalNext->data);
     }
     return list;
 }
 
-static void printDLLNode(DLLNode* n, int dim) {
-    assert(n != NULL);
-    printf("(%d", (n->data*)[0]);
-    for (int i = 1; i < dim; i++)
-        printf(",%d", (n->data*)[i]);
-    printf(")")
-    recursivePrint(n->next, dim);
-}
-
-void printList(DLLNode* start, int dim) {
+void printDLList(DLLNode* start, int dim) {
     assert(start != NULL);
     printf("[");
-    printDLLNode(start, dim);
+    printVec(start->data, dim);
     for (DLLNode* n = start->next; n != NULL; n = n->next) {
         printf(", ");
-        printDLLNode(n, dim);
+        printVec(n->data, dim);
     }
-    printf("]");
+    printf("]\n");
 }

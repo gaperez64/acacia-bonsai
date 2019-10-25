@@ -20,19 +20,69 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include "rbtree.h"
+
+#include "veclist.h"
 
 int main() {
-    RBTree* tree = NULL;
-    int nodes[] = {1, 27, 6, 8, 11, 13, 25, 17, 22, 15, 1};
-    for (int i = 0; i < 11; i++) {
-        tree = insertRBTree(tree, nodes[i], NULL);
-    }
-    printRBTree(tree);
-    // we test isDominatedRBTree here
-    assert(isDominatedRBTree(tree, 17));
-    assert(isDominatedRBTree(tree, 7));
-    assert(!isDominatedRBTree(tree, 28));
-    assert(!isDominatedRBTree(tree, 100));
+    int a[] = {3, 5, 1};
+    DLLNode* list = newDLLNode(a);
+    DLLNode* last = list;
+    int b[] = {4, 8, 9};
+    last = appendDLLNode(last, b);
+    int c[] = {2, 6, 10};
+    last = appendDLLNode(last, c);
+
+    // test correct insertion
+    assert(list != NULL);
+    assert(list->data == a);
+    assert(list->prev == NULL);
+    DLLNode* i = list->next;
+    assert(i != NULL);
+    assert(i->data == b);
+    assert(i->prev == list);
+    DLLNode* j = i->next;
+    assert(j != NULL);
+    assert(j->data == c);
+    assert(j->prev == i);
+    assert(j->next == NULL);
+
+    // test the print
+    printDLList(list, 3);
+
+    // test the copy
+    DLLNode* list2 = copyDLList(list);
+    assert(list2 != NULL);
+    assert(list2->data == a);
+    assert(list2->prev == NULL);
+    i = list2->next;
+    assert(i != NULL);
+    assert(i->data == b);
+    assert(i->prev == list2);
+    j = i->next;
+    assert(j != NULL);
+    assert(j->data == c);
+    assert(j->prev == i);
+    assert(j->next == NULL);
+    printDLList(list2, 3);
+
+    // test the sort
+    sortDLList(list2, 1);
+    assert(list2 != NULL);
+    assert(list2->data == a);
+    assert(list2->prev == NULL);
+    i = list2->next;
+    assert(i != NULL);
+    assert(i->data == c);
+    assert(i->prev == list2);
+    j = i->next;
+    assert(j != NULL);
+    assert(j->data == b);
+    assert(j->prev == i);
+    assert(j->next == NULL);
+    printDLList(list2, 3);
+
+    // test the deletion of a list
+    deleteDLList(list);
+    deleteDLList(list2);
     return 0;
 }

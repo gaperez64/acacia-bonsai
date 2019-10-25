@@ -22,7 +22,7 @@
 #include <assert.h>
 #include "vecachain.h"
 
-static void recursivePrint(RBTree* t, int i, int dim, int** v) {
+static void recursivePrint(RBTree* t, int i, int dim, int* v) {
     // Essentially: a DFS with in-order printing
     if (t == NULL) {
         printf("(%d", v[0]);
@@ -42,7 +42,7 @@ void printVecAntichain(VecAntichain* achain) {
     recursivePrint(achain->tree, 0, achain->dim, &v);
 }
 
-static void recursiveInsert(RBTree* t, int i, int dim, int** v) {
+static void recursiveInsert(RBTree* t, int i, int dim, int* v) {
     // Essentially: go to the real leaves and insert a new node
     if (i + 1 == dim) {
         RBTree* node = malloc(sizeof(RBTree));
