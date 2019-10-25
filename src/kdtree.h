@@ -16,27 +16,29 @@
  * along with Acacia bonsai. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _RBTREE_H_
+#ifndef _KDTREE_H_
 
 #include <stdbool.h>
 
-enum NodeColor {BLACK, RED};
+#include "veclist.h"
 
-typedef struct RBTree RBTree;
-struct RBTree {
-    RBTree* parent;
-    RBTree* left;
-    RBTree* right;
-    enum NodeColor color;
-    int key;
-    void* data;
+// A doubly-linked list to store int-array pointers
+typedef struct KDTNode KDTNode;
+struct KDTNode {
+    int guard;
+    KDTNode* lt;
+    KDTNode* gte;
+    int* data;
 };
 
-// insert to a NULL tree in order to create a new tree
-RBTree* insertRBTree(RBTree* root, int key, void* data);
-void printRBTree(RBTree*);
-bool isDominatedRBTree(RBTree*, int);
-RBTree* removeRBTree(RBTree*);
-void freeRBTree(RBTree*);
+// creates a KDTree for the given list of vectors
+KDTNode* createKDTree(DLLNode*, int);
+// deletes all tree nodes,
+// WARNING: this will not delete the data vectors
+void deleteKDTree(KDTNode*);
+// print the list for debugging purposes
+void printKDTree(KDTNode*, int);
+// check for domination of an element by anything in the tree
+bool isDominatedKDTree(KDTNode*, int, int*);
 
 #endif
