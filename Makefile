@@ -1,4 +1,12 @@
-.PHONY: tests
-tests: src/tests.c src/rbtree.h src/rbtree.c
-	gcc -O3 src/tests.c src/rbtree.c -o tests
+SRCS = src/veclist.c src/vecutil.c
+HDRS = src/veclist.h src/vecutil.h
+
+CFLAGS = -O3
+
+.PHONY: tests clean
+tests: src/tests.c $(SRCS) $(HDRS)
+	gcc $(CFLAGS) src/tests.c $(SRCS) -o tests
 	./tests
+
+clean:
+	rm tests
