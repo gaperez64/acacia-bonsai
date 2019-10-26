@@ -17,6 +17,7 @@
  */
 
 #ifndef _VECLIST_H_
+#define _VECLIST_H_
 
 // A doubly-linked list to store int-array pointers
 typedef struct DLLNode DLLNode;

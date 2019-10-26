@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 #include "veclist.h"
 #include "kdtree.h"
@@ -58,13 +59,15 @@ static KDTNode* recursiveKDNode(DLLNode** perdim, int dim, int len, int idx) {
     // all lists have to be split based on the median
     DLLNode* ltSorted[dim];
     DLLNode* gteSorted[dim];
+    int ltLen;
+    int gteLen;
     for (int i = 0; i < dim; i++) {
         ltSorted[i] = newDLLNode(perdim[i]->data);
         gteSorted[i] = newDLLNode(perdim[i]->data);
         DLLNode* ltLast = ltSorted[i];
         DLLNode* gteLast = gteSorted[i];
-        int ltLen = 0;
-        int gteLen = 0;
+        ltLen = 0;
+        gteLen = 0;
         for (DLLNode* n = perdim[i]->next; n != NULL; n = n->next) {
             if (n->data[idx] < med) {
                 ltLast = appendDLLNode(ltLast, n->data);
@@ -74,11 +77,12 @@ static KDTNode* recursiveKDNode(DLLNode** perdim, int dim, int len, int idx) {
                 gteLen++;
             }
         }
+        assert(ltLen + gteLen == len);
         // the original list is now redundant
         deleteDLList(perdim[i]);
     }
     // make recursive calls with next dimension
-    nextIdx = (idx + 1) % dim;
+    int nextIdx = (idx + 1) % dim;
     KDTNode* tree = malloc(sizeof(KDTNode));
     tree->guard = med;
     tree->data = NULL;
@@ -95,7 +99,7 @@ KDTNode* createKDTree(DLLNode* list, int dim) {
     DLLNode* sorted[dim];
     for (int i = 0; i < dim; i++) {
         sorted[i] = copyDLList(list);
-        sortDLList(sorted[i]);
+        sortDLList(sorted[i], i);
     }
     // the method will free the sorted DLLists
     return recursiveKDNode(sorted, dim, len, 0);
@@ -110,5 +114,50 @@ void deleteKDTree(KDTNode* root) {
     free(root);
 }
 
-void printKDTree(KDTNode* root, int dim);
-bool isDominatedKDTree(KDTNode* root, int dim, int* vec);
+static void recursivePrint(KDTNode* n, int dim, int idx) {
+    assert(n != NULL);
+    if (n->data == NULL) {  // internal node
+        printf("guard: %d\n (dim %d)", n->guard, idx);
+        int nextIdx = (idx + 1) % dim;
+        recursivePrint(n->lt, dim, nextIdx);
+        recursivePrint(n->gte, dim, nextIdx);
+    } else {  // leaf
+        printf("leaf: ");
+        printVec(n->data, dim);
+        printf("\n");
+    }
+}
+
+void printKDTree(KDTNode* root, int dim) {
+    recursivePrint(root, dim, 0);
+}
+
+/**
+ * This is a recursive traversal of the tree with two cases: either both
+ * subtrees have a region which intersects the dominating region or
+ * only one branch contains the dominating region.
+ */
+static bool recursiveSearch(KDTNode* n, int dim, int* vec, int idx) {
+    assert(n != NULL);
+    assert(vec != NULL);
+    if (n->data == NULL) {  // internal node
+        int nextIdx = (idx + 1) % dim;
+        if (vec[idx] < n->guard) {
+            return recursiveSearch(n->lt, dim, vec, nextIdx) ||
+                   recursiveSearch(n->gte, dim, vec, nextIdx);
+        } else if (vec[idx] > n->guard) {
+            return recursiveSearch(n->gte, dim, vec, nextIdx);
+        } else {  // vec[idx] == n->guard
+            return true;
+        }
+    } else {  // leaf
+        bool dominated = true;
+        for (int i = 0; i < dim; i++)
+            dominated &= vec[idx] <= n->data[idx];
+        return dominated;
+    }
+}
+
+bool isDominatedKDTree(KDTNode* root, int dim, int* vec) {
+    return recursiveSearch(root, dim, vec, 0);
+}

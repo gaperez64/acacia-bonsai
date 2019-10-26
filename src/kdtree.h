@@ -17,6 +17,7 @@
  */
 
 #ifndef _KDTREE_H_
+#define _KDTREE_H_
 
 #include <stdbool.h>
 

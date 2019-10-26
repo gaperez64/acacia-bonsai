@@ -17,6 +17,7 @@
  */
 
 #ifndef _VECUTIL_H_
+#define _VECUTIL_H_
 
 void printVec(int*, int);
 

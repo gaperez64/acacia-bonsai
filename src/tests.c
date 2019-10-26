@@ -23,7 +23,7 @@
 
 #include "veclist.h"
 
-int main() {
+static void testsVecList() {
     int a[] = {3, 5, 1};
     DLLNode* list = newDLLNode(a);
     DLLNode* last = list;
@@ -84,5 +84,9 @@ int main() {
     // test the deletion of a list
     deleteDLList(list);
     deleteDLList(list2);
+}
+
+int main() {
+    testsVecList();
     return 0;
 }

@@ -1,5 +1,5 @@
-SRCS = src/veclist.c src/vecutil.c
-HDRS = src/veclist.h src/vecutil.h
+SRCS = src/veclist.c src/vecutil.c src/kdtree.c
+HDRS = src/veclist.h src/vecutil.h src/kdtree.h
 
 CFLAGS = -O3
 
