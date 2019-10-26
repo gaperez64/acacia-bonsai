@@ -22,6 +22,7 @@
 #include <assert.h>
 
 #include "veclist.h"
+#include "kdtree.h"
 
 static void testsVecList() {
     int a[] = {3, 5, 1};
@@ -86,7 +87,39 @@ static void testsVecList() {
     deleteDLList(list2);
 }
 
+void testsKDTree() {
+    int a[] = {3, 5, 1};
+    DLLNode* list = newDLLNode(a);
+    DLLNode* last = list;
+    int b[] = {4, 8, 9};
+    last = appendDLLNode(last, b);
+    int c[] = {2, 6, 10};
+    last = appendDLLNode(last, c);
+    int d[] = {3, 3, 4};
+    last = appendDLLNode(last, d);
+    int e[] = {1, 2, 3};
+    last = appendDLLNode(last, e);
+
+    // test KDTree creation
+    KDTNode* tree = createKDTree(list, 3);
+
+    // test print
+    printKDTree(tree, 3);
+
+    // test domination
+    assert(isDominatedKDTree(tree, 3, a));
+    int f[] = {2, 5, 9};
+    assert(isDominatedKDTree(tree, 3, f));
+    int x[] = {8, 1, 1};
+    assert(!isDominatedKDTree(tree, 3, x));
+    
+    // test deletion
+    deleteKDTree(tree);
+    deleteDLList(list);
+}
+
 int main() {
     testsVecList();
+    testsKDTree();
     return 0;
 }

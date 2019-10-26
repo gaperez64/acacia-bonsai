@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <math.h>
 
+#include "vecutil.h"
 #include "veclist.h"
 #include "kdtree.h"
 
@@ -51,7 +52,7 @@ static KDTNode* newLeaf(int* data) {
 static KDTNode* recursiveKDNode(DLLNode** perdim, int dim, int len, int idx) {
     assert(len > 0);
     if (len == 1) {
-        int* vec = perdim[0][0]->data;
+        int* vec = perdim[0]->data;
         deleteDLList(perdim[0]);
         return newLeaf(vec);
     }
@@ -62,18 +63,26 @@ static KDTNode* recursiveKDNode(DLLNode** perdim, int dim, int len, int idx) {
     int ltLen;
     int gteLen;
     for (int i = 0; i < dim; i++) {
-        ltSorted[i] = newDLLNode(perdim[i]->data);
-        gteSorted[i] = newDLLNode(perdim[i]->data);
-        DLLNode* ltLast = ltSorted[i];
-        DLLNode* gteLast = gteSorted[i];
+        DLLNode* ltLast = NULL;
+        DLLNode* gteLast = NULL;
         ltLen = 0;
         gteLen = 0;
-        for (DLLNode* n = perdim[i]->next; n != NULL; n = n->next) {
+        for (DLLNode* n = perdim[i]; n != NULL; n = n->next) {
             if (n->data[idx] < med) {
-                ltLast = appendDLLNode(ltLast, n->data);
+                if (ltLast == NULL) {
+                    ltSorted[dim] = newDLLNode(n->data);
+                    ltLast = ltSorted[dim];
+                } else {
+                    ltLast = appendDLLNode(ltLast, n->data);
+                }
                 ltLen++;
             } else {
-                gteLast = appendDLLNode(gteLast, n->data);
+                if (gteLast == NULL) {
+                    gteSorted[dim] = newDLLNode(n->data);
+                    gteLast = gteSorted[dim];
+                } else {
+                    gteLast = appendDLLNode(gteLast, n->data);
+                }
                 gteLen++;
             }
         }
