@@ -101,9 +101,11 @@ void testsKDTree() {
     last = appendDLLNode(last, e);
 
     // test KDTree creation
+    printf("Test creation of KDTrees\n");
     KDTNode* tree = createKDTree(list, 3);
 
     // test print
+    printf("Test printing of KDTrees\n");
     printKDTree(tree, 3);
 
     // test domination

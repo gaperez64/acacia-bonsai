@@ -1,7 +1,7 @@
 SRCS = src/veclist.c src/vecutil.c src/kdtree.c
 HDRS = src/veclist.h src/vecutil.h src/kdtree.h
 
-CFLAGS = -O3
+CFLAGS = -g  # O3
 
 .PHONY: tests clean
 tests: src/tests.c $(SRCS) $(HDRS)

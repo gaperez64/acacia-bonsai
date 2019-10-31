@@ -91,7 +91,6 @@ DLLNode* copyDLList(DLLNode* original) {
         return NULL;
     DLLNode* last = newDLLNode(original->data);
     DLLNode* list = last;
-    DLLNode* originalNext = original->next;
     for (DLLNode* originalNext = original->next; originalNext != NULL;
            originalNext = originalNext->next) {
         last = appendDLLNode(last, originalNext->data);

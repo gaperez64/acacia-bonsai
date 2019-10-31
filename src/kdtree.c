@@ -27,20 +27,22 @@
 #include "kdtree.h"
 
 static int median(DLLNode* list, int idx, int len) {
-    float mid = floor(len / 2.0);
+    assert(len > 0 && list != NULL);
+    int mid = (int) floor(len / 2.0);
     DLLNode* node = list;
-    for (int i = 0; i < mid; i++) {
+    for (int i = 1; i < mid; i++) {  // len is 1-indexed, so is mid
         assert(node->next != NULL);
         node = node->next;
     }
+    assert(node->data != NULL);
     return node->data[idx];
 }
 
 static KDTNode* newLeaf(int* data) {
     KDTNode* n = malloc(sizeof(KDTNode));
     n->data = data;
-    n->lt = NULL;
-    n->gte = NULL;
+    n->lte = NULL;
+    n->gt = NULL;
     n->guard = -1;
     return n;
 }
@@ -58,35 +60,35 @@ static KDTNode* recursiveKDNode(DLLNode** perdim, int dim, int len, int idx) {
     }
     int med = median(perdim[idx], idx, len);
     // all lists have to be split based on the median
-    DLLNode* ltSorted[dim];
-    DLLNode* gteSorted[dim];
-    int ltLen;
-    int gteLen;
+    DLLNode* lteSorted[dim];
+    DLLNode* gtSorted[dim];
+    int lteLen;
+    int gtLen;
     for (int i = 0; i < dim; i++) {
-        DLLNode* ltLast = NULL;
-        DLLNode* gteLast = NULL;
-        ltLen = 0;
-        gteLen = 0;
+        DLLNode* lteLast = NULL;
+        DLLNode* gtLast = NULL;
+        lteLen = 0;
+        gtLen = 0;
         for (DLLNode* n = perdim[i]; n != NULL; n = n->next) {
-            if (n->data[idx] < med) {
-                if (ltLast == NULL) {
-                    ltSorted[dim] = newDLLNode(n->data);
-                    ltLast = ltSorted[dim];
+            if (n->data[idx] <= med) {
+                if (lteLast == NULL) {
+                    lteSorted[i] = newDLLNode(n->data);
+                    lteLast = lteSorted[i];
                 } else {
-                    ltLast = appendDLLNode(ltLast, n->data);
+                    lteLast = appendDLLNode(lteLast, n->data);
                 }
-                ltLen++;
+                lteLen++;
             } else {
-                if (gteLast == NULL) {
-                    gteSorted[dim] = newDLLNode(n->data);
-                    gteLast = gteSorted[dim];
+                if (gtLast == NULL) {
+                    gtSorted[i] = newDLLNode(n->data);
+                    gtLast = gtSorted[i];
                 } else {
-                    gteLast = appendDLLNode(gteLast, n->data);
+                    gtLast = appendDLLNode(gtLast, n->data);
                 }
-                gteLen++;
+                gtLen++;
             }
         }
-        assert(ltLen + gteLen == len);
+        assert(lteLen + gtLen == len);
         // the original list is now redundant
         deleteDLList(perdim[i]);
     }
@@ -95,8 +97,8 @@ static KDTNode* recursiveKDNode(DLLNode** perdim, int dim, int len, int idx) {
     KDTNode* tree = malloc(sizeof(KDTNode));
     tree->guard = med;
     tree->data = NULL;
-    tree->lt = recursiveKDNode(ltSorted, dim, ltLen, nextIdx);
-    tree->gte = recursiveKDNode(gteSorted, dim, gteLen, nextIdx);
+    tree->lte = recursiveKDNode(lteSorted, dim, lteLen, nextIdx);
+    tree->gt = recursiveKDNode(gtSorted, dim, gtLen, nextIdx);
     return tree;
 }
 
@@ -116,20 +118,20 @@ KDTNode* createKDTree(DLLNode* list, int dim) {
 
 void deleteKDTree(KDTNode* root) {
     assert(root != NULL);
-    if (root->lt != NULL)
-        deleteKDTree(root->lt);
-    if (root->gte != NULL)
-        deleteKDTree(root->gte);
+    if (root->lte != NULL)
+        deleteKDTree(root->lte);
+    if (root->gt != NULL)
+        deleteKDTree(root->gt);
     free(root);
 }
 
 static void recursivePrint(KDTNode* n, int dim, int idx) {
     assert(n != NULL);
     if (n->data == NULL) {  // internal node
-        printf("guard: %d\n (dim %d)", n->guard, idx);
+        printf("guard: %d (dim %d)\n", n->guard, idx);
         int nextIdx = (idx + 1) % dim;
-        recursivePrint(n->lt, dim, nextIdx);
-        recursivePrint(n->gte, dim, nextIdx);
+        recursivePrint(n->lte, dim, nextIdx);
+        recursivePrint(n->gt, dim, nextIdx);
     } else {  // leaf
         printf("leaf: ");
         printVec(n->data, dim);
@@ -151,18 +153,15 @@ static bool recursiveSearch(KDTNode* n, int dim, int* vec, int idx) {
     assert(vec != NULL);
     if (n->data == NULL) {  // internal node
         int nextIdx = (idx + 1) % dim;
-        if (vec[idx] < n->guard) {
-            return recursiveSearch(n->lt, dim, vec, nextIdx) ||
-                   recursiveSearch(n->gte, dim, vec, nextIdx);
-        } else if (vec[idx] > n->guard) {
-            return recursiveSearch(n->gte, dim, vec, nextIdx);
-        } else {  // vec[idx] == n->guard
-            return true;
-        }
+        if (vec[idx] <= n->guard)
+            return recursiveSearch(n->lte, dim, vec, nextIdx) ||
+                   recursiveSearch(n->gt, dim, vec, nextIdx);
+        else  // if (vec[idx] >= n->guard)
+            return recursiveSearch(n->gt, dim, vec, nextIdx);
     } else {  // leaf
         bool dominated = true;
         for (int i = 0; i < dim; i++)
-            dominated &= vec[idx] <= n->data[idx];
+            dominated &= (vec[i] <= n->data[i]);
         return dominated;
     }
 }

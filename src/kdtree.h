@@ -27,8 +27,8 @@
 typedef struct KDTNode KDTNode;
 struct KDTNode {
     int guard;
-    KDTNode* lt;
-    KDTNode* gte;
+    KDTNode* lte;
+    KDTNode* gt;
     int* data;
 };
 
