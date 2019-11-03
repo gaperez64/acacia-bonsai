@@ -26,82 +26,71 @@
 
 static void testsVecList() {
     int a[] = {3, 5, 1};
-    DLLNode* list = newDLLNode(a);
-    DLLNode* last = list;
+    VLNode* list = newVLNode(a);
+    VLNode* last = list;
     int b[] = {4, 8, 9};
-    last = appendDLLNode(last, b);
+    last = appendVLNode(last, b);
     int c[] = {2, 6, 10};
-    last = appendDLLNode(last, c);
+    last = appendVLNode(last, c);
 
     // test correct insertion
     assert(list != NULL);
     assert(list->data == a);
-    assert(list->prev == NULL);
-    DLLNode* i = list->next;
+    VLNode* i = list->next;
     assert(i != NULL);
     assert(i->data == b);
-    assert(i->prev == list);
-    DLLNode* j = i->next;
+    VLNode* j = i->next;
     assert(j != NULL);
     assert(j->data == c);
-    assert(j->prev == i);
     assert(j->next == NULL);
 
     // test the print
-    printDLList(list, 3);
+    printf("Test the printing of DL lists\n");
+    printVList(list, 3);
 
     // test the copy
-    DLLNode* list2 = copyDLList(list);
+    VLNode* list2 = copyVList(list);
     assert(list2 != NULL);
     assert(list2->data == a);
-    assert(list2->prev == NULL);
     i = list2->next;
     assert(i != NULL);
     assert(i->data == b);
-    assert(i->prev == list2);
     j = i->next;
     assert(j != NULL);
     assert(j->data == c);
-    assert(j->prev == i);
     assert(j->next == NULL);
-    printDLList(list2, 3);
 
     // test the sort
-    sortDLList(list2, 1);
+    sortVList(list2, 1);
     assert(list2 != NULL);
     assert(list2->data == a);
-    assert(list2->prev == NULL);
     i = list2->next;
     assert(i != NULL);
     assert(i->data == c);
-    assert(i->prev == list2);
     j = i->next;
     assert(j != NULL);
     assert(j->data == b);
-    assert(j->prev == i);
     assert(j->next == NULL);
-    printDLList(list2, 3);
 
     // test the deletion of a list
-    deleteDLList(list);
-    deleteDLList(list2);
+    deleteVList(list);
+    deleteVList(list2);
 }
 
 void testsKDTree() {
     int a[] = {3, 5, 1};
-    DLLNode* list = newDLLNode(a);
-    DLLNode* last = list;
+    VLNode* list = newVLNode(a);
+    VLNode* last = list;
     int b[] = {4, 8, 9};
-    last = appendDLLNode(last, b);
+    last = appendVLNode(last, b);
     int c[] = {2, 6, 10};
-    last = appendDLLNode(last, c);
+    last = appendVLNode(last, c);
     int d[] = {3, 3, 4};
-    last = appendDLLNode(last, d);
+    last = appendVLNode(last, d);
     int e[] = {1, 2, 3};
-    last = appendDLLNode(last, e);
+    last = appendVLNode(last, e);
 
     // test KDTree creation
-    printf("Test creation of KDTrees\n");
     KDTNode* tree = createKDTree(list, 3);
 
     // test print
@@ -114,10 +103,14 @@ void testsKDTree() {
     assert(isDominatedKDTree(tree, 3, f));
     int x[] = {8, 1, 1};
     assert(!isDominatedKDTree(tree, 3, x));
+    int y[] = {1, 1, 100};
+    assert(!isDominatedKDTree(tree, 3, y));
+    int z[] = {0, 0, 0};
+    assert(isDominatedKDTree(tree, 3, z));
     
     // test deletion
     deleteKDTree(tree);
-    deleteDLList(list);
+    deleteVList(list);
 }
 
 int main() {

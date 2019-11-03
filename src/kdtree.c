@@ -26,10 +26,10 @@
 #include "veclist.h"
 #include "kdtree.h"
 
-static int median(DLLNode* list, int idx, int len) {
+static int median(VLNode* list, int idx, int len) {
     assert(len > 0 && list != NULL);
     int mid = (int) floor(len / 2.0);
-    DLLNode* node = list;
+    VLNode* node = list;
     for (int i = 1; i < mid; i++) {  // len is 1-indexed, so is mid
         assert(node->next != NULL);
         node = node->next;
@@ -51,46 +51,46 @@ static KDTNode* newLeaf(int* data) {
  * NOTE: This method takes care of freeing the doubly-linked lists but not the
  * memory containing their addresses.
  */
-static KDTNode* recursiveKDNode(DLLNode** perdim, int dim, int len, int idx) {
+static KDTNode* recursiveKDNode(VLNode** perdim, int dim, int len, int idx) {
     assert(len > 0);
     if (len == 1) {
         int* vec = perdim[0]->data;
-        deleteDLList(perdim[0]);
+        deleteVList(perdim[0]);
         return newLeaf(vec);
     }
     int med = median(perdim[idx], idx, len);
     // all lists have to be split based on the median
-    DLLNode* lteSorted[dim];
-    DLLNode* gtSorted[dim];
+    VLNode* lteSorted[dim];
+    VLNode* gtSorted[dim];
     int lteLen;
     int gtLen;
     for (int i = 0; i < dim; i++) {
-        DLLNode* lteLast = NULL;
-        DLLNode* gtLast = NULL;
+        VLNode* lteLast = NULL;
+        VLNode* gtLast = NULL;
         lteLen = 0;
         gtLen = 0;
-        for (DLLNode* n = perdim[i]; n != NULL; n = n->next) {
+        for (VLNode* n = perdim[i]; n != NULL; n = n->next) {
             if (n->data[idx] <= med) {
                 if (lteLast == NULL) {
-                    lteSorted[i] = newDLLNode(n->data);
+                    lteSorted[i] = newVLNode(n->data);
                     lteLast = lteSorted[i];
                 } else {
-                    lteLast = appendDLLNode(lteLast, n->data);
+                    lteLast = appendVLNode(lteLast, n->data);
                 }
                 lteLen++;
             } else {
                 if (gtLast == NULL) {
-                    gtSorted[i] = newDLLNode(n->data);
+                    gtSorted[i] = newVLNode(n->data);
                     gtLast = gtSorted[i];
                 } else {
-                    gtLast = appendDLLNode(gtLast, n->data);
+                    gtLast = appendVLNode(gtLast, n->data);
                 }
                 gtLen++;
             }
         }
         assert(lteLen + gtLen == len);
         // the original list is now redundant
-        deleteDLList(perdim[i]);
+        deleteVList(perdim[i]);
     }
     // make recursive calls with next dimension
     int nextIdx = (idx + 1) % dim;
@@ -102,17 +102,17 @@ static KDTNode* recursiveKDNode(DLLNode** perdim, int dim, int len, int idx) {
     return tree;
 }
 
-KDTNode* createKDTree(DLLNode* list, int dim) {
+KDTNode* createKDTree(VLNode* list, int dim) {
     assert(list != NULL);
     int len = 0;
-    for (DLLNode* i = list; i != NULL; i = i->next)
+    for (VLNode* i = list; i != NULL; i = i->next)
         len++;
-    DLLNode* sorted[dim];
+    VLNode* sorted[dim];
     for (int i = 0; i < dim; i++) {
-        sorted[i] = copyDLList(list);
-        sortDLList(sorted[i], i);
+        sorted[i] = copyVList(list);
+        sortVList(sorted[i], i);
     }
-    // the method will free the sorted DLLists
+    // the method will free the sorted VLists
     return recursiveKDNode(sorted, dim, len, 0);
 }
 

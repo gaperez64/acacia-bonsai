@@ -1,11 +1,16 @@
 SRCS = src/veclist.c src/vecutil.c src/kdtree.c
 HDRS = src/veclist.h src/vecutil.h src/kdtree.h
 
-CFLAGS = -g  # O3
+CFLAGS = -O3 -DNDEBUG
 
-.PHONY: tests clean
+.PHONY: tests clean all
+
+all: $(SRCS) $(HDRS)
+	gcc $(CFLAGS) src/main.c $(SRCS) -o acacia
+
 tests: src/tests.c $(SRCS) $(HDRS)
-	gcc $(CFLAGS) src/tests.c $(SRCS) -o tests
+	gcc -g -fsanitize=address src/tests.c $(SRCS) -o tests
+	ASAN_OPTIONS=detect_leaks=1
 	./tests
 
 clean:

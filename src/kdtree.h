@@ -33,7 +33,7 @@ struct KDTNode {
 };
 
 // creates a KDTree for the given list of vectors
-KDTNode* createKDTree(DLLNode*, int);
+KDTNode* createKDTree(VLNode*, int);
 // deletes all tree nodes,
 // WARNING: this will not delete the data vectors
 void deleteKDTree(KDTNode*);
