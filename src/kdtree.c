@@ -169,3 +169,21 @@ static bool recursiveSearch(KDTNode* n, int dim, int* vec, int idx) {
 bool isDominatedKDTree(KDTNode* root, int dim, int* vec) {
     return recursiveSearch(root, dim, vec, 0);
 }
+
+static VLNode* recursiveListAll(KDTNode* root, VLNode* last) {
+    assert(root != NULL);
+    assert(last != NULL);
+    if (root->data == NULL) {  // internal node
+        last = recursiveListAll(root->lte, last);
+        last = recursiveListAll(root->gt, last);
+    } else {  // leaf
+        last = appendVLNode(last, root->data);
+    }
+    return last;
+}
+
+VLNode* listAllKDTree(KDTNode* root) {
+    VLNode dummy;
+    recursiveListAll(root, &dummy);
+    return dummy.next;
+}
