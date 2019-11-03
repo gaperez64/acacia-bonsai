@@ -20,66 +20,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
 #include "vecachain.h"
 
-static void recursivePrint(RBTree* t, int i, int dim, int* v) {
-    // Essentially: a DFS with in-order printing
-    if (t == NULL) {
-        printf("(%d", v[0]);
-        for (int i = 0; i < dim; i++)
-            printf(",%d", v[i]);
-        printf(")\n");        
-        return;
-    }
-    recursivePrint(t->left, i, dim, v);
-    v[i] = t->key;
-    recursivePrint(t->data, i + 1, dim, v);
-    recursivePrint(t->right, i, dim, v);
-}
-
-void printVecAntichain(VecAntichain* achain) {
-    int v[achain->dim];
-    recursivePrint(achain->tree, 0, achain->dim, &v);
-}
-
-static void recursiveInsert(RBTree* t, int i, int dim, int* v) {
-    // Essentially: go to the real leaves and insert a new node
-    if (i + 1 == dim) {
-        RBTree* node = malloc(sizeof(RBTree));
-        node->key = v[i];
-        node->data = NULL;
-        insertRBTree(t, node);
-    } else if (root 
-    if (root != NULL && v[i] < root->key) {
-        if (root->left != NULL) {
-            recursiveInsert(root->left, n);
-            return;
-        } else {
-            root->left = n;
-        }
-    } else if (root != NULL) {
-        if (root->right != NULL) {
-            recursiveInsert(root->right, n);
-            return;
-        } else {
-            root->right = n;
-        }
-    }
-    // insert n
-    // Note: root may be NULL here
-    n->parent = root;
-    n->left = NULL;
-    n->right = NULL;
-    n->color = RED;
-}
-
-RBTree* insertRBTree(RBTree* root, RBTree* n) {
-    recursiveInsert(root, n);
-    // repair the tree to recover red-black properties
-    repairRBTree(n);
-    // find the new root
-    root = n;
-    while (root->parent != NULL)
-        root = root->parent;
-    return root;
-}
+// check for domination of an element by anything in the antichain
+bool isDominatedVAntichain(VANode*, int, int*);
+// insert element if incomparable to anything in the antichain
+// returns true if and only if the vector was inserted
+bool insertVAntichain(VANode*, int, int*);

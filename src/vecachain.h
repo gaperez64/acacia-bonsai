@@ -17,16 +17,26 @@
  */
 
 #ifndef _VECACHAIN_H_
+#define _VECACHAIN_H_
 
-#define "rbtree.h"
+#include "kdtree.h"
 
-struct VecAntichain {
-    RBTree* tree;
-    int dim;
+// A singly-linked list to store a list of kdtrees following
+// "the logarithmic method" to dynamify a static data structure
+// see: J. L. Bentley and J. B. Saxe. Decomposable searching problems I:
+// Static-to-dynamic transformation. J. Algorithms 1(4):301–358, 1980.
+typedef struct VANode VANode;
+struct VANode {
+    VANode* next;
+    KDTNode* tree;
 };
+// check for domination of an element by anything in the antichain
+bool isDominatedVAntichain(VANode*, int, int*);
+// insert element if incomparable to anything in the antichain
+// returns true if and only if the vector was inserted
+bool insertVAntichain(VANode*, int, int*);
 
-VecAntichain* insertVecAntichain(VecAntichain*, int**);
-void printVecAntichain(VecAntichain*);
-bool isDominatedVecAntichain(VecAntichain*, int**);
+
+
 
 #endif
