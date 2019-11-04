@@ -182,8 +182,6 @@ static VLNode* recursiveListAll(KDTNode* root, VLNode* last) {
     return last;
 }
 
-VLNode* listAllKDTree(KDTNode* root) {
-    VLNode dummy;
-    recursiveListAll(root, &dummy);
-    return dummy.next;
+void listAllKDTree(KDTNode* root, VLNode* last) {
+    return recursiveListAll(root, last);
 }

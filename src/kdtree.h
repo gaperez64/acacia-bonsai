@@ -41,7 +41,10 @@ void deleteKDTree(KDTNode*);
 void printKDTree(KDTNode*, int);
 // check for domination of an element by anything in the tree
 bool isDominatedKDTree(KDTNode*, int, int*);
-// get a list of all vectors in the tree
-VLNode* listAllKDTree(KDTNode*);
+// get a list of all vectors in the tree, for convenience a
+// pointer to the last element in an already existing list
+// is given (if you want to use an empty list, create a dummy node
+// that you dump after calling the function and fetch its ->next)
+void listAllKDTree(KDTNode*, VLNode*);
 
 #endif
