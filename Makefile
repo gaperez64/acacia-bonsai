@@ -9,18 +9,18 @@ DBGFLAGS = -fsanitize=address -fno-omit-frame-pointer -g
 GEND = hoatools/hoalexer.hpp hoatools/hoalexer.cpp\
        hoatools/hoaparser.hpp hoatools/hoaparser.cpp
 
-$(GEND):
-	cd hoatools && $(MAKE)
+$(GEND): hoatools/hoa.l hoatools/hoa.y
+	cd hoatools && $(MAKE) all
 
 .PHONY: all clean
 
 acacia: $(SRCS) $(HDRS)
-	$(CXX) $(CFLAGS) -o acacia $(SRCS) acacia.c 
+	$(CXX) $(CFLAGS) -o acacia $(SRCS) acacia.cpp
 
 acacia-dbg: $(SRCS) $(HDRS)
-	$(CXX) $(DBGFLAGS) -o acacia $(SRCS) acacia.c 
+	$(CXX) $(DBGFLAGS) -o acacia $(SRCS) acacia.cpp 
 
 all: acacia acacia-dbg
 
 clean:
-	rm tests
+	rm acacia acacia-dbg

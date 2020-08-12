@@ -28,10 +28,10 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "simplehoa.h"
+#include "simplehoa.hpp"
 
 StateList* newStateNode(int id, char* name, BTree* label, IntList* accSig) {
-    StateList* list = malloc(sizeof(StateList));
+    StateList* list = (StateList*) malloc(sizeof(StateList));
     list->id = id;
     list->name = name;
     list->label = label;
@@ -49,7 +49,7 @@ StateList* prependStateNode(StateList* node, StateList* newNode,
 
 TransList* prependTransNode(TransList* node , BTree* label,
                             IntList* successors, IntList* accSig) {
-    TransList* newHead = malloc(sizeof(TransList));
+    TransList* newHead = (TransList*) malloc(sizeof(TransList));
     newHead->label = label;
     newHead->successors = successors;
     newHead->accSig = accSig;
@@ -58,28 +58,28 @@ TransList* prependTransNode(TransList* node , BTree* label,
 }
 
 IntList* newIntNode(int val) {
-    IntList* list = malloc(sizeof(IntList));
+    IntList* list = (IntList*) malloc(sizeof(IntList));
     list->i = val;
     list->next = NULL;
     return list;
 }
 
 IntList* prependIntNode(IntList* node, int val) {
-    IntList* newHead = malloc(sizeof(IntList));
+    IntList* newHead = (IntList*) malloc(sizeof(IntList));
     newHead->i = val;
     newHead->next = node;
     return newHead;
 }
 
 StringList* prependStrNode(StringList* node, char* str) {
-    StringList* newHead = malloc(sizeof(StringList));
+    StringList* newHead = (StringList*) malloc(sizeof(StringList));
     newHead->str = str;
     newHead->next = node;
     return newHead;
 }
 
 AliasList* prependAliasNode(AliasList* node, char* alias, BTree* labelExpr) {
-    AliasList* newHead = malloc(sizeof(AliasList));
+    AliasList* newHead = (AliasList*) malloc(sizeof(AliasList));
     newHead->alias = alias;
     newHead->next = node;
     newHead->labelExpr = labelExpr;
@@ -114,7 +114,7 @@ IntList* concatIntLists(IntList* list1, IntList* list2) {
 }
 
 BTree* boolBTree(bool b) {
-    BTree* created = malloc(sizeof(BTree));
+    BTree* created = (BTree*) malloc(sizeof(BTree));
     created->left = NULL;
     created->right = NULL;
     created->alias = NULL;
@@ -124,7 +124,7 @@ BTree* boolBTree(bool b) {
 }
 
 BTree* andBTree(BTree* u, BTree* v) {
-    BTree* created = malloc(sizeof(BTree));
+    BTree* created = (BTree*) malloc(sizeof(BTree));
     created->left = u;
     created->right = v;
     created->alias = NULL;
@@ -134,7 +134,7 @@ BTree* andBTree(BTree* u, BTree* v) {
 }
 
 BTree* orBTree(BTree* u, BTree* v) {
-    BTree* created = malloc(sizeof(BTree));
+    BTree* created = (BTree*) malloc(sizeof(BTree));
     created->left = u;
     created->right = v;
     created->alias = NULL;
@@ -144,7 +144,7 @@ BTree* orBTree(BTree* u, BTree* v) {
 }
 
 BTree* notBTree(BTree* u) {
-    BTree* created = malloc(sizeof(BTree));
+    BTree* created = (BTree*) malloc(sizeof(BTree));
     created->left = u;
     created->right = NULL;
     created->alias = NULL;
@@ -154,7 +154,7 @@ BTree* notBTree(BTree* u) {
 }
 
 BTree* aliasBTree(char* alias) {
-    BTree* created = malloc(sizeof(BTree));
+    BTree* created = (BTree*) malloc(sizeof(BTree));
     created->left = NULL;
     created->right = NULL;
     created->alias = alias;
@@ -164,7 +164,7 @@ BTree* aliasBTree(char* alias) {
 }
 
 BTree* apBTree(int id) {
-    BTree* created = malloc(sizeof(BTree));
+    BTree* created = (BTree*) malloc(sizeof(BTree));
     created->left = NULL;
     created->right = NULL;
     created->alias = NULL;
@@ -174,7 +174,7 @@ BTree* apBTree(int id) {
 }
 
 BTree* accidBTree(NodeType type, int id, bool negated) {
-    BTree* tree = malloc(sizeof(BTree));
+    BTree* tree = (BTree*) malloc(sizeof(BTree));
     tree->left = NULL;
     tree->right = NULL;
     tree->alias = NULL;
@@ -183,7 +183,7 @@ BTree* accidBTree(NodeType type, int id, bool negated) {
 
     if (negated) {
         BTree* original = tree;
-        tree = malloc(sizeof(BTree));
+        tree = (BTree*) malloc(sizeof(BTree));
         tree->left = original;
         tree->right = NULL;
         tree->alias = NULL;
@@ -191,7 +191,7 @@ BTree* accidBTree(NodeType type, int id, bool negated) {
         tree->id = -1;
     }
 
-    BTree* created = malloc(sizeof(BTree));
+    BTree* created = (BTree*) malloc(sizeof(BTree));
     created->left = tree;
     created->right = NULL;
     created->alias = NULL;
