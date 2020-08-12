@@ -19,7 +19,7 @@ acacia: $(SRCS) $(HDRS)
 	$(CXX) $(CFLAGS) -o acacia $(SRCS) acacia.cpp
 
 acacia-dbg: $(SRCS) $(HDRS)
-	$(CXX) $(DBGFLAGS) -o acacia $(SRCS) acacia.cpp 
+	$(CXX) $(DBGFLAGS) -o acacia-dbg $(SRCS) acacia.cpp 
 
 all: acacia acacia-dbg
 
