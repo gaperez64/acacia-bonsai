@@ -2,7 +2,8 @@ CXX = clang++
 SRCS = hoatools/simplehoa.cpp hoatools/hoaparser.cpp hoatools/hoalexer.cpp
 HDRS = hoatools/simplehoa.hpp hoatools/hoaparser.hpp hoatools/hoalexer.hpp
 
-CFLAGS = -O3 -DNDEBUG
+GITVER = $(shell git describe --tags)
+CFLAGS = -O3 -DNDEBUG -DGITVER=\"$(GITVER)\"
 DBGFLAGS = -fsanitize=address -fno-omit-frame-pointer -g
 
 # The generated files for the parser have a sub Makefile

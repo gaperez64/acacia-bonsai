@@ -30,7 +30,12 @@
 using namespace std;
 
 void usage(char* progName) {
-    cout << progName << " [OPTIONS] [FILENAME]" << endl
+#ifdef GITVER
+    cout << progName << " version: " << GITVER << endl;
+#endif
+    cout << "Usage: " << progName
+         << " [OPTIONS] [FILENAME]" << endl
+         << "Synthesis solving for universal co-Buchi specifications"
          << endl;
 }
 
