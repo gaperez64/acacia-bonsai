@@ -1,17 +1,26 @@
-SRCS = src/veclist.c src/vecutil.c src/kdtree.c
-HDRS = src/veclist.h src/vecutil.h src/kdtree.h
+CXX = clang++
+SRCS = hoatools/simplehoa.cpp hoatools/hoaparser.cpp hoatools/hoalexer.cpp
+HDRS = hoatools/simplehoa.hpp hoatools/hoaparser.hpp hoatools/hoalexer.hpp
 
 CFLAGS = -O3 -DNDEBUG
+DBGFLAGS = -fsanitize=address -fno-omit-frame-pointer -g
 
-.PHONY: tests clean all
+# The generated files for the parser have a sub Makefile
+GEND = hoatools/hoalexer.hpp hoatools/hoalexer.cpp\
+       hoatools/hoaparser.hpp hoatools/hoaparser.cpp
 
-all: $(SRCS) $(HDRS)
-	gcc $(CFLAGS) src/main.c $(SRCS) -o acacia
+$(GEND):
+	cd hoatools && $(MAKE)
 
-tests: src/tests.c $(SRCS) $(HDRS)
-	gcc -g -fsanitize=address src/tests.c $(SRCS) -o tests
-	ASAN_OPTIONS=detect_leaks=1
-	./tests
+.PHONY: all clean
+
+acacia: $(SRCS) $(HDRS)
+	$(CXX) $(CFLAGS) -o acacia $(SRCS) acacia.c 
+
+acacia-dbg: $(SRCS) $(HDRS)
+	$(CXX) $(DBGFLAGS) -o acacia $(SRCS) acacia.c 
+
+all: acacia acacia-dbg
 
 clean:
 	rm tests
