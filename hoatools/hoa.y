@@ -24,6 +24,7 @@
 
 /* C declarations */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -95,6 +96,8 @@ static StringList* tempAccNameParameters = NULL;
 static StringList* tempProperties = NULL;
 static IntList* tempStart = NULL;
 static IntList* tempCntAPs = NULL;
+static StateList* tempStates = NULL;
+static AliasList* tempAliases = NULL;
 
 // list management functions
 static IntList* newIntNode(int val) {
@@ -144,28 +147,42 @@ static IntList* concatIntLists(IntList* list1, IntList* list2) {
     return list1;
 }
 
-static void deleteStrList(StringList* list, char** dest) {
+static char** simplifyStrList(StringList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     StringList* cur = list;
+    while (cur != NULL) (*cnt)++;
     // we copy them to a plain array while deleting nodes
+    cur = list;
     int i = 0;
+    char** dest = (char**) malloc(sizeof(char*) * (*cnt));
     while (cur != NULL) {
         StringList* next = cur->next;
+        assert(cur->str != NULL);
         dest[i++] = cur->str;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
-static int* deleteIntList(IntList* list, int* dest) {
+static int* simplifyIntList(IntList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     IntList* cur = list;
+    while (cur != NULL) (*cnt)++;
     // we copy them to a plain array while deleting nodes
+    cur = list;
     int i = 0;
+    int* dest = (int*) malloc(sizeof(int) * (*cnt));
     while (cur != NULL) {
         IntList* next = cur->next;
+        assert(cur->i != NULL);
         dest[i++] = cur->i;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
 // more list management functions
@@ -205,41 +222,70 @@ static AliasList* prependAliasNode(AliasList* node, char* alias, BTree* labelExp
     return newHead;
 }
 
-static void deleteTransList(TransList* list) {
+static Transition* simplifyTransList(TransList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     TransList* cur = list;
+    while (cur != NULL) (*cnt)++;
+    // we copy them to a plain array while deleting nodes
+    cur = list;
+    int i = 0;
+    Transition* dest = (Transition*) malloc(sizeof(Transition) * (*cnt));
     while (cur != NULL) {
         TransList* next = cur->next;
-        deleteBTree(cur->label);
-        if (cur->successors != NULL) free(cur->successors);
-        if (cur->accSig != NULL) free(cur->accSig);
+        dest[i].label = cur->label;
+        dest[i].successors = simplifyIntList(cur->successors,
+                                             &(dest[i].noSucc));
+        dest[i].accSig = simplifyIntList(cur->accSig,
+                                         &(dest[i].noAccSig));
+        i++;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
-static void deleteStateList(StateList* list) {
+static State* simplifyStateList(StateList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     StateList* cur = list;
+    while (cur != NULL) (*cnt)++;
+    // we copy them to a plain array while deleting nodes
+    cur = list;
+    int i = 0;
+    State* dest = (State*) malloc(sizeof(State) * (*cnt));
     while (cur != NULL) {
         StateList* next = cur->next;
-        if (cur->name != NULL)
-            free(cur->name);
-        deleteBTree(cur->label);
-        if (cur->accSig != NULL) free(cur->accSig);
-        deleteTransList(cur->transitions);
+        dest[i].name = cur->name;
+        dest[i].label = cur->label;
+        dest[i].accSig = simplifyIntList(cur->accSig, &(dest[i].noAccSig));
+        dest[i].transitions = simplifyTransList(cur->transitions,
+                                                &(dest[i].noTrans));
+        i++;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
-static void deleteAliases(AliasList* list) {
+static Alias* simplifyAliases(AliasList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     AliasList* cur = list;
+    while (cur != NULL) (*cnt)++;
+    // we copy them to a plain array while deleting nodes
+    cur = list;
+    int i = 0;
+    Alias* dest = (Alias*) malloc(sizeof(Alias) * (*cnt));
     while (cur != NULL) {
         AliasList* next = cur->next;
-        free(cur->alias);
-        deleteBTree(cur->labelExpr);
+        dest[i].alias = cur->alias;
+        dest[i].labelExpr = cur->labelExpr;
+        i++;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
 // tree management functions
@@ -437,9 +483,9 @@ header_item: STATES INT                        {
                                                  $$ = CNTAP;
                                                }
            | ALIAS ANAME label_expr            {
-                                                 loadedData->aliases =
+                                                 tempAliases =
                                                     prependAliasNode(
-                                                        loadedData->aliases,
+                                                        tempAliases,
                                                         $2, $3
                                                     );
                                                  $$ = ALIAS;
@@ -542,7 +588,7 @@ id_list: /* empty */        { $$ = NULL; }
        ;
 
 body: statespec_list
-    { loadedData->states = $1; }
+    { tempStates = $1; }
     ;
 
 statespec_list: /* empty */ { $$ = NULL; }
@@ -599,11 +645,16 @@ int parseHoa(FILE* input, HoaData* data) {
     }
 
     // clean up internal handy elements
-    loadedData->aps = deleteStrList(tempAps);
-    loadedData->accNameParameters = deleteStrList(tempAccNameParameters);
-    loadedData->properties = deleteStrList(tempProperties);
-    loadedData->start = deleteIntList(tempStart);
-    loadedData->cntAPs = deleteIntList(tempCntAps);
+    loadedData->aps = simplifyStrList(tempAps, &(loadedData->noAPs));
+    loadedData->accNameParameters = simplifyStrList(tempAccNameParameters,
+                                                    &(loadedData->noANPs));
+    loadedData->properties = simplifyStrList(tempProperties,
+                                             &(loadedData->noProps));
+    loadedData->start = simplifyIntList(tempStart, &(loadedData->noStart));
+    loadedData->cntAPs = simplifyIntList(tempCntAps, &(loadedData->noCntAPs));
+    loadedData->states = simplifyStateList(tempStates, &(loadedData->noStates));
+    loadedData->aliases = simplifyAliasList(tempAliases,
+                                            &(loadedData->noAliases));
     
     return ret | autoError | semanticError;
 }

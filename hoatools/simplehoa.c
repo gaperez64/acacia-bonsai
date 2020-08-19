@@ -31,14 +31,19 @@
 #include "simplehoa.hpp"
 
 void defaultsHoa(HoaData* data) {
-    data->noStates = -1;  // to say we have not gotten
-    data->noAPs = -1;     // a number for these parameters
+    data->noStates = -1; 
+    data->noAPs = -1;
+    data->noStart = -1;
+    data->noAliases = -1;
+    data->noANPs = -1;
+    data->noProps = -1;
+    data->noCntAPs = -1;
+    data->noAccSets = -1;
     data->start = NULL;
     data->version = NULL;
     data->aps = NULL;
     data->aliases = NULL;
-    // data->noAccSets  // these need no default as they will
-    // data->acc        // always be set by the parser
+    data->acc = NULL;
     data->accNameID = NULL;
     data->accNameParameters = NULL;
     data->toolName = NULL;
@@ -49,7 +54,7 @@ void defaultsHoa(HoaData* data) {
     data->cntAPs = NULL;
 }
 
-// No magic here: a DFS deleting in post-order
+// A DFS deleting in post-order
 static void deleteBTree(BTree* root) {
     if (root == NULL)
         return;
@@ -119,8 +124,6 @@ void deleteHoa(HoaData* data) {
     deleteAliases(data->aliases, data->noAliases);
     // State lists
     deleteStateList(data->states, data->noStates);
-    // free container
-    free(data);
 }
 
 // DFS printing in in/pre-order

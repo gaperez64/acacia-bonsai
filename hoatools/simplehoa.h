@@ -31,9 +31,8 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 
-/* All tree-like constructs will be BTrees, for binary tree. The
- * following enumerate structure gives us the types of nodes 
- * that could appear in such trees.
+/* All tree-like constructs will be BTrees. The following enum structure gives
+ * us the types of nodes that could appear in such trees.
  */
 typedef enum {
     NT_BOOL, NT_AND, NT_OR, NT_FIN,
@@ -104,7 +103,7 @@ int parseHoa(FILE*, HoaData*);
 
 // Defaults and destructor for centralized data structure
 void defaultsHoa(HoaData*);
-void deleteHoa(HoaData*);
+void resetHoa(HoaData*);
 
 // For debugging purposes, this prints all data in human-readable form
 void printHoa(const HoaData*);
