@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "simplehoa.hpp"
+#include "simplehoa.h"
 
 void defaultsHoa(HoaData* data) {
     data->noStates = -1; 
@@ -104,7 +104,7 @@ static void deleteAliases(Alias* list, int cnt) {
     free(list);
 }
 
-void deleteHoa(HoaData* data) {
+void resetHoa(HoaData* data) {
     // Strings
     if (data->version != NULL) free(data->version);
     if (data->accNameID != NULL) free(data->accNameID);
@@ -241,13 +241,13 @@ void printHoa(const HoaData* data) {
         printf(" **\n");
         if (data->states[i].label != NULL) {
             printf("label = ");
-            printBTree(it->label);
+            printBTree(data->states[i].label);
             printf("\n");
         }
         if (data->states[i].accSig != NULL) {
             printf("acc sets = ");
-            for (int j = 0; j < data->states[i].noAccSets; j++)
-                printf("%d, ", data->states[i].noAccSets[j]);
+            for (int j = 0; j < data->states[i].noAccSig; j++)
+                printf("%d, ", data->states[i].accSig[j]);
             printf("\n");
         }
         printf("transitions:\n");
@@ -257,11 +257,11 @@ void printHoa(const HoaData* data) {
                 printf("%d, ", data->states[i].transitions[j].successors[k]);
             if (data->states[i].transitions[j].label != NULL) {
                 printf(" with label = ");
-                printBTree(states[i].transitions[j].label);
+                printBTree(data->states[i].transitions[j].label);
             }
             if (data->states[i].transitions[j].accSig != NULL) {
                 printf(" acc sets = ");
-                for (int k= 0; k < data->states[i].transitions[j].noAccSig; k++)
+                for (int k = 0; k < data->states[i].transitions[j].noAccSig; k++)
                     printf("%d, ", data->states[i].transitions[j].accSig[k]);
             }
             printf("\n");

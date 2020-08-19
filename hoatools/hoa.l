@@ -25,10 +25,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>    /* Must go BEFORE hoaparser.hpp */
+#include <stdbool.h>    /* Must go BEFORE hoaparser.h */
 
-#include "simplehoa.hpp"  /* Must go BEFORE hoaparser.hpp */
-#include "hoaparser.hpp"
+#include "simplehoa.h"  /* Must go BEFORE hoaparser.h */
+#include "hoaparser.h"
 
 char* getString(char* s) {
     int newLen = strlen(s) - 1;

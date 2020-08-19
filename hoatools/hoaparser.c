@@ -163,12 +163,13 @@
 
 /* C declarations */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 
-#include "simplehoa.hpp"
-#include "hoalexer.hpp"
+#include "simplehoa.h"
+#include "hoalexer.h"
 
 // helper functions for the parser
 void yyerror(const char* str) {
@@ -234,6 +235,8 @@ static StringList* tempAccNameParameters = NULL;
 static StringList* tempProperties = NULL;
 static IntList* tempStart = NULL;
 static IntList* tempCntAPs = NULL;
+static StateList* tempStates = NULL;
+static AliasList* tempAliases = NULL;
 
 // list management functions
 static IntList* newIntNode(int val) {
@@ -283,28 +286,47 @@ static IntList* concatIntLists(IntList* list1, IntList* list2) {
     return list1;
 }
 
-static void deleteStrList(StringList* list, char** dest) {
+static char** simplifyStrList(StringList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     StringList* cur = list;
+    while (cur != NULL) {
+        (*cnt)++;
+        cur = cur->next;
+    }
     // we copy them to a plain array while deleting nodes
+    cur = list;
     int i = 0;
+    char** dest = (char**) malloc(sizeof(char*) * (*cnt));
     while (cur != NULL) {
         StringList* next = cur->next;
+        assert(cur->str != NULL);
         dest[i++] = cur->str;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
-static int* deleteIntList(IntList* list, int* dest) {
+static int* simplifyIntList(IntList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     IntList* cur = list;
+    while (cur != NULL) {
+        (*cnt)++;
+        cur = cur->next;
+    }
     // we copy them to a plain array while deleting nodes
+    cur = list;
     int i = 0;
+    int* dest = (int*) malloc(sizeof(int) * (*cnt));
     while (cur != NULL) {
         IntList* next = cur->next;
         dest[i++] = cur->i;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
 // more list management functions
@@ -344,41 +366,80 @@ static AliasList* prependAliasNode(AliasList* node, char* alias, BTree* labelExp
     return newHead;
 }
 
-static void deleteTransList(TransList* list) {
+static Transition* simplifyTransList(TransList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     TransList* cur = list;
     while (cur != NULL) {
+       (*cnt)++;
+       cur = cur->next;
+    }
+    // we copy them to a plain array while deleting nodes
+    cur = list;
+    int i = 0;
+    Transition* dest = (Transition*) malloc(sizeof(Transition) * (*cnt));
+    while (cur != NULL) {
         TransList* next = cur->next;
-        deleteBTree(cur->label);
-        if (cur->successors != NULL) free(cur->successors);
-        if (cur->accSig != NULL) free(cur->accSig);
+        dest[i].label = cur->label;
+        dest[i].successors = simplifyIntList(cur->successors,
+                                             &(dest[i].noSucc));
+        dest[i].accSig = simplifyIntList(cur->accSig,
+                                         &(dest[i].noAccSig));
+        i++;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
-static void deleteStateList(StateList* list) {
+static State* simplifyStateList(StateList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     StateList* cur = list;
     while (cur != NULL) {
+        (*cnt)++;
+        cur = cur->next;
+    }
+    // we copy them to a plain array while deleting nodes
+    cur = list;
+    int i = 0;
+    State* dest = (State*) malloc(sizeof(State) * (*cnt));
+    while (cur != NULL) {
         StateList* next = cur->next;
-        if (cur->name != NULL)
-            free(cur->name);
-        deleteBTree(cur->label);
-        if (cur->accSig != NULL) free(cur->accSig);
-        deleteTransList(cur->transitions);
+        dest[i].id = cur->id;
+        dest[i].name = cur->name;
+        dest[i].label = cur->label;
+        dest[i].accSig = simplifyIntList(cur->accSig, &(dest[i].noAccSig));
+        dest[i].transitions = simplifyTransList(cur->transitions,
+                                                &(dest[i].noTrans));
+        i++;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
-static void deleteAliases(AliasList* list) {
+static Alias* simplifyAliasList(AliasList* list, int* cnt) {
+    (*cnt) = 0;
+    if (list == NULL) return NULL;
     AliasList* cur = list;
     while (cur != NULL) {
+        (*cnt)++;
+        cur = cur->next;
+    }
+    // we copy them to a plain array while deleting nodes
+    cur = list;
+    int i = 0;
+    Alias* dest = (Alias*) malloc(sizeof(Alias) * (*cnt));
+    while (cur != NULL) {
         AliasList* next = cur->next;
-        free(cur->alias);
-        deleteBTree(cur->labelExpr);
+        dest[i].alias = cur->alias;
+        dest[i].labelExpr = cur->labelExpr;
+        i++;
         free(cur);
         cur = next;
     }
+    return dest;
 }
 
 // tree management functions
@@ -491,20 +552,20 @@ static BTree* accidBTree(NodeType type, int id, bool negated) {
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 359 "hoa.y"
+#line 420 "hoa.y"
 {
     int number;
     char* string;
     bool boolean;
     NodeType nodetype;
-    IntList* numlist;
-    StringList* strlist;
-    TransList* trlist;
-    StateList* statelist;
+    void* numlist;
+    void* strlist;
+    void* trlist;
+    void* statelist;
     BTree* tree;
 }
 /* Line 193 of yacc.c.  */
-#line 508 "hoaparser.c"
+#line 569 "hoaparser.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -529,7 +590,7 @@ typedef struct YYLTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 533 "hoaparser.c"
+#line 594 "hoaparser.c"
 
 #ifdef short
 # undef short
@@ -838,13 +899,13 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   388,   388,   396,   398,   407,   408,   418,   422,   430,
-     435,   439,   447,   452,   461,   462,   466,   474,   477,   478,
-     481,   482,   485,   486,   489,   490,   491,   492,   493,   496,
-     497,   500,   501,   504,   505,   506,   507,   510,   511,   514,
-     515,   521,   527,   530,   531,   532,   533,   534,   536,   537,
-     540,   541,   544,   548,   549,   555,   559,   560,   563,   564,
-     567,   568,   571,   572,   575,   576
+       0,   449,   449,   457,   459,   468,   469,   479,   483,   491,
+     496,   500,   508,   513,   522,   523,   527,   535,   538,   539,
+     542,   543,   546,   547,   550,   551,   552,   553,   554,   557,
+     558,   561,   562,   565,   566,   567,   568,   571,   572,   575,
+     576,   582,   588,   591,   592,   593,   594,   595,   597,   598,
+     601,   602,   605,   609,   610,   616,   620,   621,   624,   625,
+     628,   629,   632,   633,   636,   637
 };
 #endif
 
@@ -1842,7 +1903,7 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 389 "hoa.y"
+#line 450 "hoa.y"
     {
             if (!seenHeader[HOAHDR]) /* redundant because of the grammar */
                 yyerror("No HOA: header item");
@@ -1852,7 +1913,7 @@ yyreduce:
     break;
 
   case 4:
-#line 399 "hoa.y"
+#line 460 "hoa.y"
     {
                   loadedData->version = (yyvsp[(2) - (2)].string);
                   if (seenHeader[HOAHDR])
@@ -1863,12 +1924,12 @@ yyreduce:
     break;
 
   case 5:
-#line 407 "hoa.y"
+#line 468 "hoa.y"
     { /* no new item, nothing to check */ ;}
     break;
 
   case 6:
-#line 409 "hoa.y"
+#line 470 "hoa.y"
     {
                if ((yyvsp[(2) - (2)].number) <= 8) {
                    if (seenHeader[(yyvsp[(2) - (2)].number)])
@@ -1880,7 +1941,7 @@ yyreduce:
     break;
 
   case 7:
-#line 418 "hoa.y"
+#line 479 "hoa.y"
     {
                                                  loadedData->noStates = (yyvsp[(2) - (2)].number);
                                                  (yyval.number) = STATES;
@@ -1888,7 +1949,7 @@ yyreduce:
     break;
 
   case 8:
-#line 422 "hoa.y"
+#line 483 "hoa.y"
     {
                                                  tempStart =
                                                     concatIntLists(
@@ -1900,7 +1961,7 @@ yyreduce:
     break;
 
   case 9:
-#line 430 "hoa.y"
+#line 491 "hoa.y"
     {
                                                  loadedData->noAPs = (yyvsp[(2) - (3)].number);
                                                  tempAps = (yyvsp[(3) - (3)].strlist);
@@ -1909,7 +1970,7 @@ yyreduce:
     break;
 
   case 10:
-#line 435 "hoa.y"
+#line 496 "hoa.y"
     {
                                                  tempCntAPs = (yyvsp[(2) - (2)].numlist);
                                                  (yyval.number) = CNTAP;
@@ -1917,11 +1978,11 @@ yyreduce:
     break;
 
   case 11:
-#line 439 "hoa.y"
+#line 500 "hoa.y"
     {
-                                                 loadedData->aliases =
+                                                 tempAliases =
                                                     prependAliasNode(
-                                                        loadedData->aliases,
+                                                        tempAliases,
                                                         (yyvsp[(2) - (3)].string), (yyvsp[(3) - (3)].tree)
                                                     );
                                                  (yyval.number) = ALIAS;
@@ -1929,7 +1990,7 @@ yyreduce:
     break;
 
   case 12:
-#line 447 "hoa.y"
+#line 508 "hoa.y"
     { 
                                                  loadedData->noAccSets = (yyvsp[(2) - (3)].number);
                                                  loadedData->acc = (yyvsp[(3) - (3)].tree);
@@ -1938,7 +1999,7 @@ yyreduce:
     break;
 
   case 13:
-#line 452 "hoa.y"
+#line 513 "hoa.y"
     { 
                                                  loadedData->accNameID = (yyvsp[(2) - (3)].string);
                                                  tempAccNameParameters
@@ -1951,12 +2012,12 @@ yyreduce:
     break;
 
   case 14:
-#line 461 "hoa.y"
+#line 522 "hoa.y"
     { (yyval.number) = TOOL; ;}
     break;
 
   case 15:
-#line 462 "hoa.y"
+#line 523 "hoa.y"
     {
                                                  loadedData->name = (yyvsp[(2) - (2)].string);
                                                  (yyval.number) = NAME;
@@ -1964,7 +2025,7 @@ yyreduce:
     break;
 
   case 16:
-#line 466 "hoa.y"
+#line 527 "hoa.y"
     { 
                                                  tempProperties =
                                                      concatStrLists(
@@ -1976,122 +2037,122 @@ yyreduce:
     break;
 
   case 17:
-#line 474 "hoa.y"
+#line 535 "hoa.y"
     { free((yyvsp[(1) - (2)].string)); (yyval.number) = HEADERNAME; ;}
     break;
 
   case 18:
-#line 477 "hoa.y"
+#line 538 "hoa.y"
     { (yyval.numlist) = newIntNode((yyvsp[(1) - (1)].number)); ;}
     break;
 
   case 19:
-#line 478 "hoa.y"
+#line 539 "hoa.y"
     { (yyval.numlist) = prependIntNode((yyvsp[(3) - (3)].numlist), (yyvsp[(1) - (3)].number)); ;}
     break;
 
   case 20:
-#line 481 "hoa.y"
+#line 542 "hoa.y"
     { (yyval.tree) = (yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 21:
-#line 482 "hoa.y"
+#line 543 "hoa.y"
     { (yyval.tree) = orBTree((yyvsp[(1) - (3)].tree), (yyvsp[(3) - (3)].tree)); ;}
     break;
 
   case 22:
-#line 485 "hoa.y"
+#line 546 "hoa.y"
     { (yyval.tree) = (yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 23:
-#line 486 "hoa.y"
+#line 547 "hoa.y"
     { (yyval.tree) = andBTree((yyvsp[(1) - (3)].tree), (yyvsp[(3) - (3)].tree)); ;}
     break;
 
   case 24:
-#line 489 "hoa.y"
+#line 550 "hoa.y"
     { (yyval.tree) = boolBTree((yyvsp[(1) - (1)].boolean)); ;}
     break;
 
   case 25:
-#line 490 "hoa.y"
+#line 551 "hoa.y"
     { (yyval.tree) = apBTree((yyvsp[(1) - (1)].number)); ;}
     break;
 
   case 26:
-#line 491 "hoa.y"
+#line 552 "hoa.y"
     { (yyval.tree) = aliasBTree((yyvsp[(1) - (1)].string)); ;}
     break;
 
   case 27:
-#line 492 "hoa.y"
+#line 553 "hoa.y"
     { (yyval.tree) = notBTree((yyvsp[(2) - (2)].tree)); ;}
     break;
 
   case 28:
-#line 493 "hoa.y"
+#line 554 "hoa.y"
     { (yyval.tree) = (yyvsp[(2) - (3)].tree); ;}
     break;
 
   case 29:
-#line 496 "hoa.y"
+#line 557 "hoa.y"
     { (yyval.tree) = (yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 30:
-#line 497 "hoa.y"
+#line 558 "hoa.y"
     { (yyval.tree) = orBTree((yyvsp[(1) - (3)].tree), (yyvsp[(3) - (3)].tree)); ;}
     break;
 
   case 31:
-#line 500 "hoa.y"
+#line 561 "hoa.y"
     { (yyval.tree) = (yyvsp[(1) - (1)].tree); ;}
     break;
 
   case 32:
-#line 501 "hoa.y"
+#line 562 "hoa.y"
     { (yyval.tree) = andBTree((yyvsp[(1) - (3)].tree), (yyvsp[(3) - (3)].tree)); ;}
     break;
 
   case 33:
-#line 504 "hoa.y"
+#line 565 "hoa.y"
     { (yyval.tree) = accidBTree((yyvsp[(1) - (4)].nodetype), (yyvsp[(3) - (4)].number), false); ;}
     break;
 
   case 34:
-#line 505 "hoa.y"
+#line 566 "hoa.y"
     { (yyval.tree) = accidBTree((yyvsp[(1) - (5)].nodetype), (yyvsp[(4) - (5)].number), true); ;}
     break;
 
   case 35:
-#line 506 "hoa.y"
+#line 567 "hoa.y"
     { (yyval.tree) = (yyvsp[(2) - (3)].tree); ;}
     break;
 
   case 36:
-#line 507 "hoa.y"
+#line 568 "hoa.y"
     { (yyval.tree) = boolBTree((yyvsp[(1) - (1)].boolean)); ;}
     break;
 
   case 37:
-#line 510 "hoa.y"
+#line 571 "hoa.y"
     { (yyval.nodetype) = NT_FIN; ;}
     break;
 
   case 38:
-#line 511 "hoa.y"
+#line 572 "hoa.y"
     { (yyval.nodetype) = NT_INF; ;}
     break;
 
   case 39:
-#line 514 "hoa.y"
+#line 575 "hoa.y"
     { (yyval.strlist) = NULL; ;}
     break;
 
   case 40:
-#line 515 "hoa.y"
+#line 576 "hoa.y"
     { 
                                             (yyval.strlist) = (yyvsp[(1) - (2)].boolean) ? prependStrNode((yyvsp[(2) - (2)].strlist),
                                                                      strdup("True"))
@@ -2101,7 +2162,7 @@ yyreduce:
     break;
 
   case 41:
-#line 521 "hoa.y"
+#line 582 "hoa.y"
     {
                                             char buffer[66];
                                             sprintf(buffer, "%d", (yyvsp[(1) - (2)].number));
@@ -2111,110 +2172,110 @@ yyreduce:
     break;
 
   case 42:
-#line 527 "hoa.y"
+#line 588 "hoa.y"
     { (yyval.strlist) = prependStrNode((yyvsp[(2) - (2)].strlist), (yyvsp[(1) - (2)].string)); ;}
     break;
 
   case 47:
-#line 534 "hoa.y"
+#line 595 "hoa.y"
     { free((yyvsp[(2) - (2)].string)); ;}
     break;
 
   case 48:
-#line 536 "hoa.y"
+#line 597 "hoa.y"
     { (yyval.strlist) = NULL; ;}
     break;
 
   case 49:
-#line 537 "hoa.y"
+#line 598 "hoa.y"
     { (yyval.strlist) = prependStrNode((yyvsp[(2) - (2)].strlist), (yyvsp[(1) - (2)].string)); ;}
     break;
 
   case 50:
-#line 540 "hoa.y"
+#line 601 "hoa.y"
     { (yyval.strlist) = NULL; ;}
     break;
 
   case 51:
-#line 541 "hoa.y"
+#line 602 "hoa.y"
     { (yyval.strlist) = prependStrNode((yyvsp[(2) - (2)].strlist), (yyvsp[(1) - (2)].string)); ;}
     break;
 
   case 52:
-#line 545 "hoa.y"
-    { loadedData->states = (yyvsp[(1) - (1)].statelist); ;}
+#line 606 "hoa.y"
+    { tempStates = (yyvsp[(1) - (1)].statelist); ;}
     break;
 
   case 53:
-#line 548 "hoa.y"
+#line 609 "hoa.y"
     { (yyval.statelist) = NULL; ;}
     break;
 
   case 54:
-#line 550 "hoa.y"
+#line 611 "hoa.y"
     {
                 (yyval.statelist) = prependStateNode((yyvsp[(3) - (3)].statelist), (yyvsp[(1) - (3)].statelist), (yyvsp[(2) - (3)].trlist));
               ;}
     break;
 
   case 55:
-#line 556 "hoa.y"
+#line 617 "hoa.y"
     { (yyval.statelist) = newStateNode((yyvsp[(3) - (5)].number), (yyvsp[(4) - (5)].string), (yyvsp[(2) - (5)].tree), (yyvsp[(5) - (5)].numlist)); ;}
     break;
 
   case 56:
-#line 559 "hoa.y"
+#line 620 "hoa.y"
     { (yyval.tree) = NULL; ;}
     break;
 
   case 57:
-#line 560 "hoa.y"
+#line 621 "hoa.y"
     { (yyval.tree) = (yyvsp[(2) - (3)].tree); ;}
     break;
 
   case 58:
-#line 563 "hoa.y"
+#line 624 "hoa.y"
     { (yyval.string) = NULL; ;}
     break;
 
   case 59:
-#line 564 "hoa.y"
+#line 625 "hoa.y"
     { (yyval.string) = (yyvsp[(1) - (1)].string); ;}
     break;
 
   case 60:
-#line 567 "hoa.y"
+#line 628 "hoa.y"
     { (yyval.numlist) = NULL; ;}
     break;
 
   case 61:
-#line 568 "hoa.y"
+#line 629 "hoa.y"
     { (yyval.numlist) = (yyvsp[(2) - (3)].numlist); ;}
     break;
 
   case 62:
-#line 571 "hoa.y"
+#line 632 "hoa.y"
     { (yyval.numlist) = NULL; ;}
     break;
 
   case 63:
-#line 572 "hoa.y"
+#line 633 "hoa.y"
     { (yyval.numlist) = prependIntNode((yyvsp[(2) - (2)].numlist), (yyvsp[(1) - (2)].number)); ;}
     break;
 
   case 64:
-#line 575 "hoa.y"
+#line 636 "hoa.y"
     { (yyval.trlist) = NULL; ;}
     break;
 
   case 65:
-#line 577 "hoa.y"
+#line 638 "hoa.y"
     { (yyval.trlist) = prependTransNode((yyvsp[(4) - (4)].trlist), (yyvsp[(1) - (4)].tree), (yyvsp[(2) - (4)].numlist), (yyvsp[(3) - (4)].numlist)); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 2218 "hoaparser.c"
+#line 2279 "hoaparser.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2434,7 +2495,7 @@ yyreturn:
 }
 
 
-#line 580 "hoa.y"
+#line 641 "hoa.y"
 
 /* Additional C code */
   
@@ -2457,11 +2518,16 @@ int parseHoa(FILE* input, HoaData* data) {
     }
 
     // clean up internal handy elements
-    loadedData->aps = deleteStrList(tempAps);
-    loadedData->accNameParameters = deleteStrList(tempAccNameParameters);
-    loadedData->properties = deleteStrList(tempProperties);
-    loadedData->start = deleteIntList(tempStart);
-    loadedData->cntAPs = deleteIntList(tempCntAps);
+    loadedData->aps = simplifyStrList(tempAps, &(loadedData->noAPs));
+    loadedData->accNameParameters = simplifyStrList(tempAccNameParameters,
+                                                    &(loadedData->noANPs));
+    loadedData->properties = simplifyStrList(tempProperties,
+                                             &(loadedData->noProps));
+    loadedData->start = simplifyIntList(tempStart, &(loadedData->noStart));
+    loadedData->cntAPs = simplifyIntList(tempCntAPs, &(loadedData->noCntAPs));
+    loadedData->states = simplifyStateList(tempStates, &(loadedData->noStates));
+    loadedData->aliases = simplifyAliasList(tempAliases,
+                                            &(loadedData->noAliases));
     
     return ret | autoError | semanticError;
 }

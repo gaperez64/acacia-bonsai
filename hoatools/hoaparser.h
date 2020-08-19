@@ -110,16 +110,16 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 359 "hoa.y"
+#line 420 "hoa.y"
 {
     int number;
     char* string;
     bool boolean;
     NodeType nodetype;
-    IntList* numlist;
-    StringList* strlist;
-    TransList* trlist;
-    StateList* statelist;
+    void* numlist;
+    void* strlist;
+    void* trlist;
+    void* statelist;
     BTree* tree;
 }
 /* Line 1529 of yacc.c.  */

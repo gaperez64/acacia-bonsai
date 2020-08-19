@@ -29,8 +29,8 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "simplehoa.hpp"
-#include "hoalexer.hpp"
+#include "simplehoa.h"
+#include "hoalexer.h"
 
 // helper functions for the parser
 void yyerror(const char* str) {
@@ -151,7 +151,10 @@ static char** simplifyStrList(StringList* list, int* cnt) {
     (*cnt) = 0;
     if (list == NULL) return NULL;
     StringList* cur = list;
-    while (cur != NULL) (*cnt)++;
+    while (cur != NULL) {
+        (*cnt)++;
+        cur = cur->next;
+    }
     // we copy them to a plain array while deleting nodes
     cur = list;
     int i = 0;
@@ -170,14 +173,16 @@ static int* simplifyIntList(IntList* list, int* cnt) {
     (*cnt) = 0;
     if (list == NULL) return NULL;
     IntList* cur = list;
-    while (cur != NULL) (*cnt)++;
+    while (cur != NULL) {
+        (*cnt)++;
+        cur = cur->next;
+    }
     // we copy them to a plain array while deleting nodes
     cur = list;
     int i = 0;
     int* dest = (int*) malloc(sizeof(int) * (*cnt));
     while (cur != NULL) {
         IntList* next = cur->next;
-        assert(cur->i != NULL);
         dest[i++] = cur->i;
         free(cur);
         cur = next;
@@ -226,7 +231,10 @@ static Transition* simplifyTransList(TransList* list, int* cnt) {
     (*cnt) = 0;
     if (list == NULL) return NULL;
     TransList* cur = list;
-    while (cur != NULL) (*cnt)++;
+    while (cur != NULL) {
+       (*cnt)++;
+       cur = cur->next;
+    }
     // we copy them to a plain array while deleting nodes
     cur = list;
     int i = 0;
@@ -249,13 +257,17 @@ static State* simplifyStateList(StateList* list, int* cnt) {
     (*cnt) = 0;
     if (list == NULL) return NULL;
     StateList* cur = list;
-    while (cur != NULL) (*cnt)++;
+    while (cur != NULL) {
+        (*cnt)++;
+        cur = cur->next;
+    }
     // we copy them to a plain array while deleting nodes
     cur = list;
     int i = 0;
     State* dest = (State*) malloc(sizeof(State) * (*cnt));
     while (cur != NULL) {
         StateList* next = cur->next;
+        dest[i].id = cur->id;
         dest[i].name = cur->name;
         dest[i].label = cur->label;
         dest[i].accSig = simplifyIntList(cur->accSig, &(dest[i].noAccSig));
@@ -268,11 +280,14 @@ static State* simplifyStateList(StateList* list, int* cnt) {
     return dest;
 }
 
-static Alias* simplifyAliases(AliasList* list, int* cnt) {
+static Alias* simplifyAliasList(AliasList* list, int* cnt) {
     (*cnt) = 0;
     if (list == NULL) return NULL;
     AliasList* cur = list;
-    while (cur != NULL) (*cnt)++;
+    while (cur != NULL) {
+        (*cnt)++;
+        cur = cur->next;
+    }
     // we copy them to a plain array while deleting nodes
     cur = list;
     int i = 0;
@@ -407,10 +422,10 @@ static BTree* accidBTree(NodeType type, int id, bool negated) {
     char* string;
     bool boolean;
     NodeType nodetype;
-    IntList* numlist;
-    StringList* strlist;
-    TransList* trlist;
-    StateList* statelist;
+    void* numlist;
+    void* strlist;
+    void* trlist;
+    void* statelist;
     BTree* tree;
 }
 
@@ -651,7 +666,7 @@ int parseHoa(FILE* input, HoaData* data) {
     loadedData->properties = simplifyStrList(tempProperties,
                                              &(loadedData->noProps));
     loadedData->start = simplifyIntList(tempStart, &(loadedData->noStart));
-    loadedData->cntAPs = simplifyIntList(tempCntAps, &(loadedData->noCntAPs));
+    loadedData->cntAPs = simplifyIntList(tempCntAPs, &(loadedData->noCntAPs));
     loadedData->states = simplifyStateList(tempStates, &(loadedData->noStates));
     loadedData->aliases = simplifyAliasList(tempAliases,
                                             &(loadedData->noAliases));
