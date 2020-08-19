@@ -1,6 +1,6 @@
-#line 2 "hoalexer.cpp"
+#line 2 "hoalexer.c"
 
-#line 4 "hoalexer.cpp"
+#line 4 "hoalexer.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -616,7 +616,7 @@ char* getAlias(char* s) {
     return str;
 }
 
-#line 620 "hoalexer.cpp"
+#line 620 "hoalexer.c"
 
 #define INITIAL 0
 #define C_COMMENT 1
@@ -801,7 +801,7 @@ YY_DECL
     
 #line 52 "hoa.l"
 
-#line 805 "hoalexer.cpp"
+#line 805 "hoalexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -1077,7 +1077,7 @@ YY_RULE_SETUP
 #line 89 "hoa.l"
 ECHO;
 	YY_BREAK
-#line 1081 "hoalexer.cpp"
+#line 1081 "hoalexer.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(C_COMMENT):
 	yyterminate();

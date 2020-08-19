@@ -2,9 +2,9 @@
 #define yyHEADER_H 1
 #define yyIN_HEADER 1
 
-#line 6 "hoalexer.hpp"
+#line 6 "hoalexer.h"
 
-#line 8 "hoalexer.hpp"
+#line 8 "hoalexer.h"
 
 #define  YY_INT_ALIGNED short int
 
@@ -315,6 +315,6 @@ extern int yylex (void);
 #line 89 "hoa.l"
 
 
-#line 319 "hoalexer.hpp"
+#line 319 "hoalexer.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

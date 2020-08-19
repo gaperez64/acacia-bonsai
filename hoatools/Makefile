@@ -1,15 +1,15 @@
 # The parser is flex + bison based, everything is generated from
 # hoa.l and hoa.y, the tokenizer and parser specifications
-hoalexer.cpp: hoa.l hoaparser.cpp hoaparser.hpp simplehoa.cpp simplehoa.hpp
-	flex --outfile=hoalexer.cpp --header-file=hoalexer.hpp hoa.l
+hoalexer.c: hoa.l hoaparser.c hoaparser.h simplehoa.c simplehoa.h
+	flex --outfile=hoalexer.c --header-file=hoalexer.h hoa.l
 
-hoaparser.cpp: hoa.y simplehoa.cpp simplehoa.hpp
-	bison --defines --output=hoaparser.cpp hoa.y
+hoaparser.c: hoa.y simplehoa.c simplehoa.h
+	bison --defines --output=hoaparser.c hoa.y
 
 .PHONY: clean all
 
 clean:
-	rm -f hoalexer.hpp hoalexer.cpp
-	rm -f hoaparser.hpp hoaparser.cpp
+	rm -f hoalexer.h hoalexer.c
+	rm -f hoaparser.h hoaparser.c
 
-all: hoalexer.cpp hoaparser.cpp
+all: hoalexer.c hoaparser.c

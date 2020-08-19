@@ -110,7 +110,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 83 "hoa.y"
+#line 359 "hoa.y"
 {
     int number;
     char* string;
@@ -123,7 +123,7 @@ typedef union YYSTYPE
     BTree* tree;
 }
 /* Line 1529 of yacc.c.  */
-#line 127 "hoaparser.hpp"
+#line 127 "hoaparser.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

@@ -24,6 +24,10 @@
 #ifndef _SIMPLEHOA_H
 #define _SIMPLEHOA_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -45,60 +49,48 @@ typedef struct BTree {
     NodeType type;
 } BTree;
 
-/* Boiler-plate singly linked lists structures
- * for information in the HOA files
- *
- * TODO: String and Int lists should probably disappear
- * in favor of arrays (push lists into the parser!) and
- * the other lists should become just structures for
- * arrays
- */
-typedef struct StringList {
-    char* str;
-    struct StringList* next;
-} StringList;
-
-typedef struct IntList {
-    int i;
-    struct IntList* next;
-} IntList;
-
-typedef struct TransList {
+typedef struct Transition {
     BTree* label;
-    IntList* successors;
-    IntList* accSig;
-    struct TransList* next;
-} TransList;
+    int* successors;
+    int noSucc;
+    int* accSig;
+    int noAccSig;
+} Transition;
 
-typedef struct StateList {
+typedef struct State {
     int id;
     char* name;
     BTree* label;
-    IntList* accSig;
-    TransList* transitions;
-    struct StateList* next;
-} StateList;
+    int* accSig;
+    int noAccSig;
+    Transition* transitions;
+    int noTrans;
+} State;
 
-typedef struct AliasList {
+typedef struct Alias {
     char* alias;
     BTree* labelExpr;
-    struct AliasList* next;
-} AliasList;
+} Alias;
 
 /* The centralized data structure for all data collected
  * from the file is the following.
  */
 typedef struct HoaData {
-    int noStates;
-    StringList* aps;
-    StringList* accNameParameters;
-    StringList* properties;
-    StateList* states;
-    AliasList* aliases;
-    IntList* start;
-    IntList* cntAPs;
-    int noAccSets;
+    char** aps;
     int noAPs;
+    char** accNameParameters;
+    int noANPs;
+    char** properties;
+    int noProps;
+    State* states;
+    int noStates;
+    Alias* aliases;
+    int noAliases;
+    int* start;
+    int noStart;
+    int* cntAPs;
+    int noCntAPs;
+    int noAccSets;
     BTree* acc;
     char* version;
     char* accNameID;
@@ -114,32 +106,14 @@ int parseHoa(FILE*, HoaData*);
 void defaultsHoa(HoaData*);
 void deleteHoa(HoaData*);
 
-// list management functions
-// TODO: should this be inside the parser code and not in this header?
-StateList* newStateNode(int, char*, BTree*, IntList*);
-StateList* prependStateNode(StateList*, StateList*, TransList*);
-TransList* prependTransNode(TransList*, BTree*, IntList*, IntList*);
-IntList* newIntNode(int);
-IntList* prependIntNode(IntList*, int);
-StringList* prependStrNode(StringList*, char*);
-AliasList* prependAliasNode(AliasList*, char*, BTree*);
-StringList* concatStrLists(StringList*, StringList*);
-IntList* concatIntLists(IntList*, IntList*);
-
-// tree management functions
-// TODO: same here?
-BTree* boolBTree(bool);
-BTree* andBTree(BTree*, BTree*);
-BTree* orBTree(BTree*, BTree*);
-BTree* notBTree(BTree*);
-BTree* aliasBTree(char*);
-BTree* accidBTree(NodeType, int, bool);
-BTree* apBTree(int);
-
 // For debugging purposes, this prints all data in human-readable form
 void printHoa(const HoaData*);
 
 // To check if the parsed automaton is a parity one that is good-for-games
 int isParityGFG(const HoaData*, bool*, short*);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif  // defining _SIMPLEHOA_H

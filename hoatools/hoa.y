@@ -31,8 +31,7 @@
 #include "simplehoa.hpp"
 #include "hoalexer.hpp"
 
-HoaData* loadedData;
-
+// helper functions for the parser
 void yyerror(const char* str) {
     fprintf(stderr, "Parsing error: %s [line %d]\n", str, yylineno);
 }
@@ -52,6 +51,283 @@ void hdrItemError(const char* str) {
             "Automaton error: more than one %s header item [line %d]\n",
             str, yylineno - 1);  // FIXME: This is shifted for some reason
     autoError = true;
+}
+
+// where we will save everything parsed
+static HoaData* loadedData;
+
+// temporary internal structures for easy insertion, essentially
+// singly linked lists
+typedef struct StringList {
+    char* str;
+    struct StringList* next;
+} StringList;
+
+typedef struct IntList {
+    int i;
+    struct IntList* next;
+} IntList;
+
+typedef struct TransList {
+    BTree* label;
+    IntList* successors;
+    IntList* accSig;
+    struct TransList* next;
+} TransList;
+
+typedef struct StateList {
+    int id;
+    char* name;
+    BTree* label;
+    IntList* accSig;
+    TransList* transitions;
+    struct StateList* next;
+} StateList;
+
+typedef struct AliasList {
+    char* alias;
+    BTree* labelExpr;
+    struct AliasList* next;
+} AliasList;
+
+static StringList* tempAps = NULL;
+static StringList* tempAccNameParameters = NULL;
+static StringList* tempProperties = NULL;
+static IntList* tempStart = NULL;
+static IntList* tempCntAPs = NULL;
+
+// list management functions
+static IntList* newIntNode(int val) {
+    IntList* list = (IntList*) malloc(sizeof(IntList));
+    list->i = val;
+    list->next = NULL;
+    return list;
+}
+
+static IntList* prependIntNode(IntList* node, int val) {
+    IntList* newHead = (IntList*) malloc(sizeof(IntList));
+    newHead->i = val;
+    newHead->next = node;
+    return newHead;
+}
+
+static StringList* prependStrNode(StringList* node, char* str) {
+    StringList* newHead = (StringList*) malloc(sizeof(StringList));
+    newHead->str = str;
+    newHead->next = node;
+    return newHead;
+}
+
+static StringList* concatStrLists(StringList* list1, StringList* list2) {
+    if (list2 == NULL)
+        return list1;
+    if (list1 == NULL)
+        return list2;
+
+    StringList* cur = list1;
+    while (cur->next != NULL)
+        cur = cur->next;
+    cur->next = list2;
+    return list1;
+}
+
+static IntList* concatIntLists(IntList* list1, IntList* list2) {
+    if (list2 == NULL)
+        return list1;
+    if (list1 == NULL)
+        return list2;
+
+    IntList* cur = list1;
+    while (cur->next != NULL)
+        cur = cur->next;
+    cur->next = list2;
+    return list1;
+}
+
+static void deleteStrList(StringList* list, char** dest) {
+    StringList* cur = list;
+    // we copy them to a plain array while deleting nodes
+    int i = 0;
+    while (cur != NULL) {
+        StringList* next = cur->next;
+        dest[i++] = cur->str;
+        free(cur);
+        cur = next;
+    }
+}
+
+static int* deleteIntList(IntList* list, int* dest) {
+    IntList* cur = list;
+    // we copy them to a plain array while deleting nodes
+    int i = 0;
+    while (cur != NULL) {
+        IntList* next = cur->next;
+        dest[i++] = cur->i;
+        free(cur);
+        cur = next;
+    }
+}
+
+// more list management functions
+static StateList* newStateNode(int id, char* name, BTree* label, IntList* accSig) {
+    StateList* list = (StateList*) malloc(sizeof(StateList));
+    list->id = id;
+    list->name = name;
+    list->label = label;
+    list->accSig = accSig;
+    list->transitions = NULL;
+    return list;
+}
+
+static StateList* prependStateNode(StateList* node, StateList* newNode,
+                            TransList* transitions) {
+    newNode->next = node;
+    newNode->transitions = transitions;
+    return newNode;
+}
+
+static TransList* prependTransNode(TransList* node , BTree* label,
+                            IntList* successors, IntList* accSig) {
+    TransList* newHead = (TransList*) malloc(sizeof(TransList));
+    newHead->label = label;
+    newHead->successors = successors;
+    newHead->accSig = accSig;
+    newHead->next = node;
+    return newHead;
+}
+
+static AliasList* prependAliasNode(AliasList* node, char* alias, BTree* labelExpr) {
+    AliasList* newHead = (AliasList*) malloc(sizeof(AliasList));
+    newHead->alias = alias;
+    newHead->next = node;
+    newHead->labelExpr = labelExpr;
+    newHead->next = node;
+    return newHead;
+}
+
+static void deleteTransList(TransList* list) {
+    TransList* cur = list;
+    while (cur != NULL) {
+        TransList* next = cur->next;
+        deleteBTree(cur->label);
+        if (cur->successors != NULL) free(cur->successors);
+        if (cur->accSig != NULL) free(cur->accSig);
+        free(cur);
+        cur = next;
+    }
+}
+
+static void deleteStateList(StateList* list) {
+    StateList* cur = list;
+    while (cur != NULL) {
+        StateList* next = cur->next;
+        if (cur->name != NULL)
+            free(cur->name);
+        deleteBTree(cur->label);
+        if (cur->accSig != NULL) free(cur->accSig);
+        deleteTransList(cur->transitions);
+        free(cur);
+        cur = next;
+    }
+}
+
+static void deleteAliases(AliasList* list) {
+    AliasList* cur = list;
+    while (cur != NULL) {
+        AliasList* next = cur->next;
+        free(cur->alias);
+        deleteBTree(cur->labelExpr);
+        free(cur);
+        cur = next;
+    }
+}
+
+// tree management functions
+static BTree* boolBTree(bool b) {
+    BTree* created = (BTree*) malloc(sizeof(BTree));
+    created->left = NULL;
+    created->right = NULL;
+    created->alias = NULL;
+    created->type = NT_BOOL;
+    created->id = b ? 1 : 0;
+    return created;
+}
+
+static BTree* andBTree(BTree* u, BTree* v) {
+    BTree* created = (BTree*) malloc(sizeof(BTree));
+    created->left = u;
+    created->right = v;
+    created->alias = NULL;
+    created->type = NT_AND;
+    created->id = -1;
+    return created;
+}
+
+static BTree* orBTree(BTree* u, BTree* v) {
+    BTree* created = (BTree*) malloc(sizeof(BTree));
+    created->left = u;
+    created->right = v;
+    created->alias = NULL;
+    created->type = NT_OR;
+    created->id = -1;
+    return created;
+}
+
+static BTree* notBTree(BTree* u) {
+    BTree* created = (BTree*) malloc(sizeof(BTree));
+    created->left = u;
+    created->right = NULL;
+    created->alias = NULL;
+    created->type = NT_NOT;
+    created->id = -1;
+    return created;
+}
+
+static BTree* aliasBTree(char* alias) {
+    BTree* created = (BTree*) malloc(sizeof(BTree));
+    created->left = NULL;
+    created->right = NULL;
+    created->alias = alias;
+    created->type = NT_ALIAS;
+    created->id = -1;
+    return created;
+}
+
+static BTree* apBTree(int id) {
+    BTree* created = (BTree*) malloc(sizeof(BTree));
+    created->left = NULL;
+    created->right = NULL;
+    created->alias = NULL;
+    created->type = NT_AP;
+    created->id = id;
+    return created;
+}
+
+static BTree* accidBTree(NodeType type, int id, bool negated) {
+    BTree* tree = (BTree*) malloc(sizeof(BTree));
+    tree->left = NULL;
+    tree->right = NULL;
+    tree->alias = NULL;
+    tree->type = NT_SET;
+    tree->id = id;
+
+    if (negated) {
+        BTree* original = tree;
+        tree = (BTree*) malloc(sizeof(BTree));
+        tree->left = original;
+        tree->right = NULL;
+        tree->alias = NULL;
+        tree->type = NT_NOT;
+        tree->id = -1;
+    }
+
+    BTree* created = (BTree*) malloc(sizeof(BTree));
+    created->left = tree;
+    created->right = NULL;
+    created->alias = NULL;
+    created->type = type;
+    created->id = -1;
+    return created;
 }
 
 %}
@@ -144,20 +420,20 @@ header_item: STATES INT                        {
                                                  $$ = STATES;
                                                }
            | START state_conj                  {
-                                                 loadedData->start =
+                                                 tempStart =
                                                     concatIntLists(
-                                                        loadedData->start,
+                                                        tempStart,
                                                         $2
                                                     );
                                                  $$ = START;
                                                }
            | AP INT string_list                {
                                                  loadedData->noAPs = $2;
-                                                 loadedData->aps = $3;
+                                                 tempAps = $3;
                                                  $$ = AP;
                                                }
            | CNTAP int_list                    {
-                                                 loadedData->cntAPs = $2;
+                                                 tempCntAPs = $2;
                                                  $$ = CNTAP;
                                                }
            | ALIAS ANAME label_expr            {
@@ -175,10 +451,9 @@ header_item: STATES INT                        {
                                                }
            | ACCNAME IDENTIFIER boolintid_list { 
                                                  loadedData->accNameID = $2;
-                                                 loadedData->accNameParameters
+                                                 tempAccNameParameters
                                                     = concatStrLists(
-                                                        loadedData->
-                                                            accNameParameters,
+                                                        tempAccNameParameters,
                                                         $3
                                                     );
                                                  $$ = ACCNAME;
@@ -189,9 +464,9 @@ header_item: STATES INT                        {
                                                  $$ = NAME;
                                                }
            | PROPERTIES id_list                { 
-                                                 loadedData->properties =
+                                                 tempProperties =
                                                      concatStrLists(
-                                                         loadedData->properties,
+                                                         tempProperties,
                                                          $2
                                                      );
                                                  $$ = PROPERTIES;
@@ -309,11 +584,12 @@ int parseHoa(FILE* input, HoaData* data) {
     loadedData = data;
     yyin = input;
     int ret = yyparse();
+
     // Last (semantic) checks:
     bool semanticError = false;
     // let us check that the number of APs makes sense
     int noAPs = 0;
-    for (StringList* it = loadedData->aps; it != NULL; it = it->next)
+    for (StringList* it = tempAps; it != NULL; it = it->next)
         noAPs++;
     if (noAPs != loadedData->noAPs) {
         fprintf(stderr,
@@ -321,5 +597,13 @@ int parseHoa(FILE* input, HoaData* data) {
                 "do not match (%d vs %d)\n", noAPs, loadedData->noAPs);
         semanticError = true;
     }
+
+    // clean up internal handy elements
+    loadedData->aps = deleteStrList(tempAps);
+    loadedData->accNameParameters = deleteStrList(tempAccNameParameters);
+    loadedData->properties = deleteStrList(tempProperties);
+    loadedData->start = deleteIntList(tempStart);
+    loadedData->cntAPs = deleteIntList(tempCntAps);
+    
     return ret | autoError | semanticError;
 }
