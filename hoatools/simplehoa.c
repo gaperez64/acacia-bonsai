@@ -271,6 +271,44 @@ void printHoa(const HoaData* data) {
     printf("== END HOA FILE DATA ==\n");
 }
 
+static bool checkAccNode(BTree* acc, bool good, int priority) {
+    assert(acc != NULL);
+    BTree* node = acc;
+
+    // work with node only now
+    if (!good && node->type != NT_FIN) return false;
+    if (good && node->type != NT_INF) return false;
+    assert(node->left != NULL);
+    node = node->left;
+    if (node->type != NT_SET) return false;
+    if (node->id != priority) return false;
+    return true;
+}
+
+static bool checkAccName(BTree* acc, int lastPriority, bool isMaxParity,
+                         short resGoodPriority, int curPriority) {
+    assert(acc != NULL);
+    // is the current priority good?
+    bool good = curPriority % 2 == resGoodPriority;
+
+    // base case
+    if ((isMaxParity && curPriority == 0)
+        || (!isMaxParity && curPriority == lastPriority - 1))
+        return checkAccNode(acc, good, curPriority);
+
+    // otherwise we need to call the function recursively
+    if (good && acc->type != NT_OR) return false;
+    if (!good && acc->type != NT_AND) return false;
+    bool checkLeft = checkAccNode(acc->left, good, curPriority);
+    int nextPriority = isMaxParity ? curPriority - 1 : curPriority + 1;
+    bool checkRight = checkAccName(acc->right, lastPriority, isMaxParity,
+                                   resGoodPriority, nextPriority);
+    if (good)
+        return checkLeft || checkRight;
+    else
+        return checkLeft && checkRight;
+}
+
 int isParityGFG(const HoaData* data, bool* isMaxParity, short* resGoodPriority) {
     // (1) the automaton should be a parity one
     if (strcmp(data->accNameID, "parity") != 0) {
@@ -305,6 +343,11 @@ int isParityGFG(const HoaData* data, bool* isMaxParity, short* resGoodPriority) 
     if (!foundRes) {
         fprintf(stderr, "Expected \"even\" or \"odd\" in the acceptance name\n");
         return 102;
+    }
+    if (!checkAccName(data->acc, data->noAccSets, *isMaxParity, *resGoodPriority,
+                      (*isMaxParity) ? data->noAccSets - 1 : 0)) {
+        fprintf(stderr, "Mismatch with canonical acceptance spec. for parity\n");
+        return 103;
     }
     // (2) the automaton should be deterministic, complete, colored
     bool det = false;
