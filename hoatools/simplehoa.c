@@ -309,77 +309,19 @@ static bool checkAccName(BTree* acc, int lastPriority, bool isMaxParity,
         return checkLeft && checkRight;
 }
 
-int isParityGFG(const HoaData* data, bool* isMaxParity, short* resGoodPriority) {
-    // (1) the automaton should be a parity one
-    if (strcmp(data->accNameID, "parity") != 0) {
-        fprintf(stderr, "Expected \"parity...\" automaton, found \"%s\" "
+int isNBA(const HoaData* data) {
+    // (1) the automaton should be a Buchi one
+    if (strcmp(data->accNameID, "Buchi") != 0) {
+        fprintf(stderr, "Expected \"Buchi...\" automaton, found \"%s\" "
                         "as automaton type\n", data->accNameID);
         return 100;
     }
-    bool foundOrd = false;
-    bool foundRes = false;
-    for (int i = 0; i < data->noANPs; i++) {
-        if (strcmp(data->accNameParameters[i], "max") == 0) {
-            (*isMaxParity) = true;
-            foundOrd = true;
-        }
-        if (strcmp(data->accNameParameters[i], "min") == 0) {
-            (*isMaxParity) = false;
-            foundOrd = true;
-        }
-        if (strcmp(data->accNameParameters[i], "even") == 0) {
-            (*resGoodPriority) = 0;
-            foundRes = true;
-        }
-        if (strcmp(data->accNameParameters[i], "odd") == 0) {
-            (*resGoodPriority) = 1;
-            foundRes = true;
-        }
-    }
-    if (!foundOrd) {
-        fprintf(stderr, "Expected \"max\" or \"min\" in the acceptance name\n");
-        return 101;
-    }
-    if (!foundRes) {
-        fprintf(stderr, "Expected \"even\" or \"odd\" in the acceptance name\n");
-        return 102;
-    }
-    if (!checkAccName(data->acc, data->noAccSets, *isMaxParity, *resGoodPriority,
-                      (*isMaxParity) ? data->noAccSets - 1 : 0)) {
-        fprintf(stderr, "Mismatch with canonical acceptance spec. for parity\n");
+    // we recycle the parity-acceptance checking function to check if the
+    // Buchi acceptance specification is correct: last priority = 1,
+    // isMaxParity = false, resGoodPriority = 0, and we start from 0
+    if (!checkAccName(data->acc, 1, false, 0, 0)) {
+        fprintf(stderr, "Mismatch with canonical acceptance spec. for Buchi\n");
         return 103;
-    }
-    // (2) the automaton should be deterministic, complete, colored
-    bool det = false;
-    bool complete = false;
-    bool colored = false;
-    for (int i = 0; i < data->noProps; i++) {
-        if (strcmp(data->properties[i], "deterministic") == 0)
-            det = true;
-        if (strcmp(data->properties[i], "complete") == 0)
-            complete = true;
-        if (strcmp(data->properties[i], "colored") == 0)
-            colored = true;
-    }
-    if (!det) {
-        fprintf(stderr, "Expected a deterministic automaton, "
-                        "did not find \"deterministic\" in the properties\n");
-        return 200;
-    }
-    if (!complete) {
-        fprintf(stderr, "Expected a complete automaton, "
-                        "did not find \"complete\" in the properties\n");
-        return 201;
-    }
-    if (!colored) {
-        fprintf(stderr, "Expected one acceptance set per transition, "
-                        "did not find \"colored\" in the properties\n");
-        return 202;
-    }
-    // (3) the automaton should have a unique start state
-    if (data->noStart != 1) {
-        fprintf(stderr, "Expected a unique start state\n");
-        return 300;
     }
     return 0;
 }
