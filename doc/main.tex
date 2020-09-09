@@ -1,7 +1,6 @@
 \documentclass[runningheads,a4paper,draft]{llncs}
 
-\usepackage{amsmath}
-\usepackage{amssymb}
+\usepackage{amssymb,amstext}
 \usepackage{xspace}
 \usepackage{todonotes}
 
@@ -10,7 +9,6 @@
 \let\epsilon\varepsilon
 \let\phi\varphi
 \let\emptyset\varnothing
-\let\rho\varrho
 \makeatother
 
 % Local macros
@@ -20,17 +18,16 @@
 \newcommand{\ie}{i.e.\xspace}
 \newcommand{\eve}{Eve\xspace}
 \newcommand{\adam}{Adam\xspace}
+\newcommand{\calF}{\mathcal{F}}
 \newcommand{\calN}{\mathcal{N}}
 \newcommand{\calM}{\mathcal{M}}
 \newcommand{\calS}{\mathcal{S}}
 \newcommand{\calD}{\mathcal{D}}
 \newcommand{\calG}{\mathcal{G}}
-\newcommand{\lang}[1]{\mathcal{L}_{#1}}
+\newcommand{\lang}[1]{\mathcal{L}({#1})}
 \newcommand{\out}[2]{\pi_{#1#2}}
 
 \begin{document}
-
-\frontmatter
 
 \title{Acacia Bonsai: A Minimal Implementation of Antichain-Based Algorithms
 for LTL Synthesis}
@@ -43,6 +40,7 @@ Guillermo A. P\'erez\inst{2}\orcidID{0000-0002-1200-4952}}
 University of Antwerp, Belgium\\
 \email{guillermoalberto.perez@uantwerpen.be}
 }
+\authorrunning{G. A. P\'erez \and M. Cadilhac}
 
 \maketitle
 
@@ -56,6 +54,7 @@ University of Antwerp, Belgium\\
   automaton, then \adam wins, otherwise \eve wins. To efficiently compute a
   winning strategy for one of the players, we use antichains as a symbolic
   representation of closed sets of configurations of the game.
+  \keywords{Reactive synthesis \and LTL \and Antichains \and Data structures}
 \end{abstract}
 
 \section{Definitions}
@@ -80,18 +79,18 @@ A run of $\calN$ on a word $\alpha \in A^\omega$ is an infinite sequence $\rho =
 q_0 \alpha(1) q_1 \alpha(2) \dots \in (Q\cdot A)^\omega$ such that
 $(q_i,\alpha(i+1),q_{i+1}) \in \Delta$ for all $i \in \mathbb{N}$. The automaton
 is said to be \emph{deterministic} if for all $p \in Q$ and all $a \in A$ we
-have that $(p,a,q_1), (p,a,q_2) \in \Delta \implies q_1 = q_2$.
+have that $(p,a,q_1), (p,a,q_2) \in \Delta$ implies $q_1 = q_2$.
 
 Automata are paired with a condition which determines which runs are
 \emph{accepting}. In this work we will consider two conditions.
 \begin{itemize}
   \item The \emph{B\"uchi} condition is defined with respect to a set of
     \emph{B\"uchi} or accepting states $B \subseteq Q$. A run $\rho = q_0
-    a_0 q_1 a_1 \dots$ is accepting for this condition if and only if for
+    a_1 q_1 a_1 \dots$ is accepting for this condition if and only if for
     all $i \in \mathbb{N}$ there exists $j \ge i$ such that $q_j \in B$.
     That is, the run visits accepting states infinitely often.
   \item The \emph{parity} condition is defined with respect to a
-    \emph{priority function} $p : Q \to \mathbb{N}$. A run $\rho = q_0 a_0
+    \emph{priority function} $p : Q \to \mathbb{N}$. A run $\rho = q_0 a_1
     q_1 a_1 \dots$ is accepting for the parity condition if and only if the
     value $\liminf_{i \to \infty} p(q_i)$ is even.
 \end{itemize}
@@ -102,12 +101,12 @@ the automaton $\calN$, that is, the set of words that $\calN$ accepts.
 \begin{proposition}[From~\cite{safra92,piterman07}]
   For all B\"uchi automata $\calN$ there exists a deterministic parity
   automaton $\calD$ of exponential size with respect to the size of $\calN$
-  and such that $\lang{\calN} = \lang{\calD}$.
+  such that $\lang{\calN} = \lang{\calD}$.
 \end{proposition}
 
 In this work we will consider B\"uchi automata $\calN$ whose
 language represent sets of ``bad'' words. Thus, rather than being interested in
-the set $\lang{\calN}$, we will sometimes focus on its complement. It will
+the set $\lang{\calN}$, we will mostly focus on its complement. It will
 therefore be convenient to view $\calN$ as a \emph{universal
 co-B\"uchi automaton}. That is to say, an automaton that accepts a word $\alpha$
 if all of its runs on $\alpha$ are \textbf{not} accepting with respect to the
@@ -199,11 +198,11 @@ stronger version of its acceptance condition which asks that visits to
 accepting states are bounded.
 
 \begin{definition}[Universal $K$-co-B\"uchi automata]
-    A universal $K$-co-B\"uchi (UKcB) automaton is an automaton $\calN =
-    (Q,q_0,A,\Delta,B)$ that accepts a word $\alpha$ if and only if all of its
-    runs $\rho = q_0 \alpha(1) q_1 \alpha(1) \dots$
-    on $\alpha$ visit at most $K$ accepting states, \ie~$|\{i \in \mathbb{N} \st
-    q_i \in B\}| \le K$.
+  A universal $K$-co-B\"uchi (UKcB) automaton is an automaton $\calN =
+  (Q,q_0,A,\Delta,B)$ that accepts a word $\alpha$ if and only if all of its
+  runs $\rho = q_0 \alpha(1) q_1 \alpha(2) \dots$
+  on $\alpha$ visit at most $K$ accepting states, \ie~$|\{i \in \mathbb{N} \st
+  q_i \in B\}| \le K$.
 \end{definition}
 
 Our intention is to give an incremental algorithm to solve games played on UcB
@@ -211,51 +210,48 @@ automata by solving the game played on the same automaton with UKcB semantics
 for increasing values of $K$. As a first step, we will construct a finite
 ``safety automaton'' which keeps track of the maximal accepting-state visit
 count per reachable state instead of doing so for each run.
-\begin{definition}[Universal safety automaton]\todo{G: from here onwards I
-  have to adapt}
-    For a given limit-deterministic UcB automaton $\calN = (Q,q_0,A,\Delta,B)$
-    with deterministic state-set $Q_d \subseteq Q$ and a bound $K \in
-    \mathbb{N}$, let $\calS^K_\calN$ be the automaton $(Q',q'_0,A,\Delta',F)$ with
-    components defined as follows.
-    \begin{itemize}
-        \item $Q' := \pow(Q) \times \{f : Q_d \to \{0,\dots,K\} \cup
-            \{\bot,\top\}\}$,
-        \item $q'_0 := \langle \{q_0\}, \{ q \mapsto \bot \st q \in Q_d\}
-            \rangle$,\todo{I am assuming it is not deterministic, hence $q_0
-            \not\in Q_d$}
-        \item $F := \{ \langle s, f \rangle \in Q' \st f(q) = \top \text{ for
-            some } q \in Q_d \}$,
-        \item $\Delta'$ consists of all triples 
-            $(\langle s, f \rangle, a, \langle t, g \rangle)$ such that
-            \begin{itemize}
-                \item $\forall q \in t, \exists p \in Q : (p,a,q) \in \Delta$ and
-                \item $\forall q \in Q_d :
-                        g(q) = \max_{(p,a,q) \in \Delta}
-                        f(p) + \indicator{F}{q}$,
-                    where $\bot < n < \top$, $\bot + n = \bot$, and $\top + n =
-                    \top$ for all $n \in \mathbb{N}$.
-            \end{itemize}
-    \end{itemize}
-    The automaton $\calS_\calN$ accepts a word $\alpha$ if and only if it has no
-    run $q_0 \alpha(1) q_1 \alpha(2) \dots$ on $\alpha$ which visits a
-    state from $F$, \ie~$\forall i \in \mathbb{N} : q_i \not\in F$.
+\begin{definition}[Universal safety automaton]
+  For a given UcB automaton $\calN = (Q,q_0,A,\Delta,B)$ and $K \in
+  \mathbb{N}$, let $\calS^K_\calN$ be the automaton $(\calF,f_0,A,T,U)$
+  with components defined as follows.
+  \begin{itemize}
+    \item $\calF := \{f : Q \to \{0,\dots,K\} \cup
+      \{\bot,\top\}\}$,
+    \item $f_0 \in \calF$ is such that $f_0(q_0) = 0$ and $f_0(q) =
+      \bot$ for all $q \in Q$ such that $q \neq q_0$,
+    \item $U := \{ f \in \calF \st f(q) = \top \text{ for
+      some } q \in Q \}$,
+    \item $T$ consists of all triples $(f,a,g)$ such that for all $q \in Q$ we
+      have
+      \[
+        g(q) = \max_{(p,a,q) \in \Delta}
+        f(p) + \indicator{U}{q}
+      \]
+      where $\bot < n < \top$, $\bot + n = \bot$, and $\top + n =
+      \top$ for all $n \in \mathbb{N}$.
+  \end{itemize}
+  The automaton $\calS_\calN$ accepts a word $\alpha$ if and only if it has no
+  run $q_0 \alpha(1) q_1 \alpha(2) \dots$ on $\alpha$ which visits a
+  state from $U$, \ie~$\forall i \in \mathbb{N} : q_i \not\in U$ holds for all
+  runs.
 \end{definition}
+
+\todo[inline]{continue from here}
 
 The following property of universal safety automata is immediate from the
 definition.
-\begin{lemma}
-    For all $\alpha \in A^\omega$ and all $K \in \mathbb{N}$, there exists a
-    run $\rho$ on $\alpha$ in $\calN$ which visits more than $K$ B\"uchi states
-    if and only if for all $\ell \le K$ there exists a run $\rho'$ on $\alpha$ in
-    $\calS^\ell_\calN$ that visits a final state.
+\begin{lemma}\label{lem:safe-approx}
+  For all $\alpha \in A^\omega$ and all $K,\ell \in \mathbb{N}$ with $\ell
+  \leq K$, if there exists a run $\rho$ of $\calN$ on $\alpha$ which visits
+  more than $K$ B\"uchi states then $\alpha \not\in \lang{\calS^\ell_\calN}$.
 \end{lemma}
 
 The above lemma allows us to argue that \eve winning a universal safety game
-implies she wins the game played on the limit-deterministic UcB game.
+implies she wins the game played on the UcB game.
 \begin{lemma}
-    Consider input and output alphabets $I$ and $O$, a limit-deterministic UcB
+    Consider input and output alphabets $I$ and $O$, a UcB
     automaton $\calN$ with alphabet $I \times O$, a bound $K \in \mathbb{N}$,
-    and the corresponding universal safety automaton $\calS^K_\calN$.  If there
+    and the corresponding universal safety automaton $\calS^K_\calN$. If there
     exists a winning strategy for \eve in the game played on $\calS^K_\calN$
     then there exists a winning strategy for \eve in the game played on
     $\calN$.
@@ -266,21 +262,21 @@ implies she wins the game played on the limit-deterministic UcB game.
     game played on $\calN$ is determined and that, by assumption, there exists a
     winning strategy $\tau$ for \adam. Hence, any play $\pi$ consistent with
     $\tau$ will be such that $\pi \not\in \lang{\calN}$ and thus $\pi \not\in
-    \lang{\calS^K_\calN}$. So $\tau$ is a winning strategy for \adam in the game
+    \lang{\calS^K_\calN}$ by Lemma~\ref{lem:safe-approx}.
+    So $\tau$ is a winning strategy for \adam in the game
     played on $\calS^K_\calN$.
 \qed\end{proof}
 
-Conversely, there exists a big enough bound $K$ such that if \eve wins the game
+Conversely, there exists a large enough bound $K$ such that if \eve wins the game
 played on $\calN$ then she also wins the one played on $\calS^K_\calN$.
 %
 \begin{lemma}
-    Consider input and output alphabets $I$ and $O$ and a UcB
-    automaton $\calN$ with alphabet $I \times O$ that is deterministic in the
-    limit. There exists a bound $K \in
-    \mathbb{N}$ exponential with respect to the size of $\calN$ such that for
-    the universal safety automaton $\calS^K_\calN$, if there exists a winning
-    strategy for \eve in the game played on $\calN$ then there exists a winning
-    strategy for \eve in the game played on $\calS^K_\calN$.
+    Consider input and output alphabets $I$ and $O$ and a UcB automaton
+    $\calN$ with alphabet $I \times O$. There exists a bound $K \in
+    \mathbb{N}$, exponential with respect to the size of $\calN$, such that if
+    there exists a winning strategy for \eve in the game played on $\calN$
+    then there exists a winning strategy for \eve in the game played on
+    $\calS^K_\calN$.
 \end{lemma}
 \begin{proof}[Sketch]
     Let us consider a deterministic parity automaton $\calD$ such that
@@ -301,14 +297,7 @@ played on $\calN$ then she also wins the one played on $\calS^K_\calN$.
 \qed\end{proof}
 
 \subsection{Antichain-based algorithm}
-TODO: define the order on the states of $\calS^K_\calN$ (subset and
-product-ordering on the function image)
-
-\todo[inline]{There are other possible tweaks to the simple safety game solver:
-    (algo 2) allow for resets of counters to avoid early alarms (algo 3) have
-    the non-deterministic states be actually deterministic --- except for the
-    jump to $Q_d$ --- and reset counters upon changing SCC (algo 4) keep
-    separate counting functions for each SCC in $Q_d$}
+\todo[inline]{define the order on the states}
 
 
 \bibliographystyle{splncs04}
