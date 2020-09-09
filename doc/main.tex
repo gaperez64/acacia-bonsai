@@ -1,0 +1,328 @@
+\documentclass[draft]{llncs}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xspace}
+\usepackage{todonotes}
+
+% Usual math notation fixes
+\makeatletter
+\let\epsilon\varepsilon
+\let\phi\varphi
+\let\emptyset\varnothing
+\let\rho\varrho
+\makeatother
+
+% Local macros
+\newcommand{\indicator}[2]{\mathbf{1}_{#1}(#2)}
+\newcommand{\pow}{\mathcal{P}}
+\newcommand{\st}{\mathrel{:}}
+\newcommand{\ie}{\textit{i.e.}\xspace}
+\newcommand{\eve}{Eve\xspace}
+\newcommand{\adam}{Adam\xspace}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calS}{\mathcal{S}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calG}{\mathcal{G}}
+\newcommand{\lang}[1]{\mathcal{L}_{#1}}
+\newcommand{\out}[2]{\pi_{#1#2}}
+
+\begin{document}
+
+\frontmatter
+
+\title{Reactive Synthesis Using Universal Limit-Deterministic Co-B\"uchi
+Observers}
+\author{Guillermo A. P\'erez\inst{1} \and Jean-Fran\c{c}ois Raskin\inst{1}
+\and Salomon Sickert\inst{2}}
+\institute{Universit\'e libre de Bruxelles\\
+\email{gperezme@ulb.ac.be, jraskin@ulb.ac.be} \and
+Technische Universit\"at M\"unchen\\
+\email{sickert@in.tum.de}}
+
+\maketitle
+
+\begin{abstract}
+	We consider the reactive synthesis problem with specifications given in
+	the form of a limit-deterministic co-B\"uchi automaton. More precisely, we
+	study Gale-Stewart games played between an input and an output player
+	(called \adam and \eve, respectively) and with payoff set being the
+	complement of the language of a given limit-deterministic B\"uchi
+	automaton: if the infinite input-output sequence is accepted by the
+	automaton, then \adam wins, otherwise \eve wins.
+\end{abstract}
+
+\section{Definitions}
+An \emph{infinite word} $\alpha$ over an \emph{alphabet} $A$, \ie~$\alpha \in
+A^\omega$, can be seen as a function $\alpha : \mathbb{N}_{> 0} \to A$. Thus, we
+write $\alpha(i)$ to refer to the $i$-th letter from $\alpha$. We also write
+$\alpha(i..j)$ to denote the infix
+$\alpha(i)\alpha(i+1)\dots\alpha(j-1)\alpha(j)$; $\alpha(..j)$ instead of
+$\alpha(1..j)$; and $\alpha(i..)$ to denote the infinite suffix
+$\alpha(i)\alpha(i+1)\ldots$
+
+\subsection{B\"uchi and parity automata}
+\begin{definition}[Infinite-word automata]
+    An ($\omega$-word) \emph{automaton} is a tuple $\calN =
+    (Q,q_0,A,\Delta)$ where $Q$ is a finite set of states, $q_0 \in Q$ is the
+    initial state, $A$ is a finite alphabet, and $\Delta \subseteq Q \times A
+    \times Q$ is the transition relation. Since we are interested in infinite
+    words, we will henceforth assume that for all $p \in Q$ and all $a \in A$
+    there exists $q \in Q$ such that $(p,a,q) \in Q$.
+\end{definition}
+A run of $\calN$ on a word $\alpha \in A^\omega$ is an infinite sequence $\rho =
+q_0 \alpha(1) q_1 \alpha(2) \dots \in (Q\cdot A)^\omega$ such that
+$(q_i,\alpha(i+1),q_{i+1}) \in \Delta$ for all $i \in \mathbb{N}$. The automaton
+is said to be \emph{deterministic} if for all $p \in Q$ and all $a \in A$ we
+have that $(p,a,q_1), (p,a,q_2) \in \Delta \implies q_1 = q_2$.
+
+Automata are paired with a condition which determines which runs are
+\emph{accepting}. In this work we will consider two conditions.
+\begin{itemize}
+    \item The \emph{parity} condition is defined with respect to a
+        \emph{priority function} $p : Q \to \mathbb{N}$. A run $\rho = q_0 a_0
+        q_1 a_1 \dots$ is accepting for the parity condition if and only if the
+        value $\liminf_{i \to \infty} p(q_i)$ is even.
+    \item The \emph{B\"uchi} condition is defined with respect to a set of
+        \emph{B\"uchi} or accepting states $B \subseteq Q$. A run $\rho = q_0
+        a_0 q_1 a_1 \dots$ is accepting for this condition if and only if for
+        all $i \in \mathbb{N}$ there exists $j \ge i$ such that $q_j \in B$.
+        That is, the run visits accepting states infinitely often.
+\end{itemize}
+A word $\alpha$ is accepted by the automaton $\calN$ if it has a run on
+$\alpha$ that is accepting.  We denote by $\lang{\calN}$ the \emph{language} of
+the automaton $\calN$, that is, the set of words that $\calN$ accepts.
+
+\begin{proposition}[From~\cite{safra92,piterman07}]
+    For all B\"uchi automata $\calN$ there exists a deterministic parity
+    automaton $\calD$ of exponential size with respect to the size of $\calN$
+    and such that $\lang{\calN} = \lang{\calD}$.
+\end{proposition}
+
+\subsection{Limit-deterministic (co-)B\"uchi automata}
+\begin{definition}
+    A \emph{limit-deterministic} B\"uchi automaton is a B\"uchi automaton $\calN
+    = (Q,q_0,A,\Delta,B)$ with its states partitioned into \emph{deterministic
+    states} $Q_d \subseteq Q$ and non-deterministic states $Q \setminus Q_d$ and
+    for which the following properties hold.
+    \begin{itemize}
+        \item All the B\"uchi states are in $Q_d$, \ie~$B \subseteq Q_d$.
+        \item For all $p \in Q_d$ and all $a \in A$ if $(p,a,q) \in \Delta$ then
+            $q \in Q_d$.
+        \item The transition relation $\Delta$ restricted to $Q_d$ is
+            deterministic.
+    \end{itemize}
+\end{definition}
+
+In this work we will consider limit-deterministic B\"uchi automata $\calN$ whose
+language represent sets of ``bad'' words. Thus, rather than being interested in
+the set $\lang{\calN}$, we will sometimes focus on its complement. It will
+therefore be convenient to view $\calN$ as a \emph{universal limit-deterministic
+co-B\"uchi automaton}. That is to say, an automaton that accepts a word $\alpha$
+if all of its runs on $\alpha$ are \textbf{not} accepting with respect to the
+B\"uchi condition. (In other words, all runs on $\alpha$ visit accepting states
+only finitely often.)
+
+\subsection{Synthesis games and strategies}
+\begin{definition}[Games]
+    A \emph{(Gale-Stewart) game} on input and output alphabets $I$ and $O$,
+    respectively, is a two-player perfect-information game played by \eve and
+    \adam in rounds: \adam chooses an element $i_k \in I$ and \eve responds with
+    an element $o_k \in O$. A \emph{play} in such a game is an infinite word
+    $\langle i_1, o_1\rangle \langle i_2, o_2\rangle \dots \in (I\times O)^\omega$. 
+\end{definition}
+A game is paired with a \emph{payoff set} $P \subseteq (I \times
+O)^\omega$ used to determine who wins a play $\pi$. If $\pi \in P$ then
+\emph{$\pi$ is winning for \eve}, otherwise it is \emph{winning for \adam}.
+
+\begin{definition}[Strategies]
+    A \emph{strategy} for \adam in a game is a function $\tau : (I \times O)^*
+    \to I$ which maps every (possibly empty) play prefix
+    to a choice of input letter.  Similarly, a \emph{strategy for \eve}
+    is a function $\sigma : (I \times O)^* I \to O$ which maps every play prefix
+    and input letter to a choice of output letter.
+\end{definition}
+A play $\pi = \langle i_1, o_1\rangle \langle i_2, o_2\rangle \dots$
+is \emph{consistent with} a strategy $\tau$
+for \adam if $i_k = \tau( \langle i_1, o_1\rangle \dots
+\langle i_{k-1}, o_{k-1}\rangle)$ for all $k \in
+\mathbb{N}$; it is consistent with a strategy $\sigma$ for \eve if $o_k =
+\sigma( \langle i_1, o_1\rangle \dots \langle i_{k-1}, o_{k-1}\rangle, i_{k})$.
+A pair of strategies $\sigma$ and $\tau$ for
+\eve and \adam, respectively, induces a unique play $\out{\sigma}{\tau}$
+consistent with both $\sigma$ and $\tau$.
+
+\paragraph*{Winning strategies.}
+In a game with payoff set $P$, the strategy $\sigma$ for \eve is a \emph{winning
+strategy} if for all strategies $\tau$ for \adam it holds that
+$\out{\sigma}{\tau} \in P$; the strategy $\tau$ for \eve is winning if for all
+strategies $\sigma$ for \eve we have $\out{\sigma}{\tau} \not\in P$.
+
+\begin{proposition}[Borel determinacy~\cite{martin75}]
+    For all games with Borel-definable payoff set $P$, it holds that there
+    exists a winning strategy for \adam in the game if and only if there exists
+    no winning strategy for \eve in the game.
+\end{proposition}
+
+\subsection{Realizability and synthesis}
+The realizability and synthesis problems are defined for games whose payoff sets
+are given as the language of an automaton. We sometimes refer to these as
+\emph{games played on automata}.
+\begin{definition}[Problems]
+    Consider finite input and output alphabets $I$ and $O$, respectively, and
+    an automaton $\calN$ with alphabet $I \times O$.
+    The \emph{realizability problem} asks whether
+    there exists a winning strategy for \eve in the game with payoff set 
+    $\lang{\calN}$. The \emph{synthesis problem}
+    further asks to compute and output such a strategy if one exists.
+\end{definition}
+
+\paragraph*{Finite-memory strategies.}
+A \emph{finite-memory} strategy $\sigma$ for \eve in a game played on the
+automaton $\calN =
+(Q,q_0,I \times O,\Delta)$ with finite input and
+output alphabets $I$ and $O$ is a strategy that can be encoded as a
+\emph{(deterministic) Mealy machine} $\calM = (S,s_0,I, \lambda_u,\lambda_o)$
+where $S$ is a finite set of (memory) states, $s_0$ is the initial state,
+$\lambda_u : S \times (Q \times I) \to S$ is the update function and $\lambda_o
+: S \times (Q \times I) \to O$ is the output function. The machine encodes
+$\sigma$ in the following way. For all play prefixes $\langle i_1,  o_1\rangle
+\dots \langle i_{k-1}, o_{k-1} \rangle$ and input letters $i_k \in I$ we have
+that $\sigma(\langle i_1, o_1\rangle \dots \langle i_{k-1}, o_{k-1} \rangle,
+i_k) = \lambda_o(s_k,i_k)$ where $s_{\ell + 1} =
+\lambda_u(s_\ell,i_\ell)$. We then say the strategy $\sigma$ has \emph{memory}
+$|S|$. In particular, when $|S| = 1$, we say the strategy is \emph{memoryless}
+or \emph{positional}.\todo{Do we need similar definitions for \adam?}
+
+\begin{proposition}[Memoryless determinacy for parity games~\cite{ag11}]
+    For all games played on deterministic parity automata, it holds that there
+    exists a winning strategy for \eve in the game if and only if there exists a
+    memoryless winning strategy for \eve.
+\end{proposition}
+
+\section{Universal limit-deterministic co-B\"uchi games}
+In this section we propose an Acacia-like~\cite{acacia} solution for the
+realizability and synthesis problems for games played on universal
+limit-deterministic co-B\"uchi games. Recall that these are games whose payoff
+set is given by a universal co-B\"uchi (UcB) automaton that is deterministic in
+the limit.
+From a given UcB automaton we will consider a stronger version of its acceptance
+condition which asks that visits to accepting states are bounded.
+
+\begin{definition}[Universal $K$-co-B\"uchi automata]
+    A universal $K$-co-B\"uchi (UKcB) automaton is an automaton $\calN =
+    (Q,q_0,A,\Delta,B)$ that accepts a word $\alpha$ if and only if all of its
+    runs $\rho = q_0 \alpha(1) q_1 \alpha(1) \dots$
+    on $\alpha$ visit at most $K$ accepting states, \ie~$|\{i \in \mathbb{N} \st
+    q_i \in B\}| \le K$.
+\end{definition}
+
+Our intention is to give an incremental algorithm to solve games played on UcB
+automata by solving the game played on the same automaton with UKcB semantics
+for increasing values of $K$. As a first step, we will construct a finite
+``safety automaton'' which keeps track of the maximal accepting-state visit
+count per reachable state instead of doing so for each run.
+\begin{definition}[Universal safety automaton]
+    For a given limit-deterministic UcB automaton $\calN = (Q,q_0,A,\Delta,B)$
+    with deterministic state-set $Q_d \subseteq Q$ and a bound $K \in
+    \mathbb{N}$, let $\calS^K_\calN$ be the automaton $(Q',q'_0,A,\Delta',F)$ with
+    components defined as follows.
+    \begin{itemize}
+        \item $Q' := \pow(Q) \times \{f : Q_d \to \{0,\dots,K\} \cup
+            \{\bot,\top\}\}$,
+        \item $q'_0 := \langle \{q_0\}, \{ q \mapsto \bot \st q \in Q_d\}
+            \rangle$,\todo{I am assuming it is not deterministic, hence $q_0
+            \not\in Q_d$}
+        \item $F := \{ \langle s, f \rangle \in Q' \st f(q) = \top \text{ for
+            some } q \in Q_d \}$,
+        \item $\Delta'$ consists of all triples 
+            $(\langle s, f \rangle, a, \langle t, g \rangle)$ such that
+            \begin{itemize}
+                \item $\forall q \in t, \exists p \in Q : (p,a,q) \in \Delta$ and
+                \item $\forall q \in Q_d :
+                        g(q) = \max_{(p,a,q) \in \Delta}
+                        f(p) + \indicator{F}{q}$,
+                    where $\bot < n < \top$, $\bot + n = \bot$, and $\top + n =
+                    \top$ for all $n \in \mathbb{N}$.
+            \end{itemize}
+    \end{itemize}
+    The automaton $\calS_\calN$ accepts a word $\alpha$ if and only if it has no
+    run $q_0 \alpha(1) q_1 \alpha(2) \dots$ on $\alpha$ which visits a
+    state from $F$, \ie~$\forall i \in \mathbb{N} : q_i \not\in F$.
+\end{definition}
+
+The following property of universal safety automata is immediate from the
+definition.
+\begin{lemma}
+    For all $\alpha \in A^\omega$ and all $K \in \mathbb{N}$, there exists a
+    run $\rho$ on $\alpha$ in $\calN$ which visits more than $K$ B\"uchi states
+    if and only if for all $\ell \le K$ there exists a run $\rho'$ on $\alpha$ in
+    $\calS^\ell_\calN$ that visits a final state.
+\end{lemma}
+
+The above lemma allows us to argue that \eve winning a universal safety game
+implies she wins the game played on the limit-deterministic UcB game.
+\begin{lemma}
+    Consider input and output alphabets $I$ and $O$, a limit-deterministic UcB
+    automaton $\calN$ with alphabet $I \times O$, a bound $K \in \mathbb{N}$,
+    and the corresponding universal safety automaton $\calS^K_\calN$.  If there
+    exists a winning strategy for \eve in the game played on $\calS^K_\calN$
+    then there exists a winning strategy for \eve in the game played on
+    $\calN$.
+\end{lemma}
+\begin{proof}
+    We will argue the contraposition of the claimed implication holds.
+    Note that $\lang{\calN}$ is clearly Borel definable. It follows that the
+    game played on $\calN$ is determined and that, by assumption, there exists a
+    winning strategy $\tau$ for \adam. Hence, any play $\pi$ consistent with
+    $\tau$ will be such that $\pi \not\in \lang{\calN}$ and thus $\pi \not\in
+    \lang{\calS^K_\calN}$. So $\tau$ is a winning strategy for \adam in the game
+    played on $\calS^K_\calN$.
+\qed\end{proof}
+
+Conversely, there exists a big enough bound $K$ such that if \eve wins the game
+played on $\calN$ then she also wins the one played on $\calS^K_\calN$.
+%
+\begin{lemma}
+    Consider input and output alphabets $I$ and $O$ and a UcB
+    automaton $\calN$ with alphabet $I \times O$ that is deterministic in the
+    limit. There exists a bound $K \in
+    \mathbb{N}$ exponential with respect to the size of $\calN$ such that for
+    the universal safety automaton $\calS^K_\calN$, if there exists a winning
+    strategy for \eve in the game played on $\calN$ then there exists a winning
+    strategy for \eve in the game played on $\calS^K_\calN$.
+\end{lemma}
+\begin{proof}[Sketch]
+    Let us consider a deterministic parity automaton $\calD$ such that
+    $\lang{\calD} = \lang{\calN}$ and let $\sigma$ be the winning strategy for
+    \eve in the game played on $\calN$ (and in the game played on $\calD$). By
+    memoryless determinacy of parity games, there is a memoryless strategy $\mu$
+    for \eve in the game played on $\calD$. Since $\calD$ has exponential size
+    with respect to the size of $\calN$, there exists an exponential-memory
+    strategy $\mu'$ for \eve in the game played on $\calN$. It follows that if
+    any run of $\calN$ on a play $\pi$ consistent with $\mu'$ has visited
+    sufficiently many accepting states, the Mealy machine realizing $\mu'$ must
+    have revisited some configuration. Hence, by ``pumping'' this behaviour,
+    \adam must be able to win against $\mu'$, contradicting the fact that $\mu'$
+    is a winning strategy for \eve. We thus have an exponential upper bound on
+    visits to accepting states for all runs on plays consistent with $\mu'$. By
+    construction of $\calS^K_\calN$ we have that $\mu'$ is a winning strategy for
+    \eve in the game played on $\calS^K_\calN$.
+\qed\end{proof}
+
+\subsection{Antichain-based algorithm}
+TODO: define the order on the states of $\calS^K_\calN$ (subset and
+product-ordering on the function image)
+
+\todo[inline]{There are other possible tweaks to the simple safety game solver:
+    (algo 2) allow for resets of counters to avoid early alarms (algo 3) have
+    the non-deterministic states be actually deterministic --- except for the
+    jump to $Q_d$ --- and reset counters upon changing SCC (algo 4) keep
+    separate counting functions for each SCC in $Q_d$}
+
+
+\bibliographystyle{abbrv}
+\bibliography{refs}{ }
+
+\end{document}
