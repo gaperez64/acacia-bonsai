@@ -321,13 +321,18 @@ accepting states. Formally, let us define the partial order $f \preceq g$
 to hold if and only if for all $q \in Q$ we have $f(q) \leq g(q)$.
 
 We say a state $q \in Q$ of a safety automaton $\calS$ is \emph{winning for
-\eve} if she has a winning strategy from it. Otherwise, the state is losing
-for her. It follows from Lemma~\ref{lem:runs-visits} and determinacy of safety
-games that the set of losing states from $\calS^K_\calN$ are $\preceq$-upwards
-closed.
-\begin{proposition}
-  Let $f,g \in \mathcal{F}$ be states from $\calS^K_\calN$. If $f$ is losing
-  for \eve and $f \preceq g$ then $g$ is also losing for her.
+  \eve} if she has a winning strategy from it. Otherwise, the state is losing
+for her. It follows from Lemma~\ref{lem:runs-visits} and determinacy of
+safety games that the set of losing states from $\calS^K_\calN$ are
+\emph{$\preceq$-upwards closed}. We further observe that $U$ itself is
+$\preceq$-upwards closed.
+\begin{proposition}\label{pro:up-closed}
+  Let $f,g \in \mathcal{F}$ be states from $\calS^K_\calN$ such that $f
+  \preceq g$.
+  \begin{itemize}
+    \item If $f \in U$ then $g \in U$.
+    \item If $f$ is losing for \eve then $g$ is also losing for her.
+  \end{itemize}
 \end{proposition}
 
 In the sequel we recall the classical backwards algorithm for solving safety
@@ -374,6 +379,8 @@ In the rest of this section we introduce a ``symbolic'' version of the $\upre$
 operator which leverages the $\preceq$ ordering on states of $\calS^K_\calN$.
 
 \subsection{Antichain-based algorithm}
+We intend to leverage Proposition~\ref{pro:up-closed} to define an operator
+which preserves upwards-closedness.
 \todo[inline]{define the antichain-based algorithm}
 
 
