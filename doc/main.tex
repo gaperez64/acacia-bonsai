@@ -14,8 +14,7 @@
 % Local macros
 \newcommand{\indicator}[2]{\mathbf{1}_{#1}(#2)}
 \newcommand{\pow}{\mathcal{P}}
-\newcommand{\st}{\mathrel{:}}
-\newcommand{\ie}{i.e.\xspace}
+\newcommand{\upre}{\mathbf{UPre}}
 \newcommand{\eve}{Eve\xspace}
 \newcommand{\adam}{Adam\xspace}
 \newcommand{\calF}{\mathcal{F}}
@@ -34,7 +33,7 @@ for LTL Synthesis}
 \titlerunning{Acacia Bonsai: LTL Synthesis with Antichains}
 
 \author{Micha\"el Cadilhac\inst{1} \and
-Guillermo A. P\'erez\inst{2}\orcidID{0000-0002-1200-4952}}
+Guillermo A. P\'erez\inst{2}} %\orcidID{0000-0002-1200-4952}}
 \institute{DePaul University, U.S.A.\\
 \email{michael@cadilhac.name} \and
 University of Antwerp, Belgium\\
@@ -58,7 +57,7 @@ University of Antwerp, Belgium\\
 \end{abstract}
 
 \section{Definitions}
-An \emph{infinite word} $\alpha$ over an \emph{alphabet} $A$, \ie~$\alpha \in
+An \emph{infinite word} $\alpha$ over an \emph{alphabet} $A$, i.e. $\alpha \in
 A^\omega$, can be seen as a function $\alpha : \mathbb{N}_{> 0} \to A$. Thus, we
 write $\alpha(i)$ to refer to the $i$-th letter from $\alpha$. We also write
 $\alpha(i..j)$ to denote the infix
@@ -84,14 +83,18 @@ have that $(p,a,q_1), (p,a,q_2) \in \Delta$ implies $q_1 = q_2$.
 Automata are paired with a condition which determines which runs are
 \emph{accepting}. In this work we will consider two conditions.
 \begin{itemize}
+  \item The \emph{safety} condition is defined with respect to a set $U
+    \subseteq Q$ of \emph{unsafe states}. A run $\rho = q_0 a_1 q_1 a_2 \dots$
+    is accepting for this condition, or safe, if and only if for all $i \in
+    \mathbb{N}$ we have that $q_i \not\in U$.
   \item The \emph{B\"uchi} condition is defined with respect to a set of
     \emph{B\"uchi} or accepting states $B \subseteq Q$. A run $\rho = q_0
-    a_1 q_1 a_1 \dots$ is accepting for this condition if and only if for
+    a_1 q_1 a_2 \dots$ is accepting for this condition if and only if for
     all $i \in \mathbb{N}$ there exists $j \ge i$ such that $q_j \in B$.
     That is, the run visits accepting states infinitely often.
   \item The \emph{parity} condition is defined with respect to a
     \emph{priority function} $p : Q \to \mathbb{N}$. A run $\rho = q_0 a_1
-    q_1 a_1 \dots$ is accepting for the parity condition if and only if the
+    q_1 a_2 \dots$ is accepting for the parity condition if and only if the
     value $\liminf_{i \to \infty} p(q_i)$ is even.
 \end{itemize}
 A word $\alpha$ is accepted by the automaton $\calN$ if it has a run on
@@ -152,6 +155,9 @@ strategies $\sigma$ for \eve we have $\out{\sigma}{\tau} \not\in P$.
   exists a winning strategy for \adam in the game if and only if there exists
   no winning strategy for \eve in the game.
 \end{proposition}
+We observe that all payoff sets induced by automata we consider in this work
+are indeed Borel definable. It follows that all the games we will study are
+determined.
 
 \subsection{Realizability and synthesis}
 The realizability and synthesis problems are defined for games whose payoff sets
@@ -188,6 +194,10 @@ or \emph{positional}.
   exists a winning strategy for \eve in the game if and only if there exists a
   memoryless winning strategy for \eve.
 \end{proposition}
+Since the parity condition generalizes all the other conditions we consider in
+this work, the above proposition implies memoryless determinacy for all games
+played on deterministic automata. In particular, games played on deterministic
+safety automata are also memoryless determined.
 
 \section{Universal co-B\"uchi games}
 In this section we recall the Acacia~\cite{acacia} solution for the
@@ -201,25 +211,26 @@ accepting states are bounded.
   A universal $K$-co-B\"uchi (UKcB) automaton is an automaton $\calN =
   (Q,q_0,A,\Delta,B)$ that accepts a word $\alpha$ if and only if all of its
   runs $\rho = q_0 \alpha(1) q_1 \alpha(2) \dots$
-  on $\alpha$ visit at most $K$ accepting states, \ie~$|\{i \in \mathbb{N} \st
+  on $\alpha$ visit at most $K$ accepting states, i.e. $|\{i \in \mathbb{N} :
   q_i \in B\}| \le K$.
 \end{definition}
 
 Our intention is to give an incremental algorithm to solve games played on UcB
 automata by solving the game played on the same automaton with UKcB semantics
-for increasing values of $K$. As a first step, we will construct a finite
-``safety automaton'' which keeps track of the maximal accepting-state visit
+for increasing values of $K$. As a first step, we will construct a
+deterministic
+safety automaton which keeps track of the maximal accepting-state visit
 count per reachable state instead of doing so for each run.
-\begin{definition}[Universal safety automaton]
+\begin{definition}[$K$-co-B\"uchi safety automaton]
   For a given UcB automaton $\calN = (Q,q_0,A,\Delta,B)$ and $K \in
   \mathbb{N}$, let $\calS^K_\calN$ be the automaton $(\calF,f_0,A,T,U)$
   with components defined as follows.
   \begin{itemize}
     \item $\calF := \{f : Q \to \{0,\dots,K\} \cup
-      \{\bot,\top\}\}$,
+      \{\bot\}\}$,
     \item $f_0 \in \calF$ is such that $f_0(q_0) = 0$ and $f_0(q) =
       \bot$ for all $q \in Q$ such that $q \neq q_0$,
-    \item $U := \{ f \in \calF \st f(q) = \top \text{ for
+    \item $U := \{ f \in \calF \mid f(q) = K \text{ for
       some } q \in Q \}$,
     \item $T$ consists of all triples $(f,a,g)$ such that for all $q \in Q$ we
       have
@@ -227,25 +238,34 @@ count per reachable state instead of doing so for each run.
         g(q) = \max_{(p,a,q) \in \Delta}
         f(p) + \indicator{U}{q}
       \]
-      where $\bot < n < \top$, $\bot + n = \bot$, and $\top + n =
-      \top$ for all $n \in \mathbb{N}$.
+      where $\bot < n$ and $\bot + n = \bot$, for all $n \in \mathbb{N}$, and
+      $K + 1 = K$.
   \end{itemize}
-  The automaton $\calS_\calN$ accepts a word $\alpha$ if and only if it has no
+  The automaton $\calS^K_\calN$ accepts a word $\alpha$ if and only if it has no
   run $q_0 \alpha(1) q_1 \alpha(2) \dots$ on $\alpha$ which visits a
-  state from $U$, \ie~$\forall i \in \mathbb{N} : q_i \not\in U$ holds for all
+  state from $U$, i.e. $\forall i \in \mathbb{N} : q_i \not\in U$ holds for all
   runs.
 \end{definition}
 
-The following property of universal safety automata is immediate from the
-definition.
-\begin{lemma}\label{lem:safe-approx}
+The following property of $\calS^K_\calN$ follows from a
+straightforward induction.
+\begin{lemma}\label{lem:runs-visits}
+  Let $\alpha \in A^\omega$ and $f_0 \alpha(1) f_1 \alpha(2) \dots$ be the
+  unique run of $\calS^K_\calN$ on $\alpha$. For all $i \in \mathbb{N}$ and
+  all $q_i \in Q$, if $f_i(q_i) \neq \bot$ then there exists a run $q_0
+  \alpha(1) q_1 \alpha(2) \dots$ of $\calN$ on $\alpha$ which visits at least
+  $f_i(q_i)$ accepting states.
+\end{lemma}
+%
+The following is immediate from the lemma.
+\begin{corollary}\label{cor:safe-approx}
   For all $\alpha \in A^\omega$ and all $K,\ell \in \mathbb{N}$ with $\ell
   \leq K$, if there exists a run $\rho$ of $\calN$ on $\alpha$ which visits
-  more than $K$ B\"uchi states then $\alpha \not\in \lang{\calS^\ell_\calN}$.
-\end{lemma}
+  at least $K$ accepting states then $\alpha \not\in \lang{\calS^\ell_\calN}$.
+\end{corollary}
 
-The above lemma allows us to argue that \eve winning a universal safety game
-implies she wins the game played on the UcB game.
+The above corollary allows us to argue that \eve winning the game played on
+$\calS^K_\calN$ implies she wins the game played on $\calN$.
 \begin{lemma}
     Consider input and output alphabets $I$ and $O$, a UcB
     automaton $\calN$ with alphabet $I \times O$, a bound $K \in \mathbb{N}$,
@@ -260,7 +280,7 @@ implies she wins the game played on the UcB game.
     game played on $\calN$ is determined and that, by assumption, there exists a
     winning strategy $\tau$ for \adam. Hence, any play $\pi$ consistent with
     $\tau$ will be such that $\pi \not\in \lang{\calN}$ and thus $\pi \not\in
-    \lang{\calS^K_\calN}$ by Lemma~\ref{lem:safe-approx}.
+    \lang{\calS^K_\calN}$ by Corollary~\ref{cor:safe-approx}.
     So $\tau$ is a winning strategy for \adam in the game
     played on $\calS^K_\calN$.
 \qed\end{proof}
@@ -294,8 +314,67 @@ played on $\calN$ then she also wins the one played on $\calS^K_\calN$.
     \eve in the game played on $\calS^K_\calN$.
 \qed\end{proof}
 
+\subsection{Some unsafe states are more unsafe than others}
+There is a natural order on the states $f$ of $\calS^K_N$ induced by how many
+times runs reaching each state $q$ with $f(q) \neq \bot$ have visited
+accepting states. Formally, let us define the partial order $f \preceq g$
+to hold if and only if for all $q \in Q$ we have $f(q) \leq g(q)$.
+
+We say a state $q \in Q$ of a safety automaton $\calS$ is \emph{winning for
+\eve} if she has a winning strategy from it. Otherwise, the state is losing
+for her. It follows from Lemma~\ref{lem:runs-visits} and determinacy of safety
+games that the set of losing states from $\calS^K_\calN$ are $\preceq$-upwards
+closed.
+\begin{proposition}
+  Let $f,g \in \mathcal{F}$ be states from $\calS^K_\calN$. If $f$ is losing
+  for \eve and $f \preceq g$ then $g$ is also losing for her.
+\end{proposition}
+
+In the sequel we recall the classical backwards algorithm for solving safety
+and reachability games. We will give the algorithm directly for
+$\calS^K_\calN$ and then state the necessary preliminaries for the symbolic
+antichain-based algorithm to be presented.
+
+\section{Solving safety games}
+We refer to a game played on a deterministic safety automaton as a safety
+game. Let us first consider safety games without making use of the partial
+order for our particular $K$-co-B\"uchi safety game.
+
+\subsection{Explicit algorithm}
+For this section, let $\calS = (Q,q_0, I\times O, \delta, U)$ be a safety
+game and let us write $\delta(q,\langle i, o \rangle)$ for the unique state
+$q' \in Q$ such that $(q, \langle i, o \rangle, q') \in \delta$.
+
+\paragraph{Uncontrollable predecessors.} The algorithm we describe
+consists in iteratively applying a monotonically subset-increasing operator to
+the set $U$ of unsafe states. The operator $\upre : \pow{Q} \to \pow{Q}$ is
+defined for all $S \subseteq Q$ as follows.
+\[
+  \upre(S) := S \cup \{s \in Q \mid \exists i \in I, \forall o \in O :
+  \delta(s,\langle i, o \rangle) \in S\}
+\]
+Then, we inductively define $\upre^n(S)$ for all $n \in \mathbb{N}$ by setting
+$\upre^0(S)$ to $S$ and $\upre^{n+1}(S)$ to $\upre(\upre^{n}(S))$.
+The following is immediate from the definitions.
+\begin{lemma}
+  Let $S \subseteq Q$ and $n,m \in \mathbb{N}$ such that $n \leq m$. Then,
+  $S \subseteq \upre^n(S) \subseteq \upre^m(S) \subseteq Q$.
+\end{lemma}
+Since $Q$ is finite, it follows that the $\upre^i(S)$ eventually stabilize
+from some $i \leq |Q|$ onward.  Let us write $\upre^*(S)$ for said \emph{fixed point}
+of $\upre$.
+
+It is not hard to prove by induction that $\upre^*(U)$ coincides with the set
+of states which are losing for \eve.
+\begin{proposition}
+  A state $q \in Q$ is losing for \eve if and only if $q \in \upre^*(U)$.
+\end{proposition}
+
+In the rest of this section we introduce a ``symbolic'' version of the $\upre$
+operator which leverages the $\preceq$ ordering on states of $\calS^K_\calN$.
+
 \subsection{Antichain-based algorithm}
-\todo[inline]{define the order on the states}
+\todo[inline]{define the antichain-based algorithm}
 
 
 \bibliographystyle{splncs04}
