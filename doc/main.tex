@@ -28,7 +28,7 @@
 
 % Local macros
 \newcommand{\indicator}[2]{\mathbf{1}_{#1}(#2)}
-\newcommand{\pow}{\mathcal{P}}
+\newcommand{\pow}[1]{\mathcal{P}(#1)}
 \newcommand{\upre}{\mathbf{UPre}}
 \newcommand{\eve}{Eve\xspace}
 \newcommand{\adam}{Adam\xspace}
@@ -136,36 +136,22 @@ consider three conditions.
 A word $\alpha$ is accepted by the automaton $\calN$ if it has a run on $\alpha$
 that is accepting.  The \emph{co-} variant of each model (e.g., co-Büchi
 automaton) negates the condition, that is, it turns accepting runs into
-rejecting ones, and vice versa.  The \emph{universal} variant\mcnote{I felt it
-  would be good to introduce these terms a bit more formally, is it overkill?}
+rejecting ones, and vice versa.  The \emph{universal} variant
 of each model (e.g., universal Büchi automaton) accepts a word if \emph{all} the
 runs on the word are accepting.
 
 We denote by $\lang{\calN}$ the \emph{language} of the automaton $\calN$, that
 is, the set of words that $\calN$ accepts.
 
-In this work we will consider B\"uchi automata $\calN$ whose language represent
-sets of ``bad'' words.  Thus, rather than being interested in the set
-$\lang{\calN}$, we will mostly focus on its complement. It will therefore be
-convenient to view $\calN$ as a \emph{universal co-B\"uchi automaton}. That is
-to say, an automaton that accepts a word $\alpha$ if all of its runs on $\alpha$
-are \textbf{not} accepting with respect to the B\"uchi condition. (In other
-words, all runs on $\alpha$ visit accepting states only finitely
-often.).\mcnote{I'm not a big fan of ``viewing'' a Büchi automaton as a
-  universal co-Büchi automaton to shift the focus from a language to its
-  complement; that's some gymnastics.  Is the following paragraph a good
-  rewrite?}
-
-\mcnote[inline]{%
-  In this work we will see some states of our automata as ``bad'' and want to
-  ensure that no run on a given word visits them infinitely often.  Thus, the
-  variant we are most interested in is \emph{universal co-Büchi automaton}, in
-  which a word is accepted if all its runs visit a prescribed set of states only
-  finitely often.}
+In this work we will see some states of our automata as ``bad'' and want to
+ensure that no run on a given word visits them infinitely often.  Thus, the
+variant we are most interested in is \emph{universal co-Büchi automata}, in
+which a word is accepted if all its runs visit a prescribed set of states only
+finitely often.
 
 Finally, we note that deterministic parity automata generalize the other
 conditions in the following sense:
-\begin{proposition}[From~\cite{safra92,piterman07}]\label{prop:paritymr}
+\begin{proposition}[From~\cite{safra88,piterman07}]\label{prop:paritymr}
   For all (nondeterministic) B\"uchi automata $\calN$ there exists a
   deterministic parity automaton $\calD$ of exponential size with respect to the
   size of $\calN$ such that $\lang{\calN} = \lang{\calD}$.
@@ -270,7 +256,7 @@ that visits to accepting states be bounded by an explicit constant.
   $\calN = (Q,q_0,A,\Delta,B)$ with $B \subseteq Q$ the set of accepting
   states.  It accepts a word $\alpha$ if and only if all of its runs
   $\rho = q_0 \alpha(1) q_1 \alpha(2) \dots$ on $\alpha$ visit at most $K$
-  accepting states, i.e. $|\{i \in \mathbb{N} : q_i \in B\}| \le K$.
+  accepting states, i.e. $|\{i \in \mathbb{N} : q_i \in B\}| < K$.
 \end{definition}
 
 Our intention is to give an incremental algorithm to solve games played on UcB
@@ -282,52 +268,41 @@ are the same, in that they admit the same winning strategies.
 
 Instead of working with UKcB automata directly, we will define equivalent
 universal safety automata where counting up to \(K\) is embedded in the states.
-As a starting point, with \(K = 0\), a UKcB is but a universal safety automaton:
-as soon as an accepting state is reached, the word should be
-rejected.\mcnote{You introduced the term ``Büchi state'' at the beginning as an
-  alternative to ``accepting;'' I'd be more comfortable using this term
-  throughout, as this sentence reads… weird.}  We extend this analogy for values
+As a starting point, with \(K = 1\), a UKcB is but a universal safety automaton:
+as soon as a B\"uchi state is reached, the word should be
+rejected. We extend this analogy for values
 of \(K \geq 1\) by having this universal safety automaton count, up to \(K\), the
 number of times accepting states are visited.  At the same time, we
-\emph{determinize} this automaton using a powerset-like constructions, and only
+\emph{determinize} this automaton using a powerset-like construction, and only
 keep, for each state \(q\) of \(\calN\), the \emph{maximum} number of accepting
 states visited upon reaching \(q\).  In practice, each state of our deterministic
 safety automaton will be a function
 \(f\colon Q \to \{0, \dots, K\} \cup \{\bot\}\); if a word reaches \(f\) with, say,
 \(f(q) = i\), \(0 \leq i < K \), then the same word can reach \(q\) in
-\(\calN\), never visiting more than \(i\) accepting states.\mcnote{I made this intro
-  paragraph more explicit; previous version in comment.}
-% As a first step, we will construct a
-% deterministic
-% safety automaton which keeps track of the maximal accepting-state visit
-% count per reachable state instead of doing so for each run.
-\begin{definition}[$K$-co-B\"uchi safety automaton\mcnote{Are we married to that
-    header?
-    ``\(K\)-bounded deterministic safety automaton of a UcB automaton?''}]
+\(\calN\), never visiting more than \(i\) accepting states.
+\begin{definition}[$K$-bounded deterministic safety automaton]
   For a given UcB automaton $\calN = (Q,q_0,A,\Delta,B)$ and $K \in \mathbb{N}$,
-  let $\calS^K_\calN$ be the universal deterministic safety\mcnote{Correct?}
+  let $\calS^K_\calN$ be the deterministic safety\mcnote{Correct?}
   automaton $(\calF,f_0,A,T,U)$ with components defined as follows.
   \begin{itemize}
     \item $\calF := \{f \colon Q \to \{0,\dots,K\} \cup
       \{\bot\}\}$, which is a finite set of functions,
     \item $f_0 \in \calF$ is such that $f_0(q_0) = 0$ and $f_0(q) =
       \bot$ for all $q \in Q$ such that $q \neq q_0$,
-    \item \mcnote{Any reason why $U$ is not last?}$U := \{ f \in \calF \mid f(q) = K \text{ for
-      some } q \in Q \}$, the unsafe states,
     \item $T$ consists of all triples $(f,a,g)$ such that for all $q \in Q$ we
       have
       \[
         g(q) = \max_{(p,a,q) \in \Delta}
-        f(p) + \indicator{U}{q}\mathnote{\mcnote{You mean \(\indicator{B}{q}\), right?}}
+        f(p) + \indicator{B}{q}
       \]
       where $\bot < n$ and $\bot + n = \bot$, for all $n \in \mathbb{N}$, and
       $K + 1 = K$.  If the \(\max\) is taken over an empty set, its value is \(\bot\).
+    \item $U := \{ f \in \calF \mid f(q) = K \text{ for
+      some } q \in Q \}$, the unsafe states.
   \end{itemize}
   The automaton $\calS^K_\calN$ accepts a word $\alpha$ if and only if its only
   run $f_0 \alpha(1) f_1 \alpha(2) \dots$ on $\alpha$ visits no state from $U$,
-  i.e. $\forall i \in \mathbb{N} : f_i \not\in U$.\mcnote{I removed talks about
-    multiple runs on \(\alpha\) since this machine is deterministic; I changed
-    \(q_i\) to \(f_i\).}
+  i.e. $\forall i \in \mathbb{N} : f_i \not\in U$.
 \end{definition}
 
 The following property of $\calS^K_\calN$ follows from a straightforward
@@ -335,10 +310,11 @@ induction.
 \begin{lemma}\label{lem:runs-visits}
   Let $\alpha \in A^\omega$ and $f_0 \alpha(1) f_1 \alpha(2) \dots$ be the
   unique run of $\calS^K_\calN$ on $\alpha$. For all $i \in \mathbb{N}$ and
-  all $q_i \in Q$, if $f_i(q_i) \neq \bot$ then there exists a run $q_0
-  \alpha(1) q_1 \alpha(2) \dots$ of $\calN$ on $\alpha$ which visits at least
-  $f_i(q_i)$ accepting states.
+  all $q \in Q$, if $f_i(q) \neq \bot$ then there exists a run $q_0
+  \alpha(1) q_1 \alpha(2) \dots$ of $\calN$ on $\alpha$ such that $q_i = q$
+  and $f_i(q) \leq |\{0 \leq j \leq i : q_j \in B\}|$.
 \end{lemma}
+The converse holds for large enough $K$ (see \Cref{lem:converse}).
 
 \mcnote[inline]{I'm slightly confused by this lemma; you don't mean, in your
   ``there exists a run,'' that the \(q_j\)'s are the \(q_i\)'s you just ``defined''
@@ -350,8 +326,8 @@ induction.
   that's the intent:\\ ``For all $i \in \mathbb{N}$ there exists a run of $\calN$ on
   $\alpha$ which visits at least $\max_{q \in Q} f_i(q)$ accepting states.''\\  Or
   \emph{even more succinct}:\\ ``There exists a run of \(\calN\) on \(\alpha\) which
-  visits at least \(\max_{i \in \mathbb{N}, q \in Q} f_i(q)\) accepting states.''\\
-  Also, what about the converse?}
+  visits at least \(\max_{i \in \mathbb{N}, q \in Q} f_i(q)\) accepting
+  states.''}
 %
 
 The following is immediate from the lemma. 
@@ -359,50 +335,35 @@ The following is immediate from the lemma.
   For all $\alpha \in A^\omega$ and all $K,\ell \in \mathbb{N}$ with $\ell
   \leq K$, if there exists a run of $\calN$ on $\alpha$ which visits 
   at least $K$ accepting states then $\alpha \not\in \lang{\calS^\ell_\calN}$.
-  In addition, \(\lang{\calS^K_\calN} \subseteq \lang{\calN}\) for any 
-  \(K\).\mcnote{That's the only thing that is used in the next lemma, so may be
-    worth saying?}
+  In addition, the
+  language of \(\calS^K_\calN\) is that of \(\calN\) with UKcB semantics,
+  hence \(\lang{\calS^K_\calN} \subseteq \lang{\calN}\).
 \end{corollary}
 
-\mcnote[inline]{%
-  At this point, we diverged a bit (and never come back) to the notion of UKcB;
-  wouldn't it be clearer to write the above corollary as we meant to do: ``The
-  language of \(\calS^K_\calN\) is that of \(\calN\) with UKcB semantics.''  That
-  supersedes the corollary, and closes the loop w.r.t. UKcB.}
-
-The above corollary allows us to argue that \eve winning the game played on
-$\calS^K_\calN$ implies she wins the game played on $\calN$.
+The second part of the above corollary allows us to argue that \eve winning
+the game played on $\calS^K_\calN$ implies she wins the game played on
+$\calN$.
 \begin{lemma}
     Consider input and output alphabets $I$ and $O$, a UcB
     automaton $\calN$ with alphabet $I \times O$, a bound $K \in \mathbb{N}$,
-    and the corresponding universal safety automaton $\calS^K_\calN$. If there
-    exists a winning strategy for \eve in the game played on $\calS^K_\calN$
-    then there exists a winning strategy for \eve in the game played on
+    and the corresponding universal safety automaton $\calS^K_\calN$. A
+    winning strategy for \eve in the game played on $\calS^K_\calN$
+    is also a winning strategy for \eve in the game played on
     $\calN$.
 \end{lemma}
 \begin{proof}
-  We will argue the contraposition of the claimed implication holds.  Note that
-  $\lang{\calN}$ is Borel definable. It follows that the game played on $\calN$
-  is determined and that, by assumption, there exists a winning strategy $\tau$
-  for \adam. Hence, any play $\pi$ consistent with $\tau$ will be such that
-  $\pi \not\in \lang{\calN}$ and thus $\pi \not\in \lang{\calS^K_\calN}$ by
-  Corollary~\ref{cor:safe-approx}.  So $\tau$ is a winning strategy for \adam in
-  the game played on $\calS^K_\calN$.
-  \mcnote[inline]{I don't see why this is done by contraposition; if done
-    directly, the statement of the lemma can read ``A winning strategy for \eve
-    in\ldots is also winning on \ldots'':\\
-    Consider a winning strategy \(\sigma\) for \eve in the game played on
-    \(\calS^K_\calN\).  Any play \(\pi\) consistent with \(\sigma\) is such that
-    \(\pi \in \lang{\calS^K_\calN}\), and by \Cref{cor:safe-approx},
-    \(\pi \in \lang{\calN}\), showing that \(\sigma\) is a winning strategy for
-    \eve in the game played on \(\calN\).}  \qed
+  Consider a winning strategy \(\sigma\) for \eve in the game played on
+  \(\calS^K_\calN\).  Any play \(\pi\) consistent with \(\sigma\) is such that
+  \(\pi \in \lang{\calS^K_\calN}\), and by \Cref{cor:safe-approx},
+  \(\pi \in \lang{\calN}\), showing that \(\sigma\) is a winning strategy for
+  \eve in the game played on \(\calN\).\qed
 \end{proof}
 
 More interestingly, there exists a bound $K$ such that if \eve wins
 the game played on $\calN$ then she also wins the one played on
 $\calS^K_\calN$.  This relies on the memoryless determinacy of our games.
 %
-\begin{lemma}
+\begin{lemma}\label{lem:converse}
     Consider input and output alphabets $I$ and $O$ and a UcB automaton
     $\calN$ with alphabet $I \times O$. There exists a bound $K \in
     \mathbb{N}$, exponential with respect to the size of $\calN$, such that if
@@ -411,6 +372,8 @@ $\calS^K_\calN$.  This relies on the memoryless determinacy of our games.
     $\calS^K_\calN$.
 \end{lemma}
 \begin{proof}[Sketch]
+  Recall that every B\"uchi automaton can be ``determinized'' into a parity
+  automaton of size at most exponential~\cite{safra88,piterman07}.
   Let us consider a deterministic parity\mcnote{I'd rather not talk about parity
     automata; we only use them for memoryless determinacy, and we already
     mention after \Cref{prop:det} that all our games have memoryless
@@ -439,10 +402,9 @@ accepting states. Formally, let us define the partial order $f \preceq g$
 to hold if and only if for all $q \in Q$ we have $f(q) \leq g(q)$.
 
 We say a state $q \in Q$ of a safety automaton $\calS$ is \emph{winning for \eve}
-if she has a winning strategy from it.\mcnote{``From it'' means ``in the game
-  played on \(\calS\) where the initial state is set to \(q\)?''}  Otherwise, the
-state is losing for her. It follows from Lemma~\ref{lem:runs-visits} and
-determinacy of games on safety automata\mcnote{Is determinacy necessary?} that the set of
+if she has a winning strategy from it --- that is, in the game played on
+\(\calS\) where the initial state is set to \(q\). Otherwise, the
+state is losing for her. It follows from Lemma~\ref{lem:runs-visits} that the set of
 losing states from $\calS^K_\calN$ are \emph{$\preceq$-upwards closed}. We further
 observe that $U$, the set of unsafe states of \(\calS^K_\calN\), is itself
 $\preceq$-upwards closed.
