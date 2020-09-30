@@ -373,26 +373,21 @@ $\calS^K_\calN$.  This relies on the memoryless determinacy of our games.
 \end{lemma}
 \begin{proof}[Sketch]
   Recall that every B\"uchi automaton can be ``determinized'' into a parity
-  automaton of size at most exponential~\cite{safra88,piterman07}.
-  Let us consider a deterministic parity\mcnote{I'd rather not talk about parity
-    automata; we only use them for memoryless determinacy, and we already
-    mention after \Cref{prop:det} that all our games have memoryless
-    determinacy.} automaton $\calD$ such that $\lang{\calD} = \lang{\calN}$ and
-  let $\sigma$ be the winning strategy for \eve in the game played on $\calN$ (and in
-  the game played on $\calD$). By memoryless determinacy of parity games, there
-  is a memoryless strategy $\mu$ for \eve in the game played on $\calD$. Since
-  $\calD$ has exponential size with respect to the size of $\calN$,\mcnote{I
-    don't see in \Cref{prop:det} or around a bound on the memory needed for the
-    strategy, which seems to be what we need here.} there exists
-  an exponential-memory strategy $\mu'$ for \eve in the game played on $\calN$. It
-  follows that if any run of $\calN$ on a play $\pi$ consistent with $\mu'$ has
-  visited sufficiently many accepting states, the Mealy machine realizing $\mu'$
-  must have revisited some configuration. Hence, by ``pumping'' this behaviour,
-  \adam must be able to win against $\mu'$, contradicting the fact that $\mu'$ is a
-  winning strategy for \eve. We thus have an exponential upper bound on visits
-  to accepting states for all runs on plays consistent with $\mu'$. By
-  construction of $\calS^K_\calN$ we have that $\mu'$ is a winning strategy for
-  \eve in the game played on $\calS^K_\calN$.  \qed
+  automaton of size at most exponential~\cite{safra88,piterman07}.  Let us
+  consider a deterministic parity automaton $\calD$ such that
+  $\lang{\calD} = \lang{\calN}$ and let $\sigma$ be the winning strategy for \eve in
+  the game played on $\calN$ (and in the game played on $\calD$). By memoryless
+  determinacy of parity games, there is a memoryless strategy $\mu$ for \eve in
+  the game played on $\calD$. Since $\calD$ has exponential size with respect to
+  the size of $\calN$, there exists an exponential-memory strategy $\mu'$ for \eve
+  in the game played on $\calN$. It follows that if any run of $\calN$ on a play
+  $\pi$ consistent with $\mu'$ has visited sufficiently many accepting states, the
+  Mealy machine realizing $\mu'$ must have revisited some configuration. Hence, by
+  ``pumping'' this behaviour, \adam must be able to win against $\mu'$,
+  contradicting the fact that $\mu'$ is a winning strategy for \eve. We thus have
+  an exponential upper bound on visits to accepting states for all runs on plays
+  consistent with $\mu'$. By construction of $\calS^K_\calN$ we have that $\mu'$ is
+  a winning strategy for \eve in the game played on $\calS^K_\calN$.  \qed
 \end{proof}
 
 \subsection{Some unsafe states are more unsafe than others}
