@@ -31,6 +31,8 @@
 #include "hoaparser.h"
 
 char* getString(char* s) {
+    // we remove the first and last letters (quotes)
+    // so this much is enough even for the end of string
     int newLen = strlen(s) - 1;
     char* str = (char*) malloc(sizeof(char) * newLen);
     strncpy(str, s + 1, newLen - 1);
@@ -39,7 +41,10 @@ char* getString(char* s) {
 }
 
 char* getAlias(char* s) {
-    char* str = (char*) malloc(sizeof(char) * strlen(s));
+    // we remove the first letter (an @) so this much
+    // is enough even for the end of string
+    int newLen = strlen(s);
+    char* str = (char*) malloc(sizeof(char) * newLen);
     strcpy(str, s + 1);
     return str;
 }

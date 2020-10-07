@@ -1,14 +1,14 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+/* A Bison parser, made by GNU Bison 3.5.  */
 
-/* Skeleton interface for Bison's Yacc-like parsers in C
+/* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -33,85 +31,64 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Tokens.  */
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
+
+#ifndef YY_YY_HOAPARSER_H_INCLUDED
+# define YY_YY_HOAPARSER_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
+
+/* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     HOAHDR = 1,
-     ACCEPTANCE = 2,
-     STATES = 3,
-     AP = 4,
-     CNTAP = 5,
-     ACCNAME = 6,
-     TOOL = 7,
-     NAME = 8,
-     START = 9,
-     ALIAS = 10,
-     PROPERTIES = 11,
-     LPAR = 258,
-     RPAR = 259,
-     LBRACE = 260,
-     RBRACE = 261,
-     LSQBRACE = 262,
-     RSQBRACE = 263,
-     BOOLOR = 264,
-     BOOLAND = 265,
-     BOOLNOT = 266,
-     STATEHDR = 267,
-     INF = 268,
-     FIN = 269,
-     BEGINBODY = 270,
-     ENDBODY = 271,
-     STRING = 272,
-     IDENTIFIER = 273,
-     ANAME = 274,
-     HEADERNAME = 275,
-     INT = 276,
-     BOOL = 277
-   };
+  enum yytokentype
+  {
+    HOAHDR = 1,
+    ACCEPTANCE = 2,
+    STATES = 3,
+    AP = 4,
+    CNTAP = 5,
+    ACCNAME = 6,
+    TOOL = 7,
+    NAME = 8,
+    START = 9,
+    ALIAS = 10,
+    PROPERTIES = 11,
+    LPAR = 258,
+    RPAR = 259,
+    LBRACE = 260,
+    RBRACE = 261,
+    LSQBRACE = 262,
+    RSQBRACE = 263,
+    BOOLOR = 264,
+    BOOLAND = 265,
+    BOOLNOT = 266,
+    STATEHDR = 267,
+    INF = 268,
+    FIN = 269,
+    BEGINBODY = 270,
+    ENDBODY = 271,
+    STRING = 272,
+    IDENTIFIER = 273,
+    ANAME = 274,
+    HEADERNAME = 275,
+    INT = 276,
+    BOOL = 277
+  };
 #endif
-/* Tokens.  */
-#define HOAHDR 1
-#define ACCEPTANCE 2
-#define STATES 3
-#define AP 4
-#define CNTAP 5
-#define ACCNAME 6
-#define TOOL 7
-#define NAME 8
-#define START 9
-#define ALIAS 10
-#define PROPERTIES 11
-#define LPAR 258
-#define RPAR 259
-#define LBRACE 260
-#define RBRACE 261
-#define LSQBRACE 262
-#define RSQBRACE 263
-#define BOOLOR 264
-#define BOOLAND 265
-#define BOOLNOT 266
-#define STATEHDR 267
-#define INF 268
-#define FIN 269
-#define BEGINBODY 270
-#define ENDBODY 271
-#define STRING 272
-#define IDENTIFIER 273
-#define ANAME 274
-#define HEADERNAME 275
-#define INT 276
-#define BOOL 277
 
-
-
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
-#line 420 "hoa.y"
+union YYSTYPE
 {
+#line 420 "hoa.y"
+
     int number;
     char* string;
     bool boolean;
@@ -121,28 +98,32 @@ typedef union YYSTYPE
     void* trlist;
     void* statelist;
     BTree* tree;
-}
-/* Line 1529 of yacc.c.  */
-#line 127 "hoaparser.h"
-	YYSTYPE;
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
+
+#line 103 "hoaparser.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
 #endif
 
-extern YYSTYPE yylval;
-
+/* Location type.  */
 #if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
-typedef struct YYLTYPE
+typedef struct YYLTYPE YYLTYPE;
+struct YYLTYPE
 {
   int first_line;
   int first_column;
   int last_line;
   int last_column;
-} YYLTYPE;
-# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+};
 # define YYLTYPE_IS_DECLARED 1
 # define YYLTYPE_IS_TRIVIAL 1
 #endif
 
+
+extern YYSTYPE yylval;
 extern YYLTYPE yylloc;
+int yyparse (void);
+
+#endif /* !YY_YY_HOAPARSER_H_INCLUDED  */
