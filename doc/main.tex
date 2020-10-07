@@ -272,7 +272,9 @@ are the same, in that they admit the same winning strategies.
 Instead of working with UKcB automata directly, we will define equivalent
 universal safety automata where counting up to \(K\) is embedded in the states.
 As a starting point, with \(K = 1\), a UKcB is but a universal safety automaton:
-as soon as a B\"uchi state is reached, the word should be
+as soon as a B\"uchi state is reached,\mcnote{When I suggested using ``Büchi''
+  rather than ``accepting,'' I was thinking about using the former
+  \emph{everywhere}.  Thoughts?} the word should be
 rejected. We extend this analogy for values
 of \(K \geq 1\) by having this universal safety automaton count, up to \(K\), the
 number of times accepting states are visited.  At the same time, we
@@ -390,7 +392,9 @@ We say a state $q \in Q$ of a safety automaton $\calS$ is \emph{winning for \eve
 if she has a winning strategy from it --- that is, in the game played on
 \(\calS\) where the initial state is set to \(q\). Otherwise, the
 state is losing for her. It follows from Lemma~\ref{lem:runs-visits} that the set of
-losing states from $\calS^K_\calN$ are \emph{$\preceq$-upwards closed}. We further
+losing states from $\calS^K_\calN$ are \emph{$\preceq$-upwards closed}\mcnote{I'm not
+  sure about the use of the adverb \emph{upwards}, instead of the adv/adj
+  \emph{upward}; can we use upward throughout?}. We further
 observe that $U$, the set of unsafe states of \(\calS^K_\calN\), is itself
 $\preceq$-upwards closed.
 \begin{proposition}\label{pro:up-closed}
@@ -461,7 +465,7 @@ Note that the partially ordered set $(\calF,\preceq)$ we have defined in
 \Cref{sec:order} is an upper semilattice. Indeed, for $f, g \in \calF$ we have
 that $f \sqcap g$ is a function $\phi \in \calF$ such that
 \(
-  \phi(q) = \min(f(q),g(q))
+  \phi(q) = \min(f(q),g(q))\mathnote{\mcnote{Isn't that max?}}
 \)
 for all $q \in Q$.
 
@@ -471,7 +475,9 @@ pairwise $\preceq$-incomparable.  Given $S' \subseteq S$, we write $\lfloor S'
 $S'$ is (upwards-)closed if $s' \in S'$ and $s' \preceq s''$ implies that $s''
 \in S'$. Finally, we write $\closeup{S''}$ to denote the (upwards-)closure of
 $S'' \subseteq S$, that is to say the set $\{s \in S \mid \exists s'' \in S''
-: s'' \preceq s\}$.
+: s'' \preceq s\}$.  It is immediate to check that if \(S\) is closed, then
+\(S = \closeup{\lfloor S \rfloor}\); in that sense, we will say that \(S\) is \emph{represented
+  by} the set of its minimal elements \(\lfloor S \rfloor\).
 
 The result below already captures the intuition of the developments that
 will follow in this section. We will use antichains as a ``data structure'' to
@@ -490,20 +496,22 @@ compute the set of losing states for \eve.
 \end{proposition}
 
 \paragraph{Antichain-based uncontrollable predecessors.}
-Henceforth, we fix a universal safety automaton $\calS^K_\calN = (\calF,f_0,I
-\times O, T,U)$.  Previously, we have given a definition for $\upre$ in the
-context of any safety game. For the safety game played on $\calS^K_\calN$ and
-for a set $F \subseteq \calF$, $\upre$
-can equivalently be defined as follows.
+Henceforth, we fix a universal\mcnote{Let's be consistent: Do we want to include
+  the term ``universal'' for this automaton, or just keep ``deterministic,'' or
+  even just say ``safety automaton?''  Currently, it fluctuates.} safety
+automaton $\calS^K_\calN = (\calF,f_0,I \times O, T,U)$.  Previously, we have given a
+definition for $\upre$ in the context of any safety game. For the safety game
+played on $\calS^K_\calN$ and for a set $F \subseteq \calF$, $\upre$ can equivalently be
+defined as follows.
 \[
   \upre(F) = F \cup \left( \bigcup_{i \in I} \bigcap_{o \in O}
   \{f \in \calF \mid T(f,\langle i, o \rangle) \in F\} \right)
 \]
 %
 Let us write $\frakA \subseteq \pow{\calF}$ for the set of all antichains. In
-the sequel we will argue that if $F$ is upwards closed and $A = \lfloor F
+the next lemma, we will argue that if $F$ is upwards closed and $A = \lfloor F
 \rfloor$ then $\upre(F)$ can be
-replaced by the closure of $\underline{\upre} : \frakA \to \frakA$,
+replaced by the closure of $\underline{\upre} \colon \frakA \to \frakA$,
 defined below, applied to $A$.
 \begin{align}
   \label{eqn:A0io}
@@ -522,9 +530,11 @@ defined below, applied to $A$.
 \end{align}
 Both $\underline{\upre}^n(A)$, for $n \in \mathbb{N}$, and
 $\underline{\upre}^*(A)$
-are defined as for $\upre$. 
+are defined as for $\upre$.\mcnote{Do we need to argue that the star version
+  exists?}
 
-\begin{lemma}
+
+\begin{lemma}\label{lem:uupre}
   Let $F \subseteq \calF$ be a closed set represented by the antichain $A =
   \lfloor F \rfloor$. Then $\upre(F)$ is closed and
   \(
@@ -538,11 +548,15 @@ follows that proving
   = \bigcup_{m \in A} \{ f \in \calF \mid m \preceq T(f, \langle i,o \rangle)
   \},
 \]
-from~\eqref{eqn:A0io}, is closed suffices for the lemma to hold.
+from~\eqref{eqn:A0io}, is closed suffices for the lemma to hold. \mcnote[inline]{It seems
+  that two statements are crammed in the previous sentence: the equality of these two
+  sets, which is arguably quite immediate, and the claim that it suffices that
+  it be closed for the lemma to hold.  I'd rather split these two statements.}
 
 \begin{lemma}
   Let $m \in \calF$ and $(i,o) \in I \times O$. Then $\{ f \in \calF \mid m
-  \preceq T(f, \langle i,o \rangle) \}$ is closed.
+  \preceq T(f, \langle i,o \rangle) \}$ is closed.\mcnote{This lemma could be incorporated as a
+    fact in the proof of \Cref{lem:uupre}, no?}
 \end{lemma}
 \begin{proof}
   Consider an arbitrary $f$ in the set and some $f' \in \calF$ such that $f
@@ -551,8 +565,8 @@ from~\eqref{eqn:A0io}, is closed suffices for the lemma to hold.
   \[ 
     T(f,\langle i, o \rangle) \preceq T(f',\langle i, o \rangle)
   \]
-  Further, we know $m \preceq T(f,\langle i, o \rangle)$ from our initial
-  assumption. Hence $f'$ is also in the set.\qed
+  Further, $m \preceq T(f,\langle i, o \rangle)$ holds by assumption. Hence
+  \(m \preceq T(f', \langle i, o \rangle)\) and $f'$ is also in the set.\qed
 \end{proof}
 
 \gpnote{Can we just compute the predecessors of the minima and take the
