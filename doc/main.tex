@@ -5,6 +5,7 @@
 \usepackage{xspace}
 \usepackage{todonotes}
 \usepackage{cleveref}
+\usepackage[basic,bold]{complexity}
 
 % Usual math notation fixes
 \makeatletter
@@ -40,9 +41,10 @@
 \newcommand{\calD}{\mathcal{D}}
 \newcommand{\calG}{\mathcal{G}}
 \newcommand{\frakA}{\mathfrak{A}}
-\newcommand{\lang}[1]{\mathcal{L}({#1})}
+\renewcommand{\lang}[1]{\mathcal{L}({#1})}
 \newcommand{\out}[2]{\pi_{#1#2}}
 \newcommand{\closeup}[1]{\mathrm{\uparrow} #1}
+\newcommand{\pseudopre}{\widehat{\mathrm{Pre}}}
 
 % Watermark
 \usepackage{ifdraft}
@@ -124,10 +126,10 @@ consider three conditions.
     is accepting for this condition, or safe, if and only if for all $i \in
     \mathbb{N}$ we have that $q_i \not\in U$.
   \item The \emph{B\"uchi} condition is defined with respect to a set of
-    \emph{B\"uchi} or accepting states $B \subseteq Q$. A run $\rho = q_0
+    \emph{B\"uchi} states $B \subseteq Q$. A run $\rho = q_0
     a_1 q_1 a_2 \dots$ is accepting for this condition if and only if for
     all $i \in \mathbb{N}$ there exists $j \ge i$ such that $q_j \in B$.
-    That is, the run visits accepting states infinitely often.  The parity
+    That is, the run visits B\"uchi states infinitely often.  The parity
     condition can be implemented using a Büchi condition by doing some simple
     modifications on the underlying automaton.
     %% This is "needed" for the claim that every game is memoryless determined.
@@ -173,7 +175,7 @@ O)^\omega$ used to determine who wins a play $\pi$. If $\pi \in P$ then
 \emph{$\pi$ is winning for \eve}, otherwise it is \emph{winning for \adam}.
 
 \begin{definition}[Strategies]
-  A \emph{strategy} for \adam in a game is a function $\tau\colon (I \times O)^*
+  A \emph{strategy} for \adam is a function $\tau\colon (I \times O)^*
   \to I$ which maps every (possibly empty) play prefix
   to a choice of input letter.  Similarly, a \emph{strategy for \eve}
   is a function $\sigma\colon (I \times O)^* I \to O$ which maps every play prefix
@@ -250,16 +252,16 @@ automata are also memoryless determined.
 In this section we present the Acacia~\cite{acacia} solution for the
 realizability and synthesis problems for games played on (i.e. with payoff sets
 expressed by) universal co-B\"uchi (UcB) automata.  Recall that these automata
-deem a word accepted if no run on the word visits an accepting state infinitely
+deem a word accepted if no run on the word visits a B\"uchi state infinitely
 often.  We consider a stronger version of this acceptance condition which asks
-that visits to accepting states be bounded by an explicit constant.
+that visits to B\"uchi states be bounded by an explicit constant.
 
 \begin{definition}[Universal \(K\)-co-Büchi automata]
   A universal $K$-co-B\"uchi (UKcB) automaton is a universal co-Büchi automaton
-  $\calN = (Q,q_0,A,\Delta,B)$ with $B \subseteq Q$ the set of accepting
+  $\calN = (Q,q_0,A,\Delta,B)$ with $B \subseteq Q$ the set of B\"uchi
   states.  It accepts a word $\alpha$ if and only if all of its runs
   $\rho = q_0 \alpha(1) q_1 \alpha(2) \dots$ on $\alpha$ visit at most $K$
-  accepting states, i.e. $|\{i \in \mathbb{N} : q_i \in B\}| < K$.
+  B\"uchi states, i.e. $|\{i \in \mathbb{N} : q_i \in B\}| < K$.
 \end{definition}
 
 Our intention is to give an incremental algorithm to solve games played on UcB
@@ -272,20 +274,18 @@ are the same, in that they admit the same winning strategies.
 Instead of working with UKcB automata directly, we will define equivalent
 universal safety automata where counting up to \(K\) is embedded in the states.
 As a starting point, with \(K = 1\), a UKcB is but a universal safety automaton:
-as soon as a B\"uchi state is reached,\mcnote{When I suggested using ``Büchi''
-  rather than ``accepting,'' I was thinking about using the former
-  \emph{everywhere}.  Thoughts?} the word should be
+as soon as a B\"uchi state is reached, the word should be
 rejected. We extend this analogy for values
 of \(K \geq 1\) by having this universal safety automaton count, up to \(K\), the
-number of times accepting states are visited.  At the same time, we
+number of times B\"uchi states are visited.  At the same time, we
 \emph{determinize} this automaton using a powerset-like construction, and only
-keep, for each state \(q\) of \(\calN\), the \emph{maximum} number of accepting
-states visited upon reaching \(q\).  In practice, each state of our deterministic
+keep, for each state \(q\) of \(\calN\), the \emph{maximum} number of B\"uchi
+states visited upon reaching \(q\).  In practice, each state of our
 safety automaton will be a function
 \(f\colon Q \to \{0, \dots, K\} \cup \{\bot\}\); if a word reaches \(f\) with, say,
 \(f(q) = i\), \(0 \leq i < K \), then the same word can reach \(q\) in
-\(\calN\), never visiting more than \(i\) accepting states.
-\begin{definition}[$K$-bounded deterministic safety automaton]
+\(\calN\), never visiting more than \(i\) B\"uchi states.
+\begin{definition}[$K$-bounded safety automaton]
   For a given UcB automaton $\calN = (Q,q_0,A,\Delta,B)$ and $K \in \mathbb{N}$,
   let $\calS^K_\calN$ be the deterministic safety
   automaton $(\calF,f_0,A,T,U)$ with components defined as follows.
@@ -326,7 +326,7 @@ The following is immediate from the lemma.
 \begin{corollary}\label{cor:safe-approx}
   For all $\alpha \in A^\omega$ and all $K,\ell \in \mathbb{N}$ with $\ell
   \leq K$, if there exists a run of $\calN$ on $\alpha$ which visits 
-  at least $K$ accepting states then $\alpha \not\in \lang{\calS^\ell_\calN}$.
+  at least $K$ B\"uchi states then $\alpha \not\in \lang{\calS^\ell_\calN}$.
   In addition, the
   language of \(\calS^K_\calN\) is that of \(\calN\) with UKcB semantics,
   hence \(\lang{\calS^K_\calN} \subseteq \lang{\calN}\).
@@ -338,7 +338,7 @@ $\calN$.
 \begin{lemma}
     Consider input and output alphabets $I$ and $O$, a UcB
     automaton $\calN$ with alphabet $I \times O$, a bound $K \in \mathbb{N}$,
-    and the corresponding universal safety automaton $\calS^K_\calN$. A
+    and the corresponding safety automaton $\calS^K_\calN$. A
     winning strategy for \eve in the game played on $\calS^K_\calN$
     is also a winning strategy for \eve in the game played on
     $\calN$.
@@ -373,11 +373,11 @@ $\calS^K_\calN$.  This relies on the memoryless determinacy of our games.
   the game played on $\calD$. Since $\calD$ has exponential size with respect to
   the size of $\calN$, there exists an exponential-memory strategy $\mu'$ for \eve
   in the game played on $\calN$. It follows that if any run of $\calN$ on a play
-  $\pi$ consistent with $\mu'$ has visited sufficiently many accepting states, the
+  $\pi$ consistent with $\mu'$ has visited sufficiently many B\"uchi states, the
   Mealy machine realizing $\mu'$ must have revisited some configuration. Hence, by
   ``pumping'' this behaviour, \adam must be able to win against $\mu'$,
   contradicting the fact that $\mu'$ is a winning strategy for \eve. We thus have
-  an exponential upper bound on visits to accepting states for all runs on plays
+  an exponential upper bound on visits to B\"uchi states for all runs on plays
   consistent with $\mu'$. By construction of $\calS^K_\calN$ we have that $\mu'$ is
   a winning strategy for \eve in the game played on $\calS^K_\calN$.  \qed
 \end{proof}
@@ -385,18 +385,16 @@ $\calS^K_\calN$.  This relies on the memoryless determinacy of our games.
 \subsection{Some unsafe states are more unsafe than others}\label{sec:order}
 There is a natural order on the states $f$ of $\calS^K_N$ induced by how many
 times runs reaching each state $q$ with $f(q) \neq \bot$ have visited
-accepting states. Formally, let us define the partial order $f \preceq g$
+B\"uchi states. Formally, let us define the partial order $f \preceq g$
 to hold if and only if for all $q \in Q$ we have $f(q) \leq g(q)$.
 
 We say a state $q \in Q$ of a safety automaton $\calS$ is \emph{winning for \eve}
 if she has a winning strategy from it --- that is, in the game played on
 \(\calS\) where the initial state is set to \(q\). Otherwise, the
 state is losing for her. It follows from Lemma~\ref{lem:runs-visits} that the set of
-losing states from $\calS^K_\calN$ are \emph{$\preceq$-upwards closed}\mcnote{I'm not
-  sure about the use of the adverb \emph{upwards}, instead of the adv/adj
-  \emph{upward}; can we use upward throughout?}. We further
+losing states from $\calS^K_\calN$ are \emph{$\preceq$-upward closed}. We further
 observe that $U$, the set of unsafe states of \(\calS^K_\calN\), is itself
-$\preceq$-upwards closed.
+$\preceq$-upward closed.
 \begin{proposition}\label{pro:up-closed}
   Let $f,g \in \mathcal{F}$ be states from $\calS^K_\calN$ such that $f
   \preceq g$.
@@ -412,7 +410,7 @@ $\calS^K_\calN$ and then state the necessary preliminaries for the symbolic
 antichain-based algorithm to be presented.
 
 \section{Solving safety games}
-We refer to a game played on a deterministic safety automaton as a safety
+We refer to a game played on a \emph{deterministic} safety automaton as a safety
 game. Let us first consider safety games without making use of the partial order
 on the states of \(\calS^K_\calN\).
 
@@ -452,7 +450,7 @@ operator which leverages the $\preceq$ ordering on states of $\calS^K_\calN$.
 \subsection{Antichain-based algorithm}
 We intend to leverage~\Cref{pro:up-closed} to define an operator
 which manipulates \emph{minimal elements} of the sets only and, crucially,
-preserves upwards-closedness of all intermediate sets. We first give some
+preserves upward-closedness of all intermediate sets. We first give some
 preliminaries regarding antichains.
 
 \paragraph{Lattices and antichains.} A partially ordered set $(S, \preceq)$ is
@@ -465,15 +463,15 @@ Note that the partially ordered set $(\calF,\preceq)$ we have defined in
 \Cref{sec:order} is an upper semilattice. Indeed, for $f, g \in \calF$ we have
 that $f \sqcap g$ is a function $\phi \in \calF$ such that
 \(
-  \phi(q) = \min(f(q),g(q))\mathnote{\mcnote{Isn't that max?}}
+  \phi(q) = \max(f(q),g(q))
 \)
 for all $q \in Q$.
 
 A subset $A \subseteq S$ is called an \emph{antichain} if all its elements are
 pairwise $\preceq$-incomparable.  Given $S' \subseteq S$, we write $\lfloor S'
 \rfloor$ for the antichain of $\preceq$-minimal elements of $S$. We say that
-$S'$ is (upwards-)closed if $s' \in S'$ and $s' \preceq s''$ implies that $s''
-\in S'$. Finally, we write $\closeup{S''}$ to denote the (upwards-)closure of
+$S'$ is (upward-)closed if $s' \in S'$ and $s' \preceq s''$ implies that $s''
+\in S'$. Finally, we write $\closeup{S''}$ to denote the (upward-)closure of
 $S'' \subseteq S$, that is to say the set $\{s \in S \mid \exists s'' \in S''
 : s'' \preceq s\}$.  It is immediate to check that if \(S\) is closed, then
 \(S = \closeup{\lfloor S \rfloor}\); in that sense, we will say that \(S\) is \emph{represented
@@ -496,9 +494,7 @@ compute the set of losing states for \eve.
 \end{proposition}
 
 \paragraph{Antichain-based uncontrollable predecessors.}
-Henceforth, we fix a universal\mcnote{Let's be consistent: Do we want to include
-  the term ``universal'' for this automaton, or just keep ``deterministic,'' or
-  even just say ``safety automaton?''  Currently, it fluctuates.} safety
+Henceforth, we fix a safety
 automaton $\calS^K_\calN = (\calF,f_0,I \times O, T,U)$.  Previously, we have given a
 definition for $\upre$ in the context of any safety game. For the safety game
 played on $\calS^K_\calN$ and for a set $F \subseteq \calF$, $\upre$ can equivalently be
@@ -509,12 +505,11 @@ defined as follows.
 \]
 %
 Let us write $\frakA \subseteq \pow{\calF}$ for the set of all antichains. In
-the next lemma, we will argue that if $F$ is upwards closed and $A = \lfloor F
+the next lemma, we will argue that if $F$ is closed and $A = \lfloor F
 \rfloor$ then $\upre(F)$ can be
 replaced by the closure of $\underline{\upre} \colon \frakA \to \frakA$,
 defined below, applied to $A$.
-\begin{align}
-  \label{eqn:A0io}
+\begin{align*}
   A^{(0)}_{i,o} := {} &
   \left\lfloor \bigcup_{m \in A} \{f \in \calF \mid m \preceq
   T(f,\langle i, o \rangle) \} \right\rfloor\\
@@ -527,11 +522,11 @@ defined below, applied to $A$.
   %
   \underline{\upre}(F) := {} &
   \lfloor A \cup A^{(2)} \rfloor
-\end{align}
-Both $\underline{\upre}^n(A)$, for $n \in \mathbb{N}$, and
-$\underline{\upre}^*(A)$
-are defined as for $\upre$.\mcnote{Do we need to argue that the star version
-  exists?}
+\end{align*}
+We inductively define $\underline{\upre}^n(A)$, for all $n \in \mathbb{N}$, as
+we did for $\upre$. Since $\frakA$ is finite, we also have that the
+$\underline{\upre}^i(A)$ stabilize from some $i \leq 2^{|Q|}$ onward. We write
+$\underline{\upre}^*(A)$ for said fixed point of $\underline{\upre}$.
 
 
 \begin{lemma}\label{lem:uupre}
@@ -541,22 +536,22 @@ are defined as for $\upre$.\mcnote{Do we need to argue that the star version
     \upre(F) = \closeup{\underline{\upre}(A)}.
   \)
 \end{lemma}
-From \Cref{pro:antichains} and the definitions of $\upre$ and $\underline{\upre}$ it
-follows that proving 
-\[
+The next equality follows from the facts that
+$F$ is closed and $A = \lfloor F \rfloor$.
+\begin{equation}\label{eqn:in-f}
+  \bigcup_{m \in A} \{ f \in \calF \mid m \preceq T(f, \langle i,o \rangle)
+  \}
+  =
   \{f \in \calF \mid T(f,\langle i, o \rangle) \in F\}
-  = \bigcup_{m \in A} \{ f \in \calF \mid m \preceq T(f, \langle i,o \rangle)
-  \},
-\]
-from~\eqref{eqn:A0io}, is closed suffices for the lemma to hold. \mcnote[inline]{It seems
-  that two statements are crammed in the previous sentence: the equality of these two
-  sets, which is arguably quite immediate, and the claim that it suffices that
-  it be closed for the lemma to hold.  I'd rather split these two statements.}
-
-\begin{lemma}
-  Let $m \in \calF$ and $(i,o) \in I \times O$. Then $\{ f \in \calF \mid m
-  \preceq T(f, \langle i,o \rangle) \}$ is closed.\mcnote{This lemma could be incorporated as a
-    fact in the proof of \Cref{lem:uupre}, no?}
+\end{equation}
+Hence, from \Cref{pro:antichains} and the definitions of $\upre$,
+$\underline{\upre}$, and $A^{(0)}_{i,o}$, it follows that proving
+the left-hand side of~\eqref{eqn:in-f} is closed suffices for the lemma to
+hold.
+\begin{lemma}\label{lem:closed-pre}
+  Let $F \in \calF$ be a closed set represented by the antichain $A = \lfloor
+  F \rfloor$. Then $\{f \in \calF \mid m \preceq T(f, \langle i,o \rangle) \}$
+  is closed for all $m \in \calF$, all $i \in I$, and all $o \in O$.
 \end{lemma}
 \begin{proof}
   Consider an arbitrary $f$ in the set and some $f' \in \calF$ such that $f
@@ -569,9 +564,6 @@ from~\eqref{eqn:A0io}, is closed suffices for the lemma to hold. \mcnote[inline]
   \(m \preceq T(f', \langle i, o \rangle)\) and $f'$ is also in the set.\qed
 \end{proof}
 
-\gpnote{Can we just compute the predecessors of the minima and take the
-minima of that of that?}
-
 From the above lemmas and~\Cref{pro:up-closed} it follows that one can compute the set of
 losing states for \eve using $\underline{\upre}$.
 \begin{theorem}
@@ -579,8 +571,63 @@ losing states for \eve using $\underline{\upre}$.
   \closeup{\underline{\upre}^*(\lfloor U \rfloor)}$.
 \end{theorem}
 
+Note that in computing $\underline{\upre}^*(\lfloor U \rfloor)$, the only
+intermediate set for which it is not immediately clear that we can compute it
+based on an antichain of minimal elements is $A^{(0)}_{i,o}$. Indeed,
+$A^{(1)}_i$ and $A^{(2)}$ can be computed from the antichain representation of
+a closed set using the equivalences stated in \Cref{pro:antichains}. To avoid
+computing the set of all direct predecessors of $A$ to compute $A^{(0)}_{i,o}$
+we introduce a ``pseudo-inverse'' $\pseudopre : \calF \times I \times O \to
+\calF$ of $T$ defined below for all $f \in \calF$ and all $a \in I \times
+O$. For convenience, we adopt the convention that $0 - 1 = 0$ and
+$\bot - 1 = \bot$.
+\[
+  \pseudopre(f,i,o) := \left\{ p \mapsto \max_{(p,a,q) \in \Delta} f(q) -
+  \indicator{B}{q} \right\}
+\]
+We now claim that $A^{(0)}_{i,o}$ can be computed based on the set of all
+$\pseudopre(m,i,o)$ where $m \in A, i \in I, o \in O$.
+
+\begin{proposition}[From~\cite{acacia0}]
+  Let $F \in \calF$ be a closed set represented by the antichain $A = \lfloor
+  F \rfloor$, $i \in I$, and $o \in O$. The following holds:
+  \[
+    \left\lfloor \bigcup_{m \in A} \{ f \in \calF \mid m \preceq T(f, \langle i,
+    o \rangle \} \right\rfloor = \left\lfloor \left\{ \pseudopre(m,i,o) \mid m \in
+    A\right\} \right\rfloor.
+  \]
+\end{proposition}
+\begin{proof}[Sketch]
+  Using \Cref{lem:closed-pre} and the definition of $\pseudopre$ it is easy to
+  argue that 
+  \[
+    \pseudopre(m,i,o) \in \{ f \in \calF \mid m \preceq T(f, \langle i, o
+    \rangle \}
+  \]
+  for all $m \in A$, all $i \in I$, and all $o \in O$. Hence, it suffices to
+  prove that for all $f \in \calF$ such that $m \preceq T(f, \langle i, o
+  \rangle)$ we have $\pseudopre(m,i,o) \preceq f$. However, the latter is also
+  easy to prove using the definition of $\pseudopre$.\qed
+\end{proof}
+
+We close this section with an impossibility result. While computing
+$\underline{\upre}$ is, intuitively, more efficient than computing $\upre$, it
+turns out that it is computationally hard. One can reduce the computation of
+all maximal-size independent sets of a graph to the computation of
+$\underline{\upre}$ for a safety game on functions as studied in this section.
+\begin{proposition}[From~\cite{acacia0}]
+  The $\underline{\upre}$ operator is, in general, not computable in
+  polynomial time unless $\NP = \P$.
+\end{proposition}
+
 \section{Antichain data structures}
 \todo[inline]{DO RESEARCH}
+
+\todo[inline]{Computing $\underline{\upre}$ cannot be done in polynomial time
+  unless the maximal independent set problem is in polynomial time;
+  interestingly, that problem admits polynomial-time approximation algorithms
+for polynomial approximations (i.e. not constant)}
+
 
 
 \bibliographystyle{splncs04}
