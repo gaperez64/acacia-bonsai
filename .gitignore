@@ -9,3 +9,4 @@ doc/*.fdb_latexmk
 doc/*.fls
 doc/*.log
 doc/*.pdf
+*.o

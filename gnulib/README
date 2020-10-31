@@ -1,0 +1,13 @@
+To update gnulib, we follow a process similar to the glib:
+  https://gitlab.gnome.org/GNOME/glib/-/blob/master/glib/gnulib/README
+
+That is:
+- Create an empty directory, and an empty configure.ac
+- Run gnulib-tool --import argp argmatch progname closeout
+- Copy the files in lib/ back to that directory.
+
+No modifications have been made to these files in this repository.
+
+To create config.h.meson, we s/#undef/#mesondefine/ the config.h.in, as
+suggested by meson/ac_converter.py.  The meson.build file was mostly generated
+by that tool, with some tweaks (that are probably slightly wrong).
