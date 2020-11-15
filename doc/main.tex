@@ -549,7 +549,7 @@ $\underline{\upre}$, and $A^{(0)}_{i,o}$, it follows that proving
 the left-hand side of~\eqref{eqn:in-f} is closed suffices for the lemma to
 hold.
 \begin{lemma}\label{lem:closed-pre}
-  Let $F \in \calF$ be a closed set represented by the antichain $A = \lfloor
+  Let $F \subseteq \calF$ be a closed set represented by the antichain $A = \lfloor
   F \rfloor$. Then $\{f \in \calF \mid m \preceq T(f, \langle i,o \rangle) \}$
   is closed for all $m \in \calF$, all $i \in I$, and all $o \in O$.
 \end{lemma}
@@ -567,7 +567,7 @@ hold.
 From the above lemmas and~\Cref{pro:up-closed} it follows that one can compute the set of
 losing states for \eve using $\underline{\upre}$.
 \begin{theorem}
-  A state $f \in \calF$ is losing for \eve if and only if $f \in
+  A state $f \subseteq \calF$ is losing for \eve if and only if $f \in
   \closeup{\underline{\upre}^*(\lfloor U \rfloor)}$.
 \end{theorem}
 
@@ -589,7 +589,7 @@ We now claim that $A^{(0)}_{i,o}$ can be computed based on the set of all
 $\pseudopre(m,i,o)$ where $m \in A, i \in I, o \in O$.
 
 \begin{proposition}[From~\cite{acacia0}]
-  Let $F \in \calF$ be a closed set represented by the antichain $A = \lfloor
+  Let $F \subseteq \calF$ be a closed set represented by the antichain $A = \lfloor
   F \rfloor$, $i \in I$, and $o \in O$. The following holds:
   \[
     \left\lfloor \bigcup_{m \in A} \{ f \in \calF \mid m \preceq T(f, \langle i,
