@@ -1,0 +1,17 @@
+Transition system {
+    State 0, initial:
+        Outgoing transitions:
+            to state 1 labeled ((!s) U (T))
+    State 1:
+        Outgoing transitions:
+            to state 2 labeled ((s) U (e))
+            to state 3 labeled ((s) U (!e))
+    State 3:
+        Outgoing transitions:
+            to state 2 labeled ((!s) U (e))
+            to state 3 labeled ((!s) U (!e))
+    State 2:
+        Outgoing transitions:
+            to state 2 labeled ((s) U (e))
+            to state 0 labeled ((s) U (!e))
+}

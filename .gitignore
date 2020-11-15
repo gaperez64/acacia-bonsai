@@ -1,4 +1,4 @@
-build
+build*/
 _trash
 builddir
 buildir
@@ -10,3 +10,5 @@ doc/*.fls
 doc/*.log
 doc/*.pdf
 *.o
+*~
+.dumbjump

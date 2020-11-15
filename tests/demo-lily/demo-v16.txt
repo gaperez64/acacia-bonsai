@@ -1,0 +1,81 @@
+Transition system {
+    State 0, initial:
+        Outgoing transitions:
+            to state 1 labeled ((!a0 && !a1 && !a2) U (r0 && r1 && r2))
+            to state 2 labeled ((!a0 && !a1 && !a2) U (!r0 && r1 && r2))
+            to state 3 labeled ((!a0 && !a1 && !a2) U (r0 && !r1 && r2))
+            to state 4 labeled ((!a0 && !a1 && !a2) U (!r0 && !r1 && r2))
+            to state 5 labeled ((!a0 && !a1 && !a2) U (r0 && r1 && !r2))
+            to state 6 labeled ((!a0 && !a1 && !a2) U (!r0 && r1 && !r2))
+            to state 7 labeled ((!a0 && !a1 && !a2) U (r0 && !r1 && !r2))
+            to state 8 labeled ((!a0 && !a1 && !a2) U (!r0 && !r1 && !r2))
+    State 8:
+        Outgoing transitions:
+            to state 1 labeled ((!a0 && !a1 && !a2) U (r0 && r1 && r2))
+            to state 2 labeled ((!a0 && !a1 && !a2) U (!r0 && r1 && r2))
+            to state 3 labeled ((!a0 && !a1 && !a2) U (r0 && !r1 && r2))
+            to state 4 labeled ((!a0 && !a1 && !a2) U (!r0 && !r1 && r2))
+            to state 5 labeled ((!a0 && !a1 && !a2) U (r0 && r1 && !r2))
+            to state 6 labeled ((!a0 && !a1 && !a2) U (!r0 && r1 && !r2))
+            to state 7 labeled ((!a0 && !a1 && !a2) U (r0 && !r1 && !r2))
+            to state 8 labeled ((!a0 && !a1 && !a2) U (!r0 && !r1 && !r2))
+    State 7:
+        Outgoing transitions:
+            to state 9 labeled ((a0 && !a1 && !a2) U (r1 && r2))
+            to state 3 labeled ((a0 && !a1 && !a2) U (!r1 && r2))
+            to state 5 labeled ((a0 && !a1 && !a2) U (r1 && !r2))
+            to state 8 labeled ((a0 && !a1 && !a2) U (!r1 && !r2))
+    State 10:
+        Outgoing transitions:
+            to state 9 labeled ((a0 && !a1 && !a2) U ((r1 && r2) || (r0 && r2)))
+            to state 1 labeled ((a0 && !a1 && !a2) U (!r0 && !r1 && r2))
+            to state 5 labeled ((a0 && !a1 && !a2) U (r1 && !r2))
+            to state 8 labeled ((a0 && !a1 && !a2) U (!r1 && !r2))
+    State 9:
+        Outgoing transitions:
+            to state 11 labeled ((!a0 && !a1 && a2) U (T))
+    State 12:
+        Outgoing transitions:
+            to state 9 labeled ((a0 && !a1 && !a2) U (r1))
+            to state 3 labeled ((a0 && !a1 && !a2) U (!r1 && r2))
+            to state 8 labeled ((a0 && !a1 && !a2) U (!r1 && !r2))
+    State 13:
+        Outgoing transitions:
+            to state 9 labeled ((a0 && !a1 && !a2) U (T))
+    State 6:
+        Outgoing transitions:
+            to state 13 labeled ((!a0 && a1 && !a2) U (r0 && r2))
+            to state 2 labeled ((!a0 && a1 && !a2) U (!r0 && r2))
+            to state 7 labeled ((!a0 && a1 && !a2) U (r0 && !r2))
+            to state 8 labeled ((!a0 && a1 && !a2) U (!r0 && !r2))
+    State 14:
+        Outgoing transitions:
+            to state 13 labeled ((!a0 && a1 && !a2) U (r0 && r2))
+            to state 2 labeled ((!a0 && a1 && !a2) U (!r0 && r2))
+            to state 7 labeled ((!a0 && a1 && !a2) U (r0 && !r2))
+            to state 8 labeled ((!a0 && a1 && !a2) U (!r0 && !r2))
+    State 5:
+        Outgoing transitions:
+            to state 13 labeled ((!a0 && a1 && !a2) U (r2))
+            to state 10 labeled ((!a0 && a1 && !a2) U (!r2))
+    State 4:
+        Outgoing transitions:
+            to state 5 labeled ((!a0 && !a1 && a2) U (r0 && r1))
+            to state 6 labeled ((!a0 && !a1 && a2) U (!r0 && r1))
+            to state 7 labeled ((!a0 && !a1 && a2) U (r0 && !r1))
+            to state 8 labeled ((!a0 && !a1 && a2) U (!r0 && !r1))
+    State 3:
+        Outgoing transitions:
+            to state 11 labeled ((!a0 && !a1 && a2) U (r1))
+            to state 12 labeled ((!a0 && !a1 && a2) U (!r1))
+    State 2:
+        Outgoing transitions:
+            to state 11 labeled ((!a0 && !a1 && a2) U (r0))
+            to state 14 labeled ((!a0 && !a1 && a2) U (!r0))
+    State 1:
+        Outgoing transitions:
+            to state 11 labeled ((!a0 && !a1 && a2) U (T))
+    State 11:
+        Outgoing transitions:
+            to state 13 labeled ((!a0 && a1 && !a2) U (T))
+}

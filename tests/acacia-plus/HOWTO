@@ -1,0 +1,105 @@
+# This file is part of Acacia+, a tool for synthesis of reactive systems 
+# using antichain-based techniques
+# Copyright (C) 2011-2013 UMONS-ULB
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+###########################
+ How to install Acacia+ 
+###########################
+
+1) Install glib2
+	Available at http://www.gtk.org/
+
+2) Install pygraph 1.8.0 or higher
+	python-graph is a library for working with graphs in Python. It 
+	provides a suitable data structure for representing graphs and a 
+	whole set of important algorithms.
+	python-graph is available at http://code.google.com/p/python-graph/. 
+	The dot module is not required to use Acacia+.
+	You can install it using easy_install:
+		> easy_install python-graph-core
+
+3) Install pygraphviz 1.1 or higher
+	PyGraphviz is a Python interface to the Graphviz graph layout and 
+	visualization package.
+	It is used by Acacia+ to write strategies in DOT and PNG.
+	PyGraphviz is available at http://networkx.lanl.gov/pygraphviz/.
+	You can install it using easy_install:
+		> easy_install pygraphviz
+	
+4) Install Acacia+
+	Run, from the main repository
+		> make install
+
+The following steps are optional.
+5) Install Lily-AC (only required if you want to use Wring as LTL to co-BŸchi 
+	automaton translator)
+	Lily requires Perl 5.8.8 or higher.
+	You only need to set the perl library path and the search path correctly, 
+	e.g.
+		> export LILY=/usr/local/AcaciaPlus-x.y/Lily-AC/
+		> export PERL5LIB=${LILY}:${PERL5LIB}
+		> export PATH=${LILY}:${PATH}
+	For permanent use, add the preceding lines in your .bashrc or .profile.
+
+6) Download and install LTL3BA (only required if you want to use LTL3BA as LTL 
+		to co-BŸchi automaton translator)
+	LTL3BA is a translator of LTL formulae to BŸchi automata based on LTL2BA.
+	The archive can be downloaded at http://sourceforge.net/projects/ltl3ba/.
+	Install it by following instructions contained in the README file of the
+	archive and set the LTL3BA_PATH static variable in file constants.py
+	Note: if you are working on MacOS, you might need to edit the LTL3BA Makefile
+	and remove the option -static from the compilation line.
+
+7) Download and install SPOT (only required if you want to use SPOT as LTL to 
+		co-BŸchi automaton translator)
+	Spot is an object-oriented model checking library written in C++ that 
+	provides a translation from LTL formulae to BŸchi automata.
+	The archive can be downloaded at http://spot.lip6.fr/wiki/.
+	Install it by following instructions contained in the INSTALL file of the 
+	archive and set the SPOT_PATH static variable in file constants.py
+
+WARNING: You might face some problems while compiling the ltlsynthesis library
+on step 5) or while executing Acacia+ (ctypes error when binding Python with 
+the ltlsynthesis dynamic library). This is an architecture issue that might 
+occur if your version of glib2 is not the default architecture of your machine. 
+In that case, you should open the ltlsynthesis repository and edit Makefile to 
+specify the architecture of your version of glib2 in the ARCHFLAG field (ex for 
+MacOS: ARCHFLAG=-arch i386). You can then enforce python to execute in the 
+desired architecture (to prevent ctypes error while binding) by running 
+	> arch -my_architecture python acacia_plus.py É
+
+###########################
+ How to run Acacia+  
+###########################
+Acacia+ needs two mandatory arguments to execute: an LTL formula file (.ltl 
+extension) and a partition file (.part extension).
+This archive contains some examples out of six benchmarks (see README).
+
+To run Acacia+:
+	> python acacia_plus.py --ltl examples/demo-lily/demo-v13.ltl --part examples/demo-lily/demo-v13.part
+	
+To display the helper:
+	> python acacia_plus.py --help
+	
+A complete helper with detailed description of input/output formats and 
+parameters is available at http://lit2.ulb.ac.be/acaciaplus/onlinetest/ 
+
+###########################
+ Bug reporting
+###########################
+To report a bug, please send an email to aaron.bohy@umons.ac.be
+	

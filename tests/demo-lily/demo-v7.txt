@@ -1,0 +1,16 @@
+Transition system {
+    State 0, initial:
+        Outgoing transitions:
+            to state 1 labeled ((!grant) U (cancel))
+            to state 2 labeled ((!grant) U (req && !cancel))
+            to state 0 labeled ((!grant) U (!req && !cancel))
+    State 2:
+        Outgoing transitions:
+            to state 1 labeled ((grant) U (cancel))
+            to state 0 labeled ((grant) U (!cancel))
+    State 1:
+        Outgoing transitions:
+            to state 1 labeled ((!grant) U (cancel && go))
+            to state 2 labeled ((!grant) U (req && !cancel))
+            to state 0 labeled ((!grant) U ((cancel && !go) || (!req && !cancel)))
+}

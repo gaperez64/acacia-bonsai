@@ -1,0 +1,66 @@
+# This is Acacia+, version 2.1
+#
+# Copyright (C) 2011-2013 UMONS-ULB
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+###########################
+ What is Acacia+
+###########################
+
+Acacia+ is a tool for synthesis from LTL specifications with secondary 
+(optional) mean-payoff objectives, based on symbolic antichain techniques.
+This tool was written by Aaron Bohy, Universite de Mons (UMONS) - Universite
+Libre de Bruxelles (ULB), Belgium.
+For more information, please visit Acacia+'s homepage at 
+http://lit2.ulb.ac.be/acaciaplus/
+
+
+###########################
+ Content of the package 
+###########################
+
+This package includes:
+	- a modified version of Lily 1.0.2, a linear logic synthesizer by Barbara 
+		Jobstmann and Roderick Bloem, called Lily-AC.
+	- ltl2ba-1.1, an LTL formulae to Buchi automata translator, written by 
+		Dennis Oddoux and Paul Gastin
+		(http://www.lsv.ens-cachan.fr/~gastin/ltl2ba/).
+	- six benchmarks of examples:
+		- the Lily test suite 
+		- the generalized buffer controller from the IBM RuleBase tutorial 
+			(http://haifa.ibm.com/projects/verification/RB_Homepage/tutorial3) 
+		- the load balancing system provided with Unbeast, a symbolic bounded 
+			synthesis tool written by Rudiger Ehlers
+		- a benchmark of examples for the translation from LTL to equivalent 
+			deterministic Buchi automaton application scenario
+		- a benchmark of examples for the translation from LTL to equivalent 
+			deterministic parity automaton application scenario
+		- the shared resource arbiter, a benchmark of examples for synthesis
+			from LTL with mean-payoff objectives.
+			
+###########################
+ Changes since release 2.0
+###########################
+- Release 2.1: - option --setofstrategies more powerful (when set to TRUE, 
+			extracts more strategies than before)
+		    - counting_function operations improved by using two additional 
+		  	attributes (sum_of_counters and max_counter) 
+		    - critical signal optimization improved by adding a (global)
+		        cache memory to reuse previously computed data instead of
+		        the previously implemented (local) cache memory
+		    - new LTL to co-Buchi translation tool: SPOT
+		    - HOWTO updated
+		    - minor changes, mostly on display and code refactoring
