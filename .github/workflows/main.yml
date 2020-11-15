@@ -19,6 +19,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
+    - name: Install g++-10
+      run: sudo apt-get install g++-10
     - name: Install Spot
       run: |
         wget -q -O - https://www.lrde.epita.fr/repo/debian.gpg | sudo apt-key add -
