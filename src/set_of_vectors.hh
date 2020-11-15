@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <vector>
 #include <set>
 #include <iostream>
@@ -19,7 +20,7 @@ namespace set_of_vectors {
       set (unsigned vector_size) : vector_size {vector_size} {}
 
       bool contains (const vector& v) {
-        return vector_set.contains (v);
+        return vector_set.find(v) != vector_set.end();
       }
 
       void clear_update_flag () {
