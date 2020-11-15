@@ -19,6 +19,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
+    - name: Install Spot
+      run: |
+        wget -q -O - https://www.lrde.epita.fr/repo/debian.gpg | sudo apt-key add -
+        sudo sh -c "echo 'deb http://www.lrde.epita.fr/repo/debian/ stable/' >> /etc/apt/sources.list"
+        sudo apt-get update
+        sudo apt-get install spot libspot-dev
     - uses: BSFishy/meson-build@v1.0.1
       with:
         action: test
