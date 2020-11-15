@@ -25,6 +25,8 @@ jobs:
         sudo sh -c "echo 'deb http://www.lrde.epita.fr/repo/debian/ stable/' >> /etc/apt/sources.list"
         sudo apt-get update
         sudo apt-get install spot libspot-dev
+    - name: Install PyGraph for python2
+      run: sudo pip2 install pygraph
     - uses: BSFishy/meson-build@v1.0.1
       with:
         action: test
