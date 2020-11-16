@@ -290,8 +290,9 @@ safety automaton will be a function
   let $\calS^K_\calN$ be the deterministic safety
   automaton $(\calF,f_0,A,T,U)$ with components defined as follows.
   \begin{itemize}
-    \item $\calF := \{f \colon Q \to \{0,\dots,K\} \cup
-      \{\bot\}\}$, which is a finite set of functions,
+    \item $\calF := \{f \colon Q \to \{0,\dots,K \} \cup
+      \{\bot\} \mid \exists q \in Q : f(q) \neq \bot\}$,
+      which is a finite set of functions,
     \item $f_0 \in \calF$ is such that $f_0(q_0) = 0$ and $f_0(q) =
       \bot$ for all $q \in Q$ such that $q \neq q_0$,
     \item $T$ consists of all triples $(f,a,g)$ such that for all $q \in Q$ we
@@ -586,15 +587,18 @@ $\bot - 1 = \bot$.
   \indicator{B}{q} \right\}
 \]
 We now claim that $A^{(0)}_{i,o}$ can be computed based on the set of all
-$\pseudopre(m,i,o)$ where $m \in A, i \in I, o \in O$.
-
+$\pseudopre(m,i,o)$ where $m \in A, i \in I, o \in O$. Importantly, we need to
+make sure we ignore $f = \pseudopre(f,i,o)$ if $f(q) = \bot$ for all $q \in
+Q$.
+%
 \begin{proposition}[From~\cite{acacia0}]
   Let $F \subseteq \calF$ be a closed set represented by the antichain $A = \lfloor
   F \rfloor$, $i \in I$, and $o \in O$. The following holds:
   \[
     \left\lfloor \bigcup_{m \in A} \{ f \in \calF \mid m \preceq T(f, \langle i,
-    o \rangle \} \right\rfloor = \left\lfloor \left\{ \pseudopre(m,i,o) \mid m \in
-    A\right\} \right\rfloor.
+    o \rangle \} \right\rfloor
+    =
+    \left\lfloor \bigcup_{m \in A} \{ f \in \calF \mid f = \pseudopre(m,i,o) \} \right\rfloor.
   \]
 \end{proposition}
 \begin{proof}[Sketch]
