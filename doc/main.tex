@@ -291,7 +291,7 @@ safety automaton will be a function
   automaton $(\calF,f_0,A,T,U)$ with components defined as follows.
   \begin{itemize}
     \item $\calF := \{f \colon Q \to \{0,\dots,K \} \cup
-      \{\bot\} \mid \exists q \in Q : f(q) \neq \bot\}$,
+      \{\bot\}\}$,
       which is a finite set of functions,
     \item $f_0 \in \calF$ is such that $f_0(q_0) = 0$ and $f_0(q) =
       \bot$ for all $q \in Q$ such that $q \neq q_0$,
@@ -583,35 +583,38 @@ we introduce a ``pseudo-inverse'' $\pseudopre : \calF \times I \times O \to
 O$. For convenience, we adopt the convention that $0 - 1 = 0$ and
 $\bot - 1 = \bot$.
 \[
-  \pseudopre(f,i,o) := \left\{ p \mapsto \max_{(p,a,q) \in \Delta} f(q) -
-  \indicator{B}{q} \right\}
+  \pseudopre(f,i,o) := \left\{ p \mapsto
+    \max_{(p,\langle i, o \rangle,q) \in \Delta} f(q) -
+    \indicator{B}{q} \right\}
 \]
-We now claim that $A^{(0)}_{i,o}$ can be computed based on the set of all
-$\pseudopre(m,i,o)$ where $m \in A, i \in I, o \in O$. Importantly, we need to
-make sure we ignore $f = \pseudopre(f,i,o)$ if $f(q) = \bot$ for all $q \in
-Q$.
-%
+We now claim that $A^{(0)}_{i,o}$ can be computed based on the set of
+$\pseudopre(m,i,o)$ which $\preceq$-dominate $m$,
+where $m \in A, i \in I, o \in O$.
+
 \begin{proposition}[From~\cite{acacia0}]
   Let $F \subseteq \calF$ be a closed set represented by the antichain $A = \lfloor
-  F \rfloor$, $i \in I$, and $o \in O$. The following holds:
+  F \rfloor$, $i \in I$, and $o \in O$. The following holds for all $m \in A$:
   \[
-    \left\lfloor \bigcup_{m \in A} \{ f \in \calF \mid m \preceq T(f, \langle i,
-    o \rangle \} \right\rfloor
+    \left\lfloor \{ f \in \calF \mid m \preceq T(f, \langle i,
+    o \rangle) \} \right\rfloor
     =
-    \left\lfloor \bigcup_{m \in A} \{ f \in \calF \mid f = \pseudopre(m,i,o) \} \right\rfloor.
+    \left\lfloor \{ f = \pseudopre(m,i,o) \mid
+    m \preceq T(f, \langle i, o \rangle) \} \right\rfloor.
   \]
 \end{proposition}
 \begin{proof}[Sketch]
-  Using \Cref{lem:closed-pre} and the definition of $\pseudopre$ it is easy to
-  argue that 
+  We observe that the following inclusion holds.
   \[
-    \pseudopre(m,i,o) \in \{ f \in \calF \mid m \preceq T(f, \langle i, o
-    \rangle \}
+    \{ f = \pseudopre(m,i,o) \mid
+    m \preceq T(f, \langle i, o \rangle) \}
+    \subseteq
+    \{ f \in \calF \mid m \preceq T(f, \langle i,
+    o \rangle) \}
   \]
-  for all $m \in A$, all $i \in I$, and all $o \in O$. Hence, it suffices to
-  prove that for all $f \in \calF$ such that $m \preceq T(f, \langle i, o
-  \rangle)$ we have $\pseudopre(m,i,o) \preceq f$. However, the latter is also
-  easy to prove using the definition of $\pseudopre$.\qed
+  Hence, it suffices to argue that the left-hand side is a subset of the
+  right-hand side of the equality from the claim. We will argue that
+  for all $f \in \calF$ such that $m \preceq T(f, \langle i, o
+  \rangle)$ we have $\pseudopre(m,i,o) \preceq f$.\todo[inline]{G: finish me!} 
 \end{proof}
 
 We close this section with an impossibility result. While computing
