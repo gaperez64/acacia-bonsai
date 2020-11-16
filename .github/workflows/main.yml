@@ -32,3 +32,8 @@ jobs:
     - uses: BSFishy/meson-build@v1.0.1
       with:
         action: test
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-log
+        path: build/meson-logs/testlog.txt
