@@ -521,7 +521,7 @@ defined below, applied to $A$.
   A^{(2)} := {} &
   \left\lfloor \bigcup_{i \in I} A^{(1)}_i \right\rfloor\\
   %
-  \underline{\upre}(F) := {} &
+  \underline{\upre}(A) := {} &
   \lfloor A \cup A^{(2)} \rfloor
 \end{align*}
 We inductively define $\underline{\upre}^n(A)$, for all $n \in \mathbb{N}$, as
@@ -550,9 +550,8 @@ $\underline{\upre}$, and $A^{(0)}_{i,o}$, it follows that proving
 the left-hand side of~\eqref{eqn:in-f} is closed suffices for the lemma to
 hold.
 \begin{lemma}\label{lem:closed-pre}
-  Let $F \subseteq \calF$ be a closed set represented by the antichain $A = \lfloor
-  F \rfloor$. Then $\{f \in \calF \mid m \preceq T(f, \langle i,o \rangle) \}$
-  is closed for all $m \in \calF$, all $i \in I$, and all $o \in O$.
+  Let $i \in I$, $o \in O$, and $m \in \calF$.  Then $\{f \in \calF \mid m
+  \preceq T(f, \langle i,o \rangle) \}$ is closed.
 \end{lemma}
 \begin{proof}
   Consider an arbitrary $f$ in the set and some $f' \in \calF$ such that $f
@@ -587,34 +586,59 @@ $\bot - 1 = \bot$.
     \max_{(p,\langle i, o \rangle,q) \in \Delta} f(q) -
     \indicator{B}{q} \right\}
 \]
-We now claim that $A^{(0)}_{i,o}$ can be computed based on the set of
-$\pseudopre(m,i,o)$ which $\preceq$-dominate $m$,
-where $m \in A, i \in I, o \in O$.
+$\pseudopre$ satisfies the following properties.
+\begin{lemma}[From~\cite{acacia0}]\label{lem:order-pseudopre}
+  For all $f,g \in \calF$, all $i \in I$, and all $o \in O$
+  the following hold.
+  \begin{enumerate}
+    \item $f \preceq g \implies \pseudopre(f,i,o) \preceq \pseudopre(g,i,o)$
+      \label{itm:order-pre}
+    \item $f \preceq \pseudopre(T(f,\langle i, o \rangle),i,o)$
+      \label{itm:order-postpre}
+    \item $T(\pseudopre(f,i,o), \langle i, o \rangle) \preceq f$
+      \label{itm:order-prepost}
+  \end{enumerate}
+\end{lemma}
+
+We now claim that $A^{(0)}_{i,o}$ can be more efficiently computed using
+$\pseudopre(m,i,o)$. That is, it allows us to avoid constructing the full
+closure of $m \in A$ to compute $A^{(0)}_{i,o}$. A formal statement follows.
 
 \begin{proposition}[From~\cite{acacia0}]
-  Let $F \subseteq \calF$ be a closed set represented by the antichain $A = \lfloor
-  F \rfloor$, $i \in I$, and $o \in O$. The following holds for all $m \in A$:
+  Let $m \in \calF$, $i \in I$, $o \in O$. Then, the set
+  \(
+    \{ f \in \calF \mid m \preceq T(f, \langle i,
+    o \rangle) \}
+  \)
+  is equivalent to the following:
   \[
-    \left\lfloor \{ f \in \calF \mid m \preceq T(f, \langle i,
-    o \rangle) \} \right\rfloor
-    =
-    \left\lfloor \{ f = \pseudopre(m,i,o) \mid
-    m \preceq T(f, \langle i, o \rangle) \} \right\rfloor.
+    \closeup{
+      \{ f \in \calF \mid f \preceq \pseudopre(m,i,o), m \preceq T(f, \langle
+      i, o \rangle) \preceq T(\pseudopre(m,i,o),\langle i, o \rangle) \}
+    }.
   \]
 \end{proposition}
 \begin{proof}[Sketch]
-  We observe that the following inclusion holds.
+  By \Cref{lem:closed-pre}, we get that the first set is closed. Hence, it
+  suffices to argue that for any $g$ in the first set there is some $f \in
+  \calF$ such that the following hold.
+  \begin{itemize}
+    \item $f \preceq g$
+    \item $f \preceq \pseudopre(m,i,o)$
+    \item $m \preceq T(f,\langle i, o \rangle) \preceq T(\pseudopre(m,i,o), \langle i, o \rangle)$
+  \end{itemize}
+  It suffices to argue that the first antichain is a subset of the
+  second antichain. Consider some $f \in \calF$ such that
+  $m \preceq T(f,\langle i, o\rangle)$. From \Cref{lem:order-pseudopre}
+  \Cref{itm:order-pre} it follows that
   \[
-    \{ f = \pseudopre(m,i,o) \mid
-    m \preceq T(f, \langle i, o \rangle) \}
-    \subseteq
-    \{ f \in \calF \mid m \preceq T(f, \langle i,
-    o \rangle) \}
+    \pseudopre(m,i,o) \preceq \pseudopre(T(f,\langle i, o \rangle), i, o).
   \]
-  Hence, it suffices to argue that the left-hand side is a subset of the
-  right-hand side of the equality from the claim. We will argue that
-  for all $f \in \calF$ such that $m \preceq T(f, \langle i, o
-  \rangle)$ we have $\pseudopre(m,i,o) \preceq f$.\todo[inline]{G: finish me!} 
+  Furthermore, we know that
+  \[
+    asdf
+  \]
+  by \Cref{lem:order-pseudopre} \Cref{itm:order-postpre}.
 \end{proof}
 
 We close this section with an impossibility result. While computing
