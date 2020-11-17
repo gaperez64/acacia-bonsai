@@ -31,7 +31,7 @@
 % Local macros
 \newcommand{\indicator}[2]{\mathbf{1}_{#1}(#2)}
 \newcommand{\pow}[1]{\mathcal{P}(#1)}
-\newcommand{\upre}{\mathbf{UPre}}
+\newcommand{\cpre}{\mathbf{CPre}}
 \newcommand{\eve}{Eve\xspace}
 \newcommand{\adam}{Adam\xspace}
 \newcommand{\calF}{\mathcal{F}}
@@ -43,7 +43,7 @@
 \newcommand{\frakA}{\mathfrak{A}}
 \renewcommand{\lang}[1]{\mathcal{L}({#1})}
 \newcommand{\out}[2]{\pi_{#1#2}}
-\newcommand{\closeup}[1]{\mathrm{\uparrow} #1}
+\newcommand{\closedn}[1]{\mathrm{\downarrow} #1}
 \newcommand{\pseudopre}{\widehat{\mathrm{Pre}}}
 
 % Watermark
@@ -393,15 +393,15 @@ We say a state $q \in Q$ of a safety automaton $\calS$ is \emph{winning for \eve
 if she has a winning strategy from it --- that is, in the game played on
 \(\calS\) where the initial state is set to \(q\). Otherwise, the
 state is losing for her. It follows from Lemma~\ref{lem:runs-visits} that the set of
-losing states from $\calS^K_\calN$ are \emph{$\preceq$-upward closed}. We further
-observe that $U$, the set of unsafe states of \(\calS^K_\calN\), is itself
-$\preceq$-upward closed.
-\begin{proposition}\label{pro:up-closed}
+winning states from $\calS^K_\calN$ is \emph{$\preceq$-downward closed}. We further
+observe that $U$, the set of unsafe states of \(\calS^K_\calN\), is
+\emph{$\preceq$-downward closed}.
+\begin{proposition}\label{pro:down-closed}
   Let $f,g \in \mathcal{F}$ be states from $\calS^K_\calN$ such that $f
   \preceq g$.
   \begin{itemize}
     \item If $f \in U$ then $g \in U$.
-    \item If $f$ is losing for \eve then $g$ is also losing for her.
+    \item If $g$ is winning for \eve then $f$ is also winning for her.
   \end{itemize}
 \end{proposition}
 
@@ -420,133 +420,133 @@ For this section, let $\calS = (Q,q_0, I \times O, \Delta, U)$ be a safety
 game and let us write $\Delta(q,\langle i, o \rangle)$ for the unique state
 $q' \in Q$ such that $(q, \langle i, o \rangle, q') \in \Delta$.
 
-\paragraph{Uncontrollable predecessors.} The algorithm we describe
+\paragraph{Controllable predecessors.} The algorithm we describe
 consists in iteratively applying a monotonically subset-increasing operator to
-the set $U$ of unsafe states. The operator $\upre\colon \pow{Q} \to \pow{Q}$ is
+the set $Q \setminus U$ of safe states. The operator $\cpre\colon \pow{Q} \to \pow{Q}$ is
 defined for all $S \subseteq Q$ as follows.
 \[
-  \upre(S) := S \cup \{s \in Q \mid \exists i \in I, \forall o \in O :
+  \cpre(S) := S \cap \{s \in Q \mid \forall i \in I, \exists o \in O :
   \Delta(s,\langle i, o \rangle) \in S\}
 \]
-Then, we inductively define $\upre^n(S)$ for all $n \in \mathbb{N}$ by setting
-$\upre^0(S)$ to $S$ and $\upre^{n+1}(S)$ to $\upre(\upre^{n}(S))$.
+Then, we inductively define $\cpre^n(S)$ for all $n \in \mathbb{N}$ by setting
+$\cpre^0(S)$ to $S$ and $\cpre^{n+1}(S)$ to $\cpre(\cpre^{n}(S))$.
 The following is immediate from the definitions.
 \begin{lemma}
-  Let $S \subseteq Q$ and $n, m \in \mathbb{N}$ such that $n \leq m$. Then,
-  $S \subseteq \upre^n(S) \subseteq \upre^m(S) \subseteq Q$.
+  Let $S \subseteq Q$ and $m, n \in \mathbb{N}$ such that $m \leq n$. Then,
+  $\cpre^n(S) \subseteq \cpre^m(S) \subseteq S$.
 \end{lemma}
-Since $Q$ is finite, it follows that the $\upre^i(S)$ eventually stabilize
-from some $i \leq |Q|$ onward.  Let us write $\upre^*(S)$ for said \emph{fixed point}
-of $\upre$.
+It follows that the $\cpre^i(S)$ eventually stabilize
+from some $i \leq |S|$ onward. Let us write $\cpre^*(S)$ for said \emph{fixed point}
+of $\cpre$.
 
-It is not hard to prove by induction that $\upre^*(U)$ coincides with the set
-of states which are losing for \eve.
+It is not hard to prove by induction that $\cpre^*(Q \setminus U)$ coincides with the set
+of states which are winning for \eve.
 \begin{proposition}
-  A state $q \in Q$ is losing for \eve if and only if $q \in \upre^*(U)$.
+  A state $q \in Q$ is winning for \eve if and only if $q \in \cpre^*(Q
+  \setminus U)$.
 \end{proposition}
 
-In the rest of this section we introduce a ``symbolic'' version of the $\upre$
+In the rest of this section we introduce a ``symbolic'' version of the $\cpre$
 operator which leverages the $\preceq$ ordering on states of $\calS^K_\calN$.
 
 \subsection{Antichain-based algorithm}
-We intend to leverage~\Cref{pro:up-closed} to define an operator
-which manipulates \emph{minimal elements} of the sets only and, crucially,
-preserves upward-closedness of all intermediate sets. We first give some
+We intend to leverage~\Cref{pro:down-closed} to define an operator
+which manipulates \emph{maximal elements} of the sets only and, crucially,
+preserves downward-closedness of all intermediate sets. We first give some
 preliminaries regarding antichains.
 
 \paragraph{Lattices and antichains.} A partially ordered set $(S, \preceq)$ is
-an \emph{upper semilattice} if the \emph{least upper bound} of any nonempty
+an \emph{lower semilattice} if the \emph{greatest lower bound} of any nonempty
 finite subset of $S$ is an element of $S$. Given $s,s' \in S$, we write $s
-\sqcap s'$ for the least upper bound of $\{s,s'\}$. We extend this notation
+\sqcap s'$ for the greatest lower bound of $\{s,s'\}$. We extend this notation
 to subsets $S', S'' \subseteq S$ and write
 $S \sqcap S'$ for $\{s' \sqcap s'' \mid s' \in S', s'' \in S''\}$. 
 Note that the partially ordered set $(\calF,\preceq)$ we have defined in
-\Cref{sec:order} is an upper semilattice. Indeed, for $f, g \in \calF$ we have
+\Cref{sec:order} is a lower semilattice. Indeed, for $f, g \in \calF$ we have
 that $f \sqcap g$ is a function $\phi \in \calF$ such that
 \(
-  \phi(q) = \max(f(q),g(q))
+  \phi(q) = \min(f(q),g(q))
 \)
 for all $q \in Q$.
 
 A subset $A \subseteq S$ is called an \emph{antichain} if all its elements are
-pairwise $\preceq$-incomparable.  Given $S' \subseteq S$, we write $\lfloor S'
-\rfloor$ for the antichain of $\preceq$-minimal elements of $S$. We say that
-$S'$ is (upward-)closed if $s' \in S'$ and $s' \preceq s''$ implies that $s''
-\in S'$. Finally, we write $\closeup{S''}$ to denote the (upward-)closure of
+pairwise $\preceq$-incomparable.  Given $S' \subseteq S$, we write $\lceil S'
+\rceil$ for the antichain of $\preceq$-maximal elements of $S$. We say that
+$S'$ is (downward-)closed if $s' \in S'$ and $s'' \preceq s'$ implies that $s''
+\in S'$. Finally, we write $\closedn{S''}$ to denote the (downward-)closure of
 $S'' \subseteq S$, that is to say the set $\{s \in S \mid \exists s'' \in S''
-: s'' \preceq s\}$.  It is immediate to check that if \(S\) is closed, then
-\(S = \closeup{\lfloor S \rfloor}\); in that sense, we will say that \(S\) is \emph{represented
-  by} the set of its minimal elements \(\lfloor S \rfloor\).
+: s \preceq s''\}$.  It is immediate to check that if \(S\) is closed, then
+\(S = \closedn{\lceil S \rceil}\); in that sense, we will say that \(S\) is
+\emph{represented by} the set of its maximal elements \(\lceil S \rceil\).
 
-The result below already captures the intuition of the developments that
-will follow in this section. We will use antichains as a ``data structure'' to
+The result below already captures the intuition of the developments that will
+follow in this section. We will use antichains as a ``data structure'' to
 represent closed sets and will operate on them instead of their closure to
-compute the set of losing states for \eve.
+compute the set of winning states for \eve.
 \begin{proposition}[From~\cite{dr10}]\label{pro:antichains}
-  Let $(S, \preceq)$ be an upper semilattice, and $R,R' \subseteq S$ be two
-  closed sets represented by the antichains $A = \lfloor R \rfloor, A' =
-  \lfloor R' \rfloor$. The following hold:
+  Let $(S, \preceq)$ be a lower semilattice, and $R,R' \subseteq S$ be two
+  closed sets represented by the antichains $A = \lceil R \rceil, A' =
+  \lceil R' \rceil$. The following hold:
   \begin{itemize}
-    \item $R \cup R'$ is closed and $\lfloor R \cup R' \rfloor = \lfloor A
-      \cup A'\rfloor$, and
-    \item $R \cap R'$ is closed and $\lfloor R \cap R' \rfloor = \lfloor A
-      \sqcap A'\rfloor$.
+    \item $R \cup R'$ is closed and $\lceil R \cup R' \rceil = \lceil A
+      \cup A'\rceil$, and
+    \item $R \cap R'$ is closed and $\lceil R \cap R' \rceil = \lceil A
+      \sqcap A'\rceil$.
   \end{itemize}
 \end{proposition}
 
-\paragraph{Antichain-based uncontrollable predecessors.}
+\paragraph{Antichain-based controllable predecessors.}
 Henceforth, we fix a safety
 automaton $\calS^K_\calN = (\calF,f_0,I \times O, T,U)$.  Previously, we have given a
-definition for $\upre$ in the context of any safety game. For the safety game
-played on $\calS^K_\calN$ and for a set $F \subseteq \calF$, $\upre$ can equivalently be
+definition for $\cpre$ in the context of any safety game. For the safety game
+played on $\calS^K_\calN$ and for a set $F \subseteq \calF$, $\cpre$ can equivalently be
 defined as follows.
 \[
-  \upre(F) = F \cup \left( \bigcup_{i \in I} \bigcap_{o \in O}
+  \cpre(F) = F \cap \left( \bigcap_{i \in I} \bigcup_{o \in O}
   \{f \in \calF \mid T(f,\langle i, o \rangle) \in F\} \right)
 \]
 %
 Let us write $\frakA \subseteq \pow{\calF}$ for the set of all antichains. In
-the next lemma, we will argue that if $F$ is closed and $A = \lfloor F
-\rfloor$ then $\upre(F)$ can be
-replaced by the closure of $\underline{\upre} \colon \frakA \to \frakA$,
-defined below, applied to $A$.
+the next lemma, we will argue that if $F$ is closed and $A = \lceil F \rceil$
+then $\cpre(F)$ can be replaced by the closure of $\underline{\cpre} \colon
+\frakA \to \frakA$, defined below, applied to $A$.
 \begin{align*}
   A^{(0)}_{i,o} := {} &
-  \left\lfloor \bigcup_{m \in A} \{f \in \calF \mid m \preceq
-  T(f,\langle i, o \rangle) \} \right\rfloor\\
+  \left\lceil \bigcup_{m \in A} \{f \in \calF \mid T(f,\langle i, o \rangle)
+  \preceq m \} \right\rceil\\
   %
   A^{(1)}_{i} := {} &
-  \left\lfloor \bigsqcap_{o \in O} A^{(0)}_{i,o} \right\rfloor\\
+  \left\lceil \bigsqcup_{o \in O} A^{(0)}_{i,o} \right\rceil\\
   %
   A^{(2)} := {} &
-  \left\lfloor \bigcup_{i \in I} A^{(1)}_i \right\rfloor\\
+  \left\lceil \bigcap_{i \in I} A^{(1)}_i \right\rceil\\
   %
-  \underline{\upre}(A) := {} &
-  \lfloor A \cup A^{(2)} \rfloor
+  \underline{\cpre}(A) := {} &
+  \lceil A \sqcap A^{(2)} \rceil
 \end{align*}
-We inductively define $\underline{\upre}^n(A)$, for all $n \in \mathbb{N}$, as
-we did for $\upre$. Since $\frakA$ is finite, we also have that the
-$\underline{\upre}^i(A)$ stabilize from some $i \leq 2^{|Q|}$ onward. We write
-$\underline{\upre}^*(A)$ for said fixed point of $\underline{\upre}$.
+We inductively define $\underline{\cpre}^n(A)$, for all $n \in \mathbb{N}$, as
+we did for $\cpre$. Since $\frakA$ is finite, we also have that the
+$\underline{\cpre}^i(A)$ stabilize from some $i \leq 2^{|Q|}$ onward. We write
+$\underline{\cpre}^*(A)$ for said fixed point of $\underline{\cpre}$.
 
 
-\begin{lemma}\label{lem:uupre}
+\begin{lemma}
   Let $F \subseteq \calF$ be a closed set represented by the antichain $A =
-  \lfloor F \rfloor$. Then $\upre(F)$ is closed and
+  \lceil F \rceil$. Then $\cpre(F)$ is closed and
   \(
-    \upre(F) = \closeup{\underline{\upre}(A)}.
+    \cpre(F) = \closedn{\underline{\cpre}(A)}.
   \)
 \end{lemma}
 The next equality follows from the facts that
-$F$ is closed and $A = \lfloor F \rfloor$.
+$F$ is closed and $A = \lceil F \rceil$.
 \begin{equation}\label{eqn:in-f}
-  \bigcup_{m \in A} \{ f \in \calF \mid m \preceq T(f, \langle i,o \rangle)
+  \bigcup_{m \in A} \{ f \in \calF \mid T(f, \langle i,o \rangle) \preceq m
   \}
   =
   \{f \in \calF \mid T(f,\langle i, o \rangle) \in F\}
 \end{equation}
-Hence, from \Cref{pro:antichains} and the definitions of $\upre$,
-$\underline{\upre}$, and $A^{(0)}_{i,o}$, it follows that proving
+Hence, from \Cref{pro:antichains} and the definitions of $\cpre$,
+$\underline{\cpre}$, and $A^{(0)}_{i,o}$, it follows that proving
 the left-hand side of~\eqref{eqn:in-f} is closed suffices for the lemma to
 hold.
 \begin{lemma}\label{lem:closed-pre}
@@ -554,39 +554,39 @@ hold.
   \preceq T(f, \langle i,o \rangle) \}$ is closed.
 \end{lemma}
 \begin{proof}
-  Consider an arbitrary $f$ in the set and some $f' \in \calF$ such that $f
-  \preceq f'$. It is easy to see that, by definition of the transition
+  Consider an arbitrary $f$ in the set and some $f' \in \calF$ such that $f'
+  \preceq f$. It is easy to see that, by definition of the transition
   function $T$ of $\calS^K_\calN$, we have 
   \[ 
-    T(f,\langle i, o \rangle) \preceq T(f',\langle i, o \rangle)
+    T(f',\langle i, o \rangle) \preceq T(f,\langle i, o \rangle)
   \]
-  Further, $m \preceq T(f,\langle i, o \rangle)$ holds by assumption. Hence
-  \(m \preceq T(f', \langle i, o \rangle)\) and $f'$ is also in the set.\qed
+  Further, $T(f,\langle i, o \rangle) \preceq m$ holds by assumption. Hence
+  \(T(f', \langle i, o \rangle) \preceq m\) and $f'$ is also in the set.\qed
 \end{proof}
 
-From the above lemmas and~\Cref{pro:up-closed} it follows that one can compute the set of
-losing states for \eve using $\underline{\upre}$.
+From the above lemmas and~\Cref{pro:down-closed} it follows that one can compute the set of
+losing states for \eve using $\underline{\cpre}$.
 \begin{theorem}
-  A state $f \subseteq \calF$ is losing for \eve if and only if $f \in
-  \closeup{\underline{\upre}^*(\lfloor U \rfloor)}$.
+  A state $f \subseteq \calF$ is winning for \eve if and only if $f \in
+  \closedn{\underline{\cpre}^*(\lceil Q \setminus U \rceil)}$.
 \end{theorem}
 
-Note that in computing $\underline{\upre}^*(\lfloor U \rfloor)$, the only
+Note that in computing $\underline{\cpre}^*(\lceil Q \setminus U \rceil)$, the only
 intermediate set for which it is not immediately clear that we can compute it
-based on an antichain of minimal elements is $A^{(0)}_{i,o}$. Indeed,
+based on an antichain of maximal elements is $A^{(0)}_{i,o}$. Indeed,
 $A^{(1)}_i$ and $A^{(2)}$ can be computed from the antichain representation of
 a closed set using the equivalences stated in \Cref{pro:antichains}. To avoid
-computing the set of all direct predecessors of $A$ to compute $A^{(0)}_{i,o}$
+computing the set of all direct predecessors of $\closedn{A}$ to compute $A^{(0)}_{i,o}$
 we introduce a ``pseudo-inverse'' $\pseudopre : \calF \times I \times O \to
-\calF$ of $T$ defined below for all $f \in \calF$ and all $a \in I \times
-O$. For convenience, we adopt the convention that $0 - 1 = 0$ and
+\calF$ of $T$ defined below for all $f \in \calF$, all $i \in I$, and all $o
+\in O$. For convenience, we adopt the convention that $0 - 1 = 0$ and
 $\bot - 1 = \bot$.
 \[
   \pseudopre(f,i,o) := \left\{ p \mapsto
-    \max_{(p,\langle i, o \rangle,q) \in \Delta} f(q) -
+    \min_{(p,\langle i, o \rangle,q) \in \Delta} f(q) -
     \indicator{B}{q} \right\}
 \]
-$\pseudopre$ satisfies the following properties.
+
 \begin{lemma}[From~\cite{acacia0}]\label{lem:order-pseudopre}
   For all $f,g \in \calF$, all $i \in I$, and all $o \in O$
   the following hold.
@@ -602,59 +602,35 @@ $\pseudopre$ satisfies the following properties.
 
 We now claim that $A^{(0)}_{i,o}$ can be more efficiently computed using
 $\pseudopre(m,i,o)$. That is, it allows us to avoid constructing the full
-closure of $m \in A$ to compute $A^{(0)}_{i,o}$. A formal statement follows.
+closure of $A$ to compute $A^{(0)}_{i,o}$. A formal statement follows.
 
 \begin{proposition}[From~\cite{acacia0}]
-  Let $m \in \calF$, $i \in I$, $o \in O$. Then, the set
-  \(
-    \{ f \in \calF \mid m \preceq T(f, \langle i,
-    o \rangle) \}
-  \)
-  is equivalent to the following:
+  Let $m \in \calF$, $i \in I$, $o \in O$. Then, the following equivalence
+  holds:
   \[
-    \closeup{
-      \{ f \in \calF \mid f \preceq \pseudopre(m,i,o), m \preceq T(f, \langle
-      i, o \rangle) \preceq T(\pseudopre(m,i,o),\langle i, o \rangle) \}
-    }.
+    \{ f \in \calF \mid T(f, \langle i,
+    o \rangle) \preceq m\} = \closedn{\pseudopre(m,i,o)}.
   \]
 \end{proposition}
 \begin{proof}[Sketch]
-  By \Cref{lem:closed-pre}, we get that the first set is closed. Hence, it
-  suffices to argue that for any $g$ in the first set there is some $f \in
-  \calF$ such that the following hold.
-  \begin{itemize}
-    \item $f \preceq g$
-    \item $f \preceq \pseudopre(m,i,o)$
-    \item $m \preceq T(f,\langle i, o \rangle) \preceq T(\pseudopre(m,i,o), \langle i, o \rangle)$
-  \end{itemize}
-  It suffices to argue that the first antichain is a subset of the
-  second antichain. Consider some $f \in \calF$ such that
-  $m \preceq T(f,\langle i, o\rangle)$. From \Cref{lem:order-pseudopre}
-  \Cref{itm:order-pre} it follows that
-  \[
-    \pseudopre(m,i,o) \preceq \pseudopre(T(f,\langle i, o \rangle), i, o).
-  \]
-  Furthermore, we know that
-  \[
-    asdf
-  \]
-  by \Cref{lem:order-pseudopre} \Cref{itm:order-postpre}.
+  Using \Cref{lem:order-pseudopre} and the fact that $T$ is $\preceq$-monotone,
+  both inclusions can be easily derived.
 \end{proof}
 
 We close this section with an impossibility result. While computing
-$\underline{\upre}$ is, intuitively, more efficient than computing $\upre$, it
+$\underline{\cpre}$ is, intuitively, more efficient than computing $\cpre$, it
 turns out that it is computationally hard. One can reduce the computation of
 all maximal-size independent sets of a graph to the computation of
-$\underline{\upre}$ for a safety game on functions as studied in this section.
+$\underline{\cpre}$ for a safety game on functions as studied in this section.
 \begin{proposition}[From~\cite{acacia0}]
-  The $\underline{\upre}$ operator is, in general, not computable in
+  The $\underline{\cpre}$ operator is, in general, not computable in
   polynomial time unless $\NP = \P$.
 \end{proposition}
 
 \section{Antichain data structures}
 \todo[inline]{DO RESEARCH}
 
-\todo[inline]{Computing $\underline{\upre}$ cannot be done in polynomial time
+\todo[inline]{Computing $\underline{\cpre}$ cannot be done in polynomial time
   unless the maximal independent set problem is in polynomial time;
   interestingly, that problem admits polynomial-time approximation algorithms
 for polynomial approximations (i.e. not constant)}
