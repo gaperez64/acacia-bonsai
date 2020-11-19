@@ -16,5 +16,6 @@ foreach t : tests_lily_ltl
                                          '-p', acacia_plus_py,
                                          '-P', py.path (),
                                          '-f', files ('demo-lily/' + t) ],
-        env : py_env)
+        env : py_env,
+        timeout: 5)
 endforeach

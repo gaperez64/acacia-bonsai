@@ -69,8 +69,8 @@ static const argp_option options[] = {
     "compute a winning strategy when the input is satisfiable", 0
   },
   {
-    "verbose", OPT_VERBOSE, nullptr, 0,
-    "verbose mode", -1
+    "verbose", OPT_VERBOSE, "VAL", 0,
+    "verbose mode (0, 1, 2)", -1
   },
   { nullptr, 0, nullptr, 0, nullptr, 0 },
 };
@@ -101,7 +101,7 @@ static double trans_time = 0.0;
 static double merge_time = 0.0;
 static double solve_time = 0.0;
 
-static bool verbose = false;
+static int verbose = 0;
 
 namespace {
 
@@ -123,7 +123,7 @@ namespace {
         spot::process_timer timer;
         timer.start ();
         spot::stopwatch sw;
-        bool want_time = verbose;
+        bool want_time = (verbose > 0);
 
         // To Universal co-Büchi Automaton
         trans_.set_type(spot::postprocessor::BA);
@@ -264,7 +264,7 @@ parse_opt (int key, char *arg, struct argp_state *) {
       break;
 
     case OPT_VERBOSE:
-      verbose = true;
+      verbose = atoi (arg);
       break;
 
     case 'x': {
