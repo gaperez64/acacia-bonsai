@@ -421,9 +421,9 @@ game and let us write $\Delta(q,\langle i, o \rangle)$ for the unique state
 $q' \in Q$ such that $(q, \langle i, o \rangle, q') \in \Delta$.
 
 \paragraph{Controllable predecessors.} The algorithm we describe
-consists in iteratively applying a monotonically subset-increasing operator to
-the set $Q \setminus U$ of safe states. The operator $\cpre\colon \pow{Q} \to \pow{Q}$ is
-defined for all $S \subseteq Q$ as follows.
+consists in iteratively applying a monotonically subset-decreasing operator to
+the set $Q \setminus U$ of safe states. The operator $\cpre\colon \pow{Q} \to
+\pow{Q}$ is defined for all $S \subseteq Q$ as follows.
 \[
   \cpre(S) := S \cap \{s \in Q \mid \exists i \in I, \forall o \in O :
   \Delta(s,\langle i, o \rangle) \in S\}
