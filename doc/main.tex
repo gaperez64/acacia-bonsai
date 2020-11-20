@@ -425,7 +425,7 @@ consists in iteratively applying a monotonically subset-increasing operator to
 the set $Q \setminus U$ of safe states. The operator $\cpre\colon \pow{Q} \to \pow{Q}$ is
 defined for all $S \subseteq Q$ as follows.
 \[
-  \cpre(S) := S \cap \{s \in Q \mid \forall i \in I, \exists o \in O :
+  \cpre(S) := S \cap \{s \in Q \mid \exists i \in I, \forall o \in O :
   \Delta(s,\langle i, o \rangle) \in S\}
 \]
 Then, we inductively define $\cpre^n(S)$ for all $n \in \mathbb{N}$ by setting
@@ -502,7 +502,7 @@ definition for $\cpre$ in the context of any safety game. For the safety game
 played on $\calS^K_\calN$ and for a set $F \subseteq \calF$, $\cpre$ can equivalently be
 defined as follows.
 \[
-  \cpre(F) = F \cap \left( \bigcap_{i \in I} \bigcup_{o \in O}
+  \cpre(F) = F \cap \left( \bigcup_{i \in I} \bigcap_{o \in O}
   \{f \in \calF \mid T(f,\langle i, o \rangle) \in F\} \right)
 \]
 %
@@ -516,10 +516,10 @@ then $\cpre(F)$ can be replaced by the closure of $\underline{\cpre} \colon
   \preceq m \} \right\rceil\\
   %
   A^{(1)}_{i} := {} &
-  \left\lceil \bigsqcup_{o \in O} A^{(0)}_{i,o} \right\rceil\\
+  \left\lceil \bigsqcap_{o \in O} A^{(0)}_{i,o} \right\rceil\\
   %
   A^{(2)} := {} &
-  \left\lceil \bigcap_{i \in I} A^{(1)}_i \right\rceil\\
+  \left\lceil \bigcup_{i \in I} A^{(1)}_i \right\rceil\\
   %
   \underline{\cpre}(A) := {} &
   \lceil A \sqcap A^{(2)} \rceil
