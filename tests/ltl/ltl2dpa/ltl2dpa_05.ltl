@@ -1,0 +1,3 @@
+# DPA A with 2 priorities: a word u is accepted by A if the minimal priority seen infinitely often is even
+
+(G(F((a=1) + (b=1))) <-> (G(F(p0=1)))) * G(p0=1 <-> p1=0);

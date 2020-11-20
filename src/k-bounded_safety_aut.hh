@@ -13,6 +13,10 @@ class k_bounded_safety_aut {
       aut {aut}, K {K}, input_support {input_support}, output_support {output_support} {
     }
 
+    spot::formula bdd_to_formula (bdd f) {
+      return spot::bdd_to_formula (f, aut->get_dict ());
+    }
+
     bool solve (int verbose = 0) {
       if (verbose)
         std::cout << "Computing the set of safe states." << std::endl;
@@ -44,7 +48,7 @@ class k_bounded_safety_aut {
     }
 
     SetOfStates unsafe_states () {
-      SetOfStates U (aut->num_states ());
+      SetOfStates U;
       State f (aut->num_states ());
       for (unsigned src = 0; src < aut->num_states (); ++src)
         f[src] = -1;
@@ -60,14 +64,14 @@ class k_bounded_safety_aut {
     }
 
     SetOfStates safe_states () {
-      SetOfStates S (aut->num_states ());
+      SetOfStates S;
       State f (aut->num_states ());
 
       for (unsigned src = 0; src < aut->num_states (); ++src)
         f[src] = K - 1;
       S.insert (f);
 
-      S.downward_close (K);
+      S.downward_close ();
       return S;
     }
 
@@ -76,49 +80,79 @@ class k_bounded_safety_aut {
     // F2 = \cap_{i \in I} F1i
     // F1i = \cup_{o \in O} PreHat (F, i, o)
     void cpre_inplace (SetOfStates& F, int verbose = 0) {
-      bdd input_letters = bddtrue;
-      SetOfStates F2 (aut->num_states ());
+      SetOfStates F2;
 
       if (verbose)
         std::cout << "Computing cpre(F) with maxelts (F) = " << std::endl
-                  << F.max_elements (K);
+                  << F.max_elements ();
 
-      bool first_input = true;
+      // bool first_input = true;
+      // bdd input_letters = bddtrue;
 
-      while (input_letters != bddfalse) {
-        bdd one_input_letter = pick_one_letter (input_letters, input_support);
-        bdd output_letters = bddtrue;
+      // while (input_letters != bddfalse) {
+      //   bdd one_input_letter = pick_one_letter (input_letters, input_support);
+      //   bdd output_letters = bddtrue;
+
+      //   // NOTE: We're forcing iterative union/intersection; do we want to keep
+      //   // all ph/F1i's and give them to the SetOfStates all at once?
+
+      //   SetOfStates F1i;
+      //   do {
+      //     bdd&& one_output_letter = pick_one_letter (output_letters, output_support);
+      //     SetOfStates&& ph = pre_hat (F, one_input_letter, one_output_letter, verbose);
+      //     F1i.union_with (ph);
+      //   } while (output_letters != bddfalse);
+
+      //   if (verbose)
+      //     std::cout << "maxelts (F1_{"
+      //               << spot::bdd_to_formula (one_input_letter, aut->get_dict ())
+      //               << "}) = "
+      //               << std::endl << F1i.max_elements ();
+      //   if (first_input) {
+      //     F2 = std::move (F1i);
+      //     first_input = false;
+      //   } else
+      //     F2.intersect_with (F1i);
+      //   if (F2.empty ())
+      //     break;
+      // }
+
+      bdd output_letters = bddtrue;
+
+      while (output_letters != bddfalse) {
+        bdd one_output_letter = pick_one_letter (output_letters, output_support);
+        bdd input_letters = bddtrue;
 
         // NOTE: We're forcing iterative union/intersection; do we want to keep
-        // all ph/F1i's and give them to the SetOfStates all at once?
+        // all ph/F1o's and give them to the SetOfStates all at once?
 
-        SetOfStates F1i (aut->num_states ());
+        SetOfStates F1o;
+        bool first_input = true;
         do {
-          bdd&& one_output_letter = pick_one_letter (output_letters, output_support);
-          SetOfStates&& ph = pre_hat (F, one_input_letter, one_output_letter, verbose);
-          F1i.union_with (ph);
-        } while (output_letters != bddfalse);
+          bdd&& one_input_letter = pick_one_letter (input_letters, input_support);
+          SetOfStates&& ph = pre_hat (F, one_output_letter, one_input_letter, verbose);
+          if (first_input) {
+            F1o = std::move (ph);
+            first_input = false;
+          } else
+            F1o.intersect_with (ph);
+        } while (input_letters != bddfalse && not (F1o.empty ()));
 
         if (verbose)
           std::cout << "maxelts (F1_{"
-                    << spot::bdd_to_formula (one_input_letter, aut->get_dict ())
+                    << bdd_to_formula (one_output_letter)
                     << "}) = "
-                    << std::endl << F1i.max_elements (K);
-        if (first_input) {
-          F2 = std::move (F1i);
-          first_input = false;
-        } else
-          F2.intersect_with (F1i);
-        if (F2.empty ())
-          break;
+                    << std::endl << F1o.max_elements ();
+        F2.union_with (F1o);
       }
 
+
       if (verbose)
-        std::cout << "maxelts (F2) = " << std::endl << F2.max_elements (K);
+        std::cout << "maxelts (F2) = " << std::endl << F2.max_elements ();
 
       F.intersect_with (F2);
       if (verbose)
-        std::cout << "maxelts (F) = " << std::endl << F.max_elements (K);
+        std::cout << "maxelts (F) = " << std::endl << F.max_elements ();
     }
 
     // Disallow copies.
@@ -141,11 +175,18 @@ class k_bounded_safety_aut {
         State f (aut->num_states ());
 
         for (unsigned p = 0; p < aut->num_states (); ++p) {
-          f[p] = K;
+          // If there are no transitions from p labeled io, then we propagate
+          // the value of the nonexisting sink, which is set to be K - 1.  Note
+          // that the value of the sink cannot decrease.
+          f[p] = K - 1;
           for (const auto& e : aut->out (p)) {
             unsigned q = e.dst;
+            if (verbose > 2)
+              std::cout << "transition (" << p << "," << bdd_to_formula (e.cond) << ","
+                        << e.dst << "), io: " << bdd_to_formula (io)
+                        << ", io & cond: " << bdd_to_formula (e.cond & io) << std::endl;
             if ((e.cond & io) != bddfalse) {
-              if (m[q] <= 0)
+              if (m[q] < 0)
                 f[p] = std::min (f[p], m[q]);
               else
                 f[p] = std::min (f[p], m[q] - (aut->state_is_accepting (q) ? 1 : 0));
@@ -156,13 +197,14 @@ class k_bounded_safety_aut {
           }
         }
         if (verbose > 1)
-          std::cout << "pre_hat(" << m << "," << spot::bdd_to_formula (io, aut->get_dict ()) << ") = "
+          std::cout << "pre_hat(" << m << "," << bdd_to_formula (io) << ") = "
                     << f << std::endl;
         return f;
       });
 
-      // NOTE: Can we avoid this?
-      pre.downward_close (K);
+      // It may happen that pre is not downward closed anymore.
+      // See (G(in)->F(out)) * (G(!in)->F(!out)) with set_of_vectors implementation.
+      pre.downward_close ();
       return pre;
     }
 

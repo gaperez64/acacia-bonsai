@@ -39,15 +39,13 @@ namespace set_of_vectors {
 
   class set {
     public:
-      set (unsigned vector_size) : vector_size {vector_size} {}
+      set () {}
 
       set (const set& other) :
-        vector_size{other.vector_size},
         vector_set{other.vector_set} {}
 
       set& operator= (set&& other) {
         vector_set = std::move (other.vector_set);
-        vector_size = other.vector_size;
 
         return *this;
       }
@@ -68,21 +66,24 @@ namespace set_of_vectors {
         return vector_set.size ();
       }
 
-      void insert (const vector& v) {
-        if (vector_set.insert (v).second)
+      bool insert (const vector& v) {
+        if (vector_set.insert (v).second) {
           _updated = true;
+          return true;
+        }
+        return false;
       }
 
       // Extraordinarily wasteful.  This computes the closure by taking
       // vector_set, then everything at distance 1
-      void downward_close (int max) {
+      void downward_close () {
         std::set<vector> closure (vector_set);
 
         while (1) {
           std::set<vector> newelts;
 
           for (auto el : closure) { // Iterate while making copies.
-            for (size_t i = 0; i < vector_size; ++i)
+            for (size_t i = 0; i < el.size (); ++i)
               if (el[i] > -1) {
                 --el[i];
                 if (closure.find (el) == closure.end ())
@@ -101,11 +102,12 @@ namespace set_of_vectors {
         }
       }
 
+    private:
       // Extraordinarily wasteful.  This checks that for every member of
       // vector_set, all vectors at Hamming distance 1 are also in the set.
-      bool is_downward_closed (int max) const {
+      bool is_downward_closed () const {
         for (auto el : vector_set) { // Iterate while making copies.
-          for (size_t i = 0; i < vector_size; ++i)
+          for (size_t i = 0; i < el.size (); ++i)
             if (el[i] > -1) {
               --el[i];
               if (not contains (el))
@@ -116,8 +118,10 @@ namespace set_of_vectors {
         return true;
       }
 
-      set max_elements (int max) const {
-        assert (is_downward_closed (max));
+    public:
+
+      set max_elements () const {
+        assert (is_downward_closed ());
         std::set<vector> maxelts;
 
         for (const auto& el : vector_set) {
@@ -136,9 +140,9 @@ namespace set_of_vectors {
           for (const auto& elt : to_remove)
             maxelts.erase (elt);
           if (should_be_inserted)
-            maxelts.insert (vector (el));
+            maxelts.insert (el);
         }
-        set set_of_maxelts (vector_size);
+        set set_of_maxelts;
         set_of_maxelts.vector_set = maxelts;
 
         return set_of_maxelts;
@@ -177,11 +181,7 @@ namespace set_of_vectors {
         vector_set = new_set;
       }
 
-
-
-
     private:
-      unsigned vector_size;
       std::set<vector> vector_set;
       bool _updated = false;
       friend std::ostream& ::operator<<(std::ostream& os, const set& f);

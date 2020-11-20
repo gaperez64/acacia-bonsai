@@ -15,6 +15,7 @@
 
 #include "k-bounded_safety_aut.hh"
 #include "set_of_vectors.hh"
+#include "basic_antichain.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -36,11 +37,11 @@
 #include <spot/twaalgos/hoa.hh>
 
 enum {
-  OPT_LOGK = 256,
-  OPT_INPUT,
-  OPT_OUTPUT,
-  OPT_STRAT,
-  OPT_VERBOSE
+  OPT_LOGK = 'k',
+  OPT_INPUT = 'i',
+  OPT_OUTPUT = 'o',
+  OPT_STRAT = 's',
+  OPT_VERBOSE = 'v'
 };
 
 static const argp_option options[] = {
@@ -69,8 +70,8 @@ static const argp_option options[] = {
     "compute a winning strategy when the input is satisfiable", 0
   },
   {
-    "verbose", OPT_VERBOSE, "VAL", 0,
-    "verbose mode (0, 1, 2)", -1
+    "verbose", OPT_VERBOSE, nullptr, 0,
+    "verbose mode, can be repeated for more verbosity", -1
   },
   { nullptr, 0, nullptr, 0, nullptr, 0 },
 };
@@ -191,8 +192,11 @@ namespace {
           sw.start ();
 
         spot::print_hoa(std::cout, aut, nullptr) << '\n';
-        auto&& skn = k_bounded_safety_aut<set_of_vectors::vector,
-                                          set_of_vectors::set> (aut, opt_K, all_inputs, all_outputs);
+        // auto&& skn = k_bounded_safety_aut<set_of_vectors::vector,
+        //                                   set_of_vectors::set> (aut, opt_K, all_inputs, all_outputs);
+
+        auto&& skn = k_bounded_safety_aut<basic_antichain::vector,
+                                          basic_antichain::set> (aut, opt_K, all_inputs, all_outputs);
         bool realizable = skn.solve (verbose);
 
         if (want_time)
@@ -264,7 +268,7 @@ parse_opt (int key, char *arg, struct argp_state *) {
       break;
 
     case OPT_VERBOSE:
-      verbose = atoi (arg);
+      ++verbose;
       break;
 
     case 'x': {
