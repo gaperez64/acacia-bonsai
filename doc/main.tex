@@ -395,7 +395,7 @@ if she has a winning strategy from it --- that is, in the game played on
 state is losing for her. It follows from Lemma~\ref{lem:runs-visits} that the set of
 winning states from $\calS^K_\calN$ is \emph{$\preceq$-downward closed}. We further
 observe that $U$, the set of unsafe states of \(\calS^K_\calN\), is
-\emph{$\preceq$-downward closed}.
+\emph{$\preceq$-upward closed}.
 \begin{proposition}\label{pro:down-closed}
   Let $f,g \in \mathcal{F}$ be states from $\calS^K_\calN$ such that $f
   \preceq g$.
@@ -425,7 +425,7 @@ consists in iteratively applying a monotonically subset-decreasing operator to
 the set $Q \setminus U$ of safe states. The operator $\cpre\colon \pow{Q} \to
 \pow{Q}$ is defined for all $S \subseteq Q$ as follows.
 \[
-  \cpre(S) := S \cap \{s \in Q \mid \exists i \in I, \forall o \in O :
+  \cpre(S) := S \cap \{s \in Q \mid \forall i \in I, \exists o \in O :
   \Delta(s,\langle i, o \rangle) \in S\}
 \]
 Then, we inductively define $\cpre^n(S)$ for all $n \in \mathbb{N}$ by setting
@@ -502,7 +502,7 @@ definition for $\cpre$ in the context of any safety game. For the safety game
 played on $\calS^K_\calN$ and for a set $F \subseteq \calF$, $\cpre$ can equivalently be
 defined as follows.
 \[
-  \cpre(F) = F \cap \left( \bigcup_{i \in I} \bigcap_{o \in O}
+  \cpre(F) = F \cap \left( \bigcap_{i \in I} \bigcup_{o \in O}
   \{f \in \calF \mid T(f,\langle i, o \rangle) \in F\} \right)
 \]
 %
@@ -516,10 +516,10 @@ then $\cpre(F)$ can be replaced by the closure of $\underline{\cpre} \colon
   \preceq m \} \right\rceil\\
   %
   A^{(1)}_{i} := {} &
-  \left\lceil \bigsqcap_{o \in O} A^{(0)}_{i,o} \right\rceil\\
+  \left\lceil \bigcup_{o \in O} A^{(0)}_{i,o} \right\rceil\\
   %
   A^{(2)} := {} &
-  \left\lceil \bigcup_{i \in I} A^{(1)}_i \right\rceil\\
+  \left\lceil \bigsqcap_{i \in I} A^{(1)}_i \right\rceil\\
   %
   \underline{\cpre}(A) := {} &
   \lceil A \sqcap A^{(2)} \rceil
@@ -564,8 +564,8 @@ hold.
   \(T(f', \langle i, o \rangle) \preceq m\) and $f'$ is also in the set.\qed
 \end{proof}
 
-From the above lemmas and~\Cref{pro:down-closed} it follows that one can compute the set of
-losing states for \eve using $\underline{\cpre}$.
+From the above lemmas and~\Cref{pro:down-closed} it follows that one can
+compute the set of winning states for \eve using $\underline{\cpre}$.
 \begin{theorem}
   A state $f \in \calF$ is winning for \eve if and only if $f \in
   \closedn{\underline{\cpre}^*(\lceil Q \setminus U \rceil)}$.
@@ -576,11 +576,11 @@ intermediate set for which it is not immediately clear that we can compute it
 based on an antichain of maximal elements is $A^{(0)}_{i,o}$. Indeed,
 $A^{(1)}_i$ and $A^{(2)}$ can be computed from the antichain representation of
 a closed set using the equivalences stated in \Cref{pro:antichains}. To avoid
-computing the set of all direct predecessors of $\closedn{A}$ to compute $A^{(0)}_{i,o}$
-we introduce a ``pseudo-inverse'' $\pseudopre : \calF \times I \times O \to
-\calF$ of $T$ defined below for all $f \in \calF$, all $i \in I$, and all $o
-\in O$. For convenience, we adopt the convention that $0 - 1 = 0$ and
-$\bot - 1 = \bot$.
+computing the set of all direct predecessors of $\closedn{A}$ to compute
+$A^{(0)}_{i,o}$ we introduce a ``pseudo-inverse'' $\pseudopre : \calF \times I
+\times O \to \calF$ of $T$ defined below for all $f \in \calF$, all $i \in I$,
+and all $o \in O$. For convenience, we adopt the convention that $0 - 1 = \bot
+- 1 = \bot$.
 \[
   \pseudopre(f,i,o) := \left\{ p \mapsto
     \min_{(p,\langle i, o \rangle,q) \in \Delta} f(q) -
