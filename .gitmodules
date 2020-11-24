@@ -1,0 +1,3 @@
+[submodule "std-simd"]
+	path = std-simd
+	url = https://github.com/VcDevel/std-simd

@@ -9,7 +9,7 @@
 template <class State, class SetOfStates>
 class k_bounded_safety_aut {
   public:
-    k_bounded_safety_aut (const spot::twa_graph_ptr& aut, size_t K, bdd input_support, bdd output_support) :
+    k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K, bdd input_support, bdd output_support) :
       aut {aut}, K {K}, input_support {input_support}, output_support {output_support} {
     }
 
@@ -38,7 +38,8 @@ class k_bounded_safety_aut {
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
         F.clear_update_flag ();
         cpre_inplace (F, verbose);
-        std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
+        if (verbose)
+          std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
       } while (F.updated ());
 
       if (F.contains (init))
@@ -86,65 +87,65 @@ class k_bounded_safety_aut {
         std::cout << "Computing cpre(F) with maxelts (F) = " << std::endl
                   << F.max_elements ();
 
-      // bool first_input = true;
-      // bdd input_letters = bddtrue;
+      bool first_input = true;
+      bdd input_letters = bddtrue;
 
-      // while (input_letters != bddfalse) {
-      //   bdd one_input_letter = pick_one_letter (input_letters, input_support);
-      //   bdd output_letters = bddtrue;
-
-      //   // NOTE: We're forcing iterative union/intersection; do we want to keep
-      //   // all ph/F1i's and give them to the SetOfStates all at once?
-
-      //   SetOfStates F1i;
-      //   do {
-      //     bdd&& one_output_letter = pick_one_letter (output_letters, output_support);
-      //     SetOfStates&& ph = pre_hat (F, one_input_letter, one_output_letter, verbose);
-      //     F1i.union_with (ph);
-      //   } while (output_letters != bddfalse);
-
-      //   if (verbose)
-      //     std::cout << "maxelts (F1_{"
-      //               << spot::bdd_to_formula (one_input_letter, aut->get_dict ())
-      //               << "}) = "
-      //               << std::endl << F1i.max_elements ();
-      //   if (first_input) {
-      //     F2 = std::move (F1i);
-      //     first_input = false;
-      //   } else
-      //     F2.intersect_with (F1i);
-      //   if (F2.empty ())
-      //     break;
-      // }
-
-      bdd output_letters = bddtrue;
-
-      while (output_letters != bddfalse) {
-        bdd one_output_letter = pick_one_letter (output_letters, output_support);
-        bdd input_letters = bddtrue;
+      while (input_letters != bddfalse) {
+        bdd one_input_letter = pick_one_letter (input_letters, input_support);
+        bdd output_letters = bddtrue;
 
         // NOTE: We're forcing iterative union/intersection; do we want to keep
-        // all ph/F1o's and give them to the SetOfStates all at once?
+        // all ph/F1i's and give them to the SetOfStates all at once?
 
-        SetOfStates F1o;
-        bool first_input = true;
+        SetOfStates F1i;
         do {
-          bdd&& one_input_letter = pick_one_letter (input_letters, input_support);
-          SetOfStates&& ph = pre_hat (F, one_output_letter, one_input_letter, verbose);
-          if (first_input) {
-            F1o = std::move (ph);
-            first_input = false;
-          } else
-            F1o.intersect_with (ph);
-        } while (input_letters != bddfalse && not (F1o.empty ()));
+          bdd&& one_output_letter = pick_one_letter (output_letters, output_support);
+          SetOfStates&& ph = pre_hat (F, one_input_letter, one_output_letter, verbose);
+          F1i.union_with (ph);
+        } while (output_letters != bddfalse);
 
         if (verbose)
           std::cout << "maxelts (F1_{"
-                    << bdd_to_formula (one_output_letter)
+                    << spot::bdd_to_formula (one_input_letter, aut->get_dict ())
                     << "}) = "
-                    << std::endl << F1o.max_elements ();
-        F2.union_with (F1o);
+                    << std::endl << F1i.max_elements ();
+        if (first_input) {
+          F2 = std::move (F1i);
+          first_input = false;
+        } else
+          F2.intersect_with (F1i);
+        if (F2.empty ())
+          break;
       }
+
+      // bdd output_letters = bddtrue;
+
+      // while (output_letters != bddfalse) {
+      //   bdd one_output_letter = pick_one_letter (output_letters, output_support);
+      //   bdd input_letters = bddtrue;
+
+      //   // NOTE: We're forcing iterative union/intersection; do we want to keep
+      //   // all ph/F1o's and give them to the SetOfStates all at once?
+
+      //   SetOfStates F1o;
+      //   bool first_input = true;
+      //   do {
+      //     bdd&& one_input_letter = pick_one_letter (input_letters, input_support);
+      //     SetOfStates&& ph = pre_hat (F, one_output_letter, one_input_letter, verbose);
+      //     if (first_input) {
+      //       F1o = std::move (ph);
+      //       first_input = false;
+      //     } else
+      //       F1o.intersect_with (ph);
+      //   } while (input_letters != bddfalse && not (F1o.empty ()));
+
+      //   if (verbose)
+      //     std::cout << "maxelts (F1_{"
+      //               << bdd_to_formula (one_output_letter)
+      //               << "}) = "
+      //               << std::endl << F1o.max_elements ();
+      //   F2.union_with (F1o);
+      // }
 
 
       if (verbose)
@@ -161,7 +162,7 @@ class k_bounded_safety_aut {
 
   private:
     const spot::twa_graph_ptr& aut;
-    size_t K;
+    int K;
     bdd input_support, output_support;
 
     // This computes DownwardClose{Pre_hat (m, i, o) | m \in F}, where Pre_hat (m, i, o) is
@@ -187,9 +188,9 @@ class k_bounded_safety_aut {
                         << ", io & cond: " << bdd_to_formula (e.cond & io) << std::endl;
             if ((e.cond & io) != bddfalse) {
               if (m[q] < 0)
-                f[p] = std::min (f[p], m[q]);
+                f[p] = (int) std::min (f[p], m[q]);
               else
-                f[p] = std::min (f[p], m[q] - (aut->state_is_accepting (q) ? 1 : 0));
+                f[p] = (int) std::min ((int) f[p], (int) m[q] - (aut->state_is_accepting (q) ? 1 : 0));
             }
             // If we reached the minimum possible value, stop going through states.
             if (f[p] == -1)

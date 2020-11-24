@@ -1,0 +1,2 @@
+.inputs hready hlock_0 hlock_1 hbusreq_0 hbusreq_1 hburst_0 hburst_1
+.outputs busreq decide locked start hmastlock hgrant_0 hgrant_1 hmaster_0 hmaster_1

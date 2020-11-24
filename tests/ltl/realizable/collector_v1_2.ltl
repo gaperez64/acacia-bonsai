@@ -1,0 +1,1 @@
+(G ((((G (! (allfinished))) -> ((G (! (finished_0))) || (G (! (finished_1))))) && ((allfinished) -> (X (((! (allfinished)) U (finished_0)) || (G (! (allfinished))))))) && ((allfinished) -> (X (((! (allfinished)) U (finished_1)) || (G (! (allfinished))))))))

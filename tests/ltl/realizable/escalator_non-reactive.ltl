@@ -1,0 +1,1 @@
+((G (! (((utermstepsmovedb) && (! (utermstepssteps))) <-> ((utermstepssteps) && (! (utermstepsmovedb)))))) && (G (utermstepsmovedb)))

@@ -14,8 +14,9 @@
 #include "common_sys.hh"
 
 #include "k-bounded_safety_aut.hh"
-#include "set_of_vectors.hh"
+#include "simd_vector.hh"
 #include "basic_antichain.hh"
+#include "set_of_vectors.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -165,7 +166,6 @@ namespace {
                     << " states and " << aut->num_sets () << " colors\n";
         }
 
-
         ////////////////////////////////////////////////////////////////////////
         // Simplify by merging (TODO: check if useful)
 
@@ -191,12 +191,17 @@ namespace {
         if (want_time)
           sw.start ();
 
-        spot::print_hoa(std::cout, aut, nullptr) << '\n';
+        spot::print_hoa(std::cout, aut, nullptr) << std::endl;
         // auto&& skn = k_bounded_safety_aut<set_of_vectors::vector,
         //                                   set_of_vectors::set> (aut, opt_K, all_inputs, all_outputs);
+        // auto&& skn = k_bounded_safety_aut<basic_antichain::vector,
+        //                                   basic_antichain::set<basic_antichain::vector>>
+        //     (aut, opt_K, all_inputs, all_outputs);
 
-        auto&& skn = k_bounded_safety_aut<basic_antichain::vector,
-                                          basic_antichain::set> (aut, opt_K, all_inputs, all_outputs);
+        auto&& skn = k_bounded_safety_aut<simd_vector,
+                                          basic_antichain::set<simd_vector>>
+          (aut, opt_K, all_inputs, all_outputs);
+
         bool realizable = skn.solve (verbose);
 
         if (want_time)

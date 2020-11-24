@@ -1,9 +1,0 @@
-Transition system {
-    State 0, initial:
-        Outgoing transitions:
-            to state 0 labeled ((a1) U (r1))
-            to state 1 labeled ((a1) U (!r1))
-    State 1:
-        Outgoing transitions:
-            to state 0 labeled ((!a1) U (T))
-}

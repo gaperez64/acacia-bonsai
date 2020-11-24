@@ -1,8 +1,0 @@
-Transition system {
-    State 0, initial:
-        Outgoing transitions:
-            to state 1 labeled ((grant && ack) U (T))
-    State 1:
-        Outgoing transitions:
-            to state 1 labeled ((grant && ack) U (T))
-}

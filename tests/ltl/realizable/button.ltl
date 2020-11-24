@@ -1,0 +1,1 @@
+(((G ((! (((utermcountcount) && (! (utermcountincrementdcountb))) <-> ((utermcountincrementdcountb) && (! (utermcountcount))))) && (! (((utermpicpic) && (! (utermpicrenderbuttondcountb))) <-> ((utermpicrenderbuttondcountb) && (! (utermpicpic))))))) && (G ((ptermeventdclickb) <-> (utermcountincrementdcountb)))) && (G (utermpicrenderbuttondcountb)))

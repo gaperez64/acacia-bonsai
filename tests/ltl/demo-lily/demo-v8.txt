@@ -1,5 +1,0 @@
-Transition system {
-    State 0, initial:
-        Outgoing transitions:
-            to state 0 labeled ((grant) U (T))
-}

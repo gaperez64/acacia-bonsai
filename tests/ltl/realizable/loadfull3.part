@@ -1,0 +1,2 @@
+.inputs request2 request1 request0 idle
+.outputs grant2 grant1 grant0
