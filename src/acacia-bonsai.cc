@@ -14,9 +14,8 @@
 #include "common_sys.hh"
 
 #include "k-bounded_safety_aut.hh"
-#include "simd_vector.hh"
-#include "basic_antichain.hh"
-#include "set_of_vectors.hh"
+#include "vectors.hh"
+#include "sets.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -180,10 +179,12 @@ namespace {
         if (want_time)
           merge_time = sw.stop();
 
-        if (verbose)
+        if (verbose) {
           std::cerr << "simplification done in " << merge_time
                     << " seconds\nDPA has " << aut->num_states()
                     << " states\n";
+          spot::print_hoa(std::cerr, aut, nullptr) << std::endl;
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // Build S^K_N game, solve it.
@@ -191,15 +192,18 @@ namespace {
         if (want_time)
           sw.start ();
 
-        spot::print_hoa(std::cout, aut, nullptr) << std::endl;
         // auto&& skn = k_bounded_safety_aut<set_of_vectors::vector,
         //                                   set_of_vectors::set> (aut, opt_K, all_inputs, all_outputs);
         // auto&& skn = k_bounded_safety_aut<basic_antichain::vector,
         //                                   basic_antichain::set<basic_antichain::vector>>
         //     (aut, opt_K, all_inputs, all_outputs);
 
-        auto&& skn = k_bounded_safety_aut<simd_vector,
-                                          basic_antichain::set<simd_vector>>
+        // auto&& skn = k_bounded_safety_aut<vector_simd,
+        //                                   set_antichain_vector<vector_simd>>
+        auto&& skn = k_bounded_safety_aut<vector_simd,
+                                          set_antichain_vector<vector_simd>>
+
+
           (aut, opt_K, all_inputs, all_outputs);
 
         bool realizable = skn.solve (verbose);

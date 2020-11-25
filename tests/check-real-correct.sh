@@ -78,12 +78,15 @@ resaca=$?
 
 if (( resref != resaca )); then
     echo -n "FAILED:"
-    if (( resref == 0 )); then
+    if (( resaca > 128 )); then
+        echo 'CRASH'
+        exit $resaca
+    elif (( resref == 0 )); then
         echo 'FALSE NEGATIVE (may happen if K is too small)'
         exit 1
     else
         echo 'FALSE POSITIVE (should never happen)'
-        exit 99
+        exit 2
     fi
 else
     echo "Pass."

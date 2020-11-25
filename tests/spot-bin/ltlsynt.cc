@@ -99,11 +99,9 @@ my_split_2step(const const_twa_graph_ptr& aut, bdd input_bdd)
     support = bdd_existcomp(support, input_bdd);
 
     bdd all_letters = bddtrue;
-    std::cout << "Treating state " << src << std::endl;
     while (all_letters != bddfalse)
     {
       bdd one_letter = bdd_satoneset(all_letters, support, bddtrue);
-      std::cout << spot::bdd_to_formula (one_letter, aut->get_dict()) << std::endl;
       all_letters -= one_letter;
 
       dests.clear();

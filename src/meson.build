@@ -1,4 +1,4 @@
-ab_sources = ['acacia-bonsai.cc', 'set_of_vectors.cc', 'basic_antichain.cc']
+ab_sources = ['acacia-bonsai.cc']
 ab_exe = executable ('acacia-bonsai', ab_sources,
                      include_directories : inc,
                      link_with : [gnulib_lib, common_lib],
