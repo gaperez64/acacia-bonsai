@@ -90,11 +90,25 @@ class set_antichain_set {
 
     void intersect_with (const set_antichain_set& other) {
       set_antichain_set intersection;
+      bool smaller_set = false;
 
-      for (const auto& x : vector_set)
-        for (const auto& y : other.vector_set)
-          intersection.insert (x.meet (y));
-      if (this->vector_set != intersection.vector_set) {
+      for (const auto& x : vector_set) {
+        bool dominated = false;
+
+        for (const auto& y : other.vector_set) {
+          Vector &&v = x.meet (y);
+          intersection.insert (v);
+          if (v == x) {
+            dominated = true;
+            break;
+          }
+        }
+        // If x wasn't <= an element in other, then x is not in the
+        // intersection, thus the set is updated.
+        smaller_set |= not dominated;
+      }
+
+      if (smaller_set) {
         *this = std::move (intersection);
         _updated = true;
       }

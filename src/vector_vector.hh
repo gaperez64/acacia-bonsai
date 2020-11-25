@@ -8,6 +8,14 @@ class vector_vector : public std::vector<int> {
 
     vector_vector (const vector_vector& other) : std::vector<int> (other), k {other.k} {}
 
+    vector_vector& operator= (vector_vector&& other) {
+      std::vector<int>::operator= (std::move (other));
+      assert (k == other.k);
+      return *this;
+    }
+
+    vector_vector& operator= (const vector_vector&) = delete;
+
     bool partial_leq (const vector_vector& rhs) const {
       for (unsigned i = 0; i < rhs.k; ++i)
         if (not ((*this)[i] <= rhs[i]))

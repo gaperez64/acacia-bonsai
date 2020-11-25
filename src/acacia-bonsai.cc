@@ -197,13 +197,10 @@ namespace {
         // auto&& skn = k_bounded_safety_aut<basic_antichain::vector,
         //                                   basic_antichain::set<basic_antichain::vector>>
         //     (aut, opt_K, all_inputs, all_outputs);
-
         // auto&& skn = k_bounded_safety_aut<vector_simd,
         //                                   set_antichain_vector<vector_simd>>
         auto&& skn = k_bounded_safety_aut<vector_simd,
                                           set_antichain_vector<vector_simd>>
-
-
           (aut, opt_K, all_inputs, all_outputs);
 
         bool realizable = skn.solve (verbose);
