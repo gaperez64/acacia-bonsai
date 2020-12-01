@@ -356,8 +356,8 @@ foreach folder, testset : test_files
         filename = 'ltl' / folder / file
         test (file,
               check_real_exe,
-              args : [ '-p',
-                       '-a',
+              args : [ '-p', ## prefix every line with the name of the test
+                       '-a',  ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
                        '-F', files (filename) ],
               suite : [ size, folder + '/' + size, folder ],
               timeout: 30)

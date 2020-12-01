@@ -24,7 +24,7 @@ from utils import *
 
 #### Computes the fix point from start_antichain_1 which belongs to starting_player (calls a dylib C)
 def compute_fix_point(start_antichain_1, start_antichain_2, alphabet, starting_player, critical, verbosity):
-    start_time = time.clock()
+    start_time = time.process_time()
     
     # Initialize cache memory (C)
     initialize_cache_c()
@@ -82,7 +82,7 @@ def compute_fix_point(start_antichain_1, start_antichain_2, alphabet, starting_p
     controled_print("Maximum size of critical set: %d\n" % size_max_crit_set, [ALLTEXT, MINTEXT], verbosity)
     controled_print("Maximum sizes of antichains (Starting player, Other player): (%d, %d)\n" % (size_max_starting_player, size_max_other_player), [ALLTEXT, MINTEXT], verbosity)
     controled_print("Nb elements in fix point (Starting player, Other player): (%d, %d)\n" % (a1.contents.size, a2.contents.size), [ALLTEXT, MINTEXT], verbosity)
-    controled_print("Elapsed time: " + str(time.clock()-start_time) + "\n\n", [ALLTEXT, MINTEXT], verbosity)
+    controled_print("Elapsed time: " + str(time.process_time()-start_time) + "\n\n", [ALLTEXT, MINTEXT], verbosity)
     
     a1_sg = clone_antichain_c(a1, CLONE_TUPLE_FUNC(clone_tuple_c))
     a2_sg = clone_antichain_c(a2, CLONE_TUPLE_FUNC(clone_tuple_c))

@@ -236,7 +236,8 @@ def construct_automata(formulas_list, spec_names, verbosity, tool):
             print("Unexpected error:", sys.exc_info()[0])
             print("Don't forget to install " + tool + " and set the " + tool + "_PATH static variable in file constants.py.")
             exit(0)
-    
+
+        automata = automata.decode ('latin-1')
         controled_print(" done\n", [ALLTEXT, MINTEXT], verbosity)
         controled_print(tool + " output for " + spec_names[formula_index] + ": \n", [ALLTEXT], verbosity)
         controled_print(automata+"\n", [ALLTEXT], verbosity)
@@ -245,6 +246,7 @@ def construct_automata(formulas_list, spec_names, verbosity, tool):
 
         # automaton parsing
         s = automata.split('*/\n')
+        print (s)
         if s.__len__()<2:
             print("empty automaton, LTL syntax error?")
             exit(0)

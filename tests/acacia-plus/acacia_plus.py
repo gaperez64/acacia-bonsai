@@ -295,7 +295,7 @@ def parse_partition(partition):
         exit(0)
         
     for prop in (inputs+outputs):
-        if prop != lower(prop):
+        if prop != prop.lower():
             print("Atomic signals must be lowercase strings!")
             exit(0)
            
@@ -676,7 +676,7 @@ def build_group_order_tree(group_order, spec_names, tbucw_c_list):
         cur_sons = group_order_tree.neighbors(node)
         if len(cur_sons) == 0:
             try:
-                group_order_tree.add_node_attribute(node, ("tbucw", (tbucw_c_list[index(spec_names, node)])))
+                group_order_tree.add_node_attribute(node, ("tbucw", (tbucw_c_list[spec_names.index(node)])))
                 group_order_tree.add_node_attribute(node, ("spec_index", node))
                 group_order_tree.add_node_attribute(node, ("OPT2", True))
             except ValueError:
@@ -855,12 +855,12 @@ def test_realizability(tbucw_c, k_value, c_value, player, tree_node, group_order
     if opt2 == True and opt in [OPT12, OPT2]:
         controled_print("Optimization: Detect k-surely losing states...\n", [ALLTEXT, MINTEXT], verbosity)
        
-        start_opt2_time = time.clock()
+        start_opt2_time = time.process_time()
         # If k_value > 0, reset the state labels of the starting automaton_c
         if k_value > 0: # Only if k_value > 0 because otherwise, optimization 2 hasn't been applied yet
             reset_tbucw_states_labels_c(tbucw_c)
         tbucw_c_k = tbucw_size_optimization(tbucw_c, k_value)
-        opt2_time = time.clock()-start_opt2_time
+        opt2_time = time.process_time()-start_opt2_time
         
         # Test whether optimization 2 has affected the tbucw
         if get_tbucw_size_c(tbucw_c) == get_tbucw_size_c(tbucw_c_k):
@@ -969,9 +969,9 @@ def print_stats(verbosity, tbucw_time, check_time, sol_extr_time, total_time, re
         tbucw_sizes = nb_tbucw*[-1]
         for node in group_order_tree.nodes():
             if len(group_order_tree.neighbors(node)) == 0:
-               spec_k_values[index(spec_names, node)] = dict(group_order_tree.node_attributes(node))["k_value"]
-               spec_c_values[index(spec_names, node)] = dict(group_order_tree.node_attributes(node))["c_value"]
-               tbucw_sizes[index(spec_names, node)] = get_tbucw_size_c(dict(group_order_tree.node_attributes(node))["tbucw"])
+               spec_k_values[spec_names.index(node)] = dict(group_order_tree.node_attributes(node))["k_value"]
+               spec_c_values[spec_names.index(node)] = dict(group_order_tree.node_attributes(node))["c_value"]
+               tbucw_sizes[spec_names.index(node)] = get_tbucw_size_c(dict(group_order_tree.node_attributes(node))["tbucw"])
     
         controled_print("Automata construction time: %.2fs\n" % tbucw_time, [ALLTEXT, MINTEXT, RECAP], verbosity)
         controled_print("\n", [ALLTEXT, MINTEXT, RECAP], verbosity)

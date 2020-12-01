@@ -158,7 +158,7 @@ def build_tbucw(aut_list, accepting_states_list, alphabet, inputs, outputs, star
             for state in states_to_add:
                 add_state_c(a, state[0], state[1], state[2], state[3], state[4], state[5], FALSE)
             for tran in tran_to_add:
-                add_tran_c(a, tran[0], tran[1], tran[2], tran[3])      
+                add_tran_c(a, bytes(tran[0], 'latin-1'), tran[1], tran[2], tran[3])      
             
             i += 1
             cur_state_local_index += 1
@@ -182,9 +182,9 @@ def build_alphabet(inputs, outputs):
     
     # Add inputs and outputs
     for i in inputs :
-        add_input_prop_c(alphabet, i)
+        add_input_prop_c(alphabet, bytes (i, 'latin-1'))
     for o in outputs :
-        add_output_prop_c(alphabet, o)
+        add_output_prop_c(alphabet, bytes (o, 'latin-1'))
     
     # Compute the alphabet
     compute_alphabets_c(alphabet)

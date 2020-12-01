@@ -125,9 +125,9 @@ class k_bounded_safety_aut_2step {
                   << F.max_elements ();
 
       F = pre_O (F);
+      // F.intersect_with (safe_states ()); ?
       F = pre_I (F);
-      // F.intersect_with (safe); ?
-      // F.intersect_with (safe); ?
+      // F.intersect_with (safe_states ()); ?
 
       if (verbose > 1)
         std::cout << "maxelts (F) = " << std::endl << F.max_elements ();
