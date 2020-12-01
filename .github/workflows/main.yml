@@ -30,8 +30,8 @@ jobs:
       run: |
         wget -q -O - https://www.lrde.epita.fr/repo/debian.gpg | apt-key add -
         sh -c "echo 'deb http://www.lrde.epita.fr/repo/debian/ unstable/' >> /etc/apt/sources.list"
-        apt-get update
-        apt-get install spot libspot-dev
+        apt-get -y update
+        apt-get -y install spot libspot-dev
     - name: Install PyGraph for python2
       run: pip2 install pygraph
     - uses: BSFishy/meson-build@v1.0.1
