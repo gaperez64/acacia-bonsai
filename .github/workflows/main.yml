@@ -21,7 +21,7 @@ jobs:
     - name: Install packages
       run: |
         apt-get -y update
-        apt-get -y install zsh git gcc python python2 meson ninja-build
+        apt-get -y install zsh git gcc python python2 meson ninja-build gnupg wget
     - uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive
