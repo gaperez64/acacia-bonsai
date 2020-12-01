@@ -18,12 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     container: debian:sid
     steps:
+    - name: Install packages
+      run: sudo apt-get install zsh git gcc python python2
     - uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - uses: actions/setup-python@v1
-    - name: Install ZSH
-      run: sudo apt-get install zsh
     - name: Install Spot
       run: |
         wget -q -O - https://www.lrde.epita.fr/repo/debian.gpg | sudo apt-key add -
