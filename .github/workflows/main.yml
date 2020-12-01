@@ -21,7 +21,7 @@ jobs:
     - name: Install packages
       run: |
         apt-get -y update
-        apt-get -y install zsh git gcc python meson ninja-build gnupg wget python3-pip pkg-config libglib2.0-dev python3-pygraph
+        apt-get -y install zsh git gcc python meson ninja-build gnupg wget python3-pip pkg-config libglib2.0-dev
     - uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive
@@ -32,6 +32,9 @@ jobs:
         sh -c "echo 'deb http://www.lrde.epita.fr/repo/debian/ unstable/' >> /etc/apt/sources.list"
         apt-get -y update
         apt-get -y install spot libspot-dev
+    - uses: BSFishy/pip-action@v1
+      with:
+        packages: pygraph
     - uses: BSFishy/meson-build@v1.0.1
       with:
         action: test
