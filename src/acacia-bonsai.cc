@@ -194,29 +194,28 @@ namespace {
         if (want_time)
           sw.start ();
 
-        // auto&& skn = k_bounded_safety_aut<vector_simd,
-        //                                   set_antichain_vector<vector_simd>>
-        // auto&& skn = k_bounded_safety_aut<vector_simd_vector,
-        //                                   set_antichain_vector<vector_simd_vector>>
-        // auto&& skn = k_bounded_safety_aut<vector_vector,
-        //                                   set_antichain_vector<vector_vector>>
-        // auto&& skn = k_bounded_safety_aut<vector_vector,
-        //                                   set_antichain_set<vector_vector>>
-        // auto&& skn = k_bounded_safety_aut<vector_simd_vector,
-        //                                   set_set<vector_simd_vector>>
-        auto&& skn = k_bounded_safety_aut_2step<vector_simd_vector,
-                                                        set_antichain_vector<vector_simd_vector>>
-          (aut, opt_K, all_inputs, all_outputs, verbose);
-        bool realizable = skn.solve ();
+#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut
+#define STATIC_SIMD_ARRAY_MAX 0
+#define OTHER_VECTOR_IMPL vector_simd_vector
+#define SET_IMPL set_antichain_vector
 
-
-        // bool realizable =
-        //   static_switch_t<40>{}([&] (auto v) {
-        //     auto&& skn = k_bounded_safety_aut<vector_simd_array<v.value>,
-        //                                       set_antichain_vector<vector_simd_array<v.value>>>
-        //       (aut, opt_K, all_inputs, all_outputs, verbose);
-        //     return skn.solve ();
-        //   }, aut->num_states ());
+        bool realizable =
+          static_switch_t<STATIC_SIMD_ARRAY_MAX>{}(
+            // Static value of v.
+            [&] (auto v) {
+              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vector_simd_array<v.value>,
+                                                     SET_IMPL<vector_simd_array<v.value>>>
+                (aut, opt_K, all_inputs, all_outputs, verbose);
+              return skn.solve ();
+            },
+            // Dynamic value
+            [&] (int i) {
+              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<OTHER_VECTOR_IMPL,
+                                                     SET_IMPL<OTHER_VECTOR_IMPL>>
+                (aut, opt_K, all_inputs, all_outputs, verbose);
+              return skn.solve ();
+            },
+            aut->num_states ());
 
         if (want_time)
           solve_time = sw.stop ();

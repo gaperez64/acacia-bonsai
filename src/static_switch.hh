@@ -13,10 +13,10 @@ struct static_switch_t {
     template<class F, class...Args>
     using R=std::invoke_result_t<F, index_t<0>, Args...>;
 
-    template<class F, class...Args>
-    R<F, Args...> operator()(F&& f, size_t i, Args&&...args)const{
+    template<class F, class G, class...Args>
+    R<F, Args...> operator()(F&& f, G&& g, size_t i, Args&&...args) const {
       if (i >= M)
-        throw i; // make a better way to return an error
+        return g (i, std::forward<Args>(args)...);
       return invoke(std::make_index_sequence<M>{}, std::forward<F>(f), i, std::forward<Args>(args)...);
     }
   private:
