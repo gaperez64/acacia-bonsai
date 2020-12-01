@@ -4,7 +4,7 @@ LTLSYNT=@LTLSYNT@
 ACABONSAI=@ACABONSAI@
 
 ACAPLUS=@ACAPLUS@
-PYTHON=@PYTHON2@
+PYTHON=@PYTHON3@
 export ACACIA_PLUS_LIB=@ACACIA_PLUS_LIB@
 export LTL2TGBA_BIN=@LTL2TGBA_BIN@
 
@@ -37,7 +37,7 @@ run_acacia_bonsai () {
 
 run_acacia_plus () {
     echo "Running Acacia Plus..."
-    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 3 -K 30 -C REAL \
+    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 10 -K 10 -C REAL \
          -t SPOT -a BACKWARD $extra_opts
 }
 
@@ -66,7 +66,7 @@ EOF
     exit 1
 }
 
-PYTHON=${PYTHON:-$(whence python2)}
+PYTHON=${PYTHON:-$(whence python3)}
 progs=()
 while getopts "cpla+e:o:F:P:hx" opt; do
     case $opt; in

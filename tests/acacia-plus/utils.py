@@ -28,7 +28,7 @@ def switch_player(player):
 #### Prints test is verbosity corresponds to the req_verb
 def controled_print(text, req_verb, verbosity):
     if verbosity in req_verb:
-        print text,
+        print(text)
 
 #### Displays the execution parameters
 def display_parameters(player, tool, opt, critical, verbosity, nbw_constr, chk_method, chk_dir, k_start, k_bound, k_step, tocheck, set_of_strategies):
@@ -261,5 +261,5 @@ def fractions_list_to_string(l):
 
 #### Inverts a dict (source: Recipe 4.14 in the Python Cookbook, 2nd Edition)
 def invert_dict(d):
-    return dict([(v, k) for k, v in d.iteritems()])
+    return dict([(v, k) for k, v in d.items()])
     

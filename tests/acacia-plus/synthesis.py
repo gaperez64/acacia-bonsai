@@ -107,8 +107,8 @@ def add_state_to_digraph(g, ts, state_index, alphabet):
                     new_label = g.edge_label((state_index, state_to_sp)) + " || " + label
                     g.set_edge_label((state_index, state_to_sp), new_label)
                     
-                curtran_op = curtran_op.contents.next
-            curtran_sp = curtran_sp.contents.next
+                curtran_op = curtran_op.contents.__next__
+            curtran_sp = curtran_sp.contents.__next__
 
 #### Part of the convert_transition_system_into_digraph function: adds a new state to the digraph and deals its successors
 #### Labels of transition are simplified formulas with Quine-McCluskey function
@@ -161,8 +161,8 @@ def add_state_to_digraph_with_formula_simplification(g, ts, state_index, alphabe
                     except KeyError:                                            
                         label_dict[(label_O, state_to_sp)] = [label_I_int]
                 
-                curtran_op = curtran_op.contents.next
-            curtran_sp = curtran_sp.contents.next
+                curtran_op = curtran_op.contents.__next__
+            curtran_sp = curtran_sp.contents.__next__
             
         for key in label_dict:
             (label_O, state_to) = key

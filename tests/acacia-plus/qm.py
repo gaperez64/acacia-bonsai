@@ -75,7 +75,7 @@ def unate_cover(primes, ones):
 def active_primes(cubesel, primes):
 	'''Return the primes selected by the cube selection integer.'''
 	return [prime for used, prime in
-		zip(map(int, b2s(cubesel, len(primes))), primes) if used]
+		zip(list(map(int, b2s(cubesel, len(primes)))), primes) if used]
 
 
 def is_full_cover(all_primes, ones):

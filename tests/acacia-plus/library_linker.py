@@ -167,7 +167,7 @@ if os.uname()[0] == "Darwin":
 elif os.uname()[0] == "Linux":
     ext = 'so'
 else:
-    print "OS not supported"
+    print("OS not supported")
     exit(0)
 
 libpath = os.getenv ('ACACIA_PLUS_LIB',

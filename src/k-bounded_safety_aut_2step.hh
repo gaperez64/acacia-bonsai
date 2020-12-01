@@ -15,7 +15,7 @@ class k_bounded_safety_aut_2step {
   public:
     k_bounded_safety_aut_2step (const spot::twa_graph_ptr& aut, int K,
                                 bdd input_support, bdd output_support, int verbose) :
-      aut {split_2step (aut, input_support, output_support, false, false)},
+      aut {split_2step (aut, input_support, output_support, false, true)},
       K {K}, input_support {input_support}, output_support {output_support},
       verbose {verbose}
     {
@@ -145,17 +145,29 @@ class k_bounded_safety_aut_2step {
     const int verbose;
     using omega_action = std::vector<std::pair<unsigned, bool>>;
     using omega_action_vec = std::vector<omega_action>;
-    std::vector<omega_action_vec> input_actions, output_actions;
+    using omega_actions = std::vector<omega_action_vec>;
+    omega_actions input_actions, output_actions;
 
     omega_action_vec compute_omega_action (bdd letter) {
       omega_action_vec ret (aut->num_states ());
 
-      for (unsigned p = 0; p < aut->num_states (); ++p)
+      if (verbose > 1)
+        std::cout << "Computing Omega(., "
+                  << bdd_to_formula (letter) << ")." << std::endl;
+      for (unsigned p = 0; p < aut->num_states (); ++p) {
+        if (verbose > 1)
+          std::cout << p << " -> ";
         for (const auto& e : aut->out (p)) {
           unsigned q = e.dst;
-          if ((e.cond & letter) != bddfalse)
+          if ((e.cond & letter) != bddfalse) {
             ret[p].push_back (std::make_pair (q, aut->state_is_accepting (q)));
+            if (verbose > 1)
+              std::cout << "[" << q << (aut->state_is_accepting (q) ? "-1] " : "] ");
+          }
         }
+        if (verbose > 1)
+          std::cout << std::endl;
+      }
       return ret;
     }
 
@@ -174,28 +186,36 @@ class k_bounded_safety_aut_2step {
       return f;
     }
 
-    // Prop. 4 in acacia.pdf
-    SetOfStates pre_I (SetOfStates& F) {
-      if (verbose > 2)
-        std::cout << "Pre_I(F) with maxelts (F) = " << std::endl << F.max_elements ();
-      SetOfStates pre_I;
+    SetOfStates pre_IO (SetOfStates&F, const omega_actions& actions, bool intersect) {
+      SetOfStates pre_IO;
       bool first_action = true;
-      for (auto& action_vec : input_actions) {
-        SetOfStates one_pre_I =
+      for (auto& action_vec : actions) {
+        SetOfStates one_pre_IO =
           F.apply ([this, &action_vec] (const auto& m) {
             return omega (m, action_vec);
           });
         if (verbose > 2)
-          std::cout << "maxelts (one pre_I) =" << std::endl << one_pre_I.max_elements ();
+          std::cout << "maxelts (one pre_IOO) =" << std::endl << one_pre_IO.max_elements ();
         if (first_action) {
           first_action = false;
-          pre_I = std::move (one_pre_I);
+          pre_IO = std::move (one_pre_IO);
         } else
-          pre_I.intersect_with (one_pre_I);
-        if (pre_I.empty ())
+          if (intersect)
+            pre_IO.intersect_with (one_pre_IO);
+          else
+            pre_IO.union_with (one_pre_IO);
+        if (intersect && pre_IO.empty ())
           break;
       }
-      pre_I.downward_close ();
+      pre_IO.downward_close ();
+      return pre_IO;
+    }
+
+    // Prop. 4 in acacia.pdf
+    SetOfStates pre_I (SetOfStates& F) {
+      if (verbose > 2)
+        std::cout << "Pre_I(F) with maxelts (F) = " << std::endl << F.max_elements ();
+      auto&& pre_I = pre_IO (F, input_actions, true);
       if (verbose > 2)
         std::cout << "maxelts (pre_I(F)) =" << std::endl << pre_I.max_elements ();
       return pre_I;
@@ -204,22 +224,7 @@ class k_bounded_safety_aut_2step {
     SetOfStates pre_O (SetOfStates& F) {
       if (verbose > 2)
         std::cout << "Pre_O(F) with maxelts (F) = " << std::endl << F.max_elements ();
-      SetOfStates pre_O;
-      bool first_action = true;
-      for (auto& action_vec : output_actions) {
-        SetOfStates one_pre_O =
-          F.apply ([this, &action_vec] (const auto& m) {
-            return omega (m, action_vec);
-          });
-        if (verbose > 2)
-          std::cout << "maxelts (one pre_O) =" << std::endl << one_pre_O.max_elements ();
-        if (first_action) {
-          first_action = false;
-          pre_O = std::move (one_pre_O);
-        } else
-          pre_O.union_with (one_pre_O);
-      }
-      pre_O.downward_close ();
+      auto&& pre_O = pre_IO (F, output_actions, false);
       if (verbose > 2)
         std::cout << "maxelts (pre_O(F))" << std::endl << pre_O.max_elements ();
       return pre_O;

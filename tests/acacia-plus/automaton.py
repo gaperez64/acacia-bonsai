@@ -52,7 +52,7 @@ def read_formula(filename, nbw_constr):
                 l = o.readline()
 
             if l == "": # end of file -> only one spec
-                print "Formula problem: [spec_unit name] pattern not found! You probably choose compositional Buchi construction while there is only one specification."
+                print("Formula problem: [spec_unit name] pattern not found! You probably choose compositional Buchi construction while there is only one specification.")
                 exit(0)
                 
             spec_names.append(split(split(l, ']')[0])[1])
@@ -191,11 +191,11 @@ def wring_to_ltl2ba(formula,inputs,outputs):
             newguarantees = newguarantees + '&& (' + convert_local(f) + ')'
         newguarantees = '(' + newguarantees + ')'
 
-    if newassumptions <> '' and newguarantees <> '':
+    if newassumptions != '' and newguarantees != '':
         newformula = newassumptions + ' -> ' + newguarantees
-    elif newassumptions <> '':
+    elif newassumptions != '':
         newformula = '!(' + newassumptions + ')'
-    elif newguarantees <> '':
+    elif newguarantees != '':
         newformula = newguarantees
     else:
         print('Empty formula')
@@ -222,7 +222,7 @@ def construct_automata(formulas_list, spec_names, verbosity, tool):
     elif tool == SPOT:
         tool_cmd = [LTL2TGBA_BIN,'--spin','--deterministic','-f']
     else:
-        print "Wrong tool!"
+        print("Wrong tool!")
         exit(0)
 
     formula_index = 0
@@ -233,8 +233,8 @@ def construct_automata(formulas_list, spec_names, verbosity, tool):
             out = subprocess.Popen(tool_cmd+[formula],stdout=subprocess.PIPE)
             (automata,err) = out.communicate()
         except:
-            print "Unexpected error:", sys.exc_info()[0]
-            print "Don't forget to install " + tool + " and set the " + tool + "_PATH static variable in file constants.py."
+            print("Unexpected error:", sys.exc_info()[0])
+            print("Don't forget to install " + tool + " and set the " + tool + "_PATH static variable in file constants.py.")
             exit(0)
     
         controled_print(" done\n", [ALLTEXT, MINTEXT], verbosity)
@@ -346,7 +346,7 @@ def construct_automata_wring(formulas, spec_names, partition, inputs, outputs, u
         try:
             o = open(TMP_PATH+str(unique_id)+"/spec_"+str(i)+"/nbw.l2a", 'r')
         except IOError:
-            print "Wring error: Partition file might not match the formula"
+            print("Wring error: Partition file might not match the formula")
             exit(0)
         l = o.readline()
         states = []

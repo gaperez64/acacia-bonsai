@@ -338,7 +338,7 @@ conf_data = configuration_data ()
 conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
 conf_data.set_quoted ('ACABONSAI', ab_exe.full_path ())
 conf_data.set_quoted ('ACAPLUS', meson.source_root() / '@0@'.format(acacia_plus_py[0]))
-conf_data.set_quoted ('PYTHON2', py2.path ())
+conf_data.set_quoted ('PYTHON3', py.path ())
 conf_data.set_quoted ('ACACIA_PLUS_LIB', acplus_lib.full_path ())
 conf_data.set_quoted ('LTL2TGBA_BIN', ltl2tgba_exe.full_path ())
 
@@ -383,8 +383,8 @@ foreach file : benchmark_files
   filename = 'ltl' / file
   benchmark (file,
              check_real_exe,
-             args : [ '-p',
-                      '-a',
+             args : [ '-p',  ## prefix every line with the name of the test
+                      '-a',  ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
                       '-F', files (filename) ],
              timeout: 30)
 endforeach

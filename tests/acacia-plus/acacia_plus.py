@@ -54,7 +54,7 @@ def synthetize(ltl_file, partition_file, player, options):
     mp_parameters = (inputs, outputs, dimension, values_I, values_O, values_not_I, values_not_O, nu, c_start, c_bound, c_step)
     
     if tocheck in [UNREAL, BOTH] and dimension > 0: # No unrealizability testing with costs -> removing costs (dimension 0)
-        print "Warning: mean-payoff objectives turned off since unrealizability checking is on"
+        print("Warning: mean-payoff objectives turned off since unrealizability checking is on")
         dimension = 0
         c_start = [0]
         c_bound = [0]
@@ -277,26 +277,26 @@ def parse_partition(partition):
     try:
         inputs_temp = []
         for x in inputs:
-            if x<>'' and x<>'\n':
+            if x!='' and x!='\n':
                 inputs_temp.append(x)
         inputs = inputs_temp
     except UnboundLocalError:
-        print "Input signals not found"
+        print("Input signals not found")
         exit(0)
     
     try:
         outputs_temp = []
         for x in outputs:
-            if x<>'' and x<>'\n':
+            if x!='' and x!='\n':
                 outputs_temp.append(x)
         outputs = outputs_temp
     except UnboundLocalError:
-        print "Output signals not found"
+        print("Output signals not found")
         exit(0)
         
     for prop in (inputs+outputs):
         if prop != lower(prop):
-            print "Atomic signals must be lowercase strings!"
+            print("Atomic signals must be lowercase strings!")
             exit(0)
            
     values_for_I = False
@@ -308,7 +308,7 @@ def parse_partition(partition):
     def convert_signals_values(v):
         values_temp = []
         for x in v:
-            if x<>'' and x<>'\n':
+            if x!='' and x!='\n':
                 values_temp.append(x.strip('()').split(','))
         return values_temp
     
@@ -367,38 +367,38 @@ def parse_partition(partition):
                 
     if dimension != 0:
         for x in nu:
-            if x<>'' and x<>'\n':
+            if x!='' and x!='\n':
                 nu = x.strip('()').split(',')
         for x in c_start:
-            if x<>'' and x<>'\n':
+            if x!='' and x!='\n':
                 c_start = x.strip('()').split(',')
         for x in c_bound:
-            if x<>'' and x<>'\n':
+            if x!='' and x!='\n':
                 c_bound = x.strip('()').split(',')
         for x in c_step:
-            if x<>'' and x<>'\n':
+            if x!='' and x!='\n':
                 c_step = x.strip('()').split(',')
                            
         if len(inputs) != len(values_I):
-            print "The values of input signals do not correspond with the input signals"
+            print("The values of input signals do not correspond with the input signals")
             exit(0)
         if len(outputs) != len(values_O):
-            print "The values of output signals do not correspond with the output signals"
+            print("The values of output signals do not correspond with the output signals")
             exit(0)
         if len(inputs) != len(values_not_I):
-            print "The values of negation of input signals do not correspond with the input signals"
+            print("The values of negation of input signals do not correspond with the input signals")
             exit(0)
         if len(outputs) != len(values_not_O):
-            print "The values of negation of output signals do not correspond with the output signals"
+            print("The values of negation of output signals do not correspond with the output signals")
             exit(0)
                  
         for v in values_I+values_O+values_not_I+values_not_O:
             if len(v) != dimension:
-                print "All vectors of values do not have the same dimension"
+                print("All vectors of values do not have the same dimension")
                 exit(0)
         
         if nu == [] or nu == [""]:
-            print "You must specify a nu vector"
+            print("You must specify a nu vector")
             exit(0)
         if c_start == [] or c_start == [""]:
             c_start = dimension*[0]
@@ -408,19 +408,19 @@ def parse_partition(partition):
             c_step = dimension*[2]
         
         if len(nu) != dimension:
-            print "Wrong dimension of the nu vector"
+            print("Wrong dimension of the nu vector")
             exit(0)
             
         if len(c_start) != dimension:
-            print "Wrong dimension of the c_start vector"
+            print("Wrong dimension of the c_start vector")
             exit(0)
         
         if len(c_bound) != dimension:
-            print "Wrong dimension of the c_bound vector"
+            print("Wrong dimension of the c_bound vector")
             exit(0)
         
         if len(c_step) != dimension:
-            print "Wrong dimension of the c_step vector"
+            print("Wrong dimension of the c_step vector")
             exit(0)
             
         # local function that converts string values to integer values
@@ -442,7 +442,7 @@ def parse_partition(partition):
             values_not_I = convert_list_of_string_values_to_list_of_integer_values(values_not_I)
             values_not_O = convert_list_of_string_values_to_list_of_integer_values(values_not_O)
         except ValueError:
-            print "The values associated to signals must be integers"
+            print("The values associated to signals must be integers")
             exit(0)
 
         
@@ -468,7 +468,7 @@ def parse_partition(partition):
             try:                
                 nu_temp.append(convert_to_frac(x))
             except ValueError:
-                print "Nu values must be numbers"
+                print("Nu values must be numbers")
                 exit(0)
         nu = nu_temp
         
@@ -480,7 +480,7 @@ def parse_partition(partition):
                 if c_start[i] < 0 or c_bound[i] < 0 or c_step[i] < 0:
                     raise ValueError
         except ValueError:
-            print "c_start, c_bound and c_step must be vectors of positive integers"
+            print("c_start, c_bound and c_step must be vectors of positive integers")
             exit(0)
         
         for i in range(dimension):
@@ -528,7 +528,7 @@ def automata_construction(formulas, nb_spec, spec_names, partition, mp_parameter
     elif tool == WRING:
         (ucw_python, accepting_states) = construct_automata_wring(formulas, spec_names, partition, inputs, outputs, unique_id, verbosity)
     else:
-        print "Wrong tool"
+        print("Wrong tool")
         exit(0)
 
     # Optimization 1
@@ -615,7 +615,7 @@ def build_group_order_tree(group_order, spec_names, tbucw_c_list):
                         try:
                             group_order_tree.add_edge(("parent_"+str(parent_stack[len(parent_stack)-1]), node))
                         except IndexError:
-                            print "Parenthesizing: parenthesis problem (too many right parenthesis)"
+                            print("Parenthesizing: parenthesis problem (too many right parenthesis)")
                             exit(0)
                     
             parent += 1
@@ -635,18 +635,18 @@ def build_group_order_tree(group_order, spec_names, tbucw_c_list):
                     try:
                         group_order_tree.add_edge(("parent_"+str(parent_stack[len(parent_stack)-1]), node))
                     except IndexError:
-                        print "Parenthesizing: parenthesis problem (too many right parenthesis)"
+                        print("Parenthesizing: parenthesis problem (too many right parenthesis)")
                         exit(0)
             try:
                 parent_stack.pop()
             except IndexError:
-                print "Parenthesizing: parenthesis problem (too many right parenthesis)"
+                print("Parenthesizing: parenthesis problem (too many right parenthesis)")
                 exit(0)
         else:
             stack.append(group_order[i]) 
     
     if len(parent_stack) > 0:
-        print "Parenthesizing: parenthesis problem (too many left parenthesis)"
+        print("Parenthesizing: parenthesis problem (too many left parenthesis)")
         exit(0)   
 
     # Remove useless nodes (nodes that have only one son)
@@ -667,7 +667,7 @@ def build_group_order_tree(group_order, spec_names, tbucw_c_list):
    
     # Test whether there is one leaf for each spec        
     if leafs_count != nb_spec:
-        print "Parenthesizing: number of specifications problem"
+        print("Parenthesizing: number of specifications problem")
         exit(0)
         
     # Associate each leaf with the corresponding tbucw and find root
@@ -680,7 +680,7 @@ def build_group_order_tree(group_order, spec_names, tbucw_c_list):
                 group_order_tree.add_node_attribute(node, ("spec_index", node))
                 group_order_tree.add_node_attribute(node, ("OPT2", True))
             except ValueError:
-                print "Parenthesizing: specification not found (" + node + ")"
+                print(("Parenthesizing: specification not found (" + node + ")"))
                 exit(0)
         
         if len(group_order_tree.incidents(node)) == 0:
@@ -688,7 +688,7 @@ def build_group_order_tree(group_order, spec_names, tbucw_c_list):
 
     # No root ?
     if root == -1:
-        print "Parenthesizing problem: no root"
+        print("Parenthesizing problem: no root")
         exit(0)
 
     return (group_order_tree, root)
@@ -706,7 +706,7 @@ def find_a_winning_strategy(group_order_tree, tree_node, alphabet, player, optio
         try:
             tbucw_c = dict(group_order_tree.node_attributes(tree_node))["tbucw"]
         except KeyError: # Impossible?
-            print "No tbUCW ?"
+            print("No tbUCW ?")
             exit(0) 
         
         # If we have already found a winning strategy for this spec, try with a higher value of K, otherwise, start with 0
@@ -794,7 +794,7 @@ def find_a_winning_strategy(group_order_tree, tree_node, alphabet, player, optio
             for a in start_antichains_PI:
                 free_antichain_full_c(a, FREE_TUPLE_FULL_FUNC(free_tuple_full_c))
         else:
-            print "Only one son?"
+            print("Only one son?")
             exit(0)
                 
         spec_index = spec_index[0:len(spec_index)-1]+")"
@@ -1000,8 +1000,8 @@ def print_stats(verbosity, tbucw_time, check_time, sol_extr_time, total_time, re
 
 #### Displays an error message and exit    
 def exit_acaciaplus(error_text):
-    print error_text
-    print "Use the -h or --help option to display the helper"
+    print(error_text)
+    print("Use the -h or --help option to display the helper")
     exit(0)
 
 ###########################################################################################################

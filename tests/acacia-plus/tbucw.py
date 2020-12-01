@@ -107,7 +107,7 @@ def build_tbucw(aut_list, accepting_states_list, alphabet, inputs, outputs, star
                 for lab in labels_array: # for each disjunction, add a turn based state if necessary and 2 transitions
                     is_partition_ok = check_partition_with_label(lab, inputs, outputs)
                     if not is_partition_ok:
-                        print "Partition file doesn't match the formula!"
+                        print("Partition file doesn't match the formula!")
                         exit(0)
                         
                     # Label    
