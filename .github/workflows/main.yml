@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Checkout submodules
-      uses: textbook/git-checkout-submodule-action@master
+      run: git submodule update --init --recursive
     - uses: actions/setup-python@v1
     - name: Install ZSH
       run: sudo apt-get install zsh
