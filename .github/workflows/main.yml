@@ -19,7 +19,9 @@ jobs:
     container: debian:sid
     steps:
     - name: Install packages
-      run: apt-get install zsh git gcc python python2
+      run: |
+        apt-get -y update
+        apt-get -y install zsh git gcc python python2 meson ninja
     - uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive
