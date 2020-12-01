@@ -3,7 +3,7 @@
 
 
 #ifndef VECTOR_SIMD_SIZE
-# define VECTOR_SIMD_SIZE 16
+# define VECTOR_SIMD_SIZE 32
 #endif
 
 #include <experimental/simd>
@@ -30,12 +30,26 @@ class vector_simd : public fssimd {
 
     vector_simd& operator= (const vector_simd& other) = delete;
 
-    bool partial_leq (const vector_simd& rhs) const {
-      return std::experimental::all_of (static_cast<fssimd>(*this) <= rhs);
-    }
+    class po_res : public fssimd {
+      public:
+        po_res (fssimd&& e) : fssimd (std::move (e)) {}
 
-    bool partial_lt (const vector_simd& rhs) const {
-      return std::experimental::none_of (static_cast<fssimd> (*this) > rhs);
+        inline bool leq () {
+          // This tests that the MSB of each component of the difference is 0.
+          return std::experimental::reduce (static_cast<fssimd> (*this), std::bit_or ()) >= 0;
+        }
+
+        inline bool geq () {
+          // Similarly, but with the opposite of the difference.
+          auto tmp = -*this;
+          return std::experimental::reduce (tmp, std::bit_or ()) >= 0;
+        }
+
+        // inline bool eq () not implemented, as it is better to use ==.
+    };
+
+    inline auto partial_order (const vector_simd& rhs) const {
+      return po_res (rhs - static_cast<fssimd> (*this));
     }
 
     bool operator== (const vector_simd& rhs) const {
@@ -57,6 +71,10 @@ class vector_simd : public fssimd {
 
     vector_simd meet (const vector_simd& rhs) const {
       return vector_simd (std::experimental::min (*this, rhs), k);
+    }
+
+    auto size () const {
+      return k;
     }
 
   private:

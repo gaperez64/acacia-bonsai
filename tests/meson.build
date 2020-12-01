@@ -334,8 +334,18 @@ test_files = {
                  }
              }
 
-check_real_exe = find_program ('check-real-correct.sh')
+conf_data = configuration_data ()
+conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
+conf_data.set_quoted ('ACABONSAI', ab_exe.full_path ())
+conf_data.set_quoted ('ACAPLUS', meson.source_root() / '@0@'.format(acacia_plus_py[0]))
+conf_data.set_quoted ('PYTHON2', py2.path ())
+conf_data.set_quoted ('ACACIA_PLUS_LIB', acplus_lib.full_path ())
+conf_data.set_quoted ('LTL2TGBA_BIN', ltl2tgba_exe.full_path ())
 
+check_real_file = configure_file (input : 'check-real-correct.sh.in',
+                                  output : 'check-real-correct.sh',
+                                  configuration : conf_data)
+check_real_exe = find_program (check_real_file)
 
 # test_files = { 'realizable' : { 'tiny' :  [] } } ...
 
@@ -346,15 +356,35 @@ foreach folder, testset : test_files
         filename = 'ltl' / folder / file
         test (file,
               check_real_exe,
-              args : [ '-a', ab_exe,
-                       '-r', ltlsynt_exe,
-                       '-p', acacia_plus_py,
-                       '-P', py.path (),
-                       '-f', files (filename) ],
-              suite : [ size, folder + '/' + size ],
-              env : py_env,
-              timeout: 15)
+              args : [ '-p',
+                       '-a',
+                       '-F', files (filename) ],
+              suite : [ size, folder + '/' + size, folder ],
+              timeout: 30)
       endforeach
     endif
   endforeach
+endforeach
+
+benchmark_files = [  # Sorted from faster to slower
+                    'unrealizable/ltl2dba_psi_7.ltl',
+                    'realizable/ltl2dba_U2_6.ltl',
+                    'unrealizable/ltl2dba_theta_5.ltl',
+                    'unrealizable/ltl2dba_psi_8.ltl',
+                    'realizable/ltl2dba_U1_5.ltl',
+                    'realizable/ltl2dba02.ltl',
+                    'unrealizable/ltl2dba_theta_6.ltl',
+                    'realizable/ltl2dba_U2_7.ltl',
+                    'unrealizable/ltl2dba_theta_7.ltl',
+                    'realizable/ltl2dba_U2_8.ltl',
+                  ]
+
+foreach file : benchmark_files
+  filename = 'ltl' / file
+  benchmark (file,
+             check_real_exe,
+             args : [ '-p',
+                      '-a',
+                      '-F', files (filename) ],
+             timeout: 30)
 endforeach

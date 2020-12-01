@@ -29,7 +29,7 @@ class set_antichain_set {
 
     bool contains (const Vector& v) const {
       for (const auto& e : vector_set)
-        if (v.partial_leq (e))
+        if (v.partial_order (e).leq ())
           return true;
       return false;
     }
@@ -51,10 +51,11 @@ class set_antichain_set {
       bool should_be_inserted = true;
 
       for (const auto& e : vector_set) {
-        if (v.partial_leq (e)) {
+        auto po = v.partial_order (e);
+        if (po.leq ()) {
           should_be_inserted = false;
           break;
-        } else if (e.partial_lt (v)) {
+        } else if (po.geq ()) {
           should_be_inserted = true;
           to_remove.insert (e);
         }
@@ -115,7 +116,7 @@ class set_antichain_set {
     }
 
     template <typename F>
-    void apply (const F& lambda) {
+    void apply_inplace (const F& lambda) {
       std::set<Vector> new_set;
       for (auto el : vector_set) {
         auto&& changed_el = lambda (el);

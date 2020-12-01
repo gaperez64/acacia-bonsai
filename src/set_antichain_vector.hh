@@ -23,13 +23,18 @@ class set_antichain_vector {
 
     set_antichain_vector& operator= (set_antichain_vector&& other) {
       vector_set = std::move (other.vector_set);
-
+      _updated = other._updated;
       return *this;
+    }
+
+    // Ideally deleted
+    bool operator== (const set_antichain_vector& other) const {
+      return vector_set == other.vector_set;
     }
 
     bool contains (const Vector& v) const {
       for (const auto& e : vector_set)
-        if (v.partial_leq (e))
+        if (v.partial_order (e).leq ())
           return true;
       return false;
     }
@@ -54,10 +59,11 @@ class set_antichain_vector {
       auto result = vector_set.begin ();
       auto end = vector_set.end ();
       for (auto it = result; it != end; ++it) {
-        if (v.partial_leq (*it)) {
+       auto res = v.partial_order (*it);
+       if (res.leq ()) {
           should_be_inserted = false;
           break;
-        } else if (it->partial_lt (v)) {
+       } else if (res.geq ()) {
           should_be_inserted = true;
         } else { // Element needs to be kept
           if (result != it) // This can be false only on the first element.
@@ -92,7 +98,7 @@ class set_antichain_vector {
         _updated |= insert (e);
     }
 
-    void intersect_with (const set_antichain_vector& other) {
+    void intersect_with_ (const set_antichain_vector& other) {
       set_antichain_vector intersection;
       bool smaller_set = false;
 
@@ -118,14 +124,82 @@ class set_antichain_vector {
       }
     }
 
+    template <typename V>
+    class disregard_first_component : public std::less<V> {
+      public:
+        bool operator() (const V& v1, const V& v2) const {
+          auto v2prime = v2;
+          v2prime[0] = v1[0];
+          return std::less<V>::operator() (v1, v2prime);
+        }
+    };
+
+    void intersect_with (const set_antichain_vector& other) {
+      set_antichain_vector intersection;
+      bool smaller_set = false;
+      using cache_red_dim = std::set<Vector, disregard_first_component<Vector>>;
+      using vector_of_vectors = std::vector<Vector>;
+      std::map<int, std::pair<cache_red_dim, vector_of_vectors>> split_cache;
+
+      for (const auto& x : vector_set) {
+        bool dominated = false;
+
+        auto& cv = ([&x, &split_cache, &other] () -> auto& {
+          try {
+            return split_cache.at (x[0]);
+          } catch (...) {
+            auto& cv = split_cache[x[0]];
+            for (const auto& y : other.vector_set) {
+              if (y[0] >= x[0])
+                cv.first.insert (y);
+              else
+                cv.second.push_back (y);
+            }
+            return cv;
+          }
+        }) ();
+
+        auto meet = [&] (const Vector& y) {
+          Vector &&v = x.meet (y);
+          intersection.insert (v);
+          if (v == x) {
+            dominated = true;
+            return false;
+          }
+          return true;
+        };
+
+        std::all_of (cv.first.begin (), cv.first.end (), meet);
+        if (!dominated)
+          std::all_of (cv.second.begin (), cv.second.end (), meet);
+
+        // If x wasn't <= an element in other, then x is not in the
+        // intersection, thus the set is updated.
+        smaller_set |= not dominated;
+      }
+
+      if (smaller_set) {
+        *this = std::move (intersection);
+        _updated = true;
+      }
+    }
+
     template <typename F>
-    void apply (const F& lambda) {
+    set_antichain_vector apply (const F& lambda) {
+      set_antichain_vector res;
+      for (auto el : vector_set)
+        res.insert (lambda (el));
+      return res;
+    }
+
+    template <typename F>
+    void apply_inplace (const F& lambda) {
       std::vector<Vector> new_set;
       for (auto el : vector_set) {
         auto&& changed_el = lambda (el);
         if (changed_el != el)
           _updated = true;
-        new_set.push_back (changed_el);
+        new_set.push_back (changed_el); // May not be an antichain, but speeds up.
       }
       vector_set = std::move (new_set);
     }

@@ -14,8 +14,10 @@
 #include "common_sys.hh"
 
 #include "k-bounded_safety_aut.hh"
+#include "k-bounded_safety_aut_2step.hh"
 #include "vectors.hh"
 #include "sets.hh"
+#include "static_switch.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -192,18 +194,29 @@ namespace {
         if (want_time)
           sw.start ();
 
-        // auto&& skn = k_bounded_safety_aut<set_of_vectors::vector,
-        //                                   set_of_vectors::set> (aut, opt_K, all_inputs, all_outputs);
-        // auto&& skn = k_bounded_safety_aut<basic_antichain::vector,
-        //                                   basic_antichain::set<basic_antichain::vector>>
-        //     (aut, opt_K, all_inputs, all_outputs);
         // auto&& skn = k_bounded_safety_aut<vector_simd,
         //                                   set_antichain_vector<vector_simd>>
-        auto&& skn = k_bounded_safety_aut<vector_simd,
-                                          set_antichain_vector<vector_simd>>
-          (aut, opt_K, all_inputs, all_outputs);
+        // auto&& skn = k_bounded_safety_aut<vector_simd_vector,
+        //                                   set_antichain_vector<vector_simd_vector>>
+        // auto&& skn = k_bounded_safety_aut<vector_vector,
+        //                                   set_antichain_vector<vector_vector>>
+        // auto&& skn = k_bounded_safety_aut<vector_vector,
+        //                                   set_antichain_set<vector_vector>>
+        // auto&& skn = k_bounded_safety_aut<vector_simd_vector,
+        //                                   set_set<vector_simd_vector>>
+        auto&& skn = k_bounded_safety_aut_2step<vector_simd_vector,
+                                                        set_antichain_vector<vector_simd_vector>>
+          (aut, opt_K, all_inputs, all_outputs, verbose);
+        bool realizable = skn.solve ();
 
-        bool realizable = skn.solve (verbose);
+
+        // bool realizable =
+        //   static_switch_t<40>{}([&] (auto v) {
+        //     auto&& skn = k_bounded_safety_aut<vector_simd_array<v.value>,
+        //                                       set_antichain_vector<vector_simd_array<v.value>>>
+        //       (aut, opt_K, all_inputs, all_outputs, verbose);
+        //     return skn.solve ();
+        //   }, aut->num_states ());
 
         if (want_time)
           solve_time = sw.stop ();
@@ -277,13 +290,14 @@ parse_opt (int key, char *arg, struct argp_state *) {
       ++verbose;
       break;
 
-    case 'x': {
+    case 'x':
+    {
       const char *opt = extra_options.parse_options (arg);
 
       if (opt)
         error (2, 0, "failed to parse --options near '%s'", opt);
     }
-      break;
+    break;
   }
 
   END_EXCEPTION_PROTECT;

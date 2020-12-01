@@ -155,7 +155,7 @@ def synthetize(ltl_file, partition_file, player, options):
     realizable = False
     unrealizable = False
     if tocheck in [UNREAL, BOTH]: # Check realizability and unrealizability or only unrealizability (synthesis is done monolithicaly)
-        extract_solution = True
+        extract_solution = False
         c_value = [0]
         k_value = k_start-k_step
         while not realizable and not unrealizable: # iterate while we have not prove realizability or unrealizability
@@ -191,7 +191,7 @@ def synthetize(ltl_file, partition_file, player, options):
             if realizable:
                 c_value = dict(group_order_tree.node_attributes(tree_root))["c_value"]
                 controled_print("Formula is realizable -> check if it is still realizable with costs for c = " + str(c_value) + "\n\n", [MINTEXT, ALLTEXT], verbosity)
-                extract_solution = True
+                extract_solution = False
                 sg = add_credits_to_safety_game_c(sg, dimension, convert_list_to_c_format(c_value))
                 
                 if player == P_I:
@@ -211,34 +211,35 @@ def synthetize(ltl_file, partition_file, player, options):
                 else:
                     controled_print("Solution found for spec " + spec_index + " with costs for current k and c values\n\n", [MINTEXT, ALLTEXT], verbosity)
         else: # dimension = 0
-            extract_solution = True
+            extract_solution = False
             (realizable, solution, sg, sol_extr_time) = find_a_winning_strategy(group_order_tree, tree_root, alphabet, player, options, mp_parameters, extract_solution)
 
     check_time = os.times()[4] - start_time - tbucw_time
     total_time = os.times()[4] - start_time
   
     # Write the solution
-    if realizable:
-        print_solution(solution, inputs, outputs, player, filename, path, verbosity)
-        if len(solution.nodes()) <= 10:
-            display_solution(solution, inputs, outputs, player, filename, path)
+    if extract_solution:
+        if realizable:
+            print_solution(solution, inputs, outputs, player, filename, path, verbosity)
+            if len(solution.nodes()) <= 10:
+                display_solution(solution, inputs, outputs, player, filename, path)
+            else:
+                controled_print("The solution has more than 100 nodes", [MINTEXT,
+                                                                         ALLTEXT], verbosity)
+        elif unrealizable:
+            print_solution(solution, outputs, inputs, player_unreal, filename, path, verbosity)
+            if len(solution.nodes()) <= 20:
+                display_solution(solution, outputs, inputs, player_unreal, filename, path)      
+
+        # Print stats and finish
+        if realizable:
+            print_stats(verbosity, tbucw_time, check_time, sol_extr_time, total_time, realizable, unrealizable, solution, player, group_order_tree, spec_names, nb_tbucw, dimension)
+        elif unrealizable:
+            print_stats(verbosity, tbucw_time, check_time, sol_extr_time, total_time, realizable, unrealizable, solution, player_unreal, group_order_tree_unreal, spec_names_unreal, nb_tbucw, dimension)
         else:
-            controled_print("The solution has more than 100 nodes", [MINTEXT,
-                            ALLTEXT], verbosity)
-    elif unrealizable:
-        print_solution(solution, outputs, inputs, player_unreal, filename, path, verbosity)
-        if len(solution.nodes()) <= 20:
-            display_solution(solution, outputs, inputs, player_unreal, filename, path)      
-    
-    # Print stats and finish
-    if realizable:
-        print_stats(verbosity, tbucw_time, check_time, sol_extr_time, total_time, realizable, unrealizable, solution, player, group_order_tree, spec_names, nb_tbucw, dimension)
-    elif unrealizable:
-        print_stats(verbosity, tbucw_time, check_time, sol_extr_time, total_time, realizable, unrealizable, solution, player_unreal, group_order_tree_unreal, spec_names_unreal, nb_tbucw, dimension)
-    else:
-        if tocheck == UNREAL:
-            group_order_tree = group_order_tree_unreal
-        print_stats(verbosity, tbucw_time, check_time, sol_extr_time, total_time, realizable, unrealizable, solution, player, group_order_tree, spec_names, nb_tbucw, dimension)
+            if tocheck == UNREAL:
+                group_order_tree = group_order_tree_unreal
+                print_stats(verbosity, tbucw_time, check_time, sol_extr_time, total_time, realizable, unrealizable, solution, player, group_order_tree, spec_names, nb_tbucw, dimension)
     return (realizable != unrealizable, realizable)
               
 #### Opens the partition file and fills the inputs and outputs lists and read the optional values for mean-payoff objective        
@@ -804,7 +805,7 @@ def find_a_winning_strategy(group_order_tree, tree_node, alphabet, player, optio
             sg = otfur(start_antichain1, start_antichain2, cf_info, alphabet, player, dimension, convert_list_to_c_format(c_value), options)
         else:  # Backward algorithm
             sg = compute_fix_point(start_antichain1, start_antichain2, alphabet, player, critical, verbosity)
-         
+        
         if len(group_order_tree.incidents(tree_node)) == 0 and extract_solution: # Root -> extract the solution if we have to
             (winning_strategy, solution, sg, sol_extr_time) = extract_solution_from_safety_game(sg, alphabet, player, mp_parameters, options)
         else: # check if there is a winning strategy, but do not extract a solution
@@ -890,8 +891,7 @@ def test_realizability(tbucw_c, k_value, c_value, player, tree_node, group_order
         direction = FORWARD
     else:
         direction = BACKWARD
-    if chk_method == COMP:
-        extract_solution = False
+    extract_solution = False
     spec_index = dict(group_order_tree.node_attributes(tree_node))["spec_index"]
     
     (winning_strategy, solution, sg, sol_extr_time) = solve_safety_game(start_antichain_1, start_antichain_2, cf_info, tbucw_c_k.contents.alphabet, player, dimension, c_value, spec_index, options, mp_parameters, direction, extract_solution)
@@ -916,7 +916,7 @@ def solve_safety_game(start_antichain_1, start_antichain_2, cf_info, alphabet, p
         sg = otfur(start_antichain_1, start_antichain_2, cf_info, alphabet, player, dimension, convert_list_to_c_format(c_value), options)
     else: # Backward algorithm
         sg = compute_fix_point(start_antichain_1, start_antichain_2, alphabet, player, critical, verbosity)
-    
+
     # Analyze the solved safety game    
     if extract_solution: # Extract winning strategies from the safety game (if there are)
         (winning_strategy, solution, sg, sol_extr_time) = extract_solution_from_safety_game(sg, alphabet, player, mp_parameters, options)

@@ -1,7 +1,22 @@
 #pragma once
 
+/* #define PRE_HAT_CACHE */
+#define PRE_HAT_ACTION_CACHE
+
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>
+
+/// \brief Wrapper class around bdd to provide an operator< with bool value.
+/// The original type returns a bdd.  This is needed to implement a map<> with
+/// this as (part of a) key, since map<>s are key-sorted.
+class bdd_t : public bdd {
+  public:
+    bdd_t (bdd b) : bdd { b } {}
+
+    bool operator< (const bdd_t& other) const {
+      return id () < other.id ();
+    }
+};
 
 
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
@@ -9,15 +24,17 @@
 template <class State, class SetOfStates>
 class k_bounded_safety_aut {
   public:
-    k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K, bdd input_support, bdd output_support) :
-      aut {aut}, K {K}, input_support {input_support}, output_support {output_support} {
-    }
+    k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
+                          bdd input_support, bdd output_support, int verbose) :
+      aut {aut}, K {K},
+      input_support {input_support}, output_support {output_support}, verbose {verbose}
+    { }
 
-    spot::formula bdd_to_formula (bdd f) {
+    spot::formula bdd_to_formula (bdd f) const {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
-    bool solve (int verbose = 0) {
+    bool solve () {
       if (verbose)
         std::cout << "Computing the set of safe states." << std::endl;
 
@@ -37,7 +54,7 @@ class k_bounded_safety_aut {
         if (verbose)
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
         F.clear_update_flag ();
-        cpre_inplace (F, verbose);
+        cpre_inplace (F);
         if (verbose)
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
       } while (F.updated ());
@@ -65,14 +82,44 @@ class k_bounded_safety_aut {
     }
 
     SetOfStates safe_states () {
-      SetOfStates S;
       State f (aut->num_states ());
 
+      // So-called "Optimization 1" in ac+.
+      int nb_accepting_states = 0;
       for (unsigned src = 0; src < aut->num_states (); ++src)
-        f[src] = K - 1;
-      S.insert (f);
+        if (aut->state_is_accepting (src))
+          nb_accepting_states++;
 
+      auto c = std::vector<int> (aut->num_states ());
+      if (aut->state_is_accepting (aut->get_init_state_number ()))
+        c[aut->get_init_state_number ()] = 1;
+
+      bool has_changed = true;
+
+      while (has_changed) {
+        has_changed = false;
+
+        for (unsigned src = 0; src < aut->num_states (); ++src) {
+          int c_src_mod = std::min (nb_accepting_states + 1,
+                                    c[src] + (aut->state_is_accepting (src) ? 1 : 0));
+          for (const auto& e : aut->out (src))
+            if (c[e.dst] < c_src_mod) {
+              c[e.dst] = c_src_mod;
+              has_changed = true;
+            }
+        }
+      }
+
+      for (unsigned src = 0; src < aut->num_states (); ++src)
+        if (c[src] > nb_accepting_states)
+          f[src] = K - 1;
+        else
+          f[src] = 0;
+
+      SetOfStates S;
+      S.insert (f);
       S.downward_close ();
+
       return S;
     }
 
@@ -80,10 +127,10 @@ class k_bounded_safety_aut {
     // UPre(F) = F \cap F2
     // F2 = \cap_{i \in I} F1i
     // F1i = \cup_{o \in O} PreHat (F, i, o)
-    void cpre_inplace (SetOfStates& F, int verbose = 0) {
+    void cpre_inplace (SetOfStates& F) {
       SetOfStates F2;
 
-      if (verbose)
+      if (verbose > 1)
         std::cout << "Computing cpre(F) with maxelts (F) = " << std::endl
                   << F.max_elements ();
 
@@ -100,11 +147,11 @@ class k_bounded_safety_aut {
         SetOfStates F1i;
         do {
           bdd&& one_output_letter = pick_one_letter (output_letters, output_support);
-          SetOfStates&& ph = pre_hat (F, one_input_letter, one_output_letter, verbose);
+          SetOfStates&& ph = pre_hat (F, one_input_letter, one_output_letter);
           F1i.union_with (ph);
         } while (output_letters != bddfalse);
 
-        if (verbose)
+        if (verbose > 1)
           std::cout << "maxelts (F1_{"
                     << spot::bdd_to_formula (one_input_letter, aut->get_dict ())
                     << "}) = "
@@ -118,41 +165,11 @@ class k_bounded_safety_aut {
           break;
       }
 
-      // bdd output_letters = bddtrue;
-
-      // while (output_letters != bddfalse) {
-      //   bdd one_output_letter = pick_one_letter (output_letters, output_support);
-      //   bdd input_letters = bddtrue;
-
-      //   // NOTE: We're forcing iterative union/intersection; do we want to keep
-      //   // all ph/F1o's and give them to the SetOfStates all at once?
-
-      //   SetOfStates F1o;
-      //   bool first_input = true;
-      //   do {
-      //     bdd&& one_input_letter = pick_one_letter (input_letters, input_support);
-      //     SetOfStates&& ph = pre_hat (F, one_output_letter, one_input_letter, verbose);
-      //     if (first_input) {
-      //       F1o = std::move (ph);
-      //       first_input = false;
-      //     } else
-      //       F1o.intersect_with (ph);
-      //   } while (input_letters != bddfalse && not (F1o.empty ()));
-
-      //   if (verbose)
-      //     std::cout << "maxelts (F1_{"
-      //               << bdd_to_formula (one_output_letter)
-      //               << "}) = "
-      //               << std::endl << F1o.max_elements ();
-      //   F2.union_with (F1o);
-      // }
-
-
-      if (verbose)
+      if (verbose > 1)
         std::cout << "maxelts (F2) = " << std::endl << F2.max_elements ();
 
       F.intersect_with (F2);
-      if (verbose)
+      if (verbose > 1)
         std::cout << "maxelts (F) = " << std::endl << F.max_elements ();
     }
 
@@ -164,44 +181,86 @@ class k_bounded_safety_aut {
     const spot::twa_graph_ptr& aut;
     int K;
     bdd input_support, output_support;
+    const int verbose;
 
-    // This computes DownwardClose{Pre_hat (m, i, o) | m \in F}, where Pre_hat (m, i, o) is
-    // the State f that maps p to
-    //    f(p) =  min_(p, <i,o>, q \in Delta) m(q) - CharFunction(B)(q).
-    SetOfStates pre_hat (const SetOfStates& F, bdd input_letter, bdd output_letter, int verbose = 0) {
-      SetOfStates pre = F;
-      bdd io = input_letter & output_letter;
+#ifdef PRE_HAT_ACTION_CACHE
+    using pre_hat_action = std::vector<std::pair<unsigned, bool>>;
+    std::map<std::pair<unsigned, bdd_t>, pre_hat_action>
+    pre_hat_action_cache;
+#endif
 
-      pre.apply([this, &io, verbose](auto& m) {
+#ifdef PRE_HAT_CACHE
+    std::map<std::pair<State, bdd_t>, State> pre_hat_cache;
+#endif
+
+#ifdef PRE_HAT_CACHE
+    State&
+#else
+    State
+#endif
+    pre_hat_one_state (const State& m, const bdd_t& io) {
+#ifdef PRE_HAT_CACHE
+      auto pair_m_io = std::make_pair (m, io);
+      try {
+        return pre_hat_cache.at (pair_m_io);
+      } catch (...) {
+        State &f = pre_hat_cache.emplace (pair_m_io, aut->num_states ()).first->second;
+#else
         State f (aut->num_states ());
-
+#endif
         for (unsigned p = 0; p < aut->num_states (); ++p) {
           // If there are no transitions from p labeled io, then we propagate
           // the value of the nonexisting sink, which is set to be K - 1.  Note
           // that the value of the sink cannot decrease.
           f[p] = K - 1;
-          for (const auto& e : aut->out (p)) {
-            unsigned q = e.dst;
-            if (verbose > 2)
-              std::cout << "transition (" << p << "," << bdd_to_formula (e.cond) << ","
-                        << e.dst << "), io: " << bdd_to_formula (io)
-                        << ", io & cond: " << bdd_to_formula (e.cond & io) << std::endl;
-            if ((e.cond & io) != bddfalse) {
-              if (m[q] < 0)
-                f[p] = (int) std::min (f[p], m[q]);
-              else
-                f[p] = (int) std::min ((int) f[p], (int) m[q] - (aut->state_is_accepting (q) ? 1 : 0));
-            }
+#ifdef PRE_HAT_ACTION_CACHE
+          auto& actions = ([this, p, &io] () -> auto& {
+            auto pair_p_io = std::make_pair (p, io);
+            try {
+              return pre_hat_action_cache.at (pair_p_io);
+            } catch (...) {
+              auto& actions = pre_hat_action_cache[pair_p_io];
+              for (const auto& e : aut->out (p)) {
+                unsigned q = e.dst;
+                if ((e.cond & io) != bddfalse)
+                  actions.push_back (std::make_pair (q, aut->state_is_accepting (q)));
+              }
+              return actions;
+            }}) ();
+
+          for (const auto& [q, q_final] : actions) {
+            f[p] = (int) std::min ((int) f[p], std::max (-1, (int) m[q] - (q_final ? 1 : 0)));
             // If we reached the minimum possible value, stop going through states.
             if (f[p] == -1)
               break;
           }
+#else
+          for (const auto& e : aut->out (p)) {
+            unsigned q = e.dst;
+            if ((e.cond & io) != bddfalse)
+              f[p] = (int) std::min ((int) f[p],
+                                     std::max (-1,
+                                               m[q] - (aut->state_is_accepting (q) ? 1 : 0)));
+          }
+#endif
         }
-        if (verbose > 1)
+        if (verbose > 2)
           std::cout << "pre_hat(" << m << "," << bdd_to_formula (io) << ") = "
                     << f << std::endl;
         return f;
-      });
+#ifdef PRE_HAT_CACHE
+      }
+#endif
+    }
+
+    // This computes DownwardClose{Pre_hat (m, i, o) | m \in F}, where Pre_hat (m, i, o) is
+    // the State f that maps p to
+    //    f(p) =  min_(p, <i,o>, q \in Delta) m(q) - CharFunction(B)(q).
+    SetOfStates pre_hat (const SetOfStates& F, bdd input_letter, bdd output_letter) {
+      SetOfStates pre = F;
+      bdd io = input_letter & output_letter;
+
+      pre.apply_inplace ([this, &io] (const auto& m) { return pre_hat_one_state (m, io); });
 
       // It may happen that pre is not downward closed anymore.
       // See (G(in)->F(out)) * (G(!in)->F(!out)) with set_of_vectors implementation.
@@ -224,7 +283,7 @@ class k_bounded_safety_aut {
     }
 
 
-    bdd pick_one_letter (bdd& letter_set, const bdd& support) {
+    bdd pick_one_letter (bdd& letter_set, const bdd& support) const {
       bdd one_letter = bdd_satoneset (letter_set,
                                       support,
                                       bddtrue);

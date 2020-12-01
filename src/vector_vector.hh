@@ -16,15 +16,27 @@ class vector_vector : public std::vector<int> {
 
     vector_vector& operator= (const vector_vector&) = delete;
 
-    bool partial_leq (const vector_vector& rhs) const {
-      for (unsigned i = 0; i < rhs.k; ++i)
-        if (not ((*this)[i] <= rhs[i]))
-          return false;
-      return true;
-    }
+    class po_res {
+      public:
+        po_res (const vector_vector& lhs, const vector_vector& rhs) {
+          bleq = true;
+          bgeq = true;
+          for (unsigned i = 0; i < rhs.k; ++i) {
+            bleq = bleq and lhs[i] <= rhs[i];
+            bgeq = bgeq and lhs[i] >= rhs[i];
+            if (not bleq and not bgeq)
+              break;
+          }
+        }
 
-    bool partial_lt (const vector_vector& rhs) const {
-      return rhs != *this && partial_leq (rhs);
+        bool geq () { return bgeq; }
+        bool leq () { return bleq; }
+      private:
+        bool bgeq, bleq;
+    };
+
+    auto partial_order (const vector_vector& rhs) const {
+      return po_res (*this, rhs);
     }
 
     vector_vector meet (const vector_vector& rhs) const {

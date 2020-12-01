@@ -1,0 +1,158 @@
+#!/bin/zsh -f
+
+LTLSYNT=@LTLSYNT@
+ACABONSAI=@ACABONSAI@
+
+ACAPLUS=@ACAPLUS@
+PYTHON=@PYTHON2@
+export ACACIA_PLUS_LIB=@ACACIA_PLUS_LIB@
+export LTL2TGBA_BIN=@LTL2TGBA_BIN@
+
+echoandrun () {
+    echo "$@"
+    eval "$@"
+}
+
+parttoinsouts () {
+    while IFS= read line; do
+        line=$(echo "$line" | sed 's/[[:space:]]*$//;s/[[:space:]]\+/,/g')
+        head=${line/,*/}
+        args=${line/$head,/}
+        case "$head" in
+            .inputs) ins=$args;;
+            .outputs) outs=$args;;
+        esac
+    done < $1
+}
+
+run_ltlsynt () {
+    echo "Running ltlsynt..."
+    time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins $ins --outs $outs $extra_opts
+}
+
+run_acacia_bonsai () {
+    echo "Running Acacia Bonsai..."
+    time echoandrun $prog_prefix $ACABONSAI -F $ltl --ins $ins --outs $outs -k 10 $extra_opts
+}
+
+run_acacia_plus () {
+    echo "Running Acacia Plus..."
+    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 3 -K 30 -C REAL \
+         -t SPOT -a BACKWARD $extra_opts
+}
+
+PROG=$0
+usage () {
+    cat <<EOF
+Usage: $PROG [-p] -[la+] [-e PROG_PATH] -F LTL_FILE [-P PART_FILE] [-- OPTS...]
+Runs ltlsynt, acacia-bonsai, or acacia-+ on the input LTL_FILE:
+  -p: prefix every line with the name of the test (useful for meson logging)
+  -l: run ltlsynt ($LTLSYNT)
+  -a: run acacia-bonsai ($ACABONSAI)
+  -+: run acacia-plus ($ACAPLUS)
+  -c: prefix the executable with valgrind --tool=callgrind
+  -e EXE_PATH: overwrite the path for the executable
+  -o EXTRA_OPTS: extra options to the executable
+  -F LTL_FILE: file to test
+  -P PART_FILE: part file for LTL_FILE; if not provided, infered from LTL_FILE.
+
+The leftover OPTS... are passed as options to the executable.
+
+If LTL_FILE contains "realizable" or "unrealizable", then this is assumed to be
+the correct answer.  Otherwise, ltlsynt is ran on it to have a reference point.
+
+The time printed is retrieved using time(1) (or the ZSH builtin).
+EOF
+    exit 1
+}
+
+PYTHON=${PYTHON:-$(whence python2)}
+progs=()
+while getopts "cpla+e:o:F:P:hx" opt; do
+    case $opt; in
+        p) prefix=t;;
+        l|a|+) progs+=$opt;;
+        c) prog_prefix=(valgrind --tool=callgrind);;
+        e) forced_path=$OPTARG;;
+        F) ltl=$OPTARG;;
+        P) part=$OPTARG;;
+        x) setopt xtrace;;
+        h|*) usage;;
+    esac
+done
+
+part=${part:-${ltl/.ltl/.part}}
+
+shift $((OPTIND - 1))
+extra_opts+=("$@")
+
+if (( ${#progs} == 0 )); then
+    echo 'error: one program should be specified.'
+    exit 7
+fi
+if ! [[ -e $ltl && -e $part ]]; then
+    echo "error: $ltl and $part should exist."
+    exit 8
+fi
+
+parttoinsouts $part
+
+## Prefix output with the test file name.
+if [[ $prefix ]]; then
+    shortfile=${ltl/*tests\//}
+    exec >  >(sed "s!^![$shortfile] !")
+    exec 2> >(sed "s!^![$shortfile] !" >&2)
+fi
+
+echo "formula: $(cat $ltl)"
+
+## Guess realizability, or find it
+case $ltl; in
+    */realizable/*)   expect=0;;
+    */unrealizable/*) expect=1;;
+    *) echo 'Cannot guess if input is realizable.'
+       run_ltlsynt $ltl $part
+       expect=$?
+       progs=(${progs#l}) # Remove l
+       ;;
+esac
+
+if (( expect )); then
+    echo "formula is unrealizable."
+else
+    echo "formula is realizable."
+fi
+
+ret=0
+for prog in $progs; do
+    case $prog; in
+        l) run_ltlsynt;;
+        a) run_acacia_bonsai;;
+        +) run_acacia_plus;;
+    esac
+    res=$?
+    (( res == 15 && (res = 1) ))  # Acacia-+ returns 15 for "IDK".
+    if (( res != expect )); then
+        echo -n "FAILED: "
+        if (( res > 128 )); then
+            echo 'CRASH'
+            ret=$res
+        elif [[ $prog == 'l' ]]; then
+            echo 'CRITICAL: ltlsynt failed.'
+            ret=13
+        elif (( $expect == 0 )); then
+            echo 'FALSE NEGATIVE (may happen if K is too small)'
+            ret=1
+        else
+            echo 'FALSE POSITIVE (should never happen)'
+            ret=2
+        fi
+    fi
+done
+
+if (( ret == 0 )); then
+    echo "PASS."
+    exit 0
+fi
+
+exit $ret

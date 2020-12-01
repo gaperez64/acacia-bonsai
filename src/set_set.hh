@@ -106,10 +106,11 @@ class set_set {
         bool should_be_inserted = true;
 
         for (const auto& maxelt : maxelts) {
-          if (el.partial_lt (maxelt)) {
+          auto po = el.partial_order (maxelt);
+          if (po.leq ()) {
             should_be_inserted = false;
             break;
-          } else if (maxelt.partial_lt (el)) {
+          } else if (po.geq ()) {
             should_be_inserted = true;
             to_remove.insert (maxelt);
           }
@@ -147,7 +148,7 @@ class set_set {
     }
 
     template <typename F>
-    void apply (const F& lambda) {
+    void apply_inplace (const F& lambda) {
       std::set<Vector> new_set;
       for (auto el : vector_set) {
         auto&& changed_el = lambda (el);
