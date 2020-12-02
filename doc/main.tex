@@ -336,7 +336,7 @@ The following is immediate from the lemma.
 The second part of the above corollary allows us to argue that \eve winning
 the game played on $\calS^K_\calN$ implies she wins the game played on
 $\calN$.
-\begin{lemma}
+\begin{lemma}\label{lem:safe-to-gen}
     Consider input and output alphabets $I$ and $O$, a UcB
     automaton $\calN$ with alphabet $I \times O$, a bound $K \in \mathbb{N}$,
     and the corresponding safety automaton $\calS^K_\calN$. A
@@ -449,7 +449,7 @@ of states which are winning for \eve.
 In the rest of this section we introduce a ``symbolic'' version of the $\cpre$
 operator which leverages the $\preceq$ ordering on states of $\calS^K_\calN$.
 
-\subsection{Antichain-based algorithm}
+\subsection{Antichain-based algorithm}\label{sec:antichain-algo}
 We intend to leverage~\Cref{pro:down-closed} to define an operator
 which manipulates \emph{maximal elements} of the sets only and, crucially,
 preserves downward-closedness of all intermediate sets. We first give some
@@ -508,7 +508,7 @@ defined as follows.
 %
 Let us write $\frakA \subseteq \pow{\calF}$ for the set of all antichains. In
 the next lemma, we will argue that if $F$ is closed and $A = \lceil F \rceil$
-then $\cpre(F)$ can be replaced by the closure of $\underline{\cpre} \colon
+then $\cpre(F)$ can be replaced by the closure of $\overline{\cpre} \colon
 \frakA \to \frakA$, defined below, applied to $A$.
 \begin{align*}
   A^{(0)}_{i,o} := {} &
@@ -521,20 +521,20 @@ then $\cpre(F)$ can be replaced by the closure of $\underline{\cpre} \colon
   A^{(2)} := {} &
   \left\lceil \bigsqcap_{i \in I} A^{(1)}_i \right\rceil\\
   %
-  \underline{\cpre}(A) := {} &
+  \overline{\cpre}(A) := {} &
   \lceil A \sqcap A^{(2)} \rceil
 \end{align*}
-We inductively define $\underline{\cpre}^n(A)$, for all $n \in \mathbb{N}$, as
+We inductively define $\overline{\cpre}^n(A)$, for all $n \in \mathbb{N}$, as
 we did for $\cpre$. Since $\frakA$ is finite, we also have that the
-$\underline{\cpre}^i(A)$ stabilize from some $i \leq 2^{|Q|}$ onward. We write
-$\underline{\cpre}^*(A)$ for said fixed point of $\underline{\cpre}$.
+$\overline{\cpre}^i(A)$ stabilize from some $i \leq 2^{|Q|}$ onward. We write
+$\overline{\cpre}^*(A)$ for said fixed point of $\overline{\cpre}$.
 
 
 \begin{lemma}
   Let $F \subseteq \calF$ be a closed set represented by the antichain $A =
   \lceil F \rceil$. Then $\cpre(F)$ is closed and
   \(
-    \cpre(F) = \closedn{\underline{\cpre}(A)}.
+    \cpre(F) = \closedn{\overline{\cpre}(A)}.
   \)
 \end{lemma}
 The next equality follows from the facts that
@@ -546,7 +546,7 @@ $F$ is closed and $A = \lceil F \rceil$.
   \{f \in \calF \mid T(f,\langle i, o \rangle) \in F\}
 \end{equation}
 Hence, from \Cref{pro:antichains} and the definitions of $\cpre$,
-$\underline{\cpre}$, and $A^{(0)}_{i,o}$, it follows that proving
+$\overline{\cpre}$, and $A^{(0)}_{i,o}$, it follows that proving
 the left-hand side of~\eqref{eqn:in-f} is closed suffices for the lemma to
 hold.
 \begin{lemma}\label{lem:closed-pre}
@@ -565,13 +565,13 @@ hold.
 \end{proof}
 
 From the above lemmas and~\Cref{pro:down-closed} it follows that one can
-compute the set of winning states for \eve using $\underline{\cpre}$.
+compute the set of winning states for \eve using $\overline{\cpre}$.
 \begin{theorem}
   A state $f \in \calF$ is winning for \eve if and only if $f \in
-  \closedn{\underline{\cpre}^*(\lceil Q \setminus U \rceil)}$.
+  \closedn{\overline{\cpre}^*(\lceil Q \setminus U \rceil)}$.
 \end{theorem}
 
-Note that in computing $\underline{\cpre}^*(\lceil Q \setminus U \rceil)$, the only
+Note that in computing $\overline{\cpre}^*(\lceil Q \setminus U \rceil)$, the only
 intermediate set for which it is not immediately clear that we can compute it
 based on an antichain of maximal elements is $A^{(0)}_{i,o}$. Indeed,
 $A^{(1)}_i$ and $A^{(2)}$ can be computed from the antichain representation of
@@ -618,19 +618,182 @@ closure of $A$ to compute $A^{(0)}_{i,o}$. A formal statement follows.
 \end{proof}
 
 We close this section with an impossibility result. While computing
-$\underline{\cpre}$ is, intuitively, more efficient than computing $\cpre$, it
+$\overline{\cpre}$ is, intuitively, more efficient than computing $\cpre$, it
 turns out that it is computationally hard. One can reduce the computation of
 all maximal-size independent sets of a graph to the computation of
-$\underline{\cpre}$ for a safety game on functions as studied in this section.
+$\overline{\cpre}$ for a safety game on functions as studied in this section.
 \begin{proposition}[From~\cite{acacia0}]
-  The $\underline{\cpre}$ operator is, in general, not computable in
+  The $\overline{\cpre}$ operator is, in general, not computable in
   polynomial time unless $\NP = \P$.
 \end{proposition}
+
+\section{Optimizations for the antichain algorithm}
+In \Cref{sec:antichain-algo} we presented an antichain-based algorithm to
+decide the realizability problem for a co-B\"uchi game played on $\calN$.  For
+$K_1 \leq K_2$, since the state space of the $\calS^{K_1}_\calN$ is smaller
+than that of $\calS^{K_2}_\calN$, the algorithm is usually ran with increasing
+values of $K$. That is, a safety game $\calS^{K}_\calN$ is constructed and
+solved and if the answer for the realizability problem is negative then we set
+$K := K + 1$ repeat the process until $K$ reaches its theoretical bound for
+the game played on $\calN$ to be considered unrealizable (see~\Cref{lem:converse}).
+
+Presently, we will argue that one can avoid reconstructing a larger safety
+game for each $K \in \mathbb{N}$ by starting from a large value $K_2$ and
+still being able to have an ``early stopping criterion'' (after $n$ iterations
+of the $\overline{\cpre}$) based on whether some $K_1 < K_2$ would be such
+that $\calS^{K_1}_\calN$ would have already allowed to determine the game
+played on $\calN$ is realizable (that is, $n$ iterations of $\overline{\cpre}$
+would have sufficed to reach a fixpoint in $\calS^{K_1}_\calN$ and Eve wins
+that game).
+
+In the sequel, we consider a fixed co-B\"uchi automaton $\calN = (Q,q_0,I
+\times O, \Delta,B)$, $K
+\in \mathbb{N}$, and the corresponding safety automaton $\calS^K_\calN =
+(\calF,f_0,I \times O, T, U)$.
+
+\paragraph{More orders on functions and sets thereof.} Let $d \in \mathbb{N}$.
+For all $f,g \in \mathcal{F}$ we write $f \preceq_d g$ if for all $q \in Q$ it
+holds that $f(q),g(q) < d$ or $f(q) \leq g(q)$. (Recall our convention that
+$\bot < n$ for all $n \in \mathbb{N}$.) Additionally, for all $A,A' in \frakA$
+we write $A \sqsubseteq_d A'$ if for all $m \in A$ there exists $m' \in A'$
+such that $m \preceq_d m'$. Note that $\preceq_0$ coincides with $\preceq$.
+
+We can now formalize the early stopping criterion mentioned earlier.
+\begin{theorem}\label{thm:stop-criterion}
+  Let $d,n \in \mathbb{N}$ with $n > 0$.  If $\{q_0 \mapsto d\} \in
+  \closedn{\overline{\cpre}^n(Q \setminus U)}$ and
+  $\overline{\cpre}^{n-1}(Q\setminus U) \sqsubseteq_d \overline{\cpre}^n(Q
+  \setminus U)$ then Eve wins the game played on $\calN$.
+\end{theorem}
+To prove the claim, we need some auxiliary definitions and intermediate
+results.
+
+\paragraph{Shifting functions.} Let $d \in \mathbb{N}$ and consider some $f
+\in \calF$. We write $f + d$ and $f - d$ for the functions $q \mapsto f(q) +
+d$ and $q \mapsto f(q) - d$ respectively, where we adopt the following
+conventions: $\bot + d = \bot - d = \bot$, $n - d = \bot$ if $n - d < 0$, and
+$K + d = K$. We lift both notations to sets of functions in the natural way.
+Formally, for $F \subseteq \calF$, we write $F + d$ and $F - d$ to denote the
+sets $\{f + d \mid f \in F\}$ and $\{f - d \mid f \in \calF\}$ respectively.
+
+The following properties follow almost immediately from the definitions.
+\begin{lemma}\label{lem:simple-props}
+  Let $f,g \in \calF$. For all $d \in \mathbb{N}$ the following hold.
+  \begin{enumerate}
+    \item We have that $f \preceq_d g$ if and only
+      if $f - d \preceq g - d$. \label{itm:ord-op}
+    \item For $\calS^{K'}_\calN = (\calF',f'_0,I \times O,T',U')$ the safety
+      game constructed with $K' = K + d$, we have that $(f,a,g) \in T$ if and
+      only if $(f - d, a, g - d) \in T')$ for all $a \in I \times O$.
+      \label{itm:op-games}
+  \end{enumerate}
+\end{lemma}
+
+Using the above-stated properties, we can now prove the following result which
+underlies our proof of \Cref{thm:stop-criterion}.
+
+\begin{lemma}\label{lem:eq-games}
+  Let $d \in \mathbb{N}_{>0}$ and consider the safety game $\calS^{K'}_\calN =
+  (\calF',f'_0,I \times O,T',U')$ constructed with $K' = K + d$. Then,
+  \[\cpre^n(Q\setminus U) = \cpre^n(Q'\setminus U') - d\] for all $n \in
+  \mathbb{N}$.
+\end{lemma}
+\begin{proof}
+  We proceed by induction. First, note that for $n = 0$ the claim trivially
+  holds. For the inductive step, we assume the claim holds for some $n$ and
+  prove it does so too for $n + 1$. 
+  Below, we first argue that right-to-left inclusion holds and then
+  prove the other direction.
+
+  Suppose $f \in \cpre^{n+1}(Q'\setminus U')$. This means that for all $i \in I$
+  there is some $o \in O$ such that $T'(f,\langle i , o \rangle) \in
+  \cpre^{n}(Q' \setminus U')$. Hence, there is a mapping $\mu : I \to
+  \cpre^n(Q' \setminus U')$ such that for all $i \in I$ there is some $o \in
+  O$ so that $T'(f,\langle i , o \rangle) = \mu(i)$. By
+  \Cref{lem:simple-props} \Cref{itm:op-games} we get that for all $i \in I$
+  there is some $o \in O$ such that $T(f - d, \langle i, o \rangle) = \mu(i)$.
+  This means $f - d \in \cpre^{n+1}(Q\setminus U)$.
+
+  For the remaining direction, suppose $f \in \cpre^{n+1}(Q \setminus U)$.
+  This means that for all $i \in I$ there is some $o \in O$ such that 
+  \[
+    T(f, \langle i , o \rangle) \in \cpre^n(Q \setminus U) =
+    \cpre^n(Q'\setminus U') -d 
+  \]
+  with the latter equality being true because of our inductive hypothesis.
+  Hence, there is a mapping $\mu : I \to \cpre^n(Q' \setminus U')$ such that
+  for all $i \in I$ there is some $o \in O$ for which $T(f, \langle i, o
+  \rangle) = \mu(i) - d$. We will now argue that $f + d \in \cpre^n(Q'
+  \setminus U')$ so that $((f+d)-d) = f$ is seen to be in $\cpre^n(Q'
+  \setminus U') - d$. Consider some arbitrary $i \in I$ and 
+  note that $T'(f + d, \langle i , o \rangle)$ may not
+  necessarily be equal to $\mu(i)$. However, the following does hold:
+  \[
+    T'(f+d, \langle i , o \rangle) = ((\mu(i) -d) + d) \preceq \mu(i).
+  \]
+  Recall that $\cpre^n(Q' \setminus U')$ is downward closed (see
+  \Cref{pro:down-closed}). It follows that $((\mu(i) -d ) + d) \in \cpre^n(Q'
+  \setminus U')$. Since $i$ was arbitrary, we conclude that $f + d \in
+  \cpre^n(Q' \setminus U')$. \qed
+\end{proof}
+
+We are now ready to prove the main result of this section.
+\begin{proof}[of \Cref{thm:stop-criterion}]
+  Let us first restate the claim using notation that will be convenient for
+  the sequel. We write $K' = K + d$ and denote by $\calS_\calN^{K'} =
+  (\calF',f'_0,I \times O, T',U')$ the corresponding safety game. We prove
+  below that if $\{q_0 \mapsto d\} \in \closedn{\overline{\cpre}^n(Q'
+  \setminus U')}$ and $\overline{\cpre}^{n-1}(Q'\setminus U') \sqsubseteq_d
+  \overline{\cpre}^n(Q' \setminus U')$ then $f_0$ is winning for Eve in
+  the game played on $\calN$.
+
+  From \Cref{lem:simple-props} \Cref{itm:ord-op} we have:
+  \begin{align*}
+    &\overline{\cpre}^{n-1}(Q' \setminus U') \sqsubseteq_d
+    \overline{\cpre}^n(Q' \setminus U')\\
+    \iff & \overline{\cpre}^{n-1}(Q' \setminus U') - d \sqsubseteq_0
+    \overline{\cpre}^n(Q' \setminus U') - d.
+  \end{align*}
+  Furthermore, we have the following equalities:
+  \begin{align*}
+    \overline{\cpre}^n(Q' \setminus U') - d = & \lceil \cpre^n(Q' \setminus
+    U'\rceil -d & \text{by def.}\\
+    %
+    = & \lceil \cpre^n(Q' \setminus U') -d \rceil & \text{trivial}\\
+    %
+    = & \lceil \cpre^n(Q \setminus U) \rceil & \text{\Cref{lem:eq-games}}\\
+    %
+    = & \overline{\cpre}^n(Q \setminus U) & \text{by def.}
+  \end{align*}
+  Now, since $\cpre^n(Q \setminus U), \cpre^{n-1}(Q \setminus U)$ are downward
+  closed (see \Cref{pro:down-closed}) and $\cpre$ is a monotone operator then
+  the above means they are equivalent. That is, we have that $\cpre^n(Q
+  \setminus U) = \cpre^{n-1}(Q \setminus U)$. If $g = \{q_0 \mapsto d\}$ is in
+  $\closedn{ \overline{cpre}^n(Q' \setminus U') }$ then by
+  \Cref{lem:eq-games} we know $g - d = f_0$ is in $\cpre^n(Q \setminus U)$ and
+  Eve wins from $f_0$ in $S^K_\calN$ thus the game played on $\calN$
+  by \Cref{lem:safe-to-gen}.
+\end{proof}
+
+The developments above suggest that one can construct $\calS^K_\calN$ and and
+check whether the computation of the fixpoint of $\cpre$ in $\calS^{k}_\calN$
+for $k < K$ would have already ended. If that is the case but the second game
+turns out to be unrealizable, one would want to choose $k < k' \leq K$.
+Instead of using $k + 1$ and repeating (thus iterating over all possible
+$k'$), the following result allows us to apply binary search.
+
+\begin{corollary}
+  Let $n,d,d' \in \mathbb{N}_{>0}$ with $d \leq d'$. If
+  $\overline{\cpre}^{n-1}(Q\setminus U) \sqsubseteq_d \overline{\cpre}^n(Q
+  \setminus U)$ then $\overline{\cpre}^{n-1}(Q\setminus U) \sqsubseteq_{d'}
+  \overline{\cpre}^n(Q \setminus U)$.
+\end{corollary}
+The implication stated above follows directly from \Cref{lem:eq-games}.
 
 \section{Antichain data structures}
 \todo[inline]{DO RESEARCH}
 
-\todo[inline]{Computing $\underline{\cpre}$ cannot be done in polynomial time
+\todo[inline]{Computing $\overline{\cpre}$ cannot be done in polynomial time
   unless the maximal independent set problem is in polynomial time;
   interestingly, that problem admits polynomial-time approximation algorithms
 for polynomial approximations (i.e. not constant)}
