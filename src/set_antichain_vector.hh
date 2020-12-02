@@ -185,7 +185,7 @@ class set_antichain_vector {
     }
 
     template <typename F>
-    set_antichain_vector apply (const F& lambda) {
+    set_antichain_vector apply (const F& lambda) const {
       set_antichain_vector res;
       for (auto el : vector_set)
         res.insert (lambda (el));

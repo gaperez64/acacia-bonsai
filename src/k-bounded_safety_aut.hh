@@ -257,10 +257,9 @@ class k_bounded_safety_aut {
     // the State f that maps p to
     //    f(p) =  min_(p, <i,o>, q \in Delta) m(q) - CharFunction(B)(q).
     SetOfStates pre_hat (const SetOfStates& F, bdd input_letter, bdd output_letter) {
-      SetOfStates pre = F;
       bdd io = input_letter & output_letter;
 
-      pre.apply_inplace ([this, &io] (const auto& m) { return pre_hat_one_state (m, io); });
+      auto&& pre = F.apply ([this, &io] (const auto& m) { return pre_hat_one_state (m, io); });
 
       // It may happen that pre is not downward closed anymore.
       // See (G(in)->F(out)) * (G(!in)->F(!out)) with set_of_vectors implementation.

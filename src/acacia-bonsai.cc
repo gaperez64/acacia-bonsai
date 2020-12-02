@@ -15,6 +15,8 @@
 
 #include "k-bounded_safety_aut.hh"
 #include "k-bounded_safety_aut_2step.hh"
+#include "k-bounded_safety_aut_2step_nosplit.hh"
+
 #include "vectors.hh"
 #include "sets.hh"
 #include "static_switch.hh"
@@ -194,8 +196,8 @@ namespace {
         if (want_time)
           sw.start ();
 
-#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut
-#define STATIC_SIMD_ARRAY_MAX 0
+#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_2step_nosplit
+#define STATIC_SIMD_ARRAY_MAX 50
 #define OTHER_VECTOR_IMPL vector_simd_vector
 #define SET_IMPL set_antichain_vector
 
