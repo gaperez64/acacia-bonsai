@@ -34,7 +34,6 @@ jobs:
         apt-get -y install spot libspot-dev
     - name: Install python dependencies
       run: |
-        pip install wheel
         pip install pygraph
     - uses: BSFishy/meson-build@v1.0.1
       with:
@@ -44,4 +43,4 @@ jobs:
       if: always()
       with:
         name: test-log
-        path: build/meson-logs/testlog.txt
+        path: build/meson-logs/
