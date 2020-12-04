@@ -190,7 +190,7 @@ class k_bounded_safety_aut_2step_nosplit {
       State f (aut->num_states ());
 
       for (unsigned p = 0; p < aut->num_states (); ++p) {
-        f[p] = K - 1; // TODO: Check that this value is optimal viz. "Optimization 1".
+        f[p] = K - 1;
         for (const auto& [q, q_final] : action_vec[p]) {
           f[p] = (int) std::min ((int) f[p], std::max (-1, (int) m[q] - (q_final ? 1 : 0)));
           // If we reached the minimum possible value, stop going through states.

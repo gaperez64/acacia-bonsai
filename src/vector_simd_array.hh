@@ -1,42 +1,45 @@
 #pragma once
+
 #include <cassert>
-
-
-#ifndef VECTOR_SIMD_SIZE
-# define VECTOR_SIMD_SIZE 16
-#endif
-
 #include <experimental/simd>
 #include <iostream>
 
-using std::experimental::fixed_size_simd;
-using fssimd = fixed_size_simd<int, VECTOR_SIMD_SIZE>;
+#include "vector_simd_traits.hh"
 
-template <unsigned int K>
-class vector_simd_array {
-    static const unsigned int nsimds = (K + VECTOR_SIMD_SIZE - 1) / VECTOR_SIMD_SIZE;
+template <typename T, size_t nsimds>
+class vector_simd_array_;
+
+template <typename T, size_t K>
+using vector_simd_array = vector_simd_array_<T, vector_simd_traits<T>::nsimds (K)>;
+
+template <typename T, size_t nsimds>
+class vector_simd_array_ {
+    using self = vector_simd_array_<T, nsimds>;
+    using traits = vector_simd_traits<T>;
+    static const auto simd_size = traits::simd_size;
+
   public:
-    vector_simd_array ([[maybe_unused]] unsigned int k)  {
-      assert (k == K);
+    vector_simd_array_ ([[maybe_unused]] size_t k) : k {k} {
+      assert ((k + traits::simd_size - 1) / traits::simd_size == nsimds);
       ar[nsimds - 1] ^= ar[nsimds - 1];
     }
 
-    vector_simd_array () = delete;
-    vector_simd_array (const vector_simd_array<K>& other) : ar {other.ar} {}
+    vector_simd_array_ () = delete;
+    vector_simd_array_ (const self& other) : ar {other.ar}, k {other.k} {}
 
-    vector_simd_array<K>& operator= (vector_simd_array<K>&& other) {
+    self& operator= (self&& other) {
       ar = std::move (other.ar);
       return *this;
     }
 
-    vector_simd_array<K>& operator= (const vector_simd_array<K>& other) = delete;
+    self& operator= (const self& other) = delete;
 
     class po_res {
       public:
-        po_res (const vector_simd_array<K>& lhs, const vector_simd_array<K>& rhs) {
+        po_res (const self& lhs, const self& rhs) {
           bgeq = true;
           bleq = true;
-          for (size_t i = 0; i < vector_simd_array<K>::nsimds; ++i) {
+          for (size_t i = 0; i < nsimds; ++i) {
             auto diff = lhs.ar[i] - rhs.ar[i];
             if (bgeq)
               bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
@@ -58,18 +61,18 @@ class vector_simd_array {
         bool bgeq, bleq;
     };
 
-    inline auto partial_order (const vector_simd_array<K>& rhs) const {
+    inline auto partial_order (const self& rhs) const {
       return po_res (*this, rhs);
     }
 
-    bool operator== (const vector_simd_array<K>& rhs) const {
+    bool operator== (const self& rhs) const {
       for (size_t i = 0; i < nsimds; ++i)
         if (not std::experimental::all_of (ar[i] == rhs.ar[i]))
           return false;
       return true;
     }
 
-    bool operator!= (const vector_simd_array<K>& rhs) const {
+    bool operator!= (const self& rhs) const {
       for (size_t i = 0; i < nsimds; ++i)
         if (not std::experimental::any_of (ar[i] != rhs.ar[i]))
           return true;
@@ -77,7 +80,7 @@ class vector_simd_array {
     }
 
     // Used by Sets, should be a total order.
-    bool operator< (const vector_simd_array<K>& rhs) const {
+    bool operator< (const self& rhs) const {
       for (size_t i = 0; i < nsimds; ++i) {
         auto lhs_lt_rhs = ar[i] < rhs.ar[i];
         auto rhs_lt_lhs = rhs.ar[i] < ar[i];
@@ -91,15 +94,15 @@ class vector_simd_array {
     }
 
     int operator[] (size_t i) const {
-      return ar[i / VECTOR_SIMD_SIZE][i % VECTOR_SIMD_SIZE];
+      return ar[i / simd_size][i % simd_size];
     }
 
-    fssimd::reference operator[] (size_t i) {
-      return ar[i / VECTOR_SIMD_SIZE][i % VECTOR_SIMD_SIZE];
+    typename traits::fssimd::reference operator[] (size_t i) {
+      return ar[i / simd_size][i % simd_size];
     }
 
-    vector_simd_array<K> meet (const vector_simd_array<K>& rhs) const {
-      auto res = vector_simd_array<K> (K);
+    self meet (const self& rhs) const {
+      auto res = self (k);
 
       for (size_t i = 0; i < nsimds; ++i)
         res.ar[i] = std::experimental::min (ar[i], rhs.ar[i]);
@@ -107,21 +110,20 @@ class vector_simd_array {
     }
 
     auto size () const {
-      return K;
+      return k;
     }
 
   private:
-    std::array<fssimd, nsimds> ar;
-    template <unsigned int _K>
-    friend std::ostream& operator<<(std::ostream& os, const vector_simd_array<_K>& v);
+    std::array<typename traits::fssimd, nsimds> ar;
+    const size_t k;
 };
 
-template <unsigned int K>
+template <typename T, size_t nsimds>
 inline
-std::ostream& operator<<(std::ostream& os, const vector_simd_array<K>& v)
+std::ostream& operator<<(std::ostream& os, const vector_simd_array_<T, nsimds>& v)
 {
   os << "{ ";
-  for (size_t i = 0; i < K; ++i)
+  for (size_t i = 0; i < v.size (); ++i)
     os << v[i] << " ";
   os << "}";
   return os;

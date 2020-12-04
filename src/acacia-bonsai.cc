@@ -196,8 +196,9 @@ namespace {
         if (want_time)
           sw.start ();
 
+#define VECTOR_ELT_T char
 #define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_2step_nosplit
-#define STATIC_SIMD_ARRAY_MAX 50
+#define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
 #define OTHER_VECTOR_IMPL vector_simd_vector
 #define SET_IMPL set_antichain_vector
 
@@ -205,15 +206,15 @@ namespace {
           static_switch_t<STATIC_SIMD_ARRAY_MAX>{}(
             // Static value of v.
             [&] (auto v) {
-              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vector_simd_array<v.value>,
-                                                     SET_IMPL<vector_simd_array<v.value>>>
+              using vect_t = vector_simd_array<VECTOR_ELT_T, v.value>;
+              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, SET_IMPL<vect_t>>
                 (aut, opt_K, all_inputs, all_outputs, verbose);
               return skn.solve ();
             },
             // Dynamic value
             [&] (int i) {
-              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<OTHER_VECTOR_IMPL,
-                                                     SET_IMPL<OTHER_VECTOR_IMPL>>
+              using vect_t = OTHER_VECTOR_IMPL<VECTOR_ELT_T>;
+              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, SET_IMPL<vect_t>>
                 (aut, opt_K, all_inputs, all_outputs, verbose);
               return skn.solve ();
             },

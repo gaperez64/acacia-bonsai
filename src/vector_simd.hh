@@ -1,34 +1,34 @@
 #pragma once
+
 #include <cassert>
-
-
-#ifndef VECTOR_SIMD_SIZE
-# define VECTOR_SIMD_SIZE 32
-#endif
-
 #include <experimental/simd>
 #include <iostream>
 
-using std::experimental::fixed_size_simd;
-using fssimd = fixed_size_simd<int, VECTOR_SIMD_SIZE>;
+#include "vector_simd_traits.hh"
 
-class vector_simd : public fssimd {
+// Biggest SIMD vector natively implemented by the library.
+
+template <typename T>
+class vector_simd : public vector_simd_traits<T>::maxfssimd {
+    using self = vector_simd<T>;
+    static const auto max_simd_size = vector_simd_traits<T>::max_fixed_size;
+    using fssimd = typename vector_simd_traits<T>::maxfssimd;
   public:
-    vector_simd (unsigned int k) : fssimd (), k {k} {
-      assert (k <= VECTOR_SIMD_SIZE);
+    vector_simd (size_t k) : fssimd (), k {k} {
+      assert (k <= max_simd_size);
       *this ^= *this;
     }
 
     vector_simd () = delete;
-    vector_simd (const vector_simd& other) : fssimd (other), k {other.k} {}
-    vector_simd (const fssimd& other, unsigned int k) : fssimd (other), k {k} {}
+    vector_simd (const self& other) : fssimd (other), k {other.k} {}
+    vector_simd (const fssimd& other, size_t k) : fssimd (other), k {k} {}
 
-    vector_simd& operator= (vector_simd&& other) {
+    self& operator= (self&& other) {
       fssimd::operator= (std::move (other));
       return *this;
     }
 
-    vector_simd& operator= (const vector_simd& other) = delete;
+    self& operator= (const self& other) = delete;
 
     class po_res : public fssimd {
       public:
@@ -48,20 +48,20 @@ class vector_simd : public fssimd {
         // inline bool eq () not implemented, as it is better to use ==.
     };
 
-    inline auto partial_order (const vector_simd& rhs) const {
+    inline auto partial_order (const self& rhs) const {
       return po_res (rhs - static_cast<fssimd> (*this));
     }
 
-    bool operator== (const vector_simd& rhs) const {
+    bool operator== (const self& rhs) const {
       return std::experimental::all_of (static_cast<fssimd> (*this) == rhs);
     }
 
-    bool operator!= (const vector_simd& rhs) const {
+    bool operator!= (const self& rhs) const {
       return std::experimental::any_of (static_cast<fssimd> (*this) != rhs);
     }
 
     // Used by Sets, should be a total order.
-    bool operator< (const vector_simd& rhs) const {
+    bool operator< (const self& rhs) const {
       const fssimd thisfssimd = static_cast<fssimd> (*this);
       auto lhs_lt_rhs = thisfssimd < rhs;
       auto rhs_lt_lhs = rhs < thisfssimd;
@@ -69,8 +69,8 @@ class vector_simd : public fssimd {
               find_first_set (rhs_lt_lhs));
     }
 
-    vector_simd meet (const vector_simd& rhs) const {
-      return vector_simd (std::experimental::min (*this, rhs), k);
+    self meet (const self& rhs) const {
+      return self (std::experimental::min (*this, rhs), k);
     }
 
     auto size () const {
@@ -78,12 +78,12 @@ class vector_simd : public fssimd {
     }
 
   private:
-    const unsigned int k;
-    friend std::ostream& operator<<(std::ostream& os, const vector_simd& v);
+    const size_t k;
 };
 
+template <typename T>
 inline
-std::ostream& operator<<(std::ostream& os, const vector_simd& v)
+std::ostream& operator<<(std::ostream& os, const vector_simd<T>& v)
 {
   os << "{ ";
   for (size_t i = 0; i < v.k; ++i)
