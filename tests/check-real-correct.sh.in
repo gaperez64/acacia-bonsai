@@ -1,5 +1,7 @@
 #!/bin/zsh -f
 
+env > /tmp/env
+
 LTLSYNT=@LTLSYNT@
 ACABONSAI=@ACABONSAI@
 

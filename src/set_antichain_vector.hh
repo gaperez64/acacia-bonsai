@@ -187,7 +187,7 @@ class set_antichain_vector {
     template <typename F>
     set_antichain_vector apply (const F& lambda) const {
       set_antichain_vector res;
-      for (auto el : vector_set)
+      for (const auto& el : vector_set)
         res.insert (lambda (el));
       return res;
     }
@@ -195,14 +195,19 @@ class set_antichain_vector {
     template <typename F>
     void apply_inplace (const F& lambda) {
       std::vector<Vector> new_set;
-      for (auto el : vector_set) {
+      for (const auto& el : vector_set) {
         auto&& changed_el = lambda (el);
         if (changed_el != el)
           _updated = true;
-        new_set.push_back (changed_el); // May not be an antichain, but speeds up.
+        new_set.push_back (std::move (changed_el)); // May not be an antichain, but speeds up.
       }
       vector_set = std::move (new_set);
     }
+
+    auto        begin ()      { return vector_set.begin (); }
+    const auto  begin() const { return vector_set.begin (); }
+    auto        end()         { return vector_set.end (); }
+    const auto  end() const   { return vector_set.end (); }
 
   private:
     std::vector<Vector> vector_set;

@@ -16,6 +16,7 @@
 #include "k-bounded_safety_aut.hh"
 #include "k-bounded_safety_aut_2step.hh"
 #include "k-bounded_safety_aut_2step_nosplit.hh"
+#include "k-bounded_safety_aut_2step_nosplit_crit.hh"
 
 #include "vectors.hh"
 #include "sets.hh"
@@ -134,6 +135,7 @@ namespace {
         trans_.set_type(spot::postprocessor::BA);
         // "Desired characteristics": Small and state-based acceptance (implied by BA).
         trans_.set_pref(spot::postprocessor::Small |
+                        spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
                         spot::postprocessor::SBAcc);
 
         if (want_time)
@@ -197,7 +199,7 @@ namespace {
           sw.start ();
 
 #define VECTOR_ELT_T char
-#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_2step_nosplit
+#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_2step_nosplit_crit
 #define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
 #define OTHER_VECTOR_IMPL vector_simd_vector
 #define SET_IMPL set_antichain_vector

@@ -6,18 +6,7 @@
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>
 
-/// \brief Wrapper class around bdd to provide an operator< with bool value.
-/// The original type returns a bdd.  This is needed to implement a map<> with
-/// this as (part of a) key, since map<>s are key-sorted.
-class bdd_t : public bdd {
-  public:
-    bdd_t (bdd b) : bdd { b } {}
-
-    bool operator< (const bdd_t& other) const {
-      return id () < other.id ();
-    }
-};
-
+#include "bdd_helper.hh"
 
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.
