@@ -37,6 +37,7 @@ jobs:
         pip install pygraph
     - uses: BSFishy/meson-build@v1.0.1
       with:
+        setup-options: --buildtype=release
         action: test
     - name: Upload test results
       uses: actions/upload-artifact@v2
