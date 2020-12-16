@@ -12,3 +12,6 @@ doc/*.pdf
 *.o
 *~
 .dumbjump
+tests/acacia-plus/*pyc
+tests/acacia-plus/__pycache__
+_archive/

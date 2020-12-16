@@ -39,6 +39,7 @@ jobs:
       with:
         setup-options: --buildtype=release
         action: test
+        options: --suite=tiny --suite=small
     - name: Upload test results
       uses: actions/upload-artifact@v2
       if: always()

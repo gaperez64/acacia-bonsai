@@ -10,15 +10,15 @@
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.
 template <class State, class SetOfStates>
-class k_bounded_safety_aut_2step_nosplit_crit {
+class k_bounded_safety_aut_2step_nosplit_crit_incr {
     enum class direction {
       forward,
       backward
     };
 
   public:
-    k_bounded_safety_aut_2step_nosplit_crit (const spot::twa_graph_ptr& aut, int K,
-                          bdd input_support, bdd output_support, int verbose) :
+    k_bounded_safety_aut_2step_nosplit_crit_incr (const spot::twa_graph_ptr& aut, int K,
+                                                  bdd input_support, bdd output_support, int verbose) :
       aut {aut}, K {K},
       input_support {input_support}, output_support {output_support}, verbose {verbose}
     { }
@@ -48,35 +48,54 @@ class k_bounded_safety_aut_2step_nosplit_crit {
         std::cout << "Computing the set of safe states." << std::endl;
 
       SetOfStates&& F = safe_states ();
-      State init (aut->num_states ());
-
-      for (unsigned p = 0; p < aut->num_states (); ++p)
-        init[p] = -1;
-      init[aut->get_init_state_number ()] = 0;
-      if (verbose)
-        std::cout << "Initial state: " << init << std::endl;
 
       // Compute cpre^*(safe).
       int loopcount = 0;
+      ssize_t curK = K - 1;
       do {
         loopcount++;
         if (verbose)
-          std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
+          std::cout << "Loop# " << loopcount << ", F of size " << F.size ()
+                    << " current K: " << curK << std::endl;
         F.clear_update_flag ();
-        auto&& crit = critical_input_output_bwd_actions (F);
+
+        auto&& [crit, max_change] = critical_input_output_bwd_actions (F, curK);
+
         if (verbose)
-          std::cout << "Set of critical inputs of size " << crit.size () << std::endl;
-        if (crit.empty ())
-          break;
+          std::cout << "Set of critical inputs of size " << crit.size ()
+                    << ", max change: " << max_change << std::endl;
+
+        if (max_change < curK) {
+          if (verbose)
+            std::cout << "F is " << (max_change + 1) << "-stable.  Checking if init + "
+                      << (max_change + 1) << " is in it."
+                      << std::endl;
+
+          State init_plus_curK (aut->num_states ());
+          for (size_t p = 0; p < aut->num_states (); ++p)
+            init_plus_curK[p] = (int) max_change;
+          init_plus_curK[aut->get_init_state_number ()] = (int) max_change + 1;
+          if (F.contains (init_plus_curK))
+            return true;
+          if (max_change == -1) // Hope no more.
+            return false;
+
+          curK = std::min (max_change, curK / 2);
+          if (verbose)
+            std::cout << "Recomputing critical signals..." << std::endl;
+          std::tie (crit, max_change) = critical_input_output_bwd_actions (F, curK);
+          if (verbose)
+            std::cout << "Set of critical inputs of size " << crit.size ()
+                      << ", max change: " << max_change << std::endl;
+        }
+
         cpre_inplace (F, crit);
         if (verbose)
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
       } while (F.updated ());
 
-      if (F.contains (init))
-        return true; // Alice wins.
-      else
-        return false;
+      std::abort ();
+      return false;
     }
 
     SetOfStates safe_states () {
@@ -121,17 +140,18 @@ class k_bounded_safety_aut_2step_nosplit_crit {
       return S;
     }
 
-    auto critical_input_output_bwd_actions (const SetOfStates& F) {
+    auto critical_input_output_bwd_actions (const SetOfStates& F, ssize_t min_max_change) {
       // Def: f is one-step-losing if there is an input i such that for all output o
       //           succ (f, <i,o>) \not\in F
       //      the input i is the *witness* of one-step-loss.
       // Def: A set C of inputs is critical for F if:
       //        \exists f \in F, i \in C, i witnesses one-step-loss of F.
       // Algo: We go through all f in F, find an input i witnessing one-step-loss, add it to C.
-
+#warning Return witness of maxchange
       using trans_actions_pair_ref = std::reference_wrapper<const trans_actions_map::value_type>;
       std::set<trans_actions_pair_ref, ref_ptr_cmp<trans_actions_pair_ref>> C, Cbar;
       std::set<bdd_t> critical_inputs;
+      ssize_t max_change = -1;
 
       Cbar.insert (input_output_fwd_actions.begin (),
                    input_output_fwd_actions.end ());
@@ -141,29 +161,7 @@ class k_bounded_safety_aut_2step_nosplit_crit {
         if (verbose > 2)
           std::cout << "Searching for witness of one-step-loss for " << f << std::endl;
 
-        // Search witness in C
-        for (const auto& elt : C) {
-          const auto& [output_actions, inputs] = elt.get ();
-          is_witness = true;
-          for (const auto& action : output_actions)
-            if (F.contains (trans (f, action, direction::forward))) {
-              is_witness = false;
-              break;
-            }
-          if (is_witness) {
-            if (verbose > 2) {
-              std::cout << "Already have inputs ";
-              std::cout << bdd_to_formula (*inputs.begin ()) << " ";
-              std::cout << "as witnesses for " << f << std::endl;
-            }
-            break;
-          }
-        }
-        if (is_witness) // Witness already in C
-          continue;
-
-        // Search witness in the rest of the actions
-        for (auto it = Cbar.begin (); it != Cbar.end (); ++it) {
+        for (auto it = Cbar.begin (); it != Cbar.end (); /* in-body update */) {
           const auto& [output_actions, inputs] = it->get ();
           is_witness = true;
           for (const auto& action : output_actions)
@@ -171,21 +169,37 @@ class k_bounded_safety_aut_2step_nosplit_crit {
               is_witness = false;
               break;
             }
-          if (is_witness) {
-            if (verbose > 2) {
-              std::cout << "Adding critical input ";
-              std::cout << bdd_to_formula (*inputs.begin ()) << " ";
-              std::cout << "as witnesses for " << f << std::endl;
-            }
-            C.insert (*it);
-            critical_inputs.insert (*inputs.begin ());
-            Cbar.erase (it);
-            break;
+
+          if (not is_witness) {
+            it++;
+            continue;
           }
+
+          // inputs witness one-step-loss of f
+          if (verbose > 2) {
+            std::cout << "Input " << bdd_to_formula (*inputs.begin ())
+                      << " witnesses one-step-loss of " << f << std::endl;
+          }
+          auto max_bwd_change = max_bwd_change_of (F, f, output_actions);
+          max_change = std::max (max_change, max_bwd_change);
+
+           if (max_bwd_change < min_max_change) {
+            it++;
+            continue;
+          }
+
+          auto it_save = it;
+          it++;
+          critical_inputs.insert (*inputs.begin ());
+          Cbar.erase (it_save);
+          if (critical_inputs.size () >= MAX_CRITICAL_INPUTS)
+            break;
         }
+
         if (critical_inputs.size () >= MAX_CRITICAL_INPUTS)
           break;
       }
+
 
       trans_actions_ref_set ret;
       for (const auto& elt : input_output_bwd_actions) {
@@ -201,12 +215,12 @@ class k_bounded_safety_aut_2step_nosplit_crit {
         std::cout << std::endl;
       }
 
-      return ret;
+      return std::make_pair (ret, max_change);
     }
 
     // Disallow copies.
-    k_bounded_safety_aut_2step_nosplit_crit (k_bounded_safety_aut_2step_nosplit_crit&&) = delete;
-    k_bounded_safety_aut_2step_nosplit_crit& operator= (k_bounded_safety_aut_2step_nosplit_crit&&) = delete;
+    k_bounded_safety_aut_2step_nosplit_crit_incr (k_bounded_safety_aut_2step_nosplit_crit_incr&&) = delete;
+    k_bounded_safety_aut_2step_nosplit_crit_incr& operator= (k_bounded_safety_aut_2step_nosplit_crit_incr&&) = delete;
 
   private:
     const spot::twa_graph_ptr& aut;
@@ -227,6 +241,34 @@ class k_bounded_safety_aut_2step_nosplit_crit {
 
     trans_actions_map input_output_bwd_actions, input_output_fwd_actions;
 
+    auto max_bwd_change_of (const SetOfStates& F,
+                            const State& f, const trans_actions& output_actions) {
+      SetOfStates pre;
+
+      for (const auto& action : output_actions) {
+        State m (aut->num_states ());
+        for (size_t p = 0; p < aut->num_states (); ++p)
+          m[p] = K - 1;
+
+        for (size_t p = 0; p < aut->num_states (); ++p) {
+          for (const auto& [q, q_final] : action[p])
+            m[q] = std::min ((int) m[q], std::max (-1, (int) f[p] - (q_final ? 1 : 0)));
+          // TODO? If m[q] < f[q], remember q, stop changing it.
+        }
+
+        pre.insert (m);
+      }
+
+      ssize_t max_change = 0;
+      for (const auto& vec : pre)
+        if (F.contains (vec)) // If vec is not in F, it won't appear in cpre.
+          for (size_t p = 0; p < aut->num_states (); ++p)
+            if (f[p] > max_change && vec[p] < f[p])
+              max_change = f[p];
+
+      return max_change;
+    }
+
     // This computes F = CPre(F), in the following way:
     // UPre(F) = F \cap F2
     // F2 = \cap_{i \in I} F1i
@@ -235,7 +277,7 @@ class k_bounded_safety_aut_2step_nosplit_crit {
       SetOfStates F2;
 
       if (verbose > 1)
-         std::cout << "Computing cpre(F) with maxelts (F) = " << std::endl
+        std::cout << "Computing cpre(F) with maxelts (F) = " << std::endl
                   << F.max_elements ();
 
       bool first_input = true;
@@ -281,7 +323,7 @@ class k_bounded_safety_aut_2step_nosplit_crit {
                   << bdd_to_formula (letter) << ")"
                   << std::endl;
 
-      for (unsigned p = 0; p < aut->num_states (); ++p) {
+      for (size_t p = 0; p < aut->num_states (); ++p) {
         for (const auto& e : aut->out (p)) {
           unsigned q = e.dst;
           if ((e.cond & letter) != bddfalse) {
@@ -296,7 +338,7 @@ class k_bounded_safety_aut_2step_nosplit_crit {
     State trans (const State& m, const trans_action_vec& action_vec, direction dir) {
       State f (aut->num_states ());
 
-      for (unsigned p = 0; p < aut->num_states (); ++p) {
+      for (size_t p = 0; p < aut->num_states (); ++p) {
         if (dir == direction::forward)
           f[p] = -1;
         else
@@ -304,9 +346,8 @@ class k_bounded_safety_aut_2step_nosplit_crit {
 
         for (const auto& [q, q_final] : action_vec[p]) {
           if (dir == direction::forward) {
-            int mq = m[q];
-            if (mq != -1)
-              f[p] = (int) std::max ((int) f[p], std::min (K, (int) mq + (q_final ? 1 : 0)));
+            if (m[q] != -1)
+              f[p] = (int) std::max ((int) f[p], std::min (K, (int) m[q] + (q_final ? 1 : 0)));
           } else
             f[p] = (int) std::min ((int) f[p], std::max (-1, (int) m[q] - (q_final ? 1 : 0)));
 
@@ -316,19 +357,6 @@ class k_bounded_safety_aut_2step_nosplit_crit {
             break;
         }
       }
-
-      // Monotonic?
-      /*
-      if (dir == direction::forward) {
-        if (not f.partial_order (m).geq ()) {
-          std::cout << "succ(" << m << ") = " << f << " (not leq)"  << std::endl;
-        }
-      }
-      else
-        if (not m.partial_order (f).geq ())
-          std::cout << "prev(" << m << ") = " << f << " (not geq)"  << std::endl;
-       */
-
       return f;
     }
 

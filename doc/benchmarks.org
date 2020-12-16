@@ -1,0 +1,312 @@
+* 2020/12/16 set
+
+** Acacia-+
+
+1/7 Acacia_Bonsai:realizable / ltl2dba_C2_12.ltl          TIMEOUT        10.00s
+2/7 Acacia_Bonsai:realizable / generalized_buffer_2.ltl   TIMEOUT        10.00s
+3/7 Acacia_Bonsai:realizable / amba_decomposed_lock_8.ltl FAIL           1.72s (exit status 1)
+4/7 Acacia_Bonsai:realizable / Automata.ltl               TIMEOUT        10.00s
+5/7 Acacia_Bonsai:realizable / KitchenTimerV7.ltl         FAIL           5.53s (exit status 1)
+6/7 Acacia_Bonsai:realizable / full_arbiter_enc_4.ltl     OK             3.82s
+7/7 Acacia_Bonsai:realizable / load_balancer_6.ltl        TIMEOUT        10.01s
+
+1/5 Acacia_Bonsai:unrealizable / OneCounterGui.ltl                  OK             1.67s
+2/5 Acacia_Bonsai:unrealizable / detector_unreal_12.ltl             TIMEOUT        10.00s
+3/5 Acacia_Bonsai:unrealizable / OneCounterGuiA1.ltl                OK             3.17s
+4/5 Acacia_Bonsai:unrealizable / ltl2dba_psi_12.ltl                 TIMEOUT        10.00s
+5/5 Acacia_Bonsai:unrealizable / generalized_buffer_unreal1_2_2.ltl TIMEOUT        10.00s
+
+** ltlsynt
+
+1/7 Acacia_Bonsai:realizable / ltl2dba_C2_12.ltl          TIMEOUT        10.00s
+2/7 Acacia_Bonsai:realizable / generalized_buffer_2.ltl   TIMEOUT        10.00s
+3/7 Acacia_Bonsai:realizable / amba_decomposed_lock_8.ltl OK             5.58s
+4/7 Acacia_Bonsai:realizable / Automata.ltl               OK             0.03s
+5/7 Acacia_Bonsai:realizable / KitchenTimerV7.ltl         OK             0.52s
+6/7 Acacia_Bonsai:realizable / full_arbiter_enc_4.ltl     OK             0.57s
+7/7 Acacia_Bonsai:realizable / load_balancer_6.ltl        TIMEOUT        10.00s
+
+
+** k_bounded_safety_aut_2step_nosplit_crit with SIMD
+
+1/7 Acacia_Bonsai:realizable / ltl2dba_C2_12.ltl          OK             0.97s
+2/7 Acacia_Bonsai:realizable / generalized_buffer_2.ltl   OK             1.12s
+3/7 Acacia_Bonsai:realizable / amba_decomposed_lock_8.ltl OK             1.27s
+4/7 Acacia_Bonsai:realizable / Automata.ltl               OK             1.82s
+5/7 Acacia_Bonsai:realizable / KitchenTimerV7.ltl         OK             1.92s
+6/7 Acacia_Bonsai:realizable / full_arbiter_enc_4.ltl     OK             4.52s
+7/7 Acacia_Bonsai:realizable / load_balancer_6.ltl        OK             6.78s
+
+1/5 Acacia_Bonsai:unrealizable / OneCounterGui.ltl                  OK             1.47s
+2/5 Acacia_Bonsai:unrealizable / detector_unreal_12.ltl             OK             1.02s
+3/5 Acacia_Bonsai:unrealizable / OneCounterGuiA1.ltl                OK             3.12s
+4/5 Acacia_Bonsai:unrealizable / ltl2dba_psi_12.ltl                 OK             3.82s
+5/5 Acacia_Bonsai:unrealizable / generalized_buffer_unreal1_2_2.ltl OK             6.38s
+
+** k_bounded_safety_aut_2step_nosplit_crit_incr
+
+1/7 Acacia_Bonsai:realizable / ltl2dba_C2_12.ltl          OK             0.97s
+2/7 Acacia_Bonsai:realizable / generalized_buffer_2.ltl   OK             1.12s
+3/7 Acacia_Bonsai:realizable / amba_decomposed_lock_8.ltl OK             1.27s
+4/7 Acacia_Bonsai:realizable / Automata.ltl               OK             1.82s
+5/7 Acacia_Bonsai:realizable / KitchenTimerV7.ltl         OK             1.92s
+6/7 Acacia_Bonsai:realizable / full_arbiter_enc_4.ltl     OK             4.52s
+7/7 Acacia_Bonsai:realizable / load_balancer_6.ltl        OK             6.78s
+
+1/5 Acacia_Bonsai:unrealizable / OneCounterGui.ltl                  OK             1.47s
+2/5 Acacia_Bonsai:unrealizable / detector_unreal_12.ltl             OK             1.52s
+3/5 Acacia_Bonsai:unrealizable / OneCounterGuiA1.ltl                OK             3.22s
+4/5 Acacia_Bonsai:unrealizable / ltl2dba_psi_12.ltl                 OK             3.97s
+5/5 Acacia_Bonsai:unrealizable / generalized_buffer_unreal1_2_2.ltl OK             6.18s
+
+
+
+
+* Benchmarks before 2020/12/16                                      :ARCHIVE:
+with vector_vector {
+
+with PRE_HAT_ACTION_CACHE, without PRE_HAT_CACHE
+
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.82s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             1.67s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             1.72s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             2.07s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             3.37s
+ 6/10 realizable/ltl2dba02.ltl         OK             3.72s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             4.82s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             5.93s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             13.29s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             21.26s
+
+with PRE_HAT_ACTION_CACHE, with PRE_HAT_CACHE
+
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             1.42s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             3.17s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             2.67s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             3.67s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             4.12s
+ 6/10 realizable/ltl2dba02.ltl         OK             4.27s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             7.08s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             10.39s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             18.00s
+10/10 realizable/ltl2dba_U2_8.ltl      TIMEOUT        30.00s
+
+without PRE_HAT_ACTION_CACHE, without PRE_HAT_CACHE
+
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             1.07s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             2.37s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             2.07s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             2.67s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             5.53s
+ 6/10 realizable/ltl2dba02.ltl         OK             3.97s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             5.43s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             8.28s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             13.94s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             27.97s
+
+}
+
+with vector_simd {
+
+with PRE_HAT_ACTION_CACHE
+
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.72s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             1.22s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             1.37s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             1.87s
+ 5/10 realizable/ltl2dba_U1_5.ltl      FAIL           0.32s (exit status 1)
+ 6/10 realizable/ltl2dba02.ltl         FAIL           0.32s (exit status 1)
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             3.77s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             4.27s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             10.08s
+10/10 realizable/ltl2dba_U2_8.ltl      FAIL           0.32s (exit status 1)
+}
+
+with vector_simd_array<50 and k_bounded_safety_aut {
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.77s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             1.32s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             1.37s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             1.87s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             2.57s
+ 6/10 realizable/ltl2dba02.ltl         OK             3.87s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             3.67s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             4.62s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             10.04s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             17.35s
+}
+
+with vector_simd_array<50 and k_bounded_safety_aut_2step_nosplit {
+  with sets of vectors of actions: {
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.37s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.87s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.62s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.62s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             1.82s
+ 6/10 realizable/ltl2dba02.ltl         OK             4.17s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             1.63s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             3.07s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             3.92s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             15.75s
+  }
+  with sets of sets of actions: {
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.32s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.77s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.62s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.62s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             1.42s
+ 6/10 realizable/ltl2dba02.ltl         OK             3.17s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             1.52s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             2.87s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             3.82s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             11.54s
+
+with type = char {
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.27s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.42s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.42s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.57s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             0.67s
+ 6/10 realizable/ltl2dba02.ltl         OK             1.07s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             1.02s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             1.27s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             2.37s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             4.78s
+
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.22s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.37s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.37s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.47s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             0.62s
+ 6/10 realizable/ltl2dba02.ltl         OK             1.12s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             0.82s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             1.22s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             1.97s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             4.52s
+
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.12s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.27s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.12s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.22s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             0.77s
+ 6/10 realizable/ltl2dba02.ltl         OK             0.57s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             1.72s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             1.17s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             3.07s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             2.67s
+
+
+without-simd{
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.17s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.27s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.12s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.22s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             0.77s
+ 6/10 realizable/ltl2dba02.ltl         OK             0.57s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             1.32s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             1.17s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             3.42s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             2.82s
+}
+with-simd{
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.12s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.12s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.12s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.22s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             0.27s
+ 6/10 realizable/ltl2dba02.ltl         OK             0.17s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             0.77s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             0.37s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             1.57s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             0.77s
+}
+
+
+  }
+
+{ // two opts
+
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.12s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.07s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.22s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.22s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             0.07s
+ 6/10 realizable/ltl2dba02.ltl         OK             0.17s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             0.52s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             0.32s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             1.22s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             0.52s
+
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             0.12s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.07s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             0.22s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             0.17s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             0.07s
+ 6/10 realizable/ltl2dba02.ltl         OK             0.12s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             0.47s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             0.12s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             1.17s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             0.17s
+
+}
+
+}
+
+
+
+
+acacia-plus {
+ 1/10 unrealizable/ltl2dba_psi_7.ltl   OK             1.17s
+ 2/10 realizable/ltl2dba_U2_6.ltl      OK             0.42s
+ 3/10 unrealizable/ltl2dba_theta_5.ltl OK             1.87s
+ 4/10 unrealizable/ltl2dba_psi_8.ltl   OK             6.23s
+ 5/10 realizable/ltl2dba_U1_5.ltl      OK             0.47s
+ 6/10 realizable/ltl2dba02.ltl         OK             0.62s
+ 7/10 unrealizable/ltl2dba_theta_6.ltl OK             5.43s
+ 8/10 realizable/ltl2dba_U2_7.ltl      OK             0.47s
+ 9/10 unrealizable/ltl2dba_theta_7.ltl OK             19.06s
+10/10 realizable/ltl2dba_U2_8.ltl      OK             0.97s
+}
+
+
+
+
+
+--------------------------------------------------------------------------------
+
+{ ltlsynt
+ 1/16 realizable/SPI.ltl                   OK             5.43s
+ 2/16 realizable/ltl2dba_E_8.ltl           OK             1.17s
+ 3/16 realizable/collector_v1_7.ltl        OK             3.72s
+ 4/16 realizable/KitchenTimerV10.ltl       OK             1.77s
+ 5/16 realizable/ltl2dba_C2_6.ltl          OK             2.32s
+ 6/16 realizable/simple_arbiter_enc_8.ltl  OK             0.87s
+ 7/16 realizable/GamemodeChooser.ltl       OK             2.17s
+ 8/16 realizable/KitchenTimerV9.ltl        OK             2.77s
+ 9/16 realizable/KitchenTimerV7.ltl        OK             0.72s
+10/16 realizable/KitchenTimerV8.ltl        OK             2.53s
+11/16 realizable/full_arbiter_enc_4.ltl    OK             0.67s
+12/16 realizable/ltl2dba_Q_7.ltl           OK             2.62s
+13/16 realizable/narylatch_8.ltl           OK             1.92s
+14/16 realizable/ltl2dba_S_8.ltl           OK             1.57s
+15/16 realizable/TwoCountersInRangeA6.ltl  OK             4.78s
+16/16 realizable/SensorSubmodulChooser.ltl OK             2.07s
+}
+
+{ ab
+ 1/16 realizable/SPI.ltl                   TIMEOUT        9.00s
+ 2/16 realizable/ltl2dba_E_8.ltl           TIMEOUT        9.01s
+ 3/16 realizable/collector_v1_7.ltl        OK             0.42s
+ 4/16 realizable/KitchenTimerV10.ltl       TIMEOUT        9.01s
+ 5/16 realizable/ltl2dba_C2_6.ltl          OK             0.04s
+ 6/16 realizable/simple_arbiter_enc_8.ltl  TIMEOUT        9.00s
+ 7/16 realizable/GamemodeChooser.ltl       TIMEOUT        9.00s
+ 8/16 realizable/KitchenTimerV9.ltl        TIMEOUT        9.01s
+ 9/16 realizable/KitchenTimerV7.ltl        OK             2.42s
+10/16 realizable/KitchenTimerV8.ltl        TIMEOUT        9.00s
+11/16 realizable/full_arbiter_enc_4.ltl    OK             4.78s
+12/16 realizable/ltl2dba_Q_7.ltl           TIMEOUT        9.01s
+13/16 realizable/narylatch_8.ltl           TIMEOUT        9.00s
+14/16 realizable/ltl2dba_S_8.ltl           OK             0.77s
+15/16 realizable/TwoCountersInRangeA6.ltl  TIMEOUT        9.00s
+16/16 realizable/SensorSubmodulChooser.ltl TIMEOUT        9.01s
+}
