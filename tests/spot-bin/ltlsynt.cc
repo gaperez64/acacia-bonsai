@@ -34,22 +34,21 @@
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
-#include <spot/misc/game.hh>
 #include <spot/misc/timer.hh>
 #include <spot/tl/formula.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/determinize.hh>
+#include <spot/twaalgos/game.hh>
+#include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/parity.hh>
 #include <spot/twaalgos/sbacc.hh>
-#include <spot/twaalgos/totgba.hh>
-#include <spot/twaalgos/translate.hh>
-#include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/synthesis.hh>
 #include <spot/twaalgos/toparity.hh>
-#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/totgba.hh>
+#include <spot/twaalgos/translate.hh>
 
 enum
 {

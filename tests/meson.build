@@ -364,18 +364,27 @@ check_real_exe = find_program (check_real_file)
 
 # test_files = { 'realizable' : { 'tiny' :  [] } } ...
 
+backends = { 'ab'      : '-a', # Default, start acacia-bonsai
+             'ltlsynt' : '-l',
+             'aca+'    : '-+' }
+
 foreach folder, testset : test_files
   foreach size, files : testset
     if not size.startswith ('!')  # Skip sizes starting with !, typically !large
       foreach file : files
         filename = 'ltl' / folder / file
-        test (file,
-              check_real_exe,
-              args : [ '-p', ## prefix every line with the name of the test
-                       '-a',  ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
-                       '-F', files (filename) ],
-              suite : [ size, folder + '/' + size, folder ],
-              timeout: 30)
+        foreach backend, opt : backends
+          test (backend + '/' + file,
+                check_real_exe,
+                args : [ '-p', ## prefix every line with the name of the test
+                         opt,  ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
+                         '-F', files (filename) ],
+                suite : [ backend,
+                          backend + '/' + size,
+                          backend + '/' + folder + '/' + size,
+                          backend + '/' + folder ],
+                timeout: 30)
+        endforeach
       endforeach
     endif
   endforeach
@@ -394,36 +403,66 @@ endforeach
 #                     'realizable/ltl2dba_U2_8.ltl',
 #                   ]
 
-benchmark_files = {
-  'realizable' :
-    [ 'ltl2dba_C2_12.ltl',
-      'generalized_buffer_2.ltl',
-      'amba_decomposed_lock_8.ltl',
-      'Automata.ltl',
-      'KitchenTimerV7.ltl',
-      'full_arbiter_enc_4.ltl',
-      'load_balancer_6.ltl'],
+benchmark_files = \
+  { 'realizable' :
+      { 'set1' :  ## Added October 2020
+          [ 'ltl2dba_U2_6.ltl', 'ltl2dba_U1_5.ltl', 'ltl2dba02.ltl',
+            'ltl2dba_U2_7.ltl', 'ltl2dba_U2_8.ltl' ],
 
-  'unrealizable' :
-    [
-      'OneCounterGui.ltl',
-      'detector_unreal_12.ltl',
-      'OneCounterGuiA1.ltl',
-      'ltl2dba_psi_12.ltl',
-      'generalized_buffer_unreal1_2_2.ltl'
-    ]
-}
+        'set2' : ## Added December 2020, favoring ltlsynt
+          [ 'SPI.ltl', 'ltl2dba_E_8.ltl', 'collector_v1_7.ltl',
+            'KitchenTimerV10.ltl', 'ltl2dba_C2_6.ltl',
+            'simple_arbiter_enc_8.ltl', 'GamemodeChooser.ltl',
+            'KitchenTimerV9.ltl', 'KitchenTimerV7.ltl', 'KitchenTimerV8.ltl',
+            'full_arbiter_enc_4.ltl', 'ltl2dba_Q_7.ltl', 'narylatch_8.ltl',
+            'ltl2dba_S_8.ltl', 'TwoCountersInRangeA6.ltl',
+            'SensorSubmodulChooser.ltl' ],
+        
+        'set3' : ## Added December 2020, favoring AB.
+          [ 'ltl2dba_C2_12.ltl', 'generalized_buffer_2.ltl',
+            'amba_decomposed_lock_8.ltl', 'Automata.ltl', 'KitchenTimerV7.ltl',
+            'full_arbiter_enc_4.ltl', 'load_balancer_6.ltl'],
+
+        'set4' : ## Added December 2020, may favor the non incr implementation.
+          [ 'ltl2dba_U1_7.ltl', 'ltl2dba_U1_8.ltl' ]
+      },
+
+    'unrealizable' :
+      { 'set1' : ## Added October 2020
+          [ 'ltl2dba_psi_7.ltl', 'ltl2dba_theta_5.ltl', 'ltl2dba_psi_8.ltl',
+            'ltl2dba_theta_6.ltl', 'ltl2dba_theta_7.ltl' ],
+
+        'set2' : ## Added December 2020, favoring ltlsynt (hence empty).
+          [ ],
+
+        'set3' : ## Added December 2020, favoring AB.
+          [ 'OneCounterGui.ltl', 'detector_unreal_12.ltl',
+            'OneCounterGuiA1.ltl', 'ltl2dba_psi_12.ltl',
+            'generalized_buffer_unreal1_2_2.ltl' ],
+
+        'set4' : ## Added December 2020, to populate.
+          []
+      }
+  }
 
 
-foreach folder, testset : benchmark_files
-  foreach file : testset
-    filename = 'ltl' / folder / file
-    benchmark (file,
-               check_real_exe,
-               args : [ '-p',  ## prefix every line with the name of the test
-                        '-a',  ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
-                        '-F', files (filename) ],
-               suite : [ folder ],
-               timeout: 10)
+
+foreach folder, testsets : benchmark_files
+  foreach set, files : testsets
+    foreach file : files
+      filename = 'ltl' / folder / file
+      foreach backend, opt : backends
+        benchmark (backend + '/' + file,
+                   check_real_exe,
+                   args : [ '-p',  ## prefix every line with the name of the test
+                            opt,  ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
+                            '-F', files (filename) ],
+                   suite : [ backend,
+                             backend + '/' + set,
+                             backend + '/' + folder + '/' + set,
+                             backend + '/' + folder ],
+                   timeout: 10)
+      endforeach
+    endforeach
   endforeach
 endforeach
