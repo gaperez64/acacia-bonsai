@@ -199,7 +199,7 @@ namespace {
           sw.start ();
 
 #define VECTOR_ELT_T char
-#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_2step_nosplit_crit
+#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_2step_nosplit_crit_incr
 #define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
 #define OTHER_VECTOR_IMPL vector_simd_vector
 #define SET_IMPL set_antichain_vector

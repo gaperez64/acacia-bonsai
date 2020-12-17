@@ -59,7 +59,7 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
                     << " current K: " << curK << std::endl;
         F.clear_update_flag ();
 
-        auto&& [crit, max_change] = critical_input_output_bwd_actions (F, curK);
+        auto&& [crit, max_change] = critical_input_output_bwd_actions (F, curK, curK / 2);
 
         if (verbose)
           std::cout << "Set of critical inputs of size " << crit.size ()
@@ -77,16 +77,16 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
           init_plus_curK[aut->get_init_state_number ()] = (int) max_change + 1;
           if (F.contains (init_plus_curK))
             return true;
-          if (max_change == -1) // Hope no more.
+          if (max_change == -1) // Hope no more.  Equivalently, crit.empty ();
             return false;
 
           curK = std::min (max_change, curK / 2);
-          if (verbose)
+          /* if (verbose)
             std::cout << "Recomputing critical signals..." << std::endl;
           std::tie (crit, max_change) = critical_input_output_bwd_actions (F, curK);
           if (verbose)
             std::cout << "Set of critical inputs of size " << crit.size ()
-                      << ", max change: " << max_change << std::endl;
+           << ", max change: " << max_change << std::endl; */
         }
 
         cpre_inplace (F, crit);
@@ -140,17 +140,20 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
       return S;
     }
 
-    auto critical_input_output_bwd_actions (const SetOfStates& F, ssize_t min_max_change) {
+    auto critical_input_output_bwd_actions (const SetOfStates& F, ssize_t min_max_change,
+                                            ssize_t backup_min_max_change) {
       // Def: f is one-step-losing if there is an input i such that for all output o
       //           succ (f, <i,o>) \not\in F
       //      the input i is the *witness* of one-step-loss.
       // Def: A set C of inputs is critical for F if:
       //        \exists f \in F, i \in C, i witnesses one-step-loss of F.
       // Algo: We go through all f in F, find an input i witnessing one-step-loss, add it to C.
-#warning Return witness of maxchange
+
       using trans_actions_pair_ref = std::reference_wrapper<const trans_actions_map::value_type>;
       std::set<trans_actions_pair_ref, ref_ptr_cmp<trans_actions_pair_ref>> C, Cbar;
-      std::set<bdd_t> critical_inputs;
+      std::set<bdd_t> critical_inputs,
+        backup_critical_inputs,
+        max_change_inputs;
       ssize_t max_change = -1;
 
       Cbar.insert (input_output_fwd_actions.begin (),
@@ -180,10 +183,18 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
             std::cout << "Input " << bdd_to_formula (*inputs.begin ())
                       << " witnesses one-step-loss of " << f << std::endl;
           }
+
           auto max_bwd_change = max_bwd_change_of (F, f, output_actions);
-          max_change = std::max (max_change, max_bwd_change);
+          if (max_change < max_bwd_change) {
+            max_change = max_bwd_change;
+            max_change_inputs.clear ();
+          }
 
            if (max_bwd_change < min_max_change) {
+             if (max_change == max_bwd_change && max_change_inputs.size () < MAX_CRITICAL_INPUTS)
+               max_change_inputs.insert (*inputs.begin ());
+             if (max_bwd_change >= backup_min_max_change && backup_critical_inputs.size () < MAX_CRITICAL_INPUTS)
+               backup_critical_inputs.insert (*inputs.begin ());
             it++;
             continue;
           }
@@ -200,6 +211,12 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
           break;
       }
 
+      if (critical_inputs.empty ()) { // No critical signal with a sufficient max_change
+        if (backup_critical_inputs.empty ()) // Not even backup min max_change
+          critical_inputs = std::move (max_change_inputs);
+        else
+          critical_inputs = std::move (backup_critical_inputs);
+      }
 
       trans_actions_ref_set ret;
       for (const auto& elt : input_output_bwd_actions) {

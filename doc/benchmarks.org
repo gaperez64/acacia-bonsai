@@ -48,7 +48,12 @@
 37/38 unrealizable ab/ltl2dba_psi_12.ltl                 OK             3.87s
 38/38 unrealizable ab/generalized_buffer_unreal1_2_2.ltl OK             6.23s
 
+*** Set 4
 
+1/2 realizable ab/ltl2dba_U1_7.ltl OK             1.67s
+2/2 realizable ab/ltl2dba_U1_8.ltl OK             11.94s
+
+Remark: 2 is faster without _incr.
 
 ** k_bounded_safety_aut_2step_nosplit_crit with SIMD
 
@@ -98,6 +103,10 @@
  37/38 unrealizable ab/ltl2dba_psi_12.ltl                 OK             3.82s
  38/38 unrealizable ab/generalized_buffer_unreal1_2_2.ltl OK             6.23s
 
+*** Set 4
+
+1/2 realizable ab/ltl2dba_U1_7.ltl OK             2.12s
+2/2 realizable ab/ltl2dba_U1_8.ltl OK             8.73s
 
 
 
@@ -198,6 +207,7 @@
 36/38 unrealizable ltlsynt/OneCounterGuiA1.ltl                OK             0.12s
 37/38 unrealizable ltlsynt/ltl2dba_psi_12.ltl                 TIMEOUT        10.01s
 38/38 unrealizable ltlsynt/generalized_buffer_unreal1_2_2.ltl TIMEOUT        10.00s
+
 
 
 * Benchmarks before 2020/12/16                                      :ARCHIVE:
