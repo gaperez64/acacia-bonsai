@@ -25,7 +25,6 @@
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
-#include <spot/misc/game.hh>
 #include <spot/misc/timer.hh>
 #include <spot/tl/formula.hh>
 #include <spot/twa/twagraph.hh>
