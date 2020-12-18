@@ -5,7 +5,6 @@
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>
 #include "bdd_helper.hh"
-#include "ref_ptr_cmp.hh"
 
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.
@@ -150,13 +149,14 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
       // Algo: We go through all f in F, find an input i witnessing one-step-loss, add it to C.
 
       using trans_actions_pair_ref = std::reference_wrapper<const trans_actions_map::value_type>;
-      std::set<trans_actions_pair_ref, ref_ptr_cmp<trans_actions_pair_ref>> C, Cbar;
+      std::list<trans_actions_pair_ref> Cbar;
       std::set<bdd_t> critical_inputs,
         backup_critical_inputs,
         max_change_inputs;
       ssize_t max_change = -1;
 
-      Cbar.insert (input_output_fwd_actions.begin (),
+      Cbar.insert (Cbar.begin (),
+                   input_output_fwd_actions.begin (),
                    input_output_fwd_actions.end ());
 
       for (const auto& f : F) {
@@ -218,11 +218,11 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
           critical_inputs = std::move (backup_critical_inputs);
       }
 
-      trans_actions_ref_set ret;
+      trans_actions_ref_list ret;
       for (const auto& elt : input_output_bwd_actions) {
         const auto& [output_actions, inputs] = elt;
         if (not empty_intersection (inputs, critical_inputs))
-          ret.insert (std::cref (output_actions));
+          ret.push_back (std::cref (output_actions));
       }
 
       if (verbose > 1) {
@@ -253,8 +253,7 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
     using trans_actions_map = std::map<trans_actions, std::set<bdd_t>>; // Maps a set of actions to a set of inputs.
 
     using trans_actions_ref = std::reference_wrapper<const trans_actions>;
-    using trans_actions_ref_set = std::set<trans_actions_ref,
-                                           ref_ptr_cmp<trans_actions_ref>>;
+    using trans_actions_ref_list = std::list<trans_actions_ref>;
 
     trans_actions_map input_output_bwd_actions, input_output_fwd_actions;
 
@@ -290,7 +289,7 @@ class k_bounded_safety_aut_2step_nosplit_crit_incr {
     // UPre(F) = F \cap F2
     // F2 = \cap_{i \in I} F1i
     // F1i = \cup_{o \in O} PreHat (F, i, o)
-    void cpre_inplace (SetOfStates& F, const trans_actions_ref_set& io_actions) {
+    void cpre_inplace (SetOfStates& F, const trans_actions_ref_list& io_actions) {
       SetOfStates F2;
 
       if (verbose > 1)
