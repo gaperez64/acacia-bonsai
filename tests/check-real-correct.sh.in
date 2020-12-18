@@ -35,7 +35,8 @@ run_ltlsynt () {
 
 run_strix () {
     echo "Running strix..."
-    time echoandrun $prog_prefix $STRIX $ltl --ins $ins --outs $outs $extra_opts
+    time echoandrun $prog_prefix $STRIX $ltl --ins $ins --outs $outs $extra_opts | \
+        sed '/UNREALIZABLE/{:a $q1; n; ba}' ## If UNREALIZABLE is printed, exit with 1.
 }
 
 run_acacia_bonsai () {
