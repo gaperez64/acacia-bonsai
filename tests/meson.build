@@ -349,8 +349,16 @@ test_files = {
                  }
              }
 
+strix_exe = find_program ('strix', required : false)
+
 conf_data = configuration_data ()
 conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
+if strix_exe.found ()
+  conf_data.set_quoted ('STRIX', strix_exe.full_path ())
+else
+  conf_data.set_quoted ('STRIX', '/bin/false')
+endif
+
 conf_data.set_quoted ('ACABONSAI', ab_exe.full_path ())
 conf_data.set_quoted ('ACAPLUS', meson.source_root() / '@0@'.format(acacia_plus_py[0]))
 conf_data.set_quoted ('PYTHON3', py.path ())
@@ -367,6 +375,10 @@ check_real_exe = find_program (check_real_file)
 backends = { 'ab'      : '-a', # Default, start acacia-bonsai
              'ltlsynt' : '-l',
              'aca+'    : '-+' }
+
+if strix_exe.found ()
+  backends += { 'strix' : '-s' }
+endif
 
 foreach folder, testset : test_files
   foreach size, files : testset
