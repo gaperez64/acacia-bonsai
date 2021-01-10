@@ -35,7 +35,7 @@ class kdtree {
         };
         const size_t dim;
         std::shared_ptr<kdtree_node> tree;
-        const std::vector<Vector> vector_set;
+        std::vector<Vector> vector_set;
         template <typename V>
         friend std::ostream& ::operator<< (std::ostream& os, const kdtree<V>& f);
 
@@ -106,7 +106,7 @@ class kdtree {
         }
 
     public:
-        kdtree_vector (const std::vector<Vector>& elements) : vector_set{elements} {
+        kdtree (const std::vector<Vector>& elements) : vector_set{elements} {
             assert(this->vector_set.size () > 0);
             // we sort for each dimension
             std::vector<std::vector<size_t>> sorted (this->dim,
@@ -123,9 +123,34 @@ class kdtree {
             this->tree = recursive_build (sorted, 0);
         }
 
+        kdtree (const kdtree& other) : tree(other.tree), vector_set{other.vector_set} {}
+
+        kdtree& operator= (kdtree&& other) {
+            this->tree = other.tree;
+            this->vector_set = std::move (other.vector_set);
+            return *this;
+        }
+
+        bool operator== (const kdtree& other) const {
+            return vector_set == other.vector_set;
+        }
+
         bool dominates (const Vector& v, bool strict = false) const {
             return this->recursive_dominates (v, strict);
         }
+
+        auto size () const {
+          return vector_set.size ();
+        }
+
+        bool empty () {
+          return vector_set.empty ();
+        }
+
+        auto        begin ()       { return vector_set.begin (); }
+        const auto  begin () const { return vector_set.begin (); }
+        auto        end ()         { return vector_set.end (); }
+        const auto  end () const   { return vector_set.end (); }
 };
 
 template <typename Vector>
