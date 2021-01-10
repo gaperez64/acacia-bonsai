@@ -67,7 +67,7 @@ class set_kdtree {
             this->tree = std::make_shared<kdtree<Vector>> (result);
         }
 
-        // intersection in place
+        // intersection in place TODO: continue fixing from here!!
     template <typename V>
     class disregard_first_component : public std::less<V> {
       public:
