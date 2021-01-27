@@ -167,72 +167,19 @@ class set_kdtree {
                 _updated = true;
             }
         }
-        /*
 
+        auto size () const {
+            return this->tree->size ();
+        }
 
-    void intersect_with (const kdtree_vector& other) {
-      kdtree_vector intersection;
-      bool smaller_set = false;
-      using cache_red_dim = std::set<Vector, disregard_first_component<Vector>>;
-      using vector_of_vectors = std::vector<Vector>;
-      std::map<int, std::pair<cache_red_dim, vector_of_vectors>> split_cache;
+        bool empty () {
+            return this->tree->empty ();
+        }
 
-      for (const auto& x : vector_set) {
-        bool dominated = false;
-
-        auto& cv = ([&x, &split_cache, &other] () -> auto& {
-          try {
-            return split_cache.at (x[0]);
-          } catch (...) {
-            auto& cv = split_cache[x[0]];
-            for (const auto& y : other.vector_set) {
-              if (y[0] >= x[0])
-                cv.first.insert (y);
-              else
-                cv.second.push_back (y);
-            }
-            return cv;
-          }
-        }) ();
-
-        auto meet = [&] (const Vector& y) {
-          Vector &&v = x.meet (y);
-          intersection.insert (v);
-          if (v == x) {
-            dominated = true;
-            return false;
-          }
-          return true;
-        };
-
-        std::all_of (cv.first.begin (), cv.first.end (), meet);
-        if (!dominated)
-          std::all_of (cv.second.begin (), cv.second.end (), meet);
-
-        // If x wasn't <= an element in other, then x is not in the
-        // intersection, thus the set is updated.
-        smaller_set |= not dominated;
-      }
-
-      if (smaller_set) {
-        *this = std::move (intersection);
-        _updated = true;
-      }
-    }
-*/
-
-    auto size () const {
-      return this->tree->size ();
-    }
-
-    bool empty () {
-      return this->tree->empty ();
-    }
-
-    auto        begin ()       { return this->tree->begin (); }
-    const auto  begin () const { return this->tree->begin (); }
-    auto        end ()         { return this->tree->end (); }
-    const auto  end () const   { return this->tree->end (); }
+        auto        begin ()       { return this->tree->begin (); }
+        const auto  begin () const { return this->tree->begin (); }
+        auto        end ()         { return this->tree->end (); }
+        const auto  end () const   { return this->tree->end (); }
 };
 
 
