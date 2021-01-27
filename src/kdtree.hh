@@ -21,17 +21,15 @@ class kdtree {
             std::shared_ptr<kdtree_node> left;
             std::shared_ptr<kdtree_node> right;
             int location;
-            Vector value;
+            size_t value_idx;
 
-            kdtree_node (Vector leaf_value) : left (nullptr),
-                                              right (nullptr),
-                                              value (leaf_value) {}
+            kdtree_node (size_t idx) : left (nullptr),
+                                       right (nullptr),
+                                       value_idx (idx) {}
             kdtree_node (std::shared_ptr<kdtree_node> l,
                          std::shared_ptr<kdtree_node> r,
-                         int loc, size_t d) : left (l),
-                                              right (r),
-                                              location (loc),
-                                              value (d) {}                        
+                         int loc) : left (l), right (r),
+                                    location (loc) {}
         };
         const size_t dim;
         std::shared_ptr<kdtree_node> tree;
@@ -45,7 +43,7 @@ class kdtree {
             // if the list of elements is now a singleton, we make a leaf
             size_t length = sorted[0].size ();
             if (length == 1)
-                return std::make_shared<kdtree_node> (this->vector_set[sorted[0][0]]);
+                return std::make_shared<kdtree_node> (sorted[0][0]);
             // otherwise we need to create an inner node
             size_t axis = depth % this->dim;
             size_t median_idx = (length - 1) / 2;
@@ -82,11 +80,11 @@ class kdtree {
 
         bool recursive_dominates (const Vector& v,
                                   bool strict,
-                                  std::shared_ptr<kdtree_node> node = this->tree,
+                                  std::shared_ptr<kdtree_node> node,
                                   size_t depth = 0) const {
             // if we are at a leaf, just check if it dominates
             if (node->left == nullptr) {
-                return v.partial_order (node->value).leq ();
+                return v.partial_order (this->vector_set[node->value_idx]).leq ();
             } else {
                 // we have to determine if left and right
                 // have to be explored
@@ -100,13 +98,14 @@ class kdtree {
                 } else {
                     // in this case we do have to explore both sub-trees
                     return (recursive_dominates (v, strict, node->left, depth + 1) ||
-                            recrusive_dominates (v, strict, node-right, depth + 1));
+                            recursive_dominates (v, strict, node->right, depth + 1));
                 }
             }
         }
 
     public:
-        kdtree (const std::vector<Vector>& elements) : vector_set{elements} {
+        kdtree (const std::vector<Vector>& elements, const size_t dim) : dim(dim),
+                                                                         vector_set{elements} {
             assert(this->vector_set.size () > 0);
             // we sort for each dimension
             std::vector<std::vector<size_t>> sorted (this->dim,
@@ -123,10 +122,12 @@ class kdtree {
             this->tree = recursive_build (sorted, 0);
         }
 
-        kdtree (const kdtree& other) : tree(other.tree), vector_set{other.vector_set} {}
+        kdtree (const kdtree& other) : tree(other.tree), dim(other.dim),
+                                       vector_set{other.vector_set} {}
 
         kdtree& operator= (kdtree&& other) {
             this->tree = other.tree;
+            this->dim = other.dim;
             this->vector_set = std::move (other.vector_set);
             return *this;
         }
@@ -136,25 +137,25 @@ class kdtree {
         }
 
         bool dominates (const Vector& v, bool strict = false) const {
-            return this->recursive_dominates (v, strict);
+            return this->recursive_dominates (v, strict, this->tree);
         }
 
         auto size () const {
-          return vector_set.size ();
+          return this->vector_set.size ();
         }
 
         bool empty () {
-          return vector_set.empty ();
+          return this->vector_set.empty ();
         }
 
-        auto        begin ()       { return vector_set.begin (); }
-        const auto  begin () const { return vector_set.begin (); }
-        auto        end ()         { return vector_set.end (); }
-        const auto  end () const   { return vector_set.end (); }
+        auto        begin ()       { return this->vector_set.begin (); }
+        const auto  begin () const { return this->vector_set.begin (); }
+        auto        end ()         { return this->vector_set.end (); }
+        const auto  end () const   { return this->vector_set.end (); }
 };
 
 template <typename Vector>
-inline std::ostream& operator<< (std::ostream& os, const kdtree_vector<Vector>& f) {
+inline std::ostream& operator<< (std::ostream& os, const kdtree<Vector>& f) {
     for (auto el : f.vector_set)
         os << el << std::endl;
     return os;
