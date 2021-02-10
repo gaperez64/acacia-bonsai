@@ -1,11 +1,13 @@
 \documentclass[runningheads,a4paper,draft]{llncs}
 
 \usepackage{amssymb,amstext,amsmath}
+\usepackage{mathtools}
 \usepackage{stmaryrd}
 \usepackage{xspace}
 \usepackage{todonotes}
-\usepackage{cleveref}
 \usepackage[basic,bold]{complexity}
+\usepackage[draft=false]{hyperref}
+\usepackage{cleveref}
 
 % Usual math notation fixes
 \makeatletter
@@ -30,10 +32,12 @@
 
 % Local macros
 \newcommand{\indicator}[2]{\mathbf{1}_{#1}(#2)}
+\newcommand{\Vals}{\mathit{Vals}}
 \newcommand{\pow}[1]{\mathcal{P}(#1)}
 \newcommand{\cpre}{\mathbf{CPre}}
 \newcommand{\eve}{Eve\xspace}
 \newcommand{\adam}{Adam\xspace}
+\newcommand{\calA}{\mathcal{A}}
 \newcommand{\calF}{\mathcal{F}}
 \newcommand{\calN}{\mathcal{N}}
 \newcommand{\calM}{\mathcal{M}}
@@ -60,9 +64,10 @@
   \SetWatermarkText{{DRAFT  (comp. on: \DTMtoday, \DTMcurrenttime)}}
 }
 
+% table of contents stuff
+\setcounter{tocdepth}{3}
+
 \begin{document}
-
-
 
 \title{Acacia Bonsai: A Minimal Implementation of Antichain-Based Algorithms
 for LTL Synthesis}
@@ -72,7 +77,7 @@ for LTL Synthesis}
 Guillermo A. P\'erez\inst{2}} %\orcidID{0000-0002-1200-4952}}
 \institute{DePaul University, U.S.A.\\
 \email{michael@cadilhac.name} \and
-University of Antwerp, Belgium\\
+University of Antwerp -- Flanders Make, Belgium\\
 \email{guillermoalberto.perez@uantwerpen.be}
 }
 \authorrunning{M. Cadilhac \and G. A. P\'erez}
@@ -91,6 +96,8 @@ University of Antwerp, Belgium\\
   representation of closed sets of configurations of the game.
   \keywords{Reactive synthesis \and LTL \and Antichains \and Data structures}
 \end{abstract}
+
+\tableofcontents
 
 \section{Definitions}
 An \emph{infinite word} $\alpha$ over an \emph{alphabet} $A$, i.e. $\alpha \in
@@ -247,6 +254,42 @@ Since the parity condition generalizes all the other conditions we consider in
 this work, the above proposition implies memoryless determinacy for all our
 games.  In particular, by \Cref{prop:paritymr}, games played on Büchi and safety
 automata are also memoryless determined.
+
+\section{Succinct encoding of games}
+In this section we describe the encoding of both automata and games that we
+deal with, namely, \emph{symbolic automata}~\cite{dv17}. Then, we will briefly mention how
+such symbolic automata encode both infinite-word automata and games. Below,
+for a set $X$ of variables, we denote by $\mathbb{B}(X)$ the set of all
+Boolean formulas over $X$.
+\begin{definition}[Symbolic automata]
+  A \emph{symbolic utomaton} is a tuple $\calA = (Q,q_0,X,\Delta)$ where $Q$
+  is a finite set of states, $q_0 \in Q$ is the initial state, $X$ is a finite
+  set of \emph{atomic propositions}, and $\Delta \subseteq Q \times
+  \mathbb{B}(X) \times Q$ is the transition relation.
+\end{definition}
+%
+We write $\Vals(X)$ for the set of all truth valuations of $X$. For $\varphi
+\in \mathbb{B}(X)$ and $v \in \Vals(X)$, we write $v \models \varphi$ to
+denote the fact that $v$ satisfies $\varphi$. The symbolic automaton $\calA$
+is said to be \emph{complete} if for all $p \in Q$ there exist a transition
+$(p,\varphi,q) \in \Delta$ and a valuation $v \in \Vals(X)$ such that $v
+\models \varphi$. It is said to be \emph{normalized} if for all $p,q \in Q$
+there is at most one transition $(p,\varphi,q) \in \Delta$.\todo{G: this might
+  be useful in getting bounds when constructing the associated infinite word
+automaton?}
+
+A symbolic automaton $\calA = (Q,q_0,X,\Delta)$ naturally induces an infinite-word automaton
+$\calN_\calA = (Q,q_0,A,\Delta')$ with alphabet $A = \Vals(X)$. For games, we
+assume the set of atomic propositions $X$ is partitioned into $Y$ and $Z$.
+Then, the associated automaton over $I \times O$ is obtained by setting $I
+\coloneqq \Vals(Y)$ and $O \coloneqq \Vals(Z)$. Note that both constructions
+incur in an exponential blowup in general.
+
+\subsection{A smarter transformation}
+\todo[inline]{G: plug Micha\"els action/input/output algorithm here and prove
+correctness}
+
+
 
 \section{Universal co-B\"uchi games}
 In this section we present the Acacia~\cite{acacia} solution for the
@@ -634,17 +677,17 @@ $K_1 \leq K_2$, since the state space of the $\calS^{K_1}_\calN$ is smaller
 than that of $\calS^{K_2}_\calN$, the algorithm is usually ran with increasing
 values of $K$. That is, a safety game $\calS^{K}_\calN$ is constructed and
 solved and if the answer for the realizability problem is negative then we set
-$K := K + 1$ repeat the process until $K$ reaches its theoretical bound for
+$K := K + 1$ and repeat the process until $K$ reaches its theoretical bound for
 the game played on $\calN$ to be considered unrealizable (see~\Cref{lem:converse}).
 
 Presently, we will argue that one can avoid reconstructing a larger safety
 game for each $K \in \mathbb{N}$ by starting from a large value $K_2$ and
 still being able to have an ``early stopping criterion'' (after $n$ iterations
-of the $\overline{\cpre}$) based on whether some $K_1 < K_2$ would be such
-that $\calS^{K_1}_\calN$ would have already allowed to determine the game
-played on $\calN$ is realizable (that is, $n$ iterations of $\overline{\cpre}$
-would have sufficed to reach a fixpoint in $\calS^{K_1}_\calN$ and Eve wins
-that game).
+of the $\overline{\cpre}$) based on whether some $K_1 < K_2$ is such that
+$\calS^{K_1}_\calN$ would have already allowed to determine the game played on
+$\calN$ is realizable (that is, $n$ iterations of $\overline{\cpre}$ would
+have sufficed to reach a fixpoint in $\calS^{K_1}_\calN$ and determine that
+Eve wins that game).
 
 In the sequel, we consider a fixed co-B\"uchi automaton $\calN = (Q,q_0,I
 \times O, \Delta,B)$, $K
@@ -654,15 +697,16 @@ In the sequel, we consider a fixed co-B\"uchi automaton $\calN = (Q,q_0,I
 \paragraph{More orders on functions and sets thereof.} Let $d \in \mathbb{N}$.
 For all $f,g \in \mathcal{F}$ we write $f \preceq_d g$ if for all $q \in Q$ it
 holds that $f(q),g(q) < d$ or $f(q) \leq g(q)$. (Recall our convention that
-$\bot < n$ for all $n \in \mathbb{N}$.) Additionally, for all $A,A' in \frakA$
+$\bot < n$ for all $n \in \mathbb{N}$.) Additionally, for all $A,A' \in \frakA$
 we write $A \sqsubseteq_d A'$ if for all $m \in A$ there exists $m' \in A'$
 such that $m \preceq_d m'$. Note that $\preceq_0$ coincides with $\preceq$.
 
 We can now formalize the early stopping criterion mentioned earlier.
 \begin{theorem}\label{thm:stop-criterion}
   Let $d,n \in \mathbb{N}$ with $n > 0$.  If $\{q_0 \mapsto d\} \in
-  \closedn{\overline{\cpre}^n(Q \setminus U)}$ and
-  $\overline{\cpre}^{n-1}(Q\setminus U) \sqsubseteq_d \overline{\cpre}^n(Q
+  \closedn{\overline{\cpre}^n(\calF \setminus U)}$ and
+  $\overline{\cpre}^{n-1}(\calF\setminus U) \sqsubseteq_d
+  \overline{\cpre}^n(\calF
   \setminus U)$ then Eve wins the game played on $\calN$.
 \end{theorem}
 To prove the claim, we need some auxiliary definitions and intermediate
@@ -682,9 +726,9 @@ The following properties follow almost immediately from the definitions.
   \begin{enumerate}
     \item We have that $f \preceq_d g$ if and only
       if $f - d \preceq g - d$. \label{itm:ord-op}
-    \item For $\calS^{K'}_\calN = (\calF',f'_0,I \times O,T',U')$ the safety
-      game constructed with $K' = K + d$, we have that $(f,a,g) \in T$ if and
-      only if $(f - d, a, g - d) \in T')$ for all $a \in I \times O$.
+    \item Let $\calS^{K'}_\calN = (\calF',f'_0,I \times O,T',U')$ be the safety
+      game constructed with $K' = K + d$ and consider some $a \in I \times O$.
+      If $(f,a,g) \in T'$ then $(f - d, a, g - d) \in T$.
       \label{itm:op-games}
   \end{enumerate}
 \end{lemma}
@@ -695,7 +739,7 @@ underlies our proof of \Cref{thm:stop-criterion}.
 \begin{lemma}\label{lem:eq-games}
   Let $d \in \mathbb{N}_{>0}$ and consider the safety game $\calS^{K'}_\calN =
   (\calF',f'_0,I \times O,T',U')$ constructed with $K' = K + d$. Then,
-  \[\cpre^n(Q\setminus U) = \cpre^n(Q'\setminus U') - d\] for all $n \in
+  \[\cpre^n(\calF \setminus U) = \cpre^n(\calF'\setminus U') - d\] for all $n \in
   \mathbb{N}$.
 \end{lemma}
 \begin{proof}
@@ -705,36 +749,37 @@ underlies our proof of \Cref{thm:stop-criterion}.
   Below, we first argue that right-to-left inclusion holds and then
   prove the other direction.
 
-  Suppose $f \in \cpre^{n+1}(Q'\setminus U')$. This means that for all $i \in I$
+  Suppose $f \in \cpre^{n+1}(\calF'\setminus U')$. This means that for all $i \in I$
   there is some $o \in O$ such that $T'(f,\langle i , o \rangle) \in
-  \cpre^{n}(Q' \setminus U')$. Hence, there is a mapping $\mu : I \to
-  \cpre^n(Q' \setminus U')$ such that for all $i \in I$ there is some $o \in
+  \cpre^{n}(\calF' \setminus U')$. Hence, there is a mapping $\mu : I \to
+  \cpre^n(\calF' \setminus U')$ such that for all $i \in I$ there is some $o \in
   O$ so that $T'(f,\langle i , o \rangle) = \mu(i)$. By
   \Cref{lem:simple-props} \Cref{itm:op-games} we get that for all $i \in I$
-  there is some $o \in O$ such that $T(f - d, \langle i, o \rangle) = \mu(i)$.
-  This means $f - d \in \cpre^{n+1}(Q\setminus U)$.
+  there is some $o \in O$ such that $T(f - d, \langle i, o \rangle) = \mu(i) -
+  d$. This means $f - d \in \cpre^{n+1}(\calF\setminus U)$.
 
-  For the remaining direction, suppose $f \in \cpre^{n+1}(Q \setminus U)$.
-  This means that for all $i \in I$ there is some $o \in O$ such that 
+  For the remaining direction, suppose $f \in \cpre^{n+1}(\calF \setminus U)$.
+  This means that for all $i \in I$ there is some $o \in O$ such that:
   \[
-    T(f, \langle i , o \rangle) \in \cpre^n(Q \setminus U) =
-    \cpre^n(Q'\setminus U') -d 
+    T(f, \langle i , o \rangle) \in \cpre^n(\calF \setminus U) =
+    \cpre^n(\calF'\setminus U') -d,
   \]
   with the latter equality being true because of our inductive hypothesis.
-  Hence, there is a mapping $\mu : I \to \cpre^n(Q' \setminus U')$ such that
+  Hence, there is a mapping $\mu : I \to \cpre^n(\calF' \setminus U')$ such that
   for all $i \in I$ there is some $o \in O$ for which $T(f, \langle i, o
-  \rangle) = \mu(i) - d$. We will now argue that $f + d \in \cpre^n(Q'
-  \setminus U')$ so that $((f+d)-d) = f$ is seen to be in $\cpre^n(Q'
+  \rangle) = \mu(i) - d$. We will now argue that $f + d \in \cpre^{n+1}(\calF'
+  \setminus U')$ so that $((f+d)-d) = f$ is seen to be in $\cpre^{n+1}(\calF'
   \setminus U') - d$. Consider some arbitrary $i \in I$ and 
   note that $T'(f + d, \langle i , o \rangle)$ may not
   necessarily be equal to $\mu(i)$. However, the following does hold:
   \[
     T'(f+d, \langle i , o \rangle) = ((\mu(i) -d) + d) \preceq \mu(i).
   \]
-  Recall that $\cpre^n(Q' \setminus U')$ is downward closed (see
-  \Cref{pro:down-closed}). It follows that $((\mu(i) -d ) + d) \in \cpre^n(Q'
+  Recall that $\cpre^n(\calF' \setminus U')$ is downward closed (see
+  \Cref{pro:down-closed}). It follows that $((\mu(i) -d ) + d) \in
+  \cpre^n(\calF'
   \setminus U')$. Since $i$ was arbitrary, we conclude that $f + d \in
-  \cpre^n(Q' \setminus U')$. \qed
+  \cpre^{n+1}(\calF' \setminus U')$. \qed
 \end{proof}
 
 We are now ready to prove the main result of this section.
@@ -742,35 +787,35 @@ We are now ready to prove the main result of this section.
   Let us first restate the claim using notation that will be convenient for
   the sequel. We write $K' = K + d$ and denote by $\calS_\calN^{K'} =
   (\calF',f'_0,I \times O, T',U')$ the corresponding safety game. We prove
-  below that if $\{q_0 \mapsto d\} \in \closedn{\overline{\cpre}^n(Q'
-  \setminus U')}$ and $\overline{\cpre}^{n-1}(Q'\setminus U') \sqsubseteq_d
-  \overline{\cpre}^n(Q' \setminus U')$ then $f_0$ is winning for Eve in
+  below that if $\{q_0 \mapsto d\} \in \closedn{\overline{\cpre}^n(\calF'
+  \setminus U')}$ and $\overline{\cpre}^{n-1}(\calF'\setminus U') \sqsubseteq_d
+  \overline{\cpre}^n(\calF' \setminus U')$ then $f_0$ is winning for Eve in
   the game played on $\calN$.
 
   From \Cref{lem:simple-props} \Cref{itm:ord-op} we have:
   \begin{align*}
-    &\overline{\cpre}^{n-1}(Q' \setminus U') \sqsubseteq_d
-    \overline{\cpre}^n(Q' \setminus U')\\
-    \iff & \overline{\cpre}^{n-1}(Q' \setminus U') - d \sqsubseteq_0
-    \overline{\cpre}^n(Q' \setminus U') - d.
+    &\overline{\cpre}^{n-1}(\calF' \setminus U') \sqsubseteq_d
+    \overline{\cpre}^n(\calF' \setminus U')\\
+    \iff & \overline{\cpre}^{n-1}(\calF' \setminus U') - d \sqsubseteq_0
+    \overline{\cpre}^n(\calF' \setminus U') - d.
   \end{align*}
   Furthermore, we have the following equalities:
   \begin{align*}
-    \overline{\cpre}^n(Q' \setminus U') - d = & \lceil \cpre^n(Q' \setminus
+    \overline{\cpre}^n(\calF' \setminus U') - d = & \lceil \cpre^n(\calF' \setminus
     U'\rceil -d & \text{by def.}\\
     %
-    = & \lceil \cpre^n(Q' \setminus U') -d \rceil & \text{trivial}\\
+    = & \lceil \cpre^n(\calF' \setminus U') -d \rceil & \text{trivial}\\
     %
-    = & \lceil \cpre^n(Q \setminus U) \rceil & \text{\Cref{lem:eq-games}}\\
+    = & \lceil \cpre^n(\calF \setminus U) \rceil & \text{\Cref{lem:eq-games}}\\
     %
-    = & \overline{\cpre}^n(Q \setminus U) & \text{by def.}
+    = & \overline{\cpre}^n(\calF \setminus U) & \text{by def.}
   \end{align*}
-  Now, since $\cpre^n(Q \setminus U), \cpre^{n-1}(Q \setminus U)$ are downward
+  Now, since $\cpre^n(\calF \setminus U), \cpre^{n-1}(\calF \setminus U)$ are downward
   closed (see \Cref{pro:down-closed}) and $\cpre$ is a monotone operator then
-  the above means they are equivalent. That is, we have that $\cpre^n(Q
-  \setminus U) = \cpre^{n-1}(Q \setminus U)$. If $g = \{q_0 \mapsto d\}$ is in
-  $\closedn{ \overline{cpre}^n(Q' \setminus U') }$ then by
-  \Cref{lem:eq-games} we know $g - d = f_0$ is in $\cpre^n(Q \setminus U)$ and
+  the above means they are equivalent. That is, we have that $\cpre^n(\calF
+  \setminus U) = \cpre^{n-1}(\calF \setminus U)$. If $g = \{q_0 \mapsto d\}$ is in
+  $\closedn{ \overline{\cpre}^n(\calF' \setminus U') }$ then by
+  \Cref{lem:eq-games} we know $g - d = f_0$ is in $\cpre^n(\calF \setminus U)$ and
   Eve wins from $f_0$ in $S^K_\calN$ thus the game played on $\calN$
   by \Cref{lem:safe-to-gen}.
 \end{proof}
@@ -784,9 +829,10 @@ $k'$), the following result allows us to apply binary search.
 
 \begin{corollary}
   Let $n,d,d' \in \mathbb{N}_{>0}$ with $d \leq d'$. If
-  $\overline{\cpre}^{n-1}(Q\setminus U) \sqsubseteq_d \overline{\cpre}^n(Q
-  \setminus U)$ then $\overline{\cpre}^{n-1}(Q\setminus U) \sqsubseteq_{d'}
-  \overline{\cpre}^n(Q \setminus U)$.
+  $\overline{\cpre}^{n-1}(\calF\setminus U) \sqsubseteq_d
+  \overline{\cpre}^n(\calF
+  \setminus U)$ then $\overline{\cpre}^{n-1}(\calF\setminus U) \sqsubseteq_{d'}
+  \overline{\cpre}^n(\calF \setminus U)$.
 \end{corollary}
 The implication stated above follows directly from \Cref{lem:eq-games}.
 
