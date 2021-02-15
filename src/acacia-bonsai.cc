@@ -14,14 +14,17 @@
 #include "common_sys.hh"
 
 #include "k-bounded_safety_aut.hh"
+#include "k-bounded_safety_aut_work.hh"
+#include "k-bounded_safety_aut_work_only_inputs_01-08.hh"
 #include "k-bounded_safety_aut_2step.hh"
 #include "k-bounded_safety_aut_2step_nosplit.hh"
 #include "k-bounded_safety_aut_2step_nosplit_crit.hh"
 #include "k-bounded_safety_aut_2step_nosplit_crit_incr.hh"
+#include "k-bounded_safety_aut_work-save-01-11-working-inputs2.hh"
 
-#include "vectors.hh"
-#include "sets.hh"
-#include "static_switch.hh"
+#include "vector/vector.hh"
+#include "set/set.hh"
+#include "utils/static_switch.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -47,7 +50,7 @@ enum {
   OPT_OUTPUT = 'o',
   OPT_STRAT = 's',
   OPT_VERBOSE = 'v'
-};
+} ;
 
 static const argp_option options[] = {
   /**************************************************/
@@ -199,8 +202,12 @@ namespace {
           sw.start ();
 
 #define VECTOR_ELT_T char
-#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_2step_nosplit_crit_incr
-#define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
+#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_work
+#ifdef NDEBUG
+# define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
+#else
+# define STATIC_SIMD_ARRAY_MAX 0
+#endif
 #define OTHER_VECTOR_IMPL vector_simd_vector
 #define SET_IMPL set_antichain_vector
 

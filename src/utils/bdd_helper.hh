@@ -5,10 +5,16 @@
 /// a map<> with this as (part of a) key, since map<>s are key-sorted.
 class bdd_t : public bdd {
   public:
-    bdd_t (bdd b) : bdd { b } {}
+    bdd_t (bdd b) : bdd {b} {}
+
+    bdd_t (bdd&& b) : bdd {b} {}
 
     bool operator< (const bdd_t& other) const {
       return id () < other.id ();
+    }
+
+    bool operator== (const bdd_t& other) const {
+      return id () == other.id ();
     }
 };
 

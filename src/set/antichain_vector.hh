@@ -18,6 +18,8 @@ class set_antichain_vector {
   public:
     set_antichain_vector () {}
 
+    typedef Vector value_type;
+
     set_antichain_vector (const set_antichain_vector& other) :
       vector_set{other.vector_set} {}
 
@@ -202,6 +204,11 @@ class set_antichain_vector {
         new_set.push_back (std::move (changed_el)); // May not be an antichain, but speeds up.
       }
       vector_set = std::move (new_set);
+    }
+
+    void bump (const Vector& v) {
+      auto it = std::find (vector_set.begin (), vector_set.end (), v);
+      std::rotate (it, std::next (it), vector_set.end ());
     }
 
     auto        begin ()      { return vector_set.begin (); }

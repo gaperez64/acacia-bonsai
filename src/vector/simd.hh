@@ -4,7 +4,7 @@
 #include <experimental/simd>
 #include <iostream>
 
-#include "vector_simd_traits.hh"
+#include "vector/simd_traits.hh"
 
 // Biggest SIMD vector natively implemented by the library.
 

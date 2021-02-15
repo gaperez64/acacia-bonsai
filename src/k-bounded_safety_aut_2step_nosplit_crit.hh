@@ -5,7 +5,7 @@
 
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>
-#include "bdd_helper.hh"
+#include "utils/bdd_helper.hh"
 
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.

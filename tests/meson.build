@@ -391,10 +391,17 @@ foreach folder, testset : test_files
                 args : [ '-p', ## prefix every line with the name of the test
                          opt,  ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
                          '-F', files (filename) ],
-                suite : [ backend,
-                          backend + '/' + size,
-                          backend + '/' + folder + '/' + size,
-                          backend + '/' + folder ],
+                suite : [
+                  backend,
+                  backend + '/' + size,
+                  backend + '/' + folder + '/' + size,
+                  backend + '/' + folder,
+                  'all/' + file,
+                  'all',
+                  'all' + '/' + size,
+                  'all' + '/' + folder + '/' + size,
+                  'all' + '/' + folder
+                ],
                 timeout: 30)
         endforeach
       endforeach
@@ -469,10 +476,17 @@ foreach folder, testsets : benchmark_files
                    args : [ '-p',  ## prefix every line with the name of the test
                             opt,  ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
                             '-F', files (filename) ],
-                   suite : [ backend,
+                   suite : [ 
+                             backend,
                              backend + '/' + set,
                              backend + '/' + folder + '/' + set,
-                             backend + '/' + folder ],
+                             backend + '/' + folder,
+                             'all/' + file,
+                             'all',
+                             'all' + '/' + set,
+                             'all' + '/' + folder + '/' + set,
+                             'all' + '/' + folder
+                   ],
                    timeout: 10)
       endforeach
     endforeach

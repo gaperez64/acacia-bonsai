@@ -4,7 +4,7 @@
 #include <experimental/simd>
 #include <iostream>
 
-#include "vector_simd_traits.hh"
+#include "vector/simd_traits.hh"
 
 template <typename T, size_t nsimds>
 class vector_simd_array_;

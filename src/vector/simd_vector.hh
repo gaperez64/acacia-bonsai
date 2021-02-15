@@ -3,7 +3,7 @@
 #include <experimental/simd>
 #include <iostream>
 
-#include "vector_simd_traits.hh"
+#include "vector/simd_traits.hh"
 
 template <typename T>
 class vector_simd_vector {

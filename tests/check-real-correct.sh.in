@@ -95,6 +95,7 @@ part=${part:-${ltl/.ltl/.part}}
 
 shift $((OPTIND - 1))
 extra_opts+=("$@")
+#extra_opts+=(-v)
 
 if (( ${#progs} == 0 )); then
     echo 'error: one program should be specified.'
@@ -121,8 +122,11 @@ case $ltl; in
     */realizable/*)   expect=0;;
     */unrealizable/*) expect=1;;
     *) echo 'Cannot guess if input is realizable.'
+       extra_opts_save=$extra_opts
+       extra_opts=()
        run_ltlsynt $ltl $part
        expect=$?
+       extra_opts=$extra_opts_save
        progs=(${progs#l}) # Remove l
        ;;
 esac
