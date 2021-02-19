@@ -43,10 +43,11 @@ namespace ios_precomputation {
         while (fvars != bddfalse) {
           auto var = bdd_var (fvars);
           auto input = fvar_to_input[var];
-          auto input_and_not_crossing_inputs = input & not_crossing_inputs;
-          if (input_and_not_crossing_inputs != bddfalse) { // Split
-            auto input_and_crossing_inputs = input & crossing_inputs;
-            assert (input_and_crossing_inputs != input && input_and_crossing_inputs != bddfalse);
+          auto input_and_crossing_inputs = input & crossing_inputs;
+          assert (input_and_crossing_inputs != bddfalse);
+          bdd input_and_not_crossing_inputs;
+          if (input_and_not_crossing_inputs != input &&
+              (input_and_not_crossing_inputs = input & not_crossing_inputs) != bddfalse) { // Split
             //assert (input == bdd_existcomp (input, input_support));
             auto it = powset.find (input);
             assert (it != powset.end ());
@@ -67,8 +68,14 @@ namespace ios_precomputation {
             //assert (input_and_not_crossing_inputs == bdd_existcomp (input_and_not_crossing_inputs, input_support));
             //assert (input_and_crossing_inputs == bdd_existcomp (input_and_crossing_inputs, input_support));
           }
-          else
-            powset[input].push_back (trans);
+          else {
+            // We need to change the input to reflect it is now more specific.
+            auto node_handler = powset.extract (input);
+            node_handler.key () = input_and_crossing_inputs;
+            node_handler.mapped ().push_back (trans);
+            powset.insert (std::move(node_handler));
+          }
+
 #warning Discussion point
           fvars = bdd_low (fvars);
         }
@@ -90,8 +97,9 @@ namespace ios_precomputation {
           using crossings_t = typename std::map<bdd_t, TransSet>;
           using input_to_ios_t = typename std::map<bdd_t, std::list<TransSet>>;
 
-          auto crossings = power_fakevars<crossings_t> (transition_enumerator (aut),
-                                                        [] (bdd b) { return b; });
+          auto crossings = power_fakevars<crossings_t> (
+            transition_enumerator (aut, transition_formater::src_and_dst (aut)),
+            [] (bdd b) { return b; });
 
           return power_fakevars<input_to_ios_t> (crossings,
                                                  [this] (bdd b) {

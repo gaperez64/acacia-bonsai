@@ -138,7 +138,7 @@ namespace {
         trans_.set_type(spot::postprocessor::BA);
         // "Desired characteristics": Small and state-based acceptance (implied by BA).
         trans_.set_pref(spot::postprocessor::Small |
-                        spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
+                        //spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
                         spot::postprocessor::SBAcc);
 
         if (want_time)
@@ -179,6 +179,8 @@ namespace {
 
         if (want_time)
           sw.start();
+
+        aut->merge_edges ();
 
         // Merges states that have the exact same outgoing edges. This method
         // compares the successors of states in the order in which they are

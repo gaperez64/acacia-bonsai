@@ -25,6 +25,7 @@ namespace ios_precomputation {
               it = powset.erase (it);
             }
             else {
+              it->first = mod_and_it;
               it->second.push_back (transs);
               ++it;
             }
@@ -48,8 +49,9 @@ namespace ios_precomputation {
           using crossings_t = typename std::list<std::pair<bdd, TransSet>>;
           using input_to_ios_t = typename std::list<std::pair<bdd, std::list<TransSet>>>;
 
-          auto crossings = power<crossings_t> (transition_enumerator (aut),
-                                               [] (bdd b) { return b; });
+          auto crossings = power<crossings_t> (
+            transition_enumerator (aut, transition_formater::src_and_dst (aut)),
+            [] (bdd b) { return b; });
 
           return power<input_to_ios_t> (crossings,
                                         [this] (bdd b) {

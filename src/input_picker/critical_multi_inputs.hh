@@ -30,10 +30,10 @@ namespace input_picker {
           return max_change;
         }
 
-
+        double v = 10;
         template <typename SetOfStates>
         auto operator() (const SetOfStates& F, ssize_t min_max_change = 9,
-                         ssize_t backup_min_max_change = 7) const {
+                         ssize_t backup_min_max_change = 7) {
           // Def: f is one-step-losing if there is an input i such that for all output o
           //           succ (f, <i,o>) \not\in F
           //      the input i is the *witness* of one-step-loss.
@@ -41,6 +41,11 @@ namespace input_picker {
           //        \exists f \in F, i \in C, i witnesses one-step-loss of F.
           // Algo: We go through all f in F, find an input i witnessing one-step-loss, add it to C.
 
+          v = v - 0.5;
+          if (v < 0) v = 0;
+          min_max_change = v;
+          backup_min_max_change = v / 2;
+          if (verbose) std::cout << "Current K: " << min_max_change  << std::endl;
           // Sort/randomize input_output_fwd_actions
           using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
           using input_and_actions_ref_list = std::list<input_and_actions_ref>;
@@ -117,7 +122,7 @@ namespace input_picker {
               critical_inputs = std::move (backup_critical_inputs);
           }
 #warning Discussion point
-#if 1
+#if 0
           // BUTCHER
           for (const auto& c : critical_inputs) {
             const auto& [input, actions] = c.get ();

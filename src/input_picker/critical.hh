@@ -1,5 +1,6 @@
 #pragma once
 
+#include <random>
 #include "actioner/actioner.hh"
 
 namespace input_picker {
@@ -8,10 +9,10 @@ namespace input_picker {
     struct critical {
       public:
         critical (FwdActions& fwd_actions, const Actioner& actioner, int verbose) :
-          fwd_actions {fwd_actions}, actioner {actioner}, verbose {verbose} {}
+          fwd_actions {fwd_actions}, actioner {actioner}, verbose {verbose}, gen {0} {}
 
         template <typename SetOfStates>
-        auto operator() (const SetOfStates& F) const {
+        auto operator() (const SetOfStates& F) {
           // Def: f is one-step-losing if there is an input i such that for all output o
           //           succ (f, <i,o>) \not\in F
           //      the input i is the *witness* of one-step-loss.
@@ -23,9 +24,9 @@ namespace input_picker {
           using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
           std::vector<input_and_actions_ref> V (fwd_actions.begin (),
                                                 fwd_actions.end ());
-          /*auto N = std::min (V.size (), 10ul);
-           std::shuffle (V.begin (), V.begin () + N, gen);
-           std::shuffle (V.begin () + N / 2, V.end (), gen);*/
+          //auto N = std::min (V.size (), 10ul);
+          //std::shuffle (V.begin (), begin () + N, gen);
+          //std::shuffle (V.begin () + N / 2, V.end (), gen);
 
           std::list<input_and_actions_ref> Cbar (V.begin (), V.end ());
 
@@ -99,7 +100,8 @@ namespace input_picker {
         FwdActions& fwd_actions;
         const Actioner& actioner;
         const int verbose;
-    };
+        std::mt19937 gen;
+   };
   }
 
   struct critical {
