@@ -1,5 +1,6 @@
 subdir ('spot-bin')
 subdir ('acacia-plus')
+subdir ('antichains')
 
 test_files = {
                'realizable' :
