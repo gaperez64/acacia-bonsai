@@ -259,12 +259,12 @@ automata are also memoryless determined.
 In this section we describe the encoding of both automata and games that we
 deal with, namely, \emph{symbolic automata}~\cite{dv17}. Then, we will briefly mention how
 such symbolic automata encode both infinite-word automata and games. Below,
-for a set $X$ of variables, we denote by $\mathbb{B}(X)$ the set of all
+for a set $X$ of propositional variables, we denote by $\mathbb{B}(X)$ the set of all
 Boolean formulas over $X$.
 \begin{definition}[Symbolic automata]
   A \emph{symbolic utomaton} is a tuple $\calA = (Q,q_0,X,\Delta)$ where $Q$
   is a finite set of states, $q_0 \in Q$ is the initial state, $X$ is a finite
-  set of \emph{atomic propositions}, and $\Delta \subseteq Q \times
+  set of propositional variables, and $\Delta \subseteq Q \times
   \mathbb{B}(X) \times Q$ is the transition relation.
 \end{definition}
 %

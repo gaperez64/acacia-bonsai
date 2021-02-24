@@ -7,7 +7,7 @@ project ('Acacia Bonsai', ['c', 'cpp'],
 
 spot_dep = dependency ('libspot')
 
-inc = include_directories ('gnulib', 'lib', 'std-simd')
+inc = include_directories ('gnulib', 'lib', 'std-simd', 'src')
 
 subdir ('gnulib')
 subdir ('lib')
