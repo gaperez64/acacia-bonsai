@@ -1,22 +1,57 @@
 #pragma once
 
-/* #define PRE_HAT_CACHE */
-#define PRE_HAT_ACTION_CACHE
+#undef MAX_CRITICAL_INPUTS
+#define MAX_CRITICAL_INPUTS 1
+
+#include <algorithm>
+#include <map>
+#include <functional>
+#include <random>
+#include <list>
+#include <chrono>
 
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>
-
 #include "utils/bdd_helper.hh"
+#include "utils/lambda_ptr.hh"
+#include "utils/ref_ptr_cmp.hh"
 
+#include "ios_precomputation/ios_precomputation.hh"
+#include "input_picker/input_picker.hh"
+#include "safe_states/safe_states.hh"
+#include "actioner/actioner.hh"
+
+//#define debug(A...) do { std::cout << A << std::endl; } while (0)
+#define debug(A...)
+#define debug_(A...) do { std::cout << A << std::endl; } while (0)
+//#define debug_(A...)
+//#define ASSERT(A...) assert (A)
+#define ASSERT(A...)
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.
-template <class State, class SetOfStates>
-class k_bounded_safety_aut {
+template <class SetOfStates,
+          class IOsPrecomputationMaker,
+          class ActionerMaker,
+          class InputPickerMaker,
+          class SafeStatesMaker>
+class k_bounded_safety_aut_detail {
+    typedef typename SetOfStates::value_type State;
+
   public:
-    k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
-                          bdd input_support, bdd output_support, int verbose) :
+    k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, int K,
+                                 bdd input_support, bdd output_support,
+                                 int verbose,
+                                 const IOsPrecomputationMaker& ios_precomputation_maker,
+                                 const ActionerMaker& actioner_maker,
+                                 const InputPickerMaker& input_picker_maker,
+                                 const SafeStatesMaker& safe_states_maker) :
       aut {aut}, K {K},
-      input_support {input_support}, output_support {output_support}, verbose {verbose}
+      input_support {input_support}, output_support {output_support}, verbose {verbose},
+      gen {0},
+      ios_precomputation_maker {ios_precomputation_maker},
+      actioner_maker {actioner_maker},
+      input_picker_maker {input_picker_maker},
+      safe_states_maker {safe_states_maker}
     { }
 
     spot::formula bdd_to_formula (bdd f) const {
@@ -24,259 +59,193 @@ class k_bounded_safety_aut {
     }
 
     bool solve () {
+      std::cout << "SOLVE" << std::endl;
+      debug_ ("#STATES " << aut->num_states ());
+
+      // Precompute the input and output actions.
+      auto inputs_to_ios = (ios_precomputation_maker.make (aut, input_support, output_support, verbose)) ();
+      auto actioner = actioner_maker.make (aut, inputs_to_ios, K, verbose);
+      auto input_output_fwd_actions = actioner.actions ();
       if (verbose)
-        std::cout << "Computing the set of safe states." << std::endl;
+        io_stats (input_output_fwd_actions);
 
-      SetOfStates&& F = safe_states ();
-      State init (aut->num_states ());
+      SetOfStates&& F = (safe_states_maker.template make<SetOfStates> (aut, K, verbose)) ();
 
-      for (unsigned p = 0; p < aut->num_states (); ++p)
-        init[p] = -1;
-      init[aut->get_init_state_number ()] = 0;
-      if (verbose)
-        std::cout << "Initial state: " << init << std::endl;
-
-      // Compute cpre^*(safe).
       int loopcount = 0;
+
+      auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner, verbose);
+
       do {
         loopcount++;
         if (verbose)
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
         F.clear_update_flag ();
-        cpre_inplace (F);
+
+        auto&& [input, valid] = input_picker (F);
+        if (not valid) { // No valid input found.
+          State init (aut->num_states ());
+          for (size_t p = 0; p < aut->num_states (); ++p)
+            init[p] = -1;
+          init[aut->get_init_state_number ()] = 0;
+          return F.contains (init);
+        }
+        cpre_inplace (F, input, actioner);
         if (verbose)
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
-      } while (F.updated ());
+      } while (1);
 
-      if (F.contains (init))
-        return true; // Alice wins.
-      else
-        return false;
+      std::abort ();
+      return false;
     }
 
-    SetOfStates unsafe_states () {
-      SetOfStates U;
-      State f (aut->num_states ());
-      for (unsigned src = 0; src < aut->num_states (); ++src)
-        f[src] = -1;
+    // Disallow copies.
+    k_bounded_safety_aut_detail (k_bounded_safety_aut_detail&&) = delete;
+    k_bounded_safety_aut_detail& operator= (k_bounded_safety_aut_detail&&) = delete;
 
-      for (unsigned src = 0; src < aut->num_states (); ++src) {
-        f[src] = K;
-        U.insert (f);
-        f[src] = -1;
-      }
-
-      U.upward_close (K);
-      return U;
-    }
-
-    SetOfStates safe_states () {
-      State f (aut->num_states ());
-
-      // So-called "Optimization 1" in ac+.
-      int nb_accepting_states = 0;
-      for (unsigned src = 0; src < aut->num_states (); ++src)
-        if (aut->state_is_accepting (src))
-          nb_accepting_states++;
-
-      auto c = std::vector<int> (aut->num_states ());
-      if (aut->state_is_accepting (aut->get_init_state_number ()))
-        c[aut->get_init_state_number ()] = 1;
-
-      bool has_changed = true;
-
-      while (has_changed) {
-        has_changed = false;
-
-        for (unsigned src = 0; src < aut->num_states (); ++src) {
-          int c_src_mod = std::min (nb_accepting_states + 1,
-                                    c[src] + (aut->state_is_accepting (src) ? 1 : 0));
-          for (const auto& e : aut->out (src))
-            if (c[e.dst] < c_src_mod) {
-              c[e.dst] = c_src_mod;
-              has_changed = true;
-            }
-        }
-      }
-
-      for (unsigned src = 0; src < aut->num_states (); ++src)
-        if (c[src] > nb_accepting_states)
-          f[src] = K - 1;
-        else
-          f[src] = 0;
-
-      SetOfStates S;
-      S.insert (f);
-      S.downward_close ();
-
-      return S;
-    }
+  private:
+    spot::twa_graph_ptr aut;
+    int K;
+    bdd input_support, output_support;
+    const int verbose;
+    std::mt19937 gen;
+    const IOsPrecomputationMaker& ios_precomputation_maker;
+    const ActionerMaker& actioner_maker;
+    const InputPickerMaker& input_picker_maker;
+    const SafeStatesMaker& safe_states_maker;
 
     // This computes F = CPre(F), in the following way:
     // UPre(F) = F \cap F2
     // F2 = \cap_{i \in I} F1i
     // F1i = \cup_{o \in O} PreHat (F, i, o)
-    void cpre_inplace (SetOfStates& F) {
+    template <typename Action, typename Actioner>
+    void cpre_inplace (SetOfStates& F, const Action& io_action, const Actioner& actioner) {
       SetOfStates F2;
 
       if (verbose > 1)
         std::cout << "Computing cpre(F) with maxelts (F) = " << std::endl
                   << F.max_elements ();
 
-      bool first_input = true;
-      bdd input_letters = bddtrue;
-
-      while (input_letters != bddfalse) {
-        bdd one_input_letter = pick_one_letter (input_letters, input_support);
-        bdd output_letters = bddtrue;
-
-        // NOTE: We're forcing iterative union/intersection; do we want to keep
-        // all ph/F1i's and give them to the SetOfStates all at once?
-
-        SetOfStates F1i;
-        do {
-          bdd&& one_output_letter = pick_one_letter (output_letters, output_support);
-          SetOfStates&& ph = pre_hat (F, one_input_letter, one_output_letter);
-          F1i.union_with (ph);
-        } while (output_letters != bddfalse);
-
-        if (verbose > 1)
-          std::cout << "maxelts (F1_{"
-                    << spot::bdd_to_formula (one_input_letter, aut->get_dict ())
-                    << "}) = "
-                    << std::endl << F1i.max_elements ();
-        if (first_input) {
-          F2 = std::move (F1i);
-          first_input = false;
-        } else
-          F2.intersect_with (F1i);
-        if (F2.empty ())
-          break;
+      const auto& [input, actions] = io_action.get ();
+      SetOfStates F1i;
+      for (const auto& action_vec : actions) {
+        if (verbose > 2)
+          std::cout << "one_output_letter:" << std::endl;
+        F1i.union_with (F.apply ([this, &action_vec, &actioner] (const auto& m) {
+          auto&& ret = actioner.apply (m, action_vec, actioner::direction::backward);
+          if (verbose > 2)
+            std::cout << "  " << m << " -> " << ret << std::endl;
+          return ret;
+        }));
       }
 
-      if (verbose > 1)
-        std::cout << "maxelts (F2) = " << std::endl << F2.max_elements ();
-
-      F.intersect_with (F2);
+      F.intersect_with (F1i);
       if (verbose > 1)
         std::cout << "maxelts (F) = " << std::endl << F.max_elements ();
     }
 
-    // Disallow copies.
-    k_bounded_safety_aut (k_bounded_safety_aut&&) = delete;
-    k_bounded_safety_aut& operator= (k_bounded_safety_aut&&) = delete;
-
-  private:
-    const spot::twa_graph_ptr& aut;
-    int K;
-    bdd input_support, output_support;
-    const int verbose;
-
-#ifdef PRE_HAT_ACTION_CACHE
-    using pre_hat_action = std::vector<std::pair<unsigned, bool>>;
-    std::map<std::pair<unsigned, bdd_t>, pre_hat_action>
-    pre_hat_action_cache;
-#endif
-
-#ifdef PRE_HAT_CACHE
-    std::map<std::pair<State, bdd_t>, State> pre_hat_cache;
-#endif
-
-#ifdef PRE_HAT_CACHE
-    State&
-#else
-    State
-#endif
-    pre_hat_one_state (const State& m, const bdd_t& io) {
-#ifdef PRE_HAT_CACHE
-      auto pair_m_io = std::make_pair (m, io);
-      try {
-        return pre_hat_cache.at (pair_m_io);
-      } catch (...) {
-        State &f = pre_hat_cache.emplace (pair_m_io, aut->num_states ()).first->second;
-#else
-        State f (aut->num_states ());
-#endif
-        for (unsigned p = 0; p < aut->num_states (); ++p) {
-          // If there are no transitions from p labeled io, then we propagate
-          // the value of the nonexisting sink, which is set to be K - 1.  Note
-          // that the value of the sink cannot decrease.
-          f[p] = K - 1;
-#ifdef PRE_HAT_ACTION_CACHE
-          auto& actions = ([this, p, &io] () -> auto& {
-            auto pair_p_io = std::make_pair (p, io);
-            try {
-              return pre_hat_action_cache.at (pair_p_io);
-            } catch (...) {
-              auto& actions = pre_hat_action_cache[pair_p_io];
-              for (const auto& e : aut->out (p)) {
-                unsigned q = e.dst;
-                if ((e.cond & io) != bddfalse)
-                  actions.push_back (std::make_pair (q, aut->state_is_accepting (q)));
-              }
-              return actions;
-            }}) ();
-
-          for (const auto& [q, q_final] : actions) {
-            f[p] = (int) std::min ((int) f[p], std::max (-1, (int) m[q] - (q_final ? 1 : 0)));
-            // If we reached the minimum possible value, stop going through states.
-            if (f[p] == -1)
-              break;
-          }
-#else
-          for (const auto& e : aut->out (p)) {
-            unsigned q = e.dst;
-            if ((e.cond & io) != bddfalse)
-              f[p] = (int) std::min ((int) f[p],
-                                     std::max (-1,
-                                               m[q] - (aut->state_is_accepting (q) ? 1 : 0)));
-          }
-#endif
-        }
-        if (verbose > 2)
-          std::cout << "pre_hat(" << m << "," << bdd_to_formula (io) << ") = "
-                    << f << std::endl;
-        return f;
-#ifdef PRE_HAT_CACHE
+    template <typename IToActions>
+    void io_stats (const IToActions& inputs_to_actions) {
+      size_t all_io = 0;
+      for (const auto& [inputs, ios] : inputs_to_actions) {
+        if (verbose > 1)
+          std::cout << "INPUT: " << bdd_to_formula (inputs)
+                    <<  " #ACTIONS: " << ios.size () << std::endl;
+        all_io += ios.size ();
       }
-#endif
+      auto ins = input_support;
+      size_t all_inputs_size = 1;
+      while (ins != bddtrue) {
+        all_inputs_size *= 2;
+        ins = bdd_high (ins);
+      }
+
+      auto outs = output_support;
+      size_t all_outputs_size = 1;
+      while (outs != bddtrue) {
+        all_outputs_size *= 2;
+        outs = bdd_high (outs);
+      }
+
+      std::cout << "INPUT GAIN: " << inputs_to_actions.size () << "/" << all_inputs_size
+                << " = " << (inputs_to_actions.size () * 100 / all_inputs_size) << "%\n"
+                << "IO GAIN: " << all_io << "/" << all_inputs_size * all_outputs_size
+                << " = " << (all_io * 100 / (all_inputs_size * all_outputs_size)) << "%"
+                << std::endl;
     }
 
-    // This computes DownwardClose{Pre_hat (m, i, o) | m \in F}, where Pre_hat (m, i, o) is
-    // the State f that maps p to
-    //    f(p) =  min_(p, <i,o>, q \in Delta) m(q) - CharFunction(B)(q).
-    SetOfStates pre_hat (const SetOfStates& F, bdd input_letter, bdd output_letter) {
-      bdd io = input_letter & output_letter;
+    /*
+     std::map<const action_vec*, action_vec> rev;
 
-      auto&& pre = F.apply ([this, &io] (const auto& m) { return pre_hat_one_state (m, io); });
+     State trans_ (const State& m, const action_vec& vec, trans::direction dir) {
+     if (dir == trans::direction::forward)
+     return trans_orig (m, vec, dir);
+     auto it = rev.find (&vec);
+     if (it != rev.end ())
+     return trans_orig (m, it->second, dir);
+     action_vec v (aut->num_states ());
 
-      // It may happen that pre is not downward closed anymore.
-      // See (G(in)->F(out)) * (G(!in)->F(!out)) with set_of_vectors implementation.
-      pre.downward_close ();
-      return pre;
-    }
-
-    // T = { (f, a, g) | g(q) = max_(p,a,q)\in\Delta f(p) + CharFun(B)(q).
-    State T (const State& f, bdd a) {
-      State g (aut->num_states ());
-
-      for (unsigned q = 0; q < aut->num_states (); ++q)
-        g[q] = -1;
-
-      for (unsigned p = 0; p < aut->num_states (); ++p)
-        for (const auto& e : aut->out (p))
-          g[e.dst] = std::max (g[e.dst], f[p] + (aut->state_is_accepting (e.dst) ? 1 : 0));
-
-      return g;
-    }
+     for (size_t p = 0; p < aut->num_states (); ++p)
+     for (const auto& [q, q_final] : vec[p])
+     v[q].push_back (std::pair (p, q_final));
+     return trans_orig (m,
+     rev.emplace (&vec, std::move (v)).first->second,
+     dir);
+     }
 
 
-    bdd pick_one_letter (bdd& letter_set, const bdd& support) const {
-      bdd one_letter = bdd_satoneset (letter_set,
-                                      support,
-                                      bddtrue);
-      letter_set -= one_letter;
-      return one_letter;
-    }
+     State trans_orig (const State& m, const action_vec& action_vec, trans::direction dir) {
+     State f (aut->num_states ());
+     using trans::direction;
+
+     for (size_t p = 0; p < aut->num_states (); ++p) {
+     if (dir == direction::forward)
+     f[p] = -1;
+     else
+     f[p] = K - 1;
+
+     for (const auto& [q, q_final] : action_vec[p]) {
+     if (dir == direction::forward) {
+     if (m[q] != -1)
+     f[p] = (int) std::max ((int) f[p], std::min (K, (int) m[q] + (q_final ? 1 : 0)));
+     } else
+     f[p] = (int) std::min ((int) f[p], std::max (-1, (int) m[q] - (q_final ? 1 : 0)));
+
+     // If we reached the extreme values, stop going through states.
+     if ((dir == direction::forward  && f[p] == K) ||
+     (dir == direction::backward && f[p] == -1))
+     break;
+     }
+     }
+     return f;
+     }*/
 
 };
+
+template <class SetOfStates,
+          class IOsPrecomputationMaker,
+          class ActionerMaker,
+          class InputPickerMaker,
+          class SafeStatesMaker>
+static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int K,
+                                        bdd input_support, bdd output_support,
+                                        int verbose,
+                                        const IOsPrecomputationMaker& ios_precomputation_maker,
+                                        const ActionerMaker& actioner_maker,
+                                        const InputPickerMaker& input_picker_maker,
+                                        const SafeStatesMaker& safe_states_maker) {
+  return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker, InputPickerMaker, SafeStatesMaker>
+    (aut, K, input_support, output_support, verbose, ios_precomputation_maker, actioner_maker, input_picker_maker, safe_states_maker);
+}
+
+template <class State, // TODO To be removed, deduced from SetOfStates,
+          class SetOfStates>
+static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
+                                  bdd input_support, bdd output_support,
+                                  int verbose) {
+  return k_bounded_safety_aut_maker<SetOfStates> (aut, K, input_support, output_support, verbose,
+                                                  ios_precomputation::fake_vars (),
+                                                  actioner::standard (),
+                                                  input_picker::critical (),
+                                                  safe_states::standard ()
+    );
+}

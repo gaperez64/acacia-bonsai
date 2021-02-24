@@ -46,7 +46,7 @@ namespace ios_precomputation {
           auto input_and_crossing_inputs = input & crossing_inputs;
           assert (input_and_crossing_inputs != bddfalse);
           bdd input_and_not_crossing_inputs;
-          if (input_and_not_crossing_inputs != input &&
+          if (input_and_crossing_inputs != input &&
               (input_and_not_crossing_inputs = input & not_crossing_inputs) != bddfalse) { // Split
             //assert (input == bdd_existcomp (input, input_support));
             auto it = powset.find (input);

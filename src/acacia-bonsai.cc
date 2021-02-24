@@ -13,14 +13,9 @@
 #include "common_setup.hh"
 #include "common_sys.hh"
 
+#include "aut_preprocessing/aut_preprocessing.hh"
+
 #include "k-bounded_safety_aut.hh"
-#include "k-bounded_safety_aut_work.hh"
-#include "k-bounded_safety_aut_work_only_inputs_01-08.hh"
-#include "k-bounded_safety_aut_2step.hh"
-#include "k-bounded_safety_aut_2step_nosplit.hh"
-#include "k-bounded_safety_aut_2step_nosplit_crit.hh"
-#include "k-bounded_safety_aut_2step_nosplit_crit_incr.hh"
-#include "k-bounded_safety_aut_work-save-01-11-working-inputs2.hh"
 
 #include "vector/vector.hh"
 #include "set/set.hh"
@@ -175,23 +170,19 @@ namespace {
         }
 
         ////////////////////////////////////////////////////////////////////////
-        // Simplify by merging (TODO: check if useful)
+        // Preprocess automaton
 
         if (want_time)
           sw.start();
 
-        aut->merge_edges ();
+        auto aut_preprocessing_maker = aut_preprocessing::surely_losing ();
+        (aut_preprocessing_maker.make (aut, all_inputs, all_outputs, opt_K, verbose)) ();
 
-        // Merges states that have the exact same outgoing edges. This method
-        // compares the successors of states in the order in which they are
-        // stored. Therefore, it is better to call it when you know that the
-        // edges are stored, e.g. after a call to merge_edges().
-        aut->merge_states();
         if (want_time)
           merge_time = sw.stop();
 
         if (verbose) {
-          std::cerr << "simplification done in " << merge_time
+          std::cerr << "preprocessing done in " << merge_time
                     << " seconds\nDPA has " << aut->num_states()
                     << " states\n";
           spot::print_hoa(std::cerr, aut, nullptr) << std::endl;
@@ -204,11 +195,11 @@ namespace {
           sw.start ();
 
 #define VECTOR_ELT_T char
-#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut_work
+#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut
 #ifdef NDEBUG
 # define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
 #else
-# define STATIC_SIMD_ARRAY_MAX 0
+# define STATIC_SIMD_ARRAY_MAX 3
 #endif
 #define OTHER_VECTOR_IMPL vector_simd_vector
 #define SET_IMPL set_antichain_vector
