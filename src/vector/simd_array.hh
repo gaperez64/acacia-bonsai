@@ -19,13 +19,21 @@ class vector_simd_array_ {
     static const auto simd_size = traits::simd_size;
 
   public:
-    vector_simd_array_ ([[maybe_unused]] size_t k) : k {k} {
+    vector_simd_array_ (size_t k) : k {k} {
       assert ((k + traits::simd_size - 1) / traits::simd_size == nsimds);
       ar[nsimds - 1] ^= ar[nsimds - 1];
     }
 
     vector_simd_array_ () = delete;
-    vector_simd_array_ (const self& other) : ar {other.ar}, k {other.k} {}
+    vector_simd_array_ (const self& other) = delete;
+    vector_simd_array_ (self&& other) = default;
+
+    // explicit copy operator
+    vector_simd_array_ copy () const {
+      auto res = vector_simd_array_ (k);
+      res.ar = ar;
+      return res;
+    }
 
     self& operator= (self&& other) {
       ar = std::move (other.ar);

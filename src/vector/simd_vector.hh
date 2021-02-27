@@ -19,8 +19,15 @@ class vector_simd_vector {
     }
 
     vector_simd_vector () = delete;
-    vector_simd_vector (const self& other) : k {other.k}, nsimds {other.nsimds},
-                                                           vec {other.vec} {}
+    vector_simd_vector (const self& other) = delete;
+    vector_simd_vector (self&& other) = default;
+
+    // explicit copy operator
+    self copy () const {
+      auto res = self (k);
+      res.vec = vec;
+      return res;
+    }
 
     self& operator= (self&& other) {
       assert (other.k == k and other.nsimds == nsimds);

@@ -7,3 +7,6 @@ struct ref_ptr_cmp {
       return std::addressof (lhs.get ()) < std::addressof (rhs.get ());
     }
 };
+
+template <typename T>
+using reference_wrapper_set = std::set<std::reference_wrapper<T>, ref_ptr_cmp<T>>;

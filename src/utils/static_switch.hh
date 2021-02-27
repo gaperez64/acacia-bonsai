@@ -11,7 +11,7 @@ using index_t = std::integral_constant<size_t, N>;
 template<size_t M>
 struct static_switch_t {
     template<class F, class...Args>
-    using R=std::invoke_result_t<F, index_t<0>, Args...>;
+    using R = std::invoke_result_t<F, index_t<0>, Args...>;
 
     template<class F, class G, class...Args>
     R<F, Args...> operator()(F&& f, G&& g, size_t i, Args&&...args) const {

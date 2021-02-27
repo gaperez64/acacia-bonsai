@@ -8,6 +8,10 @@ class vector_vector : public std::vector<int> {
 
     vector_vector (const vector_vector& other) : std::vector<int> (other), k {other.k} {}
 
+    vector_vector copy () const {
+      return vector_vector (*this);
+    }
+
     vector_vector& operator= (vector_vector&& other) {
       std::vector<int>::operator= (std::move (other));
       assert (k == other.k);

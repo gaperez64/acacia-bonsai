@@ -119,26 +119,29 @@ class k_bounded_safety_aut_detail {
     // F1i = \cup_{o \in O} PreHat (F, i, o)
     template <typename Action, typename Actioner>
     void cpre_inplace (SetOfStates& F, const Action& io_action, const Actioner& actioner) {
-      SetOfStates F2;
 
       if (verbose > 1)
         std::cout << "Computing cpre(F) with maxelts (F) = " << std::endl
                   << F.max_elements ();
 
       const auto& [input, actions] = io_action.get ();
-      SetOfStates F1i;
+      typename SetOfStates::value_type v (aut->num_states ());
+      for (size_t i = 0; i < aut->num_states (); ++i)
+        v[i] = -1;
+      SetOfStates F1i (std::move (v));
       for (const auto& action_vec : actions) {
         if (verbose > 2)
           std::cout << "one_output_letter:" << std::endl;
+
         F1i.union_with (F.apply ([this, &action_vec, &actioner] (const auto& m) {
           auto&& ret = actioner.apply (m, action_vec, actioner::direction::backward);
           if (verbose > 2)
             std::cout << "  " << m << " -> " << ret << std::endl;
-          return ret;
+          return std::move (ret);
         }));
       }
 
-      F.intersect_with (F1i);
+      F.intersect_with (std::move (F1i));
       if (verbose > 1)
         std::cout << "maxelts (F) = " << std::endl << F.max_elements ();
     }
@@ -147,7 +150,7 @@ class k_bounded_safety_aut_detail {
     void io_stats (const IToActions& inputs_to_actions) {
       size_t all_io = 0;
       for (const auto& [inputs, ios] : inputs_to_actions) {
-        if (verbose > 1)
+        if (verbose)
           std::cout << "INPUT: " << bdd_to_formula (inputs)
                     <<  " #ACTIONS: " << ios.size () << std::endl;
         all_io += ios.size ();

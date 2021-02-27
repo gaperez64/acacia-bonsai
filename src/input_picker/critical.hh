@@ -24,9 +24,10 @@ namespace input_picker {
           using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
           std::vector<input_and_actions_ref> V (fwd_actions.begin (),
                                                 fwd_actions.end ());
-          //auto N = std::min (V.size (), 10ul);
-          //std::shuffle (V.begin (), begin () + N, gen);
-          //std::shuffle (V.begin () + N / 2, V.end (), gen);
+          /*auto N = std::min (V.size (), 10ul);
+          std::shuffle (V.begin (), V.begin () + N, gen);
+           std::shuffle (V.begin () + N / 2, V.end (), gen);*/
+          /*std::shuffle (V.begin (), V.end (), gen);*/
 
           std::list<input_and_actions_ref> Cbar (V.begin (), V.end ());
 

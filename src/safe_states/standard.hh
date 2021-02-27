@@ -44,8 +44,7 @@ namespace safe_states {
             else
               f[src] = 0;
 
-          SetOfStates S;
-          S.insert (f);
+          SetOfStates S (std::move (f));
           S.downward_close ();
 
           return S;
