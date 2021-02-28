@@ -128,18 +128,21 @@ namespace utils {
     public:
       kdtree (std::vector<Vector>&& elements, const size_t dim) : dim(dim),
                                                                   vector_set{std::move (elements)} {
+        // WARNING: moved elements, so we can't really use it below! instead,
+        // use this->vector_set
         assert(this->vector_set.size () > 0);
         // we sort for each dimension
         std::vector<std::vector<size_t>> sorted (this->dim,
-                                                 std::vector<size_t>(elements.size()));
+                                                 std::vector<size_t>(vector_set.size()));
         for (size_t d = 0; d < this->dim; d++) {
           // initialize the indices
           std::iota (sorted[d].begin (), sorted[d].end (), 0);
           // we now sort the indices based on the dimension
-          std::stable_sort (sorted[d].begin(), sorted[d].end(),
-                            [&elements, &d](size_t i1, size_t i2) {
-                              return elements[i1][d] < elements [i2][d];
+          std::stable_sort (sorted[d].begin (), sorted[d].end (),
+                            [this, &d](size_t i1, size_t i2) {
+                              return this->vector_set[i1][d] < this->vector_set[i2][d];
                             });
+          assert(this->vector_set.size () == sorted[d].size ());
         }
         this->tree = recursive_build (sorted, 0);
       }
