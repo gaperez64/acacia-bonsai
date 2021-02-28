@@ -4,7 +4,7 @@
 #include <set>
 #include <vector>
 
-#include "vector_vector.hh"
+#include "vector/vector.hh"
 #include "kdtree.hh"
 
 int main() {
