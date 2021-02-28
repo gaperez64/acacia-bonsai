@@ -9,22 +9,22 @@
 namespace set {
   // Forward definition for the operator<<s.
   template <typename>
-  class kdtree;
+  class kdtree_set;
 }
 
 template <typename Vector>
-std::ostream& operator<<(std::ostream& os, const set::kdtree<Vector>& f);
+std::ostream& operator<<(std::ostream& os, const set::kdtree_set<Vector>& f);
 
 namespace set {
 
   template <typename Vector>
-  class kdtree {
+  class kdtree_set {
     private:
       std::shared_ptr<utils::kdtree<Vector>> tree;
       bool _updated = false;
 
       template <typename V>
-      friend std::ostream& ::operator<<(std::ostream& os, const kdtree<V>& f);
+      friend std::ostream& ::operator<<(std::ostream& os, const kdtree_set<V>& f);
 
       template <typename V>
       class disregard_first_component {
@@ -39,14 +39,14 @@ namespace set {
     public:
       typedef Vector value_type;
 
-      kdtree () = delete;
+      kdtree_set () = delete;
 
-      kdtree (std::vector<Vector>&& elements) noexcept {
+      kdtree_set (std::vector<Vector>&& elements) noexcept {
         assert (elements.size() > 0);
         this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (elements), elements[0].size());
       }
 
-      kdtree (Vector&& el) {
+      kdtree_set (Vector&& el) {
         auto v = std::vector<Vector> ();
         v.push_back (std::move (el));
         this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (v), el.size());
@@ -69,13 +69,13 @@ namespace set {
         for (const auto& v : backing_vector)
           ss.push_back (lambda (v));
 
-        return kdtree (std::move (ss));
+        return kdtree_set (std::move (ss));
       }
 
 
-      kdtree (const kdtree& other) : tree(other.tree) {}
+      kdtree_set (const kdtree_set& other) : tree(other.tree) {}
 
-      kdtree& operator= (kdtree&& other) {
+      kdtree_set& operator= (kdtree_set&& other) {
         this->tree = other.tree;
         return *this;
       }
@@ -92,7 +92,7 @@ namespace set {
         return this->_updated;
       }
 
-      bool operator== (const kdtree& other) const {
+      bool operator== (const kdtree_set& other) const {
         return this->tree == other.tree;
       }
 
@@ -106,7 +106,7 @@ namespace set {
        *    m * dim * n^(1-1/dim) +
        *    dim * (n+m) * lg(n+m) )
        */
-      void union_with (const kdtree& other) {
+      void union_with (const kdtree_set& other) {
         std::vector<Vector> result;
         result.reserve (this->size () + other.size ());
         // for all elements in this tree, if they are not strictly
@@ -143,7 +143,7 @@ namespace set {
        *    dim * n * m * lg(n * m) +
        *    n * m * dim * (nm)^(1-1/dim) )
        */
-      void intersect_with (const kdtree& other) {
+      void intersect_with (const kdtree_set& other) {
         std::vector<Vector> intersection;
         bool smaller_set = false;
         using cache_red_dim = std::set<std::reference_wrapper<const Vector>,
@@ -189,24 +189,22 @@ namespace set {
           // intersection, thus the set is updated.
           smaller_set |= not dominated;
         }
-
-        if (true or smaller_set) {
-          assert (intersection.size() > 0);
-          utils::kdtree<Vector> temp_tree(std::move (intersection), intersection[0].size());
-          std::vector<std::reference_wrapper<Vector>> inter_antichain;
-          for (auto& e : temp_tree) {
-            if (not temp_tree.dominates(e, true))
-              inter_antichain.push_back (std::ref (e));
-          }
-          auto vector_antichain = std::vector<Vector> ();
-          vector_antichain.reserve (inter_antichain.size ());
-          for (auto r : inter_antichain)
-            vector_antichain.push_back (std::move (r.get ()));
-
-          this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain),
-                                                                vector_antichain[0].size ());
-          _updated = true;
+        assert (intersection.size() > 0);
+        utils::kdtree<Vector> temp_tree(std::move (intersection), intersection[0].size());
+        std::vector<std::reference_wrapper<Vector>> inter_antichain;
+        for (auto& e : temp_tree) {
+          if (not temp_tree.dominates(e, true))
+            inter_antichain.push_back (std::ref (e));
+          else
+            _updated = true;
         }
+        auto vector_antichain = std::vector<Vector> ();
+        vector_antichain.reserve (inter_antichain.size ());
+        for (auto r : inter_antichain)
+          vector_antichain.push_back (std::move (r.get ()));
+
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain),
+                                                              vector_antichain[0].size ());
         assert (this->tree->is_antichain ());
       }
 
@@ -226,7 +224,7 @@ namespace set {
 }
 
 template <typename Vector>
-inline std::ostream& operator<<(std::ostream& os, const set::kdtree<Vector>& f) {
+inline std::ostream& operator<<(std::ostream& os, const set::kdtree_set<Vector>& f) {
 
   os << *(f.tree) << std::endl;
 

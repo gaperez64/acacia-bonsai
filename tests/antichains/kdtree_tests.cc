@@ -4,8 +4,9 @@
 #include <set>
 #include <vector>
 
-#include "set/kdtree.hh"
+#include "set/kdtree_set.hh"
 #include "vector/vector.hh"
+
 vector_vector vtov (const std::vector<int>& v) {
   vector_vector out (v.size ());
 
@@ -22,6 +23,11 @@ int main() {
   v2[0] = 2; v2[1] = 5; v2[2] = 1;
   vector_vector v3(dim);
   v3[0] = 4; v3[1] = 1; v3[2] = 1;
+  /*
+   * v1 = (1, 2, 3)
+   * v2 = (2, 5, 1)
+   * v3 = (4, 1, 1)
+   */
 
   // std::cout << "We have individual vectors!" << std::endl;
 
@@ -37,7 +43,7 @@ int main() {
    std::cout << std::endl;
    */
 
-  set::kdtree<vector_vector> set_one_elt ({v1});
+  set::kdtree_set<vector_vector> set_one_elt ({v1});
   set_one_elt.union_with (set_one_elt);
   assert (set_one_elt.contains (v1));
   assert (not set_one_elt.contains (v2));
@@ -49,13 +55,38 @@ int main() {
   assert (set_one_elt.contains (v1));
   assert (not set_one_elt.contains (v2));
 
-  set::kdtree<vector_vector> set (std::move (elements));
+  set::kdtree_set<vector_vector> set (std::move (elements));
   set.union_with (set);
+  assert (set.size () == 3);
+  /*
+   * Next, we will try S & S = S.
+   * Remember that: S = {
+   * v1 = (1, 2, 3),
+   * v2 = (2, 5, 1),
+   * v3 = (4, 1, 1),
+   * }
+   * so the "meets" will be S union {
+   * v1 & v2 = (1, 2, 1)
+   * v1 & v3 = (1, 1, 1)
+   * v2 & v3 = (2, 1, 1)
+   * }
+   * let's make sure these will be eliminated inside the intersection...
+   */
+  auto tree = utils::kdtree<vector_vector> (std::vector<vector_vector> ({
+    vtov ({1, 2, 3,}),
+    vtov ({2, 5, 1}),
+    vtov ({4, 1, 1}),
+  }), 5);
+  assert (tree.size () == 3);
+  assert (tree.dominates (vtov ({1, 2, 1}), true));
+  assert (tree.dominates (vtov ({1, 1, 1}), true));
+  assert (tree.dominates (vtov ({2, 1, 1}), true));
   set.intersect_with (set);
+  assert (set.size () == 3);
   set = set.apply ([] (const vector_vector& v) { return v; });
   assert (set.size () == 3);
 
-  // std::cout << "We built the kdtree!" << std::endl;
+  // std::cout << "We built the kdtree_set!" << std::endl;
 
   vector_vector v4(dim);
   v4[0] = 0; v4[1] = 1; v4[2] = 2;
@@ -78,10 +109,10 @@ int main() {
   others.emplace_back(v4);
   others.emplace_back(v5);
 
-  set::kdtree<vector_vector> other_set (std::move (others));
+  set::kdtree_set<vector_vector> other_set (std::move (others));
 
   /*
-   std::cout << "We built another kdtree! for ";
+   std::cout << "We built another kdtree_set! for ";
    for (auto e : others)
    std::cout << e << " ";
    std::cout << std::endl;
@@ -90,7 +121,7 @@ int main() {
   set.union_with (other_set);
 
   /*
-   std::cout << "We built a union kdtree of size " << set.size () << std::endl;
+   std::cout << "We built a union kdtree_set of size " << set.size () << std::endl;
    std::cout << "Is " << v2 << " in the union? " << set.contains (v2) << std::endl;
    std::cout << "Is " << v4 << " in the union? " << set.contains (v4) << std::endl;
    std::cout << "Is " << v5 << " in the union? " << set.contains (v5) << std::endl;
@@ -99,6 +130,8 @@ int main() {
   assert(set.contains(v4));
   assert(set.contains(v5));
 
+  // std::cout << "other set before intersection " << other_set << std::endl;
+  // std::cout << "set before intersection " << set << std::endl;
   other_set.intersect_with(set);
 
   /*
@@ -113,7 +146,7 @@ int main() {
   assert(other_set.contains(v4));
   assert(other_set.contains(v5));
 
-
+  // std::cout << "made it to other tests!" << std::endl;
   {
     auto tree = utils::kdtree<vector_vector> (std::vector<vector_vector> ({
       vtov ({7, 0, 9, 9, 7}),
@@ -121,16 +154,19 @@ int main() {
       vtov ({8, 0, 9, 9, 8}),
       vtov ({9, 0, 7, 7, 9})
         }), 5);
+    assert (tree.size () == 4);
+    assert (tree.dominates (vtov ({0, 0, 0, 0, 0}), true));
+    assert (tree.dominates (vtov ({6, 0, 9, 9, 7}), true));
     assert (tree.dominates (vtov ({7, 0, 9, 9, 7}), true));
   }
 
 
-  auto F1i = set::kdtree<vector_vector> (std::vector<vector_vector> ({
+  auto F1i = set::kdtree_set<vector_vector> (std::vector<vector_vector> ({
         vtov ({7, 0, 9, 9, 7}),
         vtov ({8, 0, 9, 9, 8}),
         vtov ({9, 0, 7, 7, 9})
       }));
-  auto F = set::kdtree<vector_vector> (std::vector<vector_vector> ({
+  auto F = set::kdtree_set<vector_vector> (std::vector<vector_vector> ({
         vtov ({7, 0, 9, 9, 7}),
         vtov ({8, 0, 9, 9, 8}),
         vtov ({9, 0, 7, 7, 9})

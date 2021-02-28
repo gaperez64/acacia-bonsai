@@ -65,6 +65,21 @@ namespace utils {
         // otherwise we need to create an inner node
         size_t axis = depth % this->dim;
         size_t median_idx = (length - 1) / 2;
+        // we want the median to be the greatest index with some value (in
+        // dimension = axis) we first try moving left, then right
+        while (median_idx > 0 &&
+           this->vector_set[sorted[axis][median_idx]][axis] ==
+           this->vector_set[sorted[axis][median_idx - 1]][axis])
+          median_idx--;
+        if (median_idx == 0) {
+          median_idx = (length - 1) / 2;
+          while (median_idx + 1 < length &&
+             this->vector_set[sorted[axis][median_idx]][axis] ==
+             this->vector_set[sorted[axis][median_idx + 1]][axis])
+            median_idx++;
+        } else {  // we did find a border!
+          median_idx--;
+        }
         // we have a median, so we can now prepare a map of flags to
         // "compress" the other lists
         std::map<size_t, bool> go_left;
@@ -85,11 +100,17 @@ namespace utils {
               right[d].push_back (sorted[d][i]);
           }
         }
-        assert (left[0].size () == median_idx + 1);
-        assert (right[0].size () == length - median_idx - 1);
+        assert (left[0].size () > 0);
+        assert (right[0].size () + left[0].size () == length);
         // we are now ready for the recursive calls and to create the node
         std::shared_ptr<kdtree_node> left_res = recursive_build (left, depth + 1);
-        std::shared_ptr<kdtree_node> right_res = recursive_build (right, depth + 1);
+        std::shared_ptr<kdtree_node> right_res;
+        // since the median might not be the largest index with the same entry
+        // in dimension d, the right node might actually be empty!
+        if (right[0].size () > 0)
+            right_res = recursive_build (right, depth + 1);
+        else
+            right_res = nullptr;
         return std::make_shared<kdtree_node>(left_res, right_res,
                                              this->vector_set[
                                                sorted[axis][median_idx]
@@ -100,6 +121,10 @@ namespace utils {
                                 bool strict,
                                 std::shared_ptr<kdtree_node> node,
                                 size_t depth = 0) const {
+        // if this is called on a null leaf, just return false (such trees are
+        // build when the median index is not the largest with its value)
+        if (node == nullptr)
+          return false;
         // if we are at a leaf, just check if it dominates
         if (node->left == nullptr) {
           auto po = v.partial_order (this->vector_set[node->value_idx]);
@@ -111,11 +136,8 @@ namespace utils {
           // we have to determine if left and right
           // have to be explored
           size_t axis = depth % this->dim;
-          if (strict && v[axis] >= node->location) {
+          if (v[axis] > node->location) {
             // we won't find dominating vectors on the left
-            return recursive_dominates (v, strict, node->right, depth + 1);
-          } else if (!strict && v[axis] > node->location) {
-            // in this case we also do not need to explore the left
             return recursive_dominates (v, strict, node->right, depth + 1);
           } else {
             // in this case we do have to explore both sub-trees
