@@ -1,61 +1,70 @@
 #pragma once
 
-class vector_vector : public std::vector<int> {
-  public:
-    vector_vector (unsigned int k) : std::vector<int> (k), k {k} {}
-    // Disallow creating a vector with no dimension.
-    vector_vector () = delete;
+namespace vector {
 
-    vector_vector (const vector_vector& other) : std::vector<int> (other), k {other.k} {}
+  template <typename T>
+  class standard : public std::vector<T> {
+    public:
+      standard (unsigned int k) : std::vector<T> (k), k {k} {}
+      // Disallow creating a vector with no dimension.
+      standard () = delete;
 
-    vector_vector copy () const {
-      return vector_vector (*this);
-    }
+    private:
+      standard (const standard& other) = default;
 
-    vector_vector& operator= (vector_vector&& other) {
-      std::vector<int>::operator= (std::move (other));
-      assert (k == other.k);
-      return *this;
-    }
+    public:
+      standard (standard&& other) = default;
 
-    vector_vector& operator= (const vector_vector&) = delete;
+      standard& operator= (standard&& other) {
+        std::vector<T>::operator= (std::move (other));
+        assert (k == other.k);
+        return *this;
+      }
 
-    class po_res {
-      public:
-        po_res (const vector_vector& lhs, const vector_vector& rhs) {
-          bleq = true;
-          bgeq = true;
-          for (unsigned i = 0; i < rhs.k; ++i) {
-            bleq = bleq and lhs[i] <= rhs[i];
-            bgeq = bgeq and lhs[i] >= rhs[i];
-            if (not bleq and not bgeq)
-              break;
+      standard& operator= (const standard&) = delete;
+
+      standard copy () const {
+        return *this;
+      }
+
+      class po_res {
+        public:
+          po_res (const standard& lhs, const standard& rhs) {
+            bleq = true;
+            bgeq = true;
+            for (unsigned i = 0; i < rhs.k; ++i) {
+              bleq = bleq and lhs[i] <= rhs[i];
+              bgeq = bgeq and lhs[i] >= rhs[i];
+              if (not bleq and not bgeq)
+                break;
+            }
           }
-        }
 
-        bool geq () { return bgeq; }
-        bool leq () { return bleq; }
-      private:
-        bool bgeq, bleq;
-    };
+          bool geq () { return bgeq; }
+          bool leq () { return bleq; }
+        private:
+          bool bgeq, bleq;
+      };
 
-    auto partial_order (const vector_vector& rhs) const {
-      return po_res (*this, rhs);
-    }
+      auto partial_order (const standard& rhs) const {
+        return po_res (*this, rhs);
+      }
 
-    vector_vector meet (const vector_vector& rhs) const {
-      vector_vector res (this->size ());
+      standard meet (const standard& rhs) const {
+        standard res (this->size ());
 
-      for (unsigned i = 0; i < rhs.k; ++i)
-        res[i] = std::min ((*this)[i], rhs[i]);
-      return res;
-    }
-  private:
-    const unsigned int k;
-};
+        for (unsigned i = 0; i < rhs.k; ++i)
+          res[i] = std::min ((*this)[i], rhs[i]);
+        return res;
+      }
+    private:
+      const unsigned int k;
+  };
+}
 
+template <typename T>
 inline
-std::ostream& operator<<(std::ostream& os, const vector_vector& v)
+std::ostream& operator<<(std::ostream& os, const vector::standard<T>& v)
 {
   os << "{ ";
   for (auto el : v)

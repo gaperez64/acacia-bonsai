@@ -201,21 +201,21 @@ namespace {
 #else
 # define STATIC_SIMD_ARRAY_MAX 1
 #endif
-#define OTHER_VECTOR_IMPL vector_simd_vector
-#define SET_IMPL antichain_vector
+#define OTHER_VECTOR_IMPL simd_vector
+#define SET_IMPL kdtree_set
 
         bool realizable =
           static_switch_t<STATIC_SIMD_ARRAY_MAX>{}(
             // Static value of v.
             [&] (auto v) {
-              using vect_t = vector_simd_array<VECTOR_ELT_T, v.value>;
+              using vect_t = vector::simd_array<VECTOR_ELT_T, v.value>;
               auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, set::SET_IMPL<vect_t>>
                 (aut, opt_K, all_inputs, all_outputs, verbose);
               return skn.solve ();
             },
             // Dynamic value
             [&] (int i) {
-              using vect_t = OTHER_VECTOR_IMPL<VECTOR_ELT_T>;
+              using vect_t = vector::OTHER_VECTOR_IMPL<VECTOR_ELT_T>;
               auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, set::SET_IMPL<vect_t>>
                 (aut, opt_K, all_inputs, all_outputs, verbose);
               return skn.solve ();

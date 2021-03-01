@@ -7,21 +7,33 @@
 #include "set/kdtree_set.hh"
 #include "vector/vector.hh"
 
-vector_vector vtov (const std::vector<int>& v) {
-  vector_vector out (v.size ());
+
+using ab_vector = vector::simd_vector<char>;
+
+ab_vector vtov (const std::vector<int>& v) {
+  ab_vector out (v.size ());
 
   for (size_t i = 0; i < v.size (); ++i)
     out[i] = v[i];
   return out;
 }
 
+std::vector<ab_vector> vvtovv (const std::vector<std::vector<int>>& vv) {
+  std::vector<ab_vector> out;
+  out.reserve (vv.size ());
+
+  for (size_t i = 0; i < vv.size (); ++i)
+    out[i] = vtov (vv[i]);
+  return out;
+}
+
 int main() {
   const size_t dim = 3;
-  vector_vector v1(dim);
+  ab_vector v1(dim);
   v1[0] = 1; v1[1] = 2; v1[2] = 3;
-  vector_vector v2(dim);
+  ab_vector v2(dim);
   v2[0] = 2; v2[1] = 5; v2[2] = 1;
-  vector_vector v3(dim);
+  ab_vector v3(dim);
   v3[0] = 4; v3[1] = 1; v3[2] = 1;
   /*
    * v1 = (1, 2, 3)
@@ -31,10 +43,10 @@ int main() {
 
   // std::cout << "We have individual vectors!" << std::endl;
 
-  std::vector<vector_vector> elements;
-  elements.emplace_back(v1);
-  elements.emplace_back(v2);
-  elements.emplace_back(v3);
+  std::vector<ab_vector> elements;
+  elements.emplace_back(v1.copy ());
+  elements.emplace_back(v2.copy ());
+  elements.emplace_back(v3.copy ());
 
   /*
    std::cout << "We have a vector of vectors now! ";
@@ -43,19 +55,19 @@ int main() {
    std::cout << std::endl;
    */
 
-  set::kdtree_set<vector_vector> set_one_elt ({v1});
+  set::kdtree_set<ab_vector> set_one_elt (v1.copy ());
   set_one_elt.union_with (set_one_elt);
   assert (set_one_elt.contains (v1));
   assert (not set_one_elt.contains (v2));
   assert (set_one_elt.size () == 1);
   set_one_elt.intersect_with (set_one_elt);
   assert (set_one_elt.size () == 1);
-  set_one_elt = set_one_elt.apply ([] (const vector_vector& v) { return v; });
+  set_one_elt = set_one_elt.apply ([] (const ab_vector& v) { return v.copy (); });
   assert (set_one_elt.size () == 1);
   assert (set_one_elt.contains (v1));
   assert (not set_one_elt.contains (v2));
 
-  set::kdtree_set<vector_vector> set (std::move (elements));
+  set::kdtree_set<ab_vector> set (std::move (elements));
   set.union_with (set);
   assert (set.size () == 3);
   /*
@@ -72,25 +84,25 @@ int main() {
    * }
    * let's make sure these will be eliminated inside the intersection...
    */
-  auto tree = utils::kdtree<vector_vector> (std::vector<vector_vector> ({
-    vtov ({1, 2, 3,}),
-    vtov ({2, 5, 1}),
-    vtov ({4, 1, 1}),
-  }), 5);
+  auto tree = utils::kdtree<ab_vector> (vvtovv ({
+        {1, 2, 3,},
+        {2, 5, 1},
+        {4, 1, 1},
+      }), 5);
   assert (tree.size () == 3);
   assert (tree.dominates (vtov ({1, 2, 1}), true));
   assert (tree.dominates (vtov ({1, 1, 1}), true));
   assert (tree.dominates (vtov ({2, 1, 1}), true));
   set.intersect_with (set);
   assert (set.size () == 3);
-  set = set.apply ([] (const vector_vector& v) { return v; });
+  set = set.apply ([] (const ab_vector& v) { return v.copy (); });
   assert (set.size () == 3);
 
   // std::cout << "We built the kdtree_set!" << std::endl;
 
-  vector_vector v4(dim);
+  ab_vector v4(dim);
   v4[0] = 0; v4[1] = 1; v4[2] = 2;
-  vector_vector v5(dim);
+  ab_vector v5(dim);
   v5[0] = 1; v5[1] = 1; v5[2] = 10;
 
   /*
@@ -105,11 +117,11 @@ int main() {
   assert(!set.contains(v5));
 
 
-  std::vector<vector_vector> others;
-  others.emplace_back(v4);
-  others.emplace_back(v5);
+  std::vector<ab_vector> others;
+  others.emplace_back(v4.copy ());
+  others.emplace_back(v5.copy ());
 
-  set::kdtree_set<vector_vector> other_set (std::move (others));
+  set::kdtree_set<ab_vector> other_set (std::move (others));
 
   /*
    std::cout << "We built another kdtree_set! for ";
@@ -148,11 +160,11 @@ int main() {
 
   // std::cout << "made it to other tests!" << std::endl;
   {
-    auto tree = utils::kdtree<vector_vector> (std::vector<vector_vector> ({
-      vtov ({7, 0, 9, 9, 7}),
-      vtov ({8, 0, 7, 7, 8}),
-      vtov ({8, 0, 9, 9, 8}),
-      vtov ({9, 0, 7, 7, 9})
+    auto tree = utils::kdtree<ab_vector> (vvtovv ({
+          {7, 0, 9, 9, 7},
+          {8, 0, 7, 7, 8},
+          {8, 0, 9, 9, 8},
+          {9, 0, 7, 7, 9}
         }), 5);
     assert (tree.size () == 4);
     assert (tree.dominates (vtov ({0, 0, 0, 0, 0}), true));
@@ -161,15 +173,15 @@ int main() {
   }
 
 
-  auto F1i = set::kdtree_set<vector_vector> (std::vector<vector_vector> ({
-        vtov ({7, 0, 9, 9, 7}),
-        vtov ({8, 0, 9, 9, 8}),
-        vtov ({9, 0, 7, 7, 9})
+  auto F1i = set::kdtree_set<ab_vector> (vvtovv ({
+        {7, 0, 9, 9, 7},
+        {8, 0, 9, 9, 8},
+        {9, 0, 7, 7, 9}
       }));
-  auto F = set::kdtree_set<vector_vector> (std::vector<vector_vector> ({
-        vtov ({7, 0, 9, 9, 7}),
-        vtov ({8, 0, 9, 9, 8}),
-        vtov ({9, 0, 7, 7, 9})
+  auto F = set::kdtree_set<ab_vector> (vvtovv ({
+        {7, 0, 9, 9, 7},
+        {8, 0, 9, 9, 8},
+        {9, 0, 7, 7, 9}
       }));
 
   F.intersect_with (F1i);
