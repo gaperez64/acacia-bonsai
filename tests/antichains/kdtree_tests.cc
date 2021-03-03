@@ -182,13 +182,11 @@ void tests() {
         {8, 0, 9, 9, 8},
         {9, 0, 7, 7, 9}
       }));
-  std::cout << "F1i = " << F1i << std::endl;
   auto F = set::kdtree_set<VType> (vvtovv<VType> ({
         {7, 0, 9, 9, 7},
         {8, 0, 9, 9, 8},
         {9, 0, 7, 7, 9}
       }));
-  std::cout << "F = " << F << std::endl;
 
   F.intersect_with (F1i);
   assert (F.size () == 2);
