@@ -124,7 +124,7 @@ void tests() {
   others.emplace_back(v4.copy ());
   others.emplace_back(v5.copy ());
 
-  set::kdtree_set<VType> other_set (std::move (others));
+  set::kdtree_set<VType> set2 (std::move (others));
 
   /*
    std::cout << "We built another kdtree_set! for ";
@@ -133,7 +133,7 @@ void tests() {
    std::cout << std::endl;
    */
 
-  set.union_with (other_set);
+  set.union_with (set2);
 
   /*
    std::cout << "We built a union kdtree_set of size " << set.size () << std::endl;
@@ -145,9 +145,10 @@ void tests() {
   assert(set.contains(v4));
   assert(set.contains(v5));
 
-  // std::cout << "other set before intersection " << other_set << std::endl;
-  // std::cout << "set before intersection " << set << std::endl;
-  other_set.intersect_with(set);
+  std::vector<VType> others2;
+  others2.emplace_back(v4.copy ());
+  others2.emplace_back(v5.copy ());
+  set::kdtree_set<VType> other_set (std::move (others2));
 
   /*
    std::cout << "We built the intersection of last two sets, size = "

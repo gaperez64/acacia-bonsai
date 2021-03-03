@@ -130,7 +130,8 @@ namespace set {
           else
             _updated = true;
         }
-        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (result), result[0].size());
+        size_t size_before_move = result[0].size ();
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (result), size_before_move);
       }
 
       /* Intersection in place
@@ -175,7 +176,6 @@ namespace set {
            */
           auto& cv = ([&x, &split_cache, &other] () -> auto& {
             try {
-              assert(x.size () > 0);
               return split_cache.at (x[0]);
             } catch (...) {
               auto& cv = split_cache[x[0]];
@@ -225,9 +225,11 @@ namespace set {
         vector_antichain.reserve (inter_antichain.size ());
         for (auto r : inter_antichain)
           vector_antichain.push_back (std::move (r.get ()));
-
+        
+        size_t dim_before_move = vector_antichain[0].size ();
         this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain),
-                                                              vector_antichain[0].size ());
+                                                              dim_before_move);
+        assert (dim_before_move > 0);
         assert (this->tree->is_antichain ());
       }
 
