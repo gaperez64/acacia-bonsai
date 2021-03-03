@@ -128,9 +128,6 @@ namespace utils {
           return false;
         // if we are at a leaf, just check if it dominates
         if (node->left == nullptr) {
-          std::cout << "comparing " << v << " against "
-                    << this->vector_set[node->value_idx]
-                    << std::endl;
           auto po = v.partial_order (this->vector_set[node->value_idx]);
           if (strict)
             return po.leq () and not po.geq ();

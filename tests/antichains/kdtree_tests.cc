@@ -88,10 +88,10 @@ void tests() {
    * let's make sure these will be eliminated inside the intersection...
    */
   auto tree = utils::kdtree<VType> (vvtovv<VType> ({
-        {1, 2, 3,},
+        {1, 2, 3},
         {2, 5, 1},
         {4, 1, 1},
-      }), 5);
+      }), 3);
   assert (tree.size () == 3);
   assert (tree.dominates (vtov<VType> ({1, 2, 1}), true));
   assert (tree.dominates (vtov<VType> ({1, 1, 1}), true));
