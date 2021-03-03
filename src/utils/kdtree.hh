@@ -58,6 +58,7 @@ namespace utils {
       std::shared_ptr<kdtree_node>
       recursive_build (const std::vector<std::vector<size_t>>& sorted,
                        size_t depth) {
+        assert(sorted.size () > 0);
         // if the list of elements is now a singleton, we make a leaf
         size_t length = sorted[0].size ();
         if (length == 1)
@@ -127,6 +128,9 @@ namespace utils {
           return false;
         // if we are at a leaf, just check if it dominates
         if (node->left == nullptr) {
+          std::cout << "comparing " << v << " against "
+                    << this->vector_set[node->value_idx]
+                    << std::endl;
           auto po = v.partial_order (this->vector_set[node->value_idx]);
           if (strict)
             return po.leq () and not po.geq ();
@@ -152,6 +156,7 @@ namespace utils {
                                                                   vector_set{std::move (elements)} {
         // WARNING: moved elements, so we can't really use it below! instead,
         // use this->vector_set
+        assert(dim > 0);
         assert(this->vector_set.size () > 0);
         // we sort for each dimension
         std::vector<std::vector<size_t>> sorted (this->dim,
@@ -166,6 +171,8 @@ namespace utils {
                             });
           assert(this->vector_set.size () == sorted[d].size ());
         }
+        assert(sorted.size () == dim);
+        assert(sorted[0].size () == this->vector_set.size ());
         this->tree = recursive_build (sorted, 0);
       }
 

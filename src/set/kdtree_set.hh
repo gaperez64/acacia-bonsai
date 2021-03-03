@@ -48,8 +48,11 @@ namespace set {
 
       kdtree_set (Vector&& el) {
         auto v = std::vector<Vector> ();
+        // FUCK YOU and your std::moves Cadilhac, because you move el
+        // below, we have to first save the dimension to use it later
+        size_t dim = el.size ();
         v.push_back (std::move (el));
-        this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (v), el.size());
+        this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (v), dim);
       }
 
       auto max_elements () const {
@@ -114,7 +117,7 @@ namespace set {
         for (auto eit = this->tree->begin(); eit != this->tree->end(); ++eit) {
           auto& e = *eit;
           if (!other.tree->dominates(e, true))
-            result.push_back(std::move (e));
+            result.push_back(std::move (e)); // this requires a copy
           else
             _updated = true;
         }
