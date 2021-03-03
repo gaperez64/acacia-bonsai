@@ -21,10 +21,10 @@ VType vtov (const std::vector<int>& v) {
 template<typename VType>
 std::vector<VType> vvtovv (const std::vector<std::vector<int>>& vv) {
   std::vector<VType> out;
-  out.reserve (vv.size ());
+  //out.reserve (vv.size ());
 
   for (size_t i = 0; i < vv.size (); ++i)
-    out[i] = vtov<VType> (vv[i]);
+    out.emplace_back(vtov<VType> (std::move (vv[i]))); //out[i] = vtov<VType> (vv[i]);
   return out;
 }
 
@@ -101,7 +101,7 @@ void tests() {
   set = set.apply ([] (const VType& v) { return v.copy (); });
   assert (set.size () == 3);
 
-  // std::cout << "We built the kdtree_set!" << std::endl;
+  // std::cout << "We built the kdtree!" << std::endl;
 
   VType v4(dim);
   v4[0] = 0; v4[1] = 1; v4[2] = 2;
@@ -181,11 +181,13 @@ void tests() {
         {8, 0, 9, 9, 8},
         {9, 0, 7, 7, 9}
       }));
+  std::cout << "F1i = " << F1i << std::endl;
   auto F = set::kdtree_set<VType> (vvtovv<VType> ({
         {7, 0, 9, 9, 7},
         {8, 0, 9, 9, 8},
         {9, 0, 7, 7, 9}
       }));
+  std::cout << "F = " << F << std::endl;
 
   F.intersect_with (F1i);
   assert (F.size () == 2);
