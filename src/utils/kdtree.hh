@@ -83,17 +83,30 @@ namespace utils {
         }
         // we have a median, so we can now prepare a map of flags to
         // "compress" the other lists
-        std::map<size_t, bool> go_left;
+        //std::map<size_t, bool> go_left;
+        std::vector<bool> go_left (vector_set.size ());
+        bool some_flag = false;
         for (size_t i = 0; i < length; i++) {
           if (i <= median_idx)
             go_left[sorted[axis][i]] = true;
-          else
+          else {
             go_left[sorted[axis][i]] = false;
+            some_flag = true;
+          }
         }
+        if (not some_flag)
+          return std::make_shared<kdtree_node>(recursive_build (sorted, depth + 1),
+                                               nullptr,
+                                               this->vector_set[
+                                                 sorted[axis][median_idx]
+                                                 ][axis]);
+
         // we can start filling the sorted vectors for the recursive calls
         std::vector<std::vector<size_t>> left (this->dim);
         std::vector<std::vector<size_t>> right (this->dim);
         for (size_t d = 0; d < this->dim; d++) {
+          left[d].reserve (length);
+          right[d].reserve (length);
           for (size_t i = 0; i < length; i++) {
             if (go_left[sorted[d][i]])
               left[d].push_back (sorted[d][i]);
@@ -149,8 +162,20 @@ namespace utils {
       }
 
     public:
-      kdtree (std::vector<Vector>&& elements, const size_t dim) : dim(dim),
-                                                                  vector_set{std::move (elements)} {
+      kdtree (std::vector<Vector>&& elements, const size_t dim) : dim(dim) {
+        vector_set.reserve (elements.size ());
+
+        for (ssize_t i = elements.size () - 1; i >= 0; --i) {
+          bool unique = true;
+          for (ssize_t j = 0; j < i; ++j)
+            if (elements[j] == elements[i]) {
+              unique = false;
+              break;
+            }
+          if (unique)
+            vector_set.push_back (std::move (elements[i]));
+        }
+
         // WARNING: moved elements, so we can't really use it below! instead,
         // use this->vector_set
         assert(dim > 0);

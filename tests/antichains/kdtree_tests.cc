@@ -190,8 +190,21 @@ void tests() {
 
   F.intersect_with (F1i);
   assert (F.size () == 2);
-}
 
+  {
+    auto F = set::kdtree_set<VType> (vvtovv<VType> ({
+          {0, 7, 0, 0, 9, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+          {0, 8, 0, 0, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+          {-1, 8, -1, 0, 9, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+          {-1, 8, -1, 0, -1, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+          {-1, 7, -1, 0, -1, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+          {-1, 8, -1, 0, -1, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+          {-1, 8, -1, 0, -1, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+          {-1, 9, -1, 0, -1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        }));
+    assert (F.contains (vtov<VType> ({-1, 9, -1, 0, -1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})));
+  }
+}
 
 int main(int argc, char* argv[]) {
   if (std::string{"standard"}.compare(std::string{argv[1]}) == 0) {
@@ -199,7 +212,7 @@ int main(int argc, char* argv[]) {
   } else if (std::string{"simd"}.compare(std::string{argv[1]}) == 0) {
       tests<vector::simd_vector<char>>();
   } else {
-      assert(false); 
+      assert(false);
   }
 
   return 0;
