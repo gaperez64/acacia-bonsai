@@ -117,7 +117,7 @@ namespace set {
         for (auto eit = this->tree->begin(); eit != this->tree->end(); ++eit) {
           auto& e = *eit;
           if (!other.tree->dominates(e, true))
-            result.push_back(std::move (e)); // this requires a copy
+            result.push_back(e.copy ()); // this does requires a copy
           else
             _updated = true;
         }
