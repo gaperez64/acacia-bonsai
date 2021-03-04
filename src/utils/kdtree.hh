@@ -26,32 +26,21 @@ namespace utils {
           std::shared_ptr<kdtree_node> right;
           int location;
           size_t value_idx;
+          size_t depth;
 
           kdtree_node (size_t idx) : left (nullptr),
                                      right (nullptr),
-                                     value_idx (idx) {}
+                                     value_idx (idx),
+                                     depth (0) {}
           kdtree_node (std::shared_ptr<kdtree_node> l,
                        std::shared_ptr<kdtree_node> r,
-                       int loc) : left (l), right (r),
-                                  location (loc) {}
+                       int loc, size_t d) : left (l), right (r),
+                                            location (loc),
+                                            depth (d) {}
       };
       const size_t dim;
       std::shared_ptr<kdtree_node> tree;
-    public:
-      std::vector<Vector> vector_set;
 
-      bool is_antichain () const {
-        for (auto it = vector_set.begin (); it != vector_set.end (); ++it) {
-          for (auto it2 = it + 1; it2 != vector_set.end (); ++it2) {
-            auto po = it->partial_order (*it2);
-            if (po.leq () or po.geq ())
-              return false;
-          }
-        }
-        return true;
-      }
-
-    private:
       template <typename V>
       friend std::ostream& ::operator<< (std::ostream& os, const kdtree<V>& f);
 
@@ -60,11 +49,11 @@ namespace utils {
                        size_t depth) {
         assert(sorted.size () > 0);
         // if the list of elements is now a singleton, we make a leaf
-        size_t length = sorted[0].size ();
+        const size_t length = sorted[0].size ();
         if (length == 1)
           return std::make_shared<kdtree_node> (sorted[0][0]);
         // otherwise we need to create an inner node
-        size_t axis = depth % this->dim;
+        const size_t axis = depth % this->dim;
         size_t median_idx = (length - 1) / 2;
         // we want the median to be the greatest index with some value (in
         // dimension = axis) we first try moving left, then right
@@ -72,73 +61,60 @@ namespace utils {
            this->vector_set[sorted[axis][median_idx]][axis] ==
            this->vector_set[sorted[axis][median_idx - 1]][axis])
           median_idx--;
-        if (median_idx == 0) {
+        if (median_idx == 0) {  // no border found yet
           median_idx = (length - 1) / 2;
           while (median_idx + 1 < length &&
              this->vector_set[sorted[axis][median_idx]][axis] ==
              this->vector_set[sorted[axis][median_idx + 1]][axis])
             median_idx++;
-        } else {  // we did find a border!
+          if (median_idx == length - 1) {
+            // this dimension is useless, move to the next one
+            return recursive_build (sorted, depth + 1);
+          }
+        } else {  // a border was found
           median_idx--;
         }
-        // we have a median, so we can now prepare a map of flags to
+
+        // we have a median, so we have a location
+        const size_t loc = this->vector_set[sorted[axis][median_idx]][axis];
+        // and we can now prepare a map of flags to
         // "compress" the other lists
-        //std::map<size_t, bool> go_left;
         std::vector<bool> go_left (vector_set.size ());
-        bool some_flag = false;
         for (size_t i = 0; i < length; i++) {
           if (i <= median_idx)
             go_left[sorted[axis][i]] = true;
-          else {
+          else
             go_left[sorted[axis][i]] = false;
-            some_flag = true;
-          }
         }
-        if (not some_flag)
-          return std::make_shared<kdtree_node>(recursive_build (sorted, depth + 1),
-                                               nullptr,
-                                               this->vector_set[
-                                                 sorted[axis][median_idx]
-                                                 ][axis]);
 
         // we can start filling the sorted vectors for the recursive calls
-        std::vector<std::vector<size_t>> left (this->dim);
+        std::vector<std::vector<size_t>> left (std::move(sorted));
         std::vector<std::vector<size_t>> right (this->dim);
         for (size_t d = 0; d < this->dim; d++) {
-          left[d].reserve (length);
           right[d].reserve (length);
-          for (size_t i = 0; i < length; i++) {
-            if (go_left[sorted[d][i]])
-              left[d].push_back (sorted[d][i]);
-            else
-              right[d].push_back (sorted[d][i]);
+          for (auto it = left[d].begin(); it != left[d].end(); /* nothing */ ) {
+            auto it_val = *it;
+            if (!go_left[it_val]) {
+              right[d].push_back (it_val);
+              it = left[d].erase (it);
+            } else
+              ++it;
           }
         }
+        // some sanity checks
         assert (left[0].size () > 0);
+        assert (right[0].size () > 0);
         assert (right[0].size () + left[0].size () == length);
-        // we are now ready for the recursive calls and to create the node
-        std::shared_ptr<kdtree_node> left_res = recursive_build (left, depth + 1);
-        std::shared_ptr<kdtree_node> right_res;
-        // since the median might not be the largest index with the same entry
-        // in dimension d, the right node might actually be empty!
-        if (right[0].size () > 0)
-            right_res = recursive_build (right, depth + 1);
-        else
-            right_res = nullptr;
-        return std::make_shared<kdtree_node>(left_res, right_res,
-                                             this->vector_set[
-                                               sorted[axis][median_idx]
-                                               ][axis]);
+
+        return std::make_shared<kdtree_node>(recursive_build (left, depth + 1),
+                                             recursive_build (right, depth + 1),
+                                             loc, depth);
       }
 
       bool recursive_dominates (const Vector& v,
                                 bool strict,
-                                std::shared_ptr<kdtree_node> node,
-                                size_t depth = 0) const {
-        // if this is called on a null leaf, just return false (such trees are
-        // build when the median index is not the largest with its value)
-        if (node == nullptr)
-          return false;
+                                std::shared_ptr<kdtree_node> node) const {
+        assert (node != nullptr);
         // if we are at a leaf, just check if it dominates
         if (node->left == nullptr) {
           auto po = v.partial_order (this->vector_set[node->value_idx]);
@@ -149,19 +125,21 @@ namespace utils {
         } else {
           // we have to determine if left and right
           // have to be explored
-          size_t axis = depth % this->dim;
+          size_t axis = node->depth % this->dim;
           if (v[axis] > node->location) {
             // we won't find dominating vectors on the left
-            return recursive_dominates (v, strict, node->right, depth + 1);
+            return recursive_dominates (v, strict, node->right);
           } else {
             // in this case we do have to explore both sub-trees
-            return (recursive_dominates (v, strict, node->left, depth + 1) ||
-                    recursive_dominates (v, strict, node->right, depth + 1));
+            return (recursive_dominates (v, strict, node->left) ||
+                    recursive_dominates (v, strict, node->right));
           }
         }
       }
 
     public:
+      std::vector<Vector> vector_set;
+
       kdtree (std::vector<Vector>&& elements, const size_t dim) : dim(dim) {
         vector_set.reserve (elements.size ());
 
@@ -207,6 +185,18 @@ namespace utils {
         this->vector_set = std::move (other.vector_set);
         return *this;
       }
+
+      bool is_antichain () const {
+        for (auto it = vector_set.begin (); it != vector_set.end (); ++it) {
+          for (auto it2 = it + 1; it2 != vector_set.end (); ++it2) {
+            auto po = it->partial_order (*it2);
+            if (po.leq () or po.geq ())
+              return false;
+          }
+        }
+        return true;
+      }
+
 
       bool operator== (const kdtree& other) const {
         return vector_set == other.vector_set;
