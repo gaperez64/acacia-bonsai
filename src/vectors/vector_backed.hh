@@ -1,35 +1,35 @@
 #pragma once
 
-namespace vector {
+namespace vectors {
 
   template <typename T>
-  class standard : public std::vector<T> {
+  class vector_backed : public std::vector<T> {
     public:
-      standard (unsigned int k) : std::vector<T> (k), k {k} {}
+      vector_backed (unsigned int k) : std::vector<T> (k), k {k} {}
       // Disallow creating a vector with no dimension.
-      standard () = delete;
+      vector_backed () = delete;
 
     private:
-      standard (const standard& other) = default;
+      vector_backed (const vector_backed& other) = default;
 
     public:
-      standard (standard&& other) = default;
+      vector_backed (vector_backed&& other) = default;
 
-      standard& operator= (standard&& other) {
+      vector_backed& operator= (vector_backed&& other) {
         std::vector<T>::operator= (std::move (other));
         assert (k == other.k);
         return *this;
       }
 
-      standard& operator= (const standard&) = delete;
+      vector_backed& operator= (const vector_backed&) = delete;
 
-      standard copy () const {
+      vector_backed copy () const {
         return *this;
       }
 
       class po_res {
         public:
-          po_res (const standard& lhs, const standard& rhs) {
+          po_res (const vector_backed& lhs, const vector_backed& rhs) {
             bleq = true;
             bgeq = true;
             for (unsigned i = 0; i < rhs.k; ++i) {
@@ -46,12 +46,12 @@ namespace vector {
           bool bgeq, bleq;
       };
 
-      auto partial_order (const standard& rhs) const {
+      auto partial_order (const vector_backed& rhs) const {
         return po_res (*this, rhs);
       }
 
-      standard meet (const standard& rhs) const {
-        standard res (this->size ());
+      vector_backed meet (const vector_backed& rhs) const {
+        vector_backed res (this->size ());
 
         for (unsigned i = 0; i < rhs.k; ++i)
           res[i] = std::min ((*this)[i], rhs[i]);
@@ -64,7 +64,7 @@ namespace vector {
 
 template <typename T>
 inline
-std::ostream& operator<<(std::ostream& os, const vector::standard<T>& v)
+std::ostream& operator<<(std::ostream& os, const vectors::vector_backed<T>& v)
 {
   os << "{ ";
   for (auto el : v)

@@ -8,19 +8,19 @@
 #include <list>
 #include <functional>
 
-namespace set {
+namespace antichains {
   template <typename Vector>
-  class standard {
+  class full_set {
     public:
       typedef Vector value_type;
 
-      standard () {}
+      full_set () {}
 
-      standard (const standard&) = delete;
-      standard (standard&&) = default;
-      standard& operator= (standard&&) = default;
+      full_set (const full_set&) = delete;
+      full_set (full_set&&) = default;
+      full_set& operator= (full_set&&) = default;
 
-      standard (Vector&& v) {
+      full_set (Vector&& v) {
         insert (std::move (v));
       }
 
@@ -76,7 +76,7 @@ namespace set {
           _updated = true;
       }
 
-      standard max_elements () const {
+      full_set max_elements () const {
         std::set<Vector> maxelts;
 
         for (const auto& el : vector_set) {
@@ -98,7 +98,7 @@ namespace set {
           if (should_be_inserted)
             maxelts.insert (el.copy ());
         }
-        standard of_maxelts;
+        full_set of_maxelts;
         of_maxelts.vector_set = std::move (maxelts);
 
         return of_maxelts;
@@ -108,7 +108,7 @@ namespace set {
         return vector_set.empty ();
       }
 
-      void union_with (const standard& other) {
+      void union_with (const full_set& other) {
         size_t size = vector_set.size ();
         for (auto&& el : other)
           vector_set.insert (el.copy ());
@@ -116,7 +116,7 @@ namespace set {
         downward_close ();
       }
 
-      void intersect_with (const standard& other) {
+      void intersect_with (const full_set& other) {
         std::list<std::reference_wrapper<const Vector>> intersection;
         std::set_intersection(vector_set.cbegin (), vector_set.cend (),
                               other.vector_set.cbegin (), other.vector_set.cend (),
@@ -143,8 +143,8 @@ namespace set {
       }
 
       template <typename F>
-      standard apply (const F& lambda) const {
-        standard res;
+      full_set apply (const F& lambda) const {
+        full_set res;
         for (const auto& el : vector_set)
           res.insert (lambda (el));
         res.downward_close ();
@@ -164,7 +164,7 @@ namespace set {
 
 template <typename Vector>
 inline
-std::ostream& operator<<(std::ostream& os, const set::standard<Vector>& f)
+std::ostream& operator<<(std::ostream& os, const antichains::full_set<Vector>& f)
 {
   for (auto&& el : f)
     os << el << std::endl;

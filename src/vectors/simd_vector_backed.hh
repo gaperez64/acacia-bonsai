@@ -3,25 +3,25 @@
 #include <experimental/simd>
 #include <iostream>
 
-#include "vector/simd_traits.hh"
+#include "utils/simd_traits.hh"
 
-namespace vector {
+namespace vectors {
   template <typename T>
-  class simd_vector {
-      using self = simd_vector<T>;
-      using traits = simd_traits<T>;
+  class simd_vector_backed {
+      using self = simd_vector_backed<T>;
+      using traits = utils::simd_traits<T>;
       static const auto simd_size = traits::simd_size;
 
     public:
-      simd_vector (size_t k) : k {k},
+      simd_vector_backed (size_t k) : k {k},
                                nsimds {traits::nsimds (k)},
                                vec (nsimds) {
         vec.back () ^= vec.back ();
       }
 
-      simd_vector () = delete;
-      simd_vector (const self& other) = delete;
-      simd_vector (self&& other) = default;
+      simd_vector_backed () = delete;
+      simd_vector_backed (const self& other) = delete;
+      simd_vector_backed (self&& other) = default;
 
       // explicit copy operator
       self copy () const {
@@ -156,7 +156,7 @@ namespace vector {
 
 template <typename T>
 inline
-std::ostream& operator<<(std::ostream& os, const vector::simd_vector<T>& v)
+std::ostream& operator<<(std::ostream& os, const vectors::simd_vector_backed<T>& v)
 {
   os << "{ ";
   for (size_t i = 0; i < v.size (); ++i)

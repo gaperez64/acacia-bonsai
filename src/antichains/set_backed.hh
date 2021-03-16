@@ -7,23 +7,23 @@
 #include <cassert>
 #include "utils/ref_ptr_cmp.hh"
 
-namespace set {
+namespace antichains {
   template <typename Vector>
-  class antichain_set {
+  class set_backed {
     public:
       typedef Vector value_type;
 
     private:
-      antichain_set () {}
+      set_backed () {}
 
     public:
-      antichain_set (Vector&& v) noexcept {
+      set_backed (Vector&& v) noexcept {
         insert (std::move (v));
       }
 
-      antichain_set (const antichain_set&) = delete;
-      antichain_set (antichain_set&&) = default;
-      antichain_set& operator= (antichain_set&&) = default;
+      set_backed (const set_backed&) = delete;
+      set_backed (set_backed&&) = default;
+      set_backed& operator= (set_backed&&) = default;
 
       bool contains (const Vector& v) const {
         for (const auto& e : vector_set)
@@ -74,7 +74,7 @@ namespace set {
         // nil
       }
 
-      const antichain_set& max_elements () const {
+      const set_backed& max_elements () const {
         return *this;
       }
 
@@ -82,13 +82,13 @@ namespace set {
         return vector_set.empty ();
       }
 
-      void union_with (antichain_set&& other) {
+      void union_with (set_backed&& other) {
         for (auto it = other.begin (); it != other.end (); /* in-body */)
           _updated |= insert (std::move (other.vector_set.extract (it++).value ()));
       }
 
-      void intersect_with (const antichain_set& other) {
-        antichain_set intersection;
+      void intersect_with (const set_backed& other) {
+        set_backed intersection;
         bool smaller_set = false;
 
         for (const auto& x : vector_set) {
@@ -126,8 +126,8 @@ namespace set {
       }
 
       template <typename F>
-      antichain_set apply (const F& lambda) const {
-        antichain_set res;
+      set_backed apply (const F& lambda) const {
+        set_backed res;
         for (const auto& el : vector_set)
           res.insert (lambda (el));
         return res;
@@ -147,7 +147,7 @@ namespace set {
 
 template <typename Vector>
 inline
-std::ostream& operator<<(std::ostream& os, const set::antichain_set<Vector>& f)
+std::ostream& operator<<(std::ostream& os, const antichains::set_backed<Vector>& f)
 {
   for (auto&& el : f)
     os << el << std::endl;

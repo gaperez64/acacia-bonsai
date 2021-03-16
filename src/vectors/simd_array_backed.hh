@@ -4,34 +4,34 @@
 #include <experimental/simd>
 #include <iostream>
 
-#include "vector/simd_traits.hh"
+#include "utils/simd_traits.hh"
 
-namespace vector {
+namespace vectors {
   template <typename T, size_t nsimds>
-  class simd_array_;
+  class simd_array_backed_;
 
   template <typename T, size_t K>
-  using simd_array = simd_array_<T, simd_traits<T>::nsimds (K)>;
+  using simd_array_backed = simd_array_backed_<T, utils::simd_traits<T>::nsimds (K)>;
 
   template <typename T, size_t nsimds>
-  class simd_array_ {
-      using self = simd_array_<T, nsimds>;
-      using traits = simd_traits<T>;
+  class simd_array_backed_ {
+      using self = simd_array_backed_<T, nsimds>;
+      using traits = utils::simd_traits<T>;
       static const auto simd_size = traits::simd_size;
 
     public:
-      simd_array_ (size_t k) : k {k} {
+      simd_array_backed_ (size_t k) : k {k} {
         assert ((k + traits::simd_size - 1) / traits::simd_size == nsimds);
         ar[nsimds - 1] ^= ar[nsimds - 1];
       }
 
-      simd_array_ () = delete;
-      simd_array_ (const self& other) = delete;
-      simd_array_ (self&& other) = default;
+      simd_array_backed_ () = delete;
+      simd_array_backed_ (const self& other) = delete;
+      simd_array_backed_ (self&& other) = default;
 
       // explicit copy operator
-      simd_array_ copy () const {
-        auto res = simd_array_ (k);
+      simd_array_backed_ copy () const {
+        auto res = simd_array_backed_ (k);
         res.ar = ar;
         return res;
       }
@@ -131,7 +131,7 @@ namespace vector {
 
 template <typename T, size_t nsimds>
 inline
-std::ostream& operator<<(std::ostream& os, const vector::simd_array_<T, nsimds>& v)
+std::ostream& operator<<(std::ostream& os, const vectors::simd_array_backed_<T, nsimds>& v)
 {
   os << "{ ";
   for (size_t i = 0; i < v.size (); ++i)

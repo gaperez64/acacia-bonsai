@@ -1,6 +1,8 @@
 #pragma once
 
-namespace vector {
+#include <experimental/simd>
+
+namespace utils {
   template <typename Elt>
   struct simd_traits {
       static constexpr auto simd_size = std::experimental::simd_size_v<Elt>;

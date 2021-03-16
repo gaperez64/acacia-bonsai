@@ -6,25 +6,25 @@
 #include <iostream>
 #include <cassert>
 
-namespace set {
+namespace antichains {
   template <typename Vector>
-  class antichain_vector {
+  class vector_backed {
     public:
       typedef Vector value_type;
 
-      antichain_vector (Vector&& v) {
+      vector_backed (Vector&& v) {
         insert (std::move (v));
       }
 
     private:
-      antichain_vector () = default;
+      vector_backed () = default;
 
     public:
-      antichain_vector (const antichain_vector&) = delete;
-      antichain_vector (antichain_vector&&) = default;
-      antichain_vector& operator= (antichain_vector&&) = default;
+      vector_backed (const vector_backed&) = delete;
+      vector_backed (vector_backed&&) = default;
+      vector_backed& operator= (vector_backed&&) = default;
 
-      bool operator== (const antichain_vector& other) = delete;
+      bool operator== (const vector_backed& other) = delete;
 
       bool contains (const Vector& v) const {
         for (const auto& e : vector_set)
@@ -78,7 +78,7 @@ namespace set {
         // nil
       }
 
-      const antichain_vector& max_elements () const {
+      const vector_backed& max_elements () const {
         return *this;
       }
 
@@ -86,7 +86,7 @@ namespace set {
         return vector_set.empty ();
       }
 
-      void union_with (antichain_vector&& other) {
+      void union_with (vector_backed&& other) {
         for (auto&& e : other.vector_set)
           _updated |= insert (std::move (e));
       }
@@ -101,8 +101,8 @@ namespace set {
           }
       };
 
-      void intersect_with (const antichain_vector& other) {
-        antichain_vector intersection;
+      void intersect_with (const vector_backed& other) {
+        vector_backed intersection;
         bool smaller_set = false;
 
         // split_cache maps first-dim p to:
@@ -166,8 +166,8 @@ namespace set {
       }
 
       template <typename F>
-      antichain_vector apply (const F& lambda) const {
-        antichain_vector res;
+      vector_backed apply (const F& lambda) const {
+        vector_backed res;
         for (const auto& el : vector_set)
           res.insert (lambda (el));
         return res;
@@ -204,7 +204,7 @@ namespace set {
 
 template <typename Vector>
 inline
-std::ostream& operator<<(std::ostream& os, const set::antichain_vector<Vector>& f)
+std::ostream& operator<<(std::ostream& os, const antichains::vector_backed<Vector>& f)
 {
   for (auto&& el : f)
     os << el << std::endl;

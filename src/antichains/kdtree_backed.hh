@@ -6,25 +6,25 @@
 
 #include "utils/kdtree.hh"
 
-namespace set {
+namespace antichains {
   // Forward definition for the operator<<s.
   template <typename>
-  class kdtree_set;
+  class kdtree_backed;
 }
 
 template <typename Vector>
-std::ostream& operator<<(std::ostream& os, const set::kdtree_set<Vector>& f);
+std::ostream& operator<<(std::ostream& os, const antichains::kdtree_backed<Vector>& f);
 
-namespace set {
+namespace antichains {
 
   template <typename Vector>
-  class kdtree_set {
+  class kdtree_backed {
     private:
       std::shared_ptr<utils::kdtree<Vector>> tree;
       bool _updated = false;
 
       template <typename V>
-      friend std::ostream& ::operator<<(std::ostream& os, const kdtree_set<V>& f);
+      friend std::ostream& ::operator<<(std::ostream& os, const kdtree_backed<V>& f);
 
       template <typename V>
       class disregard_first_component {
@@ -39,14 +39,14 @@ namespace set {
     public:
       typedef Vector value_type;
 
-      kdtree_set () = delete;
+      kdtree_backed () = delete;
 
-      kdtree_set (std::vector<Vector>&& elements) noexcept {
+      kdtree_backed (std::vector<Vector>&& elements) noexcept {
         assert (elements.size() > 0);
         this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (elements), elements[0].size());
       }
 
-      kdtree_set (Vector&& el) {
+      kdtree_backed (Vector&& el) {
         auto v = std::vector<Vector> ();
         // FUCK YOU and your std::moves Cadilhac, because you move el
         // below, we have to first save the dimension to use it later
@@ -72,13 +72,13 @@ namespace set {
         for (const auto& v : backing_vector)
           ss.push_back (lambda (v));
 
-        return kdtree_set (std::move (ss));
+        return kdtree_backed (std::move (ss));
       }
 
 
-      kdtree_set (const kdtree_set& other) : tree(other.tree) {}
+      kdtree_backed (const kdtree_backed& other) : tree(other.tree) {}
 
-      kdtree_set& operator= (kdtree_set&& other) {
+      kdtree_backed& operator= (kdtree_backed&& other) {
         this->tree = other.tree;
         return *this;
       }
@@ -95,7 +95,7 @@ namespace set {
         return this->_updated;
       }
 
-      bool operator== (const kdtree_set& other) const {
+      bool operator== (const kdtree_backed& other) const {
         return this->tree == other.tree;
       }
 
@@ -109,7 +109,7 @@ namespace set {
        *    m * dim * n^(1-1/dim) +
        *    dim * (n+m) * lg(n+m) )
        */
-      void union_with (const kdtree_set& other) {
+      void union_with (const kdtree_backed& other) {
         std::vector<Vector> result;
         result.reserve (this->size () + other.size ());
         // for all elements in this tree, if they are not strictly
@@ -147,7 +147,7 @@ namespace set {
        *    dim * n * m * lg(n * m) +
        *    n * m * dim * (nm)^(1-1/dim) )
        */
-      void intersect_with (const kdtree_set& other) {
+      void intersect_with (const kdtree_backed& other) {
         std::vector<Vector> intersection;
         bool smaller_set = false;
         using cache_red_dim = std::set<std::reference_wrapper<const Vector>,
@@ -225,7 +225,7 @@ namespace set {
         vector_antichain.reserve (inter_antichain.size ());
         for (auto r : inter_antichain)
           vector_antichain.push_back (std::move (r.get ()));
-        
+
         size_t dim_before_move = vector_antichain[0].size ();
         this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain),
                                                               dim_before_move);
@@ -249,9 +249,7 @@ namespace set {
 }
 
 template <typename Vector>
-inline std::ostream& operator<<(std::ostream& os, const set::kdtree_set<Vector>& f) {
-
+inline std::ostream& operator<<(std::ostream& os, const antichains::kdtree_backed<Vector>& f) {
   os << *(f.tree) << std::endl;
-
   return os;
 }

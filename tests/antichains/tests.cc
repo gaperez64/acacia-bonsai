@@ -9,8 +9,8 @@
 
 #include "test_maker.hh"
 
-#include "set/set.hh"
-#include "vector/vector.hh"
+#include "antichains.hh"
+#include "vectors.hh"
 
 template<class T, class = void>
 struct has_insert : std::false_type {};
@@ -204,8 +204,8 @@ struct test_t : public generic_test_t {
       }
 
 
-      // Standard set is so slow, this will never finish.
-      if constexpr (std::is_same<SetType, set::standard<VType>>::value)
+      // Full set is so slow, this will never finish.
+      if constexpr (std::is_same<SetType, antichains::full_set<VType>>::value)
                      return;
 
 
@@ -260,8 +260,13 @@ void usage (const char* progname) {
   exit (0);
 }
 
-using vector_types = type_list<vector::simd_vector<char>, vector::standard<char>>;
-using set_types = template_type_list<set::standard, set::kdtree_set, set::antichain_set, set::antichain_vector>;
+using vector_types = type_list<vectors::simd_vector_backed<char>,
+                               vectors::vector_backed<char>>;
+
+using set_types = template_type_list<antichains::full_set,
+                                     antichains::kdtree_backed,
+                                     antichains::set_backed,
+                                     antichains::vector_backed>;
 
 int main(int argc, char* argv[]) {
   register_maker ((vector_types*) 0, (set_types*) 0);
@@ -269,12 +274,10 @@ int main(int argc, char* argv[]) {
   if (argc != 3)
     usage (argv[0]);
 
-  auto implem = std::string ("set::") + argv[1] + "<vector::" + argv[2] + "<char> >";
+  auto implem = std::string ("antichains::") + argv[1] + "<vectors::" + argv[2] + "<char> >";
 
   try {
-    std::cout << "[--] running tests for " << implem << "\r";
     test_makers[implem] ();
-    std::cout << "[OK]" << std::endl;
   } catch (std::bad_function_call& e) {
     std::cout << "error: no such implem: " << implem << std::endl;
   }

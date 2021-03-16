@@ -29,35 +29,50 @@ static std::set<std::string> set_names, vector_names;
 #define typestring(T)                                                   \
   ([] () { int _; return abi::__cxa_demangle (typeid(T).name (), 0, 0, &_); }) ()
 
-namespace set {
+namespace antichains {
   template <typename VecType>
   struct all {};
 }
-namespace vector {
+namespace vectors {
   template <typename Unit>
   struct all {};
 }
 
+// One set, one vector
 template <template <typename V> typename SetType, typename VecType>
 void register_maker (type_list<VecType>*, SetType<VecType>* = 0) {
   vector_names.insert (typestring (VecType));
-  test_makers[typestring (SetType<VecType>)] = [] () {
+
+  auto ts = typestring (SetType<VecType>);
+  auto test = [ts] () {
+    std::cout << "[--] running tests for " << ts << "\r";
     test_t<SetType<VecType>> () ();
+    std::cout << "[OK]" << std::endl;
   };
-  auto prev = test_makers[typestring (set::all<VecType>)];
-  test_makers[typestring (set::all<VecType>)] = [prev] () {
+
+  test_makers[ts] = test;
+
+  for (auto&& ts : {
+      typestring (antichains::all<VecType>),
+      typestring (SetType<vectors::all<char>>),
+      typestring (antichains::all<vectors::all<char>>)
+    }) {
+    auto prev = test_makers[ts];
+    test_makers[ts] = [prev, test] () {
       if (prev) prev ();
-      std::cout << typestring (SetType<VecType>) << std::endl;
-      test_t<SetType<VecType>> () ();
-  };
+      test ();
+    };
+  }
 }
 
+// One set, multiple vectors
 template <template <typename V> typename SetType, typename VecType, typename... VecTypes>
 void register_maker (type_list<VecType, VecTypes...>*, SetType<VecType>* = 0) {
   register_maker<SetType> ((type_list<VecType>*) 0);
   register_maker<SetType> ((type_list<VecTypes...>*) 0);
 }
 
+// Multiple sets, multiple vectors
 template <template <typename V> typename SetType, template <typename V> typename... SetTypes, typename... VecTypes>
 void register_maker (type_list<VecTypes...>* v, template_type_list<SetType, SetTypes...>* = 0) {
   set_names.insert (typestring (SetType<int>));
