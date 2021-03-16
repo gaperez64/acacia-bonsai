@@ -5,6 +5,7 @@
 #include <set>
 #include <iostream>
 #include <cassert>
+#include "utils/ref_ptr_cmp.hh"
 
 namespace set {
   template <typename Vector>
@@ -22,6 +23,7 @@ namespace set {
 
       antichain_set (const antichain_set&) = delete;
       antichain_set (antichain_set&&) = default;
+      antichain_set& operator= (antichain_set&&) = default;
 
       bool contains (const Vector& v) const {
         for (const auto& e : vector_set)
@@ -94,11 +96,11 @@ namespace set {
 
           for (const auto& y : other.vector_set) {
             Vector &&v = x.meet (y);
-            intersection.insert (std::move (v));
-            if (v == x) {
+            if (v == x)
               dominated = true;
+            intersection.insert (std::move (v));
+            if (dominated)
               break;
-            }
           }
           // If x wasn't <= an element in other, then x is not in the
           // intersection, thus the set is updated.

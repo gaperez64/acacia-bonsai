@@ -22,6 +22,7 @@ namespace set {
     public:
       antichain_vector (const antichain_vector&) = delete;
       antichain_vector (antichain_vector&&) = default;
+      antichain_vector& operator= (antichain_vector&&) = default;
 
       bool operator== (const antichain_vector& other) = delete;
 

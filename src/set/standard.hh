@@ -5,6 +5,8 @@
 #include <set>
 #include <iostream>
 #include <cassert>
+#include <list>
+#include <functional>
 
 namespace set {
   template <typename Vector>
@@ -16,6 +18,7 @@ namespace set {
 
       standard (const standard&) = delete;
       standard (standard&&) = default;
+      standard& operator= (standard&&) = default;
 
       standard (Vector&& v) {
         insert (std::move (v));
@@ -40,6 +43,7 @@ namespace set {
       bool insert (Vector&& v) {
         if (vector_set.insert (std::move (v)).second) {
           _updated = true;
+          downward_close ();
           return true;
         }
         return false;
@@ -58,7 +62,7 @@ namespace set {
               if (el[i] > -1) {
                 Vector v = el.copy ();
                 v[i] -= 1;
-                if (vector_set.find (el) == vector_set.end ())
+                if (vector_set.find (v) == vector_set.end ())
                   newelts.push_back (std::move (v));
               }
           }
@@ -109,6 +113,7 @@ namespace set {
         for (auto&& el : other)
           vector_set.insert (el.copy ());
         _updated = _updated or size != vector_set.size ();
+        downward_close ();
       }
 
       void intersect_with (const standard& other) {
@@ -122,6 +127,7 @@ namespace set {
           for (auto& r : intersection)
             vector_set.insert (r.get ().copy ());
         }
+        downward_close ();
       }
 
       template <typename F>
@@ -141,6 +147,7 @@ namespace set {
         standard res;
         for (const auto& el : vector_set)
           res.insert (lambda (el));
+        res.downward_close ();
         return res;
       }
 
