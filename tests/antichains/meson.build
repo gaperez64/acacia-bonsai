@@ -1,10 +1,16 @@
-kdtree_sources = ['kdtree_tests.cc']
+tests_sources = ['tests.cc']
 
 
 
-kdtree_exe = executable ('kdtree', kdtree_sources,
+tests_exe = executable ('tests', tests_sources,
                          include_directories : inc,
                          link_with : common_lib)
 
-test('vec_antichains', kdtree_exe, args : ['standard'], suite : 'antichains')
-test('simd_antichains', kdtree_exe, args : ['simd'], suite : 'antichains')
+sets = [ 'standard', 'kdtree_set', 'antichain_set', 'antichain_vector' ]
+vectors = [ 'standard', 'simd_vector' ]
+
+foreach set : sets
+  foreach vec : vectors
+    test(set + '/' + vec, tests_exe, args : [set, vec], suite : 'set_vec_implems')
+  endforeach
+endforeach
