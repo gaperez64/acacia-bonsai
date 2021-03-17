@@ -47,91 +47,73 @@ namespace utils {
       std::vector<bool> go_left;
 
       std::shared_ptr<kdtree_node>
-      recursive_build (const std::vector<std::vector<size_t>>& sorted,
+      recursive_build (const std::vector<std::list<size_t>>& sorted,
                        size_t depth) {
         assert (sorted.size () > 0);
+        
         // if the list of elements is now a singleton, we make a leaf
         const size_t length = sorted[0].size ();
-
         if (length == 1)
-          return std::make_shared<kdtree_node> (sorted[0][0]);
+          return std::make_shared<kdtree_node> (sorted[0].front());
 
-        // otherwise we need to create an inner node
+        // otherwise we need to create an inner node based on the dimension
+        // "axis" and the median w.r.t. the axis
         const size_t axis = depth % this->dim;
-        size_t median_idx = (length - 1) / 2;
 
         // we want the median to be the greatest index with some value (in
         // dimension = axis) we first try moving left, then right
-        while (median_idx > 0 &&
-               this->vector_set[sorted[axis][median_idx]][axis] ==
-               this->vector_set[sorted[axis][median_idx - 1]][axis])
-          median_idx--;
-
-        if (median_idx == 0) {  // no border found yet
-          median_idx = (length - 1) / 2;
-
-          while (median_idx + 1 < length &&
-                 this->vector_set[sorted[axis][median_idx]][axis] ==
-                 this->vector_set[sorted[axis][median_idx + 1]][axis])
-            median_idx++;
-
-          if (median_idx == length - 1) {
-            // this dimension is useless, move to the next one
-            return recursive_build (sorted, depth + 1);
+        auto idx_it = sorted[axis].begin();
+        size_t cur_value = this->vector_set[*idx_it][axis];
+        ++idx_it;
+        size_t last_change = 0;
+        bool found = false;
+        for (size_t i = 1; i < length; i++) {
+          size_t val = this->vector_set[*idx_it][axis];
+          if (cur_value != val) {
+            cur_value = val;
+            last_change = i;
+            if (i >= ((length - 1) / 2)) {
+              found = true;
+              break;
+            }
           }
-        } else {  // a border was found
-          median_idx--;
+          ++idx_it;
         }
 
-        // we have a median, so we have a location
-        const size_t loc = this->vector_set[sorted[axis][median_idx]][axis];
+        if (not found) {
+          // this dimension is useless, move to the next one
+          return recursive_build (sorted, depth + 1);
+        }
 
+        // otherwise a border was found!
+        const size_t median_idx = last_change - 1;
+        // we have a median, so we have a location
+        const size_t loc = this->vector_set[*std::next(sorted[axis].begin(),
+                                                       median_idx)
+                                           ][axis];
         // and we can now prepare a map of flags to
         // "compress" the other lists
+        idx_it = sorted[axis].begin();
         for (size_t i = 0; i < length; i++) {
           if (i <= median_idx)
-            go_left[sorted[axis][i]] = true;
+            go_left[*idx_it] = true;
           else
-            go_left[sorted[axis][i]] = false;
+            go_left[*idx_it] = false;
+          ++idx_it;
         }
 
         // we can start filling the sorted vectors for the recursive calls
-        std::vector<std::vector<size_t>> left (std::move (sorted));
-        std::vector<std::vector<size_t>> right (this->dim);
+        std::vector<std::list<size_t>> left (std::move (sorted));
+        std::vector<std::list<size_t>> right (this->dim);
 
         for (size_t d = 0; d < this->dim; d++) {
-          right[d].reserve (length);
-
-          // for (auto it = left[d].begin (); it != left[d].end (); /* nothing */) {
-          //   auto it_val = *it;
-
-          //   if (!go_left[it_val]) {
-          //     right[d].push_back (it_val);
-          //     if (it + 1 != left[d].end ())
-          //       std::iter_swap (it, left[d].end () - 1);
-          //     left[d].pop_back ();
-          //   } else
-          //     ++it;
-          // }
-
-          for (size_t i = 0; i < left[d].size (); ++i) {
-            auto it_val = left[d][i];
-
-            if (!go_left[it_val]) {
-              right[d].push_back (it_val);
-              left[d][i] = (long unsigned) -1;
-            }
-          }
-
-          size_t i = 0, delta = 0;
-          for (/* out */; i < left[d].size () - delta; /* noop */)
-            if (left[d][i + delta] == (long unsigned) -1)
-              ++delta;
-            else {
-              left[d][i] = left[d][i + delta];
-              ++i;
-            }
-          left[d].resize (i);
+           for (auto it = left[d].begin (); it != left[d].end (); /* noop */) {
+             if (not go_left[*it]) {
+               right[d].push_back (*it);
+               it = left[d].erase(it);
+             } else
+               ++it;
+           }
         }
 
         // some sanity checks
@@ -198,17 +180,16 @@ namespace utils {
         assert (dim > 0);
         assert (this->vector_set.size () > 0);
         // we sort for each dimension
-        std::vector<std::vector<size_t>> sorted (this->dim,
-                                                 std::vector<size_t> (vector_set.size ()));
+        std::vector<std::list<size_t>> sorted (this->dim,
+                                               std::list<size_t> (vector_set.size (), 0));
 
         for (size_t d = 0; d < this->dim; d++) {
           // initialize the indices
           std::iota (sorted[d].begin (), sorted[d].end (), 0);
           // we now sort the indices based on the dimension
-          std::stable_sort (sorted[d].begin (), sorted[d].end (),
-                            [this, &d] (size_t i1, size_t i2) {
-                              return this->vector_set[i1][d] < this->vector_set[i2][d];
-                            });
+          sorted[d].sort([this, &d] (size_t i1, size_t i2) {
+                           return this->vector_set[i1][d] < this->vector_set[i2][d];
+                        });
           assert (this->vector_set.size () == sorted[d].size ());
         }
 
