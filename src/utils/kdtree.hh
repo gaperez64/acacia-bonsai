@@ -68,15 +68,15 @@ namespace utils {
         size_t last_change = 0;
         bool found = false;
         for (size_t i = 1; i < length; i++) {
+          assert (idx_it != sorted[axis].end());
           size_t val = this->vector_set[*idx_it][axis];
           if (cur_value != val) {
             cur_value = val;
             last_change = i;
-            if (i >= ((length - 1) / 2)) {
-              found = true;
-              break;
-            }
+            found = true;
           }
+          if (found && i >= ((length - 1) / 2))
+            break;
           ++idx_it;
         }
 
