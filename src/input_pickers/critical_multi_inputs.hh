@@ -1,8 +1,8 @@
 #pragma once
 
-#include "actioner/actioner.hh"
+#include "actioners.hh"
 
-namespace input_picker {
+namespace input_pickers {
   namespace detail {
     template <typename FwdActions, typename Actioner>
     struct critical_multi_inputs {
@@ -17,7 +17,7 @@ namespace input_picker {
           SetOfStates pre;
 
           for (const auto& action : output_actions)
-            pre.insert (actioner.apply (f, action,  actioner::direction::backward));
+            pre.insert (actioner.apply (f, action,  actioners::direction::backward));
 
           //pre.intersect_with (F);
           ssize_t max_change = 0;
@@ -69,7 +69,7 @@ namespace input_picker {
               is_witness = true;
               auto it_act = actions.begin ();
               for (; it_act != actions.end (); ++it_act)
-                if (F.contains (actioner.apply (f, *it_act, actioner::direction::forward))) {
+                if (F.contains (actioner.apply (f, *it_act, actioners::direction::forward))) {
                   is_witness = false;
                   break;
                 }

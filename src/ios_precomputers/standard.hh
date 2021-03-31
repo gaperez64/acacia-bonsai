@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ios_precomputation {
+namespace ios_precomputers {
   namespace detail {
     template <typename Aut, typename TransSet>
     class standard_container {

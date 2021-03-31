@@ -1,9 +1,9 @@
 #pragma once
 
-namespace actioner {
+namespace actioners {
   namespace detail {
-    template <typename Aut, typename Supports>
-    class no_ios_precomputation {
+    template <typename Aut, typename IToIOs>
+    class standard {
       public: // types
 
         using action = std::vector<std::pair<unsigned, bool>>; // All these pairs are unique by construction.
@@ -36,25 +36,21 @@ namespace actioner {
         };
         using input_and_actions_set = std::list<input_and_actions>;
       public:
-        no_ios_precomputation (const Aut& aut, const Supports& supports, int K, int verbose) :
+        standard (const Aut& aut, const IToIOs& inputs_to_ios, int K, int verbose) :
           aut {aut}, K {K}, verbose {verbose} {
-          std::map<action_vecs, bdd> ioset;
-          bdd input_letters = bddtrue;
-          while (input_letters != bddfalse) {
-            bdd one_input_letter = pick_one_letter (input_letters, supports.first);
-            action_vecs fwd_actions;
-            bdd output_letters = bddtrue;
-            while (output_letters != bddfalse) {
-              bdd one_output_letter = pick_one_letter (output_letters, supports.second);
-              const auto& fwd = compute_action (one_input_letter & one_output_letter);
-              fwd_actions.push_back (std::move (fwd));
+#warning TODO? Cache compute_action_vec?
+          std::set<input_and_actions, compare_actions> ioset;
+
+          for (const auto& [input, ios] : inputs_to_ios) {
+            std::list<action_vec> fwd_actions;
+            for (const auto& transset : ios) {
+              fwd_actions.push_back (compute_action_vec (transset));
             }
-            ioset[fwd_actions] = one_input_letter;
+            ioset.insert (std::pair (input, std::move (fwd_actions)));
           }
 
           for (auto it = ioset.begin(); it != ioset.end(); ) {
-            auto e = ioset.extract (it++);
-            input_output_fwd_actions.emplace_back (e.mapped (), std::move (e.key ()));
+            input_output_fwd_actions.push_back (std::move (ioset.extract (it++).value ()));
           }
         }
 
@@ -92,33 +88,23 @@ namespace actioner {
         const int K, verbose;
         input_and_actions_set input_output_fwd_actions;
 
-        auto compute_action (bdd letter) {
+        template <typename Set>
+        auto compute_action_vec (const Set& transset) {
           action_vec ret_fwd (aut->num_states ());
+#warning TODO: That seems overkill, why not just have transset by itself?  That seems to have little sense.  Test this.
 
-          for (size_t p = 0; p < aut->num_states (); ++p) {
-            for (const auto& e : aut->out (p)) {
-              unsigned q = e.dst;
-              if ((e.cond & letter) != bddfalse) {
-                ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));
-              }
-            }
-          }
+          for (const auto& [p, q] : transset)
+            ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));
+
           return ret_fwd;
-        }
-        static bdd pick_one_letter (bdd& letter_set, const bdd& support) {
-          bdd one_letter = bdd_satoneset (letter_set,
-                                          support,
-                                          bddtrue);
-          letter_set -= one_letter;
-          return one_letter;
         }
     };
   }
 
-  struct no_ios_precomputation {
-      template <typename Aut, typename Supports>
-      static auto make (const Aut& aut, const Supports& supports, int K, int verbose) {
-        return detail::no_ios_precomputation (aut, supports, K, verbose);
+  struct standard {
+      template <typename Aut, typename IToIOs>
+      static auto make (const Aut& aut, const IToIOs& itoios, int K, int verbose) {
+        return detail::standard (aut, itoios, K, verbose);
       }
   };
 }

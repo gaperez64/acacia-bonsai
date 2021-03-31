@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ios_precomputation {
+namespace ios_precomputers {
   struct delegate {
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
       static auto make (Aut aut,

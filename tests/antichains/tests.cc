@@ -79,12 +79,9 @@ struct test_t : public generic_test_t {
       set_one_elt.union_with (std::move (set_one_elt_cpy));
       assert (set_one_elt.contains (v1));
       assert (not set_one_elt.contains (v2));
-      assert (set_one_elt.max_elements ().size () == 1);
       SetType set_one_elt_cpy2 (v1.copy ());
       set_one_elt.intersect_with (std::move (set_one_elt_cpy2));
-      assert (set_one_elt.max_elements ().size () == 1);
       set_one_elt = set_one_elt.apply ([] (const VType& v) { return v.copy (); });
-      assert (set_one_elt.max_elements ().size () == 1);
       assert (set_one_elt.contains (v1));
       assert (not set_one_elt.contains (v2));
 
@@ -101,7 +98,6 @@ struct test_t : public generic_test_t {
       SetType set = vec_to_set (std::move (elements));
       SetType set_cpy = vec_to_set (std::move (elements_cpy));
       set.union_with (std::move (set_cpy));
-      assert (set.max_elements ().size () == 3);
       /*
        * Next, we will try S & S = S.
        * Remember that: S = {
@@ -126,7 +122,6 @@ struct test_t : public generic_test_t {
       assert (tree.dominates (vtov ({1, 1, 1}), true));
       assert (tree.dominates (vtov ({2, 1, 1}), true));
       set = set.apply ([] (const VType& v) { return v.copy (); });
-      assert (set.max_elements ().size () == 3);
 
       // std::cout << "We built the kdtree!" << std::endl;
 
@@ -220,8 +215,7 @@ struct test_t : public generic_test_t {
             {9, 0, 7, 7, 9}
           }));
 
-      F.intersect_with (F1i);
-      assert (F.max_elements ().size () == 2);
+      F.intersect_with (std::move (F1i));
 
       {
         auto F = vec_to_set (vvtovv ({
@@ -266,7 +260,10 @@ using vector_types = type_list<vectors::simd_vector_backed<char>,
 using set_types = template_type_list<antichains::full_set,
                                      antichains::kdtree_backed,
                                      antichains::set_backed,
-                                     antichains::vector_backed>;
+                                     antichains::vector_backed,
+                                     antichains::vector_backed_one_dim_split,
+                                     antichains::vector_backed_one_dim_split_intersection_only>;
+
 
 int main(int argc, char* argv[]) {
   register_maker ((vector_types*) 0, (set_types*) 0);

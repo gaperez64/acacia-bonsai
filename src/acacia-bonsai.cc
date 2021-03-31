@@ -13,7 +13,7 @@
 #include "common_setup.hh"
 #include "common_sys.hh"
 
-#include "aut_preprocessing/aut_preprocessing.hh"
+#include "aut_preprocessors.hh"
 
 #include "k-bounded_safety_aut.hh"
 
@@ -175,8 +175,8 @@ namespace {
         if (want_time)
           sw.start();
 
-        auto aut_preprocessing_maker = aut_preprocessing::surely_losing ();
-        (aut_preprocessing_maker.make (aut, all_inputs, all_outputs, opt_K, verbose)) ();
+        auto aut_preprocessors_maker = aut_preprocessors::surely_losing ();
+        (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K, verbose)) ();
 
         if (want_time)
           merge_time = sw.stop();
@@ -199,11 +199,11 @@ namespace {
 #ifdef NDEBUG
 # define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
 #else
-# define STATIC_SIMD_ARRAY_MAX 1
+# define STATIC_SIMD_ARRAY_MAX 30
 #endif
 #define ARRAY_VECTOR_IMPL simd_array_backed
-#define OTHER_VECTOR_IMPL simd_vector_backed
-#define ANTICHAIN_IMPL vector_backed
+#define OTHER_VECTOR_IMPL vector_backed
+#define ANTICHAIN_IMPL vector_backed_one_dim_split
 
         bool realizable =
           static_switch_t<STATIC_SIMD_ARRAY_MAX>{}(

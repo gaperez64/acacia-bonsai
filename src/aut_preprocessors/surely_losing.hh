@@ -4,10 +4,10 @@
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/mask.hh>
 
-#include "ios_precomputation/powset.hh"  // for power()
+#include "ios_precomputers/powset.hh"  // for power()
 
 
-namespace aut_preprocessing {
+namespace aut_preprocessors {
   namespace detail {
     template <typename Aut>
     class surely_losing {
@@ -85,7 +85,7 @@ namespace aut_preprocessing {
 
           for (size_t q = 0; q < aut->num_states (); ++q) {
             auto input_power =
-              ios_precomputation::detail::power<crossings_t> (
+              ios_precomputers::detail::power<crossings_t> (
                 transition_enumerator (aut, q, transition_formater::cond_and_dst (aut)),
                 [this] (bdd b) {
                   return bdd_exist (b, output_support);

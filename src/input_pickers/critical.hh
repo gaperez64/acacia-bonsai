@@ -1,9 +1,9 @@
 #pragma once
 
 #include <random>
-#include "actioner/actioner.hh"
+#include "actioners.hh"
 
-namespace input_picker {
+namespace input_pickers {
   namespace detail {
     template <typename FwdActions, typename Actioner>
     struct critical {
@@ -35,6 +35,8 @@ namespace input_picker {
           bool found_input = false;
 
           for (const auto& f : F) {
+            //#warning Magic
+            //if (f[0] < 0) continue;
             bool is_witness = false;
             if (verbose > 2)
               std::cout << "Searching for witness of one-step-loss for " << f << std::endl;
@@ -43,11 +45,19 @@ namespace input_picker {
               auto& [input, actions] = it->get ();
               is_witness = true;
               auto it_act = actions.begin ();
-              for (; it_act != actions.end (); ++it_act)
-                if (F.contains (actioner.apply (f, *it_act, actioner::direction::forward))) {
+              for (; it_act != actions.end (); ++it_act) {
+                auto fwdf = actioner.apply (f, *it_act, actioners::direction::forward);
+                if (verbose > 2)
+                  std::cout << "apply(" << f << ", <" << input << ", ?>) = " << fwdf << ": ";
+                if (F.contains (fwdf)) {
+                  if (verbose > 2)
+                    std::cout << " is in F." << std::endl;
                   is_witness = false;
                   break;
                 }
+                if (verbose > 2)
+                  std::cout << " is not in F." << std::endl;
+              }
 
               if (is_witness) {
                 // inputs witness one-step-loss of f
@@ -68,8 +78,11 @@ namespace input_picker {
               break;
           }
 
-          if (not found_input)
+          if (not found_input) {
+            if (verbose > 2)
+              std::cout << "No critical input." << std::endl;
             return std::pair (critical_input, false);
+          }
 
 #warning Discussion point
 #if 1

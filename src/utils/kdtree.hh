@@ -50,7 +50,7 @@ namespace utils {
       recursive_build (const std::vector<std::list<size_t>>& sorted,
                        size_t depth) {
         assert (sorted.size () > 0);
-        
+
         // if the list of elements is now a singleton, we make a leaf
         const size_t length = sorted[0].size ();
         if (length == 1)
@@ -157,6 +157,7 @@ namespace utils {
 
     public:
       std::vector<Vector> vector_set;
+
 
       kdtree (std::vector<Vector>&& elements, const size_t dim) : dim (dim),
                                                                   go_left (elements.size ()) {

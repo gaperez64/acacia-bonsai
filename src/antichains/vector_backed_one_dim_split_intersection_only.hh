@@ -8,23 +8,32 @@
 
 namespace antichains {
   template <typename Vector>
-  class vector_backed {
+  class vector_backed_one_dim_split_intersection_only {
+      using self = vector_backed_one_dim_split_intersection_only;
     public:
       typedef Vector value_type;
 
-      vector_backed (Vector&& v) {
+      vector_backed_one_dim_split_intersection_only (Vector&& v) {
         insert (std::move (v));
       }
 
+      ~vector_backed_one_dim_split_intersection_only () {
+        /* DEBUG
+        std::cout << "vs.size() =  " << vector_set.size () << std::endl;
+         */
+      }
+
+
     private:
-      vector_backed () = default;
+      vector_backed_one_dim_split_intersection_only () = default;
 
     public:
-      vector_backed (const vector_backed&) = delete;
-      vector_backed (vector_backed&&) = default;
-      vector_backed& operator= (vector_backed&&) = default;
+      vector_backed_one_dim_split_intersection_only (const self&) = delete;
+      vector_backed_one_dim_split_intersection_only (self&&) = default;
 
-      bool operator== (const vector_backed& other) = delete;
+      self& operator= (self&&) = default;
+
+      bool operator== (const self& other) = delete;
 
       bool contains (const Vector& v) const {
         for (const auto& e : vector_set)
@@ -78,7 +87,7 @@ namespace antichains {
         // nil
       }
 
-      const vector_backed& max_elements () const {
+      const self& max_elements () const {
         return *this;
       }
 
@@ -86,7 +95,7 @@ namespace antichains {
         return vector_set.empty ();
       }
 
-      void union_with (vector_backed&& other) {
+      void union_with (self&& other) {
         for (auto&& e : other.vector_set)
           _updated |= insert (std::move (e));
       }
@@ -101,22 +110,58 @@ namespace antichains {
           }
       };
 
-      void intersect_with (const vector_backed& other) {
-        vector_backed intersection;
+      void intersect_with (const self& other) {
+        self intersection;
         bool smaller_set = false;
+
+        // split_cache maps first-dim p to:
+        //   - the set of vectors that have a bigger or equal to p
+        //   - the set of other vectors
+        // then we go through all vectors in vector_set:
+        //    for all vectors in split_cache[x[0]].first, compute the meets, and
+        //              put them intersection; if x is dominated, leave.
+        //    if x is not dominated, do the same for split_cache[x[0]].second
+
+        // Different wording: we compare x in vector_set with all of
+        // other.vector_set, prioritazing the vectors in other.vector_set that
+        // have a larger first component (hence can potentially dominate x).
+
+#warning vector_set should simply be a vector of size K with vs[k] == all the elements which start with k.
+
+        using cache_red_dim = std::set<std::reference_wrapper<const Vector>,
+                                       disregard_first_component<std::reference_wrapper<const Vector>>>;
+        using vector_of_vectors = std::vector<std::reference_wrapper<const Vector>>;
+        std::map<int, std::pair<cache_red_dim, vector_of_vectors>> split_cache;
 
         for (const auto& x : vector_set) {
           bool dominated = false;
 
-          auto meet = [&] (const Vector& y) {
-            Vector &&v = x.meet (y);
+          auto& cv = ([&x, &split_cache, &other] () -> auto& {
+            try {
+              return split_cache.at (x[0]);
+            } catch (...) {
+              auto& cv = split_cache[x[0]];
+              for (const auto& y : other.vector_set) {
+                if (y[0] >= x[0])
+                  cv.first.insert (std::ref (y));
+                else
+                  cv.second.push_back (std::ref (y));
+              }
+              return cv;
+            }
+          }) ();
+
+          auto meet = [&] (std::reference_wrapper<const Vector> y) {
+            Vector &&v = x.meet (y.get ());
             if (v == x)
               dominated = true;
             intersection.insert (std::move (v));
             return not dominated;
           };
 
-          std::all_of (other.vector_set.begin (), other.vector_set.end (), meet);
+          std::all_of (cv.first.begin (), cv.first.end (), meet);
+          if (!dominated)
+            std::all_of (cv.second.begin (), cv.second.end (), meet);
 
           // If x wasn't <= an element in other, then x is not in the
           // intersection, thus the set is updated.
@@ -130,8 +175,8 @@ namespace antichains {
       }
 
       template <typename F>
-      vector_backed apply (const F& lambda) const {
-        vector_backed res;
+      self apply (const F& lambda) const {
+        self res;
         for (const auto& el : vector_set)
           res.insert (lambda (el));
         return res;
@@ -168,7 +213,8 @@ namespace antichains {
 
 template <typename Vector>
 inline
-std::ostream& operator<<(std::ostream& os, const antichains::vector_backed<Vector>& f)
+std::ostream& operator<<(std::ostream& os,
+                         const antichains::vector_backed_one_dim_split_intersection_only<Vector>& f)
 {
   for (auto&& el : f)
     os << el << std::endl;

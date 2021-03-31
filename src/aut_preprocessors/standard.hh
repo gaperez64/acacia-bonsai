@@ -1,6 +1,6 @@
 #pragma once
 
-namespace aut_preprocessing {
+namespace aut_preprocessors {
   namespace detail {
     template <typename Aut>
     class standard {

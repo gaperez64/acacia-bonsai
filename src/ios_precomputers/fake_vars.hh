@@ -2,7 +2,7 @@
 
 #include "utils/transition_enumerator.hh"
 
-namespace ios_precomputation {
+namespace ios_precomputers {
   namespace detail {
     template <typename RetSet, typename FormSet, typename Projection>
     auto power_fakevars (const FormSet& crossings,

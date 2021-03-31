@@ -4,25 +4,38 @@
 #include <iostream>
 
 namespace vectors {
+#define BYTES_PER_UNIT 8
+
+  template <typename T, size_t Units>
+  class array_backed_;
+
   template <typename T, size_t K>
-  class array_backed : public std::array<T, K> {
-      using self = array_backed<T, K>;
+  using array_backed = array_backed_<T, (K + BYTES_PER_UNIT - 1) / BYTES_PER_UNIT>;
+
+  template <typename T, size_t Units>
+  class array_backed_ : public std::array<T, Units * BYTES_PER_UNIT> {
+      size_t k;
+      using self = array_backed_<T, Units>;
     public:
-      array_backed (size_t k) {
-        assert (K == k);
+      array_backed_ (size_t k) : k {k} {
+        assert ((k + BYTES_PER_UNIT - 1) / BYTES_PER_UNIT == Units);
+        for (size_t i = k; i < Units * BYTES_PER_UNIT; ++i)
+          (*this)[i] = 0;
       }
 
-      array_backed () = delete;
+      size_t size () const { return k; }
+
+      array_backed_ () = delete;
 
     private:
-      array_backed (const self& other) = default;
+      array_backed_ (const self& other) = default;
 
     public:
-      array_backed (self&& other) = default;
+      array_backed_ (self&& other) = default;
 
       // explicit copy operator
-      array_backed copy () const {
-        auto res = array_backed (*this);
+      array_backed_ copy () const {
+        auto res = array_backed_ (*this);
         return res;
       }
 
@@ -34,7 +47,7 @@ namespace vectors {
           po_res (const self& lhs, const self& rhs) {
             bgeq = true;
             bleq = true;
-            for (size_t i = 0; i < K; ++i) {
+            for (size_t i = 0; i < lhs.k; ++i) {
               auto diff = lhs[i] - rhs[i];
               if (bgeq)
                 bgeq = (diff >= 0);
@@ -61,9 +74,9 @@ namespace vectors {
       }
 
       self meet (const self& rhs) const {
-        auto res = self (K);
+        auto res = self (k);
 
-        for (size_t i = 0; i < K; ++i)
+        for (size_t i = 0; i < k; ++i)
           res[i] = std::min ((*this)[i], rhs[i]);
         return res;
       }
@@ -71,9 +84,9 @@ namespace vectors {
 
 }
 
-template <typename T, size_t K>
+template <typename T, size_t Units>
 inline
-std::ostream& operator<<(std::ostream& os, const vectors::array_backed<T, K>& v)
+std::ostream& operator<<(std::ostream& os, const vectors::array_backed_<T, Units>& v)
 {
   os << "{ ";
   for (size_t i = 0; i < v.size (); ++i)

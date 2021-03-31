@@ -14,21 +14,26 @@ struct static_switch_t {
     using R = std::invoke_result_t<F, index_t<0>, Args...>;
 
     template<class F, class G, class...Args>
-    R<F, Args...> operator()(F&& f, G&& g, size_t i, Args&&...args) const {
+    R<F, Args...> operator () (F&& f, G&& g, size_t i, Args&& ...args) const {
       if (i >= M)
-        return g (i, std::forward<Args>(args)...);
-      return invoke(std::make_index_sequence<M>{}, std::forward<F>(f), i, std::forward<Args>(args)...);
+        return g (i, std::forward<Args> (args)...);
+
+      return invoke (std::make_index_sequence<M> {}, std::forward<F> (f), i, std::forward<Args> (args)...);
     }
+
   private:
+
     template<size_t...Is, class F, class...Args>
-    R<F, Args...> invoke(std::index_sequence<Is...>, F&&f, size_t i, Args&&...args)const {
-      using pF=decltype(std::addressof(f));
-      using call_func = R<F, Args...>(*)(pF pf, Args&&...args);
-      static const call_func table[M]={
-        [](pF pf, Args&&...args)->R<F, Args...>{
-          return std::forward<F>(*pf)(index_t<Is>{}, std::forward<Args>(args)...);
+    R<F, Args...> invoke (std::index_sequence<Is...>, F&& f, size_t i, Args&& ...args) const {
+      using pF = decltype (std::addressof (f));
+      using call_func = R<F, Args...> (*) (pF pf, Args&& ...args);
+
+      static const call_func table[M] = {
+        [] (pF pf, Args&& ...args) -> R<F, Args...>{
+          return std::forward<F> (*pf) (index_t<Is>{}, std::forward<Args> (args)...);
         }...
       };
-      return table[i](std::addressof(f), std::forward<Args>(args)...);
+
+      return table[i] (std::addressof (f), std::forward<Args> (args)...);
     }
 };
