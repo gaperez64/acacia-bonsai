@@ -90,31 +90,6 @@ class k_bounded_safety_aut_detail {
         }
         cpre_inplace (F, input, actioner);
 
-        #warning Is there an idea there?
-        if (false) {// and loopcount > std::max ((int) aut->num_states (), (int) K)) {
-          // Flush -1s.
-          State v (aut->num_states ());
-          SetOfStates newF (std::move (v));
-          bool empty = true;
-          for (const auto& v : F)
-            if (v[0] >= 0) {
-              if (empty) {
-                empty = false;
-                newF = SetOfStates (v.copy ());
-              }
-              else
-                newF.insert (v.copy ());
-            }
-          if (empty)
-            return false;
-          F = std::move (newF);
-          State vp (aut->num_states ());
-          for (size_t src = 1; src < aut->num_states (); ++src)
-            vp[src] = K;
-          vp[0] = -1;
-          F.insert (std::move (vp));
-        }
-
         if (verbose)
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
       } while (1);

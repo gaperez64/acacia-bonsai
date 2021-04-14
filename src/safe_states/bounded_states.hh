@@ -25,6 +25,7 @@ namespace safe_states {
 
           bool has_changed = true;
 
+          #warning Set accepting states to nb_accepting_states + 1?
           while (has_changed) {
             has_changed = false;
 
@@ -40,16 +41,25 @@ namespace safe_states {
           }
 
 #warning TODO: Remove the 0 states?
+          unsigned bounded = 0;
           for (unsigned src = 0; src < aut->num_states (); ++src)
             if (c[src] > nb_accepting_states)
               f[src] = K - 1;
-            else
+            else {
+              bounded++;
               f[src] = 0;
+            }
+
+          if (verbose)
+            std::cout << "Bounded states: " << bounded << " / "
+                      << aut->num_states () << " = "
+                      << (bounded * 100) / aut->num_states () << "%" << std::endl;
 
           SetOfStates S (std::move (f));
 
           return S;
         }
+
       private:
         const Aut aut;
         const int K, verbose;
