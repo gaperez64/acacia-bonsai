@@ -13,12 +13,12 @@
 #include "common_setup.hh"
 #include "common_sys.hh"
 
-#include "aut_preprocessing/aut_preprocessing.hh"
+#include "aut_preprocessors.hh"
 
 #include "k-bounded_safety_aut.hh"
 
-#include "vector/vector.hh"
-#include "set/set.hh"
+#include "vectors.hh"
+#include "antichains.hh"
 #include "utils/static_switch.hh"
 
 #include <spot/misc/bddlt.hh>
@@ -175,8 +175,8 @@ namespace {
         if (want_time)
           sw.start();
 
-        auto aut_preprocessing_maker = aut_preprocessing::surely_losing ();
-        (aut_preprocessing_maker.make (aut, all_inputs, all_outputs, opt_K, verbose)) ();
+        auto aut_preprocessors_maker = aut_preprocessors::surely_losing ();
+        (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K, verbose)) ();
 
         if (want_time)
           merge_time = sw.stop();
@@ -199,24 +199,26 @@ namespace {
 #ifdef NDEBUG
 # define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
 #else
-# define STATIC_SIMD_ARRAY_MAX 3
+# define STATIC_SIMD_ARRAY_MAX 44
 #endif
-#define OTHER_VECTOR_IMPL vector_simd_vector
-#define SET_IMPL set_antichain_vector
+#define ARRAY_VECTOR_IMPL simd_array_backed_sum
+#define OTHER_VECTOR_IMPL vector_backed
+#define ANTICHAIN_IMPL vector_backed_one_dim_split_intersection_only
+#define OTHER_ANTICHAIN_IMPL vector_backed_one_dim_split
 
         bool realizable =
           static_switch_t<STATIC_SIMD_ARRAY_MAX>{}(
             // Static value of v.
             [&] (auto v) {
-              using vect_t = vector_simd_array<VECTOR_ELT_T, v.value>;
-              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, SET_IMPL<vect_t>>
+              using vect_t = vectors::ARRAY_VECTOR_IMPL<VECTOR_ELT_T, v.value>;
+              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::ANTICHAIN_IMPL<vect_t>>
                 (aut, opt_K, all_inputs, all_outputs, verbose);
               return skn.solve ();
             },
             // Dynamic value
             [&] (int i) {
-              using vect_t = OTHER_VECTOR_IMPL<VECTOR_ELT_T>;
-              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, SET_IMPL<vect_t>>
+              using vect_t = vectors::OTHER_VECTOR_IMPL<VECTOR_ELT_T>;
+              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::OTHER_ANTICHAIN_IMPL<vect_t>>
                 (aut, opt_K, all_inputs, all_outputs, verbose);
               return skn.solve ();
             },

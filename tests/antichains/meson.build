@@ -1,6 +1,8 @@
-kdtree_sources = ['kdtree_tests.cc']
+tests_sources = ['tests.cc']
 
-kdtree_exe = executable ('kdtree', kdtree_sources,
+tests_exe = executable ('tests', tests_sources,
                          include_directories : inc,
-                         link_with : common_lib)
-test('test1', kdtree_exe, args : ['first', 'second'])
+                         link_with : common_lib,
+                         c_args : '-O0' )  # Deactivate optimization, otherwise it takes ages.
+
+test('antichains/vectors implementations', tests_exe, args : ['all', 'all'], suite : 'antichains')

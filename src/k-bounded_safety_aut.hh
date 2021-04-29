@@ -16,10 +16,10 @@
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
 
-#include "ios_precomputation/ios_precomputation.hh"
-#include "input_picker/input_picker.hh"
-#include "safe_states/safe_states.hh"
-#include "actioner/actioner.hh"
+#include "ios_precomputers.hh"
+#include "input_pickers.hh"
+#include "safe_states.hh"
+#include "actioners.hh"
 
 //#define debug(A...) do { std::cout << A << std::endl; } while (0)
 #define debug(A...)
@@ -41,14 +41,14 @@ class k_bounded_safety_aut_detail {
     k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, int K,
                                  bdd input_support, bdd output_support,
                                  int verbose,
-                                 const IOsPrecomputationMaker& ios_precomputation_maker,
+                                 const IOsPrecomputationMaker& ios_precomputer_maker,
                                  const ActionerMaker& actioner_maker,
                                  const InputPickerMaker& input_picker_maker,
                                  const SafeStatesMaker& safe_states_maker) :
       aut {aut}, K {K},
       input_support {input_support}, output_support {output_support}, verbose {verbose},
       gen {0},
-      ios_precomputation_maker {ios_precomputation_maker},
+      ios_precomputer_maker {ios_precomputer_maker},
       actioner_maker {actioner_maker},
       input_picker_maker {input_picker_maker},
       safe_states_maker {safe_states_maker}
@@ -63,7 +63,7 @@ class k_bounded_safety_aut_detail {
       debug_ ("#STATES " << aut->num_states ());
 
       // Precompute the input and output actions.
-      auto inputs_to_ios = (ios_precomputation_maker.make (aut, input_support, output_support, verbose)) ();
+      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, verbose)) ();
       auto actioner = actioner_maker.make (aut, inputs_to_ios, K, verbose);
       auto input_output_fwd_actions = actioner.actions ();
       if (verbose)
@@ -79,17 +79,16 @@ class k_bounded_safety_aut_detail {
         loopcount++;
         if (verbose)
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
-        F.clear_update_flag ();
 
         auto&& [input, valid] = input_picker (F);
         if (not valid) { // No valid input found.
-          State init (aut->num_states ());
-          for (size_t p = 0; p < aut->num_states (); ++p)
-            init[p] = -1;
+          std::vector<char> init (aut->num_states ());
+          init.assign (aut->num_states (), -1);
           init[aut->get_init_state_number ()] = 0;
-          return F.contains (init);
+          return F.contains (State (init));
         }
         cpre_inplace (F, input, actioner);
+
         if (verbose)
           std::cout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl;
       } while (1);
@@ -108,7 +107,7 @@ class k_bounded_safety_aut_detail {
     bdd input_support, output_support;
     const int verbose;
     std::mt19937 gen;
-    const IOsPrecomputationMaker& ios_precomputation_maker;
+    const IOsPrecomputationMaker& ios_precomputer_maker;
     const ActionerMaker& actioner_maker;
     const InputPickerMaker& input_picker_maker;
     const SafeStatesMaker& safe_states_maker;
@@ -118,36 +117,46 @@ class k_bounded_safety_aut_detail {
     // F2 = \cap_{i \in I} F1i
     // F1i = \cup_{o \in O} PreHat (F, i, o)
     template <typename Action, typename Actioner>
-    void cpre_inplace (SetOfStates& F, const Action& io_action, const Actioner& actioner) {
-      SetOfStates F2;
+    void cpre_inplace (SetOfStates& F, const Action& io_action, Actioner& actioner) {
 
       if (verbose > 1)
-        std::cout << "Computing cpre(F) with maxelts (F) = " << std::endl
-                  << F.max_elements ();
+        std::cout << "Computing cpre(F) with F = " << std::endl
+                  << F;
 
       const auto& [input, actions] = io_action.get ();
-      SetOfStates F1i;
+      std::vector<char> v (aut->num_states (), -1);
+      auto vv = typename SetOfStates::value_type (v);
+      SetOfStates F1i (std::move (vv));
+      bool first_turn = true;
       for (const auto& action_vec : actions) {
         if (verbose > 2)
           std::cout << "one_output_letter:" << std::endl;
-        F1i.union_with (F.apply ([this, &action_vec, &actioner] (const auto& m) {
-          auto&& ret = actioner.apply (m, action_vec, actioner::direction::backward);
+
+        SetOfStates&& F1io = F.apply ([this, &action_vec, &actioner] (const auto& m) {
+          auto&& ret = actioner.apply (m, action_vec, actioners::direction::backward);
           if (verbose > 2)
             std::cout << "  " << m << " -> " << ret << std::endl;
-          return ret;
-        }));
+          return std::move (ret);
+        });
+
+        if (first_turn) {
+          F1i = std::move (F1io);
+          first_turn = false;
+        }
+        else
+          F1i.union_with (std::move (F1io));
       }
 
-      F.intersect_with (F1i);
+      F.intersect_with (std::move (F1i));
       if (verbose > 1)
-        std::cout << "maxelts (F) = " << std::endl << F.max_elements ();
+        std::cout << "F = " << std::endl << F;
     }
 
     template <typename IToActions>
     void io_stats (const IToActions& inputs_to_actions) {
       size_t all_io = 0;
       for (const auto& [inputs, ios] : inputs_to_actions) {
-        if (verbose > 1)
+        if (verbose)
           std::cout << "INPUT: " << bdd_to_formula (inputs)
                     <<  " #ACTIONS: " << ios.size () << std::endl;
         all_io += ios.size ();
@@ -229,12 +238,12 @@ template <class SetOfStates,
 static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int K,
                                         bdd input_support, bdd output_support,
                                         int verbose,
-                                        const IOsPrecomputationMaker& ios_precomputation_maker,
+                                        const IOsPrecomputationMaker& ios_precomputer_maker,
                                         const ActionerMaker& actioner_maker,
                                         const InputPickerMaker& input_picker_maker,
                                         const SafeStatesMaker& safe_states_maker) {
   return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker, InputPickerMaker, SafeStatesMaker>
-    (aut, K, input_support, output_support, verbose, ios_precomputation_maker, actioner_maker, input_picker_maker, safe_states_maker);
+    (aut, K, input_support, output_support, verbose, ios_precomputer_maker, actioner_maker, input_picker_maker, safe_states_maker);
 }
 
 template <class State, // TODO To be removed, deduced from SetOfStates,
@@ -243,9 +252,9 @@ static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
                                   bdd input_support, bdd output_support,
                                   int verbose) {
   return k_bounded_safety_aut_maker<SetOfStates> (aut, K, input_support, output_support, verbose,
-                                                  ios_precomputation::fake_vars (),
-                                                  actioner::standard (),
-                                                  input_picker::critical (),
-                                                  safe_states::standard ()
+                                                  ios_precomputers::fake_vars (),
+                                                  actioners::standard (),
+                                                  input_pickers::critical (),
+                                                  safe_states::bounded_states ()
     );
 }
