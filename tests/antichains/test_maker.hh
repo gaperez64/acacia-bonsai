@@ -34,7 +34,6 @@ namespace antichains {
   struct all {};
 }
 namespace vectors {
-  template <typename Unit>
   struct all {};
 }
 
@@ -45,7 +44,7 @@ void register_maker (type_list<VecType>*, SetType<VecType>* = 0) {
 
   auto ts = typestring (SetType<VecType>);
   auto test = [ts] () {
-    std::cout << "[--] running tests for " << ts << "\r";
+    std::cout << "[--] running tests for " << ts << "\r" << std::flush;
     test_t<SetType<VecType>> () ();
     std::cout << "[OK]" << std::endl;
   };
@@ -54,8 +53,8 @@ void register_maker (type_list<VecType>*, SetType<VecType>* = 0) {
 
   for (auto&& ts : {
       typestring (antichains::all<VecType>),
-      typestring (SetType<vectors::all<char>>),
-      typestring (antichains::all<vectors::all<char>>)
+      typestring (SetType<vectors::all>),
+      typestring (antichains::all<vectors::all>)
     }) {
     auto prev = test_makers[ts];
     test_makers[ts] = [prev, test] () {
@@ -68,6 +67,7 @@ void register_maker (type_list<VecType>*, SetType<VecType>* = 0) {
 // One set, multiple vectors
 template <template <typename V> typename SetType, typename VecType, typename... VecTypes>
 void register_maker (type_list<VecType, VecTypes...>*, SetType<VecType>* = 0) {
+  set_names.insert (typestring (SetType<int>));
   register_maker<SetType> ((type_list<VecType>*) 0);
   register_maker<SetType> ((type_list<VecTypes...>*) 0);
 }
@@ -75,7 +75,6 @@ void register_maker (type_list<VecType, VecTypes...>*, SetType<VecType>* = 0) {
 // Multiple sets, multiple vectors
 template <template <typename V> typename SetType, template <typename V> typename... SetTypes, typename... VecTypes>
 void register_maker (type_list<VecTypes...>* v, template_type_list<SetType, SetTypes...>* = 0) {
-  set_names.insert (typestring (SetType<int>));
   register_maker<SetType> (v);
   register_maker<SetTypes...> (v);
 }

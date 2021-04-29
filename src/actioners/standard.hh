@@ -37,7 +37,8 @@ namespace actioners {
         using input_and_actions_set = std::list<input_and_actions>;
       public:
         standard (const Aut& aut, const IToIOs& inputs_to_ios, int K, int verbose) :
-          aut {aut}, K {K}, verbose {verbose} {
+          aut {aut}, K {(char) K}, verbose {(char) verbose},
+          apply_out (aut->num_states ()), mcopy (aut->num_states ()) {
 #warning TODO? Cache compute_action_vec?
           std::set<input_and_actions, compare_actions> ioset;
 
@@ -57,35 +58,36 @@ namespace actioners {
         auto& actions () { return input_output_fwd_actions; }
 
         template <typename State>
-        State apply (const State& m, const action_vec& avec, direction dir) const /* __attribute__((pure)) */ {
-          State f (m.size ());
+        State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
+          if (dir == direction::forward)
+            apply_out.assign (m.size (), (char) -1);
+          else
+            apply_out.assign (m.size (), (char) (K - 1));
 
-          for (size_t p = 0; p < m.size (); ++p)
-            if (dir == direction::forward)
-              f[p] = -1;
-            else
-              f[p] = K - 1;
+          m.to_vector (mcopy);
 
           for (size_t p = 0; p < m.size (); ++p) {
             for (const auto& [q, q_final] : avec[p]) {
               if (dir == direction::forward) {
-                if (m[q] != -1)
-                  f[p] = (int) std::max ((int) f[p], std::min (K, (int) m[q] + (q_final ? 1 : 0)));
+                if (mcopy[q] != -1)
+                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (mcopy[q] + (char) (q_final ? 1 : 0))));
               } else
-                if (f[q] != -1)
-                  f[q] = (int) std::min ((int) f[q], std::max (-1, (int) m[p] - (q_final ? 1 : 0)));
+                if (apply_out[q] != -1)
+                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (mcopy[p] - (char) (q_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
-              if (dir == direction::forward && f[p] == K)
+              if (dir == direction::forward && apply_out[p] == K)
                 break;
             }
           }
-          return f;
+
+          return State (apply_out);
         }
 
       private:
         const Aut& aut;
-        const int K, verbose;
+        const char K, verbose;
+        std::vector<char> apply_out, mcopy;
         input_and_actions_set input_output_fwd_actions;
 
         template <typename Set>

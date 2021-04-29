@@ -22,20 +22,12 @@ template<typename SetType>
 struct test_t : public generic_test_t {
     using VType = typename SetType::value_type;
 
-    VType vtov (const std::vector<int>& v) {
-      VType out (v.size ());
-
-      for (size_t i = 0; i < v.size (); ++i)
-        out[i] = v[i];
-      return out;
-    }
-
-    std::vector<VType> vvtovv (const std::vector<std::vector<int>>& vv) {
+    std::vector<VType> vvtovv (const std::vector<std::vector<char>>& vv) {
       std::vector<VType> out;
       //out.reserve (vv.size ());
 
       for (size_t i = 0; i < vv.size (); ++i)
-        out.emplace_back(vtov (std::move (vv[i]))); //out[i] = vtov<VType> (vv[i]);
+        out.emplace_back(VType (std::move (vv[i]))); //out[i] = VType<VType> (vv[i]);
       return out;
     }
 
@@ -51,13 +43,9 @@ struct test_t : public generic_test_t {
     }
 
     void operator() () {
-      const size_t dim = 3;
-      VType v1(dim);
-      v1[0] = 1; v1[1] = 2; v1[2] = 3;
-      VType v2(dim);
-      v2[0] = 2; v2[1] = 5; v2[2] = 1;
-      VType v3(dim);
-      v3[0] = 4; v3[1] = 1; v3[2] = 1;
+      VType v1 ({1, 2, 3});
+      VType v2 ({2, 5, 1});
+      VType v3 ({4, 1, 1});
       /*
        * v1 = (1, 2, 3)
        * v2 = (2, 5, 1)
@@ -112,23 +100,21 @@ struct test_t : public generic_test_t {
        * }
        * let's make sure these will be eliminated inside the intersection...
        */
-      auto tree = utils::kdtree<VType> (vvtovv ({
+      auto tree = vec_to_set (vvtovv ({
             {1, 2, 3},
             {2, 5, 1},
             {4, 1, 1},
-          }), 3);
-      assert (tree.size () == 3);
-      assert (tree.dominates (vtov ({1, 2, 1}), true));
-      assert (tree.dominates (vtov ({1, 1, 1}), true));
-      assert (tree.dominates (vtov ({2, 1, 1}), true));
+          }));
+      //assert (tree.size () == 3);
+      assert (tree.contains (VType ({1, 2, 1})));
+      assert (tree.contains (VType ({1, 1, 1})));
+      assert (tree.contains (VType ({2, 1, 1})));
       set = set.apply ([] (const VType& v) { return v.copy (); });
 
       // std::cout << "We built the kdtree!" << std::endl;
 
-      VType v4(dim);
-      v4[0] = 0; v4[1] = 1; v4[2] = 2;
-      VType v5(dim);
-      v5[0] = 1; v5[1] = 1; v5[2] = 10;
+      VType v4 ({0, 1, 2});
+      VType v5 ({1, 1, 10});
 
       /*
        std::cout << "Is " << v2 << " in the closure? " << set.contains(v2) << std::endl;
@@ -186,16 +172,16 @@ struct test_t : public generic_test_t {
 
       // std::cout << "made it to other tests!" << std::endl;
       {
-        auto tree = utils::kdtree (vvtovv ({
+        auto tree = vec_to_set (vvtovv ({
               {7, 0, 9, 9, 7},
               {8, 0, 7, 7, 8},
               {8, 0, 9, 9, 8},
               {9, 0, 7, 7, 9}
-            }), 5);
-        assert (tree.size () == 4);
-        assert (tree.dominates (vtov ({0, 0, 0, 0, 0}), true));
-        assert (tree.dominates (vtov ({6, 0, 9, 9, 7}), true));
-        assert (tree.dominates (vtov ({7, 0, 9, 9, 7}), true));
+            }));
+        //assert (tree.size () == 4);
+        assert (tree.contains (VType ({0, 0, 0, 0, 0})));
+        assert (tree.contains (VType ({6, 0, 9, 9, 7})));
+        assert (tree.contains (VType ({7, 0, 9, 9, 7})));
       }
 
 
@@ -228,7 +214,7 @@ struct test_t : public generic_test_t {
               {-1, 8, -1, 0, -1, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
               {-1, 9, -1, 0, -1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
             }));
-        assert (F.contains (vtov ({-1, 9, -1, 0, -1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})));
+        assert (F.contains (VType ({-1, 9, -1, 0, -1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})));
       }
     }
 
@@ -248,21 +234,42 @@ void usage (const char* progname) {
   std::cout << "  VECTYPE:\n  - all" << std::endl;
   for (auto&& s : vector_names) {
     auto start = s.find_last_of (':') + 1;
-    std::cout << "  - " << s.substr (start, s.find_first_of ('<') - start) << std::endl;
+    std::cout << "  - " << s.substr (start, s.find_first_of ('>') - start + 1) << std::endl;
   }
 
   exit (0);
 }
 
-using vector_types = type_list<vectors::simd_vector_backed<char>,
-                               vectors::vector_backed<char>>;
+namespace vectors {
+  template <typename T>
+  using simd_array_backed_sum_fixed = vectors::simd_array_backed_sum<T, 10>;
 
-using set_types = template_type_list<antichains::full_set,
+  template <typename T>
+  using simd_array_backed_fixed = vectors::simd_array_backed<T, 10>;
+
+  template <typename T>
+  using array_backed_fixed = vectors::array_backed<T, 10>;
+
+  template <typename T>
+  using array_backed_sum_fixed = vectors::array_backed_sum<T, 10>;
+
+}
+
+using vector_types = type_list<vectors::vector_backed<char>,
+                               vectors::array_backed_fixed<char>,
+                               vectors::array_backed_sum_fixed<char>,
+                               vectors::simd_vector_backed<char>,
+                               vectors::simd_array_backed_fixed<char>,
+                               vectors::simd_array_backed_sum_fixed<char>>;
+
+using set_types = template_type_list<//antichains::full_set, ; to slow.
                                      antichains::kdtree_backed,
                                      antichains::set_backed,
                                      antichains::vector_backed,
+                                     antichains::vector_backed_sum_split,
                                      antichains::vector_backed_one_dim_split,
                                      antichains::vector_backed_one_dim_split_intersection_only>;
+
 
 
 int main(int argc, char* argv[]) {
@@ -271,7 +278,8 @@ int main(int argc, char* argv[]) {
   if (argc != 3)
     usage (argv[0]);
 
-  auto implem = std::string ("antichains::") + argv[1] + "<vectors::" + argv[2] + "<char> >";
+  auto implem = std::string ("antichains::") + argv[1]
+    + "<vectors::" + argv[2] + (argv[2][strlen (argv[2]) - 1] == '>' ? " " : "") + ">";
 
   try {
     test_makers[implem] ();

@@ -14,6 +14,8 @@ namespace vectors {
 
     public:
       vector_backed (vector_backed&& other) = default;
+      vector_backed (const std::vector<T>& other) : std::vector<T> (other), k {other.size ()} {
+      }
 
       vector_backed& operator= (vector_backed&& other) {
         std::vector<T>::operator= (std::move (other));
@@ -57,8 +59,13 @@ namespace vectors {
           res[i] = std::min ((*this)[i], rhs[i]);
         return res;
       }
+
+      void to_vector (std::vector<char>& v) const {
+        v = *static_cast<const std::vector<char>*> (this);
+      }
+
     private:
-      const unsigned int k;
+      const size_t k;
   };
 }
 

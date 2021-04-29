@@ -104,9 +104,11 @@ namespace antichains {
       class disregard_first_component {
         public:
           bool operator() (const V& v1, const V& v2) const {
-            auto v2prime = v2.get ().copy ();
-            v2prime[0] = v1.get ()[0];
-            return v1.get () < v2prime;
+            std::vector<typename Vector::value_type> v;
+            v2.get ().to_vector (v);
+            v[0] = v1.get ()[0];
+            v.resize (v2.get ().size ());
+            return v1.get () < Vector (v);
           }
       };
 

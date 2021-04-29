@@ -8,7 +8,7 @@ namespace input_pickers {
     template <typename FwdActions, typename Actioner>
     struct critical {
       public:
-        critical (FwdActions& fwd_actions, const Actioner& actioner, int verbose) :
+        critical (FwdActions& fwd_actions, Actioner& actioner, int verbose) :
           fwd_actions {fwd_actions}, actioner {actioner}, verbose {verbose}, gen {0} {}
 
         template <typename SetOfStates>
@@ -112,7 +112,7 @@ namespace input_pickers {
         }
       private:
         FwdActions& fwd_actions;
-        const Actioner& actioner;
+        Actioner& actioner;
         const int verbose;
         std::mt19937 gen;
    };
@@ -120,7 +120,7 @@ namespace input_pickers {
 
   struct critical {
       template <typename FwdActions, typename Actioner>
-      static auto make (FwdActions& fwd_actions, const Actioner& actioner, int verbose) {
+      static auto make (FwdActions& fwd_actions, Actioner& actioner, int verbose) {
         return detail::critical (fwd_actions, actioner, verbose);
       }
   };

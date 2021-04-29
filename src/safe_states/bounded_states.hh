@@ -12,14 +12,12 @@ namespace safe_states {
         bounded_states (Aut aut, int K, int verbose) : aut {aut}, K {K}, verbose {verbose} {}
 
         SetOfStates operator() () const {
-          State f (aut->num_states ());
-
           int nb_accepting_states = 0;
           for (unsigned src = 0; src < aut->num_states (); ++src)
             if (aut->state_is_accepting (src))
               nb_accepting_states++;
 
-          auto c = std::vector<int> (aut->num_states ());
+          auto c = std::vector<char> (aut->num_states ());
           if (aut->state_is_accepting (aut->get_init_state_number ()))
             c[aut->get_init_state_number ()] = 1;
 
@@ -44,10 +42,10 @@ namespace safe_states {
           unsigned bounded = 0;
           for (unsigned src = 0; src < aut->num_states (); ++src)
             if (c[src] > nb_accepting_states)
-              f[src] = K - 1;
+              c[src] = K - 1;
             else {
               bounded++;
-              f[src] = 0;
+              c[src] = 0;
             }
 
           if (verbose)
@@ -55,9 +53,7 @@ namespace safe_states {
                       << aut->num_states () << " = "
                       << (bounded * 100) / aut->num_states () << "%" << std::endl;
 
-          SetOfStates S (std::move (f));
-
-          return S;
+          return SetOfStates (State (c));
         }
 
       private:

@@ -20,10 +20,30 @@ namespace vectors {
       static const auto simd_size = traits::simd_size;
 
     public:
+      using value_type = T;
+
+    private:
       simd_array_backed_ (size_t k) : k {k} {
         assert ((k + traits::simd_size - 1) / traits::simd_size == nsimds);
         ar[nsimds - 1] ^= ar[nsimds - 1];
       }
+
+    public:
+      simd_array_backed_ (const std::vector<T>& v) : k {v.size ()} {
+        ssize_t i;
+        for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
+          ar[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
+        if (k % simd_size != 0) {
+          T tail[simd_size] = {0};
+          std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
+          ar[i].copy_from (tail, std::experimental::vector_aligned);
+          ++i;
+        }
+        assert (i > 0);
+        for (; i < (ssize_t) nsimds; ++i) // This shouldn't happen if the vector is tight.
+          ar[i] ^= ar[i];
+      }
+
 
       simd_array_backed_ () = delete;
       simd_array_backed_ (const self& other) = delete;
@@ -147,7 +167,7 @@ namespace vectors {
         return false;
       }
 
-      // Used by Sets, should be a total order.
+      // Used by std::sets, should be a total order.  Do not use.
       bool operator< (const self& rhs) const {
         for (size_t i = 0; i < nsimds; ++i) {
           auto lhs_lt_rhs = ar[i] < rhs.ar[i];
@@ -161,11 +181,16 @@ namespace vectors {
         return false;
       }
 
-      int operator[] (size_t i) const {
-        return ar[i / simd_size][i % simd_size];
+      void to_vector (std::vector<char>& v) const {
+        v.resize (nsimds * simd_size);
+
+        for (size_t i = 0; i < nsimds; ++i)
+          ar[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
+        // We don't resize v back; this could be confusing, but we'll see v
+        // again and again, so want to be sure it's of sufficient size.
       }
 
-      typename traits::fssimd::reference operator[] (size_t i) {
+      int operator[] (size_t i) const {
         return ar[i / simd_size][i % simd_size];
       }
 

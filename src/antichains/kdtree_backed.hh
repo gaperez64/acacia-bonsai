@@ -30,9 +30,11 @@ namespace antichains {
       class disregard_first_component {
         public:
           bool operator() (const V& v1, const V& v2) const {
-            auto v2prime = v2.get ().copy ();
-            v2prime[0] = v1.get ()[0];
-            return v1.get () < v2prime;
+            std::vector<typename Vector::value_type> v;
+            v2.get ().to_vector (v);
+            v[0] = v1.get ()[0];
+            v.resize (v2.get ().size ());
+            return v1.get () < Vector (v);
           }
       };
 
@@ -48,8 +50,6 @@ namespace antichains {
 
       kdtree_backed (Vector&& el) {
         auto v = std::vector<Vector> ();
-        // FUCK YOU and your std::moves Cadilhac, because you move el
-        // below, we have to first save the dimension to use it later
         size_t dim = el.size ();
         v.push_back (std::move (el));
         this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (v), dim);
@@ -194,10 +194,10 @@ namespace antichains {
           // We mean to traverse the keys of the map and compute their meet
           // with x, so we will need the following definition of meet
           auto meet = [&] (std::reference_wrapper<const Vector> y) {
-            Vector &&v = x.meet (y);
+            Vector &&v = x.meet (y.get ());
             if (v == x)
               dominated = true;
-            intersection.emplace_back (std::move (v));
+            intersection.push_back (v.copy ());
             return not dominated;
           };
 

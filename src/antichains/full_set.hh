@@ -25,7 +25,7 @@ namespace antichains {
       }
 
       bool contains (const Vector& v) const {
-        return vector_set.find(v) != vector_set.end();
+        return vector_set.find (v) != vector_set.end ();
       }
 
       void clear_update_flag () {
@@ -56,12 +56,15 @@ namespace antichains {
 
         while (1) {
           std::list<Vector> newelts;
+          std::vector<typename Vector::value_type> elcopy;
 
           for (auto& el : vector_set) { // Iterate while making copies.
+            el.to_vector (elcopy);
             for (size_t i = 0; i < el.size (); ++i)
-              if (el[i] > -1) {
-                Vector v = el.copy ();
-                v[i] -= 1;
+              if (elcopy[i] > -1) {
+                elcopy[i]--;
+                Vector v = Vector (elcopy);
+                elcopy[i]++;
                 if (vector_set.find (v) == vector_set.end ())
                   newelts.push_back (std::move (v));
               }

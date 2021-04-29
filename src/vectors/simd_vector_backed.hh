@@ -13,11 +13,30 @@ namespace vectors {
       static const auto simd_size = traits::simd_size;
 
     public:
+      using value_type = T;
+
+    private:
       simd_vector_backed (size_t k) : k {k},
-                               nsimds {traits::nsimds (k)},
-                               vec (nsimds) {
+                                      nsimds {traits::nsimds (k)},
+                                      vec (nsimds) {
         vec.back () ^= vec.back ();
       }
+    public:
+      simd_vector_backed (const std::vector<T>& v) : simd_vector_backed (v.size ()) {
+        ssize_t i;
+        for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
+          vec[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
+        if (k % simd_size != 0) {
+          T tail[simd_size] = {0};
+          std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
+          vec[i].copy_from (tail, std::experimental::vector_aligned);
+          ++i;
+        }
+        assert (i > 0);
+        for (; i < (ssize_t) nsimds; ++i) // This shouldn't happen if the vector is tight.
+          vec[i] ^= vec[i];
+      }
+
 
       simd_vector_backed () = delete;
       simd_vector_backed (const self& other) = delete;
@@ -37,6 +56,12 @@ namespace vectors {
       }
 
       self& operator= (const self& other) = delete;
+
+      void to_vector (std::vector<T>& v) const {
+        v.resize (nsimds * simd_size);
+        for (size_t i = 0; i < nsimds; ++i)
+          vec[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
+      }
 
       class po_res {
         public:

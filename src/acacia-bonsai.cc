@@ -199,11 +199,12 @@ namespace {
 #ifdef NDEBUG
 # define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
 #else
-# define STATIC_SIMD_ARRAY_MAX 30
+# define STATIC_SIMD_ARRAY_MAX 44
 #endif
-#define ARRAY_VECTOR_IMPL simd_array_backed
+#define ARRAY_VECTOR_IMPL simd_array_backed_sum
 #define OTHER_VECTOR_IMPL vector_backed
-#define ANTICHAIN_IMPL vector_backed_one_dim_split
+#define ANTICHAIN_IMPL vector_backed_one_dim_split_intersection_only
+#define OTHER_ANTICHAIN_IMPL vector_backed_one_dim_split
 
         bool realizable =
           static_switch_t<STATIC_SIMD_ARRAY_MAX>{}(
@@ -217,7 +218,7 @@ namespace {
             // Dynamic value
             [&] (int i) {
               using vect_t = vectors::OTHER_VECTOR_IMPL<VECTOR_ELT_T>;
-              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::ANTICHAIN_IMPL<vect_t>>
+              auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::OTHER_ANTICHAIN_IMPL<vect_t>>
                 (aut, opt_K, all_inputs, all_outputs, verbose);
               return skn.solve ();
             },

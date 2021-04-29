@@ -4,30 +4,33 @@
 #include <iostream>
 
 namespace vectors {
-#define BYTES_PER_UNIT 8
+  // What's the multiple of T's we store.  This is used to speed up compilation
+  // and reduce program size.
+#define T_PER_UNIT 8
 
   template <typename T, size_t Units>
   class array_backed_;
 
   template <typename T, size_t K>
-  using array_backed = array_backed_<T, (K + BYTES_PER_UNIT - 1) / BYTES_PER_UNIT>;
+  using array_backed = array_backed_<T, (K + T_PER_UNIT - 1) / T_PER_UNIT>;
 
   template <typename T, size_t Units>
-  class array_backed_ : public std::array<T, Units * BYTES_PER_UNIT> {
-      size_t k;
+  class array_backed_ : public std::array<T, Units * T_PER_UNIT> {
       using self = array_backed_<T, Units>;
+      using base = std::array<T, Units * T_PER_UNIT>;
+
     public:
-      array_backed_ (size_t k) : k {k} {
-        assert ((k + BYTES_PER_UNIT - 1) / BYTES_PER_UNIT == Units);
-        for (size_t i = k; i < Units * BYTES_PER_UNIT; ++i)
-          (*this)[i] = 0;
+      array_backed_ (const std::vector<T>& v) : k {v.size ()} {
+        assert (k <= Units * T_PER_UNIT);
+        std::copy (v.begin (), v.end (), this->data ());
+        if (Units * T_PER_UNIT > k)
+          std::fill (&(*this)[k], this->end (), 0);
       }
 
       size_t size () const { return k; }
 
-      array_backed_ () = delete;
-
     private:
+      array_backed_ (size_t k) : k {k} {}
       array_backed_ (const self& other) = default;
 
     public:
@@ -39,8 +42,18 @@ namespace vectors {
         return res;
       }
 
-      self& operator= (self&& other) = default;
+      self& operator= (self&& other) {
+        assert (other.k == k);
+        base::operator= (std::move (other));
+        return *this;
+      }
+
       self& operator= (const self& other) = delete;
+
+      void to_vector (std::vector<char>& v) const {
+        v.resize (k);
+        std::copy (this->begin (), &(*this)[k], v.data ());
+      }
 
       class po_res {
         public:
@@ -70,16 +83,26 @@ namespace vectors {
       };
 
       inline auto partial_order (const self& rhs) const {
+        assert (rhs.k == k);
+
         return po_res (*this, rhs);
       }
 
       self meet (const self& rhs) const {
         auto res = self (k);
+        assert (rhs.k == k);
 
         for (size_t i = 0; i < k; ++i)
           res[i] = std::min ((*this)[i], rhs[i]);
+
+        if (k < Units * T_PER_UNIT)
+          std::fill (&res[k], res.end (), 0);
+
         return res;
       }
+
+    private:
+      const size_t k;
   };
 
 }

@@ -82,11 +82,10 @@ class k_bounded_safety_aut_detail {
 
         auto&& [input, valid] = input_picker (F);
         if (not valid) { // No valid input found.
-          State init (aut->num_states ());
-          for (size_t p = 0; p < aut->num_states (); ++p)
-            init[p] = -1;
+          std::vector<char> init (aut->num_states ());
+          init.assign (aut->num_states (), -1);
           init[aut->get_init_state_number ()] = 0;
-          return F.contains (init);
+          return F.contains (State (init));
         }
         cpre_inplace (F, input, actioner);
 
@@ -118,17 +117,16 @@ class k_bounded_safety_aut_detail {
     // F2 = \cap_{i \in I} F1i
     // F1i = \cup_{o \in O} PreHat (F, i, o)
     template <typename Action, typename Actioner>
-    void cpre_inplace (SetOfStates& F, const Action& io_action, const Actioner& actioner) {
+    void cpre_inplace (SetOfStates& F, const Action& io_action, Actioner& actioner) {
 
       if (verbose > 1)
         std::cout << "Computing cpre(F) with F = " << std::endl
                   << F;
 
       const auto& [input, actions] = io_action.get ();
-      typename SetOfStates::value_type v (aut->num_states ());
-      for (size_t i = 0; i < aut->num_states (); ++i)
-        v[i] = -1;
-      SetOfStates F1i (std::move (v));
+      std::vector<char> v (aut->num_states (), -1);
+      auto vv = typename SetOfStates::value_type (v);
+      SetOfStates F1i (std::move (vv));
       bool first_turn = true;
       for (const auto& action_vec : actions) {
         if (verbose > 2)
