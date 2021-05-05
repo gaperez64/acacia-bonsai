@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 namespace vectors {
 
@@ -14,7 +15,8 @@ namespace vectors {
 
     public:
       vector_backed (vector_backed&& other) = default;
-      vector_backed (const std::vector<T>& other) : std::vector<T> (other), k {other.size ()} {
+      vector_backed (std::span<const T> other) : std::vector<T> (other.begin (), other.end ()),
+                                                 k {other.size ()} {
       }
 
       vector_backed& operator= (vector_backed&& other) {
@@ -35,8 +37,9 @@ namespace vectors {
             bleq = true;
             bgeq = true;
             for (unsigned i = 0; i < rhs.k; ++i) {
-              bleq = bleq and lhs[i] <= rhs[i];
-              bgeq = bgeq and lhs[i] >= rhs[i];
+              auto diff = lhs[i] - rhs[i];
+              bgeq = bgeq and (diff >= 0);
+              bleq = bleq and (diff <= 0);
               if (not bleq and not bgeq)
                 break;
             }
@@ -60,8 +63,12 @@ namespace vectors {
         return res;
       }
 
-      void to_vector (std::vector<char>& v) const {
-        v = *static_cast<const std::vector<char>*> (this);
+      static size_t capacity_for (size_t elts) {
+        return elts;
+      }
+
+      void to_vector (std::span<T> v) const {
+        std::copy (this->begin (), this->end (), v.begin ());
       }
 
     private:

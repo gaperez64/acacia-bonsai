@@ -2,6 +2,7 @@
 #include <cassert>
 #include <experimental/simd>
 #include <iostream>
+#include <span>
 
 #include "utils/simd_traits.hh"
 
@@ -22,7 +23,7 @@ namespace vectors {
         vec.back () ^= vec.back ();
       }
     public:
-      simd_vector_backed (const std::vector<T>& v) : simd_vector_backed (v.size ()) {
+      simd_vector_backed (std::span<const T> v) : simd_vector_backed (v.size ()) {
         ssize_t i;
         for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
           vec[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
@@ -57,8 +58,12 @@ namespace vectors {
 
       self& operator= (const self& other) = delete;
 
-      void to_vector (std::vector<T>& v) const {
-        v.resize (nsimds * simd_size);
+      static constexpr size_t capacity_for (size_t elts) {
+        return traits::nsimds (elts) * simd_size;
+      }
+
+      void to_vector (std::span<T> v) const {
+        assert (v.size () >= k);
         for (size_t i = 0; i < nsimds; ++i)
           vec[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
       }

@@ -15,10 +15,10 @@ struct static_switch_t {
 
     template<class F, class G, class...Args>
     R<F, Args...> operator () (F&& f, G&& g, size_t i, Args&& ...args) const {
-      if (i >= M)
+      if (i > M)
         return g (i, std::forward<Args> (args)...);
 
-      return invoke (std::make_index_sequence<M> {}, std::forward<F> (f), i, std::forward<Args> (args)...);
+      return invoke (std::make_index_sequence<M + 1> {}, std::forward<F> (f), i, std::forward<Args> (args)...);
     }
 
   private:
@@ -28,7 +28,7 @@ struct static_switch_t {
       using pF = decltype (std::addressof (f));
       using call_func = R<F, Args...> (*) (pF pf, Args&& ...args);
 
-      static const call_func table[M] = {
+      static const call_func table[M + 1] = {
         [] (pF pf, Args&& ...args) -> R<F, Args...>{
           return std::forward<F> (*pf) (index_t<Is>{}, std::forward<Args> (args)...);
         }...

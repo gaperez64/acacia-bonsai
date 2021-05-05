@@ -3,16 +3,16 @@
 // So-called "Optimization 1" in ac+.
 // A state is bounded if it cannot carry a counter value of at least k.
 
-namespace safe_states {
+namespace bounded_states {
   namespace detail {
-    template <typename SetOfStates, typename Aut>
-    class bounded_states {
-        typedef typename SetOfStates::value_type State;
+    template <typename Aut>
+    class forward_saturation {
       public:
-        bounded_states (Aut aut, int K, int verbose) : aut {aut}, K {K}, verbose {verbose} {}
+        forward_saturation (Aut aut, int K, int verbose) : aut {aut}, K {K}, verbose {verbose} {}
 
-        SetOfStates operator() () const {
-          int nb_accepting_states = 0;
+        size_t operator() () const {
+          int nb_accepting_states = 0, nbounded = aut->num_states ();
+
           for (unsigned src = 0; src < aut->num_states (); ++src)
             if (aut->state_is_accepting (src))
               nb_accepting_states++;
@@ -21,9 +21,9 @@ namespace safe_states {
           if (aut->state_is_accepting (aut->get_init_state_number ()))
             c[aut->get_init_state_number ()] = 1;
 
+
           bool has_changed = true;
 
-          #warning Set accepting states to nb_accepting_states + 1?
           while (has_changed) {
             has_changed = false;
 
@@ -32,28 +32,38 @@ namespace safe_states {
                                         c[src] + (aut->state_is_accepting (src) ? 1 : 0));
               for (const auto& e : aut->out (src))
                 if (c[e.dst] < c_src_mod) {
+                  if (c_src_mod == nb_accepting_states + 1)
+                    nbounded--;
                   c[e.dst] = c_src_mod;
                   has_changed = true;
                 }
             }
           }
 
-#warning TODO: Remove the 0 states?
-          unsigned bounded = 0;
+          auto rename = std::vector<unsigned> (aut->num_states ());
+
+          unsigned bounded = 0, unbounded = 0;
           for (unsigned src = 0; src < aut->num_states (); ++src)
             if (c[src] > nb_accepting_states)
-              c[src] = K - 1;
-            else {
-              bounded++;
-              c[src] = 0;
-            }
+              rename[src] = nbounded + unbounded++;
+            else
+              rename[src] = bounded++;
+
+          assert (bounded == nbounded);
 
           if (verbose)
             std::cout << "Bounded states: " << bounded << " / "
                       << aut->num_states () << " = "
                       << (bounded * 100) / aut->num_states () << "%" << std::endl;
 
-          return SetOfStates (State (c));
+          // WARNING: Internal Spot
+          auto& g = aut->get_graph();
+          g.rename_states_(rename);
+          aut->set_init_state(rename[aut->get_init_state_number()]);
+          g.sort_edges_();
+          g.chain_edges_();
+
+          return nbounded;
         }
 
       private:
@@ -62,10 +72,10 @@ namespace safe_states {
     };
   }
 
-  struct bounded_states {
-      template <typename SetOfStates, typename Aut>
+  struct forward_saturation {
+      template <typename Aut>
       static auto make (Aut aut, int K, int verbose) {
-        return detail::bounded_states<SetOfStates, Aut> (aut, K, verbose);
+        return detail::forward_saturation<Aut> (aut, K, verbose);
       }
   };
 }

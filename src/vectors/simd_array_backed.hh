@@ -29,14 +29,15 @@ namespace vectors {
       }
 
     public:
-      simd_array_backed_ (const std::vector<T>& v) : k {v.size ()} {
+      simd_array_backed_ (std::span<const T> v) : k {v.size ()} {
         ssize_t i;
+        // For some reason, with O3, the span v may be unaligned as a simd vector.
         for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
-          ar[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
+          ar[i].copy_from (&v[i * simd_size], std::experimental::element_aligned);
         if (k % simd_size != 0) {
           T tail[simd_size] = {0};
           std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
-          ar[i].copy_from (tail, std::experimental::vector_aligned);
+          ar[i].copy_from (tail, std::experimental::element_aligned);
           ++i;
         }
         assert (i > 0);
@@ -181,16 +182,18 @@ namespace vectors {
         return false;
       }
 
-      void to_vector (std::vector<char>& v) const {
-        v.resize (nsimds * simd_size);
-
-        for (size_t i = 0; i < nsimds; ++i)
-          ar[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
-        // We don't resize v back; this could be confusing, but we'll see v
-        // again and again, so want to be sure it's of sufficient size.
+      static constexpr size_t capacity_for (size_t elts) {
+        return nsimds * simd_size;
       }
 
-      int operator[] (size_t i) const {
+      void to_vector (std::span<char> v) const {
+        // Sadly, we can't assume that v is aligned, as it could be the values after the bool cut-off.
+        for (size_t i = 0; i < nsimds; ++i) {
+          ar[i].copy_to (&v[i * simd_size], std::experimental::element_aligned);
+        }
+      }
+
+      T operator[] (size_t i) const {
         return ar[i / simd_size][i % simd_size];
       }
 

@@ -15,10 +15,10 @@
 #include "utils/bdd_helper.hh"
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
+#include "vectors.hh"
 
 #include "ios_precomputers.hh"
 #include "input_pickers.hh"
-#include "safe_states.hh"
 #include "actioners.hh"
 
 //#define debug(A...) do { std::cout << A << std::endl; } while (0)
@@ -32,8 +32,7 @@
 template <class SetOfStates,
           class IOsPrecomputationMaker,
           class ActionerMaker,
-          class InputPickerMaker,
-          class SafeStatesMaker>
+          class InputPickerMaker>
 class k_bounded_safety_aut_detail {
     typedef typename SetOfStates::value_type State;
 
@@ -43,15 +42,13 @@ class k_bounded_safety_aut_detail {
                                  int verbose,
                                  const IOsPrecomputationMaker& ios_precomputer_maker,
                                  const ActionerMaker& actioner_maker,
-                                 const InputPickerMaker& input_picker_maker,
-                                 const SafeStatesMaker& safe_states_maker) :
+                                 const InputPickerMaker& input_picker_maker) :
       aut {aut}, K {K},
       input_support {input_support}, output_support {output_support}, verbose {verbose},
       gen {0},
       ios_precomputer_maker {ios_precomputer_maker},
       actioner_maker {actioner_maker},
-      input_picker_maker {input_picker_maker},
-      safe_states_maker {safe_states_maker}
+      input_picker_maker {input_picker_maker}
     { }
 
     spot::formula bdd_to_formula (bdd f) const {
@@ -69,7 +66,12 @@ class k_bounded_safety_aut_detail {
       if (verbose)
         io_stats (input_output_fwd_actions);
 
-      SetOfStates&& F = (safe_states_maker.template make<SetOfStates> (aut, K, verbose)) ();
+      auto safe_vector = std::vector<char> (aut->num_states (), K - 1);
+
+      for (size_t i = 0; i < vectors::bitset_threshold; ++i)
+        safe_vector[i] = 0;
+
+      SetOfStates F = SetOfStates (State (safe_vector));
 
       int loopcount = 0;
 
@@ -110,7 +112,6 @@ class k_bounded_safety_aut_detail {
     const IOsPrecomputationMaker& ios_precomputer_maker;
     const ActionerMaker& actioner_maker;
     const InputPickerMaker& input_picker_maker;
-    const SafeStatesMaker& safe_states_maker;
 
     // This computes F = CPre(F), in the following way:
     // UPre(F) = F \cap F2
@@ -233,17 +234,15 @@ class k_bounded_safety_aut_detail {
 template <class SetOfStates,
           class IOsPrecomputationMaker,
           class ActionerMaker,
-          class InputPickerMaker,
-          class SafeStatesMaker>
+          class InputPickerMaker>
 static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int K,
                                         bdd input_support, bdd output_support,
                                         int verbose,
                                         const IOsPrecomputationMaker& ios_precomputer_maker,
                                         const ActionerMaker& actioner_maker,
-                                        const InputPickerMaker& input_picker_maker,
-                                        const SafeStatesMaker& safe_states_maker) {
-  return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker, InputPickerMaker, SafeStatesMaker>
-    (aut, K, input_support, output_support, verbose, ios_precomputer_maker, actioner_maker, input_picker_maker, safe_states_maker);
+                                        const InputPickerMaker& input_picker_maker) {
+  return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker, InputPickerMaker>
+    (aut, K, input_support, output_support, verbose, ios_precomputer_maker, actioner_maker, input_picker_maker);
 }
 
 template <class State, // TODO To be removed, deduced from SetOfStates,
@@ -253,8 +252,7 @@ static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
                                   int verbose) {
   return k_bounded_safety_aut_maker<SetOfStates> (aut, K, input_support, output_support, verbose,
                                                   ios_precomputers::fake_vars (),
-                                                  actioners::standard (),
-                                                  input_pickers::critical (),
-                                                  safe_states::bounded_states ()
+                                                  actioners::standard<State> (),
+                                                  input_pickers::critical ()
     );
 }

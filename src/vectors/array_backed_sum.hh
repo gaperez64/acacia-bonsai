@@ -55,8 +55,12 @@ namespace vectors {
 
       self& operator= (const self& other) = delete;
 
-      void to_vector (std::vector<char>& v) const {
-        v.resize (k);
+      static constexpr size_t capacity_for (size_t elts) {
+        return elts;
+      }
+
+      void to_vector (std::span<char> v) const {
+        assert (v.size () >= k);
         std::copy (this->begin (), &(*this)[k], v.data ());
       }
 
@@ -136,7 +140,7 @@ namespace vectors {
       }
 
       bool operator!= (const self& rhs) const {
-        return sum != rhs.sum and (static_cast<base> (*this) != static_cast<base> (rhs));
+        return sum != rhs.sum or (static_cast<base> (*this) != static_cast<base> (rhs));
       }
 
       self meet (const self& rhs) const {

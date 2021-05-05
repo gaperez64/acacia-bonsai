@@ -1,4 +1,5 @@
 #include <cassert>
+#include <span>
 #include <memory>
 #include <ostream>
 #include <set>
@@ -17,6 +18,8 @@ struct has_insert : std::false_type {};
 
 template <class T>
 struct has_insert<T, std::void_t<decltype(std::declval<T>().insert (std::declval<typename T::value_type> ()))>> : std::true_type {};
+
+#define il std::initializer_list<char>
 
 template<typename SetType>
 struct test_t : public generic_test_t {
@@ -43,9 +46,9 @@ struct test_t : public generic_test_t {
     }
 
     void operator() () {
-      VType v1 ({1, 2, 3});
-      VType v2 ({2, 5, 1});
-      VType v3 ({4, 1, 1});
+      VType v1 (il {1, 2, 3});
+      VType v2 (il {2, 5, 1});
+      VType v3 (il {4, 1, 1});
       /*
        * v1 = (1, 2, 3)
        * v2 = (2, 5, 1)
@@ -106,15 +109,15 @@ struct test_t : public generic_test_t {
             {4, 1, 1},
           }));
       //assert (tree.size () == 3);
-      assert (tree.contains (VType ({1, 2, 1})));
-      assert (tree.contains (VType ({1, 1, 1})));
-      assert (tree.contains (VType ({2, 1, 1})));
+      assert (tree.contains (VType (il {1, 2, 1})));
+      assert (tree.contains (VType (il {1, 1, 1})));
+      assert (tree.contains (VType (il {2, 1, 1})));
       set = set.apply ([] (const VType& v) { return v.copy (); });
 
       // std::cout << "We built the kdtree!" << std::endl;
 
-      VType v4 ({0, 1, 2});
-      VType v5 ({1, 1, 10});
+      VType v4 (il {0, 1, 2});
+      VType v5 (il {1, 1, 10});
 
       /*
        std::cout << "Is " << v2 << " in the closure? " << set.contains(v2) << std::endl;
@@ -179,9 +182,9 @@ struct test_t : public generic_test_t {
               {9, 0, 7, 7, 9}
             }));
         //assert (tree.size () == 4);
-        assert (tree.contains (VType ({0, 0, 0, 0, 0})));
-        assert (tree.contains (VType ({6, 0, 9, 9, 7})));
-        assert (tree.contains (VType ({7, 0, 9, 9, 7})));
+        assert (tree.contains (VType (il {0, 0, 0, 0, 0})));
+        assert (tree.contains (VType (il {6, 0, 9, 9, 7})));
+        assert (tree.contains (VType (il {7, 0, 9, 9, 7})));
       }
 
 
@@ -214,7 +217,7 @@ struct test_t : public generic_test_t {
               {-1, 8, -1, 0, -1, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
               {-1, 9, -1, 0, -1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
             }));
-        assert (F.contains (VType ({-1, 9, -1, 0, -1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})));
+        assert (F.contains (VType (il {-1, 9, -1, 0, -1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})));
       }
     }
 
@@ -260,7 +263,8 @@ using vector_types = type_list<vectors::vector_backed<char>,
                                vectors::array_backed_sum_fixed<char>,
                                vectors::simd_vector_backed<char>,
                                vectors::simd_array_backed_fixed<char>,
-                               vectors::simd_array_backed_sum_fixed<char>>;
+                               vectors::simd_array_backed_sum_fixed<char>,
+                               vectors::bitset_and_X<1, vectors::simd_vector_backed<char>>>;
 
 using set_types = template_type_list<//antichains::full_set, ; to slow.
                                      antichains::kdtree_backed,

@@ -2,7 +2,7 @@
 
 namespace actioners {
   namespace detail {
-    template <typename Aut, typename IToIOs>
+    template <typename State, typename Aut, typename IToIOs>
     class standard {
       public: // types
 
@@ -15,7 +15,7 @@ namespace actioners {
             bool operator() (const input_and_actions& x, const input_and_actions& y) const {
               return (x.second < y.second);
               // Let's favor the actions with the most potential for -1.
-              auto num_accepting_of = [this] (const action_vecs& x) constexpr {
+              auto num_accepting_of = [this] (const action_vecs& x) {
                 int num_accepting = 0;
                 for (const auto& tav : x)
                   for (const auto& ta : tav)
@@ -39,6 +39,9 @@ namespace actioners {
         standard (const Aut& aut, const IToIOs& inputs_to_ios, int K, int verbose) :
           aut {aut}, K {(char) K}, verbose {(char) verbose},
           apply_out (aut->num_states ()), mcopy (aut->num_states ()) {
+
+          mcopy.reserve (State::capacity_for (mcopy.size ()));
+
 #warning TODO? Cache compute_action_vec?
           std::set<input_and_actions, compare_actions> ioset;
 
@@ -57,7 +60,6 @@ namespace actioners {
 
         auto& actions () { return input_output_fwd_actions; }
 
-        template <typename State>
         State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
           if (dir == direction::forward)
             apply_out.assign (m.size (), (char) -1);
@@ -103,10 +105,11 @@ namespace actioners {
     };
   }
 
+  template <typename State>
   struct standard {
       template <typename Aut, typename IToIOs>
       static auto make (const Aut& aut, const IToIOs& itoios, int K, int verbose) {
-        return detail::standard (aut, itoios, K, verbose);
+        return detail::standard<State, Aut, IToIOs> (aut, itoios, K, verbose);
       }
   };
 }

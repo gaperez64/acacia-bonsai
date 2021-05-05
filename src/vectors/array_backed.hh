@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <span>
 
 namespace vectors {
   // What's the multiple of T's we store.  This is used to speed up compilation
@@ -20,7 +21,7 @@ namespace vectors {
       using base = std::array<T, Units * T_PER_UNIT>;
 
     public:
-      array_backed_ (const std::vector<T>& v) : k {v.size ()} {
+      array_backed_ (std::span<const T> v) : k {v.size ()} {
         assert (k <= Units * T_PER_UNIT);
         std::copy (v.begin (), v.end (), this->data ());
         if (Units * T_PER_UNIT > k)
@@ -50,8 +51,12 @@ namespace vectors {
 
       self& operator= (const self& other) = delete;
 
-      void to_vector (std::vector<char>& v) const {
-        v.resize (k);
+      static constexpr size_t capacity_for (size_t elts) {
+        return elts;
+      }
+
+      void to_vector (std::span<char> v) const {
+        assert (v.size () >= k);
         std::copy (this->begin (), &(*this)[k], v.data ());
       }
 

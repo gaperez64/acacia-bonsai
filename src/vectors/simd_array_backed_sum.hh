@@ -30,18 +30,18 @@ namespace vectors {
       }
 
     public:
-      simd_array_backed_sum_ (const std::vector<T>& v) : k {v.size ()} {
+      simd_array_backed_sum_ (std::span<const T> v) : k {v.size ()} {
         sum = 0;
         for (auto&& c : v)
           sum += c;
 
         ssize_t i;
         for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
-          ar[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
+          ar[i].copy_from (&v[i * simd_size], std::experimental::element_aligned);
         if (k % simd_size != 0) {
           T tail[simd_size] = {0};
           std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
-          ar[i].copy_from (tail, std::experimental::vector_aligned);
+          ar[i].copy_from (tail, std::experimental::element_aligned);
           ++i;
         }
         assert (i > 0);
@@ -69,13 +69,13 @@ namespace vectors {
 
       self& operator= (const self& other) = delete;
 
-      void to_vector (std::vector<char>& v) const {
-        v.resize (nsimds * simd_size);
+      static constexpr size_t capacity_for (size_t elts) {
+        return nsimds * simd_size;
+      }
 
+      void to_vector (std::span<char> v) const {
         for (size_t i = 0; i < nsimds; ++i)
-          ar[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
-        // We don't resize v back; this could be confusing, but we'll see v
-        // again and again, so want to be sure it's of sufficient size.
+          ar[i].copy_to (&v[i * simd_size], std::experimental::element_aligned);
       }
 
       class po_res {

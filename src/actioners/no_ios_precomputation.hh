@@ -2,10 +2,9 @@
 
 namespace actioners {
   namespace detail {
-    template <typename Aut, typename Supports>
+    template <typename State, typename Aut, typename Supports>
     class no_ios_precomputation {
       public: // types
-
         using action = std::vector<std::pair<unsigned, bool>>; // All these pairs are unique by construction.
         using action_vec = std::vector<action>;          // Vector indexed by state number
         using action_vecs = std::list<action_vec>;
@@ -15,7 +14,7 @@ namespace actioners {
             bool operator() (const input_and_actions& x, const input_and_actions& y) const {
               return (x.second < y.second);
               // Let's favor the actions with the most potential for -1.
-              auto num_accepting_of = [this] (const action_vecs& x) constexpr {
+              auto num_accepting_of = [this] (const action_vecs& x) {
                 int num_accepting = 0;
                 for (const auto& tav : x)
                   for (const auto& ta : tav)
@@ -60,7 +59,6 @@ namespace actioners {
 
         auto& actions () { return input_output_fwd_actions; }
 
-        template <typename State>
         State apply (const State& m, const action_vec& avec, direction dir) const /* __attribute__((pure)) */ {
           State f (m.size ());
 
@@ -115,10 +113,11 @@ namespace actioners {
     };
   }
 
+  template <typename State>
   struct no_ios_precomputation {
       template <typename Aut, typename Supports>
       static auto make (const Aut& aut, const Supports& supports, int K, int verbose) {
-        return detail::no_ios_precomputation (aut, supports, K, verbose);
+        return detail::no_ios_precomputation<State, Aut, Supports> (aut, supports, K, verbose);
       }
   };
 }

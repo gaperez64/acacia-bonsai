@@ -56,7 +56,8 @@ namespace antichains {
 
         while (1) {
           std::list<Vector> newelts;
-          std::vector<typename Vector::value_type> elcopy;
+          std::vector<typename Vector::value_type> elcopy (vector_set.front ().size ());
+          elcopy.reserve (Vector::capacity_for (elcopy.size ()));
 
           for (auto& el : vector_set) { // Iterate while making copies.
             el.to_vector (elcopy);
