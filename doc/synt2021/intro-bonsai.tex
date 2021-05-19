@@ -1,0 +1,56 @@
+Nowadays, hardware and software systems are everywhere around us. One way to
+ensure their correct functioning is to automatically synthesize them from a
+formal specification.  This has two advantages over alternatives such as
+testing and model checking.  Namely, the design part of the
+program-development process can be completely bypassed and the synthesized
+program is correct by construction.
+
+In this work we are be interested in synthesizing \emph{reactive
+systems}~\cite{hp84}. These are systems which maintain a continuous
+interaction with their environment.  Examples of reactive systems include
+communication, network, and multimedia protocols as well as operating systems.
+For the specification, we consider \emph{linear temporal logic} (LTL, for
+short)~\cite{pnueli77}. LTL allows to naturally specify time dependence
+amongst events that make up the formal specification of a system. The
+popularity of LTL as a formal specification language extends to, amongst
+others, artificial intelligence~\cite{gv16,cm19,gnpw20}, hybrid systems and
+control~\cite{bvpyb16}, software engineering~\cite{lpb15}, and
+bio-informatics~\cite{abbdfhinprs17}.
+
+The
+classical doubly-exponential-time synthesis algorithm can be decomposed
+into three steps:
+\begin{enumerate*}[label={(\roman*)}]
+  \item \emph{compile} the input LTL formula into an automaton of exponential
+    size~\cite{vw84},
+  \item \emph{determinize} the automaton~\cite{safra88,piterman07} incurring a
+    second exponential blowup,
+  \item and determine the winner of a \emph{two-player zero-sum game} played
+    on the latter automaton~\cite{pr89}.
+\end{enumerate*}
+By and far, most alternative approaches focus on avoiding the determinization
+step of the algorithm while keeping the rest of the algorithm intact.  This
+has motivated the development of so-called Safra-less approaches,
+e.g.~\cite{kpv06,eks16,ekrs17,tushy17} to cite a few.  Worth mentioning are
+the on-the-fly game construction implemented in the Strix tool~\cite{msl18}
+and the \emph{antichain}-based on-the-fly (bounded) determinization described
+in~\cite{fjr09} and implemented in Acacia+~\cite{bbfjr12}. Both techniques
+avoid constructing the doubly-exponential deterministic automaton.  It is
+worth highlighting that Acacia+ was not ranked in recent editions of the
+\emph{Reactive Synthesis Competition} (SYNTCOMP,\footnote{See
+\url{http://www.syntcomp.org/}} for short) since it is no longer maintained
+despite remaining one of the main temporal synthesis references for new
+advancements in the field (see,
+e.g.\cite{ffrt17,ztlpv17,apsec20,lms20,bltv20}).
+
+\paragraph*{Contribution}
+We provide a complete rewriting of Acacia in C++ articulated around modularity
+and leveraging modern techniques for better performances. These techniques
+include compile-time specialization of the algorithms, the use of SIMD
+registers to store vectors, and several preprocessing steps, one of them
+relying on efficient Binary Decision Diagram (BDD) libraries. For now, we have
+focused on the natural decision version of the synthesis problem which takes as
+input an LTL formula and asks whether a controller satisfying it (no matter
+the behavior of the environment) exists. Acacia-Bonsai was specifically
+designed to be able to easily try different antichain data structures as well
+preprocessing pipelines.
