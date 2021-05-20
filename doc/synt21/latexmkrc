@@ -1,0 +1,66 @@
+# -*- Perl -*-
+
+## Compile in _build: targets with starting @ are replaced with _build/,
+## possibly adding .tex; symbolic links are created.
+if (! -e "_build") {
+    mkdir ("_build");
+}
+if (! -e "_build/master.tex") {
+    my $master = <<'END';
+\RequirePackage{pgfkeys,xstring}
+\pgfqkeys{/vars}{.unknown/.code={\pgfkeyssetvalue{\pgfkeyscurrentkey}{#1}}}
+\def\varpath{/vars}
+\StrBehind*{\jobname}{.}[\args]
+\StrBefore*{\jobname.}{.}[\filename]
+\expandafter\pgfqkeys\expandafter{\expandafter\varpath\expandafter}\expandafter{\args}
+\input{../src/\filename.tex}
+END
+    open(FH, '>', "_build/master.tex") or die $!;
+    print FH $master;
+    close(FH);
+    system ("ln -f -s master.tex _build/main.tex;");
+}
+
+sub all_targets {
+    system("find src -name '*.tex' -exec grep -l documentclass '{}' \\; |
+                  while read f; do
+                    echo \$f
+                    grep '^%% var:' \$f | sed \"s@%% var: @\$f.@\"
+           done | sed 's|^src/\\(.*\\)\\.tex\\(.*\\)|@\\1\\2|' | " . $_[0]);
+}
+
+for (@ARGV) {
+    if ($_ eq "\@list") {
+        all_targets ("sort");
+        exit 0;
+    }
+    if ($_ eq "\@all") {
+        all_targets ("xargs -n 1 latexmk");
+        exit 0;
+    }
+    if (/^@/) {
+        unless (/\.tex$/) { s/$/.tex/ };
+        s/^@//;
+        $f=$_;
+        s/^/_build\//;
+        system("ln -f -s master.tex _build/$f");
+    }
+}
+
+$ENV{'TEXINPUTS'}='../src:../lib:../img:./:../cc:';
+$ENV{'BIBINPUTS'}='../src:';
+$ENV{'BSTINPUTS'}='../lib:../src:';
+
+$recorder = 1;  # try to use the .fls to notice changed files
+$pdf_mode = 1;  # generate PDFs, not DVIs
+$bibtex_use = 2;  # run BibTeX/biber when appears necessary
+$clean_ext = 'vtc nav snm vrb';  # also clean those extensions when invoking latexmk -c
+@default_files = ('_build/main.tex');
+$do_cd = 1;
+
+add_cus_dep('org', 'orgtex', 0, 'orgtex');
+sub orgtex {
+  $dir = dirname($_[0]);
+  $file = basename($_[0]);
+  system ("emacs --batch --eval \"(progn (require 'org) (org-babel-tangle-file \\\"$dir/$file.org\\\" \\\"$dir/${file}.orgtex\\\"))\"");
+}
