@@ -37,11 +37,11 @@ namespace vectors {
 
         ssize_t i;
         for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
-          ar[i].copy_from (&v[i * simd_size], std::experimental::element_aligned);
+          ar[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
         if (k % simd_size != 0) {
           T tail[simd_size] = {0};
           std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
-          ar[i].copy_from (tail, std::experimental::element_aligned);
+          ar[i].copy_from (tail, std::experimental::vector_aligned);
           ++i;
         }
         assert (i > 0);
@@ -75,7 +75,7 @@ namespace vectors {
 
       void to_vector (std::span<char> v) const {
         for (size_t i = 0; i < nsimds; ++i)
-          ar[i].copy_to (&v[i * simd_size], std::experimental::element_aligned);
+          ar[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
       }
 
       class po_res {
@@ -211,11 +211,14 @@ namespace vectors {
         return ar[i / simd_size][i % simd_size];
       }
 
+      auto bin () const {
+        return (sum + k) / k;
+      }
+
     private:
       std::array<typename traits::fssimd, nsimds> ar;
       const size_t k;
 #warning also store max?
-    public:
       int sum = 0;
   };
 

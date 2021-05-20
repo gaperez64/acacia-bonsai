@@ -68,7 +68,7 @@ class k_bounded_safety_aut_detail {
 
       auto safe_vector = std::vector<char> (aut->num_states (), K - 1);
 
-      for (size_t i = 0; i < vectors::bitset_threshold; ++i)
+      for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
         safe_vector[i] = 0;
 
       SetOfStates F = SetOfStates (State (safe_vector));
@@ -251,7 +251,7 @@ static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
                                   bdd input_support, bdd output_support,
                                   int verbose) {
   return k_bounded_safety_aut_maker<SetOfStates> (aut, K, input_support, output_support, verbose,
-                                                  ios_precomputers::fake_vars (),
+                                                  ios_precomputers::delegate (),
                                                   actioners::standard<State> (),
                                                   input_pickers::critical ()
     );

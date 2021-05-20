@@ -64,6 +64,7 @@ namespace actioners {
           if (dir == direction::forward)
             apply_out.assign (m.size (), (char) -1);
           else
+#warning Assign 0 to bool states
             apply_out.assign (m.size (), (char) (K - 1));
 
           m.to_vector (mcopy);

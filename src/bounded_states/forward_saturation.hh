@@ -2,6 +2,17 @@
 
 // So-called "Optimization 1" in ac+.
 // A state is bounded if it cannot carry a counter value of at least k.
+/* Note: In ac+, this is computed backward:
+   while (has_changed)
+    for dst in aut
+      c_dst = c[dst]
+      for src s.t. (src, dst) in aut
+        t = min (nb_accepting_states + 1, c[src] + (accepting(src)?1:0))
+        if (t > c_dst) { c_dst = t; has_changed = true}
+      c[dst] = c_dst;
+   ... and uses a copy of c in each loop.  Not sure why. */
+#warning todo backward saturation.
+#warning todo use scc.
 
 namespace bounded_states {
   namespace detail {
@@ -11,16 +22,16 @@ namespace bounded_states {
         forward_saturation (Aut aut, int K, int verbose) : aut {aut}, K {K}, verbose {verbose} {}
 
         size_t operator() () const {
-          int nb_accepting_states = 0, nbounded = aut->num_states ();
+          unsigned nb_accepting_states = 0, nunbounded = 0;
 
           for (unsigned src = 0; src < aut->num_states (); ++src)
             if (aut->state_is_accepting (src))
               nb_accepting_states++;
 
-          auto c = std::vector<char> (aut->num_states ());
+          assert (nb_accepting_states < UCHAR_MAX);
+          auto c = std::vector<unsigned char> (aut->num_states ());
           if (aut->state_is_accepting (aut->get_init_state_number ()))
             c[aut->get_init_state_number ()] = 1;
-
 
           bool has_changed = true;
 
@@ -28,12 +39,12 @@ namespace bounded_states {
             has_changed = false;
 
             for (unsigned src = 0; src < aut->num_states (); ++src) {
-              int c_src_mod = std::min (nb_accepting_states + 1,
-                                        c[src] + (aut->state_is_accepting (src) ? 1 : 0));
+              unsigned c_src_mod = std::min (nb_accepting_states + 1u,
+                                             c[src] + (aut->state_is_accepting (src) ? 1u : 0u));
               for (const auto& e : aut->out (src))
                 if (c[e.dst] < c_src_mod) {
                   if (c_src_mod == nb_accepting_states + 1)
-                    nbounded--;
+                    nunbounded++;
                   c[e.dst] = c_src_mod;
                   has_changed = true;
                 }
@@ -45,11 +56,11 @@ namespace bounded_states {
           unsigned bounded = 0, unbounded = 0;
           for (unsigned src = 0; src < aut->num_states (); ++src)
             if (c[src] > nb_accepting_states)
-              rename[src] = nbounded + unbounded++;
+              rename[src] = unbounded++;
             else
-              rename[src] = bounded++;
+              rename[src] = nunbounded + bounded++;
 
-          assert (bounded == nbounded);
+          assert (unbounded == nunbounded);
 
           if (verbose)
             std::cout << "Bounded states: " << bounded << " / "
@@ -63,7 +74,7 @@ namespace bounded_states {
           g.sort_edges_();
           g.chain_edges_();
 
-          return nbounded;
+          return nunbounded;
         }
 
       private:

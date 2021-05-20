@@ -8,6 +8,8 @@
 #include <sstream>
 #include <cstdlib>
 
+#include "vectors.hh"
+
 namespace antichains {
   template <typename Vector>
   class vector_backed_sum_split {
@@ -258,21 +260,9 @@ namespace antichains {
       size_t split_dim;
 
       // Surely: if bin_of (u) > bin_of (v), then v can't dominate u.
-      struct general_ {};
-      struct special_ : general_ {};
-      template <typename> struct int_ { typedef int type; };
-
       size_t bin_of (const Vector& v) const {
-        return bin_of_helper (v, special_ ());
-      }
-
-      template <typename V, typename int_<decltype (V::sum)>::type = 0>
-      size_t bin_of_helper (const V& v, special_) const {
-        return (size_t) (((ssize_t) v.sum + v.size ()) / v.size ());
-      }
-
-      template <typename V>
-      size_t bin_of_helper (const V& v, general_) const {
+        if constexpr (vectors::has_bin<Vector>::value)
+          return v.bin ();
         return 0;
       }
   };

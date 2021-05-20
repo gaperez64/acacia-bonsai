@@ -264,7 +264,7 @@ using vector_types = type_list<vectors::vector_backed<char>,
                                vectors::simd_vector_backed<char>,
                                vectors::simd_array_backed_fixed<char>,
                                vectors::simd_array_backed_sum_fixed<char>,
-                               vectors::bitset_and_X<1, vectors::simd_vector_backed<char>>>;
+                               vectors::X_and_bitset<vectors::simd_vector_backed<char>, 1>>;
 
 using set_types = template_type_list<//antichains::full_set, ; to slow.
                                      antichains::kdtree_backed,
@@ -286,6 +286,7 @@ int main(int argc, char* argv[]) {
     + "<vectors::" + argv[2] + (argv[2][strlen (argv[2]) - 1] == '>' ? " " : "") + ">";
 
   try {
+    vectors::bool_threshold = 128;
     test_makers[implem] ();
   } catch (std::bad_function_call& e) {
     std::cout << "error: no such implem: " << implem << std::endl;

@@ -20,6 +20,7 @@ namespace vectors {
       simd_vector_backed (size_t k) : k {k},
                                       nsimds {traits::nsimds (k)},
                                       vec (nsimds) {
+        assert (nsimds >= 1);
         vec.back () ^= vec.back ();
       }
     public:

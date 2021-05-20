@@ -8,7 +8,7 @@ namespace bounded_states {
         no_bounded_states (Aut aut, int K, int verbose) : aut {aut}, K {K}, verbose {verbose} {}
 
         size_t operator() () const {
-          return 0;
+          return aut->num_states ();
         }
       private:
         const Aut aut;
