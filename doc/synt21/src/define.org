@@ -148,10 +148,10 @@ versions of the letter X.
   \defmathtext\cpre{CPre}
   \defmath\vinit{v_\text{init}}
   \defmath\vsafe{v_\text{safe}}
-  \defmathtext\safe{safe}
+  \defmathtext\safe{Safe}
   \defmath\down{\mathrm{\downarrow}}
   \newcommand{\wh}[1]{\widehat{#1}}
-  \defmathtext\act{act}
+  \defmathtext\ioact{io-act}
   \defmathtext\iact{i-act}
 #+END_SRC
 
@@ -176,6 +176,40 @@ document, since hyperref has to be loaded *after* the definitions.
     \setlist[abenum*,1]{label={(\alph*)}}
   }
 #+END_SRC
+
+* Code
+
+# This uses minted, so requires compiling with =-shell-escape=:
+# #+begin_src latex
+#   %\usepackage[outputdir=_build]{minted}
+#   \usepackage{minted}
+#   \newminted{c++}{}
+#   \def\cinline#1{\mintinline[style=colorful]{c++}{#1}}
+# #+end_src
+
+Using minted is probably the best looks, but not compatible with easychair.
+#+begin_src latex
+  \def\cinline#1{\texttt{#1}}
+#+end_src
+
+* Automata
+
+This relies on TikZ:
+#+begin_src latex
+  \usepackage{tikz}
+
+  \usetikzlibrary{automata,positioning,calc,through,fit,decorations.pathreplacing}
+
+  %% Automata
+  \newenvironment{smallautomaton}[1][]{
+      \begin{tikzpicture}[shorten >=1pt,initial text=,
+        every state/.style={draw=blue!50,very thick,fill=blue!20},
+        node distance=1cm,state/.append style={minimum size=1em},%
+        smallstate/.style={state,minimum size=.5em,inner sep=0pt},on grid,auto,#1]}
+      {\end{tikzpicture}
+  }
+
+#+end_src
 
 * Theorems
 

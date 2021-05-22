@@ -1,20 +1,10 @@
-\documentclass[sigconf,screen]{acmart}
+\documentclass[sigconf,screen,nonacm]{acmart}
 \usepackage[english]{babel}
-\usepackage[ruled,vlined]{algorithm2e}
+\usepackage[ruled,vlined,nosemicolon]{algorithm2e}
 \usepackage{paralist}
+\usepackage{tikz}
 
-\setcopyright{acmcopyright}
-\copyrightyear{2018}
-\acmYear{2018}
-\acmDOI{10.1145/1122445.1122456}
-
-%% These commands are for a PROCEEDINGS abstract or paper.
-\acmConference[Woodstock '18]{Woodstock '18: ACM Symposium on Neural
-  Gaze Detection}{June 03--05, 2018}{Woodstock, NY}
-\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
-  June 03--05, 2018, Woodstock, NY}
-\acmPrice{15.00}
-\acmISBN{978-1-4503-XXXX-X/18/06}
+\usetikzlibrary{hobby,calc}
 
 \input{define.orgtex}
 
@@ -23,7 +13,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{Acacia-Bonsai: A Modern Implementation of Antichain-Based LTL Realizability}
+\title{Acacia-Bonsai: A Modern Implementation of Downset-Based LTL Realizability}
 
 \author{Michaël Cadilhac}
 \email{michael@cadilhac.name}
@@ -46,20 +36,20 @@
 \email{perez@uantwerp.be}
 
 \begin{abstract}
-  We describe our implementation of antichain-based algorithms used to solve the
-  realizability for linear temporal logic (LTL) specifications.  These
+  We describe our implementation of downset-based algorithms used to solve the
+  realizability problem for linear temporal logic (LTL) specifications.  These
   algorithms were introduced by Filiot et al in the 2010s and implemented in the
   tools Acacia and Acacia+ in C and Python.  We provide a complete rewriting of
-  Acacia in C++ articulated around modularity and leveraging modern techniques
+  Acacia in C++ articulated around genericity and leveraging modern techniques
   for better performances.  These techniques include compile-time specialization
   of the algorithms, the use of SIMD registers to store vectors, and several
-  preprocessing steps, one of them relying on efficient Binary Decision Diagram
-  (BDD) libraries.
+  preprocessing steps, some relying on efficient Binary Decision Diagram (BDD)
+  libraries.
 \end{abstract}
 
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{LTL synthesis, C++, SIMD, antichains}
+\keywords{LTL synthesis, C++, SIMD, downset, antichains, BDD}
 
 \maketitle
 
@@ -96,48 +86,36 @@ into three steps:
     on the latter automaton~\cite{pr89}.
 \end{enumerate}
 By and far, most alternative approaches focus on avoiding the determinization
-step of the algorithm while keeping the rest of the algorithm intact.  This
-has motivated the development of so-called Safra-less approaches,
-e.g.~\cite{kpv06,eks16,ekrs17,tushy17} to cite a few.  Worth mentioning are
-the on-the-fly game construction implemented in the Strix tool~\cite{msl18}
-and the \emph{antichain}-based on-the-fly (bounded) determinization described
-in~\cite{fjr09} and implemented in Acacia+~\cite{bbfjr12}. Both techniques
-avoid constructing the doubly-exponential deterministic automaton.  It is
-worth highlighting that Acacia+ was not ranked in recent editions of the
-\emph{Reactive Synthesis Competition} (SYNTCOMP,\footnote{See
-\url{http://www.syntcomp.org/}} for short) since it is no longer maintained
-despite remaining one of the main temporal synthesis references for new
-advancements in the field (see,
+step of the algorithm while keeping the rest of the algorithm intact.  This has
+motivated the development of so-called Safra-less approaches,
+e.g.~\cite{kpv06,eks16,ekrs17,tushy17} to cite a few.  Worth mentioning are the
+on-the-fly game construction implemented in the Strix tool~\cite{msl18} and the
+\emph{downset}-based (or ``antichain-based'') on-the-fly (bounded)
+determinization described in~\cite{fjr09} and implemented in
+Acacia+~\cite{bbfjr12}. Both techniques avoid constructing the
+doubly-exponential deterministic automaton.  It is worth highlighting that
+Acacia+ was not ranked in recent editions of the \emph{Reactive Synthesis
+  Competition} (SYNTCOMP,\footnote{See \url{http://www.syntcomp.org/}} for
+short) since it is no longer maintained despite remaining one of the main
+temporal synthesis references for new advancements in the field (see,
 e.g.\cite{ffrt17,ztlpv17,apsec20,lms20,bltv20}).
 
 \paragraph*{Contribution}
-We provide a complete rewriting of Acacia in C++ articulated around modularity
-and leveraging modern techniques for better performances. These techniques
-include compile-time specialization of the algorithms, the use of SIMD
-registers to store vectors, and several preprocessing steps, one of them
-relying on efficient Binary Decision Diagram (BDD) libraries. For now, we have
-focused on the natural decision version of the synthesis problem which takes as
-input an LTL formula and asks whether a controller satisfying it (no matter
-the behavior of the environment) exists. Acacia-Bonsai was specifically
-designed to be able to easily try different antichain data structures as well
-preprocessing pipelines.
-
-Move "disclaimer here"
+We present the Acacia approach to solving the problem at hand and propose a new
+implementation that allows for a variety of optimization steps.  For now, we
+have focused on the natural decision version of the synthesis problem which
+takes as input an LTL formula and asks whether a controller satisfying it (no
+matter the behavior of the environment) exists.  We entirely specialize our
+presentation on the technical problem at hand and strive to distillate the
+algorithmic essence of the Acacia approach in that context.  The main algorithm
+is presented in Section~\ref{sec:algo} and the different implementation options
+are listed in Section~\ref{sec:implem}.
 
 \section{Preliminaries}
 
-\emph{Disclaimer.} For the purpose of this short abstract, we focus on the very
-problem at hand and do not explore how this ties to the realizability problem;
-we simply mention the latter at the end of this section, for perspective.  We do
-not introduce the full definitions that are required to prove correctness of the
-main algorithm.  Indeed, we strive to distillate the algorithmic essence of the
-Acacia approach of the realizability problem, but refer the interested reader to
-the original publications for proofs.  We also deliberately abuse the notation
-therein, specializing them as needed.
-
 Throughout this abstract, we assume the existence of two alphabets, \(I\) and
 \(O\); although these stand for input and output, the actual definitions of these
-two terms is more complex.
+two terms is slightly more complex.
 
 An \emph{input} is a boolean combination of symbols of \(I\) and it is \emph{pure}
 if it is just a conjunction in which all the symbols in \(I\) appear (that is, it
@@ -149,43 +127,53 @@ inputs and \(x\) for IOs.  Two IOs \(x\) and \(y\) are \emph{compatible} if
 and \(x\) is pure, then \(x \land y = x\).
 
 A \emph{Büchi automaton} \cA is a tuple \((Q, q_0, \delta, B)\), \(Q\) is a set of
-states, \(q_0\) the initial state,
-\(\delta \subseteq Q \times \bbB(I \cup O) \times Q\) is the transition relation, and
-\(B \subseteq Q\) is the set of Büchi states.  The actual semantics of this automaton will
-not be relevant to our exposition, we simply note that these automata are
-usually defined to recognize infinite sequences of symbols from \(I \cup O\). 
+states, \(q_0\) the initial state, \(\delta\) is the transition relation that uses IO as
+labels, and \(B \subseteq Q\) is the set of Büchi states.  The actual semantics of this
+automaton will not be relevant to our exposition, we simply note that these
+automata are usually defined to recognize infinite sequences of symbols from
+\(I \cup O\).  We assume, throughout this abstract, the existence of some automaton
+\(\cA\).
 
 We will be interested in valuations of the states of \(\cA\) that indicate some
 sort of progress towards reaching Büchi states---again, we do not go into details
 here.  We will simply speak of \emph{vectors over \cA} for elements in
 \(\bbZ^Q\), mapping states to integers.  In practice, these vectors will range
-into a finite subset of \(\bbZ\), with \(-1\) as minimum value and an upper bound
-provided by the problem.
+into a finite subset of \(\bbZ\), with \(-1\) as an implicit minimum value and an
+upper bound provided by the problem.
 
 For a vector \(\vec{v}\) over \(\cA\) and an IO \(x\), we define a function that takes
 one step back in the automaton, decreasing components that have seen Büchi
 states.  Write \(\chi_B(q)\) for the function mapping a state \(q\) to \(1\) if \(q \in B\),
 and \(0\) otherwise.  We then define:
-\[\bwd(\vec{v}, x) = \left\{p \mapsto \min_{\substack{(p, y, q) \in \delta\\ x \text{ comp. with } y}} v_q -
+\[\bwd(\vec{v}, x) = \left\{p \mapsto \min_{\substack{(p, y, q) \in \delta\\ x \text{ comp.\ with } y}} v_q -
   \chi_B(q)\right\}\enspace,\]
-and we generalize this to sets using \(\bwd(S, x) = \{\bwd(\vec{v}, x) \mid \vec{v}
+and we generalize this to sets: \(\bwd(S, x) = \{\bwd(\vec{v}, x) \mid \vec{v}
 \in S\}\).
 
 For a set \(S\) of vectors over \cA and a (possibly nonpure) input \(i\), define:
-\[\cpre_i(S) = \bigcup_{\substack{x \text{ pure IO}\\x \text{ comp.\ with} i}} \bwd(S, x)\]
+\[\cpre_i(S) = S \cap \bigcup_{\substack{x \text{ pure IO}\\x \text{ comp.\ with } i}} \bwd(S, x)\enspace.\]
 
 It can be proved that iterating \cpre with any possible pure input stabilizes to
-a fixed point, and that the downward closure of that fixed point is independent
-from the order in which the inputs are selected.  We define
-\(\down\cpre^*(S)\) to be that set.
+a fixed point that is independent from the order in which the inputs are
+selected.  We define \(\cpre^*(S)\) to be that set.
 
-We define two vectors 
+All the sets that we manipulate will be \emph{downsets}: we say that a vector
+\(\vec{u}\) dominates another vector \(\vec{v}\) if for any \(q \in Q\),
+\(u_q \geq v_q\), and we say that a set is a downset if \(\vec{u} \in S\) and
+\(\vec{u}\) dominates \(\vec{v}\) implies that \(\vec{v} \in S\).  This allows to
+implement these sets by keeping only dominating elements, which form, as they
+are pairwise nondominating, an \emph{antichain}.  In practice, it may be
+interesting to keep more elements than just the dominating ones or even to keep
+all of the elements to avoid the cost of computing domination.
 
+Finally, we define \(\vinit\) as the vector that maps \(q_0\) to \(0\) and all other
+states to \(-1\), and \(\safe_k\) as the smallest downset containing the
+all-\(k\) vector.
 We are now equipped to define the computational problem we focus on:\\[1em]
 \textbf{BackwardRealizability}
 \begin{compactitem}
 \item \textbf{Given:} A Büchi automaton \cA and an integer \(k > 0\),
-\item \textbf{Question:} Does \(\vinit \in \down\cpre^*(\{\safe_k(\cA)\})\)?
+\item \textbf{Question:} Does \(\vinit \in \cpre^*(\safe_k(\cA)\})\)?
 \end{compactitem}
 \vspace{1em}
 
@@ -209,20 +197,32 @@ introduce it in a more general setting and succinctly present the original
 exposition when we mention how this optimization can be implemented in
 Section~\ref{sec:implem-bool}.  We start with an example.  Consider the
 following Büchi automaton:
-% \begin{automaton}
-%   \node[state] (q0) {\(q_0\)};
-%   \node[state, right of=q0] (q1) {\(q_1\)};
-%   \node[]...
-%   \path[->] (q0) edge (q1)
-%             (q1) edge (r);
-% \end{automaton}
+
+
+\tikzset{
+ pics/blob/.style={
+   code={
+   \draw[use Hobby shortcut, fill, closed] (0,0) +($(0:1+4*rnd)$)
+       \foreach \a in {60,120,...,350} {  .. +($(\a: 1+4*rnd)$) };
+   }
+}}
+
+\begin{center}
+  \begin{smallautomaton}
+    \node[smallstate,initial] (q0) {\(q_0\)};
+    \node[smallstate, right of=q0] (q1) {\(q_1\)};
+    \path pic[right=1cm of q1,smallstate,scale=0.15,dashed] {blob};
+    \node[right of=q1] (r) {};
+
+    \path[->] (q0) edge node {\(\top\)} (q1) (q1) edge node {\(\top\)} (r);
+  \end{smallautomaton}
+\end{center}
 
 Recall that we are only interested in knowing, after \cpre has stabilized,
 whether the initial state can carry a nonnegative value.  In that sense, the
 crucial information associated with \(q_0\) is boolean in nature: is its value
-positive or \(-1\)?  Even further, this same remark can be applied to \(q_1\), since
-\(q_1\) being valued \(6\) or \(9\), for instance, is not important to the valuation
-of \(q_0\).
+positive or \(-1\)?  Even further, this same remark can be applied to \(q_1\) since
+\(q_1\) being valued \(6\) or \(7\) is not important to the valuation of \(q_0\).
 
 Consequently, the set of states may be partitioned into integer-valued states
 and boolean-valued ones.  Naturally, detecting which states can be made boolean
@@ -236,22 +236,22 @@ requires to refer to the underlying Büchi automaton and checking for each
 transition therein whether \(x\) is compatible with the condition.  In general, it
 will be preferable to precompute, for each \(x\), what are the relevant pairs
 \((p, q)\) for which \(x\) can go from \(p\) to \(q\).  We call the set of such pairs
-the \emph{action} of \(x\) and denote it \(\act(x)\); in symbols:
-\[\act(x) = \{(p, q) \mid (\exists (p, y, q) \in \delta)[x \text{ is compatible with }
+the \emph{io-action} of \(x\) and denote it \(\ioact(x)\); in symbols:
+\[\ioact(x) = \{(p, q) \mid (\exists (p, y, q) \in \delta)[x \text{ is compatible with }
 y]\}\enspace.\]
 
 Further, as we will be computing \(\cpre_i(S)\) for inputs \(i\), we abstract in a
 similar way the information required for this computation.  We use the term
-\emph{input-action} for the set of actions of IOs compatible with \(i\) and denote
+\emph{input-action} for the set of io-actions of IOs compatible with \(i\) and denote
 it \(\iact(i)\); in symbols:
-\[\iact(i) = \{\act(x) \mid x \text{ is an IO compatible with } i\}\enspace.\]
+\[\iact(i) = \{\ioact(x) \mid x \text{ is an IO compatible with } i\}\enspace.\]
 
 We will also use this notation later to devise a set of sufficient inputs for
 the automaton, as introduced in the previous section.
 
 Note that from an implementation point of view, we do not require that the
 actions be precomputed.  Indeed, when iterating through pairs
-\((p, q) \in \act(x)\), the underlying implementation can be going back to the
+\((p, q) \in \ioact(x)\), the underlying implementation can be going back to the
 automaton if it so wishes.
 
 \subsection{Sufficient inputs}
@@ -262,64 +262,114 @@ redundant.  For instance, consider a Büchi automaton with
 \(I = \{i\}, O = \{o_1, o_2\}\), but the only transitions compatible with \(i\) are
 labeled \(i \land o_1\) and \(i \land \neg o_1\).  Pure IOs compatible with the first
 label will be \(i \land o_1 \land o_2\) and \(i \land o_1 \land \neg o_2\), but
-certainly, these two IOs have the same actions, and optimally, we would only
+certainly, these two IOs have the same io-actions, and optimally, we would only
 consider \(i \land o_1\).  However, we should not consider \(i \land o_2\), as it is
 compatible with both transitions, but does not correspond to a pure IO.  We will
 thus allow our main algorithm to select certain inputs and IOs:
 \begin{definition}
   An IO (\resp input) is \emph{valid} if there is a pure IO (\resp input) with
-  the same action (\resp input-action).  A set \(X\) of valid IOs is
-  \emph{sufficient} if it represents all the possible actions of pure IOs:
-  \[\{\act(x) \mid x \in K\} = \{act(x) \mid x \text{ is a pure IO}\}\enspace.\]
+  the same io-action (\resp input-action).  A set \(X\) of valid IOs is
+  \emph{sufficient} if it represents all the possible io-actions of pure IOs:
+  \[\{\ioact(x) \mid x \in K\} = \{act(x) \mid x \text{ is a pure IO}\}\enspace.\]
   A sufficient set of inputs is defined similarly with input-actions.
 \end{definition}
 
 \subsection{Algorithm}
 
+The following algorithm solves \textbf{BackwardRealizability} by computing
+explicitly \(\cpre^*\):
 \begin{algorithm}
-\SetKwData{Antichain}{Antichain}
+  \LinesNumbered
+\SetKwData{Downset}{Downset}
 \SetKwFunction{Union}{Union}\SetKwFunction{FindCompress}{FindCompress}
-\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\SetKwInput{Input}{Input}\SetKwInput{Output}{Output}
 
 \Input{A Büchi automaton \cA, an integer \(k > 0\)}
-\Output{Whether \(\vinit \in \down \cpre^*(\{\safe_k(\cA)\})\)}
+\Output{Whether \(\vinit \in  \cpre^*(\safe_k(\cA))\)}
 \BlankLine
 
-Split states of \cA into boolean and nonboolean\;
-Build a type \Antichain with possibly partially boolean vectors\;
-Compute \vsafe: each boolean component receives 0, each nonboolean \(k - 1\)\;
-Let \(S = \{\vsafe\}\) of type \Antichain\;
-Compute a sufficient set \(K\) of  inputs\;
-Compute the input-actions of \(K\)\;
+Possibly remove some useless states in \cA\;\label{alg:preproc}
+Split states of \cA into boolean and nonboolean\;\label{alg:bool}
+Let \Downset be a type with possibly partially boolean vectors\;\label{alg:types}
+Let \(S = \safe_k(\cA)\) of type \Downset\;
+Compute a sufficient set \(E\) of  inputs\;\label{alg:inputs}
+Compute the input-actions of \(E\)\;\label{alg:actions}
 \While{true}{
-  Pick an input-action \(a\) that leads to progress in \(S\)\;
-  \lIf{no such action is found}{\Return \(\vinit \in S\)}
+  Pick an input-action \(a\) of \(E\)\;\label{alg:pick}
+  \lIf{no action is returned}{\Return \((\vinit \stackrel{\text{\smash{?}}}{\in} S)\)}
   \(S \leftarrow \cpre_a (S)\)\;
 }
 \caption{Main algorithm}\label{main_algo}
 \end{algorithm}
 
-The implementation of \(\cpre_a\) is straightforward; 
+This structure requires that the ``input-action picker'' of line \ref{alg:pick}
+decides whether we have reached a fixed point.  As the selector could check
+whether \(S\) has changed, this is without loss of generality.
 
-- Compute a representation of 
+Computing \(\cpre_a\) depends on the internal representation of actions, but
+follows the definition.  That is, it will iterate through all the io-actions
+compatible with \(a\), then apply \(\bwd\) on \(S\), take the union over all these
+applications, and finally intersect this with \(S\).
 
-\section{The many options at every step}
+\section{The many options at every line}
 
+\subsection{Preprocessing of the automaton (line \ref{alg:preproc})}
 
-\subsection{Boolean states}
+In this step, one can provide a heuristic that would remove certain states that
+would not contribute to the computation.  We provide an optional step that would
+detect \emph{surely losing states}, as presented in \cite{...}.
 
-\subsection{Vectors and antichains}
+\subsection{Boolean states (line \ref{alg:bool})}
 
-\subsection{Selecting relevant inputs}
+We provide several implementations of the detection of boolean states, in
+addition to an option to not detect them.  Our implementations are based on the
+concept of \emph{bounded state}, as presented in \cite{...}.
 
-\subsubsection{Terminal inputs and IOs}
+\subsection{Vectors and downsets (line \ref{alg:types})}
+
+The most basic data structure in the main algorithm is that of a vector used to
+give a value to the states.  We provide a handful of different vector
+implementations:
+\begin{itemize}
+\item Standard vector and array types (\cinline{std::vector},
+  \cinline{std::array}).  Note that arrays are of fixed size; our implementation
+  automatically precompiles arrays of different sizes (up to \(300\) by default),
+  and defaults to vectors if more entries are needed;
+\item Vectors and arrays backed by SIMD\footnote{SIMD: Single Instruction
+    Multiple Data, a set of CPU instructions \& registers to compute
+    component-wise operations on fixed-size vectors.} registers.  This makes use of the
+  \cinline{std::experimental::simd} type and leverages modern CPU optimizations;
+\end{itemize}
+
+Additionally, these implementations can be combined with an array of booleans
+(\cinline{std::bitset}) to provide a type that combines both boolean and integer
+values.  Also, these types can optionally expose an integer that is compatible
+with the partial order (for instance, the sum of all the elements in the vector
+is: if \(\vec{u}\) dominates \(\vec{v}\), then the sum of the elements in \(\vec{u}\)
+is larger than that of \(\vec{v}\)).  This value can help the downset
+implementations in sorting the vectors.  As a technical note, we disallowed
+these types to be copied implicitly: if a vector is inserted into a downset,
+then it is actually \emph{moved} there (\cinline{std::move}).
+
+Downsets are built on top of a vector type.  We provide multiple
+implementations, among which:
+\begin{itemize}
+\item Straightforward implementations using sets or vectors of vectors;
+\item An implementation that relies on \(k\)-d trees;
+\item Implementations that store the vectors in specific bins depending on the
+  extra information exposed by the vector type.
+\end{itemize}
+
+\subsection{Selecting sufficient inputs (line \ref{alg:inputs})}
+
+%\subsubsection{Terminal inputs and IOs}
 
 Recall our discussion on sufficient inputs of Section~\label{sec:rel}.  We
 introduce the notion of \emph{terminal} IO that follows the intuition that there
 are no further restriction of the IO that would lead to a more specific action:
 \begin{definition}
   An IO \(x\) is said to be \emph{terminal} if for every compatible IO \(y\), we
-  have \(\act(x) \subseteq \act(y)\).  Further, an \emph{input} \(i\) is said to be
+  have \(\ioact(x) \subseteq \ioact(y)\).  Further, an \emph{input} \(i\) is said to be
   \emph{terminal} if for every compatible input \(j\) we have
   \(\iact(i) \subseteq \iact(j)\).
 \end{definition}
@@ -327,31 +377,34 @@ are no further restriction of the IO that would lead to a more specific action:
 The key property of terminal inputs is that they are automatically valid, while
 still being more general than pure inputs.
 \begin{proposition}
-  Every pure IO is terminal and every pure input is terminal.
+  Every pure IO and input is terminal.  Every terminal IO and input is valid.
 \end{proposition}
-\begin{proof}
-  Consider a pure IO \(x\) and a compatible IO \(y\).  If \((p, q) \in \act(x)\), then
-  there is a transition \((p, z, q) \in \delta\) such that \(x\) is compatible with \(z\),
-  and thus \(x \land z = x\).  Consequently, \(x \land z \land y = x \land y \neq \bot\),
-  hence \(y\) and \(z\) are compatible and \((p, q) \in \act(y)\).  This shows that
-  \(\act(x) \subseteq \act(y)\) and that \(x\) is terminal.
+% \begin{proof}
+%   Consider a pure IO \(x\) and a compatible IO \(y\).  If \((p, q) \in \ioact(x)\), then
+%   there is a transition \((p, z, q) \in \delta\) such that \(x\) is compatible with \(z\),
+%   and thus \(x \land z = x\).  Consequently, \(x \land z \land y = x \land y \neq \bot\),
+%   hence \(y\) and \(z\) are compatible and \((p, q) \in \ioact(y)\).  This shows that
+%   \(\ioact(x) \subseteq \ioact(y)\) and that \(x\) is terminal.
 
-  Consider now a pure input \(i\) and a compatible input \(j\).  Let \(\act(x) \in
-  \iact(i)\).  It holds that \(x\) is compatible with \(i\), hence \(i \land x \neq \bot\).
-  Since \(i\) is pure, \(i \land j = i\), thus \(i \land j \land x \neq \bot\), and \(x\) is
-  also compatible with \(j\), implying that \(\act(x) \in \iact(j)\).  This shows that
-  \(\iact(i) \subseteq \iact(j)\) and that \(i\) is terminal.
-\end{proof}
+%   Consider now a pure input \(i\) and a compatible input \(j\).  Let \(\ioact(x) \in
+%   \iact(i)\).  It holds that \(x\) is compatible with \(i\), hence \(i \land x \neq \bot\).
+%   Since \(i\) is pure, \(i \land j = i\), thus \(i \land j \land x \neq \bot\), and \(x\) is
+%   also compatible with \(j\), implying that \(\ioact(x) \in \iact(j)\).  This shows that
+%   \(\iact(i) \subseteq \iact(j)\) and that \(i\) is terminal.
+% \end{proof}
 
-\begin{proposition}
-  Any terminal IO and input is valid.
-\end{proposition}
-\begin{proof}
-  We prove the case for inputs, the IO case being similar.  Let \(i\) be a
-  terminal input and \(j\) be a compatible pure input (at least one exists), then
-  \(\iact(i) \subseteq \iact(j)\).  Since \(j\) is pure, it is also terminal, hence
-  \(\iact(j) \subseteq \iact(i)\).  Hence \(\iact(i) = \iact(j)\) and \(i\) is valid.
-\end{proof}
+% \begin{proposition}
+%   Any terminal IO and input is valid.
+% \end{proposition}
+% \begin{proof}
+%   We prove the case for inputs, the IO case being similar.  Let \(i\) be a
+%   terminal input and \(j\) be a compatible pure input (at least one exists), then
+%   \(\iact(i) \subseteq \iact(j)\).  Since \(j\) is pure, it is also terminal, hence
+%   \(\iact(j) \subseteq \iact(i)\).  Hence \(\iact(i) = \iact(j)\) and \(i\) is valid.
+% \end{proof}
+
+Our approaches to input selection focus in efficiently searching for a
+sufficient set of terminal IOs and inputs.
 
 % \begin{proposition}
 %   Let \(S\) be a set of vectors; then:
@@ -364,17 +417,19 @@ still being more general than pure inputs.
 % \end{proposition}
 % \begin{proof}
 %   If \(x\) is a terminal IO and \(y\) is a compatible pure IO, then \(y\) is also
-%   terminal, showing that \(\act(x) = \act(y)\).  Since \(\bwd(\cdot, x)\) only depends
-%   on \(\act(x)\), this proves the statement.  This is similar for inputs, since
+%   terminal, showing that \(\ioact(x) = \ioact(y)\).  Since \(\bwd(\cdot, x)\) only depends
+%   on \(\ioact(x)\), this proves the statement.  This is similar for inputs, since
 %   \(\cpre_i\) only depends on \(\iact(i)\).
 % \end{proof}
+
+%\subsubsection{Algorithms}
 
 For completeness, we present here a simple algorithm for computing a sufficient
 set of terminal IOs.  Our most basic implementation applies this algorithm a
 second time to compute a sufficient set of terminal inputs.
 
 \begin{algorithm}
-\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\SetKwInput{Input}{Input}\SetKwInput{Output}{Output}
 
 \Input{A Büchi automaton \cA}
 \Output{A sufficient set of terminal inputs}
@@ -395,14 +450,39 @@ second time to compute a sufficient set of terminal inputs.
 \caption{Computing a sufficient set of terminal IOs}
 \end{algorithm}
 
+At this point, we provide 3 implementations of input selection:
+\begin{itemize}
+\item No precomputation, i.e., return pure inputs/IOs;
+\item Applying the previous algorithm twice, once for IOs, once for inputs;
+\item Use a pure BDD approach to do the previous algorithm.
+\end{itemize}
 
+\subsection{Precomputing actions (line \ref{alg:actions})}
 
-\subsection{Precomputing actions}
+Since computing \(\cpre_i\) for an input \(i\) requires to go through
+\(\iact(i)\), possibly going back to the automaton and iterating through all
+transitions, it may be beneficial to precompute this set.  We provide this step
+as an optional optimization.
 
-\subsection{Main loop: Picking actions}
+\subsection{Main loop: Picking input-actions (line \ref{alg:pick})}
 
-\section{Experimental results}
+We provide two implementations of the input-action picker:
+\begin{itemize}
+\item Return each input-action in turn, until no change has occurred to \(S\)
+  while going through all possible input-actions;
+\item Search for an input-action that is certain to change \(S\).  This is based
+  on the concept of \emph{critical input} as presented in \cite{...}.
+\end{itemize}
 
+\section{Conclusion}
+
+We provided six degrees of freedom in the main algorithm for downset-based LTL
+realizability and implemented multiple options for each of these degrees.  In
+this short abstract, we presented the main ideas behind these.  Preliminary
+experiments show that this careful reimplementation surpasses the performances
+of the original Acacia+, making Acacia-Bonsai competitive against modern LTL
+realizability tools.  Our implementation can be found at
+\url{https://github.com/gaperez64/acacia-bonsai/}.
 
 
 \end{document}
@@ -412,4 +492,4 @@ second time to compute a sufficient set of terminal inputs.
 
 % LocalWords:  Antichain LTL Realizability Michaël Cadilhac michael cadilhac
 % LocalWords:  DePaul Pérez perez uantwerp SIMD antichains realizability
-% LocalWords:  iteratively
+% LocalWords:  iteratively Downset downset
