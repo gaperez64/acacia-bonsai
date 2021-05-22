@@ -146,8 +146,7 @@ versions of the letter X.
   \defmathtext\deg{deg}
   \defmathtext\bwd{bwd}
   \defmathtext\cpre{CPre}
-  \defmath\vinit{v_\text{init}}
-  \defmath\vsafe{v_\text{safe}}
+  \defmath\vinit{\vec{v}_\text{init}}
   \defmathtext\safe{Safe}
   \defmath\down{\mathrm{\downarrow}}
   \newcommand{\wh}[1]{\widehat{#1}}
