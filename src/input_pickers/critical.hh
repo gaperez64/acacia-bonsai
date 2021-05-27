@@ -24,7 +24,7 @@ namespace input_pickers {
           using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
           std::vector<input_and_actions_ref> V (fwd_actions.begin (),
                                                 fwd_actions.end ());
-          /*auto N = std::min (V.size (), 10ul);
+          /*auto N = std::min (V.size (), 3ul);
           std::shuffle (V.begin (), V.begin () + N, gen);
            std::shuffle (V.begin () + N / 2, V.end (), gen);*/
           /*std::shuffle (V.begin (), V.end (), gen);*/

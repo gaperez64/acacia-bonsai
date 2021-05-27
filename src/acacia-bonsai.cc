@@ -20,7 +20,7 @@
 #include "vectors.hh"
 #include "antichains.hh"
 #include "utils/static_switch.hh"
-#include "bounded_states.hh"
+#include "boolean_states.hh"
 
 
 #include <spot/misc/bddlt.hh>
@@ -105,7 +105,7 @@ static spot::option_map extra_options;
 
 static double trans_time = 0.0;
 static double merge_time = 0.0;
-static double bounded_states_time = 0.0;
+static double boolean_states_time = 0.0;
 static double solve_time = 0.0;
 
 static int verbose = 0;
@@ -192,20 +192,26 @@ namespace {
         }
 
         ////////////////////////////////////////////////////////////////////////
-        // Bounded states
+        // Boolean states
 
         if (want_time)
           sw.start ();
 
-        auto bounded_states_maker = bounded_states::forward_saturation ();
-        vectors::bool_threshold = (bounded_states_maker.make (aut, opt_K, verbose)) ();
+        auto boolean_states_maker = boolean_states::forward_saturation ();
+        vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K, verbose)) ();
 
         if (want_time)
-          bounded_states_time = sw.stop ();
+          boolean_states_time = sw.stop ();
 
         if (verbose) {
-          std::cerr  << "computation of bounded states in " << bounded_states_time
-                     << ", found " << vectors::bool_threshold << " bounded states.\n";
+          std::cerr  << "computation of boolean states in " << boolean_states_time
+                     << ", found " << vectors::bool_threshold << " boolean states.\n";
+        }
+
+        // Special case: only boolean states, so... no useful accepting state.
+        if (vectors::bool_threshold == 0) {
+          std::cout << "REALIZABLE\n";
+          return 0;
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -217,97 +223,64 @@ namespace {
 #define VECTOR_ELT_T char
 #define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut
 #ifdef NDEBUG
-# define STATIC_SIMD_ARRAY_MAX 300    // This precompiles quite a few vector_simd_array (ARRAY_MAX / (32/sizeof(elt)))
+# define STATIC_ARRAY_MAX 300
 # define STATIC_MAX_BITSETS 3ul
 #else
-# define STATIC_SIMD_ARRAY_MAX 30
+# define STATIC_ARRAY_MAX 30
 # define STATIC_MAX_BITSETS 1ul
 #endif
-#define ARRAY_VECTOR_IMPL simd_array_backed
-#define OTHER_VECTOR_IMPL vector_backed
+#define ARRAY_IMPL simd_array_backed
+#define VECTOR_IMPL vector_backed
 
 #define ARRAY_AND_BITSET_ANTICHAIN_IMPL vector_backed_sum_split
 #define VECTOR_AND_BITSET_ANTICHAIN_IMPL vector_backed_sum_split
 
-        /* All possibilities; overkill.
+        constexpr auto max_nbools = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
+        auto nbitsets_if_bool_threshold_is = [&] (size_t bt) {
+          if (aut->num_states () <= bt)
+            return 0ul;
+          size_t nbools = aut->num_states () - bt;
+          if (verbose and nbools > max_nbools)
+            std::cerr << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
+                      << "\tTotal # of Boolean-for-bitset states: " << nbools
+                      << ", max: " << max_nbools << std::endl;
+          return std::min (vectors::nbools_to_nbitsets (nbools), STATIC_MAX_BITSETS);
+        };
+
+#warning split bool state and bitset states.
+
         bool realizable =
-          static_switch_t<STATIC_BITSET_MAX> {} (
-            // Static value of nbools.
-            [&] (auto vbools) {
-              return static_switch_t<STATIC_SIMD_ARRAY_MAX> {} (
-                [&] (auto vnonbools) {
-                  using vect_t = vectors::X_and_bitset<vbools.value,
-                                                       vectors::ARRAY_VECTOR_IMPL<VECTOR_ELT_T, vnonbools.value>>;
-                  auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::ARRAY_AND_BITSET_ANTICHAIN_IMPL<vect_t>>
+          static_switch_t<STATIC_ARRAY_MAX> {} (
+            // Array
+            [&] (auto vnonbools) {
+              using ar_t = vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>;
+              return static_switch_t<STATIC_MAX_BITSETS> {} (
+                [&] (auto nbitsets) {
+                  using full_vec_t = vectors::X_and_bitset<ar_t, nbitsets.value>;
+                  auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<full_vec_t, antichains::ARRAY_AND_BITSET_ANTICHAIN_IMPL<full_vec_t>>
                     (aut, opt_K, all_inputs, all_outputs, verbose);
                   return skn.solve ();
                 },
-                [&] (int i) {
-                  using vect_t = vectors::X_and_bitset<vbools.value,
-                                                       vectors::OTHER_VECTOR_IMPL<VECTOR_ELT_T>>;
-                  auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::VECTOR_AND_BITSET_ANTICHAIN_IMPL<vect_t>>
-                    (aut, opt_K, all_inputs, all_outputs, verbose);
-                  return skn.solve ();
-                },
-                aut->num_states () - vbools.value);
+                [] (auto x) { assert (false); return false; }, // unreachable.
+                nbitsets_if_bool_threshold_is (ar_t::capacity_for (vnonbools.value))
+                );
             },
-            // Dynamic value of bool_threshold! UNLIKELY!
-            [&] (int i) {
-              return static_switch_t<STATIC_SIMD_ARRAY_MAX>{}(
-                // Static value of v.
-                [&] (auto v) {
-                  using vect_t = vectors::ARRAY_VECTOR_IMPL<VECTOR_ELT_T, v.value>;
-                  auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::ARRAY_ANTICHAIN_IMPL<vect_t>>
+            [&] (int nonbools) {
+              using vec_t = vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+
+              return static_switch_t<STATIC_MAX_BITSETS> {} (
+                [&] (auto nbitsets) {
+                  using full_vec_t = vectors::X_and_bitset<vec_t, nbitsets.value>;
+                  auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<full_vec_t,
+                                                         antichains::VECTOR_AND_BITSET_ANTICHAIN_IMPL<full_vec_t>>
                     (aut, opt_K, all_inputs, all_outputs, verbose);
                   return skn.solve ();
                 },
-                // Dynamic value
-                [&] (int i) {
-                  using vect_t = vectors::OTHER_VECTOR_IMPL<VECTOR_ELT_T>;
-                  auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::VECTOR_ANTICHAIN_IMPL<vect_t>>
-                    (aut, opt_K, all_inputs, all_outputs, verbose);
-                  return skn.solve ();
-                },
-                aut->num_states ());
+                [] (auto x) { assert (false); return false; }, // unreachable.
+                nbitsets_if_bool_threshold_is (vec_t::capacity_for (nonbools))
+                );
             },
             vectors::bool_threshold);
-         */
-
-        constexpr auto max_nbools = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
-        if (verbose and max_nbools < (aut->num_states () - vectors::bool_threshold))
-          std::cerr << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
-                    << "\tTotal # of Boolean states: " << (aut->num_states () - vectors::bool_threshold)
-                    << ", max: " << max_nbools << std::endl;
-        auto nbitsets = std::min (vectors::nbools_to_nbitsets (aut->num_states () - vectors::bool_threshold),
-                                  STATIC_MAX_BITSETS);
-
-        bool realizable =
-          static_switch_t<STATIC_MAX_BITSETS> {} (
-            // Static value of nbools.
-            [&] (auto nbitsets) {
-              return static_switch_t<STATIC_SIMD_ARRAY_MAX> {} (
-                [&] (auto vnonbools) {
-                  using vect_t = vectors::X_and_bitset<vectors::ARRAY_VECTOR_IMPL<VECTOR_ELT_T, vnonbools.value>,
-                                                       nbitsets.value>;
-                  auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::ARRAY_AND_BITSET_ANTICHAIN_IMPL<vect_t>>
-                    (aut, opt_K, all_inputs, all_outputs, verbose);
-                  return skn.solve ();
-                },
-                [&] (int i) {
-                  using vect_t = vectors::X_and_bitset<vectors::OTHER_VECTOR_IMPL<VECTOR_ELT_T>,
-                                                       nbitsets.value>;
-                  auto&& skn = K_BOUNDED_SAFETY_AUT_IMPL<vect_t, antichains::VECTOR_AND_BITSET_ANTICHAIN_IMPL<vect_t>>
-                    (aut, opt_K, all_inputs, all_outputs, verbose);
-                  return skn.solve ();
-                },
-                aut->num_states () - std::min (vectors::nbitsets_to_nbools (nbitsets),   // Encodable bool states
-                                               aut->num_states () - vectors::bool_threshold)); // All bool states
-            },
-            [&] (int i) {
-              assert (false);
-              return false;
-            },
-            nbitsets);
 
         if (want_time)
           solve_time = sw.stop ();

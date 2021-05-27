@@ -14,5 +14,6 @@ namespace utils {
       using fssimd = std::experimental::fixed_size_simd<Elt, simd_size>;
       using maxfssimd =
         std::experimental::fixed_size_simd<Elt, max_fixed_size>;
+#warning Tweak max/fs
   };
 }

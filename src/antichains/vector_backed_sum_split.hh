@@ -84,7 +84,6 @@ namespace antichains {
         } while (i != start);
 
         if (bin >= vector_set.size ()) {
-          std::cout << "Resizing to " << bin + 1 << std::endl;
           vector_set.resize (bin + 1);
         }
         vector_set[bin].push_back (std::move (v));

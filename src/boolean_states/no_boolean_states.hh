@@ -1,11 +1,11 @@
 #pragma once
 
-namespace bounded_states {
+namespace boolean_states {
   namespace detail {
     template <typename Aut>
-    class no_bounded_states {
+    class no_boolean_states {
       public:
-        no_bounded_states (Aut aut, int K, int verbose) : aut {aut}, K {K}, verbose {verbose} {}
+        no_boolean_states (Aut aut, int K, int verbose) : aut {aut}, K {K}, verbose {verbose} {}
 
         size_t operator() () const {
           return aut->num_states ();
@@ -16,10 +16,10 @@ namespace bounded_states {
     };
   }
 
-  struct no_bounded_states {
+  struct no_boolean_states {
       template <typename Aut>
       static auto make (Aut aut, int K, int verbose) {
-        return detail::no_bounded_states<Aut> (aut, K, verbose);
+        return detail::no_boolean_states<Aut> (aut, K, verbose);
       }
   };
 }

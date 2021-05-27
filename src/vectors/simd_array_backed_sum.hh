@@ -201,7 +201,7 @@ namespace vectors {
       {
         os << "{ ";
         for (size_t i = 0; i < k; ++i)
-          os << (*this)[i] << " ";
+          os << (int) (*this)[i] << " ";
         os << "}";
         return os;
       }

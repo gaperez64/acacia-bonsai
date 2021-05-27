@@ -5,9 +5,10 @@ namespace vectors {
   // Set to the vector size to disable this.
   static size_t bool_threshold = 0;
 
-
   // Vectors implementing bin() should satisfy:
-  //       if u.bin () > v.bin (), then v can't dominate u.
+  //       if u.bin () < v.bin (), then u can't dominate v.
+  // or equivalently:
+  //       if u dominates v, then u.bin () >= v.bin ()
   template<class T, class = void>
   struct has_bin : std::false_type {};
 

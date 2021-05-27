@@ -14,7 +14,7 @@
 #warning todo backward saturation.
 #warning todo use scc.
 
-namespace bounded_states {
+namespace boolean_states {
   namespace detail {
     template <typename Aut>
     class forward_saturation {

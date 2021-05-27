@@ -3,11 +3,11 @@
 
 namespace vectors {
 
-  static constexpr auto nbools_to_nbitsets (size_t nbools) {
+  static constexpr size_t nbools_to_nbitsets (size_t nbools) {
     return (nbools + sizeof (unsigned long) * 8 - 1) / (sizeof (unsigned long) * 8);
   }
 
-  static constexpr auto nbitsets_to_nbools (size_t nbitsets) {
+  static constexpr size_t nbitsets_to_nbools (size_t nbitsets) {
     return nbitsets * sizeof (unsigned long) * 8;
   }
 
@@ -21,9 +21,11 @@ namespace vectors {
 
       X_and_bitset (const std::vector<value_type>& v) :
         k {v.size ()},
-        local_bool_threshold {std::max (std::min (bool_threshold, k), k - std::min (Bools, k))},
-        x {std::span (v.data (), local_bool_threshold)}
+        local_bool_threshold {X::capacity_for (bool_threshold)}, // We assume that X is used at full capacity.
+        x {std::span (v.data (), local_bool_threshold)},
+        sum {0}
       {
+        bools.reset ();
         for (size_t i = local_bool_threshold; i < k; ++i) {
           if ((bools[i - local_bool_threshold] = (v[i] + 1)) == true)
             sum++;
@@ -138,8 +140,10 @@ namespace vectors {
       }
 
       auto bin () const {
-        auto bitset_bin = sum / (k - local_bool_threshold);
+        auto bitset_bin = sum; // / (k - local_bool_threshold);
 
+        // Even if X doesn't have bin (), our local sum is valid, in that:
+        //   if u dominates v, then in particular, it dominates it over the boolean part, so u.sum >= v.sum.
         if constexpr (has_bin<X>::value)
           bitset_bin += x.bin ();
 
@@ -151,6 +155,14 @@ namespace vectors {
       X x;
       std::bitset<Bools> bools;
       size_t sum; // The sum of all the elements of bools, seen as 0/1 values.
+  };
+
+  template <class X>
+  class X_and_bitset<X, 0> : public X {
+      using X::X;
+
+    public:
+      X_and_bitset (X&& x) : X (std::move (x)) {}
   };
 }
 

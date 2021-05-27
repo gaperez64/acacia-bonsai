@@ -44,8 +44,11 @@ class transition_enumerator {
 
       private:
         void skip_states_with_no_succ () {
-          while (state < aut->num_states () && it == aut->out (state).end ()) {
+          assert (state != aut->num_states ());
+          while (it == aut->out (state).end ()) {
             state++;
+            if (state == aut->num_states ())
+              break;
             it = aut->out (state).begin ();
           }
         }

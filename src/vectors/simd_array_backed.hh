@@ -222,7 +222,7 @@ std::ostream& operator<<(std::ostream& os, const vectors::simd_array_backed_<T, 
 {
   os << "{ ";
   for (size_t i = 0; i < v.size (); ++i)
-    os << v[i] << " ";
+    os << (int) v[i] << " ";
   os << "}";
   return os;
 }
