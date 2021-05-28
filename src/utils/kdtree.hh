@@ -11,12 +11,9 @@ namespace utils {
   // Forward definition for the operator<<s.
   template <typename>
   class kdtree;
-}
 
-template <typename Vector>
-std::ostream& operator<< (std::ostream& os, const utils::kdtree<Vector>& f);
-
-namespace utils {
+  template <typename Vector>
+  std::ostream& operator<< (std::ostream& os, const utils::kdtree<Vector>& f);
 
   template <typename Vector>
   class kdtree {
@@ -42,7 +39,7 @@ namespace utils {
       std::shared_ptr<kdtree_node> tree;
 
       template <typename V>
-      friend std::ostream& ::operator<< (std::ostream& os, const kdtree<V>& f);
+      friend std::ostream& operator<< (std::ostream& os, const kdtree<V>& f);
 
       std::vector<bool> go_left;
 
@@ -90,7 +87,7 @@ namespace utils {
         // we have a median, so we have a location
         const size_t loc = this->vector_set[*std::next(sorted[axis].begin(),
                                                        median_idx)
-                                           ][axis];
+          ][axis];
         // and we can now prepare a map of flags to
         // "compress" the other lists
         idx_it = sorted[axis].begin();
@@ -107,13 +104,13 @@ namespace utils {
         std::vector<std::list<size_t>> right (this->dim);
 
         for (size_t d = 0; d < this->dim; d++) {
-           for (auto it = left[d].begin (); it != left[d].end (); /* noop */) {
-             if (not go_left[*it]) {
-               right[d].push_back (*it);
-               it = left[d].erase(it);
-             } else
-               ++it;
-           }
+          for (auto it = left[d].begin (); it != left[d].end (); /* noop */) {
+            if (not go_left[*it]) {
+              right[d].push_back (*it);
+              it = left[d].erase(it);
+            } else
+              ++it;
+          }
         }
 
         // some sanity checks
@@ -189,8 +186,8 @@ namespace utils {
           std::iota (sorted[d].begin (), sorted[d].end (), 0);
           // we now sort the indices based on the dimension
           sorted[d].sort([this, &d] (size_t i1, size_t i2) {
-                           return this->vector_set[i1][d] < this->vector_set[i2][d];
-                        });
+            return this->vector_set[i1][d] < this->vector_set[i2][d];
+          });
           assert (this->vector_set.size () == sorted[d].size ());
         }
 
@@ -245,12 +242,12 @@ namespace utils {
         return this->vector_set.end ();
       }
   };
-}
 
-template <typename Vector>
-inline std::ostream& operator<< (std::ostream& os, const utils::kdtree<Vector>& f) {
-  for (auto&& el : f.vector_set)
-    os << el << std::endl;
+  template <typename Vector>
+  inline std::ostream& operator<< (std::ostream& os, const kdtree<Vector>& f) {
+    for (auto&& el : f.vector_set)
+      os << el << std::endl;
 
-  return os;
+    return os;
+  }
 }

@@ -20,7 +20,7 @@ namespace vectors {
       using base = std::array<T, Units * T_PER_UNIT>;
 
     public:
-      array_backed_sum_ (const std::vector<T>& v) : k {v.size ()} {
+      array_backed_sum_ (std::span<const T> v) : k {v.size ()} {
         sum = 0;
         for (auto&& c : v)
           sum += c;
@@ -159,9 +159,13 @@ namespace vectors {
         return res;
       }
 
+      auto bin () const {
+        return (sum + k) / k;
+      }
+
     private:
       const size_t k;
-      int sum;
+      int sum = 0;
   };
 
 }

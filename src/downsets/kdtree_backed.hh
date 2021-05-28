@@ -20,7 +20,7 @@ namespace downsets {
       std::shared_ptr<utils::kdtree<Vector>> tree;
 
       template <typename V>
-      friend std::ostream& ::operator<<(std::ostream& os, const kdtree_backed<V>& f);
+      friend std::ostream& operator<<(std::ostream& os, const kdtree_backed<V>& f);
 
       template <typename V>
       class disregard_first_component {

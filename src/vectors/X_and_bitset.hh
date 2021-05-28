@@ -62,10 +62,7 @@ namespace vectors {
       self& operator= (const self& other) = delete;
 
       static size_t capacity_for (size_t elts) {
-        if (bool_threshold > elts) [[unlikely]] // No boolean state.
-          return X::capacity_for (elts);
-        return std::max (elts,
-                         X::capacity_for (elts - std::min (Bools, elts - bool_threshold)));
+        return std::max (X::capacity_for (bitset_threshold), elts);
       }
 
       void to_vector (std::span<value_type> v) const {
@@ -163,15 +160,14 @@ namespace vectors {
       X_and_bitset (X&& x) : X (std::move (x)) {}
   };
 
-template <class X, size_t Bools>
-inline
-std::ostream& operator<<(std::ostream& os, const vectors::X_and_bitset<X, Bools>& v)
-{
-  os << "{ ";
-  for (size_t i = 0; i < v.size (); ++i)
-    os << (int) v[i] << " ";
-  os << "}";
-  return os;
-}
-
+  template <class X, size_t Bools>
+  inline
+  std::ostream& operator<<(std::ostream& os, const X_and_bitset<X, Bools>& v)
+  {
+    os << "{ ";
+    for (size_t i = 0; i < v.size (); ++i)
+      os << (int) v[i] << " ";
+    os << "}";
+    return os;
+  }
 }
