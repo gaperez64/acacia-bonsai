@@ -34,7 +34,7 @@ template <class SetOfStates,
           class ActionerMaker,
           class InputPickerMaker>
 class k_bounded_safety_aut_detail {
-    typedef typename SetOfStates::value_type State;
+    using State = typename SetOfStates::value_type;
 
   public:
     k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, int K,
@@ -245,14 +245,13 @@ static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int K,
     (aut, K, input_support, output_support, verbose, ios_precomputer_maker, actioner_maker, input_picker_maker);
 }
 
-template <class State, // TODO To be removed, deduced from SetOfStates,
-          class SetOfStates>
+template <class SetOfStates>
 static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
                                   bdd input_support, bdd output_support,
                                   int verbose) {
   return k_bounded_safety_aut_maker<SetOfStates> (aut, K, input_support, output_support, verbose,
                                                   ios_precomputers::fake_vars (),
-                                                  actioners::standard<State> (),
+                                                  actioners::standard<typename SetOfStates::value_type> (),
                                                   input_pickers::critical ()
     );
 }

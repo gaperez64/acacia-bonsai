@@ -1,0 +1,36 @@
+INFO {
+  TITLE:       "LTL -> DBA  -  Formula S from paper 'Larger Automata and Less Work for LTL Model Checking' by J. Geldenhuys and H. Hansen"
+  DESCRIPTION: "Conversion of LTL to Deterministic Buchi Automaton"
+  SEMANTICS:   Mealy
+  TARGET:      Mealy
+}
+
+GLOBAL {
+  PARAMETERS {
+    n = 5;
+  }
+
+  DEFINITIONS {
+    // always p_i for some 0<=i<=n-1
+    event(bus) =
+      ||[0 <= i < SIZEOF bus]
+        (G bus[i]);
+  }
+}
+
+MAIN {
+
+  INPUTS {
+    p[n]; // input propositions
+  }
+
+  OUTPUTS {
+    acc; // accepting state
+  }
+
+  GUARANTEES {
+    (event(p))
+      <-> G F acc;
+  }
+
+}

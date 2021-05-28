@@ -1,0 +1,34 @@
+INFO {
+  TITLE:       "LTL -> DPA  -  Example 25"
+  DESCRIPTION: "A formula that cannot be represented by a DPA with 3 priorities (Source: R. Dimitrova, B. Finkbeiner, H. Torfah: Approximate Automata for Omega-regular Languages, ATVA 2019)"
+  SEMANTICS:   Mealy
+  TARGET:      Mealy
+}
+
+MAIN {
+
+  INPUTS {
+    a;
+    b;
+    c;
+    d;
+  }
+
+  OUTPUTS {
+    p0;
+    p1;
+    p2;
+  }
+
+  INVARIANTS {
+       ( p0 && !p1 && !p2)
+    || (!p0 &&  p1 && !p2)
+    || (!p0 && !p1 &&  p2);
+  }
+
+  GUARANTEES {
+    ((G F a -> G F b) && (G F c -> G F d))
+      <-> (G F p0 || (G F p2 && !G F p1));
+  }
+
+}

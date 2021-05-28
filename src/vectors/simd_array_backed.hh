@@ -214,6 +214,12 @@ namespace vectors {
       const size_t k;
   };
 
+  template <typename T>
+  struct traits<simd_array_backed_, T> {
+      static constexpr auto capacity_for (size_t elts) {
+        return utils::simd_traits<T>::capacity_for (elts);
+      }
+  };
 }
 
 template <typename T, size_t nsimds>

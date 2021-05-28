@@ -17,17 +17,16 @@ namespace vectors {
 
       static constexpr auto Bools = nbitsets_to_nbools (NBitsets);
     public:
-      using value_type = X::value_type;
+      using value_type = typename X::value_type;
 
       X_and_bitset (const std::vector<value_type>& v) :
         k {v.size ()},
-        local_bool_threshold {X::capacity_for (bool_threshold)}, // We assume that X is used at full capacity.
-        x {std::span (v.data (), local_bool_threshold)},
+        x {std::span (v.data (), std::min (bitset_threshold, k))},
         sum {0}
       {
         bools.reset ();
-        for (size_t i = local_bool_threshold; i < k; ++i) {
-          if ((bools[i - local_bool_threshold] = (v[i] + 1)) == true)
+        for (size_t i = bitset_threshold; i < k; ++i) {
+          if ((bools[i - bitset_threshold] = (v[i] + 1)) == true)
             sum++;
         }
       }
@@ -38,9 +37,8 @@ namespace vectors {
 
     private:
 
-      X_and_bitset (size_t k, size_t local_bool_threshold, X&& x, std::bitset<Bools>&& bools, size_t sum) :
+      X_and_bitset (size_t k, X&& x, std::bitset<Bools>&& bools, size_t sum) :
         k {k},
-        local_bool_threshold {local_bool_threshold},
         x {std::move (x)},
         bools {std::move (bools)},
         sum {sum}
@@ -51,7 +49,7 @@ namespace vectors {
       // explicit copy operator
       self copy () const {
         std::bitset<Bools> b = bools;
-        return X_and_bitset (k, local_bool_threshold, x.copy (), std::move (b), sum);
+        return X_and_bitset (k, x.copy (), std::move (b), sum);
       }
 
       self& operator= (self&& other) {
@@ -71,9 +69,9 @@ namespace vectors {
       }
 
       void to_vector (std::span<value_type> v) const {
-        x.to_vector (std::span (v.data (), local_bool_threshold));
-        for (size_t i = local_bool_threshold; i < k; ++i)
-          v[i] = bools[i - local_bool_threshold] - 1;
+        x.to_vector (std::span (v.data (), bitset_threshold));
+        for (size_t i = bitset_threshold; i < k; ++i)
+          v[i] = bools[i - bitset_threshold] - 1;
       }
 
       class po_res {
@@ -121,15 +119,15 @@ namespace vectors {
       }
 
       value_type operator[] (size_t i) const {
-        if (i >= local_bool_threshold)
-          return bools[i - local_bool_threshold] - 1;
+        if (i >= bitset_threshold)
+          return bools[i - bitset_threshold] - 1;
         return x[i];
       }
 
     public:
       self meet (const self& rhs) const {
         assert (rhs.k == k);
-        return self (k, local_bool_threshold, x.meet (rhs.x), bools & rhs.bools, sum);
+        return self (k, x.meet (rhs.x), bools & rhs.bools, sum);
       }
 
       bool operator< (const self& rhs) const {
@@ -140,18 +138,18 @@ namespace vectors {
       }
 
       auto bin () const {
-        auto bitset_bin = sum; // / (k - local_bool_threshold);
+        auto bitset_bin = sum; // / (k - bitset_threshold);
 
         // Even if X doesn't have bin (), our local sum is valid, in that:
         //   if u dominates v, then in particular, it dominates it over the boolean part, so u.sum >= v.sum.
         if constexpr (has_bin<X>::value)
-          bitset_bin += x.bin ();
+                       bitset_bin += x.bin ();
 
         return bitset_bin;
       }
 
     private:
-      const size_t k, local_bool_threshold;
+      const size_t k;
       X x;
       std::bitset<Bools> bools;
       size_t sum; // The sum of all the elements of bools, seen as 0/1 values.
@@ -164,7 +162,6 @@ namespace vectors {
     public:
       X_and_bitset (X&& x) : X (std::move (x)) {}
   };
-}
 
 template <class X, size_t Bools>
 inline
@@ -175,4 +172,6 @@ std::ostream& operator<<(std::ostream& os, const vectors::X_and_bitset<X, Bools>
     os << (int) v[i] << " ";
   os << "}";
   return os;
+}
+
 }

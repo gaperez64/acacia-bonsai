@@ -1,0 +1,40 @@
+INFO {
+  TITLE:       "LTL -> DBA  -  Formula U2 from paper 'Larger Automata and Less Work for LTL Model Checking' by J. Geldenhuys and H. Hansen"
+  DESCRIPTION: "Conversion of LTL to Deterministic Buchi Automaton"
+  SEMANTICS:   Mealy
+  TARGET:      Mealy
+}
+
+GLOBAL {
+  PARAMETERS {
+    n = 3;
+  }
+
+  DEFINITIONS {
+    // sequential until of bus signals
+    sequential_until(bus) =
+      f(bus,0,SIZEOF bus - 1);
+
+    // helper function
+    f(bus,i,size) =
+      i < size : bus[i] U (f(bus,i + 1,size))
+      i == size : bus[i];
+  }
+}
+
+MAIN {
+
+  INPUTS {
+    p[n]; // input propositions
+  }
+
+  OUTPUTS {
+    acc; // accepting state
+  }
+
+  GUARANTEES {
+    (sequential_until(p))
+      <-> G F acc;
+  }
+
+}

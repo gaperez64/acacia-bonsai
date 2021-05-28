@@ -216,7 +216,6 @@ namespace utils {
         return true;
       }
 
-
       bool operator== (const kdtree& other) const {
         return vector_set == other.vector_set;
       }

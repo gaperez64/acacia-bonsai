@@ -183,6 +183,13 @@ namespace vectors {
       const size_t k, nsimds;
       std::vector<typename traits::fssimd> vec;
   };
+
+  template <typename T>
+  struct traits<simd_vector_backed, T> {
+      static constexpr auto capacity_for (size_t elts) {
+        return utils::simd_traits<T>::capacity_for (elts);
+      }
+  };
 }
 
 template <typename T>

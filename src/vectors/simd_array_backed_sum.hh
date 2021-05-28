@@ -31,6 +31,7 @@ namespace vectors {
 
     public:
       simd_array_backed_sum_ (std::span<const T> v) : k {v.size ()} {
+#warning non unreasonable to ask for everything to be copyable.
         sum = 0;
         for (auto&& c : v)
           sum += c;
@@ -220,6 +221,13 @@ namespace vectors {
       const size_t k;
 #warning also store max?
       int sum = 0;
+  };
+
+  template <typename T>
+  struct traits<simd_array_backed_sum_, T> {
+      static constexpr auto capacity_for (size_t elts) {
+        return utils::simd_traits<T>::capacity_for (elts);
+      }
   };
 
 }
