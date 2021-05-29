@@ -231,13 +231,13 @@ namespace {
 # define STATIC_ARRAY_MAX 30
 # define STATIC_MAX_BITSETS 1ul
 #endif
-#define ARRAY_IMPL array_backed_sum
+#define ARRAY_IMPL simd_array_backed_sum
 #define VECTOR_IMPL simd_vector_backed
 
         constexpr auto STATIC_ARRAY_CAP_MAX = vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
-#define ARRAY_AND_BITSET_DOWNSET_IMPL vector_backed_one_dim_split
-#define VECTOR_AND_BITSET_DOWNSET_IMPL vector_backed_one_dim_split_intersection_only
+#define ARRAY_AND_BITSET_DOWNSET_IMPL vector_backed_bin
+#define VECTOR_AND_BITSET_DOWNSET_IMPL vector_backed_bin
 
         // Compute how many boolean states will actually be put in bitsets.
         constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);

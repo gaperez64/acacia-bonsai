@@ -17,13 +17,13 @@ namespace downsets {
       typedef Vector value_type;
 
       vector_backed_bin (Vector&& v) {
-        vector_set.resize (10);
+        vector_set.resize (v.size ());
         insert (std::move (v));
       }
 
     private:
-      vector_backed_bin () {
-        vector_set.resize (10);
+      vector_backed_bin (size_t starting_vector_set_size) {
+        vector_set.resize (starting_vector_set_size);
       }
 
     public:
@@ -50,38 +50,41 @@ namespace downsets {
         return _size;
       }
 
-      inline bool insert (Vector&& v) {
+      inline bool insert (Vector&& v, bool antichain = true) {
         size_t bin = bin_of (v);
-        auto start = std::min (bin, vector_set.size () - 1);
-        [[maybe_unused]] bool must_remove = false;
 
-        size_t i = start;
-        do {
-          // This is like remove_if, but allows breaking.
-          auto result = vector_set[i].begin ();
-          auto end = vector_set[i].end ();
+        if (antichain) {
+          auto start = std::min (bin, vector_set.size () - 1);
+          [[maybe_unused]] bool must_remove = false;
 
-          for (auto it = result; it != end; ++it) {
-            auto res = v.partial_order (*it);
-            if (res.leq ()) { // v is dominated.
-              assert (not must_remove); // Assuming we started with an antichain
-              return false;
+          size_t i = start;
+          do {
+            // This is like remove_if, but allows breaking.
+            auto result = vector_set[i].begin ();
+            auto end = vector_set[i].end ();
+
+            for (auto it = result; it != end; ++it) {
+              auto res = v.partial_order (*it);
+              if (res.leq ()) { // v is dominated.
+                assert (not must_remove); // Assuming we started with an antichain
+                return false;
 #warning Check that geq is not called when NDEBUG?
-            } else if (res.geq ()) { // v dominates *it
-              must_remove = true; /* *it should be removed */
-            } else { // *it needs to be kept
-              if (result != it) // This can be false only on the first element.
-                *result = std::move (*it);
-              ++result;
+              } else if (res.geq ()) { // v dominates *it
+                must_remove = true; /* *it should be removed */
+              } else { // *it needs to be kept
+                if (result != it) // This can be false only on the first element.
+                  *result = std::move (*it);
+                ++result;
+              }
             }
-          }
 
-          if (result != vector_set[i].end ())
-            vector_set[i].erase (result, vector_set[i].end ());
+            if (result != vector_set[i].end ())
+              vector_set[i].erase (result, vector_set[i].end ());
 
-          // i = (i == vector_set.size () - 1) ? 0 : i + 1;
-          i = (i + 1) % vector_set.size ();
-        } while (i != start);
+            // i = (i == vector_set.size () - 1) ? 0 : i + 1;
+            i = (i + 1) % vector_set.size ();
+          } while (i != start);
+        }
 
         if (bin >= vector_set.size ()) {
           vector_set.resize (bin + 1);
@@ -100,7 +103,7 @@ namespace downsets {
       void intersect_with (vector_backed_bin&& other) {
         if (vector_set.empty ())
           return;
-        vector_backed_bin intersection;
+        vector_backed_bin intersection (vector_set.size ());
 
         size_t bin = vector_set.size () / 2;
 
@@ -148,14 +151,12 @@ namespace downsets {
         *this = std::move (intersection);
       }
 
-#warning FIXME: Antichain?
-
       template <typename F>
       vector_backed_bin apply (const F& lambda) const {
-        vector_backed_bin res;
+        vector_backed_bin res (vector_set.size ());
         for (const auto& elvec : vector_set)
           for (auto&& el : elvec)
-            res.insert (lambda (el));
+            res.insert (lambda (el)); // Alternatively, this could insert without preserving antichain.
         return res;
       }
 
