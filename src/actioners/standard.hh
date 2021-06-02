@@ -87,9 +87,10 @@ namespace actioners {
           return State (apply_out);
         }
 
+        char K;
       private:
         const Aut& aut;
-        const char K, verbose;
+        const char /*  K, */ verbose;
         std::vector<char> apply_out, mcopy;
         input_and_actions_set input_output_fwd_actions;
 

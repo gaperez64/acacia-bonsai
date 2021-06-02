@@ -56,8 +56,10 @@ class k_bounded_safety_aut_detail {
     }
 
     bool solve () {
-      std::cout << "SOLVE" << std::endl;
-      debug_ ("#STATES " << aut->num_states ());
+      auto goal = K;
+#ifdef PROGRESSIVE_K
+      K = K / 2;
+#endif
 
       // Precompute the input and output actions.
       auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, verbose)) ();
@@ -87,7 +89,19 @@ class k_bounded_safety_aut_detail {
           std::vector<char> init (aut->num_states ());
           init.assign (aut->num_states (), -1);
           init[aut->get_init_state_number ()] = 0;
-          return F.contains (State (init));
+          if (F.contains (State (init)))
+            return true;
+          if (K >= goal)
+            return false;
+          K += 2;
+          actioner.K = K;
+          F = F.apply ([&] (const State& s) {
+            auto vec = std::vector<char> (s.size (), 0);
+            for (size_t i = 0; i < s.size (); ++i)
+              vec[i] = s[i] + 2;
+            return State (vec);
+          });
+          continue;
         }
         cpre_inplace (F, input, actioner);
 
@@ -250,7 +264,7 @@ static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
                                   bdd input_support, bdd output_support,
                                   int verbose) {
   return k_bounded_safety_aut_maker<SetOfStates> (aut, K, input_support, output_support, verbose,
-                                                  ios_precomputers::standard (),
+                                                  ios_precomputers::fake_vars (),
                                                   actioners::standard<typename SetOfStates::value_type> (),
                                                   input_pickers::critical ()
     );

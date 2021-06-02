@@ -1,3 +1,22 @@
+#ifndef STAREXEC
+# error This is a butchered version of Acacia-Bonsai for StarExec, STAREXEC should be defined to 1..3
+#endif
+
+#if STAREXEC == 1
+# define PROGRESSIVE_K
+# define DEFAULT_K 12
+#endif
+
+#if STAREXEC == 2
+# define DEFAULT_K 11
+# define NO_SIMD
+#endif
+
+#if STAREXEC == 3
+# define DEFAULT_K 11
+#endif
+
+
 #include <config.h>
 
 #include <memory>
@@ -100,7 +119,7 @@ static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 
 static bool opt_strat = false;
-static unsigned opt_K = 5;
+static unsigned opt_K = DEFAULT_K;
 static spot::option_map extra_options;
 
 static double trans_time = 0.0;
@@ -231,8 +250,13 @@ namespace {
 # define STATIC_ARRAY_MAX 30
 # define STATIC_MAX_BITSETS 1ul
 #endif
-#define ARRAY_IMPL simd_array_backed_sum
-#define VECTOR_IMPL simd_vector_backed
+#ifdef NO_SIMD
+# define ARRAY_IMPL array_backed_sum
+# define VECTOR_IMPL vector_backed
+#else
+# define ARRAY_IMPL simd_array_backed_sum
+# define VECTOR_IMPL simd_vector_backed
+#endif
 
         constexpr auto STATIC_ARRAY_CAP_MAX = vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
