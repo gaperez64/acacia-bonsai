@@ -57,6 +57,8 @@ namespace actioners {
           }
         }
 
+        void setK (int newK) { K = newK; }
+
         auto& actions () { return input_output_fwd_actions; }
 
         State apply (const State& m, const action_vec& avec, direction dir) const /* __attribute__((pure)) */ {
@@ -87,7 +89,8 @@ namespace actioners {
 
       private:
         const Aut& aut;
-        const int K, verbose;
+        int K;
+        const int verbose;
         input_and_actions_set input_output_fwd_actions;
 
         auto compute_action (bdd letter) {

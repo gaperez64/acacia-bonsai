@@ -58,6 +58,8 @@ namespace actioners {
           }
         }
 
+        void setK (int newK) { K = (char) newK; }
+
         auto& actions () { return input_output_fwd_actions; }
 
         State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
@@ -87,8 +89,8 @@ namespace actioners {
           return State (apply_out);
         }
 
+       private:
         char K;
-      private:
         const Aut& aut;
         const char /*  K, */ verbose;
         std::vector<char> apply_out, mcopy;

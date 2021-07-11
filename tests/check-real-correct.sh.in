@@ -41,7 +41,7 @@ run_strix () {
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    time echoandrun $prog_prefix $ACABONSAI -F $ltl --ins $ins --outs $outs -k 10 $extra_opts
+    time echoandrun $prog_prefix $ACABONSAI -F $ltl --ins $ins --outs $outs -K 10 $extra_opts
 }
 
 run_acacia_plus () {

@@ -1,22 +1,3 @@
-#ifndef STAREXEC
-# error This is a butchered version of Acacia-Bonsai for StarExec, STAREXEC should be defined to 1..3
-#endif
-
-#if STAREXEC == 1
-# define PROGRESSIVE_K
-# define DEFAULT_K 12
-#endif
-
-#if STAREXEC == 2
-# define DEFAULT_K 11
-# define NO_SIMD
-#endif
-
-#if STAREXEC == 3
-# define DEFAULT_K 11
-#endif
-
-
 #include <config.h>
 
 #include <memory>
@@ -41,6 +22,7 @@
 #include "utils/static_switch.hh"
 #include "boolean_states.hh"
 
+#include "configuration.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -61,7 +43,9 @@
 #include <spot/twaalgos/hoa.hh>
 
 enum {
-  OPT_LOGK = 'k',
+  OPT_K = 'K',
+  OPT_Kmin = 'M',
+  OPT_Kinc = 'I',
   OPT_INPUT = 'i',
   OPT_OUTPUT = 'o',
   OPT_STRAT = 's',
@@ -84,8 +68,16 @@ static const argp_option options[] = {
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
   {
-    "logk", OPT_LOGK, "VAL", 0,
-    "starting value of K, expressed as its logarithm", 0
+    "K", OPT_K, "VAL", 0,
+    "final value of K, or unique value if Kmin is not specified", 0
+  },
+  {
+    "Kmin", OPT_Kmin, "VAL", 0,
+    "starting value of K; Kinc MUST be set when using this option", 0
+  },
+  {
+    "Kinc", OPT_Kinc, "VAL", 0,
+    "increment value for K, used when Kmin < K", 0
   },
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Output options:", 20 },
@@ -119,7 +111,8 @@ static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 
 static bool opt_strat = false;
-static unsigned opt_K = DEFAULT_K;
+static unsigned opt_K = DEFAULT_K,
+  opt_Kmin = -1u, opt_Kinc = 0;
 static spot::option_map extra_options;
 
 static double trans_time = 0.0;
@@ -241,28 +234,6 @@ namespace {
         if (want_time)
           sw.start ();
 
-#define VECTOR_ELT_T char
-#define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut
-#ifdef NDEBUG
-# define STATIC_ARRAY_MAX 300
-# define STATIC_MAX_BITSETS 3ul
-#else
-# define STATIC_ARRAY_MAX 30
-# define STATIC_MAX_BITSETS 1ul
-#endif
-#ifdef NO_SIMD
-# define ARRAY_IMPL array_backed_sum
-# define VECTOR_IMPL vector_backed
-#else
-# define ARRAY_IMPL simd_array_backed_sum
-# define VECTOR_IMPL simd_vector_backed
-#endif
-
-        constexpr auto STATIC_ARRAY_CAP_MAX = vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
-
-#define ARRAY_AND_BITSET_DOWNSET_IMPL vector_backed_bin
-#define VECTOR_AND_BITSET_DOWNSET_IMPL vector_backed_bin
-
         // Compute how many boolean states will actually be put in bitsets.
         constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
         auto nbitsetbools = aut->num_states () - vectors::bool_threshold;
@@ -298,7 +269,7 @@ namespace {
                       vectors::X_and_bitset<
                         vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
                         vbitsets.value>>>
-                    (aut, opt_K, all_inputs, all_outputs, verbose);
+                    (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, verbose);
                   realizable = skn.solve ();
                 },
                 UNREACHABLE,
@@ -315,7 +286,7 @@ namespace {
                   vectors::X_and_bitset<
                     vectors::VECTOR_IMPL<VECTOR_ELT_T>,
                     vbitsets.value>>>
-                (aut, opt_K, all_inputs, all_outputs, verbose);
+                (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, verbose);
               realizable = skn.solve ();
             },
             UNREACHABLE,
@@ -386,8 +357,22 @@ parse_opt (int key, char *arg, struct argp_state *) {
       opt_strat = true;
       break;
 
-    case OPT_LOGK:
-      opt_K = atoi (arg); // TODO: Better this.
+    case OPT_K:
+      opt_K = atoi (arg);
+      if (opt_K == 0)
+        error (3, 0, "K cannot be 0 or not a number.");
+      break;
+
+    case OPT_Kmin:
+      opt_Kmin = atoi (arg);
+      if (opt_Kmin == 0)
+        error (3, 0, "Kmin cannot be 0 or not a number.");
+      break;
+
+    case OPT_Kinc:
+      opt_Kinc = atoi (arg);
+      if (opt_Kinc == 0)
+        error (3, 0, "Kinc cannot be 0 or not a number.");
       break;
 
     case OPT_VERBOSE:
@@ -434,6 +419,15 @@ main (int argc, char **argv) {
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();
+
+    // Adjust the value of K
+    if (opt_Kmin == -1u)
+      opt_Kmin = opt_K;
+    if (opt_Kmin > opt_K or (opt_Kmin < opt_K and opt_Kinc == 0))
+      error (3, 0, "Incompatible values for K, Kmin, and Kinc.");
+    if (opt_Kmin == 0)
+      opt_Kmin = opt_K;
+
     return processor.run ();
   });
 }

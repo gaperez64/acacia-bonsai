@@ -37,13 +37,13 @@ class k_bounded_safety_aut_detail {
     using State = typename SetOfStates::value_type;
 
   public:
-    k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, int K,
+    k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, int Kfrom, int Kto, int Kinc,
                                  bdd input_support, bdd output_support,
                                  int verbose,
                                  const IOsPrecomputationMaker& ios_precomputer_maker,
                                  const ActionerMaker& actioner_maker,
                                  const InputPickerMaker& input_picker_maker) :
-      aut {aut}, K {K},
+      aut {aut}, Kfrom {Kfrom}, Kto {Kto}, Kinc {Kinc},
       input_support {input_support}, output_support {output_support}, verbose {verbose},
       gen {0},
       ios_precomputer_maker {ios_precomputer_maker},
@@ -56,10 +56,7 @@ class k_bounded_safety_aut_detail {
     }
 
     bool solve () {
-      auto goal = K;
-#ifdef PROGRESSIVE_K
-      K = K / 2;
-#endif
+      int K = Kfrom;
 
       // Precompute the input and output actions.
       auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, verbose)) ();
@@ -91,14 +88,14 @@ class k_bounded_safety_aut_detail {
           init[aut->get_init_state_number ()] = 0;
           if (F.contains (State (init)))
             return true;
-          if (K >= goal)
+          if (Kfrom >= Kto)
             return false;
-          K += 2;
-          actioner.K = K;
+          K += Kinc;
+          actioner.setK (K);
           F = F.apply ([&] (const State& s) {
             auto vec = std::vector<char> (s.size (), 0);
             for (size_t i = 0; i < s.size (); ++i)
-              vec[i] = s[i] + 2;
+              vec[i] = s[i] + Kinc;
             return State (vec);
           });
           continue;
@@ -119,7 +116,7 @@ class k_bounded_safety_aut_detail {
 
   private:
     spot::twa_graph_ptr aut;
-    int K;
+    const int Kfrom, Kto, Kinc;
     bdd input_support, output_support;
     const int verbose;
     std::mt19937 gen;
@@ -196,74 +193,28 @@ class k_bounded_safety_aut_detail {
                 << " = " << (all_io * 100 / (all_inputs_size * all_outputs_size)) << "%"
                 << std::endl;
     }
-
-    /*
-     std::map<const action_vec*, action_vec> rev;
-
-     State trans_ (const State& m, const action_vec& vec, trans::direction dir) {
-     if (dir == trans::direction::forward)
-     return trans_orig (m, vec, dir);
-     auto it = rev.find (&vec);
-     if (it != rev.end ())
-     return trans_orig (m, it->second, dir);
-     action_vec v (aut->num_states ());
-
-     for (size_t p = 0; p < aut->num_states (); ++p)
-     for (const auto& [q, q_final] : vec[p])
-     v[q].push_back (std::pair (p, q_final));
-     return trans_orig (m,
-     rev.emplace (&vec, std::move (v)).first->second,
-     dir);
-     }
-
-
-     State trans_orig (const State& m, const action_vec& action_vec, trans::direction dir) {
-     State f (aut->num_states ());
-     using trans::direction;
-
-     for (size_t p = 0; p < aut->num_states (); ++p) {
-     if (dir == direction::forward)
-     f[p] = -1;
-     else
-     f[p] = K - 1;
-
-     for (const auto& [q, q_final] : action_vec[p]) {
-     if (dir == direction::forward) {
-     if (m[q] != -1)
-     f[p] = (int) std::max ((int) f[p], std::min (K, (int) m[q] + (q_final ? 1 : 0)));
-     } else
-     f[p] = (int) std::min ((int) f[p], std::max (-1, (int) m[q] - (q_final ? 1 : 0)));
-
-     // If we reached the extreme values, stop going through states.
-     if ((dir == direction::forward  && f[p] == K) ||
-     (dir == direction::backward && f[p] == -1))
-     break;
-     }
-     }
-     return f;
-     }*/
-
 };
 
 template <class SetOfStates,
           class IOsPrecomputationMaker,
           class ActionerMaker,
           class InputPickerMaker>
-static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int K,
+static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int Kfrom, int Kto, int Kinc,
                                         bdd input_support, bdd output_support,
                                         int verbose,
                                         const IOsPrecomputationMaker& ios_precomputer_maker,
                                         const ActionerMaker& actioner_maker,
                                         const InputPickerMaker& input_picker_maker) {
   return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker, InputPickerMaker>
-    (aut, K, input_support, output_support, verbose, ios_precomputer_maker, actioner_maker, input_picker_maker);
+    (aut, Kfrom, Kto, Kinc, input_support, output_support, verbose, ios_precomputer_maker, actioner_maker, input_picker_maker);
 }
 
 template <class SetOfStates>
-static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int K,
+static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int Kfrom, int Kto, int Kinc,
                                   bdd input_support, bdd output_support,
                                   int verbose) {
-  return k_bounded_safety_aut_maker<SetOfStates> (aut, K, input_support, output_support, verbose,
+  return k_bounded_safety_aut_maker<SetOfStates> (aut, Kfrom, Kto, Kinc,
+                                                  input_support, output_support, verbose,
                                                   ios_precomputers::fake_vars (),
                                                   actioners::standard<typename SetOfStates::value_type> (),
                                                   input_pickers::critical ()
