@@ -105,8 +105,9 @@ namespace actioners {
         template <typename Set>
         auto compute_action_vec (const Set& transset) {
           action_vec ret_fwd (aut->num_states ());
-#warning TODO: Test again caching this.
-#warning TODO: We have two representations of the same thing here; see if we can narrow it down to one.
+          TODO ("Test again caching this.");
+          TODO ("We have two representations of the same thing here; "
+                "see if we can narrow it down to one.");
 
           for (const auto& [p, q] : transset)
             ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));

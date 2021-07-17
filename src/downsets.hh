@@ -1,5 +1,7 @@
 #pragma once
 
+#include "configuration.hh"
+
 #include "downsets/full_set.hh"
 #include "downsets/kdtree_backed.hh"
 #include "downsets/vector_backed.hh"

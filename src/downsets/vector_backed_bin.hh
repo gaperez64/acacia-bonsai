@@ -68,7 +68,7 @@ namespace downsets {
               if (res.leq ()) { // v is dominated.
                 assert (not must_remove); // Assuming we started with an antichain
                 return false;
-#warning Check that geq is not called when NDEBUG?
+                TODO ("Check that geq is not called when NDEBUG.");
               } else if (res.geq ()) { // v dominates *it
                 must_remove = true; /* *it should be removed */
               } else { // *it needs to be kept
@@ -117,7 +117,7 @@ namespace downsets {
                 Vector&& v = x.meet (el);
                 if (v == x)
                   dominated = true;
-#warning  Check v == el?
+                TODO ("Check v == el too?  See if this is good tradeoff.");
                 intersection.insert (std::move (v));
                 if (dominated)
                   break;

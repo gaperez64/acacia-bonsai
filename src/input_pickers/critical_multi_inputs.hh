@@ -77,7 +77,7 @@ namespace input_pickers {
               if (not is_witness) {
                 // The action proving nonwitness is likely to do it again, put it at
                 // the front.
-#warning TODO? Put a weight, rather than pushing at the front.
+                TODO ("Put a weight, rather than pushing at the front.");
                 if (it_act != actions.begin ())
                   actions.splice (actions.begin(), actions, it_act);
                 ++it;
@@ -121,7 +121,7 @@ namespace input_pickers {
             else
               critical_inputs = std::move (backup_critical_inputs);
           }
-#warning Discussion point
+
 #if 0
           // BUTCHER
           for (const auto& c : critical_inputs) {

@@ -11,8 +11,9 @@
         if (t > c_dst) { c_dst = t; has_changed = true}
       c[dst] = c_dst;
    ... and uses a copy of c in each loop.  Not sure why. */
-#warning todo backward saturation.
-#warning todo use scc.
+
+TODO ("Implement backward saturation.");
+TODO ("Use Spot's SCC implementation.");
 
 namespace boolean_states {
   namespace detail {

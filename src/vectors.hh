@@ -1,5 +1,7 @@
 #pragma once
 
+#include "configuration.hh"
+
 namespace vectors {
   // This is the position at and after which all state counters are boolean.
   // Set to the vector size to disable this.

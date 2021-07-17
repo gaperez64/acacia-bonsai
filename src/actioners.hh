@@ -1,5 +1,7 @@
 #pragma once
 
+#include "configuration.hh"
+
 namespace actioners {
     enum class direction {
       forward,

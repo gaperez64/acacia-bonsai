@@ -142,7 +142,7 @@ namespace downsets {
                 Vector&& v = x.meet (el);
                 if (v == x)
                   dominated = true;
-#warning  Check v == el?
+                TODO ("See if checking v == el is a good idea.");
                 intersection.insert (std::move (v));
                 if (dominated)
                   break;
@@ -176,7 +176,8 @@ namespace downsets {
         *this = std::move (intersection);
       }
 
-#warning FIXME: Antichain?
+      TODO ("See if it's better to temporarily have "
+            "something that ain't an Antichain.");
       template <typename F>
       vector_backed_one_dim_split apply (const F& lambda) const {
         vector_backed_one_dim_split res;

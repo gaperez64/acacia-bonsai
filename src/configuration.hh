@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/todo.hh"
+
 #define DEFAULT_K 11
 
 #define VECTOR_ELT_T char

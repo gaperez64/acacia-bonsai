@@ -459,7 +459,7 @@ main (int argc, char **argv) {
         nchildren--;
         if (pid == pidreal) {
           if (verbose)
-            std::cout << "Check for realizability complete, returning " << res << ".\n";
+            std::cout << "Check for realizability complete.\n";
           if (res == 1) {
             kill (pidunreal, SIGKILL);
             wait (nullptr);
@@ -482,6 +482,7 @@ main (int argc, char **argv) {
       return 2;
     }
 
+    // Non multi-process execution.
     bool realizable = processor.run ();
 
     if (realizable) {

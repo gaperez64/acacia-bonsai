@@ -24,6 +24,7 @@ namespace input_pickers {
           using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
           std::vector<input_and_actions_ref> V (fwd_actions.begin (),
                                                 fwd_actions.end ());
+          TODO ("Settle on a way to shuffle the inputs.");
           /*auto N = std::min (V.size (), 3ul);
           std::shuffle (V.begin (), V.begin () + N, gen);
            std::shuffle (V.begin () + N / 2, V.end (), gen);*/
@@ -35,8 +36,6 @@ namespace input_pickers {
           bool found_input = false;
 
           for (const auto& f : F) {
-            //#warning Magic
-            //if (f[0] < 0) continue;
             bool is_witness = false;
             if (verbose > 2)
               std::cout << "Searching for witness of one-step-loss for " << f << std::endl;
@@ -70,7 +69,7 @@ namespace input_pickers {
                 break;
               }
 
-#warning TODO? Put a weight, rather than pushing at the front.
+              TODO ("Try putting a weight, rather than pushing at the front.");
               if (it_act != actions.begin ())
                 actions.splice (actions.begin(), actions, it_act);
             }
@@ -84,7 +83,7 @@ namespace input_pickers {
             return std::pair (critical_input, false);
           }
 
-#warning Discussion point
+          TODO ("Prettify this, test if it comes with better perfs.");
 #if 1
           // BUTCHER
           const auto& [input, actions] = critical_input.get ();

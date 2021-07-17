@@ -3,6 +3,9 @@ project ('Acacia Bonsai', ['c', 'cpp'],
          version : '0.0.1',
          license : 'GPL-3.0')
 
+add_global_arguments (['-ftrack-macro-expansion=0',
+                       '-fno-diagnostics-show-caret'], language: 'cpp')
+
 spot_dep = dependency ('libspot')
 
 inc = include_directories ('gnulib', 'lib', 'std-simd', 'src')
