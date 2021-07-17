@@ -23,15 +23,10 @@ namespace vectors {
       using value_type = T;
 
     private:
-      simd_array_backed_sum_ (size_t k) : k {k}, sum {0} {
-        // assert ((k + traits::simd_size - 1) / traits::simd_size == nsimds);
-        for (size_t i = 0; i < nsimds; ++i)
-          ar[i] ^= ar[i];
-      }
+      simd_array_backed_sum_ (size_t k) : k {k}, sum {0} { }
 
     public:
       simd_array_backed_sum_ (std::span<const T> v) : k {v.size ()} {
-#warning non unreasonable to ask for everything to be copyable.
         sum = 0;
         for (auto&& c : v)
           sum += c;
@@ -182,7 +177,6 @@ namespace vectors {
       }
 
       self meet (const self& rhs) const {
-#warning Overkill to call the whole constructor
         auto res = self (k);
 
         for (size_t i = 0; i < nsimds; ++i) {
@@ -219,7 +213,6 @@ namespace vectors {
     private:
       std::array<typename traits::fssimd, nsimds> ar;
       const size_t k;
-#warning also store max?
       int sum = 0;
   };
 

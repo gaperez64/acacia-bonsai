@@ -2,6 +2,9 @@
 
 #include "utils/transition_enumerator.hh"
 
+// See powset.hh for a definition of the computational problem solved here, and
+// explanations on this implementation.
+
 namespace ios_precomputers {
   namespace detail {
     template <typename RetSet, typename FormSet, typename Projection>
@@ -48,7 +51,6 @@ namespace ios_precomputers {
           bdd input_and_not_crossing_inputs;
           if (input_and_crossing_inputs != input &&
               (input_and_not_crossing_inputs = input & not_crossing_inputs) != bddfalse) { // Split
-            //assert (input == bdd_existcomp (input, input_support));
             auto it = powset.find (input);
             assert (it != powset.end ());
             powset.emplace (input_and_not_crossing_inputs, it->second);
@@ -57,16 +59,12 @@ namespace ios_precomputers {
             powset.erase (it);
 
             auto ianc_var = get_fresh_var ();
-            //fvars_available = bdd_high (fvars_available);
-            // all_inputs_with_fvars = bdd_forall (all_inputs_with_fvars, bdd_ithvar (var)); // improve?
+            // all_inputs_with_fvars = bdd_forall (all_inputs_with_fvars, bdd_ithvar (var)); // Which one is better?
             all_inputs_with_fvars = bdd_restrict (all_inputs_with_fvars, bdd_nithvar (var));
             all_inputs_with_fvars |= ((bdd_ithvar (var) & input_and_crossing_inputs) |
                                       (bdd_ithvar (ianc_var) & input_and_not_crossing_inputs));
-            //all_fvars &= bdd_ithvar (ianc_var);
             fvar_to_input[var] = input_and_crossing_inputs;
             fvar_to_input[ianc_var] = input_and_not_crossing_inputs;
-            //assert (input_and_not_crossing_inputs == bdd_existcomp (input_and_not_crossing_inputs, input_support));
-            //assert (input_and_crossing_inputs == bdd_existcomp (input_and_crossing_inputs, input_support));
           }
           else {
             // We need to change the input to reflect it is now more specific.
@@ -76,11 +74,10 @@ namespace ios_precomputers {
             powset.insert (std::move(node_handler));
           }
 
-#warning Discussion point
           fvars = bdd_low (fvars);
         }
       }
-      //aut->get_dict ()->unregister_all_my_variables (this);
+      // Note that there's no way in BuDDy to free variables.
 
       return powset;
     }

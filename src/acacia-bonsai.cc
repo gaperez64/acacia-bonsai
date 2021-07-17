@@ -5,6 +5,10 @@
 #include <sstream>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
+
+#include <signal.h>
+#include <sys/wait.h>
 
 #include "argmatch.h"
 
@@ -48,9 +52,10 @@ enum {
   OPT_Kinc = 'I',
   OPT_INPUT = 'i',
   OPT_OUTPUT = 'o',
-  OPT_STRAT = 's',
+  OPT_UNREAL = 'u',
   OPT_VERBOSE = 'v'
 } ;
+
 
 static const argp_option options[] = {
   /**************************************************/
@@ -82,8 +87,8 @@ static const argp_option options[] = {
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Output options:", 20 },
   {
-    "strategy", OPT_STRAT, nullptr, 0,
-    "compute a winning strategy when the input is satisfiable", 0
+    "unrealizability", OPT_UNREAL, nullptr, 0,
+    "checks for unrealizability too, by forking another instance.", 0
   },
   {
     "verbose", OPT_VERBOSE, nullptr, 0,
@@ -101,16 +106,18 @@ static const struct argp_child children[] = {
 };
 
 const char argp_program_doc[] = "\
-Synthesize a controller from its LTL specification.\v\
+Verify realizability for LTL specification.\v\
 Exit status:\n\
   0   if the input problem is realizable\n\
   1   if the input problem is not realizable\n\
-  2   if any error has been reported";
+  2   if this could not be decided\n\
+  3   if any error has been reported";
 
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 
-static bool opt_strat = false;
+
+static bool opt_unreal = false, check_real = true;
 static unsigned opt_K = DEFAULT_K,
   opt_Kmin = -1u, opt_Kinc = 0;
 static spot::option_map extra_options;
@@ -138,7 +145,7 @@ namespace {
         : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_) {
       }
 
-      int solve_formula (spot::formula f) {
+      bool solve_formula (spot::formula f) {
         spot::process_timer timer;
         timer.start ();
         spot::stopwatch sw;
@@ -157,7 +164,19 @@ namespace {
         ////////////////////////////////////////////////////////////////////////
         // Translate the formula to a UcB (Universal co-Büchi)
         // To do so, negate formula, and convert to a normal Büchi.
-        f = spot::formula::Not (f);
+        if (check_real)
+          f = spot::formula::Not (f);
+        else {
+          f = f.map ([this] (spot::formula m) {
+            if (m.is (spot::op::ap) and
+                (std::ranges::find (output_aps_,
+                                    m.ap_name ()) != output_aps_.end ()))
+              return spot::formula::X (m);
+            return m;
+          });
+          input_aps_.swap (output_aps_);
+        }
+
         auto aut = trans_.run (&f);
 
         // Create BDDs for the input and output AP.
@@ -222,8 +241,7 @@ namespace {
 
         // Special case: only boolean states, so... no useful accepting state.
         if (vectors::bool_threshold == 0) {
-          std::cout << "REALIZABLE\n";
-          return 0;
+          return true;
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -244,6 +262,8 @@ namespace {
                       << ", max: " << max_bools_in_bitsets << std::endl;
           nbitsetbools = max_bools_in_bitsets;
         }
+
+        constexpr auto STATIC_ARRAY_CAP_MAX = vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
         // Maximize usage of the nonbool implementation
         auto nonbools = aut->num_states () - nbitsetbools;
@@ -297,27 +317,16 @@ namespace {
           solve_time = sw.stop ();
 
         if (verbose)
-          std::cerr << "safety game solved in " << solve_time << " seconds\n";
+          std::cerr << (check_real ? "[real] " : "[unreal] ")
+                    << "safety game solved in " << solve_time << " seconds, returning " << realizable << "\n";
 
         timer.stop ();
 
-        if (realizable) {
-          std::cout << "REALIZABLE\n";
-
-          if (opt_strat) {
-            // TODO.
-          }
-
-          return 0;
-        } else {
-          std::cout << "UNREALIZABLE\n";
-          return 1;
-        }
+        return realizable;
       }
 
       int process_formula (spot::formula f, const char *, int) override {
-        unsigned res = solve_formula (f);
-        return res;
+        return solve_formula (f);
       }
 
   };
@@ -353,8 +362,8 @@ parse_opt (int key, char *arg, struct argp_state *) {
       break;
     }
 
-    case OPT_STRAT:
-      opt_strat = true;
+    case OPT_UNREAL:
+      opt_unreal = true;
       break;
 
     case OPT_K:
@@ -428,6 +437,61 @@ main (int argc, char **argv) {
     if (opt_Kmin == 0)
       opt_Kmin = opt_K;
 
-    return processor.run ();
+    if (opt_unreal) {
+      int pidreal, pidunreal;
+      if ((pidreal = fork ()) == 0) {
+        check_real = true;
+        int res =  processor.run ();
+        std::cout << "[real] returning " << res << "\n";
+        return res;
+      }
+
+      if ((pidunreal = fork ()) == 0) {
+        check_real = false;
+        return processor.run ();
+      }
+
+      int nchildren = 2;
+      while (nchildren) {
+        int res;
+        int pid = wait (&res);
+        res = WEXITSTATUS (res);
+        nchildren--;
+        if (pid == pidreal) {
+          if (verbose)
+            std::cout << "Check for realizability complete, returning " << res << ".\n";
+          if (res == 1) {
+            kill (pidunreal, SIGKILL);
+            wait (nullptr);
+            std::cout << "REALIZABLE\n";
+            return 0;
+          }
+        }
+        if (pid == pidunreal) {
+          if (verbose)
+            std::cout << "Check for unrealizability complete.\n";
+          if (res == 1) {
+            kill (pidreal, SIGKILL);
+            wait (nullptr);
+            std::cout << "UNREALIZABLE\n";
+            return 1;
+          }
+        }
+      }
+      std::cout << "UNKNOWN\n";
+      return 2;
+    }
+
+    bool realizable = processor.run ();
+
+    if (realizable) {
+      std::cout << "REALIZABLE\n";
+      return 0;
+    }
+    else {
+      std::cout << "UNKNOWN\n";
+      return 1;
+    }
+
   });
 }

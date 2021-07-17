@@ -42,7 +42,6 @@ namespace actioners {
 
           mcopy.reserve (State::capacity_for (mcopy.size ()));
 
-#warning TODO? Cache compute_action_vec?
           std::set<input_and_actions, compare_actions> ioset;
 
           for (const auto& [input, ios] : inputs_to_ios) {
@@ -65,9 +64,16 @@ namespace actioners {
         State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
           if (dir == direction::forward)
             apply_out.assign (m.size (), (char) -1);
-          else
-#warning Assign 0 to bool states
-            apply_out.assign (m.size (), (char) (K - 1));
+          else {
+            // Non boolean
+            std::fill_n (apply_out.begin (),
+                         vectors::bool_threshold,
+                         (char) (K - 1));
+            // Boolean
+            std::fill_n (apply_out.begin () + vectors::bool_threshold,
+                         m.size () - vectors::bool_threshold,
+                         (char) 0);
+          }
 
           m.to_vector (mcopy);
 
@@ -90,16 +96,17 @@ namespace actioners {
         }
 
        private:
-        char K;
         const Aut& aut;
-        const char /*  K, */ verbose;
+        char K;
+        const char verbose;
         std::vector<char> apply_out, mcopy;
         input_and_actions_set input_output_fwd_actions;
 
         template <typename Set>
         auto compute_action_vec (const Set& transset) {
           action_vec ret_fwd (aut->num_states ());
-#warning TODO: That seems overkill, why not just have transset by itself?  That seems to have little sense.  Test this.
+#warning TODO: Test again caching this.
+#warning TODO: We have two representations of the same thing here; see if we can narrow it down to one.
 
           for (const auto& [p, q] : transset)
             ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));

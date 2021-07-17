@@ -19,7 +19,7 @@
 # define VECTOR_IMPL simd_vector_backed
 #endif
 
-constexpr auto STATIC_ARRAY_CAP_MAX = vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
-
 #define ARRAY_AND_BITSET_DOWNSET_IMPL vector_backed_bin
 #define VECTOR_AND_BITSET_DOWNSET_IMPL vector_backed_bin
+
+#define SIMD_IS_MAX true
