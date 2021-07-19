@@ -167,15 +167,19 @@ namespace {
         if (check_real)
           f = spot::formula::Not (f);
         else {
-          f = f.map ([this] (spot::formula m) {
+          auto rec = [this] (auto&& self, spot::formula m) {
             if (m.is (spot::op::ap) and
                 (std::ranges::find (output_aps_,
                                     m.ap_name ()) != output_aps_.end ()))
               return spot::formula::X (m);
-            return m;
-          });
+            return m.map ([&] (spot::formula t) { return self (self, t); });
+          };
+          f = f.map ([&] (spot::formula t) { return rec (rec, t); });
           input_aps_.swap (output_aps_);
         }
+
+	if (verbose)
+	  std::cout << "Formula: " << f << std::endl;
 
         auto aut = trans_.run (&f);
 
