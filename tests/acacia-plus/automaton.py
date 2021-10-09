@@ -246,7 +246,6 @@ def construct_automata(formulas_list, spec_names, verbosity, tool):
 
         # automaton parsing
         s = automata.split('*/\n')
-        print (s)
         if s.__len__()<2:
             print("empty automaton, LTL syntax error?")
             exit(0)

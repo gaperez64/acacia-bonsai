@@ -149,7 +149,7 @@ for prog in $progs; do
         +) run_acacia_plus;;
     esac
     res=$?
-    if (( res == 3 || (expect < 2 && res != expect) )); then
+    if (( res > 2 || (expect < 2 && res != expect) )); then
         echo -n "FAILED: "
         if (( res > 128 )); then
             echo 'CRASH'
