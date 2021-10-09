@@ -20,7 +20,7 @@ namespace boolean_states {
     template <typename Aut>
     class forward_saturation {
       public:
-        forward_saturation (Aut aut, int K, int verbose) : aut {aut}, K {K}, verbose {verbose} {}
+        forward_saturation (Aut aut, int K) : aut {aut}, K {K} {}
 
         size_t operator() () const {
           unsigned nb_accepting_states = 0, nunbounded = 0;
@@ -63,10 +63,9 @@ namespace boolean_states {
 
           assert (unbounded == nunbounded);
 
-          if (verbose)
-            std::cout << "Bounded states: " << bounded << " / "
-                      << aut->num_states () << " = "
-                      << (bounded * 100) / aut->num_states () << "%" << std::endl;
+          verb_do (1, vout << "Bounded states: " << bounded << " / "
+                   /*   */ << aut->num_states () << " = "
+                   /*   */ << (bounded * 100) / aut->num_states () << "%" << std::endl);
 
           // WARNING: Internal Spot
           auto& g = aut->get_graph();
@@ -80,14 +79,14 @@ namespace boolean_states {
 
       private:
         const Aut aut;
-        const int K, verbose;
+        const int K;
     };
   }
 
   struct forward_saturation {
       template <typename Aut>
-      static auto make (Aut aut, int K, int verbose) {
-        return detail::forward_saturation<Aut> (aut, K, verbose);
+      static auto make (Aut aut, int K) {
+        return detail::forward_saturation<Aut> (aut, K);
       }
   };
 }

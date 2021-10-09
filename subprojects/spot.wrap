@@ -1,0 +1,10 @@
+[wrap-git]
+url = https://gitlab.lrde.epita.fr/spot/spot.git
+revision = b9a39c557625279eed37f96e66979460264da431
+patch_directory=spot
+depth = 1
+
+[provide]
+dependency_names = libspot, libbddx
+libspot = spot_dep
+libbddx = bddx_dep

@@ -1,6 +1,8 @@
 #pragma once
 #include <bitset>
 
+#include <utils/vector_mm.hh>
+
 namespace vectors {
 
   static constexpr size_t nbools_to_nbitsets (size_t nbools) {
@@ -19,7 +21,8 @@ namespace vectors {
     public:
       using value_type = typename X::value_type;
 
-      X_and_bitset (const std::vector<value_type>& v) :
+      template <typename Alloc>
+      X_and_bitset (const std::vector<value_type, Alloc>& v) :
         k {v.size ()},
         x {std::span (v.data (), std::min (bitset_threshold, k))},
         sum {0}
@@ -30,6 +33,9 @@ namespace vectors {
             sum++;
         }
       }
+
+      X_and_bitset (std::initializer_list<value_type> v) :
+        X_and_bitset (utils::vector_mm<value_type> (v)) {}
 
       size_t size () const { return k; }
 

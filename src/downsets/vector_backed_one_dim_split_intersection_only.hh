@@ -6,6 +6,8 @@
 #include <iostream>
 #include <cassert>
 
+#include <utils/vector_mm.hh>
+
 namespace downsets {
   template <typename Vector>
   class vector_backed_one_dim_split_intersection_only {
@@ -76,7 +78,7 @@ namespace downsets {
       class disregard_first_component {
         public:
           bool operator() (const V& v1, const V& v2) const {
-            std::vector<typename Vector::value_type> v (v1.get ().size ());
+            utils::vector_mm<typename Vector::value_type> v (v1.get ().size ());
             v.reserve (Vector::capacity_for (v.size ()));
 
             v2.get ().to_vector (v);

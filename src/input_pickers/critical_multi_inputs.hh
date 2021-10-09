@@ -7,8 +7,8 @@ namespace input_pickers {
     template <typename FwdActions, typename Actioner>
     struct critical_multi_inputs {
       public:
-        critical_multi_inputs (FwdActions& fwd_actions, const Actioner& actioner, int verbose) :
-          fwd_actions {fwd_actions}, actioner {actioner}, verbose {verbose} {}
+        critical_multi_inputs (FwdActions& fwd_actions, const Actioner& actioner) :
+          fwd_actions {fwd_actions}, actioner {actioner} {}
 
         template <typename SetOfStates, typename State, typename ActionVecList>
         static auto max_bwd_change_of (const SetOfStates& F,
@@ -45,7 +45,7 @@ namespace input_pickers {
           if (v < 0) v = 0;
           min_max_change = v;
           backup_min_max_change = v / 2;
-          if (verbose) std::cout << "Current K: " << min_max_change  << std::endl;
+          verb_do (1, vout << "Current K: " << min_max_change  << std::endl);
           // Sort/randomize input_output_fwd_actions
           using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
           using input_and_actions_ref_list = std::list<input_and_actions_ref>;
@@ -61,8 +61,7 @@ namespace input_pickers {
 
           for (const auto& f : F) {
             bool is_witness = false;
-            if (verbose > 2)
-              std::cout << "Searching for witness of one-step-loss for " << f << std::endl;
+            verb_do (3, vout << "Searching for witness of one-step-loss for " << f << std::endl);
 
             for (auto it = Cbar.begin (); it != Cbar.end (); /* in-body update */) {
               auto& [input, actions] = it->get ();
@@ -77,7 +76,7 @@ namespace input_pickers {
               if (not is_witness) {
                 // The action proving nonwitness is likely to do it again, put it at
                 // the front.
-                TODO ("Put a weight, rather than pushing at the front.");
+                //TODO ("Put a weight, rather than pushing at the front.");
                 if (it_act != actions.begin ())
                   actions.splice (actions.begin(), actions, it_act);
                 ++it;
@@ -85,10 +84,9 @@ namespace input_pickers {
               }
 
               // inputs witness one-step-loss of f
-              if (verbose > 2) {
-                std::cout << "Input " << input
-                          << " witnesses one-step-loss of " << f << std::endl;
-              }
+              verb_do (3, vout << "Input " << input
+                       /*   */ << " witnesses one-step-loss of " << f << std::endl);
+
 
               auto max_bwd_change = max_bwd_change_of (F, f, actions, actioner);
               if (max_change < max_bwd_change) {
@@ -140,28 +138,27 @@ namespace input_pickers {
 #endif
 
 
-          if (verbose > 1) {
-            std::cout << "Critical inputs: ";
-            for (const auto& c : critical_inputs) {
-              const auto& [input, actions] = c.get ();
-              std::cout << "[" << input << "] ";
-            }
-            std::cout << std::endl;
-          }
+          verb_do (2, {
+              vout << "Critical inputs: ";
+              for (const auto& c : critical_inputs) {
+                const auto& [input, actions] = c.get ();
+                vout << "[" << input << "] ";
+              }
+              vout << "\n";
+            });
 
           return std::pair (critical_inputs.front(), not critical_inputs.empty());
          }
       private:
         FwdActions& fwd_actions;
         const Actioner& actioner;
-        const int verbose;
     };
   }
 
   struct critical_multi_inputs {
       template <typename FwdActions, typename Actioner>
-      static auto make (FwdActions& fwd_actions, const Actioner& actioner, int verbose) {
-        return detail::critical_multi_inputs (fwd_actions, actioner, verbose);
+      static auto make (FwdActions& fwd_actions, const Actioner& actioner) {
+        return detail::critical_multi_inputs (fwd_actions, actioner);
       }
   };
 }

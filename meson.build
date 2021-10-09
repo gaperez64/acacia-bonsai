@@ -6,11 +6,13 @@ project ('Acacia Bonsai', ['c', 'cpp'],
 add_global_arguments (['-ftrack-macro-expansion=0',
                        '-fno-diagnostics-show-caret'], language: 'cpp')
 
-spot_dep = dependency ('libspot')
+spot_dep = dependency('libspot')
+bddx_dep = dependency('libbddx')
+boost_dep = dependency('boost')
+gnulib_dep = dependency('gnulib')
 
-inc = include_directories ('gnulib', 'lib', 'std-simd', 'src')
+inc = include_directories ('lib', 'src')
 
-subdir ('gnulib')
 subdir ('lib')
 subdir ('src')
 subdir ('tests')

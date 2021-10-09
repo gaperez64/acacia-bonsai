@@ -3,6 +3,8 @@ acplus_sources = [ 'antichain.c', 'backward_algorithm.c', 'bits.c', 'cache.c',
   'memory_management.c', 'safety_game.c', 'synthesis.c', 'tbucw.c',
   'transition_system.c', 'tuple.c', 'vector.c' ]
 
+cc = meson.get_compiler('c')
+
 acplus_deps = [ dependency('glib-2.0', version: '>=2.38'),
                 cc.find_library('m', required : false) ]
 

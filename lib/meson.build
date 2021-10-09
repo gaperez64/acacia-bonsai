@@ -11,6 +11,7 @@ common_sources = [
 
 common_lib = static_library ('common', common_sources,
                              include_directories : inc,
+                             dependencies : [gnulib_dep, spot_dep, bddx_dep],
                              cpp_args : ['-DHAVE_CONFIG_H',
                                          '-DPACKAGE_NAME="@0@"'.format (meson.project_name()),
                                          '-DPACKAGE_VERSION="@0@"'.format (meson.project_version()),

@@ -35,7 +35,7 @@ namespace vectors {
         for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
           ar[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
         if (k % simd_size != 0) {
-          T tail[simd_size] = {0};
+          T tail[simd_size] alignas (32) = {0} ;
           std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
           ar[i].copy_from (tail, std::experimental::vector_aligned);
           ++i;

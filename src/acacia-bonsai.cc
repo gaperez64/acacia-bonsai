@@ -1,5 +1,4 @@
 #include <config.h>
-
 #include <memory>
 #include <string>
 #include <sstream>
@@ -25,6 +24,8 @@
 #include "downsets.hh"
 #include "utils/static_switch.hh"
 #include "boolean_states.hh"
+
+#include <utils/verbose.hh>
 
 #include "configuration.hh"
 
@@ -127,7 +128,9 @@ static double merge_time = 0.0;
 static double boolean_states_time = 0.0;
 static double solve_time = 0.0;
 
-static int verbose = 0;
+int               utils::verbose = 0;
+utils::voutstream utils::vout;
+
 
 namespace {
 
@@ -149,7 +152,7 @@ namespace {
         spot::process_timer timer;
         timer.start ();
         spot::stopwatch sw;
-        bool want_time = (verbose > 0);
+        bool want_time = (utils::verbose > 0);
 
         // To Universal co-Büchi Automaton
         trans_.set_type(spot::postprocessor::BA);
@@ -178,8 +181,7 @@ namespace {
           input_aps_.swap (output_aps_);
         }
 
-	if (verbose)
-	  std::cout << "Formula: " << f << std::endl;
+	verb_do (1, vout << "Formula: " << f << std::endl);
 
         auto aut = trans_.run (&f);
 
@@ -200,12 +202,12 @@ namespace {
         if (want_time)
           trans_time = sw.stop ();
 
-        if (verbose) {
-          std::cerr << "translating formula done in "
-                    << trans_time << " seconds\n";
-          std::cerr << "automaton has " << aut->num_states ()
-                    << " states and " << aut->num_sets () << " colors\n";
-        }
+        verb_do (1, {
+          vout << "translating formula done in "
+                 << trans_time << " seconds\n";
+          vout << "automaton has " << aut->num_states ()
+                 << " states and " << aut->num_sets () << " colors\n";
+          });
 
         ////////////////////////////////////////////////////////////////////////
         // Preprocess automaton
@@ -214,17 +216,17 @@ namespace {
           sw.start();
 
         auto aut_preprocessors_maker = aut_preprocessors::surely_losing ();
-        (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K, verbose)) ();
+        (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K)) ();
 
         if (want_time)
           merge_time = sw.stop();
 
-        if (verbose) {
-          std::cerr << "preprocessing done in " << merge_time
-                    << " seconds\nDPA has " << aut->num_states()
-                    << " states\n";
-          spot::print_hoa(std::cerr, aut, nullptr) << std::endl;
-        }
+        verb_do (1,  {
+            vout << "preprocessing done in " << merge_time
+                 << " seconds\nDPA has " << aut->num_states()
+                 << " states\n";
+            spot::print_hoa(utils::vout, aut, nullptr);
+          });
 
         ////////////////////////////////////////////////////////////////////////
         // Boolean states
@@ -233,15 +235,14 @@ namespace {
           sw.start ();
 
         auto boolean_states_maker = boolean_states::forward_saturation ();
-        vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K, verbose)) ();
+        vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K)) ();
 
         if (want_time)
           boolean_states_time = sw.stop ();
 
-        if (verbose) {
-          std::cerr  << "computation of boolean states in " << boolean_states_time
-                     << ", found " << vectors::bool_threshold << " boolean states.\n";
-        }
+        verb_do (1, vout << "computation of boolean states in " << boolean_states_time
+                 /*   */ << ", found " << vectors::bool_threshold << " boolean states.\n");
+
 
         // Special case: only boolean states, so... no useful accepting state.
         if (vectors::bool_threshold == 0) {
@@ -260,14 +261,14 @@ namespace {
         constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
         auto nbitsetbools = aut->num_states () - vectors::bool_threshold;
         if (nbitsetbools > max_bools_in_bitsets) {
-          if (verbose)
-            std::cerr << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
-                      << "\tTotal # of Boolean-for-bitset states: " << nbitsetbools
-                      << ", max: " << max_bools_in_bitsets << std::endl;
+          verb_do (1, vout << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
+                   /*   */ << "\tTotal # of Boolean-for-bitset states: " << nbitsetbools
+                   /*   */ << ", max: " << max_bools_in_bitsets << std::endl);
           nbitsetbools = max_bools_in_bitsets;
         }
 
-        constexpr auto STATIC_ARRAY_CAP_MAX = vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+        constexpr auto STATIC_ARRAY_CAP_MAX =
+          vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
         // Maximize usage of the nonbool implementation
         auto nonbools = aut->num_states () - nbitsetbools;
@@ -293,7 +294,7 @@ namespace {
                       vectors::X_and_bitset<
                         vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
                         vbitsets.value>>>
-                    (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, verbose);
+                    (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
                   realizable = skn.solve ();
                 },
                 UNREACHABLE,
@@ -310,7 +311,7 @@ namespace {
                   vectors::X_and_bitset<
                     vectors::VECTOR_IMPL<VECTOR_ELT_T>,
                     vbitsets.value>>>
-                (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, verbose);
+                (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
               realizable = skn.solve ();
             },
             UNREACHABLE,
@@ -320,9 +321,7 @@ namespace {
         if (want_time)
           solve_time = sw.stop ();
 
-        if (verbose)
-          std::cerr << (check_real ? "[real] " : "[unreal] ")
-                    << "safety game solved in " << solve_time << " seconds, returning " << realizable << "\n";
+        verb_do (1, vout << "safety game solved in " << solve_time << " seconds, returning " << realizable << "\n");
 
         timer.stop ();
 
@@ -389,7 +388,7 @@ parse_opt (int key, char *arg, struct argp_state *) {
       break;
 
     case OPT_VERBOSE:
-      ++verbose;
+      ++utils::verbose;
       break;
 
     case 'x':
@@ -441,18 +440,24 @@ main (int argc, char **argv) {
     if (opt_Kmin == 0)
       opt_Kmin = opt_K;
 
+    utils::vout.set_prefix ("[real] ");
+
     if (opt_unreal) {
       int pidreal, pidunreal;
       if ((pidreal = fork ()) == 0) {
         check_real = true;
-        int res =  processor.run ();
-        std::cout << "[real] returning " << res << "\n";
+        int res = processor.run ();
+        verb_do (1, vout << "returning " << res << "\n");
         return res;
       }
 
       if ((pidunreal = fork ()) == 0) {
+        utils::vout.set_prefix ("[unreal] ");
+
         check_real = false;
-        return processor.run ();
+        int res = processor.run ();
+        verb_do (1, vout << "returning " << res << "\n");
+        return res;
       }
 
       int nchildren = 2;
@@ -462,8 +467,7 @@ main (int argc, char **argv) {
         res = WEXITSTATUS (res);
         nchildren--;
         if (pid == pidreal) {
-          if (verbose)
-            std::cout << "Check for realizability complete.\n";
+          verb_do (1, vout << "Check for realizability complete.\n");
           if (res == 1) {
             kill (pidunreal, SIGKILL);
             wait (nullptr);
@@ -472,8 +476,7 @@ main (int argc, char **argv) {
           }
         }
         if (pid == pidunreal) {
-          if (verbose)
-            std::cout << "Check for unrealizability complete.\n";
+          verb_do (1, vout << "Check for unrealizability complete.\n");
           if (res == 1) {
             kill (pidreal, SIGKILL);
             wait (nullptr);

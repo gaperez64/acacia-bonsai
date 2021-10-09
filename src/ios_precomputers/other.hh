@@ -204,7 +204,7 @@
 #endif
 
 
-      if (verbose) {
+        verb_do (1, {
         size_t all_io = 0;
         std::set<bdd_t> all_io_set;
         for (const auto& [inputs, ios] : inputs_to_ios) {
@@ -233,4 +233,4 @@
                   << " = " << (all_io * 100 / (all_inputs_size * all_outputs_size)) << "%\n"
                   << "IO W/CACHE: " << all_io_set.size () << " REDOING " << (all_io - all_io_set.size ())
                   << std::endl;
-      }
+          });

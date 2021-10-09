@@ -22,6 +22,10 @@ namespace utils {
         return nsimds (nelts) * simd_size;
       }
 
+      static constexpr auto alignment () {
+        return simd_size * sizeof (Elt);
+      }
+
       using fssimd = std::experimental::fixed_size_simd<Elt, simd_size>;
   };
 }

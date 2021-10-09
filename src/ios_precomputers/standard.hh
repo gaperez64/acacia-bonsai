@@ -6,14 +6,13 @@ namespace ios_precomputers {
     class standard_container {
       public:
         standard_container (Aut aut,
-                            bdd input_support, bdd output_support, int verbose) :
-          aut {aut}, input_support {input_support}, output_support {output_support}, verbose {verbose}
+                            bdd input_support, bdd output_support) :
+          aut {aut}, input_support {input_support}, output_support {output_support}
         { }
 
       private:
         Aut aut;
         bdd input_support, output_support;
-        int verbose;
 
         class bdd_it :
           public std::iterator<std::input_iterator_tag, bdd> {
@@ -141,9 +140,9 @@ namespace ios_precomputers {
   struct standard {
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
       static auto make (Aut aut,
-                        bdd input_support, bdd output_support, int verbose) {
+                        bdd input_support, bdd output_support) {
         return [&] () {
-          return detail::standard_container<Aut, TransSet> (aut, input_support, output_support, verbose);
+          return detail::standard_container<Aut, TransSet> (aut, input_support, output_support);
         };
       }
   };

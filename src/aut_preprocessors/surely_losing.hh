@@ -4,6 +4,8 @@
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/mask.hh>
 
+#include <utils/verbose.hh>
+
 #include "ios_precomputers/powset.hh"  // for power()
 
 
@@ -12,8 +14,8 @@ namespace aut_preprocessors {
     template <typename Aut>
     class surely_losing {
       public:
-        surely_losing (Aut& aut, bdd input_support, bdd output_support, unsigned K, int verbose) :
-          aut {aut}, input_support {input_support}, output_support {output_support}, K {K}, verbose {verbose}
+        surely_losing (Aut& aut, bdd input_support, bdd output_support, unsigned K) :
+          aut {aut}, input_support {input_support}, output_support {output_support}, K {K}
         {}
 
         auto operator() () {
@@ -57,8 +59,7 @@ namespace aut_preprocessors {
               flushed++;
               for (auto t = aut->out_iteraser (q); t; t.erase ())
                 /* no-body */;
-              if (verbose > 1)
-                std::cout << "Flushing state " << q << std::endl;
+              verb_do (2, vout << "Flushing state " << q << std::endl);
               aut->new_acc_edge (q, q, bddtrue);
             }
           if (flushed) {
@@ -66,14 +67,13 @@ namespace aut_preprocessors {
             aut->purge_dead_states ();
             aut->merge_states ();
           }
-          if (verbose)
-            std::cout << "After flushing " << flushed
-                      << " states and cleaning, aut has " << aut->num_states ()
-                      << " states." << std::endl;
-          if (verbose > 1) {
-            std::cout << "Automaton after flushing surely losing states:\n";
-            spot::print_hoa(std::cout, aut, nullptr) << std::endl;
-          }
+          verb_do (1, vout << "After flushing " << flushed
+                   /*   */ << " states and cleaning, aut has " << aut->num_states ()
+                   /*   */ << " states." << std::endl);
+          verb_do (2, {
+              vout << "Automaton after flushing surely losing states:\n";
+              spot::print_hoa(vout, aut, nullptr) << std::endl;
+            });
         }
 
       private:
@@ -111,14 +111,13 @@ namespace aut_preprocessors {
         Aut& aut;
         const bdd input_support, output_support;
         const unsigned K;
-        const int verbose;
     };
   }
 
   struct surely_losing {
       template <typename Aut>
-      static auto make (Aut& aut, bdd input_support, bdd output_support, unsigned K, int verbose) {
-        return detail::surely_losing (aut, input_support, output_support, K, verbose);
+      static auto make (Aut& aut, bdd input_support, bdd output_support, unsigned K) {
+        return detail::surely_losing (aut, input_support, output_support, K);
       }
   };
 }

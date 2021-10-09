@@ -1,5 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2017-2020 Laboratoire de Recherche et Développement
+// Copyright (C) 2017-2021 Laboratoire de Recherche et Développement
 // de l'Epita (LRDE).
 //
 // This file is part of Spot, a model checking library.
@@ -19,12 +19,6 @@
 
 #include <config.h>
 
-#include <memory>
-#include <string>
-#include <sstream>
-#include <unordered_map>
-#include <vector>
-
 #include "argmatch.h"
 
 #include "common_aoutput.hh"
@@ -36,54 +30,62 @@
 #include <spot/misc/escape.hh>
 #include <spot/misc/timer.hh>
 #include <spot/tl/formula.hh>
+#include <spot/tl/apcollect.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
-#include <spot/twaalgos/degen.hh>
-#include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/game.hh>
 #include <spot/twaalgos/hoa.hh>
-#include <spot/twaalgos/parity.hh>
-#include <spot/twaalgos/sbacc.hh>
-#include <spot/twaalgos/simulation.hh>
+#include <spot/twaalgos/minimize.hh>
+#include <spot/twaalgos/product.hh>
 #include <spot/twaalgos/synthesis.hh>
-#include <spot/twaalgos/toparity.hh>
-#include <spot/twaalgos/totgba.hh>
 #include <spot/twaalgos/translate.hh>
 
 enum
 {
   OPT_ALGO = 256,
   OPT_CSV,
+  OPT_DECOMPOSE,
   OPT_INPUT,
   OPT_OUTPUT,
   OPT_PRINT,
   OPT_PRINT_AIGER,
   OPT_PRINT_HOA,
   OPT_REAL,
-  OPT_VERBOSE
+  OPT_SIMPLIFY,
+  OPT_VERBOSE,
+  OPT_VERIFY
 };
 
 static const argp_option options[] =
   {
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Input options:", 1 },
-    { "ins", OPT_INPUT, "PROPS", 0,
-      "comma-separated list of uncontrollable (a.k.a. input) atomic"
-      " propositions", 0},
     { "outs", OPT_OUTPUT, "PROPS", 0,
       "comma-separated list of controllable (a.k.a. output) atomic"
       " propositions", 0},
+    { "ins", OPT_INPUT, "PROPS", OPTION_ARG_OPTIONAL,
+      "comma-separated list of controllable (a.k.a. output) atomic"
+      " propositions. If unspecified its the complement of \"outs\".", 0},
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
     { "algo", OPT_ALGO, "sd|ds|ps|lar|lar.old", 0,
-      "choose the algorithm for synthesis:\n"
-      " - sd:   translate to tgba, split, then determinize (default)\n"
-      " - ds:   translate to tgba, determinize, then split\n"
-      " - ps:   translate to dpa, then split\n"
-      " - lar:  translate to a deterministic automaton with arbitrary"
+      "choose the algorithm for synthesis:"
+      " \"sd\": translate to tgba, split, then determinize (default);"
+      " \"ds\": translate to tgba, determinize, then split;"
+      " \"ps\": translate to dpa, then split;"
+      " \"lar\": translate to a deterministic automaton with arbitrary"
       " acceptance condition, then use LAR to turn to parity,"
-      " then split\n"
-      " - lar.old:  old version of LAR, for benchmarking.\n", 0 },
+      " then split;"
+      " \"lar.old\": old version of LAR, for benchmarking.\n", 0 },
+    { "decompose", OPT_DECOMPOSE, "yes|no", 0,
+      "whether to decompose the specification as multiple output-disjoint "
+      "problems to solve independently (enabled by default)", 0 },
+    { "simplify", OPT_SIMPLIFY, "no|bisim|bwoa|sat|bisim-sat|bwoa-sat", 0,
+      "simplification to apply to the controler (no) nothing, "
+      "(bisim) bisimulation-based reduction, (bwoa) bissimulation-based "
+      "reduction with output assignment, (sat) SAT-based minimization, "
+      "(bisim-sat) SAT after bisim, (bwoa-sat) SAT after bwoa.  Defaults "
+      "to 'bwoa'.", 0 },
     /**************************************************/
     { nullptr, 0, nullptr, 0, "Output options:", 20 },
     { "print-pg", OPT_PRINT, nullptr, 0,
@@ -92,12 +94,19 @@ static const argp_option options[] =
       "print the parity game in the HOA format, do not solve it", 0},
     { "realizability", OPT_REAL, nullptr, 0,
       "realizability only, do not compute a winning strategy", 0},
-    { "aiger", OPT_PRINT_AIGER, "ITE|ISOP", OPTION_ARG_OPTIONAL,
-      "prints a winning strategy as an AIGER circuit.  With argument \"ISOP\""
-      " conditions are converted to DNF, while the default \"ITE\" uses the "
-      "if-the-else normal form.", 0},
+    { "aiger", OPT_PRINT_AIGER, "ite|isop|both[+ud][+dc]"
+                                 "[+sub0|sub1|sub2]", OPTION_ARG_OPTIONAL,
+      "prints a winning strategy as an AIGER circuit. The first, and only "
+      "mandatory option defines the method to be used. \"ite\" for "
+      "If-then-else normal form; "
+      "\"isop\" for irreducible sum of producs; "
+      "\"both\" tries both encodings and keeps the smaller one. "
+      "The other options further "
+      "refine the encoding, see aiger::encode_bdd.", 0},
     { "verbose", OPT_VERBOSE, nullptr, 0,
       "verbose mode", -1 },
+    { "verify", OPT_VERIFY, nullptr, 0,
+       "verifies the strategy or (if demanded) aiger against the spec.", -1 },
     { "csv", OPT_CSV, "[>>]FILENAME", OPTION_ARG_OPTIONAL,
       "output statistics as CSV in FILENAME or on standard output "
       "(if '>>' is used to request append mode, the header line is "
@@ -125,35 +134,20 @@ Exit status:\n\
   1   if the input problem is not realizable\n\
   2   if any error has been reported";
 
-static std::vector<std::string> input_aps;
-static std::vector<std::string> output_aps;
+static std::vector<std::string> all_output_aps;
+static std::vector<std::string> all_input_aps;
 
 static const char* opt_csv = nullptr;
 static bool opt_print_pg = false;
 static bool opt_print_hoa = false;
 static const char* opt_print_hoa_args = nullptr;
 static bool opt_real = false;
+static bool opt_do_verify = false;
 static const char* opt_print_aiger = nullptr;
-static spot::option_map extra_options;
 
-static double trans_time = 0.0;
-static double split_time = 0.0;
-static double paritize_time = 0.0;
-static double solve_time = 0.0;
-static double strat2aut_time = 0.0;
-static unsigned nb_states_dpa = 0;
-static unsigned nb_states_parity_game = 0;
+static spot::synthesis_info* gi;
 
-enum solver
-{
-  DET_SPLIT,
-  SPLIT_DET,
-  DPA_SPLIT,
-  LAR,
-  LAR_OLD,
-};
-
-static char const *const solver_names[] =
+static char const *const algo_names[] =
   {
    "ds",
    "sd",
@@ -162,7 +156,7 @@ static char const *const solver_names[] =
    "lar.old"
   };
 
-static char const *const solver_args[] =
+static char const *const algo_args[] =
 {
   "detsplit", "ds",
   "splitdet", "sd",
@@ -171,22 +165,53 @@ static char const *const solver_args[] =
   "lar.old",
   nullptr
 };
-static solver const solver_types[] =
+static spot::synthesis_info::algo const algo_types[] =
 {
-  DET_SPLIT, DET_SPLIT,
-  SPLIT_DET, SPLIT_DET,
-  DPA_SPLIT, DPA_SPLIT,
-  LAR,
-  LAR_OLD,
+  spot::synthesis_info::algo::DET_SPLIT, spot::synthesis_info::algo::DET_SPLIT,
+  spot::synthesis_info::algo::SPLIT_DET, spot::synthesis_info::algo::SPLIT_DET,
+  spot::synthesis_info::algo::DPA_SPLIT, spot::synthesis_info::algo::DPA_SPLIT,
+  spot::synthesis_info::algo::LAR,
+  spot::synthesis_info::algo::LAR_OLD,
 };
-ARGMATCH_VERIFY(solver_args, solver_types);
+ARGMATCH_VERIFY(algo_args, algo_types);
 
-static solver opt_solver = SPLIT_DET;
-static bool verbose = false;
+static const char* const decompose_args[] =
+  {
+    "yes", "true", "enabled", "1",
+    "no", "false", "disabled", "0",
+    nullptr
+  };
+static bool decompose_values[] =
+  {
+    true, true, true, true,
+    false, false, false, false,
+  };
+ARGMATCH_VERIFY(decompose_args, decompose_values);
+bool opt_decompose_ltl = true;
+
+static const char* const simplify_args[] =
+  {
+    "no", "false", "disabled", "0",
+    "bisim", "1",
+    "bwoa", "bisim-with-output-assignment", "2",
+    "sat", "3",
+    "bisim-sat", "4",
+    "bwoa-sat", "5",
+    nullptr
+  };
+static unsigned simplify_values[] =
+  {
+    0, 0, 0, 0,
+    1, 1,
+    2, 2, 2,
+    3, 3,
+    4, 4,
+    5, 5,
+  };
+ARGMATCH_VERIFY(simplify_args, simplify_values);
 
 namespace
 {
-
   auto str_tolower = [] (std::string s)
     {
       std::transform(s.begin(), s.end(), s.begin(),
@@ -194,35 +219,15 @@ namespace
       return s;
     };
 
-  static spot::twa_graph_ptr
-  to_dpa(const spot::twa_graph_ptr& split)
-  {
-    // if the input automaton is deterministic, degeneralize it to be sure to
-    // end up with a parity automaton
-    auto dpa = spot::tgba_determinize(spot::degeneralize_tba(split),
-                                      false, true, true, false);
-    dpa->merge_edges();
-    if (opt_print_pg)
-      dpa = spot::sbacc(dpa);
-    spot::reduce_parity_here(dpa, true);
-    spot::change_parity_here(dpa, spot::parity_kind_max,
-                             spot::parity_style_odd);
-    assert((
-      [&dpa]() -> bool
-        {
-          bool max, odd;
-          dpa->acc().is_parity(max, odd);
-          return max && odd;
-        }()));
-    assert(spot::is_deterministic(dpa));
-    return dpa;
-  }
-
   static void
-  print_csv(spot::formula f, bool realizable)
+  print_csv(const spot::formula& f)
   {
-    if (verbose)
-      std::cerr << "writing CSV to " << opt_csv << '\n';
+    auto& vs = gi->verbose_stream;
+    auto& bv = gi->bv;
+    if (not bv)
+      throw std::runtime_error("No information available for csv!");
+    if (vs)
+      *vs << "writing CSV to " << opt_csv << '\n';
 
     output_file outf(opt_csv);
     std::ostream& out = outf.ostream();
@@ -231,307 +236,381 @@ namespace
     // (Even if that file was empty initially.)
     if (!outf.append())
       {
-        out << ("\"formula\",\"algo\",\"trans_time\","
+        out << ("\"formula\",\"algo\",\"tot_time\",\"trans_time\","
                 "\"split_time\",\"todpa_time\"");
         if (!opt_print_pg && !opt_print_hoa)
           {
             out << ",\"solve_time\"";
             if (!opt_real)
               out << ",\"strat2aut_time\"";
-            out << ",\"realizable\"";
+            if (opt_print_aiger)
+              out << ",\"aig_time\"";
+            out << ",\"realizable\""; //-1: Unknown, 0: Unreal, 1: Real
           }
-        out << ",\"dpa_num_states\",\"parity_game_num_states\""
-            << '\n';
+        out << ",\"dpa_num_states\",\"dpa_num_states_env\""
+            << ",\"strat_num_states\",\"strat_num_edges\"";
+        if (opt_print_aiger)
+            out << ",\"nb latches\",\"nb gates\"";
+        out << '\n';
       }
     std::ostringstream os;
     os << f;
     spot::escape_rfc4180(out << '"', os.str());
-    out << "\",\"" << solver_names[opt_solver]
-        << "\"," << trans_time
-        << ',' << split_time
-        << ',' << paritize_time;
+    out << "\",\"" << algo_names[(int) gi->s]
+        << "\"," << bv->total_time
+        << ',' << bv->trans_time
+        << ',' << bv->split_time
+        << ',' << bv->paritize_time;
     if (!opt_print_pg && !opt_print_hoa)
       {
-        out << ',' << solve_time;
+        out << ',' << bv->solve_time;
         if (!opt_real)
-          out << ',' << strat2aut_time;
-        out << ',' << realizable;
+          out << ',' << bv->strat2aut_time;
+        if (opt_print_aiger)
+          out << ',' << bv->aig_time;
+        out << ',' << bv->realizable;
       }
-    out << ',' << nb_states_dpa
-        << ',' << nb_states_parity_game
-        << '\n';
+    out << ',' << bv->nb_states_arena
+        << ',' << bv->nb_states_arena_env
+        << ',' << bv->nb_strat_states
+        << ',' << bv->nb_strat_edges;
+
+    if (opt_print_aiger)
+    {
+      out << ',' << bv->nb_latches
+          << ',' << bv->nb_gates;
+    }
+    out << '\n';
     outf.close(opt_csv);
+  }
+
+  int
+  solve_formula(const spot::formula& f,
+                const std::vector<std::string>& input_aps,
+                const std::vector<std::string>& output_aps)
+  {
+    spot::stopwatch sw;
+    if (gi->bv)
+      sw.start();
+
+    auto safe_tot_time = [&]()
+    {
+      if (gi->bv)
+        gi->bv->total_time = sw.stop();
+    };
+
+    std::vector<spot::formula> sub_form;
+    std::vector<std::set<spot::formula>> sub_outs;
+    if (opt_decompose_ltl)
+    {
+      auto subs = split_independant_formulas(f, output_aps);
+      if (subs.first.size() > 1)
+      {
+        sub_form = subs.first;
+        sub_outs = subs.second;
+      }
+    }
+    // When trying to split the formula, we can apply transformations that
+    // increase its size. This is why we will use the original formula if it
+    // has not been cut.
+    if (sub_form.empty())
+    {
+      sub_form = { f };
+      sub_outs.resize(1);
+      std::transform(output_aps.begin(), output_aps.end(),
+            std::inserter(sub_outs[0], sub_outs[0].begin()),
+            [](const std::string& name) {
+              return spot::formula::ap(name);
+            });
+    }
+    std::vector<std::vector<std::string>> sub_outs_str;
+    std::transform(sub_outs.begin(), sub_outs.end(),
+                   std::back_inserter(sub_outs_str),
+                   [](const auto& forms)
+                    {
+                      std::vector<std::string> r;
+                      r.reserve(forms.size());
+                      for (auto f : forms)
+                        r.push_back(f.ap_name());
+                      return r;
+                    });
+
+    assert((sub_form.size() == sub_outs.size())
+           && (sub_form.size() == sub_outs_str.size()));
+
+    const bool want_game = opt_print_pg || opt_print_hoa;
+
+    std::vector<spot::twa_graph_ptr> arenas;
+
+    auto sub_f = sub_form.begin();
+    auto sub_o = sub_outs_str.begin();
+    std::vector<spot::strategy_like_t> strategies;
+
+    auto print_game = want_game ?
+      [](const spot::twa_graph_ptr& game)->void
+        {
+          if (opt_print_pg)
+            pg_print(std::cout, game);
+          else
+            spot::print_hoa(std::cout, game, opt_print_hoa_args) << '\n';
+        }
+      :
+      [](const spot::twa_graph_ptr&)->void{};
+
+    for (; sub_f != sub_form.end(); ++sub_f, ++sub_o)
+    {
+      // If we want to print a game,
+      // we never use the direct approach
+      spot::strategy_like_t strat{0, nullptr, bddfalse};
+      if (!want_game)
+        strat =
+            spot::try_create_direct_strategy(*sub_f, *sub_o, *gi);
+
+      switch (strat.success)
+      {
+      case -1:
+        {
+          std::cout << "UNREALIZABLE" << std::endl;
+          safe_tot_time();
+          return 1;
+        }
+      case 0:
+        {
+          auto arena = spot::create_game(*sub_f, *sub_o, *gi);
+          if (gi->bv)
+            {
+              gi->bv->nb_states_arena += arena->num_states();
+              auto spptr =
+                  arena->get_named_prop<std::vector<bool>>("state-player");
+              assert(spptr);
+              gi->bv->nb_states_arena_env +=
+                  std::count(spptr->cbegin(), spptr->cend(), false);
+              assert((spptr->at(arena->get_init_state_number()) == false)
+                     && "Env needs first turn");
+            }
+          print_game(arena);
+          if (!spot::solve_game(arena, *gi))
+            {
+              std::cout << "UNREALIZABLE" << std::endl;
+              safe_tot_time();
+              return 1;
+            }
+          // Create the (partial) strategy
+          // only if we need it
+          if (!opt_real)
+            {
+              spot::strategy_like_t sl;
+              sl.success = 1;
+              sl.strat_like = spot::create_strategy(arena, *gi);
+              sl.glob_cond = bddfalse;
+              strategies.push_back(sl);
+            }
+          break;
+        }
+      case 1:
+        {
+          // the direct approach yielded a strategy
+          // which can now be minimized
+          // We minimize only if we need it
+          assert(strat.strat_like && "Expected success but found no strat!");
+          if (!opt_real)
+            {
+              spot::stopwatch sw_min;
+              sw_min.start();
+              unsigned simplify = gi->minimize_lvl;
+              bool do_split = 3 <= simplify;
+              if (do_split)
+                split_2step_fast_here(strat.strat_like,
+                    spot::get_synthesis_outputs(strat.strat_like));
+              minimize_strategy_here(strat.strat_like, simplify);
+              if (do_split)
+                strat.strat_like = spot::unsplit_2step(strat.strat_like);
+              auto delta = sw_min.stop();
+              if (gi->bv)
+                gi->bv->strat2aut_time += delta;
+              if (gi->verbose_stream)
+                *gi->verbose_stream << "final strategy has "
+                                   << strat.strat_like->num_states()
+                                   << " states and "
+                                   << strat.strat_like->num_edges()
+                                   << " edges\n"
+                                   << "minimization took " << delta
+                                   << " seconds\n";
+            }
+          SPOT_FALLTHROUGH;
+        }
+      case 2:
+        if (!opt_real)
+          strategies.push_back(strat);
+        break;
+      default:
+        throw std::runtime_error("ltlsynt: Recieved unexpected success "
+                                 "code during strategy generation!");
+      }
+    }
+
+    // If we only wanted to print the game we are done
+    if (want_game)
+      {
+        safe_tot_time();
+        return 0;
+      }
+
+    std::cout << "REALIZABLE" << std::endl;
+    if (opt_real)
+      {
+        safe_tot_time();
+        return 0;
+      }
+    // If we reach this line
+    // a strategy was found for each subformula
+    assert(strategies.size() == sub_form.size()
+           && "Strategies are missing");
+
+    spot::aig_ptr saig = nullptr;
+    spot::twa_graph_ptr tot_strat = nullptr;
+    automaton_printer printer;
+    spot::process_timer timer_printer_dummy;
+
+    if (opt_print_aiger)
+      {
+        spot::stopwatch sw2;
+        if (gi->bv)
+          sw2.start();
+        saig = spot::strategies_to_aig(strategies, opt_print_aiger,
+                                       input_aps,
+                                       sub_outs_str);
+        if (gi->bv)
+          {
+            gi->bv->aig_time = sw2.stop();
+            gi->bv->nb_latches = saig->num_latches();
+            gi->bv->nb_gates = saig->num_gates();
+          }
+        if (gi->verbose_stream)
+          {
+            *gi->verbose_stream << "AIG circuit was created in "
+                               << gi->bv->aig_time
+                               << " and has " << saig->num_latches()
+                               << " latches and "
+                               << saig->num_gates() << " gates\n";
+          }
+        spot::print_aiger(std::cout, saig) << '\n';
+      }
+    else
+      {
+        assert(std::all_of(strategies.begin(), strategies.end(),
+                           [](const auto& sl){return sl.success == 1; })
+               && "ltlsynt: Can not handle TGBA as strategy.");
+        tot_strat = strategies.front().strat_like;
+        for (size_t i = 1; i < strategies.size(); ++i)
+          tot_strat = spot::product(tot_strat, strategies[i].strat_like);
+        printer.print(tot_strat, timer_printer_dummy);
+      }
+
+    // Final step: Do verification if demanded
+    if (!opt_do_verify)
+      {
+        safe_tot_time();
+        return 0;
+      }
+
+
+    // TODO: different options to speed up verification?!
+    spot::translator trans(gi->dict, &gi->opt);
+    auto neg_spec = trans.run(spot::formula::Not(f));
+    if (saig)
+      {
+        // Test the aiger
+        auto saigaut = saig->as_automaton(false);
+        if (neg_spec->intersects(saigaut))
+          throw std::runtime_error("Aiger and negated specification "
+                                   "do intersect -> strategy not OK.");
+        std::cout << "c\nCircuit was verified\n";
+      }
+    else if  (tot_strat)
+      {
+        // Test the strat
+        if (neg_spec->intersects(tot_strat))
+          throw std::runtime_error("Strategy and negated specification "
+                                   "do intersect -> strategy not OK.");
+        std::cout << "/*Strategy was verified*/\n";
+      }
+    // Done
+
+    safe_tot_time();
+    return 0;
   }
 
   class ltl_processor final : public job_processor
   {
   private:
-    spot::translator& trans_;
     std::vector<std::string> input_aps_;
     std::vector<std::string> output_aps_;
 
   public:
-
-    ltl_processor(spot::translator& trans,
-                  std::vector<std::string> input_aps_,
+    ltl_processor(std::vector<std::string> input_aps_,
                   std::vector<std::string> output_aps_)
-      : trans_(trans), input_aps_(input_aps_), output_aps_(output_aps_)
+        : input_aps_(std::move(input_aps_)),
+          output_aps_(std::move(output_aps_))
     {
-    }
-
-    int solve_formula(spot::formula f)
-    {
-      spot::process_timer timer;
-      timer.start();
-      spot::stopwatch sw;
-      bool want_time = verbose || opt_csv;
-
-      switch (opt_solver)
-        {
-        case LAR:
-        case LAR_OLD:
-          trans_.set_type(spot::postprocessor::Generic);
-          trans_.set_pref(spot::postprocessor::Deterministic);
-          break;
-        case DPA_SPLIT:
-          trans_.set_type(spot::postprocessor::ParityMaxOdd);
-          trans_.set_pref(spot::postprocessor::Deterministic
-                          | spot::postprocessor::Colored);
-          break;
-        case DET_SPLIT:
-        case SPLIT_DET:
-          break;
-        }
-
-      if (want_time)
-        sw.start();
-      auto aut = trans_.run(&f);
-      bdd all_inputs = bddtrue;
-      bdd all_outputs = bddtrue;
-      for (const auto& ap_i : input_aps_)
-        {
-          unsigned v = aut->register_ap(spot::formula::ap(ap_i));
-          all_inputs &= bdd_ithvar(v);
-        }
-      for (const auto& ap_i : output_aps_)
-        {
-          unsigned v = aut->register_ap(spot::formula::ap(ap_i));
-          all_outputs &= bdd_ithvar(v);
-        }
-      if (want_time)
-        trans_time = sw.stop();
-      if (verbose)
-        {
-          std::cerr << "translating formula done in "
-                    << trans_time << " seconds\n";
-          std::cerr << "automaton has " << aut->num_states()
-                    << " states and " << aut->num_sets() << " colors\n";
-        }
-
-      spot::twa_graph_ptr dpa = nullptr;
-      switch (opt_solver)
-        {
-          case DET_SPLIT:
-            {
-              if (want_time)
-                sw.start();
-              auto tmp = to_dpa(aut);
-              if (verbose)
-                std::cerr << "determinization done\nDPA has "
-                          << tmp->num_states() << " states, "
-                          << tmp->num_sets() << " colors\n";
-              tmp->merge_states();
-              if (want_time)
-                paritize_time = sw.stop();
-              if (verbose)
-                std::cerr << "simplification done\nDPA has "
-                          << tmp->num_states() << " states\n"
-                          << "determinization and simplification took "
-                          << paritize_time << " seconds\n";
-              if (want_time)
-                sw.start();
-              dpa = split_2step(tmp, all_inputs, all_outputs, true, true);
-              spot::colorize_parity_here(dpa, true);
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << tmp->num_states() << " states\n";
-              break;
-            }
-          case DPA_SPLIT:
-            {
-              if (want_time)
-                sw.start();
-              aut->merge_states();
-              if (want_time)
-                paritize_time = sw.stop();
-              if (verbose)
-                std::cerr << "simplification done in " << paritize_time
-                          << " seconds\nDPA has " << aut->num_states()
-                          << " states\n";
-              if (want_time)
-                sw.start();
-              dpa = split_2step(aut, all_inputs, all_outputs, true, true);
-              spot::colorize_parity_here(dpa, true);
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << dpa->num_states() << " states\n";
-              break;
-            }
-          case SPLIT_DET:
-            {
-              if (want_time)
-                sw.start();
-              auto split = split_2step(aut, all_inputs, all_outputs,
-                                       true, false);
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << split->num_states() << " states\n";
-              if (want_time)
-                sw.start();
-              dpa = to_dpa(split);
-              if (verbose)
-                std::cerr << "determinization done\nDPA has "
-                          << dpa->num_states() << " states, "
-                          << dpa->num_sets() << " colors\n";
-              dpa->merge_states();
-              if (verbose)
-                std::cerr << "simplification done\nDPA has "
-                          << dpa->num_states() << " states\n"
-                          << "determinization and simplification took "
-                          << paritize_time << " seconds\n";
-              if (want_time)
-                paritize_time = sw.stop();
-              // The named property "state-player" is set in split_2step
-              // but not propagated by to_dpa
-              alternate_players(dpa);
-              break;
-            }
-          case LAR:
-          case LAR_OLD:
-            {
-              if (want_time)
-                sw.start();
-              if (opt_solver == LAR)
-                {
-                  dpa = spot::to_parity(aut);
-                  // reduce_parity is called by to_parity(),
-                  // but with colorization turned off.
-                  spot::colorize_parity_here(dpa, true);
-                }
-              else
-                {
-                  dpa = spot::to_parity_old(aut);
-                  dpa = reduce_parity_here(dpa, true);
-                }
-              spot::change_parity_here(dpa, spot::parity_kind_max,
-                                       spot::parity_style_odd);
-              if (want_time)
-                paritize_time = sw.stop();
-              if (verbose)
-                std::cerr << "LAR construction done in " << paritize_time
-                          << " seconds\nDPA has "
-                          << dpa->num_states() << " states, "
-                          << dpa->num_sets() << " colors\n";
-
-              if (want_time)
-                sw.start();
-              dpa = split_2step(dpa, all_inputs, all_outputs, true, true);
-              spot::colorize_parity_here(dpa, true);
-              if (want_time)
-                split_time = sw.stop();
-              if (verbose)
-                std::cerr << "split inputs and outputs done in " << split_time
-                          << " seconds\nautomaton has "
-                          << dpa->num_states() << " states\n";
-              break;
-            }
-        }
-      nb_states_dpa = dpa->num_states();
-
-      if (opt_print_pg)
-        {
-          timer.stop();
-          pg_print(std::cout, dpa);
-          return 0;
-        }
-      if (opt_print_hoa)
-        {
-          timer.stop();
-          spot::print_hoa(std::cout, dpa, opt_print_hoa_args) << '\n';
-          return 0;
-        }
-
-      if (want_time)
-        sw.start();
-      bool player1winning = solve_parity_game(dpa);
-      if (want_time)
-        solve_time = sw.stop();
-      if (verbose)
-        std::cerr << "parity game solved in " << solve_time << " seconds\n";
-      nb_states_parity_game = dpa->num_states();
-      timer.stop();
-      if (player1winning)
-        {
-          std::cout << "REALIZABLE\n";
-          if (!opt_real)
-            {
-              if (want_time)
-                sw.start();
-              auto strat_aut = apply_strategy(dpa, all_outputs,
-                                              true, false);
-              if (want_time)
-                strat2aut_time = sw.stop();
-
-              // output the winning strategy
-              if (opt_print_aiger)
-                spot::print_aiger(std::cout, strat_aut, opt_print_aiger);
-              else
-                {
-                  automaton_printer printer;
-                  printer.print(strat_aut, timer);
-                }
-            }
-          return 0;
-        }
-      else
-        {
-          std::cout << "UNREALIZABLE\n";
-          return 1;
-        }
     }
 
     int process_formula(spot::formula f, const char*, int) override
     {
-      unsigned res = solve_formula(f);
+      auto unknown_aps = [](spot::formula f,
+                            const std::vector<std::string>& known)
+      {
+        std::vector<std::string> unknown;
+        std::set<spot::formula> seen;
+        f.traverse([&](const spot::formula& s)
+        {
+          if (s.is(spot::op::ap))
+            {
+              if (!seen.insert(s).second)
+                return false;
+              const std::string& a = s.ap_name();
+              if (std::find(known.begin(), known.end(), a) == known.end())
+                unknown.push_back(a);
+            }
+          return false;
+        });
+        return unknown;
+      };
+
+      // Decide which atomic propositions are input or output.
+      int res;
+      if (input_aps_.empty() && !output_aps_.empty())
+        res = solve_formula(f, unknown_aps(f, output_aps_), output_aps_);
+      else if (output_aps_.empty() && !input_aps_.empty())
+        res = solve_formula(f, input_aps_, unknown_aps(f, input_aps_));
+      else
+        res = solve_formula(f, input_aps_, output_aps_);
+
       if (opt_csv)
-        print_csv(f, res == 0);
+        print_csv(f);
       return res;
     }
-
   };
 }
 
 static int
-parse_opt(int key, char* arg, struct argp_state*)
+parse_opt(int key, char *arg, struct argp_state *)
 {
   // Called from C code, so should not raise any exception.
   BEGIN_EXCEPTION_PROTECT;
   switch (key)
     {
     case OPT_ALGO:
-      opt_solver = XARGMATCH("--algo", arg, solver_args, solver_types);
+      gi->s = XARGMATCH("--algo", arg, algo_args, algo_types);
       break;
     case OPT_CSV:
       opt_csv = arg ? arg : "-";
+      if (not gi->bv)
+        gi->bv = spot::synthesis_info::bench_var();
+      break;
+    case OPT_DECOMPOSE:
+      opt_decompose_ltl = XARGMATCH("--decompose", arg,
+                                    decompose_args, decompose_values);
       break;
     case OPT_INPUT:
       {
@@ -540,7 +619,7 @@ parse_opt(int key, char* arg, struct argp_state*)
         while (std::getline(aps, ap, ','))
           {
             ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            input_aps.push_back(str_tolower(ap));
+            all_input_aps.push_back(str_tolower(ap));
           }
         break;
       }
@@ -551,29 +630,39 @@ parse_opt(int key, char* arg, struct argp_state*)
         while (std::getline(aps, ap, ','))
           {
             ap.erase(remove_if(ap.begin(), ap.end(), isspace), ap.end());
-            output_aps.push_back(str_tolower(ap));
+            all_output_aps.push_back(str_tolower(ap));
           }
         break;
       }
     case OPT_PRINT:
       opt_print_pg = true;
+      gi->force_sbacc = true;
       break;
     case OPT_PRINT_HOA:
       opt_print_hoa = true;
       opt_print_hoa_args = arg;
       break;
     case OPT_PRINT_AIGER:
-      opt_print_aiger = arg ? arg : "INF";
+      opt_print_aiger = arg ? arg : "ite";
       break;
     case OPT_REAL:
       opt_real = true;
       break;
+    case OPT_SIMPLIFY:
+      gi->minimize_lvl = XARGMATCH("--simplify", arg,
+                                   simplify_args, simplify_values);
+      break;
     case OPT_VERBOSE:
-      verbose = true;
+      gi->verbose_stream = &std::cerr;
+      if (not gi->bv)
+        gi->bv = spot::synthesis_info::bench_var();
+      break;
+    case OPT_VERIFY:
+      opt_do_verify = true;
       break;
     case 'x':
       {
-        const char* opt = extra_options.parse_options(arg);
+        const char* opt = gi->opt.parse_options(arg);
         if (opt)
           error(2, 0, "failed to parse --options near '%s'", opt);
       }
@@ -587,25 +676,34 @@ int
 main(int argc, char **argv)
 {
   return protected_main(argv, [&] {
-      extra_options.set("simul", 0);
-      extra_options.set("ba-simul", 0);
-      extra_options.set("det-simul", 0);
-      extra_options.set("tls-impl", 1);
-      extra_options.set("wdba-minimize", 2);
-      const argp ap = { options, parse_opt, nullptr,
-                        argp_program_doc, children, nullptr, nullptr };
-      if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
-        exit(err);
-      check_no_formula();
+    // Create gi_ as a local variable, so make sure it is destroyed
+    // before all global variables.
+    spot::synthesis_info gi_;
+    gi = &gi_;
+    //gi_.opt.set("simul", 0);     // no simulation, except...
+    //gi_.opt.set("dpa-simul", 1); // ... after determinization
+    gi_.opt.set("tls-impl", 1);  // no automata-based implication check
+    gi_.opt.set("wdba-minimize", 2); // minimize only syntactic oblig
+    const argp ap = { options, parse_opt, nullptr,
+                      argp_program_doc, children, nullptr, nullptr };
+    if (int err = argp_parse(&ap, argc, argv, ARGP_NO_HELP, nullptr, nullptr))
+      exit(err);
+    check_no_formula();
 
-      // Setup the dictionary now, so that BuDDy's initialization is
-      // not measured in our timings.
-      spot::bdd_dict_ptr dict = spot::make_bdd_dict();
-      spot::translator trans(dict, &extra_options);
-      ltl_processor processor(trans, input_aps, output_aps);
+    // Check if inputs and outputs are distinct
+    for (const auto& ai : all_input_aps)
+      if (std::find(all_output_aps.begin(), all_output_aps.end(), ai)
+          != all_output_aps.end())
+            throw std::runtime_error("ltlsynt(): " + ai +
+                                     " appears in the input AND output APs.");
 
-      // Diagnose unused -x options
-      extra_options.report_unused_options();
-      return processor.run();
-    });
+    ltl_processor processor(all_input_aps, all_output_aps);
+    if (int res = processor.run(); res == 0 || res == 1)
+      {
+        // Diagnose unused -x options
+        gi_.opt.report_unused_options();
+        return res;
+      }
+    return 2;
+  });
 }

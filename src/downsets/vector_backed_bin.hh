@@ -68,7 +68,6 @@ namespace downsets {
               if (res.leq ()) { // v is dominated.
                 assert (not must_remove); // Assuming we started with an antichain
                 return false;
-                TODO ("Check that geq is not called when NDEBUG.");
               } else if (res.geq ()) { // v dominates *it
                 must_remove = true; /* *it should be removed */
               } else { // *it needs to be kept
@@ -81,7 +80,6 @@ namespace downsets {
             if (result != vector_set[i].end ())
               vector_set[i].erase (result, vector_set[i].end ());
 
-            // i = (i == vector_set.size () - 1) ? 0 : i + 1;
             i = (i + 1) % vector_set.size ();
           } while (i != start);
         }
@@ -154,9 +152,16 @@ namespace downsets {
       template <typename F>
       vector_backed_bin apply (const F& lambda) const {
         vector_backed_bin res (vector_set.size ());
-        for (const auto& elvec : vector_set)
-          for (auto&& el : elvec)
-            res.insert (lambda (el)); // Alternatively, this could insert without preserving antichain.
+        for (auto& elvec : vector_set)
+          for (auto& el : elvec) {
+            /* Insert without preserving antichain:
+                auto el_mod = lambda (el);
+                res.vector_set[bin_of (el_mod)].push_back (std::move (el_mod));
+               This seems to perform worse than what I have here.
+             */
+            res.insert (lambda (el));
+          }
+
         return res;
       }
 
@@ -218,9 +223,10 @@ namespace downsets {
             stabilize ();
           }
 
-          auto operator++ () {
+          auto& operator++ () {
             ++sub_it;
             stabilize ();
+            return *this;
           }
 
           bool operator!= (const iterator& other) const {

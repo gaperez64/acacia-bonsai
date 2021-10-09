@@ -102,8 +102,8 @@ namespace ios_precomputers {
     template <typename Aut, typename TransSet>
     class powset {
       public:
-        powset (Aut aut, bdd input_support, bdd output_support, int verbose) :
-          aut {aut}, input_support {input_support}, output_support {output_support}, verbose {verbose}
+        powset (Aut aut, bdd input_support, bdd output_support) :
+          aut {aut}, input_support {input_support}, output_support {output_support}
         {}
 
         auto operator() () const
@@ -124,15 +124,14 @@ namespace ios_precomputers {
       private:
         Aut aut;
         const bdd input_support, output_support;
-        const int verbose;
     };
 
   }
 
   struct powset {
       template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
-      static auto make (Aut aut, bdd input_support, bdd output_support, int verbose) {
-        return detail::powset<Aut, TransSet> (aut, input_support, output_support, verbose);
+      static auto make (Aut aut, bdd input_support, bdd output_support) {
+        return detail::powset<Aut, TransSet> (aut, input_support, output_support);
       }
   };
 }

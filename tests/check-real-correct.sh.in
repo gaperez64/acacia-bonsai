@@ -5,7 +5,7 @@ env > /tmp/env
 LTLSYNT=@LTLSYNT@
 STRIX=@STRIX@
 ACABONSAI=@ACABONSAI@
-
+export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:$LD_LIBRARY_PATH
 ACAPLUS=@ACAPLUS@
 PYTHON=@PYTHON3@
 export ACACIA_PLUS_LIB=@ACACIA_PLUS_LIB@
@@ -30,7 +30,7 @@ parttoinsouts () {
 
 run_ltlsynt () {
     echo "Running ltlsynt..."
-    time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins $ins --outs $outs $extra_opts
+    time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs $extra_opts
 }
 
 run_strix () {
@@ -78,7 +78,7 @@ EOF
 
 PYTHON=${PYTHON:-$(whence python3)}
 progs=()
-while getopts "cplsa+e:o:F:P:hx" opt; do
+while getopts "vcplsa+e:o:F:P:hx" opt; do
     case $opt; in
         p) prefix=t;;
         [lsa+]) progs+=$opt;;
@@ -87,6 +87,7 @@ while getopts "cplsa+e:o:F:P:hx" opt; do
         F) ltl=$OPTARG;;
         P) part=$OPTARG;;
         x) setopt xtrace;;
+        v) verbose=t;;
         h|*) usage;;
     esac
 done
@@ -95,7 +96,7 @@ part=${part:-${ltl/.ltl/.part}}
 
 shift $((OPTIND - 1))
 extra_opts+=("$@")
-#extra_opts+=(-v)
+[[ $verbose ]] && extra_opts+=(-v)
 
 if (( ${#progs} == 0 )); then
     echo 'error: one program should be specified.'

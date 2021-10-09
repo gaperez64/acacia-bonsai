@@ -36,8 +36,8 @@ namespace actioners {
         };
         using input_and_actions_set = std::list<input_and_actions>;
       public:
-        standard (const Aut& aut, const IToIOs& inputs_to_ios, int K, int verbose) :
-          aut {aut}, K {(char) K}, verbose {(char) verbose},
+        standard (const Aut& aut, const IToIOs& inputs_to_ios, int K) :
+          aut {aut}, K {(char) K},
           apply_out (aut->num_states ()), mcopy (aut->num_states ()) {
 
           mcopy.reserve (State::capacity_for (mcopy.size ()));
@@ -98,14 +98,12 @@ namespace actioners {
        private:
         const Aut& aut;
         char K;
-        const char verbose;
-        std::vector<char> apply_out, mcopy;
+        utils::vector_mm<char> apply_out, mcopy;
         input_and_actions_set input_output_fwd_actions;
 
         template <typename Set>
         auto compute_action_vec (const Set& transset) {
           action_vec ret_fwd (aut->num_states ());
-          TODO ("Test again caching this.");
           TODO ("We have two representations of the same thing here; "
                 "see if we can narrow it down to one.");
 
@@ -120,8 +118,8 @@ namespace actioners {
   template <typename State>
   struct standard {
       template <typename Aut, typename IToIOs>
-      static auto make (const Aut& aut, const IToIOs& itoios, int K, int verbose) {
-        return detail::standard<State, Aut, IToIOs> (aut, itoios, K, verbose);
+      static auto make (const Aut& aut, const IToIOs& itoios, int K) {
+        return detail::standard<State, Aut, IToIOs> (aut, itoios, K);
       }
   };
 }

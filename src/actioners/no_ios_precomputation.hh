@@ -35,8 +35,8 @@ namespace actioners {
         };
         using input_and_actions_set = std::list<input_and_actions>;
       public:
-        no_ios_precomputation (const Aut& aut, const Supports& supports, int K, int verbose) :
-          aut {aut}, K {K}, verbose {verbose} {
+        no_ios_precomputation (const Aut& aut, const Supports& supports, int K) :
+          aut {aut}, K {K} {
           std::map<action_vecs, bdd> ioset;
           bdd input_letters = bddtrue;
           while (input_letters != bddfalse) {
@@ -90,7 +90,6 @@ namespace actioners {
       private:
         const Aut& aut;
         int K;
-        const int verbose;
         input_and_actions_set input_output_fwd_actions;
 
         auto compute_action (bdd letter) {
@@ -119,8 +118,8 @@ namespace actioners {
   template <typename State>
   struct no_ios_precomputation {
       template <typename Aut, typename Supports>
-      static auto make (const Aut& aut, const Supports& supports, int K, int verbose) {
-        return detail::no_ios_precomputation<State, Aut, Supports> (aut, supports, K, verbose);
+      static auto make (const Aut& aut, const Supports& supports, int K) {
+        return detail::no_ios_precomputation<State, Aut, Supports> (aut, supports, K);
       }
   };
 }

@@ -581,7 +581,7 @@ struct table_entry
 };
 
 /* Table of platform-dependent mappings, sorted in ascending order.  */
-static const struct table_entry locale_table[] =
+[[maybe_unused]] static const struct table_entry locale_table[] =
   {
 # if defined __FreeBSD__                                    /* FreeBSD 4.2 */
     { "cs_CZ.ISO_8859-2",  "ISO-8859-2" },
