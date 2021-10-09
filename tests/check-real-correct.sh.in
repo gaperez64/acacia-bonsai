@@ -46,7 +46,7 @@ run_acacia_bonsai () {
 
 run_acacia_plus () {
     echo "Running Acacia Plus..."
-    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 10 -K 10 -C REAL \
+    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 10 -K 10 -C BOTH \
          -t SPOT -a BACKWARD $extra_opts
 }
 
