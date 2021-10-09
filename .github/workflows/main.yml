@@ -29,11 +29,11 @@ jobs:
     - name: Install python dependencies
       run: |
         pip install pygraph
-    - uses: BSFishy/meson-build@v1.0.1
+    - uses: BSFishy/meson-build@v1.0.3
       with:
         setup-options: --buildtype=release
         action: test
-        options: --suite=ab/tiny --suite=ab/small
+        options: --benchmark --suite=ab/0-1s
     - name: Upload test results
       uses: actions/upload-artifact@v2
       if: always()
