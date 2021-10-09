@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/VcDevel/std-simd
+revision = 31653668ded22df437b2173d3ad13dea2c3345f7
+patch_directory=std-simd
+
+[provide]
+dependency_names = stdsimd
+stdsimd = stdsimd_dep
