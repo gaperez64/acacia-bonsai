@@ -10,6 +10,7 @@ p = mod.add_project('configure',
   configure_options : ['--disable-devel',
                        '--disable-debug',
                        '--enable-optimizations',
+                       '--disable-python',
                        '--disable-static'
                       ],
 )
