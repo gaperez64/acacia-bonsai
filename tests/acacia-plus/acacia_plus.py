@@ -1147,9 +1147,12 @@ def main(hardargs=None):
 if __name__ == "__main__":
     (solved, is_real) = main()
     if (not solved):
+        print ("UNKNOWN")
         sys.exit(15)
     if (is_real):
+        print ("REALIZABLE")
         sys.exit(0)
     else:
+        print ("UNREALIZABLE")
         sys.exit(1)
 

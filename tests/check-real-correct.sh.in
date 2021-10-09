@@ -28,26 +28,33 @@ parttoinsouts () {
     done < $1
 }
 
+real_to_exitcode () {
+    sed '/^UNREALIZABLE/{q1} ; /^REALIZABLE/{q0} ; /^UNKNOWN/{q3}; ${q129}'
+}
+
 run_ltlsynt () {
     echo "Running ltlsynt..."
-    time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs $extra_opts
+    time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs $extra_opts | \
+        real_to_exitcode
 }
 
 run_strix () {
     echo "Running strix..."
     time echoandrun $prog_prefix $STRIX $ltl --ins $ins --outs $outs $extra_opts | \
-        sed '/UNREALIZABLE/{:a $q1; n; ba}' ## If UNREALIZABLE is printed, exit with 1.
+        real_to_exitcode
 }
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    time echoandrun $prog_prefix $ACABONSAI -u -F $ltl --ins $ins --outs $outs -K 10 $extra_opts
+    time echoandrun $prog_prefix $ACABONSAI -u -F $ltl --ins $ins --outs $outs -K 10 $extra_opts | \
+        real_to_exitcode
 }
 
 run_acacia_plus () {
     echo "Running Acacia Plus..."
     time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 10 -K 10 -C BOTH \
-         -t SPOT -a BACKWARD $extra_opts
+         -t SPOT -a BACKWARD $extra_opts | \
+        real_to_exitcode
 }
 
 PROG=$0
@@ -122,19 +129,14 @@ echo "formula: $(cat $ltl)"
 case $ltl; in
     */realizable/*)   expect=0;;
     */unrealizable/*) expect=1;;
-    *) echo 'Cannot guess if input is realizable.'
-       extra_opts_save=$extra_opts
-       extra_opts=()
-       run_ltlsynt $ltl $part
-       expect=$?
-       extra_opts=$extra_opts_save
-       progs=(${progs#l}) # Remove l
+    *) echo 'Realizability not established.'
+       expect=2
        ;;
 esac
 
-if (( expect )); then
+if (( expect == 1 )); then
     echo "formula is unrealizable."
-else
+elif (( expect == 0 )); then
     echo "formula is realizable."
 fi
 
@@ -147,8 +149,7 @@ for prog in $progs; do
         +) run_acacia_plus;;
     esac
     res=$?
-    (( res == 15 && (res = 1) ))  # Acacia-+ returns 15 for "IDK".
-    if (( res != expect )); then
+    if (( res == 3 || (expect < 2 && res != expect) )); then
         echo -n "FAILED: "
         if (( res > 128 )); then
             echo 'CRASH'
@@ -156,11 +157,14 @@ for prog in $progs; do
         elif [[ $prog == 'l' ]]; then
             echo 'CRITICAL: ltlsynt failed.'
             ret=13
-        elif (( $expect == 0 )); then
-            echo 'FALSE NEGATIVE (may happen if K is too small)'
+        elif (( res == 3 )); then
+            echo 'UNKNOWN RETURNED'
+            ret=3
+        elif (( expect == 0 )); then
+            echo 'FALSE NEGATIVE'
             ret=1
-        else
-            echo 'FALSE POSITIVE (should never happen)'
+        elif (( expect == 1 )); then
+            echo 'FALSE POSITIVE'
             ret=2
         fi
     fi
