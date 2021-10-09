@@ -1,0 +1,1 @@
+(((G (((! (hgrant_0)) && (true)) || ((true) && (! (hgrant_1))))) && (G ((hgrant_0) || (hgrant_1)))) -> (G ((((hready) -> ((X ((true) && (! (hmaster_0)))) <-> (hgrant_0))) && ((hready) -> ((X ((true) && (hmaster_0))) <-> (hgrant_1)))) && ((! (hready)) -> ((X (hmaster_0)) <-> (hmaster_0))))))

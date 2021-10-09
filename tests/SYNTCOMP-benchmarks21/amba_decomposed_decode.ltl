@@ -1,0 +1,1 @@
+(G (((((((! (hburst_0)) && (! (hburst_1))) -> (single)) && (((hburst_0) && (! (hburst_1))) -> (burst4))) && (((! (hburst_0)) && (hburst_1)) -> (incr))) && (! ((single) && ((burst4) || (incr))))) && (! ((burst4) && (incr)))))
