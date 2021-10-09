@@ -3,8 +3,10 @@ project('spot', 'cpp',
 )
 
 mod = import('unstable_external_project')
-
-run_command ('autoreconf', '-fvi')
+fs = import ('fs')
+if not fs.exists ('configure')
+  run_command ('autoreconf', '-fvi')
+endif
 
 p = mod.add_project('configure',
   configure_options : ['--disable-devel',

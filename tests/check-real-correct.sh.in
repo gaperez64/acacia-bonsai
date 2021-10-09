@@ -46,14 +46,14 @@ run_strix () {
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    time echoandrun $prog_prefix $ACABONSAI -u -F $ltl --ins $ins --outs $outs -K 10 $extra_opts | \
+    time echoandrun $prog_prefix $ACABONSAI -u -F $ltl --ins $ins --outs $outs $extra_opts | \
         real_to_exitcode
 }
 
 run_acacia_plus () {
     echo "Running Acacia Plus..."
     time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 10 -K 10 -C BOTH \
-         -t SPOT -a BACKWARD $extra_opts | \
+         -t SPOT -a BACKWARD -v 0 $extra_opts | \
         real_to_exitcode
 }
 
