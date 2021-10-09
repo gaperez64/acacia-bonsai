@@ -67,6 +67,7 @@ Runs ltlsynt, acacia-bonsai, or acacia-+ on the input LTL_FILE:
   -s: run strix ($STRIX)
   -a: run acacia-bonsai ($ACABONSAI)
   -+: run acacia-plus ($ACAPLUS)
+  -v: verbose
   -c: prefix the executable with valgrind --tool=callgrind
   -e EXE_PATH: overwrite the path for the executable
   -o EXTRA_OPTS: extra options to the executable
@@ -123,7 +124,7 @@ if [[ $prefix ]]; then
     exec 2> >(sed "s!^![$shortfile] !" >&2)
 fi
 
-echo "formula: $(cat $ltl)"
+[[ $verbose ]] && echo "formula: $(cat $ltl)"
 
 ## Guess realizability, or find it
 case $ltl; in
