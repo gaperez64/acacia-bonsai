@@ -15,5 +15,6 @@ doc/*.pdf
 tests/acacia-plus/*pyc
 tests/acacia-plus/__pycache__
 _archive/
-subprojects/spot
 _build
+subprojects/spot
+subprojects/std-simd

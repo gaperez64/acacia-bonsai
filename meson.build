@@ -11,6 +11,14 @@ bddx_dep = dependency('libbddx')
 boost_dep = dependency('boost')
 gnulib_dep = dependency('gnulib')
 
+cpp = meson.get_compiler('cpp')
+
+if cpp.has_header ('experimental/simd')
+  stdsimd_dep = declare_dependency ()
+else
+  stdsimd_dep = dependency ('stdsimd')
+endif
+
 inc = include_directories ('lib', 'src')
 
 subdir ('lib')
