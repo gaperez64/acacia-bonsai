@@ -382,6 +382,17 @@ Remark: 2 is faster without _incr.
 12/12 Acacia_Bonsai:strix+strix/set3+strix/unrealizable/set3+strix/unrealizable / strix/generalized_buffer_unreal1_2_2.ltl OK             14.71s
 
 
+* Notes
+
+** Where Aca+ is faster than AB [2021-02-24 Wed]
+
+aca+/full_arbiter_enc_4.ltl
+aca+/full_arbiter_5.ltl
+ab/ltl2dba_beta_3.ltl
+
+ab/ltl2dba_U2_10.ltl // Not faster, but they need K10, we need K11
+
+
 * Benchmarks before 2020/12/16                                      :ARCHIVE:
 with vector_vector {
 

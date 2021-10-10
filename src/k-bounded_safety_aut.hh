@@ -93,7 +93,7 @@ class k_bounded_safety_aut_detail {
           init[aut->get_init_state_number ()] = 0;
           if (F.contains (State (init)))
             return true;
-          if (Kfrom >= Kto)
+          if (K >= Kto)
             return false;
           verb_do (1, vout << "Incrementing K from " << K << " to " << K + Kinc << std::endl);
           K += Kinc;
