@@ -213,8 +213,8 @@ static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int Kfrom, int
                                   bdd input_support, bdd output_support) {
   return k_bounded_safety_aut_maker<SetOfStates> (aut, Kfrom, Kto, Kinc,
                                                   input_support, output_support,
-                                                  ios_precomputers::standard (),
-                                                  actioners::standard<typename SetOfStates::value_type> (),
-                                                  input_pickers::critical ()
+                                                  IOS_PRECOMPUTER (),
+                                                  ACTIONER (),
+                                                  INPUT_PICKER ()
     );
 }

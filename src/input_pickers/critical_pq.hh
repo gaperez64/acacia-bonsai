@@ -1,15 +1,20 @@
 #pragma once
 
 #include <random>
+#include <optional>
 #include "actioners.hh"
 
 namespace input_pickers {
   namespace detail {
     template <typename FwdActions, typename Actioner>
-    struct critical {
+    struct critical_pq {
       public:
-        critical (FwdActions& fwd_actions, Actioner& actioner) :
-          fwd_actions {fwd_actions}, actioner {actioner}, gen {0} {}
+        critical_pq (FwdActions& fwd_actions, Actioner& actioner) :
+          actioner {actioner}, gen {0} {
+          int priority = 0;
+          for (auto& el : fwd_actions)
+            fwd_actions_pq.emplace (priority++, std::ref (el));
+        }
 
         template <typename SetOfStates>
         auto operator() (const SetOfStates& F) {
@@ -20,30 +25,17 @@ namespace input_pickers {
           //        \exists f \in F, i \in C, i witnesses one-step-loss of F.
           // Algo: We go through all f in F, find an input i witnessing one-step-loss, add it to C.
 
-          // Sort/randomize input_output_fwd_actions
-          using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
-          std::vector<input_and_actions_ref> V (fwd_actions.begin (),
-                                                fwd_actions.end ());
-
-          /*auto N = std::min (V.size (), 3ul);
-          std::shuffle (V.begin (), V.begin () + N, gen);
-           std::shuffle (V.begin () + N / 2, V.end (), gen);*/
-          /*std::shuffle (V.begin (), V.end (), gen);*/
-
-          std::list<input_and_actions_ref> Cbar (V.begin (), V.end ());
-
-          auto critical_input = input_and_actions_ref (* (typename input_and_actions_ref::type*) NULL);
-          bool found_input = false;
+          auto critical_input = fwd_actions_pq.end ();
 
           for (const auto& f : F) {
             bool is_witness = false;
             verb_do (3, vout << "Searching for witness of one-step-loss for " << f << std::endl);
 
-            for (auto it = Cbar.begin (); it != Cbar.end (); ++it) {
-              auto& [input, actions] = it->get ();
+            for (auto it = fwd_actions_pq.begin (); it != fwd_actions_pq.end (); ++it) {
+              auto& [input, actions] = it->second.get ();
               is_witness = true;
               auto it_act = actions.begin ();
-              for (; it_act != actions.end (); ++it_act) {
+              for (/* */; it_act != actions.end (); ++it_act) {
                 auto fwdf = actioner.apply (f, *it_act, actioners::direction::forward);
                 verb_do (3, vout << "apply(" << f << ", <" << input << ", ?>) = " << fwdf << ": ");
                 if (F.contains (fwdf)) {
@@ -58,44 +50,51 @@ namespace input_pickers {
                 // inputs witness one-step-loss of f
                 verb_do (3, vout << "Input " << input
                          /*   */ << " witnesses one-step-loss of " << f << std::endl);
-                critical_input = *it;
-                found_input = true;
+                critical_input = it;
                 break;
               }
 
-              TODO ("Try putting a weight, rather than pushing at the front.");
+              TODO ("Try also putting a weight, rather than pushing at the front.");
               if (it_act != actions.begin ())
                 actions.splice (actions.begin(), actions, it_act);
-          }
-            if (found_input)
+            }
+            if (critical_input != fwd_actions_pq.end ())
               break;
           }
 
-          if (not found_input) {
+          if (critical_input == fwd_actions_pq.end ()) {
             verb_do (3, vout << "No critical input." << std::endl);
-            return std::pair (critical_input, false);
+            return std::optional<input_and_actions_ref> ();
+          }
+
+          // Update the hit count of that critical input.
+          {
+            auto [priority, ref] = *critical_input;
+            fwd_actions_pq.erase (critical_input);
+            fwd_actions_pq.emplace (priority - 1, ref);
           }
 
           verb_do (2, {
               vout << "Critical input: ";
-              const auto& [input, actions] = critical_input.get ();
+              const auto& [input, actions] = critical_input->second.get ();
               vout << "[" << input << "] " << std::endl;
             });
 
-          return std::pair (critical_input, true);
+          return std::make_optional (critical_input->second);
         }
       private:
-        FwdActions& fwd_actions;
+        using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
+        using fwd_actions_pq_t = std::multimap<int, input_and_actions_ref>; // needs to be signed
+        fwd_actions_pq_t fwd_actions_pq;
         Actioner& actioner;
-        const int verbose;
         std::mt19937 gen;
    };
   }
 
-  struct critical {
+  struct critical_pq {
       template <typename FwdActions, typename Actioner>
-      static auto make (FwdActions& fwd_actions, Actioner& actioner, int verbose) {
-        return detail::critical (fwd_actions, actioner, verbose);
+      static auto make (FwdActions& fwd_actions, Actioner& actioner) {
+        return detail::critical_pq (fwd_actions, actioner);
       }
   };
 }

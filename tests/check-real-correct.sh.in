@@ -34,25 +34,27 @@ real_to_exitcode () {
 
 run_ltlsynt () {
     echo "Running ltlsynt..."
-    time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs $extra_opts | \
+    time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs \
+         $LTLSYNT_OPTS $extra_opts | \
         real_to_exitcode
 }
 
 run_strix () {
     echo "Running strix..."
-    time echoandrun $prog_prefix $STRIX $ltl --ins $ins --outs $outs $extra_opts | \
+    time echoandrun $prog_prefix $STRIX $ltl --ins $ins --outs $outs $STRIX_OPTS $extra_opts | \
         real_to_exitcode
 }
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    time echoandrun $prog_prefix $ACABONSAI -c BOTH -F $ltl --ins $ins --outs $outs $extra_opts | \
+    time echoandrun $prog_prefix $ACABONSAI -c BOTH -F $ltl --ins $ins --outs $outs \
+         $AB_OPTS $extra_opts | \
         real_to_exitcode
 }
 
 run_acacia_plus () {
     echo "Running Acacia Plus..."
-    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 10 -K 10 -C BOTH \
+    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 10 -K 10 $AP_OPTS -C BOTH \
          -t SPOT -a BACKWARD -v 0 $extra_opts | \
         real_to_exitcode
 }
@@ -80,6 +82,9 @@ If LTL_FILE contains "realizable" or "unrealizable", then this is assumed to be
 the correct answer.  Otherwise, ltlsynt is ran on it to have a reference point.
 
 The time printed is retrieved using time(1) (or the ZSH builtin).
+
+Additionally, extra options are passed to the tools using environment variables:
+LTLSYNT_OPTS, STRIX_OPTS, AB_OPTS, AP_OPTS.
 EOF
     exit 1
 }

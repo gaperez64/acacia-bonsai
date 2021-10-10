@@ -6,9 +6,9 @@
 namespace input_pickers {
   namespace detail {
     template <typename FwdActions, typename Actioner>
-    struct critical {
+    struct critical_rnd {
       public:
-        critical (FwdActions& fwd_actions, Actioner& actioner) :
+        critical_rnd (FwdActions& fwd_actions, Actioner& actioner) :
           fwd_actions {fwd_actions}, actioner {actioner}, gen {0} {}
 
         template <typename SetOfStates>
@@ -25,10 +25,9 @@ namespace input_pickers {
           std::vector<input_and_actions_ref> V (fwd_actions.begin (),
                                                 fwd_actions.end ());
 
-          /*auto N = std::min (V.size (), 3ul);
+          auto N = std::min (V.size (), 5ul);
           std::shuffle (V.begin (), V.begin () + N, gen);
-           std::shuffle (V.begin () + N / 2, V.end (), gen);*/
-          /*std::shuffle (V.begin (), V.end (), gen);*/
+          std::shuffle (V.begin () + N / 2, V.end (), gen);
 
           std::list<input_and_actions_ref> Cbar (V.begin (), V.end ());
 
@@ -92,10 +91,10 @@ namespace input_pickers {
    };
   }
 
-  struct critical {
+  struct critical_rnd {
       template <typename FwdActions, typename Actioner>
       static auto make (FwdActions& fwd_actions, Actioner& actioner, int verbose) {
-        return detail::critical (fwd_actions, actioner, verbose);
+        return detail::critical_rnd (fwd_actions, actioner, verbose);
       }
   };
 }

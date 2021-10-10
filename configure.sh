@@ -3,10 +3,11 @@
 PROG=$0
 
 declare -A targets
-targets=([starexec]='CXXFLAGS="-march=sandybridge -O3 -flto -fuse-linker-plugin -pipe" meson --buildtype=release'
+
+targets=([starexec]='CXXFLAGS="-march=sandybridge -O3 -flto -fuse-linker-plugin -pipe $CXXFLAGS" meson --buildtype=release'
          [debug]='meson'
-         [optimized]='CXXFLAGS="-march=native -O3 -flto -fuse-linker-plugin -pipe" meson --buildtype=release'
-         [optimized_nosimd]='CXXFLAGS="-march=native -O3 -flto -fuse-linker-plugin -pipe -DNO_SIMD" meson --buildtype=release')
+         [optimized]='CXXFLAGS="-march=native -O3 -flto -fuse-linker-plugin -pipe $CXXFLAGS" meson --buildtype=release'
+         [optimized_nosimd]='CXXFLAGS="-march=native -O3 -flto -fuse-linker-plugin -pipe -DNO_SIMD $CXXFLAGS" meson --buildtype=release')
 
 
 usage () {

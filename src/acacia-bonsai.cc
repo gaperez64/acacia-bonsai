@@ -223,7 +223,7 @@ namespace {
         if (want_time)
           sw.start();
 
-        auto aut_preprocessors_maker = aut_preprocessors::surely_losing ();
+        auto aut_preprocessors_maker = AUT_PREPROCESSOR ();
         (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K)) ();
 
         if (want_time)
@@ -242,7 +242,7 @@ namespace {
         if (want_time)
           sw.start ();
 
-        auto boolean_states_maker = boolean_states::forward_saturation ();
+        auto boolean_states_maker = BOOLEAN_STATES ();
         vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K)) ();
 
         if (want_time)
