@@ -2,7 +2,19 @@
 
 #include "utils/todo.hh"
 
-#define DEFAULT_K 11
+#ifndef DEFAULT_K
+# define DEFAULT_K 11
+#endif
+#ifndef DEFAULT_KMIN
+# define DEFAULT_KMIN -1u
+#endif
+#ifndef DEFAULT_KINC
+# define DEFAULT_KINC 0
+#endif
+
+#define DEFAULT_K 12
+#define DEFAULT_KMIN 4
+#define DEFAULT_KINC 2
 
 #define VECTOR_ELT_T char
 #define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut

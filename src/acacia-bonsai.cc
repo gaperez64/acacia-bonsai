@@ -9,6 +9,8 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+#include <boost/algorithm/string.hpp>
+
 #include "argmatch.h"
 
 #include "common_aoutput.hh"
@@ -53,7 +55,7 @@ enum {
   OPT_Kinc = 'I',
   OPT_INPUT = 'i',
   OPT_OUTPUT = 'o',
-  OPT_UNREAL = 'u',
+  OPT_CHECK = 'c',
   OPT_VERBOSE = 'v'
 } ;
 
@@ -88,8 +90,8 @@ static const argp_option options[] = {
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Output options:", 20 },
   {
-    "unrealizability", OPT_UNREAL, nullptr, 0,
-    "checks for unrealizability too, by forking another instance.", 0
+    "check", OPT_CHECK, "[real|unreal|both]", 0,
+    "either check for real, unreal, or both", 0
   },
   {
     "verbose", OPT_VERBOSE, nullptr, 0,
@@ -118,9 +120,15 @@ static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 
 
-static bool opt_unreal = false, check_real = true;
+enum {
+  CHECK_REAL,
+  CHECK_UNREAL,
+  CHECK_BOTH
+} opt_check = CHECK_REAL;
+
+static bool check_real = true;
 static unsigned opt_K = DEFAULT_K,
-  opt_Kmin = -1u, opt_Kinc = 0;
+  opt_Kmin = DEFAULT_KMIN, opt_Kinc = DEFAULT_KINC;
 static spot::option_map extra_options;
 
 static double trans_time = 0.0;
@@ -365,8 +373,16 @@ parse_opt (int key, char *arg, struct argp_state *) {
       break;
     }
 
-    case OPT_UNREAL:
-      opt_unreal = true;
+    case OPT_CHECK:
+      boost::algorithm::to_lower (arg);
+      if (arg == std::string {"real"})
+        opt_check = CHECK_REAL;
+      else if (arg == std::string {"unreal"})
+        opt_check = CHECK_UNREAL;
+      else if (arg == std::string {"both"})
+        opt_check = CHECK_BOTH;
+      else
+        error (3, 0, "Should specify real, unreal, or both.");
       break;
 
     case OPT_K:
@@ -440,66 +456,73 @@ main (int argc, char **argv) {
     if (opt_Kmin == 0)
       opt_Kmin = opt_K;
 
-    utils::vout.set_prefix ("[real] ");
+    enum { REAL, UNREAL, UNK } res = UNK;
 
-    if (opt_unreal) {
-      int pidreal, pidunreal;
-      if ((pidreal = fork ()) == 0) {
+    switch (opt_check) {
+      case CHECK_REAL:
         check_real = true;
-        int res = processor.run ();
-        verb_do (1, vout << "returning " << res << "\n");
-        return res;
-      }
-
-      if ((pidunreal = fork ()) == 0) {
-        utils::vout.set_prefix ("[unreal] ");
-
+        res = processor.run () ? REAL : UNK;
+        break;
+      case CHECK_UNREAL:
         check_real = false;
-        int res = processor.run ();
-        verb_do (1, vout << "returning " << res << "\n");
-        return res;
-      }
+        res = processor.run () ? UNREAL : UNK;
+        break;
+      case CHECK_BOTH:
+        int pidreal, pidunreal;
+        if ((pidreal = fork ()) == 0) {
+          utils::vout.set_prefix ("[real] ");
+          check_real = true;
+          int res = processor.run ();
+          verb_do (1, vout << "returning " << res << "\n");
+          return res;
+        }
 
-      int nchildren = 2;
-      while (nchildren) {
-        int res;
-        int pid = wait (&res);
-        res = WEXITSTATUS (res);
-        nchildren--;
-        if (pid == pidreal) {
-          verb_do (1, vout << "Check for realizability complete.\n");
-          if (res == 1) {
-            kill (pidunreal, SIGKILL);
-            wait (nullptr);
-            std::cout << "REALIZABLE\n";
-            return 0;
+        if ((pidunreal = fork ()) == 0) {
+          utils::vout.set_prefix ("[unreal] ");
+          check_real = false;
+          int res = processor.run ();
+          verb_do (1, vout << "returning " << res << "\n");
+          return res;
+        }
+
+        int nchildren = 2;
+        while (nchildren) {
+          int ret;
+          int pid = wait (&ret);
+          ret = WEXITSTATUS (ret);
+          nchildren--;
+          if (pid == pidreal) {
+            verb_do (1, vout << "Check for realizability complete.\n");
+            if (ret == 1) {
+              kill (pidunreal, SIGKILL);
+              wait (nullptr);
+              res = REAL;
+              break;
+            }
+          }
+          if (pid == pidunreal) {
+            verb_do (1, vout << "Check for unrealizability complete.\n");
+            if (ret == 1) {
+              kill (pidreal, SIGKILL);
+              wait (nullptr);
+              res = UNREAL;
+              break;
           }
         }
-        if (pid == pidunreal) {
-          verb_do (1, vout << "Check for unrealizability complete.\n");
-          if (res == 1) {
-            kill (pidreal, SIGKILL);
-            wait (nullptr);
-            std::cout << "UNREALIZABLE\n";
-            return 1;
-          }
-        }
       }
-      std::cout << "UNKNOWN\n";
-      return 2;
     }
 
-    // Non multi-process execution.
-    bool realizable = processor.run ();
-
-    if (realizable) {
-      std::cout << "REALIZABLE\n";
-      return 0;
+    switch (res) {
+      case REAL:
+        std::cout << "REALIZABLE\n";
+        return 0;
+      case UNREAL:
+        std::cout << "UNREALIZABLE\n";
+        return 1;
+      case UNK:
+        std::cout << "UNKNOWN\n";
+        return 3;
     }
-    else {
-      std::cout << "UNKNOWN\n";
-      return 1;
-    }
-
+    return -1;
   });
 }
