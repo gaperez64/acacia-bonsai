@@ -5,7 +5,7 @@ env > /tmp/env
 LTLSYNT=@LTLSYNT@
 STRIX=@STRIX@
 ACABONSAI=@ACABONSAI@
-export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 ACAPLUS=@ACAPLUS@
 PYTHON=@PYTHON3@
 export ACACIA_PLUS_LIB=@ACACIA_PLUS_LIB@
