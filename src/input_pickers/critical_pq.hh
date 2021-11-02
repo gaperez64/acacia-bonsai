@@ -71,7 +71,7 @@ namespace input_pickers {
           {
             auto [priority, ref] = *critical_input;
             fwd_actions_pq.erase (critical_input);
-            fwd_actions_pq.emplace (priority - 1, ref);
+            critical_input = fwd_actions_pq.emplace (priority - 1, ref);
           }
 
           verb_do (2, {
