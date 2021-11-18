@@ -1,3 +1,5 @@
+[![CI](https://github.com/gaperez64/acacia-bonsai/actions/workflows/main.yml/badge.svg)](https://github.com/gaperez64/acacia-bonsai/actions/workflows/main.yml)
+
 # Acacia bonsai
 
 This is a minimal implementation of universal co-Buchi reactive synthesis
