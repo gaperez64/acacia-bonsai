@@ -1,9 +1,11 @@
-\documentclass[sigconf,screen,nonacm]{acmart}
+\documentclass[runningheads,a4paper,draft]{llncs}
 \usepackage[english]{babel}
 \usepackage[ruled,vlined,nosemicolon]{algorithm2e}
-\usepackage{paralist}
 \usepackage{tikz}
+\usepackage{paralist}
 \usepackage[inline]{enumitem}
+\usepackage{amssymb,amstext,amsmath}
+\usepackage{mathtools}
 
 \usetikzlibrary{hobby,calc}
 
@@ -11,32 +13,20 @@
 
 \begin{document}
 
-%%
-%% The "title" command has an optional parameter,
-%% allowing the author to define a "short title" to be used in page headers.
 \title{Acacia-Bonsai: A Modern Implementation of Downset-Based LTL Realizability}
+\titlerunning{Acacia-Bonsai: Downset-Based LTL Realizability}
 
-\author{Michaël Cadilhac}
-\email{michael@cadilhac.name}
-\orcid{1234-5678-9012}
-\affiliation{%
-  \institution{DePaul University}
-  \streetaddress{Wabash Ave}
-  \city{Chicago}
-  \state{IL}
-  \country{USA}
-  \postcode{60604}
+\author{Micha\"el Cadilhac\inst{1}%\orcidID{1234-5678-9012}
+\and Guillermo A. P\'erez\inst{2}%\orcidID{0000-0002-1200-4952}
 }
-
-\author{Guillermo A. Pérez}
+\institute{DePaul University, USA\\
+\email{michael@cadilhac.name} \and
+University of Antwerp -- Flanders Make, Belgium\\
 \email{guillermoalberto.perez@uantwerpen.be}
-\affiliation{%
-  \institution{University of Antwerp -- Flanders Make}
-  \streetaddress{Middelheimlaan 1}
-  \city{Antwerp}
-  \country{Belgium}
-  \postcode{2020}
 }
+\authorrunning{M. Cadilhac \and G. A. P\'erez}
+
+\maketitle
 
 \begin{abstract}
   We describe our implementation of downset-based algorithms used to solve the
@@ -48,44 +38,31 @@
   These techniques include compile-time specialization of the algorithms, the
   use of SIMD registers to store vectors, and several preprocessing steps, some
   relying on efficient Binary Decision Diagram (BDD) libraries.
+  \keywords{LTL synthesis \and C++ \and SIMD \and downset \and antichains \and BDD}
 \end{abstract}
-
-%% Keywords. The author(s) should pick words that accurately describe
-%% the work being presented. Separate the keywords with commas.
-\keywords{LTL synthesis, C++, SIMD, downset, antichains, BDD}
-
-\maketitle
 
 \section{Introduction}
 
-%Nowadays, hardware and software systems are everywhere around us. One way to
-%ensure their correct functioning is to automatically synthesize them from a
-%formal specification.  This has two advantages over alternatives such as
-%testing and model checking: the design part of the
-%program-development process can be completely bypassed and the synthesized
-%program is correct by construction.
+Nowadays, hardware and software systems are everywhere around us. One way to
+ensure their correct functioning is to automatically synthesize them from a
+formal specification.  This has two advantages over alternatives such as
+testing and model checking: the design part of the program-development process
+can be completely bypassed and the synthesized program is correct by
+construction.
 
 In this work we are interested in synthesizing \emph{reactive
-systems}~\cite{hp84}. These maintain a continuous
-interaction with their environment. 
-%Examples of reactive systems include
-%communication, network, and multimedia protocols as well as operating systems.
-For the specification, we consider \emph{linear temporal logic}
-(LTL)~\cite{pnueli77}. LTL allows to naturally specify time dependence among
-events that make up the formal specification of a system. The popularity of LTL
-%as a formal specification language 
-extends to
-%, amongst
-%others, 
-AI~\cite{gv16,cm19,gnpw20}, hybrid systems and
-control~\cite{bvpyb16}, software engineering~\cite{lpb15}, and
+systems}~\cite{hp84}. These maintain a continuous interaction with their
+environment.  Examples of reactive systems include communication, network, and
+multimedia protocols as well as operating systems.  For the specification, we
+consider \emph{linear temporal logic} (LTL)~\cite{pnueli77}. LTL allows to
+naturally specify time dependence among events that make up the formal
+specification of a system. The popularity of LTL as a formal specification
+language extends to, amongst others, AI~\cite{gv16,cm19,gnpw20}, hybrid
+systems and control~\cite{bvpyb16}, software engineering~\cite{lpb15}, and
 bio-informatics~\cite{abbdfhinprs17}.
 
-The
-classical %doubly-exponential-time 
-synthesis algorithm can be decomposed
-as follows:
-%into three steps:
+The classical doubly-exponential-time synthesis algorithm can be decomposed
+into three steps:
 \begin{enumerate*}
   \item \emph{compile} the LTL formula into an automaton of exponential
     size~\cite{vw84},
@@ -95,18 +72,16 @@ as follows:
     on the latter automaton~\cite{pr89}.
 \end{enumerate*}
 Most alternative approaches focus on avoiding the determinization step of the
-algorithm. This has motivated
-the development of so-called Safra-less approaches,
-e.g.~\cite{kpv06,eks16,ekrs17,tushy17}. Worth mentioning are the on-the-fly
-game construction implemented in the Strix tool~\cite{msl18} and the
-\emph{downset}-based (or ``antichain-based'') on-the-fly bounded
+algorithm. This has motivated the development of so-called Safra-less
+approaches, e.g.~\cite{kpv06,eks16,ekrs17,tushy17}. Worth mentioning are the
+on-the-fly game construction implemented in the Strix tool~\cite{msl18} and
+the \emph{downset}-based (or ``antichain-based'') on-the-fly bounded
 determinization described in~\cite{fjr09} and implemented in
-Acacia+~\cite{bbfjr12}. Both avoid constructing the
-doubly-exponential deterministic automaton.
-Acacia+ was not ranked in recent editions of SYNTCOMP\footnote{See \url{http://www.syntcomp.org/}.}
-since it is no longer maintained despite remaining one of the main
-references for new advancements in the field (see,
-e.g.\cite{ffrt17,ztlpv17,apsec20,lms20,bltv20}).
+Acacia+~\cite{bbfjr12}. Both avoid constructing the doubly-exponential
+deterministic automaton.  Acacia+ was not ranked in recent editions of
+SYNTCOMP\footnote{See \url{http://www.syntcomp.org/}.} since it is no longer
+maintained despite remaining one of the main references for new advancements
+in the field (see, e.g.\cite{ffrt17,ztlpv17,apsec20,lms20,bltv20}).
 
 \paragraph*{Contribution}
 We present the Acacia approach to solving the problem at hand and propose a
@@ -533,13 +508,10 @@ of the original Acacia+, making Acacia-Bonsai competitive against modern LTL
 realizability tools.  Our implementation can be found at
 \url{https://github.com/gaperez64/acacia-bonsai/}.
 
-\bibliographystyle{abbrv}
+\bibliographystyle{splncs04}
 \bibliography{refs}
 
 \end{document}
-
-%%
-%% End of file `sample-sigconf.tex'.
 
 % LocalWords:  Antichain LTL Realizability Michaël Cadilhac michael cadilhac
 % LocalWords:  DePaul Pérez perez uantwerp SIMD antichains realizability
