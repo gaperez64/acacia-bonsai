@@ -12,6 +12,10 @@
 # define DEFAULT_KINC 0
 #endif
 
+#ifndef DEFAULT_UNREAL_X
+# define DEFAULT_UNREAL_X UNREAL_X_BOTH
+#endif
+
 #ifndef VECTOR_ELT_T
 # define VECTOR_ELT_T char
 #endif

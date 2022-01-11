@@ -58,8 +58,13 @@ namespace boolean_states {
           for (unsigned src = 0; src < aut->num_states (); ++src)
             if (c[src] > nb_accepting_states)
               rename[src] = unbounded++;
-            else
+            else {
+              verb_do (2, vout << "Found bounded state: " << src << std::endl);
+              // Make it not accepting
+              for (auto& e : aut->out (src))
+                e.acc = spot::acc_cond::mark_t {};
               rename[src] = nunbounded + bounded++;
+            }
 
           assert (unbounded == nunbounded);
 
@@ -73,6 +78,7 @@ namespace boolean_states {
           aut->set_init_state(rename[aut->get_init_state_number()]);
           g.sort_edges_();
           g.chain_edges_();
+          aut->prop_universal(spot::trival::maybe ());
 
           return nunbounded;
         }

@@ -28,6 +28,7 @@
 #include "boolean_states.hh"
 
 #include <utils/verbose.hh>
+#include <utils/cache.hh>
 
 #include "configuration.hh"
 
@@ -49,16 +50,24 @@
 #include <spot/twaalgos/toparity.hh>
 #include <spot/twaalgos/hoa.hh>
 
+using namespace std::literals;
+
 enum {
   OPT_K = 'K',
   OPT_Kmin = 'M',
   OPT_Kinc = 'I',
+  OPT_UNREAL_X = 'u',
   OPT_INPUT = 'i',
   OPT_OUTPUT = 'o',
   OPT_CHECK = 'c',
   OPT_VERBOSE = 'v'
 } ;
 
+enum unreal_x_t {
+  UNREAL_X_FORMULA = 'f',
+  UNREAL_X_AUTOMATON = 'a',
+  UNREAL_X_BOTH
+};
 
 static const argp_option options[] = {
   /**************************************************/
@@ -87,6 +96,22 @@ static const argp_option options[] = {
     "Kinc", OPT_Kinc, "VAL", 0,
     "increment value for K, used when Kmin < K", 0
   },
+  {
+    "unreal-x", OPT_UNREAL_X, "[formula|automaton|both]", 0,
+    "for unrealizability, either add X's to outputs in the"
+    " input formula, or push outputs one transition forward in"
+    " the automaton; with 'both', two processes are started,"
+    " one for each option (default: "
+#if DEFAULT_UNREAL_X == UNREAL_X_FORMULA
+    "formula"
+#elif DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
+    "automaton"
+#else
+    "both"
+#endif
+    ").", 0
+  },
+
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Output options:", 20 },
   {
@@ -126,6 +151,8 @@ enum {
   CHECK_BOTH
 } opt_check = CHECK_REAL;
 
+static auto opt_unreal_x = DEFAULT_UNREAL_X;
+
 static bool check_real = true;
 static unsigned opt_K = DEFAULT_K,
   opt_Kmin = DEFAULT_KMIN, opt_Kinc = DEFAULT_KINC;
@@ -156,6 +183,51 @@ namespace {
         : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_) {
       }
 
+      using aut_t = decltype (trans_.run (spot::formula::ff ()));
+
+      // Changes q -> <i', o'> -> q' with saved o to
+      // q -> <i', o> -> {q' saved o}
+      aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs) {
+        auto ret = spot::make_twa_graph (aut->get_dict ());
+        ret->copy_acceptance_of (aut);
+        ret->copy_ap_of (aut);
+        ret->prop_copy (aut, spot::twa::prop_set::all());
+        ret->prop_universal (spot::trival::maybe ());
+
+        static auto cache = utils::make_cache<unsigned> (0u, 0u);
+        const auto build_aut = [&] (unsigned state, bdd saved_o,
+                                    const auto& recurse) {
+          auto cached = cache.get (state, saved_o.id ());
+          if (cached) return *cached;
+          auto ret_state = ret->new_state ();
+          cache (ret_state, state, saved_o.id ());
+          for (auto& e : aut->out (state)) {
+            auto cond = e.cond;
+            // e.cond = i1 & o1 || !i1 & !o1
+
+            while (cond != bddfalse) {
+              // Pick one satisfying assignment where outputs all have values
+              bdd one_sat = bdd_satoneset (cond, all_outputs, bddtrue);
+              // Get the corresponding input bdd
+              bdd one_input_bdd =
+                bdd_exist (cond & bdd_exist (one_sat, all_inputs),
+                           all_outputs);
+              ret->new_edge (ret_state,
+                             recurse (e.dst,
+                                      bdd_exist (cond & one_input_bdd,
+                                                all_inputs),
+                                      recurse),
+                             saved_o & one_input_bdd,
+                             e.acc);
+              cond -= one_input_bdd;
+            }
+          }
+          return ret_state;
+        };
+        build_aut (aut->get_init_state_number (), bddtrue, build_aut);
+        return ret;
+      }
+
       bool solve_formula (spot::formula f) {
         spot::process_timer timer;
         timer.start ();
@@ -177,7 +249,8 @@ namespace {
         // To do so, negate formula, and convert to a normal Büchi.
         if (check_real)
           f = spot::formula::Not (f);
-        else {
+        else if (opt_unreal_x == UNREAL_X_FORMULA) {
+          // Add X at the outputs
           auto rec = [this] (auto&& self, spot::formula m) {
             if (m.is (spot::op::ap) and
                 (std::ranges::find (output_aps_,
@@ -186,6 +259,7 @@ namespace {
             return m.map ([&] (spot::formula t) { return self (self, t); });
           };
           f = f.map ([&] (spot::formula t) { return rec (rec, t); });
+          // Swap I and O.
           input_aps_.swap (output_aps_);
         }
 
@@ -205,6 +279,12 @@ namespace {
         {
           unsigned v = aut->register_ap (spot::formula::ap(ap_i));
           all_outputs &= bdd_ithvar(v);
+        }
+        // If unreal but we haven't pushed outputs yet using X on formula
+        if (not check_real and opt_unreal_x == UNREAL_X_AUTOMATON) {
+          aut = push_outputs (aut, all_inputs, all_outputs);
+          input_aps_.swap (output_aps_);
+          std::swap (all_inputs, all_outputs);
         }
 
         if (want_time)
@@ -373,42 +453,59 @@ parse_opt (int key, char *arg, struct argp_state *) {
       break;
     }
 
-    case OPT_CHECK:
+    case OPT_UNREAL_X: {
       boost::algorithm::to_lower (arg);
-      if (arg == std::string {"real"})
+      if (arg == "formula"sv)
+        opt_unreal_x = UNREAL_X_FORMULA;
+      else if (arg == "automaton"sv)
+        opt_unreal_x = UNREAL_X_AUTOMATON;
+      else if (arg == "both"sv)
+        opt_unreal_x = UNREAL_X_BOTH;
+      else
+        error (3, 0, "Should specify formula, automaton, or both.");
+      break;
+    }
+
+    case OPT_CHECK: {
+      boost::algorithm::to_lower (arg);
+      if (arg == "real"sv)
         opt_check = CHECK_REAL;
-      else if (arg == std::string {"unreal"})
+      else if (arg == "unreal"sv)
         opt_check = CHECK_UNREAL;
-      else if (arg == std::string {"both"})
+      else if (arg == "both"sv)
         opt_check = CHECK_BOTH;
       else
         error (3, 0, "Should specify real, unreal, or both.");
       break;
+    }
 
-    case OPT_K:
+    case OPT_K: {
       opt_K = atoi (arg);
       if (opt_K == 0)
         error (3, 0, "K cannot be 0 or not a number.");
       break;
+    }
 
-    case OPT_Kmin:
+    case OPT_Kmin: {
       opt_Kmin = atoi (arg);
       if (opt_Kmin == 0)
         error (3, 0, "Kmin cannot be 0 or not a number.");
       break;
+    }
 
-    case OPT_Kinc:
+    case OPT_Kinc: {
       opt_Kinc = atoi (arg);
       if (opt_Kinc == 0)
         error (3, 0, "Kinc cannot be 0 or not a number.");
       break;
+    }
 
-    case OPT_VERBOSE:
+    case OPT_VERBOSE: {
       ++utils::verbose;
       break;
+    }
 
-    case 'x':
-    {
+    case 'x': {
       const char *opt = extra_options.parse_options (arg);
 
       if (opt)
@@ -456,73 +553,51 @@ main (int argc, char **argv) {
     if (opt_Kmin == 0)
       opt_Kmin = opt_K;
 
-    enum { REAL, UNREAL, UNK } res = UNK;
+    const auto start_proc = [&] (bool real, unreal_x_t unreal_x) {
+      if (fork () == 0) {
+        utils::vout.set_prefix (std::string {"["}
+                                + (real ?
+                                   "real" :
+                                   std::string {"unreal-x="} + (char) unreal_x)
+                                + "] ");
+        check_real = real;
+        opt_unreal_x = unreal_x;
+        int res = processor.run ();
+        verb_do (1, vout << "returning " << res << "\n");
+        exit (res ? 1 - real : 3);  // 0 if real, 1 if unreal, 3 if unknown
+      }
+    };
 
-    switch (opt_check) {
-      case CHECK_REAL:
-        check_real = true;
-        res = processor.run () ? REAL : UNK;
-        break;
-      case CHECK_UNREAL:
-        check_real = false;
-        res = processor.run () ? UNREAL : UNK;
-        break;
-      case CHECK_BOTH:
-        int pidreal, pidunreal;
-        if ((pidreal = fork ()) == 0) {
-          utils::vout.set_prefix ("[real] ");
-          check_real = true;
-          int res = processor.run ();
-          verb_do (1, vout << "returning " << res << "\n");
-          return res;
-        }
 
-        if ((pidunreal = fork ()) == 0) {
-          utils::vout.set_prefix ("[unreal] ");
-          check_real = false;
-          int res = processor.run ();
-          verb_do (1, vout << "returning " << res << "\n");
-          return res;
-        }
+    // We are going to kill our group, so make sure our session ID is not shared
+    // with out parent.
+    setsid ();
 
-        int nchildren = 2;
-        while (nchildren) {
-          int ret;
-          int pid = wait (&ret);
-          ret = WEXITSTATUS (ret);
-          nchildren--;
-          if (pid == pidreal) {
-            verb_do (1, vout << "Check for realizability complete.\n");
-            if (ret == 1) {
-              kill (pidunreal, SIGKILL);
-              wait (nullptr);
-              res = REAL;
-              break;
-            }
-          }
-          if (pid == pidunreal) {
-            verb_do (1, vout << "Check for unrealizability complete.\n");
-            if (ret == 1) {
-              kill (pidreal, SIGKILL);
-              wait (nullptr);
-              res = UNREAL;
-              break;
-          }
-        }
+    if (opt_check == CHECK_BOTH or opt_check == CHECK_REAL)
+      start_proc (true, UNREAL_X_BOTH);
+    if (opt_check == CHECK_BOTH or opt_check == CHECK_UNREAL) {
+      if (opt_unreal_x == UNREAL_X_BOTH or opt_unreal_x == UNREAL_X_FORMULA)
+        start_proc (false, UNREAL_X_FORMULA);
+      if (opt_unreal_x == UNREAL_X_BOTH or opt_unreal_x == UNREAL_X_AUTOMATON)
+        start_proc (false, UNREAL_X_AUTOMATON);
+    }
+
+    int ret;
+    while (wait (&ret) != -1) { // as long as we have children to wait for
+      ret = WEXITSTATUS (ret);
+      if (ret < 3) {
+        signal (SIGQUIT, SIG_IGN);
+        kill (0, SIGQUIT);
+        while (wait (NULL) != -1)
+          /* no body */;
+        if (ret == 0)
+          std::cout << "REALIZABLE\n";
+        else
+          std::cout << "UNREALIZABLE\n";
+        return ret;
       }
     }
-
-    switch (res) {
-      case REAL:
-        std::cout << "REALIZABLE\n";
-        return 0;
-      case UNREAL:
-        std::cout << "UNREALIZABLE\n";
-        return 1;
-      case UNK:
-        std::cout << "UNKNOWN\n";
-        return 3;
-    }
-    return -1;
+    std::cout << "UNKNOWN\n";
+    return 3;
   });
 }

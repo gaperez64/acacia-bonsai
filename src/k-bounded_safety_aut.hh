@@ -74,7 +74,7 @@ class k_bounded_safety_aut_detail {
 
       for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
         safe_vector[i] = 0;
-
+      TODO ("Check init at each step?");
       SetOfStates F = SetOfStates (State (safe_vector));
 
       int loopcount = 0;
