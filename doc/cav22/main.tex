@@ -99,11 +99,12 @@ different implementation options are listed in Section~\ref{sec:implem}.
 
 Throughout this abstract, we assume the existence of two alphabets, \(I\) and
 \(O\); although these stand for input and output, the actual definitions of
-these two terms is slightly more complex: An \emph{input} is a boolean
-combination of symbols of \(I\) and it is \emph{pure} if it is just a
-conjunction in which all the symbols in \(I\) appear; e.g., with \(I = \{i_1,
+these two terms is slightly more complex: An \emph{input} (respectively,
+\emph{output}) is a boolean
+combination of symbols of \(I\) ($O$) and it is \emph{pure} if it is just a
+conjunction in which all the symbols in \(I\) ($O$) appear; e.g., with \(I = \{i_1,
 i_2\}\), the expressions \(\top\) (true), \(\bot\) (false), and \((i_1 \lor
-i_2)\) are inputs, and \((i_1 \land \neg i_2)\) is a pure input.  Similarly,
+i_2)\) are inputs, and \((i_1 \land \neg i_2)\) is a pure input. Similarly,
 an \emph{IO} is a boolean combination of symbols of \(I \cup O\), and it is
 \emph{pure} if it is a conjunction in which all the symbols in \(I \cup O\)
 appear.  We use \(i, j\) to denote inputs and \(x, y\) for IOs.  Two IOs \(x\)
@@ -336,18 +337,19 @@ implementations:
   \cinline{std::array}).  Note that arrays are of fixed size; our implementation
   %automatically
   precompiles arrays of different sizes (up to \(300\) by default),
-  and defaults to vectors if more entries are needed;
+  and defaults to vectors if more entries are needed.
 \item Vectors and arrays backed by SIMD\footnote{SIMD: Single Instruction
   Multiple Data, a set of CPU instructions \& registers to compute
   component-wise operations on fixed-size vectors.} registers.  This makes use of the
-  type \cinline{std::experimental::simd} and leverages modern CPU optimizations;
+  type \cinline{std::experimental::simd} and leverages modern CPU
+  optimizations.
 \end{itemize}
 
 Additionally, all these implementations can be combined with an array of booleans
 (\cinline{std::bitset}) to provide a type that combines boolean and integer
 values.  Also, these types can optionally expose an integer that is compatible
-with the partial order (i.e., the sum of all the elements in the vector
-is: if \(\vec{u}\) dominates \(\vec{v}\), then the sum of the elements in \(\vec{u}\)
+with the partial order (i.e., the sum of all the elements in the vector: if
+\(\vec{u}\) dominates \(\vec{v}\), then the sum of the elements in \(\vec{u}\)
 is larger than that of \(\vec{v}\)).  This value can help the downset
 implementations in sorting the vectors.  As a technical note, we disallowed
 these types to be copied implicitly: if a vector is inserted into a downset,
@@ -487,6 +489,64 @@ We provide two implementations of the input-action picker:
 \item Search for an input-action that is certain to change \(S\).  This is based
   on the concept of \emph{critical input} as presented in \cite{bohy14}.
 \end{itemize}
+
+\section{Checking nonrealizability}
+As mentioned in the preliminaries, for large values of $k$ the 
+\textbf{BackwardRealizability} problem is equivalent to a non-zero sum game
+whose payoff set is the complement of the language of the given automaton.
+More precisely, for small values of $k$, a negative answer for the
+\textbf{BackwardRealizability} problem does not imply the output player does
+not win the game. Instead, if one is interested in whether the output player
+wins, a property known as determinacy~\cite{borel} can be leveraged to instead
+ask whether a complementary property holds: does the input player win the
+game? A positive answer to the \textbf{BackwardRealizability} problem for
+an automaton $\mathcal{B}$, whose language is the complement of that of
+$\mathcal{A}$, implies that the input player indeed wins and
+the output player does not.
+
+One can obtain $\mathcal{B}$ by swapping the sets $I$ and $O$ and ``shifting
+forward'' all outputs. We provide two ways of the shifting of the outputs,
+both of them based on the assumption that $\mathcal{A}$ was compiled from a
+known LTL formula $\varphi$:
+\begin{itemize}
+  \item Add a ``next'' operator to every output in $\varphi$;
+  \item Construct $\mathcal{B}'$ from $\lnot \varphi$ and apply
+    Algorithm~\ref{alg:caddys-madness} to it.
+\end{itemize}
+
+We choose to explictly present Algorithm~\ref{alg:caddys-madness} here because, in
+practice, it outperforms the naive construction which introduces an
+exponential number of intermediate states representing all choices of outputs
+from every state.
+
+\begin{algorithm}
+\SetKwInput{Input}{Input}\SetKwInput{Output}{Output}
+
+\Input{A Büchi automaton \cA with initial state $q_0$}
+\Output{The states $S$ and transitions $\Delta$ of the B\"uchi automaton
+$\mathcal{B}$}
+\BlankLine
+\(S,V \leftarrow \{(q_0,\top)\}\), \(\Delta \leftarrow \{\}\)\;
+\While{\(V\) is nonempty}{
+  Pop $(p,o)$ from $V$\;
+  \For{every \((p,x,q) \in \delta\)}{
+    $y \leftarrow x$\;
+    \While{$y \neq \bot$}{
+      Let $o'$ be a pure output compatible with y\;
+      Let $i$ be an input s.t. $i \land o' \equiv y \land o'$\;
+      Let $o''$ be an output s.t. $i \land o'' \equiv i \land y$\;
+      Add $(\langle p, o\rangle, o \land i, \langle q, o'\rangle)$ to
+      $\Delta$\;
+      If $(q,o')$ is not in $S$, add it to $S$ and $V$\;
+      $y \leftarrow y \land \lnot i$\;
+    }
+  }
+}
+\Return \(S,\Delta\)
+\caption{Modifying \cA so that the outputs are shifted forward}
+\label{alg:caddys-madness}
+\end{algorithm}
+
 
 \section{Conclusion}
 
