@@ -210,7 +210,7 @@ namespace {
               bdd one_sat = bdd_satoneset (cond, all_outputs, bddtrue);
               // Get the corresponding input bdd
               bdd one_input_bdd =
-                bdd_exist (cond & bdd_exist (one_sat, all_inputs), // FIXME: is the exists needed?
+                bdd_exist (cond & bdd_exist (one_sat, all_inputs), 
                            all_outputs);
               ret->new_edge (ret_state,
                              recurse (e.dst,
