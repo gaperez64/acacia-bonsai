@@ -36,7 +36,11 @@ namespace actioners {
         using input_and_actions_set = std::list<input_and_actions>;
       public:
         no_ios_precomputation (const Aut& aut, const Supports& supports, int K) :
-          aut {aut}, K {K} {
+          aut {aut}, K {K},
+          apply_out (aut->num_states ()), mcopy (aut->num_states ()) {
+
+          mcopy.reserve (State::capacity_for (mcopy.size ()));
+
           std::map<action_vecs, bdd> ioset;
           bdd input_letters = bddtrue;
           while (input_letters != bddfalse) {
@@ -61,35 +65,44 @@ namespace actioners {
 
         auto& actions () { return input_output_fwd_actions; }
 
-        State apply (const State& m, const action_vec& avec, direction dir) const /* __attribute__((pure)) */ {
-          State f (m.size ());
+        State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
+          if (dir == direction::forward)
+            apply_out.assign (m.size (), (char) -1);
+          else {
+            // Non boolean
+            std::fill_n (apply_out.begin (),
+                         vectors::bool_threshold,
+                         (char) (K - 1));
+            // Boolean
+            std::fill_n (apply_out.begin () + vectors::bool_threshold,
+                         m.size () - vectors::bool_threshold,
+                         (char) 0);
+          }
 
-          for (size_t p = 0; p < m.size (); ++p)
-            if (dir == direction::forward)
-              f[p] = -1;
-            else
-              f[p] = K - 1;
+          m.to_vector (mcopy);
 
           for (size_t p = 0; p < m.size (); ++p) {
             for (const auto& [q, q_final] : avec[p]) {
               if (dir == direction::forward) {
-                if (m[q] != -1)
-                  f[p] = (int) std::max ((int) f[p], std::min (K, (int) m[q] + (q_final ? 1 : 0)));
+                if (mcopy[q] != -1)
+                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (mcopy[q] + (char) (q_final ? 1 : 0))));
               } else
-                if (f[q] != -1)
-                  f[q] = (int) std::min ((int) f[q], std::max (-1, (int) m[p] - (q_final ? 1 : 0)));
+                if (apply_out[q] != -1)
+                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (mcopy[p] - (char) (q_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
-              if (dir == direction::forward && f[p] == K)
+              if (dir == direction::forward && apply_out[p] == K)
                 break;
             }
           }
-          return f;
+
+          return State (apply_out);
         }
 
       private:
         const Aut& aut;
         int K;
+        utils::vector_mm<char> apply_out, mcopy;
         input_and_actions_set input_output_fwd_actions;
 
         auto compute_action (bdd letter) {
