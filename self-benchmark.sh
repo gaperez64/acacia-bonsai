@@ -117,4 +117,5 @@ for name in ${(k)confs}; do
     echo "done"
     touch benchmarked
     cd ..
+    cp $build/meson-logs/testlog.json _bm-logs/$name.json
 done
