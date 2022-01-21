@@ -15,8 +15,8 @@ defaults=$(<<EOF
 -DK_BOUNDED_SAFETY_AUT_IMPL='k_bounded_safety_aut'
 -DSTATIC_ARRAY_MAX='300'
 -DSTATIC_MAX_BITSETS='3ul'
--DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed_bin'
--DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed_bin'
+-DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed'
+-DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'
 -DSIMD_IS_MAX='true'
 -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
 -DBOOLEAN_STATES='boolean_states::forward_saturation'
@@ -41,7 +41,6 @@ EOF
 confs=(
     [base]=" "
     [best]="$best"
-    [best_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed"
     [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
     [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
@@ -59,11 +58,10 @@ confs=(
     [inputpicker_critical]="-DINPUT_PICKER=input_pickers::critical"
     [inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
     [inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
-    [downset_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed"
     [downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
+    [downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin"
     [downset_v1ds]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split"
     [downset_v1dsio]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only"
-    [downset_kdtree_nosimd]="-DNO_SIMD -DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed"
 )
 
 for name param in ${(kv)confs}; do
