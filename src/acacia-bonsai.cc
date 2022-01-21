@@ -518,8 +518,23 @@ parse_opt (int key, char *arg, struct argp_state *) {
   return 0;
 }
 
-int
-main (int argc, char **argv) {
+void terminate (int signum) {
+  if (getpgid (0) == getpid ()) { // Main process
+    signal (SIGTERM, SIG_IGN);
+    kill (0, SIGTERM);
+    while (wait (NULL) != -1)
+      /* no body */;
+  }
+  else
+    exit (3);
+}               
+
+int main (int argc, char **argv) {
+  struct sigaction action;
+  memset (&action, 0, sizeof(struct sigaction));
+  action.sa_handler = terminate;
+  sigaction (SIGTERM, &action, NULL);
+               
   return protected_main (argv, [&] {
     // These options play a role in twaalgos.
     extra_options.set ("simul", 0);
@@ -568,11 +583,8 @@ main (int argc, char **argv) {
       }
     };
 
-
-    // We are going to kill our group, so make sure our session ID is not shared
-    // with out parent.
-    setsid ();
-
+    setpgid (0, 0);
+    assert (getpgid (0) == getpid ());
     if (opt_check == CHECK_BOTH or opt_check == CHECK_REAL)
       start_proc (true, UNREAL_X_BOTH);
     if (opt_check == CHECK_BOTH or opt_check == CHECK_UNREAL) {
@@ -586,10 +598,7 @@ main (int argc, char **argv) {
     while (wait (&ret) != -1) { // as long as we have children to wait for
       ret = WEXITSTATUS (ret);
       if (ret < 3) {
-        signal (SIGQUIT, SIG_IGN);
-        kill (0, SIGQUIT);
-        while (wait (NULL) != -1)
-          /* no body */;
+        terminate (0);
         if (ret == 0)
           std::cout << "REALIZABLE\n";
         else
@@ -601,3 +610,4 @@ main (int argc, char **argv) {
     return 3;
   });
 }
+

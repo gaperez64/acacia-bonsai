@@ -1,7 +1,5 @@
 #!/bin/zsh -f
 
-env > /tmp/env
-
 LTLSYNT=@LTLSYNT@
 STRIX=@STRIX@
 ACABONSAI=@ACABONSAI@
@@ -11,9 +9,19 @@ PYTHON=@PYTHON3@
 export ACACIA_PLUS_LIB=@ACACIA_PLUS_LIB@
 export LTL2TGBA_BIN=@LTL2TGBA_BIN@
 
+TRAPTERM () { 
+  if [[ $childpid != '' ]]; then
+    kill -TERM $childpid 2>/dev/null
+    wait $childpid
+  fi
+  exit
+}
+
 echoandrun () {
     echo "$@"
-    eval "$@"
+    "$@"&
+    childpid=$!
+    wait $childpid
 }
 
 parttoinsouts () {
@@ -41,22 +49,22 @@ run_ltlsynt () {
 
 run_strix () {
     echo "Running strix..."
-    time echoandrun $prog_prefix $STRIX $ltl --ins $ins --outs $outs $STRIX_OPTS $extra_opts | \
+    time echoandrun $prog_prefix $STRIX --realizability -F $ltl --ins $ins --outs $outs $STRIX_OPTS $extra_opts | \
         real_to_exitcode
 }
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    time echoandrun $prog_prefix $ACABONSAI -c BOTH -F $ltl --ins $ins --outs $outs \
+    echoandrun $prog_prefix $ACABONSAI -c BOTH -F $ltl --ins $ins --outs $outs \
          $AB_OPTS $extra_opts | \
-        real_to_exitcode
+         real_to_exitcode
 }
 
 run_acacia_plus () {
     echo "Running Acacia Plus..."
-    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 10 -K 10 $AP_OPTS -C BOTH \
+    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 5 -K 11 -y 2 $AP_OPTS -C BOTH \
          -t SPOT -a BACKWARD -v 0 $extra_opts | \
-        real_to_exitcode
+         real_to_exitcode
 }
 
 PROG=$0
@@ -124,8 +132,8 @@ parttoinsouts $part
 ## Prefix output with the test file name.
 if [[ $prefix ]]; then
     shortfile=${ltl/*tests\//}
-    exec >  >(sed "s!^![$shortfile] !")
-    exec 2> >(sed "s!^![$shortfile] !" >&2)
+   exec >  >(sed "s!^![$shortfile] !")
+   exec 2> >(sed "s!^![$shortfile] !" >&2)
 fi
 
 [[ $verbose ]] && echo "formula: $(cat $ltl)"
