@@ -74,10 +74,13 @@ class k_bounded_safety_aut_detail {
 
       for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
         safe_vector[i] = 0;
-      TODO ("Check init at each step?");
       SetOfStates F = SetOfStates (State (safe_vector));
 
       int loopcount = 0;
+
+      utils::vector_mm<char> init (aut->num_states ());
+      init.assign (aut->num_states (), -1);
+      init[aut->get_init_state_number ()] = 0;
 
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
 
@@ -86,13 +89,11 @@ class k_bounded_safety_aut_detail {
         verb_do (1, vout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl);
 
         auto&& input = input_picker (F);
-        if (not input.has_value ()) { // No valid input found.
-          verb_do (1, vout << "No valid input found.\n");
-          utils::vector_mm<char> init (aut->num_states ());
-          init.assign (aut->num_states (), -1);
-          init[aut->get_init_state_number ()] = 0;
-          if (F.contains (State (init)))
-            return true;
+        if (not input.has_value ()) // No more inputs, and we just tested that init was present
+          return true;
+
+        cpre_inplace (F, *input, actioner);
+        if (not F.contains (State (init))) {
           if (K >= Kto)
             return false;
           verb_do (1, vout << "Incrementing K from " << K << " to " << K + Kinc << std::endl);
@@ -108,7 +109,6 @@ class k_bounded_safety_aut_detail {
           verb_do (1, vout << "Done" << std::endl);
           continue;
         }
-        cpre_inplace (F, *input, actioner);
 
         verb_do (1, vout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl);
       } while (1);
