@@ -63,7 +63,7 @@ confs=(
     [downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
     [downset_v1ds]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split"
     [downset_v1dsio]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only"
-    [downset_kdtree_nosimd]=="-DNO_SIMD -DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed"
+    [downset_kdtree_nosimd]="-DNO_SIMD -DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed"
 )
 
 for name param in ${(kv)confs}; do
