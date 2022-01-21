@@ -15,8 +15,6 @@ defaults=$(<<EOF
 -DK_BOUNDED_SAFETY_AUT_IMPL='k_bounded_safety_aut'
 -DSTATIC_ARRAY_MAX='300'
 -DSTATIC_MAX_BITSETS='3ul'
--DARRAY_IMPL='simd_array_backed_sum'
--DVECTOR_IMPL='simd_vector_backed'
 -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed_bin'
 -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed_bin'
 -DSIMD_IS_MAX='true'
@@ -28,9 +26,21 @@ defaults=$(<<EOF
 EOF
         )
 
+# Experimentally determined
+best=$(<<EOF
+-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2
+-DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
+-DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
+-DBOOLEAN_STATES='boolean_states::forward_saturation'
+-DIOS_PRECOMPUTER='ios_precomputers::powset'
+-DINPUT_PICKER='input_pickers::critical'
+EOF
+     )
+     
 # These all differ from the base configuration by /one/ option.
 confs=(
     [base]=" "
+    [best]="$best"
     [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
     [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
