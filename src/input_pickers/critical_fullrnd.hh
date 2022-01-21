@@ -7,10 +7,10 @@
 namespace input_pickers {
   namespace detail {
     template <typename FwdActions, typename Actioner>
-    struct critical {
+    struct critical_fullrnd {
       public:
-        critical (FwdActions& fwd_actions, Actioner& actioner) :
-          fwd_actions {fwd_actions}, actioner {actioner} {}
+        critical_fullrnd (FwdActions& fwd_actions, Actioner& actioner) :
+          fwd_actions {fwd_actions}, actioner {actioner}, gen {0} {}
 
         template <typename SetOfStates>
         auto operator() (const SetOfStates& F) {
@@ -24,6 +24,8 @@ namespace input_pickers {
           // Sort/randomize input_output_fwd_actions
           std::vector<input_and_actions_ref> V (fwd_actions.begin (),
                                                 fwd_actions.end ());
+
+          std::shuffle (V.begin (), V.end (), gen);
 
           std::list<input_and_actions_ref> Cbar (V.begin (), V.end ());
 
@@ -81,13 +83,14 @@ namespace input_pickers {
         using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
         FwdActions& fwd_actions;
         Actioner& actioner;
+        std::mt19937 gen;
    };
   }
 
-  struct critical {
+  struct critical_fullrnd {
       template <typename FwdActions, typename Actioner>
       static auto make (FwdActions& fwd_actions, Actioner& actioner) {
-        return detail::critical (fwd_actions, actioner);
+        return detail::critical_fullrnd (fwd_actions, actioner);
       }
   };
 }

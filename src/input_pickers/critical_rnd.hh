@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <optional>
 #include "actioners.hh"
 
 namespace input_pickers {
@@ -21,7 +22,6 @@ namespace input_pickers {
           // Algo: We go through all f in F, find an input i witnessing one-step-loss, add it to C.
 
           // Sort/randomize input_output_fwd_actions
-          using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
           std::vector<input_and_actions_ref> V (fwd_actions.begin (),
                                                 fwd_actions.end ());
 
@@ -31,8 +31,7 @@ namespace input_pickers {
 
           std::list<input_and_actions_ref> Cbar (V.begin (), V.end ());
 
-          auto critical_input = input_and_actions_ref (* (typename input_and_actions_ref::type*) NULL);
-          bool found_input = false;
+          auto critical_input = Cbar.end ();
 
           for (const auto& f : F) {
             bool is_witness = false;
@@ -57,8 +56,7 @@ namespace input_pickers {
                 // inputs witness one-step-loss of f
                 verb_do (3, vout << "Input " << input
                          /*   */ << " witnesses one-step-loss of " << f << std::endl);
-                critical_input = *it;
-                found_input = true;
+                critical_input = it;
                 break;
               }
 
@@ -66,24 +64,25 @@ namespace input_pickers {
               if (it_act != actions.begin ())
                 actions.splice (actions.begin(), actions, it_act);
           }
-            if (found_input)
+            if (critical_input != Cbar.end ())
               break;
           }
 
-          if (not found_input) {
+          if (critical_input == Cbar.end ()) {
             verb_do (3, vout << "No critical input." << std::endl);
-            return std::pair (critical_input, false);
+            return std::optional<input_and_actions_ref> ();
           }
 
           verb_do (2, {
               vout << "Critical input: ";
-              const auto& [input, actions] = critical_input.get ();
+              const auto& [input, actions] = critical_input->get ();
               vout << "[" << input << "] " << std::endl;
             });
 
-          return std::pair (critical_input, true);
+          return std::make_optional (*critical_input);
         }
       private:
+        using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
         FwdActions& fwd_actions;
         Actioner& actioner;
         std::mt19937 gen;

@@ -6,9 +6,9 @@ opt='-march=native -O3 -flto -fuse-linker-plugin -pipe -DNO_VERBOSE'
 
 declare -A confs
 
-# These all differ from the standard configuration in configuration.hh by /one/
-# option.
+# These all differ from the base configuration by /one/ option.
 confs=(
+    [base]="-DDEFAULT_K='11' -DDEFAULT_KMIN='-1u' -DDEFAULT_KINC='0' -DDEFAULT_UNREAL_X='UNREAL_X_BOTH' -DVECTOR_ELT_T='char' -DK_BOUNDED_SAFETY_AUT_IMPL='k_bounded_safety_aut' -DSTATIC_ARRAY_MAX='300' -DSTATIC_MAX_BITSETS='3ul' -DARRAY_IMPL='simd_array_backed_sum' -DVECTOR_IMPL='simd_vector_backed' -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed_bin' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed_bin' -DSIMD_IS_MAX='true' -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing' -DBOOLEAN_STATES='boolean_states::forward_saturation' -DIOS_PRECOMPUTER='ios_precomputers::standard' -DACTIONER='actioners::standard<typename SetOfStates::value_type>' -DINPUT_PICKER='input_pickers::critical_pq'"
     [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
     [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
@@ -23,8 +23,9 @@ confs=(
     [iosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONERS='actioners::no_ios_precomputation<typename SetOfStates::value_type>'"
     [iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
     [iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
-    [inputpicker_critical]="-DINPUT_PICKER=input_pickers::critical_pq"
+    [inputpicker_critical]="-DINPUT_PICKER=input_pickers::critical"
     [inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
+    [inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
 )
 
 for name param in ${(kv)confs}; do
