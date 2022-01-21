@@ -86,15 +86,14 @@ namespace input_pickers {
       private:
         FwdActions& fwd_actions;
         Actioner& actioner;
-        const int verbose;
         std::mt19937 gen;
    };
   }
 
   struct critical_rnd {
       template <typename FwdActions, typename Actioner>
-      static auto make (FwdActions& fwd_actions, Actioner& actioner, int verbose) {
-        return detail::critical_rnd (fwd_actions, actioner, verbose);
+      static auto make (FwdActions& fwd_actions, Actioner& actioner) {
+        return detail::critical_rnd (fwd_actions, actioner);
       }
   };
 }
