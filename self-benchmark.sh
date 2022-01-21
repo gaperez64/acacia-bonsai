@@ -42,14 +42,36 @@ done
 for name in ${(k)confs}; do
     build=build_$name
     log=_bm-logs/$name.log
+    if [[ -e $build/compiled ]]; then
+      echo "$name already compiled"
+      continue
+    fi
+    cd $build
+    echo -n "compiling $name "
+    if meson compile &> ../$log; then
+      echo "done"
+      touch compiled
+    else
+      echo "FAILED"
+    fi
+    cd ..
+done
+    
+for name in ${(k)confs}; do
+    build=build_$name
+    log=_bm-logs/$name.log
     if [[ -e $build/benchmarked ]]; then
         echo "skipping already benchmarked $name"
         continue
     fi
-    touch $build/benchmarked
+    if [[ ! -e $build/compiled ]]; then
+        echo "skipping uncompiled $name"
+        continue
+    fi
     cd $build
     echo -n "benchmarking $name"
     meson test --benchmark --suite=ab/syntcomp21/crit -t 1.7 &>> ../$log
     echo "done"
+    touch benchmarked
     cd ..
 done
