@@ -882,7 +882,7 @@
    "result": { "status": false, "rtime": 0 }
  },
  "preamble": {
-    "program": "strix",
-    "prog_alias": "strix"
+    "program": "Strix",
+    "prog_alias": "Strix"
   }
 }

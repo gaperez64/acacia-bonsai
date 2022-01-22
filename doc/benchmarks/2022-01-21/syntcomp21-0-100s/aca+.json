@@ -882,7 +882,7 @@
    "result": { "status": false, "rtime": 0 }
  },
  "preamble": {
-    "program": "aca+",
-    "prog_alias": "aca+"
+    "program": "Acacia+",
+    "prog_alias": "Acacia+"
   }
 }

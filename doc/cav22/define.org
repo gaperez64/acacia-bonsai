@@ -215,7 +215,7 @@ This relies on TikZ:
 Theorems should be defined before =\begin{document}= for cleveref to catch them.
 #+BEGIN_SRC latex
   \AfterPackage{cleveref}{
-    \theoremstyle{plain}
+    %\theoremstyle{plain}
     %\newtheorem{theorem}{Theorem}
     \newtheorem{proposition}[theorem]{Proposition}
     %\newtheorem{lemma}[theorem]{Lemma}

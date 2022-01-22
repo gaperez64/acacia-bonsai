@@ -142,16 +142,16 @@
 }
 
 \AfterPackage{cleveref}{
-  \theoremstyle{plain}
+  %\theoremstyle{plain}
   %\newtheorem{theorem}{Theorem}
-  \newtheorem{proposition}[theorem]{Proposition}
+  %\newtheorem{proposition}[theorem]{Proposition}
   %\newtheorem{lemma}[theorem]{Lemma}
-  \newtheorem{question}[theorem]{Question}
+  %\newtheorem{question}[theorem]{Question}
   %\newtheorem{corollary}[theorem]{Corollary}
-  \newtheorem{conjecture}[theorem]{Conjecture}
+  %\newtheorem{conjecture}[theorem]{Conjecture}
   \Crefname{conjecture}{Conjecture}{Conjectures}
-  \newtheorem{problem}[theorem]{Problem}
-  \newtheorem{claim}[theorem]{Claim}
+  %\newtheorem{problem}[theorem]{Problem}
+  %\newtheorem{claim}[theorem]{Claim}
 }
 
 \def\renewtheorem#1{%
