@@ -35,8 +35,8 @@ best=$(<<EOF
 -DIOS_PRECOMPUTER='ios_precomputers::powset'
 -DINPUT_PICKER='input_pickers::critical'
 EOF
-     )
-     
+    )
+
 # These all differ from the base configuration by /one/ option.
 confs=(
     [base]=" "
@@ -66,58 +66,107 @@ confs=(
     [downset_v1dsio]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only"
 )
 
-for name param in ${(kv)confs}; do
-    build=build_$name
-    log=_bm-logs/$name.log
-    rm -f $log
-    if [[ -e $build ]]; then
-        echo "$build exists, not rebuilding."
-    else
-        echo -n "building $build... "
-        if CXXFLAGS="$opt $defaults $param" meson $build --buildtype=release &>> $log; then
-            echo "done."
-        else
-            echo "FAILED; exciting readily, please remove $build."
-            cat $log
-            exit 2
-        fi
-    fi
+mode= # print, list
+donot=()
+conflist=(${(k)confs})
+
+while getopts "hplBCRc:" option; do
+    case $option; in
+        h) cat <<EOF
+usage: $0 [-hpbl] [-c CONF[,CONF,...]]
+  -h: Print this message.
+  -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
+  -l: Do not build/compile/benchmark, instead, list configurations.
+  -B: Do not build.
+  -C: Do not compile.
+  -R: Do not benchmark.
+  -c CONF,...: Only consider configurations listed.
+EOF
+           exit 1;;
+        p) mode=print;;
+        l) mode=list;;
+        B) donot+=build;;
+        C) donot+=compile;;
+        R) donot+=benchmark;;
+        c) conflist=(${(@s:,:)OPTARG});;
+    esac
 done
 
-for name in ${(k)confs}; do
-    build=build_$name
-    log=_bm-logs/$name.log
-    if [[ -e $build/compiled ]]; then
-      echo "$name already compiled"
-      continue
-    fi
-    cd $build
-    echo -n "compiling $name... "
-    if meson compile &>> ../$log; then
-      echo "done"
-      touch compiled
-    else
-      echo "FAILED"
-    fi
-    cd ..
-done
-    
-for name in ${(k)confs}; do
-    build=build_$name
-    log=_bm-logs/$name.log
-    if [[ -e $build/benchmarked ]]; then
-        echo "skipping already benchmarked $name"
-        continue
-    fi
-    if [[ ! -e $build/compiled ]]; then
-        echo "skipping uncompiled $name"
-        continue
-    fi
-    cd $build
-    echo -n "benchmarking $name... "
-    meson test --benchmark --suite=ab/syntcomp21/crit -t 1.7 &>> ../$log
-    echo "done"
-    touch benchmarked
-    cd ..
-    cp $build/meson-logs/testlog.json _bm-logs/$name.json
-done
+## Print and list mode
+if [[ $mode == print || $mode == list ]]; then
+    for name in $conflist; do
+        echo -n "- $name"
+        if [[ $mode == print ]]; then
+            echo -n ": $opt $defaults $confs[$name]" | tr '\n' ' '
+        fi
+        echo
+    done
+    exit
+fi
+
+## Build
+if ! (( $donot[(Ie)build] )); then
+    for name param in $conflist; do
+        param=$confs[$name]
+        [[ $param == "" ]] && { echo "error: $name, unknown configuration."; exit 2 }
+        build=build_$name
+        log=_bm-logs/$name.log
+        rm -f $log
+        if [[ -e $build ]]; then
+            echo "$build exists, not rebuilding."
+        else
+            echo -n "building $build... "
+            if CXXFLAGS="$opt $defaults $param" meson $build --buildtype=release &>> $log; then
+                echo "done."
+            else
+                echo "FAILED; exciting readily, please remove $build."
+                cat $log
+                exit 2
+            fi
+        fi
+    done
+fi
+
+## Compile
+if ! (( $donot[(Ie)compile] )); then
+    for name in $conflist; do
+        build=build_$name
+        log=_bm-logs/$name.log
+        if [[ -e $build/compiled ]]; then
+            echo "$name already compiled"
+            continue
+        fi
+        cd $build
+        echo -n "compiling $name... "
+        if meson compile &>> ../$log; then
+            echo "done"
+            touch compiled
+        else
+            echo "FAILED"
+        fi
+        cd ..
+    done
+fi
+
+## Benchmark
+if ! (( $donot[(Ie)benchmark] )); then
+    for name in $conflist; do
+        build=build_$name
+        log=_bm-logs/$name.log
+        if [[ -e $build/benchmarked ]]; then
+            echo "skipping already benchmarked $name"
+            continue
+        fi
+        if [[ ! -e $build/compiled ]]; then
+            echo "skipping uncompiled $name"
+            continue
+        fi
+        cd $build
+        echo -n "benchmarking $name... "
+        meson test --benchmark --suite=ab/syntcomp21/crit -t 1.7 &>> ../$log
+        echo "done"
+        touch benchmarked
+        cd ..
+        cp $build/meson-logs/testlog.json _bm-logs/$name.json
+    done
+fi
