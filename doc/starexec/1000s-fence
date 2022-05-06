@@ -1,8 +1,0 @@
-amba_case_study_2.tlsf,realizable
-amba_decomposed_lock_12.tlsf,realizable
-full_arbiter_enc_10.tlsf,realizable
-load_balancer_8.tlsf,realizable
-ltl2dba_beta_10.tlsf,realizable
-ltl2dba_Q_12.tlsf,realizable
-prioritized_arbiter_enc_12.tlsf,realizable
-round_robin_arbiter_7.tlsf,realizable

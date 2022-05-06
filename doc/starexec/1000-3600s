@@ -1,6 +1,0 @@
-amba_decomposed_arbiter_10.tlsf,realizable
-full_arbiter_enc_12.tlsf,realizable
-genbuf4.tlsf,realizable
-generalized_buffer_4.tlsf,realizable
-load_balancer_10.tlsf,realizable
-narylatch_12.tlsf,realizable
