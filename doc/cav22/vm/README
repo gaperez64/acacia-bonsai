@@ -1,0 +1,199 @@
+This is the README file for Acacia-Bonsai's Artifact for CAV'22, written May 2022.
+
+Repository URL: https://github.com/gaperez64/acacia-bonsai/
+License:        GPLv3
+
+
+* Accessing the VM
+
+The VM provided is a VirtualBox image of an up-to-date Arch Linux.  The
+following packages & dependencies were installed
+- boost 1.78.0-2
+- gcc 11.2.0-4
+- git 2.36.0-1
+- make 4.3-3
+- meson 0.62.1-1
+- ninja 1.10.2-1
+- zsh 5.8.1-2
+
+To access the VM, boot it up in VirtualBox and SSH/login with username cav22 and
+password cav22.
+
+* Structure of the artifact
+
+In the home folder of user cav22, the folder src/ contains:
+- spot (rev: 20bcc21).  This is the version of Spot <https://spot.lrde.epita.fr>
+that would be automagically downloaded by the build system of Acacia-Bonsai if
+Spot weren't found on the system.  Here, it is compiled separately to avoid
+recompiling it with each different compilation option of Acacia-Bonsai.
+- strix (rev: b85eabe).  This is Strix <https://github.com/meyerphi/strix>.
+- mkplot.  This is a Python script to create scatterplots
+<https://github.com/alexeyignatiev/mkplot>.
+- acacia-bonsai (rev: 73a3e9e).  This is Acacia-Bonsai.
+
+The Acacia-Bonsai project itself is divided into the following subfolders:
+- lib: Spot code to process inputs.
+- subprojects: Dependencies; Meson will automagically download and compile the
+dependencies that are not found on the system.
+- tests: Test and benchmark files.
+- src: Source code for Acacia-Bonsai.
+- doc: Papers and benchmarks.
+
+* Compiling, running, benchmarking
+
+Acacia-Bonsai relies on the Meson build system <https://mesonbuild.com/>.  To
+compile and run Acacia-Bonsai, the simplest route is:
+
+  $ cd ~/src/acacia-bonsai/
+  $ meson build
+  $ cd build
+  $ meson compile
+  $ src/acacia-bonsai –help
+  Usage: acacia-bonsai [OPTION...]
+  Verify realizability for LTL specification.
+  
+    -f, --formula=STRING       process the formula STRING
+    [...]  
+   Input options:
+    -i, --ins=PROPS            comma-separated list of uncontrollable (a.k.a.
+                               input) atomic propositions
+    -o, --outs=PROPS           comma-separated list of controllable (a.k.a.
+                               output) atomic propositions
+    [...]
+
+To check if a formula is realizable, one can simply run, for instance:
+
+  $ cd ~/src/acacia-bonsai/build/
+  $ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' --ins req --outs grant
+  REALIZABLE
+
+The source tree contains a copy of all the LTL files used in the SyntComp21
+<http://syntcomp.org/> competition, with a description of which symbols are
+inputs and outputs in a .part file.  As it can be cumbersome to extract the
+inputs/outputs, a script is provided to do this automatically.  For instance:
+
+  $ cd ~/src/acacia-bonsai/build/
+  $ tests/check-real-correct.sh -a -F ../tests/ltl/syntcomp21/lilydemo08.ltl
+  Running Acacia Bonsai...
+  src/acacia-bonsai -c BOTH -F ../tests/ltl/syntcomp21/lilydemo08.ltl --ins req --outs grant
+  REALIZABLE
+
+The file self-benchmark.sh, at the root of the project, wraps about 25 different
+compilation options in a convenient script that builds, compiles, and benchmarks
+them:
+
+  $ cd ~/src/acacia-bonsai/
+  $ ./self-benchmark.sh –help
+  usage: ./self-benchmark.sh [-hplBCR] [-b BENCHMARK] [-c CONF[,CONF,...]]
+    -h: Print this message.
+    -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
+    -l: Do not build/compile/benchmark, instead, list configurations.
+    -B: Do not build.
+    -C: Do not compile.
+    -R: Do not benchmark.
+    -b BENCHMARK: Run a specific benchmark suite (default: ab/syntcomp21/crit).
+    -t TIMEOUT: Use timeout factor TIMEOUT (default: 1.7).  Actual time is multiplied by 10.
+    -c CONF,...: Only consider configurations listed.
+  
+
+Running the script with no argument builds, compiles, and benchmarks the 25
+compilation options.  Logs and benchmarking results are stored in the folder
+_bm-logs.  On the VM, the logs therein were generated using:
+
+  $ ./self-benchmark.sh -b ab/set1
+
+This asks the script to run, with 25 different compilation options:
+
+  $ CXXFLAGS="...some options..." meson build_some_options --buildtype=release
+  $ cd build_some_options
+  $ meson test --benchmark --suite=ab/set1
+  $ cp meson-logs/testlog.json ../_bm-logs/some_options.json
+
+The benchmark suite "ab/set1" contains 10 small files that should pass all tests
+in less than a minute.
+
+To experiment with the version of Acacia-Bonsai with best performances, one can
+use the "best" configuration:
+
+  $ ./self-benchmark.sh -c best
+
+To see which CXXFLAGS were used, the option '-p' can be passed to
+self-benchmark.sh.
+
+* Benchmarks appearing in the paper
+
+The Meson build file at acacia-bonsai/tests/meson.build contains the list of all
+test & benchmark suites available.  A suite simply is a set of LTL files.
+
+To compare the different configurations of Acacia-Bonsai (Section 6.2, "The
+options of Acacia-Bonsai"), the test suite "ab/syntcomp21/crit" was used.  A
+sanitized version of the Meson test logs on the test machine (as listed in
+Section 6.1) are stored in:
+
+   acacia-bonsai/doc/benchmarks/2022-01-21/syntcomp21-crit
+
+Each file in this folder was the "meson-logs/testlog.json" file of the
+corresponding configuration.  These files were obtained by running:
+
+  $ ./self-benchmark.sh -b ab/syntcomp21/crit
+
+To compare Acacia-Bonsai with Strix, ltlsynt, and Acacia+, the test suites
+"ab/syntcomp21/0s-20s" and "ab/syntcomp21/20s-100s" were used with
+self-benchmark.sh on the best Acacia-Bonsai configuration:
+
+  $ ./self-benchmark.sh -c best -b ab/syntcomp21/0s-20s,ab/syntcomp21/20s-100s
+  
+Similarly, the sanitized JSON files obtained are stored in:
+
+   acacia-bonsai/doc/benchmarks/2022-01-21/syntcomp21-0s-100s
+
+Note that the files in these folders have been sanitized to hide potentially
+sensitive information and to put them in a format that mkplot understands.  To
+sanitize these files, we used:
+
+  $ doc/benchmarks/meson-to-mkplot.sh 'Title of Plot' testlog.json 
+
+The scatter plot was then generated using:
+
+  $ ~/src/mkplot/mkplot.py -l --lloc='upper left' --font=cmr --ymin=1e-2 --ymax=15 --ylog -l -t 15 -b pdf --save-to plot.pdf ~/src/acacia-bonsai/doc/benchmarks/2022-01-21/syntcomp21-0-100s/*.json
+
+* Replication
+
+The virtual machine takes an incredibly long time to run the benchmarks used in
+the paper.  To obtain a more manageable run time, one can run a different
+benchmark suite; this is what was done on the VM (running on an Intel(R)
+Core(TM) i5-4570 CPU @ 3.20GHz with one core and 5GB of RAM allocated for the
+VM).  The following benchmarks were executed:
+
+  $ ./self-benchmark.sh -b ab/set1
+
+(This has already been run on the VM, so the script will refuse to overwrite the
+benchmarks.  Remove the build*/ folders or the files build*/benchmarked for the
+script to rerun the benchmarks.)
+
+Then, the benchmark JSONs are stored in _bm-logs.  They can be converted to
+mkplottable files using:
+
+  $ cd _bm-logs
+  $ mkdir mkplottable
+  $ for f in *.json; do ../doc/benchmarks/meson-to-mkplot.sh ${f/json/} $f > mkplottable/$f; done
+
+And finally, a plot can be created using:
+
+  $  ~/src/mkplot/mkplot.py -l --lloc='upper right' --font=cmr --ymin=1e-2 --ymax=15 --ylog -l -t 15 -b pdf --xmax=10 --save-to plot.pdf ~/src/acacia-bonsai/_bm-logs/mkplottable/*.json
+
+To compare the run times with Strix, ltlsynt, and Acacia+, we can do:
+
+  $ cd ~/src/acacia-bonsai/
+  $ meson build
+  $ meson test --benchmark --suite='strix/set1'
+  $ cp meson-logs/testlog.json ~/src/acacia-bonsai/_bm-logs/strix.json
+  $ meson test --benchmark --suite='aca+/set1'
+  $ cp meson-logs/testlog.json ~/src/acacia-bonsai/_bm-logs/aca+.json
+  $ meson test --benchmark --suite='ltlsynt/set1'
+  $ cp meson-logs/testlog.json ~/src/acacia-bonsai/_bm-logs/ltlsynt.json
+
+Note that Acacia-Bonsai does not shine on this specific set of tests compared to
+its competitors.  This is because the 'set1' suite was curated to exhibit some
+computationally expensive aspects of the algorithm and better compare different
+options in Acacia-Bonsai.
