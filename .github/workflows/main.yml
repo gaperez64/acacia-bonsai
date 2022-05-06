@@ -23,8 +23,6 @@ jobs:
         apt-get -y update
         apt-get -y install zsh git gcc python-is-python3 meson ninja-build gnupg wget python3-pip python3-distutils pkg-config libglib2.0-dev libffi6 libboost-dev autoconf automake libtool bison flex
     - uses: actions/checkout@v2
-    - name: Checkout submodules
-      run: git submodule update --init --recursive
     - uses: actions/setup-python@v2
     - name: Install python dependencies
       run: |
