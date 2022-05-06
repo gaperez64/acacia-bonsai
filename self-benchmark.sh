@@ -72,6 +72,7 @@ confs=(
 mode= # print, list
 donot=()
 conflist=(${(k)confs})
+benchsuites=(--suite=$BENCHMARK_SUITE)
 
 if (( $# == 0 )); then
   secs=10
@@ -97,7 +98,7 @@ fi
 while getopts "hplBCRb:t:c:" option; do
     case $option; in
         h) cat <<EOF
-usage: $0 [-hplBCR] [-b BENCHMARK] [-c CONF[,CONF,...]]
+usage: $0 [-hplBCR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
   -h: Print this message.
   -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
   -l: Do not build/compile/benchmark, instead, list configurations.
@@ -116,7 +117,10 @@ EOF
         R) donot+=benchmark;;
         c) conflist=(${(@s:,:)OPTARG});;
 	t) TIMEOUT_FACTOR=$OPTARG;;
-	b) BENCHMARK_SUITE=$OPTARG;;
+	b) benchsuites=()
+	   for b in ${(@s:,:)OPTARG}; do
+	     benchsuites+=(--suite="$b")
+	   done
     esac
 done
 
@@ -195,7 +199,7 @@ if ! (( $donot[(Ie)benchmark] )); then
         fi
         cd $build
         echo -n "benchmarking $name (logfile: $log)... "
-        meson test --benchmark --suite=$BENCHMARK_SUITE -t $TIMEOUT_FACTOR &>> ../$log
+        meson test --benchmark $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
         echo "done; testlog stored at _bm-logs/$name.json"
         touch benchmarked
         cd ..
