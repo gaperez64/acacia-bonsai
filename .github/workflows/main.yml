@@ -37,5 +37,11 @@ jobs:
       uses: actions/upload-artifact@v2
       if: always()
       with:
-        name: test-log
+        name: test-logs
         path: _bm-logs/
+    - name: Upload compilation logs
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: meson-logs
+        path: build_base/meson-logs
