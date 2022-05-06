@@ -1,3 +1,0 @@
-* Some todos
-** TODO Check different extra info rather than sum (max?)
-   
