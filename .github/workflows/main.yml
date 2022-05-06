@@ -31,7 +31,7 @@ jobs:
         pip install pygraph
     - name: Run benchmarks
       run: |
-        ./self-benchmark.sh
+        ./self-benchmark.sh -c base -b ab/set1 -t 3
     - name: Upload test results
       uses: actions/upload-artifact@v2
       if: always()
