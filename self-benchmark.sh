@@ -94,7 +94,7 @@ EOF
   echo "."
 fi
 
-while getopts "hplBCRc:" option; do
+while getopts "hplBCRb:t:c:" option; do
     case $option; in
         h) cat <<EOF
 usage: $0 [-hplBCR] [-b BENCHMARK] [-c CONF[,CONF,...]]
