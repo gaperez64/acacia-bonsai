@@ -2,6 +2,9 @@
 
 mkdir -p _bm-logs
 
+BENCHMARK_SUITE=ab/syntcomp21/crit
+TIMEOUT_FACTOR=1.7
+
 opt='-march=native -O3 -flto -fuse-linker-plugin -pipe -DNO_VERBOSE'
 
 declare -A confs
@@ -70,16 +73,39 @@ mode= # print, list
 donot=()
 conflist=(${(k)confs})
 
+if (( $# == 0 )); then
+  secs=10
+
+  cat <<EOF
+No option given; this will build, compile, and benchmark ${#confs} different configurations.
+To build/compile/benchmark with default (debug) options, run:
+
+  $ meson build
+  $ cd build
+  $ meson compile
+  $ meson test --benchmark --suite=$BENCHMARK_SUITE -t $TIMEOUT_FACTOR
+
+EOF
+  echo -n "Waiting $secs seconds before starting; hit Ctrl-C to cancel: "
+  for i in {$secs..1}; do
+    echo -n "$i "
+    sleep 1
+  done
+  echo "."
+fi
+
 while getopts "hplBCRc:" option; do
     case $option; in
         h) cat <<EOF
-usage: $0 [-hpbl] [-c CONF[,CONF,...]]
+usage: $0 [-hplBCR] [-b BENCHMARK] [-c CONF[,CONF,...]]
   -h: Print this message.
   -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
   -l: Do not build/compile/benchmark, instead, list configurations.
   -B: Do not build.
   -C: Do not compile.
   -R: Do not benchmark.
+  -b BENCHMARK: Run a specific benchmark suite (default: $BENCHMARK_SUITE).
+  -t TIMEOUT: Use timeout factor TIMEOUT (default: $TIMEOUT_FACTOR).  Actual time is multiplied by 10.
   -c CONF,...: Only consider configurations listed.
 EOF
            exit 1;;
@@ -89,6 +115,8 @@ EOF
         C) donot+=compile;;
         R) donot+=benchmark;;
         c) conflist=(${(@s:,:)OPTARG});;
+	t) TIMEOUT_FACTOR=$OPTARG;;
+	b) BENCHMARK_SUITE=$OPTARG;;
     esac
 done
 
@@ -106,16 +134,16 @@ fi
 
 ## Build
 if ! (( $donot[(Ie)build] )); then
-    for name param in $conflist; do
+    for name in $conflist; do
         param=$confs[$name]
         [[ $param == "" ]] && { echo "error: $name, unknown configuration."; exit 2 }
         build=build_$name
         log=_bm-logs/$name.log
         rm -f $log
         if [[ -e $build ]]; then
-            echo "$build exists, not rebuilding."
+            echo "$build exists, not rebuilding, remove folder to rebuild."
         else
-            echo -n "building $build... "
+            echo -n "building $build (logfile: $log)... "
             if CXXFLAGS="$opt $defaults $param" meson $build --buildtype=release &>> $log; then
                 echo "done."
             else
@@ -133,11 +161,15 @@ if ! (( $donot[(Ie)compile] )); then
         build=build_$name
         log=_bm-logs/$name.log
         if [[ -e $build/compiled ]]; then
-            echo "$name already compiled"
+            echo "$name already compiled, remove $build/compiled to recompile"
             continue
         fi
+        if ! [[ -e $build ]]; then
+	    echo "$name isn't built, skipping."
+	    continue
+        fi
         cd $build
-        echo -n "compiling $name... "
+        echo -n "compiling $name (logfile: $log)... "
         if meson compile &>> ../$log; then
             echo "done"
             touch compiled
@@ -154,17 +186,17 @@ if ! (( $donot[(Ie)benchmark] )); then
         build=build_$name
         log=_bm-logs/$name.log
         if [[ -e $build/benchmarked ]]; then
-            echo "skipping already benchmarked $name"
+            echo "skipping already benchmarked $name, remove $build/benchmarked to rebenchmark"
             continue
         fi
         if [[ ! -e $build/compiled ]]; then
-            echo "skipping uncompiled $name"
+            echo "skipping uncompiled $name, create $build/compiled if compiled by hand"
             continue
         fi
         cd $build
-        echo -n "benchmarking $name... "
-        meson test --benchmark --suite=ab/syntcomp21/crit -t 1.7 &>> ../$log
-        echo "done"
+        echo -n "benchmarking $name (logfile: $log)... "
+        meson test --benchmark --suite=$BENCHMARK_SUITE -t $TIMEOUT_FACTOR &>> ../$log
+        echo "done; testlog stored at _bm-logs/$name.json"
         touch benchmarked
         cd ..
         cp $build/meson-logs/testlog.json _bm-logs/$name.json
