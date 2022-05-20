@@ -13,21 +13,18 @@
 
 \input{define.orgtex}
 
-\usepackage[mathlines]{lineno}
-\linenumbers
-
 \begin{document}
 
 \title{Acacia-Bonsai: A Modern Implementation of Downset-Based LTL Realizability}
 \titlerunning{Acacia-Bonsai: Downset-Based LTL Realizability}
 
-\author{Micha\"el Cadilhac\inst{1}%\orcidID{1234-5678-9012}
-\and Guillermo A. P\'erez\inst{2}%\orcidID{0000-0002-1200-4952}
+\author{Micha\"el Cadilhac\inst{1}\orcidID{0000-0001-9828-9129}
+\and Guillermo A. P\'erez\inst{2}\orcidID{0000-0002-1200-4952}
 }
 \institute{DePaul University, USA\\
 \email{michael@cadilhac.name} \and
 University of Antwerp -- Flanders Make, Belgium\\
-\email{guillermoalberto.perez@uantwerpen.be}
+\email{guillermo.perez@uantwerp.be}
 }
 \authorrunning{M. Cadilhac \and G. A. P\'erez}
 
@@ -39,7 +36,7 @@ University of Antwerp -- Flanders Make, Belgium\\
   introduced by Filiot et al.~in the 2010s and implemented in the tools Acacia
   and Acacia+ in C and Python.  We identify degrees of freedom in the original
   algorithms and provide a complete rewriting of Acacia in C++20 articulated
-  around genericity and leveraging modern techniques for better performances.
+  around genericity and leveraging modern techniques for better performance.
   These techniques include compile-time specialization of the algorithms, the
   use of SIMD registers to store vectors, and several preprocessing steps, some
   relying on efficient Binary Decision Diagram (BDD) libraries.  We also explore
@@ -74,8 +71,8 @@ into three steps:
   \item \emph{compile} the LTL formula into an automaton of exponential
     size~\cite{vw84},
   \item \emph{determinize} the automaton~\cite{safra88,piterman07} incurring a
-    second exponential blowup,
-  \item and determine the winner of a \emph{two-player zero-sum game} played
+    second exponential blowup, and
+  \item determine the winner of a \emph{two-player zero-sum game} played
     on the latter automaton~\cite{pr89}.
 \end{enumerate*}
 Most alternative approaches focus on avoiding the determinization step of the
@@ -106,27 +103,31 @@ Benchmarks are included in Section~\ref{sec:benchmarks}.
 \section{Preliminaries}
 
 Throughout this abstract, we assume the existence of two alphabets, \(I\) and
-\(O\); although these stand for input and output, the actual definitions of these
-two terms is slightly more complex: An \emph{input} (\resp \emph{output}) is a
-boolean combination of symbols of \(I\) (\resp $O$) and it is \emph{pure} if it is
-a \emph{conjunction} in which \emph{all} the symbols in \(I\) (\resp $O$) appear;
-e.g., with \(I = \{i_1, i_2\}\), the expressions \(\top\) (true), \(\bot\) (false), and
-\((i_1 \lor i_2)\) are inputs, and \((i_1 \land \neg i_2)\) is a pure input. Similarly,
-an \emph{IO} is a boolean combination of symbols of \(I \cup O\), and it is
-\emph{pure} if it is a conjunction in which all the symbols in \(I \cup O\) appear.
-We use \(i, j\) to denote inputs and \(x, y\) for IOs.  Two IOs \(x\) and \(y\) are
-\emph{compatible} if \(x \land y \neq \bot\).
+\(O\); although these stand for input and output, the actual definitions of
+these two terms is slightly more complex: An \emph{input} (\resp
+\emph{output}) is a boolean combination of symbols of \(I\) (\resp $O$) and it
+is \emph{pure} if it is a \emph{conjunction} in which \emph{all} the symbols
+in \(I\) (\resp $O$) appear exactly once; e.g., with \(I = \{i_1, i_2\}\), the
+expressions \(\top\) (true), \(\bot\) (false), and \((i_1 \lor i_2)\) are
+inputs, and \((i_1 \land \neg i_2)\) is a pure input. Similarly, an \emph{IO}
+is a boolean combination of symbols of \(I \cup O\), and it is \emph{pure} if
+it is a conjunction in which all the symbols in \(I \cup O\) appear exactly
+once.  We use \(i, j\) to denote inputs and \(x, y\) for IOs.  Two IOs \(x\)
+and \(y\) are \emph{compatible} if \(x \land y \neq \bot\).
 
-A \emph{Büchi automaton} \cA is a tuple \((Q, q_0, \delta, B)\) with \(Q\) a set of
-states, \(q_0\) the initial state, \(\delta\) the transition relation that uses IOs as
-labels, and \(B \subseteq Q\) the set of Büchi states.  The actual semantics of this
-automaton will not be relevant to our exposition, we simply note that these
-automata are usually defined to recognize infinite sequences of symbols from
-\(I \cup O\).  We assume, throughout this paper, the existence of some automaton
-\(\cA\).
+A \emph{Büchi automaton} \cA is a tuple \((Q, q_0, \delta, B)\) with \(Q\) a
+set of states, \(q_0\) the initial state, \(\delta\) the transition relation
+that uses IOs as labels, and \(B \subseteq Q\) the set of Büchi states.  The
+actual semantics of this automaton will not be relevant to our exposition, we
+simply note that these automata are usually defined to recognize infinite
+sequences of pure IOs.  We assume, throughout this paper, the existence of
+some automaton \(\cA\).
 
-We will be interested in valuations of the states of \(\cA\) that indicate some
-sort of progress towards reaching Büchi states---again, we do not go into details
+We will be interested in valuations of the states of \(\cA\) that encode the
+number of visits to
+%indicate some
+%sort of progress towards reaching 
+Büchi states---again, we do not go into details
 here.  We will simply speak of \emph{vectors over \cA} for elements in
 \(\bbZ^Q\), mapping states to integers.  We will write \(\vec{v}\) for such vectors,
 and \(v_q\) for its value for state \(q\).  In practice, these vectors will range
@@ -159,7 +160,7 @@ are pairwise nondominating, an \emph{antichain}.  In practice, it may be
 interesting to keep more elements than just the dominating ones or even to keep
 all of the elements to avoid the cost of computing domination.
 
-Finally, we define \(\safe_k\) as the smallest downset containing the all-\(k\)
+Finally, we define \(\safe_k\) as the unique downset containing the all-\(k\)
 vector.
 We are now equipped to define the computational problem we focus on:\\[1em]
 \textbf{BackwardRealizability}
@@ -172,19 +173,17 @@ We are now equipped to define the computational problem we focus on:\\[1em]
 
 We note, for completeness, that (for sufficiently large values of $k$) this
 problem is equivalent to deciding the realizability problem associated with
-\cA: the question has a positive answer iff the \emph{output player} wins the
-Gale-Stewart game with payoff set the complement of the language of \(\cA\).
+\cA: the question has a positive answer if and only if the \emph{output player} wins the
+Gale-Stewart game with payoff set the \emph{complement} of the language of \(\cA\).
 
 \section{Realizability algorithm}
 
-The problem 
-%above 
-admits a natural algorithmic solution: start with the initial
-set, pick an input \(i\), apply \(\cpre_i\) on the set, and iterate until all inputs
-induce no change to the set, then check whether this set contains a vector that
-maps \(q_0\) to \(0\).  We first introduce some degrees of freedom in this approach,
-then present a slight twist on that solution that will serve as a canvas for the
-different optimizations.
+The problem admits a natural algorithmic solution: start with the initial set,
+pick an input \(i\), apply \(\cpre_i\) on the set, and iterate until all
+inputs induce no change to the set, then check whether this set contains a
+vector that maps \(q_0\) to \(0\).  We first introduce some degrees of freedom
+in this approach, then present a slight twist on that solution that will serve
+as a canvas for the different optimizations.
 
 \subsection{Boolean states}
 
@@ -194,8 +193,8 @@ succinctly present the original idea when we mention how it
 %this optimization 
 can be implemented in
 Section~\ref{sec:implem-bool}.  We start with an example.  Consider the
-%following 
-Büchi automaton:
+following 
+Büchi automaton, with $q_0,q_1 \not\in B$.
 
 \pgfmathsetseed{41}
 \tikzset{
@@ -242,7 +241,7 @@ Further, as we will be computing \(\cpre_i(S)\) for inputs \(i\), we abstract in
 similar way the information required for this computation.  We use the term
 \emph{input-action} for the set of io-actions of IOs compatible with \(i\) and denote
 it \(\iact(i)\); in symbols:
-\[\iact(i) = \{\ioact(x) \mid x \text{ is an IO compatible with } i\}\enspace.\]
+\[\iact(i) = \bigcup_{\substack{x \text{ an IO}\\\text{compat. with }i}} \ioact(x) \enspace.\]
 
 In other words, actions contain exactly the information necessary to compute
 \(\cpre\).  Note that from an implementation point of view, we do not require that
@@ -370,7 +369,7 @@ Downset types are built on top of a vector type.  We provide:
 \item Implementations using sets or vectors of vectors, either containing only
   the dominating vectors, or containing explicitly all the vectors;
 \item An implementation that relies on \(k\)-d trees, a space-partitioning data
-  structure for organizing points in a \(k\)-dimensional space;
+  structure for organizing points in a \(k\)-dimensional space;~\cite{bcko08}
 \item Implementations that store the vectors in specific bins depending on the
   %extra
   information exposed by the vector type.
@@ -506,7 +505,7 @@ We provide several implementations of the input-action picker:
   randomize part of the array of input-actions, and randomize the whole array).
 \end{compactitem}
 
-\section{Checking nonrealizability}\label{sec:unreal}
+\section{Checking unrealizability of LTL specifications}\label{sec:unreal}
 
 As mentioned in the preliminaries, for large values of $k$ the 
 \textbf{BackwardRealizability} problem is equivalent to a non-zero sum game
@@ -575,7 +574,7 @@ $\mathcal{B}$}
 
 For the past few years, the yardstick of performance for synthesis tools is the
 SYNTCOMP competition~\cite{syntcomp17}.  The organizers provide a bank of nearly a
-thousand LTL formulas, and candidate tools are ran with a time limit of one hour
+thousand LTL formulas, and candidate tools are run with a time limit of one hour
 on each of them.  The tool that solves the most instances in this timeframe wins
 the competition.
 
@@ -590,7 +589,8 @@ timeout of 15 seconds for all tests.
 
 We compared Acacia-Bonsai against itself using different choices of options, and
 against Acacia+~\cite{bbfjr12}, Strix~\cite{msl18}, and
-ltlsynt~\cite{duret.16.atva2}.  The benchmarks were completed on a headless
+ltlsynt~\cite{duret.16.atva2}.  The benchmarks were completed on a
+%headless
 Linux computer with the following specifications:
 \begin{compactitem}
 \item CPU: Intel\textregistered{} Core\texttrademark{} i7-8700 CPU @ 3.20GHz.  This CPU
@@ -609,11 +609,11 @@ options.
 \begin{compactitem}
 \item Preprocessing of the automaton (\Cref{sec:preproc}). This seems to have
   little impact, although a handful of tests saw an important boost.  Overall,
-  the performances were \emph{worse} with automaton preprocessing, owing to the
+  the performance was \emph{worse} with automaton preprocessing, owing to the
   cost of computing the surely loosing states.  Overall, we elected to leave the
   option activated in our best configuration.
 \item Boolean states (\Cref{sec:implem-bool}). Using boolean states boosted
-  performances by a marginal amount when SIMD was activated, but had a more
+  performance by a marginal amount when SIMD was activated, but had a more
   important impact when SIMD was deactivated.  This follows the intuition that,
   thanks to bitmasks, boolean states allow for vectorized computing, and they
   are thus of a lesser impact when native vectorized computing is possible.
@@ -627,31 +627,40 @@ options.
   comes with a significant boost in speed (shown in the graph below when
   comparing all implementations).  Among our different implementations to find a
   sufficient set, \Cref{alg:sufficient} turned out to offer the best
-  performances.
+  performance.
 \item Picking input-actions (\Cref{sec:io}).  The approaches performed
   equivalently, with a slight edge for the choice of critical inputs without
   randomizing or priority queue.
-\item Nonrealizability (\Cref{sec:unreal}). Computation of the nonrealizability
+\item Unrealizability (\Cref{sec:unreal}). Computation of the unrealizability
   automaton using \Cref{alg:caddys-madness}, rather than applying \(X\) on the
   outputs of the formula, allowed to solve 14\% more instances.  In practice, we
-  elected to create two processes for nonrealizability, one for each option,
+  elected to create two processes for unrealizability, one for each option,
   allowing for parallel computation on the two resulting automata.
 \end{compactitem}
 
-\paragraph{Acacia-Bonsai and foes.}  The following graph shows the performance
-of the tools.  Since these tools tend to solve a lot of instances under one
-second, we elected to present this graphic with a logarithmic y-axis.  Thanks to
-this, the cost of entry of SIMD instructions is also emphasized.
+\paragraph{Acacia-Bonsai and foes.}  The following survival (a.k.a. cactus)
+plot shows the performance of the tools.  Since these tools tend to solve a
+lot of instances under one second, we elected to present this graphic with a
+logarithmic y-axis.  Thanks to this, the cost of entry of SIMD instructions is
+also emphasized.
 
 \vspace{1em}
 
 \noindent \includegraphics[width=\textwidth]{cactus}
 
+\paragraph{Acacia-Bonsai and Strix.} Observe that, in the graph presented
+above, Strix and Acacia-Bonsai seem on par overall. The following scatterplot
+shows that neither tool is consistently better than the other. After careful
+inspection of the results, it seems that some parameterized benchmarks are
+easier to solve with Acacia-Bonsai after a particular value of the parameters.
+Additionally, several unrealizable benchmarks result in a timeout for Strix
+while Acacia-Bonsai solves them quickly.
 
+\vspace{1em}
 
-%; note that all compilation optimization available were turned on
-%for all tools, and that execution conditions were the same for all.
-
+\begin{center}
+\noindent \includegraphics[width=0.8\textwidth]{scatterplot}
+\end{center}
 
 
 \section{Conclusion}
@@ -659,9 +668,14 @@ this, the cost of entry of SIMD instructions is also emphasized.
 We provided six degrees of freedom in the main algorithm for downset-based LTL
 realizability and implemented multiple options for each of these degrees.  In
 this paper, we presented the main ideas behind these.  Experiments show that
-this careful reimplementation surpasses the performances of the original
+this careful reimplementation surpasses the performance of the original
 Acacia+, making Acacia-Bonsai competitive against modern LTL realizability
 tools. Our implementation can be found at \url{https://github.com/gaperez64/acacia-bonsai/}.
+
+One option from Acacia+ which we have not yet implemented consists in
+decomposing LTL formulas that are conjunctions of subformulas into smaller
+instances of the realizability problem. We plan on implementing this before
+the next edition of SYNTCOMP.
 
 \bibliographystyle{splncs04}
 \bibliography{refs}
