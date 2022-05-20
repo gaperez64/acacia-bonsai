@@ -169,7 +169,6 @@ We are now equipped to define the computational problem we focus on:\\[1em]
 \item \textbf{Question:} Is there a \(\vec{v} \in \cpre^*(\safe_k)\) with \(v_{q_0} \geq
   0\)?
 \end{compactitem}
-\vspace{1em}
 
 We note, for completeness, that (for sufficiently large values of $k$) this
 problem is equivalent to deciding the realizability problem associated with
@@ -241,7 +240,7 @@ Further, as we will be computing \(\cpre_i(S)\) for inputs \(i\), we abstract in
 similar way the information required for this computation.  We use the term
 \emph{input-action} for the set of io-actions of IOs compatible with \(i\) and denote
 it \(\iact(i)\); in symbols:
-\[\iact(i) = \bigcup_{\substack{x \text{ an IO}\\\text{compat. with }i}} \ioact(x) \enspace.\]
+\[\iact(i) = \bigcup_{\substack{x \text{ an IO}\\\text{compatible with }i}} \ioact(x) \enspace.\]
 
 In other words, actions contain exactly the information necessary to compute
 \(\cpre\).  Note that from an implementation point of view, we do not require that
@@ -276,8 +275,6 @@ We
 solve \textbf{BackwardRealizability} by computing
 \(\cpre^*\) explicitly:
 
-\vspace{0.5em}
-
 \begin{algorithm}[H]
   \LinesNumbered
 \SetKwData{Downset}{\texttt{Downset}}
@@ -303,8 +300,6 @@ Compute the input-actions of \(E\)\;\label{alg:actions}
 }
 \caption{Main algorithm}\label{main_algo}
 \end{algorithm}
-
-\vspace{0.5em}
 
 Our algorithm requires that the ``input-action picker'' used in line \ref{alg:pick}
 decides whether we have reached a fixed point.  As the picker could check
@@ -538,8 +533,6 @@ tries to minimize the number of states \((q, o)\) necessary by considering nonpu
 outputs that maximally correspond to a nonpure input compatible with the
 original transition label.
 
-\vspace{1em}
-
 \begin{algorithm}[H]
 \SetKwInput{Input}{Input}\SetKwInput{Output}{Output}
 
@@ -644,23 +637,21 @@ lot of instances under one second, we elected to present this graphic with a
 logarithmic y-axis.  Thanks to this, the cost of entry of SIMD instructions is
 also emphasized.
 
-\vspace{1em}
-
-\noindent \includegraphics[width=\textwidth]{cactus}
+\begin{center}
+\includegraphics[width=\textwidth]{cactus}
+\end{center}
 
 \paragraph{Acacia-Bonsai and Strix.} Observe that, in the graph presented
-above, Strix and Acacia-Bonsai seem on par overall. The following scatterplot
-shows that neither tool is consistently better than the other. After careful
-inspection of the results, it seems that some parameterized benchmarks are
+above, Strix and Acacia-Bonsai seem on par overall. A quick inspection of the
+results reveals that neither tool is consistently better than the other.
+However, it seems that some parameterized benchmarks are
 easier to solve with Acacia-Bonsai after a particular value of the parameters.
 Additionally, several unrealizable benchmarks result in a timeout for Strix
 while Acacia-Bonsai solves them quickly.
 
-\vspace{1em}
-
-\begin{center}
-\noindent \includegraphics[width=0.8\textwidth]{scatterplot}
-\end{center}
+%\begin{center}
+%\includegraphics[width=0.7\textwidth]{scatterplot}
+%\end{center}
 
 
 \section{Conclusion}
@@ -676,6 +667,13 @@ One option from Acacia+ which we have not yet implemented consists in
 decomposing LTL formulas that are conjunctions of subformulas into smaller
 instances of the realizability problem. We plan on implementing this before
 the next edition of SYNTCOMP.
+
+\subsubsection*{Acknowledgements.}
+We would like to thank V\'eronique Bruy\`ere for recommending the use of
+\(k\)-d trees as a data structure to store and manipulate downsets as well as
+Cl\'ement Tamines for useful conversations on these and alternative data
+structures.
+This research was partially funded by the FWO G030020N project ``SAILor''.
 
 \bibliographystyle{splncs04}
 \bibliography{refs}
