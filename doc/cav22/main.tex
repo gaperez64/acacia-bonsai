@@ -192,8 +192,7 @@ succinctly present the original idea when we mention how it
 %this optimization 
 can be implemented in
 Section~\ref{sec:implem-bool}.  We start with an example.  Consider the
-following 
-Büchi automaton, with $q_0,q_1 \not\in B$.
+Büchi automaton from \Cref{fig:smallauto} with $q_0,q_1 \not\in B$.
 
 \pgfmathsetseed{41}
 \tikzset{
@@ -204,7 +203,8 @@ Büchi automaton, with $q_0,q_1 \not\in B$.
    }
 }}
 
-\begin{center}
+\begin{figure}[h]
+  \centering
   \begin{smallautomaton}
     \node[smallstate,initial] (q0) {\(q_0\)};
     \node[smallstate, right of=q0] (q1) {\(q_1\)};
@@ -213,7 +213,9 @@ Büchi automaton, with $q_0,q_1 \not\in B$.
 
     \path[->] (q0) edge node {\(\top\)} (q1) (q1) edge node {\(\top\)} (r);
   \end{smallautomaton}
-\end{center}
+  \caption{Small automaton with $q_0,q_1 \not\in B$.}
+  \label{fig:smallauto}
+\end{figure}
 
 Recall that we are interested in, after \cpre has stabilized, whether the
 initial state can carry a nonnegative value.  In that sense, the crucial
@@ -275,7 +277,7 @@ We
 solve \textbf{BackwardRealizability} by computing
 \(\cpre^*\) explicitly:
 
-\begin{algorithm}[H]
+\begin{algorithm}
   \LinesNumbered
 \SetKwData{Downset}{\texttt{Downset}}
 \SetKwFunction{Union}{Union}\SetKwFunction{FindCompress}{FindCompress}
@@ -524,7 +526,7 @@ input formula, by putting an \(X\) (neXt) operator on each output.  This can
 however make the formula much more complex.
 
 We propose an alternative to this: Obtain the automaton for \(\neg \phi\), then push the
-outputs one state forward.  This means that a transition \((p, \langle i, o \rangle, q)\) is
+outputs one state forward. This means that a transition \((p, \langle i, o \rangle, q)\) is
 translated to a transition \((p, i, q)\), and the output \(o\) should be fired from
 \(q\).  In practice, we would need to remember that output, and this would require
 the construction to consider every state \((q, o)\), augmenting the number of
@@ -533,7 +535,7 @@ tries to minimize the number of states \((q, o)\) necessary by considering nonpu
 outputs that maximally correspond to a nonpure input compatible with the
 original transition label.
 
-\begin{algorithm}[H]
+\begin{algorithm}
 \SetKwInput{Input}{Input}\SetKwInput{Output}{Output}
 
 \Input{A Büchi automaton \cA with initial state $q_0$}
@@ -631,18 +633,21 @@ options.
   allowing for parallel computation on the two resulting automata.
 \end{compactitem}
 
-\paragraph{Acacia-Bonsai and foes.}  The following survival (a.k.a. cactus)
-plot shows the performance of the tools.  Since these tools tend to solve a
+\paragraph{Acacia-Bonsai and foes.}  The survival (a.k.a. cactus)
+plot from \Cref{fig:cactus} shows the performance of the tools.  Since these tools tend to solve a
 lot of instances under one second, we elected to present this graphic with a
 logarithmic y-axis.  Thanks to this, the cost of entry of SIMD instructions is
 also emphasized.
 
-\begin{center}
-\includegraphics[width=\textwidth]{cactus}
-\end{center}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{cactus}
+  \caption{Survival plot for SYNTCOMP tools and Acacia-Bonsai}
+  \label{fig:cactus}
+\end{figure}
 
-\paragraph{Acacia-Bonsai and Strix.} Observe that, in the graph presented
-above, Strix and Acacia-Bonsai seem on par overall. A quick inspection of the
+\paragraph{Acacia-Bonsai and Strix.} Observe that, in the graph from
+\Cref{fig:cactus}, Strix and Acacia-Bonsai seem on par overall. A quick inspection of the
 results reveals that neither tool is consistently better than the other.
 However, it seems that some parameterized benchmarks are
 easier to solve with Acacia-Bonsai after a particular value of the parameters.
