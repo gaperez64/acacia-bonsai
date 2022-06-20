@@ -210,7 +210,7 @@ namespace {
               bdd one_sat = bdd_satoneset (cond, all_outputs, bddtrue);
               // Get the corresponding input bdd
               bdd one_input_bdd =
-                bdd_exist (cond & bdd_exist (one_sat, all_inputs), 
+                bdd_exist (cond & bdd_exist (one_sat, all_inputs),
                            all_outputs);
               ret->new_edge (ret_state,
                              recurse (e.dst,
@@ -231,8 +231,9 @@ namespace {
       bool solve_formula (spot::formula f) {
         spot::process_timer timer;
         timer.start ();
-        spot::stopwatch sw;
-        bool want_time = (utils::verbose > 0);
+
+        spot::stopwatch sw, sw_nospot;
+        bool want_time = true; // Hardcoded
 
         // To Universal co-Büchi Automaton
         trans_.set_type(spot::postprocessor::BA);
@@ -287,34 +288,32 @@ namespace {
           std::swap (all_inputs, all_outputs);
         }
 
-        if (want_time)
+        if (want_time) {
           trans_time = sw.stop ();
-
-        verb_do (1, {
-          vout << "translating formula done in "
+          vout << "Translating formula done in "
                  << trans_time << " seconds\n";
-          vout << "automaton has " << aut->num_states ()
+          vout << "Automaton has " << aut->num_states ()
                  << " states and " << aut->num_sets () << " colors\n";
-          });
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // Preprocess automaton
 
-        if (want_time)
+        if (want_time) {
           sw.start();
+          sw_nospot.start ();
+        }
 
         auto aut_preprocessors_maker = AUT_PREPROCESSOR ();
         (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K)) ();
 
-        if (want_time)
+        if (want_time) {
           merge_time = sw.stop();
-
-        verb_do (1,  {
-            vout << "preprocessing done in " << merge_time
-                 << " seconds\nDPA has " << aut->num_states()
-                 << " states\n";
-            spot::print_hoa(utils::vout, aut, nullptr);
-          });
+          vout << "Preprocessing done in " << merge_time
+               << " seconds\nDPA has " << aut->num_states()
+               << " states\n";
+        }
+        verb_do (2, spot::print_hoa(utils::vout, aut, nullptr));
 
         ////////////////////////////////////////////////////////////////////////
         // Boolean states
@@ -325,11 +324,11 @@ namespace {
         auto boolean_states_maker = BOOLEAN_STATES ();
         vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K)) ();
 
-        if (want_time)
+        if (want_time) {
           boolean_states_time = sw.stop ();
-
-        verb_do (1, vout << "computation of boolean states in " << boolean_states_time
-                 /*   */ << ", found " << vectors::bool_threshold << " boolean states.\n");
+          vout << "Computation of boolean states in " << boolean_states_time
+            /*   */ << "seconds , found " << vectors::bool_threshold << " boolean states.\n";
+        }
 
 
         // Special case: only boolean states, so... no useful accepting state.
@@ -406,10 +405,11 @@ namespace {
             vectors::nbools_to_nbitsets (nbitsetbools));
         }
 
-        if (want_time)
+        if (want_time) {
           solve_time = sw.stop ();
-
-        verb_do (1, vout << "safety game solved in " << solve_time << " seconds, returning " << realizable << "\n");
+          vout << "Safety game solved in " << solve_time << " seconds, returning " << realizable << "\n";
+          vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
+        }
 
         timer.stop ();
 
@@ -527,14 +527,14 @@ void terminate (int signum) {
   }
   else
     exit (3);
-}               
+}
 
 int main (int argc, char **argv) {
   struct sigaction action;
   memset (&action, 0, sizeof(struct sigaction));
   action.sa_handler = terminate;
   sigaction (SIGTERM, &action, NULL);
-               
+
   return protected_main (argv, [&] {
     // These options play a role in twaalgos.
     extra_options.set ("simul", 0);
@@ -610,4 +610,3 @@ int main (int argc, char **argv) {
     return 3;
   });
 }
-
