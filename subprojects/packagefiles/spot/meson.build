@@ -9,6 +9,7 @@ if not fs.exists ('configure')
 endif
 
 p = mod.add_project('configure',
+  env : environment (),
   configure_options : ['--disable-devel',
                        '--disable-debug',
                        '--enable-optimizations',
