@@ -290,10 +290,10 @@ namespace {
 
         if (want_time) {
           trans_time = sw.stop ();
-          vout << "Translating formula done in "
-                 << trans_time << " seconds\n";
-          vout << "Automaton has " << aut->num_states ()
-                 << " states and " << aut->num_sets () << " colors\n";
+          utils::vout << "Translating formula done in "
+                      << trans_time << " seconds\n";
+          utils::vout << "Automaton has " << aut->num_states ()
+                      << " states and " << aut->num_sets () << " colors\n";
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -309,9 +309,9 @@ namespace {
 
         if (want_time) {
           merge_time = sw.stop();
-          vout << "Preprocessing done in " << merge_time
-               << " seconds\nDPA has " << aut->num_states()
-               << " states\n";
+          utils::vout << "Preprocessing done in " << merge_time
+                      << " seconds\nDPA has " << aut->num_states()
+                      << " states\n";
         }
         verb_do (2, spot::print_hoa(utils::vout, aut, nullptr));
 
@@ -326,8 +326,8 @@ namespace {
 
         if (want_time) {
           boolean_states_time = sw.stop ();
-          vout << "Computation of boolean states in " << boolean_states_time
-            /*   */ << "seconds , found " << vectors::bool_threshold << " boolean states.\n";
+          utils::vout << "Computation of boolean states in " << boolean_states_time
+            /*     */ << "seconds , found " << vectors::bool_threshold << " boolean states.\n";
         }
 
 
@@ -407,8 +407,8 @@ namespace {
 
         if (want_time) {
           solve_time = sw.stop ();
-          vout << "Safety game solved in " << solve_time << " seconds, returning " << realizable << "\n";
-          vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
+          utils::vout << "Safety game solved in " << solve_time << " seconds, returning " << realizable << "\n";
+          utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
         }
 
         timer.stop ();
