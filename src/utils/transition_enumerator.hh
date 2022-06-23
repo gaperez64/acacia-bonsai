@@ -19,9 +19,11 @@ class transition_enumerator {
     bool one_state;
     Formater formater;
 
-    class trans_it :
-      public std::iterator<std::input_iterator_tag, bdd> {
+    class trans_it {
       public:
+        using iterator_category = std::input_iterator_tag;
+        using value_type = bdd;
+        
         trans_it (Aut aut, unsigned state, Formater formater) : aut {aut}, state {state}, formater {formater} {
           if (state == aut->num_states ())
             return;

@@ -14,9 +14,11 @@ namespace ios_precomputers {
         Aut aut;
         bdd input_support, output_support;
 
-        class bdd_it :
-          public std::iterator<std::input_iterator_tag, bdd> {
+        class bdd_it {
           public:
+            using iterator_category = std::input_iterator_tag;
+            using value_type = bdd;
+
             bdd_it (bdd support) :
               letter_set {bddtrue},
               support {support}
@@ -56,13 +58,11 @@ namespace ios_precomputers {
             bdd letter_set, support, current_letter;
         };
 
-
-        using ios_it_actual_type = std::iterator<std::input_iterator_tag,
-                                                 TransSet>;
-
-        class ios_it : public ios_it_actual_type,
-                       public bdd_it {
+        class ios_it : public bdd_it {
           public:
+            using iterator_category = std::input_iterator_tag;
+            using value_type = TransSet;
+
             ios_it (bdd input, bdd output_support, Aut aut) :
               bdd_it (output_support), input {input}, aut {aut}
             { update_transset (); }
@@ -107,11 +107,11 @@ namespace ios_precomputers {
             Aut aut;
         };
 
-        using in_it_actual_type = typename std::iterator<std::input_iterator_tag,
-                                                         std::pair<bdd, ios>>;
-        class in_it : public in_it_actual_type,
-                      public bdd_it {
+        class in_it : public bdd_it {
           public:
+            using iterator_category = std::input_iterator_tag;
+            using value_type = std::pair<bdd, ios>;
+
             in_it (bdd input_support, bdd output_support, Aut aut) :
               bdd_it (input_support),
               current_ios (bdd_it::current_letter, ios (bdd_it::current_letter, output_support, aut)),
