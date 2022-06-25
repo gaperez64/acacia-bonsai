@@ -526,7 +526,7 @@ void terminate (int signum) {
       /* no body */;
   }
   else
-    exit (3);
+    _exit (3);
 }
 
 int main (int argc, char **argv) {
