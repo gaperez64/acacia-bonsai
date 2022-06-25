@@ -330,16 +330,16 @@ namespace {
             /*     */ << "seconds , found " << vectors::bool_threshold << " boolean states.\n";
         }
 
-
         // Special case: only boolean states, so... no useful accepting state.
         if (vectors::bool_threshold == 0) {
+          if (want_time)
+            utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
           return true;
         }
+        
 
         ////////////////////////////////////////////////////////////////////////
         // Build S^K_N game, solve it.
-
-        bool realizable = false;
 
         if (want_time)
           sw.start ();
@@ -371,6 +371,8 @@ namespace {
 
 #define UNREACHABLE [] (int x) { assert (false); }
 
+        bool realizable = false;
+        
         if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) { // Array & Bitsets
           static_switch_t<STATIC_ARRAY_CAP_MAX> {} (
             [&] (auto vnonbools) {
