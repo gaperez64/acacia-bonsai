@@ -38,34 +38,35 @@ namespace downsets {
         return vector_set.size ();
       }
 
-     bool insert (Vector&& v) {
-        bool should_be_inserted = true;
-
+      bool insert (Vector&& v) {
+        bool must_remove = false;
+  
         // This is like remove_if, but allows breaking.
         auto result = vector_set.begin ();
         auto end = vector_set.end ();
+  
         for (auto it = result; it != end; ++it) {
-          auto res = v.partial_order (*it);
-          if (res.leq ()) {
-            should_be_inserted = false;
-            break;
-          } else if (res.geq ()) {
-            should_be_inserted = true;
-          } else { // Element needs to be kept
-            if (result != it) // This can be false only on the first element.
-              *result = std::move (*it);
-            ++result;
-          }
+	  auto res = v.partial_order (*it);
+	  if (not must_remove and res.leq ()) { // v is dominated.
+	    // if must_remove is true, since we started with an antichain,
+	    // it's not possible that res.leq () holds.  Hence we don't check for
+	    // leq if must_remove is true.
+	    return false;
+	  } else if (res.geq ()) { // v dominates *it
+	    must_remove = true; /* *it should be removed */
+	  } else { // *it needs to be kept
+	    if (result != it) // This can be false only on the first element.
+	      *result = std::move (*it);
+	    ++result;
+	  }
         }
-
-        if (should_be_inserted) {
-          vector_set.erase (result, vector_set.end ());
-          vector_set.push_back (std::move (v));
-        }
-
-        return should_be_inserted;
+  
+        if (result != vector_set.end ())
+	  vector_set.erase (result, vector_set.end ());
+        vector_set.push_back (std::move (v));
+        return true;
       }
-
+  
       void union_with (vector_backed&& other) {
         for (auto&& e : other.vector_set)
           insert (std::move (e));

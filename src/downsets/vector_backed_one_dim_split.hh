@@ -89,8 +89,10 @@ namespace downsets {
 
           for (auto it = result; it != end; ++it) {
             auto res = v.partial_order (*it);
-            if (res.leq ()) { // v is dominated.
-              assert (not must_remove); // Assuming we started with an antichain
+            if (not must_remove and res.leq ()) { // v is dominated.
+              // if must_remove is true, since we started with an antichain,
+              // it's not possible that res.leq () holds.  Hence we don't check for
+              // leq if must_remove is true.
               return false;
             } else if (res.geq ()) { // v dominates *it
               must_remove = true; /* *it should be removed */
