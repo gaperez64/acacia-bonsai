@@ -327,7 +327,7 @@ namespace {
         if (want_time) {
           boolean_states_time = sw.stop ();
           utils::vout << "Computation of boolean states in " << boolean_states_time
-            /*     */ << "seconds , found " << vectors::bool_threshold << " boolean states.\n";
+            /*     */ << "seconds , found " << vectors::bool_threshold << " nonboolean states.\n";
         }
 
         // Special case: only boolean states, so... no useful accepting state.
@@ -368,6 +368,8 @@ namespace {
           nbitsetbools -= (actual_nonbools - nonbools);
 
         vectors::bitset_threshold = aut->num_states () - nbitsetbools;
+
+	utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
 
 #define UNREACHABLE [] (int x) { assert (false); }
 
