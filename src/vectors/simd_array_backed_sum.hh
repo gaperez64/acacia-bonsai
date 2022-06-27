@@ -30,19 +30,9 @@ namespace vectors {
         sum = 0;
         for (auto&& c : v)
           sum += c;
-
-        ssize_t i;
-        for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
-          ar[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
-        if (k % simd_size != 0) {
-          T tail[simd_size] alignas (32) = {0} ;
-          std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
-          ar[i].copy_from (tail, std::experimental::vector_aligned);
-          ++i;
-        }
-        assert (i > 0);
-        for (; i < (ssize_t) nsimds; ++i) // This shouldn't happen if the vector is tight.
-          ar[i] ^= ar[i];
+        ar.back () ^= ar.back ();
+        // Trust memcpy to DTRT.
+        std::memcpy ((char*) ar.data (), (char*) v.data (), v.size ());
       }
 
       simd_array_backed_sum_ () = delete;
@@ -89,9 +79,11 @@ namespace vectors {
               return;
 
             for (up_to = 0; up_to < nsimds; ++up_to) {
-              auto diff = lhs.ar[up_to] - rhs.ar[up_to];
-              bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
-              bleq = bleq and (std::experimental::reduce (-diff, std::bit_or ()) >= 0);
+              //auto diff = lhs.ar[up_to] - rhs.ar[up_to];
+              //bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
+              //bleq = bleq and (std::experimental::reduce (-diff, std::bit_or ()) >= 0);
+	      bgeq = bgeq and (std::experimental::all_of (lhs.ar[up_to] >= rhs.ar[up_to]));
+	      bleq = bleq and (std::experimental::all_of (lhs.ar[up_to] <= rhs.ar[up_to]));
               if (not bgeq)
                 has_bgeq = true;
               if (not bleq)
@@ -109,8 +101,9 @@ namespace vectors {
             assert (has_bleq);
             has_bgeq = true;
             for (; up_to < nsimds; ++up_to) {
-              auto diff = lhs.ar[up_to] - rhs.ar[up_to];
-              bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
+              //auto diff = lhs.ar[up_to] - rhs.ar[up_to];
+	      bgeq = bgeq and (std::experimental::all_of (lhs.ar[up_to] >= rhs.ar[up_to]));
+              //bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
               if (not bgeq)
                 break;
             }
@@ -123,8 +116,9 @@ namespace vectors {
             assert (has_bgeq);
             has_bleq = true;
             for (; up_to < nsimds; ++up_to) {
-              auto diff = rhs.ar[up_to] - lhs.ar[up_to];
-              bleq = bleq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
+              bleq = bleq and (std::experimental::all_of (lhs.ar[up_to] <= rhs.ar[up_to]));
+	      //auto diff = rhs.ar[up_to] - lhs.ar[up_to];
+              //bleq = bleq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
               if (not bleq)
                 break;
             }
@@ -161,19 +155,15 @@ namespace vectors {
       bool operator== (const self& rhs) const {
         if (sum != rhs.sum)
           return false;
-        for (size_t i = 0; i < nsimds; ++i)
-          if (not std::experimental::all_of (ar[i] == rhs.ar[i]))
-            return false;
-        return true;
+        // Trust memcmp to DTRT
+        return std::memcmp ((char*) rhs.ar.data (), (char*) ar.data (), nsimds * simd_size) == 0;
       }
 
       bool operator!= (const self& rhs) const {
         if (sum != rhs.sum)
           return true;
-        for (size_t i = 0; i < nsimds; ++i)
-          if (not std::experimental::any_of (ar[i] != rhs.ar[i]))
-            return true;
-        return false;
+        // Trust memcmp to DTRT
+        return std::memcmp ((char*) rhs.ar.data (), (char*) ar.data (), nsimds * simd_size) != 0;
       }
 
       self meet (const self& rhs) const {
@@ -181,6 +171,9 @@ namespace vectors {
 
         for (size_t i = 0; i < nsimds; ++i) {
           res.ar[i] = std::experimental::min (ar[i], rhs.ar[i]);
+          // This should NOT be used since this can lead to overflows over char
+          //   res.sum += std::experimental::reduce (res.ar[i]);
+          // instead, we manually loop through:
           for (size_t j = 0; j < simd_size; ++j)
             res.sum += res.ar[i][j];
         }

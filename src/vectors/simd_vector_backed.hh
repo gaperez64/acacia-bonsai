@@ -6,6 +6,8 @@
 
 #include "utils/simd_traits.hh"
 
+TODO ("Remove reduce/use memcmp/memcpy");
+
 namespace vectors {
   template <typename T>
   class simd_vector_backed {
