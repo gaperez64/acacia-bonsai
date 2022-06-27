@@ -38,9 +38,18 @@ namespace actioners {
       public:
         standard (const Aut& aut, const IToIOs& inputs_to_ios, int K) :
           aut {aut}, K {(char) K},
-          apply_out (aut->num_states ()), mcopy (aut->num_states ()) {
+          apply_out (aut->num_states ()), mcopy (aut->num_states ()), backward_reset (aut->num_states ()) {
 
           mcopy.reserve (State::capacity_for (mcopy.size ()));
+
+	  // Non boolean
+          std::fill_n (backward_reset.begin (),
+                       vectors::bool_threshold,
+                       (char) (K - 1));
+          // Boolean
+          std::fill_n (backward_reset.begin () + vectors::bool_threshold,
+                       aut->num_states () - vectors::bool_threshold,
+                       (char) 0);
 
           std::set<input_and_actions, compare_actions> ioset;
 
@@ -64,27 +73,19 @@ namespace actioners {
         State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
           if (dir == direction::forward)
             apply_out.assign (m.size (), (char) -1);
-          else {
-            // Non boolean
-            std::fill_n (apply_out.begin (),
-                         vectors::bool_threshold,
-                         (char) (K - 1));
-            // Boolean
-            std::fill_n (apply_out.begin () + vectors::bool_threshold,
-                         m.size () - vectors::bool_threshold,
-                         (char) 0);
-          }
+          else
+            apply_out = backward_reset;
 
-          m.to_vector (mcopy);
+          //m.to_vector (mcopy);
 
           for (size_t p = 0; p < m.size (); ++p) {
             for (const auto& [q, q_final] : avec[p]) {
               if (dir == direction::forward) {
-                if (mcopy[q] != -1)
-                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (mcopy[q] + (char) (q_final ? 1 : 0))));
+                if (m[q] != -1)
+                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (m[q] + (char) (q_final ? 1 : 0))));
               } else
                 if (apply_out[q] != -1)
-                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (mcopy[p] - (char) (q_final ? 1 : 0))));
+                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (m[p] - (char) (q_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
               if (dir == direction::forward && apply_out[p] == K)
@@ -98,7 +99,7 @@ namespace actioners {
        private:
         const Aut& aut;
         char K;
-        utils::vector_mm<char> apply_out, mcopy;
+        utils::vector_mm<char> apply_out, mcopy, backward_reset;
         input_and_actions_set input_output_fwd_actions;
 
         template <typename Set>
