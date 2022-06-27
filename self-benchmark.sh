@@ -17,15 +17,15 @@ defaults=$(<<EOF
 -DVECTOR_ELT_T='char'
 -DK_BOUNDED_SAFETY_AUT_IMPL='k_bounded_safety_aut'
 -DSTATIC_ARRAY_MAX='300'
--DSTATIC_MAX_BITSETS='3ul'
--DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed'
--DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'
+-DSTATIC_MAX_BITSETS='8ul'
 -DSIMD_IS_MAX='true'
 -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
 -DBOOLEAN_STATES='boolean_states::forward_saturation'
 -DIOS_PRECOMPUTER='ios_precomputers::standard'
 -DACTIONER='actioners::standard<typename SetOfStates::value_type>'
 -DINPUT_PICKER='input_pickers::critical_pq'
+-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
+-DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
 EOF
         )
 
@@ -43,9 +43,9 @@ EOF
 # These all differ from the base configuration by /one/ option.
 confs=(
     [base]=" "
-    [best]="$best"
-    [best_nosimd]="$best -DNO_SIMD"
-    [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation<typename SetOfStates::value_type>'"
+#    [best]="$best"
+#    [best_nosimd]="$best -DNO_SIMD"
+#    [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation<typename SetOfStates::value_type>'"
     [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
     [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
@@ -63,10 +63,11 @@ confs=(
     [inputpicker_critical]="-DINPUT_PICKER=input_pickers::critical"
     [inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
     [inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
+    [downset_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
     [downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
     [downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin"
     [downset_v1ds]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split"
-    [downset_v1dsio]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only"
+#    [downset_v1dsio]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only"
 )
 
 mode= # print, list
@@ -148,7 +149,7 @@ if ! (( $donot[(Ie)build] )); then
             echo "$build exists, not rebuilding, remove folder to rebuild."
         else
             echo -n "building $build (logfile: $log)... "
-            if CXXFLAGS="$opt $defaults $param" meson $build --buildtype=release &>> $log; then
+            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson $build --buildtype=release &>> $log; then
                 echo "done."
             else
                 echo "FAILED; exciting readily, please remove $build."
@@ -178,7 +179,9 @@ if ! (( $donot[(Ie)compile] )); then
             echo "done"
             touch compiled
         else
-            echo "FAILED"
+            echo "FAILED; stopping..."
+            cat ../$log
+            exit 3
         fi
         cd ..
     done
@@ -200,8 +203,13 @@ if ! (( $donot[(Ie)benchmark] )); then
         cd $build
         echo -n "benchmarking $name (logfile: $log)... "
         meson test --benchmark $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
-        echo "done; testlog stored at _bm-logs/$name.json"
-        touch benchmarked
+        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
+            echo "FAILED; testlog stored at $log, _bm-logs/$name.json left untouched"
+            exit 5
+        else
+            echo "done; testlog stored at $log"
+            touch benchmarked
+        fi
         cd ..
         cp $build/meson-logs/testlog.json _bm-logs/$name.json
     done
