@@ -4,9 +4,9 @@
 #include <iostream>
 #include <span>
 
+#include "vectors/simd_po_res_sum.hh"
 #include "utils/simd_traits.hh"
 
-TODO ("Remove reduce/use memcmp/memcpy");
 
 namespace vectors {
   template <typename T>
@@ -21,24 +21,18 @@ namespace vectors {
     private:
       simd_vector_backed (size_t k) : k {k},
                                       nsimds {traits::nsimds (k)},
-                                      vec (nsimds) {
+                                      data (nsimds) {
         assert (nsimds >= 1);
-        vec.back () ^= vec.back ();
+        data.back () ^= data.back ();
       }
     public:
       simd_vector_backed (std::span<const T> v) : simd_vector_backed (v.size ()) {
-        ssize_t i;
-        for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
-          vec[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
-        if (k % simd_size != 0) {
-          T tail[simd_size] alignas (32) = {0};
-          std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
-          vec[i].copy_from (tail, std::experimental::vector_aligned);
-          ++i;
-        }
-        assert (i > 0);
-        for (; i < (ssize_t) nsimds; ++i) // This shouldn't happen if the vector is tight.
-          vec[i] ^= vec[i];
+        sum = 0;
+        for (auto&& c : v)
+          sum += c;
+        data.back () ^= data.back ();
+        // Trust memcpy to DTRT.
+        std::memcpy ((char*) data.data (), (char*) v.data (), v.size ());
       }
 
 
@@ -46,111 +40,51 @@ namespace vectors {
       simd_vector_backed (const self& other) = delete;
       simd_vector_backed (self&& other) = default;
 
-      // explicit copy operator
       self copy () const {
         auto res = self (k);
-        res.vec = vec;
+        res.data = data;
         return res;
       }
 
       self& operator= (self&& other) {
         assert (other.k == k and other.nsimds == nsimds);
-        vec = std::move (other.vec);
+        data = std::move (other.data);
         return *this;
       }
 
       self& operator= (const self& other) = delete;
 
       static constexpr size_t capacity_for (size_t elts) {
-        return traits::nsimds (elts) * simd_size;
+        return traits::capacity_for (elts);
       }
 
       void to_vector (std::span<T> v) const {
-        assert (v.size () >= k);
-        for (size_t i = 0; i < nsimds; ++i)
-          vec[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
+        memcpy ((char*) v.data (), (char*) data.data (), data.size () * simd_size);
       }
 
-      class po_res {
-        public:
-          po_res (const self& lhs, const self& rhs) {
-            bgeq = true;
-            bleq = true;
-            for (size_t i = 0; i < lhs.nsimds; ++i) {
-              auto diff = lhs.vec[i] - rhs.vec[i];
-              if (bgeq)
-                bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
-              if (bleq)
-                bleq = bleq and (std::experimental::reduce (-diff, std::bit_or ()) >= 0);
-              if (not bgeq and not bleq)
-                break;
-            }
-          }
-
-          inline bool geq () {
-            return bgeq;
-          }
-
-          inline bool leq () {
-            return bleq;
-          }
-        private:
-          bool bgeq, bleq;
-      };
-
-      // Alternative implementation that stores the pairwise difference but does
-      // not reduce each of them.  Actually slower, possibly because the other
-      // implementation does not go through the whole vector if it realizes the
-      // vectors are incomparable.
-      class po_res_ {
-        public:
-          po_res_ (const self& lhs, const self& rhs) :
-            diffs (lhs.nsimds) {
-            for (size_t i = 0; i < lhs.nsimds; ++i)
-              diffs[i] = lhs.vec[i] - rhs.vec[i];
-          }
-
-          inline bool geq () const {
-            for (size_t i = 0; i < diffs.size (); ++i)
-              if (not (std::experimental::reduce (diffs[i], std::bit_or ()) >= 0))
-                return false;
-            return true;
-          }
-
-          inline bool leq () const {
-            for (size_t i = 0; i < diffs.size (); ++i)
-              if (not (std::experimental::reduce (-diffs[i], std::bit_or ()) >= 0))
-                return false;
-            return true;
-          }
-        private:
-          std::vector<typename traits::fssimd> diffs;
-      };
-
-
       inline auto partial_order (const self& rhs) const {
-        return po_res_ (*this, rhs);
+        return simd_po_res_sum (*this, rhs);
       }
 
       bool operator== (const self& rhs) const {
-        for (size_t i = 0; i < nsimds; ++i)
-          if (not std::experimental::all_of (vec[i] == rhs.vec[i]))
-            return false;
-        return true;
+        if (sum != rhs.sum)
+          return false;
+        // Trust memcmp to DTRT
+        return std::memcmp ((char*) rhs.data.data (), (char*) data.data (), nsimds * simd_size) == 0;
       }
 
       bool operator!= (const self& rhs) const {
-        for (size_t i = 0; i < nsimds; ++i)
-          if (not std::experimental::any_of (vec[i] != rhs.vec[i]))
-            return true;
-        return false;
+        if (sum != rhs.sum)
+          return true;
+        // Trust memcmp to DTRT
+        return std::memcmp ((char*) rhs.data.data (), (char*) data.data (), nsimds * simd_size) != 0;
       }
 
-      // Used by Sets, should be a total order.
+      // Used by Sets, should be a total order.  Do not use.
       bool operator< (const self& rhs) const {
         for (size_t i = 0; i < nsimds; ++i) {
-          auto lhs_lt_rhs = vec[i] < rhs.vec[i];
-          auto rhs_lt_lhs = rhs.vec[i] < vec[i];
+          auto lhs_lt_rhs = data[i] < rhs.data[i];
+          auto rhs_lt_lhs = rhs.data[i] < data[i];
           auto p1 = find_first_set (lhs_lt_rhs);
           auto p2 = find_first_set (rhs_lt_lhs);
           if (p1 == p2)
@@ -161,19 +95,26 @@ namespace vectors {
       }
 
       T operator[] (size_t i) const {
-        return vec[i / simd_size][i % simd_size];
+        return data[i / simd_size][i % simd_size];
       }
 
       typename traits::fssimd::reference operator[] (size_t i) {
-        return vec[i / simd_size][i % simd_size];
+        return data[i / simd_size][i % simd_size];
       }
 
 
       self meet (const self& rhs) const {
         auto res = self (k);
 
-        for (size_t i = 0; i < nsimds; ++i)
-          res.vec[i] = std::experimental::min (vec[i], rhs.vec[i]);
+        for (size_t i = 0; i < nsimds; ++i) {
+          res.data[i] = std::experimental::min (data[i], rhs.data[i]);
+          // This should NOT be used since this can lead to overflows over char
+          //   res.sum += std::experimental::reduce (res.data[i]);
+          // instead, we manually loop through:
+          for (size_t j = 0; j < simd_size; ++j)
+            res.sum += res.data[i][j];
+        }
+
         return res;
       }
 
@@ -181,9 +122,15 @@ namespace vectors {
         return k;
       }
 
+      auto bin () const {
+        return (sum + k) / k;
+      }
+
     private:
+      friend simd_po_res_sum<self>;
       const size_t k, nsimds;
-      std::vector<typename traits::fssimd> vec;
+      std::vector<typename traits::fssimd> data;
+      int sum = 0;
   };
 
   template <typename T>

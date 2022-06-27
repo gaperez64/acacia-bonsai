@@ -4,6 +4,7 @@
 #include <experimental/simd>
 #include <iostream>
 
+#include "vectors/simd_po_res_sum.hh"
 #include "utils/simd_traits.hh"
 
 namespace vectors {
@@ -30,9 +31,9 @@ namespace vectors {
         sum = 0;
         for (auto&& c : v)
           sum += c;
-        ar.back () ^= ar.back ();
+        data.back () ^= data.back ();
         // Trust memcpy to DTRT.
-        std::memcpy ((char*) ar.data (), (char*) v.data (), v.size ());
+        std::memcpy ((char*) data.data (), (char*) v.data (), v.size ());
       }
 
       simd_array_backed_sum_ () = delete;
@@ -42,13 +43,13 @@ namespace vectors {
       // explicit copy operator
       simd_array_backed_sum_ copy () const {
         auto res = simd_array_backed_sum_ (k);
-        res.ar = ar;
+        res.data = data;
         res.sum = sum;
         return res;
       }
 
       self& operator= (self&& other) {
-        ar = std::move (other.ar);
+        data = std::move (other.data);
         sum = other.sum;
         return *this;
       }
@@ -60,89 +61,19 @@ namespace vectors {
       }
 
       void to_vector (std::span<char> v) const {
-        for (size_t i = 0; i < nsimds; ++i)
-          ar[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
+        memcpy ((char*) v.data (), (char*) data.data (), data.size () * simd_size);
       }
 
-      class po_res {
-        public:
-          po_res (const self& lhs, const self& rhs) : lhs {lhs}, rhs {rhs} {
-            bgeq = (lhs.sum >= rhs.sum);
-            if (not bgeq)
-              has_bgeq = true;
-
-            bleq = (lhs.sum <= rhs.sum);
-            if (not bleq)
-              has_bleq = true;
-
-            if (has_bgeq or has_bleq)
-              return;
-
-            for (up_to = 0; up_to < nsimds; ++up_to) {
-              //auto diff = lhs.ar[up_to] - rhs.ar[up_to];
-              //bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
-              //bleq = bleq and (std::experimental::reduce (-diff, std::bit_or ()) >= 0);
-	      bgeq = bgeq and (std::experimental::all_of (lhs.ar[up_to] >= rhs.ar[up_to]));
-	      bleq = bleq and (std::experimental::all_of (lhs.ar[up_to] <= rhs.ar[up_to]));
-              if (not bgeq)
-                has_bgeq = true;
-              if (not bleq)
-                has_bleq = true;
-              if (has_bgeq or has_bgeq)
-                return;
-            }
-            has_bgeq = true;
-            has_bleq = true;
-          }
-
-          inline bool geq () {
-            if (has_bgeq)
-              return bgeq;
-            assert (has_bleq);
-            has_bgeq = true;
-            for (; up_to < nsimds; ++up_to) {
-              //auto diff = lhs.ar[up_to] - rhs.ar[up_to];
-	      bgeq = bgeq and (std::experimental::all_of (lhs.ar[up_to] >= rhs.ar[up_to]));
-              //bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
-              if (not bgeq)
-                break;
-            }
-            return bgeq;
-          }
-
-          inline bool leq () {
-            if (has_bleq)
-              return bleq;
-            assert (has_bgeq);
-            has_bleq = true;
-            for (; up_to < nsimds; ++up_to) {
-              bleq = bleq and (std::experimental::all_of (lhs.ar[up_to] <= rhs.ar[up_to]));
-	      //auto diff = rhs.ar[up_to] - lhs.ar[up_to];
-              //bleq = bleq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
-              if (not bleq)
-                break;
-            }
-            return bleq;
-          }
-
-        private:
-          const self& lhs;
-          const self& rhs;
-          bool bgeq, bleq;
-          bool has_bgeq = false,
-            has_bleq = false;
-          size_t up_to = 0;
-      };
 
       inline auto partial_order (const self& rhs) const {
-        return po_res (*this, rhs);
+        return simd_po_res_sum (*this, rhs);
       }
 
       // Used by Sets, should be a total order.  Do not use.
       bool operator< (const self& rhs) const {
         for (size_t i = 0; i < nsimds; ++i) {
-          auto lhs_lt_rhs = ar[i] < rhs.ar[i];
-          auto rhs_lt_lhs = rhs.ar[i] < ar[i];
+          auto lhs_lt_rhs = data[i] < rhs.data[i];
+          auto rhs_lt_lhs = rhs.data[i] < data[i];
           auto p1 = find_first_set (lhs_lt_rhs);
           auto p2 = find_first_set (rhs_lt_lhs);
           if (p1 == p2)
@@ -156,26 +87,26 @@ namespace vectors {
         if (sum != rhs.sum)
           return false;
         // Trust memcmp to DTRT
-        return std::memcmp ((char*) rhs.ar.data (), (char*) ar.data (), nsimds * simd_size) == 0;
+        return std::memcmp ((char*) rhs.data.data (), (char*) data.data (), nsimds * simd_size) == 0;
       }
 
       bool operator!= (const self& rhs) const {
         if (sum != rhs.sum)
           return true;
         // Trust memcmp to DTRT
-        return std::memcmp ((char*) rhs.ar.data (), (char*) ar.data (), nsimds * simd_size) != 0;
+        return std::memcmp ((char*) rhs.data.data (), (char*) data.data (), nsimds * simd_size) != 0;
       }
 
       self meet (const self& rhs) const {
         auto res = self (k);
 
         for (size_t i = 0; i < nsimds; ++i) {
-          res.ar[i] = std::experimental::min (ar[i], rhs.ar[i]);
+          res.data[i] = std::experimental::min (data[i], rhs.data[i]);
           // This should NOT be used since this can lead to overflows over char
-          //   res.sum += std::experimental::reduce (res.ar[i]);
+          //   res.sum += std::experimental::reduce (res.data[i]);
           // instead, we manually loop through:
           for (size_t j = 0; j < simd_size; ++j)
-            res.sum += res.ar[i][j];
+            res.sum += res.data[i][j];
         }
 
         return res;
@@ -196,7 +127,7 @@ namespace vectors {
 
       // Should be used sparingly.
       int operator[] (size_t i) const {
-        return ar[i / simd_size][i % simd_size];
+        return data[i / simd_size][i % simd_size];
       }
 
       auto bin () const {
@@ -204,13 +135,14 @@ namespace vectors {
       }
 
     private:
-      std::array<typename traits::fssimd, nsimds> ar;
+      friend simd_po_res_sum<self>;
+      std::array<typename traits::fssimd, nsimds> data;
       const size_t k;
       int sum = 0;
   };
 
   template <typename T>
-  struct traits<simd_array_backed_sum_, T> {
+  struct traits<simd_array_backed_sum, T> {
       static constexpr auto capacity_for (size_t elts) {
         return utils::simd_traits<T>::capacity_for (elts);
       }
