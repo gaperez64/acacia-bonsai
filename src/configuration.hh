@@ -30,7 +30,7 @@
 # endif
 
 # ifndef STATIC_MAX_BITSETS
-#  define STATIC_MAX_BITSETS 3ul
+#  define STATIC_MAX_BITSETS 8ul
 # endif
 
 #else
