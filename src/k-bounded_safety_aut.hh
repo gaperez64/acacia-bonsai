@@ -102,8 +102,9 @@ class k_bounded_safety_aut_detail {
           verb_do (1, {vout << "Adding Kinc to every vector..."; vout.flush (); });
           F = F.apply ([&] (const State& s) {
             auto vec = utils::vector_mm<char> (s.size (), 0);
-            for (size_t i = 0; i < s.size (); ++i)
+            for (size_t i = 0; i < vectors::bool_threshold; ++i)
               vec[i] = s[i] + Kinc;
+            // Other entries are set to 0 by initialization, since they are bool.
             return State (vec);
           });
           verb_do (1, vout << "Done" << std::endl);
