@@ -4,7 +4,7 @@
 #include <iostream>
 #include <span>
 
-#include "vectors/simd_po_res_sum.hh"
+#include "vectors/simd_po_res.hh"
 #include "utils/simd_traits.hh"
 
 
@@ -63,7 +63,7 @@ namespace vectors {
       }
 
       inline auto partial_order (const self& rhs) const {
-        return simd_po_res_sum (*this, rhs);
+        return simd_po_res (*this, rhs);
       }
 
       bool operator== (const self& rhs) const {
@@ -127,7 +127,7 @@ namespace vectors {
       }
 
     private:
-      friend simd_po_res_sum<self>;
+      friend simd_po_res<self>;
       const size_t k, nsimds;
       std::vector<typename traits::fssimd> data;
       int sum = 0;

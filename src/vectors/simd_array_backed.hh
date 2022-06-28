@@ -23,26 +23,13 @@ namespace vectors {
       using value_type = T;
 
     private:
-      simd_array_backed_ (size_t k) : k {k} {
-        assert ((k + traits::simd_size - 1) / traits::simd_size == nsimds);
-        ar[nsimds - 1] ^= ar[nsimds - 1];
-      }
+      simd_array_backed_ (size_t k) : k {k} { }
 
     public:
       simd_array_backed_ (std::span<const T> v) : k {v.size ()} {
-        ssize_t i;
-        // For some reason, with O3, the span v may be unaligned as a simd vector.
-        for (i = 0; i < (ssize_t) traits::nsimds (k) - (k % simd_size ? 1 : 0); ++i)
-          ar[i].copy_from (&v[i * simd_size], std::experimental::vector_aligned);
-        if (k % simd_size != 0) {
-          T tail[simd_size] = {0};
-          std::copy (&v[i * simd_size], &v[i * simd_size] + (k % simd_size), tail);
-          ar[i].copy_from (tail, std::experimental::vector_aligned);
-          ++i;
-        }
-        assert (i > 0);
-        for (; i < (ssize_t) nsimds; ++i) // This shouldn't happen if the vector is tight.
-          ar[i] ^= ar[i];
+        data.back () ^= data.back ();
+        // Trust memcpy to DTRT.
+        std::memcpy ((char*) data.data (), (char*) v.data (), v.size ());
       }
 
 
@@ -53,117 +40,31 @@ namespace vectors {
       // explicit copy operator
       simd_array_backed_ copy () const {
         auto res = simd_array_backed_ (k);
-        res.ar = ar;
+        res.data = data;
         return res;
       }
 
       self& operator= (self&& other) {
-        ar = std::move (other.ar);
+        data = std::move (other.data);
         return *this;
       }
 
       self& operator= (const self& other) = delete;
 
-#define PO_RES_INIT
-
-#ifdef PO_RES_INIT
-      class po_res {
-        public:
-          po_res (const self& lhs, const self& rhs) {
-            bgeq = true;
-            bleq = true;
-            for (size_t i = 0; i < nsimds; ++i) {
-              auto diff = lhs.ar[i] - rhs.ar[i];
-              if (bgeq)
-                bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
-              if (bleq)
-                bleq = bleq and (std::experimental::reduce (-diff, std::bit_or ()) >= 0);
-              if (not bgeq and not bleq)
-                break;
-            }
-          }
-
-          inline bool geq () {
-            return bgeq;
-          }
-
-          inline bool leq () {
-            return bleq;
-          }
-        private:
-          bool bgeq, bleq;
-      };
-#else
-      class po_res {
-        public:
-          po_res (const self& lhs, const self& rhs) : lhs {lhs}, rhs {rhs} {
-            for (up_to = 0; up_to < nsimds; ++up_to) {
-              auto diff = lhs.ar[up_to] - rhs.ar[up_to];
-              bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
-              bleq = bleq and (std::experimental::reduce (-diff, std::bit_or ()) >= 0);
-              if (not bgeq)
-                has_bgeq = true;
-              if (not bleq)
-                has_bleq = true;
-              if (has_bgeq or has_bgeq)
-                return;
-            }
-            has_bgeq = true;
-            has_bleq = true;
-          }
-
-          inline bool geq () {
-            if (has_bgeq)
-              return bgeq;
-            assert (has_bleq);
-            has_bgeq = true;
-            for (; up_to < nsimds; ++up_to) {
-              auto diff = lhs.ar[up_to] - rhs.ar[up_to];
-              bgeq = bgeq and (std::experimental::reduce (diff, std::bit_or ()) >= 0);
-              if (not bgeq)
-                break;
-            }
-            return bgeq;
-          }
-
-          inline bool leq () {
-            if (has_bleq)
-              return bleq;
-            assert (has_bgeq);
-            has_bleq = true;
-            for (; up_to < nsimds; ++up_to) {
-              auto diff = lhs.ar[up_to] - rhs.ar[up_to];
-              bleq = bleq and (std::experimental::reduce (-diff, std::bit_or ()) >= 0);
-              if (not bleq)
-                break;
-            }
-            return bleq;
-          }
-
-        private:
-          const self& lhs;
-          const self& rhs;
-          bool bgeq = true, bleq = true;
-          bool has_bgeq = false,
-            has_bleq = false;
-          size_t up_to = 0;
-      };
-#endif
-
       inline auto partial_order (const self& rhs) const {
-        return po_res (*this, rhs);
+        return simd_po_res (*this, rhs);
       }
 
       bool operator== (const self& rhs) const {
         for (size_t i = 0; i < nsimds; ++i)
-          if (not std::experimental::all_of (ar[i] == rhs.ar[i]))
+          if (not std::experimental::all_of (data[i] == rhs.data[i]))
             return false;
         return true;
       }
 
       bool operator!= (const self& rhs) const {
         for (size_t i = 0; i < nsimds; ++i)
-          if (not std::experimental::any_of (ar[i] != rhs.ar[i]))
+          if (not std::experimental::any_of (data[i] != rhs.data[i]))
             return true;
         return false;
       }
@@ -171,8 +72,8 @@ namespace vectors {
       // Used by std::sets, should be a total order.  Do not use.
       bool operator< (const self& rhs) const {
         for (size_t i = 0; i < nsimds; ++i) {
-          auto lhs_lt_rhs = ar[i] < rhs.ar[i];
-          auto rhs_lt_lhs = rhs.ar[i] < ar[i];
+          auto lhs_lt_rhs = data[i] < rhs.data[i];
+          auto rhs_lt_lhs = rhs.data[i] < data[i];
           auto p1 = find_first_set (lhs_lt_rhs);
           auto p2 = find_first_set (rhs_lt_lhs);
           if (p1 == p2)
@@ -189,19 +90,19 @@ namespace vectors {
       void to_vector (std::span<char> v) const {
         // Sadly, we can't assume that v is aligned, as it could be the values after the bool cut-off.
         for (size_t i = 0; i < nsimds; ++i) {
-          ar[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
+          data[i].copy_to (&v[i * simd_size], std::experimental::vector_aligned);
         }
       }
 
       T operator[] (size_t i) const {
-        return ar[i / simd_size][i % simd_size];
+        return data[i / simd_size][i % simd_size];
       }
 
       self meet (const self& rhs) const {
         auto res = self (k);
 
         for (size_t i = 0; i < nsimds; ++i)
-          res.ar[i] = std::experimental::min (ar[i], rhs.ar[i]);
+          res.data[i] = std::experimental::min (data[i], rhs.data[i]);
         return res;
       }
 
@@ -210,7 +111,8 @@ namespace vectors {
       }
 
     private:
-      std::array<typename traits::fssimd, nsimds> ar;
+      friend simd_po_res<self>;
+      std::array<typename traits::fssimd, nsimds> data;
       const size_t k;
   };
 

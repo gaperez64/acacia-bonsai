@@ -4,7 +4,7 @@
 #include <experimental/simd>
 #include <iostream>
 
-#include "vectors/simd_po_res_sum.hh"
+#include "vectors/simd_po_res.hh"
 #include "utils/simd_traits.hh"
 
 namespace vectors {
@@ -66,7 +66,7 @@ namespace vectors {
 
 
       inline auto partial_order (const self& rhs) const {
-        return simd_po_res_sum (*this, rhs);
+        return simd_po_res (*this, rhs);
       }
 
       // Used by Sets, should be a total order.  Do not use.
@@ -135,7 +135,7 @@ namespace vectors {
       }
 
     private:
-      friend simd_po_res_sum<self>;
+      friend simd_po_res<self>;
       std::array<typename traits::fssimd, nsimds> data;
       const size_t k;
       int sum = 0;
