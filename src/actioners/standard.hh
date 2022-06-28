@@ -66,7 +66,12 @@ namespace actioners {
           }
         }
 
-        void setK (int newK) { K = (char) newK; }
+        void setK (int newK) {
+	  K = (char) newK;
+	  std::fill_n (backward_reset.begin (),
+                       vectors::bool_threshold,
+                       (char) (K - 1));
+	}
 
         auto& actions () { return input_output_fwd_actions; }
 
