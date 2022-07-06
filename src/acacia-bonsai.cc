@@ -202,24 +202,16 @@ namespace {
           auto ret_state = ret->new_state ();
           cache (ret_state, state, saved_o.id ());
           for (auto& e : aut->out (state)) {
-            auto cond = e.cond;
-            // e.cond = i1 & o1 || !i1 & !o1
 
-            while (cond != bddfalse) {
+            for (auto&& one_input_bdd : minterms_of (e.cond, all_inputs)) {
               // Pick one satisfying assignment where outputs all have values
-              bdd one_sat = bdd_satoneset (cond, all_outputs, bddtrue);
-              // Get the corresponding input bdd
-              bdd one_input_bdd =
-                bdd_exist (cond & bdd_exist (one_sat, all_inputs),
-                           all_outputs);
               ret->new_edge (ret_state,
                              recurse (e.dst,
-                                      bdd_exist (cond & one_input_bdd,
+                                      bdd_exist (e.cond & one_input_bdd,
                                                 all_inputs),
                                       recurse),
                              saved_o & one_input_bdd,
                              e.acc);
-              cond -= one_input_bdd;
             }
           }
           return ret_state;
@@ -281,6 +273,7 @@ namespace {
           unsigned v = aut->register_ap (spot::formula::ap(ap_i));
           all_outputs &= bdd_ithvar(v);
         }
+
         // If unreal but we haven't pushed outputs yet using X on formula
         if (not check_real and opt_unreal_x == UNREAL_X_AUTOMATON) {
           aut = push_outputs (aut, all_inputs, all_outputs);
@@ -336,7 +329,7 @@ namespace {
             utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
           return true;
         }
-        
+
 
         ////////////////////////////////////////////////////////////////////////
         // Build S^K_N game, solve it.
@@ -374,7 +367,7 @@ namespace {
 #define UNREACHABLE [] (int x) { assert (false); }
 
         bool realizable = false;
-        
+
         if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) { // Array & Bitsets
           static_switch_t<STATIC_ARRAY_CAP_MAX> {} (
             [&] (auto vnonbools) {
