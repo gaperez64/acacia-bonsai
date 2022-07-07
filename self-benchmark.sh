@@ -31,20 +31,23 @@ EOF
 
 # Experimentally determined
 best=$(<<EOF
--DDEFAULT_KMIN=5 -DDEFAULT_KINC=2
+-DDEFAULT_KMIN=2 -DDEFAULT_KINC=3
 -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
 -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
 -DBOOLEAN_STATES='boolean_states::forward_saturation'
 -DIOS_PRECOMPUTER='ios_precomputers::powset'
 -DINPUT_PICKER='input_pickers::critical'
+-DSIMD_IS_MAX='false'
+-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
+-DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
 EOF
     )
 
 # These all differ from the base configuration by /one/ option.
 confs=(
     [base]=" "
-#    [best]="$best"
-#    [best_nosimd]="$best -DNO_SIMD"
+    [best]="$best"
+    [best_nosimd]="$best -DNO_SIMD"
 #    [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation<typename SetOfStates::value_type>'"
     [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
@@ -61,11 +64,12 @@ confs=(
     [iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
     [iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
     [inputpicker_critical]="-DINPUT_PICKER=input_pickers::critical"
+    [inputpicker_critical_pq]="-DINPUT_PICKER=input_pickers::critical_pq"
     [inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
     [inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
     [downset_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
     [downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
-    [downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DARRAY_IMPL=simd_array_backed_sum -DVECTOR_IMPL=simd_vector_backed_sum"
+    [downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DARRAY_IMPL=simd_array_backed_sum -DVECTOR_IMPL=simd_vector_backed"
     [downset_v1ds]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split"
 #    [downset_v1dsio]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only"
 )
