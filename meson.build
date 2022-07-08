@@ -3,8 +3,14 @@ project ('Acacia Bonsai', ['c', 'cpp'],
          version : '0.0.1',
          license : 'GPL-3.0')
 
-add_global_arguments (['-ftrack-macro-expansion=0',
-                       '-fno-diagnostics-show-caret'], language: 'cpp')
+if meson.get_compiler('cpp').get_id() == 'clang'
+  extra_args = []
+else
+  extra_args = ['-ftrack-macro-expansion=0',
+                '-fno-diagnostics-show-caret']
+endif
+
+add_global_arguments (extra_args, language: 'cpp')
 
 spot_dep = dependency('libspot')
 bddx_dep = dependency('libbddx')
