@@ -565,7 +565,7 @@ $\mathcal{B}$}
     $y \leftarrow x$\;
     \While(\tcp*[h]{\rm Iterating through $x$'s minterms focusing on inputs}){$y \neq \bot$}{
       Let \(i\) be a pure input compatible with \(y\)\;
-      \(o' \leftarrow \exists I.\.x \land i\)\;
+      \(o' \leftarrow \exists I.\.x \land i\) \tcp*[h]{\rm Extract nonpure output compatible with \(i\)}\;
       Add $(\langle p, o\rangle, o \land i, \langle q, o'\rangle)$ to $\Delta$\;
       If $(q,o')$ is not in $S$, add it to $S$ and $V$\;
       $y \leftarrow y \land \lnot i$\;
@@ -593,7 +593,7 @@ all the tests were solved in less than 20 seconds by some tool during the
 competition, and among the 66 tests left out, 50 were not solved by any tool.
 This showcases a usual trend of synthesis tools: either they solve an instance
 fast, or they are unlikely to solve it at all.  To better focus on the fine
-performance differences between the tools, we set a timeout of 20 seconds for
+performance differences between the tools, we set a timeout of 60 seconds for
 all tests.
 
 We compared Acacia-Bonsai against itself using different choices of options, and
@@ -627,7 +627,7 @@ parameter by diverging from the defaults by a single option each time.
   impact, although a handful of tests saw an important boost.  Overall, the
   performance was slightly worse with automaton preprocessing, owing to the cost
   of computing the surely loosing states.  We elected to deactivate this option
-  in our best configuration, as this allowed one more test to pass.
+  in our best configuration, as this allowed four more tests to pass.
 \item Boolean states (\Cref{sec:implem-bool}).  This step allowed solving about
   5\% more tests when activated, globally.  
 \item Vectors and downsets (\Cref{sec:vecds}).  Despite a wealth of different
@@ -655,7 +655,8 @@ parameter by diverging from the defaults by a single option each time.
   \begin{figure}[h!]
     \centering
     \includegraphics[width=0.7\textwidth]{unreal}
-    \caption{Reducing unrealizability to realizability.}
+    \caption{Reducing unrealizability to realizability.  Timeout set at 20
+      seconds for readability.}
     \label{fig:unreal}
   \end{figure}
 
@@ -669,8 +670,8 @@ parameter by diverging from the defaults by a single option each time.
 \end{compactitem}
 
 \paragraph{Acacia-Bonsai and foes.}  The following plot shows the performance of
-the tools together.  Within our parameters, Acacia-Bonsai solves 675 tests,
-while Acacia+ solves 511, ltlsynt 682, and Strix 756.
+the tools together.  Within our parameters, Acacia-Bonsai solves 699 tests,
+while Acacia+ solves 560, ltlsynt 703, and Strix 770.
 
 \begin{figure}[h!]
   \centering
@@ -683,17 +684,17 @@ while Acacia+ solves 511, ltlsynt 682, and Strix 756.
 understand the intrinsic algorithmic competitiveness of the different tools, we
 study which instances were solved by our tool but not the others, and conversely:
 \begin{itemize}
-\item \emph{ltlsynt.}\quad This tool solves 7 more instances than Acacia-Bonsai
-  overall.  It solves 61 instances on which Acacia-Bonsai times out, with 19 of
-  them being unrealizable and the rest being realizable.  It would be
-  interesting to implement, within ltlsynt, the unrealizability technique we
-  describe in \Cref{sec:unreal}.
-\item \emph{Strix.}\quad This tool solves 81 more instances than Acacia-Bonsai
-  overall.  It solves 124 instances on which Acacia-Bonsai times out, 72 of
-  which are unrealizable.  For 113 of these instances, Strix answers in less
-  than 2 seconds.  Conversely, of the 42 instances on which Acacia-Bonsai
-  answers while Strix times out, 32 are solved within two seconds.  This
-  naturally hints at the possibility of combining the approaches of the two
+\item \emph{ltlsynt.}\quad This tool solves 4 more instances than Acacia-Bonsai
+  overall.  It solves 61 instances on which Acacia-Bonsai times out, with less
+  than a third of them being unrealizable instances.  It would be interesting to
+  implement, within ltlsynt, the unrealizability techniques we describe in
+  \Cref{sec:unreal}.
+\item \emph{Strix.}\quad This tool solves 71 more instances than Acacia-Bonsai
+  overall.  It solves 124 instances on which Acacia-Bonsai times out, 58\% of
+  which are unrealizable.  For 90\% of these 124 instances, Strix answers in
+  less than 2 seconds.  Conversely, of the instances on which Acacia-Bonsai
+  answers while Strix times out, three quarters are solved within two seconds.
+  This naturally hints at the possibility of combining the approaches of the two
   tools, using parallelization.
 \end{itemize}
 
@@ -715,6 +716,15 @@ future, we plan on investigating data structures for downsets that delay some of
 their computations in order to better leverage vectorized operations.  Such a
 data structure would not provide better theoretical performances, but would
 potentially outperform our other data structures.
+
+One surprise that prompts for further investigation is brought by our approach
+to unrealizability (\Cref{sec:unreal}): we provided two options for processing
+the input LTL formula into an automaton that expresses a realizable game iff the
+original formula was \emph{un}realizable.  Although one option consistently
+produces larger automata than the other, it appears that the downset-based
+realizability algorithm performs better on the larger automata.  A close study
+of the resulting automata may help in identifying salient features of automata
+that are easier for the Acacia algorithm.
 
 Lastly, we should note that this reimplementation of Acacia+ is not complete,
 since a few options of Acacia+ have not yet been included in Acacia-Bonsai yet.
