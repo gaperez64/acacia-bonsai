@@ -28,9 +28,9 @@ EOF
 
 if $disregard_spot; then
   grep 'Time disregarding' $2 | \
-     perl -pe 's@.*? / (.*?)".*Time disregarding Spot translation: (.*?) seconds.*"result": (.*?),.*@"\1": { "status": \3, "rtime": \2 },@;s/"OK"/true/;s@"(KO|TIMEOUT)"@false@'
+     perl -pe 's@.*? / (.*?)".*Time disregarding Spot translation: (.*?) seconds.*"result": (.*?),.*@"\1": { "status": \3, "rtime": \2 },@;s/"OK"/true/;s@"(KO|TIMEOUT|FAIL)"@false@'
 else
-  perl -pe 's@.*? / (.*?)".*"result": (.*?),.*"duration": (.*?),.*@"\1": { "status": \2, "rtime": \3 },@;s/"OK"/true/;s@"(KO|TIMEOUT)"@false@' $2
+  perl -pe 's@.*? / (.*?)".*"result": (.*?),.*"duration": (.*?),.*@"\1": { "status": \2, "rtime": \3 },@;s/"OK"/true/;s@"(KO|TIMEOUT|FAIL)"@false@' $2
 fi
 
 
