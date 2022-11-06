@@ -351,10 +351,17 @@ test_files = \
                  }
              }
 
+conf_data = configuration_data ()
+
+ltlsynt_exe = find_program ('ltlsynt', required : false)
 strix_exe = find_program ('strix', required : false)
 
-conf_data = configuration_data ()
-conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
+if ltlsynt_exe.found ()
+  conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
+else
+  conf_data.set_quoted ('LTLSYNT', '/bin/false')
+endif
+
 if strix_exe.found ()
   conf_data.set_quoted ('STRIX', strix_exe.full_path ())
 else
@@ -375,8 +382,11 @@ check_real_exe = find_program (check_real_file)
 # test_files = { 'realizable' : { 'tiny' :  [] } } ...
 
 backends = { 'ab'      : '-a', # Default, start acacia-bonsai
-             'ltlsynt' : '-l',
              'aca+'    : '-+' }
+
+if ltlsynt_exe.found ()
+  backends += { 'ltlsynt' : '-l' }
+endif
 
 if strix_exe.found ()
   backends += { 'strix' : '-s' }
