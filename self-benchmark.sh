@@ -33,7 +33,7 @@ EOF
 best=$(<<EOF
 -DDEFAULT_KMIN=2 -DDEFAULT_KINC=3
 -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
--DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
+-DAUT_PREPROCESSOR='aut_preprocessors::standard'
 -DBOOLEAN_STATES='boolean_states::forward_saturation'
 -DIOS_PRECOMPUTER='ios_precomputers::powset'
 -DINPUT_PICKER='input_pickers::critical'
