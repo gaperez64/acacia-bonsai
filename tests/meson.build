@@ -1715,6 +1715,12 @@ benchmark_files = \
                     
                   }
 
+benchmark_files += { 'syntcomp21': benchmark_files['syntcomp21'] + { 'all':
+   benchmark_files['syntcomp21']['0s-20s'] +
+   benchmark_files['syntcomp21']['20s-100s'] +
+   benchmark_files['syntcomp21']['100s-1000s'] +
+   benchmark_files['syntcomp21']['1000s-inf'] } }
+
 fs = import ('fs')
 
 foreach folder, testsets : benchmark_files
