@@ -75,6 +75,7 @@ confs=(
 )
 
 mode= # print, list
+force=false
 donot=()
 conflist=(${(k)confs})
 benchsuites=(--suite=$BENCHMARK_SUITE)
@@ -100,7 +101,7 @@ EOF
   echo "."
 fi
 
-while getopts "hplBCRb:t:c:" option; do
+while getopts "hplBCRfb:t:c:" option; do
     case $option; in
         h) cat <<EOF
 usage: $0 [-hplBCR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
@@ -110,6 +111,7 @@ usage: $0 [-hplBCR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
   -B: Do not build.
   -C: Do not compile.
   -R: Do not benchmark.
+  -f: Do not fail when a benchmark does, continue as if they passed.
   -b BENCHMARK: Run a specific benchmark suite (default: $BENCHMARK_SUITE).
   -t TIMEOUT: Use timeout factor TIMEOUT (default: $TIMEOUT_FACTOR).  Actual time is multiplied by 10.
   -c CONF,...: Only consider configurations listed.
@@ -120,6 +122,7 @@ EOF
         B) donot+=build;;
         C) donot+=compile;;
         R) donot+=benchmark;;
+        f) force=true;;
         c) conflist=(${(@s:,:)OPTARG});;
 	t) TIMEOUT_FACTOR=$OPTARG;;
 	b) benchsuites=()
@@ -207,7 +210,7 @@ if ! (( $donot[(Ie)benchmark] )); then
         cd $build
         echo -n "benchmarking $name (logfile: $log)... "
         meson test --benchmark $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
-        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
+        if ! $force && grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
             echo "FAILED; testlog stored at $log, _bm-logs/$name.json left untouched"
             exit 5
         else
