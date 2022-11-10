@@ -5,9 +5,9 @@ November 2022.
 
 Artifact link:           https://doi.org/10.5281/zenodo.7296659
 Repository URL:          https://github.com/gaperez64/acacia-bonsai/
+Version provided:        https://github.com/gaperez64/acacia-bonsai/tree/TACAS23
 License:                 GPLv3
 
-Additional requirements: Internet connection to install dependencies
 Experiment Runtime:      Compilation: 1 hour, Benchmarking: 9 hours
 
 * At a glimpse: suggested process
@@ -23,30 +23,39 @@ here for convenience.
 
   $ cd acacia-bonsai
 
-  $ ./self-benchmark.sh -b ab/syntcomp21/0s-20s -t 1
-  [wait 8 hours for completion]
+  $ ./self-benchmark.sh -b ab/syntcomp21/crit -t 1
+  [wait 8 hours for completion of benchmarking of 25 versions
+   of Acacia-Bonsai]
 
   $ for tool in ab strix ltlsynt aca+; do \
-      ./self-benchmark.sh -c best -b $tool/syntcomp21/0s-20s -t 1; \
+      rm -f build_best/benchmarked; \
+      ./self-benchmark.sh -f -c best -b $tool/syntcomp21/crit -t 1; \
       mv _bm-logs/best.json _bm-logs/$tool.json; \
     done
-  [wait 1 hour for completion]
+  [wait 1 hour for completion of benchmarking of the best version of
+   Acacia-Bonsai, and of competing tools]
 
   $ mkdir mkplottable
 
   $ for f in _bm-logs/*.json; do \
-      ../doc/benchmarks/meson-to-mkplot.sh ${f/json/} $f > mkplottable/$f; \
+      doc/benchmarks/meson-to-mkplot.sh $(basename $f .json) $f > mkplottable/$(basename $f); \
     done
 
   $ ~/mkplot/mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to plot.pdf mkplottable/*.json
-    [~/acacia-bonsai/_bm-logs/plot.pdf contains a plot of the benchmarking of
-     the different options of Acacia-Bonsai and other tools.]
+    [~/acacia-bonsai/plot.pdf contains a plot of the benchmarking of
+     the different options of Acacia-Bonsai and other tools]
 
 
-The last command creates plots based on a set of benchmarks.  To plot
-Acacia-Bonsai against other tools, use, instead of mkplottable/*.json,
-mkplottable/{ab,strix,ltlsynt,aca+}.json .
-
+Remarks:
+- The last command creates plots based on the set of all benchmarks.  To plot
+  Acacia-Bonsai against other tools, use, instead of mkplottable/*.json,
+  mkplottable/{ab,strix,ltlsynt,aca+}.json .
+- These benchmarks are run with a 10s timeout and rely on a fairly arbitrary
+  subset of all the available tests, hence the overall shape of the final graph
+  might differ from the one presented in the paper.  Replace '/syntcomp21/crit'
+  with '/syntcomp21/all' to run all tests and use '-t 6' instead of '-t 1' to
+  use a 60s timeout (allow for a few hours per benchmark).  See below for more
+  information.
 
 * Installing the artifact and the project's dependencies
 
@@ -161,11 +170,11 @@ of SyntComp21.  To replicate the benchmark, one can use:
 
 We do NOT recommend that the reviewer starts this many tests as this can take up
 to 130 hours.  Instead, they can obtain similar results by benchmarking only the
-ab/syntcomp21/0s-20s test suite and putting a time out at 10s:
+ab/syntcomp21/crit test suite and putting a time out at 10s:
 
-  $ ./self-benchmark.sh -b ab/syntcomp21/0s-20s -t 1
+  $ ./self-benchmark.sh -b ab/syntcomp21/crit -t 1
 
-This test suite contains about 90 instances.  With that time limit and the 25
+This test suite contains 94 instances.  With that time limit and the 25
 configurations being tested, all the benchmarks should run in at most 7 hours.
 Compiling the 25 configurations, which is also done by the script, should take
 at most 1 hour.
@@ -180,22 +189,24 @@ was used.  The test script allows testing for the different tools by varying the
   [... runs Acacia-Bonsai]
   $ cp _bm-logs/best.json acacia-bonsai.json
   
-  $ rm -f build_best/benchmarked; ./self-benchmark.sh -b strix/syntcomp21/all -t 6 -c best
+  $ rm -f build_best/benchmarked; ./self-benchmark.sh -f -b strix/syntcomp21/all -t 6 -c best
   [... runs Strix]
   $ cp _bm-logs/best.json strix.json
   
-  $ rm -f build_best/benchmarked; ./self-benchmark.sh -b ltlsynt/syntcomp21/all -t 6 -c best
+  $ rm -f build_best/benchmarked; ./self-benchmark.sh -f -b ltlsynt/syntcomp21/all -t 6 -c best
   [... runs ltlsynt]
   $ cp _bm-logs/best.json ltlsynt.json
   
-  $ rm -f build_best/benchmarked; ./self-benchmark.sh -b aca+/syntcomp21/all -t 6 -c best
+  $ rm -f build_best/benchmarked; ./self-benchmark.sh -f -b aca+/syntcomp21/all -t 6 -c best
   [... runs Acacia+]
   $ cp _bm-logs/best.json aca+.json
   
 Similarly, if the reviewer wishes to execute the benchmarks for the other tools,
-we encourage them to replace 'syntcomp21/all' with 'syntcomp21/0s-20s' and
-'-t 6' with '-t 1' to obtain reasonable running times (approx. 1 hour for all
-tools).
+we encourage them to replace 'syntcomp21/all' with 'syntcomp21/crit' and '-t 6'
+with '-t 1' to obtain reasonable running times (approx. 1 hour for all tools).
+The '-f' option is used to allow the script to assume that the test suite
+passed, which is not the case for ltlsynt (for technical reasons) and for
+Acacia+.
   
 ** Generating the plots
 
