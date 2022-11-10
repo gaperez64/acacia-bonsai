@@ -9,6 +9,7 @@ Version provided:        https://github.com/gaperez64/acacia-bonsai/tree/TACAS23
 License:                 GPLv3
 
 Experiment Runtime:      Compilation: 1 hour, Benchmarking: 9 hours
+Tested on:               Linux x86_64, Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz, 8GB of RAM
 
 * At a glimpse: suggested process
 
