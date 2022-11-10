@@ -19,10 +19,8 @@ run () {
 }
 
 echo "Install some apt dependencies."
-## apt-get install meson zsh libboost-dev libglib2.0-dev python3 python-is-python3
-for pkg in $THOME/packages/*.deb; do
-  run dpkg --force-all -i $pkg
-done
+## apt-get install meson zsh libboost-dev libglib2.0-dev python3 python-is-python3 python3-matplotlib
+run dpkg --force-all -i $THOME/packages/*.deb
 
 echo "Install extra dependencies that are not found in apt."
 
@@ -31,8 +29,8 @@ cd $THOME/deps/
 run dpkg -i --ignore-depends=glibc ./strix-21.0.0-1-amd64.deb
 run sed -i 's/^Depends: .*glibc[^,]*,/Depends: /' /var/lib/dpkg/status
 
-echo "Spot (from http://www.lrde.epita.fr/dload/spot/spot-2.11.2.tar.gz)"
-cd $THOME/deps/spot-2.11.2/
+echo "Spot (from http://www.lrde.epita.fr/dload/spot/spot-2.10.6.tar.gz)"
+cd $THOME/deps/spot/
 mkdir -p _build
 cd _build
 run ../configure --prefix=/usr --disable-devel --disable-debug --enable-optimizations --disable-python --disable-static --disable-doxygen
