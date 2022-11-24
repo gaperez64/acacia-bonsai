@@ -1,0 +1,32 @@
+// synthesis
+
+1) find for every dominating element an action that results in a vector dominated by the original
+for elem in downset:
+    for action in ...:
+        if transition(elem, action) <= elem:
+            // do this action when the state is a vector dominated by elem
+
+
+2) maybe such an action does not exist for some states, but if an action leads to a vector dominated by another
+   dominating vector which was already solved, this may still be okay?
+
+solved = {}
+for elem in downset:
+    for action in ...:
+        if transition(elem, action) <= elem:
+            solved.add(elem)
+
+// loop again and now consider any result dominated by some vector in solved to be okay
+for elem in downset:
+    for action in ...:
+        for s in solved:
+            if transition(elem, action) <= solved:
+                // this action takes us into the dominated elements of another element "s" from where on we can
+                // use that one's action - will this action also work for elements dominated by elem?
+                solved.add(elem)
+
+// ^ repeat until convergence/all elements in downset are solved
+
+which actions to loop over: only sufficient inputs?
+what is transition(s, a)?
+if it is realizable, will the algorithm always find a working policy?
