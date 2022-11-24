@@ -410,6 +410,12 @@ namespace {
 
         timer.stop ();
 
+        if (realizable)
+        {
+            utils::vout << "realizable -> synthesis!\n";
+        }
+
+
         return realizable;
       }
 
