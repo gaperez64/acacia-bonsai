@@ -380,8 +380,6 @@ namespace {
                         vbitsets.value>>>
                     (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
                   realizable = skn.solve ();
-
-                  utils::vout << "R: " << realizable << "\n";
                 },
                 UNREACHABLE,
                 vectors::nbools_to_nbitsets (nbitsetbools));

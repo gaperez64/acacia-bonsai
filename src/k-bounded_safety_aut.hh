@@ -90,8 +90,35 @@ class k_bounded_safety_aut_detail {
 
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
-          return true;
+        {
+            utils::vout << "Final F: " << F << "\n";
+            utils::vout << "= antichain of size " << F.size() << "\n";
 
+            // for every dominating element m
+            for(auto& m: F)
+            {
+                // for every input i
+                for(auto& x: inputs_to_ios)
+                {
+                    // ‘const std::pair<bdd, ios_precomputers::detail::standard_container<std::shared_ptr<spot::twa_graph>, std::vector<std::pair<int, int> > >::ios>’
+                    //utils::vout << x << "\n";
+                }
+
+                for (auto pair: input_output_fwd_actions)
+                {
+                    // first: BDD input
+                    // second: ‘std::__cxx11::list<std::vector<std::vector<std::pair<unsigned int, bool>>>>’
+                    // standard.hh: using input_and_actions = std::pair<bdd, action_vecs>;
+
+                    utils::vout << "1 " << pair.first << "\n";
+                    //utils::vout << "2 " << input_support << "\n";
+
+                    // calculate ActCPre_i(m)
+                    //act_cpre(SetOfStates(m.copy()), pair.first, actioner);
+                }
+            }
+            return true;
+        }
         cpre_inplace (F, *input, actioner);
         if (not F.contains (State (init))) {
           if (K >= Kto)
@@ -165,6 +192,30 @@ class k_bounded_safety_aut_detail {
       F.intersect_with (std::move (F1i));
       verb_do (2, vout << "F = " << std::endl << F);
     }
+
+
+    template <typename Action, typename Actioner>
+    void act_cpre(const SetOfStates& m, const Action& io_action, Actioner& actioner)
+    {
+        assert(m.size() == 1); // m is a single state in a set
+        utils::vout << "m. " << m << "\n";
+
+        const auto& [input, actions] = io_action.get();
+        // for all actions compatible with i
+        for(const auto& action_vec: actions)
+        {
+            // calculate bwd(m, io), see if this is dominated by some element in the antichain
+            SetOfStates&& bwd = m.apply ([this, &action_vec, &actioner] (const auto& _m) {
+                auto&& ret = actioner.apply (_m, action_vec, actioners::direction::backward);
+                verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
+                return std::move (ret);
+            });
+
+            utils::vout << "-> " << bwd << "\n";
+            // TODO. check if dominated
+        }
+    }
+
 
     template <typename IToActions>
     void io_stats (const IToActions& inputs_to_actions) {
