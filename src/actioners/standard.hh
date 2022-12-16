@@ -53,15 +53,33 @@ namespace actioners {
 
           std::set<input_and_actions, compare_actions> ioset;
 
+          // inputs_to_ios: a map [input i, set of sets of pairs (p, q)].  Each set of pairs (p, q)
+          // corresponds to an i-compatible IO x in the natural way; that is, it is the set
+          // of pairs (p, q) such that p -> q is compatible with x.
           for (const auto& [input, ios] : inputs_to_ios) {
+              // input: bdd
+              // ios: ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>,
+              //        vector<pair<int, int>>>::ios
+              // -> set of sets of pairs (p, q)
             std::list<action_vec> fwd_actions;
+            // action_vec : vector<vector<pair<unsigned int, bool>>>
+            // -> set of sets of pairs (p, q)
             for (const auto& transset : ios) {
+                // transset: vector<pair<int, int>>
+                // = vector of (p, q)
+                // turn this into a vector that maps q to a list of tuples (p, is_q_accepting)
+                // insert this map for every transset
               fwd_actions.push_back (compute_action_vec (transset));
             }
+            // per input: list (one element per compatible IO) of actions
             ioset.insert (std::pair (input, std::move (fwd_actions)));
           }
 
           for (auto it = ioset.begin(); it != ioset.end(); ) {
+              // what is being inserted:
+              // pair<bdd, list<vector<vector<pair<unsigned int, bool>>>>>
+              // -> for every input, a list (one per compatible IO) of actions
+              // where an action maps each state q to a list of (p, is_q_accepting) tuples
             input_output_fwd_actions.push_back (std::move (ioset.extract (it++).value ()));
           }
         }
@@ -113,6 +131,8 @@ namespace actioners {
           TODO ("We have two representations of the same thing here; "
                 "see if we can narrow it down to one.");
 
+          // ret_fwd: vector<vector<pair<unsigned int, bool>>>
+          // first index = state q, map each state q to a list of tuples (p, is_q_accepting)
           for (const auto& [p, q] : transset)
             ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));
 
