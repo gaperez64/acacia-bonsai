@@ -65,6 +65,7 @@ class k_bounded_safety_aut_detail {
       // Precompute the input and output actions.
       verb_do (1, vout << "IOS Precomputer..." << std::endl);
       auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+      // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, K);
       verb_do (1, vout << "Fetching IO actions" << std::endl);
@@ -92,9 +93,10 @@ class k_bounded_safety_aut_detail {
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
         {
-            utils::vout << "Final F: " << F << "\n";
-            utils::vout << "= antichain of size " << F.size() << "\n";
+            utils::vout << "Final F:\n" << F;
+            utils::vout << "= antichain of size " << F.size() << "\n\n";
 
+            int k = 1;
             // for every dominating element m
             for(auto& m: F)
             {
@@ -111,7 +113,8 @@ class k_bounded_safety_aut_detail {
                     //act_cpre(SetOfStates(m.copy()), x.second, actioner);
                 }
                 */
-
+                utils::vout << "Elem " << k++ << "\n";
+                int j = 1;
                 for(auto& tuple: input_output_fwd_actions)
                 {
                     // .first = input (BDD)
@@ -119,6 +122,7 @@ class k_bounded_safety_aut_detail {
                     //  -> for this input, a list (one per compatible IO) of actions
                     //  where an action maps each state q to a list of (p, is_q_accepting) tuples
                     //  these actions are used in act_cpre
+                    utils::vout << "Input " << j++ << " ";
                     act_cpre(SetOfStates(m.copy()), tuple.second, actioner, F);
                 }
             }
@@ -205,7 +209,6 @@ class k_bounded_safety_aut_detail {
     void act_cpre(const SetOfStates& m, const Actions& actions, Actioner& actioner, const  SetOfStates& antichain)
     {
         assert(m.size() == 1); // m is a single state in a set
-        //utils::vout << "m. " << m << "\n";
 
         bool dominated = false;
 
@@ -227,16 +230,18 @@ class k_bounded_safety_aut_detail {
         // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
         for(const auto& action_vec: actions)
         {
-            // calculate bwd(m, io), see if this is dominated by some element in the antichain
+            // calculate bwd(m, action), see if this is dominated by some element in the antichain
             SetOfStates&& bwd = m.apply ([this, &action_vec, &actioner] (const auto& _m) {
                 auto&& ret = actioner.apply (_m, action_vec, actioners::direction::backward);
                 verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
                 return std::move (ret);
             });
 
+            assert(bwd.size() == 1);
+
             //utils::vout << m << " -> " << bwd << "\n";
             // antichain = type downsets::vector_backed_bin<vectors::X_and_bitset<vectors::simd_array_backed_sum_<char, 1ul>, 0ul> >
-            if (antichain.contains(*m.begin()))
+            if (antichain.contains(*bwd.begin()))
             {
                 dominated = true;
             }
@@ -244,11 +249,11 @@ class k_bounded_safety_aut_detail {
         if (!dominated)
         {
             // not good, shouldn´t happen
-            utils::vout << "-> not dominated\n";
+            utils::vout << "-> no action exists\n";
         }
         else
         {
-            utils::vout << "-> dominated\n";
+            utils::vout << "-> action exists\n";
         }
     }
 

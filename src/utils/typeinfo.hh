@@ -2,7 +2,6 @@
 
 // https://stackoverflow.com/questions/4484982/how-to-convert-typename-t-to-string-in-c
 
-#include <iostream>
 #include <typeinfo>
 #include <cxxabi.h>
 

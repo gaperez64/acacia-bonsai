@@ -68,7 +68,7 @@ namespace ios_precomputers {
             { update_transset (); }
 
             auto operator* () const {
-              return current_io;
+              return current_io; // return current_io (vector<pair<p, q>>) AND the IO compatible with I that gave this action?
             }
 
           private:
@@ -78,6 +78,8 @@ namespace ios_precomputers {
             }
 
             void update_transset () {
+                // this updates current_io (set of (p, q) pairs) -> this should also store somewhere what the IO actually is
+                // is this letter?
               bdd letter = input & bdd_it::current_letter;
               current_io.clear ();
               for (size_t p = 0; p < aut->num_states (); ++p) {

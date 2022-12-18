@@ -1,8 +1,0 @@
-// synthesis
-
-1) find for every dominating element the outputs that results in a vector dominated by the original
-for elem in downset:
-    for input in ...:
-        for output in ...:
-            if transition(elem, input, output) <= downset:
-                policy[elem][input].add(output)
