@@ -101,6 +101,7 @@ class k_bounded_safety_aut_detail {
             for(auto& m: F)
             {
                 // for every input i
+
                 /*
                 for(auto& x: inputs_to_ios)
                 {
@@ -108,9 +109,6 @@ class k_bounded_safety_aut_detail {
                     // .second = ios_precomputers::detail::standard_container<
                     //               shared_ptr<spot::twa_graph>,
                     //               vector<pair<int, int>>>::ios
-                    // .second = transitions: set of sets of pairs (p, q), one set of sets per compatible IO
-                    // (
-                    //act_cpre(SetOfStates(m.copy()), x.second, actioner);
                 }
                 */
                 utils::vout << "Elem " << k++ << "\n";
@@ -211,22 +209,6 @@ class k_bounded_safety_aut_detail {
         assert(m.size() == 1); // m is a single state in a set
 
         bool dominated = false;
-
-        // for all "pure" IOs compatible with i
-        /*
-        for (size_t p = 0; p < aut->num_states (); ++p)
-        {
-            for (const auto& e : aut->out (p))
-            {
-                unsigned q = e.dst;
-                if ((e.cond & input) != bddfalse)
-                {
-                    // q can be reached from p with a transition that is compatible with the input
-                    //current_io.push_back (std::pair (p, q));
-                }
-            }
-        }
-        */
         // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
         for(const auto& action_vec: actions)
         {
