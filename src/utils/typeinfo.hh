@@ -31,11 +31,11 @@ public:
     T first;
     U second;
 
-    const auto& begin() const
+    auto begin() const
     {
         return first.begin();
     }
-    const auto& end() const
+    auto end() const
     {
         return first.end();
     }

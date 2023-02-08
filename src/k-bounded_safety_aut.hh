@@ -65,11 +65,11 @@ class k_bounded_safety_aut_detail {
       // Precompute the input and output actions.
       verb_do (1, vout << "IOS Precomputer..." << std::endl);
       auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support)) ();
-      // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, itpair<vector<pair<int, int>>, bdd>>
+      // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);
-      auto actioner = actioner_maker.make (aut, inputs_to_ios, K); // change to include IO
+      auto actioner = actioner_maker.make (aut, inputs_to_ios, K);
       verb_do (1, vout << "Fetching IO actions" << std::endl);
-      auto input_output_fwd_actions = actioner.actions ();
+      auto input_output_fwd_actions = actioner.actions (); // list<pair<bdd, list<action_vec>>>
       verb_do (1, io_stats (input_output_fwd_actions));
 
       auto safe_vector = utils::vector_mm<char> (aut->num_states (), K - 1);
@@ -84,6 +84,7 @@ class k_bounded_safety_aut_detail {
       init.assign (aut->num_states (), -1);
       init[aut->get_init_state_number ()] = 0;
 
+      /*
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
 
       do {
@@ -140,6 +141,7 @@ class k_bounded_safety_aut_detail {
       } while (1);
 
       std::abort ();
+      */
       return false;
     }
 
