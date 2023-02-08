@@ -34,6 +34,11 @@ namespace actioners {
                 return actions[i];
             }
 
+            const auto& operator[](size_t i) const
+            {
+                return actions[i];
+            }
+
             bool operator<(const action_vec& rhs) const
             {
                 return actions < rhs.actions;

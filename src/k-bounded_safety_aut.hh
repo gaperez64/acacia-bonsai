@@ -84,7 +84,6 @@ class k_bounded_safety_aut_detail {
       init.assign (aut->num_states (), -1);
       init[aut->get_init_state_number ()] = 0;
 
-      /*
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
 
       do {
@@ -94,27 +93,9 @@ class k_bounded_safety_aut_detail {
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
         {
-            // dit in functie steken, conditioneel met commandline argument in acacia-bonsai.cc
-            utils::vout << "Final F:\n" << F;
-            utils::vout << "= antichain of size " << F.size() << "\n\n";
-
-            int k = 1;
-            // for every dominating element m
-            for(auto& m: F)
+            if (true) // TODO command line argument
             {
-                // for every input i
-                utils::vout << "Elem " << k++ << "\n";
-                int j = 1;
-                for(auto& tuple: input_output_fwd_actions)
-                {
-                    // .first = input (BDD)
-                    // .second = list<vector<vector<pair<unsigned int, bool>>>>
-                    //  -> for this input, a list (one per compatible IO) of actions
-                    //  where an action maps each state q to a list of (p, is_q_accepting) tuples
-                    //  these actions are used in act_cpre
-                    utils::vout << "Input " << j++ << " "; // bdd_to_formula(.first)
-                    act_cpre(SetOfStates(m.copy()), tuple.second, actioner, F); // return set of IOs
-                }
+                synthesis(F, actioner);
             }
             return true;
         }
@@ -141,7 +122,6 @@ class k_bounded_safety_aut_detail {
       } while (1);
 
       std::abort ();
-      */
       return false;
     }
 
@@ -195,13 +175,44 @@ class k_bounded_safety_aut_detail {
       verb_do (2, vout << "F = " << std::endl << F);
     }
 
+    template<typename Antichain, typename Actioner>
+    void synthesis(Antichain& F, Actioner& actioner)
+    {
+        utils::vout << "Final F:\n" << F;
+        utils::vout << "= antichain of size " << F.size() << "\n\n";
+
+        auto input_output_fwd_actions = actioner.actions();
+
+        int k = 1;
+        // for every dominating element m
+        for(auto& m: F)
+        {
+            // for every input i
+            utils::vout << "Elem " << k++ << "\n";
+            int j = 1;
+            for(auto& tuple: input_output_fwd_actions)
+            {
+                // .first = input (BDD)
+                // .second = list<action_vec>
+                //  -> for this input, a list (one per compatible IO) of actions
+                //  where an action maps each state q to a list of (p, is_q_accepting) tuples
+                //  + the action includes the IO
+                //  these actions are used in act_cpre
+                utils::vout << "Input " << j++ << ": " << bdd_to_formula(tuple.first) << "\n";
+                act_cpre(SetOfStates(m.copy()), tuple.second, actioner, F); // return set of IOs
+                utils::vout << "\n";
+            }
+            utils::vout << "\n\n";
+        }
+    }
 
     template <typename Actions, typename Actioner>
-    void act_cpre(const SetOfStates& m, const Actions& actions, Actioner& actioner, const  SetOfStates& antichain)
+    void act_cpre(const SetOfStates& m, const Actions& actions, Actioner& actioner, const SetOfStates& antichain)
     {
         assert(m.size() == 1); // m is a single state in a set
 
         bool dominated = false;
+        utils::vout << "m = " << m;
         // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
         for(const auto& action_vec: actions)
         {
@@ -214,11 +225,13 @@ class k_bounded_safety_aut_detail {
 
             assert(bwd.size() == 1);
 
-            //utils::vout << m << " -> " << bwd << "\n";
+            utils::vout << "IO = " << bdd_to_formula(action_vec.IO) << ": -> " << bwd;
             // antichain = type downsets::vector_backed_bin<vectors::X_and_bitset<vectors::simd_array_backed_sum_<char, 1ul>, 0ul> >
             if (antichain.contains(*bwd.begin()))
             {
                 dominated = true;
+                utils::vout << "-> dominated\n";
+                //utils::vout << "dominated with IO = " << bdd_to_formula(action_vec.IO) << "\n";
             }
         }
         if (!dominated)

@@ -24,6 +24,7 @@ std::string get_typename(const T& x)
     }
 }
 
+// class that is like std::pair but allows iterating over the first element and accessing it with [] (assuming it's std::vector)
 template<typename T, typename U>
 class itpair
 {
@@ -44,6 +45,8 @@ public:
     {
         return first[i];
     }
+
+    // const []
 };
 
 //
