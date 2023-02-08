@@ -65,9 +65,9 @@ class k_bounded_safety_aut_detail {
       // Precompute the input and output actions.
       verb_do (1, vout << "IOS Precomputer..." << std::endl);
       auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support)) ();
-      // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, vector<pair<int, int>>>
+      // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, itpair<vector<pair<int, int>>, bdd>>
       verb_do (1, vout << "Make actions..." << std::endl);
-      auto actioner = actioner_maker.make (aut, inputs_to_ios, K);
+      auto actioner = actioner_maker.make (aut, inputs_to_ios, K); // change to include IO
       verb_do (1, vout << "Fetching IO actions" << std::endl);
       auto input_output_fwd_actions = actioner.actions ();
       verb_do (1, io_stats (input_output_fwd_actions));
@@ -93,6 +93,7 @@ class k_bounded_safety_aut_detail {
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
         {
+            // dit in functie steken, conditioneel met commandline argument in acacia-bonsai.cc
             utils::vout << "Final F:\n" << F;
             utils::vout << "= antichain of size " << F.size() << "\n\n";
 
@@ -101,16 +102,6 @@ class k_bounded_safety_aut_detail {
             for(auto& m: F)
             {
                 // for every input i
-
-                /*
-                for(auto& x: inputs_to_ios)
-                {
-                    // .first = input (BDD)
-                    // .second = ios_precomputers::detail::standard_container<
-                    //               shared_ptr<spot::twa_graph>,
-                    //               vector<pair<int, int>>>::ios
-                }
-                */
                 utils::vout << "Elem " << k++ << "\n";
                 int j = 1;
                 for(auto& tuple: input_output_fwd_actions)
@@ -120,8 +111,8 @@ class k_bounded_safety_aut_detail {
                     //  -> for this input, a list (one per compatible IO) of actions
                     //  where an action maps each state q to a list of (p, is_q_accepting) tuples
                     //  these actions are used in act_cpre
-                    utils::vout << "Input " << j++ << " ";
-                    act_cpre(SetOfStates(m.copy()), tuple.second, actioner, F);
+                    utils::vout << "Input " << j++ << " "; // bdd_to_formula(.first)
+                    act_cpre(SetOfStates(m.copy()), tuple.second, actioner, F); // return set of IOs
                 }
             }
             return true;

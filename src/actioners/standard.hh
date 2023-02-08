@@ -8,6 +8,25 @@ namespace actioners {
 
         using action = std::vector<std::pair<unsigned, bool>>; // All these pairs are unique by construction.
         using action_vec = std::vector<action>;          // Vector indexed by state number
+        /*
+        struct action_vec
+        {
+            std::vector<action> actions; // index by state number q to get a vector of (p, is_q_accepting) tuples
+            bdd IO; // the IO compatible with the input that gave this
+
+            action_vec() = default;
+            action_vec(size_t size, bdd IO): IO(IO)
+            {
+                actions.resize(size);
+            }
+
+            auto& operator[](size_t i)
+            {
+                return actions[i];
+            }
+        };
+        */
+
         using action_vecs = std::list<action_vec>;
         using input_and_actions = std::pair<bdd, action_vecs>;
         struct compare_actions {
@@ -56,18 +75,18 @@ namespace actioners {
           // inputs_to_ios: a map [input i, set of sets of pairs (p, q)].  Each set of pairs (p, q)
           // corresponds to an i-compatible IO x in the natural way; that is, it is the set
           // of pairs (p, q) such that p -> q is compatible with x.
+          // !! set of sets of pairs (p, q) -> set of pairs of (sets p, q and IO)
           for (const auto& [input, ios] : inputs_to_ios) {
               // input: bdd
               // ios: ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>,
-              //        vector<pair<int, int>>>::ios
+              //        vector<pair<int, int>>>::ios         !! -> pair<vector<pair<int, int>>, bdd>
               // -> set of sets of pairs (p, q)
             std::list<action_vec> fwd_actions;
             // action_vec : vector<vector<pair<unsigned int, bool>>>
-            // -> set of sets of pairs (p, q)
             for (const auto& transset : ios) {
-                // transset: vector<pair<int, int>>
-                // = vector of (p, q)
-                // turn this into a vector that maps q to a list of tuples (p, is_q_accepting)
+                // transset: pair<vector<pair<int, int>>, BDD>
+                // = vector of (p, q) and the IO
+                // turn this into a vector that maps q to a list of tuples (p, is_q_accepting) and keep the IO
                 // insert this map for every transset
               fwd_actions.push_back (compute_action_vec (transset));
             }
@@ -127,13 +146,17 @@ namespace actioners {
 
         template <typename Set>
         auto compute_action_vec (const Set& transset) {
-          action_vec ret_fwd (aut->num_states ());
+
+            // create action_vec and include transset.second = the IO
+          //action_vec ret_fwd (aut->num_states(), transset.second);
+            action_vec ret_fwd (aut->num_states());
           TODO ("We have two representations of the same thing here; "
                 "see if we can narrow it down to one.");
 
           // ret_fwd: vector<vector<pair<unsigned int, bool>>>
           // first index = state q, map each state q to a list of tuples (p, is_q_accepting)
-          for (const auto& [p, q] : transset)
+
+          for (const auto& [p, q] : transset.first)
             ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));
 
           return ret_fwd;
