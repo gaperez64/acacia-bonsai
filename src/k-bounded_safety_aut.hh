@@ -95,7 +95,7 @@ class k_bounded_safety_aut_detail {
         {
             if (true) // TODO command line argument
             {
-                synthesis(F, actioner);
+                synthesis(F, actioner, K);
             }
             return true;
         }
@@ -175,11 +175,72 @@ class k_bounded_safety_aut_detail {
       verb_do (2, vout << "F = " << std::endl << F);
     }
 
+
+
+    bdd binary_encode(unsigned int s, const std::vector<bdd>& src)
+    {
+        // turn the value into a BDD e.g. with 4 states so 2 variables:
+        // state 0: !x1 & !x2
+        // state 1:  x1 & !x2
+        // state 2: !x1 &  x2
+        // state 3:  x1 &  x2
+
+        bdd res = bddtrue;
+        for(const bdd& var: src)
+        {
+            // use least significant bit for first variable, next bit for second variable, and so on
+            bool negate = (s & 1) == 0;
+            s >>= 1;
+            res &= negate ? (!var) : var;
+        }
+        assert(s == 0);
+        return res;
+    }
+
+    bdd encode_full_state(const SetOfStates& m, const std::vector<std::vector<bdd>>& state_aps)
+    {
+        // combine binary_encode for each automaton state's value into one BDD
+        assert(m.size() == 1); // m is a single state in a set
+        bdd res = bddtrue;
+
+        auto& state = *m.begin();
+
+        for(unsigned int i = 0; i < state.size(); i++)
+        {
+            int value = state[i]; // should be between -1 and k
+            assert(value >= -1);
+            res &= binary_encode((unsigned int)(value+1), state_aps[i]);
+        }
+
+        return res;
+    }
+
     template<typename Antichain, typename Actioner>
-    void synthesis(Antichain& F, Actioner& actioner)
+    void synthesis(Antichain& F, Actioner& actioner, int K)
     {
         utils::vout << "Final F:\n" << F;
         utils::vout << "= antichain of size " << F.size() << "\n\n";
+
+        // create APs to encode the mapping of the automaton states to integers
+        // number of variables to encode one entry
+        unsigned int mapping_bits = ceil(log2(K + 2));
+        assert((K + 2) <= (1 << mapping_bits));
+        utils::vout << "K = " << K << " -> " << mapping_bits << " bits\n";
+        utils::vout << "Number of automaton states = " << aut->num_states() << "\n";
+
+
+        // create atomic propositions
+        std::vector<std::vector<bdd>> state_aps(aut->num_states());
+        for(unsigned int s = 0; s < aut->num_states(); s++)
+        {
+            for(unsigned int i = 0; i < mapping_bits; i++)
+            {
+                unsigned int v = aut->register_ap(spot::formula::ap("S"+std::to_string(s)+"_"+std::to_string(i)));
+                state_aps[s].push_back(bdd_ithvar(v)); // store v instead of the bdd object itself?
+            }
+        }
+
+        bdd encoding = bddfalse;
 
         auto input_output_fwd_actions = actioner.actions();
 
@@ -187,9 +248,13 @@ class k_bounded_safety_aut_detail {
         // for every dominating element m
         for(auto& m: F)
         {
-            // for every input i
             utils::vout << "Elem " << k++ << "\n";
             int j = 1;
+            SetOfStates m_in_set = SetOfStates(m.copy());
+            bdd states_encoding = encode_full_state(m_in_set, state_aps);
+            bdd IO_encoding = bddfalse;
+
+            // for every input i
             for(auto& tuple: input_output_fwd_actions)
             {
                 // .first = input (BDD)
@@ -199,50 +264,61 @@ class k_bounded_safety_aut_detail {
                 //  + the action includes the IO
                 //  these actions are used in act_cpre
                 utils::vout << "Input " << j++ << ": " << bdd_to_formula(tuple.first) << "\n";
-                act_cpre(SetOfStates(m.copy()), tuple.second, actioner, F); // return set of IOs
+
+                // add all IOs that are good and are compatible with this input
+                IO_encoding |= act_cpre(m_in_set, tuple.second, actioner, F);
                 utils::vout << "\n";
             }
+            // add all the IOs that are good in this state
+            encoding |= states_encoding & IO_encoding;
             utils::vout << "\n\n";
         }
+
+        utils::vout << "Resulting BDD:\n" << bdd_to_formula(encoding) << "\n";
     }
 
     template <typename Actions, typename Actioner>
-    void act_cpre(const SetOfStates& m, const Actions& actions, Actioner& actioner, const SetOfStates& antichain)
+    bdd act_cpre(const SetOfStates& m, const Actions& actions, Actioner& actioner, const SetOfStates& antichain)
     {
         assert(m.size() == 1); // m is a single state in a set
 
         bool dominated = false;
         utils::vout << "m = " << m;
+        bdd good_IOs = bddfalse;
+
         // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
         for(const auto& action_vec: actions)
         {
-            // calculate bwd(m, action), see if this is dominated by some element in the antichain
-            SetOfStates&& bwd = m.apply ([this, &action_vec, &actioner] (const auto& _m) {
-                auto&& ret = actioner.apply (_m, action_vec, actioners::direction::backward);
+            // calculate fwd(m, action), see if this is dominated by some element in the antichain
+            SetOfStates&& fwd = m.apply ([this, &action_vec, &actioner] (const auto& _m) {
+                auto&& ret = actioner.apply (_m, action_vec, actioners::direction::forward);
                 verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
                 return std::move (ret);
             });
 
-            assert(bwd.size() == 1);
+            assert(fwd.size() == 1);
 
-            utils::vout << "IO = " << bdd_to_formula(action_vec.IO) << ": -> " << bwd;
-            // antichain = type downsets::vector_backed_bin<vectors::X_and_bitset<vectors::simd_array_backed_sum_<char, 1ul>, 0ul> >
-            if (antichain.contains(*bwd.begin()))
+            //utils::vout << "IO = " << bdd_to_formula(action_vec.IO) << ": -> " << fwd;
+            // antichain = type downsets::vector_backed_bin<vectors::X_and_bitset<vectors::simd_array_backed_sum_<char, 1ul>, 0ul>>
+            if (antichain.contains(*fwd.begin()))
             {
                 dominated = true;
-                utils::vout << "-> dominated\n";
-                //utils::vout << "dominated with IO = " << bdd_to_formula(action_vec.IO) << "\n";
+                //utils::vout << "-> dominated\n";
+                utils::vout << "dominated with IO = " << bdd_to_formula(action_vec.IO) << ": " << fwd;
+                good_IOs |= action_vec.IO;
             }
         }
         if (!dominated)
         {
             // not good, shouldn´t happen
-            utils::vout << "-> no action exists\n";
+            utils::vout << "-> NO action exists\n";
         }
         else
         {
             utils::vout << "-> action exists\n";
         }
+
+        return good_IOs;
     }
 
 

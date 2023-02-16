@@ -9,6 +9,7 @@ namespace actioners {
         using action = std::vector<std::pair<unsigned, bool>>; // All these pairs are unique by construction.
         //using action_vec = std::vector<action>;          // Vector indexed by state number
 
+        // store action vector per state + IO
         struct action_vec
         {
             std::vector<action> actions; // index by state number q to get a vector of (p, is_q_accepting) tuples
@@ -107,7 +108,7 @@ namespace actioners {
             std::list<action_vec> fwd_actions;
             // action_vec : vector<vector<pair<unsigned int, bool>>>
             for (const auto& transset : ios) {
-                // transset: itpair<vector<pair<int, int>>, bdd>
+                // transset: transitions_io_pair (stores vector<pair<p, q>> and IO)
                 // turn this into a vector that maps q to a list of tuples (p, is_q_accepting) and keep the IO
                 // insert this map for every transset
                 fwd_actions.push_back (compute_action_vec (transset));
@@ -172,7 +173,7 @@ namespace actioners {
         auto compute_action_vec (const Set& transset) {
 
             // create action_vec and include transset.second = the IO
-          action_vec ret_fwd (aut->num_states(), transset.second);
+          action_vec ret_fwd (aut->num_states(), transset.IO);
           //action_vec ret_fwd (aut->num_states());
           TODO ("We have two representations of the same thing here; "
                 "see if we can narrow it down to one.");
@@ -180,7 +181,7 @@ namespace actioners {
           // ret_fwd: vector<vector<pair<unsigned int, bool>>>
           // first index = state q, map each state q to a list of tuples (p, is_q_accepting)
 
-          for (const auto& [p, q] : transset.first)
+          for (const auto& [p, q] : transset)
             ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));
 
           return ret_fwd;

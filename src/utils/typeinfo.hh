@@ -24,42 +24,10 @@ std::string get_typename(const T& x)
     }
 }
 
-// class that is like std::pair but allows iterating over the first element and accessing it with [] (assuming it's std::vector)
-template<typename T, typename U>
-class itpair
-{
-public:
-    T first;
-    U second;
-
-    auto begin() const
-    {
-        return first.begin();
-    }
-    auto end() const
-    {
-        return first.end();
-    }
-
-    auto& operator[](size_t i)
-    {
-        return first[i];
-    }
-
-    // const []
-};
-
 //
 
 template<class T, class U>
 std::ostream& operator<<(std::ostream& ost, const std::pair<T, U>& pair)
-{
-    ost << "(" << pair.first << ", " << pair.second << ")";
-    return ost;
-}
-
-template<class T, class U>
-std::ostream& operator<<(std::ostream& ost, const itpair<T, U>& pair)
 {
     ost << "(" << pair.first << ", " << pair.second << ")";
     return ost;
