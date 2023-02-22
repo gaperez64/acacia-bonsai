@@ -109,7 +109,6 @@ namespace ios_precomputers {
                   unsigned q = e.dst;
                   if ((e.cond & letter) != bddfalse)
                   {
-                      //std::cout << "pair (" << p << ", " << q << "): letter = " << spot::bdd_to_formula(letter, aut->get_dict()) << std::endl;
                       current_io.push_back(std::pair(p, q));
                   }
                 }

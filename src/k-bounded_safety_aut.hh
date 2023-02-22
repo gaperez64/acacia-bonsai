@@ -176,28 +176,7 @@ class k_bounded_safety_aut_detail {
     }
 
 
-    /*
-    // get index of a dominating element, returns -1 if not contained
-    template<class Vector>
-    int get_index(const SetOfStates& antichain, const Vector& v) const
-    {
-        int i = 0;
-        auto it = antichain.begin();
-        while (*it != v)
-        {
-            i++;
-            ++it;
-            if (!(it != antichain.end()))
-            {
-                return -1;
-            }
-        }
-        assert(i < antichain.size());
-        return i;
-    }
-    */
-
-    // get index of the first domating element that dominates the vector v
+    // get index of the first dominating element that dominates the vector v
     template<class Vector>
     int get_dominated_index(const SetOfStates& antichain, const Vector& v) const
     {
@@ -217,7 +196,7 @@ class k_bounded_safety_aut_detail {
         return i;
     }
 
-    bdd binary_encode(unsigned int s, const std::vector<bdd>& src)
+    bdd binary_encode(unsigned int s, const std::vector<bdd>& src) // ~ bdd_buildcube(s, src.size(), src.data())
     {
         // turn the value into a BDD e.g. with 4 states so 2 variables:
         // state 0: !x1 & !x2
@@ -245,6 +224,21 @@ class k_bounded_safety_aut_detail {
         return binary_encode(index, state_vars);
     }
 
+    // this can't be the best way to do this..
+    std::vector<bdd> cube_to_vector(const bdd& cube)
+    {
+        std::vector<bdd> res;
+        for(int i = 0; i < bdd_varnum(); i++)
+        {
+            bdd var = bdd_ithvar(i);
+            if (cube == (cube & var))
+            {
+                res.push_back(var);
+            }
+        }
+        return res;
+    }
+
     template<typename Antichain, typename Actioner>
     void synthesis(Antichain& F, Actioner& actioner, int K)
     {
@@ -259,13 +253,16 @@ class k_bounded_safety_aut_detail {
 
         // create atomic propositions
         std::vector<bdd> state_vars, state_vars_prime;
+        bdd state_vars_cube = bddtrue, state_vars_prime_cube = bddtrue;
         for(unsigned int i = 0; i < mapping_bits; i++)
         {
-            unsigned int v = aut->register_ap(spot::formula::ap("S"+std::to_string(i)));
+            unsigned int v = aut->register_ap(spot::formula::ap("Y"+std::to_string(i)));
             state_vars.push_back(bdd_ithvar(v)); // store v instead of the bdd object itself?
+            state_vars_cube &= bdd_ithvar(v);
 
-            v = aut->register_ap(spot::formula::ap("Sp"+std::to_string(i)));
+            v = aut->register_ap(spot::formula::ap("Z"+std::to_string(i)));
             state_vars_prime.push_back(bdd_ithvar(v));
+            state_vars_prime_cube &= bdd_ithvar(v);
         }
 
         bdd encoding = bddfalse;
@@ -301,7 +298,91 @@ class k_bounded_safety_aut_detail {
             utils::vout << "\n\n";
         }
 
-        utils::vout << "Resulting BDD:\n" << bdd_to_formula(encoding) << "\n";
+        utils::vout << "Resulting BDD:\n" << bdd_to_formula(encoding) << "\n\n";
+
+
+        // g_o1(I, L) g_o2 ... maken: g_o1 geeft gegeven een input en Latch (= huidige state: welk dominating element)
+        // of o1 true moet zijn of niet
+        // f_L1(I, L) f_L2 ... geeft wat de nieuwe state is, één functie per variable (bv 4 dom elements -> 2 vars, X en X')
+        std::vector<bdd> output_vector = cube_to_vector(output_support);
+
+        // assumes deterministic policy?
+        for(const bdd& o: output_vector)
+        {
+            bdd g_o = bdd_exist(encoding & o, output_support & state_vars_prime_cube);
+            utils::vout << "g_" << bdd_to_formula(o) << ": " << bdd_to_formula(g_o) << "\n";
+        }
+
+        for(const bdd& m: state_vars_prime)
+        {
+            bdd f_l = bdd_exist(encoding & m, output_support & state_vars_prime_cube);
+            utils::vout << "f_" << bdd_to_formula(m) << ": " << bdd_to_formula(f_l) << "\n";
+        }
+
+        // initial state
+        auto init_vector = utils::vector_mm<char> (aut->num_states(), -1);
+        //for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
+        //    init_vector[i] = 0;
+        init_vector[aut->get_init_state_number()] = 0;
+        utils::vout << "Initial vector: " << State(init_vector) << "\n";
+        int init_index = get_dominated_index(F, State(init_vector));
+        utils::vout << "Initial state: " << bdd_to_formula(binary_encode(init_index, state_vars)) << " (index " << init_index << ")\n";
+
+        utils::vout << "\n\n\n";
+
+        //
+        // https://github.com/gaperez64/AbsSynthe/blob/native-dev-par/source/algos.cpp#L129
+        bdd care_set = bddfalse; // encoding for states we care about?
+        for(unsigned int s = 0; s < F.size(); s++)
+        {
+            care_set |= binary_encode(s, state_vars); // | binary_encode(s, state_vars_prime);
+        }
+
+        bdd strategy = encoding;
+
+        std::vector<bdd> inputs = output_vector;
+        //std::vector<unsigned> c_input_lits;
+        std::vector<bdd> c_input_funs;
+
+        for(const bdd& c: inputs)
+        {
+            bdd others_cube = bddtrue;
+            unsigned others_count = 0;
+
+            for(const bdd& j: inputs)
+            {
+                if (c == j) continue;
+                others_cube &= j;
+                others_count++;
+            }
+
+            bdd c_arena;
+            if (others_count > 0)
+            {
+                c_arena = bdd_exist(strategy, others_cube);
+            }
+            else
+            {
+                c_arena = strategy;
+            }
+
+            bdd can_be_true = bdd_restrict(c_arena, c); // positive cofactor
+            bdd can_be_false = bdd_restrict(c_arena, !c); // negative cofactor
+
+            bdd must_be_true = (!can_be_false) & can_be_true;
+            bdd must_be_false = (!can_be_true) & can_be_false;
+
+            bdd local_care_set = care_set & (must_be_true | must_be_false);
+
+            bdd res = bdd_restrict(must_be_true, local_care_set); // opt1
+            //bdd opt2 = bdd_restrict(!must_be_false, local_care_set);
+
+            //strategy = bdd_compose(strategy, res, c);
+            strategy &= (!c | res) & (!res | c);
+            c_input_funs.push_back(res);
+
+            utils::vout << "c = " << bdd_to_formula(c) << ": " << bdd_to_formula(res) << ", strat = " << bdd_to_formula(strategy) << "\n";
+        }
     }
 
     template <typename Actions, typename Actioner>
@@ -310,7 +391,6 @@ class k_bounded_safety_aut_detail {
         assert(m.size() == 1); // m is a single state in a set
 
         bool dominated = false;
-        //utils::vout << "m = " << m;
         bdd transitions = bddfalse;
 
         // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
@@ -330,6 +410,7 @@ class k_bounded_safety_aut_detail {
                 dominated = true;
                 utils::vout << "dominated with IO = " << bdd_to_formula(action_vec.IO) << ": " << fwd;
                 transitions |= action_vec.IO & encode_state(fwd, antichain, state_vars_prime);
+                // return transitions; <- for deterministic policy using first IO that is found
             }
         }
 
