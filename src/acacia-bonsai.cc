@@ -60,7 +60,8 @@ enum {
   OPT_INPUT = 'i',
   OPT_OUTPUT = 'o',
   OPT_CHECK = 'c',
-  OPT_VERBOSE = 'v'
+  OPT_VERBOSE = 'v',
+  OPT_SYNTH = 'S'
 } ;
 
 enum unreal_x_t {
@@ -81,6 +82,10 @@ static const argp_option options[] = {
     "outs", OPT_OUTPUT, "PROPS", 0,
     "comma-separated list of controllable (a.k.a. output) atomic"
     " propositions", 0
+  },
+  {
+      "synth", OPT_SYNTH, "FNAME", 0,
+      ".aag filename, stdout, or empty", 0
   },
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
@@ -143,6 +148,7 @@ Exit status:\n\
 
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
+std::string synth_fname;
 
 
 enum {
@@ -379,7 +385,7 @@ namespace {
                         vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
                         vbitsets.value>>>
                     (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-                  realizable = skn.solve ();
+                  realizable = skn.solve (synth_fname);
                 },
                 UNREACHABLE,
                 vectors::nbools_to_nbitsets (nbitsetbools));
@@ -396,7 +402,7 @@ namespace {
                     vectors::VECTOR_IMPL<VECTOR_ELT_T>,
                     vbitsets.value>>>
                 (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-              realizable = skn.solve ();
+              realizable = skn.solve (synth_fname);
             },
             UNREACHABLE,
             vectors::nbools_to_nbitsets (nbitsetbools));
@@ -448,6 +454,11 @@ parse_opt (int key, char *arg, struct argp_state *) {
       }
 
       break;
+    }
+
+    case OPT_SYNTH: {
+        synth_fname = arg;
+        break;
     }
 
     case OPT_UNREAL_X: {

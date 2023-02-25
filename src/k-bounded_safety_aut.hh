@@ -25,6 +25,7 @@
 #include "ios_precomputers.hh"
 #include "input_pickers.hh"
 #include "actioners.hh"
+#include "aiger.hh"
 
 //#define debug(A...) do { std::cout << A << std::endl; } while (0)
 #define debug(A...)
@@ -59,7 +60,7 @@ class k_bounded_safety_aut_detail {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
-    bool solve () {
+    bool solve (const std::string& synth_fname) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -93,9 +94,9 @@ class k_bounded_safety_aut_detail {
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
         {
-            if (true) // TODO command line argument
+            if (!synth_fname.empty())
             {
-                synthesis(F, actioner);
+                synthesis(F, actioner, synth_fname);
             }
             return true;
         }
@@ -251,7 +252,7 @@ class k_bounded_safety_aut_detail {
     };
 
     template<typename Antichain, typename Actioner>
-    void synthesis(Antichain& F, Actioner& actioner)
+    void synthesis(Antichain& F, Actioner& actioner, const std::string& synth_fname)
     {
         utils::vout << "Final F:\n" << F;
         utils::vout << "= antichain of size " << F.size() << "\n";
@@ -300,6 +301,8 @@ class k_bounded_safety_aut_detail {
                 //IOXp_encoding |= act_cpre(m_in_set, tuple.second, actioner, F, state_vars_prime);
                 std::pair<bdd, State> p = get_transition(states[src], tuple.second, actioner, F);
                 int index = get_dominated_index(states, p.second);
+                // ^ returns index of FIRST element that dominates
+
                 if (index == -1)
                 {
                     // we didn't know this state was reachable yet: it's not in states
@@ -329,6 +332,7 @@ class k_bounded_safety_aut_detail {
             }
         }
 
+        utils::vout << "\n";
 
         // create APs to encode the mapping of the automaton states to integers
         // number of variables to encode the state
@@ -369,8 +373,14 @@ class k_bounded_safety_aut_detail {
 
         utils::vout << "Resulting BDD:\n" << bdd_to_formula(encoding) << "\n\n";
 
-        // turn output cube (single bdd) into vector<bdd>
+        // turn cube (single bdd) into vector<bdd>
+        std::vector<bdd> input_vector = cube_to_vector(input_support);
         std::vector<bdd> output_vector = cube_to_vector(output_support);
+
+
+        // AIGER
+        aiger aig(input_vector, state_vars, (int)output_vector.size());
+        int i = 0;
 
 
         // for each output: function(current_state, input) that says whether this output is made true
@@ -380,8 +390,10 @@ class k_bounded_safety_aut_detail {
             bdd neg = !bdd_exist(encoding & (!o), output_support & state_vars_prime_cube);
             bdd g_o = (bdd_nodecount(pos) < bdd_nodecount(neg)) ? pos : neg;
             utils::vout << "g_" << bdd_to_formula(o) << ": " << bdd_to_formula(g_o) << "\n";
+            aig.add_output(i++, g_o);
         }
 
+        i = 0;
         // new state as function(current_state, input)
         for(const bdd& m: state_vars_prime)
         {
@@ -389,9 +401,25 @@ class k_bounded_safety_aut_detail {
             bdd neg = !bdd_exist(encoding & (!m), output_support & state_vars_prime_cube);
             bdd f_l = (bdd_nodecount(pos) < bdd_nodecount(neg)) ? pos : neg;
             utils::vout << "f_" << bdd_to_formula(m) << ": " << bdd_to_formula(f_l) << "\n";
+            aig.add_latch(i++, f_l);
         }
 
-        utils::vout << "\n\n\n";
+
+
+
+        if (synth_fname != "stdout")
+        {
+            std::ofstream f(synth_fname);
+            aig.output(f, false);
+            f.close();
+        }
+        else
+        {
+            utils::vout << "\n\n\n";
+            aig.output(utils::vout, true);
+        }
+
+        utils::vout << "\n\n";
     }
 
     // return IO + destination state (one IO, one destination state: deterministic)
