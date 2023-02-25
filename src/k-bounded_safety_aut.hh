@@ -95,7 +95,7 @@ class k_bounded_safety_aut_detail {
         {
             if (true) // TODO command line argument
             {
-                synthesis(F, actioner, K);
+                synthesis(F, actioner);
             }
             return true;
         }
@@ -177,8 +177,9 @@ class k_bounded_safety_aut_detail {
 
 
     // get index of the first dominating element that dominates the vector v
-    template<class Vector>
-    int get_dominated_index(const SetOfStates& antichain, const Vector& v) const
+    // Container can be SetOfStates, or std::vector
+    template<class Container>
+    int get_dominated_index(const Container& antichain, const State& v) const
     {
         int i = 0;
         auto it = antichain.begin();
@@ -186,14 +187,26 @@ class k_bounded_safety_aut_detail {
         {
             if (SetOfStates((*it).copy()).contains(v))
             {
-                break;
+                return i;
             }
-
             i++;
             ++it;
         }
-        assert((size_t)i < antichain.size()); // fails if no i is found: will be equal to size
-        return i;
+        return -1; // not found
+    }
+
+    template<class Container>
+    State get_dominated_element(const Container& antichain, const State& v) const
+    {
+        int i = 0;
+        auto it = antichain.begin();
+        while (it != antichain.end())
+        {
+            if (SetOfStates((*it).copy()).contains(v)) return (*it).copy();
+            i++;
+            ++it;
+        }
+        std::abort(); // element should be found, if we reach this -> bad
     }
 
     bdd binary_encode(unsigned int s, const std::vector<bdd>& src) // ~ bdd_buildcube(s, src.size(), src.data())
@@ -216,14 +229,6 @@ class k_bounded_safety_aut_detail {
         return res;
     }
 
-    bdd encode_state(const SetOfStates& m, const SetOfStates& antichain, const std::vector<bdd>& state_vars)
-    {
-        assert(m.size() == 1); // m is a single state in a set
-        auto& state = *m.begin();
-        int index = get_dominated_index(antichain, state); // get_index(antichain, state);
-        return binary_encode(index, state_vars);
-    }
-
     // this can't be the best way to do this..
     std::vector<bdd> cube_to_vector(const bdd& cube)
     {
@@ -239,17 +244,98 @@ class k_bounded_safety_aut_detail {
         return res;
     }
 
+    struct transition
+    {
+        bdd IO;
+        int new_state = -1;
+    };
+
     template<typename Antichain, typename Actioner>
-    void synthesis(Antichain& F, Actioner& actioner, int K)
+    void synthesis(Antichain& F, Actioner& actioner)
     {
         utils::vout << "Final F:\n" << F;
-        utils::vout << "= antichain of size " << F.size();
+        utils::vout << "= antichain of size " << F.size() << "\n";
+
+        // Latches in the AIGER file are initialized to zero, so it would be nice if index 0 is the initial state
+        // -> create new std::vector of dominating elements, start with only an initial one, and then add
+        //    the reachable ones
+        std::vector<State> states;
+
+        auto init_vector = utils::vector_mm<char>(aut->num_states(), -1);
+        init_vector[aut->get_init_state_number()] = 0;
+        int init_index = get_dominated_index(F, State(init_vector));
+        utils::vout << "Initial vector: " << State(init_vector) << " (index " << init_index << ")\n";
+        states.push_back(get_dominated_element(F, State(init_vector)));
+        utils::vout << "-> states = " << states << "\n\n";
+
+        // explore and store transitions
+        auto input_output_fwd_actions = actioner.actions();
+
+        std::vector<std::vector<transition>> transitions; // for every state: a vector of transitions (one per input)
+        std::vector<unsigned int> states_todo = {0};
+
+        while (!states_todo.empty())
+        {
+            unsigned int src = states_todo[states_todo.size()-1];
+            states_todo.pop_back();
+
+            utils::vout << "Element " << states[src] << "\n";
+
+            // make sure transitions vector is large enough
+            while (src >= transitions.size())
+            {
+                transitions.push_back({});
+            }
+
+            for(auto& tuple: input_output_fwd_actions)
+            {
+                // .first = input (BDD)
+                // .second = list<action_vec>
+                //  -> for this input, a list (one per compatible IO) of actions
+                //  where an action maps each state q to a list of (p, is_q_accepting) tuples
+                //  + the action includes the IO
+                utils::vout << "Input: " << bdd_to_formula(tuple.first) << "\n";
+
+                // add all compatible IOs that keep us in the antichain (+ encoding of destination state)
+                //IOXp_encoding |= act_cpre(m_in_set, tuple.second, actioner, F, state_vars_prime);
+                std::pair<bdd, State> p = get_transition(states[src], tuple.second, actioner, F);
+                int index = get_dominated_index(states, p.second);
+                if (index == -1)
+                {
+                    // we didn't know this state was reachable yet: it's not in states
+                    // -> add it, and add it to states_todo so we also check its successors
+                    index = states.size();
+                    states.push_back(get_dominated_element(F, p.second));
+                    states_todo.push_back(index);
+                }
+
+                transitions[src].push_back({p.first, index});
+
+                utils::vout << "\n";
+            }
+
+            utils::vout << "\n";
+        }
+
+        utils::vout << "-> states = " << states << "\n";
+
+        // Print transitions
+        for(unsigned int i = 0; i < states.size(); i++)
+        {
+            utils::vout << "State " << i << ":\n";
+            for(const auto& t: transitions[i])
+            {
+                utils::vout << bdd_to_formula(t.IO) << " -> state " << t.new_state << "\n";
+            }
+        }
+
 
         // create APs to encode the mapping of the automaton states to integers
         // number of variables to encode the state
-        unsigned int mapping_bits = ceil(log2(F.size()));
-        assert(F.size() <= (1ull << mapping_bits));
-        utils::vout << " -> " << mapping_bits << " bit(s)\n\n";
+        unsigned int mapping_bits = ceil(log2(states.size()));
+        assert(states.size() <= (1ull << mapping_bits));
+        utils::vout << states.size() << " reachable states -> " << mapping_bits << " bit(s)\n\n";
+		
 
         // create atomic propositions
         std::vector<bdd> state_vars, state_vars_prime;
@@ -265,139 +351,58 @@ class k_bounded_safety_aut_detail {
             state_vars_prime_cube &= bdd_ithvar(v);
         }
 
+
         bdd encoding = bddfalse;
 
-        auto input_output_fwd_actions = actioner.actions();
-
-        int k = 0;
-        // for every dominating element m
-        for(auto& m: F)
+        // create BDD encoding using the states & transitions
+        for(unsigned int i = 0; i < states.size(); i++)
         {
-            utils::vout << "Elem " << k++ << "\n";
-            SetOfStates m_in_set = SetOfStates(m.copy());
-            bdd state_encoding = encode_state(m_in_set, F, state_vars);
-            bdd IOXp_encoding = bddfalse; // encoding of I, O, and X'
-
-            // for every input i
-            for(auto& tuple: input_output_fwd_actions)
+            bdd state_encoding = binary_encode(i, state_vars);
+            bdd trans_encoding = bddfalse;
+            // for every transition from state i
+            for(const transition& ts: transitions[i])
             {
-                // .first = input (BDD)
-                // .second = list<action_vec>
-                //  -> for this input, a list (one per compatible IO) of actions
-                //  where an action maps each state q to a list of (p, is_q_accepting) tuples
-                //  + the action includes the IO
-                //  these actions are used in act_cpre
-                utils::vout << "Input: " << bdd_to_formula(tuple.first) << "\n";
-
-                // add all compatible IOs that keep us in the antichain (+ encoding of destination state)
-                IOXp_encoding |= act_cpre(m_in_set, tuple.second, actioner, F, state_vars_prime);
-                utils::vout << "\n";
+                trans_encoding |= ts.IO & binary_encode(ts.new_state, state_vars_prime);
             }
-            // add encoding for current state and add to total BDD
-            encoding |= state_encoding & IOXp_encoding;
-            utils::vout << "\n\n";
+            encoding |= state_encoding & trans_encoding;
         }
 
         utils::vout << "Resulting BDD:\n" << bdd_to_formula(encoding) << "\n\n";
 
-
-        // g_o1(I, L) g_o2 ... maken: g_o1 geeft gegeven een input en Latch (= huidige state: welk dominating element)
-        // of o1 true moet zijn of niet
-        // f_L1(I, L) f_L2 ... geeft wat de nieuwe state is, één functie per variable (bv 4 dom elements -> 2 vars, X en X')
+        // turn output cube (single bdd) into vector<bdd>
         std::vector<bdd> output_vector = cube_to_vector(output_support);
 
-        // assumes deterministic policy?
+
+        // for each output: function(current_state, input) that says whether this output is made true
         for(const bdd& o: output_vector)
         {
-            bdd g_o = bdd_exist(encoding & o, output_support & state_vars_prime_cube);
+            bdd pos = bdd_exist(encoding & o, output_support & state_vars_prime_cube);
+            bdd neg = !bdd_exist(encoding & (!o), output_support & state_vars_prime_cube);
+            bdd g_o = (bdd_nodecount(pos) < bdd_nodecount(neg)) ? pos : neg;
             utils::vout << "g_" << bdd_to_formula(o) << ": " << bdd_to_formula(g_o) << "\n";
         }
 
+        // new state as function(current_state, input)
         for(const bdd& m: state_vars_prime)
         {
-            bdd f_l = bdd_exist(encoding & m, output_support & state_vars_prime_cube);
+            bdd pos = bdd_exist(encoding & m, output_support & state_vars_prime_cube);
+            bdd neg = !bdd_exist(encoding & (!m), output_support & state_vars_prime_cube);
+            bdd f_l = (bdd_nodecount(pos) < bdd_nodecount(neg)) ? pos : neg;
             utils::vout << "f_" << bdd_to_formula(m) << ": " << bdd_to_formula(f_l) << "\n";
         }
 
-        // initial state
-        auto init_vector = utils::vector_mm<char> (aut->num_states(), -1);
-        //for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
-        //    init_vector[i] = 0;
-        init_vector[aut->get_init_state_number()] = 0;
-        utils::vout << "Initial vector: " << State(init_vector) << "\n";
-        int init_index = get_dominated_index(F, State(init_vector));
-        utils::vout << "Initial state: " << bdd_to_formula(binary_encode(init_index, state_vars)) << " (index " << init_index << ")\n";
-
         utils::vout << "\n\n\n";
-
-        //
-        // https://github.com/gaperez64/AbsSynthe/blob/native-dev-par/source/algos.cpp#L129
-        bdd care_set = bddfalse; // encoding for states we care about?
-        for(unsigned int s = 0; s < F.size(); s++)
-        {
-            care_set |= binary_encode(s, state_vars); // | binary_encode(s, state_vars_prime);
-        }
-
-        bdd strategy = encoding;
-
-        std::vector<bdd> inputs = output_vector;
-        //std::vector<unsigned> c_input_lits;
-        std::vector<bdd> c_input_funs;
-
-        for(const bdd& c: inputs)
-        {
-            bdd others_cube = bddtrue;
-            unsigned others_count = 0;
-
-            for(const bdd& j: inputs)
-            {
-                if (c == j) continue;
-                others_cube &= j;
-                others_count++;
-            }
-
-            bdd c_arena;
-            if (others_count > 0)
-            {
-                c_arena = bdd_exist(strategy, others_cube);
-            }
-            else
-            {
-                c_arena = strategy;
-            }
-
-            bdd can_be_true = bdd_restrict(c_arena, c); // positive cofactor
-            bdd can_be_false = bdd_restrict(c_arena, !c); // negative cofactor
-
-            bdd must_be_true = (!can_be_false) & can_be_true;
-            bdd must_be_false = (!can_be_true) & can_be_false;
-
-            bdd local_care_set = care_set & (must_be_true | must_be_false);
-
-            bdd res = bdd_restrict(must_be_true, local_care_set); // opt1
-            //bdd opt2 = bdd_restrict(!must_be_false, local_care_set);
-
-            //strategy = bdd_compose(strategy, res, c);
-            strategy &= (!c | res) & (!res | c);
-            c_input_funs.push_back(res);
-
-            utils::vout << "c = " << bdd_to_formula(c) << ": " << bdd_to_formula(res) << ", strat = " << bdd_to_formula(strategy) << "\n";
-        }
     }
 
+    // return IO + destination state (one IO, one destination state: deterministic)
     template <typename Actions, typename Actioner>
-    bdd act_cpre(const SetOfStates& m, const Actions& actions, Actioner& actioner, const SetOfStates& antichain, std::vector<bdd> state_vars_prime)
+    std::pair<bdd, State> get_transition(const State& elem, const Actions& actions, Actioner& actioner, const SetOfStates& antichain)
     {
-        assert(m.size() == 1); // m is a single state in a set
-
-        bool dominated = false;
-        bdd transitions = bddfalse;
-
         // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
         for(const auto& action_vec: actions)
         {
             // calculate fwd(m, action), see if this is dominated by some element in the antichain
-            SetOfStates&& fwd = m.apply ([this, &action_vec, &actioner] (const auto& _m) {
+            SetOfStates&& fwd = SetOfStates(elem.copy()).apply ([this, &action_vec, &actioner] (const auto& _m) {
                 auto&& ret = actioner.apply (_m, action_vec, actioners::direction::forward);
                 verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
                 return std::move (ret);
@@ -407,16 +412,16 @@ class k_bounded_safety_aut_detail {
 
             if (antichain.contains(*fwd.begin()))
             {
-                dominated = true;
                 utils::vout << "dominated with IO = " << bdd_to_formula(action_vec.IO) << ": " << fwd;
-                transitions |= action_vec.IO & encode_state(fwd, antichain, state_vars_prime);
-                // return transitions; <- for deterministic policy using first IO that is found
+                return {action_vec.IO, (*fwd.begin()).copy()}; // <- for deterministic policy using first IO that is found
             }
         }
 
-        assert(dominated);
-        return transitions;
+        std::abort();
     }
+
+
+    ////////////////////////////////////////////////
 
 
     template <typename IToActions>
