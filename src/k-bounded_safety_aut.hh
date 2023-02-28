@@ -251,11 +251,18 @@ class k_bounded_safety_aut_detail {
         int new_state = -1;
     };
 
+    bool _verbose;
     template<typename Antichain, typename Actioner>
     void synthesis(Antichain& F, Actioner& actioner, const std::string& synth_fname)
     {
-        utils::vout << "Final F:\n" << F;
+        int s = 0;
+        for(const auto& f: F) s++;
+        _verbose = s < 16; // only print out everything for small test examples
+
+        if (_verbose) utils::vout << "Final F:\n" << F;
         utils::vout << "= antichain of size " << F.size() << "\n";
+        utils::vout << "(actually " << s << ")\n";
+
 
         // Latches in the AIGER file are initialized to zero, so it would be nice if index 0 is the initial state
         // -> create new std::vector of dominating elements, start with only an initial one, and then add
@@ -280,7 +287,7 @@ class k_bounded_safety_aut_detail {
             unsigned int src = states_todo[states_todo.size()-1];
             states_todo.pop_back();
 
-            utils::vout << "Element " << states[src] << "\n";
+            if (_verbose) utils::vout << "Element " << states[src] << "\n";
 
             // make sure transitions vector is large enough
             while (src >= transitions.size())
@@ -295,7 +302,7 @@ class k_bounded_safety_aut_detail {
                 //  -> for this input, a list (one per compatible IO) of actions
                 //  where an action maps each state q to a list of (p, is_q_accepting) tuples
                 //  + the action includes the IO
-                utils::vout << "Input: " << bdd_to_formula(tuple.first) << "\n";
+                if (_verbose) utils::vout << "Input: " << bdd_to_formula(tuple.first) << "\n";
 
                 // add all compatible IOs that keep us in the antichain (+ encoding of destination state)
                 //IOXp_encoding |= act_cpre(m_in_set, tuple.second, actioner, F, state_vars_prime);
@@ -314,25 +321,28 @@ class k_bounded_safety_aut_detail {
 
                 transitions[src].push_back({p.first, index});
 
-                utils::vout << "\n";
+                if (_verbose) utils::vout << "\n";
+            }
+
+            if (_verbose) utils::vout << "\n";
+        }
+
+        if (_verbose)
+        {
+            utils::vout << "-> states = " << states << "\n";
+
+            // Print transitions
+            for(unsigned int i = 0; i < states.size(); i++)
+            {
+                utils::vout << "State " << i << ":\n";
+                for(const auto& t: transitions[i])
+                {
+                    utils::vout << bdd_to_formula(t.IO) << " -> state " << t.new_state << "\n";
+                }
             }
 
             utils::vout << "\n";
         }
-
-        utils::vout << "-> states = " << states << "\n";
-
-        // Print transitions
-        for(unsigned int i = 0; i < states.size(); i++)
-        {
-            utils::vout << "State " << i << ":\n";
-            for(const auto& t: transitions[i])
-            {
-                utils::vout << bdd_to_formula(t.IO) << " -> state " << t.new_state << "\n";
-            }
-        }
-
-        utils::vout << "\n";
 
         // create APs to encode the mapping of the automaton states to integers
         // number of variables to encode the state
@@ -371,7 +381,7 @@ class k_bounded_safety_aut_detail {
             encoding |= state_encoding & trans_encoding;
         }
 
-        utils::vout << "Resulting BDD:\n" << bdd_to_formula(encoding) << "\n\n";
+        if (_verbose) utils::vout << "Resulting BDD:\n" << bdd_to_formula(encoding) << "\n\n";
 
         // turn cube (single bdd) into vector<bdd>
         std::vector<bdd> input_vector = cube_to_vector(input_support);
@@ -389,7 +399,7 @@ class k_bounded_safety_aut_detail {
             bdd pos = bdd_exist(encoding & o, output_support & state_vars_prime_cube);
             bdd neg = !bdd_exist(encoding & (!o), output_support & state_vars_prime_cube);
             bdd g_o = (bdd_nodecount(pos) < bdd_nodecount(neg)) ? pos : neg;
-            utils::vout << "g_" << bdd_to_formula(o) << ": " << bdd_to_formula(g_o) << "\n";
+            if (_verbose) utils::vout << "g_" << bdd_to_formula(o) << ": " << bdd_to_formula(g_o) << "\n";
             aig.add_output(i++, g_o);
         }
 
@@ -400,7 +410,7 @@ class k_bounded_safety_aut_detail {
             bdd pos = bdd_exist(encoding & m, output_support & state_vars_prime_cube);
             bdd neg = !bdd_exist(encoding & (!m), output_support & state_vars_prime_cube);
             bdd f_l = (bdd_nodecount(pos) < bdd_nodecount(neg)) ? pos : neg;
-            utils::vout << "f_" << bdd_to_formula(m) << ": " << bdd_to_formula(f_l) << "\n";
+            if (_verbose) utils::vout << "f_" << bdd_to_formula(m) << ": " << bdd_to_formula(f_l) << "\n";
             aig.add_latch(i++, f_l);
         }
 
@@ -438,7 +448,7 @@ class k_bounded_safety_aut_detail {
 
             if (antichain.contains(*fwd.begin()))
             {
-                utils::vout << "dominated with IO = " << bdd_to_formula(action_vec.IO) << ": " << fwd;
+                if (_verbose) utils::vout << "dominated with IO = " << bdd_to_formula(action_vec.IO) << ": " << fwd;
                 return {action_vec.IO, (*fwd.begin()).copy()}; // <- for deterministic policy using first IO that is found
             }
         }

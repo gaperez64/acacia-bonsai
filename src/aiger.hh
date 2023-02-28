@@ -61,25 +61,21 @@ public:
         }
 
         // gates
-        for(const and_gate& gate: gates)
+        for(const auto& gate: gates) // key = {i1, i2} tuple, value = o
         {
-            ost << gate.o << " " << gate.i1 << " " << gate.i2 << "\n";
+            ost << gate.second << " " << gate.first.first << " " << gate.first.second << "\n";
         }
+        utils::vout << "Aiger output: " << gates.size() << " gates\n";
     }
 
 private:
-	struct and_gate
-	{
-		int o, i1, i2;
-	};
-
     std::vector<int> inputs, latches; // index i gives bdd_var(b) of i-th input or i-th state AP
     int vi; // free variable index
 
     std::vector<int> latches_id, outputs; // index i gives gate number for next step's state of the i-th latch, or the i-th output
-    std::vector<and_gate> gates; // all gates
 
-    std::map<int, int> cache; // map bdd.id() to a gate number to reuse gates
+    std::map<int, int> cache; // map bdd.id() to a gate number
+    std::map<std::pair<int, int>, int> gates; // map i1 x i2 to an output so we don't make gates with the same inputs
 
     // inputs go from 2  to  2*inputs
     int input_index(int i)
@@ -97,6 +93,24 @@ private:
     {
         vi += 2;
         return vi-2;
+    }
+
+    int add_gate(int i1, int i2)
+    {
+        // add gate g, except if it already exists!
+        if (i1 > i2)
+        {
+            std::swap(i1, i2);
+        }
+
+        if (gates.find({i1, i2}) != gates.end())
+        {
+            return gates[{i1, i2}];
+        }
+
+        int n = get_gate();
+        gates[{i1, i2}] = n;
+        return n;
     }
 
     std::vector<int> bddvec_to_idvec(const std::vector<bdd>& vec)
@@ -142,7 +156,8 @@ private:
             return 0;
         }
 
-        // use cache if we can
+        // reuse gate if we encountered this BDD before
+        // doesn't actually make size smaller because no duplicate gates are allowed, but should make it faster for large BDDs
         if (cache.find(f.id()) != cache.end())
         {
             return cache[f.id()];
@@ -158,9 +173,7 @@ private:
         // goal: get gate low_g to contain low & !var
         if (low_g >= 2) // low_g is not true/false
         {
-            int tmp = low_g;
-            low_g = get_gate();
-            gates.push_back({low_g, tmp, gate ^ 1}); // low & !var
+            low_g = add_gate(low_g, gate ^ 1); // low & !var
         }
         else if (low_g == 1)
         {
@@ -173,9 +186,7 @@ private:
         int high_g = bdd2aig(high);
         if (high_g >= 2) // not true or false
         {
-            int tmp = high_g;
-            high_g = get_gate();
-            gates.push_back({high_g, tmp, gate}); // high & var
+            high_g = add_gate(high_g, gate); // high & var
         }
         else if (high_g == 1)
         {
@@ -189,8 +200,7 @@ private:
         // if they are both not true/false: make a gate that ANDs their negations
         if ((low_g >= 2) && (high_g >= 2))
         {
-            output_unnegated = get_gate();
-            gates.push_back({output_unnegated, low_g ^ 1, high_g ^ 1}); // !(low & !var) & !(high & var)
+            output_unnegated = add_gate(low_g ^ 1, high_g ^ 1); // !(low & !var) & !(high & var)
         }
         else if (low_g >= 2) // high_g is either true or false: don't need a gate
         {
