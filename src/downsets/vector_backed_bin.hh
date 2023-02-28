@@ -79,8 +79,10 @@ namespace downsets {
               }
             }
 
-            if (result != vector_set[i].end ())
+            if (result != vector_set[i].end ()) {
               vector_set[i].erase (result, vector_set[i].end ());
+              --_size;
+            }
 
             i = (i + 1) % vector_set.size ();
           } while (i != start);
