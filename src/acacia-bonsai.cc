@@ -85,7 +85,7 @@ static const argp_option options[] = {
   },
   {
       "synth", OPT_SYNTH, "FNAME", 0,
-      ".aag filename, stdout, or empty", 0
+      ".aag filename, stdout, or empty for no synthesis", 0
   },
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },

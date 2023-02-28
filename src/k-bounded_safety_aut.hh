@@ -343,12 +343,12 @@ class k_bounded_safety_aut_detail {
 
         // create atomic propositions
         std::vector<bdd> state_vars, state_vars_prime;
-        bdd state_vars_cube = bddtrue, state_vars_prime_cube = bddtrue;
+        bdd state_vars_prime_cube = bddtrue;
         for(unsigned int i = 0; i < mapping_bits; i++)
         {
             unsigned int v = aut->register_ap(spot::formula::ap("Y"+std::to_string(i)));
             state_vars.push_back(bdd_ithvar(v)); // store v instead of the bdd object itself?
-            state_vars_cube &= bdd_ithvar(v);
+            //state_vars_cube &= bdd_ithvar(v);
 
             v = aut->register_ap(spot::formula::ap("Z"+std::to_string(i)));
             state_vars_prime.push_back(bdd_ithvar(v));
@@ -405,9 +405,7 @@ class k_bounded_safety_aut_detail {
         }
 
 
-
-
-        if (synth_fname != "stdout")
+        if ((synth_fname != "stdout") && (synth_fname != "-"))
         {
             std::ofstream f(synth_fname);
             aig.output(f, false);

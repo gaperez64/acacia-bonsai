@@ -4,14 +4,7 @@
 
 #pragma once
 
-#include <spot/twa/formula2bdd.hh>
-#include <spot/twa/twagraph.hh>
 #include <vector>
-
-struct and_gate
-{
-    int o, i1, i2;
-};
 
 class aiger
 {
@@ -44,7 +37,7 @@ public:
         ost << outputs.size() << " " << gates.size() << "\n";
 
         // inputs
-        for(int i = 0; i < inputs.size(); i++)
+        for(int i = 0; i < (int)inputs.size(); i++)
         {
             ost << input_index(i);
             if (info) ost << "   <- input " << i;
@@ -52,7 +45,7 @@ public:
         }
 
         // latches
-        for(int i = 0; i < latches.size(); i++)
+        for(int i = 0; i < (int)latches.size(); i++)
         {
             ost << latch_index(i) << " " << latches_id[i] ;
             if (info) ost << "  <- latch " << i;
@@ -60,7 +53,7 @@ public:
         }
 
         // outputs
-        for(int i = 0; i < outputs.size(); i++)
+        for(int i = 0; i < (int)outputs.size(); i++)
         {
             ost << outputs[i];
             if (info) ost << "   <- output " << i;
@@ -75,6 +68,11 @@ public:
     }
 
 private:
+	struct and_gate
+	{
+		int o, i1, i2;
+	};
+
     std::vector<int> inputs, latches; // index i gives bdd_var(b) of i-th input or i-th state AP
     int vi; // free variable index
 
@@ -94,7 +92,7 @@ private:
         return 2 + 2*(int)inputs.size() + 2*i;
     }
 
-    // get a new gate
+    // get a new unused gate number
     int get_gate()
     {
         vi += 2;
@@ -151,7 +149,7 @@ private:
         }
 
         // get gate with the value we're looking at + look at high/low branch
-        int gate = bddvar_to_gate(bdd_var(f));
+        int gate = bddvar_to_gate(bdd_var(f)); // will be an input or a latch -> a value that is already known
         bdd low = bdd_low(f);
         bdd high = bdd_high(f);
 
@@ -162,14 +160,14 @@ private:
         {
             int tmp = low_g;
             low_g = get_gate();
-            gates.push_back({low_g, tmp, gate | 1}); // low & !var
+            gates.push_back({low_g, tmp, gate ^ 1}); // low & !var
         }
         else if (low_g == 1)
         {
-            // true & (gate | 1) -> low_g = gate | 1
-            low_g = gate | 1;
+            // true & (gate ^ 1) -> low_g = gate ^ 1
+            low_g = gate ^ 1;
         }
-        // low_g == 0: false & (gate | 1) -> low_g = false = 0, and it's already 0
+        // low_g == 0: false & (gate ^ 1) -> low_g = false = 0, and it's already 0
 
         // same cases as above but for high to calculate high & var
         int high_g = bdd2aig(high);
@@ -185,7 +183,7 @@ private:
         }
 
 
-        // we have "low & !var" and "high & var", now we want to AND their negations, and then invert this again to get their OR
+        // we have low_g = (low & !var) and high_g = (high & var), now we want to AND their negations, and then invert this again to get their OR
         int output_unnegated; // will be the gate that does not yet have the final negation
 
         // if they are both not true/false: make a gate that ANDs their negations
@@ -196,45 +194,21 @@ private:
         }
         else if (low_g >= 2) // high_g is either true or false: don't need a gate
         {
-            // o = low_g^1 & z       z = true/false = high_g^1
-            if (high_g == 0)
-            {
-                // low_g^1 & true
-                output_unnegated = low_g ^ 1;
-            }
-            else
-            {
-                // low_g^1 & false
-                output_unnegated = 0;
-            }
+			output_unnegated = (high_g == 0) ? low_g ^ 1 : 0;
         }
         else if (high_g >= 2) // same case as above but for low_g being true or false
         {
-            // o = high_g^1 & z       z = true/false = low_g^1
-            if (low_g == 0)
-            {
-                output_unnegated = high_g ^ 1;
-            }
-            else
-            {
-                output_unnegated = 0;
-            }
+			output_unnegated = (low_g == 0) ? high_g ^ 1 : 0;
         }
-        else
+        else // both low_g and high_g are an immediate
         {
-            output_unnegated = (low_g^1) & (high_g^1);
+            output_unnegated = (low_g ^ 1) & (high_g ^ 1);
             utils::vout << "it happens!\n";
             // does this ever happen?
         }
 
-        /*
-        int output = get_gate();
-        gates.push_back({output, output_unnegated ^ 1, output_unnegated ^ 1}); // !(!(low & !var) & !(high & var)) = (low & !var) | (high & var)
-        */
-
         int output = output_unnegated ^ 1; // negate this, store in the cache
         cache[f.id()] = output;
-
         return output;
     }
 };
