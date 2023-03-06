@@ -85,7 +85,7 @@ static const argp_option options[] = {
   },
   {
       "synth", OPT_SYNTH, "FNAME", 0,
-      ".aag filename, stdout, or empty for no synthesis", 0
+      "enable synthesis, pass .aag filename, or stdout or - to print gates", 0
   },
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
@@ -262,7 +262,7 @@ namespace {
           input_aps_.swap (output_aps_);
         }
 
-	verb_do (1, vout << "Formula: " << f << std::endl);
+        verb_do (1, vout << "Formula: " << f << std::endl);
 
         auto aut = trans_.run (&f);
 
@@ -368,7 +368,7 @@ namespace {
 
         vectors::bitset_threshold = aut->num_states () - nbitsetbools;
 
-	utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
+        utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
 
 #define UNREACHABLE [] (int x) { assert (false); }
 

@@ -97,17 +97,20 @@ private:
 
     int add_gate(int i1, int i2)
     {
-        // add gate g, except if it already exists!
-        if (i1 > i2)
-        {
-            std::swap(i1, i2);
-        }
+        // add gate g, but only if we have to!
+        if (i1 > i2) std::swap(i1, i2); // i1 should be smaller than i2
+
+        if (i1 == 0) return 0; // false & x = false
+        if (i1 == 1) return i2; // true & x = x
+        if (i1 == i2) return i1; // x & x = x
+        if ((i1 ^ i2) == 1) return 0; // x & !x = false
 
         if (gates.find({i1, i2}) != gates.end())
         {
             return gates[{i1, i2}];
         }
 
+        // actually create a new gate
         int n = get_gate();
         gates[{i1, i2}] = n;
         return n;
@@ -147,14 +150,8 @@ private:
     int bdd2aig(const bdd& f)
     {
         // base cases
-        if (f == bddtrue)
-        {
-            return 1;
-        }
-        if (f == bddfalse)
-        {
-            return 0;
-        }
+        if (f == bddfalse) return 0;
+        if (f == bddtrue) return 1;
 
         // reuse gate if we encountered this BDD before
         // doesn't actually make size smaller because no duplicate gates are allowed, but should make it faster for large BDDs
@@ -168,56 +165,16 @@ private:
         bdd low = bdd_low(f);
         bdd high = bdd_high(f);
 
-        // recursive call on low
-        int low_g = bdd2aig(low);
-        // goal: get gate low_g to contain low & !var
-        if (low_g >= 2) // low_g is not true/false
-        {
-            low_g = add_gate(low_g, gate ^ 1); // low & !var
-        }
-        else if (low_g == 1)
-        {
-            // true & (gate ^ 1) -> low_g = gate ^ 1
-            low_g = gate ^ 1;
-        }
-        // low_g == 0: false & (gate ^ 1) -> low_g = false = 0, and it's already 0
+        // use recursive call on low
+        int low_g = add_gate(bdd2aig(low), gate ^ 1); // low & !var
 
-        // same cases as above but for high to calculate high & var
-        int high_g = bdd2aig(high);
-        if (high_g >= 2) // not true or false
-        {
-            high_g = add_gate(high_g, gate); // high & var
-        }
-        else if (high_g == 1)
-        {
-            high_g = gate;
-        }
+        // same as above but for high to calculate high & var
+        int high_g = add_gate(bdd2aig(high), gate); // high & var
 
 
         // we have low_g = (low & !var) and high_g = (high & var), now we want to AND their negations, and then invert this again to get their OR
-        int output_unnegated; // will be the gate that does not yet have the final negation
-
-        // if they are both not true/false: make a gate that ANDs their negations
-        if ((low_g >= 2) && (high_g >= 2))
-        {
-            output_unnegated = add_gate(low_g ^ 1, high_g ^ 1); // !(low & !var) & !(high & var)
-        }
-        else if (low_g >= 2) // high_g is either true or false: don't need a gate
-        {
-			output_unnegated = (high_g == 0) ? low_g ^ 1 : 0;
-        }
-        else if (high_g >= 2) // same case as above but for low_g being true or false
-        {
-			output_unnegated = (low_g == 0) ? high_g ^ 1 : 0;
-        }
-        else // both low_g and high_g are an immediate
-        {
-            output_unnegated = (low_g ^ 1) & (high_g ^ 1);
-            utils::vout << "it happens!\n";
-            // does this ever happen?
-        }
-
-        int output = output_unnegated ^ 1; // negate this, store in the cache
+        int output = add_gate(low_g ^ 1, high_g ^ 1) ^ 1; // !(!(low & !var) & !(high & var))
+        // store in the cache for when we possibly encounter the same BDD in the future
         cache[f.id()] = output;
         return output;
     }
