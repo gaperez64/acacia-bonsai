@@ -5,17 +5,36 @@
 #pragma once
 
 #include <vector>
+#include "utils/typeinfo.hh"
 
 class aiger
 {
 public:
-    aiger(const std::vector<bdd>& _inputs, const std::vector<bdd>& _latches, int _outputs)
+    aiger(const std::vector<bdd>& _inputs, const std::vector<bdd>& _latches, const std::vector<bdd>& _outputs, spot::twa_graph_ptr aut)
     {
         inputs = bddvec_to_idvec(_inputs); // mapping of vector<bdd> to vector<int> using bdd_var to get the AP number
         latches = bddvec_to_idvec(_latches); // '
         latches_id = std::vector<int>(_latches.size()); // for each latch: the ID of the gate it will be equal to next step
-        outputs = std::vector<int>(_outputs); // for each output: the ID of the gate it is equal to
+        outputs = std::vector<int>(_outputs.size()); // for each output: the ID of the gate it is equal to
         vi = 2 + 2*inputs.size() + 2*latches.size(); // first free variable index
+
+        // maybe not the cleanest way to get the atomic propositions as a string again
+        for(const bdd& b: _inputs)
+        {
+            std::stringstream ss;
+            ss << spot::bdd_to_formula(b, aut->get_dict());
+            input_names.push_back(ss.str());
+        }
+
+        for(const bdd& b: _outputs)
+        {
+            std::stringstream ss;
+            ss << spot::bdd_to_formula(b, aut->get_dict());
+            output_names.push_back(ss.str());
+        }
+
+        //utils::vout << "I: " << input_names << "\n";
+        //utils::vout << "O: " << output_names << "\n";
     }
 
     // pass formula to calculate i-th latch (primed state)
@@ -65,6 +84,18 @@ public:
         {
             ost << gate.second << " " << gate.first.first << " " << gate.first.second << "\n";
         }
+
+        // input + output names for model checking
+        for(int i = 0; i < (int)input_names.size(); i++)
+        {
+            ost << "i" << i << " " << input_names[i] << "\n";
+        }
+
+        for(int i = 0; i < (int)output_names.size(); i++)
+        {
+            ost << "o" << i << " " << output_names[i] << "\n";
+        }
+
         utils::vout << "Aiger output: " << gates.size() << " gates\n";
     }
 
@@ -76,6 +107,8 @@ private:
 
     std::map<int, int> cache; // map bdd.id() to a gate number
     std::map<std::pair<int, int>, int> gates; // map i1 x i2 to an output so we don't make gates with the same inputs
+
+    std::vector<std::string> input_names, output_names; // names of the atomic propositions
 
     // inputs go from 2  to  2*inputs
     int input_index(int i)

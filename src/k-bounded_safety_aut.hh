@@ -186,10 +186,7 @@ class k_bounded_safety_aut_detail {
         auto it = antichain.begin();
         while (it != antichain.end())
         {
-            if (SetOfStates((*it).copy()).contains(v))
-            {
-                return i;
-            }
+            if (SetOfStates((*it).copy()).contains(v)) return i;
             i++;
             ++it;
         }
@@ -263,9 +260,11 @@ class k_bounded_safety_aut_detail {
         //    the reachable ones
         std::vector<State> states;
 
+        // initial vector = all -1, and 0 for the initial state
         auto init_vector = utils::vector_mm<char>(aut->num_states(), -1);
         init_vector[aut->get_init_state_number()] = 0;
         int init_index = get_dominated_index(F, State(init_vector));
+        assert(init_index != -1);
         verb_do(1, vout << "Initial vector: " << State(init_vector) << " (index " << init_index << ")\n");
         states.push_back(get_dominated_element(F, State(init_vector)));
         verb_do(1, vout << "-> states = " << states << "\n\n");
@@ -381,10 +380,10 @@ class k_bounded_safety_aut_detail {
 
 
         // AIGER
-        aiger aig(input_vector, state_vars, (int)output_vector.size());
+        aiger aig(input_vector, state_vars, output_vector, aut);
+
+
         int i = 0;
-
-
         // for each output: function(current_state, input) that says whether this output is made true
         for(const bdd& o: output_vector)
         {
@@ -407,7 +406,7 @@ class k_bounded_safety_aut_detail {
         }
 
 
-        if ((synth_fname != "stdout") && (synth_fname != "-"))
+        if (synth_fname != "-")
         {
             std::ofstream f(synth_fname);
             aig.output(f, false);

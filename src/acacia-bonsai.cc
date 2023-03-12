@@ -85,7 +85,7 @@ static const argp_option options[] = {
   },
   {
       "synth", OPT_SYNTH, "FNAME", 0,
-      "enable synthesis, pass .aag filename, or stdout or - to print gates", 0
+      "enable synthesis, pass .aag filename, or - to print gates", 0
   },
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
