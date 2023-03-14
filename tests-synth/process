@@ -18,8 +18,6 @@ origf="$1"
 rm -f $TESTFOLDER/monitor.aag $TESTFOLDER/monitor.aig $TESTFOLDER/synthesis.aag $TESTFOLDER/synthesis.aag-combined.aag $TESTFOLDER/synthesis.aag-res
 
 echo origf=\"$origf\"
-echo LS:
-ls
 
 FORMULA=$(./meyerphi-syfco "$origf" -f ltl)
 
@@ -40,12 +38,14 @@ OUTPS=$(sed 's/ //g' <<< "$OUTPS")
 echo "-f \"$FORMULA\" --ins $INPS --outs $OUTPS"
 
 ../build/src/acacia-bonsai -f "$FORMULA" --ins "$INPS" --outs "$OUTPS" -S "$syntf" --check=real -v -v
+#ltlsynt -f "$FORMULA" --ins="$INPS" --outs="$OUTPS" --aiger | sed '1d' > "$syntf"
+#ltlsynt --tlsf="$origf" --aiger | sed '1d' > "$syntf"
 
 if [[ -f "$syntf" ]]; then
     echo Synthesis seems to be ok?
 else
     echo No synthesis!
-    exit 1
+    exit 2
 fi
 
 
@@ -55,7 +55,7 @@ aigtoaig "$TESTFOLDER/monitor.aig" "$TESTFOLDER/monitor.aag"  # <- aigtoaig assu
 
 if [ ! -f "$TESTFOLDER/monitor.aag" ]; then
     echo "Error=The monitor file was not generated!"
-    exit 1
+    exit 3
 fi
 
 # Combine monitor with synthesized file
@@ -63,12 +63,12 @@ fi
 
 if [ ! -f "${syntf}-combined.aag" ]; then
     echo "Error=The combined file was not generated!"
-    exit 1
+    exit 4
 fi
 
 if ! (head -n 1 "${syntf}-combined.aag" | grep -q '^aag'); then
     echo "Error=during monitor combination"
-    exit 1
+    exit 5
 fi
 
 # Model checking each justice constraint of the combined file in parallel
@@ -87,21 +87,21 @@ if [ $res_val -eq 0 ]; then
     if [ $num_false -ge 1 ]; then
         echo "starexec-result=MC-INCORRECT"
         echo "Error=model checker says no!"
-        exit 1
+        exit 6
     elif [ $num_true -lt $num_justice ]; then
         echo "starexec-result=MC-ERROR"
         echo "Error=not all justice properties found"
-        exit 1
+        exit 7
     else
         echo "Model_check_result=SUCCESS"
         exit 0  # <- happy exit code
     fi
 elif [ $res_val -eq 124 ] || [ $res_val -eq 137 ]; then
     echo "starexec-result=MC-TIMEOUT"
-    exit 1
+    exit 8
 else
     echo "starexec-result=MC-ERROR"
     echo "Error=unknown MC error, returned ${res_val}"
-    exit 1
+    exit 9
 fi
 
