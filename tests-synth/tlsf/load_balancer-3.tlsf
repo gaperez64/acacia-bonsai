@@ -1,13 +1,13 @@
 INFO {
-  TITLE:       "Full Arbiter"
-  DESCRIPTION: "Parameterized Arbiter, where no spurious grants are allowed"
+  TITLE:       "Parameterized Load Balancer"
+  DESCRIPTION: "Parameterized Load Balancer (generalized version of the Acacia+ benchmark)"
   SEMANTICS:   Mealy
   TARGET:      Mealy
 }
 
 GLOBAL {
   PARAMETERS {
-    n = 2;
+    n = 3;
   }
 
   DEFINITIONS {
@@ -36,38 +36,35 @@ GLOBAL {
 
     // returns the position between i and j
     m(i,j) = (i + j) / 2;
-  } 
+  }   
 }
 
 MAIN {
 
   INPUTS {
-    r[n]; // request signals
-  } 
+    idle;
+    request[n];
+  }
 
   OUTPUTS {
-    g[n]; // grant signals
+    grant[n];
+  }
+
+  ASSUMPTIONS {
+    G F idle;
+    G (idle && X &&[0 <= i < n] !grant[i] -> X idle);
+    G (X !grant[0] || X ((!request[0] && !idle) U (!request[0] && idle)));
   }
 
   INVARIANTS {
-    // no spurious grants
-    &&[0 <= i < n] (
-      (g[i] && G !r[i] -> F !g[i]) &&
-      (g[i] && X (!r[i] && !g[i]) -> X (r[i] R !g[i]))
-    );
-
-    // ensure mutual exclusion on the output bus
-    mutual_exclusion(g);
+    X mutual_exclusion(grant);    
+    &&[0 <= i < n] (X grant[i] -> request[i]);
+    &&[0 < i < n] (request[0] -> grant[i]);
+    !idle -> X &&[0 <= i < n] !grant[i];
   }
 
   GUARANTEES {
-    &&[0 <= i < n] (
-      // no grant before any request    
-      (r[i] R !g[i]) && 
-      // every request is eventually granted    
-      G (r[i] -> F g[i])
-    );
+    &&[0 <= i < n] ! F G (request[i] && X !grant[i]);
   }
-  
-}
 
+}

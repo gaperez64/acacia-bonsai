@@ -15,11 +15,12 @@ syntf="$TESTFOLDER/synthesis.aag"
 origf="$1"
 
 # clean up previous test's files
-rm -f $TESTFOLDER/monitor.aag $TESTFOLDER/monitor.aig $TESTFOLDER/synthesis.aag $TESTFOLDER/synthesis.aag-combined.aag $TESTFOLDER/synthesis.aag-res
+rm -f $TESTFOLDER/monitor.aig $TESTFOLDER/synthesis.aag $TESTFOLDER/synthesis.aag-combined.aag $TESTFOLDER/synthesis.aag-res
 
 echo origf=\"$origf\"
 
-FORMULA=$(./meyerphi-syfco "$origf" -f ltl)
+# convert TLSF to LTL formula + inputs/outputs
+FORMULA=$(./meyerphi-syfco "$origf" -f ltl -m fully) # NOT ltlxba!!
 
 # return if the file is not found -> error
 RET=$?
@@ -37,6 +38,8 @@ OUTPS=$(sed 's/ //g' <<< "$OUTPS")
 
 echo "-f \"$FORMULA\" --ins $INPS --outs $OUTPS"
 
+
+# call acacia-bonsai to do synthesis
 ../build/src/acacia-bonsai -f "$FORMULA" --ins "$INPS" --outs "$OUTPS" -S "$syntf" --check=real -v -v
 #ltlsynt -f "$FORMULA" --ins="$INPS" --outs="$OUTPS" --aiger | sed '1d' > "$syntf"
 #ltlsynt --tlsf="$origf" --aiger | sed '1d' > "$syntf"
@@ -51,15 +54,14 @@ fi
 
 # Generate monitor
 ./meyerphi-syfco --format smv-decomp "$origf" --mode fully | sed -e "/^/n" | ./smvtoaig -L ./ltl2smv > "$TESTFOLDER/monitor.aig"
-aigtoaig "$TESTFOLDER/monitor.aig" "$TESTFOLDER/monitor.aag"  # <- aigtoaig assumed to be in PATH
 
-if [ ! -f "$TESTFOLDER/monitor.aag" ]; then
+if [ ! -f "$TESTFOLDER/monitor.aig" ]; then
     echo "Error=The monitor file was not generated!"
     exit 3
 fi
 
 # Combine monitor with synthesized file
-./combine-aiger "$TESTFOLDER/monitor.aag" "${syntf}" > "${syntf}-combined.aag"
+./combine-aiger "$TESTFOLDER/monitor.aig" "${syntf}" > "${syntf}-combined.aag"
 
 if [ ! -f "${syntf}-combined.aag" ]; then
     echo "Error=The combined file was not generated!"

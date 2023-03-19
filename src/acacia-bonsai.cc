@@ -148,7 +148,7 @@ Exit status:\n\
 
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
-std::string synth_fname;
+static std::string synth_fname;
 
 
 enum {
@@ -584,6 +584,8 @@ int main (int argc, char **argv) {
                                    std::string {"unreal-x="} + (char) unreal_x)
                                 + "] ");
         check_real = real;
+        if (!real)
+          synth_fname = ""; // no synthesis for the environment if the formula is unrealizable
         opt_unreal_x = unreal_x;
         int res = processor.run ();
         verb_do (1, vout << "returning " << res << "\n");
