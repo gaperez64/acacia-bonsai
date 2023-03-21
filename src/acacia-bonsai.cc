@@ -457,8 +457,8 @@ parse_opt (int key, char *arg, struct argp_state *) {
     }
 
     case OPT_SYNTH: {
-        synth_fname = arg;
-        break;
+      synth_fname = arg;
+      break;
     }
 
     case OPT_UNREAL_X: {

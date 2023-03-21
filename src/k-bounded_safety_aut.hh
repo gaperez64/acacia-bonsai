@@ -153,8 +153,6 @@ class k_bounded_safety_aut_detail {
       SetOfStates F1i (std::move (vv));
       bool first_turn = true;
       for (const auto& action_vec : actions) {
-          // action_vec : vector<vector<pair<unsigned int, bool>>>
-          // -> map each state q to a list of (p, is_q_accepting) tuples
         verb_do (3, vout << "one_output_letter:" << std::endl);
 
         SetOfStates&& F1io = F.apply ([this, &action_vec, &actioner] (const auto& m) {
