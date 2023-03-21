@@ -10,46 +10,39 @@ namespace actioners {
         //using action_vec = std::vector<action>;          // Vector indexed by state number
 
         // store action vector per state + IO
-        struct action_vec
-        {
-            std::vector<action> actions; // index by state number q to get a vector of (p, is_q_accepting) tuples
-            bdd IO; // the IO compatible with the input that gave this
+        struct action_vec {
+          std::vector<action> actions; // index by state number q to get a vector of (p, is_q_accepting) tuples
+          bdd IO; // the IO compatible with the input that gave this
 
-            action_vec() = default;
-            action_vec(size_t size, bdd IO): IO(IO)
-            {
-                actions.resize(size);
-            }
+          action_vec () = default;
+          action_vec (size_t size, bdd IO) : IO (IO) {
+            actions.resize (size);
+          }
 
-            auto begin() const
-            {
-                return actions.begin();
-            }
-            auto end() const
-            {
-                return actions.end();
-            }
+          auto begin () const {
+            return actions.begin ();
+          }
 
-            auto& operator[](size_t i)
-            {
-                return actions[i];
-            }
+          auto end () const {
+            return actions.end ();
+          }
 
-            const auto& operator[](size_t i) const
-            {
-                return actions[i];
-            }
+          auto& operator[] (size_t i) {
+            return actions[i];
+          }
 
-            bool operator<(const action_vec& rhs) const
-            {
-                // I hope this works and the BDDs' ids dont change
-                return (actions < rhs.actions) || ((actions == rhs.actions) && (IO.id() < rhs.IO.id()));
-            }
+          const auto& operator[] (size_t i) const {
+            return actions[i];
+          }
 
-            size_t size() const
-            {
-                return actions.size();
-            }
+          bool operator<(const action_vec& rhs) const {
+            // I hope this works and the BDDs' ids dont change
+            return (IO.id () < rhs.IO.id ()) || ((IO.id () == rhs.IO.id ()) && (actions < rhs.actions));
+          }
+
+          size_t size () const {
+            return actions.size ();
+          }
         };
 
         using action_vecs = std::list<action_vec>;
@@ -100,31 +93,30 @@ namespace actioners {
           // inputs_to_ios: a map [input i, set of sets of pairs (p, q)].  Each set of pairs (p, q)
           // corresponds to an i-compatible IO x in the natural way; that is, it is the set
           // of pairs (p, q) such that p -> q is compatible with x.
-          // !! set of sets of pairs (p, q) -> set of pairs of (sets (p, q) and IO)
+          // This set of pairs (p, q) also includes a BDD = the IO
           for (const auto& [input, ios] : inputs_to_ios) {
-              // input: bdd
-              // ios: ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>,
-              //        vector<pair<int, int>>>::ios
-              // -> set of pairs of (sets (p, q) and IO)
+            // input: bdd
+            // ios: set of pairs of (sets (p, q) and IO)
             std::list<action_vec> fwd_actions;
             // action_vec : vector<vector<pair<unsigned int, bool>>>
             for (const auto& transset : ios) {
-                // transset: transitions_io_pair (stores vector<pair<p, q>> and IO)
-                // turn this into a vector that maps q to a list of tuples (p, is_q_accepting) and keep the IO
-                // insert this map for every transset
-                fwd_actions.push_back (compute_action_vec (transset));
-                // type that is being inserted: action_vec (ios_precomputers/standard.hh)
+              // transset: transitions_io_pair (stores vector<pair<p, q>> and IO)
+              // turn this into a vector that maps q to a list of tuples (p, is_q_accepting) and keep the IO
+              // insert this map for every transset
+              fwd_actions.push_back (compute_action_vec (transset));
+              // type that is being inserted: action_vec (ios_precomputers/standard.hh)
+              // with current configuration.hh at the time of writing
             }
             // per input: list (one element per compatible IO) of actions
-            // what is being inserted = pair<bdd, action_vec>
+            // what is being inserted = pair<bdd, action_vec> with current configuration.hh at the time of writing
             ioset.insert (std::pair (input, std::move (fwd_actions)));
           }
 
           for (auto it = ioset.begin(); it != ioset.end(); ) {
-              // what is being inserted:
-              // pair<bdd, list<vector<vector<pair<unsigned int, bool>>>>>
-              // -> for every input, a list (one per compatible IO) of actions
-              // where an action maps each state q to a list of (p, is_q_accepting) tuples
+            // what is being inserted:
+            // pair<bdd, list<vector<vector<pair<unsigned int, bool>>>>>
+            // -> for every input, a list (one per compatible IO) of actions
+            // where an action maps each state q to a list of (p, is_q_accepting) tuples
             input_output_fwd_actions.push_back (std::move (ioset.extract (it++).value ()));
           }
         }

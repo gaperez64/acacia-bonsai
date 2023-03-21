@@ -59,25 +59,21 @@ namespace ios_precomputers {
         };
 
         // class that stores vector<pair<p, q>> and also the IO, iterating over it iterates over the (p, q) pairs
-        class transitions_io_pair
-        {
+        struct transitions_io_pair {
         public:
-            TransSet transitions;
-            bdd IO;
+          TransSet transitions;
+          bdd IO;
 
-            auto begin() const
-            {
-                return transitions.begin();
-            }
-            auto end() const
-            {
-                return transitions.end();
-            }
+          auto begin () const {
+            return transitions.begin ();
+          }
+          auto end () const {
+            return transitions.end ();
+          }
 
-            auto& operator[](size_t i)
-            {
-                return transitions[i];
-            }
+          auto& operator[] (size_t i) {
+            return transitions[i];
+          }
         };
 
         class ios_it : public bdd_it {
@@ -90,7 +86,7 @@ namespace ios_precomputers {
             { update_transset (); }
 
             auto operator* () const {
-                // return current_io (vector<pair<p, q>>) AND the IO compatible with I that gave this action
+              // return current_io (vector<pair<p, q>>) AND the IO compatible with I that gave this action
               return transitions_io_pair(current_io, letter);
             }
 
