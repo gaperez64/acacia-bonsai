@@ -1,12 +1,32 @@
 \documentclass[aspectratio=169]{beamer}
 \usetheme{uantwerpen}
 
+\usepackage{mathtools}
+
+% tikz
+\usepackage{tikz}
+\usetikzlibrary{automata,positioning,overlay-beamer-styles}
+
+% macros
+\newcommand{\always}{\mathop{\mathtt{G}}}
+\newcommand{\evtly}{\mathop{\mathtt{F}}}
+\newcommand{\until}{\mathrel{\mathtt{U}}}
+\newcommand{\nxt}{\mathop{\mathtt{X}}}
 
 % titlepage info
 \title{Acacia-Bonsai}
 \subtitle{A Modern Implementation of Downset-Based LTL Synthesis}
-\author{Micha\"el Cadilhac \and Guillermo A. P\'erez}
+\author{Micha\"el Cadilhac \and \underline{Guillermo A. P\'erez}}
 \date{TACAS 2023}
+
+% outline before each section
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
 
 \begin{document}
 
@@ -14,6 +34,126 @@
 	\titlepage
 \end{frame}
 
-% Outline
+\begin{frame}{Motivation: Safe Reactive Systems}
+  \begin{block}{Reactive systems}
+    These are systems that interact with their environment in a
+    \alert{continuous} fashion, i.e. nonstop, and they are all around us.
+  \end{block}
+  \begin{center}
+    \begin{tikzpicture}
+      \node (cnt) {Controller};
+      \node[right= of cnt] (env) {Environment};
+      \path[->,auto]
+        (cnt) edge[bend left] node{\footnotesize Val of ins} (env)
+        (env) edge[bend left] node{\footnotesize Val of outs} (cnt)
+        ;
+    \end{tikzpicture}
+  \end{center}
+  \pause
+  \begin{block}{Safety via synthesis}
+    Reactive systems are hard to design and errors can \alert{cost lives} and
+    money. Hence, we would like to \alert{synthesize them} from a formal
+    specification!
+  \end{block}
+\end{frame}
+
+\begin{frame}{Motivation: Synthesis Competition}
+  \begin{block}{SYNTCOMP}
+    Since 2014, the synthesis competition SYNTCOMP gathers benchmarks and
+    tools for synthesis from different specification formats:
+    \begin{itemize}
+      \item Safety monitors
+      \item \alert{Linear temporal logic (LTL) formulas}
+      \item Parity games
+    \end{itemize}
+  \end{block}
+  \pause
+  \begin{block}{LTL syntesis tools}
+    Award winning tools include:
+    \begin{itemize}
+      \item Strix
+      \item ltlsynt
+      \item \alert{Acacia (no longer maintained)}
+      \item \dots
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{LTL Specifications}
+
+\begin{frame}{Linear temporal logic}
+  \begin{block}{Formulas}
+    Fix a set $P$ of \alert{atomic propositions}. LTL formulas are of the
+    form:
+    \[
+      \varphi \Coloneqq a \in P \mid \varphi \land \varphi \mid
+      \lnot \varphi \mid \nxt \varphi \mid \evtly \varphi \mid
+      \always \varphi \mid \varphi \until \varphi
+    \]
+  \end{block}
+  \pause
+  \begin{block}{Semantics over words (by example)}
+    ``It is always the case that if there is a request then eventually it is
+    granted'':
+    \[ \varphi = \bigwedge_{i=1,2} \always(\mathit{req}_i \rightarrow \evtly
+    \mathit{grant}_i)\]
+    \begin{itemize}
+      \item
+        $(\mathit{req}_1,\mathit{req}_2,\mathit{grant}_1,\overline{\mathit{grant}_2})^*
+        (\overline{\mathit{req}_1},\overline{\mathit{req}_2},\overline{\mathit{grant}_1},\mathit{grant}_2)^\omega$
+        \alert{satisfies} $\varphi$
+        \pause
+      \item
+        $(\overline{\mathit{req}_1},\overline{\mathit{req}_2},\mathit{grant}_1,\mathit{grant}_2)^\omega
+        \models \varphi$
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{Synthesis Algorithms}
+
+\begin{frame}{Classical Algorithms}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (spec) {LTL\\formula};
+      \node[right= of spec,align=center] (auto) {B\"uchi\\automaton};
+      \node[right= of auto,align=center] (det) {Deterministic\\automaton};
+      \node[right= of det,align=center] (game) {(Parity)\\Game};
+      \node[right= of game,align=center] {\alert{2EXP}\\\alert{(complete)}};
+      \node[below= of det,align=center,visible on=<3->] (safraless)
+        {Safraless\\approaches};
+      \path[->]
+        (spec) edge[thick,color=red] (auto)
+        (auto) edge[thick,color=red] (det)
+        (det) edge (game)
+      ;
+      \path[->,visible on=<3->]
+        (auto) edge[bend right] (safraless)
+      ;
+    \end{tikzpicture}
+  \end{center}
+  \visible<2->{
+    \begin{block}{Important optimizations}
+      \begin{itemize}
+        \item Normalization procedures on the LTL formula
+        \item On-the-fly construction of the deterministic automaton (and game)
+        \item \dots
+      \end{itemize}
+    \end{block}
+  }
+\end{frame}
+
+\section{Approximation via Safety}
+% 4. Safety approximation: to avoid determinization
+
+\section{Downsets}
+% 5. Downsets (a.k.a. Antichains)
+
+\section{Acacia-Bonsai and Experiments}
+% 6. Tool architecture and features
+% 7. Experimental results
+
+\section{Conclusion}
+% 8. Conclusion + future work
 
 \end{document}
