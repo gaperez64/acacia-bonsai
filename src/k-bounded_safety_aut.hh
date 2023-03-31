@@ -60,7 +60,16 @@ class k_bounded_safety_aut_detail {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
-    bool solve (const std::string& synth_fname) {
+    struct solve_ret_t {
+      bool solved;
+      SetOfStates F; // the antichain
+
+      solve_ret_t(bool s, SetOfStates&& F_): F(std::move(F_)) {
+        solved = s;
+      }
+    };
+
+    solve_ret_t solve (const std::string& synth_fname) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -97,12 +106,12 @@ class k_bounded_safety_aut_detail {
           if (!synth_fname.empty ()) {
             synthesis (F, actioner, synth_fname);
           }
-          return true;
+          return { true, std::move(F) };
         }
         cpre_inplace (F, *input, actioner);
         if (not F.contains (State (init))) {
           if (K >= Kto)
-            return false;
+            return { false, std::move(F) };
           verb_do (1, vout << "Incrementing K from " << K << " to " << K + Kinc << std::endl);
           K += Kinc;
           actioner.setK (K);
@@ -122,7 +131,7 @@ class k_bounded_safety_aut_detail {
       } while (1);
 
       std::abort ();
-      return false;
+      return { false, std::move(F) };
     }
 
     // Disallow copies.

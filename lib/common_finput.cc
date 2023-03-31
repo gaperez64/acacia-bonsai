@@ -128,7 +128,7 @@ job_processor::process_string(const std::string& input,
       pf.format_errors(std::cerr);
       return 1;
     }
-  return process_formula(pf.f, filename, linenum);
+  return process_formula({pf.f}, filename, linenum);
 }
 
 int
@@ -356,6 +356,7 @@ job_processor::process_file(const char* filename)
 int
 job_processor::run()
 {
+  /*
   int error = 0;
   for (auto& j: jobs)
     {
@@ -367,6 +368,25 @@ job_processor::run()
         break;
     }
   return error;
+  */
+  // composition: add jobs (all strings) to one vector to call solve with instead of calling solve on each string
+  std::vector<spot::formula> formulas;
+  for (auto& j: jobs)
+  {
+      assert(!j.file_p);
+
+      auto pf = parse_formula(j.str);
+
+      if (!pf.f || !pf.errors.empty())
+      {
+          //if (filename)
+          //    error_at_line(0, 0, filename, linenum, "parse error:");
+          pf.format_errors(std::cerr);
+          return 1;
+      }
+      formulas.push_back(pf.f);
+  }
+  return process_formula(formulas, nullptr, 0);
 }
 
 void check_no_formula()

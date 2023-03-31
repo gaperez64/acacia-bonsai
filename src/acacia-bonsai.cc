@@ -385,7 +385,7 @@ namespace {
                         vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
                         vbitsets.value>>>
                     (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-                  realizable = skn.solve (synth_fname);
+                  realizable = skn.solve (synth_fname).solved;
                 },
                 UNREACHABLE,
                 vectors::nbools_to_nbitsets (nbitsetbools));
@@ -402,7 +402,7 @@ namespace {
                     vectors::VECTOR_IMPL<VECTOR_ELT_T>,
                     vbitsets.value>>>
                 (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-              realizable = skn.solve (synth_fname);
+              realizable = skn.solve (synth_fname).solved;
             },
             UNREACHABLE,
             vectors::nbools_to_nbitsets (nbitsetbools));
@@ -416,11 +416,11 @@ namespace {
 
         timer.stop ();
 
-        return realizable;
+        return realizable; // TODO: also return antichain + automaton
       }
 
-      int process_formula (spot::formula f, const char *, int) override {
-        return solve_formula (f);
+      int process_formula (std::vector<spot::formula> f, const char *, int) override {
+        return solve_formula (f[0]);
       }
 
   };
