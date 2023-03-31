@@ -200,8 +200,8 @@ class k_bounded_safety_aut_detail {
       std::abort (); // element should be found, if we reach this -> bad
     }
 
-    bdd binary_encode (unsigned int s, const std::vector<bdd>& src) // ~ bdd_buildcube(s, src.size(), src.data())
-    {
+    bdd binary_encode (unsigned int s, const std::vector<bdd>& src) const {
+      // ~ bdd_buildcube(s, src.size(), src.data())
       // turn the value into a BDD e.g. with 4 states so 2 variables:
       // state 0: !x1 & !x2
       // state 1:  x1 & !x2
@@ -237,8 +237,7 @@ class k_bounded_safety_aut_detail {
     };
 
     template <typename Antichain, typename Actioner>
-    void synthesis(Antichain& F, Actioner& actioner, const std::string& synth_fname)
-    {
+    void synthesis(Antichain& F, Actioner& actioner, const std::string& synth_fname) {
       verb_do (2, vout << "Final F:\n" << F);
       verb_do (1, vout << "F = antichain of size " << F.size() << "\n");
 
@@ -399,7 +398,7 @@ class k_bounded_safety_aut_detail {
 
     // return IO + destination state (one IO, one destination state: deterministic)
     template <typename Actions, typename Actioner>
-    std::pair<bdd, State> get_transition (const State& elem, const Actions& actions, Actioner& actioner, const SetOfStates& antichain) {
+    std::pair<bdd, State> get_transition (const State& elem, const Actions& actions, Actioner& actioner, const SetOfStates& antichain) const {
       // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
       for (const auto& action_vec : actions) {
         // calculate fwd(m, action), see if this is dominated by some element in the antichain

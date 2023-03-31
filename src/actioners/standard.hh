@@ -139,13 +139,13 @@ namespace actioners {
           //m.to_vector (mcopy);
 
           for (size_t p = 0; p < m.size (); ++p) {
-            for (const auto& [q, q_final] : avec[p]) {
+            for (const auto& [q, p_final] : avec[p]) {
               if (dir == direction::forward) {
                 if (m[q] != -1)
-                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (m[q] + (char) (q_final ? 1 : 0))));
+                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (m[q] + (char) (p_final ? 1 : 0))));
               } else
                 if (apply_out[q] != -1)
-                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (m[p] - (char) (q_final ? 1 : 0))));
+                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (m[p] - (char) (p_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
               if (dir == direction::forward && apply_out[p] == K)
@@ -166,7 +166,7 @@ namespace actioners {
         auto compute_action_vec (const Set& transset) {
 
             // create action_vec and include transset.second = the IO
-          action_vec ret_fwd (aut->num_states(), transset.IO);
+          action_vec ret_fwd (aut->num_states (), transset.IO);
           //action_vec ret_fwd (aut->num_states());
           TODO ("We have two representations of the same thing here; "
                 "see if we can narrow it down to one.");
