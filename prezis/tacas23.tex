@@ -37,7 +37,8 @@
 \begin{frame}{Motivation: Safe Reactive Systems}
   \begin{block}{Reactive systems}
     These are systems that interact with their environment in a
-    \alert{continuous} fashion, i.e. nonstop, and they are all around us.
+    \alert{continuous} fashion, i.e. nonstop, and they are all around us:
+    e.g. operating systems, schedulers, embedded controllers\dots
   \end{block}
   \begin{center}
     \begin{tikzpicture}
@@ -91,7 +92,24 @@
       \always \varphi \mid \varphi \until \varphi
     \]
   \end{block}
-  \pause
+
+  \begin{block}{Why LTL?}
+    It allows to naturally specify time dependence amongst events.
+    It has applicaitons in:
+    \begin{itemize}
+      \item Artificial intelligence
+      \item Hybrid systems and control
+      \item Software engineering
+      \item Bio-informatics
+      \item \dots
+    \end{itemize}
+    It forms the basis of the \alert{Property Specification Language} (IEEE
+    1850) that can be used with electronic system design languages (HDLs e.g.
+    Verilog).
+  \end{block}
+\end{frame}
+
+\begin{frame}{Semantics of LTL}
   \begin{block}{Semantics over words (by example)}
     ``It is always the case that if there is a request then eventually it is
     granted'':
@@ -106,6 +124,16 @@
       \item
         $(\overline{\mathit{req}_1},\overline{\mathit{req}_2},\mathit{grant}_1,\mathit{grant}_2)^\omega
         \models \varphi$
+    \end{itemize}
+  \end{block}
+  \pause
+  \begin{block}{The synthesis problem}
+    Does there exist a \alert{controller} $\sigma : Val(ins)^* \to Val(outs)$
+    such that all outcomes consistent with $\sigma$ satisfy the specification?
+    \pause
+    \begin{itemize}
+      \item For $\varphi$ as above, with $ins = \{req_i\}$ and $outs = \{grant_i\}$,
+        \alert{yes!} ``grant all requests immediately''
     \end{itemize}
   \end{block}
 \end{frame}
@@ -143,8 +171,51 @@
   }
 \end{frame}
 
-\section{Approximation via Safety}
 % 4. Safety approximation: to avoid determinization
+\begin{frame}{From LTL to B\"uchi Automata: Example}
+  \[ \lnot\left(\bigwedge_{i=1,2} \always(\mathit{req}_i \rightarrow \evtly
+  \mathit{grant}_i)\right)\]
+  %
+  \pause
+  %
+  \begin{center}
+    \begin{tikzpicture}
+      \node[initial,state](s0){0};
+      \node[state,accepting,above right= of s0](s1){1};
+      \node[state,accepting,below right= of s0](s2){2};
+      \path[->,auto]
+        (s0) edge[loop above] node{$
+          \bigwedge \mathit{req}_i \rightarrow \mathit{grant}_i
+        $} (s0)
+        (s0) edge node[swap]{$\mathit{req}_1 \land \lnot \mathit{grant}_1$} (s1)
+        (s0) edge node{$\mathit{req}_2 \land \lnot \mathit{grant}_2$} (s2)
+        (s1) edge[loop right] node{$\top$} (s1)
+        (s2) edge[loop right] node{$\top$} (s2)
+      ;
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Let's Play a Game}
+  \begin{block}{The synthesis game}
+    Let $\mathcal{A}_{\lnot \varphi}$ be the B\"uchi automaton for the
+    complement of the specification $\varphi$. In each round of the game:
+    \begin{enumerate}
+      \item Environment chooses a valuation of ins,
+      \item Controller then chooses a valuation of outs.
+    \end{enumerate}
+    The (infinite) outcome is \alert{winning for Controller} iff it
+    satisfies $\varphi$ iff it is \emph{not} accepted by $\mathcal{A}_{\lnot
+    \varphi}$.
+    \begin{itemize}
+      \item Non-determinism in $\mathcal{A}_{\lnot \varphi}$ makes things
+        algorithmically difficult\dots
+    \end{itemize}
+  \end{block}
+  \pause
+  \begin{block}{A handicapped game}
+  \end{block}
+\end{frame}
 
 \section{Downsets}
 % 5. Downsets (a.k.a. Antichains)
