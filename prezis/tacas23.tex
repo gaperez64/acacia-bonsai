@@ -69,7 +69,7 @@
     \end{itemize}
   \end{block}
   \pause
-  \begin{block}{LTL syntesis tools}
+  \begin{block}{LTL synthesis tools}
     Award winning tools include:
     \begin{itemize}
       \item Strix
@@ -95,7 +95,7 @@
 
   \begin{block}{Why LTL?}
     It allows to naturally specify time dependence amongst events.
-    It has applicaitons in:
+    It has applications in:
     \begin{itemize}
       \item Artificial intelligence
       \item Hybrid systems and control
@@ -184,9 +184,7 @@
       \node[state,accepting,above right= of s0](s1){1};
       \node[state,accepting,below right= of s0](s2){2};
       \path[->,auto]
-        (s0) edge[loop above] node{$
-          \bigwedge \mathit{req}_i \rightarrow \mathit{grant}_i
-        $} (s0)
+        (s0) edge[loop above] node{$\top$} (s0)
         (s0) edge node[swap]{$\mathit{req}_1 \land \lnot \mathit{grant}_1$} (s1)
         (s0) edge node{$\mathit{req}_2 \land \lnot \mathit{grant}_2$} (s2)
         (s1) edge[loop right] node{$\top$} (s1)
@@ -213,18 +211,180 @@
     \end{itemize}
   \end{block}
   \pause
-  \begin{block}{A handicapped game}
+  \begin{block}{A handicapped version of the game}
+    Let $k \in \mathbb{N}$.
+    \begin{itemize}
+      \item Rounds of the game proceed as before.
+      \item The outcome is winning for Controller iff all runs of
+        $\mathcal{A}_{\lnot \varphi}$ on it reach final states \alert{at most $k$
+        times}.
+    \end{itemize}
   \end{block}
 \end{frame}
 
-\section{Downsets}
+\begin{frame}{A Concrete Game: Example}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[initial,state](s0){0};
+      \node[state,accepting,above right= of s0](s1){1};
+      \node[state,accepting,below right= of s0](s2){2};
+      \path[->,auto]
+        (s0) edge[loop above] node{$\top$} (s0)
+        (s0) edge node[swap]{$\mathit{req}_1 \land \lnot \mathit{grant}_1$} (s1)
+        (s0) edge node{$\mathit{req}_2 \land \lnot \mathit{grant}_2$} (s2)
+        (s1) edge[loop right] node{$\lnot \mathit{grant}_1$} (s1)
+        (s2) edge[loop right] node{$\lnot \mathit{grant}_2$} (s2)
+      ;
+    \end{tikzpicture}
+  \end{center}
+  \begin{block}{The handicap gives a conservative over-approximation}
+    Controller does not grant anything, $n$ turns. Then, it grants
+    everything once; grants requests immediately.
+    \begin{itemize}
+      \item If $k \geq n$, this is a \alert{winning strategy} for controller
+        in both versions of the game.
+      \item If $k < n$, this strategy is winning for the first game and
+        \alert{losing for the handicapped version}.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{A Game Played on Vectors: k=2}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[initial](v0){$\begin{pmatrix}0\\-1\\-1\end{pmatrix}$};
+      \node[right=2cm of v0](v1){$\begin{pmatrix}0\\1\\-1\end{pmatrix}$};
+      \node[right= of v1](v2){$\begin{pmatrix}0\\2\\-1\end{pmatrix}$};
+      \node[color=red,right= of v2](v3){$\begin{pmatrix}0\\3\\-1\end{pmatrix}$};
+      \node[below= of v1](v4){$\begin{pmatrix}0\\-1\\1\end{pmatrix}$};
+      \node[below= of v0](v5){$\begin{pmatrix}0\\1\\1\end{pmatrix}$};
+      \node[right= of v4](dots){\dots};
+      \path[->,auto]
+        (v0) edge[loop above] node{$\bigwedge r_i \rightarrow g_i$} (v0)
+        (v0) edge node[swap,align=center]{$r_1 \land \lnot g_1$\\$r_2 \rightarrow g_2$} (v1)
+        (v1) edge node[align=center]{$\lnot g_1$\\$r_2 \rightarrow g_2$} (v2)
+        (v2) edge node[align=center]{$\lnot g_1$\\$r_2 \rightarrow g_2$} (v3)
+        (v1) edge[bend right] node[swap,align=center]{$g_1$\\$r_2 \rightarrow g_2$} (v0)
+        (v0) edge[bend right] node[swap,align=center,pos=0.9]{$r_1 \rightarrow g_1$\\$r_2 \land
+        \lnot g_2$} (v4)
+        (v1) edge node{$g_1 \land r_2 \land \lnot g_2$} (v4)
+        (v0) edge node[swap]{$\bigwedge r_i \land \lnot g_i$} (v5)
+      ;
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Summary of the Algorithm}
+  \begin{block}{From LTL to safety game}
+    \begin{enumerate}
+      \item Negate the specification $\varphi$
+      \item Construct a B\"uchi automaton for it $\mathcal{A}_{\lnot \varphi}$
+      \item Fix $k \in \mathbb{N}$, turn the handicap game into a
+        \alert{safety game} played on vectors
+    \end{enumerate}
+  \end{block}
+  \pause
+  \begin{block}{Solving safety games}
+    This can be done efficiently. For instance, using the \alert{UPre}
+    operator on sets $S$ of vectors: 
+    \begin{itemize}
+      \item $s' \in \mathrm{UPre}$ if Controller cannot avoid
+        reaching a state in $\mathrm{UPre}(S)$ from $s'$ in at most $1$ step
+    \end{itemize}
+    The set of states from which Controller has a winning strategy is exactly
+    the \alert{complement} of the least fixpoint of UPre. 
+  \end{block}
+  \pause
+  \begin{block}{On the approximation}
+    There is a double-exponential $k$ such that Controller has a winning
+    strategy from the initial vector iff the answer to the synthesis problem
+    is \alert{yes}.
+  \end{block}
+\end{frame}
+
+\section{Antichains}
+
+\begin{frame}{Safety is Monotonic}
+  \begin{block}{Key observation}
+    Let $\vec{u} \leq \vec{v}$ be states. If $\vec{u}$ is \alert{not safe} then
+    $\vec{v}$ is not safe either.
+    \begin{itemize}
+      \item All sets computed by UPre, from the final states, are \alert{upward
+        closed}!
+    \end{itemize}
+  \end{block}
+  \pause
+  \begin{block}{Solving safety games, revisited}
+    We can have \alert{symbolic} versions of operators that work on
+    antichains of \alert{minimal elements} to represent closed sets:
+    \begin{itemize}
+      \item Symbolic membership
+      \item Symbolic union
+      \item Symbolic intersection
+      \item Symbolic UPre
+    \end{itemize}
+  \end{block}
+\end{frame}
 % 5. Downsets (a.k.a. Antichains)
 
 \section{Acacia-Bonsai and Experiments}
+
 % 6. Tool architecture and features
+
+\begin{frame}{Acacia-Bonsai}
+  C++20 implementation of all of the above, and more
+
+  \begin{block}{Optimizations}
+    Some based on previous antichain-based synthesis tools:
+    \begin{itemize}
+      \item Surely losing states
+      \item Boolean states
+      \item Minimizing set of input/output valuations
+      \item \dots
+    \end{itemize}
+  \end{block}
+
+  \pause
+  \begin{block}{Antichain data structures}
+    \begin{itemize}
+      \item Vector
+      \item Arrays (i.e. fixed size)
+      \item Vectors/arrays backed by SIMD registers (data parallelism)
+      \item k-d trees
+      \item \dots
+    \end{itemize}
+  \end{block}
+\end{frame}
+
 % 7. Experimental results
 
-\section{Conclusion}
+\begin{frame}{Comparison}
+  \centering
+  \includegraphics[width=0.7\textwidth]{../doc/tacas23/img/cactus}
+
+  Survival plot for SYNTCOMP'21 tools and Acacia-Bonsai
+\end{frame}
+
 % 8. Conclusion + future work
+\begin{frame}{Conclusion}
+  \begin{block}{Acacia-Bonsai}
+    \begin{itemize}
+      \item A modern (re)implementation of downset-based LTL realizability
+      \item Soon, \alert{also synthesis!}
+      \item SIMD registers and advanced data structures don't help much in
+        practice
+      \item All solved benchmarks can be solved with low $k$ values
+    \end{itemize}
+  \end{block}
+
+  \pause
+
+  \begin{block}{Future work}
+    \begin{itemize}
+      \item Try more data structures for antichains
+      \item Missing: decompose specifications
+    \end{itemize}
+  \end{block}
+\end{frame}
 
 \end{document}
