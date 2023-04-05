@@ -236,8 +236,8 @@ class k_bounded_safety_aut_detail {
       int new_state = -1;
     };
 
-    template <typename Antichain, typename Actioner>
-    void synthesis(Antichain& F, Actioner& actioner, const std::string& synth_fname) {
+    template <typename Actioner>
+    void synthesis(SetOfStates& F, Actioner& actioner, const std::string& synth_fname) {
       verb_do (2, vout << "Final F:\n" << F);
       verb_do (1, vout << "F = antichain of size " << F.size() << "\n");
 
