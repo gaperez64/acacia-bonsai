@@ -31,6 +31,7 @@
 #include <utils/cache.hh>
 
 #include "configuration.hh"
+#include "composition.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -61,7 +62,8 @@ enum {
   OPT_OUTPUT = 'o',
   OPT_CHECK = 'c',
   OPT_VERBOSE = 'v',
-  OPT_SYNTH = 'S'
+  OPT_SYNTH = 'S',
+  OPT_NOMERGE = 'N' // DEBUG COMPOSITION
 } ;
 
 enum unreal_x_t {
@@ -127,6 +129,10 @@ static const argp_option options[] = {
     "verbose", OPT_VERBOSE, nullptr, 0,
     "verbose mode, can be repeated for more verbosity", -1
   },
+  {
+    "nomerge", OPT_NOMERGE, nullptr, 0,
+    "don't merge antichains", -1
+  },
   { nullptr, 0, nullptr, 0, nullptr, 0 },
 };
 
@@ -149,6 +155,7 @@ Exit status:\n\
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 static std::string synth_fname;
+static bool no_merge = false; // DEBUG COMPOSITION
 
 
 enum {
@@ -226,7 +233,7 @@ namespace {
         return ret;
       }
 
-      bool solve_formula (spot::formula f) {
+      aut_ret solve_formula (spot::formula f) {
         spot::process_timer timer;
         timer.start ();
 
@@ -333,7 +340,8 @@ namespace {
         if (vectors::bool_threshold == 0) {
           if (want_time)
             utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
-          return true;
+          assert(false);
+          //return true;
         }
 
 
@@ -353,14 +361,13 @@ namespace {
           nbitsetbools = max_bools_in_bitsets;
         }
 
-        constexpr auto STATIC_ARRAY_CAP_MAX =
-          vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
         // Maximize usage of the nonbool implementation
         auto nonbools = aut->num_states () - nbitsetbools;
-        size_t actual_nonbools = (nonbools <= STATIC_ARRAY_CAP_MAX) ?
-          vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (nonbools) :
-          vectors::traits<vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (nonbools);
+        //size_t actual_nonbools = (nonbools <= STATIC_ARRAY_CAP_MAX) ?
+        //  vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (nonbools) :
+        //  vectors::traits<vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (nonbools);
+        size_t actual_nonbools = nonbools;
         if (actual_nonbools >= aut->num_states ())
           nbitsetbools = 0;
         else
@@ -370,6 +377,18 @@ namespace {
 
         utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
 
+        if (want_time) {
+          solve_time = sw.stop ();
+          utils::vout << "(1) done in " << solve_time << " seconds\n";
+          utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
+        }
+
+        timer.stop ();
+
+        return {aut, vectors::bool_threshold, vectors::bitset_threshold, actual_nonbools, nbitsetbools,
+        all_inputs, all_outputs};
+
+        /*
 #define UNREACHABLE [] (int x) { assert (false); }
 
         bool realizable = false;
@@ -416,13 +435,98 @@ namespace {
 
         timer.stop ();
 
-        return realizable; // TODO: also return antichain + automaton
+        return realizable;
+        */
       }
 
       int process_formula (std::vector<spot::formula> f, const char *, int) override {
-        return solve_formula (f[0]);
-      }
 
+#define UNREACHABLE [] (int x) { utils::vout << "UNREACHABLE!\n"; assert (false); }
+
+        std::vector<aut_ret> r;
+        for(size_t i = 0; i < f.size (); i++)
+        {
+          utils::vout << "Formula " << i << ": " << f[i] << "\n";
+          r.push_back(solve_formula(f[i]));
+          utils::vout << "-> nbitsetbools     " << r[i].nbitsetbools << "\n";
+          utils::vout << "-> bitset_threshold " << r[i].bitset_threshold << "\n";
+          utils::vout << "-> bool_threshold   " << r[i].bool_threshold << "\n";
+          utils::vout << "-> actual_nonbools  " << r[i].actual_nonbools << "\n";
+        }
+
+        if (f.size () == 1) {
+          bool realizable = false;
+
+          static_switch_t<STATIC_MAX_BITSETS> {} (
+          [&] (auto vbitsets) {
+            auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
+            downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
+            vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vbitsets.value>>>
+            (r[0].aut, opt_Kmin, opt_K, opt_Kinc, r[0].all_inputs, r[0].all_outputs);
+            realizable = skn.solve (synth_fname).solved;
+          },
+          UNREACHABLE,
+          vectors::nbools_to_nbitsets (r[0].nbitsetbools));
+
+          return realizable;
+        }
+        else if (f.size () == 2) {
+          bool realizable = false;
+
+          static_switch_t<STATIC_MAX_BITSETS> {} (
+          [&] (auto vbitsets0) {
+            r[0].set_globals();
+            auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
+            downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
+            vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(vbitsets0.value)>>>
+            (r[0].aut, opt_Kmin, opt_K, opt_Kinc, r[0].all_inputs, r[0].all_outputs);
+            auto t0 = skn.solve ("");
+            utils::vout << "F0: " << t0.F << "\n";
+            if (!t0.solved) {
+              utils::vout << "Not solvable -> false!\n";
+              return;
+            }
+
+            static_switch_t<STATIC_MAX_BITSETS> {} (
+            [&] (auto vbitsets1) {
+              r[1].set_globals();
+              auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
+              downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
+              vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(vbitsets1.value)>>>
+              (r[1].aut, opt_Kmin, opt_K, opt_Kinc, r[1].all_inputs, r[1].all_outputs);
+              auto t1 = skn.solve ("");
+              utils::vout << "F1: " << t1.F << "\n";
+              if (!t1.solved) {
+                utils::vout << "Not solvable -> false!\n";
+                return;
+              }
+
+              auto compose01 = composition<decltype (t0.F), decltype (t1.F), vbitsets0.value, vbitsets1.value>();
+              auto merge_aut01 = compose01.merge_aut (r[0], r[1]);
+              auto merge_chain01 = compose01.merge_antichains (t0.F, t1.F);
+              utils::vout << "New antichain: " << merge_chain01 << "\n";
+
+              auto skn2 = K_BOUNDED_SAFETY_AUT_IMPL<
+              downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
+              vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(vbitsets0.value + vbitsets1.value)>>>
+              (merge_aut01.aut, opt_Kmin, opt_K, opt_Kinc, merge_aut01.all_inputs, merge_aut01.all_outputs);
+              auto t01 = skn2.solve (synth_fname, no_merge ? nullptr : &merge_chain01);
+              realizable = t01.solved;
+
+            },
+            UNREACHABLE,
+            //vectors::nbools_to_nbitsets (r[1].nbitsetbools));
+            r[1].nbitsetbools);
+          },
+          UNREACHABLE,
+          //vectors::nbools_to_nbitsets (r[0].nbitsetbools));
+          r[0].nbitsetbools);
+
+          utils::vout << "Realizable: " << realizable << "\n";
+          return realizable;
+        }
+        else assert(false);
+      }
   };
 }
 
@@ -510,6 +614,11 @@ parse_opt (int key, char *arg, struct argp_state *) {
 
     case OPT_VERBOSE: {
       ++utils::verbose;
+      break;
+    }
+
+    case OPT_NOMERGE: {
+      no_merge = true;
       break;
     }
 

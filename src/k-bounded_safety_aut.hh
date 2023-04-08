@@ -69,7 +69,7 @@ class k_bounded_safety_aut_detail {
       }
     };
 
-    solve_ret_t solve (const std::string& synth_fname) {
+    solve_ret_t solve (const std::string& synth_fname, SetOfStates* init_safe = nullptr) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -87,6 +87,13 @@ class k_bounded_safety_aut_detail {
       for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
         safe_vector[i] = 0;
       SetOfStates F = SetOfStates (State (safe_vector));
+
+      if (init_safe != nullptr) {
+        // use a better starting point than the all-K vector
+        F = std::move (*init_safe);
+        utils::vout << "using F: " << F << "\n";
+      }
+      else utils::vout << "using default F: " << F << "\n";
 
       int loopcount = 0;
 
