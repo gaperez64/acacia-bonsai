@@ -36,7 +36,6 @@ namespace actioners {
           }
 
           bool operator<(const action_vec& rhs) const {
-            // I hope this works and the BDDs' ids dont change
             return (IO.id () < rhs.IO.id ()) || ((IO.id () == rhs.IO.id ()) && (actions < rhs.actions));
           }
 
