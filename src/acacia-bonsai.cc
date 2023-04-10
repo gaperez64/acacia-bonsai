@@ -503,14 +503,14 @@ namespace {
 
               auto compose01 = composition<decltype (t0.F), decltype (t1.F), vbitsets0.value, vbitsets1.value>();
               auto merge_aut01 = compose01.merge_aut (r[0], r[1]);
-              auto merge_chain01 = compose01.merge_antichains (t0.F, t1.F);
-              utils::vout << "New antichain: " << merge_chain01 << "\n";
+              auto merge_safe01 = compose01.merge_saferegions(t0.F, t1.F);
+              utils::vout << "New safe region: " << merge_safe01 << "\n";
 
               auto skn2 = K_BOUNDED_SAFETY_AUT_IMPL<
               downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
               vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(vbitsets0.value + vbitsets1.value)>>>
               (merge_aut01.aut, opt_Kmin, opt_K, opt_Kinc, merge_aut01.all_inputs, merge_aut01.all_outputs);
-              auto t01 = skn2.solve (synth_fname, no_merge ? nullptr : &merge_chain01);
+              auto t01 = skn2.solve (synth_fname, no_merge ? nullptr : &merge_safe01);
               realizable = t01.solved;
 
             },

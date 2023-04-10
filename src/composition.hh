@@ -220,19 +220,16 @@ class composition {
 
 
 
-  auto merge_antichains(F1t& F1, F2t& F2)
-  {
+  auto merge_saferegions(F1t& F1, F2t& F2) {
     downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
     vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(B1 + B2)>>
-    final_chain(combine_vectors(*F1.begin(), *F2.begin())); // need a first element for the constructor to work
-    for(const auto& m1: F1)
-    {
-      for(const auto& m2: F2)
-      {
-        final_chain.insert(combine_vectors(m1, m2));
+    merged(combine_vectors(*F1.begin(), *F2.begin())); // need a first element for the constructor to work
+    for(const auto& m1: F1) {
+      for(const auto& m2: F2) {
+        merged.insert(combine_vectors(m1, m2));
       }
     }
 
-    return final_chain;
+    return merged;
   }
 };
