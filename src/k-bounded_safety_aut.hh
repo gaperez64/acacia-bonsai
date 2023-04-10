@@ -177,10 +177,10 @@ class k_bounded_safety_aut_detail {
     // get index of the first dominating element that dominates the vector v
     // Container can be SetOfStates, or std::vector
     template <class Container>
-    int get_dominated_index (const Container& antichain, const State& v) const {
+    int get_dominated_index (const Container& saferegion, const State& v) const {
       int i = 0;
-      auto it = antichain.begin ();
-      while (it != antichain.end ()) {
+      auto it = saferegion.begin ();
+      while (it != saferegion.end ()) {
         if (SetOfStates ((*it).copy ()).contains (v)) return i;
         i++;
         ++it;
@@ -189,10 +189,10 @@ class k_bounded_safety_aut_detail {
     }
 
     template <class Container>
-    State get_dominated_element (const Container& antichain, const State& v) const {
+    State get_dominated_element (const Container& saferegion, const State& v) const {
       int i = 0;
-      auto it = antichain.begin ();
-      while (it != antichain.end ()) {
+      auto it = saferegion.begin ();
+      while (it != saferegion.end ()) {
         if (SetOfStates ((*it).copy ()).contains (v)) return (*it).copy ();
         i++;
         ++it;
@@ -239,7 +239,7 @@ class k_bounded_safety_aut_detail {
     template <typename Actioner>
     void synthesis(SetOfStates& F, Actioner& actioner, const std::string& synth_fname) {
       verb_do (2, vout << "Final F:\n" << F);
-      verb_do (1, vout << "F = antichain of size " << F.size() << "\n");
+      verb_do (1, vout << "F = downset of size " << F.size() << "\n");
 
 
       // Latches in the AIGER file are initialized to zero, so it would be nice if index 0 is the initial state
@@ -283,7 +283,7 @@ class k_bounded_safety_aut_detail {
           //  + the action includes the IO
           verb_do (2, vout << "Input: " << bdd_to_formula (tuple.first) << "\n");
 
-          // add all compatible IOs that keep us in the antichain (+ encoding of destination state)
+          // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
           std::pair<bdd, State> p = get_transition (states[src], tuple.second, actioner, F);
           int index = get_dominated_index (states, p.second);
           // ^ returns index of FIRST element that dominates
@@ -398,10 +398,10 @@ class k_bounded_safety_aut_detail {
 
     // return IO + destination state (one IO, one destination state: deterministic)
     template <typename Actions, typename Actioner>
-    std::pair<bdd, State> get_transition (const State& elem, const Actions& actions, Actioner& actioner, const SetOfStates& antichain) const {
+    std::pair<bdd, State> get_transition (const State& elem, const Actions& actions, Actioner& actioner, const SetOfStates& saferegion) const {
       // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
       for (const auto& action_vec : actions) {
-        // calculate fwd(m, action), see if this is dominated by some element in the antichain
+        // calculate fwd(m, action), see if this is dominated by some element in the safe region
         SetOfStates&& fwd = SetOfStates (elem.copy ()).apply ([this, &action_vec, &actioner] (const auto& _m) {
           auto&& ret = actioner.apply (_m, action_vec, actioners::direction::forward);
           verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
@@ -410,7 +410,7 @@ class k_bounded_safety_aut_detail {
 
         assert (fwd.size () == 1);
 
-        if (antichain.contains (*fwd.begin ())) {
+        if (saferegion.contains (*fwd.begin ())) {
           verb_do (2, vout << "dominated with IO = " << bdd_to_formula (action_vec.IO) << ": " << fwd);
           return { action_vec.IO, (*fwd.begin ()).copy () }; // <- for deterministic policy using first IO that is found
         }
