@@ -45,8 +45,8 @@
       \node (cnt) {Controller};
       \node[right= of cnt] (env) {Environment};
       \path[->,auto]
-        (cnt) edge[bend left] node{\footnotesize Val of ins} (env)
-        (env) edge[bend left] node{\footnotesize Val of outs} (cnt)
+        (cnt) edge[bend left] node{\footnotesize Val of outs} (env)
+        (env) edge[bend left] node{\footnotesize Val of ins} (cnt)
         ;
     \end{tikzpicture}
   \end{center}
@@ -187,8 +187,8 @@
         (s0) edge[loop above] node{$\top$} (s0)
         (s0) edge node[swap]{$\mathit{req}_1 \land \lnot \mathit{grant}_1$} (s1)
         (s0) edge node{$\mathit{req}_2 \land \lnot \mathit{grant}_2$} (s2)
-        (s1) edge[loop right] node{$\top$} (s1)
-        (s2) edge[loop right] node{$\top$} (s2)
+        (s1) edge[loop right] node{$\lnot \mathit{grant}_1$} (s1)
+        (s2) edge[loop right] node{$\lnot \mathit{grant}_2$} (s2)
       ;
     \end{tikzpicture}
   \end{center}
