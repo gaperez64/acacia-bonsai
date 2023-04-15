@@ -60,16 +60,8 @@ class k_bounded_safety_aut_detail {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
-    struct solve_ret_t {
-      bool solved;
-      SetOfStates F; // the antichain
 
-      solve_ret_t(bool s, SetOfStates&& F_): F(std::move(F_)) {
-        solved = s;
-      }
-    };
-
-    solve_ret_t solve (const std::string& synth_fname, SetOfStates* init_safe = nullptr) {
+    std::optional<SetOfStates> solve (const std::string& synth_fname, SetOfStates* init_safe = nullptr) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -91,9 +83,9 @@ class k_bounded_safety_aut_detail {
       if (init_safe != nullptr) {
         // use a better starting point than the all-K vector
         F = std::move (*init_safe);
-        utils::vout << "using F: " << F << "\n";
+        verb_do (1, vout << "using F: " << F << "\n");
       }
-      else utils::vout << "using default F: " << F << "\n";
+      else verb_do (1, vout << "using default F: " << F << "\n");
 
       int loopcount = 0;
 
@@ -113,12 +105,12 @@ class k_bounded_safety_aut_detail {
           if (!synth_fname.empty ()) {
             synthesis (F, actioner, synth_fname);
           }
-          return { true, std::move(F) };
+          return std::make_optional<SetOfStates>(std::move (F));
         }
         cpre_inplace (F, *input, actioner);
         if (not F.contains (State (init))) {
           if (K >= Kto)
-            return { false, std::move(F) };
+            return std::nullopt;
           verb_do (1, vout << "Incrementing K from " << K << " to " << K + Kinc << std::endl);
           K += Kinc;
           actioner.setK (K);
@@ -138,7 +130,7 @@ class k_bounded_safety_aut_detail {
       } while (1);
 
       std::abort ();
-      return { false, std::move(F) };
+      return std::nullopt;
     }
 
     // Disallow copies.

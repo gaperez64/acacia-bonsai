@@ -233,7 +233,7 @@ namespace {
         return ret;
       }
 
-      aut_ret solve_formula (spot::formula f) {
+      aut_ret solve_formula (spot::formula f, const std::string& synth = "") {
         spot::process_timer timer;
         timer.start ();
 
@@ -269,7 +269,7 @@ namespace {
           input_aps_.swap (output_aps_);
         }
 
-        verb_do (1, vout << "Formula: " << f << std::endl);
+	verb_do (1, vout << "Formula: " << f << std::endl);
 
         auto aut = trans_.run (&f);
 
@@ -341,7 +341,6 @@ namespace {
           if (want_time)
             utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
           assert(false);
-          //return true;
         }
 
 
@@ -351,47 +350,20 @@ namespace {
         if (want_time)
           sw.start ();
 
-        // Compute how many boolean states will actually be put in bitsets.
-        constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
-        auto nbitsetbools = aut->num_states () - vectors::bool_threshold;
-        if (nbitsetbools > max_bools_in_bitsets) {
-          verb_do (1, vout << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
-                   /*   */ << "\tTotal # of Boolean-for-bitset states: " << nbitsetbools
-                   /*   */ << ", max: " << max_bools_in_bitsets << std::endl);
-          nbitsetbools = max_bools_in_bitsets;
-        }
 
-
-        // Maximize usage of the nonbool implementation
-        auto nonbools = aut->num_states () - nbitsetbools;
-        //size_t actual_nonbools = (nonbools <= STATIC_ARRAY_CAP_MAX) ?
-        //  vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (nonbools) :
-        //  vectors::traits<vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (nonbools);
-        size_t actual_nonbools = nonbools;
-        if (actual_nonbools >= aut->num_states ())
-          nbitsetbools = 0;
-        else
-          nbitsetbools -= (actual_nonbools - nonbools);
-
-        vectors::bitset_threshold = aut->num_states () - nbitsetbools;
-
-        utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
-
-        if (want_time) {
-          solve_time = sw.stop ();
-          utils::vout << "(1) done in " << solve_time << " seconds\n";
-          utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
-        }
-
-        timer.stop ();
-
-        return {aut, vectors::bool_threshold, vectors::bitset_threshold, actual_nonbools, nbitsetbools,
-        all_inputs, all_outputs};
-
-        /*
 #define UNREACHABLE [] (int x) { assert (false); }
 
-        bool realizable = false;
+        constexpr auto STATIC_ARRAY_CAP_MAX =
+        vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+
+        aut_ret ret;
+        ret.aut = aut;
+        ret.all_inputs = all_inputs;
+        ret.all_outputs = all_outputs;
+        ret.bitset_threshold = vectors::bitset_threshold;
+        ret.bool_threshold = vectors::bool_threshold;
+
+        auto [nbitsetbools, actual_nonbools] = ret.set_globals();
 
         if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) { // Array & Bitsets
           static_switch_t<STATIC_ARRAY_CAP_MAX> {} (
@@ -404,7 +376,10 @@ namespace {
                         vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
                         vbitsets.value>>>
                     (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-                  realizable = skn.solve (synth_fname).solved;
+                  auto safe = skn.solve (synth);
+                  if (safe.has_value()) {
+                    ret.safe = cast_downset<GenericDownset>(safe.value());
+                  }
                 },
                 UNREACHABLE,
                 vectors::nbools_to_nbitsets (nbitsetbools));
@@ -421,7 +396,10 @@ namespace {
                     vectors::VECTOR_IMPL<VECTOR_ELT_T>,
                     vbitsets.value>>>
                 (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-              realizable = skn.solve (synth_fname).solved;
+              auto safe = skn.solve (synth);
+              if (safe.has_value()) {
+                ret.safe = cast_downset<GenericDownset>(safe.value());
+              }
             },
             UNREACHABLE,
             vectors::nbools_to_nbitsets (nbitsetbools));
@@ -429,103 +407,114 @@ namespace {
 
         if (want_time) {
           solve_time = sw.stop ();
-          utils::vout << "Safety game solved in " << solve_time << " seconds, returning " << realizable << "\n";
+          utils::vout << "Safety game solved in " << solve_time << " seconds, returning " << ret.safe.has_value() << "\n";
           utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
         }
 
         timer.stop ();
 
-        return realizable;
-        */
+        return ret;
+      }
+
+      void shrink_safe (aut_ret& m, const std::string& synth = "") {
+        auto [nbitsetbools, actual_nonbools] = m.set_globals();
+
+#define UNREACHABLE [] (int x) { assert (false); }
+
+        constexpr auto STATIC_ARRAY_CAP_MAX =
+        vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+
+        if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) { // Array & Bitsets
+          static_switch_t<STATIC_ARRAY_CAP_MAX> {} (
+            [&] (auto vnonbools) {
+              static_switch_t<STATIC_MAX_BITSETS> {} (
+                [&] (auto vbitsets) {
+                  using SpecializedDownset = downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<
+                      vectors::X_and_bitset<
+                      vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
+                      vbitsets.value>>;
+                  auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
+                    (m.aut, opt_Kmin, opt_K, opt_Kinc, m.all_inputs, m.all_outputs);
+                  assert(m.safe.has_value ());
+                  auto current_safe = cast_downset<SpecializedDownset>(m.safe.value ());
+                  auto safe = skn.solve (synth, &current_safe);
+                  if (safe.has_value ()) {
+                    m.safe = cast_downset<GenericDownset>(safe.value ());
+                  } else m.safe = std::nullopt;
+                },
+                UNREACHABLE,
+                vectors::nbools_to_nbitsets (nbitsetbools));
+            },
+            UNREACHABLE,
+            actual_nonbools);
+        }
+        else {                                  // Vectors & Bitsets
+          static_switch_t<STATIC_MAX_BITSETS> {} (
+            [&] (auto vbitsets) {
+              using SpecializedDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
+                  vectors::X_and_bitset<
+                  vectors::VECTOR_IMPL<VECTOR_ELT_T>,
+                  vbitsets.value>>;
+              auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
+                (m.aut, opt_Kmin, opt_K, opt_Kinc, m.all_inputs, m.all_outputs);
+              assert(m.safe.has_value ());
+              auto current_safe = cast_downset<SpecializedDownset>(m.safe.value ());
+              auto safe = skn.solve (synth, &current_safe);
+              if (safe.has_value ()) {
+                m.safe = cast_downset<GenericDownset>(safe.value ());
+              } else m.safe = std::nullopt;
+            },
+            UNREACHABLE,
+            vectors::nbools_to_nbitsets (nbitsetbools));
+        }
       }
 
       int process_formula (std::vector<spot::formula> f, const char *, int) override {
+        assert(!f.empty());
+        if (f.size () == 1) {
+          // no composition
+          return solve_formula (f[0], synth_fname).safe.has_value ();
+        }
 
-#define UNREACHABLE [] (int x) { utils::vout << "UNREACHABLE!\n"; assert (false); }
+        utils::vout << "Using composition for " << f.size() << " formulas:\n";
 
         std::vector<aut_ret> r;
-        for(size_t i = 0; i < f.size (); i++)
-        {
+        for(size_t i = 0; i < f.size (); i++) {
           utils::vout << "Formula " << i << ": " << f[i] << "\n";
-          r.push_back(solve_formula(f[i]));
-          utils::vout << "-> nbitsetbools     " << r[i].nbitsetbools << "\n";
-          utils::vout << "-> bitset_threshold " << r[i].bitset_threshold << "\n";
-          utils::vout << "-> bool_threshold   " << r[i].bool_threshold << "\n";
-          utils::vout << "-> actual_nonbools  " << r[i].actual_nonbools << "\n";
+          r.push_back (solve_formula (f[i]));
+          if (!r[i].safe.has_value ()) {
+            utils::vout << "Subformula not realizable!\n";
+            return false;
+          }
+          //utils::vout << "-> nbitsetbools     " << r[i].nbitsetbools << "\n";
+          //utils::vout << "-> bitset_threshold " << r[i].bitset_threshold << "\n";
+          utils::vout << "-> bool_threshold = " << r[i].bool_threshold << "\n"; // = number of boolean states
+          //utils::vout << "-> actual_nonbools  " << r[i].actual_nonbools << "\n";
+          utils::vout << "-> safe " << r[i].safe.value () << "\n";
         }
 
-        if (f.size () == 1) {
-          bool realizable = false;
+        bool shrink_often = true; // shrink safe region after every merge
 
-          static_switch_t<STATIC_MAX_BITSETS> {} (
-          [&] (auto vbitsets) {
-            auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
-            downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-            vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vbitsets.value>>>
-            (r[0].aut, opt_Kmin, opt_K, opt_Kinc, r[0].all_inputs, r[0].all_outputs);
-            realizable = skn.solve (synth_fname).solved;
-          },
-          UNREACHABLE,
-          vectors::nbools_to_nbitsets (r[0].nbitsetbools));
-
-          return realizable;
-        }
-        else if (f.size () == 2) {
-          bool realizable = false;
-
-          static_switch_t<STATIC_MAX_BITSETS> {} (
-          [&] (auto vbitsets0) {
-            r[0].set_globals();
-            auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
-            downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-            vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(vbitsets0.value)>>>
-            (r[0].aut, opt_Kmin, opt_K, opt_Kinc, r[0].all_inputs, r[0].all_outputs);
-            auto t0 = skn.solve ("");
-            utils::vout << "F0: " << t0.F << "\n";
-            if (!t0.solved) {
-              utils::vout << "Not solvable -> false!\n";
-              return;
+        // merge the formulas into r[0] alias merged
+        aut_ret& merged = r[0];
+        for(size_t i = 1; i < f.size (); i++) {
+          utils::vout << "\nAdding formula " << i << "..\n";
+          bool final = i == (f.size() - 1); // final iteration of the loop: always shrink, and enable synthesis
+          auto composer = composition ();
+          composer.merge_aut (merged, r[i]);
+          merged.safe = composer.merge_saferegions (merged.safe.value (), r[i].safe.value ());
+          utils::vout << "Merged:\n" << merged.safe.value ();
+          if (shrink_often || final) {
+            shrink_safe (merged, final ? synth_fname : "");
+            if (!merged.safe.has_value ()) {
+              utils::vout << "Conjunction of subformulas 0 to " << i << " is not realizable!\n";
+              return false;
             }
-
-            static_switch_t<STATIC_MAX_BITSETS> {} (
-            [&] (auto vbitsets1) {
-              r[1].set_globals();
-              auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
-              downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-              vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(vbitsets1.value)>>>
-              (r[1].aut, opt_Kmin, opt_K, opt_Kinc, r[1].all_inputs, r[1].all_outputs);
-              auto t1 = skn.solve ("");
-              utils::vout << "F1: " << t1.F << "\n";
-              if (!t1.solved) {
-                utils::vout << "Not solvable -> false!\n";
-                return;
-              }
-
-              auto compose01 = composition<decltype (t0.F), decltype (t1.F), vbitsets0.value, vbitsets1.value>();
-              auto merge_aut01 = compose01.merge_aut (r[0], r[1]);
-              auto merge_safe01 = compose01.merge_saferegions(t0.F, t1.F);
-              utils::vout << "New safe region: " << merge_safe01 << "\n";
-
-              auto skn2 = K_BOUNDED_SAFETY_AUT_IMPL<
-              downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-              vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(vbitsets0.value + vbitsets1.value)>>>
-              (merge_aut01.aut, opt_Kmin, opt_K, opt_Kinc, merge_aut01.all_inputs, merge_aut01.all_outputs);
-              auto t01 = skn2.solve (synth_fname, no_merge ? nullptr : &merge_safe01);
-              realizable = t01.solved;
-
-            },
-            UNREACHABLE,
-            //vectors::nbools_to_nbitsets (r[1].nbitsetbools));
-            r[1].nbitsetbools);
-          },
-          UNREACHABLE,
-          //vectors::nbools_to_nbitsets (r[0].nbitsetbools));
-          r[0].nbitsetbools);
-
-          utils::vout << "Realizable: " << realizable << "\n";
-          return realizable;
+            else utils::vout << "Shrunk:\n" << merged.safe.value ();
+          }
         }
-        else assert(false);
+
+        return true;
       }
   };
 }

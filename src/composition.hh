@@ -13,20 +13,75 @@
 #include "vectors.hh"
 #include "downsets.hh"
 #include "k-bounded_safety_aut.hh"
+#include "utils/typeinfo.hh"
+
+
+using GenericDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vectors::vector_backed<VECTOR_ELT_T>>;
 
 struct aut_ret {
   spot::twa_graph_ptr aut;
-  size_t bool_threshold; // deze gaan opgeteld moeten worden?
+  size_t bool_threshold;
   size_t bitset_threshold;
-  size_t actual_nonbools;
-  size_t nbitsetbools; // ook optellen? # bools in bitsets
-  bdd all_inputs, all_outputs; // blijft wss hetzelfde
+  //size_t actual_nonbools;
+  //size_t nbitsetbools;
+  bdd all_inputs, all_outputs;
+  std::optional<GenericDownset> safe;
 
-  void set_globals() const {
-    vectors::bool_threshold = bool_threshold;
-    vectors::bitset_threshold = bitset_threshold;
+  auto set_globals() {
+    vectors::bool_threshold = bool_threshold; // number of boolean states
+
+    // Compute how many boolean states will actually be put in bitsets.
+    constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
+    auto nbitsetbools = aut->num_states () - vectors::bool_threshold;
+    if (nbitsetbools > max_bools_in_bitsets) {
+      verb_do (1, vout << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
+                       /*   */ << "\tTotal # of Boolean-for-bitset states: " << nbitsetbools
+                       /*   */ << ", max: " << max_bools_in_bitsets << std::endl);
+      nbitsetbools = max_bools_in_bitsets;
+    }
+
+    constexpr auto STATIC_ARRAY_CAP_MAX =
+    vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+
+    // Maximize usage of the nonbool implementation
+    auto nonbools = aut->num_states () - nbitsetbools;
+    size_t actual_nonbools = (nonbools <= STATIC_ARRAY_CAP_MAX) ?
+    vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (nonbools) :
+    vectors::traits<vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (nonbools);
+    if (actual_nonbools >= aut->num_states ())
+      nbitsetbools = 0;
+    else
+      nbitsetbools -= (actual_nonbools - nonbools);
+
+    vectors::bitset_threshold = aut->num_states () - nbitsetbools;
+
+    //utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
+    //utils::vout << "Thought it was " << bitset_threshold << "\n";
+    bitset_threshold = vectors::bitset_threshold;
+
+    return std::pair<size_t, size_t>(nbitsetbools, actual_nonbools);
   }
 };
+
+template<typename To, typename From>
+To cast_vector(From& f) {
+  auto vec = utils::vector_mm<char>(f.size(), 0);
+  for(size_t i = 0; i < f.size(); i++) {
+    vec[i] = f[i];
+  }
+  return To(vec);
+}
+
+template<typename To, typename From>
+To cast_downset(From& f) {
+  using NewVec = To::value_type;
+  To downset(cast_vector<NewVec>(*f.begin()));
+  for(const auto& vec: f) {
+    downset.insert(cast_vector<NewVec>(vec));
+  }
+  return downset;
+}
+
 
 
 // from https://spot.lre.epita.fr/tut21.html
@@ -94,41 +149,39 @@ void custom_print(std::ostream& out, spot::twa_graph_ptr& aut)
 
 
 
-
-template<typename F1t, typename F2t, size_t B1, size_t B2>
 class composition {
   private:
   std::vector<unsigned int> rename;
 
   // Concatenate two vectors, taking into a account a new initial state is added, + the states are renamed
   auto combine_vectors(const auto& m1, const auto& m2) {
-    utils::vout << ": " << m1 << " " << m2 << "\n";
+    //utils::vout << ": " << m1 << " " << m2 << "\n";
 
-    auto safe_vector = utils::vector_mm<char>(m1.size () + m2.size () + 1, 0);
+    auto vec = utils::vector_mm<char>(m1.size () + m2.size () + 1, 0);
 
     for (size_t i = 0; i < m1.size (); ++i)
-      safe_vector[rename[i]] = m1[i];
+      vec[rename[i]] = m1[i];
 
     for (size_t i = 0; i < m2.size (); ++i)
-      safe_vector[rename[i + m1.size () + 1]] = m2[i];
+      vec[rename[i + m1.size () + 1]] = m2[i];
 
-    safe_vector[rename[m1.size ()]] = 0; // new init state
-    return vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(B1 + B2)>(safe_vector);
+    vec[rename[m1.size ()]] = 0; // new init state
+    return GenericDownset::value_type (vec);
   }
 
   public:
   composition() {
-    utils::vout << "I am " << get_typename(*this) << "\n";
+    //utils::vout << "I am " << get_typename(*this) << "\n";
   }
 
   // Merge src automaton into dest
-  aut_ret merge_aut(aut_ret dest, aut_ret src) {
-    utils::vout << "Merge\n";
-    utils::vout << "------------\n";
-    custom_print (utils::vout, dest.aut);
-    utils::vout << "------------\n";
-    custom_print (utils::vout, src.aut);
-    utils::vout << "------------\n";
+  void merge_aut(aut_ret& dest, aut_ret& src) {
+    //utils::vout << "Merge\n";
+    //utils::vout << "------------\n";
+    //custom_print (utils::vout, dest.aut);
+    //utils::vout << "------------\n";
+    //custom_print (utils::vout, src.aut);
+    //utils::vout << "------------\n";
 
     // note to self: don't need new init state if original init state (in one of the two automata) has no incoming transitions
     unsigned int offset = dest.aut->num_states () + 1; // + 1 because of the new init state
@@ -161,42 +214,42 @@ class composition {
 
     // rename states to put boolean states at the end
     unsigned int index_nonbool = 0; // where non-boolean states start
-    unsigned int index_bool = dest.actual_nonbools + src.actual_nonbools + 1; // where boolean states start
+    unsigned int index_bool = dest.bool_threshold + src.bool_threshold + 1; // where boolean states start
 
     rename.resize(dest.aut->num_states ());
     for(unsigned int s = 0; s < rename.size (); s++) {
       if (s < new_init) {
         // this state belonged to dest.aut
-        if (s < dest.actual_nonbools) {
-          utils::vout << s << " is nonbool\n";
+        if (s < dest.bool_threshold) {
+          //utils::vout << s << " is nonbool\n";
           rename[s] = index_nonbool++;
         }
         else {
-          utils::vout << s << " is bool\n";
+          //utils::vout << s << " is bool\n";
           rename[s] = index_bool++;
         }
       }
       else if (s == new_init) {
         // new initial state is non bool?
-        utils::vout << s << " is nonbool?\n";
+        //utils::vout << s << " is nonbool?\n";
         rename[s] = index_nonbool++;
       }
       else {
         // this state belonged to src.aut
-        if ((s - new_init - 1) < src.actual_nonbools) {
-          utils::vout << s << " is nonbool\n";
+        if ((s - new_init - 1) < src.bool_threshold) {
+          //utils::vout << s << " is nonbool\n";
           rename[s] = index_nonbool++;
         }
         else {
-          utils::vout << s << " is bool\n";
+          //utils::vout << s << " is bool\n";
           rename[s] = index_bool++;
         }
       }
     }
-    assert(index_nonbool == dest.actual_nonbools + src.actual_nonbools + 1);
+    assert(index_nonbool == dest.bool_threshold + src.bool_threshold + 1);
     assert(index_bool == dest.aut->num_states ());
 
-    utils::vout << "Rename: " << rename << "\n";
+    //utils::vout << "Rename: " << rename << "\n";
 
     // WARNING: Internal Spot
     auto& g = dest.aut->get_graph();
@@ -206,24 +259,19 @@ class composition {
     g.chain_edges_();
     dest.aut->prop_universal(spot::trival::maybe ());
 
-    dest.actual_nonbools += src.actual_nonbools + 1; // +1 for new init state
-    dest.nbitsetbools += src.nbitsetbools;
+
     dest.bool_threshold += src.bool_threshold + 1; // '
     dest.bitset_threshold += src.bitset_threshold + 1; // '
     dest.set_globals ();
 
-    utils::vout << "---------------------->\n";
-    custom_print (utils::vout, dest.aut);
-
-    return dest;
+    //utils::vout << "---------------------->\n";
+    //custom_print (utils::vout, dest.aut);
   }
 
 
 
-  auto merge_saferegions(F1t& F1, F2t& F2) {
-    downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-    vectors::X_and_bitset<vectors::VECTOR_IMPL<VECTOR_ELT_T>, vectors::nbools_to_nbitsets(B1 + B2)>>
-    merged(combine_vectors(*F1.begin(), *F2.begin())); // need a first element for the constructor to work
+  auto merge_saferegions(GenericDownset& F1, GenericDownset& F2) {
+    GenericDownset merged(combine_vectors(*F1.begin(), *F2.begin())); // need a first element for the constructor to work
     for(const auto& m1: F1) {
       for(const auto& m2: F2) {
         merged.insert(combine_vectors(m1, m2));
