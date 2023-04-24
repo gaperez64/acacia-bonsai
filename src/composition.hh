@@ -21,13 +21,13 @@ using GenericDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vectors::vector_
 struct aut_ret {
   spot::twa_graph_ptr aut;
   size_t bool_threshold;
-  size_t bitset_threshold;
+  //size_t bitset_threshold;
   //size_t actual_nonbools;
   //size_t nbitsetbools;
   bdd all_inputs, all_outputs;
   std::optional<GenericDownset> safe;
 
-  auto set_globals() {
+  auto set_globals () {
     vectors::bool_threshold = bool_threshold; // number of boolean states
 
     // Compute how many boolean states will actually be put in bitsets.
@@ -57,15 +57,15 @@ struct aut_ret {
 
     //utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
     //utils::vout << "Thought it was " << bitset_threshold << "\n";
-    bitset_threshold = vectors::bitset_threshold;
+    //bitset_threshold = vectors::bitset_threshold;
 
     return std::pair<size_t, size_t>(nbitsetbools, actual_nonbools);
   }
 };
 
 template<typename To, typename From>
-To cast_vector(From& f) {
-  auto vec = utils::vector_mm<char>(f.size(), 0);
+To cast_vector (From& f) {
+  auto vec = utils::vector_mm<VECTOR_ELT_T>(f.size(), 0);
   for(size_t i = 0; i < f.size(); i++) {
     vec[i] = f[i];
   }
@@ -73,7 +73,7 @@ To cast_vector(From& f) {
 }
 
 template<typename To, typename From>
-To cast_downset(From& f) {
+To cast_downset (From& f) {
   using NewVec = To::value_type;
   To downset(cast_vector<NewVec>(*f.begin()));
   for(const auto& vec: f) {
@@ -85,7 +85,7 @@ To cast_downset(From& f) {
 
 
 // from https://spot.lre.epita.fr/tut21.html
-void custom_print(std::ostream& out, spot::twa_graph_ptr& aut)
+void custom_print (std::ostream& out, spot::twa_graph_ptr& aut)
 {
   // We need the dictionary to print the BDDs that label the edges
   const spot::bdd_dict_ptr& dict = aut->get_dict();
@@ -154,10 +154,10 @@ class composition {
   std::vector<unsigned int> rename;
 
   // Concatenate two vectors, taking into a account a new initial state is added, + the states are renamed
-  auto combine_vectors(const auto& m1, const auto& m2) {
+  auto combine_vectors (const auto& m1, const auto& m2) {
     //utils::vout << ": " << m1 << " " << m2 << "\n";
 
-    auto vec = utils::vector_mm<char>(m1.size () + m2.size () + 1, 0);
+    auto vec = utils::vector_mm<VECTOR_ELT_T>(m1.size () + m2.size () + 1, 0);
 
     for (size_t i = 0; i < m1.size (); ++i)
       vec[rename[i]] = m1[i];
@@ -170,12 +170,12 @@ class composition {
   }
 
   public:
-  composition() {
+  composition () {
     //utils::vout << "I am " << get_typename(*this) << "\n";
   }
 
   // Merge src automaton into dest
-  void merge_aut(aut_ret& dest, aut_ret& src) {
+  void merge_aut (aut_ret& dest, aut_ret& src) {
     //utils::vout << "Merge\n";
     //utils::vout << "------------\n";
     //custom_print (utils::vout, dest.aut);
@@ -260,8 +260,7 @@ class composition {
     dest.aut->prop_universal(spot::trival::maybe ());
 
 
-    dest.bool_threshold += src.bool_threshold + 1; // '
-    dest.bitset_threshold += src.bitset_threshold + 1; // '
+    dest.bool_threshold += src.bool_threshold + 1;
     dest.set_globals ();
 
     //utils::vout << "---------------------->\n";
@@ -270,7 +269,7 @@ class composition {
 
 
 
-  auto merge_saferegions(GenericDownset& F1, GenericDownset& F2) {
+  auto merge_saferegions (GenericDownset& F1, GenericDownset& F2) {
     GenericDownset merged(combine_vectors(*F1.begin(), *F2.begin())); // need a first element for the constructor to work
     for(const auto& m1: F1) {
       for(const auto& m2: F2) {

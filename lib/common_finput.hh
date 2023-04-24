@@ -58,7 +58,7 @@ public:
   virtual ~job_processor();
 
   virtual int
-  process_formula(std::vector<spot::formula> f,
+  process_formula(spot::formula f,
                   const char* filename = nullptr, int linenum = 0) = 0;
 
   virtual int

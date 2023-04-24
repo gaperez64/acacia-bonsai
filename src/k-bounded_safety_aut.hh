@@ -61,7 +61,7 @@ class k_bounded_safety_aut_detail {
     }
 
 
-    std::optional<SetOfStates> solve (const std::string& synth_fname, SetOfStates* init_safe = nullptr) {
+    std::optional<SetOfStates> solve (const std::string& synth_fname, SetOfStates& F) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -74,7 +74,8 @@ class k_bounded_safety_aut_detail {
       auto input_output_fwd_actions = actioner.actions (); // list<pair<bdd, list<action_vec>>>
       verb_do (1, io_stats (input_output_fwd_actions));
 
-      auto safe_vector = utils::vector_mm<char> (aut->num_states (), K - 1);
+      /*
+      auto safe_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), K - 1);
 
       for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
         safe_vector[i] = 0;
@@ -86,10 +87,11 @@ class k_bounded_safety_aut_detail {
         verb_do (1, vout << "using F: " << F << "\n");
       }
       else verb_do (1, vout << "using default F: " << F << "\n");
+      */
 
       int loopcount = 0;
 
-      utils::vector_mm<char> init (aut->num_states ());
+      utils::vector_mm<VECTOR_ELT_T> init (aut->num_states ());
       init.assign (aut->num_states (), -1);
       init[aut->get_init_state_number ()] = 0;
 
@@ -116,7 +118,7 @@ class k_bounded_safety_aut_detail {
           actioner.setK (K);
           verb_do (1, {vout << "Adding Kinc to every vector..."; vout.flush (); });
           F = F.apply ([&] (const State& s) {
-            auto vec = utils::vector_mm<char> (s.size (), 0);
+            auto vec = utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
             for (size_t i = 0; i < vectors::bool_threshold; ++i)
               vec[i] = s[i] + Kinc;
             // Other entries are set to 0 by initialization, since they are bool.
@@ -156,7 +158,7 @@ class k_bounded_safety_aut_detail {
       verb_do (2, vout << "Computing cpre(F) with F = " << std::endl << F);
 
       const auto& [input, actions] = io_action.get ();
-      utils::vector_mm<char> v (aut->num_states (), -1);
+      utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
       auto vv = typename SetOfStates::value_type (v);
       SetOfStates F1i (std::move (vv));
       bool first_turn = true;
@@ -256,7 +258,7 @@ class k_bounded_safety_aut_detail {
       std::vector<State> states;
 
       // initial vector = all -1, and 0 for the initial state
-      auto init_vector = utils::vector_mm<char> (aut->num_states (), -1);
+      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
       init_vector[aut->get_init_state_number ()] = 0;
       int init_index = get_dominated_index (F, State (init_vector));
       assert (init_index != -1);

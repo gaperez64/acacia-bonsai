@@ -187,6 +187,7 @@ namespace {
       spot::translator &trans_;
       std::vector<std::string> input_aps_;
       std::vector<std::string> output_aps_;
+      std::vector<spot::formula> formulas;
 
     public:
 
@@ -233,7 +234,7 @@ namespace {
         return ret;
       }
 
-      aut_ret solve_formula (spot::formula f, const std::string& synth = "") {
+      aut_ret prepare_formula (spot::formula f) {
         spot::process_timer timer;
         timer.start ();
 
@@ -269,7 +270,7 @@ namespace {
           input_aps_.swap (output_aps_);
         }
 
-	verb_do (1, vout << "Formula: " << f << std::endl);
+        verb_do (1, vout << "Formula: " << f << std::endl);
 
         auto aut = trans_.run (&f);
 
@@ -340,76 +341,38 @@ namespace {
         if (vectors::bool_threshold == 0) {
           if (want_time)
             utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
-          assert(false);
+          aut_ret ret;
+          ret.aut = nullptr;
+          return ret;
         }
 
 
         ////////////////////////////////////////////////////////////////////////
         // Build S^K_N game, solve it.
 
-        if (want_time)
-          sw.start ();
-
-
-#define UNREACHABLE [] (int x) { assert (false); }
-
-        constexpr auto STATIC_ARRAY_CAP_MAX =
-        vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+        //if (want_time)
+        //  sw.start ();
 
         aut_ret ret;
         ret.aut = aut;
         ret.all_inputs = all_inputs;
         ret.all_outputs = all_outputs;
-        ret.bitset_threshold = vectors::bitset_threshold;
+        //ret.bitset_threshold = vectors::bitset_threshold;
         ret.bool_threshold = vectors::bool_threshold;
+        ret.set_globals ();
 
-        auto [nbitsetbools, actual_nonbools] = ret.set_globals();
+        auto all_k = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), opt_Kmin - 1);
+        for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
+          all_k[i] = 0;
+        ret.safe = GenericDownset (GenericDownset::value_type (all_k));
 
-        if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) { // Array & Bitsets
-          static_switch_t<STATIC_ARRAY_CAP_MAX> {} (
-            [&] (auto vnonbools) {
-              static_switch_t<STATIC_MAX_BITSETS> {} (
-                [&] (auto vbitsets) {
-                  auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
-                    downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<
-                      vectors::X_and_bitset<
-                        vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
-                        vbitsets.value>>>
-                    (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-                  auto safe = skn.solve (synth);
-                  if (safe.has_value()) {
-                    ret.safe = cast_downset<GenericDownset>(safe.value());
-                  }
-                },
-                UNREACHABLE,
-                vectors::nbools_to_nbitsets (nbitsetbools));
-            },
-            UNREACHABLE,
-            actual_nonbools);
-        }
-        else {                                  // Vectors & Bitsets
-          static_switch_t<STATIC_MAX_BITSETS> {} (
-            [&] (auto vbitsets) {
-              auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
-                downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-                  vectors::X_and_bitset<
-                    vectors::VECTOR_IMPL<VECTOR_ELT_T>,
-                    vbitsets.value>>>
-                (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-              auto safe = skn.solve (synth);
-              if (safe.has_value()) {
-                ret.safe = cast_downset<GenericDownset>(safe.value());
-              }
-            },
-            UNREACHABLE,
-            vectors::nbools_to_nbitsets (nbitsetbools));
-        }
-
+        /*
         if (want_time) {
           solve_time = sw.stop ();
-          utils::vout << "Safety game solved in " << solve_time << " seconds, returning " << ret.safe.has_value() << "\n";
+          utils::vout << "Safety game created in " << solve_time << " seconds\n";
           utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
         }
+        */
 
         timer.stop ();
 
@@ -436,10 +399,10 @@ namespace {
                   auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
                     (m.aut, opt_Kmin, opt_K, opt_Kinc, m.all_inputs, m.all_outputs);
                   assert(m.safe.has_value ());
-                  auto current_safe = cast_downset<SpecializedDownset>(m.safe.value ());
-                  auto safe = skn.solve (synth, &current_safe);
+                  auto current_safe = cast_downset<SpecializedDownset> (m.safe.value ());
+                  auto safe = skn.solve (synth, current_safe);
                   if (safe.has_value ()) {
-                    m.safe = cast_downset<GenericDownset>(safe.value ());
+                    m.safe = cast_downset<GenericDownset> (safe.value ());
                   } else m.safe = std::nullopt;
                 },
                 UNREACHABLE,
@@ -458,10 +421,10 @@ namespace {
               auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
                 (m.aut, opt_Kmin, opt_K, opt_Kinc, m.all_inputs, m.all_outputs);
               assert(m.safe.has_value ());
-              auto current_safe = cast_downset<SpecializedDownset>(m.safe.value ());
-              auto safe = skn.solve (synth, &current_safe);
+              auto current_safe = cast_downset<SpecializedDownset> (m.safe.value ());
+              auto safe = skn.solve (synth, current_safe);
               if (safe.has_value ()) {
-                m.safe = cast_downset<GenericDownset>(safe.value ());
+                m.safe = cast_downset<GenericDownset> (safe.value ());
               } else m.safe = std::nullopt;
             },
             UNREACHABLE,
@@ -469,37 +432,67 @@ namespace {
         }
       }
 
-      int process_formula (std::vector<spot::formula> f, const char *, int) override {
-        assert(!f.empty());
-        if (f.size () == 1) {
-          // no composition
-          return solve_formula (f[0], synth_fname).safe.has_value ();
-        }
+      int process_formula (spot::formula f, const char *, int) override {
+        formulas.push_back (f);
+        return 0;
+      }
 
-        utils::vout << "Using composition for " << f.size() << " formulas:\n";
+      int run () override {
+        job_processor::run();
+
+        assert(!formulas.empty());
+        
+        if (formulas.size () == 1) {
+          // no composition
+          auto r = prepare_formula (formulas[0]);
+          shrink_safe (r, synth_fname);
+          return (r.safe.has_value () || (r.aut == nullptr));
+        }
+        if (!check_real) {
+          utils::vout << "Error: can't do composition for unrealizability!\n";
+          return 0;
+        }
+        
+
+        utils::vout << "Using composition for " << formulas.size() << " formulas:\n";
 
         std::vector<aut_ret> r;
-        for(size_t i = 0; i < f.size (); i++) {
-          utils::vout << "Formula " << i << ": " << f[i] << "\n";
-          r.push_back (solve_formula (f[i]));
-          if (!r[i].safe.has_value ()) {
+        for(size_t i = 0; i < formulas.size (); i++) {
+          utils::vout << "Formula " << i << ": " << formulas[i] << "\n";
+          r.push_back (prepare_formula (formulas[i]));
+          size_t index = r.size () - 1;
+          shrink_safe (r[index]);
+
+          if (r[index].aut == nullptr) {
+            utils::vout << "Subformula is trivial -> removing!\n\n";
+            r.pop_back ();
+            continue;
+          }
+
+          if (!r[index].safe.has_value ()) {
             utils::vout << "Subformula not realizable!\n";
             return false;
           }
-          //utils::vout << "-> nbitsetbools     " << r[i].nbitsetbools << "\n";
-          //utils::vout << "-> bitset_threshold " << r[i].bitset_threshold << "\n";
-          utils::vout << "-> bool_threshold = " << r[i].bool_threshold << "\n"; // = number of boolean states
-          //utils::vout << "-> actual_nonbools  " << r[i].actual_nonbools << "\n";
-          utils::vout << "-> safe " << r[i].safe.value () << "\n";
+
+          utils::vout << "-> bool_threshold = " << r[index].bool_threshold << "\n"; // = number of non boolean states
+          utils::vout << "-> safe " << r[index].safe.value () << "\n";
         }
 
-        bool shrink_often = true; // shrink safe region after every merge
+        // only one formula left?
+        if (r.size () == 1) {
+          // note: will try all inputs again to see if this is actually the safe region before doing synthesis
+          // maybe make k-bounded safety automaton for GenericDownset and call synthesis directly with r[0].safe?
+          shrink_safe(r[0], synth_fname);
+          return r[0].safe.has_value ();
+        }
+
+        bool shrink_often = !no_merge; // shrink safe region after every merge
 
         // merge the formulas into r[0] alias merged
         aut_ret& merged = r[0];
-        for(size_t i = 1; i < f.size (); i++) {
+        for(size_t i = 1; i < r.size (); i++) {
           utils::vout << "\nAdding formula " << i << "..\n";
-          bool final = i == (f.size() - 1); // final iteration of the loop: always shrink, and enable synthesis
+          bool final = i == (r.size() - 1); // final iteration of the loop: always shrink, and enable synthesis
           auto composer = composition ();
           composer.merge_aut (merged, r[i]);
           merged.safe = composer.merge_saferegions (merged.safe.value (), r[i].safe.value ());
