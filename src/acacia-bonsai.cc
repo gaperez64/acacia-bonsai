@@ -380,6 +380,8 @@ namespace {
       }
 
       void shrink_safe (aut_ret& m, const std::string& synth = "") {
+        spot::stopwatch sw;
+        sw.start ();
         auto [nbitsetbools, actual_nonbools] = m.set_globals();
 
 #define UNREACHABLE [] (int x) { assert (false); }
@@ -430,6 +432,9 @@ namespace {
             UNREACHABLE,
             vectors::nbools_to_nbitsets (nbitsetbools));
         }
+
+        solve_time = sw.stop ();
+        utils::vout << "Safety game solved in " << solve_time << " seconds\n";
       }
 
       int process_formula (spot::formula f, const char *, int) override {

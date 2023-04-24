@@ -36,11 +36,9 @@ OUTPS=$(./meyerphi-syfco "$origf" -outs)
 INPS=$(sed 's/ //g' <<< "$INPS")
 OUTPS=$(sed 's/ //g' <<< "$OUTPS")
 
-echo "-f \"$FORMULA\" --ins $INPS --outs $OUTPS"
-
-
+echo "../build/src/acacia-bonsai -f \"$FORMULA\" --ins \"$INPS\" --outs \"$OUTPS\" -S \"$syntf\" --check=real"
 # call acacia-bonsai to do synthesis
-../build/src/acacia-bonsai -f "$FORMULA" --ins "$INPS" --outs "$OUTPS" -S "$syntf" --check=real
+eval "../build/src/acacia-bonsai -f \"$FORMULA\" --ins \"$INPS\" --outs \"$OUTPS\" -S \"$syntf\" --check=real"
 #ltlsynt -f "$FORMULA" --ins="$INPS" --outs="$OUTPS" --aiger | sed '1d' > "$syntf"
 #ltlsynt --tlsf="$origf" --aiger | sed '1d' > "$syntf"
 

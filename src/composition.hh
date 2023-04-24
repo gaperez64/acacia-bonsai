@@ -147,31 +147,43 @@ void custom_print (std::ostream& out, spot::twa_graph_ptr& aut)
   }
 }
 
+std::vector<unsigned int> rename2;
 
+void f(const std::vector<unsigned int>& v, void*) {
+  rename2 = v;
+};
 
 class composition {
   private:
   std::vector<unsigned int> rename;
+  unsigned int aut_size; // number of states in the final merged automaton
 
   // Concatenate two vectors, taking into a account a new initial state is added, + the states are renamed
   auto combine_vectors (const auto& m1, const auto& m2) {
-    //utils::vout << ": " << m1 << " " << m2 << "\n";
+    assert(aut_size > 0);
+    auto vec = utils::vector_mm<VECTOR_ELT_T>(aut_size, 0);
 
-    auto vec = utils::vector_mm<VECTOR_ELT_T>(m1.size () + m2.size () + 1, 0);
+    for (size_t i = 0; i < m1.size (); ++i) {
+      if (rename[i] != -1u) {
+        vec[rename[i]] = m1[i];
+      }
+    }
 
-    for (size_t i = 0; i < m1.size (); ++i)
-      vec[rename[i]] = m1[i];
+    for (size_t i = 0; i < m2.size (); ++i) {
+      if (rename[i + m1.size () + 1] != -1u) {
+        vec[rename[i + m1.size () + 1]] = m2[i];
+      }
+    }
 
-    for (size_t i = 0; i < m2.size (); ++i)
-      vec[rename[i + m1.size () + 1]] = m2[i];
-
-    vec[rename[m1.size ()]] = 0; // new init state
+    //assert(rename[m1.size ()] < 10000);
+    //vec[rename[m1.size ()]] = 0; // new init state
     return GenericDownset::value_type (vec);
   }
 
   public:
   composition () {
     //utils::vout << "I am " << get_typename(*this) << "\n";
+    aut_size = 0;
   }
 
   // Merge src automaton into dest
@@ -249,7 +261,7 @@ class composition {
     assert(index_nonbool == dest.bool_threshold + src.bool_threshold + 1);
     assert(index_bool == dest.aut->num_states ());
 
-    //utils::vout << "Rename: " << rename << "\n";
+    utils::vout << "Rename:  " << rename << "\n";
 
     // WARNING: Internal Spot
     auto& g = dest.aut->get_graph();
@@ -259,9 +271,38 @@ class composition {
     g.chain_edges_();
     dest.aut->prop_universal(spot::trival::maybe ());
 
+    //
+    //custom_print (utils::vout, dest.aut);
+
+    rename2.clear();
+    spot::twa_graph::shift_action w = &f;
+    dest.aut->purge_unreachable_states (&w);
+    // ^ spot already renames the states again, but we need to remember how they were renamed
+    //   to make sure merging the downsets happens correctly
+
+    utils::vout << "Rename2: " << rename2 << "\n";
+
+    if (!rename2.empty()) {
+      // code assumes that the renaming is in order, e.g. [0, -1, 1, 2] to get rid of what was state 1,
+      // never [0, -1, 2, 1] for instance.
+      assert(rename.size() == rename2.size());
+
+      for (unsigned int s = 0; s < rename.size (); s++) {
+        if (rename2[rename[s]] == -1u) {
+          utils::vout << "State " << s << " which was renamed to " << rename[s] << " is now removed ";
+          if (rename[s] < (dest.bool_threshold + src.bool_threshold + 1)) {
+            dest.bool_threshold--;
+            utils::vout << "(nonbool)\n";
+          } else utils::vout << "(bool)\n";
+        }
+        else utils::vout << "State " << s << " which was renamed to " << rename[s] << " is now renamed to " << rename2[rename[s]] << "\n";
+        rename[s] = rename2[rename[s]];
+      }
+    }
 
     dest.bool_threshold += src.bool_threshold + 1;
     dest.set_globals ();
+    aut_size = dest.aut->num_states();
 
     //utils::vout << "---------------------->\n";
     //custom_print (utils::vout, dest.aut);
