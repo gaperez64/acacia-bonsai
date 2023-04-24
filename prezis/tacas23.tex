@@ -302,7 +302,7 @@
   \end{block}
 \end{frame}
 
-\section{Antichains}
+\section{Downsets and Antichains}
 
 \begin{frame}{Safety is Monotonic}
   \begin{block}{Key observation}
@@ -370,9 +370,9 @@
   \begin{block}{Acacia-Bonsai}
     \begin{itemize}
       \item A modern (re)implementation of downset-based LTL realizability
-      \item Soon, \alert{also synthesis!}
+      \item Soon, \alert{synthesis} and \alert{decomposition of specs}
       \item SIMD registers and advanced data structures don't help much in
-        practice
+        practice!
       \item All solved benchmarks can be solved with low $k$ values
     \end{itemize}
   \end{block}
@@ -382,7 +382,7 @@
   \begin{block}{Future work}
     \begin{itemize}
       \item Try more data structures for antichains
-      \item Missing: decompose specifications
+      \item GPU instead of SIMD?
     \end{itemize}
   \end{block}
 \end{frame}
