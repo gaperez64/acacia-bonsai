@@ -1,5 +1,7 @@
 #pragma once
 
+thread_local int _tid;
+
 namespace utils {
   // https://stackoverflow.com/questions/37490881/overloading-operator-in-c-with-a-prefix
   class prefixstringbuf : public std::stringbuf {
@@ -21,7 +23,7 @@ namespace utils {
           if (first_line and not prev_ended_in_eol)
             outstream << line;
           else
-            outstream << prefix << line;
+            outstream << prefix << "[" << _tid << "] " << line;
           first_line = false;
           if (not s.eof () or ends_in_eol)
             outstream << std::endl;

@@ -61,7 +61,7 @@ class k_bounded_safety_aut_detail {
     }
 
 
-    std::optional<SetOfStates> solve (const std::string& synth_fname, SetOfStates& F) {
+    std::optional<SetOfStates> solve (SetOfStates& F) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -103,13 +103,10 @@ class k_bounded_safety_aut_detail {
 
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
-        {
-          if (!synth_fname.empty ()) {
-            synthesis (F, actioner, synth_fname);
-          }
-          return std::make_optional<SetOfStates>(std::move (F));
-        }
+          return std::make_optional<SetOfStates> (std::move (F));
+
         cpre_inplace (F, *input, actioner);
+
         if (not F.contains (State (init))) {
           if (K >= Kto)
             return std::nullopt;
@@ -246,8 +243,11 @@ class k_bounded_safety_aut_detail {
       int new_state = -1;
     };
 
-    template <typename Actioner>
-    void synthesis(SetOfStates& F, Actioner& actioner, const std::string& synth_fname) {
+  public:
+    void synthesis(SetOfStates& F, const std::string& synth_fname) {
+      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+      auto actioner = actioner_maker.make (aut, inputs_to_ios, Kfrom);
+
       verb_do (2, vout << "Final F:\n" << F);
       verb_do (1, vout << "F = downset of size " << F.size() << "\n");
 
@@ -406,6 +406,8 @@ class k_bounded_safety_aut_detail {
       verb_do (1, vout << "\n\n");
     }
 
+  private:
+
     // return IO + destination state (one IO, one destination state: deterministic)
     template <typename Actions, typename Actioner>
     std::pair<bdd, State> get_transition (const State& elem, const Actions& actions, Actioner& actioner, const SetOfStates& saferegion) const {
@@ -426,7 +428,8 @@ class k_bounded_safety_aut_detail {
         }
       }
 
-      std::abort ();
+      utils::vout << "No transition found from " << elem << " with safe region " << saferegion << "\n";
+      assert (false);
     }
 
 

@@ -1,90 +1,11 @@
 //
-// Created by nils on 08/04/23.
+// Created by nils on 04/05/23.
 //
 
 #pragma once
 
-#include <iostream>
-#include <spot/twa/fwd.hh>
-#include <bddx.h>
-#include <spot/twa/bddprint.hh>
-#include "utils/verbose.hh"
-#include "configuration.hh"
-#include "vectors.hh"
-#include "downsets.hh"
-#include "k-bounded_safety_aut.hh"
-#include "utils/typeinfo.hh"
+#include "types.hh"
 
-
-using GenericDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vectors::vector_backed<VECTOR_ELT_T>>;
-
-struct aut_ret {
-  spot::twa_graph_ptr aut;
-  size_t bool_threshold;
-  //size_t bitset_threshold;
-  //size_t actual_nonbools;
-  //size_t nbitsetbools;
-  bdd all_inputs, all_outputs;
-  std::optional<GenericDownset> safe;
-
-  auto set_globals () {
-    vectors::bool_threshold = bool_threshold; // number of boolean states
-
-    // Compute how many boolean states will actually be put in bitsets.
-    constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
-    auto nbitsetbools = aut->num_states () - vectors::bool_threshold;
-    if (nbitsetbools > max_bools_in_bitsets) {
-      verb_do (1, vout << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
-                       /*   */ << "\tTotal # of Boolean-for-bitset states: " << nbitsetbools
-                       /*   */ << ", max: " << max_bools_in_bitsets << std::endl);
-      nbitsetbools = max_bools_in_bitsets;
-    }
-
-    constexpr auto STATIC_ARRAY_CAP_MAX =
-    vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
-
-    // Maximize usage of the nonbool implementation
-    auto nonbools = aut->num_states () - nbitsetbools;
-    size_t actual_nonbools = (nonbools <= STATIC_ARRAY_CAP_MAX) ?
-    vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (nonbools) :
-    vectors::traits<vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (nonbools);
-    if (actual_nonbools >= aut->num_states ())
-      nbitsetbools = 0;
-    else
-      nbitsetbools -= (actual_nonbools - nonbools);
-
-    vectors::bitset_threshold = aut->num_states () - nbitsetbools;
-
-    //utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
-    //utils::vout << "Thought it was " << bitset_threshold << "\n";
-    //bitset_threshold = vectors::bitset_threshold;
-
-    return std::pair<size_t, size_t>(nbitsetbools, actual_nonbools);
-  }
-};
-
-template<typename To, typename From>
-To cast_vector (From& f) {
-  auto vec = utils::vector_mm<VECTOR_ELT_T>(f.size(), 0);
-  for(size_t i = 0; i < f.size(); i++) {
-    vec[i] = f[i];
-  }
-  return To(vec);
-}
-
-template<typename To, typename From>
-To cast_downset (From& f) {
-  using NewVec = To::value_type;
-  To downset(cast_vector<NewVec>(*f.begin()));
-  for(const auto& vec: f) {
-    downset.insert(cast_vector<NewVec>(vec));
-  }
-  return downset;
-}
-
-
-
-// from https://spot.lre.epita.fr/tut21.html
 void custom_print (std::ostream& out, spot::twa_graph_ptr& aut)
 {
   // We need the dictionary to print the BDDs that label the edges
@@ -107,24 +28,6 @@ void custom_print (std::ostream& out, spot::twa_graph_ptr& aut)
   if (auto name = aut->get_named_prop<std::string>("automaton-name"))
     out << "Name: " << *name << '\n';
 
-  // For the following prop_*() methods, the return value is an
-  // instance of the spot::trival class that can represent
-  // yes/maybe/no.  These properties correspond to bits stored in the
-  // automaton, so they can be queried in constant time.  They are
-  // only set whenever they can be determined at a cheap cost: for
-  // instance an algorithm that always produces deterministic automata
-  // would set the deterministic property on its output.  In this
-  // example, the properties that are set come from the "properties:"
-  // line of the input file.
-  //out << "Complete: " << aut->prop_complete() << '\n';
-  //out << "Deterministic: " << (aut->prop_universal()
-  //&& aut->is_existential()) << '\n';
-  //out << "Unambiguous: " << aut->prop_unambiguous() << '\n';
-  //out << "State-Based Acc: " << aut->prop_state_acc() << '\n';
-  //out << "Terminal: " << aut->prop_terminal() << '\n';
-  //out << "Weak: " << aut->prop_weak() << '\n';
-  //out << "Inherently Weak: " << aut->prop_inherently_weak() << '\n';
-  //out << "Stutter Invariant: " << aut->prop_stutter_invariant() << '\n';
 
   // States are numbered from 0 to n-1
   unsigned n = aut->num_states();
@@ -147,7 +50,7 @@ void custom_print (std::ostream& out, spot::twa_graph_ptr& aut)
   }
 }
 
-std::vector<unsigned int> rename2;
+thread_local std::vector<unsigned int> rename2;
 
 void f(const std::vector<unsigned int>& v, void*) {
   rename2 = v;
@@ -261,7 +164,7 @@ class composition {
     assert(index_nonbool == dest.bool_threshold + src.bool_threshold + 1);
     assert(index_bool == dest.aut->num_states ());
 
-    utils::vout << "Rename:  " << rename << "\n";
+    //utils::vout << "Rename:  " << rename << "\n";
 
     // WARNING: Internal Spot
     auto& g = dest.aut->get_graph();
@@ -280,7 +183,7 @@ class composition {
     // ^ spot already renames the states again, but we need to remember how they were renamed
     //   to make sure merging the downsets happens correctly
 
-    utils::vout << "Rename2: " << rename2 << "\n";
+    //utils::vout << "Rename2: " << rename2 << "\n";
 
     if (!rename2.empty()) {
       // code assumes that the renaming is in order, e.g. [0, -1, 1, 2] to get rid of what was state 1,
@@ -289,20 +192,20 @@ class composition {
 
       for (unsigned int s = 0; s < rename.size (); s++) {
         if (rename2[rename[s]] == -1u) {
-          utils::vout << "State " << s << " which was renamed to " << rename[s] << " is now removed ";
+          //utils::vout << "State " << s << " which was renamed to " << rename[s] << " is now removed ";
           if (rename[s] < (dest.bool_threshold + src.bool_threshold + 1)) {
             dest.bool_threshold--;
-            utils::vout << "(nonbool)\n";
-          } else utils::vout << "(bool)\n";
+            //utils::vout << "(nonbool)\n";
+          } //else utils::vout << "(bool)\n";
         }
-        else utils::vout << "State " << s << " which was renamed to " << rename[s] << " is now renamed to " << rename2[rename[s]] << "\n";
+        //else utils::vout << "State " << s << " which was renamed to " << rename[s] << " is now renamed to " << rename2[rename[s]] << "\n";
         rename[s] = rename2[rename[s]];
       }
     }
 
     dest.bool_threshold += src.bool_threshold + 1;
     dest.set_globals ();
-    aut_size = dest.aut->num_states();
+    aut_size = dest.aut->num_states ();
 
     //utils::vout << "---------------------->\n";
     //custom_print (utils::vout, dest.aut);
