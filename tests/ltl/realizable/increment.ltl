@@ -1,1 +1,1 @@
-((G (! (((utermcountcount) && (! (utermcountincrementdcountb))) <-> ((utermcountincrementdcountb) && (! (utermcountcount)))))) && (G ((ptermeventdclickb) <-> (utermcountincrementdcountb))))
+((G (! (((u0count0count) && (! (u0count0f1dincrement0count1b))) <-> ((u0count0f1dincrement0count1b) && (! (u0count0count)))))) && (G ((p0p0event0click) <-> (u0count0f1dincrement0count1b))))

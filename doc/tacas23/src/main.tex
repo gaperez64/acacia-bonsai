@@ -1,6 +1,7 @@
 \documentclass[runningheads,a4paper]{llncs}
 \usepackage[english]{babel}
-\usepackage[ruled,vlined,nosemicolon]{algorithm2e}
+\usepackage{xspace}
+% \usepackage[ruled,vlined,nosemicolon]{algorithm2e}
 \usepackage{pbox}
 \usepackage{float}
 \usepackage{tikz}
@@ -11,7 +12,7 @@
 \usepackage{cleveref}
 
 \newif\ifanon
-\anontrue
+\anonfalse
 
 \usetikzlibrary{hobby,calc}
 
@@ -30,9 +31,9 @@
 
  \author{\anon{Micha\"el Cadilhac\inst{1}\orcidID{0000-0001-9828-9129}
          \and \anon{Guillermo A. P\'erez\inst{2}\orcidID{0000-0002-1200-4952}}}}
-\institute{\anon{DePaul University, USA}\\
+\institute{\anon{DePaul University, Chicago, USA}\\
  \anon{\email{michael@cadilhac.name}} \and
- \anon{University of Antwerp -- Flanders Make, Belgium}\\
+ \anon{University of Antwerp -- Flanders Make, Antwerp, Belgium}\\
  \anon{\email{guillermo.perez@uantwerp.be}}
 }
 \authorrunning{\anon{M. Cadilhac \and G. A. P\'erez}}
@@ -172,15 +173,17 @@ are pairwise nondominating, an \emph{antichain}.  In practice, it may be
 interesting to keep more elements than just the dominating ones or even to keep
 all of the elements to avoid the cost of computing domination.
 
-Finally, we define \(\safe_k\) as the unique downset containing the all-\(k\)
-vector.
-We are now equipped to define the computational problem we focus on:\\[1em]
+Finally, we define \(\safe_k\) as the downset \(\{i \mid i \leq k\}^Q\), i.e., all vectors
+with values bounded by \(k\).
+We are now equipped to define the computational problem we focus on:\\[0.5em]
 \textbf{BackwardRealizability}
 \begin{compactitem}
 \item \textbf{Given:} A Büchi automaton \cA and an integer \(k > 0\),
 \item \textbf{Question:} Is there a \(\vec{v} \in \cpre^*(\safe_k)\) with \(v_{q_0} \geq
   0\)?
 \end{compactitem}
+
+\vspace{0.5em}
 
 We note, for completeness, that (for sufficiently large values of $k$) this
 problem is equivalent to deciding the realizability problem associated with
@@ -229,8 +232,8 @@ Büchi automaton from \Cref{fig:smallauto} with $q_0,q_1 \not\in B$.
   \label{fig:smallauto}
 \end{figure}
 
-Recall that we are interested in, after \cpre has stabilized, whether the
-initial state can carry a nonnegative value.  In that sense, the crucial
+Recall that we are interested in whether the initial state can carry a
+nonnegative value, after \cpre has stabilized.  In that sense, the crucial
 information associated with \(q_0\) is boolean in nature: is its value positive or
 \(-1\)?  Even further, this same remark can be applied to \(q_1\) since \(q_1\) being
 valued \(6\) or \(7\) is not important to the valuation of \(q_0\).  Hence the set of
@@ -271,15 +274,16 @@ redundant.  For instance, consider a Büchi automaton with
 labeled \((i \land o_1)\) and \((i \land \neg o_1)\).  Pure IOs compatible with the first
 label will be \((i \land o_1 \land o_2)\) and \((i \land o_1 \land \neg o_2)\), but
 certainly, these two IOs have the same io-actions, and optimally, we would only
-consider \((i \land o_1)\).  However, we should not consider \((i \land o_2)\), as it is
-compatible with both transitions, but does not correspond to a pure IO.  We will
-thus allow our main algorithm to select certain inputs and IOs:
+consider \((i \land o_1)\).  However, we should not consider \((i \land o_2)\), as
+it induces an io-action that is not induced by a pure IO.  We will
+thus allow our main algorithm to select certain inputs and IOs and introduce the
+following notion:
 \begin{definition}
-  An IO (\resp input) is \emph{valid} if there is a pure IO (\resp input) with
-  the same io-action (\resp input-action).  A set \(X\) of valid IOs is
+  An IO (\resp input) is \emph{valid} if there exists any pure IO (\resp input)
+  with the same io-action (\resp input-action).  A set \(X\) of valid IOs is
   \emph{sufficient} if it represents all the possible io-actions of pure IOs:
-  \(\{\ioact(x) \mid x \in X\} = \{\ioact(x) \mid x \text{ is a pure IO}\}.\)
-  A sufficient set of inputs is defined similarly with input-actions.
+  \(\{\ioact(x) \mid x \in X\} = \{\ioact(x) \mid x \text{ is a pure IO}\}.\) A sufficient
+  set of inputs is defined similarly with input-actions.
 \end{definition}
 
 \subsection{Algorithm}\label{sec:algo}
@@ -290,29 +294,25 @@ solve \textbf{BackwardRealizability} by computing
 \(\cpre^*\) explicitly:
 
 \begin{algorithm}
-  \LinesNumbered
-\SetKwData{Downset}{\texttt{Downset}}
-\SetKwFunction{Union}{Union}\SetKwFunction{FindCompress}{FindCompress}
-\SetKwInput{Input}{Input}\SetKwInput{Output}{Output}
-
-\Input{A Büchi automaton \cA, an integer \(k > 0\)}
-\Output{Whether \((\exists \vec{v} \in  \cpre^*(\safe_k))[v_{q_0} \geq 0]\)}
-\BlankLine
-
-Possibly remove some useless states in \cA\;\label{alg:preproc}
-Split states of \cA into boolean and nonboolean\;\label{alg:bool}
-Let \Downset be a type for downsets using a vector type that possibly has a
-boolean part\;\label{alg:types}
-Let \(S = \safe_k\) of type \Downset\;
-Compute a sufficient set \(E\) of  inputs\;\label{alg:inputs}
-Compute the input-actions of \(E\)\;\label{alg:actions}
-\While{true}{
-  Pick an input-action \(a\) of \(E\)\;\label{alg:pick}
-  \If{no action is returned}{\Return whether a vector in \(S\) maps \(q_0\) to a
-    nonnegative value}
-  \(S \leftarrow \cpre_a (S)\)\;
-}
 \caption{Main algorithm}\label{main_algo}
+\alginput A Büchi automaton \cA, an integer \(k > 0\)
+\algoutput Whether \((\exists \vec{v} \in  \cpre^*(\safe_k))[v_{q_0} \geq 0]\)
+\begin{algorithmic}[1]
+\State Possibly remove some useless states in \cA\label{alg:preproc}
+\State Split states of \cA into boolean and nonboolean\label{alg:bool}
+\State Let \texttt{Downset} be a type for downsets using a vector type that possibly has a
+boolean part\label{alg:types}
+\State Let \(S = \safe_k\) of type \texttt{Downset}
+\State Compute a sufficient set \(E\) of  inputs\label{alg:inputs}
+\State Compute the input-actions of \(E\)\label{alg:actions}
+\While{true}
+  \State Pick an input-action \(a\) of \(E\)\label{alg:pick}
+  \If{no action is returned}
+    \State \Return whether a vector in \(S\) maps \(q_0\) to a nonnegative value
+  \EndIf
+  \State \(S \leftarrow \cpre_a (S)\)
+\EndWhile
+\end{algorithmic}
 \end{algorithm}
 
 Our algorithm requires that the ``input-action picker'' used in line \ref{alg:pick}
@@ -326,6 +326,16 @@ iterating through all io-actions compatible with \(a\), applying \(\bwd\) on
 intersecting the result with \(S\).
 
 \section{The many options at every line}\label{sec:implem}
+
+The main computational costs of the algorithm are in finding input-actions and
+computing \(\cpre_a\).  For the former, reducing the number of candidates is
+crucial (by considering a good set of sufficient inputs).  For the latter,
+reducing the size of the automaton (hence the dimension of the vectors) and
+providing efficient data types for downsets is key.  Additionally, for the
+``input-action picker'' to return an input that \emph{will} make progress, it
+has to explore \(S\) in some way --- this can again be a costly operation that would
+be sped up by better data structures for downsets.  Let us now review these
+potential optimizations line by line.
 
 \subsection{Preprocessing of the automaton (line \ref{alg:preproc})}\label{sec:preproc}
 
@@ -359,6 +369,8 @@ classes:
   type \cinline{std::experimental::simd} and leverages modern CPU
   optimizations.
 \end{compactitem}
+
+\vspace{.5em}
 
 Additionally, all these implementations can be glued to an array of booleans
 (\cinline{std::bitset}) to provide a type that combines boolean and integer
@@ -450,29 +462,29 @@ We present a simple algorithm for computing a sufficient set of terminal
 IOs.  This is done by iteratively refining a set \(P\) of terminal IOs, starting
 by assuming that \(\{\top\}\) is such a set and using any counterexample to split the
 IOs:
-
 \begin{algorithm}[H]
-\SetKwInput{Input}{Input}\SetKwInput{Output}{Output}
-
-\Input{A Büchi automaton \cA}
-\Output{A sufficient set of terminal IOs}
-\BlankLine
-\(P \leftarrow \{\top\}\)\;
-\For{every label \(x\) in the automaton}{
-  \For{every element \(y\) in \(P\)}{
-    \If{\(x \land y \neq \bot\)}{
-      Delete \(y\) from \(P\)\;
-      Insert \(x \land y\) in \(P\)\;
-      \lIf{\(\neg x \land y \neq \bot\)}{
-        insert \(\neg x \land y\) in \(P\)
-      }
-    }
-  }
-}
-\Return \(P\)
 \caption{Computing a sufficient set of terminal IOs}
 \label{alg:sufficient}
+\alginput* A Büchi automaton \cA
+\algoutput* A sufficient set of terminal IOs
+\begin{algorithmic}
+\State \(P \leftarrow \{\top\}\)
+\For{every label \(x\) in the automaton}
+  \For{every element \(y\) in \(P\)}
+    \If{\(x \land y \neq \bot\)}
+      \State Delete \(y\) from \(P\)
+      \State Insert \(x \land y\) in \(P\)
+      \If{\(\neg x \land y \neq \bot\)}
+        insert \(\neg x \land y\) in \(P\)
+      \EndIf
+    \EndIf
+  \EndFor
+\EndFor
+\State \Return \(P\)
+\end{algorithmic}
 \end{algorithm}
+\vspace{.5em}
+
 \noindent We provide 3 implementations of input selection:
 \begin{compactitem}
 \item No precomputation, i.e., return pure inputs/IOs;
@@ -520,15 +532,15 @@ restarted.
 
 \section{Checking unrealizability of LTL specifications}\label{sec:unreal}
 
-As mentioned in the preliminaries, for large values of $k$ the 
+As mentioned in the preliminaries, for large values of $k$ the
 \textbf{BackwardRealizability} problem is equivalent to a non-zero sum game
-whose payoff set is the complement of the language of the given automaton.
-More precisely, for small values of $k$, a negative answer for the
-\textbf{BackwardRealizability} problem does not imply the output player does
-not win the game. Instead, if one is interested in whether the output player
-wins, a property known as determinacy~\cite{borel} can be leveraged to instead
-ask whether a complementary property holds: does the input player win the
-game?
+whose payoff set is the complement of the language of the given automaton.  More
+precisely, for small values of $k$, a negative answer for the
+\textbf{BackwardRealizability} problem does not imply that the output player
+does not win the game. Instead, if one is interested in whether the output
+player wins, a property known as determinacy~\cite{borel} can be leveraged to
+instead ask whether a complementary property holds: does the input player win
+the game?
 
 We thus need to build an automaton \(\mathcal{B}\) for which a positive answer to
 the \textbf{BackwardRealizability} translates to the previous property.  To do
@@ -551,30 +563,34 @@ tries to minimize the number of states \((q, o)\) necessary by considering nonpu
 outputs that maximally correspond to a pure input compatible with the
 original transition label.
 
-\begin{algorithm}[H]
-\SetKwInput{Input}{Input}\SetKwInput{Output}{Output}
-
-\Input{A Büchi automaton \cA with initial state $q_0$}
-\Output{The states $S$ and transitions $\Delta$ of the B\"uchi automaton
-$\mathcal{B}$}
-\BlankLine
-\(S,V \leftarrow \{(q_0,\top)\}\), \(\Delta \leftarrow \{\}\)\;
-\While{\(V\) is nonempty}{
-  Pop $(p,o)$ from $V$\;
-  \For{every \((p,x,q) \in \delta\)}{
-    $y \leftarrow x$\;
-    \While(\tcp*[h]{\rm Iterating through $x$'s minterms focusing on inputs}){$y \neq \bot$}{
-      Let \(i\) be a pure input compatible with \(y\)\;
-      \(o' \leftarrow \exists I.\.x \land i\) \tcp*[h]{\rm Extract nonpure output compatible with \(i\)}\;
-      Add $(\langle p, o\rangle, o \land i, \langle q, o'\rangle)$ to $\Delta$\;
-      If $(q,o')$ is not in $S$, add it to $S$ and $V$\;
-      $y \leftarrow y \land \lnot i$\;
-    }
-  }
-}
-\Return \(S,\Delta\)
+  \begin{algorithm}[H]
 \caption{Modifying \cA so that the outputs are shifted forward}
 \label{alg:caddys-madness}
+\alginput* A Büchi automaton \cA with initial state $q_0$ and transition set \(\delta\)
+\algoutput* The states $S$ and transitions $\Delta$ of the B\"uchi automaton $\mathcal{B}$
+\begin{algorithmic}
+\State \(S,V \leftarrow \{(q_0,\top)\}\)
+\State \(\Delta \leftarrow \{\}\)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \begin{algorithmic}
+\While{\(V\) is nonempty}
+  \State Pop $(p,o)$ from $V$
+  \For{every \((p,x,q) \in \delta\)}
+    \State $y \leftarrow x$
+    \While{$y \neq \bot$} \Comment{Iterating through $x$'s minterms focusing on inputs}
+      \State Let \(i\) be a pure input compatible with \(y\)
+      \State \(o' \leftarrow \exists I.\, x \land i\) \Comment{Extract nonpure output compatible with \(i\)}
+      \State Add $(\langle p, o\rangle, o \land i, \langle q, o'\rangle)$ to $\Delta$
+      \State If $(q,o')$ is not in $S$, add it to $S$ and $V$
+      \State $y \leftarrow y \land \lnot i$
+    \EndWhile
+  \EndFor
+\EndWhile
+\State \Return \(S,\Delta\)
+\end{algorithmic}
 \end{algorithm}
 
 \section{Benchmarks}\label{sec:benchmarks}
@@ -582,7 +598,7 @@ $\mathcal{B}$}
 \subsection{Protocol}
 
 For the past few years, the yardstick of performance for synthesis tools is the
-SYNTCOMP competition~\cite{syntcomp17}.  The organizers provide a bank of nearly a
+SYNTCOMP competition~\cite{syntcomp21}.  The organizers provide a bank of nearly a
 thousand LTL formulas, and candidate tools are run with a time limit of one hour
 on each of them.  The tool that solves the most instances in this timeframe wins
 the competition.
@@ -598,7 +614,7 @@ all tests.
 
 We compared Acacia-Bonsai against itself using different choices of options, and
 against Acacia+~\cite{bbfjr12}, Strix~\cite{msl18}, and
-ltlsynt~\cite{duret.16.atva2}.  The benchmarks were completed on a
+ltlsynt~\cite{duret.16.atva2,mc18}.  The benchmarks were completed on a
 %headless
 Linux computer with the following specifications:
 \begin{compactitem}
@@ -640,7 +656,8 @@ parameter by diverging from the defaults by a single option each time.
   the task at hand.
 \item Precomputing a sufficient set of inputs and IO (\Cref{sec:suff}).
   Computing that set using \Cref{alg:sufficient} turned out to offer the best
-  performance, solving 23 more tests than using the pure inputs/IOs.
+  performance, solving 23 more tests than using the pure inputs/IOs.  The
+  pure BDD approach for this step was slightly more costly.
 \item Picking input-actions (\Cref{sec:io}).  The approaches performed
   equivalently, with a slight edge for the choice of critical inputs without
   randomizing or priority queue.
@@ -648,15 +665,15 @@ parameter by diverging from the defaults by a single option each time.
   combinations, which had little impact on overall performance, with the best
   one solving 3 more tests than the worst.
 \item Unrealizability (\Cref{sec:unreal}). The following figure shows how the
-  two options, \(X\) on the outputs of the formula vs the automaton-based
-  approach, compare.  For this figure, we only show the unrealizable tests and
-  add the configuration we use in practice: starting two threads of execution,
-  one for each option, and stopping as soon as one returns.
+  formula-based and the automaton-based approaches to unrealizability compare.
+  We only show the unrealizable tests and add the configuration we use in
+  practice: start two threads, one for each option, and stop as soon as one
+  returns.
   \begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.7\textwidth]{unreal}
+    \centering\vspace{-2em}
+    \includegraphics[width=0.7\textwidth]{unreal}\vspace{-1em}
     \caption{Reducing unrealizability to realizability.  Timeout set at 20
-      seconds for readability.}
+      seconds.}
     \label{fig:unreal}
   \end{figure}
 
@@ -704,9 +721,11 @@ We provided multiple degrees of freedom in the main algorithm for downset-based
 LTL realizability and implemented options for each of these degrees.  In this
 paper, we presented the main ideas behind these.  Experiments show that this
 careful reimplementation surpasses the performance of the original Acacia+,
-making Acacia-Bonsai competitive against modern LTL realizability tools. Our
-implementation can be found at
-\anon{\url{https://github.com/gaperez64/acacia-bonsai/}}.
+making Acacia-Bonsai competitive against modern LTL realizability tools.  Along
+with implementing some optimizations present in previous implementations, we
+introduced several new ones: reduction of the input-output alphabet, alternative
+antichain data structures, different strategies for input-picking, and
+constructing a ``shifted automaton'' to test unrealizability.
 
 A somewhat disappointing conclusion of our experiments concerns code that makes
 explicit use of SIMD registers, i.e., large CPU registers that support pointwise
@@ -738,6 +757,12 @@ We would like to thank \anon{V\'eronique Bruy\`ere} for recommending the use of
 \anon{Cl\'ement Tamines} for useful conversations on these and alternative data
 structures.  This research was partially funded by \anon{the FWO G030020N
   project ``SAILor''.}
+
+\subsubsection*{Data-Availability Statement}
+The software presented in this article and the analysed dataset are available
+as~\cite{zenodo}.  In addition, the version under study is tagged in the GitHub
+repository of this software as:\\
+\centerline{\texttt{\url{https://github.com/gaperez64/acacia-bonsai/tree/TACAS23}}}
 
 \bibliographystyle{splncs04}
 \bibliography{refs}
