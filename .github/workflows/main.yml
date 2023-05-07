@@ -21,7 +21,7 @@ jobs:
     - name: Install packages
       run: |
         apt-get -y update
-        apt-get -y install zsh git gcc python-is-python3 meson ninja-build gnupg wget python3-pip python3-distutils pkg-config libglib2.0-dev libffi6 libboost-dev autoconf automake libtool bison flex
+        apt-get -y install zsh git gcc python-is-python3 meson ninja-build gnupg wget python3-pip python3-distutils pkg-config libglib2.0-dev libffi-dev libboost-dev autoconf automake libtool bison flex
     - name: Checkout repository and submodules
       uses: actions/checkout@v2
       with:
@@ -29,7 +29,7 @@ jobs:
     - uses: actions/setup-python@v2
     - name: Install python dependencies
       run: |
-        pip install pygraph
+        pip install pygraph --break-system-packages
     - name: Run benchmarks
       run: |
         ./self-benchmark.sh -c base -b ab/set1 -t 3

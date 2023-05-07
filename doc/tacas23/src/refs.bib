@@ -5,7 +5,7 @@
                Thibaud Michaud and
                Etienne Renault and
                Laurent Xu},
-  title     = {Spot 2.0 - {A} Framework for {LTL} and {\textbackslash}omega -Automata
+  title     = {Spot 2.0 - {A} Framework for {LTL} and $\omega$-Automata
                Manipulation},
   booktitle = {{ATVA}},
   series    = {Lecture Notes in Computer Science},
@@ -346,7 +346,7 @@
 @inproceedings{gv16,
   author    = {Giuseppe De Giacomo and
                Moshe Y. Vardi},
-  title     = {LTL\({}_{\mbox{f}}\) and LDL\({}_{\mbox{f}}\) Synthesis under Partial
+  title     = {{LTL}\({}_{\mbox{f}}\) and {LDL}\({}_{\mbox{f}}\) Synthesis under Partial
                Observability},
   booktitle = {{IJCAI}},
   pages     = {1044--1050},
@@ -1368,4 +1368,99 @@
   volume    = {260},
   pages     = {116--143},
   year      = {2017}
+}
+
+@software{zenodo,
+  author       = {Cadilhac, Michaël and
+                  Pérez, Guillermo A.},
+  title        = {{Acacia-Bonsai (TACAS'23 version)}},
+  month        = nov,
+  year         = 2022,
+  publisher    = {Zenodo},
+  version      = {{https://github.com/gaperez64/acacia- 
+                   bonsai/tree/TACAS23}},
+  doi          = {10.5281/zenodo.7296659},
+}
+
+
+@book{bcko08,
+  author    = {Mark de Berg and
+               Otfried Cheong and
+               Marc J. van Kreveld and
+               Mark H. Overmars},
+  title     = {Computational geometry: algorithms and applications, 3rd Edition},
+  publisher = {Springer},
+  year      = {2008},
+  url       = {https://www.worldcat.org/oclc/227584184},
+  isbn      = {9783540779735},
+  timestamp = {Fri, 17 Jul 2020 16:12:38 +0200},
+  biburl    = {https://dblp.org/rec/books/lib/BergCKO08.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@article{syntcomp21,
+  author    = {Swen Jacobs and
+               Guillermo A. P{\'{e}}rez and
+               Remco Abraham and
+               V{\'{e}}ronique Bruy{\`{e}}re and
+               Micha{\"{e}}l Cadilhac and
+               Maximilien Colange and
+               Charly Delfosse and
+               Tom van Dijk and
+               Alexandre Duret{-}Lutz and
+               Peter Faymonville and
+               Bernd Finkbeiner and
+               Ayrat Khalimov and
+               Felix Klein and
+               Michael Luttenberger and
+               Klara J. Meyer and
+               Thibaud Michaud and
+               Adrien Pommellet and
+               Florian Renkin and
+               Philipp Schlehuber{-}Caissier and
+               Mouhammad Sakr and
+               Salomon Sickert and
+               Ga{\"{e}}tan Staquet and
+               Cl{\'{e}}ment Tamines and
+               Leander Tentrup and
+               Adam Walker},
+  title     = {The Reactive Synthesis Competition {(SYNTCOMP):} 2018-2021},
+  journal   = {CoRR},
+  volume    = {abs/2206.00251},
+  year      = {2022},
+   doi       = {10.48550/arXiv.2206.00251},
+  eprinttype = {arXiv},
+  eprint    = {2206.00251},
+  timestamp = {Mon, 26 Sep 2022 16:14:00 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-2206-00251.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@InProceedings{mc18,
+  author	= {Thibaud Michaud and Maximilien Colange},
+  title		= {Reactive Synthesis from {LTL} Specification with {S}pot},
+  booktitle	= {Proceedings of the 7th Workshop on Synthesis, SYNT@CAV
+		  2018},
+  series	= {Electronic Proceedings in Theoretical Computer Science},
+  year		= 2018,
+  abstract	= {We present \texttt{ltlsynt}, a new tool for reactive
+		  synthesis from LTL specifications. It relies on the
+		  efficiency of Spot to translate the input LTL specification
+		  to a deterministic parity automaton. The latter yields a
+		  parity game, which we solve with Zielonka's recursive
+		  algorithm.
+		  
+		  The approach taken in \texttt{ltlsynt} was widely believed
+		  to be impractical, due to the double-exponential size of
+		  the parity game, and to the open status of the complexity
+		  of parity games resolution. \texttt{ltlsynt} ranked second
+		  of its track in the $2017$ edition of the SYNTCOMP
+		  competition. This demonstrates the practical applicability
+		  of the parity game approach, when backed by efficient
+		  manipulations of $\omega$-automata such as the ones
+		  provided by Spot. We present our approach and report on our
+		  experimental evaluation of \texttt{ltlsynt} to better
+		  understand its strengths and weaknesses.}
 }
