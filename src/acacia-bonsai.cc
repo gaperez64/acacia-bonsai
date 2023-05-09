@@ -155,7 +155,7 @@ Exit status:\n\
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 static std::string synth_fname;
-static int threads = 1;
+static int threads = 0;
 
 
 enum {
@@ -386,7 +386,7 @@ namespace {
       int run () override {
         job_processor::run ();
 
-        composition_mt composer(opt_K, opt_Kmin, opt_Kinc);
+        composition_mt composer (opt_K, opt_Kmin, opt_Kinc);
         for(spot::formula& f: formulas) {
           aut_ret game = prepare_formula (f);
           if (game.aut) {
