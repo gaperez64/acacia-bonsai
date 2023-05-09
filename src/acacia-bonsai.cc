@@ -60,7 +60,8 @@ enum {
   OPT_INPUT = 'i',
   OPT_OUTPUT = 'o',
   OPT_CHECK = 'c',
-  OPT_VERBOSE = 'v'
+  OPT_VERBOSE = 'v',
+  OPT_SYNTH = 'S'
 } ;
 
 enum unreal_x_t {
@@ -81,6 +82,10 @@ static const argp_option options[] = {
     "outs", OPT_OUTPUT, "PROPS", 0,
     "comma-separated list of controllable (a.k.a. output) atomic"
     " propositions", 0
+  },
+  {
+    "synth", OPT_SYNTH, "FNAME", 0,
+    "enable synthesis, pass .aag filename, or - to print gates", 0
   },
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
@@ -143,6 +148,7 @@ Exit status:\n\
 
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
+static std::string synth_fname;
 
 
 enum {
@@ -256,7 +262,7 @@ namespace {
           input_aps_.swap (output_aps_);
         }
 
-	verb_do (1, vout << "Formula: " << f << std::endl);
+        verb_do (1, vout << "Formula: " << f << std::endl);
 
         auto aut = trans_.run (&f);
 
@@ -362,7 +368,7 @@ namespace {
 
         vectors::bitset_threshold = aut->num_states () - nbitsetbools;
 
-	utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
+        utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
 
 #define UNREACHABLE [] (int x) { assert (false); }
 
@@ -379,7 +385,7 @@ namespace {
                         vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
                         vbitsets.value>>>
                     (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-                  realizable = skn.solve ();
+                  realizable = skn.solve (synth_fname);
                 },
                 UNREACHABLE,
                 vectors::nbools_to_nbitsets (nbitsetbools));
@@ -396,7 +402,7 @@ namespace {
                     vectors::VECTOR_IMPL<VECTOR_ELT_T>,
                     vbitsets.value>>>
                 (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-              realizable = skn.solve ();
+              realizable = skn.solve (synth_fname);
             },
             UNREACHABLE,
             vectors::nbools_to_nbitsets (nbitsetbools));
@@ -447,6 +453,11 @@ parse_opt (int key, char *arg, struct argp_state *) {
         output_aps.push_back (ap);
       }
 
+      break;
+    }
+
+    case OPT_SYNTH: {
+      synth_fname = arg;
       break;
     }
 
@@ -573,6 +584,8 @@ int main (int argc, char **argv) {
                                    std::string {"unreal-x="} + (char) unreal_x)
                                 + "] ");
         check_real = real;
+        if (!real)
+          synth_fname = ""; // no synthesis for the environment if the formula is unrealizable
         opt_unreal_x = unreal_x;
         int res = processor.run ();
         verb_do (1, vout << "returning " << res << "\n");

@@ -1,0 +1,109 @@
+#!/bin/bash
+# AUTHORS: Guillermo A. Perez + Philipp Meyer
+# DESCRIPTION: The post-processor for synthesis tools on .tlsf benchmarks
+#              (Based on Jens Kreber's script). This version of the post-
+#              processor uses nuXMV to model check synthesized controllers.
+# arg1 = the absolute path to the benchmark file (.tlsf)
+# - modified to call acacia-bonsai
+
+
+BASE=../tests-synth
+cd $BASE
+TESTFOLDER=../build/tests-synth
+
+syntf="$TESTFOLDER/synthesis.aag"
+origf="$1"
+
+# clean up previous test's files
+rm -f $TESTFOLDER/monitor.aig $TESTFOLDER/synthesis.aag $TESTFOLDER/synthesis.aag-combined.aag $TESTFOLDER/synthesis.aag-res
+
+echo origf=\"$origf\"
+
+# convert TLSF to LTL formula + inputs/outputs
+FORMULA=$(./meyerphi-syfco "$origf" -f ltl -m fully) # NOT ltlxba!!
+
+# return if the file is not found -> error
+RET=$?
+echo ret: $RET
+if [ $RET -ne 0 ]; then
+    exit 1
+fi
+
+
+INPS=$(./meyerphi-syfco "$origf" -ins)
+OUTPS=$(./meyerphi-syfco "$origf" -outs)
+# get rid of spaces: a, b, c -> a,b,c
+INPS=$(sed 's/ //g' <<< "$INPS")
+OUTPS=$(sed 's/ //g' <<< "$OUTPS")
+
+echo "-f \"$FORMULA\" --ins $INPS --outs $OUTPS"
+
+
+# call acacia-bonsai to do synthesis
+../build/src/acacia-bonsai -f "$FORMULA" --ins "$INPS" --outs "$OUTPS" -S "$syntf" --check=real -v -v
+#ltlsynt -f "$FORMULA" --ins="$INPS" --outs="$OUTPS" --aiger | sed '1d' > "$syntf"
+#ltlsynt --tlsf="$origf" --aiger | sed '1d' > "$syntf"
+
+if [[ -f "$syntf" ]]; then
+    echo Synthesis seems to be ok?
+else
+    echo No synthesis!
+    exit 2
+fi
+
+
+# Generate monitor
+./meyerphi-syfco --format smv-decomp "$origf" --mode fully | sed -e "/^/n" | ./smvtoaig -L ./ltl2smv > "$TESTFOLDER/monitor.aig"
+
+if [ ! -f "$TESTFOLDER/monitor.aig" ]; then
+    echo "Error=The monitor file was not generated!"
+    exit 3
+fi
+
+# Combine monitor with synthesized file
+./combine-aiger "$TESTFOLDER/monitor.aig" "${syntf}" > "${syntf}-combined.aag"
+
+if [ ! -f "${syntf}-combined.aag" ]; then
+    echo "Error=The combined file was not generated!"
+    exit 4
+fi
+
+if ! (head -n 1 "${syntf}-combined.aag" | grep -q '^aag'); then
+    echo "Error=during monitor combination"
+    exit 5
+fi
+
+# Model checking each justice constraint of the combined file in parallel
+num_justice=$(head -n 1 "${syntf}-combined.aag" | cut -d" " -f9);
+
+# sequential check
+TLIMIT=1000
+# TODO: stop hardcoding the above value
+echo "read_aiger_model -i ${syntf}-combined.aag; encode_variables; build_boolean_model; check_ltlspec_ic3; quit" | timeout -k 10 ${TLIMIT} ./nuXmv -int >"${syntf}-res" 2>&1
+res_val=$?
+
+# check result
+if [ $res_val -eq 0 ]; then
+    num_true=$(grep -c 'specification .* is true' "${syntf}-res" || true)
+    num_false=$(grep -c 'specification .* is false' "${syntf}-res" || true)
+    if [ $num_false -ge 1 ]; then
+        echo "starexec-result=MC-INCORRECT"
+        echo "Error=model checker says no!"
+        exit 6
+    elif [ $num_true -lt $num_justice ]; then
+        echo "starexec-result=MC-ERROR"
+        echo "Error=not all justice properties found"
+        exit 7
+    else
+        echo "Model_check_result=SUCCESS"
+        exit 0  # <- happy exit code
+    fi
+elif [ $res_val -eq 124 ] || [ $res_val -eq 137 ]; then
+    echo "starexec-result=MC-TIMEOUT"
+    exit 8
+else
+    echo "starexec-result=MC-ERROR"
+    echo "Error=unknown MC error, returned ${res_val}"
+    exit 9
+fi
+

@@ -51,3 +51,32 @@ REALIZABLE
 
 The `-c` option selects a configuration and the `-B` option deactivates actual
 benchmarking, so that only compilation is done.
+
+# Citing
+
+If you use this tool for your academic work, please make sure to cite the
+paper we wrote about it.
+
+```
+@inproceedings{DBLP:conf/tacas/CadilhacP23,
+  author       = {Micha{\"{e}}l Cadilhac and
+                  Guillermo A. P{\'{e}}rez},
+  editor       = {Sriram Sankaranarayanan and
+                  Natasha Sharygina},
+  title        = {Acacia-Bonsai: {A} Modern Implementation of Downset-Based {LTL} Realizability},
+  booktitle    = {Tools and Algorithms for the Construction and Analysis of Systems
+                  - 29th International Conference, {TACAS} 2023, Held as Part of the
+                  European Joint Conferences on Theory and Practice of Software, {ETAPS}
+                  2022, Paris, France, April 22-27, 2023, Proceedings, Part {II}},
+  series       = {Lecture Notes in Computer Science},
+  volume       = {13994},
+  pages        = {192--207},
+  publisher    = {Springer},
+  year         = {2023},
+  url          = {https://doi.org/10.1007/978-3-031-30820-8\_14},
+  doi          = {10.1007/978-3-031-30820-8\_14},
+  timestamp    = {Sat, 29 Apr 2023 19:25:03 +0200},
+  biburl       = {https://dblp.org/rec/conf/tacas/CadilhacP23.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+```
