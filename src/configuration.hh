@@ -62,11 +62,11 @@
 #endif
 
 #ifndef ARRAY_AND_BITSET_DOWNSET_IMPL
-# define ARRAY_AND_BITSET_DOWNSET_IMPL vector_backed_bin
+# define ARRAY_AND_BITSET_DOWNSET_IMPL vector_backed
 #endif
 
 #ifndef VECTOR_AND_BITSET_DOWNSET_IMPL
-# define VECTOR_AND_BITSET_DOWNSET_IMPL vector_backed_bin
+# define VECTOR_AND_BITSET_DOWNSET_IMPL vector_backed
 #endif
 
 #ifndef SIMD_IS_MAX
