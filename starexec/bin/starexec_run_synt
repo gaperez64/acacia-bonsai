@@ -5,6 +5,7 @@ SYFCO=./syfco
 ACABON=./acacia-bonsai
 FILE=$1
 PART=$(mktemp)
+RES=$(mktemp)
 LTL=$($SYFCO $FILE -f ltlxba -m fully -pf $PART)
 
 parttoinsouts () {
@@ -21,5 +22,6 @@ parttoinsouts () {
 
 parttoinsouts $PART
 
-$ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs" --synth="-" -v
-rm -f $PART
+$ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs" --synth="RES" -v
+cat $RES
+rm -f $PART $RES
