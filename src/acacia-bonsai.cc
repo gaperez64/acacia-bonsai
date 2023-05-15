@@ -231,7 +231,11 @@ namespace {
         timer.start ();
 
         spot::stopwatch sw, sw_nospot;
-        bool want_time = true; // Hardcoded
+#ifndef NDEBUG
+        bool want_time = true;
+#else
+        bool want_time = false;
+#endif
 
         // To Universal co-Büchi Automaton
         trans_.set_type(spot::postprocessor::BA);
