@@ -167,8 +167,8 @@ class pipe_t {
     write_obj<int> (aut->num_states ());
 
     int num_edges = 0;
-    for(auto& edge: aut->edges ()) num_edges++;
-    assert(num_edges == aut->num_edges ());
+    for(auto& _: aut->edges ()) num_edges++;
+    assert(num_edges == (int)aut->num_edges ());
     //write_obj<int> (num_edges);
     //utils::vout << "Number of edges: " << num_edges << " (func gives " << aut->num_edges () << ")\n";
     write_obj<int> (aut->num_edges ());
@@ -200,7 +200,7 @@ class pipe_t {
 
     int states = read_obj<int> ();
     for(int i = 0; i < states; i++) {
-      assert (aut->new_state () == i);
+      assert ((int)aut->new_state () == i);
     }
 
     int edges = read_obj<int> ();

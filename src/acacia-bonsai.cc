@@ -394,6 +394,13 @@ namespace {
 
 
       int run () override {
+        for(std::string ap: input_aps) {
+          dict->register_proposition (spot::formula::ap (ap), this);
+        }
+        for(std::string ap: output_aps) {
+          dict->register_proposition (spot::formula::ap (ap), this);
+        }
+
         job_processor::run ();
 
         // if formulas.size() == 1
@@ -411,7 +418,9 @@ namespace {
         composer.all_outputs_v = all_outputs_v;
         composer.all_outputs = all_outputs;
 
-        return composer.run (workers, synth_fname);
+        int ret = composer.run (workers, synth_fname);
+        dict->unregister_all_my_variables (this);
+        return ret;
       }
   };
 }

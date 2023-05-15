@@ -31,7 +31,7 @@ class composition_mt {
   std::vector<worker_t> workers;
 
   bdd invariant = bddtrue;
-  aut_ret invariant_aut;
+  //aut_ret invariant_aut;
 
   bdd all_inputs, all_outputs;
   std::vector<bdd> all_inputs_v, all_outputs_v;
@@ -51,7 +51,7 @@ class composition_mt {
   spot::formula bdd_to_formula (bdd f) const;
   void add_game (aut_ret& t);
   void enqueue (job_ptr p);
-  void add_invariant (bdd inv, aut_ret aut);
+  void add_invariant (bdd inv);
   void finish_invariant ();
   void be_child (job_ptr job, int id);
 
@@ -250,7 +250,7 @@ void composition_mt::enqueue (job_ptr p) {
   bdd condition;
   if (is_invariant(p->get_aut().aut, condition)) {
     utils::vout << "Found invariant: " << spot::bdd_to_formula (condition, p->get_aut ().aut->get_dict ()) << "\n";
-    add_invariant (condition, p->get_aut ());
+    add_invariant (condition);
     return;
   }
 
@@ -307,34 +307,38 @@ void composition_mt::add_result (aut_ret& r) {
   }
 }
 
-void composition_mt::add_invariant (bdd inv, aut_ret aut) {
+void composition_mt::add_invariant (bdd inv) {
   invariant &= inv;
-  invariant_aut = aut;
   if (invariant == bddfalse) losing = true;
 }
 
 void composition_mt::finish_invariant() {
   if (invariant != bddtrue) {
-    spot::twa_graph_ptr aut = invariant_aut.aut;
+    aut_ret invariant_aut;
+    invariant_aut.bool_threshold = 1;
+
+    spot::twa_graph_ptr aut = std::make_shared<spot::twa_graph> (dict);
+    aut->set_generalized_buchi (1);
+    aut->set_acceptance (spot::acc_cond::inf ({0}));
+    aut->prop_state_acc (true);
+    aut->new_states (2);
+    aut->set_init_state (1);
     //utils::vout << "Adding invariant: " << spot::bdd_to_formula (invariant, aut->get_dict ()) << "\n";
 
+    aut->new_edge (1, 1, invariant);
+    aut->new_edge (1, 0, !invariant);
+    aut->new_acc_edge (0, 0, bddtrue);
     unsigned init = aut->get_init_state_number();
     unsigned other = 1-init;
-
-    for(auto& edge: aut->edges()) {
-      if ((edge.src == init) && (edge.dst == init)) {
-        edge.cond = invariant;
-      }
-      else if ((edge.src == init) && (edge.dst == other)) {
-        edge.cond = !invariant;
-      }
-    }
 
     invariant_aut.solved = true;
 
     auto safe = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), 0);
     safe[other] = -1;
     invariant_aut.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (safe));
+    invariant_aut.aut = aut;
+
+    //custom_print(utils::vout, aut);
 
     add_result (invariant_aut);
   }
@@ -343,7 +347,7 @@ void composition_mt::finish_invariant() {
 
 
 void composition_mt::be_child (job_ptr job, int id) {
-  utils::vout.set_prefix ("[" + std::to_string (id+1) + "]");
+  utils::vout.set_prefix ("[" + std::to_string (id+1) + "] ");
 
   pipe_t& my_pipe = workers[id].to_main;
 
@@ -352,17 +356,12 @@ void composition_mt::be_child (job_ptr job, int id) {
   my_pipe.write_obj<int> (MESSAGE_END);
 
   utils::vout << "Done: wrote " << my_pipe.get_bytes_count () << " bytes to pipe\n";
-  //shared_pipe.write_obj<char> (id);
-
   exit(0);
 }
 
 int composition_mt::run (int worker_count, std::string synth_fname) {
-  utils::vout.set_prefix ("[0]");
+  utils::vout.set_prefix ("[0] ");
 
-  spot::twa_graph_ptr _hold_ = pending_jobs.front()->get_aut().aut;
-
-  //threads = 1;
   if (worker_count <= 0) {
     worker_count = std::thread::hardware_concurrency ();
   }
@@ -371,12 +370,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
   worker_count = std::min<int> (worker_count, pending_jobs.size ());
   assert (worker_count >= 0);
 
-  //dict->dump(utils::vout);
-
-
   finish_invariant ();
-
-  //dict->dump(utils::vout);
 
   // create shared pipe
   assert (shared_pipe.create_pipe () == 0);
@@ -389,8 +383,6 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     //assert(new_size != -1);
     //utils::vout << "Pipe size: " << new_size << "\n";
   }
-
-
 
   // spawn the workers with their initial job
   for(int i = 0; i < worker_count; i++) {
@@ -432,23 +424,6 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     */
 
     my_pipe.assert_read<int> (MESSAGE_START);
-    /*
-    char result = my_pipe.read_obj<char> (); // 0 if no downset (unrealizable), otherwise 1 if solved
-
-    if (result == 0) {
-      // unrealizable!
-      losing = true;
-      utils::vout << "Game not realizable -> abort!\n";
-    }
-    else if (result == 1) {
-      aut_ret game = workers[wid].game;
-      game.safe = my_pipe.read_downset ();
-      game.solved = true;
-      //utils::vout << "Downset: " << *game.safe << "\n";
-      add_result (game);
-    }
-    else assert(false);
-    */
     aut_ret game = my_pipe.read_result (dict);
 
 
