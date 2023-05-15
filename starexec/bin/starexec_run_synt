@@ -22,6 +22,6 @@ parttoinsouts () {
 
 parttoinsouts $PART
 
-$ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs" --synth="RES" -v
-cat $RES
+$ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs" --synth="RES"
+echo $(cat $RES)
 rm -f $PART $RES

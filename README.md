@@ -52,6 +52,18 @@ REALIZABLE
 The `-c` option selects a configuration and the `-B` option deactivates actual
 benchmarking, so that only compilation is done.
 
+## Compiling for StarExec
+You will need some wrapping script (see `starexec` directory). Additionally,
+you will need to compile in an `x86_64` machine with SIMD deactivated and
+everything statically linked because StarExec runs on an old linux with old
+libraries. For instance:
+1. Set up a meson build library with 
+```
+CXXFLAGS=-DNO_SIMD meson setup $BUILD_DIR --buildtype=release --prefer-static --default-library=static
+```
+2. Print the compilation command with `meson compile -vC $BUILD_DIR` for acacia-bonsai and add
+   `-static` to ensure everything is statically linked.
+
 # Citing
 
 If you use this tool for your academic work, please make sure to cite the
