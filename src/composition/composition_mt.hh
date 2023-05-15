@@ -18,7 +18,7 @@ using job_ptr = std::shared_ptr<job_base>;
 struct worker_t {
   pipe_t to_main, from_main;
   pid_t pid = -1;
-  //aut_ret game;
+  bool active = true;
 };
 
 class composition_mt {
@@ -31,18 +31,15 @@ class composition_mt {
   std::vector<worker_t> workers;
 
   bdd invariant = bddtrue;
-  //aut_ret invariant_aut;
 
   bdd all_inputs, all_outputs;
-  std::vector<bdd> all_inputs_v, all_outputs_v;
   spot::bdd_dict_ptr dict;
   unsigned _opt_K, _opt_Kmin, _opt_Kinc;
 
 
   public:
-  composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc,
-      bdd all_inputs, std::vector<bdd> all_inputs_v, bdd all_outputs, std::vector<bdd> all_outputs_v, spot::bdd_dict_ptr dict):
-        all_inputs(all_inputs), all_outputs(all_outputs), all_inputs_v(all_inputs_v), all_outputs_v(all_outputs_v), dict(dict) {
+  composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc, spot::bdd_dict_ptr dict):
+        dict(dict) {
     _opt_K = opt_K;
     _opt_Kmin = opt_Kmin;
     _opt_Kinc = opt_Kinc;
@@ -53,7 +50,8 @@ class composition_mt {
   void enqueue (job_ptr p);
   void add_invariant (bdd inv);
   void finish_invariant ();
-  void be_child (job_ptr job, int id);
+  int epilogue (std::string synth_fname);
+  void be_child (int id);
 
   job_ptr dequeue ();
 
@@ -65,10 +63,8 @@ class composition_mt {
 
 class job_base {
   public:
-  virtual void run (pipe_t&, pipe_t&, int, composition_mt*) = 0;
-  virtual std::string name () = 0;
-  virtual aut_ret get_aut () = 0;
-  virtual bool is_original () = 0;
+  virtual void to_pipe(pipe_t&) = 0;
+  //virtual bool is_original () = 0;
   virtual ~job_base () = default;
 };
 
@@ -78,15 +74,12 @@ class job_base {
 class job_solve: public job_base {
   public:
   aut_ret starting_point;
-  bool original;
 
   public:
   job_solve (aut_ret& game, bool original);
 
-  virtual void run (pipe_t&, pipe_t&, int, composition_mt*) override;
-  virtual std::string name () override;
-  virtual aut_ret get_aut () override;
-  virtual bool is_original () override;
+  virtual void to_pipe(pipe_t&) override;
+  //virtual bool is_original () override;
   virtual ~job_solve () override = default;
 };
 
@@ -96,7 +89,7 @@ class job_solve: public job_base {
 
 job_solve::job_solve (aut_ret& game, bool orig) {
   starting_point = std::move (game);
-  original = orig;
+  //original = orig;
 }
 
 
@@ -192,46 +185,12 @@ bool is_invariant(spot::twa_graph_ptr aut, bdd& condition) {
   return ((edges == 7) && (condition == !condition_neg));
 }
 
-void job_solve::run (pipe_t& pipe, pipe_t& shared_pipe, int id, composition_mt* m) {
-  // solve
-  utils::vout << "Starting solve on automaton with " << starting_point.aut->num_states() << " states\n";
-
-  //utils::vout << starting_point.bool_threshold << " (nonbool)\n";
-  //custom_print (utils::vout, starting_point.aut);
-
-  //utils::vout << "F: " << *(starting_point.safe);
-  shrink_safe (starting_point, m);
-
-  shared_pipe.write_obj<char> (id);
-
-  /*
-  if (starting_point.safe) {
-    //utils::vout << "Solved into " << *(starting_point.safe);
-    utils::vout << "Pipe.w: " << pipe.w << "\n";
-    pipe.write_obj<char> (1); // solved it
-    pipe.write_downset (*starting_point.safe);
-  }
-  else {
-    utils::vout << "Solved but not winning\n";
-    pipe.write_obj<char> (0); // no downset
-  }
-  */
+void job_solve::to_pipe (pipe_t& pipe) {
+  // send this job to a subprocess
+  pipe.write_obj<char> (0);
   pipe.write_result (starting_point);
-
+  utils::vout << "Job sent: wrote " << pipe.get_bytes_count () << " bytes from pipe\n";
 }
-
-std::string job_solve::name () {
-  return "SOLVE";
-}
-
-aut_ret job_solve::get_aut () {
-  return starting_point;
-}
-
-bool job_solve::is_original () {
-  return original;
-}
-
 
 
 //////////////////////////////////////////////////
@@ -247,14 +206,16 @@ spot::formula composition_mt::bdd_to_formula (bdd f) const {
 }
 
 void composition_mt::enqueue (job_ptr p) {
+  /*
   bdd condition;
   if (is_invariant(p->get_aut().aut, condition)) {
     utils::vout << "Found invariant: " << spot::bdd_to_formula (condition, p->get_aut ().aut->get_dict ()) << "\n";
     add_invariant (condition);
     return;
   }
+  */
 
-  utils::vout << "New job added to queue: " << p->name () << "\n";
+  //utils::vout << "New job added to queue: " << p->name () << "\n";
   pending_jobs.push(p);
 }
 
@@ -274,9 +235,6 @@ void composition_mt::add_result (aut_ret& r) {
     stored_result = std::make_shared<aut_ret> (r);
   }
   else {
-    //utils::vout << "Adding new merge job\n";
-    //enqueue (std::make_shared<job_merge> (*stored_result, r));
-
     aut_ret inputs[2];
     inputs[0] = *stored_result;
     inputs[1] = r;
@@ -344,18 +302,67 @@ void composition_mt::finish_invariant() {
   }
 }
 
+int composition_mt::epilogue (std::string synth_fname) {
+  if (losing) {
+    utils::vout << "Losing!\n";
+    return 0;
+  }
 
+  // check stored_result
+  if (!stored_result) {
+    utils::vout << "No result?\n";
+    return 0;
+  }
 
-void composition_mt::be_child (job_ptr job, int id) {
+  aut_ret& r = *stored_result;
+
+  if (!r.solved) {
+    shrink_safe (r, this);
+  }
+
+  if (!r.safe) {
+    utils::vout << "Final result is not realizable!\n";
+    return 0;
+  }
+
+  if (!synth_fname.empty()) {
+    r.set_globals ();
+    auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
+    (r.aut, _opt_Kmin, _opt_K, _opt_Kinc, all_inputs, all_outputs);
+    skn.synthesis (*r.safe, synth_fname);
+  }
+
+  return 1;
+}
+
+void composition_mt::be_child (int id) {
   utils::vout.set_prefix ("[" + std::to_string (id+1) + "] ");
 
-  pipe_t& my_pipe = workers[id].to_main;
+  pipe_t& to_main = workers[id].to_main;
+  pipe_t& from_main = workers[id].from_main;
 
-  my_pipe.write_obj<int> (MESSAGE_START);
-  job->run (my_pipe, shared_pipe, id, this);
-  my_pipe.write_obj<int> (MESSAGE_END);
+  while (true) {
+    int job = from_main.read_obj<char> ();
+    if (job == -1) break;
 
-  utils::vout << "Done: wrote " << my_pipe.get_bytes_count () << " bytes to pipe\n";
+    if (job == 0) {
+      // solve job
+      aut_ret r = from_main.read_result (dict);
+      utils::vout << "Job received: read " << from_main.get_bytes_count () << " bytes from pipe\n";
+
+      utils::vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n";
+      shrink_safe (r, this);
+
+      shared_pipe.write_obj<char> (id);
+      to_main.write_obj<int> (MESSAGE_START);
+      to_main.write_result (r);
+      to_main.write_obj<int> (MESSAGE_END);
+
+      utils::vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n";
+    }
+  }
+
+  utils::vout << "Worker is finished!\n";
   exit(0);
 }
 
@@ -386,23 +393,19 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
 
   // spawn the workers with their initial job
   for(int i = 0; i < worker_count; i++) {
-    job_ptr job = dequeue ();
-    assert (job != nullptr);
-
     pid_t pid = fork ();
     assert (pid >= 0);
 
     if (pid > 0) {
-      // parent process
       workers[i].pid = pid;
-      //dict->dump(utils::vout);
-      //workers[i].game = job->get_aut ();
-      //workers[i].orig = job->is_original ();
-      //utils::vout << "Orig: " << job->is_original() << "\n";
+      job_ptr job = dequeue ();
+      assert(job != nullptr);
+
+      job->to_pipe (workers[i].from_main);
     }
     else {
       // child process
-      be_child (job, i);
+      be_child (i);
     }
   }
 
@@ -412,8 +415,8 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     int wid = shared_pipe.read_obj<char> ();
     assert((wid >= 0) && (wid < worker_count));
 
-    pipe_t& my_pipe = workers[wid].to_main;
-    utils::vout << "Wid " << wid << ": pipe " << my_pipe.r << "\n";
+    pipe_t& to_main = workers[wid].to_main;
+    pipe_t& from_main = workers[wid].from_main;
 
     /*
     while (true) {
@@ -423,9 +426,8 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     }
     */
 
-    my_pipe.assert_read<int> (MESSAGE_START);
-    aut_ret game = my_pipe.read_result (dict);
-
+    to_main.assert_read<int> (MESSAGE_START);
+    aut_ret game = to_main.read_result (dict);
 
     if (game.safe) {
       game.solved = true;
@@ -433,67 +435,36 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     } else {
       losing = true;
       utils::vout << "Game not realizable -> abort!\n";
+
+      for(int i = 0; i < worker_count; i++) {
+        if (!workers[i].active) continue;
+        kill (workers[i].pid, SIGKILL);
+        waitpid(workers[i].pid, nullptr, 0);
+      }
+      break;
     }
 
-    my_pipe.assert_read<int> (MESSAGE_END);
-    utils::vout << "Done: read " << my_pipe.get_bytes_count () << " bytes from pipe\n";
+    to_main.assert_read<int> (MESSAGE_END);
+    utils::vout << "Done: read " << to_main.get_bytes_count () << " bytes from pipe\n";
 
-    // wait for this process
-    waitpid(workers[wid].pid, nullptr, 0);
 
     job_ptr new_job = dequeue ();
     if ((new_job == nullptr) || losing) {
       active_workers--;
-      continue;
-    }
+      utils::vout << "Releasing worker " << wid << ": " << active_workers << " left.\n";
+      workers[wid].active = false;
 
-    pid_t pid = fork ();
-    assert (pid >= 0);
-
-    if (pid > 0) {
-      // parent process
-      workers[wid].pid = pid;
-      //workers[wid].game = new_job->get_aut ();
-      //workers[wid].orig = new_job->is_original ();
-    }
-    else {
-      be_child (new_job, wid);
+      from_main.write_obj<char> (-1); // done!
+      // wait for this process
+      waitpid(workers[wid].pid, nullptr, 0);
+    } else {
+      // send new job
+      new_job->to_pipe (from_main);
     }
   }
 
 
   utils::vout << "All workers are finished.\n";
 
-  if (losing) {
-    utils::vout << "Losing!\n";
-    return 0;
-  }
-
-  // check stored_result
-  if (!stored_result) {
-    utils::vout << "No result?\n";
-    return 0;
-  }
-
-  aut_ret& r = *stored_result;
-
-  if (!r.solved) {
-    shrink_safe (r, this);
-  }
-
-  if (!r.safe) {
-    utils::vout << "Final result is not realizable!\n";
-    return 0;
-  }
-
-  //utils::vout << "Realizable, safe region: " << *r.safe << "\n";
-  if (!synth_fname.empty()) {
-    r.set_globals ();
-    auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
-    (r.aut, _opt_Kmin, _opt_K, _opt_Kinc, all_inputs, all_outputs);
-    skn.synthesis (*r.safe, synth_fname);
-  }
-
-
-  return 1;
+  return epilogue (synth_fname);
 }

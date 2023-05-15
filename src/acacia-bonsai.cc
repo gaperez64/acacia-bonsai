@@ -189,7 +189,6 @@ namespace {
       std::vector<spot::formula> formulas;
 
       bdd all_inputs, all_outputs;
-      std::vector<bdd> all_inputs_v, all_outputs_v;
       spot::bdd_dict_ptr dict;
 
     public:
@@ -281,20 +280,16 @@ namespace {
         // Create BDDs for the input and output AP.
         all_inputs = bddtrue;
         all_outputs = bddtrue;
-        all_inputs_v.clear ();
-        all_outputs_v.clear ();
 
         for (const auto& ap_i : input_aps_)
         {
           unsigned v = aut->register_ap (spot::formula::ap (ap_i));
           all_inputs &= bdd_ithvar (v);
-          all_inputs_v.push_back (bdd_ithvar (v));
         }
         for (const auto& ap_i : output_aps_)
         {
           unsigned v = aut->register_ap (spot::formula::ap (ap_i));
           all_outputs &= bdd_ithvar (v);
-          all_outputs_v.push_back (bdd_ithvar (v));
         }
 
         // If unreal but we haven't pushed outputs yet using X on formula
@@ -403,9 +398,33 @@ namespace {
 
         job_processor::run ();
 
-        // if formulas.size() == 1
+        if (formulas.empty ()) {
+          utils::vout << "Pass a formula!\n";
+          return 0;
+        }
 
-        composition_mt composer (opt_K, opt_Kmin, opt_Kinc, all_inputs, all_inputs_v, all_outputs, all_outputs_v, dict);
+        if (formulas.size () == 1) {
+          // one formula: don't make subprocesses, quickly do everything here
+          aut_ret game = prepare_formula (formulas[0]);
+          composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict);
+          composer.all_inputs = all_inputs;
+          composer.all_outputs = all_outputs;
+          shrink_safe (game, &composer);
+          composer.add_result (game);
+          return composer.epilogue (synth_fname);
+        }
+
+        if (!check_real) {
+          utils::vout << "Error: can't do composition for unrealizability!\n";
+          return 0;
+        }
+
+        if (opt_Kinc != 0) {
+          utils::vout << "Error: can't do composition with incrementing K values!\n";
+          return 0;
+        }
+
+        composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict);
         for(spot::formula& f: formulas) {
           aut_ret game = prepare_formula (f);
           if (game.aut) {
@@ -413,14 +432,14 @@ namespace {
           }
         }
 
-        composer.all_inputs_v = all_inputs_v;
         composer.all_inputs = all_inputs;
-        composer.all_outputs_v = all_outputs_v;
         composer.all_outputs = all_outputs;
 
-        int ret = composer.run (workers, synth_fname);
+        return composer.run (workers, synth_fname);
+      }
+
+      ~ltl_processor () override {
         dict->unregister_all_my_variables (this);
-        return ret;
       }
   };
 }
@@ -580,9 +599,9 @@ int main (int argc, char **argv) {
     if (opt_Kmin == 0)
       opt_Kmin = opt_K;
 
-    utils::vout << "Running processor in main process\n";
-    processor.run ();
-    return 0;
+    //utils::vout << "Running processor in main process\n";
+    //processor.run ();
+    //return 0;
 
     const auto start_proc = [&] (bool real, unreal_x_t unreal_x) {
       if (fork () == 0) {
