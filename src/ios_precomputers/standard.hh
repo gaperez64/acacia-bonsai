@@ -103,9 +103,8 @@ namespace ios_precomputers {
               for (size_t p = 0; p < aut->num_states (); ++p) {
                 for (const auto& e : aut->out (p)) {
                   unsigned q = e.dst;
-                  if ((e.cond & letter) != bddfalse)
-                  {
-                      current_io.push_back(std::pair(p, q));
+                  if ((e.cond & letter) != bddfalse) {
+                      current_io.push_back (std::pair (p, q));
                   }
                 }
               }

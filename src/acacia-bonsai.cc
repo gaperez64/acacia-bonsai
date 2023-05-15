@@ -63,7 +63,7 @@ enum {
   OPT_CHECK = 'c',
   OPT_VERBOSE = 'v',
   OPT_SYNTH = 'S',
-  OPT_THREADS = 't'
+  OPT_WORKERS = 'j'
 } ;
 
 enum unreal_x_t {
@@ -90,8 +90,8 @@ static const argp_option options[] = {
     "enable synthesis, pass .aag filename, or - to print gates", 0
   },
     {
-    "threads", OPT_THREADS, "VAL", 0,
-    "Number of threads", 0
+    "workers", OPT_WORKERS, "VAL", 0,
+    "Number of parallel workers for composition", 0
   },
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
@@ -155,7 +155,7 @@ Exit status:\n\
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 static std::string synth_fname;
-static int threads = 0;
+static int workers = 0;
 
 
 enum {
@@ -188,12 +188,17 @@ namespace {
       std::vector<std::string> output_aps_;
       std::vector<spot::formula> formulas;
 
+      bdd all_inputs, all_outputs;
+      std::vector<bdd> all_inputs_v, all_outputs_v;
+      spot::bdd_dict_ptr dict;
+
     public:
 
       ltl_processor (spot::translator &trans,
                      std::vector<std::string> input_aps_,
-                     std::vector<std::string> output_aps_)
-        : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_) {
+                     std::vector<std::string> output_aps_,
+                     spot::bdd_dict_ptr dict_)
+        : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_), dict(dict_) {
       }
 
       using aut_t = decltype (trans_.run (spot::formula::ff ()));
@@ -274,17 +279,22 @@ namespace {
         auto aut = trans_.run (&f);
 
         // Create BDDs for the input and output AP.
-        bdd all_inputs = bddtrue;
-        bdd all_outputs = bddtrue;
+        all_inputs = bddtrue;
+        all_outputs = bddtrue;
+        all_inputs_v.clear ();
+        all_outputs_v.clear ();
+
         for (const auto& ap_i : input_aps_)
         {
-          unsigned v = aut->register_ap (spot::formula::ap(ap_i));
-          all_inputs &= bdd_ithvar(v);
+          unsigned v = aut->register_ap (spot::formula::ap (ap_i));
+          all_inputs &= bdd_ithvar (v);
+          all_inputs_v.push_back (bdd_ithvar (v));
         }
         for (const auto& ap_i : output_aps_)
         {
-          unsigned v = aut->register_ap (spot::formula::ap(ap_i));
-          all_outputs &= bdd_ithvar(v);
+          unsigned v = aut->register_ap (spot::formula::ap (ap_i));
+          all_outputs &= bdd_ithvar (v);
+          all_outputs_v.push_back (bdd_ithvar (v));
         }
 
         // If unreal but we haven't pushed outputs yet using X on formula
@@ -354,8 +364,8 @@ namespace {
 
         aut_ret ret;
         ret.aut = aut;
-        ret.all_inputs = all_inputs;
-        ret.all_outputs = all_outputs;
+        //ret.all_inputs = all_inputs;
+        //ret.all_outputs = all_outputs;
         ret.bool_threshold = vectors::bool_threshold;
         ret.solved = false;
         ret.set_globals ();
@@ -386,7 +396,9 @@ namespace {
       int run () override {
         job_processor::run ();
 
-        composition_mt composer (opt_K, opt_Kmin, opt_Kinc);
+        // if formulas.size() == 1
+
+        composition_mt composer (opt_K, opt_Kmin, opt_Kinc, all_inputs, all_inputs_v, all_outputs, all_outputs_v, dict);
         for(spot::formula& f: formulas) {
           aut_ret game = prepare_formula (f);
           if (game.aut) {
@@ -394,7 +406,12 @@ namespace {
           }
         }
 
-        return composer.run (threads, synth_fname);
+        composer.all_inputs_v = all_inputs_v;
+        composer.all_inputs = all_inputs;
+        composer.all_outputs_v = all_outputs_v;
+        composer.all_outputs = all_outputs;
+
+        return composer.run (workers, synth_fname);
       }
   };
 }
@@ -434,8 +451,8 @@ parse_opt (int key, char *arg, struct argp_state *) {
       break;
     }
 
-    case OPT_THREADS: {
-      threads = std::stoi(arg);
+    case OPT_WORKERS: {
+      workers = atoi (arg);
       break;
     }
 
@@ -541,7 +558,7 @@ int main (int argc, char **argv) {
     // not measured in our timings.
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
-    ltl_processor processor (trans, input_aps, output_aps);
+    ltl_processor processor (trans, input_aps, output_aps, dict);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();

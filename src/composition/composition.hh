@@ -6,14 +6,14 @@
 
 #include "types.hh"
 
-void custom_print (std::ostream& out, spot::twa_graph_ptr& aut)
+void custom_print (std::ostream& out, spot::twa_graph_ptr aut)
 {
   // We need the dictionary to print the BDDs that label the edges
   const spot::bdd_dict_ptr& dict = aut->get_dict();
 
   // Some meta-data...
-  //out << "Acceptance: " << aut->get_acceptance() << '\n';
-  //out << "Number of sets: " << aut->num_sets() << '\n';
+  out << "Acceptance: " << aut->get_acceptance() << '\n';
+  out << "Number of sets: " << aut->num_sets() << '\n';
   out << "Number of states: " << aut->num_states() << '\n';
   out << "Number of edges: " << aut->num_edges() << '\n';
   out << "Initial state: " << aut->get_init_state_number() << '\n';
@@ -50,7 +50,7 @@ void custom_print (std::ostream& out, spot::twa_graph_ptr& aut)
   }
 }
 
-thread_local std::vector<unsigned int> rename2;
+std::vector<unsigned int> rename2;
 
 void f(const std::vector<unsigned int>& v, void*) {
   rename2 = v;

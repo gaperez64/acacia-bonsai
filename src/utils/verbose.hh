@@ -8,7 +8,7 @@ namespace utils {
       bool prev_ended_in_eol = true;
       std::string prefix = "";
 
-    protected:
+    public:
       virtual int sync()
       {
         int ret = std::stringbuf::sync();
@@ -49,7 +49,9 @@ namespace utils {
 
       template<typename T>
       std::ostream& operator<< (const T& data) {
-        return static_cast<std::ostream&>(*this) << data;
+        std::ostream& r = static_cast<std::ostream&>(*this) << data;
+        buf.sync (); fflush (stdout);
+        return r;
       }
 
       void set_prefix (const std::string& s) { buf.set_prefix (s); }

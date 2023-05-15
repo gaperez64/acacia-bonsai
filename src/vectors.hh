@@ -5,13 +5,13 @@
 namespace vectors {
   // This is the position at and after which all state counters are boolean.
   // Set to the vector size to disable this.
-  thread_local static size_t bool_threshold = 0;
+  static size_t bool_threshold = 0;
 
   // The boolean threshold may lay at an inconvenient position.  For instance,
   // it may be at 7, in which case a vector type that implements a split between
   // boolean and nonboolean may want to use 8 dimensions as nonbools, and the
   // rest as bool.  This is this threshold:
-  thread_local static size_t bitset_threshold = 0;
+  static size_t bitset_threshold = 0;
 
   // Vectors implementing bin() should satisfy:
   //       if u.bin () < v.bin (), then u can't dominate v.

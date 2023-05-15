@@ -70,8 +70,8 @@ class aiger {
     }
 
     // gates
-    for (const auto& gate : gates) // key = {i1, i2} tuple, value = o
-    {
+    for (const auto& gate : gates) {
+      // key = {i1, i2} tuple, value = o
       ost << gate.second << " " << gate.first.first << " " << gate.first.second << "\n";
     }
 
