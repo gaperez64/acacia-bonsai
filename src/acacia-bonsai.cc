@@ -372,7 +372,7 @@ namespace {
 
         vectors::bitset_threshold = aut->num_states () - nbitsetbools;
 
-        utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
+        verb_do (1, vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n");
 
 #define UNREACHABLE [] (int x) { assert (false); }
 
