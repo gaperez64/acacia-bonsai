@@ -17,12 +17,11 @@ using GenericDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vectors::vector_
 struct aut_ret {
   spot::twa_graph_ptr aut;
   size_t bool_threshold;
-  //bdd all_inputs, all_outputs;
   std::shared_ptr<GenericDownset> safe;
   bool solved;
 
   auto set_globals () {
-    vectors::bool_threshold = bool_threshold; // number of boolean states
+    vectors::bool_threshold = bool_threshold; // number of nonboolean states
 
     // Compute how many boolean states will actually be put in bitsets.
     constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
@@ -53,26 +52,38 @@ struct aut_ret {
     //utils::vout << "Thought it was " << bitset_threshold << "\n";
     //bitset_threshold = vectors::bitset_threshold;
 
-    return std::pair<size_t, size_t>(nbitsetbools, actual_nonbools);
+    return std::pair<size_t, size_t> (nbitsetbools, actual_nonbools);
   }
 };
 
 
 template<typename To, typename From>
 To cast_vector (From& f) {
-  auto vec = utils::vector_mm<VECTOR_ELT_T>(f.size(), 0);
-  for(size_t i = 0; i < f.size(); i++) {
+  auto vec = utils::vector_mm<VECTOR_ELT_T> (f.size (), 0);
+  for(size_t i = 0; i < f.size (); i++) {
     vec[i] = f[i];
   }
-  return To(vec);
+  return To (vec);
 }
 
 template<typename To, typename From>
 To cast_downset (From& f) {
   using NewVec = To::value_type;
-  To downset(cast_vector<NewVec>(*f.begin()));
+  To downset (cast_vector<NewVec> (*f.begin ()));
   for(const auto& vec: f) {
-    downset.insert(cast_vector<NewVec>(vec));
+    downset.insert (cast_vector<NewVec> (vec));
   }
   return downset;
 }
+
+enum unreal_x_t {
+  UNREAL_X_FORMULA = 'f',
+  UNREAL_X_AUTOMATON = 'a',
+  UNREAL_X_BOTH
+};
+
+enum job_type {
+  e_solve,
+  e_formula,
+  e_done
+};

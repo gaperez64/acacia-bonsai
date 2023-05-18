@@ -71,20 +71,36 @@ class pipe_t {
   void assert_read (const T& expected) {
     T result = read_obj<T> ();
     if (result != expected) {
-      printf("Expected %08x got %08x\n", expected, result);
-      fflush(stdout);
-      assert(false);
+      printf ("Expected %08x got %08x\n", expected, result);
+      fflush (stdout);
+      assert (false);
     }
+  }
+
+  void write_string (const std::string& str) {
+    write_obj<size_t> (str.size ());
+    for(char c: str) {
+      write_obj<char> (c);
+    }
+  }
+
+  std::string read_string () {
+    size_t size = read_obj<size_t> ();
+    std::string str;
+    str.resize (size);
+    for(size_t i = 0; i < size; i++) {
+      str[i] = read_obj<char> ();
+    }
+    return str;
   }
 
   void write_downset (GenericDownset& downset) {
     write_obj<int> (DOWNSET_START);
 
     write_obj<int> (downset.size ()); // number of dominating elements
-    write_obj<int> ((*downset.begin()).size ()); // number of values per element (= number of states in automaton)
+    write_obj<int> ((*downset.begin ()).size ()); // number of values per element (= number of states in automaton)
 
     for(auto& state: downset) {
-      //printf("j: %d\n", j++); fflush(stdout);
       for(auto& value: state) {
         write_obj<VECTOR_ELT_T> (value);
       }
@@ -116,22 +132,24 @@ class pipe_t {
     return result;
   }
 
+  void write_formula (spot::formula f) {
+    // turn it into a string and write this string
+    std::stringstream stream;
+    stream << f;
+    write_string (stream.str ());
+  }
+
+  spot::formula read_formula () {
+    std::string str = read_string ();
+    return spot::parse_formula (str);
+  }
+
   void write_bdd (bdd b, spot::bdd_dict_ptr dict) {
     write_obj<int> (BDD_START);
 
-    // turn the BDD into a formula, turn that into a string, and send this string
+    // turn the BDD into a formula, write that
     spot::formula f = spot::bdd_to_formula (b, dict);
-    std::stringstream stream;
-    stream << f;
-    std::string str = stream.str ();
-
-    write_obj<int> (str.size ());
-    for(char c: str) {
-      write_obj<char> (c);
-    }
-
-    //printf("wrote str: %s\n", str.c_str()); fflush(stdout);
-
+    write_formula (f);
 
     write_obj<int> (BDD_END);
   }
@@ -139,23 +157,12 @@ class pipe_t {
   bdd read_bdd (spot::bdd_dict_ptr dict) {
     assert_read<int> (BDD_START);
 
-    // read a string, parse it into a formula
-    int size = read_obj<int> ();
-    std::string str;
-    str.resize(size);
-    for(int i = 0; i < size; i++) {
-      str[i] = read_obj<char> ();
-    }
+    spot::formula formula = read_formula ();
     assert_read<int> (BDD_END);
 
-    //printf("str: %s\n", str.c_str()); fflush(stdout);
-
-
-    spot::formula formula = spot::parse_formula (str);
     bdd res = spot::formula_to_bdd (formula, dict, this);
     dict->unregister_all_my_variables (this);
 
-    //utils::vout << "str: " << str << "\n res: " << spot::bdd_to_formula(res, dict) << "\n";
     return res;
   }
 
@@ -164,28 +171,24 @@ class pipe_t {
 
     aut->merge_edges();
 
-    write_obj<int> (aut->num_states ());
-
-    int num_edges = 0;
-    for(auto& _: aut->edges ()) num_edges++;
-    assert(num_edges == (int)aut->num_edges ());
-    //write_obj<int> (num_edges);
-    //utils::vout << "Number of edges: " << num_edges << " (func gives " << aut->num_edges () << ")\n";
-    write_obj<int> (aut->num_edges ());
-    write_obj<int> (aut->get_init_state_number ());
+    write_obj<unsigned> (aut->num_states ());
+    write_obj<unsigned> (aut->num_edges ());
+    write_obj<unsigned> (aut->get_init_state_number ());
 
     for(unsigned i = 0; i < aut->num_states (); i++) {
       bool acc = aut->state_is_accepting (i);
       write_obj<char> (acc);
     }
 
+    unsigned edge_count = 0;
     for(auto& edge: aut->edges ()) {
       //utils::vout << "Edge: " << edge.src << " -> " << edge.dst << " (" << spot::bdd_to_formula(edge.cond, aut->get_dict()) << ")\n";
-      write_obj<int> (edge.src);
-      write_obj<int> (edge.dst);
+      write_obj<unsigned> (edge.src);
+      write_obj<unsigned> (edge.dst);
       write_bdd (edge.cond, aut->get_dict ());
+      edge_count++;
     }
-    //assert(edge_count == aut->num_edges());
+    assert (edge_count == aut->num_edges());
 
     write_obj<int> (AUTOMATON_END);
   }
@@ -198,23 +201,23 @@ class pipe_t {
     aut->set_acceptance (spot::acc_cond::inf ({0}));
     aut->prop_state_acc (true);
 
-    int states = read_obj<int> ();
-    for(int i = 0; i < states; i++) {
-      assert ((int)aut->new_state () == i);
+    unsigned states = read_obj<unsigned> ();
+    for(unsigned i = 0; i < states; i++) {
+      assert (aut->new_state () == i);
     }
 
-    int edges = read_obj<int> ();
-    int init = read_obj<int> ();
+    unsigned edges = read_obj<unsigned> ();
+    unsigned init = read_obj<unsigned> ();
     aut->set_init_state (init);
 
     std::vector<bool> acc (states);
-    for(int i = 0; i < states; i++) {
+    for(unsigned i = 0; i < states; i++) {
       acc[i] = read_obj<char> ();
     }
 
-    for(int i = 0; i < edges; i++) {
-      int src = read_obj<int> ();
-      int dst = read_obj<int> ();
+    for(unsigned i = 0; i < edges; i++) {
+      unsigned src = read_obj<unsigned> ();
+      unsigned dst = read_obj<unsigned> ();
       bdd cond = read_bdd (dict);
       if (acc[src]) {
         aut->new_acc_edge (src, dst, cond);

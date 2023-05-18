@@ -66,11 +66,13 @@ enum {
   OPT_WORKERS = 'j'
 } ;
 
+/*
 enum unreal_x_t {
   UNREAL_X_FORMULA = 'f',
   UNREAL_X_AUTOMATON = 'a',
   UNREAL_X_BOTH
 };
+*/
 
 static const argp_option options[] = {
   /**************************************************/
@@ -171,10 +173,6 @@ static unsigned opt_K = DEFAULT_K,
   opt_Kmin = DEFAULT_KMIN, opt_Kinc = DEFAULT_KINC;
 static spot::option_map extra_options;
 
-static double trans_time = 0.0;
-static double merge_time = 0.0;
-static double boolean_states_time = 0.0;
-
 int               utils::verbose = 0;
 utils::voutstream utils::vout;
 
@@ -188,7 +186,6 @@ namespace {
       std::vector<std::string> output_aps_;
       std::vector<spot::formula> formulas;
 
-      bdd all_inputs, all_outputs;
       spot::bdd_dict_ptr dict;
 
     public:
@@ -200,202 +197,13 @@ namespace {
         : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_), dict(dict_) {
       }
 
-      using aut_t = decltype (trans_.run (spot::formula::ff ()));
-
-      // Changes q -> <i', o'> -> q' with saved o to
-      // q -> <i', o> -> {q' saved o}
-      aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs) {
-        auto ret = spot::make_twa_graph (aut->get_dict ());
-        ret->copy_acceptance_of (aut);
-        ret->copy_ap_of (aut);
-        ret->prop_copy (aut, spot::twa::prop_set::all());
-        ret->prop_universal (spot::trival::maybe ());
-
-        static auto cache = utils::make_cache<unsigned> (0u, 0u);
-        const auto build_aut = [&] (unsigned state, bdd saved_o,
-                                    const auto& recurse) {
-          auto cached = cache.get (state, saved_o.id ());
-          if (cached) return *cached;
-          auto ret_state = ret->new_state ();
-          cache (ret_state, state, saved_o.id ());
-          for (auto& e : aut->out (state)) {
-
-            for (auto&& one_input_bdd : minterms_of (e.cond, all_inputs)) {
-              // Pick one satisfying assignment where outputs all have values
-              ret->new_edge (ret_state,
-                             recurse (e.dst,
-                                      bdd_exist (e.cond & one_input_bdd,
-                                                all_inputs),
-                                      recurse),
-                             saved_o & one_input_bdd,
-                             e.acc);
-            }
-          }
-          return ret_state;
-        };
-        build_aut (aut->get_init_state_number (), bddtrue, build_aut);
-        return ret;
-      }
-
-      aut_ret prepare_formula (spot::formula f) {
-        spot::process_timer timer;
-        timer.start ();
-
-        spot::stopwatch sw, sw_nospot;
-        bool want_time = true; // Hardcoded
-
-        // To Universal co-Büchi Automaton
-        trans_.set_type(spot::postprocessor::BA);
-        // "Desired characteristics": Small and state-based acceptance (implied by BA).
-        trans_.set_pref(spot::postprocessor::Small |
-                        //spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
-                        spot::postprocessor::SBAcc);
-
-        if (want_time)
-          sw.start ();
-
-        ////////////////////////////////////////////////////////////////////////
-        // Translate the formula to a UcB (Universal co-Büchi)
-        // To do so, negate formula, and convert to a normal Büchi.
-        if (check_real)
-          f = spot::formula::Not (f);
-        else if (opt_unreal_x == UNREAL_X_FORMULA) {
-          // Add X at the outputs
-          auto rec = [this] (auto&& self, spot::formula m) {
-            if (m.is (spot::op::ap) and
-                (std::ranges::find (output_aps_,
-                                    m.ap_name ()) != output_aps_.end ()))
-              return spot::formula::X (m);
-            return m.map ([&] (spot::formula t) { return self (self, t); });
-          };
-          f = f.map ([&] (spot::formula t) { return rec (rec, t); });
-          // Swap I and O.
-          input_aps_.swap (output_aps_);
-        }
-
-        verb_do (1, vout << "Formula: " << f << std::endl);
-
-        auto aut = trans_.run (&f);
-
-        // Create BDDs for the input and output AP.
-        all_inputs = bddtrue;
-        all_outputs = bddtrue;
-
-        for (const auto& ap_i : input_aps_)
-        {
-          unsigned v = aut->register_ap (spot::formula::ap (ap_i));
-          all_inputs &= bdd_ithvar (v);
-        }
-        for (const auto& ap_i : output_aps_)
-        {
-          unsigned v = aut->register_ap (spot::formula::ap (ap_i));
-          all_outputs &= bdd_ithvar (v);
-        }
-
-        // If unreal but we haven't pushed outputs yet using X on formula
-        if (not check_real and opt_unreal_x == UNREAL_X_AUTOMATON) {
-          aut = push_outputs (aut, all_inputs, all_outputs);
-          input_aps_.swap (output_aps_);
-          std::swap (all_inputs, all_outputs);
-        }
-
-        if (want_time) {
-          trans_time = sw.stop ();
-          utils::vout << "Translating formula done in "
-                      << trans_time << " seconds\n";
-          utils::vout << "Automaton has " << aut->num_states ()
-                      << " states and " << aut->num_sets () << " colors\n";
-        }
-
-        ////////////////////////////////////////////////////////////////////////
-        // Preprocess automaton
-
-        if (want_time) {
-          sw.start();
-          sw_nospot.start ();
-        }
-
-        auto aut_preprocessors_maker = AUT_PREPROCESSOR ();
-        (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K)) ();
-
-        if (want_time) {
-          merge_time = sw.stop();
-          utils::vout << "Preprocessing done in " << merge_time
-                      << " seconds\nDPA has " << aut->num_states()
-                      << " states\n";
-        }
-        verb_do (2, spot::print_hoa(utils::vout, aut, nullptr));
-
-        ////////////////////////////////////////////////////////////////////////
-        // Boolean states
-
-        if (want_time)
-          sw.start ();
-
-        auto boolean_states_maker = BOOLEAN_STATES ();
-        vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K)) ();
-
-        if (want_time) {
-          boolean_states_time = sw.stop ();
-          utils::vout << "Computation of boolean states in " << boolean_states_time
-                      << "seconds , found " << vectors::bool_threshold << " nonboolean states.\n";
-        }
-
-        // Special case: only boolean states, so... no useful accepting state.
-        if (vectors::bool_threshold == 0) {
-          if (want_time)
-            utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
-          aut_ret ret;
-          ret.aut = nullptr;
-          return ret;
-        }
-
-
-        ////////////////////////////////////////////////////////////////////////
-        // Build S^K_N game, solve it.
-
-        //if (want_time)
-        //  sw.start ();
-
-        aut_ret ret;
-        ret.aut = aut;
-        //ret.all_inputs = all_inputs;
-        //ret.all_outputs = all_outputs;
-        ret.bool_threshold = vectors::bool_threshold;
-        ret.solved = false;
-        ret.set_globals ();
-
-        auto all_k = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), opt_Kmin - 1);
-        for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
-          all_k[i] = 0;
-        ret.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (all_k));
-
-
-        //if (want_time) {
-        //  solve_time = sw.stop ();
-        //  utils::vout << "Safety game created in " << solve_time << " seconds\n";
-        //  utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
-        //}
-
-        timer.stop ();
-
-        return ret;
-      }
-
       int process_formula (spot::formula f, const char *, int) override {
         formulas.push_back (f);
         return 0;
       }
 
-
       int run () override {
-        for(std::string ap: input_aps) {
-          dict->register_proposition (spot::formula::ap (ap), this);
-        }
-        for(std::string ap: output_aps) {
-          dict->register_proposition (spot::formula::ap (ap), this);
-        }
-
+        // call base class ::run which adds the formulas passed with -f to the vector
         job_processor::run ();
 
         if (formulas.empty ()) {
@@ -403,16 +211,29 @@ namespace {
           return 0;
         }
 
+        // manually register inputs/outputs
+        bdd all_inputs = bddtrue;
+        bdd all_outputs = bddtrue;
+
+        for(std::string ap: input_aps) {
+          unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
+          all_inputs &= bdd_ithvar (v);
+        }
+        for(std::string ap: output_aps) {
+          unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
+          all_outputs &= bdd_ithvar (v);
+        }
+
+        composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict, trans_, all_inputs, all_outputs, input_aps_, output_aps_);
+
         if (formulas.size () == 1) {
-          // one formula: don't make subprocesses, quickly do everything here
-          aut_ret game = prepare_formula (formulas[0]);
-          composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict);
-          composer.all_inputs = all_inputs;
-          composer.all_outputs = all_outputs;
-          shrink_safe (game, &composer);
+          // one formula: don't make subprocesses, do everything here
+          aut_ret game = composer.prepare_formula (formulas[0], check_real, opt_unreal_x);
+          composer.solve_game (game);
           composer.add_result (game);
           return composer.epilogue (synth_fname);
         }
+
 
         if (!check_real) {
           utils::vout << "Error: can't do composition for unrealizability!\n";
@@ -424,16 +245,9 @@ namespace {
           return 0;
         }
 
-        composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict);
         for(spot::formula& f: formulas) {
-          aut_ret game = prepare_formula (f);
-          if (game.aut) {
-            composer.add_game (game);
-          }
+          composer.add_formula (f);
         }
-
-        composer.all_inputs = all_inputs;
-        composer.all_outputs = all_outputs;
 
         return composer.run (workers, synth_fname);
       }
