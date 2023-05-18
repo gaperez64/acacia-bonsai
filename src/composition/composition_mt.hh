@@ -54,7 +54,7 @@ class composition_mt {
   void add_invariant (bdd inv);
   void add_formula (spot::formula f);
   void finish_invariant ();
-  void solve_game (aut_ret& game);
+  void solve_game (aut_ret& game, std::string synth = "");
   int epilogue (std::string synth_fname);
   void be_child (int id);
 
@@ -113,7 +113,7 @@ void job_solve::to_pipe (pipe_t& pipe) {
   // send this job to a subprocess
   pipe.write_obj<job_type> (e_solve);
   pipe.write_result (starting_point);
-  verb_do(1, vout << "Solve job sent: wrote " << pipe.get_bytes_count () << " bytes to pipe\n");
+  verb_do (1, vout << "Solve job sent: wrote " << pipe.get_bytes_count () << " bytes to pipe\n");
 }
 
 
@@ -124,7 +124,7 @@ job_formula::job_formula (spot::formula f): f(f) {
 void job_formula::to_pipe (pipe_t& pipe) {
   pipe.write_obj<job_type> (e_formula);
   pipe.write_formula (f);
-  verb_do(1, vout << "Formula job sent: wrote " << pipe.get_bytes_count () << " bytes to pipe\n");
+  verb_do (1, vout << "Formula job sent: wrote " << pipe.get_bytes_count () << " bytes to pipe\n");
 }
 
 
@@ -196,7 +196,7 @@ void composition_mt::add_result (aut_ret& r) {
     assert (inputs[0].safe);
     assert (inputs[1].safe);
 
-    verb_do(2, vout << "Merging " << *inputs[0].safe << " and " << *inputs[1].safe);
+    verb_do (2, vout << "Merging " << *inputs[0].safe << " and " << *inputs[1].safe);
 
     auto composer = composition ();
     composer.merge_aut (inputs[0], inputs[1]);
@@ -204,8 +204,8 @@ void composition_mt::add_result (aut_ret& r) {
     inputs[0].solved = false;
 
     assert (inputs[0].safe);
-    verb_do(2, vout << "Merge res: " << *(inputs[0].safe));
-    verb_do(1, vout << "Done with merge, adding solve job\n");
+    verb_do (2, vout << "Merge res: " << *(inputs[0].safe));
+    verb_do (1, vout << "Done with merge, adding solve job\n");
     enqueue (std::make_shared<job_solve> (inputs[0]));
 
     stored_result = nullptr;
@@ -233,7 +233,7 @@ void composition_mt::finish_invariant() {
     aut->prop_state_acc (true);
     aut->new_states (2);
     aut->set_init_state (1);
-    verb_do(1, vout << "Gathered invariants: adding invariant " << spot::bdd_to_formula (invariant, dict) << "\n");
+    verb_do (1, vout << "Gathered invariants: adding invariant " << spot::bdd_to_formula (invariant, dict) << "\n");
 
     aut->new_edge (1, 1, invariant);
     aut->new_edge (1, 0, !invariant);
@@ -250,7 +250,7 @@ void composition_mt::finish_invariant() {
   }
 }
 
-void composition_mt::solve_game (aut_ret& game) {
+void composition_mt::solve_game (aut_ret& game, std::string synth) {
   spot::stopwatch sw;
   sw.start ();
 
@@ -271,10 +271,10 @@ void composition_mt::solve_game (aut_ret& game) {
         vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
         vbitsets.value>>;
         auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
-        (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
+        (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, invariant);
         assert(game.safe);
         auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-        auto safe = skn.solve (current_safe);
+        auto safe = skn.solve (current_safe, synth);
         if (safe.has_value ()) {
           game.safe = std::make_shared<GenericDownset>(cast_downset<GenericDownset> (safe.value ()));
         } else game.safe = nullptr;
@@ -293,10 +293,10 @@ void composition_mt::solve_game (aut_ret& game) {
       vectors::VECTOR_IMPL<VECTOR_ELT_T>,
       vbitsets.value>>;
       auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
-      (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
+      (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, invariant);
       assert(game.safe);
       auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-      auto safe = skn.solve (current_safe);
+      auto safe = skn.solve (current_safe, synth);
       if (safe.has_value ()) {
         game.safe = std::make_shared<GenericDownset>(cast_downset<GenericDownset> (safe.value ()));
       } else game.safe = nullptr;
@@ -308,7 +308,7 @@ void composition_mt::solve_game (aut_ret& game) {
   game.solved = true;
 
   double solve_time = sw.stop ();
-  verb_do(1, vout << "Safety game solved in " << solve_time << " seconds\n");
+  verb_do (1, vout << "Safety game solved in " << solve_time << " seconds\n");
 }
 
 int composition_mt::epilogue (std::string synth_fname) {
@@ -319,31 +319,44 @@ int composition_mt::epilogue (std::string synth_fname) {
 
   // check stored_result
   if (!stored_result) {
-    // shouldn't happen
-    utils::vout << "No result?\n";
-    return 0;
+    // can happen if there are only invariants -> make a dummy automaton with 1 non-accepting state
+    aut_ret r;
+
+    spot::twa_graph_ptr aut = std::make_shared<spot::twa_graph> (dict);
+    aut->set_generalized_buchi (1);
+    aut->set_acceptance (spot::acc_cond::inf ({0}));
+    aut->prop_state_acc (true);
+    aut->new_states (1);
+    aut->set_init_state (0);
+    aut->new_edge (0, 0, bddtrue);
+
+    r.solved = true;
+
+    auto safe = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), 0);
+    safe[0] = 0;
+    r.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (safe));
+    r.aut = aut;
+
+    stored_result = std::make_shared<aut_ret> (r);
   }
 
   aut_ret& r = *stored_result;
 
-  // solve it if it hasn't been solved
   if (!r.solved) {
-    solve_game (r);
-  }
-
-  if (!r.safe) {
-    utils::vout << "Safety game is not winning!!\n";
-    return 0;
-  }
-
-  if (!synth_fname.empty()) {
+    // call solve + synthesis reusing the actioner
+    utils::vout << "Not fully solved -> extra solve\n";
+    solve_game (r, synth_fname);
+  } else {
+    // call synthesis directly
+    utils::vout << "Already solved -> synthesis2\n";
     r.set_globals ();
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
-    (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-    skn.synthesis (*r.safe, synth_fname);
+    (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, invariant);
+    skn.synthesis2 (*r.safe, synth_fname);
   }
 
-  return 1;
+  // if there is no safe region: return 0 (not winning)
+  return r.safe != nullptr;
 }
 
 void composition_mt::be_child (int id) {
@@ -360,8 +373,8 @@ void composition_mt::be_child (int id) {
     if (job == e_solve) {
       // solve job
       aut_ret r = from_main.read_result (dict);
-      verb_do(1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-      verb_do(1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
+      verb_do (1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
+      verb_do (1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
 
       solve_game (r);
 
@@ -371,15 +384,15 @@ void composition_mt::be_child (int id) {
       to_main.write_result (r);
       to_main.write_obj<int> (MESSAGE_END);
 
-      verb_do(1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
+      verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
       continue;
     }
 
     if (job == e_formula) {
       // turn formula into automaton
       spot::formula f = from_main.read_formula ();
-      verb_do(1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-      verb_do(1, vout << "Formula: " << f << "\n");
+      verb_do (1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
+      verb_do (1, vout << "Formula: " << f << "\n");
 
       aut_ret r = prepare_formula (f);
 
@@ -403,14 +416,14 @@ void composition_mt::be_child (int id) {
 
       to_main.write_obj<int> (MESSAGE_END);
 
-      verb_do(1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
+      verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
       continue;
     }
 
     assert (false);
   }
 
-  verb_do(1, vout << "Worker is finished!\n");
+  verb_do (1, vout << "Worker is finished!\n");
   exit(0);
 }
 
@@ -478,29 +491,31 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
 
       if (game.safe) {
         if (game.solved) {
-          verb_do(1, vout << "Solved game -> add as result\n");
+          verb_do (1, vout << "Solved game -> add as result\n");
           add_result (game);
         } else {
           base_remaining--;
-          verb_do(1, vout << "Unsolved game -> add solve job\n");
+          verb_do (1, vout << "Unsolved game -> add solve job\n");
           enqueue (std::make_shared<job_solve> (game));
         }
       } else {
         losing = true;
-        verb_do(1, vout << "Game not realizable -> abort!\n");
+        verb_do (1, vout << "Game not realizable -> abort!\n");
       }
     } else {
       // invariant
       base_remaining--;
       bdd inv = to_main.read_bdd (dict);
-      verb_do(1, vout << "Read invariant: " << bdd_to_formula (inv) << "\n");
+      verb_do (1, vout << "Read invariant: " << bdd_to_formula (inv) << "\n");
       add_invariant (inv);
     }
 
+    /*
     if (base_remaining == 0) {
       base_remaining = -1;
       finish_invariant ();
     }
+    */
 
     // kill all workers and immediately abort if found to be losing
     if (losing) {
@@ -513,18 +528,33 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     }
 
     to_main.assert_read<int> (MESSAGE_END);
-    verb_do(1, vout << "Done: read " << to_main.get_bytes_count () << " bytes from pipe\n");
-
+    verb_do (1, vout << "Done: read " << to_main.get_bytes_count () << " bytes from pipe\n");
 
     job_ptr new_job = dequeue ();
-    if ((new_job == nullptr) || losing) {
+
+    // we want to do the final solve ourselves so that we can reuse the actioner for synthesis
+    // only 1 worker remaining (the one that just gave us this result),
+    // no more remaining jobs after "new_job" we just dequeued,
+    // no stored result (which would be merged with the result of new_job),
+    // and "new_job" should be a solve job, not a formula job
+    bool is_final_solve = ((active_workers == 1) && (pending_jobs.empty () && (!stored_result)));
+    is_final_solve &= dynamic_cast<job_solve*> (new_job.get()) != nullptr;
+
+    if ((new_job == nullptr) || losing || is_final_solve) {
       active_workers--;
-      verb_do(1, vout << "Releasing worker " << wid << ": " << active_workers << " left.\n");
+      verb_do (1, vout << "Releasing worker " << wid << ": " << active_workers << " left.\n");
       workers[wid].active = false;
 
-      from_main.write_obj<job_type> (e_done); // done!
+      from_main.write_obj<job_type> (e_done);
       // wait for this process
       waitpid (workers[wid].pid, nullptr, 0);
+
+      if (is_final_solve) {
+        // add this job (unsolved) as a result, epilogue () will see it's not yet solved
+        job_solve* j = dynamic_cast<job_solve*> (new_job.get ());
+        assert (j != nullptr);
+        add_result (j->starting_point);
+      }
     } else {
       // send new job
       new_job->to_pipe (from_main);

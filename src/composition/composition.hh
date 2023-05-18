@@ -173,7 +173,7 @@ class composition {
             dest.bool_threshold--;
           }
         }
-        else verb_do(2, vout << "State " << s << " which was renamed to " << rename[s] << " is now renamed to " << rename2[rename[s]] << "\n");
+        else verb_do (2, vout << "State " << s << " which was renamed to " << rename[s] << " is now renamed to " << rename2[rename[s]] << "\n");
         rename[s] = rename2[rename[s]];
       }
     }

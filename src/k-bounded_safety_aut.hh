@@ -44,12 +44,12 @@ class k_bounded_safety_aut_detail {
 
   public:
     k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, int Kfrom, int Kto, int Kinc,
-                                 bdd input_support, bdd output_support,
+                                 bdd input_support, bdd output_support, bdd invariant,
                                  const IOsPrecomputationMaker& ios_precomputer_maker,
                                  const ActionerMaker& actioner_maker,
                                  const InputPickerMaker& input_picker_maker) :
       aut {aut}, Kfrom {Kfrom}, Kto {Kto}, Kinc {Kinc},
-      input_support {input_support}, output_support {output_support},
+      input_support {input_support}, output_support {output_support}, invariant {invariant},
       gen {0},
       ios_precomputer_maker {ios_precomputer_maker},
       actioner_maker {actioner_maker},
@@ -61,33 +61,18 @@ class k_bounded_safety_aut_detail {
     }
 
 
-    std::optional<SetOfStates> solve (SetOfStates& F) {
+    std::optional<SetOfStates> solve (SetOfStates& F, std::string synth) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
       verb_do (1, vout << "IOS Precomputer..." << std::endl);
-      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
       // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, K);
       verb_do (1, vout << "Fetching IO actions" << std::endl);
       auto input_output_fwd_actions = actioner.actions (); // list<pair<bdd, list<action_vec>>>
       verb_do (1, io_stats (input_output_fwd_actions));
-
-      /*
-      auto safe_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), K - 1);
-
-      for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
-        safe_vector[i] = 0;
-      SetOfStates F = SetOfStates (State (safe_vector));
-
-      if (init_safe != nullptr) {
-        // use a better starting point than the all-K vector
-        F = std::move (*init_safe);
-        verb_do (1, vout << "using F: " << F << "\n");
-      }
-      else verb_do (1, vout << "using default F: " << F << "\n");
-      */
 
       int loopcount = 0;
 
@@ -103,7 +88,10 @@ class k_bounded_safety_aut_detail {
 
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
+        {
+          if (!synth.empty ()) synthesis (F, synth, actioner);
           return std::make_optional<SetOfStates> (std::move (F));
+        }
 
         cpre_inplace (F, *input, actioner);
 
@@ -140,6 +128,7 @@ class k_bounded_safety_aut_detail {
     spot::twa_graph_ptr aut;
     const int Kfrom, Kto, Kinc;
     bdd input_support, output_support;
+    bdd invariant;
     std::mt19937 gen;
     const IOsPrecomputationMaker& ios_precomputer_maker;
     const ActionerMaker& actioner_maker;
@@ -244,9 +233,15 @@ class k_bounded_safety_aut_detail {
     };
 
   public:
-    void synthesis(SetOfStates& F, const std::string& synth_fname) {
-      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+    void synthesis2(SetOfStates& F, const std::string& synth_fname) {
+      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
       auto actioner = actioner_maker.make (aut, inputs_to_ios, Kfrom);
+
+      synthesis (F, synth_fname, actioner);
+    }
+
+    template<class Actioner>
+    void synthesis(SetOfStates& F, const std::string& synth_fname, Actioner& actioner) {
 
       verb_do (2, vout << "Final F:\n" << F);
       verb_do (1, vout << "F = downset of size " << F.size() << "\n");
@@ -471,19 +466,19 @@ template <class SetOfStates,
           class ActionerMaker,
           class InputPickerMaker>
 static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int Kfrom, int Kto, int Kinc,
-                                        bdd input_support, bdd output_support,
+                                        bdd input_support, bdd output_support, bdd invariant,
                                         const IOsPrecomputationMaker& ios_precomputer_maker,
                                         const ActionerMaker& actioner_maker,
                                         const InputPickerMaker& input_picker_maker) {
   return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker, InputPickerMaker>
-    (aut, Kfrom, Kto, Kinc, input_support, output_support, ios_precomputer_maker, actioner_maker, input_picker_maker);
+    (aut, Kfrom, Kto, Kinc, input_support, output_support, invariant, ios_precomputer_maker, actioner_maker, input_picker_maker);
 }
 
 template <class SetOfStates>
 static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int Kfrom, int Kto, int Kinc,
-                                  bdd input_support, bdd output_support) {
+                                  bdd input_support, bdd output_support, bdd invariant) {
   return k_bounded_safety_aut_maker<SetOfStates> (aut, Kfrom, Kto, Kinc,
-                                                  input_support, output_support,
+                                                  input_support, output_support, invariant,
                                                   IOS_PRECOMPUTER (),
                                                   ACTIONER (),
                                                   INPUT_PICKER ()

@@ -16,7 +16,7 @@ using GenericDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vectors::vector_
 
 struct aut_ret {
   spot::twa_graph_ptr aut;
-  size_t bool_threshold;
+  size_t bool_threshold = 0;
   std::shared_ptr<GenericDownset> safe;
   bool solved;
 
