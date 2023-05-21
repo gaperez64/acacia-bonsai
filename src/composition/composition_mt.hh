@@ -344,11 +344,11 @@ int composition_mt::epilogue (std::string synth_fname) {
 
   if (!r.solved) {
     // call solve + synthesis reusing the actioner
-    utils::vout << "Not fully solved -> extra solve\n";
+    verb_do (1, vout << "Not fully solved -> extra solve\n");
     solve_game (r, synth_fname);
   } else {
     // call synthesis directly
-    utils::vout << "Already solved -> synthesis2\n";
+    verb_do (1, vout << "Already solved -> synthesis2\n");
     r.set_globals ();
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
     (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, invariant);
@@ -435,7 +435,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
   }
   worker_count = std::min<int> (worker_count, 255);
   worker_count = std::min<int> (worker_count, pending_jobs.size ());
-  utils::vout << "Workers: " << worker_count << "\n";
+  verb_do (1, vout << "Workers: " << worker_count << "\n");
 
   assert (worker_count > 0);
 
@@ -562,7 +562,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
   }
 
 
-  utils::vout << "All workers are finished.\n";
+  verb_do (1, vout << "All workers are finished.\n");
 
   return epilogue (synth_fname);
 }
@@ -655,10 +655,10 @@ aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unrea
 
   if (want_time) {
     double trans_time = sw.stop ();
-    utils::vout << "Translating formula done in "
-                << trans_time << " seconds\n";
-    utils::vout << "Automaton has " << aut->num_states ()
-                << " states and " << aut->num_sets () << " colors\n";
+    verb_do (1, vout << "Translating formula done in "
+                << trans_time << " seconds\n");
+    verb_do (1, vout << "Automaton has " << aut->num_states ()
+                << " states and " << aut->num_sets () << " colors\n");
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -674,9 +674,9 @@ aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unrea
 
   if (want_time) {
     double merge_time = sw.stop();
-    utils::vout << "Preprocessing done in " << merge_time
+    verb_do (1, vout << "Preprocessing done in " << merge_time
                 << " seconds\nDPA has " << aut->num_states()
-                << " states\n";
+                << " states\n");
   }
   verb_do (2, spot::print_hoa (utils::vout, aut, nullptr));
 
@@ -691,14 +691,14 @@ aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unrea
 
   if (want_time) {
     double boolean_states_time = sw.stop ();
-    utils::vout << "Computation of boolean states in " << boolean_states_time
-                << "seconds , found " << vectors::bool_threshold << " nonboolean states.\n";
+    verb_do (1, vout << "Computation of boolean states in " << boolean_states_time
+                << "seconds , found " << vectors::bool_threshold << " nonboolean states.\n");
   }
 
   // Special case: only boolean states, so... no useful accepting state.
   if (vectors::bool_threshold == 0) {
     if (want_time)
-      utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
+      verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
     aut_ret ret;
     ret.aut = nullptr;
     return ret;
@@ -725,8 +725,8 @@ aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unrea
 
   if (want_time) {
     double solve_time = sw.stop ();
-    utils::vout << "Safety game created in " << solve_time << " seconds\n";
-    utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
+    verb_do (1, vout << "Safety game created in " << solve_time << " seconds\n");
+    verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
   }
 
   timer.stop ();
