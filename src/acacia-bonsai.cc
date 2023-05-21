@@ -227,10 +227,8 @@ namespace {
         composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict, trans_, all_inputs, all_outputs, input_aps_, output_aps_);
 
         if (formulas.size () == 1) {
-          // one formula: don't make subprocesses, do everything here
-          aut_ret game = composer.prepare_formula (formulas[0], check_real, opt_unreal_x);
-          composer.add_result (game);
-          return composer.epilogue (synth_fname);
+          // one formula: don't make subprocesses, do everything here by calling the functions directly
+          return composer.run_one (formulas[0], synth_fname, check_real, opt_unreal_x);
         }
 
 

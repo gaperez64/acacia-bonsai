@@ -17,18 +17,19 @@ class job_base;
 using job_ptr = std::shared_ptr<job_base>;
 
 struct worker_t {
+  // two pipes, for communication in both directions
   pipe_t to_main, from_main;
   pid_t pid = -1;
-  bool active = true;
+  bool active = true; // whether the worker has already stopped
 };
 
 class composition_mt {
-  public:
-  std::queue<job_ptr> pending_jobs;
-  std::shared_ptr<aut_ret> stored_result;
-  bool losing = false;
+  private:
+  std::queue<job_ptr> pending_jobs; // all currently unfinished jobs no worker is working on yet
+  std::shared_ptr<safety_game> stored_result; // room for temporary result: if there are 2, merge them
+  bool losing = false; // whether the game is already found to be losing (early abort)
 
-  pipe_t shared_pipe;
+  pipe_t shared_pipe; // pipe that all workers use to write a byte to to signify they are done with their job
   std::vector<worker_t> workers;
 
   bdd invariant = bddtrue;
@@ -42,6 +43,20 @@ class composition_mt {
   std::vector<std::string> output_aps_;
 
 
+  spot::formula bdd_to_formula (bdd f) const; // for debugging
+  void enqueue (job_ptr p); // add a new job to the queue
+  job_ptr dequeue (); // take a job from the pending jobs queue
+
+  void add_invariant (bdd inv); // add a new invariant
+  void finish_invariant (); // turns the invariant into a solved 2-state automaton, not used right now because the ios-precomputer uses the invariant
+  void solve_game (safety_game& game, std::string synth = ""); // use the k-bounded safety aut to solve a game, possibly with synthesis if the string is non-empty
+  int epilogue (std::string synth_fname); // look at the final result, call synthesis if needed and return whether it was realizable
+  void be_child (int id); // does everything a child process has to do
+  void add_result (safety_game& r); // add a new result to the temporary, or add a merge if there is already one stored
+
+  using aut_t = decltype (trans_.run (spot::formula::ff ()));
+  aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs);
+  safety_game prepare_formula (spot::formula f, bool check_real = true, unreal_x_t opt_unreal_x = UNREAL_X_BOTH); // turn a formula into an automaton
 
   public:
   composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc, spot::bdd_dict_ptr dict, spot::translator& trans, bdd all_inputs, bdd all_outputs,
@@ -49,44 +64,33 @@ class composition_mt {
         dict(dict), trans_(trans), all_inputs(all_inputs), all_outputs(all_outputs), input_aps_(input_aps_), output_aps_(output_aps_) {
   }
 
-  spot::formula bdd_to_formula (bdd f) const;
-  void enqueue (job_ptr p);
-  void add_invariant (bdd inv);
-  void add_formula (spot::formula f);
-  void finish_invariant ();
-  void solve_game (aut_ret& game, std::string synth = "");
-  int epilogue (std::string synth_fname);
-  void be_child (int id);
-
-  job_ptr dequeue ();
-
-  void add_result (aut_ret& r);
-
-  int run (int workers, std::string synth_fname);
-
-  using aut_t = decltype (trans_.run (spot::formula::ff ()));
-  aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs);
-  aut_ret prepare_formula (spot::formula f, bool check_real = true, unreal_x_t opt_unreal_x = UNREAL_X_BOTH);
+  void add_formula (spot::formula f); // adds a formula job
+  int run (int workers, std::string synth_fname); // run everything with the given number of workers
+  int run_one (spot::formula f, std::string synth_fname, bool check_real, unreal_x_t opt_unreal_x); // solve only one formula, with no subprocesses
 };
 
+// abstract base class for jobs
 class job_base {
   public:
-  virtual void to_pipe(pipe_t&) = 0;
   virtual ~job_base () = default;
-};
 
+  virtual void to_pipe(pipe_t&) = 0;
+  virtual void set_invariant(bdd) = 0;
+};
 
 // solve the safety game, changing the downset to the actual safe region instead of
 // an overapproximation
 class job_solve: public job_base {
   public:
-  aut_ret starting_point;
+  safety_game starting_point;
+  bdd invariant;
 
   public:
-  explicit job_solve (aut_ret& game);
+  explicit job_solve (safety_game& game);
+  ~job_solve () override = default;
 
   void to_pipe(pipe_t&) override;
-  ~job_solve () override = default;
+  void set_invariant(bdd) override;
 };
 
 // turn a formula into an automaton with a starting all-k safe region
@@ -96,24 +100,32 @@ class job_formula: public job_base {
 
   public:
   explicit job_formula (spot::formula f);
+  ~job_formula () override = default;
 
   void to_pipe(pipe_t&) override;
-  ~job_formula () override = default;
+  void set_invariant(bdd) override;
 };
 
 //////////////////////////////////////////////////
 
 
 
-job_solve::job_solve (aut_ret& game) {
+job_solve::job_solve (safety_game& game) {
   starting_point = game;
+  invariant = bddtrue;
 }
 
 void job_solve::to_pipe (pipe_t& pipe) {
   // send this job to a subprocess
-  pipe.write_obj<job_type> (e_solve);
-  pipe.write_result (starting_point);
+  pipe.write_obj<job_type> (j_solve);
+  // sends the invariant as well to be used when solving
+  pipe.write_bdd (invariant, starting_point.aut->get_dict ());
+  pipe.write_safety_game (starting_point);
   verb_do (1, vout << "Solve job sent: wrote " << pipe.get_bytes_count () << " bytes to pipe\n");
+}
+
+void job_solve::set_invariant (bdd inv) {
+  invariant = inv;
 }
 
 
@@ -122,14 +134,18 @@ job_formula::job_formula (spot::formula f): f(f) {
 }
 
 void job_formula::to_pipe (pipe_t& pipe) {
-  pipe.write_obj<job_type> (e_formula);
+  pipe.write_obj<job_type> (j_formula);
   pipe.write_formula (f);
   verb_do (1, vout << "Formula job sent: wrote " << pipe.get_bytes_count () << " bytes to pipe\n");
 }
 
+void job_formula::set_invariant (bdd) {
+  // doesn't do anything
+}
 
 
-bool is_invariant(spot::twa_graph_ptr aut, bdd& condition) {
+// detects whether a Büchi automaton recognizes an invariant, i.e. G (booleanfunction)
+bool is_invariant (spot::twa_graph_ptr aut, bdd& condition) {
   if (aut->num_states () != 2) return false;
   unsigned init = aut->get_init_state_number ();
   unsigned other = 1-init;
@@ -184,12 +200,13 @@ job_ptr composition_mt::dequeue () {
   return val;
 }
 
-void composition_mt::add_result (aut_ret& r) {
+void composition_mt::add_result (safety_game& r) {
   if (!stored_result) {
-    stored_result = std::make_shared<aut_ret> (r);
+    stored_result = std::make_shared<safety_game> (r);
   }
   else {
-    aut_ret inputs[2];
+    // merge the stored result, and the new result r
+    safety_game inputs[2];
     inputs[0] = *stored_result;
     inputs[1] = r;
 
@@ -224,13 +241,10 @@ void composition_mt::add_formula (spot::formula f) {
 void composition_mt::finish_invariant() {
   // create 2-state solved automaton for all invariants found
   if (invariant != bddtrue) {
-    aut_ret invariant_aut;
+    safety_game invariant_aut;
     invariant_aut.bool_threshold = 1;
 
-    spot::twa_graph_ptr aut = std::make_shared<spot::twa_graph> (dict);
-    aut->set_generalized_buchi (1);
-    aut->set_acceptance (spot::acc_cond::inf ({0}));
-    aut->prop_state_acc (true);
+    spot::twa_graph_ptr aut = new_automaton (dict);
     aut->new_states (2);
     aut->set_init_state (1);
     verb_do (1, vout << "Gathered invariants: adding invariant " << spot::bdd_to_formula (invariant, dict) << "\n");
@@ -250,7 +264,7 @@ void composition_mt::finish_invariant() {
   }
 }
 
-void composition_mt::solve_game (aut_ret& game, std::string synth) {
+void composition_mt::solve_game (safety_game& game, std::string synth) {
   spot::stopwatch sw;
   sw.start ();
 
@@ -271,10 +285,10 @@ void composition_mt::solve_game (aut_ret& game, std::string synth) {
         vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
         vbitsets.value>>;
         auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
-        (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, invariant);
+        (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
         assert(game.safe);
         auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-        auto safe = skn.solve (current_safe, synth);
+        auto safe = skn.solve (current_safe, synth, invariant);
         if (safe.has_value ()) {
           game.safe = std::make_shared<GenericDownset>(cast_downset<GenericDownset> (safe.value ()));
         } else game.safe = nullptr;
@@ -293,10 +307,10 @@ void composition_mt::solve_game (aut_ret& game, std::string synth) {
       vectors::VECTOR_IMPL<VECTOR_ELT_T>,
       vbitsets.value>>;
       auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
-      (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, invariant);
+      (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
       assert(game.safe);
       auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-      auto safe = skn.solve (current_safe, synth);
+      auto safe = skn.solve (current_safe, synth, invariant);
       if (safe.has_value ()) {
         game.safe = std::make_shared<GenericDownset>(cast_downset<GenericDownset> (safe.value ()));
       } else game.safe = nullptr;
@@ -320,12 +334,9 @@ int composition_mt::epilogue (std::string synth_fname) {
   // check stored_result
   if (!stored_result) {
     // can happen if there are only invariants -> make a dummy automaton with 1 non-accepting state
-    aut_ret r;
+    safety_game r;
 
-    spot::twa_graph_ptr aut = std::make_shared<spot::twa_graph> (dict);
-    aut->set_generalized_buchi (1);
-    aut->set_acceptance (spot::acc_cond::inf ({0}));
-    aut->prop_state_acc (true);
+    spot::twa_graph_ptr aut = new_automaton (dict);
     aut->new_states (1);
     aut->set_init_state (0);
     aut->new_edge (0, 0, bddtrue);
@@ -337,10 +348,10 @@ int composition_mt::epilogue (std::string synth_fname) {
     r.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (safe));
     r.aut = aut;
 
-    stored_result = std::make_shared<aut_ret> (r);
+    stored_result = std::make_shared<safety_game> (r);
   }
 
-  aut_ret& r = *stored_result;
+  safety_game& r = *stored_result;
 
   if (!r.solved) {
     // call solve + synthesis reusing the actioner
@@ -351,8 +362,8 @@ int composition_mt::epilogue (std::string synth_fname) {
     verb_do (1, vout << "Already solved -> synthesis2\n");
     r.set_globals ();
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
-    (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs, invariant);
-    skn.synthesis2 (*r.safe, synth_fname);
+    (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
+    skn.synthesis_no_solve (*r.safe, synth_fname, invariant);
   }
 
   // if there is no safe region: return 0 (not winning)
@@ -365,56 +376,59 @@ void composition_mt::be_child (int id) {
   pipe_t& to_main = workers[id].to_main;
   pipe_t& from_main = workers[id].from_main;
 
+  // keep reading jobs until we are done
   while (true) {
     job_type job = from_main.read_obj<job_type> ();
 
-    if (job == e_done) break;
+    if (job == j_done) break;
 
-    if (job == e_solve) {
+    if (job == j_solve) {
+      // update invariant
+      invariant = from_main.read_bdd (dict);
+
       // solve job
-      aut_ret r = from_main.read_result (dict);
+      safety_game r = from_main.read_safety_game (dict);
       verb_do (1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
       verb_do (1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
 
       solve_game (r);
 
       shared_pipe.write_obj<char> (id);
-      to_main.write_obj<int> (MESSAGE_START);
-      to_main.write_obj<char> (0);
-      to_main.write_result (r);
-      to_main.write_obj<int> (MESSAGE_END);
+      to_main.write_guard (MESSAGE_START);
+      to_main.write_obj<result_type> (r_game);
+      to_main.write_safety_game (r);
+      to_main.write_guard (MESSAGE_END);
 
       verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
       continue;
     }
 
-    if (job == e_formula) {
+    if (job == j_formula) {
       // turn formula into automaton
       spot::formula f = from_main.read_formula ();
       verb_do (1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-      verb_do (1, vout << "Formula: " << f << "\n");
+      verb_do (1, vout << "Formula to be converted: " << f << "\n");
 
-      aut_ret r = prepare_formula (f);
+      safety_game r = prepare_formula (f);
 
       shared_pipe.write_obj<char> (id);
-      to_main.write_obj<int> (MESSAGE_START);
+      to_main.write_guard (MESSAGE_START);
 
       if (r.aut) {
         bdd condition;
         if (is_invariant (r.aut, condition)) {
-          to_main.write_obj<char> (1);
+          to_main.write_obj<result_type> (r_invariant);
           to_main.write_bdd (condition, dict);
         } else {
-          to_main.write_obj<char> (0);
-          to_main.write_result (r);
+          to_main.write_obj<result_type> (r_game);
+          to_main.write_safety_game (r);
         }
       } else {
-        // trivial formula: just send this as an invariant "true"
-        to_main.write_obj<char> (1);
-        to_main.write_bdd (bddtrue, dict);
+        // trivial formula (automaton with no accepting states, like "G true")
+        to_main.write_obj<result_type> (r_null);
       }
 
-      to_main.write_obj<int> (MESSAGE_END);
+      to_main.write_guard (MESSAGE_END);
 
       verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
       continue;
@@ -428,7 +442,7 @@ void composition_mt::be_child (int id) {
 }
 
 int composition_mt::run (int worker_count, std::string synth_fname) {
-  utils::vout.set_prefix ("[0] ");
+  verb_do (1, utils::vout.set_prefix ("[0] "));
 
   if (worker_count <= 0) {
     worker_count = std::thread::hardware_concurrency ();
@@ -451,7 +465,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     //utils::vout << "Pipe size: " << new_size << "\n";
   }
 
-  // how many formula jobs aren't yet solved: once this is 0, add invariants
+  // how many formula jobs aren't yet solved: once this is 0, add invariants, if not using ios precomputer that uses the invariant
   int base_remaining = pending_jobs.size ();
 
   // spawn the workers with their initial job
@@ -483,33 +497,51 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     pipe_t& to_main = workers[wid].to_main;
     pipe_t& from_main = workers[wid].from_main;
 
-    to_main.assert_read<int> (MESSAGE_START);
-    char has_game = !to_main.read_obj<char> ();
+    to_main.read_guard (MESSAGE_START);
+    result_type res = to_main.read_obj<result_type> ();
 
-    if (has_game) {
-      aut_ret game = to_main.read_result (dict);
+    switch (res) {
+      case r_game: {
+      safety_game game = to_main.read_safety_game (dict);
 
-      if (game.safe) {
-        if (game.solved) {
-          verb_do (1, vout << "Solved game -> add as result\n");
-          add_result (game);
+        if (game.safe) {
+          if (game.solved) {
+            verb_do (1, vout << "Solved game -> add as result\n");
+            add_result (game);
+          } else {
+            base_remaining--;
+            verb_do (1, vout << "Unsolved game -> add solve job\n");
+            enqueue (std::make_shared<job_solve> (game));
+          }
         } else {
-          base_remaining--;
-          verb_do (1, vout << "Unsolved game -> add solve job\n");
-          enqueue (std::make_shared<job_solve> (game));
+          losing = true;
+          verb_do (1, vout << "Game not realizable -> abort!\n");
         }
-      } else {
-        losing = true;
-        verb_do (1, vout << "Game not realizable -> abort!\n");
+        break;
       }
-    } else {
-      // invariant
-      base_remaining--;
-      bdd inv = to_main.read_bdd (dict);
-      verb_do (1, vout << "Read invariant: " << bdd_to_formula (inv) << "\n");
-      add_invariant (inv);
+
+      case r_invariant: {
+        base_remaining--;
+        bdd inv = to_main.read_bdd (dict);
+        verb_do (1, vout << "Read invariant: " << bdd_to_formula (inv) << "\n");
+        add_invariant (inv);
+        break;
+      }
+
+      case r_null: {
+        // trivial formula: don't have to do anything except mark that a formula has been converted
+        base_remaining--;
+        break;
+      }
+
+      default:
+        assert (false);
     }
 
+    to_main.read_guard (MESSAGE_END);
+
+    // if the ios precomputer does not use the invariants, we need to add an automaton that encodes all the invariants
+    // not needed at the moment
     /*
     if (base_remaining == 0) {
       base_remaining = -1;
@@ -527,7 +559,6 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
       break;
     }
 
-    to_main.assert_read<int> (MESSAGE_END);
     verb_do (1, vout << "Done: read " << to_main.get_bytes_count () << " bytes from pipe\n");
 
     job_ptr new_job = dequeue ();
@@ -545,7 +576,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
       verb_do (1, vout << "Releasing worker " << wid << ": " << active_workers << " left.\n");
       workers[wid].active = false;
 
-      from_main.write_obj<job_type> (e_done);
+      from_main.write_obj<job_type> (j_done);
       // wait for this process
       waitpid (workers[wid].pid, nullptr, 0);
 
@@ -557,6 +588,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
       }
     } else {
       // send new job
+      new_job->set_invariant (invariant);
       new_job->to_pipe (from_main);
     }
   }
@@ -564,6 +596,12 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
 
   verb_do (1, vout << "All workers are finished.\n");
 
+  return epilogue (synth_fname);
+}
+
+int composition_mt::run_one (spot::formula f, std::string synth_fname, bool check_real, unreal_x_t opt_unreal_x) {
+  safety_game game = prepare_formula (f, check_real, opt_unreal_x);
+  add_result (game);
   return epilogue (synth_fname);
 }
 
@@ -582,7 +620,7 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
 
   static auto cache = utils::make_cache<unsigned> (0u, 0u);
   const auto build_aut = [&] (unsigned state, bdd saved_o,
-                         const auto& recurse) {
+                              const auto& recurse) {
     auto cached = cache.get (state, saved_o.id ());
     if (cached) return *cached;
     auto ret_state = ret->new_state ();
@@ -592,12 +630,12 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
       for (auto&& one_input_bdd : minterms_of (e.cond, all_inputs)) {
         // Pick one satisfying assignment where outputs all have values
         ret->new_edge (ret_state,
-        recurse (e.dst,
-        bdd_exist (e.cond & one_input_bdd,
-        all_inputs),
-        recurse),
-        saved_o & one_input_bdd,
-        e.acc);
+                       recurse (e.dst,
+                                bdd_exist (e.cond & one_input_bdd,
+                                          all_inputs),
+                                recurse),
+                       saved_o & one_input_bdd,
+                       e.acc);
       }
     }
     return ret_state;
@@ -606,7 +644,7 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
   return ret;
 }
 
-aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unreal_x_t opt_unreal_x) {
+safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, unreal_x_t opt_unreal_x) {
   spot::process_timer timer;
   timer.start ();
 
@@ -617,8 +655,8 @@ aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unrea
   trans_.set_type(spot::postprocessor::BA);
   // "Desired characteristics": Small and state-based acceptance (implied by BA).
   trans_.set_pref(spot::postprocessor::Small |
-  //spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
-  spot::postprocessor::SBAcc);
+                  //spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
+                  spot::postprocessor::SBAcc);
 
   if (want_time)
     sw.start ();
@@ -632,8 +670,8 @@ aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unrea
     // Add X at the outputs
     auto rec = [this] (auto&& self, spot::formula m) {
       if (m.is (spot::op::ap) and
-      (std::ranges::find (output_aps_,
-       m.ap_name ()) != output_aps_.end ()))
+          (std::ranges::find (output_aps_,
+                              m.ap_name ()) != output_aps_.end ()))
         return spot::formula::X (m);
       return m.map ([&] (spot::formula t) { return self (self, t); });
     };
@@ -692,14 +730,14 @@ aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unrea
   if (want_time) {
     double boolean_states_time = sw.stop ();
     verb_do (1, vout << "Computation of boolean states in " << boolean_states_time
-                << "seconds , found " << vectors::bool_threshold << " nonboolean states.\n");
+      /*          */ << "seconds , found " << vectors::bool_threshold << " nonboolean states.\n");
   }
 
   // Special case: only boolean states, so... no useful accepting state.
   if (vectors::bool_threshold == 0) {
     if (want_time)
       verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
-    aut_ret ret;
+    safety_game ret;
     ret.aut = nullptr;
     return ret;
   }
@@ -711,7 +749,7 @@ aut_ret composition_mt::prepare_formula (spot::formula f, bool check_real, unrea
   //if (want_time)
   //  sw.start ();
 
-  aut_ret ret;
+  safety_game ret;
   ret.aut = aut;
   ret.bool_threshold = vectors::bool_threshold;
   ret.solved = false;

@@ -85,8 +85,8 @@ namespace ios_precomputers {
             ios_it (bdd input, bdd output_support, Aut aut, bdd inv) :
               bdd_it (output_support), input {input}, aut {aut}
             {
-              //utils::vout << "ios_it with invariant inv = " << spot::bdd_to_formula (inv, aut->get_dict()) << " -> " <<
-              //spot::bdd_to_formula (inv & input, aut->get_dict()) << "\n";
+              // set the invariant to include the input, then keep iterating until we find the first output valuation
+              // that satisfies the invariant
               invariant = inv & input;
               while (((invariant & bdd_it::current_letter) == bddfalse) && (bdd_it::support != bddfalse)) {
                 bdd_it::get_next_letter ();
@@ -101,6 +101,7 @@ namespace ios_precomputers {
 
           private:
             virtual void get_next_letter () {
+              // not just the next letter, but the next letter that satisfies the invariant
               do {
                 bdd_it::get_next_letter ();
               }

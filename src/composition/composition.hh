@@ -51,21 +51,23 @@ void custom_print (std::ostream& out, spot::twa_graph_ptr aut)
   }
 }
 
-// spot::purge_unreachable_states calls the function f which stores the vector we need in a global variable for further use
+// spot::purge_unreachable_states calls the function set_rename2 which stores the vector we need in a global variable for further use
 std::vector<unsigned int> rename2;
 
-void f(const std::vector<unsigned int>& v, void*) {
+void set_rename2(const std::vector<unsigned int>& v, void*) {
   rename2 = v;
 };
 
 class composition {
   private:
+  // the way states are renamed to move boolean states to the end, and also when removing unreachable states (the original initial states before merging)
+  // -1 means the state is no longer there
   std::vector<unsigned int> rename;
   unsigned int aut_size = 0; // number of states in the final merged automaton
 
-  // Concatenate two vectors, taking into a account a new initial state is added, + the states are renamed
+  // concatenate two vectors, taking into a account a new initial state is added, + the states are renamed
   auto combine_vectors (const auto& m1, const auto& m2) {
-    assert(aut_size > 0);
+    assert (aut_size > 0);
     auto vec = utils::vector_mm<VECTOR_ELT_T>(aut_size, 0);
 
     for (size_t i = 0; i < m1.size (); ++i) {
@@ -87,7 +89,7 @@ class composition {
   composition () = default;
 
   // Merge src automaton into dest
-  void merge_aut (aut_ret& dest, aut_ret& src) {
+  void merge_aut (safety_game& dest, safety_game& src) {
     unsigned int offset = dest.aut->num_states () + 1; // + 1 because of the new init state
 
     // add new initial state which has all transitions of both initial states
@@ -155,8 +157,9 @@ class composition {
     dest.aut->prop_universal(spot::trival::maybe ());
 
 
-    rename2.clear();
-    spot::twa_graph::shift_action w = &f;
+    // use spot's weird purge_unreachable_states function which sets a global variable rename2
+    rename2.clear ();
+    spot::twa_graph::shift_action w = &set_rename2;
     dest.aut->purge_unreachable_states (&w);
     // ^ spot already renames the states again, but we need to remember how they were renamed
     //   to make sure merging the downsets happens correctly
@@ -174,7 +177,7 @@ class composition {
           }
         }
         else verb_do (2, vout << "State " << s << " which was renamed to " << rename[s] << " is now renamed to " << rename2[rename[s]] << "\n");
-        rename[s] = rename2[rename[s]];
+        rename[s] = rename2[rename[s]]; // apply both renamings
       }
     }
 

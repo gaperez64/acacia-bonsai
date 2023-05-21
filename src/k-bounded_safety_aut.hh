@@ -44,12 +44,12 @@ class k_bounded_safety_aut_detail {
 
   public:
     k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, int Kfrom, int Kto, int Kinc,
-                                 bdd input_support, bdd output_support, bdd invariant,
+                                 bdd input_support, bdd output_support,
                                  const IOsPrecomputationMaker& ios_precomputer_maker,
                                  const ActionerMaker& actioner_maker,
                                  const InputPickerMaker& input_picker_maker) :
       aut {aut}, Kfrom {Kfrom}, Kto {Kto}, Kinc {Kinc},
-      input_support {input_support}, output_support {output_support}, invariant {invariant},
+      input_support {input_support}, output_support {output_support},
       gen {0},
       ios_precomputer_maker {ios_precomputer_maker},
       actioner_maker {actioner_maker},
@@ -61,11 +61,11 @@ class k_bounded_safety_aut_detail {
     }
 
 
-    std::optional<SetOfStates> solve (SetOfStates& F, std::string synth) {
+    std::optional<SetOfStates> solve (SetOfStates& F, std::string synth, bdd invariant) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
-      verb_do (1, vout << "IOS Precomputer..." << std::endl);
+      verb_do (1, vout << "IOS Precomputer with invariant " << bdd_to_formula (invariant) << "..." << std::endl);
       auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
       // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);
@@ -128,7 +128,6 @@ class k_bounded_safety_aut_detail {
     spot::twa_graph_ptr aut;
     const int Kfrom, Kto, Kinc;
     bdd input_support, output_support;
-    bdd invariant;
     std::mt19937 gen;
     const IOsPrecomputationMaker& ios_precomputer_maker;
     const ActionerMaker& actioner_maker;
@@ -233,13 +232,14 @@ class k_bounded_safety_aut_detail {
     };
 
   public:
-    void synthesis2(SetOfStates& F, const std::string& synth_fname) {
+    void synthesis_no_solve(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
       auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
       auto actioner = actioner_maker.make (aut, inputs_to_ios, Kfrom);
 
       synthesis (F, synth_fname, actioner);
     }
 
+  private:
     template<class Actioner>
     void synthesis(SetOfStates& F, const std::string& synth_fname, Actioner& actioner) {
 
@@ -466,19 +466,19 @@ template <class SetOfStates,
           class ActionerMaker,
           class InputPickerMaker>
 static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int Kfrom, int Kto, int Kinc,
-                                        bdd input_support, bdd output_support, bdd invariant,
+                                        bdd input_support, bdd output_support,
                                         const IOsPrecomputationMaker& ios_precomputer_maker,
                                         const ActionerMaker& actioner_maker,
                                         const InputPickerMaker& input_picker_maker) {
   return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker, InputPickerMaker>
-    (aut, Kfrom, Kto, Kinc, input_support, output_support, invariant, ios_precomputer_maker, actioner_maker, input_picker_maker);
+    (aut, Kfrom, Kto, Kinc, input_support, output_support, ios_precomputer_maker, actioner_maker, input_picker_maker);
 }
 
 template <class SetOfStates>
 static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int Kfrom, int Kto, int Kinc,
-                                  bdd input_support, bdd output_support, bdd invariant) {
+                                  bdd input_support, bdd output_support) {
   return k_bounded_safety_aut_maker<SetOfStates> (aut, Kfrom, Kto, Kinc,
-                                                  input_support, output_support, invariant,
+                                                  input_support, output_support,
                                                   IOS_PRECOMPUTER (),
                                                   ACTIONER (),
                                                   INPUT_PICKER ()

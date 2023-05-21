@@ -12,15 +12,21 @@
 #include <spot/twa/bddprint.hh>
 #include <optional>
 
+// downset type that does not depend on the exact automaton
 using GenericDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vectors::vector_backed<VECTOR_ELT_T>>;
 
-struct aut_ret {
+// Safety game: contains the Büchi automaton and the number of nonboolean states
+// may also contain a downset which is either the safe region if solved == true, or some overestimation if solved == false
+// if this contains no safe region (safe == nullptr), then the game was solved and found to be losing for the controller
+struct safety_game {
   spot::twa_graph_ptr aut;
   size_t bool_threshold = 0;
   std::shared_ptr<GenericDownset> safe;
   bool solved;
 
   auto set_globals () {
+    // set the global variables needed for boolean states to function correctly
+
     vectors::bool_threshold = bool_threshold; // number of nonboolean states
 
     // Compute how many boolean states will actually be put in bitsets.
@@ -48,15 +54,14 @@ struct aut_ret {
 
     vectors::bitset_threshold = aut->num_states () - nbitsetbools;
 
-    //utils::vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n";
-    //utils::vout << "Thought it was " << bitset_threshold << "\n";
-    //bitset_threshold = vectors::bitset_threshold;
+    verb_do (1, vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n");
 
+    // return two values needed for the specialized downset k-bounded safety automaton
     return std::pair<size_t, size_t> (nbitsetbools, actual_nonbools);
   }
 };
 
-
+// cast a vector (state in the safety game) to another type, for example to go from array+bitset to vector
 template<typename To, typename From>
 To cast_vector (From& f) {
   auto vec = utils::vector_mm<VECTOR_ELT_T> (f.size (), 0);
@@ -66,6 +71,7 @@ To cast_vector (From& f) {
   return To (vec);
 }
 
+// cast a downset (set of safety game states) to another type
 template<typename To, typename From>
 To cast_downset (From& f) {
   using NewVec = To::value_type;
@@ -76,6 +82,18 @@ To cast_downset (From& f) {
   return downset;
 }
 
+// make an empty automaton
+spot::twa_graph_ptr new_automaton (spot::bdd_dict_ptr dict) {
+  spot::twa_graph_ptr aut = spot::make_twa_graph (dict);
+
+  // single acceptance set, inf(0) acceptance condition, state-based acceptance
+  aut->set_generalized_buchi (1);
+  aut->set_acceptance (spot::acc_cond::inf ({0}));
+  aut->prop_state_acc (true);
+
+  return aut;
+}
+
 enum unreal_x_t {
   UNREAL_X_FORMULA = 'f',
   UNREAL_X_AUTOMATON = 'a',
@@ -83,7 +101,13 @@ enum unreal_x_t {
 };
 
 enum job_type {
-  e_solve,
-  e_formula,
-  e_done
+  j_solve,
+  j_formula,
+  j_done
+};
+
+enum result_type {
+  r_game,
+  r_invariant,
+  r_null
 };
