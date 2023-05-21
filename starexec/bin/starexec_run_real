@@ -1,0 +1,25 @@
+#!/bin/bash
+export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+
+SYFCO=./syfco
+ACABON=./acacia-bonsai
+FILE=$1
+PART=$(mktemp)
+LTL=$($SYFCO $FILE -f ltlxba -m fully -pf $PART)
+
+parttoinsouts () {
+    while IFS= read line; do
+        line=$(echo "$line" | sed 's/[[:space:]]*$//;s/[[:space:]]\+/,/g')
+        head=${line/,*/}
+        args=${line/$head,/}
+        case "$head" in
+            .inputs) ins=$args;;
+            .outputs) outs=$args;;
+        esac
+    done < $1
+}
+
+parttoinsouts $PART
+
+$ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs"
+rm -f $PART
