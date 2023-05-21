@@ -194,7 +194,7 @@ namespace {
                      std::vector<std::string> input_aps_,
                      std::vector<std::string> output_aps_,
                      spot::bdd_dict_ptr dict_)
-        : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_), dict(dict_) {
+        : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_), dict (dict_) {
       }
 
       int process_formula (spot::formula f, const char *, int) override {
@@ -409,10 +409,6 @@ int main (int argc, char **argv) {
       error (3, 0, "Incompatible values for K, Kmin, and Kinc.");
     if (opt_Kmin == 0)
       opt_Kmin = opt_K;
-
-    //utils::vout << "Running processor in main process\n";
-    //processor.run ();
-    //return 0;
 
     const auto start_proc = [&] (bool real, unreal_x_t unreal_x) {
       if (fork () == 0) {
