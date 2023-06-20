@@ -266,6 +266,8 @@ class pipe_t {
     if (r.aut) {
       write_obj<char> (1);
       write_automaton (r.aut);
+      // + invariant here as we use the automaton dict
+      write_bdd (r.invariant, r.aut->get_dict ());
     }
     else write_obj<char> (0);
 
@@ -291,6 +293,9 @@ class pipe_t {
     safety_game r;
     char has_aut = read_obj<char> ();
     r.aut = has_aut ? read_automaton (dict) : nullptr;
+    //r.invariant = has_aut ? read_bdd (dict) : bddtrue;
+    r.invariant = bddtrue;
+    if (has_aut) r.invariant = read_bdd (dict);
 
     r.bool_threshold = read_obj<size_t> ();
 

@@ -153,7 +153,7 @@ namespace ios_precomputers {
             in_it (bdd input_support, bdd output_support, Aut aut, bdd _invariant) :
               bdd_it (input_support),
               current_ios (bdd_it::current_letter, ios (bdd_it::current_letter, output_support, aut, _invariant)),
-              output_support {output_support}, aut {aut}, invariant(_invariant)
+              output_support {output_support}, aut {aut}, invariant {_invariant}
             { }
 
             auto& operator* ()  { return current_ios; }
@@ -179,7 +179,7 @@ namespace ios_precomputers {
   struct standard {
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
       static auto make (Aut aut,
-                        bdd input_support, bdd output_support, bdd invariant) {
+                        bdd input_support, bdd output_support, bdd invariant = bddtrue) {
         return [&] () {
           return detail::standard_container<Aut, TransSet> (aut, input_support, output_support, invariant);
         };

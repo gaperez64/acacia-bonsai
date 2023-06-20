@@ -18,11 +18,13 @@ using GenericDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vectors::vector_
 // Safety game: contains the Büchi automaton and the number of nonboolean states
 // may also contain a downset which is either the safe region if solved == true, or some overestimation if solved == false
 // if this contains no safe region (safe == nullptr), then the game was solved and found to be losing for the controller
+// finally it also includes the invariant that was used to solve the game
 struct safety_game {
   spot::twa_graph_ptr aut;
   size_t bool_threshold = 0;
   std::shared_ptr<GenericDownset> safe;
-  bool solved;
+  bool solved = false;
+  bdd invariant = bddtrue;
 
   auto set_globals () {
     // set the global variables needed for boolean states to function correctly

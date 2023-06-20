@@ -286,11 +286,11 @@ void composition_mt::solve_game (safety_game& game, std::string synth) {
         vbitsets.value>>;
         auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
         (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-        assert(game.safe);
+        assert (game.safe);
         auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
         auto safe = skn.solve (current_safe, synth, invariant);
         if (safe.has_value ()) {
-          game.safe = std::make_shared<GenericDownset>(cast_downset<GenericDownset> (safe.value ()));
+          game.safe = std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
         } else game.safe = nullptr;
       },
       UNREACHABLE,
@@ -308,11 +308,11 @@ void composition_mt::solve_game (safety_game& game, std::string synth) {
       vbitsets.value>>;
       auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
       (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-      assert(game.safe);
+      assert (game.safe);
       auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
       auto safe = skn.solve (current_safe, synth, invariant);
       if (safe.has_value ()) {
-        game.safe = std::make_shared<GenericDownset>(cast_downset<GenericDownset> (safe.value ()));
+        game.safe = std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
       } else game.safe = nullptr;
     },
     UNREACHABLE,
@@ -320,6 +320,7 @@ void composition_mt::solve_game (safety_game& game, std::string synth) {
   }
 
   game.solved = true;
+  game.invariant = invariant;
 
   double solve_time = sw.stop ();
   verb_do (1, vout << "Safety game solved in " << solve_time << " seconds\n");
@@ -347,19 +348,21 @@ int composition_mt::epilogue (std::string synth_fname) {
     safe[0] = 0;
     r.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (safe));
     r.aut = aut;
+    r.invariant = invariant;
 
     stored_result = std::make_shared<safety_game> (r);
   }
 
   safety_game& r = *stored_result;
 
-  if (!r.solved) {
+  if ((!r.solved) || (r.invariant != invariant)) {
     // call solve + synthesis reusing the actioner
-    verb_do (1, vout << "Not fully solved -> extra solve\n");
+    if (!r.solved) verb_do (1, vout << "Not fully solved -> extra solve\n");
+    if (r.invariant != invariant) verb_do (1, vout << "Solved but not with the right invariant -> extra solve\n");
     solve_game (r, synth_fname);
   } else {
     // call synthesis directly
-    verb_do (1, vout << "Already solved -> synthesis2\n");
+    verb_do (1, vout << "Already solved -> synthesis\n");
     r.set_globals ();
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
     (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
@@ -380,65 +383,72 @@ void composition_mt::be_child (int id) {
   while (true) {
     job_type job = from_main.read_obj<job_type> ();
 
-    if (job == j_done) break;
+    switch (job) {
+      case j_done: {
+        verb_do (1, vout << "Worker is finished!\n");
+        exit (0);
+        break;
+      }
+    
+      case j_solve: {
+        // update invariant
+        invariant = from_main.read_bdd (dict);
 
-    if (job == j_solve) {
-      // update invariant
-      invariant = from_main.read_bdd (dict);
+        // solve job
+        safety_game r = from_main.read_safety_game (dict);
+        verb_do (1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
+        verb_do (1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
 
-      // solve job
-      safety_game r = from_main.read_safety_game (dict);
-      verb_do (1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-      verb_do (1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
+        solve_game (r);
 
-      solve_game (r);
+        shared_pipe.write_obj<char> (id);
+        to_main.write_guard (MESSAGE_START);
+        to_main.write_obj<result_type> (r_game);
+        to_main.write_safety_game (r);
+        to_main.write_guard (MESSAGE_END);
 
-      shared_pipe.write_obj<char> (id);
-      to_main.write_guard (MESSAGE_START);
-      to_main.write_obj<result_type> (r_game);
-      to_main.write_safety_game (r);
-      to_main.write_guard (MESSAGE_END);
-
-      verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
-      continue;
-    }
-
-    if (job == j_formula) {
-      // turn formula into automaton
-      spot::formula f = from_main.read_formula ();
-      verb_do (1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-      verb_do (1, vout << "Formula to be converted: " << f << "\n");
-
-      safety_game r = prepare_formula (f);
-
-      shared_pipe.write_obj<char> (id);
-      to_main.write_guard (MESSAGE_START);
-
-      if (r.aut) {
-        bdd condition;
-        if (is_invariant (r.aut, condition)) {
-          to_main.write_obj<result_type> (r_invariant);
-          to_main.write_bdd (condition, dict);
-        } else {
-          to_main.write_obj<result_type> (r_game);
-          to_main.write_safety_game (r);
-        }
-      } else {
-        // trivial formula (automaton with no accepting states, like "G true")
-        to_main.write_obj<result_type> (r_null);
+        verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
+        break;
       }
 
-      to_main.write_guard (MESSAGE_END);
+      case j_formula: {
+        // turn formula into automaton
+        spot::formula f = from_main.read_formula ();
+        verb_do (1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
+        verb_do (1, vout << "Formula to be converted: " << f << "\n");
 
-      verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
-      continue;
+        safety_game r = prepare_formula (f);
+
+        shared_pipe.write_obj<char> (id);
+        to_main.write_guard (MESSAGE_START);
+
+        if (r.aut) {
+          bdd condition;
+          if (is_invariant (r.aut, condition)) {
+            to_main.write_obj<result_type> (r_invariant);
+            to_main.write_bdd (condition, dict);
+          } else {
+            to_main.write_obj<result_type> (r_game);
+            to_main.write_safety_game (r);
+          }
+        } else {
+          // trivial formula (automaton with no accepting states, like "G true")
+          to_main.write_obj<result_type> (r_null);
+        }
+
+        to_main.write_guard (MESSAGE_END);
+
+        verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
+        break;
+      }  
+  
+      default: {
+        verb_do (1, vout << "Bad job type!\n");
+        exit (0);
+        break;
+      }
     }
-
-    assert (false);
   }
-
-  verb_do (1, vout << "Worker is finished!\n");
-  exit(0);
 }
 
 int composition_mt::run (int worker_count, std::string synth_fname) {
