@@ -23,6 +23,7 @@ struct worker_t {
   bool active = true; // whether the worker has already stopped
 };
 
+template<int UNUSED = 1>
 class composition_mt {
   private:
   std::queue<job_ptr> pending_jobs; // all currently unfinished jobs no worker is working on yet
