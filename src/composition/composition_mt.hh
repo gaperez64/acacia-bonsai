@@ -470,13 +470,16 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
   for(int i = 0; i < worker_count; i++) {
     assert (workers[i].to_main.create_pipe () == 0);
     assert (workers[i].from_main.create_pipe () == 0);
-    //int new_size = fcntl(workers[i].pipe.w, F_SETPIPE_SZ, 1024*1024);
-    //assert(new_size != -1);
-    //utils::vout << "Pipe size: " << new_size << "\n";
   }
 
   // how many formula jobs aren't yet solved: once this is 0, add invariants, if not using ios precomputer that uses the invariant
   int base_remaining = pending_jobs.size ();
+
+  if constexpr (! IOS_PRECOMPUTER::supports_invariant) {
+    verb_do (1, vout << "Invariant is not supported -> add safety game for it\n");
+  } else {
+    verb_do (1, vout << "IOs precomputer supports invariant\n");
+  }
 
   // spawn the workers with their initial job
   for(int i = 0; i < worker_count; i++) {
@@ -486,7 +489,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     if (pid > 0) {
       workers[i].pid = pid;
       job_ptr job = dequeue ();
-      assert(job != nullptr);
+      assert (job != nullptr);
 
       job->to_pipe (workers[i].from_main);
     }
@@ -551,13 +554,12 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     to_main.read_guard (MESSAGE_END);
 
     // if the ios precomputer does not use the invariants, we need to add an automaton that encodes all the invariants
-    // not needed at the moment
-    /*
-    if (base_remaining == 0) {
-      base_remaining = -1;
-      finish_invariant ();
+    if constexpr (! IOS_PRECOMPUTER::supports_invariant) {
+      if (base_remaining == 0) {
+        base_remaining = -1;
+        finish_invariant ();
+      }
     }
-    */
 
     // kill all workers and immediately abort if found to be losing
     if (losing) {
@@ -579,7 +581,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
     // no stored result (which would be merged with the result of new_job),
     // and "new_job" should be a solve job, not a formula job
     bool is_final_solve = ((active_workers == 1) && (pending_jobs.empty () && (!stored_result)));
-    is_final_solve &= dynamic_cast<job_solve*> (new_job.get()) != nullptr;
+    is_final_solve &= dynamic_cast<job_solve*> (new_job.get ()) != nullptr;
 
     if ((new_job == nullptr) || losing || is_final_solve) {
       active_workers--;

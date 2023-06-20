@@ -60,13 +60,23 @@ class k_bounded_safety_aut_detail {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
+    auto get_inputs_to_ios (bdd invariant) {
+      // call the right constructor: with an extra variant if supported, otherwise the invariant is ignored
+      // (it is assumed that other code will see that the invariant was not taken into account,
+      //  such as in composition_mt.hh which calls finish_invariant only when needed)
+      if constexpr (IOsPrecomputationMaker::supports_invariant) {
+        return (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
+      } else {
+        return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+      }
+    }
 
     std::optional<SetOfStates> solve (SetOfStates& F, std::string synth, bdd invariant) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
       verb_do (1, vout << "IOS Precomputer with invariant " << bdd_to_formula (invariant) << "..." << std::endl);
-      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
+      auto inputs_to_ios = get_inputs_to_ios (invariant);
       // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, K);
@@ -233,7 +243,7 @@ class k_bounded_safety_aut_detail {
 
   public:
     void synthesis_no_solve(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
-      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
+      auto inputs_to_ios = get_inputs_to_ios (invariant);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, Kfrom);
 
       synthesis (F, synth_fname, actioner);
@@ -242,6 +252,10 @@ class k_bounded_safety_aut_detail {
   private:
     template<class Actioner>
     void synthesis(SetOfStates& F, const std::string& synth_fname, Actioner& actioner) {
+      // for the moment, IOs have only been included in the standard.hh ios_precomputers and standard.hh actioner
+      // trying any other will give an error in this function, so for a more readable error, the following static asserts:
+      static_assert (std::is_same_v<IOsPrecomputationMaker, ios_precomputers::standard>);
+      static_assert (std::is_same_v<ActionerMaker, actioners::standard<typename SetOfStates::value_type>>);
 
       verb_do (2, vout << "Final F:\n" << F);
       verb_do (1, vout << "F = downset of size " << F.size() << "\n");
@@ -290,6 +304,10 @@ class k_bounded_safety_aut_detail {
 
           // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
           std::pair<bdd, State> p = get_transition (states[src], tuple.second, actioner, F);
+          // note: it may be that an IO is returned that keeps us in the safe region but requires adding a new element (index == -1)
+          // it could be that there does exist an IO that doesn't make us add a new maximal element, so we could add a new argument
+          // to get_transition to pass the current states, which would then be checked first - may make a slightly smaller circuit
+
           int index = get_dominated_index (states, p.second);
           // ^ returns index of FIRST element that dominates
 
