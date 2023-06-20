@@ -3,6 +3,7 @@
 namespace ios_precomputers {
   struct delegate {
     static const bool supports_invariant = false;
+    static const bool supports_synthesis = false;
 
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
       static auto make (Aut aut,

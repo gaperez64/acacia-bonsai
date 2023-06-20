@@ -178,20 +178,13 @@ namespace ios_precomputers {
 
   struct standard {
     static const bool supports_invariant = true;
+    static const bool supports_synthesis = true;
 
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
       static auto make (Aut aut,
                         bdd input_support, bdd output_support, bdd invariant) {
         return [&] () {
           return detail::standard_container<Aut, TransSet> (aut, input_support, output_support, invariant);
-        };
-      }
-
-      template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
-      static auto make (Aut aut,
-                        bdd input_support, bdd output_support) {
-        return [&] () {
-          return detail::standard_container<Aut, TransSet> (aut, input_support, output_support, bddtrue);
         };
       }
   };

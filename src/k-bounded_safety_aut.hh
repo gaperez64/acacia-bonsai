@@ -254,6 +254,11 @@ class k_bounded_safety_aut_detail {
     void synthesis(SetOfStates& F, const std::string& synth_fname, Actioner& actioner) {
       // for the moment, IOs have only been included in the standard.hh ios_precomputers and standard.hh actioner
       // trying any other will give an error in this function, so for a more readable error, the following static asserts:
+
+      if constexpr (! IOsPrecomputationMaker::supports_synthesis) {
+        return;
+      }
+
       static_assert (std::is_same_v<IOsPrecomputationMaker, ios_precomputers::standard>);
       static_assert (std::is_same_v<ActionerMaker, actioners::standard<typename SetOfStates::value_type>>);
 

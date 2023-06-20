@@ -6,7 +6,40 @@ namespace actioners {
     class no_ios_precomputation {
       public: // types
         using action = std::vector<std::pair<unsigned, bool>>; // All these pairs are unique by construction.
-        using action_vec = std::vector<action>;          // Vector indexed by state number
+        // store action vector per state + IO
+        struct action_vec {
+          std::vector<action> actions; // index by state number q to get a vector of (p, is_q_accepting) tuples
+          bdd IO; // the IO compatible with the input that gave this
+
+          action_vec () = default;
+          action_vec (size_t size, bdd IO) : IO (IO) {
+            actions.resize (size);
+          }
+
+          auto begin () const {
+            return actions.begin ();
+          }
+
+          auto end () const {
+            return actions.end ();
+          }
+
+          auto& operator[] (size_t i) {
+            return actions[i];
+          }
+
+          const auto& operator[] (size_t i) const {
+            return actions[i];
+          }
+
+          bool operator<(const action_vec& rhs) const {
+            return (IO.id () < rhs.IO.id ()) || ((IO.id () == rhs.IO.id ()) && (actions < rhs.actions));
+          }
+
+          size_t size () const {
+            return actions.size ();
+          }
+        };
         using action_vecs = std::list<action_vec>;
         using input_and_actions = std::pair<bdd, action_vecs>;
         struct compare_actions {
@@ -106,7 +139,7 @@ namespace actioners {
         input_and_actions_set input_output_fwd_actions;
 
         auto compute_action (bdd letter) {
-          action_vec ret_fwd (aut->num_states ());
+          action_vec ret_fwd (aut->num_states (), letter);
 
           for (size_t p = 0; p < aut->num_states (); ++p) {
             for (const auto& e : aut->out (p)) {
