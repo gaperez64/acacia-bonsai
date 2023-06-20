@@ -67,16 +67,16 @@ namespace actioners {
 
         State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
           if (dir == direction::forward)
-            apply_out.assign (m.size (), (char) -1);
+            apply_out.assign (m.size (), (VECTOR_ELT_T) -1);
           else {
             // Non boolean
             std::fill_n (apply_out.begin (),
                          vectors::bool_threshold,
-                         (char) (K - 1));
+                         (VECTOR_ELT_T) (K - 1));
             // Boolean
             std::fill_n (apply_out.begin () + vectors::bool_threshold,
                          m.size () - vectors::bool_threshold,
-                         (char) 0);
+                         (VECTOR_ELT_T) 0);
           }
 
           m.to_vector (mcopy);
@@ -85,10 +85,10 @@ namespace actioners {
             for (const auto& [q, p_final] : avec[p]) {
               if (dir == direction::forward) {
                 if (mcopy[q] != -1)
-                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (mcopy[q] + (char) (p_final ? 1 : 0))));
+                  apply_out[p] = std::max (apply_out[p], std::min ((VECTOR_ELT_T) K, (VECTOR_ELT_T) (mcopy[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
               } else
                 if (apply_out[q] != -1)
-                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (mcopy[p] - (char) (p_final ? 1 : 0))));
+                  apply_out[q] = std::min (apply_out[q], std::max ((VECTOR_ELT_T) -1, (VECTOR_ELT_T) (mcopy[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
               if (dir == direction::forward && apply_out[p] == K)
@@ -102,7 +102,7 @@ namespace actioners {
       private:
         const Aut& aut;
         int K;
-        utils::vector_mm<char> apply_out, mcopy;
+        utils::vector_mm<VECTOR_ELT_T> apply_out, mcopy;
         input_and_actions_set input_output_fwd_actions;
 
         auto compute_action (bdd letter) {
