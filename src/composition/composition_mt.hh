@@ -49,7 +49,7 @@ class composition_mt {
 
   void add_invariant (bdd inv); // add a new invariant
   void finish_invariant (); // turns the invariant into a solved 2-state automaton, not used right now because the ios-precomputer uses the invariant
-  void solve_game (safety_game& game, std::string synth = ""); // use the k-bounded safety aut to solve a game, possibly with synthesis if the string is non-empty
+  void solve_game (safety_game& game); // use the k-bounded safety aut to solve a game
   int epilogue (std::string synth_fname); // look at the final result, call synthesis if needed and return whether it was realizable
   void be_child (int id); // does everything a child process has to do
   void add_result (safety_game& r); // add a new result to the temporary, or add a merge if there is already one stored
@@ -264,7 +264,7 @@ void composition_mt::finish_invariant() {
   }
 }
 
-void composition_mt::solve_game (safety_game& game, std::string synth) {
+void composition_mt::solve_game (safety_game& game) {
   spot::stopwatch sw;
   sw.start ();
 
@@ -288,7 +288,7 @@ void composition_mt::solve_game (safety_game& game, std::string synth) {
         (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
         assert (game.safe);
         auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-        auto safe = skn.solve (current_safe, synth, invariant);
+        auto safe = skn.solve (current_safe, invariant);
         if (safe.has_value ()) {
           game.safe = std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
         } else game.safe = nullptr;
@@ -310,7 +310,7 @@ void composition_mt::solve_game (safety_game& game, std::string synth) {
       (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
       assert (game.safe);
       auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-      auto safe = skn.solve (current_safe, synth, invariant);
+      auto safe = skn.solve (current_safe, invariant);
       if (safe.has_value ()) {
         game.safe = std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
       } else game.safe = nullptr;
@@ -355,19 +355,21 @@ int composition_mt::epilogue (std::string synth_fname) {
 
   safety_game& r = *stored_result;
 
-  if ((!r.solved) || (r.invariant != invariant)) {
-    // call solve + synthesis reusing the actioner
+  // if the final result was not solved, or it was solved with the wrong invariant (if the IOs precomputer uses it in the first place)
+  // then a final solve is needed before calling synthesis
+  bool not_fully_solved = ((r.invariant != invariant) && IOS_PRECOMPUTER::supports_invariant);
+
+  if ((!r.solved) || not_fully_solved) {
     if (!r.solved) verb_do (1, vout << "Not fully solved -> extra solve\n");
-    if (r.invariant != invariant) verb_do (1, vout << "Solved but not with the right invariant -> extra solve\n");
-    solve_game (r, synth_fname);
-  } else {
-    // call synthesis directly
-    verb_do (1, vout << "Already solved -> synthesis\n");
-    r.set_globals ();
-    auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
-    (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-    skn.synthesis_no_solve (*r.safe, synth_fname, invariant);
+    if (not_fully_solved) verb_do (1, vout << "Solved but not with the right invariant -> extra solve\n");
+    solve_game (r);
   }
+
+  // call synthesis
+  r.set_globals ();
+  auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
+  (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
+  skn.synthesis (*r.safe, synth_fname, invariant);
 
   // if there is no safe region: return 0 (not winning)
   return r.safe != nullptr;
@@ -555,7 +557,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
 
     // if the ios precomputer does not use the invariants, we need to add an automaton that encodes all the invariants
     if constexpr (! IOS_PRECOMPUTER::supports_invariant) {
-      if (base_remaining == 0) {
+      if (base_remaining == 0) { // once all formula jobs are finished, we know all invariants
         base_remaining = -1;
         finish_invariant ();
       }
@@ -575,15 +577,7 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
 
     job_ptr new_job = dequeue ();
 
-    // we want to do the final solve ourselves so that we can reuse the actioner for synthesis
-    // only 1 worker remaining (the one that just gave us this result),
-    // no more remaining jobs after "new_job" we just dequeued,
-    // no stored result (which would be merged with the result of new_job),
-    // and "new_job" should be a solve job, not a formula job
-    bool is_final_solve = ((active_workers == 1) && (pending_jobs.empty () && (!stored_result)));
-    is_final_solve &= dynamic_cast<job_solve*> (new_job.get ()) != nullptr;
-
-    if ((new_job == nullptr) || losing || is_final_solve) {
+    if (new_job == nullptr) {
       active_workers--;
       verb_do (1, vout << "Releasing worker " << wid << ": " << active_workers << " left.\n");
       workers[wid].active = false;
@@ -591,13 +585,6 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
       from_main.write_obj<job_type> (j_done);
       // wait for this process
       waitpid (workers[wid].pid, nullptr, 0);
-
-      if (is_final_solve) {
-        // add this job (unsolved) as a result, epilogue () will see it's not yet solved
-        job_solve* j = dynamic_cast<job_solve*> (new_job.get ());
-        assert (j != nullptr);
-        add_result (j->starting_point);
-      }
     } else {
       // send new job
       new_job->set_invariant (invariant);

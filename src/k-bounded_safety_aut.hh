@@ -71,7 +71,7 @@ class k_bounded_safety_aut_detail {
       }
     }
 
-    std::optional<SetOfStates> solve (SetOfStates& F, std::string synth, bdd invariant) {
+    std::optional<SetOfStates> solve (SetOfStates& F, bdd invariant) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -99,7 +99,7 @@ class k_bounded_safety_aut_detail {
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
         {
-          if (!synth.empty ()) synthesis (F, synth, actioner);
+          //if (!synth.empty ()) synthesis (F, synth, actioner);
           return std::make_optional<SetOfStates> (std::move (F));
         }
 
@@ -242,25 +242,11 @@ class k_bounded_safety_aut_detail {
     };
 
   public:
-    void synthesis_no_solve(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
-      auto inputs_to_ios = get_inputs_to_ios (invariant);
-      auto actioner = actioner_maker.make (aut, inputs_to_ios, Kfrom);
-
-      synthesis (F, synth_fname, actioner);
-    }
-
-  private:
-    template<class Actioner>
-    void synthesis(SetOfStates& F, const std::string& synth_fname, Actioner& actioner) {
-      // for the moment, IOs have only been included in the standard.hh ios_precomputers and standard.hh actioner
-      // trying any other will give an error in this function, so for a more readable error, the following static asserts:
-
-      if constexpr (! IOsPrecomputationMaker::supports_synthesis) {
-        return;
-      }
-
-      static_assert (std::is_same_v<IOsPrecomputationMaker, ios_precomputers::standard>);
-      static_assert (std::is_same_v<ActionerMaker, actioners::standard<typename SetOfStates::value_type>>);
+    void synthesis(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
+      auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
+      auto maker = actioners::standard<typename SetOfStates::value_type> ();
+      // manually list the two template types so we can set the third (include IOs) to true
+      auto actioner = maker.template make <decltype (aut), decltype (inputs_to_ios), true> (aut, inputs_to_ios, Kfrom);
 
       verb_do (2, vout << "Final F:\n" << F);
       verb_do (1, vout << "F = downset of size " << F.size() << "\n");
@@ -288,7 +274,7 @@ class k_bounded_safety_aut_detail {
       std::vector<unsigned int> states_todo = { 0 };
 
       while (!states_todo.empty ()) {
-        // pop the last state
+        // pop the last state (depth-first search)
         unsigned int src = states_todo[states_todo.size () - 1];
         states_todo.pop_back ();
 
@@ -311,7 +297,8 @@ class k_bounded_safety_aut_detail {
           std::pair<bdd, State> p = get_transition (states[src], tuple.second, actioner, F);
           // note: it may be that an IO is returned that keeps us in the safe region but requires adding a new element (index == -1)
           // it could be that there does exist an IO that doesn't make us add a new maximal element, so we could add a new argument
-          // to get_transition to pass the current states, which would then be checked first - may make a slightly smaller circuit
+          // to get_transition to pass the current states, which would then be checked first - may make a slightly smaller circuit,
+          // at the cost of taking longer (as we no longer stop at the first IO)
 
           int index = get_dominated_index (states, p.second);
           // ^ returns index of FIRST element that dominates

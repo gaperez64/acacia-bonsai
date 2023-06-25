@@ -6,40 +6,7 @@ namespace actioners {
     class no_ios_precomputation {
       public: // types
         using action = std::vector<std::pair<unsigned, bool>>; // All these pairs are unique by construction.
-        // store action vector per state + IO
-        struct action_vec {
-          std::vector<action> actions; // index by state number q to get a vector of (p, is_q_accepting) tuples
-          bdd IO; // the IO compatible with the input that gave this
-
-          action_vec () = default;
-          action_vec (size_t size, bdd IO) : IO (IO) {
-            actions.resize (size);
-          }
-
-          auto begin () const {
-            return actions.begin ();
-          }
-
-          auto end () const {
-            return actions.end ();
-          }
-
-          auto& operator[] (size_t i) {
-            return actions[i];
-          }
-
-          const auto& operator[] (size_t i) const {
-            return actions[i];
-          }
-
-          bool operator<(const action_vec& rhs) const {
-            return (IO.id () < rhs.IO.id ()) || ((IO.id () == rhs.IO.id ()) && (actions < rhs.actions));
-          }
-
-          size_t size () const {
-            return actions.size ();
-          }
-        };
+        using action_vec = std::vector<action>;          // Vector indexed by state number
         using action_vecs = std::list<action_vec>;
         using input_and_actions = std::pair<bdd, action_vecs>;
         struct compare_actions {
@@ -100,28 +67,28 @@ namespace actioners {
 
         State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
           if (dir == direction::forward)
-            apply_out.assign (m.size (), (VECTOR_ELT_T) -1);
+            apply_out.assign (m.size (), (char) -1);
           else {
             // Non boolean
             std::fill_n (apply_out.begin (),
                          vectors::bool_threshold,
-                         (VECTOR_ELT_T) (K - 1));
+                         (char) (K - 1));
             // Boolean
             std::fill_n (apply_out.begin () + vectors::bool_threshold,
                          m.size () - vectors::bool_threshold,
-                         (VECTOR_ELT_T) 0);
+                         (char) 0);
           }
 
           m.to_vector (mcopy);
 
           for (size_t p = 0; p < m.size (); ++p) {
-            for (const auto& [q, p_final] : avec[p]) {
+            for (const auto& [q, q_final] : avec[p]) {
               if (dir == direction::forward) {
                 if (mcopy[q] != -1)
-                  apply_out[p] = std::max (apply_out[p], std::min ((VECTOR_ELT_T) K, (VECTOR_ELT_T) (mcopy[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
+                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (mcopy[q] + (char) (q_final ? 1 : 0))));
               } else
                 if (apply_out[q] != -1)
-                  apply_out[q] = std::min (apply_out[q], std::max ((VECTOR_ELT_T) -1, (VECTOR_ELT_T) (mcopy[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
+                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (mcopy[p] - (char) (q_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
               if (dir == direction::forward && apply_out[p] == K)
@@ -135,11 +102,11 @@ namespace actioners {
       private:
         const Aut& aut;
         int K;
-        utils::vector_mm<VECTOR_ELT_T> apply_out, mcopy;
+        utils::vector_mm<char> apply_out, mcopy;
         input_and_actions_set input_output_fwd_actions;
 
         auto compute_action (bdd letter) {
-          action_vec ret_fwd (aut->num_states (), letter);
+          action_vec ret_fwd (aut->num_states ());
 
           for (size_t p = 0; p < aut->num_states (); ++p) {
             for (const auto& e : aut->out (p)) {

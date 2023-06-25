@@ -84,7 +84,7 @@ class aiger {
       ost << "o" << i << " " << output_names[i] << "\n";
     }
 
-    // utils::vout << "Aiger output: " << gates.size () << " gates\n";
+    verb_do (1, vout << "Aiger output: " << gates.size () << " gates\n");
   }
 
   private:

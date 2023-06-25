@@ -113,7 +113,6 @@ namespace ios_precomputers {
 
   struct fake_vars {
     static const bool supports_invariant = false;
-    static const bool supports_synthesis = false;
 
       template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {

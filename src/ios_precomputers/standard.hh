@@ -177,8 +177,7 @@ namespace ios_precomputers {
   }
 
   struct standard {
-    static const bool supports_invariant = true;
-    static const bool supports_synthesis = true;
+    static const bool supports_invariant = true; // note: this is only true for this implementation right now, false for the other ios_precomputers
 
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
       static auto make (Aut aut,
