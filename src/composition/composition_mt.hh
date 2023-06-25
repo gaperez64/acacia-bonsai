@@ -365,11 +365,13 @@ int composition_mt::epilogue (std::string synth_fname) {
     solve_game (r);
   }
 
-  // call synthesis
-  r.set_globals ();
-  auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
-  (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-  skn.synthesis (*r.safe, synth_fname, invariant);
+  // call synthesis if needed
+  if (!synth_fname.empty ()) {
+    r.set_globals ();
+    auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
+    (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
+    skn.synthesis (*r.safe, synth_fname, invariant);
+  }
 
   // if there is no safe region: return 0 (not winning)
   return r.safe != nullptr;
