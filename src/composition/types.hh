@@ -74,6 +74,7 @@ To cast_vector (From& f) {
 }
 
 // cast a downset (set of safety game states) to another type
+// TODO some downset types may be much faster with a bulk insert
 template<typename To, typename From>
 To cast_downset (From& f) {
   using NewVec = To::value_type;

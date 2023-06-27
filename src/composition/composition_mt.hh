@@ -646,6 +646,8 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
 }
 
 safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, unreal_x_t opt_unreal_x) {
+  // Note: this function is only run once with unrealizability as there is no composition -> swapping the inputs/outputs only happens once
+  
   spot::process_timer timer;
   timer.start ();
 
@@ -679,6 +681,7 @@ safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, u
     f = f.map ([&] (spot::formula t) { return rec (rec, t); });
     // Swap I and O.
     input_aps_.swap (output_aps_);
+    std::swap (all_inputs, all_outputs);
   }
 
   verb_do (1, vout << "Formula: " << f << std::endl);
@@ -689,7 +692,7 @@ safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, u
   if (not check_real and opt_unreal_x == UNREAL_X_AUTOMATON) {
     aut = push_outputs (aut, all_inputs, all_outputs);
     input_aps_.swap (output_aps_);
-    std::swap (all_inputs, all_outputs); // can only happen once because no composition with unrealizability -> no problem
+    std::swap (all_inputs, all_outputs);
   }
 
   if (want_time) {
