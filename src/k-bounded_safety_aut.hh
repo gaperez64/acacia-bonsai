@@ -118,7 +118,7 @@ class k_bounded_safety_aut_detail {
           continue;
         }
 
-        verb_do (1, vout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl);
+        // verb_do (1, vout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl);
       } while (1);
 
       std::abort ();
