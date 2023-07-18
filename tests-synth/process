@@ -20,7 +20,7 @@ rm -f $TESTFOLDER/monitor.aig $TESTFOLDER/synthesis.aag $TESTFOLDER/synthesis.aa
 echo origf=\"$origf\"
 
 # convert TLSF to LTL formula + inputs/outputs
-FORMULA=$(./meyerphi-syfco "$origf" -f ltlxba -m fully) # NOT ltlxba!!
+FORMULA=$(./meyerphi-syfco "$origf" -f ltl -m fully) # NOT ltlxba!!
 
 # return if the file is not found -> error
 RET=$?
@@ -40,7 +40,7 @@ echo "-f \"$FORMULA\" --ins $INPS --outs $OUTPS"
 
 
 # call acacia-bonsai to do synthesis
-../build/src/acacia-bonsai -f "$FORMULA" --ins "$INPS" --outs "$OUTPS" -S "$syntf" --check=real -v -v -v
+../build/src/acacia-bonsai -f "$FORMULA" --ins "$INPS" --outs "$OUTPS" -S "$syntf" --check=real -v -v
 #ltlsynt -f "$FORMULA" --ins="$INPS" --outs="$OUTPS" --aiger | sed '1d' > "$syntf"
 #ltlsynt --tlsf="$origf" --aiger | sed '1d' > "$syntf"
 
