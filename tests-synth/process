@@ -20,13 +20,13 @@ rm -f $TESTFOLDER/monitor.aig $TESTFOLDER/synthesis.aag $TESTFOLDER/synthesis.aa
 echo origf=\"$origf\"
 
 # convert TLSF to LTL formula + inputs/outputs
-FORMULA=$(./meyerphi-syfco "$origf" -f ltl -m fully) # NOT ltlxba!!
+FORMULA=$(./meyerphi-syfco "$origf" -f ltlxba -m fully) # NOT ltlxba!!
 
 # return if the file is not found -> error
 RET=$?
 echo ret: $RET
 if [ $RET -ne 0 ]; then
-    exit 1
+    exit -1
 fi
 
 
@@ -40,7 +40,7 @@ echo "-f \"$FORMULA\" --ins $INPS --outs $OUTPS"
 
 
 # call acacia-bonsai to do synthesis
-../build/src/acacia-bonsai -f "$FORMULA" --ins "$INPS" --outs "$OUTPS" -S "$syntf" --check=real -v -v
+../build/src/acacia-bonsai -f "$FORMULA" --ins "$INPS" --outs "$OUTPS" -S "$syntf" --check=real -v -v -v
 #ltlsynt -f "$FORMULA" --ins="$INPS" --outs="$OUTPS" --aiger | sed '1d' > "$syntf"
 #ltlsynt --tlsf="$origf" --aiger | sed '1d' > "$syntf"
 
@@ -48,7 +48,7 @@ if [[ -f "$syntf" ]]; then
     echo Synthesis seems to be ok?
 else
     echo No synthesis!
-    exit 2
+    exit -1
 fi
 
 
@@ -57,7 +57,7 @@ fi
 
 if [ ! -f "$TESTFOLDER/monitor.aig" ]; then
     echo "Error=The monitor file was not generated!"
-    exit 3
+    exit -1
 fi
 
 # Combine monitor with synthesized file
@@ -65,12 +65,12 @@ fi
 
 if [ ! -f "${syntf}-combined.aag" ]; then
     echo "Error=The combined file was not generated!"
-    exit 4
+    exit -1
 fi
 
 if ! (head -n 1 "${syntf}-combined.aag" | grep -q '^aag'); then
     echo "Error=during monitor combination"
-    exit 5
+    exit -1
 fi
 
 # Model checking each justice constraint of the combined file in parallel
@@ -89,21 +89,21 @@ if [ $res_val -eq 0 ]; then
     if [ $num_false -ge 1 ]; then
         echo "starexec-result=MC-INCORRECT"
         echo "Error=model checker says no!"
-        exit 6
+        exit -1
     elif [ $num_true -lt $num_justice ]; then
         echo "starexec-result=MC-ERROR"
         echo "Error=not all justice properties found"
-        exit 7
+        exit -1
     else
         echo "Model_check_result=SUCCESS"
         exit 0  # <- happy exit code
     fi
 elif [ $res_val -eq 124 ] || [ $res_val -eq 137 ]; then
     echo "starexec-result=MC-TIMEOUT"
-    exit 8
+    exit -1
 else
     echo "starexec-result=MC-ERROR"
     echo "Error=unknown MC error, returned ${res_val}"
-    exit 9
+    exit -1
 fi
 

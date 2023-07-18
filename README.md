@@ -23,7 +23,7 @@ This program depends on:
 
 To compile and run, use Meson:
 ```
-$ meson build
+$ meson setup build
 $ cd build
 $ meson compile
 $ src/acacia-bonsai --help
