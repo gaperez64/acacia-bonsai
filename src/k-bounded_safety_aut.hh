@@ -259,7 +259,6 @@ class k_bounded_safety_aut_detail {
       // explore and store transitions
       auto input_output_fwd_actions = actioner.actions ();
 
-
       std::vector<std::vector<transition>> transitions; // for every state: a vector of transitions (one per input)
       std::vector<unsigned int> states_todo = { 0 };
 
@@ -304,8 +303,6 @@ class k_bounded_safety_aut_detail {
         verb_do (2, vout << "\n");
       }
 
-
-
       verb_do (2, vout << "-> states = " << states << "\n");
 
       // Print transitions
@@ -324,22 +321,24 @@ class k_bounded_safety_aut_detail {
       assert (states.size () <= (1ull << mapping_bits));
       verb_do (1, vout << states.size () << " reachable states -> " << mapping_bits << " bit(s)\n\n");
 
-        
-
       // create atomic propositions
       std::vector<bdd> state_vars, state_vars_prime;
+      bdd state_vars_cube = bddtrue;
       bdd state_vars_prime_cube = bddtrue;
       for (unsigned int i = 0; i < mapping_bits; i++) {
         unsigned int v = aut->register_ap (spot::formula::ap ("Y" + std::to_string (i)));
+        verb_do (2, vout << "Y" << i << " = " << v << std::endl);
         state_vars.push_back (bdd_ithvar (v)); // store v instead of the bdd object itself?
+        state_vars_cube &= bdd_ithvar (v);
 
         v = aut->register_ap (spot::formula::ap ("Z" + std::to_string (i)));
+        verb_do (2, vout << "Z" << i << " = " << v << std::endl);
         state_vars_prime.push_back (bdd_ithvar (v));
         state_vars_prime_cube &= bdd_ithvar (v);
       }
 
-
       bdd encoding = bddfalse;
+      bdd enc_primed_states = bddfalse;
 
       // create BDD encoding using the states & transitions
       for (unsigned int i = 0; i < states.size (); i++) {
@@ -350,7 +349,26 @@ class k_bounded_safety_aut_detail {
           trans_encoding |= ts.IO & binary_encode (ts.new_state, state_vars_prime);
         }
         encoding |= state_encoding & trans_encoding;
+        enc_primed_states |= binary_encode (i, state_vars_prime);
       }
+
+      // we can now check that the encoded transition relation is inductive:
+      // in words, for all transitions it is the case that the target is in
+      // the set of reachable states (i.e. the set of all source states)
+      assert (bdd_forall (!encoding | enc_primed_states,
+              state_vars_cube &
+              input_support &
+              output_support & state_vars_prime_cube) == bddtrue);
+      // we can also check that for all states and all inputs there is an
+      // output and a successor
+      // FIXME: This message below causes the bug from issue #33 to show up
+      // even for ltl2dba_U11.tlsf
+      verb_do (2, vout << "BDD of state-inputs without successor:\n"
+                       << bdd_to_formula (bdd_forall (!encoding, output_support & state_vars_prime_cube))
+                       << "\n\n");
+      // FIXME: The assertion below should hold
+      // assert (bdd_forall (bdd_exist (encoding, output_support & state_vars_prime_cube),
+      //                     state_vars_cube & input_support) == bddtrue);
 
       verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
 
@@ -358,10 +376,8 @@ class k_bounded_safety_aut_detail {
       std::vector<bdd> input_vector = cube_to_vector (input_support);
       std::vector<bdd> output_vector = cube_to_vector (output_support);
 
-
       // AIGER
       aiger aig (input_vector, state_vars, output_vector, aut);
-
 
       int i = 0;
       // for each output: function(current_state, input) that says whether this output is made true
