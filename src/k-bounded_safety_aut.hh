@@ -361,11 +361,14 @@ class k_bounded_safety_aut_detail {
               output_support & state_vars_prime_cube) == bddtrue);
       // we can also check that for all states and all inputs there is an
       // output and a successor
-      // FIXME: This message below causes the bug from issue #33 to show up
+      // FIXME: The two BDD operations below cause the bug from issue #33 to show up
       // even for ltl2dba_U11.tlsf
-      verb_do (2, vout << "BDD of state-inputs without successor:\n"
-                       << bdd_to_formula (bdd_forall (!encoding, output_support & state_vars_prime_cube))
-                       << "\n\n");
+      bdd op = output_support & state_vars_prime_cube;
+      bdd xd = bdd_forall (!encoding, op);
+      // verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
+      // verb_do (2, vout << "BDD of state-inputs without successor:\n"
+      //                  << bdd_to_formula (xd)
+      //                  << "\n\n");
       // FIXME: The assertion below should hold
       // assert (bdd_forall (bdd_exist (encoding, output_support & state_vars_prime_cube),
       //                     state_vars_cube & input_support) == bddtrue);
