@@ -49,9 +49,7 @@ namespace utils {
 
       template<typename T>
       std::ostream& operator<< (const T& data) {
-        std::ostream& r = static_cast<std::ostream&>(*this) << data;
-        buf.sync (); fflush (stdout);
-        return r;
+        return static_cast<std::ostream&>(*this) << data;
       }
 
       void set_prefix (const std::string& s) { buf.set_prefix (s); }
