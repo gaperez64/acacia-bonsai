@@ -393,17 +393,9 @@ class k_bounded_safety_aut_detail {
       bdd nosucc = bdd_exist (encoding, state_vars_prime_cube);
       for (const bdd& o : output_vector) {
         bdd pos = nosucc & o;
-        verb_do (2, vout << "Pos solution" << std::endl
-                         << bdd_to_formula (pos) << std::endl);
         pos = bdd_exist (pos, output_support);
-        verb_do (2, vout << "Pos after quant" << std::endl
-                         << bdd_to_formula (pos) << std::endl);
         bdd neg = nosucc & (!o);
-        verb_do (2, vout << "Neg solution" << std::endl
-                         << bdd_to_formula (neg) << std::endl);
         neg = !bdd_exist (neg, output_support);
-        verb_do (2, vout << "Neg after quant" << std::endl
-                         << bdd_to_formula (pos) << std::endl);
         bdd g_o = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
         verb_do (2, vout << "g_" << bdd_to_formula (o) << ": " << bdd_to_formula (g_o) << "\n");
         aig.add_output (i++, g_o);
@@ -412,8 +404,12 @@ class k_bounded_safety_aut_detail {
       i = 0;
       // new state as function(current_state, input)
       for (const bdd& m : state_vars_prime) {
-        bdd pos = bdd_exist (encoding & m, output_support & state_vars_prime_cube);
-        bdd neg = !bdd_exist (encoding & (!m), output_support & state_vars_prime_cube);
+        bdd pos = encoding & m;
+        pos = bdd_exist (pos, state_vars_prime_cube);
+        pos = bdd_exist (pos, output_support);
+        bdd neg = encoding & (!m);
+        neg = bdd_exist (neg, state_vars_prime_cube);
+        neg = !bdd_exist (neg, output_support);
         bdd f_l = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
         verb_do (2, vout << "f_" << bdd_to_formula (m) << ": " << bdd_to_formula (f_l) << "\n");
         aig.add_latch (i++, f_l);
