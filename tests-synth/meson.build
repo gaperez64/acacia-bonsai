@@ -2,6 +2,7 @@
 
 tester = find_program('process-synth', meson.current_source_dir() / 'process-synth.sh')
 
+test('01', tester, args: [meson.current_source_dir() / 'tlsf/01.tlsf'], is_parallel: false, suite: 'synth')
 test('full_arbiter-3', tester, args: [meson.current_source_dir() / 'tlsf/full_arbiter-3.tlsf'], is_parallel: false, suite: 'synth')
 test('round_robin_arbiter-3', tester, args: [meson.current_source_dir() / 'tlsf/round_robin_arbiter-3.tlsf'], is_parallel: false, suite: 'synth')
 test('robot_grid-2x2', tester, args: [meson.current_source_dir() / 'tlsf/robot_grid-2x2.tlsf'], is_parallel: false, suite: 'synth')

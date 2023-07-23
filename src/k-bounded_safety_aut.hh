@@ -341,13 +341,15 @@ class k_bounded_safety_aut_detail {
       bdd state_vars_cube = bddtrue;
       bdd state_vars_prime_cube = bddtrue;
       for (unsigned int i = 0; i < mapping_bits; i++) {
-        unsigned int v = aut->register_ap ("y" + std::to_string (i));
-        verb_do (2, vout << "_y" << i << " = " << v << std::endl);
+        // Note the long and complex prefix of the variables we introduce:
+        // we do not want them to clash with existing APs!
+        unsigned int v = aut->register_ap ("_ab_enc_y" + std::to_string (i));
+        verb_do (2, vout << "y" << i << " = " << v << std::endl);
         state_vars.push_back (bdd_ithvar (v)); // store v instead of the bdd object itself?
         state_vars_cube &= bdd_ithvar (v);
 
-        v = aut->register_ap ("z" + std::to_string (i));
-        verb_do (2, vout << "_z" << i << " = " << v << std::endl);
+        v = aut->register_ap ("_ab_enc_z" + std::to_string (i));
+        verb_do (2, vout << "z" << i << " = " << v << std::endl);
         state_vars_prime.push_back (bdd_ithvar (v));
         state_vars_prime_cube &= bdd_ithvar (v);
       }
