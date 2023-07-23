@@ -2,20 +2,21 @@
 
 namespace actioners {
   namespace detail {
-    template <typename State, typename Aut, typename IToIOs>
+    template <typename State, typename Aut, typename IToIOs, bool include_IOs>
     class standard {
       public: // types
 
         using action = std::vector<std::pair<unsigned, bool>>; // All these pairs are unique by construction.
-        //using action_vec = std::vector<action>;          // Vector indexed by state number
+        using action_vec_default = std::vector<action>;        // Vector indexed by state number
 
         // store action vector per state + IO
-        struct action_vec {
-          std::vector<action> actions; // index by state number q to get a vector of (p, is_q_accepting) tuples
-          bdd IO; // the IO compatible with the input that gave this
+        struct action_vec_IO {
+          action_vec_default actions; // index by state number q to get a vector of (p, is_q_accepting) tuples
+          bdd IO; // the IO compatible with the input that yielded this action vector
 
-          action_vec () = default;
-          action_vec (size_t size, bdd IO) : IO (IO) {
+          action_vec_IO () = default;
+
+          explicit action_vec_IO (size_t size) : IO (bddfalse) {
             actions.resize (size);
           }
 
@@ -35,7 +36,7 @@ namespace actioners {
             return actions[i];
           }
 
-          bool operator<(const action_vec& rhs) const {
+          bool operator<(const action_vec_IO& rhs) const {
             return (IO.id () < rhs.IO.id ()) || ((IO.id () == rhs.IO.id ()) && (actions < rhs.actions));
           }
 
@@ -43,6 +44,9 @@ namespace actioners {
             return actions.size ();
           }
         };
+
+        // use the struct with the IO if include_IOs is true, otherwise use the normal action vector type
+        using action_vec = std::conditional <include_IOs, action_vec_IO, action_vec_default>::type;
 
         using action_vecs = std::list<action_vec>;
         using input_and_actions = std::pair<bdd, action_vecs>;
@@ -73,7 +77,7 @@ namespace actioners {
         using input_and_actions_set = std::list<input_and_actions>;
       public:
         standard (const Aut& aut, const IToIOs& inputs_to_ios, int K) :
-          aut {aut}, K {(char) K},
+          aut {aut}, K {(VECTOR_ELT_T) K},
           apply_out (aut->num_states ()), mcopy (aut->num_states ()), backward_reset (aut->num_states ()) {
 
           mcopy.reserve (State::capacity_for (mcopy.size ()));
@@ -81,11 +85,11 @@ namespace actioners {
 	  // Non boolean
           std::fill_n (backward_reset.begin (),
                        vectors::bool_threshold,
-                       (char) (K - 1));
+                       (VECTOR_ELT_T) (K - 1));
           // Boolean
           std::fill_n (backward_reset.begin () + vectors::bool_threshold,
                        aut->num_states () - vectors::bool_threshold,
-                       (char) 0);
+                       (VECTOR_ELT_T) 0);
 
           std::set<input_and_actions, compare_actions> ioset;
 
@@ -121,17 +125,17 @@ namespace actioners {
         }
 
         void setK (int newK) {
-	  K = (char) newK;
+	  K = (VECTOR_ELT_T) newK;
 	  std::fill_n (backward_reset.begin (),
                        vectors::bool_threshold,
-                       (char) (K - 1));
+                       (VECTOR_ELT_T) (K - 1));
 	}
 
         auto& actions () { return input_output_fwd_actions; }
 
         State apply (const State& m, const action_vec& avec, direction dir) /* __attribute__((pure)) */ {
           if (dir == direction::forward)
-            apply_out.assign (m.size (), (char) -1);
+            apply_out.assign (m.size (), (VECTOR_ELT_T) -1);
           else
             apply_out = backward_reset;
 
@@ -141,10 +145,10 @@ namespace actioners {
             for (const auto& [q, p_final] : avec[p]) {
               if (dir == direction::forward) {
                 if (m[q] != -1)
-                  apply_out[p] = std::max (apply_out[p], std::min ((char) K, (char) (m[q] + (char) (p_final ? 1 : 0))));
+                  apply_out[p] = std::max (apply_out[p], std::min ((VECTOR_ELT_T) K, (VECTOR_ELT_T) (m[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
               } else
                 if (apply_out[q] != -1)
-                  apply_out[q] = std::min (apply_out[q], std::max ((char) -1, (char) (m[p] - (char) (p_final ? 1 : 0))));
+                  apply_out[q] = std::min (apply_out[q], std::max ((VECTOR_ELT_T) -1, (VECTOR_ELT_T) (m[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
               if (dir == direction::forward && apply_out[p] == K)
@@ -157,16 +161,18 @@ namespace actioners {
 
        private:
         const Aut& aut;
-        char K;
-        utils::vector_mm<char> apply_out, mcopy, backward_reset;
+        VECTOR_ELT_T K;
+        utils::vector_mm<VECTOR_ELT_T> apply_out, mcopy, backward_reset;
         input_and_actions_set input_output_fwd_actions;
 
         template <typename Set>
         auto compute_action_vec (const Set& transset) {
 
-            // create action_vec and include transset.second = the IO
-          action_vec ret_fwd (aut->num_states (), transset.IO);
-          //action_vec ret_fwd (aut->num_states());
+          // create action_vec and include transset.second = the IO if needed
+          action_vec ret_fwd (aut->num_states ());
+          if constexpr (include_IOs)
+            ret_fwd.IO = transset.IO;
+
           TODO ("We have two representations of the same thing here; "
                 "see if we can narrow it down to one.");
 
@@ -183,9 +189,9 @@ namespace actioners {
 
   template <typename State>
   struct standard {
-      template <typename Aut, typename IToIOs>
+      template <typename Aut, typename IToIOs, bool include_IOs = false>
       static auto make (const Aut& aut, const IToIOs& itoios, int K) {
-        return detail::standard<State, Aut, IToIOs> (aut, itoios, K);
+        return detail::standard<State, Aut, IToIOs, include_IOs> (aut, itoios, K);
       }
   };
 }

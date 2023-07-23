@@ -31,6 +31,7 @@
 #include <utils/cache.hh>
 
 #include "configuration.hh"
+#include "composition/composition_mt.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -61,14 +62,17 @@ enum {
   OPT_OUTPUT = 'o',
   OPT_CHECK = 'c',
   OPT_VERBOSE = 'v',
-  OPT_SYNTH = 'S'
+  OPT_SYNTH = 'S',
+  OPT_WORKERS = 'j'
 } ;
 
+/*
 enum unreal_x_t {
   UNREAL_X_FORMULA = 'f',
   UNREAL_X_AUTOMATON = 'a',
   UNREAL_X_BOTH
 };
+*/
 
 static const argp_option options[] = {
   /**************************************************/
@@ -86,6 +90,10 @@ static const argp_option options[] = {
   {
     "synth", OPT_SYNTH, "FNAME", 0,
     "enable synthesis, pass .aag filename, or - to print gates", 0
+  },
+    {
+    "workers", OPT_WORKERS, "VAL", 0,
+    "Number of parallel workers for composition", 0
   },
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Fine tuning:", 10 },
@@ -149,6 +157,7 @@ Exit status:\n\
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 static std::string synth_fname;
+static int workers = 0;
 
 
 enum {
@@ -164,11 +173,6 @@ static unsigned opt_K = DEFAULT_K,
   opt_Kmin = DEFAULT_KMIN, opt_Kinc = DEFAULT_KINC;
 static spot::option_map extra_options;
 
-static double trans_time = 0.0;
-static double merge_time = 0.0;
-static double boolean_states_time = 0.0;
-static double solve_time = 0.0;
-
 int               utils::verbose = 0;
 utils::voutstream utils::vout;
 
@@ -180,253 +184,74 @@ namespace {
       spot::translator &trans_;
       std::vector<std::string> input_aps_;
       std::vector<std::string> output_aps_;
+      std::vector<spot::formula> formulas;
+
+      spot::bdd_dict_ptr dict;
 
     public:
 
       ltl_processor (spot::translator &trans,
                      std::vector<std::string> input_aps_,
-                     std::vector<std::string> output_aps_)
-        : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_) {
-      }
-
-      using aut_t = decltype (trans_.run (spot::formula::ff ()));
-
-      // Changes q -> <i', o'> -> q' with saved o to
-      // q -> <i', o> -> {q' saved o}
-      aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs) {
-        auto ret = spot::make_twa_graph (aut->get_dict ());
-        ret->copy_acceptance_of (aut);
-        ret->copy_ap_of (aut);
-        ret->prop_copy (aut, spot::twa::prop_set::all());
-        ret->prop_universal (spot::trival::maybe ());
-
-        static auto cache = utils::make_cache<unsigned> (0u, 0u);
-        const auto build_aut = [&] (unsigned state, bdd saved_o,
-                                    const auto& recurse) {
-          auto cached = cache.get (state, saved_o.id ());
-          if (cached) return *cached;
-          auto ret_state = ret->new_state ();
-          cache (ret_state, state, saved_o.id ());
-          for (auto& e : aut->out (state)) {
-
-            for (auto&& one_input_bdd : minterms_of (e.cond, all_inputs)) {
-              // Pick one satisfying assignment where outputs all have values
-              ret->new_edge (ret_state,
-                             recurse (e.dst,
-                                      bdd_exist (e.cond & one_input_bdd,
-                                                all_inputs),
-                                      recurse),
-                             saved_o & one_input_bdd,
-                             e.acc);
-            }
-          }
-          return ret_state;
-        };
-        build_aut (aut->get_init_state_number (), bddtrue, build_aut);
-        return ret;
-      }
-
-      bool solve_formula (spot::formula f) {
-        spot::process_timer timer;
-        timer.start ();
-
-        spot::stopwatch sw, sw_nospot;
-#ifndef NDEBUG
-        bool want_time = true;
-#else
-        bool want_time = false;
-#endif
-
-        // To Universal co-Büchi Automaton
-        trans_.set_type(spot::postprocessor::BA);
-        // "Desired characteristics": Small and state-based acceptance (implied by BA).
-        trans_.set_pref(spot::postprocessor::Small |
-                        //spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
-                        spot::postprocessor::SBAcc);
-
-        if (want_time)
-          sw.start ();
-
-        ////////////////////////////////////////////////////////////////////////
-        // Translate the formula to a UcB (Universal co-Büchi)
-        // To do so, negate formula, and convert to a normal Büchi.
-        if (check_real)
-          f = spot::formula::Not (f);
-        else if (opt_unreal_x == UNREAL_X_FORMULA) {
-          // Add X at the outputs
-          auto rec = [this] (auto&& self, spot::formula m) {
-            if (m.is (spot::op::ap) and
-                (std::ranges::find (output_aps_,
-                                    m.ap_name ()) != output_aps_.end ()))
-              return spot::formula::X (m);
-            return m.map ([&] (spot::formula t) { return self (self, t); });
-          };
-          f = f.map ([&] (spot::formula t) { return rec (rec, t); });
-          // Swap I and O.
-          input_aps_.swap (output_aps_);
-        }
-
-        verb_do (1, vout << "Formula: " << f << std::endl);
-
-        auto aut = trans_.run (&f);
-
-        // Create BDDs for the input and output AP.
-        bdd all_inputs = bddtrue;
-        bdd all_outputs = bddtrue;
-        for (const auto& ap_i : input_aps_)
-        {
-          unsigned v = aut->register_ap (spot::formula::ap(ap_i));
-          all_inputs &= bdd_ithvar(v);
-        }
-        for (const auto& ap_i : output_aps_)
-        {
-          unsigned v = aut->register_ap (spot::formula::ap(ap_i));
-          all_outputs &= bdd_ithvar(v);
-        }
-
-        // If unreal but we haven't pushed outputs yet using X on formula
-        if (not check_real and opt_unreal_x == UNREAL_X_AUTOMATON) {
-          aut = push_outputs (aut, all_inputs, all_outputs);
-          input_aps_.swap (output_aps_);
-          std::swap (all_inputs, all_outputs);
-        }
-
-        if (want_time) {
-          trans_time = sw.stop ();
-          utils::vout << "Translating formula done in "
-                      << trans_time << " seconds\n";
-          utils::vout << "Automaton has " << aut->num_states ()
-                      << " states and " << aut->num_sets () << " colors\n";
-        }
-
-        ////////////////////////////////////////////////////////////////////////
-        // Preprocess automaton
-
-        if (want_time) {
-          sw.start();
-          sw_nospot.start ();
-        }
-
-        auto aut_preprocessors_maker = AUT_PREPROCESSOR ();
-        (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K)) ();
-
-        if (want_time) {
-          merge_time = sw.stop();
-          utils::vout << "Preprocessing done in " << merge_time
-                      << " seconds\nDPA has " << aut->num_states()
-                      << " states\n";
-        }
-        verb_do (2, spot::print_hoa(utils::vout, aut, nullptr));
-
-        ////////////////////////////////////////////////////////////////////////
-        // Boolean states
-
-        if (want_time)
-          sw.start ();
-
-        auto boolean_states_maker = BOOLEAN_STATES ();
-        vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K)) ();
-
-        if (want_time) {
-          boolean_states_time = sw.stop ();
-          utils::vout << "Computation of boolean states in " << boolean_states_time
-            /*     */ << "seconds , found " << vectors::bool_threshold << " nonboolean states.\n";
-        }
-
-        // Special case: only boolean states, so... no useful accepting state.
-        if (vectors::bool_threshold == 0) {
-          if (want_time)
-            utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
-          return true;
-        }
-
-
-        ////////////////////////////////////////////////////////////////////////
-        // Build S^K_N game, solve it.
-
-        if (want_time)
-          sw.start ();
-
-        // Compute how many boolean states will actually be put in bitsets.
-        constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
-        auto nbitsetbools = aut->num_states () - vectors::bool_threshold;
-        if (nbitsetbools > max_bools_in_bitsets) {
-          verb_do (1, vout << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
-                   /*   */ << "\tTotal # of Boolean-for-bitset states: " << nbitsetbools
-                   /*   */ << ", max: " << max_bools_in_bitsets << std::endl);
-          nbitsetbools = max_bools_in_bitsets;
-        }
-
-        constexpr auto STATIC_ARRAY_CAP_MAX =
-          vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
-
-        // Maximize usage of the nonbool implementation
-        auto nonbools = aut->num_states () - nbitsetbools;
-        size_t actual_nonbools = (nonbools <= STATIC_ARRAY_CAP_MAX) ?
-          vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (nonbools) :
-          vectors::traits<vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (nonbools);
-        if (actual_nonbools >= aut->num_states ())
-          nbitsetbools = 0;
-        else
-          nbitsetbools -= (actual_nonbools - nonbools);
-
-        vectors::bitset_threshold = aut->num_states () - nbitsetbools;
-
-        verb_do (1, vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n");
-
-#define UNREACHABLE [] (int x) { assert (false); }
-
-        bool realizable = false;
-
-        if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) { // Array & Bitsets
-          static_switch_t<STATIC_ARRAY_CAP_MAX> {} (
-            [&] (auto vnonbools) {
-              static_switch_t<STATIC_MAX_BITSETS> {} (
-                [&] (auto vbitsets) {
-                  auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
-                    downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<
-                      vectors::X_and_bitset<
-                        vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
-                        vbitsets.value>>>
-                    (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-                  realizable = skn.solve (synth_fname);
-                },
-                UNREACHABLE,
-                vectors::nbools_to_nbitsets (nbitsetbools));
-            },
-            UNREACHABLE,
-            actual_nonbools);
-        }
-        else {                                  // Vectors & Bitsets
-          static_switch_t<STATIC_MAX_BITSETS> {} (
-            [&] (auto vbitsets) {
-              auto skn = K_BOUNDED_SAFETY_AUT_IMPL<
-                downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-                  vectors::X_and_bitset<
-                    vectors::VECTOR_IMPL<VECTOR_ELT_T>,
-                    vbitsets.value>>>
-                (aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-              realizable = skn.solve (synth_fname);
-            },
-            UNREACHABLE,
-            vectors::nbools_to_nbitsets (nbitsetbools));
-        }
-
-        if (want_time) {
-          solve_time = sw.stop ();
-          utils::vout << "Safety game solved in " << solve_time << " seconds, returning " << realizable << "\n";
-          utils::vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n";
-        }
-
-        timer.stop ();
-
-        return realizable;
+                     std::vector<std::string> output_aps_,
+                     spot::bdd_dict_ptr dict_)
+        : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_), dict (dict_) {
       }
 
       int process_formula (spot::formula f, const char *, int) override {
-        return solve_formula (f);
+        formulas.push_back (f);
+        return 0;
       }
 
+      int run () override {
+        // call base class ::run which adds the formulas passed with -f to the vector
+        job_processor::run ();
+
+        if (formulas.empty ()) {
+          utils::vout << "Pass a formula!\n";
+          return 0;
+        }
+
+        // manually register inputs/outputs
+        bdd all_inputs = bddtrue;
+        bdd all_outputs = bddtrue;
+
+        for(std::string ap: input_aps) {
+          unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
+          all_inputs &= bdd_ithvar (v);
+        }
+        for(std::string ap: output_aps) {
+          unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
+          all_outputs &= bdd_ithvar (v);
+        }
+
+        composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict, trans_, all_inputs, all_outputs, input_aps_, output_aps_);
+
+        if (formulas.size () == 1) {
+          // one formula: don't make subprocesses, do everything here by calling the functions directly
+          return composer.run_one (formulas[0], synth_fname, check_real, opt_unreal_x);
+        }
+
+
+        if (!check_real) {
+          utils::vout << "Error: can't do composition for unrealizability!\n";
+          return 0;
+        }
+
+        if (opt_Kinc != 0) {
+          utils::vout << "Error: can't do composition with incrementing K values!\n";
+          return 0;
+        }
+
+        for(spot::formula& f: formulas) {
+          composer.add_formula (f);
+        }
+
+        return composer.run (workers, synth_fname);
+      }
+
+      ~ltl_processor () override {
+        dict->unregister_all_my_variables (this);
+      }
   };
 }
 
@@ -462,6 +287,11 @@ parse_opt (int key, char *arg, struct argp_state *) {
 
     case OPT_SYNTH: {
       synth_fname = arg;
+      break;
+    }
+
+    case OPT_WORKERS: {
+      workers = atoi (arg);
       break;
     }
 
@@ -567,7 +397,7 @@ int main (int argc, char **argv) {
     // not measured in our timings.
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
-    ltl_processor processor (trans, input_aps, output_aps);
+    ltl_processor processor (trans, input_aps, output_aps, dict);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();

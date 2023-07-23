@@ -281,8 +281,7 @@ namespace downsets {
 
   template <typename Vector>
   inline
-  std::ostream& operator<<(std::ostream& os,
-                           const vector_backed_bin<Vector>& f)
+  std::ostream& operator<<(std::ostream& os, const vector_backed_bin<Vector>& f)
   {
     for (auto&& el : f)
       os << el << std::endl;
