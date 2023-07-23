@@ -60,12 +60,23 @@ class k_bounded_safety_aut_detail {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
-    bool solve (const std::string& synth_fname) {
+    auto get_inputs_to_ios (bdd invariant) {
+      // call the right constructor: with an extra variant if supported, otherwise the invariant is ignored
+      // (it is assumed that other code will see that the invariant was not taken into account,
+      //  such as in composition_mt.hh which calls finish_invariant only when needed)
+      if constexpr (IOsPrecomputationMaker::supports_invariant) {
+        return (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
+      } else {
+        return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+      }
+    }
+
+    std::optional<SetOfStates> solve (SetOfStates& F, bdd invariant) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
-      verb_do (1, vout << "IOS Precomputer..." << std::endl);
-      auto inputs_to_ios = (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+      verb_do (1, vout << "IOS Precomputer with invariant " << bdd_to_formula (invariant) << "..." << std::endl);
+      auto inputs_to_ios = get_inputs_to_ios (invariant);
       // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, K);
@@ -73,15 +84,9 @@ class k_bounded_safety_aut_detail {
       auto input_output_fwd_actions = actioner.actions (); // list<pair<bdd, list<action_vec>>>
       verb_do (1, io_stats (input_output_fwd_actions));
 
-      auto safe_vector = utils::vector_mm<char> (aut->num_states (), K - 1);
-
-      for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
-        safe_vector[i] = 0;
-      SetOfStates F = SetOfStates (State (safe_vector));
-
       int loopcount = 0;
 
-      utils::vector_mm<char> init (aut->num_states ());
+      utils::vector_mm<VECTOR_ELT_T> init (aut->num_states ());
       init.assign (aut->num_states (), -1);
       init[aut->get_init_state_number ()] = 0;
 
@@ -94,21 +99,21 @@ class k_bounded_safety_aut_detail {
         auto&& input = input_picker (F);
         if (not input.has_value ()) // No more inputs, and we just tested that init was present
         {
-          if (!synth_fname.empty ()) {
-            synthesis (F, actioner, synth_fname);
-          }
-          return true;
+          //if (!synth.empty ()) synthesis (F, synth, actioner);
+          return std::make_optional<SetOfStates> (std::move (F));
         }
+
         cpre_inplace (F, *input, actioner);
+
         if (not F.contains (State (init))) {
           if (K >= Kto)
-            return false;
+            return std::nullopt;
           verb_do (1, vout << "Incrementing K from " << K << " to " << K + Kinc << std::endl);
           K += Kinc;
           actioner.setK (K);
           verb_do (1, {vout << "Adding Kinc to every vector..."; vout.flush (); });
           F = F.apply ([&] (const State& s) {
-            auto vec = utils::vector_mm<char> (s.size (), 0);
+            auto vec = utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
             for (size_t i = 0; i < vectors::bool_threshold; ++i)
               vec[i] = s[i] + Kinc;
             // Other entries are set to 0 by initialization, since they are bool.
@@ -122,7 +127,7 @@ class k_bounded_safety_aut_detail {
       } while (1);
 
       std::abort ();
-      return false;
+      return std::nullopt;
     }
 
     // Disallow copies.
@@ -148,7 +153,7 @@ class k_bounded_safety_aut_detail {
       verb_do (2, vout << "Computing cpre(F) with F = " << std::endl << F);
 
       const auto& [input, actions] = io_action.get ();
-      utils::vector_mm<char> v (aut->num_states (), -1);
+      utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
       auto vv = typename SetOfStates::value_type (v);
       SetOfStates F1i (std::move (vv));
       bool first_turn = true;
@@ -236,8 +241,13 @@ class k_bounded_safety_aut_detail {
       int new_state = -1;
     };
 
-    template <typename Actioner>
-    void synthesis(SetOfStates& F, Actioner& actioner, const std::string& synth_fname) {
+  public:
+    void synthesis(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
+      auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
+      auto maker = actioners::standard<typename SetOfStates::value_type> ();
+      // manually list the two template types so we can set the third (include IOs) to true
+      auto actioner = maker.template make <decltype (aut), decltype (inputs_to_ios), true> (aut, inputs_to_ios, Kfrom);
+
       verb_do (2, vout << "Final F:\n" << F);
       verb_do (1, vout << "F = downset of size " << F.size() << "\n");
 
@@ -248,7 +258,7 @@ class k_bounded_safety_aut_detail {
       std::vector<State> states;
 
       // initial vector = all -1, and 0 for the initial state
-      auto init_vector = utils::vector_mm<char> (aut->num_states (), -1);
+      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
       init_vector[aut->get_init_state_number ()] = 0;
       int init_index = get_dominated_index (F, State (init_vector));
       assert (init_index != -1);
@@ -263,7 +273,7 @@ class k_bounded_safety_aut_detail {
       std::vector<unsigned int> states_todo = { 0 };
 
       while (!states_todo.empty ()) {
-        // pop the last state
+        // pop the last state (depth-first search)
         unsigned int src = states_todo[states_todo.size () - 1];
         states_todo.pop_back ();
 
@@ -284,6 +294,11 @@ class k_bounded_safety_aut_detail {
 
           // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
           std::pair<bdd, State> p = get_transition (states[src], tuple.second, actioner, F);
+          // note: it may be that an IO is returned that keeps us in the safe region but requires adding a new element (index == -1)
+          // it could be that there does exist an IO that doesn't make us add a new maximal element, so we could add a new argument
+          // to get_transition to pass the current states, which would then be checked first - may make a slightly smaller circuit,
+          // at the cost of taking longer (as we no longer stop at the first IO)
+
           int index = get_dominated_index (states, p.second);
           // ^ returns index of FIRST element that dominates
 
@@ -415,6 +430,8 @@ class k_bounded_safety_aut_detail {
       verb_do (1, vout << "\n\n");
     }
 
+  private:
+
     // return IO + destination state (one IO, one destination state: deterministic)
     template <typename Actions, typename Actioner>
     std::pair<bdd, State> get_transition (const State& elem, const Actions& actions, Actioner& actioner, const SetOfStates& saferegion) const {
@@ -435,7 +452,8 @@ class k_bounded_safety_aut_detail {
         }
       }
 
-      std::abort ();
+      utils::vout << "No transition found from " << elem << " with safe region " << saferegion << "\n";
+      assert (false);
     }
 
 

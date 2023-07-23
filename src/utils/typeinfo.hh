@@ -20,7 +20,7 @@ std::string get_typename (const T& x) {
   }
 }
 
-// for debugging: to print some of thhe common STL types/containers
+// for debugging: to print some of the common STL types/containers
 
 template <class T, class U>
 std::ostream& operator<< (std::ostream& ost, const std::pair<T, U>& pair) {

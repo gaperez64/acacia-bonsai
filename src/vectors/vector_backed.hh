@@ -74,15 +74,15 @@ namespace vectors {
     private:
       const size_t k;
   };
-}
 
-template <typename T>
-inline
-std::ostream& operator<<(std::ostream& os, const vectors::vector_backed<T>& v)
-{
-  os << "{ ";
-  for (auto el : v)
-    os << el << " ";
-  os << "}";
-  return os;
+  template <typename T>
+  inline
+  std::ostream& operator<<(std::ostream& os, const vectors::vector_backed<T>& v)
+  {
+      os << "{ ";
+      for (auto el : v)
+        os << (int) el << " ";
+      os << "}";
+      return os;
+  }
 }
