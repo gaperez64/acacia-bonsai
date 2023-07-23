@@ -8,7 +8,7 @@ namespace utils {
       bool prev_ended_in_eol = true;
       std::string prefix = "";
 
-    public:
+    protected:
       virtual int sync()
       {
         int ret = std::stringbuf::sync();
