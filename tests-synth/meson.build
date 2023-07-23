@@ -1,6 +1,6 @@
 # meson test --suite synth
 
-tester = find_program('process-synth', meson.current_source_dir() / 'process-synth')
+tester = find_program('process-synth', meson.current_source_dir() / 'process-synth.sh')
 
 test('full_arbiter-3', tester, args: [meson.current_source_dir() / 'tlsf/full_arbiter-3.tlsf'], is_parallel: false, suite: 'synth')
 test('round_robin_arbiter-3', tester, args: [meson.current_source_dir() / 'tlsf/round_robin_arbiter-3.tlsf'], is_parallel: false, suite: 'synth')
@@ -21,7 +21,7 @@ test('prioritized_arbiter-3', tester, args: [meson.current_source_dir() / 'tlsf/
 
 # meson test --suite comp
 
-tester_c = find_program('process-comp', meson.current_source_dir() / 'process-comp')
+tester_c = find_program('process-comp', meson.current_source_dir() / 'process-comp.sh')
 
 test('c-full_arbiter-3', tester_c, args: [meson.current_source_dir() / 'tlsf/full_arbiter-3.tlsf'], is_parallel: false, suite: 'comp')
 test('c-round_robin_arbiter-3', tester_c, args: [meson.current_source_dir() / 'tlsf/round_robin_arbiter-3.tlsf'], is_parallel: false, suite: 'comp')
