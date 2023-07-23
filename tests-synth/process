@@ -7,15 +7,12 @@
 # - modified to call acacia-bonsai
 
 
-BASE=../tests-synth
+BASE=$(dirname "$0")
 cd $BASE
-TESTFOLDER=../build/tests-synth
+TESTFOLDER=$(mktemp -d)
 
 syntf="$TESTFOLDER/synthesis.aag"
 origf="$1"
-
-# clean up previous test's files
-rm -f $TESTFOLDER/monitor.aig $TESTFOLDER/synthesis.aag $TESTFOLDER/synthesis.aag-combined.aag $TESTFOLDER/synthesis.aag-res
 
 echo origf=\"$origf\"
 
@@ -107,3 +104,4 @@ else
     exit -1
 fi
 
+rm -r "$TESTFOLDER"

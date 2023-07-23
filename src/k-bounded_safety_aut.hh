@@ -326,13 +326,13 @@ class k_bounded_safety_aut_detail {
       bdd state_vars_cube = bddtrue;
       bdd state_vars_prime_cube = bddtrue;
       for (unsigned int i = 0; i < mapping_bits; i++) {
-        unsigned int v = aut->register_ap (spot::formula::ap ("Y" + std::to_string (i)));
-        verb_do (2, vout << "Y" << i << " = " << v << std::endl);
+        unsigned int v = aut->register_ap ("y" + std::to_string (i));
+        verb_do (2, vout << "_y" << i << " = " << v << std::endl);
         state_vars.push_back (bdd_ithvar (v)); // store v instead of the bdd object itself?
         state_vars_cube &= bdd_ithvar (v);
 
-        v = aut->register_ap (spot::formula::ap ("Z" + std::to_string (i)));
-        verb_do (2, vout << "Z" << i << " = " << v << std::endl);
+        v = aut->register_ap ("z" + std::to_string (i));
+        verb_do (2, vout << "_z" << i << " = " << v << std::endl);
         state_vars_prime.push_back (bdd_ithvar (v));
         state_vars_prime_cube &= bdd_ithvar (v);
       }
@@ -355,23 +355,12 @@ class k_bounded_safety_aut_detail {
       // we can now check that the encoded transition relation is inductive:
       // in words, for all transitions it is the case that the target is in
       // the set of reachable states (i.e. the set of all source states)
-      assert (bdd_forall (!encoding | enc_primed_states,
-              state_vars_cube &
-              input_support &
-              output_support & state_vars_prime_cube) == bddtrue);
-      // we can also check that for all states and all inputs there is an
-      // output and a successor
-      // FIXME: The two BDD operations below cause the bug from issue #33 to show up
-      // even for ltl2dba_U11.tlsf
-      bdd op = output_support & state_vars_prime_cube;
-      bdd xd = bdd_forall (!encoding, op);
-      // verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
-      // verb_do (2, vout << "BDD of state-inputs without successor:\n"
-      //                  << bdd_to_formula (xd)
-      //                  << "\n\n");
-      // FIXME: The assertion below should hold
-      // assert (bdd_forall (bdd_exist (encoding, output_support & state_vars_prime_cube),
-      //                     state_vars_cube & input_support) == bddtrue);
+      bdd indcert = !encoding | enc_primed_states;
+      indcert = bdd_forall (indcert, state_vars_cube);
+      indcert = bdd_forall (indcert, input_support);
+      indcert = bdd_forall (indcert, output_support);
+      indcert = bdd_forall (indcert, state_vars_prime_cube);
+      assert (indcert == bddtrue);
 
       verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
 
@@ -384,9 +373,20 @@ class k_bounded_safety_aut_detail {
 
       int i = 0;
       // for each output: function(current_state, input) that says whether this output is made true
+      bdd nosucc = bdd_exist (encoding, state_vars_prime_cube);
       for (const bdd& o : output_vector) {
-        bdd pos = bdd_exist (encoding & o, output_support & state_vars_prime_cube);
-        bdd neg = !bdd_exist (encoding & (!o), output_support & state_vars_prime_cube);
+        bdd pos = nosucc & o;
+        verb_do (2, vout << "Pos solution" << std::endl
+                         << bdd_to_formula (pos) << std::endl);
+        pos = bdd_exist (pos, output_support);
+        verb_do (2, vout << "Pos after quant" << std::endl
+                         << bdd_to_formula (pos) << std::endl);
+        bdd neg = nosucc & (!o);
+        verb_do (2, vout << "Neg solution" << std::endl
+                         << bdd_to_formula (neg) << std::endl);
+        neg = !bdd_exist (neg, output_support);
+        verb_do (2, vout << "Neg after quant" << std::endl
+                         << bdd_to_formula (pos) << std::endl);
         bdd g_o = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
         verb_do (2, vout << "g_" << bdd_to_formula (o) << ": " << bdd_to_formula (g_o) << "\n");
         aig.add_output (i++, g_o);
