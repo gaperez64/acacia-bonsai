@@ -344,12 +344,12 @@ class k_bounded_safety_aut_detail {
         // Note the long and complex prefix of the variables we introduce:
         // we do not want them to clash with existing APs!
         unsigned int v = aut->register_ap ("_ab_enc_y" + std::to_string (i));
-        verb_do (2, vout << "y" << i << " = " << v << std::endl);
+        verb_do (2, vout << "_ab_enc_y" << i << " = " << v << std::endl);
         state_vars.push_back (bdd_ithvar (v)); // store v instead of the bdd object itself?
         state_vars_cube &= bdd_ithvar (v);
 
         v = aut->register_ap ("_ab_enc_z" + std::to_string (i));
-        verb_do (2, vout << "z" << i << " = " << v << std::endl);
+        verb_do (2, vout << "_ab_enc_z" << i << " = " << v << std::endl);
         state_vars_prime.push_back (bdd_ithvar (v));
         state_vars_prime_cube &= bdd_ithvar (v);
       }
@@ -378,6 +378,14 @@ class k_bounded_safety_aut_detail {
       indcert = bdd_forall (indcert, output_support);
       indcert = bdd_forall (indcert, state_vars_prime_cube);
       assert (indcert == bddtrue);
+
+      // we can also check that no state-input has multiple
+      // output valuations that enable a transition
+      bdd mulsol = bdd_exist (encoding, state_vars_prime_cube);
+      mulsol = bdd_forall (mulsol, output_support);
+      mulsol = bdd_exist (mulsol, input_support);
+      mulsol = bdd_exist (mulsol, state_vars_cube);
+      assert (mulsol == bddfalse);
 
       verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
 

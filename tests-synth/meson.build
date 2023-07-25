@@ -14,8 +14,8 @@ test('generalized_buffer-2', tester, args: [meson.current_source_dir() / 'tlsf/g
 test('mux-10', tester, args: [meson.current_source_dir() / 'tlsf/mux-10.tlsf'], is_parallel: false, suite: 'synth')
 test('narylatch-6', tester, args: [meson.current_source_dir() / 'tlsf/narylatch-6.tlsf'], is_parallel: false, suite: 'synth')
 test('prioritized_arbiter-3', tester, args: [meson.current_source_dir() / 'tlsf/prioritized_arbiter-3.tlsf'], is_parallel: false, suite: 'synth')
+test('ltl2dba_U11', tester, args: [meson.current_source_dir() / 'tlsf/ltl2dba_U11.tlsf'], is_parallel: false, suite: 'synth')
 # these take too long, but are interesting cases
-#test('ltl2dba_U11', tester, args: [meson.current_source_dir() / 'tlsf/ltl2dba_U16.tlsf'], is_parallel: false, suite: 'synth')
 #test('ltl2dba_U16', tester, args: [meson.current_source_dir() / 'tlsf/ltl2dba_U16.tlsf'], is_parallel: false, suite: 'synth')
 #test('ltl2dba_U17', tester, args: [meson.current_source_dir() / 'tlsf/ltl2dba_U17.tlsf'], is_parallel: false, suite: 'synth')
 #test('ltl2dba_U18', tester, args: [meson.current_source_dir() / 'tlsf/ltl2dba_U18.tlsf'], is_parallel: false, suite: 'synth')
