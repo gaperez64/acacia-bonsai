@@ -355,6 +355,7 @@ class k_bounded_safety_aut_detail {
       }
 
       bdd encoding = bddfalse;
+      bdd enc_states = bddfalse;
       bdd enc_primed_states = bddfalse;
 
       // create BDD encoding using the states & transitions
@@ -366,8 +367,12 @@ class k_bounded_safety_aut_detail {
           trans_encoding |= ts.IO & binary_encode (ts.new_state, state_vars_prime);
         }
         encoding |= state_encoding & trans_encoding;
+        enc_states |= state_encoding;
         enc_primed_states |= binary_encode (i, state_vars_prime);
       }
+      bdd original_encoding = encoding;
+      
+      verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
 
       // we can now check that the encoded transition relation is inductive:
       // in words, for all transitions it is the case that the target is in
@@ -379,15 +384,14 @@ class k_bounded_safety_aut_detail {
       indcert = bdd_forall (indcert, state_vars_prime_cube);
       assert (indcert == bddtrue);
 
-      // we can also check that no state-input has multiple
-      // output valuations that enable a transition
-      bdd mulsol = bdd_exist (encoding, state_vars_prime_cube);
-      mulsol = bdd_forall (mulsol, output_support);
-      mulsol = bdd_exist (mulsol, input_support);
-      mulsol = bdd_exist (mulsol, state_vars_cube);
-      assert (mulsol == bddfalse);
-
-      verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
+      // we can also check that for all encoded states, and all input
+      // valuations, there exists an output transition
+      bdd wincert = !enc_states | encoding;
+      wincert = bdd_exist (wincert, state_vars_prime_cube);
+      wincert = bdd_exist (wincert, output_support);
+      wincert = bdd_forall (wincert, input_support);
+      wincert = bdd_forall (wincert, state_vars_cube);
+      assert (wincert == bddtrue);
 
       // turn cube (single bdd) into vector<bdd>
       std::vector<bdd> input_vector = cube_to_vector (input_support);
@@ -398,31 +402,40 @@ class k_bounded_safety_aut_detail {
 
       int i = 0;
       // for each output: function(current_state, input) that says whether this output is made true
-      bdd nosucc = bdd_exist (encoding, state_vars_prime_cube);
       for (const bdd& o : output_vector) {
-        bdd pos = nosucc & o;
+        bdd wosucc = bdd_exist (encoding, state_vars_prime_cube);
+        bdd pos = bdd_restrict (wosucc, o);
         pos = bdd_exist (pos, output_support);
-        bdd neg = nosucc & (!o);
+        bdd neg = bdd_restrict (wosucc, !o);
         neg = !bdd_exist (neg, output_support);
         bdd g_o = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
         verb_do (2, vout << "g_" << bdd_to_formula (o) << ": " << bdd_to_formula (g_o) << "\n");
         aig.add_output (i++, g_o);
+        // as a last step, we need to update encoding to fix the function of
+        // the output we have just chosen
+        encoding &= ((!g_o) | o) & (g_o | (!o));
+        assert (encoding != bddfalse);
       }
 
       i = 0;
       // new state as function(current_state, input)
       for (const bdd& m : state_vars_prime) {
-        bdd pos = encoding & m;
+        bdd pos = bdd_restrict (encoding, m);
         pos = bdd_exist (pos, state_vars_prime_cube);
         pos = bdd_exist (pos, output_support);
-        bdd neg = encoding & (!m);
+        bdd neg = bdd_restrict (encoding, !m);
         neg = bdd_exist (neg, state_vars_prime_cube);
         neg = !bdd_exist (neg, output_support);
         bdd f_l = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
         verb_do (2, vout << "f_" << bdd_to_formula (m) << ": " << bdd_to_formula (f_l) << "\n");
         aig.add_latch (i++, f_l);
+        encoding &= ((!f_l) | m) & (f_l | (!m));
+        assert (encoding != bddfalse);
       }
 
+      // here, we can check whether we refined the encoding instead of adding
+      // new things - which would be erroneous
+      assert (encoding == (encoding & original_encoding));
 
       if (synth_fname != "-") {
         std::ofstream f (synth_fname);
