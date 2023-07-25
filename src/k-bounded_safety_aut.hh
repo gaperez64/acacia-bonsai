@@ -393,6 +393,16 @@ class k_bounded_safety_aut_detail {
       wincert = bdd_forall (wincert, state_vars_cube);
       assert (wincert == bddtrue);
 
+      // we could also check that no state-input has multiple
+      // output valuations that enable a transition
+      /*bdd mulsol = bdd_exist (encoding, state_vars_prime_cube);
+      mulsol = bdd_forall (mulsol, output_support);
+      mulsol = bdd_exist (mulsol, input_support);
+      mulsol = bdd_exist (mulsol, state_vars_cube);
+      verb_do (3, vout << "Has multiple possible output vals? "
+                       << bdd_to_formula (mulsol)
+                       << std::endl);*/
+
       // turn cube (single bdd) into vector<bdd>
       std::vector<bdd> input_vector = cube_to_vector (input_support);
       std::vector<bdd> output_vector = cube_to_vector (output_support);
@@ -434,8 +444,23 @@ class k_bounded_safety_aut_detail {
       }
 
       // here, we can check whether we refined the encoding instead of adding
-      // new things - which would be erroneous
+      // new things - which would be erroneous; and then redo the previous
+      // sanity checks
       assert (encoding == (encoding & original_encoding));
+
+      indcert = !encoding | enc_primed_states;
+      indcert = bdd_forall (indcert, state_vars_cube);
+      indcert = bdd_forall (indcert, input_support);
+      indcert = bdd_forall (indcert, output_support);
+      indcert = bdd_forall (indcert, state_vars_prime_cube);
+      assert (indcert == bddtrue);
+
+      wincert = !enc_states | encoding;
+      wincert = bdd_exist (wincert, state_vars_prime_cube);
+      wincert = bdd_exist (wincert, output_support);
+      wincert = bdd_forall (wincert, input_support);
+      wincert = bdd_forall (wincert, state_vars_cube);
+      assert (wincert == bddtrue);
 
       if (synth_fname != "-") {
         std::ofstream f (synth_fname);

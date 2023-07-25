@@ -29,8 +29,8 @@ class aiger {
       output_names.push_back (ss.str ());
     }
 
-    //utils::vout << "I: " << input_names << "\n";
-    //utils::vout << "O: " << output_names << "\n";
+    verb_do (2, vout << "I: " << input_names << "\n");
+    verb_do (2, vout << "O: " << output_names << "\n");
   }
 
   // pass formula to calculate i-th latch (primed state)
@@ -143,12 +143,13 @@ class aiger {
   // pass a bdd_var of an input or a state AP, gives the right gate number
   int bddvar_to_gate (int var) {
     int o = -2;
+
     // if var is an input: refer to input_index
-    // if var is a state: refer to latch_index
     if (std::find (inputs.begin (), inputs.end (), var) != inputs.end ()) {
       o = input_index (std::find (inputs.begin (), inputs.end (), var) - inputs.begin ());
     }
 
+    // if var is a state: refer to latch_index
     if (std::find (latches.begin (), latches.end (), var) != latches.end ()) {
       o = latch_index (std::find (latches.begin (), latches.end (), var) - latches.begin ());
     }
@@ -168,6 +169,11 @@ class aiger {
     if (cache.find (f.id ()) != cache.end ()) {
       return cache[f.id ()];
     }
+    bdd nf = !f;
+    if (cache.find (nf.id ()) != cache.end ()) {
+      return cache[nf.id ()] ^ 1;
+    }
+    verb_do (3, vout << "Cache miss on BDD id " << f.id () << std::endl);
 
     // get gate with the value we're looking at + look at high/low branch
     int gate = bddvar_to_gate (bdd_var (f)); // will be an input or a latch -> a value that is already known
@@ -181,8 +187,10 @@ class aiger {
     int high_g = add_gate (bdd2aig (high), gate); // high & var
 
 
-    // we have low_g = (low & !var) and high_g = (high & var), now we want to AND their negations, and then invert this again to get their OR
+    // we have low_g = (low & !var) and high_g = (high & var),
+    // now we want to AND their negations, and then invert this again to get their OR
     int output = add_gate (low_g ^ 1, high_g ^ 1) ^ 1; // !(!(low & !var) & !(high & var))
+
     // store in the cache for when we possibly encounter the same BDD in the future
     cache[f.id ()] = output;
     return output;
