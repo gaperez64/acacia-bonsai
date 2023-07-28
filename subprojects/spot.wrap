@@ -1,6 +1,6 @@
 [wrap-git]
 url = https://gitlab.lrde.epita.fr/spot/spot.git
-revision = 20bcc216a09dafddf930e58a0bde385f0625311a
+revision = 7358a264923065a33b2b0a561936c9e088a8df84
 patch_directory=spot
 depth = 1
 

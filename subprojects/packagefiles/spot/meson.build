@@ -16,7 +16,8 @@ p = mod.add_project('configure',
                        '--disable-python',
                        '--disable-static',
                        '--disable-python',
-                       '--disable-doxygen'
+                       '--disable-doxygen',
+                       '--enable-max-accsets=64'
                       ],
 )
 
