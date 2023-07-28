@@ -2,10 +2,10 @@ project('spot', 'cpp',
   meson_version : '>=0.57.0',
 )
 
-mod = import('unstable_external_project')
+mod = import('unstable-external_project')
 fs = import ('fs')
 if not fs.exists ('configure')
-  run_command ('autoreconf', '-fvi')
+  run_command ('autoreconf', '-fvi', check: true)
 endif
 
 p = mod.add_project('configure',
