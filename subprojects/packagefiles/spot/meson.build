@@ -10,7 +10,8 @@ endif
 
 p = mod.add_project('configure',
   env : [ 'CXXFLAGS=' ],
-  configure_options : ['--disable-devel',
+  configure_options : [
+                       '--disable-devel',
                        '--disable-debug',
                        '--enable-optimizations',
                        '--disable-python',

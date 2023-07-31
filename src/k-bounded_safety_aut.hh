@@ -401,10 +401,10 @@ class k_bounded_safety_aut_detail {
       // in words, for all transitions it is the case that the target is in
       // the set of reachable states (i.e. the set of all source states)
       bdd indcert = !encoding | enc_primed_states;
-      indcert = bdd_forall (indcert, state_vars_cube);
-      indcert = bdd_forall (indcert, input_support);
-      indcert = bdd_forall (indcert, output_support);
-      indcert = bdd_forall (indcert, state_vars_prime_cube);
+      indcert = !bdd_exist (!indcert, state_vars_cube);
+      indcert = !bdd_exist (!indcert, input_support);
+      indcert = !bdd_exist (!indcert, output_support);
+      indcert = !bdd_exist (!indcert, state_vars_prime_cube);
       assert (indcert == bddtrue);
 
       // we can also check that for all encoded states, and all input
@@ -412,16 +412,20 @@ class k_bounded_safety_aut_detail {
       bdd wincert = !enc_states | encoding;
       wincert = bdd_exist (wincert, state_vars_prime_cube);
       wincert = bdd_exist (wincert, output_support);
-      wincert = bdd_forall (wincert, input_support);
-      wincert = bdd_forall (wincert, state_vars_cube);
+      wincert = !bdd_exist (!wincert, input_support);
+      wincert = !bdd_exist (!wincert, state_vars_cube);
       assert (wincert == bddtrue);
 
       // we could also check that no state-input has multiple
       // output valuations that enable a transition
       bdd mulsol = bdd_exist (encoding, state_vars_prime_cube);
-      mulsol = bdd_forall (mulsol, output_support);
-      mulsol = bdd_exist (mulsol, input_support);
-      mulsol = bdd_exist (mulsol, state_vars_cube);
+      verb_do (2, vout << "Encoding with no succ "
+                       << bdd_to_formula (mulsol)
+                       << std::endl);
+      verb_do (2, vout << "Output support "
+                       << bdd_to_formula (output_support)
+                       << std::endl);
+      mulsol = !bdd_exist (!mulsol, output_support);
       verb_do (2, vout << "Has multiple possible output vals? "
                        << bdd_to_formula (mulsol)
                        << std::endl);
@@ -436,8 +440,8 @@ class k_bounded_safety_aut_detail {
 
       int i = 0;
       // for each output: function(current_state, input) that says whether this output is made true
+      bdd wosucc = bdd_exist (encoding, state_vars_prime_cube);
       for (const bdd& o : output_vector) {
-        bdd wosucc = bdd_exist (encoding, state_vars_prime_cube);
         bdd pos = bdd_restrict (wosucc, o);
         pos = bdd_exist (pos, output_support);
         bdd neg = bdd_restrict (wosucc, !o);
@@ -447,9 +451,10 @@ class k_bounded_safety_aut_detail {
         aig.add_output (i++, g_o);
         // as a last step, we need to update encoding to fix the function of
         // the output we have just chosen
-        encoding &= ((!g_o) | o) & (g_o | (!o));
-        assert (encoding != bddfalse);
+        wosucc &= ((!g_o) | o) & (g_o | (!o));
+        assert (wosucc != bddfalse);
       }
+      encoding &= wosucc;
 
       verb_do (2, vout << "BDD after fixing outs:\n" << bdd_to_formula (encoding) << "\n\n");
 
@@ -460,14 +465,14 @@ class k_bounded_safety_aut_detail {
       assert (encoding == (encoding & original_encoding));
 
       indcert = !encoding | enc_primed_states;
-      indcert = bdd_forall (indcert, state_vars_cube);
-      indcert = bdd_forall (indcert, input_support);
-      indcert = bdd_forall (indcert, output_support);
-      indcert = bdd_forall (indcert, state_vars_prime_cube);
+      indcert = !bdd_exist (!indcert, state_vars_cube);
+      indcert = !bdd_exist (!indcert, input_support);
+      indcert = !bdd_exist (!indcert, output_support);
+      indcert = !bdd_exist (!indcert, state_vars_prime_cube);
       assert (indcert == bddtrue);
 
       mulsol = bdd_exist (encoding, state_vars_prime_cube);
-      mulsol = bdd_forall (mulsol, output_support);
+      mulsol = !bdd_exist (!mulsol, output_support);
       mulsol = bdd_exist (mulsol, input_support);
       mulsol = bdd_exist (mulsol, state_vars_cube);
       assert (mulsol == bddfalse);
@@ -475,8 +480,8 @@ class k_bounded_safety_aut_detail {
       wincert = !enc_states | encoding;
       wincert = bdd_exist (wincert, state_vars_prime_cube);
       wincert = bdd_exist (wincert, output_support);
-      wincert = bdd_forall (wincert, input_support);
-      wincert = bdd_forall (wincert, state_vars_cube);
+      wincert = !bdd_exist (!wincert, input_support);
+      wincert = !bdd_exist (!wincert, state_vars_cube);
       assert (wincert == bddtrue);
 #endif
 
@@ -494,21 +499,23 @@ class k_bounded_safety_aut_detail {
         outless &= ((!f_l) | m) & (f_l | (!m));
         assert (outless != bddfalse);
       }
+      encoding &= outless;
+      
+      verb_do (2, vout << "BDD after fixing latches:\n" << bdd_to_formula (encoding) << "\n\n");
 
 #ifndef NDEBUG
       // same checks here again
-      encoding &= outless;
       assert (encoding == (encoding & original_encoding));
 
       indcert = !encoding | enc_primed_states;
-      indcert = bdd_forall (indcert, state_vars_cube);
-      indcert = bdd_forall (indcert, input_support);
-      indcert = bdd_forall (indcert, output_support);
-      indcert = bdd_forall (indcert, state_vars_prime_cube);
+      indcert = !bdd_exist (!indcert, state_vars_cube);
+      indcert = !bdd_exist (!indcert, input_support);
+      indcert = !bdd_exist (!indcert, output_support);
+      indcert = !bdd_exist (!indcert, state_vars_prime_cube);
       assert (indcert == bddtrue);
 
       mulsol = bdd_exist (encoding, state_vars_prime_cube);
-      mulsol = bdd_forall (mulsol, output_support);
+      mulsol = !bdd_exist (!mulsol, output_support);
       mulsol = bdd_exist (mulsol, input_support);
       mulsol = bdd_exist (mulsol, state_vars_cube);
       assert (mulsol == bddfalse);
@@ -516,8 +523,8 @@ class k_bounded_safety_aut_detail {
       wincert = !enc_states | encoding;
       wincert = bdd_exist (wincert, state_vars_prime_cube);
       wincert = bdd_exist (wincert, output_support);
-      wincert = bdd_forall (wincert, input_support);
-      wincert = bdd_forall (wincert, state_vars_cube);
+      wincert = !bdd_exist (!wincert, input_support);
+      wincert = !bdd_exist (!wincert, state_vars_cube);
       assert (wincert == bddtrue);
 
       bdd_stats (&s);
