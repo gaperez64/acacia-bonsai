@@ -169,10 +169,12 @@ class aiger {
     // reuse gate if we encountered this BDD before
     // doesn't actually make size smaller because no duplicate gates are allowed, but should make it faster for large BDDs
     if (cache.find (f.id ()) != cache.end ()) {
+      assert (f == refcache[f.id ()]);
       return cache[f.id ()];
     }
     bdd nf = !f;
     if (cache.find (nf.id ()) != cache.end ()) {
+      assert (nf == refcache[nf.id ()]);
       return cache[nf.id ()] ^ 1;
     }
     verb_do (3, vout << "Cache miss on BDD id " << f.id () << std::endl);

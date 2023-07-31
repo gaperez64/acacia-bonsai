@@ -10,8 +10,7 @@ endif
 
 p = mod.add_project('configure',
   env : [ 'CXXFLAGS=' ],
-  configure_options : [
-                       '--disable-devel',
+  configure_options : ['--disable-devel',
                        '--disable-debug',
                        '--enable-optimizations',
                        '--disable-python',
@@ -24,3 +23,4 @@ p = mod.add_project('configure',
 
 bddx_dep = p.dependency ('bddx')
 spot_dep = p.dependency ('spot')
+meson.override_dependency ('libspot', spot_dep)
