@@ -21,5 +21,5 @@ p = mod.add_project('configure',
                       ],
 )
 
-bddx_dep = p.dependency ('libbddx')
-spot_dep = p.dependency ('libspot')
+bddx_dep = p.dependency ('bddx')
+spot_dep = p.dependency ('spot')
