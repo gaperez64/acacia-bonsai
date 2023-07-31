@@ -94,6 +94,8 @@ class aiger {
   std::vector<int> latches_id, outputs; // index i gives gate number for next step's state of the i-th latch, or the i-th output
 
   std::map<int, int> cache; // map bdd.id() to a gate number
+  std::map<int, bdd> refcache; // dirty trick to keep ref counts on all bdds
+                               // we are using
   std::map<std::pair<int, int>, int> gates; // map i1 x i2 to an output so we don't make gates with the same inputs
 
   std::vector<std::string> input_names, output_names; // names of the atomic propositions
@@ -193,6 +195,8 @@ class aiger {
 
     // store in the cache for when we possibly encounter the same BDD in the future
     cache[f.id ()] = output;
+    refcache[f.id ()] = f;
+
     return output;
   }
 };

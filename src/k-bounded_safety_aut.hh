@@ -419,16 +419,10 @@ class k_bounded_safety_aut_detail {
       // we could also check that no state-input has multiple
       // output valuations that enable a transition
       bdd mulsol = bdd_exist (encoding, state_vars_prime_cube);
-      verb_do (2, vout << "Encoding with no succ "
-                       << bdd_to_formula (mulsol)
-                       << std::endl);
-      verb_do (2, vout << "Output support "
-                       << bdd_to_formula (output_support)
-                       << std::endl);
       mulsol = !bdd_exist (!mulsol, output_support);
-      verb_do (2, vout << "Has multiple possible output vals? "
-                       << bdd_to_formula (mulsol)
-                       << std::endl);
+      mulsol = bdd_exist (mulsol, input_support);
+      mulsol = bdd_exist (mulsol, state_vars_cube);
+      assert (mulsol == bddfalse);
 #endif
 
       // turn cube (single bdd) into vector<bdd>
@@ -483,6 +477,18 @@ class k_bounded_safety_aut_detail {
       wincert = !bdd_exist (!wincert, input_support);
       wincert = !bdd_exist (!wincert, state_vars_cube);
       assert (wincert == bddtrue);
+
+      bdd_stats (&s);
+      std::cout << "a-bonsai: BDD stats: produced=" << s.produced
+                << " nodenum=" << s.nodenum
+                << " freenodes=" << s.freenodes
+                << " (" << (s.freenodes * 100 / s.nodenum)
+                << "%) minfreenodes=" << s.minfreenodes
+                << "% varnum=" << s.varnum
+                << " cachesize=" << s.cachesize
+                << " hashsize=" << s.hashsize
+                << " gbcnum=" << s.gbcnum
+                << '\n';
 #endif
 
       i = 0;
