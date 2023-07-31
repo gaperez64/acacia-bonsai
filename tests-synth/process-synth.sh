@@ -13,11 +13,10 @@ TESTFOLDER=$(mktemp -d)
 
 syntf="$TESTFOLDER/synthesis.aag"
 origf="$1"
+abpath="$2"
 
 # clean up previous test's files
 rm -f $TESTFOLDER/monitor.aig $TESTFOLDER/synthesis.aag $TESTFOLDER/synthesis.aag-combined.aag $TESTFOLDER/synthesis.aag-res
-
-echo origf=\"$origf\"
 
 # convert TLSF to LTL formula + inputs/outputs
 FORMULA=$(./meyerphi-syfco "$origf" -f ltl -m fully) # NOT ltlxba!!
@@ -35,9 +34,9 @@ OUTPS=$(./meyerphi-syfco "$origf" -outs)
 INPS=$(sed 's/ //g' <<< "$INPS")
 OUTPS=$(sed 's/ //g' <<< "$OUTPS")
 
-echo "../build/src/acacia-bonsai -f \"$FORMULA\" --ins \"$INPS\" --outs \"$OUTPS\" -S \"$syntf\" --check=real"
+echo "$abpath/src/acacia-bonsai -f \"$FORMULA\" --ins \"$INPS\" --outs \"$OUTPS\" -S \"$syntf\" --check=real"
 # call acacia-bonsai to do synthesis
-eval "../build/src/acacia-bonsai -f \"$FORMULA\" --ins \"$INPS\" --outs \"$OUTPS\" -S \"$syntf\" --check=real"
+eval "$abpath/src/acacia-bonsai -f \"$FORMULA\" --ins \"$INPS\" --outs \"$OUTPS\" -S \"$syntf\" --check=real"
 #ltlsynt -f "$FORMULA" --ins="$INPS" --outs="$OUTPS" --aiger | sed '1d' > "$syntf"
 #ltlsynt --tlsf="$origf" --aiger | sed '1d' > "$syntf"
 

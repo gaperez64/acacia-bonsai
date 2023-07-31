@@ -26,7 +26,9 @@ testset = ['01',
 
 foreach t : testset
   filename = meson.source_root() / 'tests/ltl/realizable' / t + '.tlsf'
-  test(t, tester, args: [filename], is_parallel: false, suite: 'synth')
+  test(t, tester, args: [filename, 
+                         meson.project_build_root()],
+       is_parallel: false, suite: 'synth')
 endforeach
 
 # meson test --suite comp
@@ -35,5 +37,7 @@ tester_c = find_program('process-comp', meson.current_source_dir() / 'process-co
 
 foreach t : testset
   filename = meson.source_root() / 'tests/ltl/realizable' / t + '.tlsf'
-  test('c-' + t, tester, args: [filename], is_parallel: false, suite: 'comp')
+  test('c-' + t, tester, args: [filename,
+                                meson.project_build_root()],
+       is_parallel: false, suite: 'comp')
 endforeach

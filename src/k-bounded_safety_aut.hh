@@ -338,15 +338,16 @@ class k_bounded_safety_aut_detail {
 
       verb_do (2, vout << "-> states = " << states << "\n");
 
+#ifndef NDEBUG
       // Print transitions
       for (unsigned int i = 0; i < states.size (); i++) {
-        verb_do (2, vout << "State " << i << ":\n");
+        verb_do (3, vout << "State " << i << ":\n");
         for (const auto& t : transitions[i]) {
-          verb_do (2, vout << bdd_to_formula (t.IO) << " -> state " << t.new_state << "\n");
+          verb_do (3, vout << bdd_to_formula (t.IO) << " -> state " << t.new_state << "\n");
         }
       }
-
-      verb_do (2, vout << "\n");
+      verb_do (3, vout << "\n");
+#endif
 
       // create APs to encode the mapping of the automaton states to integers
       // number of variables to encode the state
@@ -356,20 +357,6 @@ class k_bounded_safety_aut_detail {
 
       // extending the number of variables in Buddy by the required amount
       bdd_extvarnum (2 * mapping_bits);
-#ifndef NDEBUG
-      bddStat s;
-      bdd_stats (&s);
-      std::cout << "a-bonsai: BDD stats: produced=" << s.produced
-                << " nodenum=" << s.nodenum
-                << " freenodes=" << s.freenodes
-                << " (" << (s.freenodes * 100 / s.nodenum)
-                << "%) minfreenodes=" << s.minfreenodes
-                << "% varnum=" << s.varnum
-                << " cachesize=" << s.cachesize
-                << " hashsize=" << s.hashsize
-                << " gbcnum=" << s.gbcnum
-                << '\n';
-#endif
 
       // create atomic propositions
       std::vector<bdd> state_vars, state_vars_prime;
@@ -409,6 +396,7 @@ class k_bounded_safety_aut_detail {
       
       verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
 
+#ifndef NDEBUG
       // we can now check that the encoded transition relation is inductive:
       // in words, for all transitions it is the case that the target is in
       // the set of reachable states (i.e. the set of all source states)
@@ -437,8 +425,7 @@ class k_bounded_safety_aut_detail {
       verb_do (2, vout << "Has multiple possible output vals? "
                        << bdd_to_formula (mulsol)
                        << std::endl);
-
-      verb_do (2, vout << "BDD after mods:\n" << bdd_to_formula (encoding) << "\n\n");
+#endif
 
       // turn cube (single bdd) into vector<bdd>
       std::vector<bdd> input_vector = cube_to_vector (input_support);
@@ -464,24 +451,11 @@ class k_bounded_safety_aut_detail {
         assert (encoding != bddfalse);
       }
 
-      i = 0;
-      // new state as function(current_state, input)
-      for (const bdd& m : state_vars_prime) {
-        bdd pos = bdd_restrict (encoding, m);
-        pos = bdd_exist (pos, state_vars_prime_cube);
-        pos = bdd_exist (pos, output_support);
-        bdd neg = bdd_restrict (encoding, !m);
-        neg = bdd_exist (neg, state_vars_prime_cube);
-        neg = !bdd_exist (neg, output_support);
-        bdd f_l = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
-        verb_do (2, vout << "f_" << bdd_to_formula (m) << ": " << bdd_to_formula (f_l) << "\n");
-        aig.add_latch (i++, f_l);
-        encoding &= ((!f_l) | m) & (f_l | (!m));
-        assert (encoding != bddfalse);
-      }
+      verb_do (2, vout << "BDD after fixing outs:\n" << bdd_to_formula (encoding) << "\n\n");
 
+#ifndef NDEBUG
       // here, we can check whether we refined the encoding instead of adding
-      // new things - which would be erroneous; and then redo the previous
+      // new things - which would be erroneous; and then some
       // sanity checks
       assert (encoding == (encoding & original_encoding));
 
@@ -492,12 +466,73 @@ class k_bounded_safety_aut_detail {
       indcert = bdd_forall (indcert, state_vars_prime_cube);
       assert (indcert == bddtrue);
 
+      mulsol = bdd_exist (encoding, state_vars_prime_cube);
+      mulsol = bdd_forall (mulsol, output_support);
+      mulsol = bdd_exist (mulsol, input_support);
+      mulsol = bdd_exist (mulsol, state_vars_cube);
+      assert (mulsol == bddfalse);
+
       wincert = !enc_states | encoding;
       wincert = bdd_exist (wincert, state_vars_prime_cube);
       wincert = bdd_exist (wincert, output_support);
       wincert = bdd_forall (wincert, input_support);
       wincert = bdd_forall (wincert, state_vars_cube);
-      // assert (wincert == bddtrue);  // FIXME: this should pass
+      assert (wincert == bddtrue);
+#endif
+
+      i = 0;
+      // new state as function(current_state, input)
+      bdd outless = bdd_exist (encoding, output_support);
+      for (const bdd& m : state_vars_prime) {
+        bdd pos = bdd_restrict (outless, m);
+        pos = bdd_exist (pos, state_vars_prime_cube);
+        bdd neg = bdd_restrict (outless, !m);
+        neg = !bdd_exist (neg, state_vars_prime_cube);
+        bdd f_l = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
+        verb_do (2, vout << "f_" << bdd_to_formula (m) << ": " << bdd_to_formula (f_l) << "\n");
+        aig.add_latch (i++, f_l);
+        outless &= ((!f_l) | m) & (f_l | (!m));
+        assert (outless != bddfalse);
+      }
+
+#ifndef NDEBUG
+      // same checks here again
+      encoding &= outless;
+      assert (encoding == (encoding & original_encoding));
+
+      indcert = !encoding | enc_primed_states;
+      indcert = bdd_forall (indcert, state_vars_cube);
+      indcert = bdd_forall (indcert, input_support);
+      indcert = bdd_forall (indcert, output_support);
+      indcert = bdd_forall (indcert, state_vars_prime_cube);
+      assert (indcert == bddtrue);
+
+      mulsol = bdd_exist (encoding, state_vars_prime_cube);
+      mulsol = bdd_forall (mulsol, output_support);
+      mulsol = bdd_exist (mulsol, input_support);
+      mulsol = bdd_exist (mulsol, state_vars_cube);
+      assert (mulsol == bddfalse);
+
+      wincert = !enc_states | encoding;
+      wincert = bdd_exist (wincert, state_vars_prime_cube);
+      wincert = bdd_exist (wincert, output_support);
+      wincert = bdd_forall (wincert, input_support);
+      wincert = bdd_forall (wincert, state_vars_cube);
+      assert (wincert == bddtrue);
+
+      bdd_stats (&s);
+      std::cout << "a-bonsai: BDD stats: produced=" << s.produced
+                << " nodenum=" << s.nodenum
+                << " freenodes=" << s.freenodes
+                << " (" << (s.freenodes * 100 / s.nodenum)
+                << "%) minfreenodes=" << s.minfreenodes
+                << "% varnum=" << s.varnum
+                << " cachesize=" << s.cachesize
+                << " hashsize=" << s.hashsize
+                << " gbcnum=" << s.gbcnum
+                << '\n';
+#endif
+
       
       if (synth_fname != "-") {
         std::ofstream f (synth_fname);
