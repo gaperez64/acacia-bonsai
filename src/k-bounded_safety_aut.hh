@@ -251,6 +251,24 @@ class k_bounded_safety_aut_detail {
       verb_do (2, vout << "Final F:\n" << F);
       verb_do (1, vout << "F = downset of size " << F.size() << "\n");
 
+#ifndef NDEBUG
+      bdd_printorder ();
+      bdd_reorder_verbose (5);
+      // specialized spot version of bdd_printstats ()
+      bddStat s;
+      bdd_stats (&s);
+      std::cout << "a-bonsai: BDD stats: produced=" << s.produced
+                << " nodenum=" << s.nodenum
+                << " freenodes=" << s.freenodes
+                << " (" << (s.freenodes * 100 / s.nodenum)
+                << "%) minfreenodes=" << s.minfreenodes
+                << "% varnum=" << s.varnum
+                << " cachesize=" << s.cachesize
+                << " hashsize=" << s.hashsize
+                << " gbcnum=" << s.gbcnum
+                << '\n';
+#endif
+
 
       // Latches in the AIGER file are initialized to zero, so it would be nice if index 0 is the initial state
       // -> create new std::vector of dominating elements, start with only an initial one, and then add
@@ -336,6 +354,23 @@ class k_bounded_safety_aut_detail {
       assert (states.size () <= (1ull << mapping_bits));
       verb_do (1, vout << states.size () << " reachable states -> " << mapping_bits << " bit(s)\n\n");
 
+      // extending the number of variables in Buddy by the required amount
+      bdd_extvarnum (2 * mapping_bits);
+#ifndef NDEBUG
+      bddStat s;
+      bdd_stats (&s);
+      std::cout << "a-bonsai: BDD stats: produced=" << s.produced
+                << " nodenum=" << s.nodenum
+                << " freenodes=" << s.freenodes
+                << " (" << (s.freenodes * 100 / s.nodenum)
+                << "%) minfreenodes=" << s.minfreenodes
+                << "% varnum=" << s.varnum
+                << " cachesize=" << s.cachesize
+                << " hashsize=" << s.hashsize
+                << " gbcnum=" << s.gbcnum
+                << '\n';
+#endif
+
       // create atomic propositions
       std::vector<bdd> state_vars, state_vars_prime;
       bdd state_vars_cube = bddtrue;
@@ -395,13 +430,13 @@ class k_bounded_safety_aut_detail {
 
       // we could also check that no state-input has multiple
       // output valuations that enable a transition
-      /*bdd mulsol = bdd_exist (encoding, state_vars_prime_cube);
+      bdd mulsol = bdd_exist (encoding, state_vars_prime_cube);
       mulsol = bdd_forall (mulsol, output_support);
       mulsol = bdd_exist (mulsol, input_support);
       mulsol = bdd_exist (mulsol, state_vars_cube);
       verb_do (2, vout << "Has multiple possible output vals? "
                        << bdd_to_formula (mulsol)
-                       << std::endl);*/
+                       << std::endl);
 
       verb_do (2, vout << "BDD after mods:\n" << bdd_to_formula (encoding) << "\n\n");
 
@@ -463,7 +498,7 @@ class k_bounded_safety_aut_detail {
       wincert = bdd_forall (wincert, input_support);
       wincert = bdd_forall (wincert, state_vars_cube);
       // assert (wincert == bddtrue);  // FIXME: this should pass
-
+      
       if (synth_fname != "-") {
         std::ofstream f (synth_fname);
         aig.output (f, false);

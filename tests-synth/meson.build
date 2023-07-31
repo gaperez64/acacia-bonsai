@@ -18,6 +18,7 @@ testset = ['01',
            'narylatch-6',
            'prioritized_arbiter-3',
            'ltl2dba_U11',
+           '07',
            # 'ltl2dba_U16',  # these take too long
            # 'ltl2dba_U17',
            # 'ltl2dba_U18'

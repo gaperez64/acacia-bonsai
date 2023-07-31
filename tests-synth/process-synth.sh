@@ -24,7 +24,6 @@ FORMULA=$(./meyerphi-syfco "$origf" -f ltl -m fully) # NOT ltlxba!!
 
 # return if the file is not found -> error
 RET=$?
-echo ret: $RET
 if [ $RET -ne 0 ]; then
     exit -1
 fi
