@@ -86,13 +86,13 @@ namespace utils {
         // Use a selection algorithm to get the median, technically we get the
         // floor of the median as the median of an even-length list could be a
         // rational if one chooses the arithmetic mean
-        size_t median_idx = points.size () / 2;
-        std::nth_element (points.begin (), median_idx, points.end (), 
+        auto mit = points.begin () + points.size () / 2;
+        std::nth_element (points.begin (), mit, points.end (), 
                           [this, &axis] (size_t i1, size_t i2) {
                             return this->vector_set[i1][axis] <
-                                   this->vector_set[i2][axis]
+                                   this->vector_set[i2][axis];
                           });
-        median_idx = points[median_idx];
+        size_t median_idx = points[points.size () / 2];
         int loc = this->vector_set[median_idx][axis];
         // small hack: if the median is the same as the max then we choose a
         // location (splitting value) that is one less, this ensures a
