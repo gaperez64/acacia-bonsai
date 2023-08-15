@@ -72,27 +72,24 @@ namespace utils {
 
       std::shared_ptr<kdtree_node>
       recursive_build (std::vector<size_t>& points, size_t axis) {
-        assert (points.size () > 0);
+        const size_t length = points.size ();
+        assert (length > 0);
+        assert (axis < this->dim && axis >= 0);
 
         // if the list of elements is now a singleton, we make a leaf
-        const size_t length = points.size ();
         if (length == 1)
           return std::make_shared<kdtree_node> (points[0]);
-
-        // otherwise we need to create an inner node based on the dimension
-        // "axis" and the median w.r.t. the axis
-        assert (axis < this->dim && axis >= 0);
 
         // Use a selection algorithm to get the median, technically we get the
         // floor of the median as the median of an even-length list could be a
         // rational if one chooses the arithmetic mean
-        auto mit = points.begin () + points.size () / 2;
+        auto mit = points.begin () + length / 2;
         std::nth_element (points.begin (), mit, points.end (), 
                           [this, &axis] (size_t i1, size_t i2) {
                             return this->vector_set[i1][axis] <
                                    this->vector_set[i2][axis];
                           });
-        size_t median_idx = points[points.size () / 2];
+        size_t median_idx = points[length / 2];
         int loc = this->vector_set[median_idx][axis];
         // small hack: if the median is the same as the max then we choose a
         // location (splitting value) that is one less, this ensures a
@@ -105,7 +102,7 @@ namespace utils {
         std::vector<size_t> right (points.size ());
 
         for (auto it = left.begin (); it != left.end (); /* noop */) {
-          if (loc > this->vector_set[*it][axis]) {
+          if (loc < this->vector_set[*it][axis]) {
             right.push_back (*it);
             it = left.erase (it);
           } else
