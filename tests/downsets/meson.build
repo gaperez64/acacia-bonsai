@@ -11,3 +11,7 @@ simdbm_exe = executable ('simd-bm', 'simd-bm.cc',
                          
 
 test('antichains/vectors implementations', tests_exe, args : ['all', 'all'], suite : 'antichains')
+test('antichains/vectors kdtree-backed', tests_exe, args : ['kdtree_backed', 'all'], suite : 'kdtree')
+test('antichains/vectors kdtree-backed', tests_exe, args : ['kdtree_backed', 'vector_backed<char>'], suite : 'kdtree-nosimd')
+test('antichains/vectors kdtree-backed', tests_exe, args : ['kdtree_backed', 'array_backed_<char, 2ul>'], suite : 'kdtree-nosimd')
+test('antichains/vectors kdtree-backed', tests_exe, args : ['kdtree_backed', 'array_backed_sum_<char, 2ul>'], suite : 'kdtree-nosimd')

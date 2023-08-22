@@ -44,7 +44,7 @@ void register_maker (type_list<VecType>*, SetType<VecType>* = 0) {
 
   auto ts = typestring (SetType<VecType>);
   auto test = [ts] () {
-    std::cout << "[--] running tests for " << ts << "\r" << std::flush;
+    std::cout << "[--] running tests for " << ts << std::endl << std::flush;
     test_t<SetType<VecType>> () ();
     std::cout << "[OK]" << std::endl;
   };

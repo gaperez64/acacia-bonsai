@@ -49,60 +49,63 @@ struct test_t : public generic_test_t {
       VType v1 (il {1, 2, 3});
       VType v2 (il {2, 5, 1});
       VType v3 (il {4, 1, 1});
-      /*
-       * v1 = (1, 2, 3)
-       * v2 = (2, 5, 1)
-       * v3 = (4, 1, 1)
-       */
+      VType v4 (il {0, 1, 2});
 
-      // std::cout << "We have individual vectors!" << std::endl;
-
-      /*
-       std::cout << "We have a vector of vectors now! ";
-       for (auto e : elements)
-       std::cout << e << " ";
-       std::cout << std::endl;
-       */
-
+      // singleton checks
+      std::cout << "Singleton checks" << std::endl;
       assert(v1.size () > 0);
+
       SetType set_one_elt (v1.copy ());
+      assert (set_one_elt.contains (v1));
+      assert (set_one_elt.contains (v4));
+      assert (not set_one_elt.contains (v2));
+      assert (not set_one_elt.contains (v3));
+
+      // singleton union test
+      std::cout << "Singleton union test" << std::endl;
       SetType set_one_elt_cpy (v1.copy ());
       set_one_elt.union_with (std::move (set_one_elt_cpy));
       assert (set_one_elt.contains (v1));
+      assert (set_one_elt.contains (v4));
       assert (not set_one_elt.contains (v2));
+      assert (not set_one_elt.contains (v3));
+
+      // appply test
+      std::cout << "Apply test" << std::endl;
       SetType set_one_elt_cpy2 (v1.copy ());
       set_one_elt.intersect_with (std::move (set_one_elt_cpy2));
       set_one_elt = set_one_elt.apply ([] (const VType& v) { return v.copy (); });
       assert (set_one_elt.contains (v1));
+      assert (set_one_elt.contains (v4));
       assert (not set_one_elt.contains (v2));
+      assert (not set_one_elt.contains (v3));
 
+      // construction test
+      std::cout << "Construction test" << std::endl;
       std::vector<VType> elements;
       elements.emplace_back(v1.copy ());
       elements.emplace_back(v2.copy ());
       elements.emplace_back(v3.copy ());
+      SetType set = vec_to_set (std::move (elements));
+      VType v5 (il {1, 1, 10});
+      assert(set.contains(v1));
+      assert(set.contains(v3));
+      assert(set.contains(v4));
+      assert(!set.contains(v5));
+      assert(set.contains(v2));
 
+      // union test
+      std::cout << "Union test" << std::endl;
       std::vector<VType> elements_cpy;
       elements_cpy.emplace_back(v1.copy ());
       elements_cpy.emplace_back(v2.copy ());
       elements_cpy.emplace_back(v3.copy ());
 
-      SetType set = vec_to_set (std::move (elements));
       SetType set_cpy = vec_to_set (std::move (elements_cpy));
       set.union_with (std::move (set_cpy));
-      /*
-       * Next, we will try S & S = S.
-       * Remember that: S = {
-       * v1 = (1, 2, 3),
-       * v2 = (2, 5, 1),
-       * v3 = (4, 1, 1),
-       * }
-       * so the "meets" will be S union {
-       * v1 & v2 = (1, 2, 1)
-       * v1 & v3 = (1, 1, 1)
-       * v2 & v3 = (2, 1, 1)
-       * }
-       * let's make sure these will be eliminated inside the intersection...
-       */
+
+      // More domination tests
+      std::cout << "Domination tests" << std::endl;
       auto tree = vec_to_set (vvtovv ({
             {1, 2, 3},
             {2, 5, 1},
@@ -112,68 +115,39 @@ struct test_t : public generic_test_t {
       assert (tree.contains (VType (il {1, 2, 1})));
       assert (tree.contains (VType (il {1, 1, 1})));
       assert (tree.contains (VType (il {2, 1, 1})));
+
+      // Another apply test
+      std::cout << "Apply test" << std::endl;
       set = set.apply ([] (const VType& v) { return v.copy (); });
-
-      // std::cout << "We built the kdtree!" << std::endl;
-
-      VType v4 (il {0, 1, 2});
-      VType v5 (il {1, 1, 10});
-
-      /*
-       std::cout << "Is " << v2 << " in the closure? " << set.contains(v2) << std::endl;
-       std::cout << "Is " << v4 << " in the closure? " << set.contains(v4) << std::endl;
-       std::cout << "Is " << v5 << " in the closure? " << set.contains(v5) << std::endl;
-       */
-
-
       assert(set.contains(v2));
       assert(set.contains(v4));
       assert(!set.contains(v5));
 
-
+      // More union tests
+      std::cout << "Union tests" << std::endl;
       std::vector<VType> others;
       others.emplace_back(v4.copy ());
       others.emplace_back(v5.copy ());
-
       SetType set2 = vec_to_set (std::move (others));
-
-      /*
-       std::cout << "We built another kdtree_set! for ";
-       for (auto e : others)
-       std::cout << e << " ";
-       std::cout << std::endl;
-       */
 
       set.union_with (std::move (set2));
 
-      /*
-       std::cout << "We built a union kdtree_set of size " << set.size () << std::endl;
-       std::cout << "Is " << v2 << " in the union? " << set.contains (v2) << std::endl;
-       std::cout << "Is " << v4 << " in the union? " << set.contains (v4) << std::endl;
-       std::cout << "Is " << v5 << " in the union? " << set.contains (v5) << std::endl;
-       */
       assert(set.contains(v2));
       assert(set.contains(v4));
       assert(set.contains(v5));
 
+      // More construction and domination tests
+      std::cout << "Construction + domination tests" << std::endl;
       std::vector<VType> others2;
       others2.emplace_back(v4.copy ());
       others2.emplace_back(v5.copy ());
       SetType other_set = vec_to_set (std::move (others2));
-
-      /*
-       std::cout << "We built the intersection of last two sets, size = "
-       << other_set.size () << std::endl;
-
-       std::cout << "Is " << v2 << " in the intersection? " << other_set.contains (v2) << std::endl;
-       std::cout << "Is " << v4 << " in the intersection? " << other_set.contains (v4) << std::endl;
-       std::cout << "Is " << v5 << " in the intersection? " << other_set.contains (v5) << std::endl;
-       */
       assert(!other_set.contains(v2));
       assert(other_set.contains(v4));
       assert(other_set.contains(v5));
 
-      // std::cout << "made it to other tests!" << std::endl;
+      // Other tests
+      std::cout << "Final tests" << std::endl;
       {
         auto tree = vec_to_set (vvtovv ({
               {7, 0, 9, 9, 7},
