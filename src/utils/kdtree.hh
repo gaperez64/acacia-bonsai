@@ -94,7 +94,16 @@ namespace utils {
         // small hack: if the median is the same as the max then we choose a
         // location (splitting value) that is one less, this ensures a
         // nonempty subset of elements with a strictly larger value
-        if (loc == this->vector_set[points.back ()][axis])
+        mit = points.begin () + length / 2;
+        bool found = false;
+        while (mit != points.end ()) {
+          if (this->vector_set[*mit][axis] > loc) {
+            found = true;
+            break;
+          }
+          mit++;
+        }
+        if (!found)
           loc--;
 
         // we can start filling the vectors for the recursive calls
