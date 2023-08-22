@@ -75,12 +75,6 @@ namespace downsets {
         return this->tree->dominates(v);
       }
 
-      // Placeholder implementation
-      /*bool insert (Vector&& v) {
-        union_with (kdtree_backed (std::move (v)));
-      }
-      */
-
       /* Union in place
        *
        * Worst-case complexity: if the size of this antichain is n, and that

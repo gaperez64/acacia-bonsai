@@ -189,12 +189,13 @@ class composition {
 
 
   auto merge_saferegions (GenericDownset& F1, GenericDownset& F2) {
-    GenericDownset merged (combine_vectors (*F1.begin (), *F2.begin ())); // need a first element for the constructor to work
+    std::vector<GenericDownset::value_type> elements;
     for(const auto& m1: F1) {
       for(const auto& m2: F2) {
-        merged.insert (combine_vectors (m1, m2));
+        elements.push_back (combine_vectors (m1, m2));
       }
     }
+    GenericDownset merged (std::move (elements));
 
     return merged;
   }

@@ -142,17 +142,21 @@ class pipe_t {
     int element_size = read_obj<int> ();
 
     std::shared_ptr<GenericDownset> result;
+    std::vector<GenericDownset::value_type> elements;
 
     for(int j = 0; j < downset_size; j++) {
       auto vec = utils::vector_mm<VECTOR_ELT_T> (element_size, 0);
       for (int i = 0; i < element_size; i++) {
         vec[i] = read_obj<VECTOR_ELT_T> ();
       }
-      if (result == nullptr) {
+      /*if (result == nullptr) {
         result = std::make_shared<GenericDownset> (GenericDownset::value_type (vec));
       }
       else result->insert (GenericDownset::value_type (vec));
+      */
+      elements.push_back (GenericDownset::value_type (vec));
     }
+    result = std::make_shared<GenericDownset> (std::move (elements));
 
     read_guard (DOWNSET_END);
     return result;

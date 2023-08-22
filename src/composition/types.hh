@@ -79,9 +79,12 @@ template<typename To, typename From>
 To cast_downset (From& f) {
   using NewVec = To::value_type;
   To downset (cast_vector<NewVec> (*f.begin ()));
+  std::vector<NewVec> vv;
   for(const auto& vec: f) {
-    downset.insert (cast_vector<NewVec> (vec));
+    vv.push_back (cast_vector<NewVec> (vec));
+    //downset.insert (cast_vector<NewVec> (vec));
   }
+  downset.union_with (std::move (vv));
   return downset;
 }
 
