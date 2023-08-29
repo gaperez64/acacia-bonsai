@@ -99,7 +99,7 @@ namespace downsets {
         // (not necessarily strict) by this tree, we keep them
         for (auto eit = other.tree->begin(); eit != other.tree->end(); ++eit) {
           auto& e = *eit;
-          if (!this->tree->dominates(e))
+          if (!this->tree->dominates (e))
             result.push_back (std::move (e));
         }
         size_t size_before_move = result[0].size ();
@@ -122,62 +122,26 @@ namespace downsets {
       void intersect_with (const kdtree_backed& other) {
         std::vector<Vector> intersection;
         bool smaller_set = false;
-        using cache_red_dim = std::set<std::reference_wrapper<const Vector>,
-                                       disregard_first_component<std::reference_wrapper<const Vector>>>;
-        using vector_of_vectors = std::vector<std::reference_wrapper<const Vector>>;
-        std::map<int, std::pair<cache_red_dim, vector_of_vectors>> split_cache;
 
         for (auto xit = this->tree->begin ();
              xit != this->tree->end ();
              ++xit) {
           auto& x = *xit;
           assert (x.size () > 0);
-          bool dominated = false;
-
-          /* The madness below is meant to split all elements in the other
-           * tree based on the value of the first dimension of x. We store in
-           * a map a pair consisting of:
-           * 1. (a set) all the elements y from the other tree
-           *    such that y[0] >= x[0]
-           * 2. a vector of all other elements y from the other
-           *    tree
-           * Why is the second one a vector and the first a set? If the
-           * condition y[0] >= x[0] holds then x[0] will replace y[0] when
-           * taking the minimum so the meet of y, y' and x is different only
-           * if y, y' differ in some other dimension besides 0
-           */
-          auto& cv = ([&x, &split_cache, &other] () -> auto& {
-            try {
-              return split_cache.at (x[0]);
-            } catch (...) {
-              auto& cv = split_cache[x[0]];
-              for (auto yit = other.tree->begin();
-                   yit != other.tree->end (); ++yit) {
-                auto&& y = *yit;
-                if (y[0] >= x[0])
-                  cv.first.insert (std::ref (y));
-                else
-                  cv.second.push_back (std::ref (y));
-              }
-              return cv;
-            }
-          }) ();
-
-          // We mean to traverse the keys of the map and compute their meet
-          // with x, so we will need the following definition of meet
-          auto meet = [&] (std::reference_wrapper<const Vector> y) {
-            Vector &&v = x.meet (y.get ());
-            if (v == x)
-              dominated = true;
-            intersection.push_back (v.copy ());
-            return not dominated;
-          };
 
           // If x is part of the set of all meets, then x will dominate the
-          // whole list! So we use this to short-circuit the computation
-          std::all_of (cv.first.begin (), cv.first.end (), meet);
-          if (!dominated)
-            std::all_of (cv.second.begin (), cv.second.end (), meet);
+          // whole list! So we use this to short-circuit the computation: we
+          // first check whether x will be there (which happens only if it is
+          // itself dominated by some element in other)
+          bool dominated = other.tree->dominates (x);
+          if (dominated) {
+            intersection.push_back (x.copy ());
+          } else {
+            for (auto yit = other.begin (); yit != other.end (); ++yit) {
+              Vector &&v = x.meet (*yit);
+              intersection.push_back (v.copy ());
+            }
+          }
 
           // If x wasn't in the set of meets, dominated is false and
           // the minima of the set is updated
