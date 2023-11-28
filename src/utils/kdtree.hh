@@ -220,8 +220,10 @@ namespace utils {
         std::fill_n (lbounds, this->dim, std::numeric_limits<int>::min ());
         return this->recursive_dominates (v, strict, this->tree, lbounds, this->dim);
       }
+
       // TODO: trim procedure, taking a vector in and marking as removed
       // everything dominated
+      
       // TODO: take into account the removed flag in the nodes, probably by
       // going through the tree and giving an iterator that spits out only
       // nonremoved things?
