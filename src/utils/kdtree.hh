@@ -238,6 +238,7 @@ namespace utils {
               if (!cur->right->removed) to_visit.push (cur->right);
             } else {  // it's a leaf!
               if (!cur->removed)
+                // FIXME: can we avoid copying vectors here?
                 this->active_set.push_back (this->vector_set[cur->value_idx].copy ());
             }
           }
