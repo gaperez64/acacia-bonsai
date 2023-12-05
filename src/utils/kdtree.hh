@@ -6,6 +6,7 @@
 #include <limits>
 #include <map>
 #include <numeric>
+#include <stack>
 #include <vector>
 
 
@@ -221,6 +222,8 @@ namespace utils {
 
       std::vector<Vector> vector_set;
       std::vector<Vector> active_set;
+    public:
+
       std::vector<Vector>* getActive() {
         if (this->active_set.empty ()) {
           // this means we need to refresh the active set doing a traversal of
@@ -228,20 +231,20 @@ namespace utils {
           std::stack<std::shared_ptr<kdtree_node>> to_visit;
           to_visit.push (this->tree);
           while (!to_visit.empty ()) {
-            std::shared_ptr<kdtree_node>> cur = to_visit.pop ();
+            std::shared_ptr<kdtree_node> cur = to_visit.top ();
+            to_visit.pop ();
             if (cur->left != nullptr) {
               if (!cur->left->removed) to_visit.push (cur->left);
               if (!cur->right->removed) to_visit.push (cur->right);
             } else {  // it's a leaf!
               if (!cur->removed)
-                this->active_set.push_back (this->vector_set[node->value_idx]);
+                this->active_set.push_back (this->vector_set[cur->value_idx]);
             }
           }
           assert (!this->active_set.empty ());
         }
         return &(this->active_set);
       }
-    public:
 
       // FIXME: can't we assume that it's already a set? an antichain even?
       kdtree (std::vector<Vector>&& elements, const size_t dim) : dim (dim) {

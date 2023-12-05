@@ -55,7 +55,7 @@ namespace downsets {
 
       template <typename F>
       auto apply (const F& lambda) const {
-        const auto& backing_vector = this->tree->vector_set;
+        const auto& backing_vector = *(this->tree->getActive ());
         std::vector<Vector> ss;
         ss.reserve (backing_vector.size ());
 
