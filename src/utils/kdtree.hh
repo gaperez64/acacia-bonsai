@@ -238,7 +238,7 @@ namespace utils {
               if (!cur->right->removed) to_visit.push (cur->right);
             } else {  // it's a leaf!
               if (!cur->removed)
-                this->active_set.push_back (this->vector_set[cur->value_idx]);
+                this->active_set.push_back (this->vector_set[cur->value_idx].copy ());
             }
           }
           assert (!this->active_set.empty ());
