@@ -22,7 +22,7 @@ namespace utils {
   class kdtree;
 
   template <typename Vector>
-  std::ostream& operator<< (std::ostream& os, const utils::kdtree<Vector>& f);
+  std::ostream& operator<< (std::ostream& os, utils::kdtree<Vector>& f);
 
   template <typename Vector>
   class kdtree {
@@ -61,7 +61,7 @@ namespace utils {
       std::shared_ptr<kdtree_node> tree;
 
       template <typename V>
-      friend std::ostream& operator<< (std::ostream& os, const kdtree<V>& f);
+      friend std::ostream& operator<< (std::ostream& os, kdtree<V>& f);
 
       /*
        * This is one of the only interesting parts of the code: building the
@@ -170,10 +170,80 @@ namespace utils {
         return recursive_dominates (v, strict, node->left, lbounds, dims_to_dom);
       }
 
-    public:
-      std::vector<Vector> vector_set;
+      void recursive_trim (const Vector& v, bool strict,
+                           std::shared_ptr<kdtree_node> node,
+                           int* ubounds, size_t dims_to_dom) {
+        assert (node != nullptr);
 
-      // FIXME: can't we assume that it's already a set?
+        if (node->removed) {                 // if we reached a dead subtree, return
+          return;
+        }
+        if (node->left == nullptr) {         // if we are at a leaf, just check if dominated
+          auto po = v.partial_order (this->vector_set[node->value_idx]);
+          if (strict && po.geq () && !po.leq ()) {
+            node->removed = true;
+            this->active_set.clear ();
+          } else if (po.geq ()) {
+            node->removed = true;
+            this->active_set.clear ();
+          }
+          return;
+        }
+        // so we're at an inner node, let's check if the left subtree
+        // is guaranteed to have a dominating vector
+        int old_bound = ubounds[node->axis];
+        size_t still_to_dom = dims_to_dom;
+        if (node->location < ubounds[node->axis]) {
+          if (node->location < v[node->axis] &&
+              old_bound >= v[node->axis]) {
+            still_to_dom--;
+          } else if (!strict &&
+                     node->location <= v[node->axis] &&
+                     old_bound > v[node->axis]) {
+            still_to_dom--;
+          }
+          ubounds[node->axis] = node->location;
+          if (still_to_dom == 0) {
+            node->left->removed = true;
+            this->active_set.clear ();
+          } else {  // here we go down recursively
+            recursive_trim (v, strict, node->left, ubounds, still_to_dom);
+          }
+        }
+        // all that's left is to check on the right recursively, if pertinent
+        ubounds[node->axis] = old_bound;
+        if (v[node->axis] < node->location ||
+            (v[node->axis] == node->location && (strict)))
+          return;
+        // it is pertinent after all
+        return recursive_trim (v, strict, node->right, ubounds, dims_to_dom);
+      }
+
+      std::vector<Vector> vector_set;
+      std::vector<Vector> active_set;
+      std::vector<Vector>* getActive() {
+        if (this->active_set.empty ()) {
+          // this means we need to refresh the active set doing a traversal of
+          // the tree
+          std::stack<std::shared_ptr<kdtree_node>> to_visit;
+          to_visit.push (this->tree);
+          while (!to_visit.empty ()) {
+            std::shared_ptr<kdtree_node>> cur = to_visit.pop ();
+            if (cur->left != nullptr) {
+              if (!cur->left->removed) to_visit.push (cur->left);
+              if (!cur->right->removed) to_visit.push (cur->right);
+            } else {  // it's a leaf!
+              if (!cur->removed)
+                this->active_set.push_back (this->vector_set[node->value_idx]);
+            }
+          }
+          assert (!this->active_set.empty ());
+        }
+        return &(this->active_set);
+      }
+    public:
+
+      // FIXME: can't we assume that it's already a set? an antichain even?
       kdtree (std::vector<Vector>&& elements, const size_t dim) : dim (dim) {
         vector_set.reserve (elements.size ());
         for (ssize_t i = elements.size () - 1; i >= 0; --i) {
@@ -198,22 +268,12 @@ namespace utils {
 
         this->tree = recursive_build (points.begin (), points.end (),
                                       points.size (), 0);
+        this->active_set.clear ();
       }
 
       kdtree (const kdtree& other) = delete;
       kdtree (kdtree&& other) = default;
       kdtree& operator= (kdtree&& other) = default;
-
-      bool is_antichain () const {
-        for (auto it = vector_set.begin (); it != vector_set.end (); ++it) {
-          for (auto it2 = it + 1; it2 != vector_set.end (); ++it2) {
-            auto po = it->partial_order (*it2);
-            if (po.leq () or po.geq ())
-              return false;
-          }
-        }
-        return true;
-      }
 
       bool dominates (const Vector& v, bool strict = false) const {
         int lbounds[this->dim];
@@ -221,38 +281,42 @@ namespace utils {
         return this->recursive_dominates (v, strict, this->tree, lbounds, this->dim);
       }
 
-      // TODO: trim procedure, taking a vector in and marking as removed
-      // everything dominated
-      
-      // TODO: take into account the removed flag in the nodes, probably by
-      // going through the tree and giving an iterator that spits out only
-      // nonremoved things?
-      bool operator== (const kdtree& other) const {
-        return vector_set == other.vector_set;
+      void trim (const Vector& v, bool strict = false) {
+        int ubounds[this->dim];
+        std::fill_n (ubounds, this->dim, std::numeric_limits<int>::max ());
+        this->recursive_trim (v, strict, this->tree, ubounds, this->dim);
       }
-      auto size () const {
-        return this->vector_set.size ();
+      
+      bool is_antichain () {
+        for (auto it = this->begin (); it != this->end (); ++it) {
+          for (auto it2 = it + 1; it2 != this->end (); ++it2) {
+            auto po = it->partial_order (*it2);
+            if (po.leq () or po.geq ())
+              return false;
+          }
+        }
+        return true;
+      }
+      bool operator== (kdtree& other) {
+        return *(this->getActive ()) == *(other->getActive ());
+      }
+      auto size () {
+        return this->getActive ()->size ();
       }
       bool empty () {
-        return this->vector_set.empty ();
+        return this->getActive ()->empty ();
       }
       auto begin () {
-        return this->vector_set.begin ();
-      }
-      const auto begin () const {
-        return this->vector_set.begin ();
+        return this->getActive ()->begin ();
       }
       auto end () {
-        return this->vector_set.end ();
-      }
-      const auto end () const   {
-        return this->vector_set.end ();
+        return this->getActive ()->end ();
       }
   };
 
   template <typename Vector>
-  inline std::ostream& operator<< (std::ostream& os, const kdtree<Vector>& f) {
-    for (auto&& el : f.vector_set)
+  inline std::ostream& operator<< (std::ostream& os, kdtree<Vector>& f) {
+    for (auto&& el : *(f.getActive ()))
       os << el << std::endl;
 
     return os;
