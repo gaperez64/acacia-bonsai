@@ -169,15 +169,17 @@ struct test_t : public generic_test_t {
 
       auto F1i = vec_to_set (vvtovv ({
             {7, 0, 9, 9, 7},
-            {8, 0, 9, 9, 8},
+            {8, 0, 9, 9, 6},
             {9, 0, 7, 7, 9}
           }));
       auto F = vec_to_set (vvtovv ({
             {7, 0, 9, 9, 7},
-            {8, 0, 9, 9, 8},
+            {8, 0, 9, 9, 5},
             {9, 0, 7, 7, 9}
           }));
 
+
+      std::cout << "Preparing to intersect" << std::endl;
       F.intersect_with (std::move (F1i));
 
       {

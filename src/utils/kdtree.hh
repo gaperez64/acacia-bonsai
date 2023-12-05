@@ -102,10 +102,10 @@ namespace utils {
         bool clean = (this->vector_set[max_idx][axis] < loc);
 
         // some sanity checks
-        assert (std::distance (begin_it, median_it) == length - (length / 2));
         assert (std::distance (begin_it, median_it) > 0);
-        assert (std::distance (median_it, end_it) == length / 2);
         assert (std::distance (median_it, end_it) > 0);
+        assert (std::distance (begin_it, median_it) == length / 2);
+        assert (std::distance (median_it, end_it) == length - (length / 2));
         assert (std::distance (begin_it, median_it) +
                 std::distance (median_it, end_it) == length);
         assert (this->vector_set[max_idx][axis] <= loc);
@@ -113,9 +113,9 @@ namespace utils {
         // the next axis is just the following dimension, wrapping around
         size_t next_axis = (axis + 1) % this->dim;
         return std::make_shared<kdtree_node> (recursive_build (begin_it, median_it,
-                                                               length - (length / 2), next_axis),
-                                              recursive_build (median_it, end_it,
                                                                length / 2, next_axis),
+                                              recursive_build (median_it, end_it,
+                                                               length - (length / 2), next_axis),
                                               loc, axis, clean);
       }
 
@@ -247,18 +247,11 @@ namespace utils {
         return &(this->active_set);
       }
 
-      // FIXME: can't we assume that it's already a set? an antichain even?
+      // NOTE: this works for any collection of vectors, not even set assumed
       kdtree (std::vector<Vector>&& elements, const size_t dim) : dim (dim) {
         vector_set.reserve (elements.size ());
         for (ssize_t i = elements.size () - 1; i >= 0; --i) {
-          bool unique = true;
-          for (ssize_t j = 0; j < i; ++j)
-            if (elements[j] == elements[i]) {
-              unique = false;
-              break;
-            }
-          if (unique)
-            this->vector_set.push_back (std::move (elements[i]));
+          this->vector_set.push_back (std::move (elements[i]));
         }
 
         // WARNING: moved elements, so we can't really use it below! instead,
