@@ -31,8 +31,6 @@ namespace utils {
       struct kdtree_node {
           std::shared_ptr<kdtree_node> left;  // left child
           std::shared_ptr<kdtree_node> right; // right child
-          bool removed;                       // whether the node has been
-                                              // deleted
           size_t value_idx;                   // only for leaves: the index of
                                               // the element from the list
           int location;                       // the value at which we split
@@ -44,7 +42,6 @@ namespace utils {
           // constructor for leaves
           kdtree_node (size_t idx) : left (nullptr),
                                      right (nullptr),
-                                     removed (false),
                                      value_idx (idx),
                                      location (0),
                                      axis (0),
@@ -53,7 +50,6 @@ namespace utils {
           kdtree_node (std::shared_ptr<kdtree_node> l,
                        std::shared_ptr<kdtree_node> r,
                        int loc, size_t a, bool c) : left (l), right (r),
-                                                    removed (false),
                                                     location (loc),
                                                     axis (a),
                                                     clean_split (c) {}
@@ -133,9 +129,6 @@ namespace utils {
                                 int* lbounds, size_t dims_to_dom) const {
         assert (node != nullptr);
 
-        if (node->removed) {                 // if we reached a dead subtree, return false
-          return false;
-        }
         if (node->left == nullptr) {         // if we are at a leaf, just check if it dominates
           auto po = v.partial_order (this->vector_set[node->value_idx]);
           if (strict)
@@ -171,81 +164,8 @@ namespace utils {
         return recursive_dominates (v, strict, node->left, lbounds, dims_to_dom);
       }
 
-      void recursive_trim (const Vector& v, bool strict,
-                           std::shared_ptr<kdtree_node> node,
-                           int* ubounds, size_t dims_to_dom) {
-        assert (node != nullptr);
-
-        if (node->removed) {                 // if we reached a dead subtree, return
-          return;
-        }
-        if (node->left == nullptr) {         // if we are at a leaf, just check if dominated
-          auto po = v.partial_order (this->vector_set[node->value_idx]);
-          if (strict && po.geq () && !po.leq ()) {
-            node->removed = true;
-            this->active_set.clear ();
-          } else if (po.geq ()) {
-            node->removed = true;
-            this->active_set.clear ();
-          }
-          return;
-        }
-        // so we're at an inner node, let's check if the left subtree
-        // is guaranteed to have a dominating vector
-        int old_bound = ubounds[node->axis];
-        size_t still_to_dom = dims_to_dom;
-        if (node->location < ubounds[node->axis]) {
-          if (node->location < v[node->axis] &&
-              old_bound >= v[node->axis]) {
-            still_to_dom--;
-          } else if (!strict &&
-                     node->location <= v[node->axis] &&
-                     old_bound > v[node->axis]) {
-            still_to_dom--;
-          }
-          ubounds[node->axis] = node->location;
-          if (still_to_dom == 0) {
-            node->left->removed = true;
-            this->active_set.clear ();
-          } else {  // here we go down recursively
-            recursive_trim (v, strict, node->left, ubounds, still_to_dom);
-          }
-        }
-        // all that's left is to check on the right recursively, if pertinent
-        ubounds[node->axis] = old_bound;
-        if (v[node->axis] < node->location ||
-            (v[node->axis] == node->location && (strict)))
-          return;
-        // it is pertinent after all
-        return recursive_trim (v, strict, node->right, ubounds, dims_to_dom);
-      }
-
       std::vector<Vector> vector_set;
-      std::vector<Vector> active_set;
     public:
-
-      std::vector<Vector>* getActive() {
-        if (this->active_set.empty ()) {
-          // this means we need to refresh the active set doing a traversal of
-          // the tree
-          std::stack<std::shared_ptr<kdtree_node>> to_visit;
-          to_visit.push (this->tree);
-          while (!to_visit.empty ()) {
-            std::shared_ptr<kdtree_node> cur = to_visit.top ();
-            to_visit.pop ();
-            if (cur->left != nullptr) {
-              if (!cur->left->removed) to_visit.push (cur->left);
-              if (!cur->right->removed) to_visit.push (cur->right);
-            } else {  // it's a leaf!
-              if (!cur->removed)
-                // FIXME: can we avoid copying vectors here?
-                this->active_set.push_back (this->vector_set[cur->value_idx].copy ());
-            }
-          }
-          assert (!this->active_set.empty ());
-        }
-        return &(this->active_set);
-      }
 
       // NOTE: this works for any collection of vectors, not even set assumed
       kdtree (std::vector<Vector>&& elements, const size_t dim) : dim (dim) {
@@ -265,7 +185,6 @@ namespace utils {
 
         this->tree = recursive_build (points.begin (), points.end (),
                                       points.size (), 0);
-        this->active_set.clear ();
       }
 
       kdtree (const kdtree& other) = delete;
@@ -277,14 +196,8 @@ namespace utils {
         std::fill_n (lbounds, this->dim, std::numeric_limits<int>::min ());
         return this->recursive_dominates (v, strict, this->tree, lbounds, this->dim);
       }
-
-      void trim (const Vector& v, bool strict = false) {
-        int ubounds[this->dim];
-        std::fill_n (ubounds, this->dim, std::numeric_limits<int>::max ());
-        this->recursive_trim (v, strict, this->tree, ubounds, this->dim);
-      }
       
-      bool is_antichain () {
+      bool is_antichain () const {
         for (auto it = this->begin (); it != this->end (); ++it) {
           for (auto it2 = it + 1; it2 != this->end (); ++it2) {
             auto po = it->partial_order (*it2);
@@ -294,26 +207,32 @@ namespace utils {
         }
         return true;
       }
-      bool operator== (kdtree& other) {
-        return *(this->getActive ()) == *(other->getActive ());
+      bool operator== (const kdtree& other) const {
+        return this->vector_set == this->vector_set;
       }
-      auto size () {
-        return this->getActive ()->size ();
+      auto size () const {
+        return this->vector_set.size ();
       }
       bool empty () {
-        return this->getActive ()->empty ();
+        return this->vector_set.empty ();
       }
       auto begin () {
-        return this->getActive ()->begin ();
+        return this->vector_set.begin ();
+      }
+      const auto begin () const {
+        return this->vector_set.begin ();
       }
       auto end () {
-        return this->getActive ()->end ();
+        return this->vector_set.end ();
+      }
+      const auto end () const {
+        return this->vector_set.end ();
       }
   };
 
   template <typename Vector>
   inline std::ostream& operator<< (std::ostream& os, kdtree<Vector>& f) {
-    for (auto&& el : *(f.getActive ()))
+    for (auto&& el : f.vector_set)
       os << el << std::endl;
 
     return os;
