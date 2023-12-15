@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <vector>
-#include <set>
 #include <iostream>
 #include <cassert>
 
@@ -142,7 +141,7 @@ namespace downsets {
       auto        end()         { return vector_set.end (); }
       const auto  end() const   { return vector_set.end (); }
 
-    private:
+    public:
       std::vector<Vector> vector_set;
   };
 

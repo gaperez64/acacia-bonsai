@@ -2,10 +2,13 @@
 
 #include <cassert>
 #include <iostream>
+#include <math.h>
 #include <vector>
 
 #include <utils/vector_mm.hh>
 #include <utils/kdtree.hh>
+
+#include <vector_backed>
 
 namespace downsets {
   // Forward definition for the operator<<s.
@@ -16,7 +19,7 @@ namespace downsets {
   std::ostream& operator<<(std::ostream& os, const kdtree_backed<Vector>& f);
 
   template <typename Vector>
-  class kdtree_backed {
+  class kdtree_backed : vector_backed {
     private:
       std::shared_ptr<utils::kdtree<Vector>> tree;
 
