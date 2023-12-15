@@ -98,7 +98,8 @@ namespace downsets {
         this->vector = std::make_shared<vector_backed<Vector>> (v);
       }
 
-      // FIXME: the result of the application may not be an antichain!
+      // FIXME: the result of the application may not be an antichain if we
+      // are building kdtrees! 
       template <typename F>
       auto apply (const F& lambda) const {
         std::vector<Vector> backing_vector;
@@ -137,7 +138,7 @@ namespace downsets {
 
       /* Intersection in place
        */
-      void intersect_with (const kdtree_backed& other) {
+      void intersect_with (const vector_or_kdtree_backed& other) {
         boolop_with (other, true);  // it is intersection
       }
 

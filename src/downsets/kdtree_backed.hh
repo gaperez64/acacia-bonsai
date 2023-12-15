@@ -44,6 +44,8 @@ namespace downsets {
 
       kdtree_backed () = delete;
 
+      // FIXME: we need to check if the vector is an antichain and otherwise
+      // shorten!
       kdtree_backed (std::vector<Vector>&& elements) noexcept {
         assert (elements.size() > 0);
         this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (elements), elements[0].size());
