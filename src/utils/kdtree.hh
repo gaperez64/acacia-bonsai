@@ -164,8 +164,8 @@ namespace utils {
         return recursive_dominates (v, strict, node->left, lbounds, dims_to_dom);
       }
 
-      std::vector<Vector> vector_set;
     public:
+      std::vector<Vector> vector_set;
 
       // NOTE: this works for any collection of vectors, not even set assumed
       kdtree (std::vector<Vector>&& elements, const size_t dim) : dim (dim) {
