@@ -28,14 +28,14 @@ namespace downsets {
       template <typename V>
       friend std::ostream& operator<<(std::ostream& os, const vector_or_kdtree_backed<V>& f);
 
-      void boolop_with (const vector_or_kdtree_backed& other, bool inter = false) {
+      void boolop_with (vector_or_kdtree_backed& other, bool inter = false) {
         if (this->kdtree == nullptr) {
           assert (this->vector != nullptr);
           if (other.kdtree != nullptr) {
-            assert (other->vector == nullptr);
+            assert (other.vector == nullptr);
             // this costs linear time already: reinterpret the kdtree as a
             // vector
-            vector_backed<Vector> B = vector_backed<Vector> (other.tree.vector_set);
+            vector_backed<Vector> B = vector_backed<Vector> (std::move (other.kdtree->tree->vector_set));
             if (inter)
               this->vector->intersect_with (B);
             else
@@ -46,7 +46,7 @@ namespace downsets {
           assert (other.vector != nullptr);
           if (this->kdtree != nullptr) {
             assert (this->vector == nullptr);
-            this->vector = vector_backed<Vector> (this->tree.vector_set);
+            this->vector = vector_backed<Vector> (std::move (this->kdtree->tree->vector_set));
             this->kdtree = nullptr;
             if (inter)
               this->vector->intersect_with (other.vector);
@@ -69,9 +69,9 @@ namespace downsets {
           else
             this->kdtree->union_with (other.kdtree);
         } else {
-          this->vector = vector_backed<Vector> (this->tree.vector_set);
+          this->vector = vector_backed<Vector> (std::move (this->kdtree->tree->vector_set));
           this->kdtree = nullptr;
-          vector_backed<Vector> B = vector_backed<Vector> (other.tree.vector_set);
+          vector_backed<Vector> B = vector_backed<Vector> (std::move (other.kdtree->tree->vector_set));
           if (inter)
             this->vector->intersect_with (B);
           else
@@ -94,7 +94,7 @@ namespace downsets {
         // size by removing dominated elements... it's easier and clearer
         // to do the check here though
         if (exp (dim) < m) {
-          this->tree = std::make_shared<kdtree_backed<Vector>> (elements);
+          this->kdtree = std::make_shared<kdtree_backed<Vector>> (elements);
           verb_do (2, vout << "VEKD: created kd-tree downset" << std::endl);
         } else {
           this->vector = std::make_shared<vector_backed<Vector>> (elements);
@@ -104,16 +104,16 @@ namespace downsets {
 
       vector_or_kdtree_backed (Vector&& el) {
         // too small, just use a vector
-        this->vector = std::make_shared<vector_backed<Vector>> (v);
+        this->vector = std::make_shared<vector_backed<Vector>> (el);
       }
 
       template <typename F>
       auto apply (const F& lambda) const {
         std::vector<Vector> backing_vector;
-        if (this->tree != nullptr)
-          backing_vector = this->tree.vector_set;
+        if (this->kdtree != nullptr)
+          backing_vector = this->kdtree->tree->vector_set;
         else
-          backing_vector = this->vector.vector_set;
+          backing_vector = this->vector->vector_set;
         std::vector<Vector> ss;
         ss.reserve (backing_vector.size ());
 
@@ -130,7 +130,7 @@ namespace downsets {
 
       bool contains (const Vector& v) const {
         if (this->kdtree != nullptr)
-          return this->tree->contains (v);
+          return this->kdtree->contains (v);
         else
           return this->vector->contains (v);
       }
@@ -139,13 +139,13 @@ namespace downsets {
        * We use kd-trees only if both are already given as kd-trees
        * and their difference in size is subexponential
        */
-      void union_with (const vector_or_kdtree_backed& other) {
+      void union_with (vector_or_kdtree_backed& other) {
         boolop_with (other, false);  // not intersection
       }
 
       /* Intersection in place
        */
-      void intersect_with (const vector_or_kdtree_backed& other) {
+      void intersect_with (vector_or_kdtree_backed& other) {
         boolop_with (other, true);  // it is intersection
       }
 
@@ -169,7 +169,7 @@ namespace downsets {
 
   template <typename Vector>
   inline std::ostream& operator<<(std::ostream& os, const vector_or_kdtree_backed<Vector>& f) {
-    if (this->kdtree != nullptr)
+    if (f.kdtree != nullptr)
       os << *(f.kdtree) << std::endl;
     else
       for (auto&& el : f.vector)

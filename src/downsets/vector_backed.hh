@@ -6,6 +6,10 @@
 #include <cassert>
 
 namespace downsets {
+  // A forward definition to allow for friend status
+  template <typename Vector>
+  class vector_or_kdtree_backed;
+
   template <typename Vector>
   class vector_backed {
     public:
@@ -23,6 +27,7 @@ namespace downsets {
 
     private:
       vector_backed () = default;
+      std::vector<Vector> vector_set;
 
     public:
       vector_backed (const vector_backed&) = delete;
@@ -141,8 +146,7 @@ namespace downsets {
       auto        end()         { return vector_set.end (); }
       const auto  end() const   { return vector_set.end (); }
 
-    public:
-      std::vector<Vector> vector_set;
+      friend class vector_or_kdtree_backed<Vector>;
   };
 
 

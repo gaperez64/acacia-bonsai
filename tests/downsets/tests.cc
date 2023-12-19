@@ -246,6 +246,7 @@ using vector_types = type_list<vectors::vector_backed<char>,
 
 using set_types = template_type_list<//downsets::full_set, ; too slow.
                                      downsets::kdtree_backed,
+                                     downsets::vector_or_kdtree_backed,
                                      downsets::set_backed,
                                      downsets::vector_backed,
                                      downsets::vector_backed_bin,
@@ -267,9 +268,9 @@ int main(int argc, char* argv[]) {
     vectors::bool_threshold = 128;
     vectors::bitset_threshold = 128;
     test_makers[implem] ();
+    return 0;
   } catch (std::bad_function_call& e) {
     std::cout << "error: no such implem: " << implem << std::endl;
+    return 1;
   }
-
-  return 0;
 }

@@ -16,6 +16,11 @@ namespace downsets {
   template <typename Vector>
   std::ostream& operator<<(std::ostream& os, const kdtree_backed<Vector>& f);
 
+  // Another forward def to have friend status
+  template <typename Vector>
+  class vector_or_kdtree_backed;
+
+  // Finally the actual class definition
   template <typename Vector>
   class kdtree_backed {
     private:
@@ -169,6 +174,8 @@ namespace downsets {
       const auto  begin () const { return this->tree->begin (); }
       auto        end ()         { return this->tree->end (); }
       const auto  end () const   { return this->tree->end (); }
+
+      friend class vector_or_kdtree_backed<Vector>;
   };
 
   template <typename Vector>
