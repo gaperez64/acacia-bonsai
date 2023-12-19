@@ -100,8 +100,9 @@ struct test_t : public generic_test_t {
       elements_cpy.emplace_back(v1.copy ());
       elements_cpy.emplace_back(v2.copy ());
       elements_cpy.emplace_back(v3.copy ());
-
+      std::cout << "creating the union operand" << std::endl;
       SetType set_cpy = vec_to_set (std::move (elements_cpy));
+      std::cout << "ready to union" << std::endl;
       set.union_with (std::move (set_cpy));
 
       // More domination tests
@@ -128,8 +129,9 @@ struct test_t : public generic_test_t {
       std::vector<VType> others;
       others.emplace_back(v4.copy ());
       others.emplace_back(v5.copy ());
+      std::cout << "creating union operand" << std::endl;
       SetType set2 = vec_to_set (std::move (others));
-
+      std::cout << "ready to union" << std::endl;
       set.union_with (std::move (set2));
 
       assert(set.contains(v2));

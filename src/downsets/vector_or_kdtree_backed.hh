@@ -7,8 +7,8 @@
 
 #include <utils/vector_mm.hh>
 
-#include <kdtree_backed.hh>
-#include <vector_backed.hh>
+#include <downsets/kdtree_backed.hh>
+#include <downsets/vector_backed.hh>
 
 namespace downsets {
   // Forward definition for the operator<<s.

@@ -8,8 +8,6 @@
 #include <utils/vector_mm.hh>
 #include <utils/kdtree.hh>
 
-#include <vector_backed>
-
 namespace downsets {
   // Forward definition for the operator<<s.
   template <typename>
@@ -19,7 +17,7 @@ namespace downsets {
   std::ostream& operator<<(std::ostream& os, const kdtree_backed<Vector>& f);
 
   template <typename Vector>
-  class kdtree_backed : vector_backed {
+  class kdtree_backed {
     private:
       std::shared_ptr<utils::kdtree<Vector>> tree;
 
@@ -46,8 +44,7 @@ namespace downsets {
 
       kdtree_backed (std::vector<Vector>&& elements) noexcept {
         assert (elements.size() > 0);
-        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (elements),
-                                                              elements[0].size ());
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (elements));
         std::vector<Vector> antichain;
         antichain.reserve (this->size ());
         
@@ -61,22 +58,22 @@ namespace downsets {
           else
             antichain.push_back(e.copy ()); // this does requires a copy
         }
-        if (removed)
-          this->tree = std::make_shared<utils::kdtree<Vector> (std::move (antichain),
-                                                                          elements[0].size ());
+        if (removed) {
+          assert (antichain.size () > 0);
+          this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (antichain));
+        }
 
       }
 
       kdtree_backed (Vector&& el) {
         auto v = std::vector<Vector> ();
-        size_t dim = el.size ();
         v.push_back (std::move (el));
-        this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (v), dim);
+        this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (v));
       }
 
       template <typename F>
       auto apply (const F& lambda) const {
-        const auto& backing_vector = this->tree.vector_set;
+        const auto& backing_vector = this->tree->vector_set;
         std::vector<Vector> ss;
         ss.reserve (backing_vector.size ());
 
@@ -97,11 +94,12 @@ namespace downsets {
 
       // Union in place
       void union_with (const kdtree_backed& other) {
+        assert (other.size () > 0);
         std::vector<Vector> result;
         result.reserve (this->size () + other.size ());
         // for all elements in this tree, if they are not strictly
         // dominated by the other tree, we keep them
-        for (auto eit = this->tree->begin(); eit != this->tree->end(); ++eit) {
+        for (auto eit = this->tree->begin (); eit != this->tree->end (); ++eit) {
           auto& e = *eit;
           if (!other.tree->dominates(e, true))
             result.push_back(e.copy ()); // this does requires a copy
@@ -113,8 +111,8 @@ namespace downsets {
           if (!this->tree->dominates (e))
             result.push_back (std::move (e));
         }
-        size_t size_before_move = result[0].size ();
-        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (result), size_before_move);
+        assert (result.size () > 0);
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (result));
       }
 
       // Intersection in place
@@ -148,7 +146,7 @@ namespace downsets {
         }
 
         assert (intersection.size() > 0);
-        utils::kdtree<Vector> temp_tree(std::move (intersection), intersection[0].size());
+        utils::kdtree<Vector> temp_tree(std::move (intersection));
         std::vector<std::reference_wrapper<Vector>> inter_antichain;
         for (auto& e : temp_tree) {
           if (not temp_tree.dominates(e, true))
@@ -159,10 +157,7 @@ namespace downsets {
         for (auto r : inter_antichain)
           vector_antichain.push_back (std::move (r.get ()));
 
-        size_t dim_before_move = vector_antichain[0].size ();
-        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain),
-                                                              dim_before_move);
-        assert (dim_before_move > 0);
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain));
         assert (this->tree->is_antichain ());
       }
 

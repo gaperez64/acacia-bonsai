@@ -68,7 +68,7 @@ namespace utils {
       recursive_build (std::vector<size_t>::iterator begin_it,
                        std::vector<size_t>::iterator end_it,
                        size_t length, size_t axis) {
-        assert (std::distance (begin_it, end_it) == length);
+        assert (static_cast<size_t>(std::distance (begin_it, end_it)) == length);
         assert (length > 0);
         assert (axis < this->dim && axis >= 0);
 
@@ -100,9 +100,9 @@ namespace utils {
         // some sanity checks
         assert (std::distance (begin_it, median_it) > 0);
         assert (std::distance (median_it, end_it) > 0);
-        assert (std::distance (begin_it, median_it) == length / 2);
-        assert (std::distance (median_it, end_it) == length - (length / 2));
-        assert (std::distance (begin_it, median_it) +
+        assert (static_cast<size_t>(std::distance (begin_it, median_it)) == length / 2);
+        assert (static_cast<size_t>(std::distance (median_it, end_it)) == length - (length / 2));
+        assert (static_cast<size_t>(std::distance (begin_it, median_it)) +
                 std::distance (median_it, end_it) == length);
         assert (this->vector_set[max_idx][axis] <= loc);
 
@@ -168,7 +168,10 @@ namespace utils {
       std::vector<Vector> vector_set;
 
       // NOTE: this works for any collection of vectors, not even set assumed
-      kdtree (std::vector<Vector>&& elements, const size_t dim) : dim (dim) {
+      kdtree (std::vector<Vector>&& elements) : dim (elements[0].size ()) {
+        assert (elements.size () > 0);
+        assert (this->dim > 0);
+
         vector_set.reserve (elements.size ());
         for (ssize_t i = elements.size () - 1; i >= 0; --i) {
           this->vector_set.push_back (std::move (elements[i]));
@@ -176,7 +179,6 @@ namespace utils {
 
         // WARNING: moved elements, so we can't really use it below! instead,
         // use this->vector_set
-        assert (dim > 0);
         assert (this->vector_set.size () > 0);
 
         // We now prepare the list of indices to include in the tree 
