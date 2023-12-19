@@ -2,9 +2,10 @@
 
 #include <cassert>
 #include <iostream>
-#include <math>
+#include <math.h>
 #include <vector>
 
+#include <utils/verbose.hh>
 #include <utils/vector_mm.hh>
 
 #include <downsets/kdtree_backed.hh>
@@ -92,10 +93,13 @@ namespace downsets {
         // downset container; their respective constructors may reduce the
         // size by removing dominated elements... it's easier and clearer
         // to do the check here though
-        if (exp (dim) < m)
+        if (exp (dim) < m) {
           this->tree = std::make_shared<kdtree_backed<Vector>> (elements);
-        else
+          verb_do (2, vout << "VEKD: created kd-tree downset" << std::endl);
+        } else {
           this->vector = std::make_shared<vector_backed<Vector>> (elements);
+          verb_do (2, vout << "VEKD: created vector downset" << std::endl);
+        }
       }
 
       vector_or_kdtree_backed (Vector&& el) {

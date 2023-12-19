@@ -17,7 +17,7 @@ test('antichains/vectors kdtree-backed', tests_exe, args : ['kdtree_backed', 've
 test('antichains/vectors kdtree-backed', tests_exe, args : ['kdtree_backed', 'array_backed_<char, 2ul>'], suite : 'kdtree-nosimd')
 test('antichains/vectors kdtree-backed', tests_exe, args : ['kdtree_backed', 'array_backed_sum_<char, 2ul>'], suite : 'kdtree-nosimd')
 
-test('antichains/vectors vekd-backed', tests_exe, args : ['vector_or_kdtree_backed', 'all'], suite : 'vector_or_kdtree')
-test('antichains/vectors vekd-backed', tests_exe, args : ['vector_or_kdtree_backed', 'vector_backed<char>'], suite : 'vector_or_kdtree-nosimd')
-test('antichains/vectors vekd-backed', tests_exe, args : ['vector_or_kdtree_backed', 'array_backed_<char, 2ul>'], suite : 'vector_or_kdtree-nosimd')
-test('antichains/vectors vekd-backed', tests_exe, args : ['vector_or_kdtree_backed', 'array_backed_sum_<char, 2ul>'], suite : 'vector_or_kdtree-nosimd')
+test('antichains/vectors vekd-backed', tests_exe, args : ['vector_or_kdtree_backed', 'all'], suite : 'vector-or-kdtree')
+test('antichains/vectors vekd-backed', tests_exe, args : ['vector_or_kdtree_backed', 'vector_backed<char>'], suite : 'vector-or-kdtree-nosimd')
+test('antichains/vectors vekd-backed', tests_exe, args : ['vector_or_kdtree_backed', 'array_backed_<char, 2ul>'], suite : 'vector-or-kdtree-nosimd')
+test('antichains/vectors vekd-backed', tests_exe, args : ['vector_or_kdtree_backed', 'array_backed_sum_<char, 2ul>'], suite : 'vector-or-kdtree-nosimd')
