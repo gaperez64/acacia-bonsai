@@ -87,6 +87,11 @@ namespace downsets {
         assert (elements.size() > 0);
         size_t m = elements.size ();
         size_t dim = elements[0].size ();
+
+        // NOTE: we are checking the size BEFORE we actually create the
+        // downset container; their respective constructors may reduce the
+        // size by removing dominated elements... it's easier and clearer
+        // to do the check here though
         if (exp (dim) < m)
           this->tree = std::make_shared<kdtree_backed<Vector>> (elements);
         else
@@ -98,8 +103,6 @@ namespace downsets {
         this->vector = std::make_shared<vector_backed<Vector>> (v);
       }
 
-      // FIXME: the result of the application may not be an antichain if we
-      // are building kdtrees! 
       template <typename F>
       auto apply (const F& lambda) const {
         std::vector<Vector> backing_vector;

@@ -44,11 +44,27 @@ namespace downsets {
 
       kdtree_backed () = delete;
 
-      // FIXME: we need to check if the vector is an antichain and otherwise
-      // shorten!
       kdtree_backed (std::vector<Vector>&& elements) noexcept {
         assert (elements.size() > 0);
-        this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (elements), elements[0].size());
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (elements),
+                                                              elements[0].size ());
+        std::vector<Vector> antichain;
+        antichain.reserve (this->size ());
+        
+        // for all elements in this tree, if they are not strictly
+        // dominated by the tree, we keep them
+        bool removed = false;
+        for (auto eit = this->tree->begin (); eit != this->tree->end (); ++eit) {
+          auto& e = *eit;
+          if (this->tree->dominates (e, true))
+            removed = true;
+          else
+            antichain.push_back(e.copy ()); // this does requires a copy
+        }
+        if (removed)
+          this->tree = std::make_shared<utils::kdtree<Vector> (std::move (antichain),
+                                                                          elements[0].size ());
+
       }
 
       kdtree_backed (Vector&& el) {
@@ -70,7 +86,6 @@ namespace downsets {
         return kdtree_backed (std::move (ss));
       }
 
-
       kdtree_backed (const kdtree_backed&) = delete;
       kdtree_backed (kdtree_backed&&) = default;
       kdtree_backed& operator= (const kdtree_backed&) = delete;
@@ -80,9 +95,7 @@ namespace downsets {
         return this->tree->dominates(v);
       }
 
-      /* Union in place
-       *
-       */
+      // Union in place
       void union_with (const kdtree_backed& other) {
         std::vector<Vector> result;
         result.reserve (this->size () + other.size ());
@@ -104,9 +117,7 @@ namespace downsets {
         this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (result), size_before_move);
       }
 
-      /* Intersection in place
-       *
-       */
+      // Intersection in place
       void intersect_with (const kdtree_backed& other) {
         std::vector<Vector> intersection;
         bool smaller_set = false;
