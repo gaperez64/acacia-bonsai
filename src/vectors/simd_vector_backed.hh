@@ -43,12 +43,14 @@ namespace vectors {
       self copy () const {
         auto res = self (k);
         res.data = data;
+        res.sum = sum;
         return res;
       }
 
       self& operator= (self&& other) {
         assert (other.k == k and other.nsimds == nsimds);
         data = std::move (other.data);
+        sum = other.sum;
         return *this;
       }
 
