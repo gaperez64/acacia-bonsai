@@ -50,7 +50,7 @@ namespace utils {
         // and determine the axis based on the dimension with the
         // longest range
         int max_range;
-        size_t axis;
+        size_t axis = 0;
         for (size_t d = 0; d < this->dim; d++) {
           auto it = points.begin();
           int val = this->vector_set[(*it)][d];
@@ -84,7 +84,7 @@ namespace utils {
         // floor of the median as the median of an even-length list could be a
         // rational if one chooses the arithmetic mean
         auto mit = points.begin () + length / 2;
-        std::nth_element (points.begin (), mit, points.end (), 
+        std::nth_element (points.begin (), mit, points.end (),
                           [this, &axis] (size_t i1, size_t i2) {
                             return this->vector_set[i1][axis] <
                                    this->vector_set[i2][axis];
@@ -181,7 +181,7 @@ namespace utils {
         assert (dim > 0);
         assert (this->vector_set.size () > 0);
 
-        // We now prepare the list of indices to include in the tree 
+        // We now prepare the list of indices to include in the tree
         std::vector<size_t> points (this->vector_set.size ());
         std::iota(points.begin(), points.end(), 0);
 

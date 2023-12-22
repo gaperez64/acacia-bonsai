@@ -274,7 +274,7 @@ namespace downsets {
       // Surely: if bin_of (u) > bin_of (v), then v can't dominate u.
       size_t bin_of (const Vector& v) const {
         if constexpr (vectors::has_bin<Vector>::value)
-                       return v.bin ();
+          return v.bin ();
         return 0;
       }
   };

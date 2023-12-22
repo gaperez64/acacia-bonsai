@@ -190,7 +190,6 @@ class aiger {
     // same as above but for high to calculate high & var
     int high_g = add_gate (bdd2aig (high), gate); // high & var
 
-
     // we have low_g = (low & !var) and high_g = (high & var),
     // now we want to AND their negations, and then invert this again to get their OR
     int output = add_gate (low_g ^ 1, high_g ^ 1) ^ 1; // !(!(low & !var) & !(high & var))
