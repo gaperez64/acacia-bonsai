@@ -22,7 +22,7 @@ struct has_insert<T, std::void_t<decltype(std::declval<T>().insert (std::declval
 #define il std::initializer_list<char>
 
 template<typename SetType>
-struct test_t : public generic_test_t {
+struct test_t : public generic_test<void> {
     using VType = typename SetType::value_type;
 
     std::vector<VType> vvtovv (const std::vector<std::vector<char>>& vv) {
@@ -262,7 +262,8 @@ int main(int argc, char* argv[]) {
   try {
     vectors::bool_threshold = 128;
     vectors::bitset_threshold = 128;
-    test_makers[implem] ();
+    auto& tests = test_list<void>::list;
+    tests[implem] ();
   } catch (std::bad_function_call& e) {
     std::cout << "error: no such implem: " << implem << std::endl;
   }
