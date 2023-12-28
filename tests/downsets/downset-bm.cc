@@ -1,0 +1,331 @@
+// TODO : Sorting and Selection in Posets | SIAM Journal on Computing | Vol. 40, No. 3 | Society for Industrial and Applied Mathematics
+// SORTING AND SELECTION IN POSETS
+// Th. 4.5
+// For vector_backed (insertion based) remove insert, and allow constructor on list
+// insert only if non dominated, this would replace it
+// dynamic data structure (vector vs kdtree) by gaperez
+// bm on syntcomp
+
+#include <cassert>
+#include <span>
+#include <memory>
+#include <ostream>
+#include <set>
+#include <vector>
+#include <string>
+#include <type_traits>
+#include <cxxabi.h>
+#include <experimental/random>
+#include <ranges>
+#include <algorithm>
+
+#include <getopt.h>
+
+#include <spot/misc/timer.hh>
+
+#undef NO_VERBOSE
+#include <utils/verbose.hh>
+
+#include <utils/vector_mm.hh>
+#include "downsets.hh"
+#include "vectors.hh"
+
+#include "test_maker.hh"
+
+using namespace std::literals;
+
+#ifndef DIMENSION
+# define DIMENSION 32
+#endif
+#ifndef ROUNDS
+# define ROUNDS 1
+#endif
+
+int               utils::verbose = 0;
+utils::voutstream utils::vout;
+
+using test_value_type = uint8_t;
+
+using result_t = std::map<std::string, double>;
+
+static std::default_random_engine::result_type starting_seed = 0;
+
+static std::map<std::string, size_t> params = {
+  {"maxval", 12},
+  {"build-query", 10240ul * 2},
+  {"transfer", 1000000000},
+  {"intersection", 256ul},
+  {"union", 512ul * 20 }
+};
+
+template <typename T>
+auto random_vector (test_value_type maxval = std::numeric_limits<test_value_type>::max ()) {
+  utils::vector_mm<T> v (DIMENSION);
+  std::generate (v.begin(), v.end(), [&] () {return std::experimental::randint (0, static_cast<int> (params["maxval"])); });
+  return v;
+}
+
+template<class T, class = void>
+struct has_insert : std::false_type {};
+
+template <class T>
+struct has_insert<T, std::void_t<decltype(std::declval<T>().insert (std::declval<typename T::value_type> ()))>> : std::true_type {};
+
+template <typename SetType>
+struct test_t : public generic_test<result_t> {
+    using VType = typename SetType::value_type;
+    using value_type = typename VType::value_type;
+
+    SetType vec_to_set (std::vector<VType>&& v) {
+      if constexpr (has_insert<SetType>::value) {
+        SetType set (std::move (v[0]));
+        for (size_t i = 1; i < v.size (); ++i)
+          set.insert (std::move (v[i]));
+        return set;
+      }
+      else
+        return SetType (std::move (v));
+    }
+
+    std::vector<VType> test_vector (size_t nitems) {
+      std::experimental::reseed (starting_seed);
+      verb_do (3, vout << "Creating a vector of " << nitems << " elements... ");
+      std::vector<VType> elts;
+      elts.reserve (nitems);
+      for (size_t i = 0; i < nitems; ++i)
+        elts.push_back (VType (random_vector<value_type> ()));
+      verb_do (3, vout << "done.\n");
+      return elts;
+    }
+
+    result_t operator() () {
+      result_t res;
+
+      if (const size_t NITEMS = params["build-query"]) {
+        verb_do (1, vout << "Test 1: Insertion and membership query" << std::endl);
+        spot::stopwatch sw;
+        double buildtime = 0, querytime = 0, transfertime = 0;
+        for (size_t rounds = 0; rounds < ROUNDS; ++rounds) {
+          verb_do (2, vout << "Round " << rounds << std::endl);
+          verb_do (2, vout << "BUILD\n");
+          auto vec1 = test_vector (NITEMS);
+          sw.start ();
+          auto set = vec_to_set (std::move (vec1));
+          buildtime += sw.stop ();
+          verb_do (2, vout << "QUERY...\n");
+          auto vec2 = test_vector (2 * NITEMS);
+          size_t in = 0, out = 0;
+          sw.start ();
+          for (auto&& x : vec2)
+            if (set.contains (x))
+              ++in;
+            else
+              ++out;
+          querytime += sw.stop ();
+          verb_do (2, vout << "... IN: " << in << " OUT: " << out << std::endl);
+          verb_do (2, vout << "TRANSFER (supposed to be free)...\n");
+          sw.start ();
+          for (size_t i = 0; i < params["transfer"]; ++i) {
+            auto set2 (std::move (set));
+            set = std::move (set2);
+          }
+          transfertime += sw.stop ();
+        }
+
+        res["build"] = buildtime;
+        res["query"] = querytime;
+        res["transfer"] = transfertime;
+
+        verb_do (1, vout << "BUILD: " << buildtime / ROUNDS
+                 << ", QUERY: " << querytime / ROUNDS
+                 << ", TRANSFER: " << transfertime / ROUNDS
+                 << std::endl);
+      }
+
+      if (const size_t NITEMS = params["intersection"]) {
+        verb_do (1, vout << "Test 2: Intersections" << std::endl);
+        spot::stopwatch sw;
+        double intertime = 0;
+        for (size_t rounds = 0; rounds < ROUNDS; ++rounds) {
+          verb_do (2, vout << "Round " << rounds << std::endl);
+          verb_do (2, vout << "BUILD\n");
+          auto set = vec_to_set (test_vector (NITEMS));
+          auto vec = test_vector (2 * NITEMS);
+          decltype (vec) vec2;
+          vec2.insert (vec2.end (), std::make_move_iterator (vec.begin () + NITEMS / 2),
+                       std::make_move_iterator (vec.begin () + 3 * NITEMS / 2));
+          auto set2 = vec_to_set (std::move (vec2));
+          verb_do (2, vout << "INTERSECT...";);
+          sw.start ();
+          set.intersect_with (std::move (set2));
+          intertime += sw.stop ();
+          verb_do (2, vout << " SIZE: " << set.size () << std::endl);
+        }
+        res["intersection"] = intertime;
+        verb_do (1, vout << "INTER: " << intertime / ROUNDS
+                 << std::endl);
+      }
+
+
+      if (const size_t NITEMS = params["union"]) {
+        verb_do (1, vout << "Test 3: Unions" << std::endl);
+        spot::stopwatch sw;
+        double uniontime = 0;
+        for (size_t rounds = 0; rounds < ROUNDS; ++rounds) {
+          verb_do (2, vout << "Round " << rounds << std::endl);
+
+          verb_do (2, vout << "BUILD\n");
+          auto set = vec_to_set (test_vector (NITEMS));
+          auto vec = test_vector (2 * NITEMS);
+          decltype (vec) vec2;
+          vec2.insert (vec2.end (), std::make_move_iterator (vec.begin () + NITEMS / 2),
+                       std::make_move_iterator (vec.begin () + 3 * NITEMS / 2));
+          auto set2 = vec_to_set (std::move (vec2));
+          verb_do (2, vout << "UNION...";);
+          sw.start ();
+          set.union_with (std::move (set2));
+          uniontime += sw.stop ();
+          verb_do (2, vout << " SIZE: " << set.size () << std::endl);
+        }
+        res["union"] = uniontime;
+        verb_do (1, vout << "UNION: " << uniontime / ROUNDS
+                 << std::endl);
+      }
+
+      return res;
+    }
+};
+
+namespace vectors{
+  template <typename T>
+  using array_backed_fixed = vectors::array_backed<T, DIMENSION>;
+
+  template <typename T>
+  using array_ptr_backed_fixed = vectors::array_ptr_backed<T, DIMENSION>;
+
+  template <typename T>
+  using simd_array_backed_fixed = vectors::simd_array_backed<T, DIMENSION>;
+
+  template <typename T>
+  using simd_array_ptr_backed_fixed = vectors::simd_array_ptr_backed<T, DIMENSION>;
+}
+
+using vector_types = type_list<
+  vectors::array_backed_fixed<test_value_type>,
+  vectors::array_ptr_backed_fixed<test_value_type>,
+  vectors::simd_array_backed_fixed<test_value_type>,
+  vectors::simd_array_ptr_backed_fixed<test_value_type>>;
+
+using set_types = template_type_list<
+  downsets::kdtree_backed,
+  downsets::vector_backed,
+  downsets::vector_backed_bin,
+  downsets::vector_backed_one_dim_split>;
+
+void usage (const char* progname) {
+  std::cout << "usage: " << progname << " [-v -v -v...] [--params PARAMS] [--seed N] SETTYPE VECTYPE" << std::endl;
+
+  std::cout << "List of parameters:" << std::endl;
+  for (auto& [p, v] : params)
+    std::cout << "  " << p << " (default: " << v << ")" << std::endl;
+  std::cout << std::endl;
+  std::cout << "  SETTYPE:\n  - all" << std::endl;
+  for (auto&& s : set_names) {
+    auto start = s.find_last_of (':') + 1;
+    std::cout << "  - " << s.substr (start, s.find_first_of ('<') - start) << std::endl;
+  }
+
+  std::cout << "  VECTYPE:\n  - all" << std::endl;
+  for (auto&& s : vector_names) {
+    auto start = s.find_last_of (':') + 1;
+    std::cout << "  - " << s.substr (start, s.find_first_of ('>') - start + 1) << std::endl;
+  }
+
+  exit (0);
+}
+
+int main (int argc, char* argv[]) {
+  const char* prog = argv[0];
+
+  register_maker<false> ((vector_types*) 0, (set_types*) 0);
+
+  while (true) {
+    static struct option long_options[] = {
+      {"seed",    required_argument, 0,  's' },
+      {"verbose", no_argument,       0,  'v' },
+      {"params",  required_argument, 0,  'p' },
+      {0,         0,                 0,  0 }
+    };
+
+    int c = getopt_long (argc, argv, "s:vp:", long_options, NULL);
+    if (c == -1)
+      break;
+    switch (c) {
+      case 's':
+        starting_seed = std::strtoul (optarg, nullptr, 10);
+        break;
+      case 'v':
+        ++utils::verbose;
+        break;
+      case 'p':
+        while (optarg) {
+          char* comma = strchr (optarg, ',');
+          if (comma) *comma = '\0';
+          char* equal = strchr (optarg, '=');
+          if (not equal) {
+            std::cerr << "invalid parameter setting: " << optarg << std::endl;
+            usage (prog);
+          }
+          *equal = '\0';
+          std::string p {optarg}, arg {equal + 1};
+          auto pk = std::views::keys (params);
+          if (std::ranges::find (pk, p) == std::ranges::end (pk)) {
+            std::cerr << "unknown parameter: " << p << std::endl;
+            usage (prog);
+          }
+          params[p] = std::stoul (arg);
+          optarg = comma ? comma + 1 : NULL;
+        }
+        break;
+    }
+  }
+
+  if (argc - optind != 2)
+    usage (prog);
+
+  auto downarg = std::string {argv[optind]},
+    vecarg = std::string {argv[optind + 1]};
+
+  std::set<std::string> downs, vecs;
+  auto& tests = test_list<result_t>::list;
+
+  for (auto& k : std::views::keys(tests)) {
+    if (downarg == "all" or k.starts_with ("downsets::"s + downarg))
+      downs.insert (k.substr (0, k.find ("<")));
+  }
+
+  for (auto& k : std::views::keys(tests)) {
+    auto v = k.substr (k.find ("<"));
+    if (vecarg == "all" or v.starts_with ("<vectors::"s + vecarg))
+      vecs.insert (v);
+  }
+
+  if (downs.empty () or vecs.empty ()) {
+    std::cout << "error: no such implementation." << std::endl;
+    return 1;
+  }
+
+  std::map<std::string, result_t> all_res;
+  for (auto& ds : downs)
+    for (auto& v : vecs) {
+      vectors::bool_threshold = DIMENSION;
+      vectors::bitset_threshold = DIMENSION;
+      all_res[ds + v] = tests[ds + v] ();
+    }
+  for (auto& res : all_res) {
+    std::cout << "- " << res.first << ":\n";
+    for (auto& test : res.second)
+      std::cout << "  - " << test.first << ": " << test.second << "\n";
+  }
+  return 0;
+}

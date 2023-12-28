@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 namespace utils {
   // https://stackoverflow.com/questions/37490881/overloading-operator-in-c-with-a-prefix

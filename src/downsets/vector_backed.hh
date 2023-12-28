@@ -50,11 +50,11 @@ namespace downsets {
 
       bool insert (Vector&& v) {
         bool must_remove = false;
-  
+
         // This is like remove_if, but allows breaking.
         auto result = vector_set.begin ();
         auto end = vector_set.end ();
-  
+
         for (auto it = result; it != end; ++it) {
 	  auto res = v.partial_order (*it);
 	  if (not must_remove and res.leq ()) { // v is dominated.
@@ -70,27 +70,17 @@ namespace downsets {
 	    ++result;
 	  }
         }
-  
+
         if (result != vector_set.end ())
 	  vector_set.erase (result, vector_set.end ());
         vector_set.push_back (std::move (v));
         return true;
       }
-  
+
       void union_with (vector_backed&& other) {
         for (auto&& e : other.vector_set)
           insert (std::move (e));
       }
-
-      template <typename V>
-      class disregard_first_component {
-        public:
-          bool operator() (const V& v1, const V& v2) const {
-            auto v2prime = v2.get ().copy ();
-            v2prime[0] = v1.get ()[0];
-            return v1.get () < v2prime;
-          }
-      };
 
       void intersect_with (const vector_backed& other) {
         vector_backed intersection;
@@ -99,16 +89,14 @@ namespace downsets {
         for (const auto& x : vector_set) {
           bool dominated = false;
 
-          auto meet = [&] (const Vector& y) {
-            Vector &&v = x.meet (y);
+          for (auto& y : other.vector_set) {
+            Vector v = x.meet (y);
             if (v == x)
               dominated = true;
             intersection.insert (std::move (v));
-            return not dominated;
+            if (dominated)
+              break;
           };
-
-          std::all_of (other.vector_set.begin (), other.vector_set.end (), meet);
-
           // If x wasn't <= an element in other, then x is not in the
           // intersection, thus the set is updated.
           smaller_set |= not dominated;
@@ -124,21 +112,6 @@ namespace downsets {
         for (const auto& el : vector_set)
           res.insert (lambda (el));
         return res;
-      }
-
-      template <typename F>
-      void apply_inplace (const F& lambda) {
-        std::vector<Vector> new_set;
-        for (const auto& el : vector_set) {
-          auto&& changed_el = lambda (el);
-          new_set.push_back (std::move (changed_el)); // May not be an antichain, but speeds up.
-        }
-        vector_set = std::move (new_set);
-      }
-
-      void bump (const Vector& v) {
-        auto it = std::find (vector_set.begin (), vector_set.end (), v);
-        std::rotate (it, std::next (it), vector_set.end ());
       }
 
       auto        begin ()      { return vector_set.begin (); }

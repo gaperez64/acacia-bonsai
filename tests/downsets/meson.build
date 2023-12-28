@@ -8,7 +8,11 @@ simdbm_exe = executable ('simd-bm', 'simd-bm.cc',
                          include_directories : inc,
                          link_with : common_lib,
                          dependencies : [boost_dep, spot_dep, bddx_dep, gnulib_dep, stdsimd_dep] )
-                         
+
+downsetbm_exe = executable ('downset-bm', 'downset-bm.cc',
+                            include_directories : inc,
+                            link_with : common_lib,
+                            dependencies : [boost_dep, spot_dep, bddx_dep, gnulib_dep, stdsimd_dep] )
 
 test('antichains/vectors implementations', tests_exe, args : ['all', 'all'], suite : 'antichains')
 

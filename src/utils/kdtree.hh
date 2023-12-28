@@ -23,7 +23,7 @@ namespace utils {
   class kdtree;
 
   template <typename Vector>
-  std::ostream& operator<< (std::ostream& os, utils::kdtree<Vector>& f);
+  std::ostream& operator<< (std::ostream& os, const utils::kdtree<Vector>& f);
 
   template <typename Vector>
   class kdtree {
@@ -58,7 +58,7 @@ namespace utils {
       std::shared_ptr<kdtree_node> tree;
 
       template <typename V>
-      friend std::ostream& operator<< (std::ostream& os, kdtree<V>& f);
+      friend std::ostream& operator<< (std::ostream& os, const kdtree<V>& f);
 
       /*
        * This is one of the only interesting parts of the code: building the
@@ -181,7 +181,7 @@ namespace utils {
         // use this->vector_set
         assert (this->vector_set.size () > 0);
 
-        // We now prepare the list of indices to include in the tree 
+        // We now prepare the list of indices to include in the tree
         std::vector<size_t> points (this->vector_set.size ());
         std::iota(points.begin (), points.end (), 0);
 
@@ -233,7 +233,7 @@ namespace utils {
   };
 
   template <typename Vector>
-  inline std::ostream& operator<< (std::ostream& os, kdtree<Vector>& f) {
+  inline std::ostream& operator<< (std::ostream& os, const kdtree<Vector>& f) {
     for (auto&& el : f.vector_set)
       os << el << std::endl;
 
