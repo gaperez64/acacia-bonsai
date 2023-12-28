@@ -13,6 +13,9 @@
 #include "downsets.hh"
 #include "vectors.hh"
 
+int               utils::verbose = 2;
+utils::voutstream utils::vout;
+
 template<class T, class = void>
 struct has_insert : std::false_type {};
 
@@ -100,8 +103,9 @@ struct test_t : public generic_test<void> {
       elements_cpy.emplace_back(v1.copy ());
       elements_cpy.emplace_back(v2.copy ());
       elements_cpy.emplace_back(v3.copy ());
-
+      std::cout << "creating the union operand" << std::endl;
       SetType set_cpy = vec_to_set (std::move (elements_cpy));
+      std::cout << "ready to union" << std::endl;
       set.union_with (std::move (set_cpy));
 
       // More domination tests
@@ -128,8 +132,9 @@ struct test_t : public generic_test<void> {
       std::vector<VType> others;
       others.emplace_back(v4.copy ());
       others.emplace_back(v5.copy ());
+      std::cout << "creating union operand" << std::endl;
       SetType set2 = vec_to_set (std::move (others));
-
+      std::cout << "ready to union" << std::endl;
       set.union_with (std::move (set2));
 
       assert(set.contains(v2));
@@ -169,15 +174,17 @@ struct test_t : public generic_test<void> {
 
       auto F1i = vec_to_set (vvtovv ({
             {7, 0, 9, 9, 7},
-            {8, 0, 9, 9, 8},
+            {8, 0, 9, 9, 6},
             {9, 0, 7, 7, 9}
           }));
       auto F = vec_to_set (vvtovv ({
             {7, 0, 9, 9, 7},
-            {8, 0, 9, 9, 8},
+            {8, 0, 9, 9, 5},
             {9, 0, 7, 7, 9}
           }));
 
+
+      std::cout << "Preparing to intersect" << std::endl;
       F.intersect_with (std::move (F1i));
 
       {
@@ -242,6 +249,7 @@ using vector_types = type_list<vectors::vector_backed<char>,
 
 using set_types = template_type_list<//downsets::full_set, ; too slow.
                                      downsets::kdtree_backed,
+                                     downsets::vector_or_kdtree_backed,
                                      downsets::set_backed,
                                      downsets::vector_backed,
                                      downsets::vector_backed_bin,
@@ -264,9 +272,9 @@ int main(int argc, char* argv[]) {
     vectors::bitset_threshold = 128;
     auto& tests = test_list<void>::list;
     tests[implem] ();
+    return 0;
   } catch (std::bad_function_call& e) {
     std::cout << "error: no such implem: " << implem << std::endl;
+    return 1;
   }
-
-  return 0;
 }

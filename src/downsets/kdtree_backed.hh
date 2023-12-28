@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <math.h>
 #include <vector>
 
 #include <utils/vector_mm.hh>
@@ -15,6 +16,11 @@ namespace downsets {
   template <typename Vector>
   std::ostream& operator<<(std::ostream& os, const kdtree_backed<Vector>& f);
 
+  // Another forward def to have friend status
+  template <typename Vector>
+  class vector_or_kdtree_backed;
+
+  // Finally the actual class definition
   template <typename Vector>
   class kdtree_backed {
     private:
@@ -43,14 +49,31 @@ namespace downsets {
 
       kdtree_backed (std::vector<Vector>&& elements) noexcept {
         assert (elements.size() > 0);
-        this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (elements), elements[0].size());
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (elements));
+        std::vector<Vector> antichain;
+        antichain.reserve (this->size ());
+        
+        // for all elements in this tree, if they are not strictly
+        // dominated by the tree, we keep them
+        bool removed = false;
+        for (auto eit = this->tree->begin (); eit != this->tree->end (); ++eit) {
+          auto& e = *eit;
+          if (this->tree->dominates (e, true))
+            removed = true;
+          else
+            antichain.push_back(e.copy ()); // this does requires a copy
+        }
+        if (removed) {
+          assert (antichain.size () > 0);
+          this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (antichain));
+        }
+
       }
 
       kdtree_backed (Vector&& el) {
         auto v = std::vector<Vector> ();
-        size_t dim = el.size ();
         v.push_back (std::move (el));
-        this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (v), dim);
+        this->tree = std::make_shared<utils::kdtree<Vector>>(std::move (v));
       }
 
       template <typename F>
@@ -65,7 +88,6 @@ namespace downsets {
         return kdtree_backed (std::move (ss));
       }
 
-
       kdtree_backed (const kdtree_backed&) = delete;
       kdtree_backed (kdtree_backed&&) = default;
       kdtree_backed& operator= (const kdtree_backed&) = delete;
@@ -75,22 +97,14 @@ namespace downsets {
         return this->tree->dominates(v);
       }
 
-      /* Union in place
-       *
-       * Worst-case complexity: if the size of this antichain is n, and that
-       * of the antichain from other m, then we do n domination queries in
-       * other and m domination queries here. Finally, we build the kdtree
-       * for the result which is at most n + m in size. Hence:
-       * O( n * dim * m^(1-1/dim) +
-       *    m * dim * n^(1-1/dim) +
-       *    dim * (n+m) * lg(n+m) )
-       */
+      // Union in place
       void union_with (const kdtree_backed& other) {
+        assert (other.size () > 0);
         std::vector<Vector> result;
         result.reserve (this->size () + other.size ());
         // for all elements in this tree, if they are not strictly
         // dominated by the other tree, we keep them
-        for (auto eit = this->tree->begin(); eit != this->tree->end(); ++eit) {
+        for (auto eit = this->tree->begin (); eit != this->tree->end (); ++eit) {
           auto& e = *eit;
           if (!other.tree->dominates(e, true))
             result.push_back(e.copy ()); // this does requires a copy
@@ -102,23 +116,11 @@ namespace downsets {
           if (!this->tree->dominates (e))
             result.push_back (std::move (e));
         }
-        size_t size_before_move = result[0].size ();
-        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (result), size_before_move);
+        assert (result.size () > 0);
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (result));
       }
 
-      /* Intersection in place
-       *
-       * Worst-case complexity: We again write n for the size of this
-       * antichain and m for the size of that of other. Some heuristics will
-       * be applied but, in essence, we take the meet of all pairs of
-       * elements one from each antichain. Then, we construct a kdtree on
-       * that set (not necessarily an antichain!). Finally, using the
-       * previous tree we compute the antichain and build a kdtree for it.
-       * Hence:
-       * O( n * m +
-       *    dim * n * m * lg(n * m) +
-       *    n * m * dim * (nm)^(1-1/dim) )
-       */
+      // Intersection in place
       void intersect_with (const kdtree_backed& other) {
         std::vector<Vector> intersection;
         bool smaller_set = false;
@@ -149,7 +151,7 @@ namespace downsets {
         }
 
         assert (intersection.size() > 0);
-        utils::kdtree<Vector> temp_tree(std::move (intersection), intersection[0].size());
+        utils::kdtree<Vector> temp_tree(std::move (intersection));
         std::vector<std::reference_wrapper<Vector>> inter_antichain;
         for (auto& e : temp_tree) {
           if (not temp_tree.dominates(e, true))
@@ -160,10 +162,7 @@ namespace downsets {
         for (auto r : inter_antichain)
           vector_antichain.push_back (std::move (r.get ()));
 
-        size_t dim_before_move = vector_antichain[0].size ();
-        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain),
-                                                              dim_before_move);
-        assert (dim_before_move > 0);
+        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain));
         assert (this->tree->is_antichain ());
       }
 
@@ -175,6 +174,8 @@ namespace downsets {
       const auto  begin () const { return this->tree->begin (); }
       auto        end ()         { return this->tree->end (); }
       const auto  end () const   { return this->tree->end (); }
+
+      friend class vector_or_kdtree_backed<Vector>;
   };
 
   template <typename Vector>

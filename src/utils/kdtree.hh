@@ -3,12 +3,22 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <numeric>
-#include <vector>
+#include <limits>
 #include <map>
+#include <numeric>
+#include <stack>
+#include <vector>
 
+
+/*
+ * This is Shrisha Rao's version of a kd-tree for variable dimension. The
+ * basis for the algorithms comes from the Computational Geometry book
+ * by de Berg et al.
+ *
+ * Coded by Guillermo A. Perez
+ */
 namespace utils {
-  // Forward definition for the operator<<s.
+  // Forward definition for the operator<<
   template <typename>
   class kdtree;
 
@@ -19,21 +29,30 @@ namespace utils {
   class kdtree {
     private:
       struct kdtree_node {
-          std::shared_ptr<kdtree_node> left;
-          std::shared_ptr<kdtree_node> right;
-          int location;
-          size_t value_idx;
-          size_t axis;
+          std::shared_ptr<kdtree_node> left;  // left child
+          std::shared_ptr<kdtree_node> right; // right child
+          size_t value_idx;                   // only for leaves: the index of
+                                              // the element from the list
+          int location;                       // the value at which we split
+          size_t axis;                        // the dimension at which we
+                                              // split
+          bool clean_split;                   // whether the split is s.t.
+                                              // to the left all is smaller
 
+          // constructor for leaves
           kdtree_node (size_t idx) : left (nullptr),
                                      right (nullptr),
                                      value_idx (idx),
-                                     axis (0) {}
+                                     location (0),
+                                     axis (0),
+                                     clean_split (false) {}
+          // constructor for inner nodes
           kdtree_node (std::shared_ptr<kdtree_node> l,
                        std::shared_ptr<kdtree_node> r,
-                       int loc, size_t a) : left (l), right (r),
-                                            location (loc),
-                                            axis (a) {}
+                       int loc, size_t a, bool c) : left (l), right (r),
+                                                    location (loc),
+                                                    axis (a),
+                                                    clean_split (c) {}
       };
       const size_t dim;
       std::shared_ptr<kdtree_node> tree;
@@ -41,160 +60,148 @@ namespace utils {
       template <typename V>
       friend std::ostream& operator<< (std::ostream& os, const kdtree<V>& f);
 
-      size_t dim_max_range (std::vector<size_t>& points) {
-        assert (points.size () > 0);
-
-        if (points.size () == 1)
-          return 0;
-
-        // and determine the axis based on the dimension with the
-        // longest range
-        int max_range;
-        size_t axis = 0;
-        for (size_t d = 0; d < this->dim; d++) {
-          auto it = points.begin();
-          int val = this->vector_set[(*it)][d];
-          int min = val;
-          int max = val;
-          while (it != points.end ()) {
-            val = this->vector_set[(*it)][d];
-            if (val < min) min = val;
-            if (val > max) max = val;
-            it++;
-          }
-          if (d == 0 || max_range < max - min) {
-            max_range = max - min;
-            axis = d;
-          }
-        }
-        return axis;
-      }
-
+      /*
+       * This is one of the only interesting parts of the code: building the
+       * kd-tree to make sure it is balanced
+       */
       std::shared_ptr<kdtree_node>
-      recursive_build (std::vector<size_t>& points, size_t axis) {
-        const size_t length = points.size ();
+      recursive_build (std::vector<size_t>::iterator begin_it,
+                       std::vector<size_t>::iterator end_it,
+                       size_t length, size_t axis) {
+        assert (static_cast<size_t>(std::distance (begin_it, end_it)) == length);
         assert (length > 0);
         assert (axis < this->dim && axis >= 0);
 
         // if the list of elements is now a singleton, we make a leaf
         if (length == 1)
-          return std::make_shared<kdtree_node> (points[0]);
+          return std::make_shared<kdtree_node> (*begin_it);
 
-        // Use a selection algorithm to get the median, technically we get the
-        // floor of the median as the median of an even-length list could be a
-        // rational if one chooses the arithmetic mean
-        auto mit = points.begin () + length / 2;
-        std::nth_element (points.begin (), mit, points.end (),
-                          [this, &axis] (size_t i1, size_t i2) {
-                            return this->vector_set[i1][axis] <
-                                   this->vector_set[i2][axis];
-                          });
-        size_t median_idx = points[length / 2];
+        // Use a selection algorithm to get the median
+        // NOTE: we actually get the item whose index is 
+        auto median_it = begin_it + length / 2;
+        std::nth_element (begin_it, median_it, end_it, 
+          [this, &axis] (size_t i1, size_t i2) {
+            return this->vector_set[i1][axis] <
+                   this->vector_set[i2][axis];
+          });
+        size_t median_idx = *median_it;
         int loc = this->vector_set[median_idx][axis];
-        // small hack: if the median is the same as the max then we choose a
-        // location (splitting value) that is one less, this ensures a
-        // nonempty subset of elements with a strictly larger value
-        mit = points.begin () + length / 2;
-        bool found = false;
-        while (mit != points.end ()) {
-          if (this->vector_set[*mit][axis] > loc) {
-            found = true;
-            break;
-          }
-          mit++;
-        }
-        if (!found)
-          loc--;
 
-        // we can start filling the vectors for the recursive calls
-        std::vector<size_t> left (std::move (points));
-        std::vector<size_t> right (points.size ());
-
-        for (auto it = left.begin (); it != left.end (); /* noop */) {
-          if (loc < this->vector_set[*it][axis]) {
-            right.push_back (*it);
-            it = left.erase (it);
-          } else
-            ++it;
-        }
+        // check whether the maximal element on the left is equal to loc
+        // (with respect to dimension axis) to determine if the split is clean
+        auto max_it = std::max_element (begin_it, median_it,
+          [this, &axis] (size_t i1, size_t i2) {
+            return this->vector_set[i1][axis] <
+                   this->vector_set[i2][axis];
+          });
+        size_t max_idx = *max_it;
+        bool clean = (this->vector_set[max_idx][axis] < loc);
 
         // some sanity checks
-        assert (left.size () > 0);
-        assert (right.size () > 0);
-        assert (right.size () + left.size () == length);
+        assert (std::distance (begin_it, median_it) > 0);
+        assert (std::distance (median_it, end_it) > 0);
+        assert (static_cast<size_t>(std::distance (begin_it, median_it)) == length / 2);
+        assert (static_cast<size_t>(std::distance (median_it, end_it)) == length - (length / 2));
+        assert (static_cast<size_t>(std::distance (begin_it, median_it)) +
+                std::distance (median_it, end_it) == length);
+        assert (this->vector_set[max_idx][axis] <= loc);
 
-        // FIXME: can we be more efficient in our choice of axes than just
-        // calling dim_max_range? after all, we are already traversing left
-        // and right a few lines above
-        return std::make_shared<kdtree_node> (recursive_build (left, dim_max_range(left)),
-                                              recursive_build (right, dim_max_range(right)),
-                                              loc, axis);
+        // the next axis is just the following dimension, wrapping around
+        size_t next_axis = (axis + 1) % this->dim;
+        return std::make_shared<kdtree_node> (recursive_build (begin_it, median_it,
+                                                               length / 2, next_axis),
+                                              recursive_build (median_it, end_it,
+                                                               length - (length / 2), next_axis),
+                                              loc, axis, clean);
       }
 
+      /*
+       * And this is the second interesting piece of code, using the
+       * properties of how the kd-tree was constructed to look for an element
+       * that dominates a given vector.
+       * NOTE: Through the recursive calls we keep track of dim variables
+       * which store the lower bounds of the region of the current node and a
+       * counter dims_to_dom which records the dimensions on which the current
+       * region is not yet dominating the region of v
+       */
       bool recursive_dominates (const Vector& v, bool strict,
-                                std::shared_ptr<kdtree_node> node) const {
+                                std::shared_ptr<kdtree_node> node,
+                                int* lbounds, size_t dims_to_dom) const {
         assert (node != nullptr);
 
-        // if we are at a leaf, just check if it dominates
-        if (node->left == nullptr) {
+        if (node->left == nullptr) {         // if we are at a leaf, just check if it dominates
           auto po = v.partial_order (this->vector_set[node->value_idx]);
-
           if (strict)
             return po.leq () and not po.geq ();
           else
             return po.leq ();
-        } else {
-          // we have to determine if left and right
-          // have to be explored
-          if (v[node->axis] > node->location) {
-            // we won't find dominating vectors on the left
-            return recursive_dominates (v, strict, node->right);
-          } else {
-            // in this case we do have to explore both sub-trees
-            return (recursive_dominates (v, strict, node->left) ||
-                    recursive_dominates (v, strict, node->right));
-          }
         }
+        // so we're at an inner node, let's check if the right subtree
+        // is guaranteed to have a dominating vector
+        int old_bound = lbounds[node->axis];
+        size_t still_to_dom = dims_to_dom;
+        if (node->location > lbounds[node->axis]) {
+          if (node->location > v[node->axis] &&
+              old_bound <= v[node->axis]) {
+            still_to_dom--;
+          } else if (!strict &&
+                     node->location >= v[node->axis] &&
+                     old_bound < v[node->axis]) {
+            still_to_dom--;
+          }
+          if (still_to_dom == 0) return true;
+          lbounds[node->axis] = node->location;
+        }
+        // if we got here, we need to check on the right recursively
+        bool r_succ = recursive_dominates (v, strict, node->right, lbounds, still_to_dom);
+        if (r_succ) return true;
+        // all that's left is to check on the left recursively, if pertinent
+        lbounds[node->axis] = old_bound;
+        if (v[node->axis] > node->location ||
+            (v[node->axis] == node->location && (strict || node->clean_split)))
+          return false;
+        // it is pertinent after all
+        return recursive_dominates (v, strict, node->left, lbounds, dims_to_dom);
       }
 
     public:
       std::vector<Vector> vector_set;
 
-      kdtree (std::vector<Vector>&& elements, const size_t dim) : dim (dim) {
+      // NOTE: this works for any collection of vectors, not even set assumed
+      kdtree (std::vector<Vector>&& elements) : dim (elements[0].size ()) {
+        assert (elements.size () > 0);
+        assert (this->dim > 0);
+
         vector_set.reserve (elements.size ());
-
         for (ssize_t i = elements.size () - 1; i >= 0; --i) {
-          bool unique = true;
-
-          for (ssize_t j = 0; j < i; ++j)
-            if (elements[j] == elements[i]) {
-              unique = false;
-              break;
-            }
-
-          if (unique)
-            this->vector_set.push_back (std::move (elements[i]));
+          this->vector_set.push_back (std::move (elements[i]));
         }
 
         // WARNING: moved elements, so we can't really use it below! instead,
         // use this->vector_set
-        assert (dim > 0);
         assert (this->vector_set.size () > 0);
 
         // We now prepare the list of indices to include in the tree
         std::vector<size_t> points (this->vector_set.size ());
-        std::iota(points.begin(), points.end(), 0);
+        std::iota(points.begin (), points.end (), 0);
 
-        this->tree = recursive_build (points, dim_max_range(points));
+        this->tree = recursive_build (points.begin (), points.end (),
+                                      points.size (), 0);
       }
 
       kdtree (const kdtree& other) = delete;
       kdtree (kdtree&& other) = default;
       kdtree& operator= (kdtree&& other) = default;
 
+      bool dominates (const Vector& v, bool strict = false) const {
+        int lbounds[this->dim];
+        std::fill_n (lbounds, this->dim, std::numeric_limits<int>::min ());
+        return this->recursive_dominates (v, strict, this->tree, lbounds, this->dim);
+      }
+      
       bool is_antichain () const {
-        for (auto it = vector_set.begin (); it != vector_set.end (); ++it) {
-          for (auto it2 = it + 1; it2 != vector_set.end (); ++it2) {
+        for (auto it = this->begin (); it != this->end (); ++it) {
+          for (auto it2 = it + 1; it2 != this->end (); ++it2) {
             auto po = it->partial_order (*it2);
             if (po.leq () or po.geq ())
               return false;
@@ -202,12 +209,8 @@ namespace utils {
         }
         return true;
       }
-
       bool operator== (const kdtree& other) const {
-        return vector_set == other.vector_set;
-      }
-      bool dominates (const Vector& v, bool strict = false) const {
-        return this->recursive_dominates (v, strict, this->tree);
+        return this->vector_set == this->vector_set;
       }
       auto size () const {
         return this->vector_set.size ();
@@ -224,7 +227,7 @@ namespace utils {
       auto end () {
         return this->vector_set.end ();
       }
-      const auto end () const   {
+      const auto end () const {
         return this->vector_set.end ();
       }
   };
