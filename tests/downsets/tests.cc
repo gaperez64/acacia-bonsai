@@ -13,6 +13,9 @@
 #include "downsets.hh"
 #include "vectors.hh"
 
+int               utils::verbose = 2;
+utils::voutstream utils::vout;
+
 template<class T, class = void>
 struct has_insert : std::false_type {};
 
