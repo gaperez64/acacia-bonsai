@@ -71,6 +71,23 @@ struct has_insert : std::false_type {};
 template <class T>
 struct has_insert<T, std::void_t<decltype(std::declval<T>().insert (std::declval<typename T::value_type> ()))>> : std::true_type {};
 
+struct {
+    size_t t1_sz, t1_in, t1_out;
+    size_t t2_sz;
+    size_t t3_sz;
+} test_chk = {};
+
+#define chk(Field, Value) do {                  \
+  if (Field == 0)                               \
+    Field = Value;                              \
+  else                                          \
+    if (Field != Value) {                                               \
+      verb_do (0, vout << "ERROR: " << #Field " != " #Value << std::endl); \
+      abort ();                                                         \
+    }                                                                   \
+  } while (0)
+
+
 template <typename SetType>
 struct test_t : public generic_test<result_t> {
     using VType = typename SetType::value_type;
@@ -107,11 +124,13 @@ struct test_t : public generic_test<result_t> {
         double buildtime = 0, querytime = 0, transfertime = 0;
         for (size_t rounds = 0; rounds < ROUNDS; ++rounds) {
           verb_do (2, vout << "Round " << rounds << std::endl);
-          verb_do (2, vout << "BUILD\n");
+          verb_do (2, vout << "BUILD...");
           auto vec1 = test_vector (NITEMS);
           sw.start ();
           auto set = vec_to_set (std::move (vec1));
           buildtime += sw.stop ();
+          verb_do (2, vout << " SIZE: " << set.size () << std::endl);
+          chk (test_chk.t1_sz, set.size ());
           verb_do (2, vout << "QUERY...\n");
           auto vec2 = test_vector (2 * NITEMS);
           size_t in = 0, out = 0;
@@ -123,6 +142,8 @@ struct test_t : public generic_test<result_t> {
               ++out;
           querytime += sw.stop ();
           verb_do (2, vout << "... IN: " << in << " OUT: " << out << std::endl);
+          chk (test_chk.t1_in, in);
+          chk (test_chk.t1_out, out);
           verb_do (2, vout << "TRANSFER (supposed to be free)...\n");
           sw.start ();
           for (size_t i = 0; i < params["transfer"]; ++i) {
@@ -130,6 +151,7 @@ struct test_t : public generic_test<result_t> {
             set = std::move (set2);
           }
           transfertime += sw.stop ();
+          chk (test_chk.t1_sz, set.size ());
         }
 
         res["build"] = buildtime;
@@ -160,6 +182,7 @@ struct test_t : public generic_test<result_t> {
           set.intersect_with (std::move (set2));
           intertime += sw.stop ();
           verb_do (2, vout << " SIZE: " << set.size () << std::endl);
+          chk (test_chk.t2_sz, set.size ());
         }
         res["intersection"] = intertime;
         verb_do (1, vout << "INTER: " << intertime / ROUNDS
@@ -186,6 +209,7 @@ struct test_t : public generic_test<result_t> {
           set.union_with (std::move (set2));
           uniontime += sw.stop ();
           verb_do (2, vout << " SIZE: " << set.size () << std::endl);
+          chk (test_chk.t3_sz, set.size ());
         }
         res["union"] = uniontime;
         verb_do (1, vout << "UNION: " << uniontime / ROUNDS
@@ -218,6 +242,7 @@ using vector_types = type_list<
 
 using set_types = template_type_list<
   downsets::kdtree_backed,
+  downsets::vector_or_kdtree_backed,
   downsets::vector_backed,
   downsets::vector_backed_bin,
   downsets::vector_backed_one_dim_split>;
@@ -296,19 +321,31 @@ int main (int argc, char* argv[]) {
   auto downarg = std::string {argv[optind]},
     vecarg = std::string {argv[optind + 1]};
 
-  std::set<std::string> downs, vecs;
+  std::list<std::string> downs, vecs;
   auto& tests = test_list<result_t>::list;
+  auto to_string_view = [] (auto&& str) {
+    return std::string_view(&*str.begin(), std::ranges::distance(str));
+  };
 
-  for (auto& k : std::views::keys(tests)) {
-    if (downarg == "all" or k.starts_with ("downsets::"s + downarg))
-      downs.insert (k.substr (0, k.find ("<")));
-  }
+  for (auto&& da : downarg
+         | std::ranges::views::split(',')
+         | std::ranges::views::transform (to_string_view))
+    for (auto& k : std::views::keys (tests))
+      if (da == "all" or k.starts_with ("downsets::"s + std::string (da))) {
+        auto sub = k.substr (0, k.find ("<"));
+        if (std::ranges::find (downs.begin (), downs.end (), sub) == downs.end ())
+          downs.push_back (sub);
+      }
 
-  for (auto& k : std::views::keys(tests)) {
-    auto v = k.substr (k.find ("<"));
-    if (vecarg == "all" or v.starts_with ("<vectors::"s + vecarg))
-      vecs.insert (v);
-  }
+  for (auto&& va : vecarg
+         | std::ranges::views::split(',')
+         | std::ranges::views::transform (to_string_view))
+    for (auto& k : std::views::keys (tests)) {
+      auto v = k.substr (k.find ("<"));
+      if (va == "all" or v.starts_with ("<vectors::"s + std::string (va)))
+        if (std::ranges::find (vecs.begin (), vecs.end (), v) == vecs.end ())
+          vecs.push_back (v);
+    }
 
   if (downs.empty () or vecs.empty ()) {
     std::cout << "error: no such implementation." << std::endl;
