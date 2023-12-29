@@ -5,6 +5,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <ranges>
 #include <memory>
 #include <numeric>
 #include <stack>
@@ -78,9 +79,9 @@ namespace utils {
           return std::make_shared<kdtree_node> (*begin_it);
 
         // Use a selection algorithm to get the median
-        // NOTE: we actually get the item whose index is 
+        // NOTE: we actually get the item whose index is
         auto median_it = begin_it + length / 2;
-        std::nth_element (begin_it, median_it, end_it, 
+        std::nth_element (begin_it, median_it, end_it,
           [this, &axis] (size_t i1, size_t i2) {
             return this->vector_set[i1][axis] <
                    this->vector_set[i2][axis];
@@ -130,7 +131,7 @@ namespace utils {
                                 int* lbounds, size_t dims_to_dom) const {
         assert (node != nullptr);
         assert (dims_to_dom > 0);
-        
+
         // if we are at a leaf, just check if it dominates
         if (node->left == nullptr) {
           auto po = v.partial_order (this->vector_set[node->value_idx]);
@@ -176,13 +177,13 @@ namespace utils {
       std::vector<Vector> vector_set;
 
       // NOTE: this works for any collection of vectors, not even set assumed
-      kdtree (std::vector<Vector>&& elements) : dim (elements[0].size ()) {
+      template <std::ranges::input_range R, class Proj = std::identity>
+      kdtree (R&& elements, Proj proj = {}) : dim (proj (elements[0]).size ()) {
         assert (elements.size () > 0);
         assert (this->dim > 0);
-
         vector_set.reserve (elements.size ());
         for (ssize_t i = elements.size () - 1; i >= 0; --i) {
-          this->vector_set.push_back (std::move (elements[i]));
+          this->vector_set.push_back (proj (std::move (elements[i])));
         }
 
         // WARNING: moved elements, so we can't really use it below! instead,
@@ -206,7 +207,7 @@ namespace utils {
         std::fill_n (lbounds, this->dim, std::numeric_limits<int>::min ());
         return this->recursive_dominates (v, strict, this->tree, lbounds, this->dim);
       }
-      
+
       bool is_antichain () const {
         for (auto it = this->begin (); it != this->end (); ++it) {
           for (auto it2 = it + 1; it2 != this->end (); ++it2) {
@@ -219,7 +220,7 @@ namespace utils {
         return true;
       }
       bool operator== (const kdtree& other) const {
-        return this->vector_set == this->vector_set;
+        return this->vector_set == other->vector_set;
       }
       auto size () const {
         return this->vector_set.size ();

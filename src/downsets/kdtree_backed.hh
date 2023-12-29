@@ -53,7 +53,7 @@ namespace downsets {
         this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (elements));
         std::vector<Vector> antichain;
         antichain.reserve (this->size ());
-        
+
         // for all elements in this tree, if they are not strictly
         // dominated by the tree, we keep them
         bool removed = false;
@@ -158,15 +158,20 @@ namespace downsets {
 
         // Worst-case scenario: we do need to build trees
         assert (intersection.size () > 0);
-        auto vector_antichain = std::vector<Vector> ();
+        auto vector_antichain = std::vector<Vector*> ();
         vector_antichain.reserve (intersection.size ());
         utils::kdtree<Vector> temp_tree(std::move (intersection));
         for (Vector& e : temp_tree) {
           if (not temp_tree.dominates(e, true)) {
-            vector_antichain.push_back (std::move (e));
+            vector_antichain.push_back (&e);
           }
         }
-        this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain));
+        struct proj {
+            const Vector& operator() (const Vector* pv) { return *pv; }
+            Vector&& operator() (Vector*&& pv)          { return std::move (*pv); }
+        };
+        this->tree = std::make_shared<utils::kdtree<Vector>> (
+          std::move (vector_antichain), proj ());
         assert (this->tree->is_antichain ());
       }
 
