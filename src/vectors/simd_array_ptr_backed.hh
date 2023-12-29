@@ -50,6 +50,7 @@ namespace vectors {
       }
 
       self& operator= (self&& other) {
+        delete data;
         data = other.data;
         other.data = nullptr;
         return *this;

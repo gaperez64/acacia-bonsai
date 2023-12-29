@@ -44,6 +44,7 @@ namespace vectors {
 
     public:
       array_ptr_backed_ (self&& other) : data (other.data), k (other.k) {
+        assert (data);
         other.data = nullptr;
       }
 
@@ -58,7 +59,10 @@ namespace vectors {
       }
 
       self& operator= (self&& other) {
+        assert (this != &other);
+        delete data;
         assert (k == other.k);
+        assert (other.data);
         data = other.data;
         other.data = nullptr;
         return *this;
@@ -142,4 +146,3 @@ namespace vectors {
   }
 
 }
-
