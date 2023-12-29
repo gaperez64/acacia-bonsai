@@ -162,11 +162,7 @@ namespace downsets {
         vector_antichain.reserve (intersection.size ());
         utils::kdtree<Vector> temp_tree(std::move (intersection));
         for (Vector& e : temp_tree) {
-          std::cout << "KD: checking whether ";
-          vectors::operator<< (std::cout, e);
-          std::cout << " is dominated" << std::endl;
           if (not temp_tree.dominates(e, true)) {
-            std::cout << "KD: no, it is not!" << std::endl;
             vector_antichain.push_back (std::move (e));
           }
         }

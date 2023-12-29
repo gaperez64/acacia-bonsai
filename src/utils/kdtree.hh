@@ -128,8 +128,9 @@ namespace utils {
                                 std::shared_ptr<kdtree_node> node,
                                 int* lbounds, size_t dims_to_dom) const {
         assert (node != nullptr);
-
-        if (node->left == nullptr) {         // if we are at a leaf, just check if it dominates
+        
+        // if we are at a leaf, just check if it dominates
+        if (node->left == nullptr) {
           auto po = v.partial_order (this->vector_set[node->value_idx]);
           if (strict)
             return po.leq () and not po.geq ();
@@ -203,8 +204,12 @@ namespace utils {
         for (auto it = this->begin (); it != this->end (); ++it) {
           for (auto it2 = it + 1; it2 != this->end (); ++it2) {
             auto po = it->partial_order (*it2);
-            if (po.leq () or po.geq ())
+            if (po.leq () or po.geq ()) {
+              std::cout << "Not antichain!!!!" << std::endl;
+              std::cout << *it << " versus " << std::endl
+                        << *it2 << std::endl;
               return false;
+            }
           }
         }
         return true;
