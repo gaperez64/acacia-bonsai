@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <math.h>
+#include <memory>
 #include <vector>
 
 #include <vectors.hh>
