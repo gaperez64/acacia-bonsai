@@ -168,8 +168,6 @@ namespace vectors {
       int sum = 0;
   };
 
-}
-
 template <typename T, size_t Units>
 inline
 std::ostream& operator<<(std::ostream& os, const vectors::array_backed_sum_<T, Units>& v)
@@ -180,3 +178,5 @@ std::ostream& operator<<(std::ostream& os, const vectors::array_backed_sum_<T, U
   os << "}";
   return os;
 }
+}
+

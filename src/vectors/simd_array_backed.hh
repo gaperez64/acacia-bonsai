@@ -122,8 +122,6 @@ namespace vectors {
         return utils::simd_traits<T>::capacity_for (elts);
       }
   };
-}
-
 template <typename T, size_t nsimds>
 inline
 std::ostream& operator<<(std::ostream& os, const vectors::simd_array_backed_<T, nsimds>& v)
@@ -134,3 +132,5 @@ std::ostream& operator<<(std::ostream& os, const vectors::simd_array_backed_<T, 
   os << "}";
   return os;
 }
+}
+

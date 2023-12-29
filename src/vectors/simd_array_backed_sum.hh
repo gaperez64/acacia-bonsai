@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <cassert>
 #include <experimental/simd>
 #include <iostream>
@@ -148,11 +149,11 @@ namespace vectors {
       }
   };
 
+  template <typename T, size_t nsimds>
+  inline
+  std::ostream& operator<<(std::ostream& os, const vectors::simd_array_backed_sum_<T, nsimds>& v)
+  {
+    return v.print (os);
+  }
 }
 
-template <typename T, size_t nsimds>
-inline
-std::ostream& operator<<(std::ostream& os, const vectors::simd_array_backed_sum_<T, nsimds>& v)
-{
-  return v.print (os);
-}

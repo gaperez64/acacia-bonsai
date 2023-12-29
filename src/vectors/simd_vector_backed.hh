@@ -141,8 +141,6 @@ namespace vectors {
         return utils::simd_traits<T>::capacity_for (elts);
       }
   };
-}
-
 template <typename T>
 inline
 std::ostream& operator<<(std::ostream& os, const vectors::simd_vector_backed<T>& v)
@@ -153,3 +151,5 @@ std::ostream& operator<<(std::ostream& os, const vectors::simd_vector_backed<T>&
   os << "}";
   return os;
 }
+}
+
