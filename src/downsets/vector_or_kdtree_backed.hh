@@ -105,10 +105,10 @@ namespace downsets {
         // to do the check here though
         if (exp (dim) < m) {
           this->kdtree = std::make_shared<kdtree_backed<Vector>> (std::move (elements));
-          verb_do (2, vout << "VEKD: created kd-tree downset" << std::endl);
+          verb_do (4, vout << "VEKD: created kd-tree downset" << std::endl);
         } else {
           this->vector = std::make_shared<vector_backed<Vector>> (std::move (elements));
-          verb_do (2, vout << "VEKD: created vector downset" << std::endl);
+          verb_do (4, vout << "VEKD: created vector downset" << std::endl);
         }
       }
 

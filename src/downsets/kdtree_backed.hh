@@ -5,6 +5,7 @@
 #include <math.h>
 #include <vector>
 
+#include <vectors.hh>
 #include <utils/vector_mm.hh>
 #include <utils/kdtree.hh>
 
@@ -146,22 +147,29 @@ namespace downsets {
           }
 
           // If x wasn't in the set of meets, dominated is false and
-          // the minima of the set is updated
+          // the set of minima is different than what is in this->tree
           smaller_set |= not dominated;
         }
 
-        assert (intersection.size() > 0);
-        utils::kdtree<Vector> temp_tree(std::move (intersection));
-        std::vector<std::reference_wrapper<Vector>> inter_antichain;
-        for (auto& e : temp_tree) {
-          if (not temp_tree.dominates(e, true))
-            inter_antichain.push_back (std::ref (e));
-        }
-        auto vector_antichain = std::vector<Vector> ();
-        vector_antichain.reserve (inter_antichain.size ());
-        for (auto r : inter_antichain)
-          vector_antichain.push_back (std::move (r.get ()));
+        // We can skip building trees and all if this->tree is the antichain
+        // of minimal elements
+        if (!smaller_set)
+          return;
 
+        // Worst-case scenario: we do need to build trees
+        assert (intersection.size () > 0);
+        auto vector_antichain = std::vector<Vector> ();
+        vector_antichain.reserve (intersection.size ());
+        utils::kdtree<Vector> temp_tree(std::move (intersection));
+        for (Vector& e : temp_tree) {
+          std::cout << "KD: checking whether ";
+          vectors::operator<< (std::cout, e);
+          std::cout << " is dominated" << std::endl;
+          if (not temp_tree.dominates(e, true)) {
+            std::cout << "KD: no, it is not!" << std::endl;
+            vector_antichain.push_back (std::move (e));
+          }
+        }
         this->tree = std::make_shared<utils::kdtree<Vector>> (std::move (vector_antichain));
         assert (this->tree->is_antichain ());
       }

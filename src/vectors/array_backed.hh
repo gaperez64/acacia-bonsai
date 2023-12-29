@@ -110,15 +110,15 @@ namespace vectors {
       const size_t k;
   };
 
+  template <typename T, size_t Units>
+  inline
+  std::ostream& operator<<(std::ostream& os, const vectors::array_backed_<T, Units>& v)
+  {
+    os << "{ ";
+    for (size_t i = 0; i < v.size (); ++i)
+      os << v[i] << " ";
+    os << "}";
+    return os;
+  }
 }
 
-template <typename T, size_t Units>
-inline
-std::ostream& operator<<(std::ostream& os, const vectors::array_backed_<T, Units>& v)
-{
-  os << "{ ";
-  for (size_t i = 0; i < v.size (); ++i)
-    os << v[i] << " ";
-  os << "}";
-  return os;
-}
