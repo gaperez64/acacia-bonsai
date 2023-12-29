@@ -3,10 +3,11 @@
 #include <vector>
 #include <string>
 
-#include "vectors/array_backed.hh"
+#include "utils/kdtree.hh"
+#include "vectors/vector_backed.hh"
 #include "downsets/kdtree_backed.hh"
 
-using SetType = downsets::kdtree_backed<vectors::array_backed<unsigned char, 4ul>>;
+using SetType = downsets::kdtree_backed<vectors::vector_backed<unsigned char>>;
 using VType = typename SetType::value_type;
 
 std::vector<VType> vvtovv (const std::vector<std::vector<unsigned char>>& vv) {
@@ -16,8 +17,36 @@ std::vector<VType> vvtovv (const std::vector<std::vector<unsigned char>>& vv) {
   return out;
 }
 
+int checkList(std::vector<VType>&& list) {
+  utils::kdtree<VType> tree(std::move (list));
+  std::cout << "checking whether the list is an antichain" << std::endl;
+  // we know for a fact that the list is not an antichain
+  if (tree.is_antichain ()) {
+    std::cerr << "incorrectly saying it is an antichain!" << std::endl;
+    return 1;
+  }
+
+  // next, we want to check whether a known element is contained in the list
+  // we know for a fact it is dominated by an element in the list
+  VType element (std::initializer_list<unsigned char> (
+    { 5, 3, 4, 3, 8, 7, 5, 10, 0, 12, 0, 5, 2, 10, 0, 2, 9, 1, 7, 0, 7, 4, 4, 1, 2, 5, 1, 8, 7, 0, 3, 5 }
+  ));
+  std::cout << "checking domination of a known element" << std::endl;
+  if (not tree.dominates (element)) {
+    std::cerr << "incorrectly saying element is not dominated" << std::endl;
+    return 1;
+  }
+  std::cout << "checking STRICT domination now" << std::endl;
+  if (not tree.dominates (element, true)) {
+    std::cerr << "incorrectly saying element is not stritly dominated" << std::endl;
+    return 1;
+  }
+
+  return 0;
+}
+
 int test() {
-  SetType set(std::move(vvtovv({
+  std::vector<VType> list = vvtovv({
     { 0, 1, 9, 5, 1, 2, 0, 8, 1, 0, 1, 6, 9, 0, 0, 6, 8, 0, 4, 0, 5, 8, 5, 0, 6, 6, 1, 6, 5, 9, 3, 1 },
     { 0, 1, 9, 5, 3, 2, 0, 2, 1, 2, 4, 6, 5, 0, 0, 4, 4, 0, 4, 0, 5, 8, 7, 5, 11, 6, 1, 4, 0, 6, 8, 8 },
     { 0, 1, 4, 4, 5, 2, 0, 1, 3, 8, 4, 4, 1, 0, 0, 6, 4, 0, 4, 0, 3, 8, 1, 8, 0, 5, 1, 2, 5, 8, 0, 9 },
@@ -1396,12 +1425,8 @@ int test() {
     { 0, 2, 12, 9, 11, 0, 6, 4, 12, 2, 2, 7, 11, 7, 1, 10, 10, 9, 0, 11, 0, 12, 3, 6, 8, 9, 12, 8, 11, 2, 10, 3 },
     { 6, 11, 9, 5, 2, 11, 2, 7, 4, 3, 10, 3, 8, 4, 6, 5, 7, 8, 0, 10, 4, 7, 12, 9, 10, 9, 5, 5, 3, 9, 2, 8 },
     { 5, 3, 4, 3, 8, 12, 10, 11, 0, 12, 0, 5, 2, 10, 0, 7, 11, 1, 7, 0, 7, 4, 6, 5, 5, 7, 12, 9, 7, 0, 3, 5 }
-  })));
-  //if (not set.is_antichain())
-  //  return 1;
-
-  // all tests passed
-  return 0;
+  });
+  return checkList(std::move (list));
 }
 
 int main(int argc, char* argv[]) {

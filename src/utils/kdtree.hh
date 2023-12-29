@@ -5,6 +5,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <memory>
 #include <numeric>
 #include <stack>
 #include <vector>
@@ -128,6 +129,7 @@ namespace utils {
                                 std::shared_ptr<kdtree_node> node,
                                 int* lbounds, size_t dims_to_dom) const {
         assert (node != nullptr);
+        assert (dims_to_dom > 0);
         
         // if we are at a leaf, just check if it dominates
         if (node->left == nullptr) {
@@ -137,17 +139,21 @@ namespace utils {
           else
             return po.leq ();
         }
-        // so we're at an inner node, let's check if the right subtree
+
+        // so we're at an inner node, this means the known lower bound for the
+        // dimension at which we split for this node must be smaller than the
+        // component of the given vector
+        assert (lbounds[node->axis] <= v[node->axis]);
+        assert (strict || (lbounds[node->axis] < v[node->axis]));
+
+        // let's check if the right subtree
         // is guaranteed to have a dominating vector
-        int old_bound = lbounds[node->axis];
+        const int old_bound = lbounds[node->axis];
         size_t still_to_dom = dims_to_dom;
-        if (node->location > lbounds[node->axis]) {
-          if (node->location > v[node->axis] &&
-              old_bound <= v[node->axis]) {
+        if (node->location > old_bound) {
+          if (node->location > v[node->axis]) {
             still_to_dom--;
-          } else if (!strict &&
-                     node->location >= v[node->axis] &&
-                     old_bound < v[node->axis]) {
+          } else if (!strict && node->location >= v[node->axis]) {
             still_to_dom--;
           }
           if (still_to_dom == 0) return true;
@@ -159,8 +165,9 @@ namespace utils {
         // all that's left is to check on the left recursively, if pertinent
         lbounds[node->axis] = old_bound;
         if (v[node->axis] > node->location ||
-            (v[node->axis] == node->location && (strict || node->clean_split)))
+            (v[node->axis] == node->location && node->clean_split)) {
           return false;
+        }
         // it is pertinent after all
         return recursive_dominates (v, strict, node->left, lbounds, dims_to_dom);
       }
@@ -205,9 +212,6 @@ namespace utils {
           for (auto it2 = it + 1; it2 != this->end (); ++it2) {
             auto po = it->partial_order (*it2);
             if (po.leq () or po.geq ()) {
-              std::cout << "Not antichain!!!!" << std::endl;
-              std::cout << *it << " versus " << std::endl
-                        << *it2 << std::endl;
               return false;
             }
           }

@@ -6,7 +6,6 @@
 #include <memory>
 #include <vector>
 
-#include <vectors.hh>
 #include <utils/vector_mm.hh>
 #include <utils/kdtree.hh>
 
