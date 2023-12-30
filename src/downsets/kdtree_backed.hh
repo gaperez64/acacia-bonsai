@@ -30,19 +30,6 @@ namespace downsets {
       template <typename V>
       friend std::ostream& operator<<(std::ostream& os, const kdtree_backed<V>& f);
 
-      template <typename V>
-      class disregard_first_component {
-        public:
-          bool operator() (const V& v1, const V& v2) const {
-            utils::vector_mm<typename Vector::value_type> v (v1.get ().size ());
-            v.reserve (Vector::capacity_for (v.size ()));
-            v2.get ().to_vector (v);
-            v[0] = v1.get ()[0];
-            v.resize (v2.get ().size ());
-            return v1.get () < Vector (v);
-          }
-      };
-
     public:
       typedef Vector value_type;
 
