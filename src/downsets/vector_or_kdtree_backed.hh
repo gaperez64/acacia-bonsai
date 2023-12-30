@@ -181,7 +181,7 @@ namespace downsets {
     if (f.kdtree != nullptr)
       os << *(f.kdtree) << std::endl;
     else
-      for (auto&& el : f.vector)
+      for (auto&& el : *(f.vector))
         os << el << std::endl;
     return os;
   }
