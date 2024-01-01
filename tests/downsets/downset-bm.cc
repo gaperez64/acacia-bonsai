@@ -147,12 +147,14 @@ struct test_t : public generic_test<result_t> {
           verb_do (2, vout << "... IN: " << in << " OUT: " << out << std::endl);
           chk (test_chk.t1_in, in);
           chk (test_chk.t1_out, out);
-          verb_do (2, vout << "TRANSFER (supposed to be free)..." << std::endl);
+          verb_do (2, vout << "TRANSFER..." << std::endl);
           auto tr = params["transfer"];
           sw.start ();
           for (size_t i = 0; i < tr; ++i) {
             auto set2 (std::move (set));
+            chk (test_chk.t1_sz, set2.size ());
             set = std::move (set2);
+            chk (test_chk.t1_sz, set.size ());
           }
           transfertime += sw.stop ();
           chk (test_chk.t1_sz, set.size ());
