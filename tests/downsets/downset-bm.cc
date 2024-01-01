@@ -61,7 +61,10 @@ static std::map<std::string, size_t> params = {
 template <typename T>
 auto random_vector (test_value_type maxval = std::numeric_limits<test_value_type>::max ()) {
   utils::vector_mm<T> v (DIMENSION);
-  std::generate (v.begin(), v.end(), [&] () {return std::experimental::randint (0, static_cast<int> (params["maxval"])); });
+  std::generate (v.begin(), v.end(),
+                 [&] () {
+                   return std::experimental::randint (0,
+                                                      static_cast<int> (params["maxval"])); });
   return v;
 }
 
@@ -145,8 +148,9 @@ struct test_t : public generic_test<result_t> {
           chk (test_chk.t1_in, in);
           chk (test_chk.t1_out, out);
           verb_do (2, vout << "TRANSFER (supposed to be free)..." << std::endl);
+          auto tr = params["transfer"];
           sw.start ();
-          for (size_t i = 0; i < params["transfer"]; ++i) {
+          for (size_t i = 0; i < tr; ++i) {
             auto set2 (std::move (set));
             set = std::move (set2);
           }
