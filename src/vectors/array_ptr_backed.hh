@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <cstring>
 #include <cassert>
 #include <iostream>
@@ -20,7 +21,7 @@ namespace vectors {
   class array_ptr_backed_ {
       using self = array_ptr_backed_<T, Units>;
       using array_t = std::array<T, Units * T_PER_UNIT>;
-      array_t* data = nullptr;
+      std::unique_ptr<array_t> data = nullptr;
 
     public:
       using value_type = T;
@@ -32,10 +33,6 @@ namespace vectors {
           std::fill (&(*data)[k], data->end (), 0);
       }
 
-      ~array_ptr_backed_ () {
-        delete data;
-      }
-
       size_t size () const { return k; }
 
     private:
@@ -43,7 +40,7 @@ namespace vectors {
       array_ptr_backed_ (const self& other) = default;
 
     public:
-      array_ptr_backed_ (self&& other) : data (other.data), k (other.k) {
+      array_ptr_backed_ (self&& other) : data (std::move (other.data)), k (other.k) {
         assert (data);
         other.data = nullptr;
       }
@@ -60,10 +57,9 @@ namespace vectors {
 
       self& operator= (self&& other) {
         assert (this != &other);
-        delete data;
         assert (k == other.k);
         assert (other.data);
-        data = other.data;
+        data = std::move (other.data);
         other.data = nullptr;
         return *this;
       }
@@ -118,7 +114,7 @@ namespace vectors {
 
       self meet (const self& rhs) const {
         auto res = self (k);
-        res.data = new array_t;
+        res.data = std::make_unique<array_t> ();
         assert (rhs.k == k);
 
         for (size_t i = 0; i < k; ++i)
