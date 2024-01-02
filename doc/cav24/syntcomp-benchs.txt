@@ -1,0 +1,11 @@
+# rerun benchmarking for all relevant configurations
+rm -rf build_*
+./self-benchmark.sh -c downset_vector,downset_kdtree,downset_vector_or_kdtree
+rm -rf mkplottable; mkdir mkplottable
+# read JSON logs and turn them to something the cactus-plot script can use
+for f in _bm-logs/*.json; do ./doc/benchmarks/meson-to-mkplot.sh downset_vector_or_kdtree.json _bm-logs/downset_vector_or_kdtree.json > mkplottable/downset_vector_or_kdtree.json; done
+../mkplot/mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to=plot.pdf mkplottable/*.json
+
+# run benchmarking with test information about antichain sizes
+rm -rf build_*
+AB_OPT="-v -v -v -v -v"; ./self-benchmark.sh -c downset_vector_or_kdtree
