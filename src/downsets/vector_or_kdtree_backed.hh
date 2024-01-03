@@ -98,12 +98,14 @@ namespace downsets {
         assert (elements.size() > 0);
         size_t m = elements.size ();
         size_t dim = elements[0].size ();
+        verb_do (4, vout << "|VEKD: downset_size="
+                         << dim << "," << m << "|" << std::endl);
 
         // NOTE: we are checking the size BEFORE we actually create the
         // downset container; their respective constructors may reduce the
         // size by removing dominated elements... it's easier and clearer
         // to do the check here though
-        if (exp (dim) < m) {
+        if (dim * 2 < m) {  // FIXME? the theory says it should be (exp (dim) < m)
           this->kdtree = std::make_shared<kdtree_backed<Vector>> (std::move (elements));
           verb_do (4, vout << "VEKD: created kd-tree downset" << std::endl);
         } else {
