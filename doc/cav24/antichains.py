@@ -54,8 +54,9 @@ def graph():
     x = np.log(y)
     plt.plot(x, y, color="gray", label=r"$\exp(d)$")
     # for other reference, we add a solid line
-    x = np.linspace(1, max(sizs))
-    plt.plot(x, x, color="pink", label="$m = d$")
+    y = np.linspace(1, max(sizs))
+    x = np.array(list(map(lambda a: a / 2., y)))
+    plt.plot(x, y, color="pink", label="$m = 2d$")
     # show plots
     plt.legend(loc="upper right")
     plt.show()
