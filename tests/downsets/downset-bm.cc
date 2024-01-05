@@ -53,7 +53,7 @@ static std::default_random_engine::result_type starting_seed = 0;
 static std::map<std::string, size_t> params = {
   {"maxval", 12},
   {"build-query", 10240ul * 2},
-  {"transfer", 1000000000},
+  {"transfer", 1000000},
   {"intersection", 256ul},
   {"union", 512ul * 20 }
 };
@@ -68,7 +68,7 @@ auto random_vector (test_value_type maxval = std::numeric_limits<test_value_type
   return v;
 }
 
-template<class T, class = void>
+template <class T, class = void>
 struct has_insert : std::false_type {};
 
 template <class T>
@@ -147,8 +147,10 @@ struct test_t : public generic_test<result_t> {
           verb_do (2, vout << "... IN: " << in << " OUT: " << out << std::endl);
           chk (test_chk.t1_in, in);
           chk (test_chk.t1_out, out);
-          verb_do (2, vout << "TRANSFER..." << std::endl);
           auto tr = params["transfer"];
+          if (tr == 0)
+            continue;
+          verb_do (2, vout << "TRANSFER..." << std::endl);
           sw.start ();
           for (size_t i = 0; i < tr; ++i) {
             auto set2 (std::move (set));

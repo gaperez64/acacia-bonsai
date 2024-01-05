@@ -273,7 +273,7 @@ void composition_mt::solve_game (safety_game& game) {
 #define UNREACHABLE [] (int x) { assert (false); }
 
   constexpr auto STATIC_ARRAY_CAP_MAX =
-  vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+    vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) { // Array & Bitsets
     static_switch_t<STATIC_ARRAY_CAP_MAX> {} (
@@ -281,9 +281,9 @@ void composition_mt::solve_game (safety_game& game) {
       static_switch_t<STATIC_MAX_BITSETS> {} (
       [&] (auto vbitsets) {
         using SpecializedDownset = downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<
-        vectors::X_and_bitset<
-        vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
-        vbitsets.value>>;
+          vectors::X_and_bitset<
+            vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
+            vbitsets.value>>;
         auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
         (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
         assert (game.safe);
@@ -393,7 +393,7 @@ void composition_mt::be_child (int id) {
         exit (0);
         break;
       }
-    
+
       case j_solve: {
         // update invariant
         invariant = from_main.read_bdd (dict);
@@ -444,8 +444,8 @@ void composition_mt::be_child (int id) {
 
         verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
         break;
-      }  
-  
+      }
+
       default: {
         verb_do (1, vout << "Bad job type!\n");
         exit (0);
@@ -647,7 +647,7 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
 
 safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, unreal_x_t opt_unreal_x) {
   // Note: this function is only run once with unrealizability as there is no composition -> swapping the inputs/outputs only happens once
-  
+
   spot::process_timer timer;
   timer.start ();
 

@@ -11,6 +11,8 @@
 #include <stack>
 #include <vector>
 
+#include <boost/pool/object_pool.hpp>
+
 
 /*
  * This is Shrisha Rao's version of a kd-tree for variable dimension. The
@@ -30,9 +32,12 @@ namespace utils {
   template <typename Vector>
   class kdtree {
     private:
+      struct kdtree_node;
+      using kdtree_node_ptr = kdtree_node*;
+
       struct kdtree_node {
-          std::shared_ptr<kdtree_node> left;  // left child
-          std::shared_ptr<kdtree_node> right; // right child
+          kdtree_node_ptr left;  // left child
+          kdtree_node_ptr right; // right child
           size_t value_idx;                   // only for leaves: the index of
                                               // the element from the list
           int location;                       // the value at which we split
@@ -41,6 +46,8 @@ namespace utils {
           bool clean_split;                   // whether the split is s.t.
                                               // to the left all is smaller
 
+          kdtree_node () = delete;
+
           // constructor for leaves
           kdtree_node (size_t idx) : left (nullptr),
                                      right (nullptr),
@@ -48,16 +55,16 @@ namespace utils {
                                      location (0),
                                      axis (0),
                                      clean_split (false) {}
-          // constructor for inner nodes
-          kdtree_node (std::shared_ptr<kdtree_node> l,
-                       std::shared_ptr<kdtree_node> r,
-                       int loc, size_t a, bool c) : left (l), right (r),
-                                                    location (loc),
-                                                    axis (a),
-                                                    clean_split (c) {}
+          // constructor for inner nodes; location, axis, and clean_split need
+          // to be set manually after that.  This is a limitation of
+          // boost::pool::construct.
+          kdtree_node (kdtree_node_ptr l,
+                       kdtree_node_ptr r) : left (l), right (r) {}
       };
-      const size_t dim;
-      std::shared_ptr<kdtree_node> tree;
+
+      size_t dim;
+      kdtree_node_ptr tree;
+      boost::object_pool<kdtree_node>* malloc;
 
       template <typename V>
       friend std::ostream& operator<< (std::ostream& os, const kdtree<V>& f);
@@ -66,9 +73,9 @@ namespace utils {
        * This is one of the only interesting parts of the code: building the
        * kd-tree to make sure it is balanced
        */
-      std::shared_ptr<kdtree_node>
-      recursive_build (std::vector<size_t>::iterator begin_it,
-                       std::vector<size_t>::iterator end_it,
+      kdtree_node_ptr
+      recursive_build (const std::vector<size_t>::iterator& begin_it,
+                       const std::vector<size_t>::iterator& end_it,
                        size_t length, size_t axis) {
         assert (static_cast<size_t>(std::distance (begin_it, end_it)) == length);
         assert (length > 0);
@@ -76,7 +83,7 @@ namespace utils {
 
         // if the list of elements is now a singleton, we make a leaf
         if (length == 1)
-          return std::make_shared<kdtree_node> (*begin_it);
+          return malloc->construct (*begin_it);
 
         // Use a selection algorithm to get the median
         // NOTE: we actually get the item whose index is
@@ -110,11 +117,13 @@ namespace utils {
 
         // the next axis is just the following dimension, wrapping around
         size_t next_axis = (axis + 1) % this->dim;
-        return std::make_shared<kdtree_node> (recursive_build (begin_it, median_it,
-                                                               length / 2, next_axis),
-                                              recursive_build (median_it, end_it,
-                                                               length - (length / 2), next_axis),
-                                              loc, axis, clean);
+        auto ret = malloc->construct (
+          recursive_build (begin_it, median_it,
+                           length / 2, next_axis),
+          recursive_build (median_it, end_it,
+                           length - (length / 2), next_axis));
+        ret->location = loc; ret->axis = axis; ret->clean_split = clean;
+        return ret;
       }
 
       /*
@@ -127,7 +136,7 @@ namespace utils {
        * region is not yet dominating the region of v
        */
       bool recursive_dominates (const Vector& v, bool strict,
-                                std::shared_ptr<kdtree_node> node,
+                                kdtree_node_ptr node,
                                 int* lbounds, size_t dims_to_dom) const {
         assert (node != nullptr);
         assert (dims_to_dom > 0);
@@ -179,8 +188,10 @@ namespace utils {
       // NOTE: this works for any collection of vectors, not even set assumed
       template <std::ranges::input_range R, class Proj = std::identity>
       kdtree (R&& elements, Proj proj = {}) : dim (proj (elements[0]).size ()) {
+        malloc = new (std::remove_cvref_t<decltype (*malloc)>);
         assert (elements.size () > 0);
         assert (this->dim > 0);
+        malloc->set_next_size (std::max (8192ul, 2 * elements.size ()));
         vector_set.reserve (elements.size ());
         for (ssize_t i = elements.size () - 1; i >= 0; --i) {
           this->vector_set.push_back (proj (std::move (elements[i])));
@@ -199,8 +210,27 @@ namespace utils {
       }
 
       kdtree (const kdtree& other) = delete;
-      kdtree (kdtree&& other) = default;
-      kdtree& operator= (kdtree&& other) = default;
+      kdtree (kdtree&& other) : dim (other.dim),
+                                tree (std::move (other.tree)),
+                                malloc (other.malloc),
+                                vector_set (std::move (other.vector_set)) {
+        other.tree = nullptr;
+        other.malloc = nullptr;
+      }
+
+      ~kdtree () { if (malloc) delete malloc; }
+
+      kdtree& operator= (kdtree&& other) {
+        if (malloc)
+          delete malloc;
+        dim = other.dim;
+        tree = other.tree;
+        vector_set = std::move (other.vector_set);
+        malloc = other.malloc;
+        other.tree = nullptr;
+        other.malloc = nullptr;
+        return *this;
+      }
 
       bool dominates (const Vector& v, bool strict = false) const {
         int lbounds[this->dim];
@@ -228,16 +258,16 @@ namespace utils {
       bool empty () {
         return this->vector_set.empty ();
       }
-      auto begin () {
+      auto begin () noexcept {
         return this->vector_set.begin ();
       }
-      const auto begin () const {
+      const auto begin () const noexcept {
         return this->vector_set.begin ();
       }
-      auto end () {
+      auto end () noexcept {
         return this->vector_set.end ();
       }
-      const auto end () const {
+      const auto end () const noexcept {
         return this->vector_set.end ();
       }
   };

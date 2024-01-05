@@ -42,7 +42,7 @@ struct safety_game {
     }
 
     constexpr auto STATIC_ARRAY_CAP_MAX =
-    vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+      vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
     // Maximize usage of the nonbool implementation
     auto nonbools = aut->num_states () - nbitsetbools;
