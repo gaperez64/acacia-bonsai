@@ -9,6 +9,8 @@ import sys
 
 
 acsize = re.compile(r"\|VEKD: downset_size=(\d*),(\d*)\|")
+bchnam = re.compile(r"{\"name\": .* / ab/(.*).ltl\", "
+                    r"\"stdout\":")
 dims = []
 sizs = []
 
@@ -21,9 +23,10 @@ def findAntichains(line):
 
 def parse(fname):
     global dims, sizs
+    cnt = 0
 
     cache = fname + ".cache"
-    if os.path.isfile(cache):
+    if False:  # os.path.isfile(cache):
         with open(cache, 'r') as f:
             data = json.load(f)
             dims = data["dims"]
@@ -35,7 +38,10 @@ def parse(fname):
                 if not line:
                     break
                 else:
-                    findAntichains(line)
+                    for match in bchnam.finditer(line):
+                        cnt += 1
+                        print(f"[{cnt}] {match.group(1)}: {match.span()}")
+                    # findAntichains(line)
         with open(cache, 'w') as f:
             json.dump({"dims": dims,
                        "sizs": sizs}, f)

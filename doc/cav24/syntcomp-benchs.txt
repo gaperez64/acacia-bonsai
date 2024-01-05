@@ -8,10 +8,9 @@ for f in _bm-logs/*.json; do ./doc/benchmarks/meson-to-mkplot.sh $(basename $f) 
 
 # run benchmarking with test information about antichain sizes
 rm -rf build_*; rm -rf _bm-logs
-export AB_OPTS="-vvvvv"
-# you'll have to modify self benchmark to remove from the opts
-# the -DNO_VERBOSE
+# you'll have to modify self benchmark to add from the opts
+# -DAC_DATA
 ./self-benchmark.sh -c downset_vector_or_kdtree
 # the result can be processed using the following to get a graph
 # with the distribution of antichain sizes and dimensions
-/doc/cav24/antichains.py _bm-logs/downset_vector_or_kdtree.json
+doc/cav24/antichains.py _bm-logs/downset_vector_or_kdtree.json

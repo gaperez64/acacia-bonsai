@@ -43,6 +43,10 @@
 # endif
 #endif
 
+#ifdef AC_DATA
+# pragma message ("Compiling with AC_DATA")
+#endif
+
 #ifdef NO_SIMD
 # pragma message ("Compiling without SIMD")
 # ifndef ARRAY_IMPL

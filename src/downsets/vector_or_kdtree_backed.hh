@@ -5,7 +5,6 @@
 #include <math.h>
 #include <vector>
 
-#include <utils/verbose.hh>
 #include <utils/vector_mm.hh>
 
 #include <downsets/kdtree_backed.hh>
@@ -13,6 +12,14 @@
 
 // FIXME? the theory says it should be (exp (dim) < m)
 # define KD_THRESH(M, D)  (D * 2 < M)
+
+#ifdef AC_DATA
+# define data_do(acts...) do { \
+    acts;                      \
+  } while (0)
+#else
+# define data_do(x...)
+#endif
 
 namespace downsets {
   // Forward definition for the operator<<s.
@@ -105,12 +112,12 @@ namespace downsets {
         // kd-tree
         size_t m = this->size ();
         size_t dim = this->dim ();
-        verb_do (4, vout << "|VEKD: downset_size="
+        data_do (std::cout << "|VEKD: downset_size="
                          << dim << "," << m << "|" << std::endl);
         if (this->kdtree == nullptr && KD_THRESH(m, dim)) { 
           this->kdtree = std::make_shared<kdtree_backed<Vector>> (std::move (this->vector->vector_set));
           this->vector = nullptr;
-          verb_do (4, vout << "VEKD: upgraded to kd-tree downset" << std::endl);
+          data_do (std::cout << "VEKD: upgraded to kd-tree downset" << std::endl);
         }
       }
 
@@ -123,7 +130,7 @@ namespace downsets {
         assert (elements.size() > 0);
         size_t m = elements.size ();
         size_t dim = elements[0].size ();
-        verb_do (4, vout << "|VEKD: downset_size="
+        data_do (std::cout << "|VEKD: downset_size="
                          << dim << "," << m << "|" << std::endl);
 
         // NOTE: we are checking the size BEFORE we actually create the
@@ -132,10 +139,10 @@ namespace downsets {
         // to do the check here though
         if (KD_THRESH(m, dim)) { 
           this->kdtree = std::make_shared<kdtree_backed<Vector>> (std::move (elements));
-          verb_do (4, vout << "VEKD: created kd-tree downset" << std::endl);
+          data_do (std::cout << "VEKD: created kd-tree downset" << std::endl);
         } else {
           this->vector = std::make_shared<vector_backed<Vector>> (std::move (elements));
-          verb_do (4, vout << "VEKD: created vector downset" << std::endl);
+          data_do (std::cout << "VEKD: created vector downset" << std::endl);
         }
       }
 
