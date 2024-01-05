@@ -10,6 +10,7 @@
 
 #include "test_maker.hh"
 
+#include "utils/verbose.hh"
 #include "downsets.hh"
 #include "vectors.hh"
 
