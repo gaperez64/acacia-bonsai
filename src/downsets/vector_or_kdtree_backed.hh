@@ -5,11 +5,21 @@
 #include <math.h>
 #include <vector>
 
-#include <utils/verbose.hh>
 #include <utils/vector_mm.hh>
 
 #include <downsets/kdtree_backed.hh>
 #include <downsets/vector_backed.hh>
+
+// FIXME? the theory says it should be (exp (dim) < m)
+# define KD_THRESH(M, D)  (D * 2 < M)
+
+#ifdef AC_DATA
+# define data_do(acts...) do { \
+    acts;                      \
+  } while (0)
+#else
+# define data_do(x...)
+#endif
 
 namespace downsets {
   // Forward definition for the operator<<s.
@@ -27,6 +37,15 @@ namespace downsets {
 
       template <typename V>
       friend std::ostream& operator<<(std::ostream& os, const vector_or_kdtree_backed<V>& f);
+
+      size_t dim () {
+        if (this->vector != nullptr)
+          return this->vector->vector_set.size ();
+        else {
+          assert (this->kdtree != nullptr);
+          return this->kdtree->tree->vector_set.size ();
+        }
+      }
 
       void boolop_with (vector_or_kdtree_backed&& other, bool inter = false) {
         // four cases: 1. both are vectors, 2/3. one is a vector,
@@ -87,6 +106,19 @@ namespace downsets {
               this->vector->union_with (std::move (B));
           }
         }
+
+        // one last thing to deal with: it could be that we ended up with a
+        // list but it satisfies the condition for it to be upgraded to a
+        // kd-tree
+        size_t m = this->size ();
+        size_t dim = this->dim ();
+        data_do (std::cout << "|VEKD: downset_size="
+                         << dim << "," << m << "|" << std::endl);
+        if (this->kdtree == nullptr && KD_THRESH(m, dim)) { 
+          this->kdtree = std::make_shared<kdtree_backed<Vector>> (std::move (this->vector->vector_set));
+          this->vector = nullptr;
+          data_do (std::cout << "VEKD: upgraded to kd-tree downset" << std::endl);
+        }
       }
 
     public:
@@ -98,17 +130,19 @@ namespace downsets {
         assert (elements.size() > 0);
         size_t m = elements.size ();
         size_t dim = elements[0].size ();
+        data_do (std::cout << "|VEKD: downset_size="
+                         << dim << "," << m << "|" << std::endl);
 
         // NOTE: we are checking the size BEFORE we actually create the
         // downset container; their respective constructors may reduce the
         // size by removing dominated elements... it's easier and clearer
         // to do the check here though
-        if (exp (dim) < m) {
+        if (KD_THRESH(m, dim)) { 
           this->kdtree = std::make_shared<kdtree_backed<Vector>> (std::move (elements));
-          verb_do (4, vout << "VEKD: created kd-tree downset" << std::endl);
+          data_do (std::cout << "VEKD: created kd-tree downset" << std::endl);
         } else {
           this->vector = std::make_shared<vector_backed<Vector>> (std::move (elements));
-          verb_do (4, vout << "VEKD: created vector downset" << std::endl);
+          data_do (std::cout << "VEKD: created vector downset" << std::endl);
         }
       }
 
