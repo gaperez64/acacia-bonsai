@@ -583,7 +583,7 @@ class k_bounded_safety_aut_detail {
 
       utils::vout << "No transition found from " << elem << " with safe region " << saferegion << "\n";
       assert (false);
-      return std::pair<bdd, State> ();
+      return { bddfalse, elem.copy () };
     }
 
 
