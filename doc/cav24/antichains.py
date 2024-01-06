@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -13,63 +12,82 @@ bchnam = re.compile(r"{\"name\": .* / ab/(.*).ltl\", "
                     r"\"stdout\":")
 dims = []
 sizs = []
+fdims = []
+fsizs = []
+
+
+def veryFriendly(yes, total):
+    return yes * 10 > total
 
 
 def findAntichains(line):
+    total = 0
+    kdtreeFriendly = 0
+    locdims = []
+    locsizs = []
     for match in acsize.finditer(line):
-        dims.append(int(match.group(1)))
-        sizs.append(int(match.group(2)))
+        d = int(match.group(1))
+        s = int(match.group(2))
+        locdims.append(d)
+        locsizs.append(s)
+        if 2 * d < s:
+            kdtreeFriendly += 1
+        total += 1
+    dims.extend(locdims)
+    sizs.extend(locsizs)
+    if veryFriendly(kdtreeFriendly, total):
+        fdims.extend(locdims)
+        fsizs.extend(locsizs)
+    return (kdtreeFriendly, total)
 
 
 def parse(fname):
-    global dims, sizs
-    cnt = 0
-
-    cache = fname + ".cache"
-    if False:  # os.path.isfile(cache):
-        with open(cache, 'r') as f:
-            data = json.load(f)
-            dims = data["dims"]
-            sizs = data["sizs"]
-    else:
-        with open(fname, 'r') as f:
-            while True:
-                line = f.readline()
-                if not line:
-                    break
-                else:
-                    for match in bchnam.finditer(line):
-                        cnt += 1
-                        print(f"[{cnt}] {match.group(1)}: {match.span()}")
-                    # findAntichains(line)
-        with open(cache, 'w') as f:
-            json.dump({"dims": dims,
-                       "sizs": sizs}, f)
+    with open(fname, 'r') as f:
+        cnt = 0
+        vf = 0
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            else:
+                cnt += 1
+                match = bchnam.search(line)
+                (kdtree, total) = findAntichains(line)
+                if veryFriendly(kdtree, total):
+                    print(match.group(1))
+                    vf += 1
+        print(f"Found {cnt} benchmarks in total and {vf} very friendly")
+        print(f"Got {len(sizs)} data points and {len(fsizs)} "
+              "kdtree-friendly ones")
 
 
-def graph():
-    mx = 600
+def graph(friendly):
     # plot x vs y using blue circle markers
-    plt.plot(dims, sizs, "bo")
+    if friendly:
+        mx = max(fsizs)
+        plt.plot(fdims, fsizs, "gx")
+    else:
+        mx = max(sizs)
+        plt.plot(dims, sizs, "bo")
     # plt.yscale("log")
-    plt.xlim(0, mx)
     plt.xlabel("Dimension")
     plt.ylabel("Size of antichain")
     # for reference, we add a solid gray exponential line
-    y = np.linspace(1, max(sizs))
-    x = np.log(y)
-    plt.plot(x, y, color="gray", label=r"$\exp(d)$")
+    # y = np.linspace(1, mx)
+    # x = np.log(y)
+    # plt.plot(x, y, color="gray", label=r"$\exp(d)$")
     # for other reference, we add a solid line
-    y = np.linspace(1, max(sizs))
+    y = np.linspace(1, mx)
     x = np.array(list(map(lambda a: a / 2., y)))
     plt.plot(x, y, color="pink", label="$m = 2d$")
     # show plots
-    plt.legend(loc="upper right")
+    plt.legend(loc="lower right")
     plt.show()
 
 
 if __name__ == "__main__":
     assert len(sys.argv) > 1
     parse(sys.argv[1])
-    graph()
+    graph(False)
+    graph(True)
     exit(os.EX_OK)

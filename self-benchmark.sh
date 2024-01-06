@@ -5,7 +5,7 @@ mkdir -p _bm-logs
 BENCHMARK_SUITE=ab/syntcomp21/crit
 TIMEOUT_FACTOR=1.7
 
-opt='-march=native -O3 -flto -fuse-linker-plugin -pipe -DAC_DATA -DNO_VERBOSE -DNDEBUG'
+opt='-march=native -O3 -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
 
 declare -A confs
 
