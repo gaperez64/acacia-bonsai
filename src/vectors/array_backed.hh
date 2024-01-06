@@ -94,10 +94,10 @@ namespace vectors {
       }
 
       self meet (const self& rhs) const {
+        const auto ub = std::min (k, Units * T_PER_UNIT);
         auto res = self (k);
         assert (rhs.k == k);
-
-        for (size_t i = 0; i < k; ++i)
+        for (size_t i = 0; i < ub; ++i)
           res[i] = std::min ((*this)[i], rhs[i]);
 
         if (k < Units * T_PER_UNIT)
@@ -121,4 +121,3 @@ namespace vectors {
     return os;
   }
 }
-
