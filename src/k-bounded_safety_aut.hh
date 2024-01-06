@@ -393,7 +393,7 @@ class k_bounded_safety_aut_detail {
         enc_primed_states |= binary_encode (i, state_vars_prime);
       }
       bdd original_encoding = encoding;
-      
+
       verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
 
 #ifndef NDEBUG
@@ -506,7 +506,7 @@ class k_bounded_safety_aut_detail {
         assert (outless != bddfalse);
       }
       encoding &= outless;
-      
+
       verb_do (2, vout << "BDD after fixing latches:\n" << bdd_to_formula (encoding) << "\n\n");
 
 #ifndef NDEBUG
@@ -546,7 +546,7 @@ class k_bounded_safety_aut_detail {
                 << '\n';
 #endif
 
-      
+
       if (synth_fname != "-") {
         std::ofstream f (synth_fname);
         aig.output (f, false);
@@ -570,7 +570,7 @@ class k_bounded_safety_aut_detail {
         SetOfStates&& fwd = SetOfStates (elem.copy ()).apply ([this, &action_vec, &actioner] (const auto& _m) {
           auto&& ret = actioner.apply (_m, action_vec, actioners::direction::forward);
           verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
-          return std::move (ret);
+          return ret;
         });
 
         assert (fwd.size () == 1);
@@ -583,6 +583,7 @@ class k_bounded_safety_aut_detail {
 
       utils::vout << "No transition found from " << elem << " with safe region " << saferegion << "\n";
       assert (false);
+      return { bddfalse, elem };
     }
 
 
