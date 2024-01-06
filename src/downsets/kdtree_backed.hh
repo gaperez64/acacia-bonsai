@@ -57,11 +57,9 @@ namespace downsets {
 
       }
 
-      kdtree_backed (Vector&& el) {
-        auto v = std::vector<Vector> ();
-        v.push_back (std::move (el));
-        this->tree = utils::kdtree<Vector> (std::move (v));
-      }
+      kdtree_backed (Vector&& e) :
+        tree ( std::array<Vector, 1> { std::move (e) } )
+      {}
 
       template <typename F>
       auto apply (const F& lambda) const {
@@ -137,7 +135,7 @@ namespace downsets {
         assert (intersection.size () > 0);
         auto vector_antichain = std::vector<Vector*> ();
         vector_antichain.reserve (intersection.size ());
-        utils::kdtree<Vector> temp_tree(std::move (intersection));
+        utils::kdtree<Vector> temp_tree (std::move (intersection));
         for (Vector& e : temp_tree) {
           if (not temp_tree.dominates(e, true)) {
             vector_antichain.push_back (&e);

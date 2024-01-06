@@ -187,16 +187,16 @@ namespace utils {
 
       // NOTE: this works for any collection of vectors, not even set assumed
       template <std::ranges::input_range R, class Proj = std::identity>
-      kdtree (R&& elements, Proj proj = {}) : dim (proj (elements[0]).size ()) {
+      kdtree (R&& elements, Proj proj = {})
+        : dim (proj (*elements.begin ()).size ()) {
         malloc = new (std::remove_cvref_t<decltype (*malloc)>);
+        malloc->set_next_size (std::max (8192ul, 2 * elements.size ()));
+
         assert (elements.size () > 0);
         assert (this->dim > 0);
-        malloc->set_next_size (std::max (8192ul, 2 * elements.size ()));
         vector_set.reserve (elements.size ());
-        for (ssize_t i = elements.size () - 1; i >= 0; --i) {
-          this->vector_set.push_back (proj (std::move (elements[i])));
-        }
-
+        for (auto&& e : elements | std::views::reverse)
+          vector_set.push_back (proj (std::move (e)));
         // WARNING: moved elements, so we can't really use it below! instead,
         // use this->vector_set
         assert (this->vector_set.size () > 0);
