@@ -164,7 +164,7 @@ namespace downsets {
 
   template <typename Vector>
   inline std::ostream& operator<<(std::ostream& os, const kdtree_backed<Vector>& f) {
-    os << *(f.tree) << std::endl;
+    os << f.tree << std::endl;
     return os;
   }
 }
