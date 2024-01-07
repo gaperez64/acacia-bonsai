@@ -16,7 +16,7 @@ rm -rf build_*; rm -rf _bm-logs
 doc/cav24/antichains.py _bm-logs/downset_vector_or_kdtree.json
 
 # focus on the friendly benchmarks
-for f in _bm-logs/*.json; do ./doc/benchmarks/meson-to-mkplot.sh $(basename $f) $f > mkplottable/$(basename $f); done
-for f in mkplottable/*.json; do grep -E "amba_case_study2|full_arbiter_unreal24|Lights2_06e9cad4|Lights2_0f5381e9|Lights2_9cac58d3|Lights2_b02056d6|OneCounterGuiA5|OneCounterGuiA6|OneCounterGuiA7|prioritized_arbiter6" $f > "${f}2"; done
+for f in _bm-logs/*.json; do grep -E "amba_case_study2|full_arbiter_unreal24|Lights2_06e9cad4|Lights2_0f5381e9|Lights2_9cac58d3|Lights2_b02056d6|OneCounterGuiA5|OneCounterGuiA6|OneCounterGuiA7|prioritized_arbiter6" $f > "${f}2"; done
+for f in _bm-logs/*.json2; do ./doc/benchmarks/meson-to-mkplot.sh $(basename $f) $f > mkplottable/$(basename $f); done
 doc/cav24/friendly.py mkplottable
 

@@ -24,11 +24,12 @@ def graph(results):
         (bench, rtime) = results[k]
         plt.scatter(bench, rtime, label=k)
     # plt.yscale("log")
+    plt.ylim(0, 22)
     plt.xlabel("Benchmarks")
     plt.ylabel("Running time (s)")
     plt.xticks(rotation=30)
     # show plots
-    plt.legend(loc="lower left")
+    plt.legend(loc="upper right")
     plt.show()
 
 
