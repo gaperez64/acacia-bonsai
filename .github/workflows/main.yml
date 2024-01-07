@@ -30,9 +30,12 @@ jobs:
     - name: Install python dependencies
       run: |
         pip install pygraph --break-system-packages
-    - name: Run benchmarks
+    - name: Compile all configurations
       run: |
-        ./self-benchmark.sh -c base -b ab/set1 -t 3
+        ./self-benchmark -R
+    - name: Run basic benchmark with low timeout as test
+      run: |
+        ./self-benchmark.sh -b ab/set1 -t 0.5
     - name: Upload test results
       uses: actions/upload-artifact@v2
       if: always()
