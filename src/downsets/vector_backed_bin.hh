@@ -21,6 +21,13 @@ namespace downsets {
         insert (std::move (v));
       }
 
+      vector_backed_bin (std::vector<Vector>&& elements) noexcept {
+        assert (elements.size() > 0);
+        vector_set.resize (elements[0].size ());
+        for (auto&& e : elements)
+          insert (std::move (e));
+      }
+      
     private:
       vector_backed_bin (size_t starting_vector_set_size) {
         vector_set.resize (starting_vector_set_size);

@@ -19,6 +19,11 @@ namespace downsets {
         insert (std::move (v));
       }
 
+      vector_backed_one_dim_split_intersection_only (std::vector<Vector>&& elements) noexcept {
+        assert (elements.size() > 0);
+        for (auto&& e : elements)
+          insert (std::move (e));
+      }
     private:
       vector_backed_one_dim_split_intersection_only () = default;
 
