@@ -32,7 +32,7 @@ jobs:
         pip install pygraph --break-system-packages
     - name: Compile all configurations
       run: |
-        ./self-benchmark -R
+        ./self-benchmark.sh -R
     - name: Run basic benchmark with low timeout as test
       run: |
         ./self-benchmark.sh -b ab/set1 -t 0.5
