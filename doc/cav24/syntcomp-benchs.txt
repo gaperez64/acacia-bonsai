@@ -4,7 +4,7 @@ rm -rf build_*; rm -rf _bm-logs
 rm -rf mkplottable; mkdir mkplottable
 # read JSON logs and turn them to something the cactus-plot script can use
 for f in _bm-logs/*.json; do ./doc/benchmarks/meson-to-mkplot.sh $(basename $f) $f > mkplottable/$(basename $f); done
-../mkplot/mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to=plot.pdf mkplottable/*.json
+../mkplot/mkplot.py --lloc='lower right' --ymin=1e-1 --ymax=1e2 --xmax=90 --ylog -b pdf --save-to=plot.pdf mkplottable/*.json
 
 # run benchmarking with test information about antichain sizes
 rm -rf build_*; rm -rf _bm-logs

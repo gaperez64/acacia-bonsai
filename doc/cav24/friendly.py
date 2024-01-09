@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 
+
+import itertools
 import json
 import matplotlib.pyplot as plt
 import os
 import sys
+
+
+mrk = itertools.cycle(['o', '^', 'x'])
+clr = itertools.cycle(['g', 'r', 'b'])
 
 
 def loadTests(fname):
@@ -20,16 +26,19 @@ def loadTests(fname):
 
 
 def graph(results):
-    for k in results:
+    for k in ["downset_vector.json2",
+              "downset_vector_or_kdtree.json2",
+              "downset_kdtree.json2"]:
         (bench, rtime) = results[k]
-        plt.scatter(bench, rtime, label=k)
+        plt.scatter(bench, rtime, label=k, marker=next(mrk),
+                    c=next(clr))
     # plt.yscale("log")
-    plt.ylim(0, 22)
-    plt.xlabel("Benchmarks")
-    plt.ylabel("Running time (s)")
-    plt.xticks(rotation=30)
+    plt.ylim(0, 18)
+    # plt.xlabel("Benchmarks")
+    # plt.ylabel("CPU time (s)")
+    plt.xticks(rotation=20)
     # show plots
-    plt.legend(loc="upper right")
+    # plt.legend(loc="upper right")
     plt.show()
 
 
