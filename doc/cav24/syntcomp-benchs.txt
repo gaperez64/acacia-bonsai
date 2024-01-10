@@ -1,6 +1,6 @@
 # rerun benchmarking for all relevant configurations
 rm -rf build_*; rm -rf _bm-logs
-./self-benchmark.sh -c downset_vector,downset_kdtree,downset_vector_or_kdtree
+./self-benchmark.sh -c best_downset_vector_or_kdtree,best_downset_kdtree,best_downset_vector,best_downset_vector_simd -b ab/syntcomp21/0s-20s -t 2
 rm -rf mkplottable; mkdir mkplottable
 # read JSON logs and turn them to something the cactus-plot script can use
 for f in _bm-logs/*.json; do ./doc/benchmarks/meson-to-mkplot.sh $(basename $f) $f > mkplottable/$(basename $f); done
@@ -10,7 +10,7 @@ for f in _bm-logs/*.json; do ./doc/benchmarks/meson-to-mkplot.sh $(basename $f) 
 rm -rf build_*; rm -rf _bm-logs
 # you'll have to modify self benchmark to add from the opts
 # -DAC_DATA
-./self-benchmark.sh -c downset_vector_or_kdtree
+./self-benchmark.sh -c best_downset_vector_or_kdtree -b ab/syntcomp21/0s-20s -t 2
 # the result can be processed using the following to get a graph
 # with the distribution of antichain sizes and dimensions
 doc/cav24/antichains.py _bm-logs/downset_vector_or_kdtree.json
