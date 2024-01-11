@@ -17,7 +17,7 @@ fsizs = []
 
 
 def veryFriendly(yes, total):
-    return yes * 10 > total
+    return yes * 3 > total
 
 
 def findAntichains(line):
