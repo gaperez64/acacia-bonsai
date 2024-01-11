@@ -4,7 +4,7 @@ rm -rf build_*; rm -rf _bm-logs
 rm -rf mkplottable; mkdir mkplottable
 # read JSON logs and turn them to something the cactus-plot script can use
 for f in _bm-logs/*.json; do ./doc/benchmarks/meson-to-mkplot.sh $(basename $f) $f > mkplottable/$(basename $f); done
-../mkplot/mkplot.py --lloc='lower right' --ymin=1e-1 --ymax=1e2 --xmax=90 --ylog -b pdf --save-to=plot.pdf mkplottable/*.json
+../mkplot/mkplot.py --lloc='upper left' --ymin=1e-1 --ymax=1e2 --ylog -b pdf --save-to=all.pdf mkplottable/*.json
 
 # run benchmarking with test information about antichain sizes
 rm -rf build_*; rm -rf _bm-logs
@@ -16,7 +16,8 @@ rm -rf build_*; rm -rf _bm-logs
 doc/cav24/antichains.py _bm-logs/best_downset_vector_or_kdtree.json
 
 # focus on the friendly benchmarks
-for f in _bm-logs/*.json; do grep -E "Alarm_06e9cad4|Alarm_68c86764|Alarm_70523fbe|Alarm_f2774e0b|amba_decomposed_arbiter5|amba_decomposed_arbiter6|amba_decomposed_arbiter7|ltl2dpa19|OneCounterGuiA9|OneCounter|tmp_13cfc6f2" $f > "${f}2"; done
+for f in _bm-logs/*.json; do grep -E "Alarm_06e9cad4|Alarm_68c86764|Alarm_70523fbe|Alarm_f2774e0b|amba_case_study2|amba_decomposed_arbiter5|amba_decomposed_arbiter6|amba_decomposed_arbiter7|full_arbiter5|full_arbiter8|full_arbiter_enc8|full_arbiter_unreal23|full_arbiter_unreal24|full_arbiter_unreal25|generalized_buffer2|generalized_buffer3|generalized_buffer4|KitchenTimerV5|load_balancer6|load_balancer7|ltl2dba21|ltl2dba_Q5|ltl2dpa19|Morning_f1477cc5|Morning_f2774e0b|OneCounterGuiA5|OneCounterGuiA6|OneCounterGuiA7|OneCounterGuiA8|OneCounterGuiA9|prioritized_arbiter5|prioritized_arbiter7|prioritized_arbiter8|prioritized_arbiter_enc10|prioritized_arbiter_unreal25|prioritized_arbiter_unreal26|simple_arbiter5|simple_arbiter8|simple_arbiter9|simple_arbiter_unreal15_1|simple_arbiter_unreal15_2|simple_arbiter_unreal16_2|simple_arbiter_unreal25|simple_arbiter_unreal26|simple_arbiter_unreal27|SliderDelayed|SPIWriteManag|tmp_13cfc6f2" $f > "${f}2"; done
 for f in _bm-logs/*.json2; do ./doc/benchmarks/meson-to-mkplot.sh $(basename $f) $f > mkplottable/$(basename $f); done
-doc/cav24/friendly.py mkplottable
+# doc/cav24/friendly.py mkplottable
+../mkplot/mkplot.py --lloc='lower right' --ymin=1e-2 --ymax=1e2 --xmax=26 --ylog -b pdf --save-to=friendly.pdf mkplottable/*.json2
 
