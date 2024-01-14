@@ -27,7 +27,7 @@ namespace utils {
           if (not s.eof () or ends_in_eol)
             outstream << std::endl;
         }
-
+        outstream << std::flush;
         prev_ended_in_eol = ends_in_eol;
         return ret;
       };
