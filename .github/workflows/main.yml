@@ -21,7 +21,7 @@ jobs:
     - name: Install packages
       run: |
         apt-get -y update
-        apt-get -y install zsh git gcc python-is-python3 meson ninja-build gnupg wget python3-pip python3-distutils pkg-config libglib2.0-dev libffi-dev libboost-dev autoconf automake libtool bison flex
+        apt-get -y install zsh git gcc python-is-python3 meson ninja-build gnupg wget python3-pip python3-distutils pkg-config libglib2.0-dev libffi-dev libboost-dev autoconf automake libtool bison flex valgrind
     - name: Checkout repository and submodules
       uses: actions/checkout@v2
       with:
