@@ -40,10 +40,6 @@ using namespace std::literals;
 # define DIMENSION 128 * 1024
 #endif
 
-#ifndef ROUNDS
-# define ROUNDS 1
-#endif
-
 int               utils::verbose = 0;
 utils::voutstream utils::vout;
 
@@ -59,7 +55,8 @@ static std::map<std::string, size_t> params = {
   {"query", 10240ul * 4},
   {"transfer", 1000000},
   {"intersection", 256ul},
-  {"union", 512ul * 20 }
+  {"union", 512ul * 20 },
+  {"rounds", 1}
 };
 
 static std::mt19937 rand_gen;
@@ -129,6 +126,7 @@ struct test_t : public generic_test<result_t> {
     result_t operator() () {
       result_t res;
 
+      auto ROUNDS = params["rounds"];
       if (params["build"]) {
         verb_do (1, vout << "Test 1: Insertion and membership query" << std::endl);
         spot::stopwatch sw;
