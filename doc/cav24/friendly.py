@@ -26,14 +26,14 @@ def loadTests(fname):
 
 
 def graph(results):
-    for k in ["downset_vector.json2",
-              "downset_vector_or_kdtree.json2",
-              "downset_kdtree.json2"]:
+    for k in ["best_downset_vector.json2",
+              "best_downset_vector_or_kdtree.json2",
+              "best_downset_kdtree.json2"]:
         (bench, rtime) = results[k]
         plt.scatter(bench, rtime, label=k, marker=next(mrk),
                     c=next(clr))
     # plt.yscale("log")
-    plt.ylim(0, 18)
+    plt.ylim(0, 21)
     # plt.xlabel("Benchmarks")
     # plt.ylabel("CPU time (s)")
     plt.xticks(rotation=20)
