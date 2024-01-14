@@ -15,7 +15,7 @@
 #include <string>
 #include <type_traits>
 #include <cxxabi.h>
-#include <experimental/random>
+#include <random>
 #include <ranges>
 #include <algorithm>
 
@@ -32,11 +32,14 @@
 
 #include "test_maker.hh"
 
+#include <valgrind/callgrind.h>
+
 using namespace std::literals;
 
 #ifndef DIMENSION
-# define DIMENSION 32
+# define DIMENSION 128 * 1024
 #endif
+
 #ifndef ROUNDS
 # define ROUNDS 1
 #endif
@@ -52,19 +55,20 @@ static std::default_random_engine::result_type starting_seed = 0;
 
 static std::map<std::string, size_t> params = {
   {"maxval", 12},
-  {"build-query", 10240ul * 2},
+  {"build", 10240ul * 2},
+  {"query", 10240ul * 4},
   {"transfer", 1000000},
   {"intersection", 256ul},
   {"union", 512ul * 20 }
 };
 
+static std::mt19937 rand_gen;
+static std::uniform_int_distribution<uint32_t> distrib;
+
 template <typename T>
-auto random_vector (test_value_type maxval = std::numeric_limits<test_value_type>::max ()) {
+auto random_vector () {
   utils::vector_mm<T> v (DIMENSION);
-  std::generate (v.begin(), v.end(),
-                 [&] () {
-                   return std::experimental::randint (0,
-                                                      static_cast<int> (params["maxval"])); });
+  std::generate (v.begin(), v.end(), [&] () { return distrib (rand_gen); });
   return v;
 }
 
@@ -90,7 +94,6 @@ struct {
     }                                                                   \
   } while (0)
 
-
 template <typename SetType>
 struct test_t : public generic_test<result_t> {
     using VType = typename SetType::value_type;
@@ -107,59 +110,72 @@ struct test_t : public generic_test<result_t> {
         return SetType (std::move (v));
     }
 
-    std::vector<VType> test_vector (size_t nitems) {
-      std::experimental::reseed (starting_seed);
-      verb_do (3, vout << "Creating a vector of " << nitems << " elements... ");
+    std::vector<VType> test_vector (size_t nitems, ssize_t delta = 0) {
+      rand_gen.seed (starting_seed);
+      verb_do (3, vout << "Creating a vector of " << nitems << " elements... " << std::flush);
       std::vector<VType> elts;
       elts.reserve (nitems);
-      for (size_t i = 0; i < nitems; ++i)
-        elts.push_back (VType (random_vector<value_type> ()));
-      verb_do (3, vout << "done.\n");
+      for (size_t i = 0; i < nitems; ++i) {
+        auto r = random_vector<value_type> ();
+        for (auto&& x : r)
+          if (x > 0)
+            x += delta;
+        elts.push_back (VType (std::move (r)));
+      }
+      verb_do (3, vout << "done.\n" << std::flush);
       return elts;
     }
 
     result_t operator() () {
       result_t res;
 
-      if (const size_t NITEMS = params["build-query"]) {
+      if (params["build"]) {
         verb_do (1, vout << "Test 1: Insertion and membership query" << std::endl);
         spot::stopwatch sw;
         double buildtime = 0, querytime = 0, transfertime = 0;
         for (size_t rounds = 0; rounds < ROUNDS; ++rounds) {
           verb_do (2, vout << "Round " << rounds << std::endl);
-          verb_do (2, vout << "BUILD...");
-          auto vec1 = test_vector (NITEMS);
+          verb_do (2, vout << "BUILD..." << std::flush);
+          auto vec1 = test_vector (params["build"]);
           sw.start ();
+          CALLGRIND_START_INSTRUMENTATION;
           auto set = vec_to_set (std::move (vec1));
+          CALLGRIND_STOP_INSTRUMENTATION;
           buildtime += sw.stop ();
           verb_do (2, vout << " SIZE: " << set.size () << std::endl);
           chk (test_chk.t1_sz, set.size ());
-          verb_do (2, vout << "QUERY...\n");
-          auto vec2 = test_vector (2 * NITEMS);
-          size_t in = 0, out = 0;
-          sw.start ();
-          for (auto&& x : vec2)
-            if (set.contains (x))
-              ++in;
-            else
-              ++out;
-          querytime += sw.stop ();
-          verb_do (2, vout << "... IN: " << in << " OUT: " << out << std::endl);
-          chk (test_chk.t1_in, in);
-          chk (test_chk.t1_out, out);
-          auto tr = params["transfer"];
-          if (tr == 0)
-            continue;
-          verb_do (2, vout << "TRANSFER..." << std::endl);
-          sw.start ();
-          for (size_t i = 0; i < tr; ++i) {
-            auto set2 (std::move (set));
-            chk (test_chk.t1_sz, set2.size ());
-            set = std::move (set2);
+          if (params["query"]) {
+            verb_do (2, vout << "QUERY..." << std::flush);
+            auto vec2 = test_vector (params["query"], -1);
+            size_t in = 0, out = 0;
+            sw.start ();
+            CALLGRIND_START_INSTRUMENTATION;
+            for (auto&& x : vec2)
+              if (set.contains (x))
+                ++in;
+              else
+                ++out;
+            CALLGRIND_STOP_INSTRUMENTATION;
+            querytime += sw.stop ();
+            verb_do (2, vout << "... IN: " << in << " OUT: " << out << std::endl);
+            chk (test_chk.t1_in, in);
+            chk (test_chk.t1_out, out);
+          }
+          if (auto tr = params["transfer"]) {
+            verb_do (2, vout << "TRANSFER..." << std::flush);
+            sw.start ();
+            CALLGRIND_START_INSTRUMENTATION;
+            for (size_t i = 0; i < tr; ++i) {
+              auto set2 (std::move (set));
+              chk (test_chk.t1_sz, set2.size ());
+              set = std::move (set2);
+              chk (test_chk.t1_sz, set.size ());
+            }
+            CALLGRIND_STOP_INSTRUMENTATION;
+            transfertime += sw.stop ();
+            verb_do (2, vout << " done." << std::endl);
             chk (test_chk.t1_sz, set.size ());
           }
-          transfertime += sw.stop ();
-          chk (test_chk.t1_sz, set.size ());
         }
 
         res["build"] = buildtime;
@@ -187,7 +203,9 @@ struct test_t : public generic_test<result_t> {
           auto set2 = vec_to_set (std::move (vec2));
           verb_do (2, vout << "INTERSECT...";);
           sw.start ();
+          CALLGRIND_START_INSTRUMENTATION;
           set.intersect_with (std::move (set2));
+          CALLGRIND_STOP_INSTRUMENTATION;
           intertime += sw.stop ();
           verb_do (2, vout << " SIZE: " << set.size () << std::endl);
           chk (test_chk.t2_sz, set.size ());
@@ -214,7 +232,9 @@ struct test_t : public generic_test<result_t> {
           auto set2 = vec_to_set (std::move (vec2));
           verb_do (2, vout << "UNION...";);
           sw.start ();
+          CALLGRIND_START_INSTRUMENTATION;
           set.union_with (std::move (set2));
+          CALLGRIND_STOP_INSTRUMENTATION;
           uniontime += sw.stop ();
           verb_do (2, vout << " SIZE: " << set.size () << std::endl);
           chk (test_chk.t3_sz, set.size ());
@@ -246,7 +266,9 @@ using vector_types = type_list<
   vectors::array_backed_fixed<test_value_type>,
   vectors::array_ptr_backed_fixed<test_value_type>,
   vectors::simd_array_backed_fixed<test_value_type>,
-  vectors::simd_array_ptr_backed_fixed<test_value_type>>;
+  vectors::simd_array_ptr_backed_fixed<test_value_type>,
+  vectors::vector_backed<test_value_type>,
+  vectors::simd_vector_backed<test_value_type>>;
 
 using set_types = template_type_list<
   downsets::kdtree_backed,
@@ -322,6 +344,9 @@ int main (int argc, char* argv[]) {
         break;
     }
   }
+
+  decltype (distrib)::param_type distrib_params (0, (int32_t) params["maxval"]);
+  distrib.param (distrib_params);
 
   if (argc - optind != 2)
     usage (prog);
