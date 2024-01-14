@@ -4,6 +4,8 @@
 #include <experimental/simd>
 #include <iostream>
 
+#include <boost/pool/object_pool.hpp>
+
 #include "utils/simd_traits.hh"
 
 namespace vectors {
@@ -18,6 +20,7 @@ namespace vectors {
       using self = simd_array_ptr_backed_<T, nsimds>;
       using traits = utils::simd_traits<T>;
       using array_t = std::array<typename traits::fssimd, nsimds>;
+      static inline boost::object_pool<array_t> malloc {8192};
 
       static const auto simd_size = traits::simd_size;
     public:
@@ -27,14 +30,15 @@ namespace vectors {
       simd_array_ptr_backed_ (size_t k) : k {k} { }
 
     public:
-      simd_array_ptr_backed_ (std::span<const T> v) : data (new array_t), k {v.size ()} {
+      simd_array_ptr_backed_ (std::span<const T> v) : data (malloc.construct ()), k {v.size ()} {
         data->back () ^= data->back ();
         // Trust memcpy to DTRT.
         std::memcpy ((char*) data->data (), (char*) v.data (), v.size ());
       }
 
       ~simd_array_ptr_backed_ () {
-        delete data;
+        if (data)
+          malloc.destroy (data);
       }
 
       simd_array_ptr_backed_ () = delete;
@@ -50,7 +54,7 @@ namespace vectors {
       }
 
       self& operator= (self&& other) {
-        delete data;
+        if (data) malloc.destroy (data);
         data = other.data;
         other.data = nullptr;
         return *this;
@@ -100,7 +104,7 @@ namespace vectors {
 
       self meet (const self& rhs) const {
         auto res = self (k);
-        res.data = new array_t;
+        res.data = malloc.construct ();
         for (size_t i = 0; i < nsimds; ++i)
           (*res.data)[i] = std::experimental::min ((*data)[i], (*rhs.data)[i]);
         return res;

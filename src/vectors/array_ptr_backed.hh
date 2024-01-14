@@ -6,6 +6,8 @@
 #include <iostream>
 #include <span>
 
+#include <boost/pool/object_pool.hpp>
+
 namespace vectors {
   // What's the multiple of T's we store.  This is used to speed up compilation
   // and reduce program size.
@@ -20,17 +22,25 @@ namespace vectors {
   template <typename T, size_t Units>
   class array_ptr_backed_ {
       using self = array_ptr_backed_<T, Units>;
+    public:
       using array_t = std::array<T, Units * T_PER_UNIT>;
-      std::unique_ptr<array_t> data = nullptr;
+    private:
+      using array_ptr_t = array_t*;
+      array_ptr_t data = nullptr;
+      static inline boost::object_pool<array_t> malloc {8192};
 
     public:
       using value_type = T;
 
-      array_ptr_backed_ (std::span<const T> v) : data (new array_t ()), k {v.size ()} {
+      array_ptr_backed_ (std::span<const T> v) : data (malloc.construct ()), k {v.size ()} {
         assert (k <= Units * T_PER_UNIT);
         std::copy (v.begin (), v.end (), data->data ());
         if (Units * T_PER_UNIT > k)
           std::fill (&(*data)[k], data->end (), 0);
+      }
+
+      ~array_ptr_backed_ () {
+        if (data) malloc.destroy (data);
       }
 
       size_t size () const { return k; }
@@ -40,7 +50,7 @@ namespace vectors {
       array_ptr_backed_ (const self& other) = default;
 
     public:
-      array_ptr_backed_ (self&& other) : data (std::move (other.data)), k (other.k) {
+      array_ptr_backed_ (self&& other) : data (other.data), k (other.k) {
         assert (data);
         other.data = nullptr;
       }
@@ -59,7 +69,9 @@ namespace vectors {
         assert (this != &other);
         assert (k == other.k);
         assert (other.data);
-        data = std::move (other.data);
+        if (data)
+          malloc.destroy (data);
+        data = other.data;
         other.data = nullptr;
         return *this;
       }
@@ -114,7 +126,7 @@ namespace vectors {
 
       self meet (const self& rhs) const {
         auto res = self (k);
-        res.data = std::make_unique<array_t> ();
+        res.data = malloc.construct ();
         assert (rhs.k == k);
 
         for (size_t i = 0; i < k; ++i)
@@ -140,5 +152,4 @@ namespace vectors {
     os << "}";
     return os;
   }
-
 }
