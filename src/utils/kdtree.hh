@@ -231,6 +231,8 @@ namespace utils {
                     << ", dominates=" << dominates_cnt
                     << ", rec_dominates=" << rec_dominates_cnt
                     << ", double_rec_dominates=" << double_rec_dominates_cnt
+                    << ", ratio_double=" <<
+            static_cast<size_t> ((100. * static_cast<double> (double_rec_dominates_cnt) / static_cast<double> (rec_dominates_cnt))) << "%"
                     << "\n";
           delete malloc;
         }
