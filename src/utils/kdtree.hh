@@ -11,6 +11,7 @@
 #include <stack>
 #include <vector>
 
+#include <utils/verbose.hh>
 #include <boost/pool/object_pool.hpp>
 
 
@@ -226,14 +227,22 @@ namespace utils {
 
       ~kdtree () {
         if (malloc) {
-          std::cout << "delete kdtree: dim=" << dim
-                    << ", size=" << vector_set.size ()
-                    << ", dominates=" << dominates_cnt
-                    << ", rec_dominates=" << rec_dominates_cnt
-                    << ", double_rec_dominates=" << double_rec_dominates_cnt
-                    << ", ratio_double=" <<
-            static_cast<size_t> ((100. * static_cast<double> (double_rec_dominates_cnt) / static_cast<double> (rec_dominates_cnt))) << "%"
-                    << "\n";
+          // verb_do (0, vout << "delete kdtree: dim=" << dim
+          //          << ", size=" << vector_set.size ()
+          //          << ", dominates=" << dominates_cnt
+          //          << ", rec_dominates=" << rec_dominates_cnt
+          //          << ", double_rec_dominates=" << double_rec_dominates_cnt
+          //          << ", ratio_double=" <<
+          //          static_cast<size_t> ((100. * static_cast<double> (double_rec_dominates_cnt) / static_cast<double> (rec_dominates_cnt))) << "%"
+          //          << "\n");
+#ifdef INSTRUMENT_KDTREE
+          *global_dim = dim;
+          ++*global_ndelete;
+          *global_sizes += vector_set.size ();
+          *global_dominates_cnt += dominates_cnt;
+          *global_rec_dominates_cnt += rec_dominates_cnt;
+          *global_double_rec_dominates += double_rec_dominates_cnt;
+#endif
           delete malloc;
         }
 
