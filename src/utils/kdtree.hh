@@ -169,17 +169,16 @@ namespace utils {
           if (still_to_dom == 0) return true;
           lbounds[node->axis] = node->location;
         }
-        // if we got here, we need to check on the right recursively
-        bool r_succ = recursive_dominates (v, strict, node->right, lbounds, still_to_dom);
-        if (r_succ) return true;
-        // all that's left is to check on the left recursively, if pertinent
+        // should we check the left recursively?
+        bool l_succ = false;
         lbounds[node->axis] = old_bound;
-        if (v[node->axis] > node->location ||
-            (v[node->axis] == node->location && node->clean_split)) {
-          return false;
+        if (!(v[node->axis] > node->location ||
+             (v[node->axis] == node->location && node->clean_split))) {
+          l_succ = recursive_dominates (v, strict, node->left, lbounds, dims_to_dom);
         }
-        // it is pertinent after all
-        return recursive_dominates (v, strict, node->left, lbounds, dims_to_dom);
+        if (l_succ) return true;
+        // if we got here, we still need to check on the right recursively
+        return recursive_dominates (v, strict, node->right, lbounds, still_to_dom);
       }
 
     public:
