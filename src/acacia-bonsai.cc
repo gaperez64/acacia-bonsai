@@ -8,8 +8,17 @@
 
 #include <signal.h>
 #include <sys/wait.h>
-
+#include <sys/mman.h>
 #include <boost/algorithm/string.hpp>
+
+static size_t* global_ndelete = nullptr;
+static size_t* global_dim = nullptr;
+static size_t* global_sizes = nullptr;
+static size_t* global_dominates_cnt = nullptr;
+static size_t* global_rec_dominates_cnt = nullptr;
+static size_t* global_double_rec_dominates = nullptr;
+
+#define INSTRUMENT_KDTREE
 
 #include "argmatch.h"
 
@@ -67,12 +76,12 @@ enum {
 } ;
 
 /*
-enum unreal_x_t {
-  UNREAL_X_FORMULA = 'f',
-  UNREAL_X_AUTOMATON = 'a',
-  UNREAL_X_BOTH
-};
-*/
+ enum unreal_x_t {
+ UNREAL_X_FORMULA = 'f',
+ UNREAL_X_AUTOMATON = 'a',
+ UNREAL_X_BOTH
+ };
+ */
 
 static const argp_option options[] = {
   /**************************************************/
@@ -91,7 +100,7 @@ static const argp_option options[] = {
     "synth", OPT_SYNTH, "FNAME", 0,
     "enable synthesis, pass .aag filename, or - to print gates", 0
   },
-    {
+  {
     "workers", OPT_WORKERS, "VAL", 0,
     "Number of parallel workers for composition", 0
   },
@@ -353,7 +362,7 @@ parse_opt (int key, char *arg, struct argp_state *) {
       if (opt)
         error (2, 0, "failed to parse --options near '%s'", opt);
     }
-    break;
+      break;
   }
 
   END_EXCEPTION_PROTECT;
@@ -372,6 +381,19 @@ void terminate (int signum) {
 }
 
 int main (int argc, char **argv) {
+  global_ndelete = (size_t*) mmap(NULL, sizeof (size_t), PROT_READ | PROT_WRITE,
+                                  MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  global_dim = (size_t*) mmap(NULL, sizeof (size_t), PROT_READ | PROT_WRITE,
+                              MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  global_sizes = (size_t*) mmap(NULL, sizeof (size_t), PROT_READ | PROT_WRITE,
+                                MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  global_dominates_cnt = (size_t*) mmap(NULL, sizeof (size_t), PROT_READ | PROT_WRITE,
+                                        MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  global_rec_dominates_cnt = (size_t*) mmap(NULL, sizeof (size_t), PROT_READ | PROT_WRITE,
+                                            MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  global_double_rec_dominates = (size_t*) mmap(NULL, sizeof (size_t), PROT_READ | PROT_WRITE,
+                                               MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
   struct sigaction action;
   memset (&action, 0, sizeof(struct sigaction));
   action.sa_handler = terminate;
@@ -443,6 +465,14 @@ int main (int argc, char **argv) {
       ret = WEXITSTATUS (ret);
       if (ret < 3) {
         terminate (0);
+        std::cout << "global_ndelete=" << *global_ndelete << " "
+                  << "global_dim=" << *global_dim << " "
+                  << "global_sizes=" << *global_sizes << " "
+                  << "global_dominates_cnt=" << *global_dominates_cnt << " "
+                  << "global_rec_dominates_cnt=" << *global_rec_dominates_cnt << " "
+                  << "global_double_rec_dominates=" << *global_double_rec_dominates << " "
+                  << "ratio="
+                  << static_cast<size_t> ((100. * static_cast<double> (*global_double_rec_dominates) / static_cast<double> (*global_rec_dominates_cnt))) << "%\n";
         if (ret == 0)
           std::cout << "REALIZABLE\n";
         else

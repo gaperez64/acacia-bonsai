@@ -11,6 +11,7 @@
 #include <stack>
 #include <vector>
 
+#include <utils/verbose.hh>
 #include <boost/pool/object_pool.hpp>
 
 
@@ -65,6 +66,7 @@ namespace utils {
       size_t dim;
       kdtree_node_ptr tree;
       boost::object_pool<kdtree_node>* malloc;
+      size_t dominates_cnt = 0, rec_dominates_cnt = 0, double_rec_dominates_cnt = 0;
 
       template <typename V>
       friend std::ostream& operator<< (std::ostream& os, const kdtree<V>& f);
@@ -140,6 +142,7 @@ namespace utils {
                                 int* lbounds, size_t dims_to_dom) const {
         assert (node != nullptr);
         assert (dims_to_dom > 0);
+        ++const_cast<size_t&> (rec_dominates_cnt);
 
         // if we are at a leaf, just check if it dominates
         if (node->left == nullptr) {
@@ -178,6 +181,7 @@ namespace utils {
         }
         if (l_succ) return true;
         // if we got here, we still need to check on the right recursively
+        ++const_cast<size_t&> (double_rec_dominates_cnt);
         return recursive_dominates (v, strict, node->right, lbounds, still_to_dom);
       }
 
@@ -212,12 +216,36 @@ namespace utils {
       kdtree (kdtree&& other) : dim (other.dim),
                                 tree (std::move (other.tree)),
                                 malloc (other.malloc),
+                                dominates_cnt (other.dominates_cnt),
+                                rec_dominates_cnt (other.rec_dominates_cnt),
+                                double_rec_dominates_cnt (other.double_rec_dominates_cnt),
                                 vector_set (std::move (other.vector_set)) {
         other.tree = nullptr;
         other.malloc = nullptr;
       }
 
-      ~kdtree () { if (malloc) delete malloc; }
+      ~kdtree () {
+        if (malloc) {
+          // verb_do (0, vout << "delete kdtree: dim=" << dim
+          //          << ", size=" << vector_set.size ()
+          //          << ", dominates=" << dominates_cnt
+          //          << ", rec_dominates=" << rec_dominates_cnt
+          //          << ", double_rec_dominates=" << double_rec_dominates_cnt
+          //          << ", ratio_double=" <<
+          //          static_cast<size_t> ((100. * static_cast<double> (double_rec_dominates_cnt) / static_cast<double> (rec_dominates_cnt))) << "%"
+          //          << "\n");
+#ifdef INSTRUMENT_KDTREE
+          *global_dim = dim;
+          ++*global_ndelete;
+          *global_sizes += vector_set.size ();
+          *global_dominates_cnt += dominates_cnt;
+          *global_rec_dominates_cnt += rec_dominates_cnt;
+          *global_double_rec_dominates += double_rec_dominates_cnt;
+#endif
+          delete malloc;
+        }
+
+      }
 
       kdtree& operator= (kdtree&& other) {
         if (malloc)
@@ -232,6 +260,7 @@ namespace utils {
       }
 
       bool dominates (const Vector& v, bool strict = false) const {
+        ++const_cast<size_t&> (dominates_cnt);
         int lbounds[this->dim];
         std::fill_n (lbounds, this->dim, std::numeric_limits<int>::min ());
         return this->recursive_dominates (v, strict, this->tree, lbounds, this->dim);
