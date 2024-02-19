@@ -259,6 +259,10 @@ class k_bounded_safety_aut_detail {
     };
 
   public:
+    void winregion(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
+      // TODO
+    }
+
     void synthesis(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
       auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
       auto maker = actioners::standard<typename SetOfStates::value_type> ();

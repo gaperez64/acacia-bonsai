@@ -63,6 +63,7 @@ enum {
   OPT_CHECK = 'c',
   OPT_VERBOSE = 'v',
   OPT_SYNTH = 'S',
+  OPT_WINREG = 'W',
   OPT_WORKERS = 'j'
 } ;
 
@@ -91,7 +92,11 @@ static const argp_option options[] = {
     "synth", OPT_SYNTH, "FNAME", 0,
     "enable synthesis, pass .aag filename, or - to print gates", 0
   },
-    {
+  {
+    "winreg", OPT_WINREG, "FNAME", 0,
+    "output winning region, pass .aag filename, or - to print gates", 0
+  },
+  {
     "workers", OPT_WORKERS, "VAL", 0,
     "Number of parallel workers for composition", 0
   },
@@ -157,6 +162,7 @@ Exit status:\n\
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 static std::string synth_fname;
+static std::string winreg_fname;
 static int workers = 0;
 
 
@@ -230,7 +236,7 @@ namespace {
 
         if (formulas.size () == 1) {
           // one formula: don't make subprocesses, do everything here by calling the functions directly
-          return composer.run_one (formulas[0], synth_fname, check_real, opt_unreal_x);
+          return composer.run_one (formulas[0], synth_fname, winreg_fname, check_real, opt_unreal_x);
         }
 
 
@@ -248,7 +254,7 @@ namespace {
           composer.add_formula (f);
         }
 
-        return composer.run (workers, synth_fname);
+        return composer.run (workers, synth_fname, winreg_fname);
       }
 
       ~ltl_processor () override {
@@ -289,6 +295,11 @@ parse_opt (int key, char *arg, struct argp_state *) {
 
     case OPT_SYNTH: {
       synth_fname = arg;
+      break;
+    }
+
+    case OPT_WINREG: {
+      winreg_fname = arg;
       break;
     }
 
