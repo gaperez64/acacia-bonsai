@@ -409,7 +409,7 @@ class k_bounded_safety_aut_detail {
 
       verb_do (2, vout << "BDD after fixing latches:\n" << bdd_to_formula (encoding) << "\n\n");
 
-      if (synth_fname != "-") {
+      if (winreg_fname != "-") {
         std::ofstream f (winreg_fname);
         aig.output (f, false);
         f.close ();
