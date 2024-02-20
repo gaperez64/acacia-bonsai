@@ -259,8 +259,166 @@ class k_bounded_safety_aut_detail {
     };
 
   public:
-    void winregion(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
-      // TODO
+    void winregion(SetOfStates& F, const std::string& winreg_fname, bdd invariant) {
+      auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
+      auto maker = actioners::standard<typename SetOfStates::value_type> ();
+      // manually list the two template types so we can set the third (include IOs) to true
+      auto actioner = maker.template make <decltype (aut), decltype (inputs_to_ios), true> (aut, inputs_to_ios, Kfrom);
+
+      verb_do (2, vout << "Final F:\n" << F);
+      verb_do (1, vout << "F = downset of size " << F.size() << "\n");
+
+      // Latches in the AIGER file are initialized to zero, so it would be nice if index 0 is the initial state
+      // -> create new std::vector of dominating elements, start with only an initial one, and then add
+      //    the reachable ones
+      std::vector<State> states;
+
+      // initial vector = all -1, and 0 for the initial state
+      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
+      init_vector[aut->get_init_state_number ()] = 0;
+      int init_index = get_dominated_index (F, State (init_vector));
+      assert (init_index != -1);
+      verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
+      states.push_back (get_dominated_element (F, State (init_vector)));
+      verb_do (1, vout << "-> states = " << states << "\n\n");
+
+      // explore and store transitions
+      auto input_output_fwd_actions = actioner.actions ();
+
+      std::vector<std::vector<transition>> transitions; // for every state: a vector of transitions (one per input)
+      std::vector<unsigned int> states_todo = { 0 };
+
+      while (!states_todo.empty ()) {
+        // pop the last state (depth-first search)
+        unsigned int src = states_todo[states_todo.size () - 1];
+        states_todo.pop_back ();
+
+        verb_do (2, vout << "Element " << states[src] << "\n");
+
+        // make sure transitions vector is large enough
+        while (src >= transitions.size ()) {
+          transitions.push_back ({});
+        }
+
+        for (auto& tuple : input_output_fwd_actions) {
+          // .first = input (BDD)
+          // .second = list<action_vec>
+          //  -> for this input, a list (one per compatible IO) of actions
+          //  where an action maps each state q to a list of (p, is_q_accepting) tuples
+          //  + the action includes the IO
+          verb_do (2, vout << "Input: " << bdd_to_formula (tuple.first) << "\n");
+
+          // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
+          std::pair<bdd, State> p = get_transition (states[src], tuple.second, actioner, F);
+          // note: it may be that an IO is returned that keeps us in the safe
+          // region but requires adding a new element (index == -1) it could
+          // be that there does exist an IO that doesn't make us add a new
+          // maximal element, so we could add a new argument to get_transition
+          // to pass the current states, which would then be checked first -
+          // may make a slightly smaller circuit, at the cost of taking longer
+          // (as we no longer stop at the first IO)
+
+          int index = get_dominated_index (states, p.second);
+          // ^ returns index of FIRST element that dominates
+
+          if (index == -1) {
+            // we didn't know this state was reachable yet: it's not in states
+            // -> add it, and add it to states_todo so we also check its successors
+            index = states.size ();
+            states.push_back (get_dominated_element (F, p.second));
+            states_todo.push_back (index);
+          }
+          transitions[src].push_back ({ p.first, index });
+          verb_do (2, vout << "\n");
+        }
+        verb_do (2, vout << "\n");
+      }
+      verb_do (2, vout << "-> states = " << states << "\n");
+
+      // create APs to encode the mapping of the automaton states to integers
+      // number of variables to encode the state
+      unsigned int mapping_bits = ceil (log2 (states.size ()));
+      assert (states.size () <= (1ull << mapping_bits));
+      verb_do (1, vout << states.size () << " reachable states -> " << mapping_bits << " bit(s)\n\n");
+
+      // extending the number of variables in Buddy by the required amount
+      bdd_extvarnum (2 * mapping_bits);
+
+      // create atomic propositions
+      std::vector<bdd> state_vars, state_vars_prime;
+      bdd state_vars_cube = bddtrue;
+      bdd state_vars_prime_cube = bddtrue;
+      for (unsigned int i = 0; i < mapping_bits; i++) {
+        // Note the long and complex prefix of the variables we introduce:
+        // we do not want them to clash with existing APs!
+        unsigned int v = aut->register_ap ("_ab_enc_y" + std::to_string (i));
+        verb_do (2, vout << "_ab_enc_y" << i << " = " << v << std::endl);
+        state_vars.push_back (bdd_ithvar (v)); // store v instead of the bdd object itself?
+        state_vars_cube &= bdd_ithvar (v);
+
+        v = aut->register_ap ("_ab_enc_z" + std::to_string (i));
+        verb_do (2, vout << "_ab_enc_z" << i << " = " << v << std::endl);
+        state_vars_prime.push_back (bdd_ithvar (v));
+        state_vars_prime_cube &= bdd_ithvar (v);
+      }
+
+      bdd encoding = bddfalse;
+      bdd enc_states = bddfalse;
+      bdd enc_primed_states = bddfalse;
+
+      // create BDD encoding using the states & transitions
+      for (unsigned int i = 0; i < states.size (); i++) {
+        bdd state_encoding = binary_encode (i, state_vars);
+        bdd trans_encoding = bddfalse;
+        // for every transition from state i
+        for (const transition& ts : transitions[i]) {
+          trans_encoding |= ts.IO & binary_encode (ts.new_state, state_vars_prime);
+        }
+        encoding |= state_encoding & trans_encoding;
+        enc_states |= state_encoding;
+        enc_primed_states |= binary_encode (i, state_vars_prime);
+      }
+      bdd original_encoding = encoding;
+
+      verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
+
+      // turn cube (single bdd) into vector<bdd>
+      std::vector<bdd> input_vector = cube_to_vector (input_support & output_support);
+
+      // AIGER
+      aiger aig (input_vector, state_vars, aut);
+
+      // add output based on which transitions are safe (without successor)
+      aig.add_output(0, bdd_exist (encoding, state_vars_prime_cube));
+
+      int i = 0;
+      // new state as function(current_state, input)
+      bdd fixdsucc = encoding;
+      for (const bdd& m : state_vars_prime) {
+        bdd pos = bdd_restrict (fixdsucc, m);
+        pos = bdd_exist (pos, state_vars_prime_cube);
+        bdd neg = bdd_restrict (fixdsucc, !m);
+        neg = !bdd_exist (neg, state_vars_prime_cube);
+        bdd f_l = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
+        verb_do (2, vout << "f_" << bdd_to_formula (m) << ": " << bdd_to_formula (f_l) << "\n");
+        aig.add_latch (i++, f_l);
+        fixdsucc &= ((!f_l) | m) & (f_l | (!m));
+        assert (fixdsucc != bddfalse);
+      }
+      encoding &= fixdsucc;
+
+      verb_do (2, vout << "BDD after fixing latches:\n" << bdd_to_formula (encoding) << "\n\n");
+
+      if (synth_fname != "-") {
+        std::ofstream f (winreg_fname);
+        aig.output (f, false);
+        f.close ();
+      } else {
+        utils::vout << "\n\n\n";
+        aig.output (utils::vout, true);
+      }
+
+      verb_do (1, vout << "\n\n");
     }
 
     void synthesis(SetOfStates& F, const std::string& synth_fname, bdd invariant) {

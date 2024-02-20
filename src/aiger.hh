@@ -33,6 +33,26 @@ class aiger {
     verb_do (2, vout << "O: " << output_names << "\n");
   }
 
+  // simpler constructor for circuits with a single output
+  aiger (const std::vector<bdd>& _inputs, const std::vector<bdd>& _latches, spot::twa_graph_ptr aut) {
+    inputs = bddvec_to_idvec (_inputs); // mapping of vector<bdd> to vector<int> using bdd_var to get the AP number
+    latches = bddvec_to_idvec (_latches); // '
+    latches_id = std::vector<int> (_latches.size ()); // for each latch: the ID of the gate it will be equal to next step
+    outputs = std::vector<int> (1); // for each output: the ID of the gate it is equal to
+    vi = 2 + 2 * inputs.size () + 2 * latches.size (); // first free variable index
+
+    // maybe not the cleanest way to get the atomic propositions as a string again
+    for (const bdd& b : _inputs) {
+      std::stringstream ss;
+      ss << spot::bdd_to_formula (b, aut->get_dict ());
+      input_names.push_back (ss.str ());
+    }
+
+    output_names.push_back ("_ab_single_output");
+
+    verb_do (2, vout << "I: " << input_names << "\n");
+  }
+
   // pass formula to calculate i-th latch (primed state)
   void add_latch (int i, const bdd& func) {
     latches_id[i] = bdd2aig (func);
