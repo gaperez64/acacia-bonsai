@@ -379,7 +379,7 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
       (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
     if (!winreg_fname.empty ())
-      skn.winregion (*r.safe, winref_fname, invariant);
+      skn.winregion (*r.safe, winreg_fname, invariant);
     if (!synth_fname.empty ())
       skn.synthesis (*r.safe, synth_fname, invariant);
   }
