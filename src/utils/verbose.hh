@@ -13,6 +13,8 @@ namespace utils {
       virtual int sync()
       {
         int ret = std::stringbuf::sync();
+        if (view ().empty ())
+          return ret;
         bool ends_in_eol = (view ().back () == '\n');
         std::istringstream s (str ());
         str (""); // erase buffer
