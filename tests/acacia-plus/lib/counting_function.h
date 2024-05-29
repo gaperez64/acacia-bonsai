@@ -27,6 +27,8 @@
 #include "linked_list.h"
 #include "tbucw.h"
 
+#include "memory_management.h"
+
 /** Structures **/
 /** Contains all information needed by the counting_function methods **/
 typedef struct {
