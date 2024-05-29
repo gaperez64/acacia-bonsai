@@ -2,6 +2,8 @@ subdir ('spot-bin')
 subdir ('acacia-plus')
 subdir ('downsets')
 
+fs = import ('fs')
+
 test_files = \
              {
                'realizable' :
@@ -369,7 +371,7 @@ else
 endif
 
 conf_data.set_quoted ('ACABONSAI', ab_exe.full_path ())
-conf_data.set_quoted ('ACAPLUS', meson.source_root() / '@0@'.format(acacia_plus_py[0]))
+conf_data.set_quoted ('ACAPLUS', fs.relative_to (meson.source_root(), acacia_plus_py[0]))
 conf_data.set_quoted ('PYTHON3', py.path ())
 conf_data.set_quoted ('ACACIA_PLUS_LIB', acplus_lib.full_path ())
 conf_data.set_quoted ('LTL2TGBA_BIN', ltl2tgba_exe.full_path ())
@@ -1720,8 +1722,6 @@ benchmark_files += { 'syntcomp21': benchmark_files['syntcomp21'] + { 'all':
    benchmark_files['syntcomp21']['20s-100s'] +
    benchmark_files['syntcomp21']['100s-1000s'] +
    benchmark_files['syntcomp21']['1000s-inf'] } }
-
-fs = import ('fs')
 
 foreach folder, testsets : benchmark_files
   foreach set, files : testsets
