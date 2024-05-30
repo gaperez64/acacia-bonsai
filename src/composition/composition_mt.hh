@@ -359,6 +359,14 @@ int composition_mt::epilogue (std::string synth_fname) {
   // then a final solve is needed before calling synthesis
   bool not_fully_solved = ((r.invariant != invariant) && IOS_PRECOMPUTER::supports_invariant);
 
+  // there is a special case of having had found all states to be bounded
+  // this should only happen when checking UNREAL, and it means we can
+  // return true
+  if (r.aut == nullptr) {
+    assert (synth_fname.empty ());
+    return true;
+  }
+
   if ((!r.solved) || not_fully_solved) {
     if (!r.solved) verb_do (1, vout << "Not fully solved -> extra solve\n");
     if (not_fully_solved) verb_do (1, vout << "Solved but not with the right invariant -> extra solve\n");
@@ -738,7 +746,8 @@ safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, u
   }
 
   // Special case: only boolean states, so... no useful accepting state.
-  if (vectors::bool_threshold == 0) {
+  if (!check_real && vectors::bool_threshold == 0) {
+    verb_do (2, vout << "Special case: all states are bounded and checking UNREAL" << "\n");
     if (want_time)
       verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
     safety_game ret;
