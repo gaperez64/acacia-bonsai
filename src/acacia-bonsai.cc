@@ -422,7 +422,7 @@ int main (int argc, char **argv) {
           synth_fname = ""; // no synthesis for the environment if the formula is unrealizable
         opt_unreal_x = unreal_x;
         int res = processor.run ();
-        verb_do (1, vout << "returning " << res << "\n");
+        verb_do (1, vout << "returning " << (res ? 1 - real : 3) << "\n");
         exit (res ? 1 - real : 3);  // 0 if real, 1 if unreal, 3 if unknown
       }
     };
