@@ -374,10 +374,10 @@ int composition_mt::epilogue (std::string synth_fname) {
   }
 
   // call synthesis if needed
-  if (!synth_fname.empty ()) {
+  if (r.safe != nullptr & (!synth_fname.empty ())) {
     r.set_globals ();
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
-    (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
+      (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
     skn.synthesis (*r.safe, synth_fname, invariant);
   }
 
