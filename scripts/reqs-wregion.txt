@@ -1,0 +1,14 @@
+attrs==22.2.0
+bidict==0.22.1
+bitarray==2.9.2
+dfa==4.7.1
+funcy==1.18
+parsimonious==0.10.0
+py-aiger==6.2.0
+py-aiger-bv==4.7.7
+py-aiger-dfa==0.4.2
+py-aiger-ptltl==3.1.2
+pyrsistent==0.19.3
+regex==2024.5.15
+sortedcontainers==2.4.0
+toposort==1.10
