@@ -1,0 +1,38 @@
+INFO {
+  TITLE:       "Abstraction of example 1 in synthesis modulo theory"
+  DESCRIPTION: "Abstraction of example 1 in synthesis modulo theory"
+  SEMANTICS:   Mealy
+  TARGET:      Mealy
+}
+
+GLOBAL {
+  PARAMETERS {
+    k = 2;
+  }
+  DEFINITIONS {
+  }
+}
+
+MAIN {
+  INPUTS {
+    e;
+  }
+
+  OUTPUTS {
+    s1;
+    s2;
+  }
+
+  ASSUMPTIONS {
+  }
+
+  INVARIANTS {
+    e -> F[1:k] s1;
+    !e -> s2;
+    e -> (s1 && !s2) || (!s1 && s2);
+    !e -> (s1 && s2) || (s1 && !s2) || (!s1 && s2);
+  }
+
+  GUARANTEES {
+  }
+}
