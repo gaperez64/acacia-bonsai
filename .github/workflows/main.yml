@@ -14,7 +14,7 @@ jobs:
     - uses: actions/setup-python@v5
     - name: Install python dependencies
       run: |
-        pip install pygraph --break-system-packages
+        pip install pygraph
     - name: Compile all configurations
       run: |
         ./self-benchmark.sh -R
