@@ -7,7 +7,7 @@ jobs:
     - name: Install packages
       run: |
         sudo apt-get -y install zsh git gcc python-is-python3 ninja-build gnupg wget python3-pip python3-distutils pkg-config libglib2.0-dev libffi-dev libboost-dev autoconf automake libtool bison flex valgrind
-	sudo pip install --upgrade meson
+        sudo pip install --upgrade meson
     - name: Checkout repository and submodules
       uses: actions/checkout@v4
       with:
