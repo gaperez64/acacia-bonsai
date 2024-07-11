@@ -144,15 +144,16 @@ class k_bounded_safety_aut_detail {
     const InputPickerMaker& input_picker_maker;
 
     // This computes F = CPre(F), in the following way:
-    // UPre(F) = F \cap F2
-    // F2 = \cap_{i \in I} F1i
-    // F1i = \cup_{o \in O} PreHat (F, i, o)
+    // UPre(F) = F \cap F1i
+    // F1i = \cup_{o \in O} F1io
+    // F1io = PreHat (F, i, o)
     template <typename Action, typename Actioner>
     void cpre_inplace (SetOfStates& F, const Action& io_action, Actioner& actioner) {
 
       verb_do (2, vout << "Computing cpre(F) with F = " << std::endl << F);
 
       const auto& [input, actions] = io_action.get ();
+#if CPRE_AVOID_UNIONS == 0
       utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
       auto vv = typename SetOfStates::value_type (v);
       SetOfStates F1i (std::move (vv));
@@ -173,6 +174,22 @@ class k_bounded_safety_aut_detail {
         else
           F1i.union_with (std::move (F1io));
       }
+#elif CPRE_AVOID_UNIONS == 1
+      // Compute downset once, before intersection
+
+      std::vector<typename SetOfStates::value_type> F1i_vec;
+      F1i_vec.reserve (actions.size () * F.size ());
+      for (const auto& action_vec : actions) {
+        verb_do (3, vout << "one_output_letter:" << std::endl);
+
+        for (const auto& m : F)
+          F1i_vec.push_back (actioner.apply (m, action_vec, actioners::direction::backward));
+      }
+
+      SetOfStates F1i (std::move (F1i_vec));
+#elif CPRE_AVOID_UNIONS == 2
+# error Not implemented yet: Remove unions altogether and have intersect take a list
+#endif
 
       F.intersect_with (std::move (F1i));
       verb_do (2, vout << "F = " << std::endl << F);

@@ -43,6 +43,10 @@
 # endif
 #endif
 
+#ifndef CPRE_AVOID_UNIONS
+# define CPRE_AVOID_UNIONS 0
+#endif
+
 #ifdef AC_DATA
 # pragma message ("Compiling with AC_DATA")
 #endif
