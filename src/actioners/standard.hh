@@ -84,11 +84,11 @@ namespace actioners {
 
 	  // Non boolean
           std::fill_n (backward_reset.begin (),
-                       vectors::bool_threshold,
+                       posets::vectors::bool_threshold,
                        (VECTOR_ELT_T) (K - 1));
           // Boolean
-          std::fill_n (backward_reset.begin () + vectors::bool_threshold,
-                       aut->num_states () - vectors::bool_threshold,
+          std::fill_n (backward_reset.begin () + posets::vectors::bool_threshold,
+                       aut->num_states () - posets::vectors::bool_threshold,
                        (VECTOR_ELT_T) 0);
 
           std::set<input_and_actions, compare_actions> ioset;
@@ -127,7 +127,7 @@ namespace actioners {
         void setK (int newK) {
 	  K = (VECTOR_ELT_T) newK;
 	  std::fill_n (backward_reset.begin (),
-                       vectors::bool_threshold,
+                       posets::vectors::bool_threshold,
                        (VECTOR_ELT_T) (K - 1));
 	}
 

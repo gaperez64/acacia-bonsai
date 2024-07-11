@@ -273,16 +273,16 @@ void composition_mt::solve_game (safety_game& game) {
 #define UNREACHABLE [] (int x) { assert (false); }
 
   constexpr auto STATIC_ARRAY_CAP_MAX =
-    vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+    posets::vectors::traits<posets::vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) { // Array & Bitsets
     static_switch_t<STATIC_ARRAY_CAP_MAX> {} (
     [&] (auto vnonbools) {
       static_switch_t<STATIC_MAX_BITSETS> {} (
       [&] (auto vbitsets) {
-        using SpecializedDownset = downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<
-          vectors::X_and_bitset<
-            vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
+        using SpecializedDownset = posets::downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<
+          posets::vectors::X_and_bitset<
+            posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
             vbitsets.value>>;
         auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
         (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
@@ -294,7 +294,7 @@ void composition_mt::solve_game (safety_game& game) {
         } else game.safe = nullptr;
       },
       UNREACHABLE,
-      vectors::nbools_to_nbitsets (nbitsetbools));
+      posets::vectors::nbools_to_nbitsets (nbitsetbools));
     },
     UNREACHABLE,
     actual_nonbools);
@@ -302,9 +302,9 @@ void composition_mt::solve_game (safety_game& game) {
   else {                                  // Vectors & Bitsets
     static_switch_t<STATIC_MAX_BITSETS> {} (
     [&] (auto vbitsets) {
-      using SpecializedDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-      vectors::X_and_bitset<
-      vectors::VECTOR_IMPL<VECTOR_ELT_T>,
+      using SpecializedDownset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
+      posets::vectors::X_and_bitset<
+      posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>,
       vbitsets.value>>;
       auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
       (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
@@ -316,7 +316,7 @@ void composition_mt::solve_game (safety_game& game) {
       } else game.safe = nullptr;
     },
     UNREACHABLE,
-    vectors::nbools_to_nbitsets (nbitsetbools));
+    posets::vectors::nbools_to_nbitsets (nbitsetbools));
   }
 
   game.solved = true;
@@ -374,7 +374,7 @@ int composition_mt::epilogue (std::string synth_fname) {
   }
 
   // call synthesis if needed
-  if (r.safe != nullptr & (!synth_fname.empty ())) {
+  if (r.safe != nullptr and not synth_fname.empty ()) {
     r.set_globals ();
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
       (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
@@ -737,16 +737,16 @@ safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, u
     sw.start ();
 
   auto boolean_states_maker = BOOLEAN_STATES ();
-  vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K)) ();
+  posets::vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K)) ();
 
   if (want_time) {
     double boolean_states_time = sw.stop ();
     verb_do (1, vout << "Computation of boolean states in " << boolean_states_time
-      /*          */ << "seconds , found " << vectors::bool_threshold << " nonboolean states.\n");
+      /*          */ << "seconds , found " << posets::vectors::bool_threshold << " nonboolean states.\n");
   }
 
   // Special case: only boolean states, so... no useful accepting state.
-  if (!check_real && vectors::bool_threshold == 0) {
+  if (!check_real && posets::vectors::bool_threshold == 0) {
     verb_do (2, vout << "Special case: all states are bounded and checking UNREAL" << "\n");
     if (want_time)
       verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
@@ -764,12 +764,12 @@ safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, u
 
   safety_game ret;
   ret.aut = aut;
-  ret.bool_threshold = vectors::bool_threshold;
+  ret.bool_threshold = posets::vectors::bool_threshold;
   ret.solved = false;
   ret.set_globals ();
 
   auto all_k = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), opt_Kmin - 1);
-  for (size_t i = vectors::bool_threshold; i < aut->num_states (); ++i)
+  for (size_t i = posets::vectors::bool_threshold; i < aut->num_states (); ++i)
     all_k[i] = 0;
   ret.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (all_k));
 

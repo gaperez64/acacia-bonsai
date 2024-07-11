@@ -1,0 +1,10 @@
+--- src/utils/kdtree.hh
++++ src/utils/kdtree.hh
+@@ -181,6 +183,7 @@ namespace utils {
+           return false;
+         }
+         // it is pertinent after all
++        ++const_cast<size_t&> (double_rec_dominates_cnt);
+         return recursive_dominates (v, strict, node->left, lbounds, dims_to_dom);
+       }
+ 

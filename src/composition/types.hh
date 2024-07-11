@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
 #include "../configuration.hh"
-#include "../vectors.hh"
-#include "../downsets.hh"
+#include <posets/vectors.hh>
+#include <posets/downsets.hh>
 #include "../utils/verbose.hh"
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
@@ -13,7 +13,7 @@
 #include <optional>
 
 // downset type that does not depend on the exact automaton
-using GenericDownset = downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vectors::vector_backed<VECTOR_ELT_T>>;
+using GenericDownset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::vector_backed<VECTOR_ELT_T>>;
 
 // Safety game: contains the Büchi automaton and the number of nonboolean states
 // may also contain a downset which is either the safe region if solved == true, or some overestimation if solved == false
@@ -29,11 +29,11 @@ struct safety_game {
   auto set_globals () {
     // set the global variables needed for boolean states to function correctly
 
-    vectors::bool_threshold = bool_threshold; // number of nonboolean states
+    posets::vectors::bool_threshold = bool_threshold; // number of nonboolean states
 
     // Compute how many boolean states will actually be put in bitsets.
-    constexpr auto max_bools_in_bitsets = vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
-    auto nbitsetbools = aut->num_states () - vectors::bool_threshold;
+    constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
+    auto nbitsetbools = aut->num_states () - posets::vectors::bool_threshold;
     if (nbitsetbools > max_bools_in_bitsets) {
       verb_do (1, vout << "Warning: bitsets not large enough, using regular vectors for some Boolean states.\n"
                        /*   */ << "\tTotal # of Boolean-for-bitset states: " << nbitsetbools
@@ -42,21 +42,21 @@ struct safety_game {
     }
 
     constexpr auto STATIC_ARRAY_CAP_MAX =
-      vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
+      posets::vectors::traits<posets::vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (STATIC_ARRAY_MAX);
 
     // Maximize usage of the nonbool implementation
     auto nonbools = aut->num_states () - nbitsetbools;
     size_t actual_nonbools = (nonbools <= STATIC_ARRAY_CAP_MAX) ?
-    vectors::traits<vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (nonbools) :
-    vectors::traits<vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (nonbools);
+    posets::vectors::traits<posets::vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (nonbools) :
+    posets::vectors::traits<posets::vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (nonbools);
     if (actual_nonbools >= aut->num_states ())
       nbitsetbools = 0;
     else
       nbitsetbools -= (actual_nonbools - nonbools);
 
-    vectors::bitset_threshold = aut->num_states () - nbitsetbools;
+    posets::vectors::bitset_threshold = aut->num_states () - nbitsetbools;
 
-    verb_do (1, vout << "Bitset threshold set at " << vectors::bitset_threshold << "\n");
+    verb_do (1, vout << "Bitset threshold set at " << posets::vectors::bitset_threshold << "\n");
 
     // return two values needed for the specialized downset k-bounded safety automaton
     return std::pair<size_t, size_t> (nbitsetbools, actual_nonbools);

@@ -20,7 +20,7 @@
 #include <utils/verbose.hh>
 #include "utils/typeinfo.hh"
 
-#include "vectors.hh"
+#include <posets/vectors.hh>
 
 #include "ios_precomputers.hh"
 #include "input_pickers.hh"
@@ -114,7 +114,7 @@ class k_bounded_safety_aut_detail {
           verb_do (1, {vout << "Adding Kinc to every vector..."; vout.flush (); });
           F = F.apply ([&] (const State& s) {
             auto vec = utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
-            for (size_t i = 0; i < vectors::bool_threshold; ++i)
+            for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
               vec[i] = s[i] + Kinc;
             // Other entries are set to 0 by initialization, since they are bool.
             return State (vec);

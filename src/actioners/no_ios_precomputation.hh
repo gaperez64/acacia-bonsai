@@ -71,11 +71,11 @@ namespace actioners {
           else {
             // Non boolean
             std::fill_n (apply_out.begin (),
-                         vectors::bool_threshold,
+                         posets::vectors::bool_threshold,
                          (VECTOR_ELT_T) (K - 1));
             // Boolean
-            std::fill_n (apply_out.begin () + vectors::bool_threshold,
-                         m.size () - vectors::bool_threshold,
+            std::fill_n (apply_out.begin () + posets::vectors::bool_threshold,
+                         m.size () - posets::vectors::bool_threshold,
                          (VECTOR_ELT_T) 0);
           }
 

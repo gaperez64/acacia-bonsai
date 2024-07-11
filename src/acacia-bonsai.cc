@@ -22,8 +22,8 @@
 
 #include "k-bounded_safety_aut.hh"
 
-#include "vectors.hh"
-#include "downsets.hh"
+#include <posets/vectors.hh>
+#include <posets/downsets.hh>
 #include "utils/static_switch.hh"
 #include "boolean_states.hh"
 
@@ -176,6 +176,8 @@ static spot::option_map extra_options;
 int               utils::verbose = 0;
 utils::voutstream utils::vout;
 
+size_t posets::vectors::bool_threshold = 0;
+size_t posets::vectors::bitset_threshold = 0;
 
 namespace {
 
