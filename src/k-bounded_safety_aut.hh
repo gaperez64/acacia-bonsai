@@ -71,7 +71,7 @@ class k_bounded_safety_aut_detail {
       }
     }
 
-    std::optional<SetOfStates> solve (SetOfStates& F, bdd invariant) {
+    std::optional<SetOfStates> solve (SetOfStates& F, bdd invariant, std::vector<int> init_state) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -88,7 +88,14 @@ class k_bounded_safety_aut_detail {
 
       posets::utils::vector_mm<VECTOR_ELT_T> init (aut->num_states ());
       init.assign (aut->num_states (), -1);
-      init[aut->get_init_state_number ()] = 0;
+      // either the initial state from the automaton, or some given initial
+      // configuration
+      if (init_state.size () == 0) {
+        init[aut->get_init_state_number ()] = 0;
+      } else {
+        for (int i = 0; i < init_state.size (); i++)
+          init[i] = init_state[i];
+      }
 
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
 
@@ -262,7 +269,7 @@ class k_bounded_safety_aut_detail {
     };
 
   public:
-    void winregion(SetOfStates& F, const std::string& winreg_fname, bdd invariant) {
+    void winregion(SetOfStates& F, const std::string& winreg_fname, bdd invariant, std::vector<int> init_state) {
       auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
       auto maker = actioners::standard<typename SetOfStates::value_type> ();
       // manually list the two template types so we can set the third (include IOs) to true
@@ -278,8 +285,15 @@ class k_bounded_safety_aut_detail {
 
       // initial vector = all -1, and 0 for the initial state
       auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
-      init_vector[aut->get_init_state_number ()] = 0;
-      int init_index = get_dominating_index (F, State (init_vector));
+      // either the initial state from the automaton, or some given initial
+      // configuration
+      if (init_state.size () == 0) {
+        init_vector[aut->get_init_state_number ()] = 0;
+      } else {
+        for (int i = 0; i < init_state.size (); i++)
+          init_vector[i] = init_state[i];
+      }
+      int init_index = get_dominated_index (F, State (init_vector));
       assert (init_index != -1);
       verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
       states.push_back (get_dominating_element (F, State (init_vector)));
@@ -424,7 +438,7 @@ class k_bounded_safety_aut_detail {
       verb_do (1, vout << "\n\n");
     }
 
-    void synthesis(SetOfStates& F, const std::string& synth_fname, bdd invariant) {
+    void synthesis(SetOfStates& F, const std::string& synth_fname, bdd invariant, std::vector<int> init_state) {
       auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
       auto maker = actioners::standard<typename SetOfStates::value_type> ();
       // manually list the two template types so we can set the third (include IOs) to true
@@ -458,9 +472,16 @@ class k_bounded_safety_aut_detail {
       std::vector<State> states;
 
       // initial vector = all -1, and 0 for the initial state
-      auto init_vector = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
-      init_vector[aut->get_init_state_number ()] = 0;
-      int init_index = get_dominating_index (F, State (init_vector));
+      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
+      // either the initial state from the automaton, or some given initial
+      // configuration
+      if (init_state.size () == 0) {
+        init_vector[aut->get_init_state_number ()] = 0;
+      } else {
+        for (int i = 0; i < init_state.size (); i++)
+          init_vector[i] = init_state[i];
+      }
+      int init_index = get_dominated_index (F, State (init_vector));
       assert (init_index != -1);
       verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
       states.push_back (get_dominating_element (F, State (init_vector)));

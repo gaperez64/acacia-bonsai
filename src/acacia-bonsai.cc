@@ -64,7 +64,8 @@ enum {
   OPT_VERBOSE = 'v',
   OPT_SYNTH = 'S',
   OPT_WINREG = 'W',
-  OPT_WORKERS = 'j'
+  OPT_WORKERS = 'j',
+  OPT_INIT = '0'
 } ;
 
 /*
@@ -95,6 +96,10 @@ static const argp_option options[] = {
   {
     "winreg", OPT_WINREG, "FNAME", 0,
     "output winning region, pass .aag filename, or - to print gates", 0
+  },
+  {
+    "init", OPT_INIT, "STATE", 0,
+    "comma-separated state vector to use as initial state", 0
   },
   {
     "workers", OPT_WORKERS, "VAL", 0,
@@ -163,6 +168,7 @@ static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 static std::string synth_fname;
 static std::string winreg_fname;
+static std::vector<int> init_state;
 static int workers = 0;
 
 
@@ -232,16 +238,23 @@ namespace {
           all_outputs &= bdd_ithvar (v);
         }
 
-        composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict, trans_, all_inputs, all_outputs, input_aps_, output_aps_);
+        composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict, trans_, all_inputs, all_outputs, input_aps_, output_aps_,
+                                 init_state);
 
         if (formulas.size () == 1) {
           // one formula: don't make subprocesses, do everything here by calling the functions directly
           return composer.run_one (formulas[0], synth_fname, winreg_fname, check_real, opt_unreal_x);
         }
 
-
+        // NOTE: Everything after this point plays a role
+        // ONLY if there is MORE THAN ONE LTL formula
         if (!check_real) {
           utils::vout << "Error: can't do composition for unrealizability!\n";
+          return 0;
+        }
+
+        if (init_state.size () > 0) {
+          utils::vout << "Error: can't do composition with given initial state!\n";
           return 0;
         }
 
@@ -276,6 +289,18 @@ parse_opt (int key, char *arg, struct argp_state *) {
       while (std::getline (aps, ap, ',')) {
         ap.erase (remove_if (ap.begin (), ap.end (), isspace), ap.end ());
         input_aps.push_back (ap);
+      }
+
+      break;
+    }
+
+    case OPT_INIT: {
+      std::istringstream state (arg);
+      std::string val;
+
+      while (std::getline (state, val, ',')) {
+        val.erase (remove_if (val.begin (), val.end (), isspace), val.end ());
+        init_state.push_back (std::stoi (val));
       }
 
       break;
@@ -431,8 +456,9 @@ int main (int argc, char **argv) {
                                    std::string {"unreal-x="} + (char) unreal_x)
                                 + "] ");
         check_real = real;
-        if (!real)
+        if (!real) {
           synth_fname = ""; // no synthesis for the environment if the formula is unrealizable
+        }
         opt_unreal_x = unreal_x;
         int res = processor.run ();
         verb_do (1, vout << "returning " << (res ? 1 - real : 3) << "\n");
