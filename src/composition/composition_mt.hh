@@ -42,6 +42,8 @@ class composition_mt {
   std::vector<std::string> input_aps_;
   std::vector<std::string> output_aps_;
 
+  std::vector<int> init_state;
+
 
   spot::formula bdd_to_formula (bdd f) const; // for debugging
   void enqueue (job_ptr p); // add a new job to the queue
@@ -59,10 +61,13 @@ class composition_mt {
   safety_game prepare_formula (spot::formula f, bool check_real = true, unreal_x_t opt_unreal_x = UNREAL_X_BOTH); // turn a formula into an automaton
 
   public:
-  composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc, spot::bdd_dict_ptr dict, spot::translator& trans, bdd all_inputs, bdd all_outputs,
-                      std::vector<std::string> input_aps_, std::vector<std::string> output_aps_): opt_K(opt_K), opt_Kmin(opt_Kmin), opt_Kinc(opt_Kinc),
-        dict(dict), trans_(trans), all_inputs(all_inputs), all_outputs(all_outputs), input_aps_(input_aps_), output_aps_(output_aps_) {
-  }
+  composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc,
+      spot::bdd_dict_ptr dict, spot::translator& trans, bdd all_inputs, bdd
+      all_outputs, std::vector<std::string> input_aps_,
+      std::vector<std::string> output_aps_, std::vector<int> init_state):
+    opt_K(opt_K), opt_Kmin(opt_Kmin), opt_Kinc(opt_Kinc), dict(dict),
+    trans_(trans), all_inputs(all_inputs), all_outputs(all_outputs),
+    input_aps_(input_aps_), output_aps_(output_aps_), init_state(init_state) {}
 
   void add_formula (spot::formula f); // adds a formula job
   int run (int workers, std::string synth_fname, std::string winreg_fname); // run everything with the given number of workers
@@ -288,7 +293,7 @@ void composition_mt::solve_game (safety_game& game) {
         (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
         assert (game.safe);
         auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-        auto safe = skn.solve (current_safe, invariant);
+        auto safe = skn.solve (current_safe, invariant, init_state);
         if (safe.has_value ()) {
           game.safe = std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
         } else game.safe = nullptr;
@@ -310,7 +315,7 @@ void composition_mt::solve_game (safety_game& game) {
       (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
       assert (game.safe);
       auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-      auto safe = skn.solve (current_safe, invariant);
+      auto safe = skn.solve (current_safe, invariant, init_state);
       if (safe.has_value ()) {
         game.safe = std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
       } else game.safe = nullptr;
@@ -379,9 +384,9 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
       (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
     if (!winreg_fname.empty ())
-      skn.winregion (*r.safe, winreg_fname, invariant);
+      skn.winregion (*r.safe, winreg_fname, invariant, init_state);
     if (!synth_fname.empty ())
-      skn.synthesis (*r.safe, synth_fname, invariant);
+      skn.synthesis (*r.safe, synth_fname, invariant, init_state);
   }
 
   // if there is no safe region: return 0 (not winning)

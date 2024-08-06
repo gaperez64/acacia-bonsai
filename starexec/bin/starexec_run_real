@@ -21,5 +21,6 @@ parttoinsouts () {
 
 parttoinsouts $PART
 
+echo $ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs"
 $ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs"
-rm -f $PART
+# rm -f $PART

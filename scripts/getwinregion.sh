@@ -2,7 +2,7 @@
 export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
 
 SYFCO=./syfco
-ACABON=./acacia-bonsai
+ACABON=../debug/src/acacia-bonsai
 FILE=$1
 PART=$(mktemp)
 RES=$(mktemp)
@@ -22,6 +22,6 @@ parttoinsouts () {
 
 parttoinsouts $PART
 
-$ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs" --winreg="$RES"
+$ACABON -c REAL --formula="$LTL" --ins="$ins" --outs="$outs" --winreg="$RES" -v --init-states="0,1,2;2,4,2;1,1,1"
 echo "$(cat $RES)"
 rm -f $PART $RES

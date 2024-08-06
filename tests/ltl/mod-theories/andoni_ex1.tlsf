@@ -7,7 +7,7 @@ INFO {
 
 GLOBAL {
   PARAMETERS {
-    k = 2;
+    k = 5;
   }
   DEFINITIONS {
   }
