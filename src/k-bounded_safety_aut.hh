@@ -203,7 +203,9 @@ class k_bounded_safety_aut_detail {
       int i = 0;
       auto it = saferegion.begin ();
       while (it != saferegion.end ()) {
-        // FIXME: Avoid copying!!
+        // FIXME: Avoid copying, maybe by keeping a SetOfStates on the side
+        // when using vector? Or using a specific SetOfStates like
+        // vector-based
         if (SetOfStates ((*it).copy ()).contains (v)) return i;
         i++;
         ++it;
