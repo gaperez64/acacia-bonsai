@@ -199,10 +199,11 @@ class k_bounded_safety_aut_detail {
     // get index of the first dominating element that dominates the vector v
     // Container can be SetOfStates, or std::vector
     template <class Container>
-    int get_dominated_index (const Container& saferegion, const State& v) const {
+    int get_dominating_index (const Container& saferegion, const State& v) const {
       int i = 0;
       auto it = saferegion.begin ();
       while (it != saferegion.end ()) {
+        // FIXME: Avoid copying!!
         if (SetOfStates ((*it).copy ()).contains (v)) return i;
         i++;
         ++it;
@@ -211,7 +212,7 @@ class k_bounded_safety_aut_detail {
     }
 
     template <class Container>
-    State get_dominated_element (const Container& saferegion, const State& v) const {
+    State get_dominating_element (const Container& saferegion, const State& v) const {
       int i = 0;
       auto it = saferegion.begin ();
       while (it != saferegion.end ()) {
@@ -276,10 +277,10 @@ class k_bounded_safety_aut_detail {
       // initial vector = all -1, and 0 for the initial state
       auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
       init_vector[aut->get_init_state_number ()] = 0;
-      int init_index = get_dominated_index (F, State (init_vector));
+      int init_index = get_dominating_index (F, State (init_vector));
       assert (init_index != -1);
       verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
-      states.push_back (get_dominated_element (F, State (init_vector)));
+      states.push_back (get_dominating_element (F, State (init_vector)));
       verb_do (1, vout << "-> states = " << states << "\n\n");
 
       // explore and store transitions
@@ -318,14 +319,14 @@ class k_bounded_safety_aut_detail {
           // may make a slightly smaller circuit, at the cost of taking longer
           // (as we no longer stop at the first IO)
 
-          int index = get_dominated_index (states, p.second);
+          int index = get_dominating_index (states, p.second);
           // ^ returns index of FIRST element that dominates
 
           if (index == -1) {
             // we didn't know this state was reachable yet: it's not in states
             // -> add it, and add it to states_todo so we also check its successors
             index = states.size ();
-            states.push_back (get_dominated_element (F, p.second));
+            states.push_back (get_dominating_element (F, p.second));
             states_todo.push_back (index);
           }
           transitions[src].push_back ({ p.first, index });
@@ -457,10 +458,10 @@ class k_bounded_safety_aut_detail {
       // initial vector = all -1, and 0 for the initial state
       auto init_vector = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
       init_vector[aut->get_init_state_number ()] = 0;
-      int init_index = get_dominated_index (F, State (init_vector));
+      int init_index = get_dominating_index (F, State (init_vector));
       assert (init_index != -1);
       verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
-      states.push_back (get_dominated_element (F, State (init_vector)));
+      states.push_back (get_dominating_element (F, State (init_vector)));
       verb_do (1, vout << "-> states = " << states << "\n\n");
 
       // explore and store transitions
@@ -496,14 +497,14 @@ class k_bounded_safety_aut_detail {
           // to get_transition to pass the current states, which would then be checked first - may make a slightly smaller circuit,
           // at the cost of taking longer (as we no longer stop at the first IO)
 
-          int index = get_dominated_index (states, p.second);
+          int index = get_dominating_index (states, p.second);
           // ^ returns index of FIRST element that dominates
 
           if (index == -1) {
             // we didn't know this state was reachable yet: it's not in states
             // -> add it, and add it to states_todo so we also check its successors
             index = states.size ();
-            states.push_back (get_dominated_element (F, p.second));
+            states.push_back (get_dominating_element (F, p.second));
             states_todo.push_back (index);
           }
 
