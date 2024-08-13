@@ -1,10 +1,7 @@
-//
-// Created by nils on 25/02/23.
-//
-
 #pragma once
 
 #include <vector>
+#include <string>
 #include "utils/typeinfo.hh"
 
 class aiger {
@@ -33,12 +30,13 @@ class aiger {
     verb_do (2, vout << "O: " << output_names << "\n");
   }
 
-  // simpler constructor for circuits with a single output
-  aiger (const std::vector<bdd>& _inputs, const std::vector<bdd>& _latches, spot::twa_graph_ptr aut) {
+  // simpler constructor for circuits with  number of outputs
+  aiger (const std::vector<bdd>& _inputs, const std::vector<bdd>& _latches,
+         unsigned int noutputs, spot::twa_graph_ptr aut) {
     inputs = bddvec_to_idvec (_inputs); // mapping of vector<bdd> to vector<int> using bdd_var to get the AP number
     latches = bddvec_to_idvec (_latches); // '
     latches_id = std::vector<int> (_latches.size ()); // for each latch: the ID of the gate it will be equal to next step
-    outputs = std::vector<int> (1); // for each output: the ID of the gate it is equal to
+    outputs = std::vector<int> (1 + noutputs); // for each output: the ID of the gate it is equal to
     vi = 2 + 2 * inputs.size () + 2 * latches.size (); // first free variable index
 
     // maybe not the cleanest way to get the atomic propositions as a string again
@@ -49,6 +47,9 @@ class aiger {
     }
 
     output_names.push_back ("_ab_single_output");
+    for (unsigned int iout = 0; iout < noutputs; iout++)
+      output_names.push_back ("_ab_vecstate_bit_" + std::to_string (iout));
+
 
     verb_do (2, vout << "I: " << input_names << "\n");
   }

@@ -268,6 +268,11 @@ class k_bounded_safety_aut_detail {
       int new_state = -1;
     };
 
+    struct badtransition {
+      bdd IO;
+      State new_state;
+    };
+
   public:
     void winregion(SetOfStates& F, const std::string& winreg_fname, bdd invariant, std::vector<int> init_state) {
       auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
@@ -302,7 +307,8 @@ class k_bounded_safety_aut_detail {
       // explore and store transitions
       auto input_output_fwd_actions = actioner.actions ();
 
-      std::vector<std::vector<transition>> transitions; // for every state: a vector of transitions (one per input)
+      std::vector<std::vector<transition>> transitions; // for every state: a vector of safe transitions
+      std::vector<std::vector<badtransition>> badtrans; // for every state: a vector of unsafe transitions
       std::vector<unsigned int> states_todo = { 0 };
 
       while (!states_todo.empty ()) {
@@ -326,38 +332,54 @@ class k_bounded_safety_aut_detail {
           verb_do (2, vout << "Input: " << bdd_to_formula (tuple.first) << "\n");
 
           // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
-          std::pair<bdd, State> p = get_transition (states[src], tuple.second, actioner, F);
-          // note: it may be that an IO is returned that keeps us in the safe
-          // region but requires adding a new element (index == -1) it could
-          // be that there does exist an IO that doesn't make us add a new
-          // maximal element, so we could add a new argument to get_transition
-          // to pass the current states, which would then be checked first -
-          // may make a slightly smaller circuit, at the cost of taking longer
-          // (as we no longer stop at the first IO)
+          bool found_one = false;
 
-          int index = get_dominating_index (states, p.second);
-          // ^ returns index of FIRST element that dominates
+          // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
+          for (const auto& action_vec : tuple.second) {
+            // calculate fwd(m, action), see if this is dominated by some element in the safe region
+            SetOfStates&& fwd = SetOfStates (states[src].copy ()).apply ([this, &action_vec, &actioner] (const auto& _m) {
+              auto&& ret = actioner.apply (_m, action_vec, actioners::direction::forward);
+              verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
+              return ret;
+            });
 
-          if (index == -1) {
-            // we didn't know this state was reachable yet: it's not in states
-            // -> add it, and add it to states_todo so we also check its successors
-            index = states.size ();
-            states.push_back (get_dominating_element (F, p.second));
-            states_todo.push_back (index);
+            assert (fwd.size () == 1);
+            State succ = (*fwd.begin ()).copy ();
+
+            if (F.contains (succ)) {
+              found_one = true;
+              verb_do (2, vout << "dominated with IO = " << bdd_to_formula (action_vec.IO) << ": " << succ);
+
+              int index = get_dominating_index (states, succ);
+              // ^ returns index of FIRST element that dominates
+
+              if (index == -1) {
+                // we didn't know this state was reachable yet: it's not in states
+                // -> add it, and add it to states_todo so we also check its successors
+                index = states.size ();
+                states.push_back (get_dominating_element (F, succ));
+                states_todo.push_back (index);
+              }
+              transitions[src].push_back ({ action_vec.IO, index });
+            } else {
+              badtrans[src].push_back ({ action_vec.IO, std::move (succ) });
+            }
           }
-          transitions[src].push_back ({ p.first, index });
-          verb_do (2, vout << "\n");
+
+          if (not found_one) {
+            utils::vout << "No transition found from " << states[src] << " with safe region " << F << "\n";
+            assert (false);
+          }
         }
         verb_do (2, vout << "\n");
       }
-      verb_do (2, vout << "-> states = " << states << "\n");
+      verb_do (2, vout << "-> states = " << states << "\n");  
 
       // create APs to encode the mapping of the automaton states to integers
       // number of variables to encode the state
       unsigned int mapping_bits = ceil (log2 (states.size ()));
       assert (states.size () <= (1ull << mapping_bits));
-      verb_do (1, vout << states.size () << " reachable states -> " << mapping_bits << " bit(s)\n\n");
-
+      verb_do (3, vout << states.size () << " reachable states -> " << mapping_bits << " bit(s)\n\n");
       // extending the number of variables in Buddy by the required amount
       bdd_extvarnum (2 * mapping_bits);
 
@@ -383,6 +405,14 @@ class k_bounded_safety_aut_detail {
       bdd enc_states = bddfalse;
       bdd enc_primed_states = bddfalse;
 
+      // Below, while we go, we also compute the encoding
+      // of the successor states via bad transitions in terms of vectors (we
+      // use little endian with the first bit being reserved for neg/nonneg)
+      unsigned int vec_bits = ceil (log2 (states[0].size ())) + 1;
+      assert (states[0].size () <= (1ull << (vec_bits - 1)));
+      std::vector<bdd> vec_encoding (states[0].size () * vec_bits);
+      std::fill (vec_encoding.begin (), vec_encoding.end (), bddfalse);
+
       // create BDD encoding using the states & transitions
       for (unsigned int i = 0; i < states.size (); i++) {
         bdd state_encoding = binary_encode (i, state_vars);
@@ -394,6 +424,19 @@ class k_bounded_safety_aut_detail {
         encoding |= state_encoding & trans_encoding;
         enc_states |= state_encoding;
         enc_primed_states |= binary_encode (i, state_vars_prime);
+        // for every bad transition from state i
+        for (const badtransition& ts : badtrans[i]) {
+          for (int comp = 0; comp < states[0].size (); comp++) {
+            if (ts.new_state[comp] == -1)
+              vec_encoding[comp] |= state_encoding & ts.IO;
+            else
+              for (unsigned int cbit = 1; cbit < vec_bits; cbit++) {
+                if (ts.new_state[comp] & (1ull << (vec_bits - (cbit + 1)))) {
+                  vec_encoding[comp + cbit] |= encoding & ts.IO;
+                }
+              }
+          }
+        }
       }
       bdd original_encoding = encoding;
 
@@ -403,13 +446,18 @@ class k_bounded_safety_aut_detail {
       std::vector<bdd> input_vector = cube_to_vector (input_support & output_support);
 
       // AIGER
-      aiger aig (input_vector, state_vars, aut);
+      aiger aig (input_vector, state_vars, states[0].size () * vec_bits, aut);
 
       // add output based on which transitions are safe (without successor)
-      aig.add_output(0, bdd_exist (encoding, state_vars_prime_cube));
+      int ith_output = 0;
+      aig.add_output(ith_output++, bdd_exist (encoding, state_vars_prime_cube));
+      // add output for vector-based representation of successors
+      for (int comp = 0; comp < states[0].size (); comp++)
+        for (unsigned int cbit = 0; cbit < vec_bits; cbit++)
+          aig.add_output(ith_output++, vec_encoding[comp + cbit]);
 
       int i = 0;
-      // new state as function(current_state, input)
+      // new state as function(current_state, input, output)
       bdd fixdsucc = encoding;
       for (const bdd& m : state_vars_prime) {
         bdd pos = bdd_restrict (fixdsucc, m);
@@ -766,7 +814,8 @@ class k_bounded_safety_aut_detail {
 
     // return IO + destination state (one IO, one destination state: deterministic)
     template <typename Actions, typename Actioner>
-    std::pair<bdd, State> get_transition (const State& elem, const Actions& actions, Actioner& actioner, const SetOfStates& saferegion) const {
+    std::pair<bdd, State> get_transition (const State& elem, const Actions& actions,
+                                          Actioner& actioner, const SetOfStates& saferegion) const {
       // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
       for (const auto& action_vec : actions) {
         // calculate fwd(m, action), see if this is dominated by some element in the safe region
