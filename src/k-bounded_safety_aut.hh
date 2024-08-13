@@ -429,12 +429,18 @@ class k_bounded_safety_aut_detail {
           for (int comp = 0; comp < states[0].size (); comp++) {
             if (ts.new_state[comp] == -1)
               vec_encoding[comp] |= state_encoding & ts.IO;
-            else
-              for (unsigned int cbit = 1; cbit < vec_bits; cbit++) {
-                if (ts.new_state[comp] & (1ull << (vec_bits - (cbit + 1)))) {
+            else {
+              int mask = 1;
+              unsigned int cbit = vec_bits - 1;
+              while (ts.new_state[comp] >= mask) {
+                if (ts.new_state[comp] & mask)
                   vec_encoding[comp + cbit] |= encoding & ts.IO;
-                }
+                mask = mask << 1;
+                cbit -=1;
+                assert (cbit >= 1);
+                assert (mask <= (1ull << (vec_bits - 1)));
               }
+            }
           }
         }
       }
