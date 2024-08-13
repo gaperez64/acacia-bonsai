@@ -299,8 +299,17 @@ parse_opt (int key, char *arg, struct argp_state *) {
       std::string val;
 
       while (std::getline (state, val, ',')) {
-        val.erase (remove_if (val.begin (), val.end (), isspace), val.end ());
-        init_state.push_back (std::stoi (val));
+        try {
+          init_state.push_back (std::stoi (val));
+        } catch (std::invalid_argument const& ex) {
+          std::cout << "ERROR while parsing initial state: "
+                    << ex.what() << std::endl;
+          abort ();
+        } catch (std::out_of_range const& ex) {
+          std:: cout << "ERROR while parsing initial state: "
+                     << ex.what () << std::endl;
+          abort ();
+        }
       }
 
       break;

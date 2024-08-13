@@ -1,12 +1,15 @@
 #!/bin/bash
-export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=../dbgbuild/subprojects/spot/dist/usr/local/lib64:$LD_LIBRARY_PATH
 
 SYFCO=./syfco
-ACABON=../debug/src/acacia-bonsai
-FILE=$1
+ACABON=../dbgbuild/src/acacia-bonsai
+FILE=../tests/ltl/mod-theories/andoni_ex1.tlsf
+k=2
+
 PART=$(mktemp)
-RES=$(mktemp)
-LTL=$($SYFCO $FILE -f ltlxba -m fully -pf $PART)
+RES=wreg.aag
+LTL=$($SYFCO $FILE -f ltlxba -m fully -pf $PART -op k=$k)
+echo "LTL formula: $LTL"
 
 parttoinsouts () {
     while IFS= read line; do
@@ -22,6 +25,8 @@ parttoinsouts () {
 
 parttoinsouts $PART
 
-$ACABON -c REAL --formula="$LTL" --ins="$ins" --outs="$outs" --winreg="$RES" -v --init-states="0,1,2;2,4,2;1,1,1"
+echo "Calling acacia-bonsai: $ACABON -c REAL --formula=$LTL --ins=$ins --outs=$outs --winreg=$RES"
+$ACABON -c REAL --formula="$LTL" --ins="$ins" --outs="$outs" --winreg="$RES" --init="0,-1,0,0" -v -v -v
 echo "$(cat $RES)"
-rm -f $PART $RES
+rm -f $PART
+# rm -f $RES

@@ -93,7 +93,7 @@ class k_bounded_safety_aut_detail {
       if (init_state.size () == 0) {
         init[aut->get_init_state_number ()] = 0;
       } else {
-        for (int i = 0; i < init_state.size (); i++)
+        for (size_t i = 0; i < init_state.size (); i++)
           init[i] = init_state[i];
       }
 
@@ -295,7 +295,7 @@ class k_bounded_safety_aut_detail {
       if (init_state.size () == 0) {
         init_vector[aut->get_init_state_number ()] = 0;
       } else {
-        for (int i = 0; i < init_state.size (); i++)
+        for (size_t i = 0; i < init_state.size (); i++)
           init_vector[i] = init_state[i];
       }
       int init_index = get_dominated_index (F, State (init_vector));
@@ -321,6 +321,7 @@ class k_bounded_safety_aut_detail {
         // make sure transitions vector is large enough
         while (src >= transitions.size ()) {
           transitions.push_back ({});
+          badtrans.push_back ({});
         }
 
         for (auto& tuple : input_output_fwd_actions) {
@@ -408,8 +409,9 @@ class k_bounded_safety_aut_detail {
       // Below, while we go, we also compute the encoding
       // of the successor states via bad transitions in terms of vectors (we
       // use little endian with the first bit being reserved for neg/nonneg)
-      unsigned int vec_bits = ceil (log2 (states[0].size ())) + 1;
-      assert (states[0].size () <= (1ull << (vec_bits - 1)));
+      unsigned int vec_bits = ceil (log2 (Kto)) + 1;
+      assert (Kto <= (1 << (vec_bits - 1)));
+      verb_do (3, vout << Kto << " as max val -> " << vec_bits << " bit(s)\n\n");
       std::vector<bdd> vec_encoding (states[0].size () * vec_bits);
       std::fill (vec_encoding.begin (), vec_encoding.end (), bddfalse);
 
@@ -426,19 +428,19 @@ class k_bounded_safety_aut_detail {
         enc_primed_states |= binary_encode (i, state_vars_prime);
         // for every bad transition from state i
         for (const badtransition& ts : badtrans[i]) {
-          for (int comp = 0; comp < states[0].size (); comp++) {
+          for (size_t comp = 0; comp < states[0].size (); comp++) {
             if (ts.new_state[comp] == -1)
-              vec_encoding[comp] |= state_encoding & ts.IO;
+              vec_encoding[comp * vec_bits] |= state_encoding & ts.IO;
             else {
               int mask = 1;
               unsigned int cbit = vec_bits - 1;
               while (ts.new_state[comp] >= mask) {
                 if (ts.new_state[comp] & mask)
-                  vec_encoding[comp + cbit] |= encoding & ts.IO;
+                  vec_encoding[(comp * vec_bits) + cbit] |= encoding & ts.IO;
                 mask = mask << 1;
                 cbit -=1;
                 assert (cbit >= 1);
-                assert (mask <= (1ull << (vec_bits - 1)));
+                assert (mask < (1 << vec_bits));
               }
             }
           }
@@ -458,9 +460,10 @@ class k_bounded_safety_aut_detail {
       int ith_output = 0;
       aig.add_output(ith_output++, bdd_exist (encoding, state_vars_prime_cube));
       // add output for vector-based representation of successors
-      for (int comp = 0; comp < states[0].size (); comp++)
+      for (size_t comp = 0; comp < states[0].size (); comp++)
         for (unsigned int cbit = 0; cbit < vec_bits; cbit++)
-          aig.add_output(ith_output++, vec_encoding[comp + cbit]);
+          aig.add_output(ith_output++, 
+                         vec_encoding[(comp * vec_bits) + cbit]);
 
       int i = 0;
       // new state as function(current_state, input, output)
@@ -532,7 +535,7 @@ class k_bounded_safety_aut_detail {
       if (init_state.size () == 0) {
         init_vector[aut->get_init_state_number ()] = 0;
       } else {
-        for (int i = 0; i < init_state.size (); i++)
+        for (size_t i = 0; i < init_state.size (); i++)
           init_vector[i] = init_state[i];
       }
       int init_index = get_dominated_index (F, State (init_vector));
