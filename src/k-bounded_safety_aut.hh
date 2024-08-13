@@ -351,14 +351,14 @@ class k_bounded_safety_aut_detail {
               found_one = true;
               verb_do (2, vout << "dominated with IO = " << bdd_to_formula (action_vec.IO) << ": " << succ);
 
-              int index = get_dominating_index (states, succ);
-              // ^ returns index of FIRST element that dominates
+              auto it = std::find (states.begin (), states.end(), succ);
+              int index = std::distance(states.begin (), it);
 
-              if (index == -1) {
+              if (it == states.end ()) {
                 // we didn't know this state was reachable yet: it's not in states
                 // -> add it, and add it to states_todo so we also check its successors
                 index = states.size ();
-                states.push_back (get_dominating_element (F, succ));
+                states.push_back (std::move (succ));
                 states_todo.push_back (index);
               }
               transitions[src].push_back ({ action_vec.IO, index });

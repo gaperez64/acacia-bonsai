@@ -165,20 +165,25 @@ class aiger {
 
   // pass a bdd_var of an input or a state AP, gives the right gate number
   int bddvar_to_gate (int var) {
-    int o = -2;
+    //int o = -2;
 
     // if var is an input: refer to input_index
     if (std::find (inputs.begin (), inputs.end (), var) != inputs.end ()) {
-      o = input_index (std::find (inputs.begin (), inputs.end (), var) - inputs.begin ());
+      //o = 
+        return input_index (std::find (inputs.begin (), inputs.end (), var) - inputs.begin ());
     }
 
     // if var is a state: refer to latch_index
     if (std::find (latches.begin (), latches.end (), var) != latches.end ()) {
-      o = latch_index (std::find (latches.begin (), latches.end (), var) - latches.begin ());
+      //o = 
+        return latch_index (std::find (latches.begin (), latches.end (), var) - latches.begin ());
+    } else {
+      std::cout << "Looking for bddvar " << var << std::endl;
+      assert (false);
     }
 
-    assert (o != -2);
-    return o;
+    //assert (o != -2);
+    return -2;
   }
 
   // recursive bdd2aig function, can return a negated gate

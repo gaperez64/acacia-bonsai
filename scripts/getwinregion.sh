@@ -26,7 +26,7 @@ parttoinsouts () {
 parttoinsouts $PART
 
 echo "Calling acacia-bonsai: $ACABON -c REAL --formula=$LTL --ins=$ins --outs=$outs --winreg=$RES"
-$ACABON -c REAL --formula="$LTL" --ins="$ins" --outs="$outs" --winreg="$RES" --init="0,-1,0,0" -v -v -v
+$ACABON -c REAL --formula="$LTL" --ins="$ins" --outs="$outs" --winreg="$RES" -v -v -v # --init="0,-1,0,0"
 echo "$(cat $RES)"
 rm -f $PART
 # rm -f $RES
