@@ -68,7 +68,7 @@ class composition {
   // concatenate two vectors, taking into a account a new initial state is added, + the states are renamed
   auto combine_vectors (const auto& m1, const auto& m2) {
     assert (aut_size > 0);
-    auto vec = utils::vector_mm<VECTOR_ELT_T>(aut_size, 0);
+    auto vec = posets::utils::vector_mm<VECTOR_ELT_T>(aut_size, 0);
 
     for (size_t i = 0; i < m1.size (); ++i) {
       if (rename[i] != -1u) {

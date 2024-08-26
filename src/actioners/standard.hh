@@ -158,7 +158,7 @@ namespace actioners {
        private:
         const Aut& aut;
         VECTOR_ELT_T K;
-        utils::vector_mm<VECTOR_ELT_T> apply_out, backward_reset;
+        posets::utils::vector_mm<VECTOR_ELT_T> apply_out, backward_reset;
         input_and_actions_set input_output_fwd_actions;
 
         template <typename Set>

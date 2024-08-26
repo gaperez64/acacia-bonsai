@@ -16,10 +16,10 @@
 #include "utils/bdd_helper.hh"
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
-#include "utils/vector_mm.hh"
 #include <utils/verbose.hh>
 #include "utils/typeinfo.hh"
 
+#include <posets/utils/vector_mm.hh>
 #include <posets/vectors.hh>
 
 #include "ios_precomputers.hh"
@@ -86,7 +86,7 @@ class k_bounded_safety_aut_detail {
 
       int loopcount = 0;
 
-      utils::vector_mm<VECTOR_ELT_T> init (aut->num_states ());
+      posets::utils::vector_mm<VECTOR_ELT_T> init (aut->num_states ());
       init.assign (aut->num_states (), -1);
       init[aut->get_init_state_number ()] = 0;
 
@@ -113,7 +113,7 @@ class k_bounded_safety_aut_detail {
           actioner.setK (K);
           verb_do (1, {vout << "Adding Kinc to every vector..."; vout.flush (); });
           F = F.apply ([&] (const State& s) {
-            auto vec = utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
+            auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
             for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
               vec[i] = s[i] + Kinc;
             // Other entries are set to 0 by initialization, since they are bool.
@@ -154,7 +154,7 @@ class k_bounded_safety_aut_detail {
 
       const auto& [input, actions] = io_action.get ();
 #if CPRE_AVOID_UNIONS == 0
-      utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
+      posets::utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
       auto vv = typename SetOfStates::value_type (v);
       SetOfStates F1i (std::move (vv));
       bool first_turn = true;
@@ -293,7 +293,7 @@ class k_bounded_safety_aut_detail {
       std::vector<State> states;
 
       // initial vector = all -1, and 0 for the initial state
-      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
+      auto init_vector = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
       init_vector[aut->get_init_state_number ()] = 0;
       int init_index = get_dominated_index (F, State (init_vector));
       assert (init_index != -1);

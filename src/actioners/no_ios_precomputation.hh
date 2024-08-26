@@ -37,9 +37,7 @@ namespace actioners {
       public:
         no_ios_precomputation (const Aut& aut, const Supports& supports, int K) :
           aut {aut}, K {K},
-          apply_out (aut->num_states ()), mcopy (aut->num_states ()) {
-
-          mcopy.reserve (State::capacity_for (mcopy.size ()));
+          apply_out (aut->num_states ()) {
 
           std::map<action_vecs, bdd> ioset;
           bdd input_letters = bddtrue;
@@ -79,16 +77,14 @@ namespace actioners {
                          (VECTOR_ELT_T) 0);
           }
 
-          m.to_vector (mcopy);
-
           for (size_t p = 0; p < m.size (); ++p) {
             for (const auto& [q, q_final] : avec[p]) {
               if (dir == direction::forward) {
-                if (mcopy[q] != -1)
-                  apply_out[p] = std::max (apply_out[p], std::min ((VECTOR_ELT_T) K, (VECTOR_ELT_T) (mcopy[q] + (VECTOR_ELT_T) (q_final ? 1 : 0))));
+                if (m[q] != -1)
+                  apply_out[p] = std::max (apply_out[p], std::min ((VECTOR_ELT_T) K, (VECTOR_ELT_T) (m[q] + (VECTOR_ELT_T) (q_final ? 1 : 0))));
               } else
                 if (apply_out[q] != -1)
-                  apply_out[q] = std::min (apply_out[q], std::max ((VECTOR_ELT_T) -1, (VECTOR_ELT_T) (mcopy[p] - (VECTOR_ELT_T) (q_final ? 1 : 0))));
+                  apply_out[q] = std::min (apply_out[q], std::max ((VECTOR_ELT_T) -1, (VECTOR_ELT_T) (m[p] - (VECTOR_ELT_T) (q_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
               if (dir == direction::forward && apply_out[p] == K)
@@ -102,7 +98,7 @@ namespace actioners {
       private:
         const Aut& aut;
         int K;
-        utils::vector_mm<VECTOR_ELT_T> apply_out, mcopy;
+        posets::utils::vector_mm<VECTOR_ELT_T> apply_out;
         input_and_actions_set input_output_fwd_actions;
 
         auto compute_action (bdd letter) {

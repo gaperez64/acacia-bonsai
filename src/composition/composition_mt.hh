@@ -255,7 +255,7 @@ void composition_mt::finish_invariant() {
 
     invariant_aut.solved = true;
 
-    auto safe = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), 0);
+    auto safe = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), 0);
     safe[0] = -1;
     invariant_aut.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (safe));
     invariant_aut.aut = aut;
@@ -344,7 +344,7 @@ int composition_mt::epilogue (std::string synth_fname) {
 
     r.solved = true;
 
-    auto safe = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), 0);
+    auto safe = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), 0);
     safe[0] = 0;
     r.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (safe));
     r.aut = aut;
@@ -768,7 +768,7 @@ safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, u
   ret.solved = false;
   ret.set_globals ();
 
-  auto all_k = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), opt_Kmin - 1);
+  auto all_k = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), opt_Kmin - 1);
   for (size_t i = posets::vectors::bool_threshold; i < aut->num_states (); ++i)
     all_k[i] = 0;
   ret.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (all_k));

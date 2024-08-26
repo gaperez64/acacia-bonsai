@@ -66,7 +66,7 @@ struct safety_game {
 // cast a vector (state in the safety game) to another type, for example to go from array+bitset to vector
 template<typename To, typename From>
 To cast_vector (From& f) {
-  auto vec = utils::vector_mm<VECTOR_ELT_T> (f.size (), 0);
+  auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (f.size (), 0);
   for(size_t i = 0; i < f.size (); i++) {
     vec[i] = f[i];
   }

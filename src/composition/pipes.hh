@@ -145,7 +145,7 @@ class pipe_t {
     std::vector<GenericDownset::value_type> elements;
 
     for(int j = 0; j < downset_size; j++) {
-      auto vec = utils::vector_mm<VECTOR_ELT_T> (element_size, 0);
+      auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (element_size, 0);
       for (int i = 0; i < element_size; i++) {
         vec[i] = read_obj<VECTOR_ELT_T> ();
       }
@@ -312,4 +312,3 @@ class pipe_t {
     return r;
   }
 };
-
