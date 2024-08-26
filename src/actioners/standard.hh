@@ -78,9 +78,7 @@ namespace actioners {
       public:
         standard (const Aut& aut, const IToIOs& inputs_to_ios, int K) :
           aut {aut}, K {(VECTOR_ELT_T) K},
-          apply_out (aut->num_states ()), mcopy (aut->num_states ()), backward_reset (aut->num_states ()) {
-
-          mcopy.reserve (State::capacity_for (mcopy.size ()));
+          apply_out (aut->num_states ()), backward_reset (aut->num_states ()) {
 
 	  // Non boolean
           std::fill_n (backward_reset.begin (),
@@ -139,8 +137,6 @@ namespace actioners {
           else
             apply_out = backward_reset;
 
-          //m.to_vector (mcopy);
-
           for (size_t p = 0; p < m.size (); ++p) {
             for (const auto& [q, p_final] : avec[p]) {
               if (dir == direction::forward) {
@@ -162,7 +158,7 @@ namespace actioners {
        private:
         const Aut& aut;
         VECTOR_ELT_T K;
-        utils::vector_mm<VECTOR_ELT_T> apply_out, mcopy, backward_reset;
+        utils::vector_mm<VECTOR_ELT_T> apply_out, backward_reset;
         input_and_actions_set input_output_fwd_actions;
 
         template <typename Set>
