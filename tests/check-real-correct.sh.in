@@ -77,6 +77,7 @@ Runs ltlsynt, acacia-bonsai, or acacia-+ on the input LTL_FILE:
   -s: run strix ($STRIX)
   -a: run acacia-bonsai ($ACABONSAI)
   -+: run acacia-plus ($ACAPLUS)
+  -V: run using Valgrind
   -v: verbose
   -c: prefix the executable with valgrind --tool=callgrind
   -e EXE_PATH: overwrite the path for the executable
@@ -99,10 +100,11 @@ EOF
 
 PYTHON=${PYTHON:-$(whence python3)}
 progs=()
-while getopts "vcplsa+e:o:F:P:hx" opt; do
+while getopts "vcplsa+Ve:o:F:P:hx" opt; do
     case $opt; in
         p) prefix=t;;
         [lsa+]) progs+=$opt;;
+        V) prog_prefix=(valgrind --error-exitcode=18 --exit-on-first-error=yes);;
         c) prog_prefix=(valgrind --tool=callgrind);;
         e) forced_path=$OPTARG;;
         F) ltl=$OPTARG;;
