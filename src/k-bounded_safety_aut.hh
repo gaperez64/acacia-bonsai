@@ -213,6 +213,7 @@ class k_bounded_safety_aut_detail {
         // FIXME: Avoid copying, maybe by keeping a SetOfStates on the side
         // when using vector? Or using a specific SetOfStates like
         // vector-based
+        // FIXME: Or just compare the two vectors!!!
         if (SetOfStates ((*it).copy ()).contains (v)) return i;
         i++;
         ++it;
@@ -436,7 +437,7 @@ class k_bounded_safety_aut_detail {
               unsigned int cbit = vec_bits - 1;
               while (ts.new_state[comp] >= mask) {
                 if (ts.new_state[comp] & mask)
-                  vec_encoding[(comp * vec_bits) + cbit] |= encoding & ts.IO;
+                  vec_encoding[(comp * vec_bits) + cbit] |= state_encoding & ts.IO;
                 mask = mask << 1;
                 cbit -=1;
                 assert (cbit >= 1);
@@ -461,9 +462,19 @@ class k_bounded_safety_aut_detail {
       aig.add_output(ith_output++, bdd_exist (encoding, state_vars_prime_cube));
       // add output for vector-based representation of successors
       for (size_t comp = 0; comp < states[0].size (); comp++)
-        for (unsigned int cbit = 0; cbit < vec_bits; cbit++)
+        for (unsigned int cbit = 0; cbit < vec_bits; cbit++) {
+          verb_do (2, vout << "Adding " << cbit + 1
+                           << "-th bit of the " << comp + 1
+                           << "-th component, so the "
+                           << comp * vec_bits + cbit + 1
+                           << "-th bit\n");
+          verb_do (3, vout << "Corresponding BDD:\n"
+                           << bdd_to_formula (vec_encoding[(comp * vec_bits) + cbit])
+                           << "\n\n");
           aig.add_output(ith_output++, 
                          vec_encoding[(comp * vec_bits) + cbit]);
+
+        }
 
       int i = 0;
       // new state as function(current_state, input, output)
