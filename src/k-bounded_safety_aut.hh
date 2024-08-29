@@ -285,7 +285,7 @@ class k_bounded_safety_aut_detail {
       verb_do (1, vout << "F = downset of size " << F.size() << "\n");
 
       // Latches in the AIGER file are initialized to zero, so it would be nice if index 0 is the initial state
-      // -> create new std::vector of dominating elements, start with only an initial one, and then add
+      // -> create new std::vector of states, start with only an initial one, and then add
       //    the reachable ones
       std::vector<State> states;
 
@@ -299,10 +299,8 @@ class k_bounded_safety_aut_detail {
         for (size_t i = 0; i < init_state.size (); i++)
           init_vector[i] = init_state[i];
       }
-      int init_index = get_dominated_index (F, State (init_vector));
-      assert (init_index != -1);
-      verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
-      states.push_back (get_dominating_element (F, State (init_vector)));
+      verb_do (1, vout << "Initial vector: " << State (init_vector) << ")\n");
+      states.push_back (State (init_vector));
       verb_do (1, vout << "-> states = " << states << "\n\n");
 
       // explore and store transitions

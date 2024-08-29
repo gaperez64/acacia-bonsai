@@ -3,13 +3,13 @@ export LD_LIBRARY_PATH=../dbgbuild/subprojects/spot/dist/usr/local/lib64:$LD_LIB
 
 SYFCO=./syfco
 ACABON=../dbgbuild/src/acacia-bonsai
-FILE=../tests/ltl/mod-theories/andoni_ex1.tlsf
-k=2
+FILE=$1
+RES=$2
+OPTK=$3
+INIT=$4
 
 PART=$(mktemp)
-RES=wreg.aag
-LTL=$($SYFCO $FILE -f ltlxba -m fully -pf $PART -op k=$k)
-echo "LTL formula: $LTL"
+LTL=$($SYFCO $FILE -f ltlxba -m fully -pf $PART)
 
 parttoinsouts () {
     while IFS= read line; do
@@ -25,8 +25,12 @@ parttoinsouts () {
 
 parttoinsouts $PART
 
-echo "Calling acacia-bonsai: $ACABON -c REAL --formula=$LTL --ins=$ins --outs=$outs --winreg=$RES"
-$ACABON -c REAL --formula="$LTL" --ins="$ins" --outs="$outs" --winreg="$RES" -v -v -v # --init="0,-1,0,0"
-echo "$(cat $RES)"
-rm -f $PART
-# rm -f $RES
+if [ -z "${INIT}" ]; then
+    echo $ACABON -c REAL --formula="$LTL" --K="$OPTK" --ins="$ins" --outs="$outs" --winreg="$RES"
+    $ACABON -c REAL --formula="$LTL" --K="$OPTK" --ins="$ins" --outs="$outs" --winreg="$RES"
+    exit
+else
+    echo $ACABON -c REAL --formula="$LTL" --K="$OPTK" --ins="$ins" --outs="$outs" --winreg="$RES" --init="$INIT"
+    $ACABON -c REAL --formula="$LTL" --K="$OPTK" --ins="$ins" --outs="$outs" --winreg="$RES" --init="$INIT"
+    exit
+fi
