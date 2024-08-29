@@ -42,6 +42,8 @@ class composition_mt {
   std::vector<std::string> input_aps_;
   std::vector<std::string> output_aps_;
 
+  std::vector<int> init_state;
+
 
   spot::formula bdd_to_formula (bdd f) const; // for debugging
   void enqueue (job_ptr p); // add a new job to the queue
@@ -50,7 +52,7 @@ class composition_mt {
   void add_invariant (bdd inv); // add a new invariant
   void finish_invariant (); // turns the invariant into a solved 2-state automaton, not used right now because the ios-precomputer uses the invariant
   void solve_game (safety_game& game); // use the k-bounded safety aut to solve a game
-  int epilogue (std::string synth_fname); // look at the final result, call synthesis if needed and return whether it was realizable
+  int epilogue (std::string synth_fname, std::string winreg_fname); // look at the final result, call synthesis if needed and return whether it was realizable
   void be_child (int id); // does everything a child process has to do
   void add_result (safety_game& r); // add a new result to the temporary, or add a merge if there is already one stored
 
@@ -59,14 +61,17 @@ class composition_mt {
   safety_game prepare_formula (spot::formula f, bool check_real = true, unreal_x_t opt_unreal_x = UNREAL_X_BOTH); // turn a formula into an automaton
 
   public:
-  composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc, spot::bdd_dict_ptr dict, spot::translator& trans, bdd all_inputs, bdd all_outputs,
-                      std::vector<std::string> input_aps_, std::vector<std::string> output_aps_): opt_K(opt_K), opt_Kmin(opt_Kmin), opt_Kinc(opt_Kinc),
-        dict(dict), trans_(trans), all_inputs(all_inputs), all_outputs(all_outputs), input_aps_(input_aps_), output_aps_(output_aps_) {
-  }
+  composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc,
+      spot::bdd_dict_ptr dict, spot::translator& trans, bdd all_inputs, bdd
+      all_outputs, std::vector<std::string> input_aps_,
+      std::vector<std::string> output_aps_, std::vector<int> init_state):
+    opt_K(opt_K), opt_Kmin(opt_Kmin), opt_Kinc(opt_Kinc), dict(dict),
+    trans_(trans), all_inputs(all_inputs), all_outputs(all_outputs),
+    input_aps_(input_aps_), output_aps_(output_aps_), init_state(init_state) {}
 
   void add_formula (spot::formula f); // adds a formula job
-  int run (int workers, std::string synth_fname); // run everything with the given number of workers
-  int run_one (spot::formula f, std::string synth_fname, bool check_real, unreal_x_t opt_unreal_x); // solve only one formula, with no subprocesses
+  int run (int workers, std::string synth_fname, std::string winreg_fname); // run everything with the given number of workers
+  int run_one (spot::formula f, std::string synth_fname, std::string winreg_fname, bool check_real, unreal_x_t opt_unreal_x); // solve only one formula, with no subprocesses
 };
 
 // abstract base class for jobs
@@ -288,7 +293,7 @@ void composition_mt::solve_game (safety_game& game) {
         (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
         assert (game.safe);
         auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-        auto safe = skn.solve (current_safe, invariant);
+        auto safe = skn.solve (current_safe, invariant, init_state);
         if (safe.has_value ()) {
           game.safe = std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
         } else game.safe = nullptr;
@@ -310,7 +315,7 @@ void composition_mt::solve_game (safety_game& game) {
       (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
       assert (game.safe);
       auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-      auto safe = skn.solve (current_safe, invariant);
+      auto safe = skn.solve (current_safe, invariant, init_state);
       if (safe.has_value ()) {
         game.safe = std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
       } else game.safe = nullptr;
@@ -326,7 +331,7 @@ void composition_mt::solve_game (safety_game& game) {
   verb_do (1, vout << "Safety game solved in " << solve_time << " seconds\n");
 }
 
-int composition_mt::epilogue (std::string synth_fname) {
+int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname) {
   if (losing) {
     utils::vout << "(part of) safety game is not winning!\n";
     return 0;
@@ -374,11 +379,14 @@ int composition_mt::epilogue (std::string synth_fname) {
   }
 
   // call synthesis if needed
-  if (r.safe != nullptr and not synth_fname.empty ()) {
+  if ((r.safe != nullptr) and (not synth_fname.empty () or not winreg_fname.empty ())) {
     r.set_globals ();
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
       (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-    skn.synthesis (*r.safe, synth_fname, invariant);
+    if (!winreg_fname.empty ())
+      skn.winregion (*r.safe, winreg_fname, invariant, init_state);
+    if (!synth_fname.empty ())
+      skn.synthesis (*r.safe, synth_fname, invariant, init_state);
   }
 
   // if there is no safe region: return 0 (not winning)
@@ -463,7 +471,7 @@ void composition_mt::be_child (int id) {
   }
 }
 
-int composition_mt::run (int worker_count, std::string synth_fname) {
+int composition_mt::run (int worker_count, std::string synth_fname, std::string winreg_fname) {
   verb_do (1, utils::vout.set_prefix ("[0] "));
 
   if (worker_count <= 0) {
@@ -605,13 +613,14 @@ int composition_mt::run (int worker_count, std::string synth_fname) {
 
   verb_do (1, vout << "All workers are finished.\n");
 
-  return epilogue (synth_fname);
+  return epilogue (synth_fname, winreg_fname);
 }
 
-int composition_mt::run_one (spot::formula f, std::string synth_fname, bool check_real, unreal_x_t opt_unreal_x) {
+int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname,
+                             bool check_real, unreal_x_t opt_unreal_x) {
   safety_game game = prepare_formula (f, check_real, opt_unreal_x);
   add_result (game);
-  return epilogue (synth_fname);
+  return epilogue (synth_fname, winreg_fname);
 }
 
 ////////////////

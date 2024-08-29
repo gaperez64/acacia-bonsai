@@ -1,0 +1,6 @@
+attrs==24.2.0
+bidict==0.22.1
+funcy==1.18
+py-aiger==6.2.3
+pyrsistent==0.19.3
+sortedcontainers==2.4.0

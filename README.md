@@ -19,6 +19,9 @@ This program depends on:
   that Spot be separately compiled and installed.
 - [The Z shell](https://www.zsh.org/), for some scripts.
 
+Some of the tests also depend on:
+- Valgrind
+
 # Compiling, running, benchmarking
 
 To compile and run, use Meson:
