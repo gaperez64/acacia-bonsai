@@ -290,7 +290,7 @@ class k_bounded_safety_aut_detail {
       std::vector<State> states;
 
       // initial vector = all -1, and 0 for the initial state
-      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
+      auto init_vector = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
       // either the initial state from the automaton, or some given initial
       // configuration
       if (init_state.size () == 0) {
@@ -538,7 +538,7 @@ class k_bounded_safety_aut_detail {
       std::vector<State> states;
 
       // initial vector = all -1, and 0 for the initial state
-      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
+      auto init_vector = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
       // either the initial state from the automaton, or some given initial
       // configuration
       if (init_state.size () == 0) {
@@ -547,7 +547,7 @@ class k_bounded_safety_aut_detail {
         for (size_t i = 0; i < init_state.size (); i++)
           init_vector[i] = init_state[i];
       }
-      int init_index = get_dominated_index (F, State (init_vector));
+      int init_index = get_dominating_index (F, State (init_vector));
       assert (init_index != -1);
       verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
       states.push_back (get_dominating_element (F, State (init_vector)));
