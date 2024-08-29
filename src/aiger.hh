@@ -183,7 +183,7 @@ class aiger {
     }
 
     //assert (o != -2);
-    //return -2;
+    return -2;
   }
 
   // recursive bdd2aig function, can return a negated gate
