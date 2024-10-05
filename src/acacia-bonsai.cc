@@ -68,14 +68,6 @@ enum {
   OPT_INIT = '0'
 } ;
 
-/*
-enum unreal_x_t {
-  UNREAL_X_FORMULA = 'f',
-  UNREAL_X_AUTOMATON = 'a',
-  UNREAL_X_BOTH
-};
-*/
-
 static const argp_option options[] = {
   /**************************************************/
   { nullptr, 0, nullptr, 0, "Input options:", 1 },
@@ -121,18 +113,17 @@ static const argp_option options[] = {
   },
   {
     "unreal-x", OPT_UNREAL_X, "[formula|automaton|both]", 0,
-    "for unrealizability, either add X's to outputs in the"
-    " input formula, or push outputs one transition forward in"
-    " the automaton; with 'both', two processes are started,"
-    " one for each option (default: "
-#if DEFAULT_UNREAL_X == UNREAL_X_FORMULA
-    "formula"
-#elif DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
-    "automaton"
-#else
-    "both"
-#endif
-    ").", 0
+    [] () {
+      static const auto s =
+        std::string ("for unrealizability, either add X's to outputs in the"
+                     " input formula, or push outputs one transition forward in"
+                     " the automaton; with 'both', two processes are started,"
+                     " one for each option (default: ") +
+        (DEFAULT_UNREAL_X == UNREAL_X_FORMULA ? "formula" :
+         DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON ? "automaton" :
+         "both") + ").";
+      return s.c_str ();
+    } (), 0
   },
 
   /**************************************************/
