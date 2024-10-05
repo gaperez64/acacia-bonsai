@@ -414,6 +414,7 @@ int main (int argc, char **argv) {
   memset (&action, 0, sizeof(struct sigaction));
   action.sa_handler = terminate;
   sigaction (SIGTERM, &action, NULL);
+  sigaction (SIGINT, &action, NULL);
 
   return protected_main (argv, [&] {
     // These options play a role in twaalgos.

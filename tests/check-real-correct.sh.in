@@ -17,6 +17,10 @@ TRAPTERM () {
   exit
 }
 
+TRAPINT () {
+  TRAPTERM
+}
+
 echoandrun () {
     echo "$@"
     "$@"&
