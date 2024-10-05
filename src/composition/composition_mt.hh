@@ -637,28 +637,31 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
   ret->prop_universal (spot::trival::maybe ());
 
   static auto cache = utils::make_cache<unsigned> (0u, 0u);
-  const auto build_aut = [&] (unsigned state, bdd saved_o,
-                              const auto& recurse) {
-    auto cached = cache.get (state, saved_o.id ());
-    if (cached) return *cached;
-    auto ret_state = ret->new_state ();
-    cache (ret_state, state, saved_o.id ());
+  std::stack<std::pair<unsigned, bdd>> to_treat;
+  to_treat.push ({ aut->get_init_state_number (), bddtrue });
+  cache (ret->new_state (), aut->get_init_state_number (), bddtrue.id ());
+  while (not to_treat.empty ()) {
+    auto [state, saved_o]  = to_treat.top ();
+    to_treat.pop ();
+    auto ret_state = *cache.get (state, saved_o.id ());
     for (auto& e : aut->out (state)) {
-
       for (auto&& one_input_bdd : minterms_of (e.cond, all_inputs)) {
         // Pick one satisfying assignment where outputs all have values
-        ret->new_edge (ret_state,
-                       recurse (e.dst,
-                                bdd_exist (e.cond & one_input_bdd,
-                                          all_inputs),
-                                recurse),
-                       saved_o & one_input_bdd,
-                       e.acc);
+        auto nxt_bdd = bdd_exist (e.cond & one_input_bdd, all_inputs);
+        auto cached = cache.get (e.dst, nxt_bdd.id ());
+        unsigned nxt_state;
+        if (cached)
+          nxt_state = *cached;
+        else {
+          nxt_state = ret->new_state ();
+          cache (nxt_state, e.dst, nxt_bdd.id ());
+          to_treat.push ({ e.dst, nxt_bdd });
+        }
+        ret->new_edge (ret_state, nxt_state, saved_o & one_input_bdd, e.acc);
       }
     }
-    return ret_state;
-  };
-  build_aut (aut->get_init_state_number (), bddtrue, build_aut);
+  }
+
   return ret;
 }
 
