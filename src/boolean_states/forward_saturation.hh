@@ -23,14 +23,13 @@ namespace boolean_states {
         forward_saturation (Aut aut, int K) : aut {aut}, K {K} {}
 
         size_t operator() () const {
-          unsigned nb_accepting_states = 0, nunbounded = 0;
+          uint32_t nb_accepting_states = 0, nunbounded = 0;
 
-          for (unsigned src = 0; src < aut->num_states (); ++src)
+          for (uint32_t src = 0; src < aut->num_states (); ++src)
             if (aut->state_is_accepting (src))
               nb_accepting_states++;
 
-          assert (nb_accepting_states < UCHAR_MAX);
-          auto c = std::vector<unsigned char> (aut->num_states ());
+          auto c = std::vector<uint32_t> (aut->num_states ());
           if (aut->state_is_accepting (aut->get_init_state_number ()))
             c[aut->get_init_state_number ()] = 1;
 
@@ -39,8 +38,8 @@ namespace boolean_states {
           while (has_changed) {
             has_changed = false;
 
-            for (unsigned src = 0; src < aut->num_states (); ++src) {
-              unsigned c_src_mod = std::min (nb_accepting_states + 1u,
+            for (uint32_t src = 0; src < aut->num_states (); ++src) {
+              uint32_t c_src_mod = std::min (nb_accepting_states + 1u,
                                              c[src] + (aut->state_is_accepting (src) ? 1u : 0u));
               for (const auto& e : aut->out (src))
                 if (c[e.dst] < c_src_mod) {
@@ -52,10 +51,10 @@ namespace boolean_states {
             }
           }
 
-          auto rename = std::vector<unsigned> (aut->num_states ());
+          auto rename = std::vector<uint32_t> (aut->num_states ());
 
-          unsigned bounded = 0, unbounded = 0;
-          for (unsigned src = 0; src < aut->num_states (); ++src)
+          uint32_t bounded = 0, unbounded = 0;
+          for (uint32_t src = 0; src < aut->num_states (); ++src)
             if (c[src] > nb_accepting_states)
               rename[src] = unbounded++;
             else {
