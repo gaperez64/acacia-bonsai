@@ -287,7 +287,7 @@ void composition_mt::solve_game (safety_game& game) {
       [&] (auto vbitsets) {
         using SpecializedDownset = posets::downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<
           posets::vectors::X_and_bitset<
-            posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, vnonbools.value>,
+            posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, std::max (vnonbools.value, 1UL)>,
             vbitsets.value>>;
         auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
         (game.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
