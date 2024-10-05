@@ -199,6 +199,9 @@ class k_bounded_safety_aut_detail {
 #endif
 
       F.intersect_with (std::move (F1i));
+      // Experimentally, this is not faster:
+      //   F1i.intersect_with (std::move (F));
+      //   F = std::move (F1i);
       verb_do (2, vout << "F = " << std::endl << F);
     }
 
