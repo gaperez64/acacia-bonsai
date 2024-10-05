@@ -493,6 +493,7 @@ int main (int argc, char **argv) {
         if (WIFSIGNALED (ret))
           std::cout << " with signal " << WTERMSIG (ret);
         std::cout << std::endl;
+        terminate (0);
         abort ();
       }
 
