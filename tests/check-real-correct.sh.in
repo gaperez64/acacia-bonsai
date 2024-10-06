@@ -17,6 +17,10 @@ TRAPTERM () {
   exit
 }
 
+TRAPINT () {
+  TRAPTERM
+}
+
 echoandrun () {
     echo "$@"
     "$@"&
@@ -43,26 +47,26 @@ real_to_exitcode () {
 run_ltlsynt () {
     echo "Running ltlsynt..."
     time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs \
-         $LTLSYNT_OPTS $extra_opts | \
+         ${=LTLSYNT_OPTS} $extra_opts | \
         real_to_exitcode
 }
 
 run_strix () {
     echo "Running strix..."
-    time echoandrun $prog_prefix $STRIX --realizability -F $ltl --ins $ins --outs $outs $STRIX_OPTS $extra_opts | \
+    time echoandrun $prog_prefix $STRIX --realizability -F $ltl --ins $ins --outs $outs ${=STRIX_OPTS} $extra_opts | \
         real_to_exitcode
 }
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
     echoandrun $prog_prefix $ACABONSAI -c BOTH -F $ltl --ins $ins --outs $outs \
-         $AB_OPTS $extra_opts | \
+         ${=AB_OPTS} $extra_opts | \
          real_to_exitcode
 }
 
 run_acacia_plus () {
     echo "Running Acacia Plus..."
-    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 5 -K 11 -y 2 $AP_OPTS -C BOTH \
+    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 5 -K 11 -y 2 ${=AP_OPTS} -C BOTH \
          -t SPOT -a BACKWARD -v 0 $extra_opts | \
          real_to_exitcode
 }

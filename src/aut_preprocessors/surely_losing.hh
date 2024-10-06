@@ -65,7 +65,9 @@ namespace aut_preprocessors {
           if (flushed) {
             aut->prop_universal(spot::trival::maybe ());
             aut->purge_dead_states ();
-            aut->merge_states ();
+            aut->purge_unreachable_states ();
+            // Merge states now crashes sometimes:
+            // aut->merge_states ();
           }
           verb_do (1, vout << "After flushing " << flushed
                    /*   */ << " states and cleaning, aut has " << aut->num_states ()
