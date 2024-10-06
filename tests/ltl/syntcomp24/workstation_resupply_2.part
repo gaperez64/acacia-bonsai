@@ -1,0 +1,2 @@
+.inputs occupied_1 occupied_0
+.outputs alive resupply pick_up_part outside_station_1 outside_station_0 outside_stockroom station_1 station_0 stockroom

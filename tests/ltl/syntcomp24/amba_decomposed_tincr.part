@@ -1,0 +1,2 @@
+.inputs busreq decide locked hready incr
+.outputs ready1

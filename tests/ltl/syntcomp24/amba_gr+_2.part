@@ -1,0 +1,2 @@
+.inputs hburst1 hburst0 hlock1 hbusreq1 hlock0 hbusreq0 hready
+.outputs req_ready stateg10_1 stateg3_2 stateg3_1 stateg3_0 stateg2 statea1_1 statea1_0 busreq hgrant1 hgrant0 locked decide start hmastlock hmaster0

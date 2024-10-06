@@ -1,0 +1,2 @@
+.inputs nemo_leaving sense_nemo
+.outputs alive room_1 room_0 hallway_0 camera_on

@@ -1,0 +1,1 @@
+((G (true)) && ((G ((p0b02device29opened) -> (((! (p0p02device29all2windows2closed02device29room)) U (p0b02device29closed)) || (G (! (p0p02device29all2windows2closed02device29room)))))) -> (false)))
