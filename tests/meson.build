@@ -2998,7 +2998,7 @@ benchmark_files = \
                        'Window_54e1f7d2.ltl',
                        'WindowMin_a5f99bc6.ltl',
                        'workstation_resupply_1.ltl',
-                       'workstation_resupply_2.ltl',
+                       # 'workstation_resupply_2.ltl', DEACTIVATED, see #48
                        'workstation_resupply_3.ltl',
                        'workstation_resupply_4.ltl',
                        'Zoo0.ltl',
