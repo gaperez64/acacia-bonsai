@@ -286,7 +286,7 @@ void composition_mt::solve_game (safety_game& game) {
       static_switch_t<STATIC_MAX_BITSETS> {} (
       [&] (auto vbitsets) {
         using SpecializedDownset = posets::downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<
-          posets::vectors::X_and_bitset<
+          posets::vectors::x_and_bitset<
             posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, std::max (vnonbools.value, 1UL)>,
             vbitsets.value>>;
         auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
@@ -308,7 +308,7 @@ void composition_mt::solve_game (safety_game& game) {
     static_switch_t<STATIC_MAX_BITSETS> {} (
     [&] (auto vbitsets) {
       using SpecializedDownset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
-      posets::vectors::X_and_bitset<
+      posets::vectors::x_and_bitset<
       posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>,
       vbitsets.value>>;
       auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
