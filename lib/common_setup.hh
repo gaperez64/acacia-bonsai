@@ -19,13 +19,12 @@
 
 #pragma once
 
-#include "common_sys.hh"
 #include <functional>
 
 void setup(char** progname);
 
-extern const struct argp misc_argp;
-extern const struct argp misc_argp_hidden;
+// extern const struct argp misc_argp;
+// extern const struct argp misc_argp_hidden;
 
 
 // Call setup(progname) then Run mainfun() and handle exceptions.

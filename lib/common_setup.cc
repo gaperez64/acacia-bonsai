@@ -18,30 +18,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "common_setup.hh"
-#include "common_aoutput.hh"
 
-#include "argp.h"
-#include "closeout.h"
-#include "progname.h"
+// #include <error.h>
+#include "error_msg.hh"
 #include <cstdlib>
 #include <unistd.h>
 #include <iostream>
 #include <signal.h>
 #include <sys/wait.h>
 #include <spot/misc/tmpfile.hh>
-
-static void
-display_version(FILE *stream, struct argp_state*)
-{
-  fputs(program_name, stream);
-  fputs(" (" PACKAGE_NAME ") " PACKAGE_VERSION "\n\
-\n\
-Copyright (C) 2020  Laboratoire de Recherche et Développement de l'Epita.\n\
-License GPLv3+: \
-GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n\
-This is free software: you are free to change and redistribute it.\n\
-There is NO WARRANTY, to the extent permitted by law.\n", stream);
-}
 
 // This is called on normal exit (i.e., when leaving
 // main or calling exit(), even via error()).
@@ -90,18 +75,6 @@ static void bad_alloc_handler()
 void
 setup(char** argv)
 {
-  argp_program_bug_address = "<" PACKAGE_BUGREPORT ">";
-
-  // Simplify the program name, because argp() uses it to report
-  // errors and display help text.
-  set_program_name(argv[0]);
-
-  argv[0] = const_cast<char*>(program_name);
-
-  argp_program_version_hook = display_version;
-
-  argp_err_exit_status = 2;
-
   if (getenv("SPOT_OOM_ABORT"))
     std::set_new_handler(bad_alloc_handler);
 
@@ -112,78 +85,10 @@ setup(char** argv)
   if (!isatty(STDIN_FILENO))
     std::cin.tie(nullptr);
 
-  setup_default_output_format();
+  // setup_default_output_format();
   setup_sig_handler();
   atexit(atexit_cleanup);
 }
-
-
-// argp's default behavior of offering -? for --help is just too silly.
-// I mean, come on, why not also add -* to Darwinise more shell users?
-// We disable this option as well as -V (because --version don't need
-// a short version).
-enum {
-  OPT_HELP = 1,
-  OPT_VERSION,
-};
-
-static const argp_option options[] =
-  {
-    { "version", OPT_VERSION, nullptr, 0, "print program version", -1 },
-    { "help", OPT_HELP, nullptr, 0, "print this help", -1 },
-    // We support --usage as a synonym for --help because argp's
-    // hardcoded error message for unknown options mentions it.
-    { "usage", OPT_HELP, nullptr, OPTION_HIDDEN, nullptr, -1 },
-    { nullptr, 0, nullptr, 0, nullptr, 0 }
-  };
-
-static const argp_option options_hidden[] =
-  {
-    { "version", OPT_VERSION, nullptr, OPTION_HIDDEN,
-      "print program version", -1 },
-    { "help", OPT_HELP, nullptr, OPTION_HIDDEN, "print this help", -1 },
-    // We support --usage as a synonym for --help because argp's
-    // hardcoded error message for unknown options mentions it.
-    { "usage", OPT_HELP, nullptr, OPTION_HIDDEN, nullptr, -1 },
-    { nullptr, 0, nullptr, 0, nullptr, 0 }
-  };
-
-static int
-parse_opt_misc(int key, char*, struct argp_state* state)
-{
-  // Called from C code, so should not raise any exception.
-  BEGIN_EXCEPTION_PROTECT;
-  // This switch is alphabetically-ordered.
-  switch (key)
-    {
-    case OPT_HELP:
-      argp_state_help(state, state->out_stream,
-                      // Do not let argp exit: we want to diagnose a
-                      // failure to print --help by closing stdout
-                      // properly.
-                      ARGP_HELP_STD_HELP & ~ARGP_HELP_EXIT_OK);
-      close_stdout();
-      exit(0);
-      break;
-    case OPT_VERSION:
-      display_version(state->out_stream, state);
-      close_stdout();
-      exit(0);
-      break;
-    default:
-      return ARGP_ERR_UNKNOWN;
-    }
-  END_EXCEPTION_PROTECT;
-  return 0;
-}
-
-
-const struct argp misc_argp = { options, parse_opt_misc,
-                                nullptr, nullptr, nullptr, nullptr, nullptr };
-
-const struct argp misc_argp_hidden = { options_hidden, parse_opt_misc,
-                                       nullptr, nullptr, nullptr,
-                                       nullptr, nullptr };
 
 [[noreturn]] void handle_any_exception()
 {

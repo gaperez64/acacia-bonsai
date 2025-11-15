@@ -9,6 +9,7 @@
 #include <random>
 #include <list>
 #include <chrono>
+#include <fstream>
 
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>

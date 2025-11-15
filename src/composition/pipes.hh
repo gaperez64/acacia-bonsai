@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <cassert>
 #include <sstream>
+#include <spot/tl/parse.hh>
+
 #include "types.hh"
 
 // magic values

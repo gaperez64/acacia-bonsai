@@ -10,6 +10,7 @@
 #include <thread>
 #include <spot/twaalgos/translate.hh>
 #include "pipes.hh"
+#include "aut_preprocessors.hh"
 
 
 class job_base;

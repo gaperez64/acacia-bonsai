@@ -19,9 +19,7 @@
 
 #pragma once
 
-#include "common_sys.hh"
 
-#include <argp.h>
 #include <vector>
 #include <spot/tl/parse.hh>
 
@@ -39,11 +37,8 @@ struct job
 typedef std::vector<job> jobs_t;
 extern jobs_t jobs;
 extern bool lbt_input;
+extern bool lenient;
 
-extern const struct argp finput_argp;
-extern const struct argp finput_argp_headless;
-
-int parse_opt_finput(int key, char* arg, struct argp_state* state);
 
 spot::parsed_formula parse_formula(const std::string& s);
 
@@ -57,6 +52,7 @@ public:
 
   virtual ~job_processor();
 
+  // TODO: there will only be one such formula
   virtual int
   process_formula(spot::formula f,
                   const char* filename = nullptr, int linenum = 0) = 0;

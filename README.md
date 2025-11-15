@@ -31,8 +31,14 @@ $ cd build
 $ meson compile
 $ src/acacia-bonsai --help
   [...]
-$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' --ins req --outs grant
+$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' --ins req --outs grant -S out.txt
 REALIZABLE
+```
+
+Another usage:
+```
+$ src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' --inputs req --outputs grant -S out.txt
+UNKNOWN
 ```
 
 Note that this will compile a debug version of Acacia-Bonsai.  A benchmarking

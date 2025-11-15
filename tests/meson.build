@@ -1,4 +1,3 @@
-subdir ('spot-bin')
 subdir ('acacia-plus')
 
 fs = import ('fs')
@@ -373,7 +372,9 @@ conf_data.set_quoted ('ACABONSAI', ab_exe.full_path ())
 conf_data.set_quoted ('ACAPLUS', acacia_plus_py[0].full_path ())
 conf_data.set_quoted ('PYTHON3', py.path ())
 conf_data.set_quoted ('ACACIA_PLUS_LIB', acplus_lib.full_path ())
-conf_data.set_quoted ('LTL2TGBA_BIN', ltl2tgba_exe.full_path ())
+
+# TODO:
+#conf_data.set_quoted ('LTL2TGBA_BIN', ltl2tgba_exe.full_path ())
 
 check_real_file = configure_file (input : 'check-real-correct.sh.in',
                                   output : 'check-real-correct.sh',
