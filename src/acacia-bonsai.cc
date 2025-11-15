@@ -5,11 +5,10 @@
 #include <unordered_map>
 #include <vector>
 #include <algorithm>
+#include <cstring>
 
 #include <signal.h>
 #include <sys/wait.h>
-
-#include <boost/algorithm/string.hpp>
 
 #include "k-bounded_safety_aut.hh"
 
@@ -48,21 +47,6 @@
 
 
 using namespace std::literals;
-
-enum {
-  OPT_K = 'K',
-  OPT_Kmin = 'M',
-  OPT_Kinc = 'I',
-  OPT_UNREAL_X = 'u',
-  OPT_INPUT = 'i',
-  OPT_OUTPUT = 'o',
-  OPT_CHECK = 'c',
-  OPT_VERBOSE = 'v',
-  OPT_SYNTH = 'S',
-  OPT_WINREG = 'W',
-  OPT_WORKERS = 'j',
-  OPT_INIT = '0'
-} ;
 
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
