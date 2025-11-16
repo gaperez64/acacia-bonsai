@@ -13,10 +13,11 @@ This program depends on:
 - [Boost C++ Library](https://www.boost.org/)
 - A modern C++ compiler (C++20 is used)
 - [The Meson Build System](https://mesonbuild.com/)
-- [The Spot Library](https://spot.lrde.epita.fr/): Spot is automagically
-  compiled as a submodule; however, it takes quite a bit of time to do so, and
-  each build configuration of Acacia-Bonsai will recompile Spot.  We recommend
-  that Spot be separately compiled and installed.
+- [The Downset Manipulation Library](https://github.com/michaelcadilhac/posets)
+- [The Spot Library](https://spot.lrde.epita.fr/): You will need to compile
+  and install spot separately. The downset manipulation library requires
+  compilation with `g++` so to link against spot you need to compile it with
+  `g++` too (set `CXX` before configuring, compiling, and installing).
 - [The Z shell](https://www.zsh.org/), for some scripts.
 
 Some of the tests also depend on:
@@ -29,15 +30,15 @@ To compile and run, use Meson:
 $ meson setup build
 $ cd build
 $ meson compile
-$ src/acacia-bonsai --help
+$ src/acacia-bonsai -h
   [...]
-$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant -S out.txt
+$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
 Another usage:
 ```
-$ src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant -S out.txt
+$ src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant
 UNKNOWN
 ```
 
@@ -60,18 +61,6 @@ REALIZABLE
 
 The `-c` option selects a configuration and the `-B` option deactivates actual
 benchmarking, so that only compilation is done.
-
-## Compiling for StarExec
-You will need some wrapping script (see `starexec` directory). Additionally,
-you will need to compile in an `x86_64` machine with
-everything statically linked because StarExec runs on an old linux with old
-libraries. For instance:
-1. Set up a meson build library with 
-```
-CXXFLAGS="-march=sandybridge -O3 -DNDEBUG" meson setup $BUILD_DIR --buildtype=release --prefer-static --default-library=static
-```
-2. Print the compilation command with `meson compile -vC $BUILD_DIR` for acacia-bonsai and add
-   `-static` to ensure everything is statically linked.
 
 # Citing
 
