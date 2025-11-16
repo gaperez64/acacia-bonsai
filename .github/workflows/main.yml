@@ -10,7 +10,8 @@ jobs:
         sudo apt install -y zsh meson git gcc python-is-python3 \
                     ninja-build gnupg wget python3-pip \
                     pkg-config libglib2.0-dev libffi-dev libboost-dev \
-                    autoconf automake libtool bison flex valgrind gpg
+                    autoconf automake libtool bison flex valgrind gpg \
+                    autotools
         sudo pip install --upgrade meson
     - uses: actions/setup-python@v5
     - name: Install python dependencies
