@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <stdexcept>
 #include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
 #include "arg_parser.hh"
 #include "error_msg.hh"
 
@@ -50,7 +52,7 @@ ArgParseResult arg_parser(int argc, char **argv) {
                 process_arg_input_(optarg, retval);
                 break;
             case 'o':
-                process_arg_output_(optarg, retval);
+                process__arg_output_(optarg, retval);
                 break;
             case 'S':
                 process_arg_synth_(optarg, retval);

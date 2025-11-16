@@ -13,6 +13,7 @@
 #include "k-bounded_safety_aut.hh"
 
 #include "arg_parser.hh"
+#include "error_msg.hh"
 
 #include <posets/vectors.hh>
 #include <posets/downsets.hh>
