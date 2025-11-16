@@ -11,7 +11,7 @@ jobs:
                     ninja-build gnupg wget python3-pip \
                     pkg-config libglib2.0-dev libffi-dev libboost-dev \
                     autoconf automake libtool bison flex valgrind gpg \
-                    libltdl-dev
+                    libltdl-dev libboost-all-dev
         sudo pip install --upgrade meson
     - uses: actions/setup-python@v5
     - name: Install python dependencies
