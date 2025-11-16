@@ -10,9 +10,24 @@ jobs:
         sudo apt install -y zsh meson git gcc python-is-python3 \
                     ninja-build gnupg wget python3-pip \
                     pkg-config libglib2.0-dev libffi-dev libboost-dev \
-                    autoconf automake libtool bison flex valgrind gpg \
-                    libltdl-dev libboost-all-dev
+                    autoconf automake libtool bison flex valgrind gpg
         sudo pip install --upgrade meson
+    - name: Add LRDE Debian repository
+      run: |
+        sudo mkdir -p /etc/apt/keyrings
+        sudo wget https://www.lrde.epita.fr/repo/debian.gpg
+        sudo gpg --no-default-keyring --keyring ./tmp-kr.gpg --import debian.gpg
+        sudo gpg --no-default-keyring --keyring ./tmp-kr.gpg --export --output /etc/apt/keyrings/lrde.gpg
+        sudo sh -c "echo 'deb [signed-by=/etc/apt/keyrings/lrde.gpg] http://www.lrde.epita.fr/repo/debian/ stable/' >> /etc/apt/sources.list"
+        sudo apt update
+    - name: Install newer libltldl
+      run: |
+        sudo wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
+        sudo dpkg -i libltdl7_2.5.4-4build1_amd64.deb
+        sudo apt -f install
+    - name: Install Spot
+      run: |
+        sudo apt install -y spot libspot-dev
     - uses: actions/setup-python@v5
     - name: Install python dependencies
       run: |
