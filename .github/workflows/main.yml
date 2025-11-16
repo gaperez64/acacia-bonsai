@@ -24,6 +24,3 @@ jobs:
       run: |
         meson setup build
         meson compile -C build acacia-bonsai
-      with:
-        name: meson-logs
-        path: build_base/meson-logs
