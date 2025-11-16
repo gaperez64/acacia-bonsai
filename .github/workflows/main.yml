@@ -41,3 +41,17 @@ jobs:
       run: |
         meson setup build
         meson compile -C build acacia-bonsai
+    - name: Check Real
+      run: |
+        ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant)
+        if [ "ACACIA_RESULT" != "REALIZABLE" ]; then
+          echo "ACACIA_RESULT must equal 'REALIZABLE' but is 'ACACIA_RESULT'"
+          exit 1
+        fi
+    - name: Check Unknown
+      run: |
+        ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant)
+        if [ "ACACIA_RESULT" != "UNKNOWN" ]; then
+          echo "ACACIA_RESULT must equal 'UNKNOWN' but is 'ACACIA_RESULT'"
+          exit 1
+        fi
