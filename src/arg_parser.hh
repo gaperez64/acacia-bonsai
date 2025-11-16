@@ -11,9 +11,6 @@
  */
 struct ArgParseResult {
   std::string formula;
-  bool is_file = false;
-  bool lbt_input = false;
-  bool lenient = false;
   bool moore_mode = false;
   std::vector<int> init_state = {};
   std::vector<std::string> inputs = {};

@@ -111,13 +111,7 @@ void process_args_(const ArgParseResult& arg_vals) {
   opt_Kinc = arg_vals.opt_Kinc;
   utils::verbose = arg_vals.verbose_level;
 
-  lbt_input = arg_vals.lbt_input;
-  lenient = arg_vals.lenient;
-  if (arg_vals.is_file) {
-    jobs.emplace_back(arg_vals.formula.c_str(), true);
-  } else {
-    jobs.emplace_back(arg_vals.formula.c_str(), false);
-  }
+  jobs.emplace_back(arg_vals.formula.c_str(), false);
 }
 
 
