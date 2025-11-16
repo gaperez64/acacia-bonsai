@@ -31,13 +31,13 @@ $ cd build
 $ meson compile
 $ src/acacia-bonsai --help
   [...]
-$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' --ins req --outs grant -S out.txt
+$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant -S out.txt
 REALIZABLE
 ```
 
 Another usage:
 ```
-$ src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' --inputs req --outputs grant -S out.txt
+$ src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant -S out.txt
 UNKNOWN
 ```
 
