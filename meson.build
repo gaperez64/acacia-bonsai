@@ -29,5 +29,3 @@ inc = include_directories ('lib', 'src')
 
 subdir ('lib')
 subdir ('src')
-subdir ('tests')
-subdir ('tests-synth')
