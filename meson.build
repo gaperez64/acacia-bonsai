@@ -9,7 +9,7 @@ extra_args = ['-ftrack-macro-expansion=0',
 add_global_arguments (extra_args, language: 'cpp')
 
 spot_dep = dependency ('libspot')
-bddx_dep = dependency ('libbddx')
+bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 boost_dep = dependency ('boost')
 posets_dep = dependency ('posets')
 

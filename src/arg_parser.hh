@@ -23,7 +23,6 @@ struct ArgParseResult {
   unsigned int opt_Kmax = DEFAULT_K;
   unsigned int opt_Kinc = DEFAULT_KINC;
   unsigned int verbose_level = 0;
-  std::string extra_opts = "";
 };
 
 /**

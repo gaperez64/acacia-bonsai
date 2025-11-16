@@ -70,9 +70,6 @@ ArgParseResult arg_parser(int argc, char **argv) {
                 retval.verbose_level++;
                 verbose_level++;
                 break;
-            case 'x':
-                retval.extra_opts = optarg;
-                break;
             case '?':
                 // getopt() prints an error message automatically.
                 show_help(argv[0]);
@@ -84,7 +81,7 @@ ArgParseResult arg_parser(int argc, char **argv) {
     }
 
     if (retval.formula.empty()) {
-        error(3, 0, "Error: a formula or file must be specified (-f or -F).");
+        error(3, 0, "Error: a formula or file must be specified (-f).");
     }
     if (retval.inputs.empty()) {
         error(3, 0, "Error: inputs must be specified (-i).");
@@ -107,7 +104,6 @@ static void show_help(const char* program_name) {
               << "  -h                print this help\n"
               << "  -V                print program version\n"
               << "  -f STRING         process the formula STRING\n"
-              << "  -F FILENAME       process each line of FILENAME as a formula\n"
               << "  -0 STATE          comma-separated state vector to use as initial state\n"
               << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) atomic propositions\n"
               << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic propositions\n"
@@ -116,7 +112,6 @@ static void show_help(const char* program_name) {
               << "  -K VAL            final value of K, or unique value if Kmin is not specified\n"
               << "  -M VAL            starting value of K; Kinc MUST be set when using this option\n"
               << "  -v                verbose mode, can be repeated for more verbosity\n"
-              << "  -x EXTRAS         Extra options.\n\n"
               << "Exit status:\n"
               << "\t0   if the input problem is realizable\n"
               << "\t1   if the input problem is not realizable\n"

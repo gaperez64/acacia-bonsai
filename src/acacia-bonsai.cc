@@ -111,10 +111,6 @@ void process_args_(const ArgParseResult& arg_vals) {
   opt_Kinc = arg_vals.opt_Kinc;
   utils::verbose = arg_vals.verbose_level;
 
-  if (not arg_vals.extra_opts.empty()) {
-    extra_options.parse_options (arg_vals.extra_opts.c_str());
-  }
-
   lbt_input = arg_vals.lbt_input;
   lenient = arg_vals.lenient;
   if (arg_vals.is_file) {
