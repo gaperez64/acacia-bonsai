@@ -231,7 +231,7 @@ int main (int argc, char **argv) {
     int ret;
     while (wait (&ret) != -1) { // as long as we have children to wait for
       if (not WIFEXITED (ret)) {
-        std::cout << "ERROR: A child died unexepectedly";
+        std::cout << "ERROR: A child died unexepectedly ";
         if (WIFSIGNALED (ret))
           std::cout << " with signal " << WTERMSIG (ret);
         std::cout << std::endl;

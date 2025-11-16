@@ -1,4 +1,4 @@
-ab_sources = ['acacia-bonsai.cc', 'arg_parser.cpp']
+ab_sources = ['acacia-bonsai.cc', 'arg_parser.cc']
 
 ab_exe = executable ('acacia-bonsai', ab_sources,
                      include_directories : inc,
