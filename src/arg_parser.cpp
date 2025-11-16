@@ -52,7 +52,7 @@ ArgParseResult arg_parser(int argc, char **argv) {
                 process_arg_input_(optarg, retval);
                 break;
             case 'o':
-                process__arg_output_(optarg, retval);
+                process_arg_output_(optarg, retval);
                 break;
             case 'S':
                 process_arg_synth_(optarg, retval);
