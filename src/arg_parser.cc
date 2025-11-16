@@ -84,6 +84,7 @@ static void show_help(const char* program_name) {
               << "Verify realizability for LTL specifications.\n\n"
               << "Allowed options:\n"
               << "  -h                print this help\n"
+              << "  -E                (Edward) Moore mode for the controller\n"
               << "  -V                print program version\n"
               << "  -f STRING         process the formula STRING\n"
               << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) atomic propositions\n"
