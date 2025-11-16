@@ -51,7 +51,15 @@ jobs:
     - name: Check Unknown
       run: |
         ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant)
+        ACACIA_STATUS=$?
         if [ "$ACACIA_RESULT" != "UNKNOWN" ]; then
           echo "ACACIA_RESULT must equal 'UNKNOWN' but is '$ACACIA_RESULT'"
           exit 1
         fi
+        # Check exit code
+        if [ "$ACACIA_STATUS" -ne 3 ]; then
+          echo "Unexpected exit code: $ACACIA_STATUS"
+          exit 1
+        fi
+      continue-on-error: true
+
