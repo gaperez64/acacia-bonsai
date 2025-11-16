@@ -1,8 +1,9 @@
 #!/bin/bash
-export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+export LD_LIBRARY_PATH=$SCRIPT_DIR:$SCRIPT_DIR/../../build/subprojects/spot/dist/usr/local/lib64:$LD_LIBRARY_PATH
 
-SYFCO=./syfco
-ACABON=./acacia-bonsai
+SYFCO=$SCRIPT_DIR/syfco
+ACABON=$SCRIPT_DIR/../../build/src/acacia-bonsai
 FILE=$1
 PART=$(mktemp)
 LTL=$($SYFCO $FILE -f ltlxba -m fully -pf $PART)
@@ -21,6 +22,6 @@ parttoinsouts () {
 
 parttoinsouts $PART
 
-echo $ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs"
-$ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs"
+echo $ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs" -v -v
+$ACABON -c BOTH --formula="$LTL" --ins="$ins" --outs="$outs" -v -v 
 # rm -f $PART
