@@ -17,21 +17,12 @@ class job_base;
 
 using job_ptr = std::shared_ptr<job_base>;
 
-struct worker_t {
-  // two pipes, for communication in both directions
-  pipe_t to_main, from_main;
-  pid_t pid = -1;
-  bool active = true; // whether the worker has already stopped
-};
 
 class composition_mt {
   private:
   std::queue<job_ptr> pending_jobs; // all currently unfinished jobs no worker is working on yet
   std::shared_ptr<safety_game> stored_result; // room for temporary result: if there are 2, merge them
   bool losing = false; // whether the game is already found to be losing (early abort)
-
-  pipe_t shared_pipe; // pipe that all workers use to write a byte to to signify they are done with their job
-  std::vector<worker_t> workers;
 
   bdd invariant = bddtrue;
 
@@ -392,84 +383,6 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
   // if there is no safe region: return 0 (not winning)
   return r.safe != nullptr;
 }
-
-// void composition_mt::be_child (int id) {
-//   utils::vout.set_prefix ("[" + std::to_string (id+1) + "] ");
-//
-//   pipe_t& to_main = workers[id].to_main;
-//   pipe_t& from_main = workers[id].from_main;
-//
-//   // keep reading jobs until we are done
-//   while (true) {
-//     job_type job = from_main.read_obj<job_type> ();
-//
-//     switch (job) {
-//       case j_done: {
-//         verb_do (1, vout << "Worker is finished!\n");
-//         exit (0);
-//         break;
-//       }
-//
-//       case j_solve: {
-//         // update invariant
-//         invariant = from_main.read_bdd (dict);
-//
-//         // solve job
-//         safety_game r = from_main.read_safety_game (dict);
-//         verb_do (1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-//         verb_do (1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
-//
-//         solve_game (r);
-//
-//         shared_pipe.write_obj<char> (id);
-//         to_main.write_guard (MESSAGE_START);
-//         to_main.write_obj<result_type> (r_game);
-//         to_main.write_safety_game (r);
-//         to_main.write_guard (MESSAGE_END);
-//
-//         verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
-//         break;
-//       }
-//
-//       case j_formula: {
-//         // turn formula into automaton
-//         spot::formula f = from_main.read_formula ();
-//         verb_do (1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-//         verb_do (1, vout << "Formula to be converted: " << f << "\n");
-//
-//         safety_game r = prepare_formula (f);
-//
-//         shared_pipe.write_obj<char> (id);
-//         to_main.write_guard (MESSAGE_START);
-//
-//         if (r.aut) {
-//           bdd condition;
-//           if (is_invariant (r.aut, condition)) {
-//             to_main.write_obj<result_type> (r_invariant);
-//             to_main.write_bdd (condition, dict);
-//           } else {
-//             to_main.write_obj<result_type> (r_game);
-//             to_main.write_safety_game (r);
-//           }
-//         } else {
-//           // trivial formula (automaton with no accepting states, like "G true")
-//           to_main.write_obj<result_type> (r_null);
-//         }
-//
-//         to_main.write_guard (MESSAGE_END);
-//
-//         verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
-//         break;
-//       }
-//
-//       default: {
-//         verb_do (1, vout << "Bad job type!\n");
-//         exit (0);
-//         break;
-//       }
-//     }
-//   }
-// }
 
 int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname,
                              bool check_real, unreal_x_t opt_unreal_x) {
