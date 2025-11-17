@@ -54,7 +54,7 @@ class composition_mt {
   void finish_invariant (); // turns the invariant into a solved 2-state automaton, not used right now because the ios-precomputer uses the invariant
   void solve_game (safety_game& game); // use the k-bounded safety aut to solve a game
   int epilogue (std::string synth_fname, std::string winreg_fname); // look at the final result, call synthesis if needed and return whether it was realizable
-  void be_child (int id); // does everything a child process has to do
+  // void be_child (int id); // does everything a child process has to do
   void add_result (safety_game& r); // add a new result to the temporary, or add a merge if there is already one stored
 
   using aut_t = decltype (trans_.run (spot::formula::ff ()));
@@ -393,83 +393,83 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
   return r.safe != nullptr;
 }
 
-void composition_mt::be_child (int id) {
-  utils::vout.set_prefix ("[" + std::to_string (id+1) + "] ");
-
-  pipe_t& to_main = workers[id].to_main;
-  pipe_t& from_main = workers[id].from_main;
-
-  // keep reading jobs until we are done
-  while (true) {
-    job_type job = from_main.read_obj<job_type> ();
-
-    switch (job) {
-      case j_done: {
-        verb_do (1, vout << "Worker is finished!\n");
-        exit (0);
-        break;
-      }
-
-      case j_solve: {
-        // update invariant
-        invariant = from_main.read_bdd (dict);
-
-        // solve job
-        safety_game r = from_main.read_safety_game (dict);
-        verb_do (1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-        verb_do (1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
-
-        solve_game (r);
-
-        shared_pipe.write_obj<char> (id);
-        to_main.write_guard (MESSAGE_START);
-        to_main.write_obj<result_type> (r_game);
-        to_main.write_safety_game (r);
-        to_main.write_guard (MESSAGE_END);
-
-        verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
-        break;
-      }
-
-      case j_formula: {
-        // turn formula into automaton
-        spot::formula f = from_main.read_formula ();
-        verb_do (1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-        verb_do (1, vout << "Formula to be converted: " << f << "\n");
-
-        safety_game r = prepare_formula (f);
-
-        shared_pipe.write_obj<char> (id);
-        to_main.write_guard (MESSAGE_START);
-
-        if (r.aut) {
-          bdd condition;
-          if (is_invariant (r.aut, condition)) {
-            to_main.write_obj<result_type> (r_invariant);
-            to_main.write_bdd (condition, dict);
-          } else {
-            to_main.write_obj<result_type> (r_game);
-            to_main.write_safety_game (r);
-          }
-        } else {
-          // trivial formula (automaton with no accepting states, like "G true")
-          to_main.write_obj<result_type> (r_null);
-        }
-
-        to_main.write_guard (MESSAGE_END);
-
-        verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
-        break;
-      }
-
-      default: {
-        verb_do (1, vout << "Bad job type!\n");
-        exit (0);
-        break;
-      }
-    }
-  }
-}
+// void composition_mt::be_child (int id) {
+//   utils::vout.set_prefix ("[" + std::to_string (id+1) + "] ");
+//
+//   pipe_t& to_main = workers[id].to_main;
+//   pipe_t& from_main = workers[id].from_main;
+//
+//   // keep reading jobs until we are done
+//   while (true) {
+//     job_type job = from_main.read_obj<job_type> ();
+//
+//     switch (job) {
+//       case j_done: {
+//         verb_do (1, vout << "Worker is finished!\n");
+//         exit (0);
+//         break;
+//       }
+//
+//       case j_solve: {
+//         // update invariant
+//         invariant = from_main.read_bdd (dict);
+//
+//         // solve job
+//         safety_game r = from_main.read_safety_game (dict);
+//         verb_do (1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
+//         verb_do (1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
+//
+//         solve_game (r);
+//
+//         shared_pipe.write_obj<char> (id);
+//         to_main.write_guard (MESSAGE_START);
+//         to_main.write_obj<result_type> (r_game);
+//         to_main.write_safety_game (r);
+//         to_main.write_guard (MESSAGE_END);
+//
+//         verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
+//         break;
+//       }
+//
+//       case j_formula: {
+//         // turn formula into automaton
+//         spot::formula f = from_main.read_formula ();
+//         verb_do (1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
+//         verb_do (1, vout << "Formula to be converted: " << f << "\n");
+//
+//         safety_game r = prepare_formula (f);
+//
+//         shared_pipe.write_obj<char> (id);
+//         to_main.write_guard (MESSAGE_START);
+//
+//         if (r.aut) {
+//           bdd condition;
+//           if (is_invariant (r.aut, condition)) {
+//             to_main.write_obj<result_type> (r_invariant);
+//             to_main.write_bdd (condition, dict);
+//           } else {
+//             to_main.write_obj<result_type> (r_game);
+//             to_main.write_safety_game (r);
+//           }
+//         } else {
+//           // trivial formula (automaton with no accepting states, like "G true")
+//           to_main.write_obj<result_type> (r_null);
+//         }
+//
+//         to_main.write_guard (MESSAGE_END);
+//
+//         verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
+//         break;
+//       }
+//
+//       default: {
+//         verb_do (1, vout << "Bad job type!\n");
+//         exit (0);
+//         break;
+//       }
+//     }
+//   }
+// }
 
 int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname,
                              bool check_real, unreal_x_t opt_unreal_x) {
