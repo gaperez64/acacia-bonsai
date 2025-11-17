@@ -13,16 +13,31 @@
 #define debug_(A...) do {  std::cout << A << "\n"; } while (0)
 
 namespace {
+    /**
+     * Process the specified input (-i) argument. This is a comma-separated list uncontrollable atomic propositions.
+     * @param arg The comma-separated list of inputs.
+     * @param result The struct that will contain the parsed and processed argument values.
+     */
     void process_arg_input(const std::string& arg, arg_parse_result& result);
+
+    /**
+     * Process the specified output (-o) argument. This is a comma-separated list controllable atomic propositions.
+     * @param arg The comma-separated list of outputs.
+     * @param result The struct that will contain the parsed and processed argument values.
+     */
     void process_arg_output(const std::string& arg, arg_parse_result& result);
+
+    /**
+     * Print the help menu for the specified program name.
+     */
     void show_help(const char* program_name);
 }
 
 arg_parse_result arg_parser(int argc, char **argv) {
-    debug_("[DEBUG] Parsing arguments.");
     arg_parse_result retval;
     int opt;
 
+    // this goes over all provided arguments and returns the argument value.
     while ((opt = getopt(argc, argv, "hEVf:i:o:I:K:M:v")) != -1) {
         switch (opt) {
             case 'h':
@@ -74,7 +89,6 @@ arg_parse_result arg_parser(int argc, char **argv) {
         error(3, 0, "Error: if 'Kstart' (-M) is specified, then 'Kinc' (-I) also must be provided.");
     }
 
-    debug_("[DEBUG] Finished parsing arguments.");
     return retval;
 }
 
@@ -99,10 +113,12 @@ namespace {
                   << "\t0   if the input problem is realizable\n"
                   << "\t1   if the input problem is not realizable\n"
                   << "\t2   if this could not be decided\n"
-                  << "\t3   if any error has been reported" << '\n';
+                  << "\t3   if any error has been reported" << '\n'
+                  << "Version: " << VERSION << '\n';
     }
 
     void process_arg_input(const std::string& arg, arg_parse_result& result) {
+        // very simple, we just split on comma "," and add every thing to the vector of inputs
         std::istringstream props (arg);
         std::string prop;
         while (std::getline (props, prop, ',')) {
@@ -112,6 +128,7 @@ namespace {
     }
 
     void process_arg_output(const std::string& arg, arg_parse_result& result) {
+        // very simple, we just split on comma "," and add every thing to the vector of outputs
         std::istringstream props (arg);
         std::string prop;
         while (std::getline (props, prop, ',')) {

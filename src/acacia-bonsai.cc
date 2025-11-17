@@ -141,9 +141,10 @@ static void setup_sig_handler()
 
 int main (int argc, char **argv) {
 
+  debug_("[DEBUG] Parsing arguments.");
   // use boost to parse all arguments that were passed
   const auto arg_values = arg_parser(argc, argv);
-
+  debug_("[DEBUG] Finished parsing arguments.");
 
   struct sigaction action;
   memset (&action, 0, sizeof(struct sigaction));
