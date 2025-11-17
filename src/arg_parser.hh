@@ -9,16 +9,16 @@
 /**
  * Struct that will hold the parsed argument values.
  */
-struct ArgParseResult {
+struct arg_parse_result {
   std::string formula;
   bool moore_mode = false;
-  std::vector<int> init_state = {};
-  std::vector<std::string> inputs = {};
-  std::vector<std::string> outputs = {};
-  std::string synth_fname = "";
-  unsigned int opt_Kstart = DEFAULT_KMIN;
-  unsigned int opt_Kmax = DEFAULT_K;
-  unsigned int opt_Kinc = DEFAULT_KINC;
+  std::vector<int> init_state;
+  std::vector<std::string> inputs;
+  std::vector<std::string> outputs;
+  std::string synth_fname;
+  unsigned int opt_kstart = DEFAULT_KMIN;
+  unsigned int opt_kmax = DEFAULT_K;
+  unsigned int opt_kinc = DEFAULT_KINC;
   unsigned int verbose_level = 0;
 };
 
@@ -30,4 +30,4 @@ struct ArgParseResult {
  *
  * @return ArgParseResult object with the argument values.
  */
-ArgParseResult arg_parser(int argc, char **argv);
+arg_parse_result arg_parser(int argc, char **argv);

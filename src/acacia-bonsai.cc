@@ -94,7 +94,7 @@ void terminate (int signum) {
  *
  * @param arg_vals The parsed argument values passed by the user.
  */
-void process_args_(const ArgParseResult& arg_vals) {
+void process_args_(const arg_parse_result& arg_vals) {
   init_state = arg_vals.init_state;
 
   for (const auto & input : arg_vals.inputs) {
@@ -106,9 +106,9 @@ void process_args_(const ArgParseResult& arg_vals) {
   }
 
   synth_fname = arg_vals.synth_fname;
-  opt_K = arg_vals.opt_Kmax;
-  opt_Kmin = arg_vals.opt_Kstart;
-  opt_Kinc = arg_vals.opt_Kinc;
+  opt_K = arg_vals.opt_kmax;
+  opt_Kmin = arg_vals.opt_kstart;
+  opt_Kinc = arg_vals.opt_kinc;
   utils::verbose = arg_vals.verbose_level;
 
   jobs.emplace_back(arg_vals.formula.c_str(), false);
