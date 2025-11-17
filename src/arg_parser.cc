@@ -12,6 +12,7 @@
 
 #define debug_(A...) do {  std::cout << A << "\n"; } while (0)
 
+
 namespace {
     /**
      * Process the specified input (-i) argument. This is a comma-separated list uncontrollable atomic propositions.

@@ -2,7 +2,7 @@ common_sources = [
   #'common_aoutput.cc',
   #'common_cout.cc',
   #'common_file.cc',
-  'common_finput.cc',
+#  'common_finput.cc',
  # 'common_output.cc',
   #'common_post.cc',
  # 'common_r.cc',

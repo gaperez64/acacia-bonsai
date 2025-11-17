@@ -111,8 +111,6 @@ void process_args_(const arg_parse_result& arg_vals) {
   opt_Kmin = arg_vals.opt_kstart;
   opt_Kinc = arg_vals.opt_kinc;
   utils::verbose = arg_vals.verbose_level;
-
-  jobs.emplace_back(arg_vals.formula.c_str(), false);
 }
 
 
@@ -168,7 +166,8 @@ int main (int argc, char **argv) {
 
     process_args_(arg_values);
 
-    check_no_formula ();
+    // TODO: I commented this out since we now pass a single formula
+    // check_no_formula ();
 
     // Adjust the value of K
     // TODO: moved this upwards. By afterwards adjusting the KMIN global variable, this influenced the behaviour of various async code.
@@ -184,7 +183,7 @@ int main (int argc, char **argv) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
     ltl_processor processor (trans, input_aps, output_aps, dict, synth_fname, winreg_fname, check_real,
-      opt_unreal_x, workers, opt_K, opt_Kmin, opt_Kinc, init_state);
+      opt_unreal_x, workers, opt_K, opt_Kmin, opt_Kinc, init_state, arg_values.formula);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();
