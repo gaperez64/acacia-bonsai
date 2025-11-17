@@ -5,15 +5,15 @@
 #include <unordered_map>
 #include <vector>
 #include <algorithm>
+#include <cstring>
 
 #include <signal.h>
 #include <sys/wait.h>
 
-#include <boost/algorithm/string.hpp>
-
 #include "k-bounded_safety_aut.hh"
 
 #include "arg_parser.hh"
+#include "error_msg.hh"
 
 #include <posets/vectors.hh>
 #include <posets/downsets.hh>
@@ -46,23 +46,9 @@
 #include <spot/twaalgos/toparity.hh>
 #include <spot/twaalgos/hoa.hh>
 
+#define debug_(A...) do { if(utils::verbose > 0) { std::cout << A << std::endl; } } while (0)
 
 using namespace std::literals;
-
-enum {
-  OPT_K = 'K',
-  OPT_Kmin = 'M',
-  OPT_Kinc = 'I',
-  OPT_UNREAL_X = 'u',
-  OPT_INPUT = 'i',
-  OPT_OUTPUT = 'o',
-  OPT_CHECK = 'c',
-  OPT_VERBOSE = 'v',
-  OPT_SYNTH = 'S',
-  OPT_WINREG = 'W',
-  OPT_WORKERS = 'j',
-  OPT_INIT = '0'
-} ;
 
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
@@ -109,7 +95,7 @@ void terminate (int signum) {
  *
  * @param arg_vals The parsed argument values passed by the user.
  */
-void process_args_(const ArgParseResult& arg_vals) {
+void process_args_(const arg_parse_result& arg_vals) {
   init_state = arg_vals.init_state;
 
   for (const auto & input : arg_vals.inputs) {
@@ -121,22 +107,10 @@ void process_args_(const ArgParseResult& arg_vals) {
   }
 
   synth_fname = arg_vals.synth_fname;
-  opt_K = arg_vals.opt_Kmax;
-  opt_Kmin = arg_vals.opt_Kstart;
-  opt_Kinc = arg_vals.opt_Kinc;
+  opt_K = arg_vals.opt_kmax;
+  opt_Kmin = arg_vals.opt_kstart;
+  opt_Kinc = arg_vals.opt_kinc;
   utils::verbose = arg_vals.verbose_level;
-
-  if (not arg_vals.extra_opts.empty()) {
-    extra_options.parse_options (arg_vals.extra_opts.c_str());
-  }
-
-  lbt_input = arg_vals.lbt_input;
-  lenient = arg_vals.lenient;
-  if (arg_vals.is_file) {
-    jobs.emplace_back(arg_vals.formula.c_str(), true);
-  } else {
-    jobs.emplace_back(arg_vals.formula.c_str(), false);
-  }
 }
 
 
@@ -166,9 +140,10 @@ static void setup_sig_handler()
 
 int main (int argc, char **argv) {
 
+  debug_("[DEBUG] Parsing arguments.");
   // use boost to parse all arguments that were passed
   const auto arg_values = arg_parser(argc, argv);
-
+  debug_("[DEBUG] Finished parsing arguments.");
 
   struct sigaction action;
   memset (&action, 0, sizeof(struct sigaction));
@@ -191,7 +166,8 @@ int main (int argc, char **argv) {
 
     process_args_(arg_values);
 
-    check_no_formula ();
+    // TODO: I commented this out since we now pass a single formula
+    // check_no_formula ();
 
     // Adjust the value of K
     // TODO: moved this upwards. By afterwards adjusting the KMIN global variable, this influenced the behaviour of various async code.
@@ -207,7 +183,7 @@ int main (int argc, char **argv) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
     ltl_processor processor (trans, input_aps, output_aps, dict, synth_fname, winreg_fname, check_real,
-      opt_unreal_x, workers, opt_K, opt_Kmin, opt_Kinc, init_state);
+      opt_unreal_x, workers, opt_K, opt_Kmin, opt_Kinc, init_state, arg_values.formula);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();
@@ -246,7 +222,7 @@ int main (int argc, char **argv) {
     int ret;
     while (wait (&ret) != -1) { // as long as we have children to wait for
       if (not WIFEXITED (ret)) {
-        std::cout << "ERROR: A child died unexepectedly";
+        std::cout << "ERROR: A child died unexepectedly ";
         if (WIFSIGNALED (ret))
           std::cout << " with signal " << WTERMSIG (ret);
         std::cout << std::endl;

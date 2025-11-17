@@ -17,21 +17,12 @@ class job_base;
 
 using job_ptr = std::shared_ptr<job_base>;
 
-struct worker_t {
-  // two pipes, for communication in both directions
-  pipe_t to_main, from_main;
-  pid_t pid = -1;
-  bool active = true; // whether the worker has already stopped
-};
 
 class composition_mt {
   private:
   std::queue<job_ptr> pending_jobs; // all currently unfinished jobs no worker is working on yet
   std::shared_ptr<safety_game> stored_result; // room for temporary result: if there are 2, merge them
   bool losing = false; // whether the game is already found to be losing (early abort)
-
-  pipe_t shared_pipe; // pipe that all workers use to write a byte to to signify they are done with their job
-  std::vector<worker_t> workers;
 
   bdd invariant = bddtrue;
 
@@ -54,7 +45,7 @@ class composition_mt {
   void finish_invariant (); // turns the invariant into a solved 2-state automaton, not used right now because the ios-precomputer uses the invariant
   void solve_game (safety_game& game); // use the k-bounded safety aut to solve a game
   int epilogue (std::string synth_fname, std::string winreg_fname); // look at the final result, call synthesis if needed and return whether it was realizable
-  void be_child (int id); // does everything a child process has to do
+  // void be_child (int id); // does everything a child process has to do
   void add_result (safety_game& r); // add a new result to the temporary, or add a merge if there is already one stored
 
   using aut_t = decltype (trans_.run (spot::formula::ff ()));
@@ -71,7 +62,6 @@ class composition_mt {
     input_aps_(input_aps_), output_aps_(output_aps_), init_state(init_state) {}
 
   void add_formula (spot::formula f); // adds a formula job
-  int run (int workers, std::string synth_fname, std::string winreg_fname); // run everything with the given number of workers
   int run_one (spot::formula f, std::string synth_fname, std::string winreg_fname, bool check_real, unreal_x_t opt_unreal_x); // solve only one formula, with no subprocesses
 };
 
@@ -392,229 +382,6 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
 
   // if there is no safe region: return 0 (not winning)
   return r.safe != nullptr;
-}
-
-void composition_mt::be_child (int id) {
-  utils::vout.set_prefix ("[" + std::to_string (id+1) + "] ");
-
-  pipe_t& to_main = workers[id].to_main;
-  pipe_t& from_main = workers[id].from_main;
-
-  // keep reading jobs until we are done
-  while (true) {
-    job_type job = from_main.read_obj<job_type> ();
-
-    switch (job) {
-      case j_done: {
-        verb_do (1, vout << "Worker is finished!\n");
-        exit (0);
-        break;
-      }
-
-      case j_solve: {
-        // update invariant
-        invariant = from_main.read_bdd (dict);
-
-        // solve job
-        safety_game r = from_main.read_safety_game (dict);
-        verb_do (1, vout << "Solve job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-        verb_do (1, vout << "Starting solve on automaton with " << r.aut->num_states() << " states\n");
-
-        solve_game (r);
-
-        shared_pipe.write_obj<char> (id);
-        to_main.write_guard (MESSAGE_START);
-        to_main.write_obj<result_type> (r_game);
-        to_main.write_safety_game (r);
-        to_main.write_guard (MESSAGE_END);
-
-        verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
-        break;
-      }
-
-      case j_formula: {
-        // turn formula into automaton
-        spot::formula f = from_main.read_formula ();
-        verb_do (1, vout << "Formula job received: read " << from_main.get_bytes_count () << " bytes from pipe\n");
-        verb_do (1, vout << "Formula to be converted: " << f << "\n");
-
-        safety_game r = prepare_formula (f);
-
-        shared_pipe.write_obj<char> (id);
-        to_main.write_guard (MESSAGE_START);
-
-        if (r.aut) {
-          bdd condition;
-          if (is_invariant (r.aut, condition)) {
-            to_main.write_obj<result_type> (r_invariant);
-            to_main.write_bdd (condition, dict);
-          } else {
-            to_main.write_obj<result_type> (r_game);
-            to_main.write_safety_game (r);
-          }
-        } else {
-          // trivial formula (automaton with no accepting states, like "G true")
-          to_main.write_obj<result_type> (r_null);
-        }
-
-        to_main.write_guard (MESSAGE_END);
-
-        verb_do (1, vout << "Done: wrote " << to_main.get_bytes_count () << " bytes to pipe\n");
-        break;
-      }
-
-      default: {
-        verb_do (1, vout << "Bad job type!\n");
-        exit (0);
-        break;
-      }
-    }
-  }
-}
-
-int composition_mt::run (int worker_count, std::string synth_fname, std::string winreg_fname) {
-  verb_do (1, utils::vout.set_prefix ("[0] "));
-
-  if (worker_count <= 0) {
-    worker_count = std::thread::hardware_concurrency ();
-  }
-  worker_count = std::min<int> (worker_count, 255);
-  worker_count = std::min<int> (worker_count, pending_jobs.size ());
-  verb_do (1, vout << "Workers: " << worker_count << "\n");
-
-  assert (worker_count > 0);
-
-  // create shared pipe
-  assert (shared_pipe.create_pipe () == 0);
-
-  workers.resize (worker_count);
-  for(int i = 0; i < worker_count; i++) {
-    assert (workers[i].to_main.create_pipe () == 0);
-    assert (workers[i].from_main.create_pipe () == 0);
-  }
-
-  // how many formula jobs aren't yet solved: once this is 0, add invariants, if not using ios precomputer that uses the invariant
-  int base_remaining = pending_jobs.size ();
-
-  if constexpr (! IOS_PRECOMPUTER::supports_invariant) {
-    verb_do (1, vout << "Invariant is not supported -> add safety game for it\n");
-  } else {
-    verb_do (1, vout << "IOs precomputer supports invariant\n");
-  }
-
-  // spawn the workers with their initial job
-  for(int i = 0; i < worker_count; i++) {
-    pid_t pid = fork ();
-    assert (pid >= 0);
-
-    if (pid > 0) {
-      workers[i].pid = pid;
-      job_ptr job = dequeue ();
-      assert (job != nullptr);
-
-      job->to_pipe (workers[i].from_main);
-    }
-    else {
-      // child process
-      be_child (i);
-    }
-  }
-
-  int active_workers = worker_count;
-
-
-  // wait until a process writes to the shared pipe that it's writing its result
-  while (active_workers > 0) {
-    int wid = shared_pipe.read_obj<char> ();
-    assert ((wid >= 0) && (wid < worker_count));
-
-    pipe_t& to_main = workers[wid].to_main;
-    pipe_t& from_main = workers[wid].from_main;
-
-    to_main.read_guard (MESSAGE_START);
-    result_type res = to_main.read_obj<result_type> ();
-
-    switch (res) {
-      case r_game: {
-      safety_game game = to_main.read_safety_game (dict);
-
-        if (game.safe) {
-          if (game.solved) {
-            verb_do (1, vout << "Solved game -> add as result\n");
-            add_result (game);
-          } else {
-            base_remaining--;
-            verb_do (1, vout << "Unsolved game -> add solve job\n");
-            enqueue (std::make_shared<job_solve> (game));
-          }
-        } else {
-          losing = true;
-          verb_do (1, vout << "Game not realizable -> abort!\n");
-        }
-        break;
-      }
-
-      case r_invariant: {
-        base_remaining--;
-        bdd inv = to_main.read_bdd (dict);
-        verb_do (1, vout << "Read invariant: " << bdd_to_formula (inv) << "\n");
-        add_invariant (inv);
-        break;
-      }
-
-      case r_null: {
-        // trivial formula: don't have to do anything except mark that a formula has been converted
-        base_remaining--;
-        break;
-      }
-
-      default:
-        assert (false);
-    }
-
-    to_main.read_guard (MESSAGE_END);
-
-    // if the ios precomputer does not use the invariants, we need to add an automaton that encodes all the invariants
-    if constexpr (! IOS_PRECOMPUTER::supports_invariant) {
-      if (base_remaining == 0) { // once all formula jobs are finished, we know all invariants
-        base_remaining = -1;
-        finish_invariant ();
-      }
-    }
-
-    // kill all workers and immediately abort if found to be losing
-    if (losing) {
-      for(int i = 0; i < worker_count; i++) {
-        if (!workers[i].active) continue;
-        kill (workers[i].pid, SIGKILL);
-        waitpid (workers[i].pid, nullptr, 0);
-      }
-      break;
-    }
-
-    verb_do (1, vout << "Done: read " << to_main.get_bytes_count () << " bytes from pipe\n");
-
-    job_ptr new_job = dequeue ();
-
-    if (new_job == nullptr) {
-      active_workers--;
-      verb_do (1, vout << "Releasing worker " << wid << ": " << active_workers << " left.\n");
-      workers[wid].active = false;
-
-      from_main.write_obj<job_type> (j_done);
-      // wait for this process
-      waitpid (workers[wid].pid, nullptr, 0);
-    } else {
-      // send new job
-      new_job->set_invariant (invariant);
-      new_job->to_pipe (from_main);
-    }
-  }
-
-
-  verb_do (1, vout << "All workers are finished.\n");
-
-  return epilogue (synth_fname, winreg_fname);
 }
 
 int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname,

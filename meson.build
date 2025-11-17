@@ -2,19 +2,15 @@ project ('Acacia Bonsai', ['c', 'cpp'],
          default_options : ['cpp_std=c++20', 'b_ndebug=if-release'],
          license : 'GPL-3.0')
 
-if meson.get_compiler('cpp').get_id() == 'clang'
-  extra_args = []
-else
-  extra_args = ['-ftrack-macro-expansion=0',
-                '-fno-diagnostics-show-caret',
-                '-fconcepts-diagnostics-depth=2']
-endif
+extra_args = ['-ftrack-macro-expansion=0',
+              '-fno-diagnostics-show-caret',
+              '-fconcepts-diagnostics-depth=2']
 
 add_global_arguments (extra_args, language: 'cpp')
 
 spot_dep = dependency ('libspot')
-bddx_dep = dependency ('libbddx')
-boost_dep = dependency ('boost', modules: ['program_options'])
+bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
+boost_dep = dependency ('boost')
 posets_dep = dependency ('posets')
 
 cpp = meson.get_compiler('cpp')

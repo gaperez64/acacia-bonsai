@@ -1,5 +1,7 @@
 #pragma once
 
+#define VERSION 1.8
+
 #include "utils/todo.hh"
 
 #ifndef DEFAULT_K
