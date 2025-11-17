@@ -46,6 +46,7 @@
 #include <spot/twaalgos/toparity.hh>
 #include <spot/twaalgos/hoa.hh>
 
+#define debug_(A...) do { if(utils::verbose > 0) { std::cout << A << std::endl; } } while (0)
 
 using namespace std::literals;
 
