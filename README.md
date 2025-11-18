@@ -1,5 +1,3 @@
-[![CI](https://github.com/gaperez64/acacia-bonsai/actions/workflows/main.yml/badge.svg)](https://github.com/gaperez64/acacia-bonsai/actions/workflows/main.yml)
-
 # Acacia-Bonsai
 
 This is a modern implementation of universal co-Buchi reactive synthesis
