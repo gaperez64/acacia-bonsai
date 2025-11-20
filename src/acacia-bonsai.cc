@@ -58,9 +58,8 @@ static std::vector<int> init_state;
 static int workers = 0;
 
 
-static auto opt_unreal_x = DEFAULT_UNREAL_X;
+// static auto opt_unreal_x = DEFAULT_UNREAL_X;
 
-// static bool check_real = true;
 static unsigned opt_K = DEFAULT_K,
   opt_Kmin = DEFAULT_KMIN, opt_Kinc = DEFAULT_KINC;
 static spot::option_map extra_options;
@@ -177,17 +176,17 @@ int main (int argc, char **argv) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
     ltl_processor processor (trans, input_aps, output_aps, dict, synth_fname, winreg_fname,
-      opt_unreal_x, workers, opt_K, opt_Kmin, opt_Kinc, init_state, arg_values.formula);
+      DEFAULT_UNREAL_X, workers, opt_K, opt_Kmin, opt_Kinc, init_state, arg_values.formula);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();
 
 
 
-    const auto start_proc = [&] (unreal_x_t unreal_x) {
+    const auto start_proc = [&] () {
+      unreal_x_t unreal_x = DEFAULT_UNREAL_X;
       if (fork () == 0) {
         utils::vout.set_prefix (std::string {"[real"} + (char) unreal_x + "] ");
-        opt_unreal_x = unreal_x;
         int res = processor.run ();
         verb_do (1, vout << "returning " << (res ? 0 : 3) << "\n");
         exit (res ? 0 : 3);  // 0 if real, 1 if unreal, 3 if unknown
@@ -197,7 +196,7 @@ int main (int argc, char **argv) {
     setpgid (0, 0);
     assert (getpgid (0) == getpid ());
 
-    start_proc (UNREAL_X_BOTH);
+    start_proc ();
 
 
     int ret;
