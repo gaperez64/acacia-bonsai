@@ -55,14 +55,12 @@ static std::vector<std::string> output_aps;
 static std::string synth_fname;
 static std::string winreg_fname;
 static std::vector<int> init_state;
-static int workers = 0;
 
 
 // static auto opt_unreal_x = DEFAULT_UNREAL_X;
 
 static unsigned opt_K = DEFAULT_K,
   opt_Kmin = DEFAULT_KMIN, opt_Kinc = DEFAULT_KINC;
-static spot::option_map extra_options;
 
 int               utils::verbose = 0;
 utils::voutstream utils::vout;
@@ -151,6 +149,7 @@ int main (int argc, char **argv) {
 
   try {
     // These options play a role in twaalgos.
+    spot::option_map extra_options;
     extra_options.set ("simul", 0);
     extra_options.set ("ba-simul", 0);
     extra_options.set ("det-simul", 0);
@@ -176,7 +175,7 @@ int main (int argc, char **argv) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
     ltl_processor processor (trans, input_aps, output_aps, dict, synth_fname, winreg_fname,
-      DEFAULT_UNREAL_X, workers, opt_K, opt_Kmin, opt_Kinc, init_state, arg_values.formula);
+      DEFAULT_UNREAL_X, opt_K, opt_Kmin, opt_Kinc, init_state, arg_values.formula);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();

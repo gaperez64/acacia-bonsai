@@ -43,7 +43,6 @@ class ltl_processor final {
     std::string synth_fname_;
     std::string winreg_fname_;
     unreal_x_t opt_unreal_x_;
-    int workers_;
     unsigned opt_K_;
     unsigned opt_Kmin_;
     unsigned opt_Kinc_;
@@ -59,7 +58,6 @@ class ltl_processor final {
                    std::string synth_fname_,
                    std::string winreg_fname_,
                    unreal_x_t opt_unreal_x_,
-                   int workers_,
                    unsigned opt_K_,
                    unsigned opt_Kmin_,
                    unsigned opt_Kinc_,
@@ -67,7 +65,7 @@ class ltl_processor final {
                    std::string formula)
       : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_), dict (dict_),
         synth_fname_(synth_fname_), winreg_fname_(winreg_fname_),
-        opt_unreal_x_(opt_unreal_x_), workers_(workers_), opt_K_(opt_K_), opt_Kmin_(opt_Kmin_),
+        opt_unreal_x_(opt_unreal_x_), opt_K_(opt_K_), opt_Kmin_(opt_Kmin_),
         opt_Kinc_(opt_Kinc_), init_state_(init_state_), formula_(formula)
     {}
 
