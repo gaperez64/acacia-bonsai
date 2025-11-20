@@ -88,7 +88,7 @@ class ltl_processor final {
       composition_mt composer (opt_K_, opt_Kmin_, opt_Kinc_, dict, trans_, all_inputs, all_outputs, input_aps_, output_aps_,
                                init_state_);
 
-      return composer.run_one (formula, synth_fname_, winreg_fname_, true, opt_unreal_x_);
+      return composer.run_one (formula, synth_fname_, winreg_fname_, opt_unreal_x_);
     }
 
     ~ltl_processor () {

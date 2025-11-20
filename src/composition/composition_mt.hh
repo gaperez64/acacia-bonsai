@@ -50,7 +50,7 @@ class composition_mt {
 
   using aut_t = decltype (trans_.run (spot::formula::ff ()));
   aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs);
-  safety_game prepare_formula (spot::formula f, bool check_real = true, unreal_x_t opt_unreal_x = UNREAL_X_BOTH); // turn a formula into an automaton
+  safety_game prepare_formula (spot::formula f, unreal_x_t opt_unreal_x = UNREAL_X_BOTH); // turn a formula into an automaton
 
   public:
   composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc,
@@ -62,7 +62,7 @@ class composition_mt {
     input_aps_(input_aps_), output_aps_(output_aps_), init_state(init_state) {}
 
   void add_formula (spot::formula f); // adds a formula job
-  int run_one (spot::formula f, std::string synth_fname, std::string winreg_fname, bool check_real, unreal_x_t opt_unreal_x); // solve only one formula, with no subprocesses
+  int run_one (spot::formula f, std::string synth_fname, std::string winreg_fname, unreal_x_t opt_unreal_x); // solve only one formula, with no subprocesses
 };
 
 // abstract base class for jobs
@@ -384,9 +384,8 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
   return r.safe != nullptr;
 }
 
-int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname,
-                             bool check_real, unreal_x_t opt_unreal_x) {
-  safety_game game = prepare_formula (f, check_real, opt_unreal_x);
+int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname, unreal_x_t opt_unreal_x) {
+  safety_game game = prepare_formula (f, opt_unreal_x);
   add_result (game);
   return epilogue (synth_fname, winreg_fname);
 }
@@ -433,7 +432,7 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
   return ret;
 }
 
-safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, unreal_x_t opt_unreal_x) {
+safety_game composition_mt::prepare_formula (spot::formula f, unreal_x_t opt_unreal_x) {
   // Note: this function is only run once with unrealizability as there is no composition -> swapping the inputs/outputs only happens once
 
   spot::process_timer timer;
@@ -455,33 +454,35 @@ safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, u
   ////////////////////////////////////////////////////////////////////////
   // Translate the formula to a UcB (Universal co-Büchi)
   // To do so, negate formula, and convert to a normal Büchi.
-  if (check_real)
+  // TODO: commented this out since check_real is always true
+  // if (check_real)
     f = spot::formula::Not (f);
-  else if (opt_unreal_x == UNREAL_X_FORMULA) {
-    // Add X at the outputs
-    auto rec = [this] (auto&& self, spot::formula m) {
-      if (m.is (spot::op::ap) and
-          (std::ranges::find (output_aps_,
-                              m.ap_name ()) != output_aps_.end ()))
-        return spot::formula::X (m);
-      return m.map ([&] (spot::formula t) { return self (self, t); });
-    };
-    f = f.map ([&] (spot::formula t) { return rec (rec, t); });
-    // Swap I and O.
-    input_aps_.swap (output_aps_);
-    std::swap (all_inputs, all_outputs);
-  }
+  // else if (opt_unreal_x == UNREAL_X_FORMULA) {
+  //   // Add X at the outputs
+  //   auto rec = [this] (auto&& self, spot::formula m) {
+  //     if (m.is (spot::op::ap) and
+  //         (std::ranges::find (output_aps_,
+  //                             m.ap_name ()) != output_aps_.end ()))
+  //       return spot::formula::X (m);
+  //     return m.map ([&] (spot::formula t) { return self (self, t); });
+  //   };
+  //   f = f.map ([&] (spot::formula t) { return rec (rec, t); });
+  //   // Swap I and O.
+  //   input_aps_.swap (output_aps_);
+  //   std::swap (all_inputs, all_outputs);
+  // }
 
   verb_do (1, vout << "Formula: " << f << std::endl);
 
   auto aut = trans_.run (&f);
 
   // If unreal but we haven't pushed outputs yet using X on formula
-  if (not check_real and opt_unreal_x == UNREAL_X_AUTOMATON) {
-    aut = push_outputs (aut, all_inputs, all_outputs);
-    input_aps_.swap (output_aps_);
-    std::swap (all_inputs, all_outputs);
-  }
+  // TODO: commented this out since check_real is always true
+  // if (not check_real and opt_unreal_x == UNREAL_X_AUTOMATON) {
+  //   aut = push_outputs (aut, all_inputs, all_outputs);
+  //   input_aps_.swap (output_aps_);
+  //   std::swap (all_inputs, all_outputs);
+  // }
 
   if (want_time) {
     double trans_time = sw.stop ();
@@ -526,14 +527,15 @@ safety_game composition_mt::prepare_formula (spot::formula f, bool check_real, u
   }
 
   // Special case: only boolean states, so... no useful accepting state.
-  if (!check_real && posets::vectors::bool_threshold == 0) {
-    verb_do (2, vout << "Special case: all states are bounded and checking UNREAL" << "\n");
-    if (want_time)
-      verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
-    safety_game ret;
-    ret.aut = nullptr;
-    return ret;
-  }
+  // TODO: commented out since check_real is always true
+  // if (!check_real && posets::vectors::bool_threshold == 0) {
+  //   verb_do (2, vout << "Special case: all states are bounded and checking UNREAL" << "\n");
+  //   if (want_time)
+  //     verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
+  //   safety_game ret;
+  //   ret.aut = nullptr;
+  //   return ret;
+  // }
 
 
   ////////////////////////////////////////////////////////////////////////
