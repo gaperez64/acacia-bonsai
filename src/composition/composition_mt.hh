@@ -451,38 +451,12 @@ safety_game composition_mt::prepare_formula (spot::formula f) {
   if (want_time)
     sw.start ();
 
-  ////////////////////////////////////////////////////////////////////////
-  // Translate the formula to a UcB (Universal co-Büchi)
-  // To do so, negate formula, and convert to a normal Büchi.
-  // TODO: commented this out since check_real is always true
-  // if (check_real)
     f = spot::formula::Not (f);
-  // else if (opt_unreal_x == UNREAL_X_FORMULA) {
-  //   // Add X at the outputs
-  //   auto rec = [this] (auto&& self, spot::formula m) {
-  //     if (m.is (spot::op::ap) and
-  //         (std::ranges::find (output_aps_,
-  //                             m.ap_name ()) != output_aps_.end ()))
-  //       return spot::formula::X (m);
-  //     return m.map ([&] (spot::formula t) { return self (self, t); });
-  //   };
-  //   f = f.map ([&] (spot::formula t) { return rec (rec, t); });
-  //   // Swap I and O.
-  //   input_aps_.swap (output_aps_);
-  //   std::swap (all_inputs, all_outputs);
-  // }
+
 
   verb_do (1, vout << "Formula: " << f << std::endl);
 
   auto aut = trans_.run (&f);
-
-  // If unreal but we haven't pushed outputs yet using X on formula
-  // TODO: commented this out since check_real is always true
-  // if (not check_real and opt_unreal_x == UNREAL_X_AUTOMATON) {
-  //   aut = push_outputs (aut, all_inputs, all_outputs);
-  //   input_aps_.swap (output_aps_);
-  //   std::swap (all_inputs, all_outputs);
-  // }
 
   if (want_time) {
     double trans_time = sw.stop ();
@@ -525,17 +499,6 @@ safety_game composition_mt::prepare_formula (spot::formula f) {
     verb_do (1, vout << "Computation of boolean states in " << boolean_states_time
       /*          */ << "seconds , found " << posets::vectors::bool_threshold << " nonboolean states.\n");
   }
-
-  // Special case: only boolean states, so... no useful accepting state.
-  // TODO: commented out since check_real is always true
-  // if (!check_real && posets::vectors::bool_threshold == 0) {
-  //   verb_do (2, vout << "Special case: all states are bounded and checking UNREAL" << "\n");
-  //   if (want_time)
-  //     verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
-  //   safety_game ret;
-  //   ret.aut = nullptr;
-  //   return ret;
-  // }
 
 
   ////////////////////////////////////////////////////////////////////////
