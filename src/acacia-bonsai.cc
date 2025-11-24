@@ -181,11 +181,33 @@ int main (int argc, char **argv) {
     extra_options.report_unused_options ();
 
 
-    // TODO; remove this, this is the actual process.
+    // int res = processor.run ();
+
+    // switch (res) {
+    //   case 0:
+    //     std::cout << "REALIZABLE\n";
+    //     break;
+    //   case 1:
+    //     std::cout << "UNREALIZABLE\n";
+    //     break;
+    //   case 3:
+    //     std::cout << "UNKNOWN\n";
+    //     break;
+    //   default:
+    //     error(3, 0, "Unknown result code: '%d'", res);
+    //     break;
+    // }
+    //
+    // exit(res);
+
+
+    // // TODO; remove this, this is the actual process.
     const auto start_proc = [&] () {
       if (fork () == 0) {
         utils::vout.set_prefix (std::string {"[real] "});
         int res = processor.run ();
+        // TODO: figure out the return values
+        std::cout << "res " << res << std::endl;
         verb_do (1, vout << "returning " << (res ? 0 : 3) << "\n");
         exit (res ? 0 : 3);  // 0 if real, 1 if unreal, 3 if unknown
       }
@@ -207,6 +229,8 @@ int main (int argc, char **argv) {
         terminate (0);
         abort ();
       }
+
+      std::cout << ret << " " << WEXITSTATUS (ret) << std::endl;
 
       ret = WEXITSTATUS (ret);
       if (ret < 3) {
