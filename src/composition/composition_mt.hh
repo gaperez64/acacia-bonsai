@@ -20,6 +20,7 @@ using job_ptr = std::shared_ptr<job_base>;
 
 class composition_mt {
   private:
+  // TODO: this will become a shared pointer, fixed in the constructor
   std::queue<job_ptr> pending_jobs; // all currently unfinished jobs no worker is working on yet
   std::shared_ptr<safety_game> stored_result; // room for temporary result: if there are 2, merge them
   bool losing = false; // whether the game is already found to be losing (early abort)
@@ -59,7 +60,9 @@ class composition_mt {
       std::vector<std::string> output_aps_, std::vector<int> init_state):
     opt_K(opt_K), opt_Kmin(opt_Kmin), opt_Kinc(opt_Kinc), dict(dict),
     trans_(trans), all_inputs(all_inputs), all_outputs(all_outputs),
-    input_aps_(input_aps_), output_aps_(output_aps_), init_state(init_state) {}
+    input_aps_(input_aps_), output_aps_(output_aps_), init_state(init_state) {
+    // TODO: pass job ptr here
+  }
 
   void add_formula (spot::formula f); // adds a formula job
   int run_one (spot::formula f, std::string synth_fname, std::string winreg_fname); // solve only one formula, with no subprocesses
@@ -201,6 +204,7 @@ void composition_mt::add_result (safety_game& r) {
     stored_result = std::make_shared<safety_game> (r);
   }
   else {
+    // TODO: I think we can remove all of this. There should not yet be a result.
     // merge the stored result, and the new result r
     safety_game inputs[2];
     inputs[0] = *stored_result;
@@ -323,12 +327,14 @@ void composition_mt::solve_game (safety_game& game) {
 }
 
 int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname) {
+  // TODO: this should either return true (real) or false (unknown). This will require some changes.
   if (losing) {
     utils::vout << "(part of) safety game is not winning!\n";
     return 0;
   }
 
   // check stored_result
+  // TODO: this branch should be impossible?
   if (!stored_result) {
     // can happen if there are only invariants -> make a dummy automaton with 1 non-accepting state
     safety_game r;
@@ -384,7 +390,9 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
   return r.safe != nullptr;
 }
 
+// TODO: rename to "check_is_realisable")
 int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname) {
+  // TODO: move all arguments to ctor, this just invokes the solver
   safety_game game = prepare_formula (f);
   add_result (game);
   return epilogue (synth_fname, winreg_fname);
@@ -448,10 +456,11 @@ safety_game composition_mt::prepare_formula (spot::formula f) {
                   //spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
                   spot::postprocessor::SBAcc);
 
-  if (want_time)
+  if (want_time) {
     sw.start ();
+  }
 
-    f = spot::formula::Not (f);
+  f = spot::formula::Not (f);
 
 
   verb_do (1, vout << "Formula: " << f << std::endl);
