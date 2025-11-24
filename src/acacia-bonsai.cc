@@ -180,70 +180,21 @@ int main (int argc, char **argv) {
     // Diagnose unused -x options
     extra_options.report_unused_options ();
 
+    const int res = processor.run ();
 
-    // int res = processor.run ();
-
-    // switch (res) {
-    //   case 0:
-    //     std::cout << "REALIZABLE\n";
-    //     break;
-    //   case 1:
-    //     std::cout << "UNREALIZABLE\n";
-    //     break;
-    //   case 3:
-    //     std::cout << "UNKNOWN\n";
-    //     break;
-    //   default:
-    //     error(3, 0, "Unknown result code: '%d'", res);
-    //     break;
-    // }
-    //
-    // exit(res);
-
-
-    // // TODO; remove this, this is the actual process.
-    const auto start_proc = [&] () {
-      if (fork () == 0) {
-        utils::vout.set_prefix (std::string {"[real] "});
-        int res = processor.run ();
-        // TODO: figure out the return values
-        std::cout << "res " << res << std::endl;
-        verb_do (1, vout << "returning " << (res ? 0 : 3) << "\n");
-        exit (res ? 0 : 3);  // 0 if real, 1 if unreal, 3 if unknown
-      }
-    };
-
-    setpgid (0, 0);
-    assert (getpgid (0) == getpid ());
-
-    start_proc ();
-
-
-    int ret;
-    while (wait (&ret) != -1) { // as long as we have children to wait for
-      if (not WIFEXITED (ret)) {
-        std::cout << "ERROR: A child died unexepectedly ";
-        if (WIFSIGNALED (ret))
-          std::cout << " with signal " << WTERMSIG (ret);
-        std::cout << std::endl;
-        terminate (0);
-        abort ();
-      }
-
-      std::cout << ret << " " << WEXITSTATUS (ret) << std::endl;
-
-      ret = WEXITSTATUS (ret);
-      if (ret < 3) {
-        terminate (0);
-        if (ret == 0)
-          std::cout << "REALIZABLE\n";
-        else
-          std::cout << "UNREALIZABLE\n";
-        return ret;
-      }
+    switch (res) {
+      case 1:
+        std::cout << "REALIZABLE\n";
+        break;
+      case 0:
+        std::cout << "UNKNOWN\n";
+        break;
+      default:
+        error(3, 0, "Unknown result code: '%d'", res);
+        break;
     }
-    std::cout << "UNKNOWN\n";
-    return 3;
+
+    exit(res ? 0 : 3);
   }
   catch (const std::exception& e)
   {
