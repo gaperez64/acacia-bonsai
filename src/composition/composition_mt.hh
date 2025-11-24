@@ -50,7 +50,7 @@ class composition_mt {
 
   using aut_t = decltype (trans_.run (spot::formula::ff ()));
   aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs);
-  safety_game prepare_formula (spot::formula f, unreal_x_t opt_unreal_x = UNREAL_X_BOTH); // turn a formula into an automaton
+  safety_game prepare_formula (spot::formula f); // turn a formula into an automaton
 
   public:
   composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc,
@@ -62,7 +62,7 @@ class composition_mt {
     input_aps_(input_aps_), output_aps_(output_aps_), init_state(init_state) {}
 
   void add_formula (spot::formula f); // adds a formula job
-  int run_one (spot::formula f, std::string synth_fname, std::string winreg_fname, unreal_x_t opt_unreal_x); // solve only one formula, with no subprocesses
+  int run_one (spot::formula f, std::string synth_fname, std::string winreg_fname); // solve only one formula, with no subprocesses
 };
 
 // abstract base class for jobs
@@ -384,8 +384,8 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
   return r.safe != nullptr;
 }
 
-int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname, unreal_x_t opt_unreal_x) {
-  safety_game game = prepare_formula (f, opt_unreal_x);
+int composition_mt::run_one (spot::formula f, std::string synth_fname, std::string winreg_fname) {
+  safety_game game = prepare_formula (f);
   add_result (game);
   return epilogue (synth_fname, winreg_fname);
 }
@@ -432,7 +432,7 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
   return ret;
 }
 
-safety_game composition_mt::prepare_formula (spot::formula f, unreal_x_t opt_unreal_x) {
+safety_game composition_mt::prepare_formula (spot::formula f) {
   // Note: this function is only run once with unrealizability as there is no composition -> swapping the inputs/outputs only happens once
 
   spot::process_timer timer;

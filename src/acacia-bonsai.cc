@@ -174,8 +174,8 @@ int main (int argc, char **argv) {
     // not measured in our timings.
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
-    ltl_processor processor (trans, input_aps, output_aps, dict, synth_fname, winreg_fname,
-      DEFAULT_UNREAL_X, opt_K, opt_Kmin, opt_Kinc, init_state, arg_values.formula);
+    ltl_processor processor (trans, input_aps, output_aps, dict, synth_fname, winreg_fname, opt_K,
+      opt_Kmin, opt_Kinc, init_state, arg_values.formula);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();
@@ -183,9 +183,8 @@ int main (int argc, char **argv) {
 
 
     const auto start_proc = [&] () {
-      unreal_x_t unreal_x = DEFAULT_UNREAL_X;
       if (fork () == 0) {
-        utils::vout.set_prefix (std::string {"[real"} + (char) unreal_x + "] ");
+        utils::vout.set_prefix (std::string {"[real] "});
         int res = processor.run ();
         verb_do (1, vout << "returning " << (res ? 0 : 3) << "\n");
         exit (res ? 0 : 3);  // 0 if real, 1 if unreal, 3 if unknown
