@@ -21,7 +21,5 @@ else
   stdsimd_dep = dependency ('stdsimd')
 endif
 
-inc = include_directories ('lib', 'src')
-
-subdir ('lib')
+inc = include_directories ('src')
 subdir ('src')
