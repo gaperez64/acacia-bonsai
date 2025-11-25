@@ -110,4 +110,5 @@ foreach triple : triples
         ],
         suite : 'check_real_all'
     )
+    # TODO: check output
 endforeach
