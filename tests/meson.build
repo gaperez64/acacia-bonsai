@@ -38,9 +38,6 @@ ltl_files = files(
 
 # Now, we merge these into triples, always ensuring that the filenames of the three
 #   files match. We do this to prevent complicated debugging in case something goes wrong.
-# Convert "path/to/a.input" to "a"
-#get_base = lambda f: f.full_path().split('/')[-1].split('.')[0]
-
 # function to extract the basename without extension
 get_base = func(f)
   name = f.basename()      # "a.in"
@@ -96,6 +93,7 @@ foreach pair : in_map
 endforeach
 
 
+# invoke acacia on each file
 foreach triple : triples
     inputs = triple[0]
     outputs = triple[1]
