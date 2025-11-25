@@ -29,20 +29,83 @@ out_files = arggen_output.process(files(
     'b.part'
 ))
 
+# get all LTL files
 ltl_files = files(
     'a.ltl',
     'b.ltl'
 )
 
-# TODO: call acacia
-# TODO: do a simple call to 'echo' of some sorts, to check that everything is in order
 
-# TODO: instead, we should get triples using a map and basename
-foreach i : range(in_files.length())
-    inputs = in_files[i]
-    outputs = out_files[i]
-    ltl_formula = ltl_files[i]
+# Now, we merge these into triples, always ensuring that the filenames of the three
+#   files match. We do this to prevent complicated debugging in case something goes wrong.
+# Convert "path/to/a.input" to "a"
+#get_base = lambda f: f.full_path().split('/')[-1].split('.')[0]
 
+# function to extract the basename without extension
+get_base = func(f)
+  name = f.basename()      # "a.in"
+  parts = name.split('.')  # ["a", "in"]
+  parts[0]                 # "a"
+endfunc
+
+
+# retrieve the elements in the map. The map is a list of pairs.
+lookup = func(map, key)
+  result = []
+  foreach pair : map
+    if pair[0] == key
+      result += [pair[1]]
+    endif
+  endforeach
+  result
+endfunc
+
+
+# we now build maps that map the basenames to the paths
+in_map   = []
+out_map  = []
+file_map = []
+
+foreach f : in_files
+  in_map += [['@0@'.format(get_base(f)), f]]
+endforeach
+
+foreach f : out_files
+  out_map += [['@0@'.format(get_base(f)), f]]
+endforeach
+
+foreach f : ltl_files
+  file_map += [['@0@'.format(get_base(f)), f]]
+endforeach
+
+
+# build matched triples, error on mismatch
+triples = []
+foreach pair : in_map
+  base = pair[0]
+  in_file  = pair[1]
+
+  out_files  = lookup(out_map, base)
+  ltl_files = lookup(file_map, base)
+
+  if out_files.length() != 1 or ltl_files.length() != 1
+    error('Missing matching files for basename "@0@"'.format(base))
+  endif
+
+  triples += [[in_file, out_files[0], ltl_files[0]]]
+endforeach
+
+
+foreach triple : triples
+    inputs = triple[0]
+    outputs = triple[1]
+    ltl_formula = triple[2]
+
+    # TODO: do a simple call to 'echo' of some sorts, to check that everything is in order
+    message('Matched: @0@, @1@, @2@'.format(triple[0].basename(), triple[1].basename(), triple[2].basename()))
+    # TODO: make test messages that indicate what we are testing
+
+    # TODO: call acacia
     test(
         tester,
         args : [  # TODO
