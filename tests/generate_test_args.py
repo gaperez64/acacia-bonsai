@@ -23,6 +23,7 @@ def main():
 
     ltl_files = sorted(directory.glob("*.ltl"))
     part_files = sorted(directory.glob("*.part"))
+    basenames = []
 
     # we are going to match all files pairwise and feed the contents to Acacia, so the files need to correspond
     #   when they are traversed in sorted order.
@@ -30,6 +31,7 @@ def main():
         assert ltl_file.stem == part_file.stem, \
             ("Error: all files in the directory need to pair-wise have the name basename. "
              f"Instead got '{ltl_file}' and '{part_file}'")
+        basenames.append(ltl_file.stem)
 
     ltl_formulas = []
     inputs = []
@@ -55,9 +57,16 @@ def main():
                 else:
                     raise Exception(f"Error: invalid line '{line}'.")
 
-    for circ_in, circ_out, ltl_formula in zip(inputs, outputs, ltl_formulas):
-        # NOTE: some values contain spaces!
-        print(f"-i \"{circ_in}\" -o \"{circ_out}\" -f \"{ltl_formula}\"")
+    for circ_in, circ_out, ltl_formula, basename in zip(inputs, outputs, ltl_formulas, basenames):
+        # NOTE: some values contain spaces. There are also ampersands, exclamation marks and other
+        #   special characters. Semicolons should not be present
+        # print(f"-i \"{circ_in}\" -o \"{circ_out}\" -f \"{ltl_formula}\"")
+        assert ";" not in circ_in
+        assert ";" not in circ_out
+        assert ";" not in ltl_formula
+        assert ";" not in basename
+
+        print(";".join([circ_in, circ_out, ltl_formula, basename]))
 
 
 if __name__ == "__main__":

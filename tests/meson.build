@@ -10,23 +10,29 @@ get_args_cmd = run_command(
     'ltl/realizable/'
 )
 
-# TODO: get errors as well.
+# TODO: get test parser errors as well.
 args = get_args_cmd.stdout().strip().split('\n')
 message('\tGot arguments', args)
-
-
-tester = ab_exe
 
 foreach arg_values: args
     message('Executing realizability tests.')
     message('\tArgs: "', arg_values, '"')
 
+    arg_values = arg_values.split(';')
+    input_val = arg_values[0]
+    output_val = arg_values[1]
+    ltl_val = arg_values[2]
+    test_name = arg_values[3]
+
     test(
-        'real_test',
-        tester,
+        test_name,
+        ab_exe,
         args : [
-            arg_values
+            '-i', input_val,
+            '-o', output_val,
+            '-f', ltl_val,
         ],
-        suite : 'check_real_all'
+        suite : 'check_real_all',
+        timeout: 2
     )
 endforeach
