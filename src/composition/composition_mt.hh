@@ -376,6 +376,7 @@ int composition_mt::epilogue (std::string synth_fname, std::string winreg_fname)
   }
 
   // call synthesis if needed
+  // TODO remove
   if ((r.safe != nullptr) and (not synth_fname.empty () or not winreg_fname.empty ())) {
     r.set_globals ();
     auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
