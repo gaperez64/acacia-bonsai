@@ -43,7 +43,6 @@ class composition_mt {
   void enqueue (job_ptr p); // add a new job to the queue
   job_ptr dequeue (); // take a job from the pending jobs queue
 
-  void add_invariant (bdd inv); // add a new invariant
   void finish_invariant (); // turns the invariant into a solved 2-state automaton, not used right now because the ios-precomputer uses the invariant
   void solve_game (safety_game& game); // use the k-bounded safety aut to solve a game
   int epilogue (); // look at the final result and return whether it was realizable
@@ -227,11 +226,6 @@ void composition_mt::add_result (safety_game& r) {
 
     stored_result = nullptr;
   }
-}
-
-void composition_mt::add_invariant (bdd inv) {
-  invariant &= inv;
-  if (invariant == bddfalse) losing = true;
 }
 
 void composition_mt::finish_invariant() {
