@@ -52,8 +52,6 @@ using namespace std::literals;
 
 static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
-static std::string synth_fname;
-static std::string winreg_fname;
 static std::vector<int> init_state;
 
 
@@ -97,7 +95,6 @@ void process_args_(const arg_parse_result& arg_vals) {
     output_aps.push_back (output);
   }
 
-  synth_fname = arg_vals.synth_fname;
   opt_K = arg_vals.opt_kmax;
   opt_Kmin = arg_vals.opt_kstart;
   opt_Kinc = arg_vals.opt_kinc;
@@ -158,9 +155,6 @@ int main (int argc, char **argv) {
 
     process_args_(arg_values);
 
-    // TODO: I commented this out since we now pass a single formula
-    // check_no_formula ();
-
     // Adjust the value of K
     // TODO: moved this upwards. By afterwards adjusting the KMIN global variable, this influenced the behaviour of various async code.
     if (opt_Kmin == -1u)
@@ -174,7 +168,7 @@ int main (int argc, char **argv) {
     // not measured in our timings.
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
-    ltl_processor processor (trans, input_aps, output_aps, dict, synth_fname, winreg_fname, opt_K,
+    ltl_processor processor (trans, input_aps, output_aps, dict, opt_K,
       opt_Kmin, opt_Kinc, init_state, arg_values.formula);
 
     // Diagnose unused -x options

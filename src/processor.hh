@@ -40,8 +40,6 @@ class ltl_processor final {
     std::vector<std::string> input_aps_;
     std::vector<std::string> output_aps_;
     spot::bdd_dict_ptr dict;
-    std::string synth_fname_;
-    std::string winreg_fname_;
     unsigned opt_K_;
     unsigned opt_Kmin_;
     unsigned opt_Kinc_;
@@ -54,15 +52,13 @@ class ltl_processor final {
                    std::vector<std::string> input_aps_,
                    std::vector<std::string> output_aps_,
                    spot::bdd_dict_ptr dict_,
-                   std::string synth_fname_,
-                   std::string winreg_fname_,
                    unsigned opt_K_,
                    unsigned opt_Kmin_,
                    unsigned opt_Kinc_,
                    std::vector<int> init_state_,
                    std::string formula)
       : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_), dict (dict_),
-        synth_fname_(synth_fname_), winreg_fname_(winreg_fname_), opt_K_(opt_K_), opt_Kmin_(opt_Kmin_),
+        opt_K_(opt_K_), opt_Kmin_(opt_Kmin_),
         opt_Kinc_(opt_Kinc_), init_state_(init_state_), formula_(formula)
     {}
 
@@ -82,10 +78,10 @@ class ltl_processor final {
         all_outputs &= bdd_ithvar (v);
       }
 
-      composition_mt composer (opt_K_, opt_Kmin_, opt_Kinc_, dict, trans_, all_inputs, all_outputs, input_aps_, output_aps_,
-                               init_state_);
+      composition_mt composer (opt_K_, opt_Kmin_, opt_Kinc_, dict, trans_, all_inputs, all_outputs, input_aps_,
+                              output_aps_, init_state_, std::move(formula));
 
-      return composer.run_one (formula, synth_fname_, winreg_fname_);
+      return composer.run_one ();
     }
 
     ~ltl_processor () {

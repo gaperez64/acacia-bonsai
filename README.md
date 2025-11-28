@@ -53,7 +53,7 @@ $ ./self-benchmark.sh -c best -B
   [...]
 $ cd build_best
 $ src/acacia-bonsai --help
-$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' --ins req --outs grant
+$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 

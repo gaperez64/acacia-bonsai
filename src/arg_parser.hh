@@ -15,7 +15,6 @@ struct arg_parse_result {
   std::vector<int> init_state;
   std::vector<std::string> inputs;
   std::vector<std::string> outputs;
-  std::string synth_fname;
   unsigned int opt_kstart = DEFAULT_KMIN;
   unsigned int opt_kmax = DEFAULT_K;
   unsigned int opt_kinc = DEFAULT_KINC;
