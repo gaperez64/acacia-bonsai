@@ -31,6 +31,7 @@ foreach arg_values: args
             '-i', input_val,
             '-o', output_val,
             '-f', ltl_val,
+            '-K', '25'
         ],
         suite : 'check_real_all',
         timeout: 2
