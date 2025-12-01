@@ -3,7 +3,7 @@
 message('Setting up realisability tests.')
 python = find_program('python3')
 
-get_args_cmd = run_command(
+get_real_args_cmd = run_command(
     python,
     files('generate_test_args.py'),
     '--directory',
@@ -11,18 +11,17 @@ get_args_cmd = run_command(
     check: true  # if the Python script has a non-zero exit code, this will cause meson to error.
 )
 
-args = get_args_cmd.stdout().strip().split('\n')
-message('\tGot arguments', args)
+real_args = get_real_args_cmd.stdout().strip().split('\n')
 
-foreach arg_values: args
-    message('Executing realizability tests.')
-    message('\tArgs: "', arg_values, '"')
+message('Registering realizability tests.')
+foreach real_arg_values: real_args
+#    message('\tArgs: "', real_arg_values, '"')
 
-    arg_values = arg_values.split(';')
-    input_val = arg_values[0]
-    output_val = arg_values[1]
-    ltl_val = arg_values[2]
-    test_name = arg_values[3]
+    real_arg_values = real_arg_values.split(';')
+    input_val = real_arg_values[0]
+    output_val = real_arg_values[1]
+    ltl_val = real_arg_values[2]
+    test_name = real_arg_values[3]
 
     test(
         test_name,
@@ -35,5 +34,41 @@ foreach arg_values: args
         ],
         suite : 'check_real_all',
         timeout: 2
+    )
+endforeach
+
+message('Setting up unrealisability tests.')
+get_unreal_args_cmd = run_command(
+    python,
+    files('generate_test_args.py'),
+    '--directory',
+    'ltl/unrealizable/',
+    check: true  # if the Python script has a non-zero exit code, this will cause meson to error.
+)
+
+unreal_args = get_unreal_args_cmd.stdout().strip().split('\n')
+
+message('Registering realizability tests.')
+foreach unreal_arg_values: unreal_args
+#    message('\tArgs: "', real_arg_values, '"')
+
+    unreal_arg_values = unreal_arg_values.split(';')
+    input_val = unreal_arg_values[0]
+    output_val = unreal_arg_values[1]
+    ltl_val = unreal_arg_values[2]
+    test_name = unreal_arg_values[3]
+
+    test(
+        test_name,
+        ab_exe,
+        args : [
+            '-i', input_val,
+            '-o', output_val,
+            '-f', ltl_val,
+            '-K', '25'
+        ],
+        suite : 'check_unreal_all',
+        timeout: 2,
+        should_fail: true
     )
 endforeach
