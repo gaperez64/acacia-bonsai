@@ -7,10 +7,10 @@ get_args_cmd = run_command(
     python,
     files('generate_test_args.py'),
     '--directory',
-    'ltl/realizable/'
+    'ltl/realizable/',
+    check: true  # if the Python script has a non-zero exit code, this will cause meson to error.
 )
 
-# TODO: get test parser errors as well.
 args = get_args_cmd.stdout().strip().split('\n')
 message('\tGot arguments', args)
 
