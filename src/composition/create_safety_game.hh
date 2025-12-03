@@ -1,7 +1,12 @@
 #pragma once
 
+#include <spot/twaalgos/hoa.hh>
+
 #include "types.hh"
 #include "boolean_states/forward_saturation.hh"
+#include <spot/twaalgos/translate.hh>
+
+#include "aut_preprocessors/no_preprocessing.hh"
 
 
 // downset type that does not depend on the exact automaton

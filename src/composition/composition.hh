@@ -5,6 +5,7 @@
 #pragma once
 
 #include "types.hh"
+#include "create_safety_game.hh"
 
 // spot::purge_unreachable_states calls the function set_rename2 which stores the vector we need in a global variable for further use
 std::vector<unsigned int> rename2;
