@@ -24,7 +24,7 @@
 #include <utils/cache.hh>
 
 #include "configuration.hh"
-#include "composition/composition_mt.hh"
+// #include "solver_invoker/composition_mt.hh"
 #include "processor.hh"
 
 #include <spot/misc/bddlt.hh>
@@ -45,6 +45,7 @@
 #include <spot/twaalgos/split.hh>
 #include <spot/twaalgos/toparity.hh>
 #include <spot/twaalgos/hoa.hh>
+#include <spot/misc/optionmap.hh>
 
 #define debug_(A...) do { if(utils::verbose > 0) { std::cout << A << std::endl; } } while (0)
 

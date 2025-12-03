@@ -5,10 +5,13 @@
 #include <string>
 
 #include <spot/twaalgos/translate.hh>
+#include <spot/tl/formula.hh>
+#include <spot/tl/parse.hh>
+
 
 #include "error_msg.hh"
-#include "composition/create_safety_game.hh"
-#include "composition/epilogue.hh"
+#include "solver_invoker/create_safety_game.hh"
+#include "solver_invoker/epilogue.hh"
 
 
 inline spot::parsed_formula parse_formula(const std::string& s)
