@@ -160,7 +160,7 @@ int main (int argc, char **argv) {
     if (opt_Kmin == -1u)
       opt_Kmin = opt_K;
     if (opt_Kmin > opt_K or (opt_Kmin < opt_K and opt_Kinc == 0))
-      error (3, 0, "Incompatible values for K, Kmin, and Kinc.");
+      error (EXIT_CODE_ERROR, 0, "Incompatible values for K, Kmin, and Kinc.");
     if (opt_Kmin == 0)
       opt_Kmin = opt_K;
 
@@ -184,17 +184,21 @@ int main (int argc, char **argv) {
         std::cout << "UNKNOWN\n";
         break;
       default:
-        error(3, 0, "Unknown result code: '%d'", res);
+        error(EXIT_CODE_ERROR, 0, "Unknown result code: '%d'", res);
         break;
     }
 
-    exit(res ? 0 : 3);
+    if (arg_values.invert_exit_code) {
+      exit(res ? EXIT_CODE_UNKNOWN : EXIT_CODE_REAL);
+    } else {
+      exit(res ? EXIT_CODE_REAL : EXIT_CODE_UNKNOWN);
+    }
   }
   catch (const std::exception& e)
   {
-    error(2, 0, "%s", e.what());
+    error(EXIT_CODE_ERROR, 0, "%s", e.what());
   }
   catch (...) {
-    error(2, 0, "Unknown exception");
+    error(EXIT_CODE_ERROR, 0, "Unknown exception");
   }
 }

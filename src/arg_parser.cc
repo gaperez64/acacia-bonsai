@@ -71,6 +71,8 @@ arg_parse_result arg_parser(int argc, char **argv) {
             case 'v':
                 retval.verbose_level++;
                 break;
+            case '!':
+                retval.invert_exit_code = true;
             default:
                 show_help(argv[0]);
                 exit(1);
@@ -110,11 +112,11 @@ namespace {
                   << "  -K VAL            final value of K, or unique value if Kmin is not specified\n"
                   << "  -M VAL            starting value of K; Kinc MUST be set when using this option\n"
                   << "  -v                verbose mode, can be repeated for more verbosity\n"
+                  << "  -!                invert the exit code: " << EXIT_CODE_REAL << " for UNKNOWN and " << EXIT_CODE_UNKNOWN << " for REALIZABLE"
                   << "Exit status:\n"
-                  << "\t0   if the input problem is realizable\n"
-                  << "\t1   if the input problem is not realizable\n"
-                  << "\t2   if this could not be decided\n"
-                  << "\t3   if any error has been reported" << '\n'
+                  << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
+                  << "\t" << EXIT_CODE_UNKNOWN << "1   if this could not be decided\n"
+                  << "\t" << EXIT_CODE_ERROR << "2   if any error has been reported" << '\n'
                   << "Version: " << VERSION << '\n';
     }
 

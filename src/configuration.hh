@@ -2,6 +2,10 @@
 
 #define VERSION 1.8
 
+#define EXIT_CODE_REAL 0
+#define EXIT_CODE_UNKNOWN 1
+#define EXIT_CODE_ERROR 2
+
 #include "utils/todo.hh"
 
 #ifndef DEFAULT_K

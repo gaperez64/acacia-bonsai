@@ -19,6 +19,7 @@ struct arg_parse_result {
   unsigned int opt_kmax = DEFAULT_K;
   unsigned int opt_kinc = DEFAULT_KINC;
   unsigned int verbose_level = 0;
+  bool invert_exit_code = false;
 };
 
 /**
