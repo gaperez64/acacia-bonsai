@@ -9,13 +9,13 @@
 #include "utils/todo.hh"
 
 #ifndef DEFAULT_K
-# define DEFAULT_K 11
+# define DEFAULT_K 99
 #endif
 #ifndef DEFAULT_KMIN
-# define DEFAULT_KMIN -1u
+# define DEFAULT_KMIN 11
 #endif
 #ifndef DEFAULT_KINC
-# define DEFAULT_KINC 0
+# define DEFAULT_KINC 5
 #endif
 
 
