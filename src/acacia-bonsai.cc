@@ -168,13 +168,18 @@ int main (int argc, char **argv) {
     // not measured in our timings.
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
-    ltl_processor processor (trans, input_aps, output_aps, dict, opt_K,
+
+
+    // ltl_processor processor (trans, input_aps, output_aps, dict, opt_K,
+      // opt_Kmin, opt_Kinc, init_state, arg_values.formula);
+    // const int res = processor.run ();
+
+
+    const int res = run_ltl(trans, input_aps, output_aps, dict, opt_K,
       opt_Kmin, opt_Kinc, init_state, arg_values.formula);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();
-
-    const int res = processor.run ();
 
     switch (res) {
       case 1:
