@@ -6,8 +6,9 @@
 
 #include <spot/twaalgos/translate.hh>
 
-#include "composition/composition_mt.hh"
 #include "error_msg.hh"
+#include "composition/create_safety_game.hh"
+#include "composition/epilogue.hh"
 
 
 inline spot::parsed_formula parse_formula(const std::string& s)
@@ -55,12 +56,10 @@ inline int run_ltl(spot::translator &trans,
     all_outputs &= bdd_ithvar (v);
   }
 
-  composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict, trans, all_inputs, all_outputs, input_aps,
-                          output_aps, std::move(init_state), std::move(spot_formula));
-
-  const int retval = composer.run_one ();
+  safety_game game = prepare_formula(spot_formula, trans, all_inputs, all_outputs, opt_K, opt_Kmin);
+  int res = epilogue(game, opt_K, opt_Kmin, opt_Kinc, all_inputs, all_outputs, std::move(init_state), bddtrue);
 
   dict->unregister_all_my_variables (0);
 
-  return retval;
+  return res;
 }
