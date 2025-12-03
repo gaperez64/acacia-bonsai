@@ -60,6 +60,14 @@ REALIZABLE
 The `-c` option selects a configuration and the `-B` option deactivates actual
 benchmarking, so that only compilation is done.
 
+# Documentation
+
+This project comes with a doxygen configuration file. Execute the following command to generate
+documentation:
+```
+doxygen Doxyfile
+```
+
 # Citing
 
 If you use this tool for your academic work, please make sure to cite the
