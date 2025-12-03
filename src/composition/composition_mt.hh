@@ -144,35 +144,35 @@ void job_formula::set_invariant (bdd) {
 
 
 // detects whether a Büchi automaton recognizes an invariant, i.e. G (booleanfunction)
-bool is_invariant (spot::twa_graph_ptr aut, bdd& condition) {
-  if (aut->num_states () != 2) return false;
-  unsigned init = aut->get_init_state_number ();
-  unsigned other = 1-init;
-  if (aut->state_is_accepting (init)) return false;
-  if (!aut->state_is_accepting (other)) return false;
-
-  bdd condition_neg;
-
-  int edges = 0;
-
-  for(auto& edge: aut->edges ()) {
-    if ((edge.src == init) && (edge.dst == init)) {
-      condition = edge.cond;
-      edges |= 1;
-    }
-    else if ((edge.src == init) && (edge.dst == other)) {
-      condition_neg = edge.cond;
-      edges |= 2;
-    }
-    else if ((edge.src == other) && (edge.dst == other)) {
-      if (edge.cond != bddtrue) return false;
-      edges |= 4;
-    }
-    else return false;
-  }
-
-  return ((edges == 7) && (condition == !condition_neg));
-}
+// bool is_invariant (spot::twa_graph_ptr aut, bdd& condition) {
+//   if (aut->num_states () != 2) return false;
+//   unsigned init = aut->get_init_state_number ();
+//   unsigned other = 1-init;
+//   if (aut->state_is_accepting (init)) return false;
+//   if (!aut->state_is_accepting (other)) return false;
+//
+//   bdd condition_neg;
+//
+//   int edges = 0;
+//
+//   for(auto& edge: aut->edges ()) {
+//     if ((edge.src == init) && (edge.dst == init)) {
+//       condition = edge.cond;
+//       edges |= 1;
+//     }
+//     else if ((edge.src == init) && (edge.dst == other)) {
+//       condition_neg = edge.cond;
+//       edges |= 2;
+//     }
+//     else if ((edge.src == other) && (edge.dst == other)) {
+//       if (edge.cond != bddtrue) return false;
+//       edges |= 4;
+//     }
+//     else return false;
+//   }
+//
+//   return ((edges == 7) && (condition == !condition_neg));
+// }
 
 
 
