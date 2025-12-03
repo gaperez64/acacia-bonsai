@@ -34,14 +34,8 @@ class composition_mt {
 
   std::vector<int> init_state;
 
-
-  spot::formula bdd_to_formula (bdd f) const; // for debugging
-
-  // void solve_game (safety_game& game); // use the k-bounded safety aut to solve a game
   int epilogue (); // look at the final result and return whether it was realizable
 
-  using aut_t = decltype (trans_.run (spot::formula::ff ()));
-  aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs);
 
   public:
   composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc,
@@ -55,10 +49,6 @@ class composition_mt {
 
   int run_one (); // solve only one formula, with no subprocesses
 };
-
-spot::formula composition_mt::bdd_to_formula (bdd f) const {
-  return spot::bdd_to_formula (f, dict);
-}
 
 
 
@@ -96,52 +86,7 @@ int composition_mt::epilogue () {
 
 // TODO: rename to "check_is_realisable")
 int composition_mt::run_one () {
-  // safety_game game = prepare_formula (formula_);
   safety_game game = prepare_formula(formula_, trans_, all_inputs, all_outputs, opt_K, opt_Kmin);
   stored_result = std::make_shared<safety_game> (game);
-  // add_result (game);
   return epilogue ();
 }
-
-////////////////
-
-
-
-// Changes q -> <i', o'> -> q' with saved o to
-// q -> <i', o> -> {q' saved o}
-composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t& aut, bdd all_inputs, bdd all_outputs) {
-  auto ret = spot::make_twa_graph (aut->get_dict ());
-  ret->copy_acceptance_of (aut);
-  ret->copy_ap_of (aut);
-  ret->prop_copy (aut, spot::twa::prop_set::all());
-  ret->prop_universal (spot::trival::maybe ());
-
-  static auto cache = utils::make_cache<unsigned> (0u, 0u);
-  std::stack<std::pair<unsigned, bdd>> to_treat;
-  to_treat.push ({ aut->get_init_state_number (), bddtrue });
-  cache (ret->new_state (), aut->get_init_state_number (), bddtrue.id ());
-  while (not to_treat.empty ()) {
-    auto [state, saved_o]  = to_treat.top ();
-    to_treat.pop ();
-    auto ret_state = *cache.get (state, saved_o.id ());
-    for (auto& e : aut->out (state)) {
-      for (auto&& one_input_bdd : minterms_of (e.cond, all_inputs)) {
-        // Pick one satisfying assignment where outputs all have values
-        auto nxt_bdd = bdd_exist (e.cond & one_input_bdd, all_inputs);
-        auto cached = cache.get (e.dst, nxt_bdd.id ());
-        unsigned nxt_state;
-        if (cached)
-          nxt_state = *cached;
-        else {
-          nxt_state = ret->new_state ();
-          cache (nxt_state, e.dst, nxt_bdd.id ());
-          to_treat.push ({ e.dst, nxt_bdd });
-        }
-        ret->new_edge (ret_state, nxt_state, saved_o & one_input_bdd, e.acc);
-      }
-    }
-  }
-
-  return ret;
-}
-
