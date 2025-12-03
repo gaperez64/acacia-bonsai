@@ -16,17 +16,9 @@
 #include "create_safety_game.hh"
 
 
-class job_solve;
-
-using job_ptr = std::shared_ptr<job_solve>;
-
-
 class composition_mt {
   private:
-  // TODO: this will become a shared pointer, fixed in the constructor
-  std::queue<job_ptr> pending_jobs; // all currently unfinished jobs no worker is working on yet
   std::shared_ptr<safety_game> stored_result; // room for temporary result: if there are 2, merge them
-  bool losing = false; // whether the game is already found to be losing (early abort)
 
   bdd invariant = bddtrue;
 
@@ -44,18 +36,11 @@ class composition_mt {
 
   spot::formula bdd_to_formula (bdd f) const; // for debugging
 
-  // TODO: refactor away
-  void enqueue (job_ptr p); // add a new job to the queue
-  job_ptr dequeue (); // take a job from the pending jobs queue
-
   void solve_game (safety_game& game); // use the k-bounded safety aut to solve a game
   int epilogue (); // look at the final result and return whether it was realizable
-  // void be_child (int id); // does everything a child process has to do
-  void add_result (safety_game& r); // add a new result to the temporary, or add a merge if there is already one stored
 
   using aut_t = decltype (trans_.run (spot::formula::ff ()));
   aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs);
-  // safety_game prepare_formula (spot::formula f); // turn a formula into an automaton
 
   public:
   composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc,
@@ -65,83 +50,13 @@ class composition_mt {
     opt_K(opt_K), opt_Kmin(opt_Kmin), opt_Kinc(opt_Kinc), dict(dict),
     trans_(trans), all_inputs(all_inputs), all_outputs(all_outputs),
     input_aps_(input_aps_), output_aps_(output_aps_), init_state(init_state), formula_(std::move(formula)) {
-    // TODO: pass job ptr here
   }
 
   int run_one (); // solve only one formula, with no subprocesses
 };
 
-// solve the safety game, changing the downset to the actual safe region instead of
-// an overapproximation
-class job_solve {
-  public:
-  safety_game starting_point;
-  bdd invariant;
-
-  public:
-  explicit job_solve (safety_game& game);
-};
-
-
-//////////////////////////////////////////////////
-
-
-
-job_solve::job_solve (safety_game& game) {
-  starting_point = game;
-  invariant = bddtrue;
-}
-
-//////////////////////////////////////////////////
-
-
-
 spot::formula composition_mt::bdd_to_formula (bdd f) const {
   return spot::bdd_to_formula (f, dict);
-}
-
-void composition_mt::enqueue (job_ptr p) {
-  pending_jobs.push(p);
-}
-
-job_ptr composition_mt::dequeue () {
-  if (pending_jobs.empty ()) {
-    // done
-    return nullptr;
-  }
-  auto val = pending_jobs.front ();
-  pending_jobs.pop ();
-  return val;
-}
-
-void composition_mt::add_result (safety_game& r) {
-  if (!stored_result) {
-    stored_result = std::make_shared<safety_game> (r);
-  }
-  else {
-    // TODO: I think we can remove all of this. There should not yet be a result.
-    // merge the stored result, and the new result r
-    safety_game inputs[2];
-    inputs[0] = *stored_result;
-    inputs[1] = r;
-
-    assert (inputs[0].safe);
-    assert (inputs[1].safe);
-
-    verb_do (2, vout << "Merging " << *inputs[0].safe << " and " << *inputs[1].safe);
-
-    auto composer = composition ();
-    composer.merge_aut (inputs[0], inputs[1]);
-    inputs[0].safe = std::make_shared<GenericDownset> (composer.merge_saferegions (*inputs[0].safe, *inputs[1].safe));
-    inputs[0].solved = false;
-
-    assert (inputs[0].safe);
-    verb_do (2, vout << "Merge res: " << *(inputs[0].safe));
-    verb_do (1, vout << "Done with merge, adding solve job\n");
-    enqueue (std::make_shared<job_solve> (inputs[0]));
-
-    stored_result = nullptr;
-  }
 }
 
 
@@ -209,31 +124,11 @@ void composition_mt::solve_game (safety_game& game) {
 
 int composition_mt::epilogue () {
   // TODO: this should either return true (real) or false (unknown). This will require some changes.
-  if (losing) {
-    utils::vout << "(part of) safety game is not winning!\n";
-    return 0;
-  }
 
   // check stored_result
   // TODO: this branch should be impossible?
   if (!stored_result) {
-    // can happen if there are only invariants -> make a dummy automaton with 1 non-accepting state
-    safety_game r;
-
-    spot::twa_graph_ptr aut = new_automaton (dict);
-    aut->new_states (1);
-    aut->set_init_state (0);
-    aut->new_edge (0, 0, bddtrue);
-
-    r.solved = true;
-
-    auto safe = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), 0);
-    safe[0] = 0;
-    r.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (safe));
-    r.aut = aut;
-    r.invariant = invariant;
-
-    stored_result = std::make_shared<safety_game> (r);
+    error(EXIT_CODE_ERROR, "Error: result should already exist!");
   }
 
   safety_game& r = *stored_result;
@@ -263,7 +158,8 @@ int composition_mt::epilogue () {
 int composition_mt::run_one () {
   // safety_game game = prepare_formula (formula_);
   safety_game game = prepare_formula(formula_, trans_, all_inputs, all_outputs, opt_K, opt_Kmin);
-  add_result (game);
+  stored_result = std::make_shared<safety_game> (game);
+  // add_result (game);
   return epilogue ();
 }
 
