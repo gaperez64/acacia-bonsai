@@ -65,10 +65,11 @@ foreach unreal_arg_values: unreal_args
             '-i', input_val,
             '-o', output_val,
             '-f', ltl_val,
-            '-K', '25'
+            '-K', '25',
+            '-!'
         ],
         suite : 'check_unreal_all',
         timeout: 2,
-        should_fail: true
+#        should_fail: true
     )
 endforeach
