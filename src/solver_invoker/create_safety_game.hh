@@ -16,6 +16,7 @@ using GenericDownset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::
 // may also contain a downset which is either the safe region if solved == true, or some overestimation if solved == false
 // if this contains no safe region (safe == nullptr), then the game was solved and found to be losing for the controller
 // finally it also includes the invariant that was used to solve the game
+// TODO: this needs to be cleaned up made into a proper class.
 struct safety_game {
   spot::twa_graph_ptr aut;
   size_t bool_threshold = 0;
