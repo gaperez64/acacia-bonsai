@@ -4,7 +4,8 @@ project ('Acacia Bonsai', ['c', 'cpp'],
 
 extra_args = ['-ftrack-macro-expansion=0',
               '-fno-diagnostics-show-caret',
-              '-fconcepts-diagnostics-depth=2']
+              '-fconcepts-diagnostics-depth=2',
+              '-Wunused-function']
 
 add_global_arguments (extra_args, language: 'cpp')
 
