@@ -7,11 +7,13 @@
 #include "composition.hh"
 #include <queue>
 #include <fcntl.h>
-#include <thread>
 #include <spot/twaalgos/translate.hh>
-#include "pipes.hh"
+#include <cassert>
+#include <sstream>
+#include <spot/tl/parse.hh>
 #include "aut_preprocessors.hh"
 #include "k-bounded_safety_aut.hh"
+#include "create_safety_game.hh"
 
 
 class job_solve;
@@ -53,7 +55,7 @@ class composition_mt {
 
   using aut_t = decltype (trans_.run (spot::formula::ff ()));
   aut_t push_outputs (const aut_t& aut, bdd all_inputs, bdd all_outputs);
-  safety_game prepare_formula (spot::formula f); // turn a formula into an automaton
+  // safety_game prepare_formula (spot::formula f); // turn a formula into an automaton
 
   public:
   composition_mt (unsigned opt_K, unsigned opt_Kmin, unsigned opt_Kinc,
@@ -253,27 +255,14 @@ int composition_mt::epilogue () {
     if (not_fully_solved) verb_do (1, vout << "Solved but not with the right invariant -> extra solve\n");
     solve_game (r);
   }
-
-  // call synthesis if needed
-  // TODO remove
-  // if ((r.safe != nullptr) and (not synth_fname.empty () or not winreg_fname.empty ())) {
-  //   r.set_globals ();
-  //   auto skn = K_BOUNDED_SAFETY_AUT_IMPL<GenericDownset>
-  //     (r.aut, opt_Kmin, opt_K, opt_Kinc, all_inputs, all_outputs);
-  //   if (!winreg_fname.empty ())
-  //     skn.winregion (*r.safe, winreg_fname, invariant, init_state);
-  //   if (!synth_fname.empty ())
-  //     skn.synthesis (*r.safe, synth_fname, invariant, init_state);
-  // }
-
   // if there is no safe region: return 0 (not winning)
   return r.safe != nullptr;
 }
 
 // TODO: rename to "check_is_realisable")
 int composition_mt::run_one () {
-
-  safety_game game = prepare_formula (formula_);
+  // safety_game game = prepare_formula (formula_);
+  safety_game game = prepare_formula(formula_, trans_, all_inputs, all_outputs, opt_K, opt_Kmin);
   add_result (game);
   return epilogue ();
 }
@@ -320,106 +309,3 @@ composition_mt::aut_t composition_mt::push_outputs (const composition_mt::aut_t&
   return ret;
 }
 
-safety_game composition_mt::prepare_formula (spot::formula f) {
-  // Note: this function is only run once with unrealizability as there is no composition -> swapping the inputs/outputs only happens once
-
-  spot::process_timer timer;
-  timer.start ();
-
-  spot::stopwatch sw, sw_nospot;
-  bool want_time = true; // Hardcoded
-
-  // To Universal co-Büchi Automaton
-  trans_.set_type(spot::postprocessor::BA);
-  // "Desired characteristics": Small and state-based acceptance (implied by BA).
-  trans_.set_pref(spot::postprocessor::Small |
-                  //spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
-                  spot::postprocessor::SBAcc);
-
-  if (want_time) {
-    sw.start ();
-  }
-
-  f = spot::formula::Not (f);
-
-
-
-
-  verb_do (1, vout << "Formula: " << f << std::endl);
-
-  auto aut = trans_.run (&f);
-
-  if (want_time) {
-    double trans_time = sw.stop ();
-    verb_do (1, vout << "Translating formula done in "
-                << trans_time << " seconds\n");
-    verb_do (1, vout << "Automaton has " << aut->num_states ()
-                << " states and " << aut->num_sets () << " colors\n");
-  }
-
-
-
-  ////////////////////////////////////////////////////////////////////////
-  // Preprocess automaton
-
-  if (want_time) {
-    sw.start();
-    sw_nospot.start ();
-  }
-
-  auto aut_preprocessors_maker = AUT_PREPROCESSOR ();
-  // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
-  //  for the "no_preprocessing" implementation.
-  (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K)) ();
-  if (want_time) {
-    double merge_time = sw.stop();
-    verb_do (1, vout << "Preprocessing done in " << merge_time
-                << " seconds\nDPA has " << aut->num_states()
-                << " states\n");
-  }
-  verb_do (2, spot::print_hoa (utils::vout, aut, nullptr));
-
-  ////////////////////////////////////////////////////////////////////////
-  // Boolean states
-
-  if (want_time)
-    sw.start ();
-
-  auto boolean_states_maker = BOOLEAN_STATES ();
-  posets::vectors::bool_threshold = (boolean_states_maker.make (aut, opt_K)) ();
-
-  if (want_time) {
-    double boolean_states_time = sw.stop ();
-    verb_do (1, vout << "Computation of boolean states in " << boolean_states_time
-      /*          */ << "seconds , found " << posets::vectors::bool_threshold << " nonboolean states.\n");
-  }
-
-
-  ////////////////////////////////////////////////////////////////////////
-  // Build S^K_N game, solve it.
-
-  //if (want_time)
-  //  sw.start ();
-
-  safety_game ret;
-  ret.aut = aut;
-  ret.bool_threshold = posets::vectors::bool_threshold;
-  ret.solved = false;
-  ret.set_globals ();
-
-  auto all_k = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), opt_Kmin - 1);
-  for (size_t i = posets::vectors::bool_threshold; i < aut->num_states (); ++i)
-    all_k[i] = 0;
-  ret.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (all_k));
-
-
-  if (want_time) {
-    double solve_time = sw.stop ();
-    verb_do (1, vout << "Safety game created in " << solve_time << " seconds\n");
-    verb_do (1, vout << "Time disregarding Spot translation: " << sw_nospot.stop () << " seconds\n");
-  }
-
-  timer.stop ();
-
-  return ret;
-}
