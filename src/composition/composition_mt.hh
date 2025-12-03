@@ -72,9 +72,6 @@ class composition_mt {
 class job_base {
   public:
   virtual ~job_base () = default;
-
-  virtual void to_pipe(pipe_t&) = 0;
-  virtual void set_invariant(bdd) = 0;
 };
 
 // solve the safety game, changing the downset to the actual safe region instead of
@@ -87,23 +84,8 @@ class job_solve: public job_base {
   public:
   explicit job_solve (safety_game& game);
   ~job_solve () override = default;
-
-  void to_pipe(pipe_t&) override;
-  void set_invariant(bdd) override;
 };
 
-// turn a formula into an automaton with a starting all-k safe region
-class job_formula: public job_base {
-  public:
-  spot::formula f;
-
-  public:
-  explicit job_formula (spot::formula f);
-  ~job_formula () override = default;
-
-  void to_pipe(pipe_t&) override;
-  void set_invariant(bdd) override;
-};
 
 //////////////////////////////////////////////////
 
@@ -113,69 +95,6 @@ job_solve::job_solve (safety_game& game) {
   starting_point = game;
   invariant = bddtrue;
 }
-
-void job_solve::to_pipe (pipe_t& pipe) {
-  // send this job to a subprocess
-  pipe.write_obj<job_type> (j_solve);
-  // sends the invariant as well to be used when solving
-  pipe.write_bdd (invariant, starting_point.aut->get_dict ());
-  pipe.write_safety_game (starting_point);
-  verb_do (1, vout << "Solve job sent: wrote " << pipe.get_bytes_count () << " bytes to pipe\n");
-}
-
-void job_solve::set_invariant (bdd inv) {
-  invariant = inv;
-}
-
-
-job_formula::job_formula (spot::formula f): f(f) {
-
-}
-
-void job_formula::to_pipe (pipe_t& pipe) {
-  pipe.write_obj<job_type> (j_formula);
-  pipe.write_formula (f);
-  verb_do (1, vout << "Formula job sent: wrote " << pipe.get_bytes_count () << " bytes to pipe\n");
-}
-
-void job_formula::set_invariant (bdd) {
-  // doesn't do anything
-}
-
-
-// detects whether a Büchi automaton recognizes an invariant, i.e. G (booleanfunction)
-// bool is_invariant (spot::twa_graph_ptr aut, bdd& condition) {
-//   if (aut->num_states () != 2) return false;
-//   unsigned init = aut->get_init_state_number ();
-//   unsigned other = 1-init;
-//   if (aut->state_is_accepting (init)) return false;
-//   if (!aut->state_is_accepting (other)) return false;
-//
-//   bdd condition_neg;
-//
-//   int edges = 0;
-//
-//   for(auto& edge: aut->edges ()) {
-//     if ((edge.src == init) && (edge.dst == init)) {
-//       condition = edge.cond;
-//       edges |= 1;
-//     }
-//     else if ((edge.src == init) && (edge.dst == other)) {
-//       condition_neg = edge.cond;
-//       edges |= 2;
-//     }
-//     else if ((edge.src == other) && (edge.dst == other)) {
-//       if (edge.cond != bddtrue) return false;
-//       edges |= 4;
-//     }
-//     else return false;
-//   }
-//
-//   return ((edges == 7) && (condition == !condition_neg));
-// }
-
-
-
 
 //////////////////////////////////////////////////
 
