@@ -6,7 +6,7 @@
 #include "boolean_states/forward_saturation.hh"
 #include <spot/twaalgos/translate.hh>
 
-#include "aut_preprocessors/no_preprocessing.hh"
+#include "aut_preprocessors.hh"
 
 
 // downset type that does not depend on the exact automaton
