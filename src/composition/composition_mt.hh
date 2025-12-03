@@ -7,9 +7,10 @@
 #include "composition.hh"
 #include <queue>
 #include <fcntl.h>
-#include <thread>
 #include <spot/twaalgos/translate.hh>
-#include "pipes.hh"
+#include <cassert>
+#include <sstream>
+#include <spot/tl/parse.hh>
 #include "aut_preprocessors.hh"
 #include "k-bounded_safety_aut.hh"
 

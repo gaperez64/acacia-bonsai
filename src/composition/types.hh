@@ -99,21 +99,3 @@ spot::twa_graph_ptr new_automaton (spot::bdd_dict_ptr dict) {
 
   return aut;
 }
-
-// enum unreal_x_t {
-//   UNREAL_X_FORMULA = 'f',
-//   UNREAL_X_AUTOMATON = 'a',
-//   UNREAL_X_BOTH
-// };
-
-enum job_type {
-  j_solve,
-  j_formula,
-  j_done
-};
-
-enum result_type {
-  r_game,
-  r_invariant,
-  r_null
-};
