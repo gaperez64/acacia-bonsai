@@ -85,6 +85,11 @@ void terminate (int signum) {
  * @param arg_vals The parsed argument values passed by the user.
  */
 void process_args_(const arg_parse_result& arg_vals) {
+
+  if (arg_vals.formula.empty()) {
+    error(EXIT_CODE_ERROR, "Error: formula must be a non-empty string.");
+  }
+
   init_state = arg_vals.init_state;
 
   for (const auto & input : arg_vals.inputs) {
@@ -154,11 +159,10 @@ int main (int argc, char **argv) {
     process_args_(arg_values);
 
     // Adjust the value of K
-    // TODO: moved this upwards. By afterwards adjusting the KMIN global variable, this influenced the behaviour of various async code.
     if (opt_Kmin == -1u)
       opt_Kmin = opt_K;
     if (opt_Kmin > opt_K or (opt_Kmin < opt_K and opt_Kinc == 0))
-      error (EXIT_CODE_ERROR, 0, "Incompatible values for K, Kmin, and Kinc.");
+      error (EXIT_CODE_ERROR, "Incompatible values for K, Kmin, and Kinc.");
     if (opt_Kmin == 0)
       opt_Kmin = opt_K;
 
