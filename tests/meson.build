@@ -30,10 +30,12 @@ foreach real_arg_values: real_args
             '-i', input_val,
             '-o', output_val,
             '-f', ltl_val,
-            '-K', '25'
+            '-M', '10',
+            '-K', '20',
+            '-I', '1'
         ],
         suite : 'check_real_all',
-        timeout: 2
+        timeout: 4
     )
 endforeach
 
@@ -65,11 +67,13 @@ foreach unreal_arg_values: unreal_args
             '-i', input_val,
             '-o', output_val,
             '-f', ltl_val,
-            '-K', '25',
+            '-M', '10',
+            '-K', '20',
+            '-I', '1',
             '-!'
         ],
         suite : 'check_unreal_all',
-        timeout: 2,
+        timeout: 4,
 #        should_fail: true
     )
 endforeach

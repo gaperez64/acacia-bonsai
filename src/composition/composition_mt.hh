@@ -11,11 +11,12 @@
 #include <spot/twaalgos/translate.hh>
 #include "pipes.hh"
 #include "aut_preprocessors.hh"
+#include "k-bounded_safety_aut.hh"
 
 
-class job_base;
+class job_solve;
 
-using job_ptr = std::shared_ptr<job_base>;
+using job_ptr = std::shared_ptr<job_solve>;
 
 
 class composition_mt {
@@ -68,22 +69,15 @@ class composition_mt {
   int run_one (); // solve only one formula, with no subprocesses
 };
 
-// abstract base class for jobs
-class job_base {
-  public:
-  virtual ~job_base () = default;
-};
-
 // solve the safety game, changing the downset to the actual safe region instead of
 // an overapproximation
-class job_solve: public job_base {
+class job_solve {
   public:
   safety_game starting_point;
   bdd invariant;
 
   public:
   explicit job_solve (safety_game& game);
-  ~job_solve () override = default;
 };
 
 
@@ -278,6 +272,7 @@ int composition_mt::epilogue () {
 
 // TODO: rename to "check_is_realisable")
 int composition_mt::run_one () {
+
   safety_game game = prepare_formula (formula_);
   add_result (game);
   return epilogue ();
@@ -348,6 +343,8 @@ safety_game composition_mt::prepare_formula (spot::formula f) {
   f = spot::formula::Not (f);
 
 
+
+
   verb_do (1, vout << "Formula: " << f << std::endl);
 
   auto aut = trans_.run (&f);
@@ -359,6 +356,8 @@ safety_game composition_mt::prepare_formula (spot::formula f) {
     verb_do (1, vout << "Automaton has " << aut->num_states ()
                 << " states and " << aut->num_sets () << " colors\n");
   }
+
+
 
   ////////////////////////////////////////////////////////////////////////
   // Preprocess automaton
@@ -372,7 +371,6 @@ safety_game composition_mt::prepare_formula (spot::formula f) {
   // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
   //  for the "no_preprocessing" implementation.
   (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K)) ();
-
   if (want_time) {
     double merge_time = sw.stop();
     verb_do (1, vout << "Preprocessing done in " << merge_time
