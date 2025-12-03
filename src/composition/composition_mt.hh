@@ -40,10 +40,11 @@ class composition_mt {
 
 
   spot::formula bdd_to_formula (bdd f) const; // for debugging
+
+  // TODO: refactor away
   void enqueue (job_ptr p); // add a new job to the queue
   job_ptr dequeue (); // take a job from the pending jobs queue
 
-  void finish_invariant (); // turns the invariant into a solved 2-state automaton, not used right now because the ios-precomputer uses the invariant
   void solve_game (safety_game& game); // use the k-bounded safety aut to solve a game
   int epilogue (); // look at the final result and return whether it was realizable
   // void be_child (int id); // does everything a child process has to do
@@ -228,31 +229,6 @@ void composition_mt::add_result (safety_game& r) {
   }
 }
 
-void composition_mt::finish_invariant() {
-  // create 2-state solved automaton for all invariants found
-  if (invariant != bddtrue) {
-    safety_game invariant_aut;
-    invariant_aut.bool_threshold = 1;
-
-    spot::twa_graph_ptr aut = new_automaton (dict);
-    aut->new_states (2);
-    aut->set_init_state (1);
-    verb_do (1, vout << "Gathered invariants: adding invariant " << spot::bdd_to_formula (invariant, dict) << "\n");
-
-    aut->new_edge (1, 1, invariant);
-    aut->new_edge (1, 0, !invariant);
-    aut->new_acc_edge (0, 0, bddtrue);
-
-    invariant_aut.solved = true;
-
-    auto safe = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), 0);
-    safe[0] = -1;
-    invariant_aut.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (safe));
-    invariant_aut.aut = aut;
-
-    add_result (invariant_aut);
-  }
-}
 
 void composition_mt::solve_game (safety_game& game) {
   spot::stopwatch sw;
@@ -474,6 +450,8 @@ safety_game composition_mt::prepare_formula (spot::formula f) {
   }
 
   auto aut_preprocessors_maker = AUT_PREPROCESSOR ();
+  // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
+  //  for the "no_preprocessing" implementation.
   (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, opt_K)) ();
 
   if (want_time) {
