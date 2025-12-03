@@ -1,19 +1,17 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <string>
 
 #include <spot/twaalgos/translate.hh>
 
 #include "composition/composition_mt.hh"
+#include "error_msg.hh"
 
 
 inline spot::parsed_formula parse_formula(const std::string& s)
 {
-  // TODO: only do infix
-  // if (lbt_input)
-  //   return spot::parse_prefix_ltl(s);
-  // else
     return spot::parse_infix_psl
       (s, spot::default_environment::instance(), false, false);
 }
@@ -24,7 +22,7 @@ inline spot::formula process_ltl_string(const std::string& input)
 
     if (!pf.f || !pf.errors.empty())
     {
-      error(0, 0, "parse error:");
+      error(0, "parse error:");
       pf.format_errors(std::cerr);
       exit(1);
     }
@@ -33,58 +31,36 @@ inline spot::formula process_ltl_string(const std::string& input)
   }
 
 
-// TODO: remove this class
-class ltl_processor final {
-  private:
-    spot::translator &trans_;
-    std::vector<std::string> input_aps_;
-    std::vector<std::string> output_aps_;
-    spot::bdd_dict_ptr dict;
-    unsigned opt_K_;
-    unsigned opt_Kmin_;
-    unsigned opt_Kinc_;
-    std::vector<int> init_state_;
-    std::string formula_;
+inline int run_ltl(spot::translator &trans,
+                   std::vector<std::string> input_aps,
+                   std::vector<std::string> output_aps,
+                   spot::bdd_dict_ptr dict,
+                   unsigned opt_K,
+                   unsigned opt_Kmin,
+                   unsigned opt_Kinc,
+                   std::vector<int> init_state,
+                   std::string formula) {
+  spot::formula spot_formula = process_ltl_string(formula);
 
-  public:
+  // manually register inputs/outputs
+  bdd all_inputs = bddtrue;
+  bdd all_outputs = bddtrue;
 
-    ltl_processor (spot::translator &trans,
-                   std::vector<std::string> input_aps_,
-                   std::vector<std::string> output_aps_,
-                   spot::bdd_dict_ptr dict_,
-                   unsigned opt_K_,
-                   unsigned opt_Kmin_,
-                   unsigned opt_Kinc_,
-                   std::vector<int> init_state_,
-                   std::string formula)
-      : trans_ (trans), input_aps_ (input_aps_), output_aps_ (output_aps_), dict (dict_),
-        opt_K_(opt_K_), opt_Kmin_(opt_Kmin_),
-        opt_Kinc_(opt_Kinc_), init_state_(init_state_), formula_(formula)
-    {}
+  for(std::string ap: input_aps) {
+    unsigned const v = dict->register_proposition (spot::formula::ap (ap), 0);
+    all_inputs &= bdd_ithvar (v);
+  }
+  for(std::string ap: output_aps) {
+    unsigned const v = dict->register_proposition (spot::formula::ap (ap), 0);
+    all_outputs &= bdd_ithvar (v);
+  }
 
-    int run () {
-      spot::formula formula = process_ltl_string(formula_);
+  composition_mt composer (opt_K, opt_Kmin, opt_Kinc, dict, trans, all_inputs, all_outputs, input_aps,
+                          output_aps, std::move(init_state), std::move(spot_formula));
 
-      // manually register inputs/outputs
-      bdd all_inputs = bddtrue;
-      bdd all_outputs = bddtrue;
+  const int retval = composer.run_one ();
 
-      for(std::string ap: input_aps_) {
-        unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
-        all_inputs &= bdd_ithvar (v);
-      }
-      for(std::string ap: output_aps_) {
-        unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
-        all_outputs &= bdd_ithvar (v);
-      }
+  dict->unregister_all_my_variables (0);
 
-      composition_mt composer (opt_K_, opt_Kmin_, opt_Kinc_, dict, trans_, all_inputs, all_outputs, input_aps_,
-                              output_aps_, init_state_, std::move(formula));
-
-      return composer.run_one ();
-    }
-
-    ~ltl_processor () {
-      dict->unregister_all_my_variables (this);
-    }
-};
+  return retval;
+}
