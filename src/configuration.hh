@@ -1,6 +1,6 @@
 #pragma once
 
-#define VERSION 1.8
+#define VERSION 1.9  // Kasper + Guillermo determined this arbitrarily
 
 #define EXIT_CODE_REAL 0
 #define EXIT_CODE_UNKNOWN 1
@@ -85,7 +85,7 @@
 #endif
 
 #ifndef AUT_PREPROCESSOR
-# define AUT_PREPROCESSOR aut_preprocessors::surely_losing
+# define AUT_PREPROCESSOR aut_preprocessors::no_preprocessing
 #endif
 
 #ifndef BOOLEAN_STATES
