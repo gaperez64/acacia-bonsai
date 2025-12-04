@@ -21,6 +21,21 @@ This program depends on:
 Some of the tests also depend on:
 - Valgrind
 
+## Installing dependencies on macOS
+
+Note that on macOS the compilation has to happen via GCC. 
+GCC can be installed using Homebrew: `brew install gcc`. Once installed,
+meson needs to be told to use GCC instead of built-in Clang. This can be done
+using the meson-native file, or by setting the `CXX` and `CC` environment variables.
+
+Boost has to be compiled using GCC and installed in a way that meson can find Boost.
+It might be true that the only boost libraries used in this project are header only.
+In that case, Boost can be installed using Homebrew.
+
+Spot has to be manually compiled using GCC and installed.
+It is necessary to ensure that meson can find Spot using `pkgconfig`.
+This can be done, for example, by setting the `pkg_config_path` in a meson-native file.
+
 # Compiling, running, benchmarking
 
 To compile and run, use Meson:
