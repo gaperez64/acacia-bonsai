@@ -36,6 +36,10 @@ Spot has to be manually compiled using GCC and installed.
 It is necessary to ensure that meson can find Spot using `pkgconfig`.
 This can be done, for example, by setting the `pkg_config_path` in a meson-native file.
 
+## Installing dependencies on Ubuntu
+
+TODO: explain the trick currently used in the CI.
+
 # Compiling, running, benchmarking
 
 To compile and run, use Meson:
