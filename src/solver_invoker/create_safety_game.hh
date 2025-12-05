@@ -76,10 +76,30 @@ inline spot::twa_graph_ptr create_automaton(spot::formula f, spot::translator &t
 }
 
 
+inline void preprocess_standard(spot::twa_graph_ptr aut, bdd all_inputs, bdd all_outputs,
+  unsigned K) {
+  auto aut_preprocessors_maker = aut_preprocessors::standard ();
+  // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
+  //  for the "no_preprocessing" implementation.
+  (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, K)) ();
+}
+
+inline void preprocess_surely_losing(spot::twa_graph_ptr aut, bdd all_inputs, bdd all_outputs,
+  unsigned K) {
+  auto aut_preprocessors_maker = aut_preprocessors::surely_losing ();
+  // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
+  //  for the "no_preprocessing" implementation.
+  (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, K)) ();
+}
+
+
+
+// TODO: move to CTOR
 inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bdd all_inputs, bdd all_outputs,
   unsigned K, unsigned K_min) {
   // Note: this function is only run once with unrealizability as there is no composition -> swapping the inputs/outputs only happens once
 
+  // TODO: move outside
   spot::process_timer timer;
   timer.start ();
 
@@ -108,10 +128,15 @@ inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bd
     sw_nospot.start ();
   }
 
-  auto aut_preprocessors_maker = AUT_PREPROCESSOR ();
-  // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
-  //  for the "no_preprocessing" implementation.
-  (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, K)) ();
+  // TODO: move outside
+  // auto aut_preprocessors_maker = AUT_PREPROCESSOR ();
+  // // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
+  // //  for the "no_preprocessing" implementation.
+  // (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, K)) ();
+
+  preprocess_standard(aut, all_inputs, all_outputs, K);
+  // preprocess_surely_losing(aut, all_inputs, all_outputs, K);
+
   if (want_time) {
     double merge_time = sw.stop();
     verb_do (1, vout << "Preprocessing done in " << merge_time
@@ -123,9 +148,12 @@ inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bd
   ////////////////////////////////////////////////////////////////////////
   // Boolean states
 
+  // TODO: all this timer stuff will be moved to "acacia-bonsai" main function.
   if (want_time)
     sw.start ();
 
+  // only once, but need to choose
+  // TODO: make argument, move outside
   auto boolean_states_maker = BOOLEAN_STATES ();
   posets::vectors::bool_threshold = (boolean_states_maker.make (aut, K)) ();
 
@@ -142,6 +170,7 @@ inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bd
   //if (want_time)
   //  sw.start ();
 
+  // TODO: this will be the actual constructor (threshold, aut, K values)
   safety_game ret;
   ret.aut = aut;
   ret.bool_threshold = posets::vectors::bool_threshold;
