@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-#include "k-bounded_safety_aut.hh"
+#include "solver_invoker/k-bounded_safety_aut.hh"
 
 #include "arg_parser.hh"
 #include "error_msg.hh"
