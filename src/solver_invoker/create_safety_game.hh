@@ -76,23 +76,20 @@ inline spot::twa_graph_ptr create_automaton(spot::formula f, spot::translator &t
 }
 
 
-inline void preprocess_standard(spot::twa_graph_ptr aut, bdd all_inputs, bdd all_outputs,
-  unsigned K) {
-  auto aut_preprocessors_maker = aut_preprocessors::standard ();
-  // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
-  //  for the "no_preprocessing" implementation.
-  (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, K)) ();
+inline safety_game create_game(spot::twa_graph_ptr aut, size_t bool_threshold, unsigned K_min) {
+  safety_game ret;
+  ret.aut = aut;
+  ret.bool_threshold = posets::vectors::bool_threshold;
+  ret.solved = false;
+  ret.set_globals ();
+
+  auto all_k = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), K_min - 1);
+  for (size_t i = posets::vectors::bool_threshold; i < aut->num_states (); ++i)
+    all_k[i] = 0;
+  ret.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (all_k));
+
+  return ret;
 }
-
-inline void preprocess_surely_losing(spot::twa_graph_ptr aut, bdd all_inputs, bdd all_outputs,
-  unsigned K) {
-  auto aut_preprocessors_maker = aut_preprocessors::surely_losing ();
-  // NOTE: this warns about non-trivial types going into variadic args. This is only relevant
-  //  for the "no_preprocessing" implementation.
-  (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, K)) ();
-}
-
-
 
 // TODO: move to CTOR
 inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bdd all_inputs, bdd all_outputs,
@@ -134,8 +131,8 @@ inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bd
   // //  for the "no_preprocessing" implementation.
   // (aut_preprocessors_maker.make (aut, all_inputs, all_outputs, K)) ();
 
-  preprocess_standard(aut, all_inputs, all_outputs, K);
-  // preprocess_surely_losing(aut, all_inputs, all_outputs, K);
+  aut_preprocessors::standard::make (aut, all_inputs, all_outputs, K) ();
+  // aut_preprocessors::surely_losing::make (aut, all_inputs, all_outputs, K) ();
 
   if (want_time) {
     double merge_time = sw.stop();
@@ -167,20 +164,10 @@ inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bd
   ////////////////////////////////////////////////////////////////////////
   // Build S^K_N game, solve it.
 
-  //if (want_time)
-  //  sw.start ();
+  if (want_time)
+    sw.start ();
 
-  // TODO: this will be the actual constructor (threshold, aut, K values)
-  safety_game ret;
-  ret.aut = aut;
-  ret.bool_threshold = posets::vectors::bool_threshold;
-  ret.solved = false;
-  ret.set_globals ();
-
-  auto all_k = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), K_min - 1);
-  for (size_t i = posets::vectors::bool_threshold; i < aut->num_states (); ++i)
-    all_k[i] = 0;
-  ret.safe = std::make_shared<GenericDownset> (GenericDownset::value_type (all_k));
+  auto ret = create_game(aut, posets::vectors::bool_threshold, K_min);
 
 
   if (want_time) {
@@ -193,3 +180,7 @@ inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bd
 
   return ret;
 }
+
+
+
+

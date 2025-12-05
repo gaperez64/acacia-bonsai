@@ -38,7 +38,6 @@ inline int run_ltl(spot::translator &trans,
                    unsigned opt_Kinc,
                    std::vector<int> init_state,
                    std::string formula) {
-  spot::formula spot_formula = parse_ltl_string(formula);
 
   // manually register inputs/outputs
   bdd all_inputs = bddtrue;
@@ -53,7 +52,17 @@ inline int run_ltl(spot::translator &trans,
     all_outputs &= bdd_ithvar (v);
   }
 
-  safety_game game = prepare_formula(spot_formula, trans, all_inputs, all_outputs, opt_K, opt_Kmin);
+
+  spot::formula spot_formula = parse_ltl_string(formula);
+
+  auto aut = create_automaton(std::move(spot_formula), trans);
+  aut_preprocessors::standard::make (aut, all_inputs, all_outputs, opt_K) ();
+  // aut_preprocessors::surely_losing::make (aut, all_inputs, all_outputs, K) ();
+
+  posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, opt_K)) ();
+  // posets::vectors::bool_threshold = (boolean_states::no_boolean_states::make (aut, opt_K)) ();
+  safety_game game = create_game(aut, posets::vectors::bool_threshold, opt_Kmin);
+
   int res = solve_game (game, opt_K, opt_Kmin, opt_Kinc, all_inputs, all_outputs, std::move(init_state), bddtrue);
 
   dict->unregister_all_my_variables (0);
