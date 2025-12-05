@@ -17,34 +17,19 @@
 
 #include <posets/vectors.hh>
 #include <posets/downsets.hh>
-#include "utils/static_switch.hh"
-#include "boolean_states.hh"
 
 #include <utils/verbose.hh>
-#include <utils/cache.hh>
+// #include <utils/cache.hh>
 
 #include "configuration.hh"
-// #include "solver_invoker/composition_mt.hh"
 #include "solver/solver_invoker.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
 #include <spot/misc/timer.hh>
 #include <spot/misc/tmpfile.hh>
-#include <spot/tl/formula.hh>
-#include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
-#include <spot/twaalgos/degen.hh>
-#include <spot/twaalgos/determinize.hh>
-#include <spot/twaalgos/parity.hh>
-#include <spot/twaalgos/sbacc.hh>
-#include <spot/twaalgos/totgba.hh>
 #include <spot/twaalgos/translate.hh>
-#include <spot/twa/twagraph.hh>
-#include <spot/twaalgos/simulation.hh>
-#include <spot/twaalgos/split.hh>
-#include <spot/twaalgos/toparity.hh>
-#include <spot/twaalgos/hoa.hh>
 #include <spot/misc/optionmap.hh>
 
 #define debug_(A...) do { if(utils::verbose > 0) { std::cout << A << std::endl; } } while (0)
