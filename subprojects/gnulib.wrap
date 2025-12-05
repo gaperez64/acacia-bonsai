@@ -1,7 +1,0 @@
-[wrap-file]
-directory = gnulib
-
-[provide]
-dependency_names = gnulib
-gnulib = gnulib_dep
-

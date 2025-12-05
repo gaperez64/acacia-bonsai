@@ -1,20 +1,23 @@
 #pragma once
 
+#define VERSION 1.9  // Kasper + Guillermo determined this arbitrarily
+
+#define EXIT_CODE_REAL 0
+#define EXIT_CODE_UNKNOWN 1
+#define EXIT_CODE_ERROR 2
+
 #include "utils/todo.hh"
 
 #ifndef DEFAULT_K
-# define DEFAULT_K 11
+# define DEFAULT_K 99
 #endif
 #ifndef DEFAULT_KMIN
-# define DEFAULT_KMIN -1u
+# define DEFAULT_KMIN 11
 #endif
 #ifndef DEFAULT_KINC
-# define DEFAULT_KINC 0
+# define DEFAULT_KINC 5
 #endif
 
-#ifndef DEFAULT_UNREAL_X
-# define DEFAULT_UNREAL_X UNREAL_X_BOTH
-#endif
 
 #ifndef VECTOR_ELT_T
 # define VECTOR_ELT_T char
@@ -82,7 +85,7 @@
 #endif
 
 #ifndef AUT_PREPROCESSOR
-# define AUT_PREPROCESSOR aut_preprocessors::surely_losing
+# define AUT_PREPROCESSOR aut_preprocessors::no_preprocessing
 #endif
 
 #ifndef BOOLEAN_STATES

@@ -1,0 +1,41 @@
+BasedOnStyle: Google
+
+LineEnding: LF
+ColumnLimit: 99
+IndentAccessModifiers: true
+ConstructorInitializerIndentWidth: 2
+AccessModifierOffset: 2
+DerivePointerAlignment: false
+PointerAlignment: Left
+QualifierAlignment: Left
+SpaceBeforeParens: Always
+NamespaceIndentation: All
+RemoveBracesLLVM: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  BeforeElse: true
+  AfterClass: false
+  SplitEmptyRecord: false
+SpaceAfterCStyleCast: true
+AllowShortCompoundRequirementOnASingleLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+SpaceBeforeCpp11BracedList: true
+PackConstructorInitializers: CurrentLine
+IndentPPDirectives: AfterHash
+PPIndentWidth: 1
+FixNamespaceComments: false
+
+
+IncludeBlocks: Regroup
+
+IncludeCategories:
+  - Regex:           '^<posets/'
+    Priority:        3
+  - Regex:           '<[[:alnum:]./]+>'
+    Priority:        2
+  - Regex:           '.*'
+    Priority:        1
+    SortPriority:    0

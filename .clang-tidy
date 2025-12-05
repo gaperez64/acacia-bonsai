@@ -1,0 +1,53 @@
+# -*- yaml -*-
+--- 
+Checks: >
+  -*,
+  abseil-*,
+  misc-*,
+  -misc-include-cleaner,
+  clang-diagnostic-*,
+  -clang-diagnostic-unused-value,
+  -clang-diagnostic-vla-cxx-extension,
+  boost-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  clang-analyzer-*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  performance-*,
+  readability-*,
+  portability-*,
+  -readability-magic-numbers,
+  -readability-braces-around-statements,
+  -readability-inconsistent-declaration-parameter-name,
+  -readability-named-parameter,
+  -readability-identifier-length,
+  -readability-function-cognitive-complexity,
+  
+HeaderFilterRegex: '.*'
+WarningsAsErrors: '*'
+
+FormatStyle: 'file'
+
+CheckOptions:
+  readability-identifier-naming.ClassCase: 'lower_case'
+  readability-identifier-naming.ConceptCase: 'CamelCase'
+  readability-identifier-naming.GlobalConstantCase: 'UPPER_CASE'
+  readability-identifier-naming.EnumConstantCase: 'UPPER_CASE'
+  readability-identifier-naming.ClassConstantCase: 'lower_case'
+  readability-identifier-naming.LocalConstantCase: 'lower_case'
+  readability-identifier-naming.EnumCase: 'UPPER_CASE'
+  readability-identifier-naming.FunctionCase: 'lower_case'
+  readability-identifier-naming.MemberCase: 'lower_case'
+  readability-identifier-naming.MethodCase: 'lower_case'
+  readability-identifier-naming.NamespaceCase: 'lower_case'
+  readability-identifier-naming.ParameterCase: 'lower_case'
+  readability-identifier-naming.TypeAliasCase: 'lower_case'
+  readability-identifier-naming.TypeTemplateParameterCase: 'CamelCase'
+  readability-identifier-naming.ValueTemplateParameterCase: 'CamelCase'
+  readability-identifier-naming.UnionCase: 'lower_case'
+  readability-identifier-naming.VariableCase: 'lower_case'
+  readability-identifier-naming.VirtualMethodCase: 'lower_case'
+  # Only the logical ones; the bit ones (bitor, bitand, xor, etc) are a bit too verbose
+  readability-operators-representation.BinaryOperators: 'and;and_eq;not;or;or_eq'
+  readability-operators-representation.OverloadedOperators: 'and;and_eq;not;or;or_eq'
