@@ -2,8 +2,12 @@
 
 #include <spot/twa/twagraph.hh>
 
+#include "configuration.hh"
+#include "posets/vectors.hh"
+#include "posets/downsets/vector_backed.hh"
+
 // downset type that does not depend on the exact automaton
-using GenericDownset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::vector_backed<VECTOR_ELT_T>>;
+using GenericDownset = posets::downsets::vector_backed<posets::vectors::vector_backed<VECTOR_ELT_T>>;
 
 // Safety game: contains the Büchi automaton and the number of nonboolean states
 // may also contain a downset which is either the safe region if solved == true, or some overestimation if solved == false

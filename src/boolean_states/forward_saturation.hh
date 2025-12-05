@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/verbose.hh"
+
 // So-called "Optimization 1" in ac+.
 // A state is bounded if it cannot carry a counter value of at least k.
 /* Note: In ac+, this is computed backward:
