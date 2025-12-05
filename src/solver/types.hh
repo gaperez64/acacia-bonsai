@@ -39,7 +39,7 @@ To cast_downset (From& f) {
 }
 
 // make an empty automaton
-spot::twa_graph_ptr new_automaton (spot::bdd_dict_ptr dict) {
+inline spot::twa_graph_ptr new_automaton (spot::bdd_dict_ptr dict) {
   spot::twa_graph_ptr aut = spot::make_twa_graph (dict);
 
   // single acceptance set, inf(0) acceptance condition, state-based acceptance

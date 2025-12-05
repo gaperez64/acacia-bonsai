@@ -1,6 +1,11 @@
 #pragma once
 
+
+#include <spot/misc/timer.hh>
+
+
 #include "configuration.hh"
+#include "types.hh"
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "utils/static_switch.hh"

@@ -13,6 +13,7 @@
 #include "safety_game.hh"
 #include "create_automaton.hh"
 #include "solve_game.hh"
+#include "aut_preprocessors/standard.hh"
 
 
 inline spot::formula parse_ltl_string(const std::string& input)
