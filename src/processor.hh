@@ -10,7 +10,8 @@
 
 
 #include "error_msg.hh"
-#include "solver_invoker/create_safety_game.hh"
+#include "solver_invoker/safety_game.hh"
+#include "solver_invoker/create_automaton.hh"
 #include "solver_invoker/solve_game.hh"
 
 
@@ -61,7 +62,9 @@ inline int run_ltl(spot::translator &trans,
 
   posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, opt_K)) ();
   // posets::vectors::bool_threshold = (boolean_states::no_boolean_states::make (aut, opt_K)) ();
-  safety_game game = create_game(aut, posets::vectors::bool_threshold, opt_Kmin);
+
+
+  safety_game game{aut, opt_Kmin, posets::vectors::bool_threshold};
 
   int res = solve_game (game, opt_K, opt_Kmin, opt_Kinc, all_inputs, all_outputs, std::move(init_state), bddtrue);
 

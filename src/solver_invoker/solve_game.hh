@@ -4,7 +4,7 @@
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "utils/static_switch.hh"
-#include "create_safety_game.hh"
+#include "safety_game.hh"
 
 
 inline bool solve_game (safety_game& game, unsigned Kmax, unsigned Kmin, unsigned Kinc, bdd all_inputs, bdd all_outputs, std::vector<int> init_state, bdd invariant) {
