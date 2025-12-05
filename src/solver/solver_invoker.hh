@@ -9,10 +9,10 @@
 #include <spot/tl/parse.hh>
 
 
-#include "error_msg.hh"
-#include "solver_invoker/safety_game.hh"
-#include "solver_invoker/create_automaton.hh"
-#include "solver_invoker/solve_game.hh"
+#include "../error_msg.hh"
+#include "safety_game.hh"
+#include "create_automaton.hh"
+#include "solve_game.hh"
 
 
 inline spot::formula parse_ltl_string(const std::string& input)

@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-#include "solver_invoker/k-bounded_safety_aut.hh"
+#include "solver/k-bounded_safety_aut.hh"
 
 #include "arg_parser.hh"
 #include "error_msg.hh"
@@ -25,7 +25,7 @@
 
 #include "configuration.hh"
 // #include "solver_invoker/composition_mt.hh"
-#include "processor.hh"
+#include "solver/solver_invoker.hh"
 
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
