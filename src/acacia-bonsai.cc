@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include <spot/misc/escape.hh>
 #include <spot/misc/timer.hh>
 #include <spot/misc/tmpfile.hh>
 #include <spot/twaalgos/aiger.hh>
