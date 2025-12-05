@@ -11,24 +11,18 @@
 
 #include "error_msg.hh"
 #include "solver_invoker/create_safety_game.hh"
-#include "solver_invoker/epilogue.hh"
+#include "solver_invoker/solve_game.hh"
 
 
-inline spot::parsed_formula parse_formula(const std::string& s)
-{
-    return spot::parse_infix_psl
-      (s, spot::default_environment::instance(), false, false);
-}
-
-inline spot::formula process_ltl_string(const std::string& input)
+inline spot::formula parse_ltl_string(const std::string& input)
   {
-    auto pf = parse_formula(input);
+  auto pf = spot::parse_infix_psl
+    (input, spot::default_environment::instance(), false, false);
 
     if (!pf.f || !pf.errors.empty())
     {
-      error(0, "parse error:");
       pf.format_errors(std::cerr);
-      exit(1);
+      error(EXIT_CODE_ERROR, "Error parsing LTL formula");
     }
 
     return pf.f;
@@ -44,7 +38,7 @@ inline int run_ltl(spot::translator &trans,
                    unsigned opt_Kinc,
                    std::vector<int> init_state,
                    std::string formula) {
-  spot::formula spot_formula = process_ltl_string(formula);
+  spot::formula spot_formula = parse_ltl_string(formula);
 
   // manually register inputs/outputs
   bdd all_inputs = bddtrue;
@@ -60,7 +54,7 @@ inline int run_ltl(spot::translator &trans,
   }
 
   safety_game game = prepare_formula(spot_formula, trans, all_inputs, all_outputs, opt_K, opt_Kmin);
-  int res = epilogue(game, opt_K, opt_Kmin, opt_Kinc, all_inputs, all_outputs, std::move(init_state), bddtrue);
+  int res = solve_game (game, opt_K, opt_Kmin, opt_Kinc, all_inputs, all_outputs, std::move(init_state), bddtrue);
 
   dict->unregister_all_my_variables (0);
 

@@ -7,7 +7,13 @@
 #include "create_safety_game.hh"
 
 
-inline void solve_game (safety_game& game, unsigned Kmax, unsigned Kmin, unsigned Kinc, bdd all_inputs, bdd all_outputs, std::vector<int> init_state, bdd invariant) {
+inline bool solve_game (safety_game& game, unsigned Kmax, unsigned Kmin, unsigned Kinc, bdd all_inputs, bdd all_outputs, std::vector<int> init_state, bdd invariant) {
+
+  // moved here from epilogue()
+  if (game.aut == nullptr) {
+    return true;
+  }
+
   spot::stopwatch sw;
   sw.start ();
 
@@ -67,4 +73,6 @@ inline void solve_game (safety_game& game, unsigned Kmax, unsigned Kmin, unsigne
 
   double solve_time = sw.stop ();
   verb_do (1, vout << "Safety game solved in " << solve_time << " seconds\n");
+
+  return game.safe != nullptr;
 }
