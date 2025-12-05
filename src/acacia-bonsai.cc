@@ -8,18 +8,13 @@
 #include <cstring>
 
 #include <signal.h>
-#include <sys/wait.h>
 
 #include "solver/k-bounded_safety_aut.hh"
 
 #include "arg_parser.hh"
 #include "error_msg.hh"
 
-#include <posets/vectors.hh>
-#include <posets/downsets.hh>
-
 #include <utils/verbose.hh>
-// #include <utils/cache.hh>
 
 #include "configuration.hh"
 #include "solver/solver_invoker.hh"
