@@ -8,24 +8,23 @@
 #include <cstring>
 
 #include <signal.h>
+#include <unistd.h>
 
-#include "solver/k-bounded_safety_aut.hh"
-
-#include "arg_parser.hh"
-#include "error_msg.hh"
-
-#include <utils/verbose.hh>
-
-#include "configuration.hh"
-#include "solver/solver_invoker.hh"
-
-#include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
 #include <spot/misc/timer.hh>
 #include <spot/misc/tmpfile.hh>
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/misc/optionmap.hh>
+
+#include <posets/downsets.hh>
+
+#include "configuration.hh"
+#include <utils/verbose.hh>
+#include "solver/solver_invoker.hh"
+
+#include "arg_parser.hh"
+#include "error_msg.hh"
 
 #define debug_(A...) do { if(utils::verbose > 0) { std::cout << A << std::endl; } } while (0)
 
