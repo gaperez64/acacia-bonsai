@@ -9,6 +9,7 @@
 
 #include <signal.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include <spot/misc/timer.hh>
 #include <spot/misc/tmpfile.hh>
