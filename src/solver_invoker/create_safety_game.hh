@@ -1,13 +1,12 @@
 #pragma once
 
 #include <spot/twaalgos/hoa.hh>
-
-#include "types.hh"
-#include "boolean_states/forward_saturation.hh"
 #include <spot/twaalgos/translate.hh>
 #include <utility>
 
 #include "aut_preprocessors.hh"
+#include "boolean_states.hh"
+#include "types.hh"
 
 
 // downset type that does not depend on the exact automaton
@@ -70,22 +69,9 @@ inline spot::twa_graph_ptr create_automaton(spot::formula f, spot::translator &t
   trans.set_pref(spot::postprocessor::Small |
                   //spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
                   spot::postprocessor::SBAcc);
-
-  spot::stopwatch sw;
-  sw.start ();
-
   f = spot::formula::Not (f);
-
   verb_do (1, vout << "Formula: " << f << std::endl);
-
   auto aut = trans.run (&f);
-
-  double trans_time = sw.stop ();
-  verb_do (1, vout << "Translating formula done in "
-              << trans_time << " seconds\n");
-  verb_do (1, vout << "Automaton has " << aut->num_states ()
-              << " states and " << aut->num_sets () << " colors\n");
-
   return aut;
 }
 
@@ -100,8 +86,19 @@ inline safety_game prepare_formula (spot::formula f, spot::translator &trans, bd
   spot::stopwatch sw, sw_nospot;
   bool want_time = true; // Hardcoded
 
+  if (want_time) {
+    sw.start ();
+  }
 
   auto aut = create_automaton(std::move(f), trans);
+
+  if (want_time) {
+    double trans_time = sw.stop ();
+    verb_do (1, vout << "Translating formula done in "
+                << trans_time << " seconds\n");
+    verb_do (1, vout << "Automaton has " << aut->num_states ()
+                << " states and " << aut->num_sets () << " colors\n");
+  }
 
   ////////////////////////////////////////////////////////////////////////
   // Preprocess automaton
