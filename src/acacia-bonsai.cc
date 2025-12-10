@@ -34,11 +34,9 @@ static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 static std::vector<int> init_state;
 
-
-// static auto opt_unreal_x = DEFAULT_UNREAL_X;
-
-static unsigned opt_K = DEFAULT_K,
-  opt_Kmin = DEFAULT_KMIN, opt_Kinc = DEFAULT_KINC;
+static unsigned opt_K = DEFAULT_K;
+static unsigned opt_Kmin = DEFAULT_KMIN;
+static unsigned opt_Kinc = DEFAULT_KINC;
 
 int               utils::verbose = 0;
 utils::voutstream utils::vout;
@@ -46,68 +44,70 @@ utils::voutstream utils::vout;
 size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
-void terminate (int signum) {
-  if (getpgid (0) == getpid ()) { // Main process
-    signal (SIGTERM, SIG_IGN);
-    kill (0, SIGTERM);
-    while (wait (nullptr) != -1)
-      /* no body */;
-  }
-  else
-    _exit (3);
-}
-
-
-/**
- * Given the argument values that were parsed earlier, this will process the values and plug them into
- * the system.
- *
- * @param arg_vals The parsed argument values passed by the user.
- */
-void process_args_(const arg_parse_result& arg_vals) {
-
-  if (arg_vals.formula.empty()) {
-    error(EXIT_CODE_ERROR, "Error: formula must be a non-empty string.");
+namespace {
+  void terminate (int signum) {
+    if (getpgid (0) == getpid ()) { // Main process
+      signal (SIGTERM, SIG_IGN);
+      kill (0, SIGTERM);
+      while (wait (nullptr) != -1)
+        /* no body */;
+    }
+    else
+      _exit (3);
   }
 
-  init_state = arg_vals.init_state;
 
-  for (const auto & input : arg_vals.inputs) {
-    input_aps.push_back (input);
+  /**
+   * Given the argument values that were parsed earlier, this will process the values and plug them into
+   * the system.
+   *
+   * @param arg_vals The parsed argument values passed by the user.
+   */
+  void process_args(const arg_parse_result& arg_vals) {
+
+    if (arg_vals.formula.empty()) {
+      error(EXIT_CODE_ERROR, "Error: formula must be a non-empty string.");
+    }
+
+    init_state = arg_vals.init_state;
+
+    for (const auto & input : arg_vals.inputs) {
+      input_aps.push_back (input);
+    }
+
+    for (const auto & output : arg_vals.outputs) {
+      output_aps.push_back (output);
+    }
+
+    opt_K = arg_vals.opt_kmax;
+    opt_Kmin = arg_vals.opt_kstart;
+    opt_Kinc = arg_vals.opt_kinc;
+    utils::verbose = arg_vals.verbose_level;
   }
 
-  for (const auto & output : arg_vals.outputs) {
-    output_aps.push_back (output);
+
+  void sig_handler(int sig)
+  {
+    spot::cleanup_tmpfiles();
+    // Send the signal again, this time to the default handler, so that
+    // we return a meaningful error code.
+    raise(sig);
   }
 
-  opt_K = arg_vals.opt_kmax;
-  opt_Kmin = arg_vals.opt_kstart;
-  opt_Kinc = arg_vals.opt_kinc;
-  utils::verbose = arg_vals.verbose_level;
-}
-
-
-static void sig_handler(int sig)
-{
-  spot::cleanup_tmpfiles();
-  // Send the signal again, this time to the default handler, so that
-  // we return a meaningful error code.
-  raise(sig);
-}
-
-static void setup_sig_handler()
-{
-  struct sigaction sa;
-  sa.sa_handler = sig_handler;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESETHAND;
-  // Catch termination signals, so we can clean up temporary files.
-  sigaction(SIGALRM, &sa, nullptr);
-  sigaction(SIGHUP, &sa, nullptr);
-  sigaction(SIGINT, &sa, nullptr);
-  sigaction(SIGPIPE, &sa, nullptr);
-  sigaction(SIGQUIT, &sa, nullptr);
-  sigaction(SIGTERM, &sa, nullptr);
+  void setup_sig_handler()
+  {
+    struct sigaction sa;
+    sa.sa_handler = sig_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESETHAND;
+    // Catch termination signals, so we can clean up temporary files.
+    sigaction(SIGALRM, &sa, nullptr);
+    sigaction(SIGHUP, &sa, nullptr);
+    sigaction(SIGINT, &sa, nullptr);
+    sigaction(SIGPIPE, &sa, nullptr);
+    sigaction(SIGQUIT, &sa, nullptr);
+    sigaction(SIGTERM, &sa, nullptr);
+  }
 }
 
 
@@ -136,7 +136,7 @@ int main (int argc, char **argv) {
     extra_options.set ("tls-impl", 1);
     extra_options.set ("wdba-minimize", 2);
 
-    process_args_(arg_values);
+    process_args(arg_values);
 
     // Adjust the value of K
     if (opt_Kmin == -1u)
