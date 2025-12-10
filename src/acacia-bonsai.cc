@@ -30,14 +30,7 @@
 
 using namespace std::literals;
 
-static std::vector<std::string> input_aps;
-static std::vector<std::string> output_aps;
-static std::vector<int> init_state;
-
-static unsigned opt_k = DEFAULT_K;
-static unsigned opt_kmin = DEFAULT_KMIN;
-static unsigned opt_kinc = DEFAULT_KINC;
-
+// Definitions for some external variables. Needs to be refactored.
 int               utils::verbose = 0;
 utils::voutstream utils::vout;
 
@@ -45,6 +38,14 @@ size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
 namespace {
+  std::vector<std::string> input_aps;
+  std::vector<std::string> output_aps;
+  std::vector<int> init_state;
+
+  unsigned opt_k = DEFAULT_K;
+  unsigned opt_kmin = DEFAULT_KMIN;
+  unsigned opt_kinc = DEFAULT_KINC;
+
   void terminate (int signum) {
     if (getpgid (0) == getpid ()) { // Main process
       signal (SIGTERM, SIG_IGN);
@@ -150,11 +151,6 @@ int main (int argc, char **argv) {
     // not measured in our timings.
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
-
-
-    // ltl_processor processor (trans, input_aps, output_aps, dict, opt_K,
-      // opt_Kmin, opt_Kinc, init_state, arg_values.formula);
-    // const int res = processor.run ();
 
 
     const int res = run_ltl(trans, input_aps, output_aps, dict, opt_k,
