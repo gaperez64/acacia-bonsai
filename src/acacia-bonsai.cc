@@ -34,9 +34,9 @@ static std::vector<std::string> input_aps;
 static std::vector<std::string> output_aps;
 static std::vector<int> init_state;
 
-static unsigned opt_K = DEFAULT_K;
-static unsigned opt_Kmin = DEFAULT_KMIN;
-static unsigned opt_Kinc = DEFAULT_KINC;
+static unsigned opt_k = DEFAULT_K;
+static unsigned opt_kmin = DEFAULT_KMIN;
+static unsigned opt_kinc = DEFAULT_KINC;
 
 int               utils::verbose = 0;
 utils::voutstream utils::vout;
@@ -79,9 +79,9 @@ namespace {
       output_aps.push_back (output);
     }
 
-    opt_K = arg_vals.opt_kmax;
-    opt_Kmin = arg_vals.opt_kstart;
-    opt_Kinc = arg_vals.opt_kinc;
+    opt_k = arg_vals.opt_kmax;
+    opt_kmin = arg_vals.opt_kstart;
+    opt_kinc = arg_vals.opt_kinc;
     utils::verbose = arg_vals.verbose_level;
   }
 
@@ -139,12 +139,12 @@ int main (int argc, char **argv) {
     process_args(arg_values);
 
     // Adjust the value of K
-    if (opt_Kmin == -1u)
-      opt_Kmin = opt_K;
-    if (opt_Kmin > opt_K or (opt_Kmin < opt_K and opt_Kinc == 0))
+    if (opt_kmin == -1u)
+      opt_kmin = opt_k;
+    if (opt_kmin > opt_k or (opt_kmin < opt_k and opt_kinc == 0))
       error (EXIT_CODE_ERROR, "Incompatible values for K, Kmin, and Kinc.");
-    if (opt_Kmin == 0)
-      opt_Kmin = opt_K;
+    if (opt_kmin == 0)
+      opt_kmin = opt_k;
 
     // Setup the dictionary now, so that BuDDy's initialization is
     // not measured in our timings.
@@ -157,8 +157,8 @@ int main (int argc, char **argv) {
     // const int res = processor.run ();
 
 
-    const int res = run_ltl(trans, input_aps, output_aps, dict, opt_K,
-      opt_Kmin, opt_Kinc, init_state, arg_values.formula);
+    const int res = run_ltl(trans, input_aps, output_aps, dict, opt_k,
+      opt_kmin, opt_kinc, init_state, arg_values.formula);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();
