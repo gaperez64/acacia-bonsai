@@ -1,38 +1,39 @@
 #pragma once
-#include <memory>
 #include "../configuration.hh"
-#include <posets/vectors.hh>
-#include <posets/downsets.hh>
 #include "../utils/verbose.hh"
+
+#include <memory>
+#include <optional>
 #include <spot/misc/bddlt.hh>
 #include <spot/misc/escape.hh>
 #include <spot/misc/timer.hh>
 #include <spot/tl/formula.hh>
-#include <spot/twa/twagraph.hh>
 #include <spot/twa/bddprint.hh>
-#include <optional>
+#include <spot/twa/twagraph.hh>
 
+#include <posets/downsets.hh>
+#include <posets/vectors.hh>
 
-// cast a vector (state in the safety game) to another type, for example to go from array+bitset to vector
-template<typename To, typename From>
+// cast a vector (state in the safety game) to another type, for example to go from array+bitset to
+// vector
+template <typename To, typename From>
 To cast_vector (From& f) {
   auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (f.size (), 0);
-  for(size_t i = 0; i < f.size (); i++) {
+  for (size_t i = 0; i < f.size (); i++)
     vec[i] = f[i];
-  }
   return To (vec);
 }
 
 // cast a downset (set of safety game states) to another type
 // TODO some downset types may be much faster with a bulk insert
-template<typename To, typename From>
+template <typename To, typename From>
 To cast_downset (From& f) {
   using NewVec = To::value_type;
-  //To downset (cast_vector<NewVec> (*f.begin ()));
+  // To downset (cast_vector<NewVec> (*f.begin ()));
   std::vector<NewVec> vv;
-  for(const auto& vec: f) {
+  for (const auto& vec : f) {
     vv.push_back (cast_vector<NewVec> (vec));
-    //downset.insert (cast_vector<NewVec> (vec));
+    // downset.insert (cast_vector<NewVec> (vec));
   }
   To downset (std::move (vv));
   return downset;

@@ -1,6 +1,5 @@
 
 
-
 #include "aut_preprocessors.hh"
 #include "boolean_states.hh"
 #include "configuration.hh"
@@ -17,62 +16,51 @@
 #include <utility>
 #include <vector>
 
-spot::formula parse_ltl_string(const std::string& input)
-{
-    auto pf = spot::parse_infix_psl
-      (input, spot::default_environment::instance(), false, false);
+spot::formula parse_ltl_string (const std::string& input) {
+  auto pf = spot::parse_infix_psl (input, spot::default_environment::instance (), false, false);
 
-    if ((not pf.f) or (not pf.errors.empty()))
-    {
-        pf.format_errors(std::cerr);
-        error(EXIT_CODE_ERROR, "Error parsing LTL formula");
-    }
+  if ((not pf.f) or (not pf.errors.empty ())) {
+    pf.format_errors (std::cerr);
+    error (EXIT_CODE_ERROR, "Error parsing LTL formula");
+  }
 
-    return pf.f;
+  return pf.f;
 }
 
+int run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
+             std::vector<std::string> output_aps, spot::bdd_dict_ptr dict, unsigned opt_k,
+             unsigned opt_kmin, unsigned opt_kinc, std::vector<int> init_state,
+             std::string formula) {
+  // manually register inputs/outputs
+  bdd all_inputs = bddtrue;
+  bdd all_outputs = bddtrue;
 
-int run_ltl(spot::translator &trans,
-                   std::vector<std::string> input_aps,
-                   std::vector<std::string> output_aps,
-                   spot::bdd_dict_ptr dict,
-                   unsigned opt_k,
-                   unsigned opt_kmin,
-                   unsigned opt_kinc,
-                   std::vector<int> init_state,
-                   std::string formula) {
+  for (std::string ap : input_aps) {
+    const unsigned v = dict->register_proposition (spot::formula::ap (ap), nullptr);
+    all_inputs &= bdd_ithvar (v);
+  }
+  for (std::string ap : output_aps) {
+    const unsigned v = dict->register_proposition (spot::formula::ap (ap), nullptr);
+    all_outputs &= bdd_ithvar (v);
+  }
 
-    // manually register inputs/outputs
-    bdd all_inputs = bddtrue;
-    bdd all_outputs = bddtrue;
+  spot::formula spot_formula = parse_ltl_string (formula);
 
-    for(std::string ap: input_aps) {
-        unsigned const v = dict->register_proposition (spot::formula::ap (ap), nullptr);
-        all_inputs &= bdd_ithvar (v);
-    }
-    for(std::string ap: output_aps) {
-        unsigned const v = dict->register_proposition (spot::formula::ap (ap), nullptr);
-        all_outputs &= bdd_ithvar (v);
-    }
+  auto aut = create_automaton (std::move (spot_formula), trans);
+  AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
+  // aut_preprocessors::standard::make (aut, all_inputs, all_outputs, opt_k) ();
+  // aut_preprocessors::surely_losing::make (aut, all_inputs, all_outputs, K) ();
 
+  posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
+  // posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, opt_k)) ();
+  // posets::vectors::bool_threshold = (boolean_states::no_boolean_states::make (aut, opt_K)) ();
 
-    spot::formula spot_formula = parse_ltl_string(formula);
+  safety_game game {aut, opt_kmin, posets::vectors::bool_threshold};
 
-    auto aut = create_automaton(std::move(spot_formula), trans);
-    AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
-    // aut_preprocessors::standard::make (aut, all_inputs, all_outputs, opt_k) ();
-    // aut_preprocessors::surely_losing::make (aut, all_inputs, all_outputs, K) ();
+  const bool res = solve_game (game, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs,
+                               std::move (init_state), bddtrue);
 
-    posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
-    // posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, opt_k)) ();
-    // posets::vectors::bool_threshold = (boolean_states::no_boolean_states::make (aut, opt_K)) ();
+  dict->unregister_all_my_variables (nullptr);
 
-
-    safety_game game{aut, opt_kmin, posets::vectors::bool_threshold};
-
-    bool const res = solve_game (game, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs, std::move(init_state), bddtrue);
-
-    dict->unregister_all_my_variables (nullptr);
-
-    return res;
+  return res;
 }

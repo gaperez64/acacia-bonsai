@@ -7,13 +7,15 @@ namespace aut_preprocessors {
     template <typename Aut>
     class standard {
       public:
-        standard (Aut& aut, bdd input_support, bdd output_support, unsigned K) :
-          aut {aut}, input_support {input_support}, output_support {output_support}, K {K}
-        {}
+        standard (Aut& aut, bdd input_support, bdd output_support, unsigned K)
+          : aut {aut},
+            input_support {input_support},
+            output_support {output_support},
+            K {K} {}
 
         auto operator() () {
           aut->merge_edges ();
-          aut->merge_states();
+          aut->merge_states ();
         }
 
         Aut& aut;

@@ -1,16 +1,19 @@
 #pragma once
 
-#include <random>
-#include <optional>
 #include "actioners.hh"
+#include "utils/verbose.hh"
+
+#include <optional>
+#include <random>
 
 namespace input_pickers {
   namespace detail {
     template <typename FwdActions, typename Actioner>
     struct critical {
       public:
-        critical (FwdActions& fwd_actions, Actioner& actioner) :
-          fwd_actions {fwd_actions}, actioner {actioner} {}
+        critical (FwdActions& fwd_actions, Actioner& actioner)
+          : fwd_actions {fwd_actions},
+            actioner {actioner} {}
 
         template <typename SetOfStates>
         auto operator() (const SetOfStates& F) {
@@ -22,8 +25,7 @@ namespace input_pickers {
           // Algo: We go through all f in F, find an input i witnessing one-step-loss, add it to C.
 
           // Sort/randomize input_output_fwd_actions
-          std::vector<input_and_actions_ref> V (fwd_actions.begin (),
-                                                fwd_actions.end ());
+          std::vector<input_and_actions_ref> V (fwd_actions.begin (), fwd_actions.end ());
 
           std::list<input_and_actions_ref> Cbar (V.begin (), V.end ());
 
@@ -50,16 +52,18 @@ namespace input_pickers {
 
               if (is_witness) {
                 // inputs witness one-step-loss of f
-                verb_do (3, vout << "Input " << input
-                         /*   */ << " witnesses one-step-loss of " << f << std::endl);
+                verb_do (3, vout << "Input "
+                                 << input
+                                 /*   */
+                                 << " witnesses one-step-loss of " << f << std::endl);
                 critical_input = it;
                 break;
               }
 
               TODO ("Try putting a weight, rather than pushing at the front.");
               if (it_act != actions.begin ())
-                actions.splice (actions.begin(), actions, it_act);
-          }
+                actions.splice (actions.begin (), actions, it_act);
+            }
             if (critical_input != Cbar.end ())
               break;
           }
@@ -70,18 +74,19 @@ namespace input_pickers {
           }
 
           verb_do (2, {
-              vout << "Critical input: ";
-              const auto& [input, actions] = critical_input->get ();
-              vout << "[" << input << "] " << std::endl;
-            });
+            vout << "Critical input: ";
+            const auto& [input, actions] = critical_input->get ();
+            vout << "[" << input << "] " << std::endl;
+          });
 
           return std::make_optional (*critical_input);
         }
+
       private:
         using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
         FwdActions& fwd_actions;
         Actioner& actioner;
-   };
+    };
   }
 
   struct critical {
