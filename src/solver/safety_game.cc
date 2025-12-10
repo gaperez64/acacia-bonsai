@@ -45,13 +45,13 @@
     return std::pair<size_t, size_t> (nbitsetbools, actual_nonbools);
   }
 
-  safety_game::safety_game(spot::twa_graph_ptr aut, unsigned K_min, size_t bool_threshold) {
+  safety_game::safety_game(spot::twa_graph_ptr aut, unsigned k_min, size_t bool_threshold) {
     this->aut = aut;
     this->bool_threshold = bool_threshold;
     this->solved = false;
     this->set_globals ();
 
-    auto all_k = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), K_min - 1);
+    auto all_k = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), k_min - 1);
     for (size_t i = posets::vectors::bool_threshold; i < aut->num_states (); ++i)
       all_k[i] = 0;
     this->safe = std::make_shared<GenericDownset> (GenericDownset::value_type (all_k));

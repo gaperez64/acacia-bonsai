@@ -21,7 +21,7 @@ struct safety_game {
   bdd invariant = bddtrue;
 public:
 
-  safety_game(spot::twa_graph_ptr aut, unsigned K_min, size_t bool_threshold);
+  safety_game(spot::twa_graph_ptr aut, unsigned k_min, size_t bool_threshold);
   std::pair<unsigned long, unsigned long> set_globals ();
 
 };

@@ -10,7 +10,7 @@
 #include "safety_game.hh"
 
 
-bool solve_game (safety_game& game, unsigned Kmax, unsigned Kmin, unsigned Kinc, bdd all_inputs, bdd all_outputs, std::vector<int> init_state, bdd invariant) {
+bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc, bdd all_inputs, bdd all_outputs, std::vector<int> init_state, bdd invariant) {
 
   // moved here from epilogue()
   if (game.aut == nullptr) {
@@ -37,7 +37,7 @@ bool solve_game (safety_game& game, unsigned Kmax, unsigned Kmin, unsigned Kinc,
             posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, std::max (vnonbools.value, 1UL)>,
             vbitsets.value>>;
         auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
-        (game.aut, Kmin, Kmax, Kinc, all_inputs, all_outputs);
+        (game.aut, kmin, kmax, kinc, all_inputs, all_outputs);
         assert (game.safe);
         auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
         auto safe = skn.solve (current_safe, invariant, init_state);
@@ -59,7 +59,7 @@ bool solve_game (safety_game& game, unsigned Kmax, unsigned Kmin, unsigned Kinc,
       posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>,
       vbitsets.value>>;
       auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset>
-      (game.aut, Kmin, Kmax, Kinc, all_inputs, all_outputs);
+      (game.aut, kmin, kmax, kinc, all_inputs, all_outputs);
       assert (game.safe);
       auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
       auto safe = skn.solve (current_safe, invariant, init_state);
