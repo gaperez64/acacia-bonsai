@@ -140,7 +140,7 @@ int main (int argc, char **argv) {
     process_args(arg_values);
 
     // Adjust the value of K
-    if (opt_kmin == -1u)
+    if (opt_kmin == -1U)
       opt_kmin = opt_k;
     if (opt_kmin > opt_k or (opt_kmin < opt_k and opt_kinc == 0))
       error (EXIT_CODE_ERROR, "Incompatible values for K, Kmin, and Kinc.");
