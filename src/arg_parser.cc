@@ -81,16 +81,16 @@ arg_parse_result arg_parser(int argc, char **argv) {
     }
 
     if (retval.formula.empty()) {
-        error(3, 0, "Error: a formula or file must be specified (-f).");
+        error(3, "Error: a formula or file must be specified (-f).");
     }
     if (retval.inputs.empty()) {
-        error(3, 0, "Error: inputs must be specified (-i).");
+        error(3, "Error: inputs must be specified (-i).");
     }
     if (retval.outputs.empty()) {
-        error(3, 0, "Error: outputs must be specified (-o).");
+        error(3,  "Error: outputs must be specified (-o).");
     }
     if (retval.opt_kstart != DEFAULT_KMIN and retval.opt_kinc == DEFAULT_KINC) {
-        error(3, 0, "Error: if 'Kstart' (-M) is specified, then 'Kinc' (-I) also must be provided.");
+        error(3, "Error: if 'Kstart' (-M) is specified, then 'Kinc' (-I) also must be provided.");
     }
 
     return retval;
