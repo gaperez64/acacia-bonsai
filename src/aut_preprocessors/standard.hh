@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bddx.h"
+
 namespace aut_preprocessors {
   namespace detail {
     template <typename Aut>

@@ -1,6 +1,11 @@
 #pragma once
 
+#include <spot/twa/acc.hh>
+
+#include "utils/todo.hh"
 #include "utils/verbose.hh"
+
+#include <cassert>
 
 // So-called "Optimization 1" in ac+.
 // A state is bounded if it cannot carry a counter value of at least k.

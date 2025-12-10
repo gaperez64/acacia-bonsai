@@ -1,24 +1,21 @@
 
 
 
-#include <utility>
-#include <vector>
-#include <string>
+#include "aut_preprocessors.hh"
+#include "boolean_states.hh"
+#include "configuration.hh"
+#include "create_automaton.hh"
+#include "error_msg.hh"
+#include "posets/vectors/traits.hh"
+#include "safety_game.hh"
+#include "solve_game.hh"
 
-#include <spot/twaalgos/translate.hh>
 #include <spot/tl/formula.hh>
 #include <spot/tl/parse.hh>
-
-
-#include "configuration.hh"
-#include "error_msg.hh"
-#include "safety_game.hh"
-#include "create_automaton.hh"
-#include "solve_game.hh"
-#include "aut_preprocessors/standard.hh"
-#include "boolean_states/forward_saturation.hh"
-#include "posets/vectors/traits.hh"
-
+#include <spot/twaalgos/translate.hh>
+#include <string>
+#include <utility>
+#include <vector>
 
 spot::formula parse_ltl_string(const std::string& input)
 {
@@ -62,10 +59,12 @@ int run_ltl(spot::translator &trans,
     spot::formula spot_formula = parse_ltl_string(formula);
 
     auto aut = create_automaton(std::move(spot_formula), trans);
-    aut_preprocessors::standard::make (aut, all_inputs, all_outputs, opt_k) ();
+    AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
+    // aut_preprocessors::standard::make (aut, all_inputs, all_outputs, opt_k) ();
     // aut_preprocessors::surely_losing::make (aut, all_inputs, all_outputs, K) ();
 
-    posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, opt_k)) ();
+    posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
+    // posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, opt_k)) ();
     // posets::vectors::bool_threshold = (boolean_states::no_boolean_states::make (aut, opt_K)) ();
 
 
