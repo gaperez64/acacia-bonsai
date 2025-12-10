@@ -50,7 +50,7 @@ void terminate (int signum) {
   if (getpgid (0) == getpid ()) { // Main process
     signal (SIGTERM, SIG_IGN);
     kill (0, SIGTERM);
-    while (wait (NULL) != -1)
+    while (wait (nullptr) != -1)
       /* no body */;
   }
   else
@@ -101,7 +101,7 @@ static void setup_sig_handler()
   sa.sa_handler = sig_handler;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESETHAND;
-  // Catch termination signals, so we can cleanup temporary files.
+  // Catch termination signals, so we can clean up temporary files.
   sigaction(SIGALRM, &sa, nullptr);
   sigaction(SIGHUP, &sa, nullptr);
   sigaction(SIGINT, &sa, nullptr);
@@ -119,8 +119,8 @@ int main (int argc, char **argv) {
   struct sigaction action;
   memset (&action, 0, sizeof(struct sigaction));
   action.sa_handler = terminate;
-  sigaction (SIGTERM, &action, NULL);
-  sigaction (SIGINT, &action, NULL);
+  sigaction (SIGTERM, &action, nullptr);
+  sigaction (SIGINT, &action, nullptr);
 
 
   // remove all spot temporary files
@@ -171,14 +171,14 @@ int main (int argc, char **argv) {
         std::cout << "UNKNOWN\n";
         break;
       default:
-        error(EXIT_CODE_ERROR, 0, "Unknown result code: '%d'", res);
+        error(EXIT_CODE_ERROR, "Unknown result code: '%d'", res);
         break;
     }
 
     if (arg_values.invert_exit_code) {
-      exit(res ? EXIT_CODE_UNKNOWN : EXIT_CODE_REAL);
+      exit((res != 0) ? EXIT_CODE_UNKNOWN : EXIT_CODE_REAL);
     } else {
-      exit(res ? EXIT_CODE_REAL : EXIT_CODE_UNKNOWN);
+      exit((res != 0) ? EXIT_CODE_REAL : EXIT_CODE_UNKNOWN);
     }
   }
   catch (const std::exception& e)
