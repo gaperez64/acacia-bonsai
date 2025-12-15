@@ -6,7 +6,8 @@ namespace utils {
   template <typename Ret, typename... Args>
   class cache_t {
       using cache_key_t = std::tuple<Args...>;
-      using cache_map_t = std::map <cache_key_t, Ret>;
+      using cache_map_t = std::map<cache_key_t, Ret>;
+
     public:
       cache_t () {}
 
@@ -15,9 +16,10 @@ namespace utils {
         return cached != cache.end () ? &cached->second : nullptr;
       }
 
-      const Ret& operator () (const Ret& r, const Args&... args) {
+      const Ret& operator() (const Ret& r, const Args&... args) {
         return (cache.insert_or_assign (std::make_tuple (args...), r).first)->second;
       }
+
     private:
       cache_map_t cache;
   };

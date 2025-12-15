@@ -1,5 +1,11 @@
 #pragma once
 
+#include "utils/todo.hh"
+#include "utils/verbose.hh"
+
+#include <cassert>
+#include <spot/twa/acc.hh>
+
 // So-called "Optimization 1" in ac+.
 // A state is bounded if it cannot carry a counter value of at least k.
 /* Note: In ac+, this is computed backward:
@@ -23,14 +29,13 @@ namespace boolean_states {
         forward_saturation (Aut aut, int K) : aut {aut}, K {K} {}
 
         size_t operator() () const {
-          unsigned nb_accepting_states = 0, nunbounded = 0;
+          uint32_t nb_accepting_states = 0, nunbounded = 0;
 
-          for (unsigned src = 0; src < aut->num_states (); ++src)
+          for (uint32_t src = 0; src < aut->num_states (); ++src)
             if (aut->state_is_accepting (src))
               nb_accepting_states++;
 
-          assert (nb_accepting_states < UCHAR_MAX);
-          auto c = std::vector<unsigned char> (aut->num_states ());
+          auto c = std::vector<uint32_t> (aut->num_states ());
           if (aut->state_is_accepting (aut->get_init_state_number ()))
             c[aut->get_init_state_number ()] = 1;
 
@@ -39,8 +44,8 @@ namespace boolean_states {
           while (has_changed) {
             has_changed = false;
 
-            for (unsigned src = 0; src < aut->num_states (); ++src) {
-              unsigned c_src_mod = std::min (nb_accepting_states + 1u,
+            for (uint32_t src = 0; src < aut->num_states (); ++src) {
+              uint32_t c_src_mod = std::min (nb_accepting_states + 1u,
                                              c[src] + (aut->state_is_accepting (src) ? 1u : 0u));
               for (const auto& e : aut->out (src))
                 if (c[e.dst] < c_src_mod) {
@@ -52,10 +57,10 @@ namespace boolean_states {
             }
           }
 
-          auto rename = std::vector<unsigned> (aut->num_states ());
+          auto rename = std::vector<uint32_t> (aut->num_states ());
 
-          unsigned bounded = 0, unbounded = 0;
-          for (unsigned src = 0; src < aut->num_states (); ++src)
+          uint32_t bounded = 0, unbounded = 0;
+          for (uint32_t src = 0; src < aut->num_states (); ++src)
             if (c[src] > nb_accepting_states)
               rename[src] = unbounded++;
             else {
@@ -68,17 +73,21 @@ namespace boolean_states {
 
           assert (unbounded == nunbounded);
 
-          verb_do (1, vout << "Bounded states: " << bounded << " / "
-                   /*   */ << aut->num_states () << " = "
-                   /*   */ << (bounded * 100) / aut->num_states () << "%" << std::endl);
+          verb_do (1, vout << "Bounded states: " << bounded
+                           << " / "
+                           /*   */
+                           << aut->num_states ()
+                           << " = "
+                           /*   */
+                           << (bounded * 100) / aut->num_states () << "%" << std::endl);
 
           // WARNING: Internal Spot
-          auto& g = aut->get_graph();
-          g.rename_states_(rename);
-          aut->set_init_state(rename[aut->get_init_state_number()]);
-          g.sort_edges_();
-          g.chain_edges_();
-          aut->prop_universal(spot::trival::maybe ());
+          auto& g = aut->get_graph ();
+          g.rename_states_ (rename);
+          aut->set_init_state (rename[aut->get_init_state_number ()]);
+          g.sort_edges_ ();
+          g.chain_edges_ ();
+          aut->prop_universal (spot::trival::maybe ());
 
           return nunbounded;
         }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <typeinfo>
 #include <cxxabi.h>
+#include <typeinfo>
 
 // https://stackoverflow.com/questions/4484982/how-to-convert-typename-t-to-string-in-c
 
@@ -14,7 +14,8 @@ std::string get_typename (const T& x) {
     std::string name2 (name);
     free (name);
     return name2;
-  } else {
+  }
+  else {
     // not human readable
     return typeid (T).name ();
   }
@@ -33,7 +34,8 @@ std::ostream& operator<< (std::ostream& ost, const std::vector<T>& vec) {
   ost << "[";
   for (size_t i = 0; i < vec.size (); i++) {
     ost << vec[i];
-    if (i != (vec.size () - 1)) ost << ", ";
+    if (i != (vec.size () - 1))
+      ost << ", ";
   }
   ost << "]";
   return ost;
@@ -45,7 +47,8 @@ std::ostream& operator<< (std::ostream& ost, const std::set<T>& s) {
   size_t i = 0;
   for (const T& elem : s) {
     ost << elem;
-    if (i != (s.size () - 1)) ost << ", ";
+    if (i != (s.size () - 1))
+      ost << ", ";
     i++;
   }
   ost << "}";
@@ -59,7 +62,8 @@ std::ostream& operator<< (std::ostream& ost, const std::map<T, U>& m) {
 
   for (auto it = m.begin (); it != m.end (); it++) {
     ost << it->first << ": " << it->second;
-    if (i != (m.size () - 1)) ost << ", ";
+    if (i != (m.size () - 1))
+      ost << ", ";
     i++;
   }
 

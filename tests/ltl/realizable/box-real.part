@@ -1,0 +1,2 @@
+.inputs bin_x2 bin_x0 bin_st_0 pred__x_lt_xprev_ pred__xprev_lt_x_ bin_x1 incy incx stay stax
+.outputs decyc incyc decxc incxc

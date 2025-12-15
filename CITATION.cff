@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Cadilhac"
+  given-names: "Michaël"
+  orcid: "https://orcid.org/0000-0001-9828-9129"
+- family-names: "Pérez"
+  given-names: "Guillermo A."
+  orcid: "https://orcid.org/0000-0002-1200-4952"
+title: "Acacia-Bonsai"
+url: "https://github.com/gaperez64/acacia-bonsai"
+preferred-citation:
+  type: conference-paper
+  authors:
+  - family-names: "Cadilhac"
+    given-names: "Michaël"
+    orcid: "https://orcid.org/0000-0001-9828-9129"
+  - family-names: "Pérez"
+    given-names: "Guillermo A."
+    orcid: "https://orcid.org/0000-0002-1200-4952"
+  doi: "10.1007/978-3-031-30820-8_14"
+  booktitle: "TACAS"
+  series: "LNCS"
+  publisher: "Springer"
+  editor: "Sriram Sankaranarayanan and Natasha Sharygina"
+  start: 192 # First page number
+  end: 207 # Last page number
+  title: "Acacia-Bonsai: A Modern Implementation of Downset-Based LTL Realizability"
+  volume: 13994
+  year: 2023

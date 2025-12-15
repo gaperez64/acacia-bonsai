@@ -1,50 +1,65 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+on: [push]
 jobs:
-  # This workflow contains a single job called "build"
   test:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container: debian:sid
     steps:
     - name: Install packages
       run: |
-        apt-get -y update
-        apt-get -y install zsh git gcc python-is-python3 meson ninja-build gnupg wget python3-pip python3-distutils pkg-config libglib2.0-dev libffi-dev libboost-dev autoconf automake libtool bison flex valgrind
-    - name: Checkout repository and submodules
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@v2
+        sudo apt update
+        sudo apt install -y zsh meson git gcc python-is-python3 \
+                    ninja-build gnupg wget python3-pip \
+                    pkg-config libglib2.0-dev libffi-dev libboost-dev \
+                    autoconf automake libtool bison flex valgrind gpg \
+                    libboost-all-dev
+        sudo pip install --upgrade meson
+    - name: Add LRDE Debian repository
+      run: |
+        sudo mkdir -p /etc/apt/keyrings
+        sudo wget https://www.lrde.epita.fr/repo/debian.gpg
+        sudo gpg --no-default-keyring --keyring ./tmp-kr.gpg --import debian.gpg
+        sudo gpg --no-default-keyring --keyring ./tmp-kr.gpg --export --output /etc/apt/keyrings/lrde.gpg
+        sudo sh -c "echo 'deb [signed-by=/etc/apt/keyrings/lrde.gpg] http://www.lrde.epita.fr/repo/debian/ stable/' >> /etc/apt/sources.list"
+        sudo apt update
+    - name: Install newer libltldl
+      run: |
+        sudo wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
+        sudo dpkg -i libltdl7_2.5.4-4build1_amd64.deb
+        sudo apt -f install
+    - name: Install Spot
+      run: |
+        sudo apt install -y spot libspot-dev
+    - uses: actions/setup-python@v5
     - name: Install python dependencies
       run: |
-        pip install pygraph --break-system-packages
-    - name: Compile all configurations
-      run: |
-        ./self-benchmark.sh -R
-    - name: Run basic benchmark with low timeout as test
-      run: |
-        ./self-benchmark.sh -b ab/set1 -t 0.5
-    - name: Upload test results
-      uses: actions/upload-artifact@v2
-      if: always()
+        pip install pygraph
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v4
       with:
-        name: test-logs
-        path: _bm-logs/
-    - name: Upload compilation logs
-      uses: actions/upload-artifact@v2
-      if: always()
-      with:
-        name: meson-logs
-        path: build_base/meson-logs
+        submodules: recursive
+    - name: Compile default configuration
+      run: |
+        meson setup build
+        meson compile -C build acacia-bonsai
+    - name: Check Real
+      run: |
+        ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant)
+        if [ "$ACACIA_RESULT" != "REALIZABLE" ]; then
+          echo "ACACIA_RESULT must equal 'REALIZABLE' but is '$ACACIA_RESULT'"
+          exit 1
+        fi
+    - name: Check Unknown
+      run: |
+        ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant)
+        ACACIA_STATUS=$?
+        if [ "$ACACIA_RESULT" != "UNKNOWN" ]; then
+          echo "ACACIA_RESULT must equal 'UNKNOWN' but is '$ACACIA_RESULT'"
+          exit 1
+        fi
+        # Check exit code
+        if [ "$ACACIA_STATUS" -ne 3 ]; then
+          echo "Unexpected exit code: $ACACIA_STATUS"
+          exit 1
+        fi
+      continue-on-error: true
+

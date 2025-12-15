@@ -1,0 +1,7 @@
+[wrap-file]
+directory = posets
+
+[provide]
+dependency_names = posets
+posets = posets_dep
+

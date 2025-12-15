@@ -1,0 +1,3 @@
+[submodule "subprojects/posets"]
+	path = subprojects/posets
+	url = https://github.com/michaelcadilhac/posets.git

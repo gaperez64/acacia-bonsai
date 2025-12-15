@@ -1,0 +1,2 @@
+.inputs allready hbusreq_0 hbusreq_1 hbusreq_2 hbusreq_3 hbusreq_4 hbusreq_5 hbusreq_6 hbusreq_7 hbusreq_8 hbusreq_9 hbusreq_10 hbusreq_11 hbusreq_12 hbusreq_13 hbusreq_14 hbusreq_15
+.outputs decide busreq hgrant_0 hgrant_1 hgrant_2 hgrant_3 hgrant_4 hgrant_5 hgrant_6 hgrant_7 hgrant_8 hgrant_9 hgrant_10 hgrant_11 hgrant_12 hgrant_13 hgrant_14 hgrant_15

@@ -1,5 +1,3 @@
-[![CI](https://github.com/gaperez64/acacia-bonsai/actions/workflows/main.yml/badge.svg)](https://github.com/gaperez64/acacia-bonsai/actions/workflows/main.yml)
-
 # Acacia-Bonsai
 
 This is a modern implementation of universal co-Buchi reactive synthesis
@@ -13,11 +11,34 @@ This program depends on:
 - [Boost C++ Library](https://www.boost.org/)
 - A modern C++ compiler (C++20 is used)
 - [The Meson Build System](https://mesonbuild.com/)
-- [The Spot Library](https://spot.lrde.epita.fr/): Spot is automagically
-  compiled as a submodule; however, it takes quite a bit of time to do so, and
-  each build configuration of Acacia-Bonsai will recompile Spot.  We recommend
-  that Spot be separately compiled and installed.
+- [The Downset Manipulation Library](https://github.com/michaelcadilhac/posets)
+- [The Spot Library](https://spot.lrde.epita.fr/): You will need to compile
+  and install spot separately. The downset manipulation library requires
+  compilation with `g++` so to link against spot you need to compile it with
+  `g++` too (set `CXX` before configuring, compiling, and installing).
 - [The Z shell](https://www.zsh.org/), for some scripts.
+
+Some of the tests also depend on:
+- Valgrind
+
+## Installing dependencies on macOS
+
+Note that on macOS the compilation has to happen via GCC. 
+GCC can be installed using Homebrew: `brew install gcc`. Once installed,
+meson needs to be told to use GCC instead of built-in Clang. This can be done
+using the meson-native file, or by setting the `CXX` and `CC` environment variables.
+
+Boost has to be compiled using GCC and installed in a way that meson can find Boost.
+It might be true that the only boost libraries used in this project are header only.
+In that case, Boost can be installed using Homebrew.
+
+Spot has to be manually compiled using GCC and installed.
+It is necessary to ensure that meson can find Spot using `pkgconfig`.
+This can be done, for example, by setting the `pkg_config_path` in a meson-native file.
+
+## Installing dependencies on Ubuntu
+
+TODO: explain the trick currently used in the CI.
 
 # Compiling, running, benchmarking
 
@@ -26,10 +47,16 @@ To compile and run, use Meson:
 $ meson setup build
 $ cd build
 $ meson compile
-$ src/acacia-bonsai --help
+$ src/acacia-bonsai -h
   [...]
-$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' --ins req --outs grant
+$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
+```
+
+Another usage:
+```
+$ src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant
+UNKNOWN
 ```
 
 Note that this will compile a debug version of Acacia-Bonsai.  A benchmarking
@@ -45,24 +72,20 @@ $ ./self-benchmark.sh -c best -B
   [...]
 $ cd build_best
 $ src/acacia-bonsai --help
-$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' --ins req --outs grant
+$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
 The `-c` option selects a configuration and the `-B` option deactivates actual
 benchmarking, so that only compilation is done.
 
-## Compiling for StarExec
-You will need some wrapping script (see `starexec` directory). Additionally,
-you will need to compile in an `x86_64` machine with
-everything statically linked because StarExec runs on an old linux with old
-libraries. For instance:
-1. Set up a meson build library with 
+# Documentation
+
+This project comes with a doxygen configuration file. Execute the following command to generate
+documentation:
 ```
-CXXFLAGS="-march=sandybridge -O3 -DNDEBUG" meson setup $BUILD_DIR --buildtype=release --prefer-static --default-library=static
+doxygen Doxyfile
 ```
-2. Print the compilation command with `meson compile -vC $BUILD_DIR` for acacia-bonsai and add
-   `-static` to ensure everything is statically linked.
 
 # Citing
 

@@ -4,11 +4,17 @@
 template <typename Aut, typename Formater>
 class transition_enumerator {
   public:
-    transition_enumerator (Aut aut, Formater formater) :
-      aut {aut}, start_state {0}, one_state {false}, formater {formater} {}
+    transition_enumerator (Aut aut, Formater formater)
+      : aut {aut},
+        start_state {0},
+        one_state {false},
+        formater {formater} {}
 
-    transition_enumerator (Aut aut, unsigned state, Formater formater) :
-      aut {aut}, start_state {state}, one_state {true}, formater {formater} {}
+    transition_enumerator (Aut aut, unsigned state, Formater formater)
+      : aut {aut},
+        start_state {state},
+        one_state {true},
+        formater {formater} {}
 
     using value_type = std::pair<bdd, std::pair<unsigned, unsigned>>;
     typedef value_type& reference;
@@ -23,8 +29,11 @@ class transition_enumerator {
       public:
         using iterator_category = std::input_iterator_tag;
         using value_type = bdd;
-        
-        trans_it (Aut aut, unsigned state, Formater formater) : aut {aut}, state {state}, formater {formater} {
+
+        trans_it (Aut aut, unsigned state, Formater formater)
+          : aut {aut},
+            state {state},
+            formater {formater} {
           if (state == aut->num_states ())
             return;
           it = aut->out (state).begin ();
@@ -34,7 +43,7 @@ class transition_enumerator {
           assert (state < aut->num_states () && it->dst < aut->num_states ());
           return std::pair (it->cond, formater (*it));
         }
-        bool operator!= (const trans_it& rhs) const { // Minimal implementation
+        bool operator!= (const trans_it& rhs) const {  // Minimal implementation
           return rhs.state != state;
         }
 
@@ -55,34 +64,31 @@ class transition_enumerator {
           }
         }
 
-
         Aut aut;
         decltype (aut->out (0).begin ()) it;
         unsigned state;
         Formater formater;
     };
+
   public:
     auto begin () const { return trans_it (aut, start_state, formater); }
-    auto end () const { return trans_it (aut, one_state ? start_state + 1 : aut->num_states (), formater); }
+    auto end () const {
+      return trans_it (aut, one_state ? start_state + 1 : aut->num_states (), formater);
+    }
 };
-
 
 namespace transition_formater {
   template <typename Aut>
-  using edge_t = decltype (*(Aut()->out(0).begin ())) ;
+  using edge_t = decltype (*(Aut ()->out (0).begin ()));
 
   template <typename Aut>
   struct src_and_dst {
       src_and_dst (const Aut& aut) {}
-      auto operator() (edge_t<Aut> e) const {
-        return std::pair (e.src, e.dst);
-      }
+      auto operator() (edge_t<Aut> e) const { return std::pair (e.src, e.dst); }
   };
   template <typename Aut>
   struct cond_and_dst {
       cond_and_dst (const Aut& aut) {}
-      auto operator() (edge_t<Aut> e) const {
-        return std::pair (e.cond, e.dst);
-      }
+      auto operator() (edge_t<Aut> e) const { return std::pair (e.cond, e.dst); }
   };
 }

@@ -1,19 +1,21 @@
 #pragma once
 
+#define VERSION 1.9  // Kasper + Guillermo determined this arbitrarily
+
+#define EXIT_CODE_REAL 0
+#define EXIT_CODE_UNKNOWN 1
+#define EXIT_CODE_ERROR 2
+
 #include "utils/todo.hh"
 
 #ifndef DEFAULT_K
-# define DEFAULT_K 11
+# define DEFAULT_K 99
 #endif
 #ifndef DEFAULT_KMIN
-# define DEFAULT_KMIN -1u
+# define DEFAULT_KMIN 11
 #endif
 #ifndef DEFAULT_KINC
-# define DEFAULT_KINC 0
-#endif
-
-#ifndef DEFAULT_UNREAL_X
-# define DEFAULT_UNREAL_X UNREAL_X_BOTH
+# define DEFAULT_KINC 5
 #endif
 
 #ifndef VECTOR_ELT_T
@@ -24,7 +26,7 @@
 # define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut
 #endif
 #ifdef NDEBUG
-# pragma message ("Compiling with NDEBUG")
+# pragma message("Compiling with NDEBUG")
 # ifndef STATIC_ARRAY_MAX
 #  define STATIC_ARRAY_MAX 300
 # endif
@@ -34,7 +36,7 @@
 # endif
 
 #else
-# pragma message ("Compiling without NDEBUG")
+# pragma message("Compiling without NDEBUG")
 # ifndef STATIC_ARRAY_MAX
 #  define STATIC_ARRAY_MAX 30
 # endif
@@ -43,12 +45,16 @@
 # endif
 #endif
 
+#ifndef CPRE_AVOID_UNIONS
+# define CPRE_AVOID_UNIONS 0
+#endif
+
 #ifdef AC_DATA
-# pragma message ("Compiling with AC_DATA")
+# pragma message("Compiling with AC_DATA")
 #endif
 
 #ifdef NO_SIMD
-# pragma message ("Compiling without SIMD")
+# pragma message("Compiling without SIMD")
 # ifndef ARRAY_IMPL
 #  define ARRAY_IMPL array_backed_sum
 # endif
@@ -56,7 +62,7 @@
 #  define VECTOR_IMPL vector_backed
 # endif
 #else
-# pragma message ("Compiling with SIMD")
+# pragma message("Compiling with SIMD")
 # ifndef ARRAY_IMPL
 #  define ARRAY_IMPL simd_array_backed_sum
 # endif
@@ -78,7 +84,7 @@
 #endif
 
 #ifndef AUT_PREPROCESSOR
-# define AUT_PREPROCESSOR aut_preprocessors::surely_losing
+# define AUT_PREPROCESSOR aut_preprocessors::standard
 #endif
 
 #ifndef BOOLEAN_STATES
