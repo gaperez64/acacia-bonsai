@@ -1,34 +1,22 @@
 INFO {
-  TITLE:       "Converted TSL Specification: button"
+  TITLE:       "Converted TSL Specification: Button"
   DESCRIPTION: "TSL specification, which has been converted to TLSF."
   SEMANTICS:   Mealy
   TARGET:      Mealy
 }
-
 MAIN {
   INPUTS {
-    PTERMeventdclickb;
+    p0p0event0click;
   }
 
   OUTPUTS {
-    UTERMcountcount;
-    UTERMcountincrementdcountb;
-    UTERMpicpic;
-    UTERMpicrenderButtondcountb;
-  }
-
-  ASSERT {
-    (! ((UTERMcountcount && !(UTERMcountincrementdcountb)) <-> (UTERMcountincrementdcountb && !(UTERMcountcount))));
-    (! ((UTERMpicpic && !(UTERMpicrenderButtondcountb)) <-> (UTERMpicrenderButtondcountb && !(UTERMpicpic))));
+    u0count0count;
+    u0count0f1dincrement0count1b;
+    u0pic0pic;
+    u0pic0f1drender2button0count1b;
   }
 
   GUARANTEE {
-    (G ((PTERMeventdclickb <-> UTERMcountincrementdcountb))) && (G (UTERMpicrenderButtondcountb));
+    (G ((! (((u0count0count) && (! (u0count0f1dincrement0count1b))) <-> ((u0count0f1dincrement0count1b) && (! (u0count0count))))) && (! (((u0pic0pic) && (! (u0pic0f1drender2button0count1b))) <-> ((u0pic0f1drender2button0count1b) && (! (u0pic0pic))))))) && ((G ((p0p0event0click) <-> (u0count0f1dincrement0count1b))) && (G (u0pic0f1drender2button0count1b)));
   }
 }
-
-
-//#!SYNTCOMP
-//STATUS : realizable
-//REF_SIZE : -1
-//#.
