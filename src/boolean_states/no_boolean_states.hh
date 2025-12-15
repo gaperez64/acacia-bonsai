@@ -7,9 +7,8 @@ namespace boolean_states {
       public:
         no_boolean_states (Aut aut, int K) : aut {aut}, K {K} {}
 
-        size_t operator() () const {
-          return aut->num_states ();
-        }
+        size_t operator() () const { return aut->num_states (); }
+
       private:
         const Aut aut;
         const int K;

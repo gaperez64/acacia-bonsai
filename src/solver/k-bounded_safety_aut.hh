@@ -3,41 +3,40 @@
 #undef MAX_CRITICAL_INPUTS
 #define MAX_CRITICAL_INPUTS 1
 
-#include <algorithm>
-#include <map>
-#include <functional>
-#include <random>
-#include <list>
-#include <chrono>
-#include <fstream>
-
-#include <spot/twa/formula2bdd.hh>
-#include <spot/twa/twagraph.hh>
-
+#include "actioners.hh"
+#include "input_pickers.hh"
+#include "ios_precomputers.hh"
 #include "utils/bdd_helper.hh"
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
-#include <utils/verbose.hh>
 #include "utils/typeinfo.hh"
+
+#include <algorithm>
+#include <chrono>
+#include <fstream>
+#include <functional>
+#include <list>
+#include <map>
+#include <random>
+#include <spot/twa/formula2bdd.hh>
+#include <spot/twa/twagraph.hh>
+#include <utils/verbose.hh>
 
 #include <posets/utils/vector_mm.hh>
 #include <posets/vectors.hh>
 
-#include "ios_precomputers.hh"
-#include "input_pickers.hh"
-#include "actioners.hh"
-
-//#define debug(A...) do { std::cout << A << std::endl; } while (0)
+// #define debug(A...) do { std::cout << A << std::endl; } while (0)
 #define debug(A...)
-#define debug_(A...) do { std::cout << A << std::endl; } while (0)
-//#define debug_(A...)
-//#define ASSERT(A...) assert (A)
+#define debug_(A...)             \
+  do {                           \
+    std::cout << A << std::endl; \
+  } while (0)
+// #define debug_(A...)
+// #define ASSERT(A...) assert (A)
 #define ASSERT(A...)
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.
-template <class SetOfStates,
-          class IOsPrecomputationMaker,
-          class ActionerMaker,
+template <class SetOfStates, class IOsPrecomputationMaker, class ActionerMaker,
           class InputPickerMaker>
 class k_bounded_safety_aut_detail {
     using State = typename SetOfStates::value_type;
@@ -47,41 +46,46 @@ class k_bounded_safety_aut_detail {
                                  bdd input_support, bdd output_support,
                                  const IOsPrecomputationMaker& ios_precomputer_maker,
                                  const ActionerMaker& actioner_maker,
-                                 const InputPickerMaker& input_picker_maker) :
-      aut {aut}, Kfrom {Kfrom}, Kto {Kto}, Kinc {Kinc},
-      input_support {input_support}, output_support {output_support},
-      gen {0},
-      ios_precomputer_maker {ios_precomputer_maker},
-      actioner_maker {actioner_maker},
-      input_picker_maker {input_picker_maker}
-    { }
+                                 const InputPickerMaker& input_picker_maker)
+      : aut {aut},
+        Kfrom {Kfrom},
+        Kto {Kto},
+        Kinc {Kinc},
+        input_support {input_support},
+        output_support {output_support},
+        gen {0},
+        ios_precomputer_maker {ios_precomputer_maker},
+        actioner_maker {actioner_maker},
+        input_picker_maker {input_picker_maker} {}
 
     spot::formula bdd_to_formula (bdd f) const {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
     auto get_inputs_to_ios (bdd invariant) {
-      // call the right constructor: with an extra variant if supported, otherwise the invariant is ignored
-      // (it is assumed that other code will see that the invariant was not taken into account,
+      // call the right constructor: with an extra variant if supported, otherwise the invariant is
+      // ignored (it is assumed that other code will see that the invariant was not taken into
+      // account,
       //  such as in composition_mt.hh which calls finish_invariant only when needed)
-      if constexpr (IOsPrecomputationMaker::supports_invariant) {
+      if constexpr (IOsPrecomputationMaker::supports_invariant)
         return (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
-      } else {
+      else
         return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
-      }
     }
 
     std::optional<SetOfStates> solve (SetOfStates& F, bdd invariant, std::vector<int> init_state) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
-      verb_do (1, vout << "IOS Precomputer with invariant " << bdd_to_formula (invariant) << "..." << std::endl);
+      verb_do (1, vout << "IOS Precomputer with invariant " << bdd_to_formula (invariant) << "..."
+                       << std::endl);
       auto inputs_to_ios = get_inputs_to_ios (invariant);
-      // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>, vector<pair<int, int>>>
+      // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>,
+      // vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, K);
       verb_do (1, vout << "Fetching IO actions" << std::endl);
-      auto input_output_fwd_actions = actioner.actions (); // list<pair<bdd, list<action_vec>>>
+      auto input_output_fwd_actions = actioner.actions ();  // list<pair<bdd, list<action_vec>>>
       verb_do (1, io_stats (input_output_fwd_actions));
 
       int loopcount = 0;
@@ -90,12 +94,11 @@ class k_bounded_safety_aut_detail {
       init.assign (aut->num_states (), -1);
       // either the initial state from the automaton, or some given initial
       // configuration
-      if (init_state.size () == 0) {
+      if (init_state.size () == 0)
         init[aut->get_init_state_number ()] = 0;
-      } else {
+      else
         for (size_t i = 0; i < init_state.size (); i++)
           init[i] = init_state[i];
-      }
 
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
 
@@ -104,9 +107,9 @@ class k_bounded_safety_aut_detail {
         verb_do (1, vout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl);
 
         auto&& input = input_picker (F);
-        if (not input.has_value ()) // No more inputs, and we just tested that init was present
+        if (not input.has_value ())  // No more inputs, and we just tested that init was present
         {
-          //if (!synth.empty ()) synthesis (F, synth, actioner);
+          // if (!synth.empty ()) synthesis (F, synth, actioner);
           return std::make_optional<SetOfStates> (std::move (F));
         }
 
@@ -118,7 +121,10 @@ class k_bounded_safety_aut_detail {
           verb_do (1, vout << "Incrementing K from " << K << " to " << K + Kinc << std::endl);
           K += Kinc;
           actioner.setK (K);
-          verb_do (1, {vout << "Adding Kinc to every vector..."; vout.flush (); });
+          verb_do (1, {
+            vout << "Adding Kinc to every vector...";
+            vout.flush ();
+          });
           F = F.apply ([&] (const State& s) {
             auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
             for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
@@ -156,7 +162,6 @@ class k_bounded_safety_aut_detail {
     // F1io = PreHat (F, i, o)
     template <typename Action, typename Actioner>
     void cpre_inplace (SetOfStates& F, const Action& io_action, Actioner& actioner) {
-
       verb_do (2, vout << "Computing cpre(F) with F = " << std::endl << F);
 
       const auto& [input, actions] = io_action.get ();
@@ -205,7 +210,6 @@ class k_bounded_safety_aut_detail {
       verb_do (2, vout << "F = " << std::endl << F);
     }
 
-
     // get index of the first dominating element that dominates the vector v
     // Container can be SetOfStates, or std::vector
     template <class Container>
@@ -217,11 +221,12 @@ class k_bounded_safety_aut_detail {
         // when using vector? Or using a specific SetOfStates like
         // vector-based
         // FIXME: Or just compare the two vectors!!!
-        if (SetOfStates ((*it).copy ()).contains (v)) return i;
+        if (SetOfStates ((*it).copy ()).contains (v))
+          return i;
         i++;
         ++it;
       }
-      return -1; // not found
+      return -1;  // not found
     }
 
     template <class Container>
@@ -229,11 +234,12 @@ class k_bounded_safety_aut_detail {
       int i = 0;
       auto it = saferegion.begin ();
       while (it != saferegion.end ()) {
-        if (SetOfStates ((*it).copy ()).contains (v)) return (*it).copy ();
+        if (SetOfStates ((*it).copy ()).contains (v))
+          return (*it).copy ();
         i++;
         ++it;
       }
-      std::abort (); // element should be found, if we reach this -> bad
+      std::abort ();  // element should be found, if we reach this -> bad
     }
 
     bdd binary_encode (unsigned int s, const std::vector<bdd>& src) const {
@@ -255,64 +261,71 @@ class k_bounded_safety_aut_detail {
       return res;
     }
 
-    // could traverse the BDD instead but this is simpler, this function is only called on input/output support
+    // could traverse the BDD instead but this is simpler, this function is only called on
+    // input/output support
     std::vector<bdd> cube_to_vector (const bdd& cube) {
       std::vector<bdd> res;
       for (int i = 0; i < bdd_varnum (); i++) {
         bdd var = bdd_ithvar (i);
-        if (cube == (cube & var)) {
+        if (cube == (cube & var))
           res.push_back (var);
-        }
       }
       return res;
     }
 
     struct transition {
-      bdd IO;
-      int new_state = -1;
+        bdd IO;
+        int new_state = -1;
     };
 
     struct badtransition {
-      bdd IO;
-      State new_state;
+        bdd IO;
+        State new_state;
     };
 
     // return IO + destination state (one IO, one destination state: deterministic)
     template <typename Actions, typename Actioner>
     std::pair<bdd, State> get_transition (const State& elem, const Actions& actions,
-                                          Actioner& actioner, const SetOfStates& saferegion) const {
-      // action_vec maps each state q to a list of (p, is_q_accepting) tuples (vector<vector<tuple<unsigned int, bool>>>)
+                                          Actioner& actioner,
+                                          const SetOfStates& saferegion) const {
+      // action_vec maps each state q to a list of (p, is_q_accepting) tuples
+      // (vector<vector<tuple<unsigned int, bool>>>)
       for (const auto& action_vec : actions) {
         // calculate fwd(m, action), see if this is dominated by some element in the safe region
-        SetOfStates&& fwd = SetOfStates (elem.copy ()).apply ([this, &action_vec, &actioner] (const auto& _m) {
-          auto&& ret = actioner.apply (_m, action_vec, actioners::direction::forward);
-          verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
-          return ret;
-        });
+        SetOfStates&& fwd =
+            SetOfStates (elem.copy ()).apply ([this, &action_vec, &actioner] (const auto& _m) {
+              auto&& ret = actioner.apply (_m, action_vec, actioners::direction::forward);
+              verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
+              return ret;
+            });
 
         assert (fwd.size () == 1);
 
         if (saferegion.contains (*fwd.begin ())) {
-          verb_do (2, vout << "dominated with IO = " << bdd_to_formula (action_vec.IO) << ": " << fwd);
-          return { action_vec.IO, (*fwd.begin ()).copy () }; // <- for deterministic policy using first IO that is found
+          verb_do (
+              2, vout << "dominated with IO = " << bdd_to_formula (action_vec.IO) << ": " << fwd);
+          return {action_vec.IO,
+                  (*fwd.begin ())
+                      .copy ()};  // <- for deterministic policy using first IO that is found
         }
       }
 
-      utils::vout << "No transition found from " << elem << " with safe region " << saferegion << "\n";
+      utils::vout << "No transition found from " << elem << " with safe region " << saferegion
+                  << "\n";
       assert (false);
-      return { bddfalse, elem.copy () };
+      return {bddfalse, elem.copy ()};
     }
 
-
     ////////////////////////////////////////////////
-
 
     template <typename IToActions>
     void io_stats (const IToActions& inputs_to_actions) {
       size_t all_io = 0;
       for (const auto& [inputs, ios] : inputs_to_actions) {
-        verb_do (1, vout << "INPUT: " << bdd_to_formula (inputs)
-                 /*   */ <<  " #ACTIONS: " << ios.size () << std::endl);
+        verb_do (1, vout << "INPUT: "
+                         << bdd_to_formula (inputs)
+                         /*   */
+                         << " #ACTIONS: " << ios.size () << std::endl);
         all_io += ios.size ();
       }
       auto ins = input_support;
@@ -329,34 +342,30 @@ class k_bounded_safety_aut_detail {
         outs = bdd_high (outs);
       }
 
-      utils::vout << "INPUT GAIN: " << inputs_to_actions.size () << "/" << all_inputs_size
-                  << " = " << (inputs_to_actions.size () * 100 / all_inputs_size) << "%\n"
-                  << "IO GAIN: " << all_io << "/" << all_inputs_size * all_outputs_size
-                  << " = " << (all_io * 100 / (all_inputs_size * all_outputs_size)) << "%"
-                  << std::endl;
+      utils::vout << "INPUT GAIN: " << inputs_to_actions.size () << "/" << all_inputs_size << " = "
+                  << (inputs_to_actions.size () * 100 / all_inputs_size) << "%\n"
+                  << "IO GAIN: " << all_io << "/" << all_inputs_size * all_outputs_size << " = "
+                  << (all_io * 100 / (all_inputs_size * all_outputs_size)) << "%" << std::endl;
     }
 };
 
-template <class SetOfStates,
-          class IOsPrecomputationMaker,
-          class ActionerMaker,
+template <class SetOfStates, class IOsPrecomputationMaker, class ActionerMaker,
           class InputPickerMaker>
-static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int Kfrom, int Kto, int Kinc,
-                                        bdd input_support, bdd output_support,
+static auto k_bounded_safety_aut_maker (const spot::twa_graph_ptr& aut, int Kfrom, int Kto,
+                                        int Kinc, bdd input_support, bdd output_support,
                                         const IOsPrecomputationMaker& ios_precomputer_maker,
                                         const ActionerMaker& actioner_maker,
                                         const InputPickerMaker& input_picker_maker) {
-  return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker, InputPickerMaker>
-    (aut, Kfrom, Kto, Kinc, input_support, output_support, ios_precomputer_maker, actioner_maker, input_picker_maker);
+  return k_bounded_safety_aut_detail<SetOfStates, IOsPrecomputationMaker, ActionerMaker,
+                                     InputPickerMaker> (aut, Kfrom, Kto, Kinc, input_support,
+                                                        output_support, ios_precomputer_maker,
+                                                        actioner_maker, input_picker_maker);
 }
 
 template <class SetOfStates>
 static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int Kfrom, int Kto, int Kinc,
                                   bdd input_support, bdd output_support) {
-  return k_bounded_safety_aut_maker<SetOfStates> (aut, Kfrom, Kto, Kinc,
-                                                  input_support, output_support,
-                                                  IOS_PRECOMPUTER (),
-                                                  ACTIONER (),
-                                                  INPUT_PICKER ()
-    );
+  return k_bounded_safety_aut_maker<SetOfStates> (aut, Kfrom, Kto, Kinc, input_support,
+                                                  output_support, IOS_PRECOMPUTER (), ACTIONER (),
+                                                  INPUT_PICKER ());
 }

@@ -1,16 +1,16 @@
 #pragma once
 
-#include <random>
-#include <optional>
 #include "actioners.hh"
+
+#include <optional>
+#include <random>
 
 namespace input_pickers {
   namespace detail {
     template <typename FwdActions, typename Actioner>
     struct critical_pq {
       public:
-        critical_pq (FwdActions& fwd_actions, Actioner& actioner) :
-          actioner {actioner}, gen {0} {
+        critical_pq (FwdActions& fwd_actions, Actioner& actioner) : actioner {actioner}, gen {0} {
           int priority = 0;
           for (auto& el : fwd_actions)
             fwd_actions_pq.emplace (priority++, std::ref (el));
@@ -48,15 +48,17 @@ namespace input_pickers {
 
               if (is_witness) {
                 // inputs witness one-step-loss of f
-                verb_do (3, vout << "Input " << input
-                         /*   */ << " witnesses one-step-loss of " << f << std::endl);
+                verb_do (3, vout << "Input "
+                                 << input
+                                 /*   */
+                                 << " witnesses one-step-loss of " << f << std::endl);
                 critical_input = it;
                 break;
               }
 
               TODO ("Try also putting a weight, rather than pushing at the front.");
               if (it_act != actions.begin ())
-                actions.splice (actions.begin(), actions, it_act);
+                actions.splice (actions.begin (), actions, it_act);
             }
             if (critical_input != fwd_actions_pq.end ())
               break;
@@ -75,20 +77,21 @@ namespace input_pickers {
           }
 
           verb_do (2, {
-              vout << "Critical input: ";
-              const auto& [input, actions] = critical_input->second.get ();
-              vout << "[" << input << "] " << std::endl;
-            });
+            vout << "Critical input: ";
+            const auto& [input, actions] = critical_input->second.get ();
+            vout << "[" << input << "] " << std::endl;
+          });
 
           return std::make_optional (critical_input->second);
         }
+
       private:
         using input_and_actions_ref = std::reference_wrapper<typename FwdActions::value_type>;
-        using fwd_actions_pq_t = std::multimap<int, input_and_actions_ref>; // needs to be signed
+        using fwd_actions_pq_t = std::multimap<int, input_and_actions_ref>;  // needs to be signed
         fwd_actions_pq_t fwd_actions_pq;
         Actioner& actioner;
         std::mt19937 gen;
-   };
+    };
   }
 
   struct critical_pq {

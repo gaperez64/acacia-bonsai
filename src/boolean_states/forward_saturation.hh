@@ -1,5 +1,11 @@
 #pragma once
 
+#include "utils/todo.hh"
+#include "utils/verbose.hh"
+
+#include <cassert>
+#include <spot/twa/acc.hh>
+
 // So-called "Optimization 1" in ac+.
 // A state is bounded if it cannot carry a counter value of at least k.
 /* Note: In ac+, this is computed backward:
@@ -67,17 +73,21 @@ namespace boolean_states {
 
           assert (unbounded == nunbounded);
 
-          verb_do (1, vout << "Bounded states: " << bounded << " / "
-                   /*   */ << aut->num_states () << " = "
-                   /*   */ << (bounded * 100) / aut->num_states () << "%" << std::endl);
+          verb_do (1, vout << "Bounded states: " << bounded
+                           << " / "
+                           /*   */
+                           << aut->num_states ()
+                           << " = "
+                           /*   */
+                           << (bounded * 100) / aut->num_states () << "%" << std::endl);
 
           // WARNING: Internal Spot
-          auto& g = aut->get_graph();
-          g.rename_states_(rename);
-          aut->set_init_state(rename[aut->get_init_state_number()]);
-          g.sort_edges_();
-          g.chain_edges_();
-          aut->prop_universal(spot::trival::maybe ());
+          auto& g = aut->get_graph ();
+          g.rename_states_ (rename);
+          aut->set_init_state (rename[aut->get_init_state_number ()]);
+          g.sort_edges_ ();
+          g.chain_edges_ ();
+          aut->prop_universal (spot::trival::maybe ());
 
           return nunbounded;
         }

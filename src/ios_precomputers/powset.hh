@@ -1,5 +1,9 @@
 #pragma once
 
+
+#include <list>
+#include <bddx.h>
+
 #include "utils/transition_enumerator.hh"
 
 namespace ios_precomputers {
@@ -23,7 +27,8 @@ namespace ios_precomputers {
 
      Given C and k, does there exist an unambiguous refinement of C of size < k?
 
-     This is certainly NP-complete ([SP7] in Garey and Johnson is that problem without "unambiguous").]]
+     This is certainly NP-complete ([SP7] in Garey and Johnson is that problem without
+     "unambiguous").]]
 
      *Motivation.*
 
@@ -64,11 +69,11 @@ namespace ios_precomputers {
      to become:
 
      3. Compute C' & S and project it on the X_? variables.
-     4. Iterate through each of the variables that appear: if X_S' appears, this means that S cap S' is nonempty.
+     4. Iterate through each of the variables that appear: if X_S' appears, this means that S cap
+     S' is nonempty.
      */
     template <typename RetSet, typename FormSet, typename Projection>
-    auto power (const FormSet& formulas_to_transs,
-                const Projection& projection) {
+    auto power (const FormSet& formulas_to_transs, const Projection& projection) {
       RetSet powset;
 
       powset.push_back (typename RetSet::value_type (bddtrue, {}));
@@ -80,7 +85,7 @@ namespace ios_precomputers {
           auto mod_and_it = mod & it->first;
           if (mod_and_it != bddfalse) {
             auto notmod_and_it = (!mod) & it->first;
-            if (notmod_and_it != bddfalse) { // SPLIT
+            if (notmod_and_it != bddfalse) {  // SPLIT
               powset.emplace_front (mod_and_it, it->second);
               powset.front ().second.push_back (transs);
               powset.emplace_front (notmod_and_it, std::move (it->second));
@@ -102,23 +107,21 @@ namespace ios_precomputers {
     template <typename Aut, typename TransSet>
     class powset {
       public:
-        powset (Aut aut, bdd input_support, bdd output_support) :
-          aut {aut}, input_support {input_support}, output_support {output_support}
-        {}
+        powset (Aut aut, bdd input_support, bdd output_support)
+          : aut {aut},
+            input_support {input_support},
+            output_support {output_support} {}
 
-        auto operator() () const
-        {
+        auto operator() () const {
           using crossings_t = typename std::list<std::pair<bdd, TransSet>>;
           using input_to_ios_t = typename std::list<std::pair<bdd, std::list<TransSet>>>;
 
           auto crossings = power<crossings_t> (
-            transition_enumerator (aut, transition_formater::src_and_dst (aut)),
-            [] (bdd b) { return b; });
+              transition_enumerator (aut, transition_formater::src_and_dst (aut)),
+              [] (bdd b) { return b; });
 
           return power<input_to_ios_t> (crossings,
-                                        [this] (bdd b) {
-                                          return bdd_exist (b, output_support);
-                                        });
+                                        [this] (bdd b) { return bdd_exist (b, output_support); });
         }
 
       private:
@@ -129,7 +132,7 @@ namespace ios_precomputers {
   }
 
   struct powset {
-    static const bool supports_invariant = false;
+      static const bool supports_invariant = false;
 
       template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {

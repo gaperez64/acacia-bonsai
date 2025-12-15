@@ -1,6 +1,15 @@
 #pragma once
 
+
+
+#include <cassert>
+#include <map>
+#include <list>
+
+#include <bddx.h>
+
 #include "utils/transition_enumerator.hh"
+#include "utils/bdd_helper.hh"
 
 // See powset.hh for a definition of the computational problem solved here, and
 // explanations on this implementation.
@@ -8,8 +17,7 @@
 namespace ios_precomputers {
   namespace detail {
     template <typename RetSet, typename FormSet, typename Projection>
-    auto power_fakevars (const FormSet& crossings,
-                         const Projection& projection) {
+    auto power_fakevars (const FormSet& crossings, const Projection& projection) {
       RetSet powset;
       powset[bddtrue] = typename RetSet::mapped_type ({});
 
@@ -50,7 +58,8 @@ namespace ios_precomputers {
           assert (input_and_crossing_inputs != bddfalse);
           bdd input_and_not_crossing_inputs;
           if (input_and_crossing_inputs != input &&
-              (input_and_not_crossing_inputs = input & not_crossing_inputs) != bddfalse) { // Split
+              (input_and_not_crossing_inputs = input & not_crossing_inputs) !=
+                  bddfalse) {  // Split
             auto it = powset.find (input);
             assert (it != powset.end ());
             powset.emplace (input_and_not_crossing_inputs, it->second);
@@ -59,7 +68,8 @@ namespace ios_precomputers {
             powset.erase (it);
 
             auto ianc_var = get_fresh_var ();
-            // all_inputs_with_fvars = bdd_forall (all_inputs_with_fvars, bdd_ithvar (var)); // Which one is better?
+            // all_inputs_with_fvars = bdd_forall (all_inputs_with_fvars, bdd_ithvar (var)); //
+            // Which one is better?
             all_inputs_with_fvars = bdd_restrict (all_inputs_with_fvars, bdd_nithvar (var));
             all_inputs_with_fvars |= ((bdd_ithvar (var) & input_and_crossing_inputs) |
                                       (bdd_ithvar (ianc_var) & input_and_not_crossing_inputs));
@@ -71,7 +81,7 @@ namespace ios_precomputers {
             auto node_handler = powset.extract (input);
             node_handler.key () = input_and_crossing_inputs;
             node_handler.mapped ().push_back (trans);
-            powset.insert (std::move(node_handler));
+            powset.insert (std::move (node_handler));
           }
 
           fvars = bdd_low (fvars);
@@ -85,23 +95,21 @@ namespace ios_precomputers {
     template <typename Aut, typename TransSet>
     class fake_vars {
       public:
-        fake_vars (Aut aut, bdd input_support, bdd output_support) :
-          aut {aut}, input_support {input_support}, output_support {output_support}
-        {}
+        fake_vars (Aut aut, bdd input_support, bdd output_support)
+          : aut {aut},
+            input_support {input_support},
+            output_support {output_support} {}
 
-        auto operator() () const
-        {
+        auto operator() () const {
           using crossings_t = typename std::map<bdd_t, TransSet>;
           using input_to_ios_t = typename std::map<bdd_t, std::list<TransSet>>;
 
           auto crossings = power_fakevars<crossings_t> (
-            transition_enumerator (aut, transition_formater::src_and_dst (aut)),
-            [] (bdd b) { return b; });
+              transition_enumerator (aut, transition_formater::src_and_dst (aut)),
+              [] (bdd b) { return b; });
 
-          return power_fakevars<input_to_ios_t> (crossings,
-                                                 [this] (bdd b) {
-                                                   return bdd_exist (b, output_support);
-                                                 });
+          return power_fakevars<input_to_ios_t> (
+              crossings, [this] (bdd b) { return bdd_exist (b, output_support); });
         }
 
       private:
@@ -112,7 +120,7 @@ namespace ios_precomputers {
   }
 
   struct fake_vars {
-    static const bool supports_invariant = false;
+      static const bool supports_invariant = false;
 
       template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
