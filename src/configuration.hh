@@ -84,7 +84,7 @@
 #endif
 
 #ifndef AUT_PREPROCESSOR
-# define AUT_PREPROCESSOR aut_preprocessors::no_preprocessing
+# define AUT_PREPROCESSOR aut_preprocessors::standard
 #endif
 
 #ifndef BOOLEAN_STATES
