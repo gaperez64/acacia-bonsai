@@ -133,8 +133,6 @@ namespace ios_precomputers {
   }
 
   struct powset {
-      static const bool supports_invariant = false;
-
       template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
         return detail::powset<Aut, TransSet> (aut, input_support, output_support);

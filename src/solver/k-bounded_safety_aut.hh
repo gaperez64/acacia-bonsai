@@ -62,24 +62,15 @@ class k_bounded_safety_aut_detail {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
-    auto get_inputs_to_ios (bdd invariant) {
-      // call the right constructor: with an extra variant if supported, otherwise the invariant is
-      // ignored (it is assumed that other code will see that the invariant was not taken into
-      // account,
-      //  such as in composition_mt.hh which calls finish_invariant only when needed)
-      if constexpr (IOsPrecomputationMaker::supports_invariant)
-        return (ios_precomputer_maker.make (aut, input_support, output_support, invariant)) ();
-      else
-        return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
+    auto get_inputs_to_ios () {
+      return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
     }
 
-    std::optional<SetOfStates> solve (SetOfStates& F, bdd invariant, std::vector<int> init_state) {
+    std::optional<SetOfStates> solve (SetOfStates& F, std::vector<int> init_state) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
-      verb_do (1, vout << "IOS Precomputer with invariant " << bdd_to_formula (invariant) << "..."
-                       << std::endl);
-      auto inputs_to_ios = get_inputs_to_ios (invariant);
+      auto inputs_to_ios = get_inputs_to_ios ();
       // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>,
       // vector<pair<int, int>>>
       verb_do (1, vout << "Make actions..." << std::endl);

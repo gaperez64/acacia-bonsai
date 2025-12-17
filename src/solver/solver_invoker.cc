@@ -58,7 +58,7 @@ int run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
   safety_game game {aut, opt_kmin, posets::vectors::bool_threshold};
 
   const bool res = solve_game (game, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs,
-                               std::move (init_state), bddtrue);
+                               std::move (init_state));
 
   dict->unregister_all_my_variables (nullptr);
 
