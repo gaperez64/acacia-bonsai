@@ -1,13 +1,14 @@
+#include "solve_game.hh"
+
+#include "actioners.hh"
 #include "configuration.hh"
-#include "k-bounded_safety_aut.hh"
+#include "input_pickers.hh"
+#include "ios_precomputers.hh"
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "safety_game.hh"
 #include "types.hh"
 #include "utils/static_switch.hh"
-#include "actioners.hh"
-#include "input_pickers.hh"
-#include "ios_precomputers.hh"
 
 #include <spot/misc/timer.hh>
 
