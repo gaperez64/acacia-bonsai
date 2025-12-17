@@ -363,4 +363,4 @@ static auto k_bounded_safety_aut (const spot::twa_graph_ptr& aut, int Kfrom, int
 //                                      InputPickerMaker> (aut, Kfrom, Kto, Kinc, input_support,
 //                                                   output_support, IOS_PRECOMPUTER (), ACTIONER<typename SetOfStates::value_type> (),
 //                                                   INPUT_PICKER ());
-}
+// }
