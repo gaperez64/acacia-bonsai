@@ -38,11 +38,8 @@ bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc,
                     posets::downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<posets::vectors::x_and_bitset<
                         posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, std::max (vnonbools.value, 1UL)>,
                         vbitsets.value>>;
-                // using SetOfStates = SpecializedDownset; // This is how the ACTIONER directive is defined!
-                // TODO: why does this template not work?
-                // auto skn = k_bounded_safety_aut<SpecializedDownset> (
-                    // game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SetOfStates::value_type> (), INPUT_PICKER ());
-                auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs);
+                auto skn = k_bounded_safety_aut_maker<SpecializedDownset> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
+                                                  INPUT_PICKER ());
                 assert (game.safe);
                 auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
                 auto safe = skn.solve (current_safe);
@@ -63,10 +60,11 @@ bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc,
           using SpecializedDownset =
               posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::x_and_bitset<
                   posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>, vbitsets.value>>;
-          // using SetOfStates = SpecializedDownset;  // This is how the ACTIONER directive is defined!
-          // auto skn = k_bounded_safety_aut<SpecializedDownset> (game.aut, kmin, kmax, kinc,
-          // all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SetOfStates::value_type> (), INPUT_PICKER ());
+
+          // TODO: figure out how the two lines below differ from eachother
           auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs);
+          // auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
+                                                  // INPUT_PICKER ());
           assert (game.safe);
           auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
           auto safe = skn.solve (current_safe);
