@@ -1,12 +1,10 @@
 
 
 #include "aut_preprocessors.hh"
-#include "boolean_states.hh"
 #include "configuration.hh"
 #include "create_automaton.hh"
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
-#include "safety_game.hh"
 #include "solve_game.hh"
 
 #include <spot/tl/formula.hh>
@@ -47,16 +45,8 @@ int run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
 
   auto aut = create_automaton (std::move (spot_formula), trans);
   AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
-  // aut_preprocessors::standard::make (aut, all_inputs, all_outputs, opt_k) ();
-  // aut_preprocessors::surely_losing::make (aut, all_inputs, all_outputs, K) ();
 
-  posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
-  // posets::vectors::bool_threshold = (boolean_states::forward_saturation::make (aut, opt_k)) ();
-  // posets::vectors::bool_threshold = (boolean_states::no_boolean_states::make (aut, opt_K)) ();
-
-  safety_game game {aut, opt_kmin, posets::vectors::bool_threshold};
-
-  const bool res = solve_game (game, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
+  const bool res = solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
 
   dict->unregister_all_my_variables (nullptr);
 

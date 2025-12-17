@@ -1,29 +1,57 @@
+#include "boolean_states.hh"
 #include "configuration.hh"
 #include "k-bounded_safety_aut.hh"
+#include "posets/downsets.hh"
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
-#include "safety_game.hh"
-#include "types.hh"
 #include "utils/static_switch.hh"
 
 #include <spot/misc/timer.hh>
 
-bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc, bdd all_inputs,
+bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned kinc, bdd all_inputs,
                  bdd all_outputs) {
-  // moved here from epilogue()
-  if (game.aut == nullptr)
-    return true;
 
-  spot::stopwatch sw;
-  sw.start ();
+  posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, kmax)) ();
+  verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
 
-  auto [nbitsetbools, actual_nonbools] = game.set_globals ();
-
-#define UNREACHABLE [] (int x) { assert (false); }
+  // Compute how many boolean states will actually be put in bitsets.
+  constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
+  auto nbitsetbools = aut->num_states () - posets::vectors::bool_threshold;
+  if (nbitsetbools > max_bools_in_bitsets) {
+    verb_do (1, vout << "Warning: bitsets not large enough, using regular vectors for some "
+                        "Boolean states.\n"
+                     /*   */
+                     << "\tTotal # of Boolean-for-bitset states: "
+                     << nbitsetbools
+                     /*   */
+                     << ", max: " << max_bools_in_bitsets << std::endl);
+    nbitsetbools = max_bools_in_bitsets;
+  }
 
   constexpr auto STATIC_ARRAY_CAP_MAX =
       posets::vectors::traits<posets::vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (
           STATIC_ARRAY_MAX);
+
+  // Maximize usage of the nonbool implementation
+  auto nonbools = aut->num_states () - nbitsetbools;
+  size_t actual_nonbools =
+      (nonbools <= STATIC_ARRAY_CAP_MAX)
+          ? posets::vectors::traits<posets::vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (
+                nonbools)
+          : posets::vectors::traits<posets::vectors::VECTOR_IMPL, VECTOR_ELT_T>::capacity_for (
+                nonbools);
+  if (actual_nonbools >= aut->num_states ())
+    nbitsetbools = 0;
+  else
+    nbitsetbools -= (actual_nonbools - nonbools);
+
+  posets::vectors::bitset_threshold = aut->num_states () - nbitsetbools;
+
+  verb_do (1, vout << "Bitset threshold set at " << posets::vectors::bitset_threshold << "\n");
+
+  bool realizable = false;
+
+#define UNREACHABLE [] (int x) { assert (false); }
 
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) {  // Array & Bitsets
     static_switch_t<STATIC_ARRAY_CAP_MAX> {}(
@@ -35,16 +63,8 @@ bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc,
                         posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, std::max (vnonbools.value, 1UL)>,
                         vbitsets.value>>;
                 auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset> (
-                    game.aut, kmin, kmax, kinc, all_inputs, all_outputs);
-                assert (game.safe);
-                auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-                auto safe = skn.solve (current_safe);
-                if (safe.has_value ()) {
-                  game.safe = std::make_shared<GenericDownset> (
-                      cast_downset<GenericDownset> (safe.value ()));
-                }
-                else
-                  game.safe = nullptr;
+                    aut, kmin, kmax, kinc, all_inputs, all_outputs);
+                realizable = skn.solve ().has_value ();
               },
               UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
         },
@@ -56,25 +76,12 @@ bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc,
           using SpecializedDownset =
               posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::x_and_bitset<
                   posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>, vbitsets.value>>;
-          auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset> (game.aut, kmin, kmax, kinc,
+          auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset> (aut, kmin, kmax, kinc,
                                                                     all_inputs, all_outputs);
-          assert (game.safe);
-          auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-          auto safe = skn.solve (current_safe);
-          if (safe.has_value ()) {
-            game.safe =
-                std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));
-          }
-          else
-            game.safe = nullptr;
+          realizable = skn.solve ().has_value ();
         },
         UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
   }
 
-  game.solved = true;
-
-  double solve_time = sw.stop ();
-  verb_do (1, vout << "Safety game solved in " << solve_time << " seconds\n");
-
-  return game.safe != nullptr;
+  return realizable;
 }

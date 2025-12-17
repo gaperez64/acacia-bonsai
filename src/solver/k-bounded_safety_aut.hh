@@ -66,7 +66,7 @@ class k_bounded_safety_aut_detail {
       return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
     }
 
-    std::optional<SetOfStates> solve (SetOfStates& F) {
+    std::optional<SetOfStates> solve () {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -79,13 +79,19 @@ class k_bounded_safety_aut_detail {
       auto input_output_fwd_actions = actioner.actions ();  // list<pair<bdd, list<action_vec>>>
       verb_do (1, io_stats (input_output_fwd_actions));
 
-      int loopcount = 0;
-
+      // What is the initial state?
       posets::utils::vector_mm<VECTOR_ELT_T> init (aut->num_states ());
       init.assign (aut->num_states (), -1);
       init[aut->get_init_state_number ()] = 0;
 
+      // What are the safe states?
+      auto safe_vector = posets::utils::vector_mm<char> (aut->num_states (), K - 1);
+      for (size_t i = posets::vectors::bool_threshold; i < aut->num_states (); ++i)
+        safe_vector[i] = 0;
+      SetOfStates F = SetOfStates (State (safe_vector));
+
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
+      int loopcount = 0;
 
       do {
         loopcount++;
