@@ -23,7 +23,6 @@ struct arg_parse_result {
     unsigned int opt_kinc = DEFAULT_KINC;
     unreal_x_t opt_unreal_x = DEFAULT_UNREAL_X;
     unsigned int verbose_level = 0;
-    bool invert_exit_code = false;
 };
 
 /**

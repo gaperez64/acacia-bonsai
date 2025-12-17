@@ -152,10 +152,7 @@ int main (int argc, char** argv) {
       default: error (EXIT_CODE_ERROR, "Unknown result code: '%d'", res); break;
     }
 
-    if (arg_values.invert_exit_code)
-      exit ((res != 0) ? EXIT_CODE_UNKNOWN : EXIT_CODE_REAL);
-    else
-      exit ((res != 0) ? EXIT_CODE_REAL : EXIT_CODE_UNKNOWN);
+    exit ((res != 0) ? EXIT_CODE_REAL : EXIT_CODE_UNKNOWN);
   } catch (const std::exception& e) {
     error (EXIT_CODE_ERROR, "%s", e.what ());
   } catch (...) {

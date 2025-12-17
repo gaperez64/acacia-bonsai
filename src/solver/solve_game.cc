@@ -1,10 +1,15 @@
+#include "solve_game.hh"
 #include "boolean_states.hh"
-#include "configuration.hh"
 #include "k-bounded_safety_aut.hh"
 #include "posets/downsets.hh"
+#include "actioners.hh"
+#include "input_pickers.hh"
+#include "ios_precomputers.hh"
+#include "configuration.hh"
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "utils/static_switch.hh"
+#include "k-bounded_safety_aut.hh"
 
 #include <spot/misc/timer.hh>
 
@@ -62,8 +67,12 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
                     posets::downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<posets::vectors::x_and_bitset<
                         posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, std::max (vnonbools.value, 1UL)>,
                         vbitsets.value>>;
-                auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset> (
-                    aut, kmin, kmax, kinc, all_inputs, all_outputs);
+                using IOsPrecomputationMaker = IOS_PRECOMPUTER;
+                using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
+                using InputPickerMaker = INPUT_PICKER;
+                auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker, ActionerMaker,
+                                     InputPickerMaker> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
+                                                  INPUT_PICKER ());
                 realizable = skn.solve ().has_value ();
               },
               UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
@@ -76,8 +85,13 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
           using SpecializedDownset =
               posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::x_and_bitset<
                   posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>, vbitsets.value>>;
-          auto skn = K_BOUNDED_SAFETY_AUT_IMPL<SpecializedDownset> (aut, kmin, kmax, kinc,
-                                                                    all_inputs, all_outputs);
+
+          using IOsPrecomputationMaker = IOS_PRECOMPUTER;
+          using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
+          using InputPickerMaker = INPUT_PICKER;
+          auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker, ActionerMaker,
+                                     InputPickerMaker> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
+                                                  INPUT_PICKER ());
           realizable = skn.solve ().has_value ();
         },
         UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));

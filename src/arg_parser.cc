@@ -77,8 +77,6 @@ namespace {
                 : (DEFAULT_UNREAL_X == UNREAL_X_FORMULA ? "formula" : "both"))
         << std::endl
         << "  -v                verbose mode, can be repeated for more verbosity\n"
-        << "  -!                invert the exit code: " << EXIT_CODE_REAL << " for UNKNOWN and "
-        << EXIT_CODE_UNKNOWN << " for REALIZABLE\n"
         << "Exit status:\n"
         << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
         << "\t" << EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
@@ -113,7 +111,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt (argc, argv, "hVf:i:o:I:K:M:u:v!")) != -1) {
+  while ((opt = getopt (argc, argv, "hVf:i:o:I:K:M:u:v")) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (0);
       case 'V': std::cout << "Version: " << VERSION << '\n'; exit (0);
@@ -125,7 +123,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'M': retval.opt_kstart = std::stoi (optarg); break;
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
-      case '!': retval.invert_exit_code = true; break;
       default: show_help (argv[0]); exit (1);
     }
   }
