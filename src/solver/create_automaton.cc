@@ -13,8 +13,7 @@ spot::twa_graph_ptr create_automaton (spot::formula f, spot::translator& trans) 
   trans.set_pref (
       spot::postprocessor::Small |
       // spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
-      spot::postprocessor::SBAcc);
-  f = spot::formula::Not (f);
+      spot::postprocessor::SBAcc);  // state-based acceptacen
   verb_do (1, vout << "Formula: " << f << std::endl);
   auto aut = trans.run (&f);
   return aut;

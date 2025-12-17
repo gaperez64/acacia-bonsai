@@ -1,8 +1,7 @@
 #include "arg_parser.hh"
-
 #include "error_msg.hh"
-#include <string_view>
 
+#include <string_view>
 #include <algorithm>
 #include <cctype>
 #include <errno.h>
@@ -72,9 +71,13 @@ namespace {
         << "  -M VAL            starting value of K; -I MUST be set when using this option\n"
         << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both] "
            "with the default being "
-        << (DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
-                ? "automaton"
-                : (DEFAULT_UNREAL_X == UNREAL_X_FORMULA ? "formula" : "both"))
+#if DEFAULT_UNREAL_X == UNREAL_X_FORMULA
+        << "formula"
+#elif DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
+        << "automaton"
+#else
+        << "both"
+#endif
         << std::endl
         << "  -v                verbose mode, can be repeated for more verbosity\n"
         << "Exit status:\n"
@@ -119,8 +122,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'i': process_arg_input (optarg, retval); break;
       case 'o': process_arg_output (optarg, retval); break;
       case 'I': retval.opt_kinc = std::stoi (optarg); break;
-      case 'K': retval.opt_kmax = std::stoi (optarg); break;
-      case 'M': retval.opt_kstart = std::stoi (optarg); break;
+      case 'K': retval.opt_k = std::stoi (optarg); break;
+      case 'M': retval.opt_kmin = std::stoi (optarg); break;
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
       default: show_help (argv[0]); exit (1);
@@ -133,7 +136,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
     error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).");
   if (retval.outputs.empty ())
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).");
-  if (retval.opt_kstart != DEFAULT_KMIN and retval.opt_kinc == DEFAULT_KINC)
+  if (retval.opt_kmin != DEFAULT_KMIN and retval.opt_kinc == DEFAULT_KINC)
     error (EXIT_CODE_ERROR,
            "Error: if 'Kstart' (-M) is specified, then 'Kinc' (-I) also must be provided.");
 

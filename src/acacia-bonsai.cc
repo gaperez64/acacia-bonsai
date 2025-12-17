@@ -1,4 +1,3 @@
-
 #include "arg_parser.hh"
 #include "configuration.hh"
 #include "error_msg.hh"
@@ -8,6 +7,7 @@
 #include <algorithm>
 #include <cstring>
 #include <memory>
+#include <optional>
 #include <signal.h>
 #include <spot/misc/optionmap.hh>
 #include <spot/misc/timer.hh>
@@ -40,13 +40,6 @@ size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
 namespace {
-  std::vector<std::string> input_aps;
-  std::vector<std::string> output_aps;
-
-  unsigned opt_k = DEFAULT_K;
-  unsigned opt_kmin = DEFAULT_KMIN;
-  unsigned opt_kinc = DEFAULT_KINC;
-
   void terminate (int signum) {
     if (getpgid (0) == getpid ()) {  // Main process
       signal (SIGTERM, SIG_IGN);
@@ -56,28 +49,6 @@ namespace {
     }
     else
       _exit (3);
-  }
-
-  /**
-   * Given the argument values that were parsed earlier, this will process the values and plug them
-   * into the system.
-   *
-   * @param arg_vals The parsed argument values passed by the user.
-   */
-  void process_args (const arg_parse_result& arg_vals) {
-    if (arg_vals.formula.empty ())
-      error (EXIT_CODE_ERROR, "Error: formula must be a non-empty string.");
-
-    for (const auto& input : arg_vals.inputs)
-      input_aps.push_back (input);
-
-    for (const auto& output : arg_vals.outputs)
-      output_aps.push_back (output);
-
-    opt_k = arg_vals.opt_kmax;
-    opt_kmin = arg_vals.opt_kstart;
-    opt_kinc = arg_vals.opt_kinc;
-    utils::verbose = arg_vals.verbose_level;
   }
 
   void sig_handler (int sig) {
@@ -104,7 +75,7 @@ namespace {
 
 int main (int argc, char** argv) {
   // use boost to parse all arguments that were passed
-  const auto arg_values = arg_parser (argc, argv);
+  auto arg_values = arg_parser (argc, argv);
 
   struct sigaction action;
   memset (&action, 0, sizeof (struct sigaction));
@@ -125,23 +96,34 @@ int main (int argc, char** argv) {
     extra_options.set ("tls-impl", 1);
     extra_options.set ("wdba-minimize", 2);
 
-    process_args (arg_values);
-
     // Adjust the value of K
-    if (opt_kmin == -1U)
-      opt_kmin = opt_k;
-    if (opt_kmin > opt_k or (opt_kmin < opt_k and opt_kinc == 0))
-      error (EXIT_CODE_ERROR, "Incompatible values for K, Kmin, and Kinc.");
-    if (opt_kmin == 0)
-      opt_kmin = opt_k;
+    if (arg_values.opt_kmin == -1U)
+      arg_values.opt_kmin = arg_values.opt_k;
+    if (arg_values.opt_kmin > arg_values.opt_k
+        or (arg_values.opt_kmin <= arg_values.opt_k
+            and arg_values.opt_kinc == 0))
+      error (EXIT_CODE_ERROR,
+             "Incompatible values for K (%d), Kmin (%d), and Kinc (%d).",
+             arg_values.opt_k,
+             arg_values.opt_kmin,
+             arg_values.opt_kinc);
+    if (arg_values.opt_kmin == 0)
+      arg_values.opt_kmin = arg_values.opt_k;
 
     // Setup the dictionary now, so that BuDDy's initialization is
     // not measured in our timings.
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
 
-    const int res = run_ltl (trans, input_aps, output_aps, dict, opt_k, opt_kmin, opt_kinc,
-                             arg_values.formula);
+    const int res = run_ltl (trans, 
+                             arg_values.inputs,
+                             arg_values.outputs, 
+                             dict,
+                             arg_values.opt_k,
+                             arg_values.opt_kmin,
+                             arg_values.opt_kinc,
+                             arg_values.formula,
+                             std::nullopt);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();
