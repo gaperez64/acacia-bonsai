@@ -1,6 +1,6 @@
 # meson test --suite check_real_all
 
-message('Setting up realisability tests.')
+message('Setting up realizability tests.')
 python = find_program('python3')
 
 get_real_args_cmd = run_command(
@@ -39,7 +39,7 @@ foreach real_arg_values: real_args
     )
 endforeach
 
-message('Setting up unrealisability tests.')
+message('Setting up unrealizability tests.')
 get_unreal_args_cmd = run_command(
     python,
     files('generate_test_args.py'),
@@ -50,7 +50,7 @@ get_unreal_args_cmd = run_command(
 
 unreal_args = get_unreal_args_cmd.stdout().strip().split('\n')
 
-message('Registering realizability tests.')
+message('Registering unrealizability tests.')
 foreach unreal_arg_values: unreal_args
 #    message('\tArgs: "', real_arg_values, '"')
 
@@ -72,7 +72,7 @@ foreach unreal_arg_values: unreal_args
             '-I', '1',
             '-!'
         ],
-        suite : 'check_unreal_all',
+        suite : 'check_not_real_all',
         timeout: 4,
 #        should_fail: true
     )

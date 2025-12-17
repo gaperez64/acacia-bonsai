@@ -42,7 +42,6 @@ size_t posets::vectors::bitset_threshold = 0;
 namespace {
   std::vector<std::string> input_aps;
   std::vector<std::string> output_aps;
-  std::vector<int> init_state;
 
   unsigned opt_k = DEFAULT_K;
   unsigned opt_kmin = DEFAULT_KMIN;
@@ -68,8 +67,6 @@ namespace {
   void process_args (const arg_parse_result& arg_vals) {
     if (arg_vals.formula.empty ())
       error (EXIT_CODE_ERROR, "Error: formula must be a non-empty string.");
-
-    init_state = arg_vals.init_state;
 
     for (const auto& input : arg_vals.inputs)
       input_aps.push_back (input);
@@ -144,7 +141,7 @@ int main (int argc, char** argv) {
     spot::translator trans (dict, &extra_options);
 
     const int res = run_ltl (trans, input_aps, output_aps, dict, opt_k, opt_kmin, opt_kinc,
-                             init_state, arg_values.formula);
+                             arg_values.formula);
 
     // Diagnose unused -x options
     extra_options.report_unused_options ();

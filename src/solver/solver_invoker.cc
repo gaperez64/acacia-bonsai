@@ -29,8 +29,7 @@ spot::formula parse_ltl_string (const std::string& input) {
 
 int run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
              std::vector<std::string> output_aps, spot::bdd_dict_ptr dict, unsigned opt_k,
-             unsigned opt_kmin, unsigned opt_kinc, std::vector<int> init_state,
-             std::string formula) {
+             unsigned opt_kmin, unsigned opt_kinc, std::string formula) {
   // manually register inputs/outputs
   bdd all_inputs = bddtrue;
   bdd all_outputs = bddtrue;
@@ -57,8 +56,7 @@ int run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
 
   safety_game game {aut, opt_kmin, posets::vectors::bool_threshold};
 
-  const bool res = solve_game (game, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs,
-                               std::move (init_state));
+  const bool res = solve_game (game, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
 
   dict->unregister_all_my_variables (nullptr);
 

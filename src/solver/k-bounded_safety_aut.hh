@@ -66,7 +66,7 @@ class k_bounded_safety_aut_detail {
       return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
     }
 
-    std::optional<SetOfStates> solve (SetOfStates& F, std::vector<int> init_state) {
+    std::optional<SetOfStates> solve (SetOfStates& F) {
       int K = Kfrom;
 
       // Precompute the input and output actions.
@@ -83,13 +83,7 @@ class k_bounded_safety_aut_detail {
 
       posets::utils::vector_mm<VECTOR_ELT_T> init (aut->num_states ());
       init.assign (aut->num_states (), -1);
-      // either the initial state from the automaton, or some given initial
-      // configuration
-      if (init_state.size () == 0)
-        init[aut->get_init_state_number ()] = 0;
-      else
-        for (size_t i = 0; i < init_state.size (); i++)
-          init[i] = init_state[i];
+      init[aut->get_init_state_number ()] = 0;
 
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
 

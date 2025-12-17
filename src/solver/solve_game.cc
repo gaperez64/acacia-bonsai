@@ -9,7 +9,7 @@
 #include <spot/misc/timer.hh>
 
 bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc, bdd all_inputs,
-                 bdd all_outputs, std::vector<int> init_state) {
+                 bdd all_outputs) {
   // moved here from epilogue()
   if (game.aut == nullptr)
     return true;
@@ -38,7 +38,7 @@ bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc,
                     game.aut, kmin, kmax, kinc, all_inputs, all_outputs);
                 assert (game.safe);
                 auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-                auto safe = skn.solve (current_safe, init_state);
+                auto safe = skn.solve (current_safe);
                 if (safe.has_value ()) {
                   game.safe = std::make_shared<GenericDownset> (
                       cast_downset<GenericDownset> (safe.value ()));
@@ -60,7 +60,7 @@ bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc,
                                                                     all_inputs, all_outputs);
           assert (game.safe);
           auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
-          auto safe = skn.solve (current_safe, init_state);
+          auto safe = skn.solve (current_safe);
           if (safe.has_value ()) {
             game.safe =
                 std::make_shared<GenericDownset> (cast_downset<GenericDownset> (safe.value ()));

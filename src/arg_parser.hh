@@ -16,7 +16,6 @@ enum unreal_x_t {
  */
 struct arg_parse_result {
     std::string formula;
-    std::vector<int> init_state;
     std::vector<std::string> inputs;
     std::vector<std::string> outputs;
     unsigned int opt_kstart = DEFAULT_KMIN;
