@@ -9,6 +9,7 @@
 #include "safety_game.hh"
 #include "types.hh"
 #include "utils/static_switch.hh"
+#include "k-bounded_safety_aut.hh"
 
 #include <spot/misc/timer.hh>
 
