@@ -38,7 +38,11 @@ bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc,
                     posets::downsets::ARRAY_AND_BITSET_DOWNSET_IMPL<posets::vectors::x_and_bitset<
                         posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, std::max (vnonbools.value, 1UL)>,
                         vbitsets.value>>;
-                auto skn = k_bounded_safety_aut_maker<SpecializedDownset> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
+                using IOsPrecomputationMaker = IOS_PRECOMPUTER;
+                using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
+                using InputPickerMaker = INPUT_PICKER;
+                auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker, ActionerMaker,
+                                     InputPickerMaker> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
                                                   INPUT_PICKER ());
                 assert (game.safe);
                 auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
@@ -61,7 +65,11 @@ bool solve_game (safety_game& game, unsigned kmax, unsigned kmin, unsigned kinc,
               posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::x_and_bitset<
                   posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>, vbitsets.value>>;
 
-          auto skn = k_bounded_safety_aut_maker<SpecializedDownset> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
+          using IOsPrecomputationMaker = IOS_PRECOMPUTER;
+          using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
+          using InputPickerMaker = INPUT_PICKER;
+          auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker, ActionerMaker,
+                                     InputPickerMaker> (game.aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
                                                   INPUT_PICKER ());
           assert (game.safe);
           auto current_safe = cast_downset<SpecializedDownset> (*game.safe);
