@@ -101,7 +101,8 @@
 #endif
 
 #ifndef ACTIONER
-# define ACTIONER actioners::standard<typename SetOfStates::value_type>
+// # define ACTIONER actioners::standard<typename SetOfStates::value_type>
+# define ACTIONER actioners::standard
 #endif
 
 #ifndef INPUT_PICKER
