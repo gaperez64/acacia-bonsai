@@ -22,9 +22,9 @@ get_unreal_args_cmd = run_command(
 
 tests = { 'real': get_real_args_cmd.stdout().strip().split('\n'),
           'unknown': get_unreal_args_cmd.stdout().strip().split('\n') }
-expected = { 'real': '0', 'unknown': '1' }
+expected = { 'real': '0', 'unknown': '1', 'unreal': '3'}
 
-message('Registering tests.')
+message('Registering real/unknown tests.')
 foreach exp, test_list : tests
   foreach values : test_list
     values = values.split(';')
@@ -33,7 +33,7 @@ foreach exp, test_list : tests
     ltl_val = values[2]
     test_name = values[3]
     test(
-      test_name,
+      test_name + 'real-unknown',
       expect_exit,
       args : [
         expected[exp],
@@ -49,4 +49,73 @@ foreach exp, test_list : tests
       timeout: 4
     )
   endforeach
+endforeach
+
+message('Registering un-real-both tests.')
+foreach values : get_real_args_cmd.stdout().strip().split('\n')
+  values = values.split(';')
+  input_val = values[0]
+  output_val = values[1]
+  ltl_val = values[2]
+  test_name = values[3]
+  test(
+    test_name + ':both_ex_real',
+    expect_exit,
+    args : [
+      expected['real'],
+      ab_exe,
+      '-i', input_val,
+      '-o', output_val,
+      '-f', ltl_val,
+      '-M', '10',
+      '-K', '20',
+      '-I', '1',
+      '-u', 'both'
+    ],
+    suite : 'check_both_ex_real_all',
+    timeout: 4
+  )
+endforeach
+
+message('Registering unreal tests.')
+foreach values : get_unreal_args_cmd.stdout().strip().split('\n')
+  values = values.split(';')
+  input_val = values[0]
+  output_val = values[1]
+  ltl_val = values[2]
+  test_name = values[3]
+  test(
+    test_name + ':auto_ex_unreal',
+    expect_exit,
+    args : [
+      expected['real'],
+      ab_exe,
+      '-i', input_val,
+      '-o', output_val,
+      '-f', ltl_val,
+      '-M', '10',
+      '-K', '20',
+      '-I', '1',
+      '-u', 'automaton'
+    ],
+    suite : 'check_unreal_auto_all',
+    timeout: 4
+  )
+  test(
+    test_name + ':form_ex_unreal',
+    expect_exit,
+    args : [
+      expected['real'],
+      ab_exe,
+      '-i', input_val,
+      '-o', output_val,
+      '-f', ltl_val,
+      '-M', '10',
+      '-K', '20',
+      '-I', '1',
+      '-u', 'formula'
+    ],
+    suite : 'check_unreal_form_all',
+    timeout: 4
+  )
 endforeach
