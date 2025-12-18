@@ -37,29 +37,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Compile default configuration
+    - name: Compile and test all configurations
       run: |
-        meson setup build
-        meson compile -C build acacia-bonsai
-    - name: Check Real
-      run: |
-        ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant)
-        if [ "$ACACIA_RESULT" != "REALIZABLE" ]; then
-          echo "ACACIA_RESULT must equal 'REALIZABLE' but is '$ACACIA_RESULT'"
-          exit 1
-        fi
-    - name: Check Unknown
-      run: |
-        ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant)
-        ACACIA_STATUS=$?
-        if [ "$ACACIA_RESULT" != "UNKNOWN" ]; then
-          echo "ACACIA_RESULT must equal 'UNKNOWN' but is '$ACACIA_RESULT'"
-          exit 1
-        fi
-        # Check exit code
-        if [ "$ACACIA_STATUS" -ne 3 ]; then
-          echo "Unexpected exit code: $ACACIA_STATUS"
-          exit 1
-        fi
-      continue-on-error: true
-
+        ./self-benchmark.sh

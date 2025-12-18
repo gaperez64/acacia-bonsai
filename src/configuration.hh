@@ -27,11 +27,9 @@
 # ifndef STATIC_ARRAY_MAX
 #  define STATIC_ARRAY_MAX 300
 # endif
-
 # ifndef STATIC_MAX_BITSETS
 #  define STATIC_MAX_BITSETS 8ul
 # endif
-
 #else
 # pragma message("Compiling without NDEBUG")
 # ifndef STATIC_ARRAY_MAX
@@ -44,10 +42,6 @@
 
 #ifndef CPRE_AVOID_UNIONS
 # define CPRE_AVOID_UNIONS 0
-#endif
-
-#ifdef AC_DATA
-# pragma message("Compiling with AC_DATA")
 #endif
 
 #ifdef NO_SIMD

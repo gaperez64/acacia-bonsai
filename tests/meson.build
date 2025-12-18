@@ -51,6 +51,44 @@ foreach exp, test_list : tests
   endforeach
 endforeach
 
+real_f_ci = '((G (F (req))) -> (G (F (grant))))'
+unreal_f_ci = '((G (F (req))) <-> (G(!grant) ))'
+test(
+  'real_ci',
+  expect_exit,
+  args : [
+    expected['real'],
+    ab_exe,
+    '-i', 'req',
+    '-o', 'grant',
+    '-f', real_f_ci,
+    '-M', '10',
+    '-K', '20',
+    '-I', '1',
+    '-u', 'both'
+  ],
+  suite : 'ci_tests',
+  timeout: 4
+)
+test(
+  'unreal_ci',
+  expect_exit,
+  args : [
+    expected['unreal'],
+    ab_exe,
+    '-i', 'req',
+    '-o', 'grant',
+    '-f', unreal_f_ci,
+    '-M', '10',
+    '-K', '20',
+    '-I', '1',
+    '-u', 'both'
+  ],
+  suite : 'ci_tests',
+  timeout: 4
+)
+
+
 message('Registering un-real-both tests.')
 foreach values : get_real_args_cmd.stdout().strip().split('\n')
   values = values.split(';')
@@ -59,7 +97,7 @@ foreach values : get_real_args_cmd.stdout().strip().split('\n')
   ltl_val = values[2]
   test_name = values[3]
   test(
-    test_name + ':both_ex_real',
+    test_name + '-both_ex_real',
     expect_exit,
     args : [
       expected['real'],
@@ -85,7 +123,7 @@ foreach values : get_unreal_args_cmd.stdout().strip().split('\n')
   ltl_val = values[2]
   test_name = values[3]
   test(
-    test_name + ':auto_ex_unreal',
+    test_name + '-auto_ex_unreal',
     expect_exit,
     args : [
       expected['real'],
@@ -102,7 +140,7 @@ foreach values : get_unreal_args_cmd.stdout().strip().split('\n')
     timeout: 2
   )
   test(
-    test_name + ':form_ex_unreal',
+    test_name + '-form_ex_unreal',
     expect_exit,
     args : [
       expected['real'],

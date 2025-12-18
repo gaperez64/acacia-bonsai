@@ -2,10 +2,10 @@
 
 mkdir -p _bm-logs
 
-BENCHMARK_SUITE='check_real_all'
+BENCHMARK_SUITE='ci_tests'
 TIMEOUT_FACTOR=1.7
 
-opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
+opt='-march=native -Ofast -flto -pipe -DNO_VERBOSE -DNDEBUG'
 
 declare -A confs
 
