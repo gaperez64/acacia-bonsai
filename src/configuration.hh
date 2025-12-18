@@ -21,6 +21,7 @@
 #ifndef K_BOUNDED_SAFETY_AUT_IMPL
 # define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut
 #endif
+
 #ifdef NDEBUG
 # pragma message("Compiling with NDEBUG")
 # ifndef STATIC_ARRAY_MAX
@@ -92,7 +93,6 @@
 #endif
 
 #ifndef ACTIONER
-// # define ACTIONER actioners::standard<typename SetOfStates::value_type>
 # define ACTIONER actioners::standard
 #endif
 

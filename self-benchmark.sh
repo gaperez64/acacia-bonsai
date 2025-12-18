@@ -2,7 +2,7 @@
 
 mkdir -p _bm-logs
 
-BENCHMARK_SUITE=ab/syntcomp21/crit
+BENCHMARK_SUITE='check_real_all'
 TIMEOUT_FACTOR=1.7
 
 opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
@@ -11,7 +11,8 @@ declare -A confs
 
 defaults=$(<<EOF 
 -DDEFAULT_K=255
--DDEFAULT_KMIN=2 -DDEFAULT_KINC=3
+-DDEFAULT_KMIN=2
+-DDEFAULT_KINC=3
 -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
 -DVECTOR_ELT_T='char'
 -DK_BOUNDED_SAFETY_AUT_IMPL='k_bounded_safety_aut'
@@ -30,7 +31,8 @@ EOF
 
 # Experimentally determined
 best=$(<<EOF
--DDEFAULT_KMIN=2 -DDEFAULT_KINC=3
+-DDEFAULT_KMIN=2
+-DDEFAULT_KINC=3
 -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
 -DAUT_PREPROCESSOR='aut_preprocessors::standard'
 -DBOOLEAN_STATES='boolean_states::forward_saturation'
@@ -97,7 +99,7 @@ if (( $# == 0 )); then
 No option given; this will build, compile, and benchmark ${#confs} different configurations.
 To build/compile/benchmark with default (debug) options, run:
 
-  $ meson build
+  $ meson setup build
   $ cd build
   $ meson compile
   $ meson test --benchmark --suite=$BENCHMARK_SUITE -t $TIMEOUT_FACTOR
@@ -166,7 +168,7 @@ if ! (( $donot[(Ie)build] )); then
             echo "$build exists, not rebuilding, remove folder to rebuild."
         else
             echo -n "building $build (logfile: $log)... "
-            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson $build --buildtype=release &>> $log; then
+            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build --buildtype=release &>> $log; then
                 echo "done."
             else
                 echo "FAILED; please remove $build to recompile."
