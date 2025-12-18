@@ -2,11 +2,6 @@
 
 #define VERSION 1.9  // Kasper + Guillermo determined this arbitrarily
 
-#define EXIT_CODE_REAL 0
-#define EXIT_CODE_UNREAL 3
-#define EXIT_CODE_UNKNOWN 1
-#define EXIT_CODE_ERROR 2
-
 #include "utils/todo.hh"
 
 #ifndef DEFAULT_K
@@ -17,10 +12,6 @@
 #endif
 #ifndef DEFAULT_KINC
 # define DEFAULT_KINC 5
-#endif
-
-#ifndef DEFAULT_UNREAL_X
-# define DEFAULT_UNREAL_X UNREAL_X_BOTH
 #endif
 
 #ifndef VECTOR_ELT_T

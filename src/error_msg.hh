@@ -3,6 +3,15 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+// These are the possible return values for the solver
+enum solver_res : int {
+  EXIT_CODE_REAL = 0,
+  EXIT_CODE_UNKNOWN = 1,
+  EXIT_CODE_ERROR = 2,
+  EXIT_CODE_UNREAL = 3
+};
+
+
 // macOS does not have the "error.h" header, so we use
 // the following functions
 inline void error (int status, const char* format, ...) {

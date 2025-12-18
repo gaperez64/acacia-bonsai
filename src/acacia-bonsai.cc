@@ -32,15 +32,15 @@
 
 using namespace std::literals;
 
-// Definitions for some external variables. Needs to be refactored.
+// Definitions for some external variables.
+// FIXME: Could be refactored.
 int utils::verbose = 0;
 utils::voutstream utils::vout;
-
 size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
 namespace {
-  void terminate (int signum) {
+  void terminate ([[maybe_unused]] int signum) {
     if (getpgid (0) == getpid ()) {  // Main process
       signal (SIGTERM, SIG_IGN);
       kill (0, SIGTERM);
@@ -110,31 +110,67 @@ int main (int argc, char** argv) {
     if (arg_values.opt_kmin == 0)
       arg_values.opt_kmin = arg_values.opt_k;
 
-    // Setup the dictionary now, so that BuDDy's initialization is
-    // not measured in our timings.
+    // Setup the dictionary now: BuDDy's initialization
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
 
-    const int res = run_ltl (trans, 
-                             arg_values.inputs,
-                             arg_values.outputs, 
-                             dict,
-                             arg_values.opt_k,
-                             arg_values.opt_kmin,
-                             arg_values.opt_kinc,
-                             arg_values.formula,
-                             std::nullopt);
+    const auto start_proc = [&] (std::optional<unreal_x_t> unreal_x) {
+      if (fork () == 0) {
+        utils::vout.set_prefix (std::string {"["}
+                                + (not unreal_x.has_value () ?
+                                   "real" :
+                                   std::string {"unreal-x="} + (char) *unreal_x)
+                                + "] ");
+        const bool res = run_ltl (trans, 
+                                  arg_values.inputs,
+                                  arg_values.outputs, 
+                                  dict,
+                                  arg_values.opt_k,
+                                  arg_values.opt_kmin,
+                                  arg_values.opt_kinc,
+                                  arg_values.formula,
+                                  unreal_x);
+        verb_do (1, vout << "returning " << res << "\n");
+        
+        // Diagnose unused -x options, or not?
+        // extra_options.report_unused_options ();
+        
+        if (unreal_x.has_value ())
+          exit (res ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN);
+        else
+          exit (res ? EXIT_CODE_REAL : EXIT_CODE_UNKNOWN);
+      }
+    };
 
-    // Diagnose unused -x options
-    extra_options.report_unused_options ();
+    // We fork process for each (UN)REAL check now and then wait for them to
+    // return to process their exit codes
+    setpgid (0, 0);
+    assert (getpgid (0) == getpid ());
+    // We always start a realizability check
+    start_proc (std::nullopt);
 
-    switch (res) {
-      case 1: std::cout << "REALIZABLE\n"; break;
-      case 0: std::cout << "UNKNOWN\n"; break;
-      default: error (EXIT_CODE_ERROR, "Unknown result code: '%d'", res); break;
+    if (arg_values.opt_unreal_x.has_value ()) {
+      if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or *(arg_values.opt_unreal_x) == UNREAL_X_FORMULA)
+        start_proc (std::make_optional<unreal_x_t>(UNREAL_X_FORMULA));
+      if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or *(arg_values.opt_unreal_x) == UNREAL_X_AUTOMATON)
+        start_proc (std::make_optional<unreal_x_t>(UNREAL_X_AUTOMATON));
     }
 
-    exit ((res != 0) ? EXIT_CODE_REAL : EXIT_CODE_UNKNOWN);
+    int ret;
+    while (wait (&ret) != -1) { // as long as we have children to wait for
+      ret = WEXITSTATUS (ret);
+      if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
+        // One child has a definitive answer! Kill everyone else
+        terminate (0);
+        if (ret == EXIT_CODE_REAL)
+          std::cout << "REALIZABLE\n";
+        else
+          std::cout << "UNREALIZABLE\n";
+        return ret;
+      }
+    }
+    error (EXIT_CODE_UNKNOWN, "No child had a conclusive answer");
+
   } catch (const std::exception& e) {
     error (EXIT_CODE_ERROR, "%s", e.what ());
   } catch (...) {

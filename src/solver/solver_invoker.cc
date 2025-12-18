@@ -74,13 +74,13 @@ namespace {
   }
 }
 
-int run_ltl (spot::translator& trans,
-             std::vector<std::string> input_aps,
-             std::vector<std::string> output_aps,
-             spot::bdd_dict_ptr dict, unsigned opt_k,
-             unsigned opt_kmin, unsigned opt_kinc,
-             std::string formula,
-             std::optional<unreal_x_t> check_unreal) {
+bool run_ltl (spot::translator& trans,
+              std::vector<std::string> input_aps,
+              std::vector<std::string> output_aps,
+              spot::bdd_dict_ptr dict, unsigned opt_k,
+              unsigned opt_kmin, unsigned opt_kinc,
+              std::string formula,
+              std::optional<unreal_x_t> check_unreal) {
   spot::formula spot_formula = parse_ltl_string (formula);
 
   if (not check_unreal.has_value ())
@@ -124,7 +124,7 @@ int run_ltl (spot::translator& trans,
 
   AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
 
-  const bool res = solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
+  bool res = solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
 
   dict->unregister_all_my_variables (nullptr);
 

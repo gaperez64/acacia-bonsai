@@ -6,6 +6,7 @@
 #include <cctype>
 #include <errno.h>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <stdio.h>
@@ -69,16 +70,7 @@ namespace {
         << "  -I VAL            increment value for K, used when M < K\n"
         << "  -K VAL            final value of K, or unique value if M is not specified\n"
         << "  -M VAL            starting value of K; -I MUST be set when using this option\n"
-        << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both] "
-           "with the default being "
-#if DEFAULT_UNREAL_X == UNREAL_X_FORMULA
-        << "formula"
-#elif DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
-        << "automaton"
-#else
-        << "both"
-#endif
-        << std::endl
+        << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both]\n"
         << "  -v                verbose mode, can be repeated for more verbosity\n"
         << "Exit status:\n"
         << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
@@ -98,11 +90,11 @@ namespace {
 
   void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
     if (case_insensitive_equals (arg, "automaton"))
-      result.opt_unreal_x = UNREAL_X_AUTOMATON;
+      result.opt_unreal_x = std::make_optional<unreal_x_t>(UNREAL_X_AUTOMATON);
     else if (case_insensitive_equals (arg, "formula"))
-      result.opt_unreal_x = UNREAL_X_FORMULA;
+      result.opt_unreal_x = std::make_optional<unreal_x_t>(UNREAL_X_FORMULA);
     else if (case_insensitive_equals (arg, "both"))
-      result.opt_unreal_x = UNREAL_X_BOTH;
+      result.opt_unreal_x = std::make_optional<unreal_x_t>(UNREAL_X_BOTH);
     else
       error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s", arg);
   }

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 /**
  * Struct that will hold the parsed argument values.
@@ -16,7 +17,7 @@ struct arg_parse_result {
     unsigned int opt_kmin = DEFAULT_KMIN;
     unsigned int opt_k = DEFAULT_K;
     unsigned int opt_kinc = DEFAULT_KINC;
-    unreal_x_t opt_unreal_x = DEFAULT_UNREAL_X;
+    std::optional<unreal_x_t> opt_unreal_x = std::nullopt;
     unsigned int verbose_level = 0;
 };
 
