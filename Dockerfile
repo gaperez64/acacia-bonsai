@@ -13,7 +13,7 @@ RUN apt install -y zsh meson git gcc python-is-python3 \
 RUN python3 -m pip config set global.break-system-packages true
 
 # needed to build the Python interface
-# TODO: these need to be
+# TODO: these need to be set to the latest version, but that currently does not work...
 RUN pip3 install wheel meson-python build
 
 # spot installation
@@ -25,13 +25,13 @@ RUN sh -c "echo 'deb [signed-by=/etc/apt/keyrings/lrde.gpg] http://www.lrde.epit
 RUN apt update
 
 # AMD
-#RUN wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
-#RUN dpkg -i libltdl7_2.5.4-4build1_amd64.deb
+RUN wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
+RUN dpkg -i libltdl7_2.5.4-4build1_amd64.deb
 
 # ARM
-RUN wget http://ftp.de.debian.org/debian/pool/main/libt/libtool/libltdl7_2.5.4-9_arm64.deb
-RUN dpkg -i libltdl7_2.5.4-9_arm64.deb
-RUN apt -f install -y
+#RUN wget http://ftp.de.debian.org/debian/pool/main/libt/libtool/libltdl7_2.5.4-9_arm64.deb
+#RUN dpkg -i libltdl7_2.5.4-9_arm64.deb
+#RUN apt -f install -y
 
 # TODO: this seems to not run on arm. Continue on Ubuntu
 RUN apt install -y spot libspot-dev
