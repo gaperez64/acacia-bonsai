@@ -99,7 +99,7 @@ foreach values : get_unreal_args_cmd.stdout().strip().split('\n')
       '-u', 'automaton'
     ],
     suite : 'check_unreal_auto_all',
-    timeout: 4
+    timeout: 2
   )
   test(
     test_name + ':form_ex_unreal',
@@ -116,6 +116,6 @@ foreach values : get_unreal_args_cmd.stdout().strip().split('\n')
       '-u', 'formula'
     ],
     suite : 'check_unreal_form_all',
-    timeout: 4
+    timeout: 2
   )
 endforeach
