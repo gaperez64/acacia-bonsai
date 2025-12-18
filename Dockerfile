@@ -33,7 +33,7 @@ RUN wget http://ftp.de.debian.org/debian/pool/main/libt/libtool/libltdl7_2.5.4-9
 RUN dpkg -i libltdl7_2.5.4-9_arm64.deb
 RUN apt -f install -y
 
-# TODO: this seems to not run on arm
+# TODO: this seems to not run on arm. Continue on Ubuntu
 RUN apt install -y spot libspot-dev
 
 # TODO: pygraph?
