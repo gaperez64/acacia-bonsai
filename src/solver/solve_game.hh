@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bddx.h>
+#include <utility>
 #include <spot/twa/twa.hh>
 #include "solve_game.hh"
 #include "boolean_states.hh"
@@ -35,9 +36,13 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
     nbitsetbools = max_bools_in_bitsets;
   }
 
+#ifdef NO_ARRAY_CAP_MAX
+  constexpr auto STATIC_ARRAY_CAP_MAX = 0;
+#else
   constexpr auto STATIC_ARRAY_CAP_MAX =
       posets::vectors::traits<posets::vectors::ARRAY_IMPL, VECTOR_ELT_T>::capacity_for (
           STATIC_ARRAY_MAX);
+#endif
 
   // Maximize usage of the nonbool implementation
   auto nonbools = aut->num_states () - nbitsetbools;
@@ -58,7 +63,7 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
 
   bool realizable = false;
 
-#define UNREACHABLE [] (int x) { assert (false); }
+#define UNREACHABLE [] ([[maybe_unused]] int x) { std::unreachable(); }
 
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) {  // Array & Bitsets
     static_switch_t<STATIC_ARRAY_CAP_MAX> {}(

@@ -2,10 +2,10 @@
 
 mkdir -p _bm-logs
 
-BENCHMARK_SUITE='ci_tests'
+BENCHMARK_SUITE=ab/syntcomp21/crit
 TIMEOUT_FACTOR=1.7
 
-opt='-march=native -Ofast -flto -pipe -DNO_VERBOSE -DNDEBUG'
+opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
 
 declare -A confs
 
@@ -113,7 +113,7 @@ EOF
   echo "."
 fi
 
-while getopts "hplBCRfb:t:c:" option; do
+while getopts "hplBCsRfb:t:c:" option; do
     case $option; in
         h) cat <<EOF
 usage: $0 [-hplBCR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
@@ -122,6 +122,7 @@ usage: $0 [-hplBCR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
   -l: Do not build/compile/benchmark, instead, list configurations.
   -B: Do not build.
   -C: Do not compile.
+  -s: Do not test.
   -R: Do not benchmark.
   -f: Do not fail when a build, compile, or benchmark does, continue as if they passed.
   -b BENCHMARK: Run a specific benchmark suite (default: $BENCHMARK_SUITE).
@@ -133,6 +134,7 @@ EOF
         l) mode=list;;
         B) donot+=build;;
         C) donot+=compile;;
+	s) donot+=test;;
         R) donot+=benchmark;;
         f) force=true;;
         c) conflist=(${(@s:,:)OPTARG});;
@@ -203,6 +205,34 @@ if ! (( $donot[(Ie)compile] )); then
             $force || exit 3
         fi
         cd ..
+    done
+fi
+
+## Test
+if ! (( $donot[(Ie)test] )); then
+    for name in $conflist; do
+        build=build_$name
+        log=_bm-logs/$name.log
+        if [[ -e $build/tested ]]; then
+            echo "$name already tested, remove $build/tested to retest"
+            continue
+        fi
+        if ! [[ -e $build/compiled ]]; then
+	    echo "$name isn't compiled, create $build/compiled if compiled by hand"
+	    continue
+        fi
+        cd $build
+        echo -n "testing $name (logfile: $log)... "
+	meson test $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
+        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
+            echo "FAILED; testlog stored at $log, _bm-logs/$name.json left untouched"
+            $force || exit 5
+        else
+            echo "done; testlog stored at $log"
+            touch tested
+        fi
+        cd ..
+        cp $build/meson-logs/testlog.json _bm-logs/$name.json
     done
 fi
 
