@@ -32,4 +32,4 @@ jobs:
     - name: Compile and test all configurations
       run: |
         export CXX=g++-14
-        ./self-benchmark.sh -j 
+        ./self-benchmark.sh -b ab/set2 
