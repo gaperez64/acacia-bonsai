@@ -22,7 +22,7 @@ defaults=$(<<EOF
 -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
 -DBOOLEAN_STATES='boolean_states::forward_saturation'
 -DIOS_PRECOMPUTER='ios_precomputers::standard'
--DACTIONER='actioners::standard<typename SetOfStates::value_type>'
+-DACTIONER='actioners::standard'
 -DINPUT_PICKER='input_pickers::critical_pq'
 -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
 -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
@@ -49,7 +49,7 @@ confs=(
     [base]=" "
     [best]="$best"
     [best_nosimd]="$best -DNO_SIMD"
-#    [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation<typename SetOfStates::value_type>'"
+#    [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
     [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
     [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
@@ -61,7 +61,7 @@ confs=(
     [autpreproc_standard]="-DAUT_PREPROCESSOR=aut_preprocessors::standard"
     [autpreproc_nopreproc]="-DAUT_PREPROCESSOR=aut_preprocessors::no_preprocessing"
     [booleanstates_none]="-DBOOLEAN_STATES=boolean_states::no_boolean_states"
-    [iosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation<typename SetOfStates::value_type>'"
+    [iosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
     [iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
     [iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
     [inputpicker_critical]="-DINPUT_PICKER=input_pickers::critical"
