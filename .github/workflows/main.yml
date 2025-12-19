@@ -25,6 +25,7 @@ jobs:
         sudo ./configure --enable-max-accsets=64
         sudo make
         sudo make install
+        sudo rm -rf spot-2.14.4
     - name: Checkout repository and submodules
       uses: actions/checkout@v4
       with:
