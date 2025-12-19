@@ -11,7 +11,7 @@ jobs:
         sudo apt install -y zsh meson git gcc python-is-python3 \
                     ninja-build gnupg wget python3-pip \
                     pkg-config libffi-dev \
-                    libtool valgrind gpg \
+                    libtool valgrind gpg
         sudo pip install --upgrade meson
     - name: Add LRDE Debian repository
       run: |
