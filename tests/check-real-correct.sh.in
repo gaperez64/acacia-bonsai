@@ -1,13 +1,7 @@
 #!/bin/zsh -f
 
-LTLSYNT=@LTLSYNT@
-STRIX=@STRIX@
 ACABONSAI=@ACABONSAI@
 export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
-ACAPLUS=@ACAPLUS@
-PYTHON=@PYTHON3@
-export ACACIA_PLUS_LIB=@ACACIA_PLUS_LIB@
-export LTL2TGBA_BIN=@LTL2TGBA_BIN@
 
 TRAPTERM () { 
   if [[ $childpid != '' ]]; then
@@ -59,7 +53,7 @@ run_strix () {
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    echoandrun $prog_prefix $ACABONSAI -c BOTH -F $ltl --ins $ins --outs $outs \
+    echoandrun $prog_prefix $ACABONSAI -f "$(cat $ltl)" -i $ins -o $outs -u both \
          ${=AB_OPTS} $extra_opts | \
          real_to_exitcode
 }
