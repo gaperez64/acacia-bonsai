@@ -39,4 +39,4 @@ jobs:
         submodules: recursive
     - name: Compile and test all configurations
       run: |
-        ./self-benchmark.sh
+        ./self-benchmark.sh -j 

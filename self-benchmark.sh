@@ -2,7 +2,7 @@
 
 mkdir -p _bm-logs
 
-BENCHMARK_SUITE=ab/syntcomp21/crit
+BENCHMARK_SUITE=ab/tiny
 TIMEOUT_FACTOR=1.7
 
 opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
