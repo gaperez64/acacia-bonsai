@@ -89,6 +89,7 @@ confs=(
 
 mode= # print, list
 force=false
+justtest=false
 donot=()
 conflist=(${(k)confs})
 benchsuites=(--suite=$BENCHMARK_SUITE)
@@ -224,10 +225,10 @@ if ! (( $donot[(Ie)benchmark] )); then
         fi
         cd $build
 	if $justtest; then
-	    echo -n "testing $name (logfile: $log)... "
+	    echo -n "testing $name on $benchsuites (logfile: $log)... "
 	    meson test $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
 	else
-	    echo -n "benchmarking $name (logfile: $log)... "
+	    echo -n "benchmarking $name on $benchsuites (logfile: $log)... "
 	    meson test --benchmark $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
 	fi
         if grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
