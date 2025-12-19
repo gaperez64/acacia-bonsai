@@ -37,6 +37,7 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
   }
 
 #ifdef NO_ARRAY_CAP_MAX
+#pragma message("STATIC_ARRAY_CAP_MAX is being set to 0!")
   constexpr auto STATIC_ARRAY_CAP_MAX = 0;
 #else
   constexpr auto STATIC_ARRAY_CAP_MAX =

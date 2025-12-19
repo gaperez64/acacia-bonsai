@@ -47,6 +47,7 @@ EOF
 # These all differ from the base configuration by /one/ option.
 confs=(
     [base]=" "
+    [no_array_cap_max]="-DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
     [best]="$best"
     [best_nosimd]="$best -DNO_SIMD"
 #    [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
