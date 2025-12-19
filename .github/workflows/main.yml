@@ -7,8 +7,7 @@ jobs:
     - name: Install packages
       run: |
         sudo apt update
-        sudo apt upgrade gcc g++
-        sudo apt install -y zsh meson git gcc python-is-python3 \
+        sudo apt install -y zsh meson git g++-14 python-is-python3 \
                     ninja-build gnupg wget python3-pip \
                     pkg-config libffi-dev \
                     libtool valgrind gpg
@@ -39,4 +38,5 @@ jobs:
         submodules: recursive
     - name: Compile and test all configurations
       run: |
+        export CXX=g++-14
         ./self-benchmark.sh -j 
