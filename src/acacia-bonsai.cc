@@ -103,7 +103,7 @@ int main (int argc, char** argv) {
         or (arg_values.opt_kmin <= arg_values.opt_k
             and arg_values.opt_kinc == 0))
       error (EXIT_CODE_ERROR,
-             "Incompatible values for K (%d), Kmin (%d), and Kinc (%d).",
+             "Incompatible values for K (%d), Kmin (%d), and Kinc (%d).\n",
              arg_values.opt_k,
              arg_values.opt_kmin,
              arg_values.opt_kinc);
@@ -169,11 +169,11 @@ int main (int argc, char** argv) {
         return ret;
       }
     }
-    error (EXIT_CODE_UNKNOWN, "No child had a conclusive answer");
+    error (EXIT_CODE_UNKNOWN, "No child had a conclusive answer\n");
 
   } catch (const std::exception& e) {
     error (EXIT_CODE_ERROR, "%s", e.what ());
   } catch (...) {
-    error (EXIT_CODE_ERROR, "Unknown exception");
+    error (EXIT_CODE_ERROR, "Unknown exception\n");
   }
 }

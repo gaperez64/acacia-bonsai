@@ -6,6 +6,7 @@
 #include <cctype>
 #include <errno.h>
 #include <iostream>
+#include <fstream>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -63,6 +64,7 @@ namespace {
         << "  -h                print this help message\n"
         << "  -V                print program version\n"
         << "  -f STRING         process the formula STRING\n"
+        << "  -F VAL            process formula in file VAL\n"
         << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
            "atomic propositions\n"
         << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
@@ -96,7 +98,16 @@ namespace {
     else if (case_insensitive_equals (arg, "both"))
       result.opt_unreal_x = std::make_optional<unreal_x_t>(UNREAL_X_BOTH);
     else
-      error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s", arg);
+      error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s\n", arg);
+  }
+
+  void process_formula_file (const std::string& arg, arg_parse_result& result) {
+    std::ifstream file(arg.c_str ());
+    if (!file)
+      error (EXIT_CODE_ERROR, "Error: unable to open file %s\n", arg);
+    std::stringstream buffer;
+    buffer << file.rdbuf ();
+    result.formula = buffer.str ();
   }
 
 }
@@ -106,11 +117,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt (argc, argv, "hVf:i:o:I:K:M:u:v")) != -1) {
+  while ((opt = getopt (argc, argv, "hVf:F:i:o:I:K:M:u:v")) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (0);
       case 'V': std::cout << "Version: " << VERSION << '\n'; exit (0);
       case 'f': retval.formula = optarg; break;
+      case 'F': process_formula_file (optarg, retval); break;
       case 'i': process_arg_input (optarg, retval); break;
       case 'o': process_arg_output (optarg, retval); break;
       case 'I': retval.opt_kinc = std::stoi (optarg); break;
@@ -123,14 +135,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (retval.formula.empty ())
-    error (EXIT_CODE_ERROR, "Error: a formula must be specified (-f).");
+    error (EXIT_CODE_ERROR, "Error: a formula must be specified (-f or -F).\n");
   if (retval.inputs.empty ())
-    error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).");
+    error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
   if (retval.outputs.empty ())
-    error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).");
+    error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
   if (retval.opt_kmin != DEFAULT_KMIN and retval.opt_kinc == DEFAULT_KINC)
     error (EXIT_CODE_ERROR,
-           "Error: if 'Kstart' (-M) is specified, then 'Kinc' (-I) also must be provided.");
+           "Error: if 'Kstart' (-M) is specified, then 'Kinc' (-I) also must be provided.\n");
 
   return retval;
 }

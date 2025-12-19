@@ -53,7 +53,7 @@ run_strix () {
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    echoandrun $prog_prefix $ACABONSAI -f "$(cat $ltl)" -i $ins -o $outs -u both \
+    echoandrun $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs -u both \
          ${=AB_OPTS} $extra_opts | \
          real_to_exitcode
 }
