@@ -19,11 +19,6 @@
 #include <unistd.h>
 #include <vector>
 
-#define debug_(A...)        \
-  do {                      \
-    std::cout << A << "\n"; \
-  } while (0)
-
 /**
  * Struct that will hold the parsed argument values.
  */

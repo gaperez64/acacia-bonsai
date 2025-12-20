@@ -97,14 +97,10 @@ int main (int argc, char** argv) {
     // Adjust the value of K
     if (arg_values.opt_kmin == -1U)
       arg_values.opt_kmin = arg_values.opt_k;
-    if (arg_values.opt_kmin > arg_values.opt_k
-        or (arg_values.opt_kmin <= arg_values.opt_k
-            and arg_values.opt_kinc == 0))
-      error (EXIT_CODE_ERROR,
-             "Incompatible values for K (%d), Kmin (%d), and Kinc (%d).\n",
-             arg_values.opt_k,
-             arg_values.opt_kmin,
-             arg_values.opt_kinc);
+    if (arg_values.opt_kmin > arg_values.opt_k or
+        (arg_values.opt_kmin <= arg_values.opt_k and arg_values.opt_kinc == 0))
+      error (EXIT_CODE_ERROR, "Incompatible values for K (%d), Kmin (%d), and Kinc (%d).\n",
+             arg_values.opt_k, arg_values.opt_kmin, arg_values.opt_kinc);
     if (arg_values.opt_kmin == 0)
       arg_values.opt_kmin = arg_values.opt_k;
 
@@ -114,25 +110,18 @@ int main (int argc, char** argv) {
 
     const auto start_proc = [&] (std::optional<unreal_x_t> unreal_x) {
       if (fork () == 0) {
-        utils::vout.set_prefix (std::string {"["}
-                                + (not unreal_x.has_value () ?
-                                   "real" :
-                                   std::string {"unreal-x="} + (char) *unreal_x)
-                                + "] ");
-        const bool res = run_ltl (trans, 
-                                  arg_values.inputs,
-                                  arg_values.outputs, 
-                                  dict,
-                                  arg_values.opt_k,
-                                  arg_values.opt_kmin,
-                                  arg_values.opt_kinc,
-                                  arg_values.formula,
-                                  unreal_x);
+        utils::vout.set_prefix (
+            std::string {"["} +
+            (not unreal_x.has_value () ? "real" : std::string {"unreal-x="} + (char) *unreal_x) +
+            "] ");
+        const bool res =
+            run_ltl (trans, arg_values.inputs, arg_values.outputs, dict, arg_values.opt_k,
+                     arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula, unreal_x);
         verb_do (1, vout << "returning " << res << "\n");
-        
+
         // Diagnose unused -x options, or not?
         // extra_options.report_unused_options ();
-        
+
         if (unreal_x.has_value ())
           exit (res ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN);
         else
@@ -148,14 +137,16 @@ int main (int argc, char** argv) {
     start_proc (std::nullopt);
 
     if (arg_values.opt_unreal_x.has_value ()) {
-      if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or *(arg_values.opt_unreal_x) == UNREAL_X_FORMULA)
-        start_proc (std::make_optional<unreal_x_t>(UNREAL_X_FORMULA));
-      if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or *(arg_values.opt_unreal_x) == UNREAL_X_AUTOMATON)
-        start_proc (std::make_optional<unreal_x_t>(UNREAL_X_AUTOMATON));
+      if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or
+          *(arg_values.opt_unreal_x) == UNREAL_X_FORMULA)
+        start_proc (std::make_optional<unreal_x_t> (UNREAL_X_FORMULA));
+      if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or
+          *(arg_values.opt_unreal_x) == UNREAL_X_AUTOMATON)
+        start_proc (std::make_optional<unreal_x_t> (UNREAL_X_AUTOMATON));
     }
 
     int ret;
-    while (wait (&ret) != -1) { // as long as we have children to wait for
+    while (wait (&ret) != -1) {  // as long as we have children to wait for
       ret = WEXITSTATUS (ret);
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else

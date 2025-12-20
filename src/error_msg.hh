@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <stdarg.h>
 #include <stdio.h>
 

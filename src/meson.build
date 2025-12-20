@@ -1,7 +1,5 @@
 ab_sources = ['acacia-bonsai.cc']
 
-subdir ('solver')  # adds to 'ab_sources'
-
 ab_exe = executable ('acacia-bonsai', ab_sources,
                      include_directories : inc,
                      dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
