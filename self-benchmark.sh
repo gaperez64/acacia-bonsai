@@ -6,6 +6,7 @@ BENCHMARK_SUITE=ab/tiny
 TIMEOUT_FACTOR=1.7
 
 opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
+opt_justtest='-march=native -O0'
 
 declare -A confs
 
@@ -139,7 +140,7 @@ EOF
         l) mode=list;;
         B) donot+=build;;
         C) donot+=compile;;
-	s) justtest=true;;
+	j) justtest=true;;
         R) donot+=benchmark;;
         f) force=true;;
         c) conflist=(${(@s:,:)OPTARG});;
@@ -150,6 +151,14 @@ EOF
 	   done
     esac
 done
+
+## If we're just testing, go for a fast compilation
+rel="--buildtype=release"
+if $justtest; then
+    opt=$opt_justtest
+    echo "Using opt $opt for faster compile-to-test times"
+    rel=""
+fi
 
 ## Print and list mode
 if [[ $mode == print || $mode == list ]]; then
@@ -175,7 +184,7 @@ if ! (( $donot[(Ie)build] )); then
             echo "$build exists, not rebuilding, remove folder to rebuild."
         else
             echo -n "building $build (logfile: $log)... "
-            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build --buildtype=release &>> $log; then
+            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
                 echo "done."
             else
                 echo "FAILED; please remove $build to recompile."
