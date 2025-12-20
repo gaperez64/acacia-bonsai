@@ -409,7 +409,8 @@ foreach folder, testset : test_files
                   'all' + '/' + folder + '/' + size,
                   'all' + '/' + folder
                 ],
-                timeout: 30)
+                timeout: 30,
+                depends : [ab_exe])
         endforeach
       endforeach
     endif
@@ -3945,7 +3946,8 @@ foreach folder, testsets : benchmark_files
                      'all' + '/' + folder + '/' + set,
                      'all' + '/' + folder
                    ],
-                   timeout: 10)
+                   timeout: 10,
+                   depends: [ab_exe])
       endforeach
     endforeach
   endforeach
