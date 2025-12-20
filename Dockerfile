@@ -1,5 +1,4 @@
-#FROM ubuntu:25.04
-FROM ubuntu:24.04
+FROM debian:stable
 
 # install all dependencies
 RUN apt update
@@ -17,24 +16,10 @@ RUN python3 -m pip config set global.break-system-packages true
 RUN pip3 install wheel meson-python build
 
 # spot installation
-RUN mkdir -p /etc/apt/keyrings
-RUN wget https://www.lrde.epita.fr/repo/debian.gpg
-RUN gpg --no-default-keyring --keyring ./tmp-kr.gpg --import debian.gpg
-RUN gpg --no-default-keyring --keyring ./tmp-kr.gpg --export --output /etc/apt/keyrings/lrde.gpg
-RUN sh -c "echo 'deb [signed-by=/etc/apt/keyrings/lrde.gpg] http://www.lrde.epita.fr/repo/debian/ stable/' >> /etc/apt/sources.list"
-RUN apt update
-
-# AMD
-RUN wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
-RUN dpkg -i libltdl7_2.5.4-4build1_amd64.deb
-
-# ARM
-#RUN wget http://ftp.de.debian.org/debian/pool/main/libt/libtool/libltdl7_2.5.4-9_arm64.deb
-#RUN dpkg -i libltdl7_2.5.4-9_arm64.deb
-#RUN apt -f install -y
-
-# TODO: this seems to not run on arm. Continue on Ubuntu
-RUN apt install -y spot libspot-dev
+RUN wget -q -O /etc/apt/keyrings/lre-epita.gpg https://www.lre.epita.fr/repo/debian.gpg
+RUN echo "deb [signed-by=/etc/apt/keyrings/lre-epita.gpg] http://www.lre.epita.fr/repo/debian/ stable/" > /etc/apt/sources.list.d/lre-epita.list
+RUN apt-get update
+RUN apt-get install -y spot libspot-dev spot-doc python3-spot # Or a subset of those
 
 # TODO: pygraph?
 
