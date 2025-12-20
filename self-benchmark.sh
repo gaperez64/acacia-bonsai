@@ -6,7 +6,7 @@ BENCHMARK_SUITE=ab/tiny
 TIMEOUT_FACTOR=1.7
 
 opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
-opt_justtest='-march=native -O0'
+opt_justtest=''
 
 declare -A confs
 
