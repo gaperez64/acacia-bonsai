@@ -39,38 +39,36 @@ utils::voutstream utils::vout;
 size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
-namespace {
-  void terminate ([[maybe_unused]] int signum) {
-    if (getpgid (0) == getpid ()) {  // Main process
-      signal (SIGTERM, SIG_IGN);
-      kill (0, SIGTERM);
-      while (wait (nullptr) != -1)
-        /* no body */;
-    }
-    else
-      _exit (3);
+void terminate ([[maybe_unused]] int signum) {
+  if (getpgid (0) == getpid ()) {  // Main process
+    signal (SIGTERM, SIG_IGN);
+    kill (0, SIGTERM);
+    while (wait (nullptr) != -1)
+      /* no body */;
   }
+  else
+    _exit (3);
+}
 
-  void sig_handler (int sig) {
-    spot::cleanup_tmpfiles ();
-    // Send the signal again, this time to the default handler, so that
-    // we return a meaningful error code.
-    raise (sig);
-  }
+void sig_handler (int sig) {
+  spot::cleanup_tmpfiles ();
+  // Send the signal again, this time to the default handler, so that
+  // we return a meaningful error code.
+  raise (sig);
+}
 
-  void setup_sig_handler () {
-    struct sigaction sa;
-    sa.sa_handler = sig_handler;
-    sigemptyset (&sa.sa_mask);
-    sa.sa_flags = SA_RESETHAND;
-    // Catch termination signals, so we can clean up temporary files.
-    sigaction (SIGALRM, &sa, nullptr);
-    sigaction (SIGHUP, &sa, nullptr);
-    sigaction (SIGINT, &sa, nullptr);
-    sigaction (SIGPIPE, &sa, nullptr);
-    sigaction (SIGQUIT, &sa, nullptr);
-    sigaction (SIGTERM, &sa, nullptr);
-  }
+void setup_sig_handler () {
+  struct sigaction sa;
+  sa.sa_handler = sig_handler;
+  sigemptyset (&sa.sa_mask);
+  sa.sa_flags = SA_RESETHAND;
+  // Catch termination signals, so we can clean up temporary files.
+  sigaction (SIGALRM, &sa, nullptr);
+  sigaction (SIGHUP, &sa, nullptr);
+  sigaction (SIGINT, &sa, nullptr);
+  sigaction (SIGPIPE, &sa, nullptr);
+  sigaction (SIGQUIT, &sa, nullptr);
+  sigaction (SIGTERM, &sa, nullptr);
 }
 
 int main (int argc, char** argv) {

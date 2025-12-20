@@ -1,4 +1,4 @@
-ab_sources = ['acacia-bonsai.cc', 'arg_parser.cc']
+ab_sources = ['acacia-bonsai.cc']
 
 subdir ('solver')  # adds to 'ab_sources'
 
