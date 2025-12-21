@@ -47,7 +47,7 @@ void terminate ([[maybe_unused]] int signum) {
       /* no body */;
   }
   else
-    _exit (3);
+    _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
 }
 
 void sig_handler (int sig) {

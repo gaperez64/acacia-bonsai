@@ -1,24 +1,23 @@
 #pragma once
 
-#include <bddx.h>
-#include <utility>
-#include <spot/twa/twa.hh>
-#include "solve_game.hh"
-#include "boolean_states.hh"
-#include "k-bounded_safety_aut.hh"
-#include "posets/downsets.hh"
 #include "actioners.hh"
+#include "boolean_states.hh"
+#include "configuration.hh"
 #include "input_pickers.hh"
 #include "ios_precomputers.hh"
-#include "configuration.hh"
+#include "k_bounded_safety_aut.hh"
+#include "posets/downsets.hh"
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
+#include "solve_game.hh"
 #include "utils/static_switch.hh"
-#include "k-bounded_safety_aut.hh"
 
-bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned kinc, bdd all_inputs,
-                 bdd all_outputs) {
+#include <bddx.h>
+#include <spot/twa/twa.hh>
+#include <utility>
 
+bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned kinc,
+                 bdd all_inputs, bdd all_outputs) {
   posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, kmax)) ();
   verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
 
@@ -37,7 +36,7 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
   }
 
 #ifdef NO_ARRAY_CAP_MAX
-#pragma message("STATIC_ARRAY_CAP_MAX is being set to 0!")
+# pragma message("STATIC_ARRAY_CAP_MAX is being set to 0!")
   constexpr auto STATIC_ARRAY_CAP_MAX = 0;
 #else
   constexpr auto STATIC_ARRAY_CAP_MAX =
@@ -64,7 +63,7 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
 
   bool realizable = false;
 
-#define UNREACHABLE [] ([[maybe_unused]] int x) { std::unreachable(); }
+#define UNREACHABLE [] ([[maybe_unused]] int x) { std::unreachable (); }
 
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) {  // Array & Bitsets
     static_switch_t<STATIC_ARRAY_CAP_MAX> {}(
@@ -78,9 +77,10 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
                 using IOsPrecomputationMaker = IOS_PRECOMPUTER;
                 using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
                 using InputPickerMaker = INPUT_PICKER;
-                auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker, ActionerMaker,
-                                     InputPickerMaker> (aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
-                                                  INPUT_PICKER ());
+                auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
+                                                       ActionerMaker, InputPickerMaker> (
+                    aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
+                    ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
                 realizable = skn.solve ().has_value ();
               },
               UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
@@ -97,9 +97,10 @@ bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned
           using IOsPrecomputationMaker = IOS_PRECOMPUTER;
           using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
           using InputPickerMaker = INPUT_PICKER;
-          auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker, ActionerMaker,
-                                     InputPickerMaker> (aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (), ACTIONER<typename SpecializedDownset::value_type> (),
-                                                  INPUT_PICKER ());
+          auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
+                                                 ActionerMaker, InputPickerMaker> (
+              aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
+              ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
           realizable = skn.solve ().has_value ();
         },
         UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));

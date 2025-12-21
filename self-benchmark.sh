@@ -10,25 +10,25 @@ opt_justtest=''
 
 declare -A confs
 
-defaults=$(<<EOF 
--DDEFAULT_K=255
--DDEFAULT_KMIN=2
--DDEFAULT_KINC=3
--DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
--DVECTOR_ELT_T='char'
--DK_BOUNDED_SAFETY_AUT_IMPL='k_bounded_safety_aut'
--DSTATIC_ARRAY_MAX='300'
--DSTATIC_MAX_BITSETS='8ul'
--DSIMD_IS_MAX='true'
--DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
--DBOOLEAN_STATES='boolean_states::forward_saturation'
--DIOS_PRECOMPUTER='ios_precomputers::standard'
--DACTIONER='actioners::standard'
--DINPUT_PICKER='input_pickers::critical_pq'
--DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
--DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
-EOF
-        )
+# WARNING: The actual defaults are set in configuration.hh
+# defaults=$(<<EOF 
+# -DDEFAULT_K=255
+# -DDEFAULT_KMIN=2
+# -DDEFAULT_KINC=3
+# -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
+# -DVECTOR_ELT_T='char'
+# -DSTATIC_ARRAY_MAX='300'
+# -DSTATIC_MAX_BITSETS='8ul'
+# -DSIMD_IS_MAX='true'
+# -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
+# -DBOOLEAN_STATES='boolean_states::forward_saturation'
+# -DIOS_PRECOMPUTER='ios_precomputers::standard'
+# -DACTIONER='actioners::standard'
+# -DINPUT_PICKER='input_pickers::critical_pq'
+# -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
+# -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
+# EOF
+#         )
 
 # Experimentally determined
 best=$(<<EOF
@@ -165,7 +165,9 @@ if [[ $mode == print || $mode == list ]]; then
     for name in $conflist; do
         echo -n "- $name"
         if [[ $mode == print ]]; then
-            echo -n ": $opt $defaults $confs[$name]" | tr '\n' ' '
+            # echo -n ": $opt $defaults $confs[$name]" | tr '\n' ' '
+	    # defaults are set in configuration.hh
+            echo -n ": $opt $confs[$name]" | tr '\n' ' '
         fi
         echo
     done
@@ -184,6 +186,8 @@ if ! (( $donot[(Ie)build] )); then
             echo "$build exists, not rebuilding, remove folder to rebuild."
         else
             echo -n "building $build (logfile: $log)... "
+            # if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
+	    # defaults are set in configuration.hh
             if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
                 echo "done."
             else

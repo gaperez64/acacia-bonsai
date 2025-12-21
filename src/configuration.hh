@@ -4,44 +4,54 @@
 
 #include "utils/todo.hh"
 
-#ifndef DEFAULT_K
-# define DEFAULT_K 99
-#endif
-#ifndef DEFAULT_KMIN
-# define DEFAULT_KMIN 11
-#endif
-#ifndef DEFAULT_KINC
-# define DEFAULT_KINC 5
+#ifndef CPRE_AVOID_UNIONS
+# define CPRE_AVOID_UNIONS 0
 #endif
 
+#ifndef NO_ARRAY_CAP_MAX
+// define it if you want STATIC_ARRAY_CAP_MAX to be 0
+#endif
+
+// The defaults were copied from self-benchmark 21/12/2025
+
+#ifndef DEFAULT_K
+# define DEFAULT_K 255
+#endif
+#ifndef DEFAULT_KMIN
+# define DEFAULT_KMIN 2
+#endif
+#ifndef DEFAULT_KINC
+# define DEFAULT_KINC 3
+#endif
+#ifndef DEFAULT_UNREAL_X
+# define DEFAULT_UNREAL_X UNREAL_X_BOTH
+#endif
 #ifndef VECTOR_ELT_T
 # define VECTOR_ELT_T char
 #endif
-
-#ifndef K_BOUNDED_SAFETY_AUT_IMPL
-# define K_BOUNDED_SAFETY_AUT_IMPL k_bounded_safety_aut
+#ifndef STATIC_ARRAY_MAX
+# define STATIC_ARRAY_MAX 300
 #endif
-
-#ifdef NDEBUG
-# pragma message("Compiling with NDEBUG")
-# ifndef STATIC_ARRAY_MAX
-#  define STATIC_ARRAY_MAX 300
-# endif
-# ifndef STATIC_MAX_BITSETS
-#  define STATIC_MAX_BITSETS 8ul
-# endif
-#else
-# pragma message("Compiling without NDEBUG")
-# ifndef STATIC_ARRAY_MAX
-#  define STATIC_ARRAY_MAX 30
-# endif
-# ifndef STATIC_MAX_BITSETS
-#  define STATIC_MAX_BITSETS 1ul
-# endif
+#ifndef STATIC_MAX_BITSETS
+# define STATIC_MAX_BITSETS 8ul
 #endif
-
-#ifndef CPRE_AVOID_UNIONS
-# define CPRE_AVOID_UNIONS 0
+#ifndef SIMD_IS_MAX
+# define SIMD_IS_MAX true
+#endif
+#ifndef AUT_PREPROCESSOR
+# define AUT_PREPROCESSOR aut_preprocessors::surely_losing
+#endif
+#ifndef BOOLEAN_STATES
+# define BOOLEAN_STATES boolean_states::forward_saturation
+#endif
+#ifndef IOS_PRECOMPUTER
+# define IOS_PRECOMPUTER ios_precomputers::standard
+#endif
+#ifndef ACTIONER
+# define ACTIONER actioners::standard
+#endif
+#ifndef INPUT_PICKER
+# define INPUT_PICKER input_pickers::critical_pq
 #endif
 
 #ifdef NO_SIMD
@@ -65,31 +75,6 @@
 #ifndef ARRAY_AND_BITSET_DOWNSET_IMPL
 # define ARRAY_AND_BITSET_DOWNSET_IMPL vector_backed
 #endif
-
 #ifndef VECTOR_AND_BITSET_DOWNSET_IMPL
 # define VECTOR_AND_BITSET_DOWNSET_IMPL vector_backed
-#endif
-
-#ifndef SIMD_IS_MAX
-# define SIMD_IS_MAX true
-#endif
-
-#ifndef AUT_PREPROCESSOR
-# define AUT_PREPROCESSOR aut_preprocessors::standard
-#endif
-
-#ifndef BOOLEAN_STATES
-# define BOOLEAN_STATES boolean_states::forward_saturation
-#endif
-
-#ifndef IOS_PRECOMPUTER
-# define IOS_PRECOMPUTER ios_precomputers::standard
-#endif
-
-#ifndef ACTIONER
-# define ACTIONER actioners::standard
-#endif
-
-#ifndef INPUT_PICKER
-# define INPUT_PICKER input_pickers::critical_pq
 #endif
