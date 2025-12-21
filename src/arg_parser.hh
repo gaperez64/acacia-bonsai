@@ -29,7 +29,7 @@ struct arg_parse_result {
     unsigned int opt_kmin = DEFAULT_KMIN;
     unsigned int opt_k = DEFAULT_K;
     unsigned int opt_kinc = DEFAULT_KINC;
-    std::optional<unreal_x_t> opt_unreal_x = std::nullopt;
+    std::optional<unreal_x_t> opt_unreal_x = std::make_optional<unreal_x_t>(DEFAULT_UNREAL_X);
     unsigned int verbose_level = 0;
 };
 
@@ -85,6 +85,7 @@ void show_help (const char* program_name) {
       << "  -K VAL            final value of K, or unique value if M is not specified\n"
       << "  -M VAL            starting value of K; -I MUST be set when using this option\n"
       << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both]\n"
+      << "  -r                just check realizability, not unrealizability\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
       << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
@@ -135,11 +136,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
   int opt;
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt (argc, argv, "hVf:F:i:o:I:K:M:u:v")) != -1) {
+  while ((opt = getopt (argc, argv, "hrVf:F:i:o:I:K:M:u:v")) != -1) {
     switch (opt) {
-      case 'h': show_help (argv[0]); exit (0);
-      case 'V': std::cout << "Version: " << VERSION << '\n'; exit (0);
+      case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
+      case 'V': std::cout << "Version: " << VERSION << '\n'; exit (EXIT_CODE_UNKNOWN);
       case 'f': retval.formula = optarg; break;
+      case 'r': retval.opt_unreal_x = std::nullopt; break;
       case 'F': process_formula_file (optarg, retval); break;
       case 'i': process_arg_input (optarg, retval); break;
       case 'o': process_arg_output (optarg, retval); break;
@@ -148,7 +150,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'M': retval.opt_kmin = std::stoi (optarg); break;
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
-      default: show_help (argv[0]); exit (1);
+      default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }
   }
 
