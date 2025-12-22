@@ -34,6 +34,9 @@ RUN meson compile -C build acacia-bonsai
 #RUN meson install -C build --dry-run
 RUN meson install -C build
 
+# TODO: cleanup the build
+# TODO: check if the Python stuff works.
+
 #RUN mkdir -p /opt/acacia_bonsai/build
 #WORKDIR /opt/acacia_bonsai/build
 
