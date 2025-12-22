@@ -3,10 +3,9 @@ FROM debian:stable
 # install all dependencies
 RUN apt update
 RUN apt install -y zsh meson git gcc python-is-python3 \
-                    ninja-build gnupg wget python3-pip \
-                    pkg-config libglib2.0-dev libffi-dev libboost-dev \
-                    autoconf automake libtool bison flex valgrind gpg \
-                    libboost-all-dev
+                    ninja-build wget python3-pip \
+                    pkg-config libffi-dev \
+                    autoconf automake libtool bison flex valgrind
 
 # tell Python that this system is disposable and global installs are OK
 RUN python3 -m pip config set global.break-system-packages true
