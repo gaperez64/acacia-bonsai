@@ -82,6 +82,7 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
     spot_formula = spot::formula::Not (spot_formula);
   else if (*check_unreal == UNREAL_X_FORMULA) {
     // Add X at the outputs
+    verb_do (2, vout << "Adding X to the outputs in the formula\n");
     auto rec = [output_aps] (auto&& self, spot::formula m) {
       if (m.is (spot::op::ap) and
           (std::ranges::find (output_aps, m.ap_name ()) != output_aps.end ()))
@@ -110,6 +111,7 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
 
   // If unreal but we haven't pushed outputs yet using X on formula
   if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
+    verb_do (2, vout << "Swapping the inputs and outputs and pushing the outputs\n");
     aut = push_outputs (aut, all_inputs, all_outputs);
     input_aps.swap (output_aps);
     std::swap (all_inputs, all_outputs);

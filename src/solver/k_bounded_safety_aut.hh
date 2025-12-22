@@ -107,8 +107,10 @@ class k_bounded_safety_aut_detail {
         cpre_inplace (F, *input, actioner);
 
         if (not F.contains (State (init))) {
-          if (K >= Kto)
+          if (K >= Kto) {
+            verb_do (2, vout << "Early exit because the initial state is out\n");
             return std::nullopt;
+          }
           verb_do (1, vout << "Incrementing K from " << K << " to " << K + Kinc << std::endl);
           K += Kinc;
           actioner.setK (K);
@@ -130,6 +132,7 @@ class k_bounded_safety_aut_detail {
         // verb_do (1, vout << "Loop# " << loopcount << ", F of size " << F.size () << std::endl);
       } while (1);
 
+      verb_do (2, vout << "Aborting!\n");
       std::abort ();
       return std::nullopt;
     }

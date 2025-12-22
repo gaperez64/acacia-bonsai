@@ -156,7 +156,7 @@ int main (int argc, char** argv) {
         terminate (0);        
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
-        else if 
+        else
           std::cout << "UNREALIZABLE\n";
         return ret;
       }
