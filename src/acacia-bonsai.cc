@@ -96,16 +96,6 @@ int main (int argc, char** argv) {
     extra_options.set ("tls-impl", 1);
     extra_options.set ("wdba-minimize", 2);
 
-    // Adjust the value of K
-    if (arg_values.opt_kmin == -1U)
-      arg_values.opt_kmin = arg_values.opt_k;
-    if (arg_values.opt_kmin > arg_values.opt_k or
-        (arg_values.opt_kmin <= arg_values.opt_k and arg_values.opt_kinc == 0))
-      error (EXIT_CODE_ERROR, "Incompatible values for K (%d), Kmin (%d), and Kinc (%d).\n",
-             arg_values.opt_k, arg_values.opt_kmin, arg_values.opt_kinc);
-    if (arg_values.opt_kmin == 0)
-      arg_values.opt_kmin = arg_values.opt_k;
-
     // Setup the dictionary now: BuDDy's initialization
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
@@ -150,7 +140,6 @@ int main (int argc, char** argv) {
     int ret;
     while (wait (&ret) != -1) {  // as long as we have children to wait for
       ret = WEXITSTATUS (ret);
-      verb_do (2, vout << "found someone with return value " << ret << "\n");
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else
         terminate (0);        

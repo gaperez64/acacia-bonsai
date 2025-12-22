@@ -142,6 +142,7 @@ void process_formula_file (const std::string& arg, arg_parse_result& result) {
 arg_parse_result arg_parser (int argc, char** argv) {
   arg_parse_result retval;
   int opt;
+  std::optional<int> sgn_kmin = std::nullopt;
 
   // this goes over all provided arguments and returns the argument value.
   while ((opt = getopt (argc, argv, "hrVf:F:i:o:I:K:M:u:v")) != -1) {
@@ -155,7 +156,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'o': process_arg_output (optarg, retval); break;
       case 'I': retval.opt_kinc = std::stoi (optarg); break;
       case 'K': retval.opt_k = std::stoi (optarg); break;
-      case 'M': retval.opt_kmin = std::stoi (optarg); break;
+      case 'M': sgn_kmin = std::make_optional<int> (std::stoi (optarg)); break;
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
@@ -171,6 +172,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
   if (retval.opt_kmin != DEFAULT_KMIN and retval.opt_kinc == DEFAULT_KINC)
     error (EXIT_CODE_ERROR,
            "Error: if 'Kstart' (-M) is specified, then 'Kinc' (-I) also must be provided.\n");
+
+  // Adjust the value of K
+  if (sgn_kmin.has_value () and *sgn_kmin <= 0)
+    retval.opt_kmin = retval.opt_k;
+  if (retval.opt_kmin > retval.opt_k or (retval.opt_kmin <= retval.opt_k and retval.opt_kinc == 0))
+    error (EXIT_CODE_ERROR, "Error: incompatible values for K (%d), Kmin (%d), and Kinc (%d).\n",
+           retval.opt_k, retval.opt_kmin, retval.opt_kinc);
 
   return retval;
 }
