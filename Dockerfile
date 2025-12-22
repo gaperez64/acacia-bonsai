@@ -4,7 +4,7 @@ FROM debian:stable
 RUN apt update
 RUN apt install -y zsh meson git gcc python-is-python3 \
                     ninja-build wget python3-pip \
-                    pkg-config libffi-dev \
+                    pkg-config \
                     autoconf automake libtool bison flex valgrind
 
 # tell Python that this system is disposable and global installs are OK
@@ -22,7 +22,6 @@ RUN apt-get install -y spot libspot-dev spot-doc python3-spot
 RUN mkdir -p /opt/acacia_bonsai/build
 WORKDIR /opt/acacia_bonsai/build
 
-# TODO: is there anything that needs to be ignored in the .dockerignore?
 COPY . .
 
 RUN meson setup build --prefix /opt/acacia_bonsai
