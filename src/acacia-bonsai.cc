@@ -153,10 +153,10 @@ int main (int argc, char** argv) {
       verb_do (2, vout << "found someone with return value " << ret << "\n");
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else
-        terminate (0);
+        terminate (0);        
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
-        else
+        else if 
           std::cout << "UNREALIZABLE\n";
         return ret;
       }
