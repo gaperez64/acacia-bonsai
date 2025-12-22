@@ -26,10 +26,10 @@ struct arg_parse_result {
     std::string formula;
     std::vector<std::string> inputs;
     std::vector<std::string> outputs;
-    unsigned int opt_kmin = DEFAULT_KMIN;
-    unsigned int opt_k = DEFAULT_K;
-    unsigned int opt_kinc = DEFAULT_KINC;
-    std::optional<unreal_x_t> opt_unreal_x = std::make_optional<unreal_x_t>(DEFAULT_UNREAL_X);
+    VECTOR_ELT_T opt_kmin = DEFAULT_KMIN;
+    VECTOR_ELT_T opt_k = DEFAULT_K;
+    VECTOR_ELT_T opt_kinc = DEFAULT_KINC;
+    std::optional<unreal_x_t> opt_unreal_x = std::make_optional<unreal_x_t> (DEFAULT_UNREAL_X);
     unsigned int verbose_level = 0;
 };
 
@@ -69,38 +69,37 @@ void process_arg_output (const std::string& arg, arg_parse_result& result) {
  * Print the help menu for the specified program name.
  */
 void show_help (const char* program_name) {
-  std::cout
-      << "Usage: " << program_name << " [OPTIONS]\n"
-      << "Check realizability for LTL specifications.\n\n"
-      << "Allowed options:\n"
-      << "  -h                print this help message\n"
-      << "  -V                print program version\n"
-      << "  -f STRING         process the formula STRING\n"
-      << "  -F VAL            process formula in file VAL\n"
-      << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
-         "atomic propositions\n"
-      << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
-         "propositions\n"
-      << "  -I VAL            increment value for K, used when M < K\n"
-      << "  -K VAL            final value of K, or unique value if M is not specified\n"
-      << "  -M VAL            starting value of K; -I MUST be set when using this option\n"
-      << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both] "
-      << "unrealizability is chedked by default with "
+  std::cout << "Usage: " << program_name << " [OPTIONS]\n"
+            << "Check realizability for LTL specifications.\n\n"
+            << "Allowed options:\n"
+            << "  -h                print this help message\n"
+            << "  -V                print program version\n"
+            << "  -f STRING         process the formula STRING\n"
+            << "  -F VAL            process formula in file VAL\n"
+            << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
+               "atomic propositions\n"
+            << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
+               "propositions\n"
+            << "  -I VAL            increment value for K, used when M < K\n"
+            << "  -K VAL            final value of K, or unique value if M is not specified\n"
+            << "  -M VAL            starting value of K; -I MUST be set when using this option\n"
+            << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both] "
+            << "unrealizability is chedked by default with "
 #if DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
-      << "VAL = automaton"
+            << "VAL = automaton"
 #elif DEFAULT_UNREAL_X == UNREAL_X_FORMULA
-      << "VAL = formula"
+            << "VAL = formula"
 #else
-      << "VAL = both"
+            << "VAL = both"
 #endif
-      << std::endl
-      << "  -r                just check realizability, not unrealizability\n"
-      << "  -v                verbose mode, can be repeated for more verbosity\n"
-      << "Exit status:\n"
-      << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
-      << "\t" << EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-      << "\t" << EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
-      << "Version: " << VERSION << '\n';
+            << std::endl
+            << "  -r                just check realizability, not unrealizability\n"
+            << "  -v                verbose mode, can be repeated for more verbosity\n"
+            << "Exit status:\n"
+            << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
+            << "\t" << EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
+            << "\t" << EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
+            << "Version: " << VERSION << '\n';
 }
 
 bool case_insensitive_char_equals (char a, char b) {

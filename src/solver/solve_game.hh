@@ -16,7 +16,7 @@
 #include <spot/twa/twa.hh>
 #include <utility>
 
-bool solve_game (spot::twa_graph_ptr aut, unsigned kmax, unsigned kmin, unsigned kinc,
+bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
                  bdd all_inputs, bdd all_outputs) {
   posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, kmax)) ();
   verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");

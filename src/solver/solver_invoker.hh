@@ -73,8 +73,8 @@ namespace {
 }
 
 bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
-              std::vector<std::string> output_aps, spot::bdd_dict_ptr dict, unsigned opt_k,
-              unsigned opt_kmin, unsigned opt_kinc, std::string formula,
+              std::vector<std::string> output_aps, spot::bdd_dict_ptr dict, VECTOR_ELT_T opt_k,
+              VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc, std::string formula,
               std::optional<unreal_x_t> check_unreal) {
   spot::formula spot_formula = parse_ltl_string (formula);
 

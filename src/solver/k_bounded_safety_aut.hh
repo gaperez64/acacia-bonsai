@@ -42,8 +42,8 @@ class k_bounded_safety_aut_detail {
     using State = typename SetOfStates::value_type;
 
   public:
-    k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, int Kfrom, int Kto, int Kinc,
-                                 bdd input_support, bdd output_support,
+    k_bounded_safety_aut_detail (spot::twa_graph_ptr aut, VECTOR_ELT_T Kfrom, VECTOR_ELT_T Kto,
+                                 VECTOR_ELT_T Kinc, bdd input_support, bdd output_support,
                                  const IOsPrecomputationMaker& ios_precomputer_maker,
                                  const ActionerMaker& actioner_maker,
                                  const InputPickerMaker& input_picker_maker)
@@ -342,5 +342,3 @@ class k_bounded_safety_aut_detail {
                   << (all_io * 100 / (all_inputs_size * all_outputs_size)) << "%" << std::endl;
     }
 };
-
-
