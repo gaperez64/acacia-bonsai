@@ -72,8 +72,10 @@ void setup_sig_handler () {
 }
 
 int main (int argc, char** argv) {
-  // use boost to parse all arguments that were passed
+  // parse all arguments that were passed
   auto arg_values = arg_parser (argc, argv);
+  // set the global verbose level
+  utils::verbose = arg_values.verbose_level;
 
   struct sigaction action;
   memset (&action, 0, sizeof (struct sigaction));
@@ -120,7 +122,7 @@ int main (int argc, char** argv) {
         verb_do (1, vout << "returning " << res << "\n");
 
         // Diagnose unused -x options, or not?
-        // extra_options.report_unused_options ();
+        extra_options.report_unused_options ();
 
         if (unreal_x.has_value ())
           exit (res ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN);
@@ -148,12 +150,13 @@ int main (int argc, char** argv) {
     int ret;
     while (wait (&ret) != -1) {  // as long as we have children to wait for
       ret = WEXITSTATUS (ret);
+      verb_do (2, vout << "found someone with return value " << ret << "\n");
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else
-        terminate (0);
+        terminate (0);        
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
-        else
+        else if 
           std::cout << "UNREALIZABLE\n";
         return ret;
       }

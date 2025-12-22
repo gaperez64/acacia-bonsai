@@ -84,7 +84,16 @@ void show_help (const char* program_name) {
       << "  -I VAL            increment value for K, used when M < K\n"
       << "  -K VAL            final value of K, or unique value if M is not specified\n"
       << "  -M VAL            starting value of K; -I MUST be set when using this option\n"
-      << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both]\n"
+      << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both] "
+      << "unrealizability is chedked by default with "
+#if DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
+      << "VAL = automaton"
+#elif DEFAULT_UNREAL_X == UNREAL_X_FORMULA
+      << "VAL = formula"
+#else
+      << "VAL = both"
+#endif
+      << std::endl
       << "  -r                just check realizability, not unrealizability\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
