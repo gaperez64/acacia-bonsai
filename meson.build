@@ -1,5 +1,5 @@
 project ('Acacia Bonsai', ['c', 'cpp'],
-         default_options : ['cpp_std=c++20', 'b_ndebug=if-release'],
+         default_options : ['cpp_std=c++23', 'b_ndebug=if-release'],
          license : 'GPL-3.0')
 
 extra_args = ['-ftrack-macro-expansion=0',

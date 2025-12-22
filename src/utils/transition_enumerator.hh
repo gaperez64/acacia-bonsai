@@ -1,6 +1,8 @@
 #pragma once
 
-// A simple enumerator of all the transitions.  It returns (cond, (src, dst)) objects.
+#include <cassert>
+
+// A simple enumerator of all the transitions.  It returns (cond, Formatter(edge)) objects.
 template <typename Aut, typename Formater>
 class transition_enumerator {
   public:

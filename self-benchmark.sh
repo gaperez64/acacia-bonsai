@@ -2,35 +2,38 @@
 
 mkdir -p _bm-logs
 
-BENCHMARK_SUITE=ab/syntcomp21/crit
+BENCHMARK_SUITE=ab/set2
 TIMEOUT_FACTOR=1.7
 
 opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
+opt_justtest=''
 
 declare -A confs
 
-defaults=$(<<EOF 
--DDEFAULT_K=255
--DDEFAULT_KMIN=2 -DDEFAULT_KINC=3
--DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
--DVECTOR_ELT_T='char'
--DK_BOUNDED_SAFETY_AUT_IMPL='k_bounded_safety_aut'
--DSTATIC_ARRAY_MAX='300'
--DSTATIC_MAX_BITSETS='8ul'
--DSIMD_IS_MAX='true'
--DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
--DBOOLEAN_STATES='boolean_states::forward_saturation'
--DIOS_PRECOMPUTER='ios_precomputers::standard'
--DACTIONER='actioners::standard<typename SetOfStates::value_type>'
--DINPUT_PICKER='input_pickers::critical_pq'
--DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
--DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
-EOF
-        )
+# WARNING: The actual defaults are set in configuration.hh
+# defaults=$(<<EOF 
+# -DDEFAULT_K=255
+# -DDEFAULT_KMIN=2
+# -DDEFAULT_KINC=3
+# -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
+# -DVECTOR_ELT_T='char'
+# -DSTATIC_ARRAY_MAX='300'
+# -DSTATIC_MAX_BITSETS='8ul'
+# -DSIMD_IS_MAX='true'
+# -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
+# -DBOOLEAN_STATES='boolean_states::forward_saturation'
+# -DIOS_PRECOMPUTER='ios_precomputers::standard'
+# -DACTIONER='actioners::standard'
+# -DINPUT_PICKER='input_pickers::critical_pq'
+# -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
+# -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
+# EOF
+#         )
 
 # Experimentally determined
 best=$(<<EOF
--DDEFAULT_KMIN=2 -DDEFAULT_KINC=3
+-DDEFAULT_KMIN=2
+-DDEFAULT_KINC=3
 -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
 -DAUT_PREPROCESSOR='aut_preprocessors::standard'
 -DBOOLEAN_STATES='boolean_states::forward_saturation'
@@ -45,9 +48,10 @@ EOF
 # These all differ from the base configuration by /one/ option.
 confs=(
     [base]=" "
+    [no_array_cap_max]="-DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
     [best]="$best"
     [best_nosimd]="$best -DNO_SIMD"
-#    [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation<typename SetOfStates::value_type>'"
+#    [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
     [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
     [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
@@ -59,9 +63,10 @@ confs=(
     [autpreproc_standard]="-DAUT_PREPROCESSOR=aut_preprocessors::standard"
     [autpreproc_nopreproc]="-DAUT_PREPROCESSOR=aut_preprocessors::no_preprocessing"
     [booleanstates_none]="-DBOOLEAN_STATES=boolean_states::no_boolean_states"
-    [iosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation<typename SetOfStates::value_type>'"
+    [iosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
     [iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
     [iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
+    [iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
     [inputpicker_critical]="-DINPUT_PICKER=input_pickers::critical"
     [inputpicker_critical_pq]="-DINPUT_PICKER=input_pickers::critical_pq"
     [inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
@@ -80,12 +85,15 @@ confs=(
     [best_downset_sharingtree_simd]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed'"
     [best_downset_simple_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DNO_SIMD"
     [best_downset_simple_sharingtree_simd]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed'"
+    [best_downset_simple_sharingtrie]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DNO_SIMD"
+    [best_downset_simple_sharingtrie_simd]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed'"
 #    [downset_v1ds]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split"
 #    [downset_v1dsio]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_one_dim_split_intersection_only"
 )
 
 mode= # print, list
 force=false
+justtest=false
 donot=()
 conflist=(${(k)confs})
 benchsuites=(--suite=$BENCHMARK_SUITE)
@@ -97,7 +105,7 @@ if (( $# == 0 )); then
 No option given; this will build, compile, and benchmark ${#confs} different configurations.
 To build/compile/benchmark with default (debug) options, run:
 
-  $ meson build
+  $ meson setup build
   $ cd build
   $ meson compile
   $ meson test --benchmark --suite=$BENCHMARK_SUITE -t $TIMEOUT_FACTOR
@@ -111,15 +119,16 @@ EOF
   echo "."
 fi
 
-while getopts "hplBCRfb:t:c:" option; do
+while getopts "hplBCjRfb:t:c:" option; do
     case $option; in
         h) cat <<EOF
-usage: $0 [-hplBCR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
+usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
   -h: Print this message.
   -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
   -l: Do not build/compile/benchmark, instead, list configurations.
   -B: Do not build.
   -C: Do not compile.
+  -j: Just test instead of benchmarking.
   -R: Do not benchmark.
   -f: Do not fail when a build, compile, or benchmark does, continue as if they passed.
   -b BENCHMARK: Run a specific benchmark suite (default: $BENCHMARK_SUITE).
@@ -131,6 +140,7 @@ EOF
         l) mode=list;;
         B) donot+=build;;
         C) donot+=compile;;
+	j) justtest=true;;
         R) donot+=benchmark;;
         f) force=true;;
         c) conflist=(${(@s:,:)OPTARG});;
@@ -142,12 +152,22 @@ EOF
     esac
 done
 
+## If we're just testing, go for a fast compilation
+rel="--buildtype=release"
+if $justtest; then
+    opt=$opt_justtest
+    echo "Using opt $opt for faster compile-to-test times"
+    rel=""
+fi
+
 ## Print and list mode
 if [[ $mode == print || $mode == list ]]; then
     for name in $conflist; do
         echo -n "- $name"
         if [[ $mode == print ]]; then
-            echo -n ": $opt $defaults $confs[$name]" | tr '\n' ' '
+            # echo -n ": $opt $defaults $confs[$name]" | tr '\n' ' '
+	    # defaults are set in configuration.hh
+            echo -n ": $opt $confs[$name]" | tr '\n' ' '
         fi
         echo
     done
@@ -166,7 +186,9 @@ if ! (( $donot[(Ie)build] )); then
             echo "$build exists, not rebuilding, remove folder to rebuild."
         else
             echo -n "building $build (logfile: $log)... "
-            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson $build --buildtype=release &>> $log; then
+            # if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
+	    # defaults are set in configuration.hh
+            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
                 echo "done."
             else
                 echo "FAILED; please remove $build to recompile."
@@ -218,8 +240,13 @@ if ! (( $donot[(Ie)benchmark] )); then
             continue
         fi
         cd $build
-        echo -n "benchmarking $name (logfile: $log)... "
-        meson test --benchmark $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
+	if $justtest; then
+	    echo -n "testing $name on $benchsuites (logfile: $log)... "
+	    meson test $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
+	else
+	    echo -n "benchmarking $name on $benchsuites (logfile: $log)... "
+	    meson test --benchmark $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
+	fi
         if grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
             echo "FAILED; testlog stored at $log, _bm-logs/$name.json left untouched"
             $force || exit 5

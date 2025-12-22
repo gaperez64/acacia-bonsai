@@ -1,5 +1,7 @@
 name: CI
 on: [push]
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -7,59 +9,29 @@ jobs:
     - name: Install packages
       run: |
         sudo apt update
-        sudo apt install -y zsh meson git gcc python-is-python3 \
+        sudo apt install -y zsh meson git g++-14 python-is-python3 \
                     ninja-build gnupg wget python3-pip \
-                    pkg-config libglib2.0-dev libffi-dev libboost-dev \
-                    autoconf automake libtool bison flex valgrind gpg \
-                    libboost-all-dev
+                    pkg-config libffi-dev \
+                    libtool valgrind gpg
         sudo pip install --upgrade meson
-    - name: Add LRDE Debian repository
-      run: |
-        sudo mkdir -p /etc/apt/keyrings
-        sudo wget https://www.lrde.epita.fr/repo/debian.gpg
-        sudo gpg --no-default-keyring --keyring ./tmp-kr.gpg --import debian.gpg
-        sudo gpg --no-default-keyring --keyring ./tmp-kr.gpg --export --output /etc/apt/keyrings/lrde.gpg
-        sudo sh -c "echo 'deb [signed-by=/etc/apt/keyrings/lrde.gpg] http://www.lrde.epita.fr/repo/debian/ stable/' >> /etc/apt/sources.list"
-        sudo apt update
     - name: Install newer libltldl
       run: |
         sudo wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
         sudo dpkg -i libltdl7_2.5.4-4build1_amd64.deb
         sudo apt -f install
-    - name: Install Spot
-      run: |
-        sudo apt install -y spot libspot-dev
-    - uses: actions/setup-python@v5
-    - name: Install python dependencies
-      run: |
-        pip install pygraph
     - name: Checkout repository and submodules
       uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Compile default configuration
+    - name: Install Spot
       run: |
-        meson setup build
-        meson compile -C build acacia-bonsai
-    - name: Check Real
+        sudo wget http://www.lre.epita.fr/dload/spot/spot-2.14.4.tar.gz
+        tar -xvzf spot-2.14.4.tar.gz
+        cd spot-2.14.4
+        sudo ./configure --enable-max-accsets=64
+        sudo make
+        sudo make install
+    - name: Compile and test all configurations
       run: |
-        ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant)
-        if [ "$ACACIA_RESULT" != "REALIZABLE" ]; then
-          echo "ACACIA_RESULT must equal 'REALIZABLE' but is '$ACACIA_RESULT'"
-          exit 1
-        fi
-    - name: Check Unknown
-      run: |
-        ACACIA_RESULT=$(./build/src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant)
-        ACACIA_STATUS=$?
-        if [ "$ACACIA_RESULT" != "UNKNOWN" ]; then
-          echo "ACACIA_RESULT must equal 'UNKNOWN' but is '$ACACIA_RESULT'"
-          exit 1
-        fi
-        # Check exit code
-        if [ "$ACACIA_STATUS" -ne 3 ]; then
-          echo "Unexpected exit code: $ACACIA_STATUS"
-          exit 1
-        fi
-      continue-on-error: true
-
+        export CXX=g++-14
+        ./self-benchmark.sh -j -b ab/tiny
