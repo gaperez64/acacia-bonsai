@@ -19,24 +19,18 @@ RUN pip3 install wheel meson-python build
 RUN wget -q -O /etc/apt/keyrings/lre-epita.gpg https://www.lre.epita.fr/repo/debian.gpg
 RUN echo "deb [signed-by=/etc/apt/keyrings/lre-epita.gpg] http://www.lre.epita.fr/repo/debian/ stable/" > /etc/apt/sources.list.d/lre-epita.list
 RUN apt-get update
-RUN apt-get install -y spot libspot-dev spot-doc python3-spot # Or a subset of those
+RUN apt-get install -y spot libspot-dev spot-doc python3-spot
 
-# TODO: pygraph?
+RUN mkdir -p /opt/acacia_bonsai/build
+WORKDIR /opt/acacia_bonsai/build
 
-RUN mkdir /opt/acacia_bonsai
-WORKDIR /opt/acacia_bonsai
-
-# TODO: how to exclude files?
+# TODO: how to exclude files? => .dockerignore
 COPY . .
 
-RUN meson setup build
+RUN meson setup build --prefix /opt/acacia_bonsai
 RUN meson compile -C build acacia-bonsai
-#RUN meson install -C build --dry-run
 RUN meson install -C build
-
-# TODO: cleanup the build
 # TODO: check if the Python stuff works.
 
-#RUN mkdir -p /opt/acacia_bonsai/build
-#WORKDIR /opt/acacia_bonsai/build
+WORKDIR /opt/acacia_bonsai/
 
