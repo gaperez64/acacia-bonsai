@@ -12,7 +12,6 @@ RUN apt install -y zsh meson git gcc python-is-python3 \
 RUN python3 -m pip config set global.break-system-packages true
 
 # needed to build the Python interface
-# TODO: these need to be set to the latest version, but that currently does not work...
 RUN pip3 install wheel meson-python build
 
 # spot installation
@@ -24,12 +23,13 @@ RUN apt-get install -y spot libspot-dev spot-doc python3-spot
 RUN mkdir -p /opt/acacia_bonsai/build
 WORKDIR /opt/acacia_bonsai/build
 
-# TODO: how to exclude files? => .dockerignore
+# TODO: is there anything that needs to be ignored in the .dockerignore?
 COPY . .
 
 RUN meson setup build --prefix /opt/acacia_bonsai
 RUN meson compile -C build acacia-bonsai
 RUN meson install -C build
+
 # TODO: check if the Python stuff works.
 
 WORKDIR /opt/acacia_bonsai/
