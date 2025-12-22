@@ -15,7 +15,7 @@
 // The defaults were copied from self-benchmark 21/12/2025
 
 #ifndef DEFAULT_K
-# define DEFAULT_K 255
+# define DEFAULT_K 200  // WARNING! Check VECTOR_ELT_T below!
 #endif
 #ifndef DEFAULT_KMIN
 # define DEFAULT_KMIN 2

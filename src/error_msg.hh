@@ -7,9 +7,9 @@
 // These are the possible return values for the solver
 enum solver_res : int {
   EXIT_CODE_REAL = 0,
-  EXIT_CODE_UNKNOWN = 1,
-  EXIT_CODE_ERROR = 2,
-  EXIT_CODE_UNREAL = 3
+  EXIT_CODE_UNKNOWN = 2,
+  EXIT_CODE_ERROR = 3,
+  EXIT_CODE_UNREAL = 1
 };
 
 

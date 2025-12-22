@@ -161,7 +161,7 @@ int main (int argc, char** argv) {
         return ret;
       }
     }
-    error (EXIT_CODE_UNKNOWN, "No child had a conclusive answer\n");
+    error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
 
   } catch (const std::exception& e) {
     error (EXIT_CODE_ERROR, "%s", e.what ());

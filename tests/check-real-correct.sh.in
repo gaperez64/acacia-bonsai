@@ -17,14 +17,15 @@ TRAPINT () {
 
 echoandrun () {
     echo "$@"
-    "$@"&
-    childpid=$!
-    wait $childpid
+    "$@"
+    #&
+    #childpid=$!
+    #wait $childpid
 }
 
 parttoinsouts () {
     while IFS= read line; do
-        line=$(echo "$line" | sed 's/[[:space:]]*$//;s/[[:space:]]\+/,/g')
+        line=$(echo "$line" | sed -r 's/[[:space:]]*$//;s/[[:space:]]+/,/g')
         head=${line/,*/}
         args=${line/$head,/}
         case "$head" in
@@ -34,6 +35,7 @@ parttoinsouts () {
     done < $1
 }
 
+# FIXME: sed with exit codes/q commands is GNU only!
 real_to_exitcode () {
     sed '/^UNREALIZABLE/{q1} ; /^REALIZABLE/{q0} ; /^UNKNOWN/{q3}; ${q129}'
 }
@@ -53,9 +55,10 @@ run_strix () {
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    echoandrun $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
-         ${=AB_OPTS} $extra_opts | \
-         real_to_exitcode
+    echoandrun $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs -v -v -v \
+         ${=AB_OPTS} $extra_opts 
+         #| \
+         #real_to_exitcode
 }
 
 run_acacia_plus () {
