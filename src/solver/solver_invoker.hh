@@ -19,7 +19,7 @@
 #include <vector>
 
 // These are the valid ways of treating unrealizability
-enum unreal_x_t { UNREAL_X_FORMULA, UNREAL_X_AUTOMATON, UNREAL_X_BOTH };
+enum unreal_x_t : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREAL_X_BOTH };
 
 spot::formula parse_ltl_string (const std::string& input) {
   auto pf = spot::parse_infix_psl (input, spot::default_environment::instance (), false, false);

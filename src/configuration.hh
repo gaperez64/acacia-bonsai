@@ -39,7 +39,8 @@
 # define SIMD_IS_MAX true
 #endif
 #ifndef AUT_PREPROCESSOR
-# define AUT_PREPROCESSOR aut_preprocessors::surely_losing
+//# define AUT_PREPROCESSOR aut_preprocessors::surely_losing
+# define AUT_PREPROCESSOR aut_preprocessors::standard
 #endif
 #ifndef BOOLEAN_STATES
 # define BOOLEAN_STATES boolean_states::forward_saturation
