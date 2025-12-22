@@ -31,6 +31,7 @@ COPY . .
 
 RUN meson setup build
 RUN meson compile -C build acacia-bonsai
+RUN meson install -C build --dry-run
 
 #RUN mkdir -p /opt/acacia_bonsai/build
 #WORKDIR /opt/acacia_bonsai/build
