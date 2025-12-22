@@ -80,9 +80,9 @@ void show_help (const char* program_name) {
                "atomic propositions\n"
             << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
                "propositions\n"
-            << "  -I VAL            increment value for K, used when M < K\n"
             << "  -K VAL            final value of K, or unique value if M is not specified\n"
-            << "  -M VAL            starting value of K; -I MUST be set when using this option\n"
+            << "  -M VAL            starting value of K\n"
+            << "  -I VAL            increment value for K, used when M < K\n"
             << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both] "
             << "unrealizability is chedked by default with "
 #if DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
@@ -96,9 +96,10 @@ void show_help (const char* program_name) {
             << "  -r                just check realizability, not unrealizability\n"
             << "  -v                verbose mode, can be repeated for more verbosity\n"
             << "Exit status:\n"
-            << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
+            << "\t" << EXIT_CODE_REAL    << "   if the input problem is realizable\n"
+            << "\t" << EXIT_CODE_UNREAL  << "   if it is unrealizable\n"
             << "\t" << EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-            << "\t" << EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
+            << "\t" << EXIT_CODE_ERROR   << "   if any error has been reported" << '\n'
             << "Version: " << VERSION << '\n';
 }
 
@@ -119,7 +120,7 @@ void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
   else if (case_insensitive_equals (arg, "both"))
     result.opt_unreal_x = std::make_optional<unreal_x_t> (UNREAL_X_BOTH);
   else
-    error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s\n", arg);
+    error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s\n", arg.c_str ());
 }
 
 void process_formula_file (const std::string& arg, arg_parse_result& result) {
@@ -169,13 +170,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
     error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
   if (retval.outputs.empty ())
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
-  if (retval.opt_kmin != DEFAULT_KMIN and retval.opt_kinc == DEFAULT_KINC)
-    error (EXIT_CODE_ERROR,
-           "Error: if 'Kstart' (-M) is specified, then 'Kinc' (-I) also must be provided.\n");
 
   // Adjust the value of K
-  if (sgn_kmin.has_value () and *sgn_kmin <= 0)
+  if (sgn_kmin.has_value () and *sgn_kmin <= 0) {
+    verb_do (2, vout << "Kmin is being corrected since it was negative!\n");
     retval.opt_kmin = retval.opt_k;
+  }
   if (retval.opt_kmin > retval.opt_k or (retval.opt_kmin <= retval.opt_k and retval.opt_kinc == 0))
     error (EXIT_CODE_ERROR, "Error: incompatible values for K (%d), Kmin (%d), and Kinc (%d).\n",
            retval.opt_k, retval.opt_kmin, retval.opt_kinc);
