@@ -122,6 +122,9 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
 
   AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
 
+  posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
+  verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
+
   bool res = solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
 
   dict->unregister_all_my_variables (nullptr);
