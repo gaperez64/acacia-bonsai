@@ -3,7 +3,14 @@ fs = import ('fs')
 test_files = \
              {
                'realizable' :
-                 { 'tiny' :  # Less than 50 bytes
+                 { 
+                   'issue54': # These gave wrong answers for SYNTCOMP 2025
+                     [ 'KitchenTimerV7.ltl',
+                       'simple_arbiter_with_hints_pb_6_pe_.ltl',
+                       'simple_arbiter_with_hints_pb_8_pe_.ltl'
+                     ],
+
+                   'tiny' :  # Less than 50 bytes
                      
                      [ 'ltl2dba23.ltl', 'lilydemo08.ltl', 'ltl2dba_U2_3.ltl',
                        'ltl2dba_U2_1.ltl', 'ltl2dba_E_1.ltl', 'ltl2dba_C2_1.ltl',
