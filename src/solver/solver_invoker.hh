@@ -79,6 +79,7 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
   spot::formula spot_formula = parse_ltl_string (formula);
 
   if (check_unreal.has_value ()) {
+    assert (*check_unreal != UNREAL_X_BOTH);
     // Swap I and O.
     verb_do (2, vout << "Swapping inputs and outputs\n");
     input_aps.swap (output_aps);
