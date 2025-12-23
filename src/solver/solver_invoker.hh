@@ -78,21 +78,25 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
               std::optional<unreal_x_t> check_unreal) {
   spot::formula spot_formula = parse_ltl_string (formula);
 
-  if (not check_unreal.has_value ())
-    spot_formula = spot::formula::Not (spot_formula);
-  else if (*check_unreal == UNREAL_X_FORMULA) {
-    // Add X at the outputs
-    verb_do (2, vout << "Adding X to the outputs in the formula\n");
-    auto rec = [output_aps] (auto&& self, spot::formula m) {
-      if (m.is (spot::op::ap) and
-          (std::ranges::find (output_aps, m.ap_name ()) != output_aps.end ()))
-        return spot::formula::X (m);
-      return m.map ([&] (spot::formula t) { return self (self, t); });
-    };
-    spot_formula = spot_formula.map ([&] (spot::formula t) { return rec (rec, t); });
+  if (check_unreal.has_value ()) {
     // Swap I and O.
+    verb_do (2, vout << "Swapping inputs and outputs\n");
     input_aps.swap (output_aps);
-  }
+
+    // Swapping them in the formula too
+    if (*check_unreal == UNREAL_X_FORMULA) {
+      // Add X at the outputs
+      verb_do (2, vout << "Adding X to the outputs in the formula\n");
+      auto rec = [output_aps] (auto&& self, spot::formula m) {
+        if (m.is (spot::op::ap) and
+            (std::ranges::find (output_aps, m.ap_name ()) != output_aps.end ()))
+          return spot::formula::X (m);
+        return m.map ([&] (spot::formula t) { return self (self, t); });
+      };
+      spot_formula = spot_formula.map ([&] (spot::formula t) { return rec (rec, t); });
+    }
+  } else  // all that is needed for real is to negate the formula
+    spot_formula = spot::formula::Not (spot_formula);
 
   // Create BDDs for the input and output APs
   bdd all_inputs = bddtrue;
@@ -111,10 +115,8 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
 
   // If unreal but we haven't pushed outputs yet using X on formula
   if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
-    verb_do (2, vout << "Swapping the inputs and outputs and pushing the outputs\n");
+    verb_do (2, vout << "Pushing the outputs in the automaton\n");
     aut = push_outputs (aut, all_inputs, all_outputs);
-    input_aps.swap (output_aps);
-    std::swap (all_inputs, all_outputs);
   }
 
   AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
