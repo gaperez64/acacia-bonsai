@@ -3,28 +3,15 @@
 ACABONSAI=@ACABONSAI@
 export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
-TRAPTERM () { 
-  if [[ $childpid != '' ]]; then
-    kill -TERM $childpid 2>/dev/null
-    wait $childpid
-  fi
-  exit
-}
-
-TRAPINT () {
-  TRAPTERM
-}
-
 echoandrun () {
     echo "$@"
-    "$@"&
-    childpid=$!
-    wait $childpid
+    "$@"
 }
 
 parttoinsouts () {
     while IFS= read line; do
-        line=$(echo "$line" | sed 's/[[:space:]]*$//;s/[[:space:]]\+/,/g')
+	# Note the -r, it's mandatory for non-GNU sed implementations
+        line=$(echo "$line" | sed -r 's/[[:space:]]*$//;s/[[:space:]]+/,/g')
         head=${line/,*/}
         args=${line/$head,/}
         case "$head" in
@@ -34,35 +21,19 @@ parttoinsouts () {
     done < $1
 }
 
-real_to_exitcode () {
-    sed '/^UNREALIZABLE/{q1} ; /^REALIZABLE/{q0} ; /^UNKNOWN/{q3}; ${q129}'
-}
-
 run_ltlsynt () {
     echo "Running ltlsynt..."
-    time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs \
-         ${=LTLSYNT_OPTS} $extra_opts | \
-        real_to_exitcode
-}
-
-run_strix () {
-    echo "Running strix..."
-    time echoandrun $prog_prefix $STRIX --realizability -F $ltl --ins $ins --outs $outs ${=STRIX_OPTS} $extra_opts | \
-        real_to_exitcode
+    echo "I don't know how though :("
+#     time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs \
+#          ${=LTLSYNT_OPTS} $extra_opts
+#     # TODO: treat output to determine return code?
+#     # note that sed with q commands is a GNU-only thing
 }
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
     echoandrun $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
-         ${=AB_OPTS} $extra_opts | \
-         real_to_exitcode
-}
-
-run_acacia_plus () {
-    echo "Running Acacia Plus..."
-    time echoandrun $prog_prefix $PYTHON $ACAPLUS -L $ltl -P $part -k 5 -K 11 -y 2 ${=AP_OPTS} -C BOTH \
-         -t SPOT -a BACKWARD -v 0 $extra_opts | \
-         real_to_exitcode
+         ${=AB_OPTS} $extra_opts 
 }
 
 PROG=$0
@@ -72,9 +43,7 @@ Usage: $PROG [-p] -[la+] [-e PROG_PATH] -F LTL_FILE [-P PART_FILE] [-- OPTS...]
 Runs ltlsynt, acacia-bonsai, or acacia-+ on the input LTL_FILE:
   -p: prefix every line with the name of the test (useful for meson logging)
   -l: run ltlsynt ($LTLSYNT)
-  -s: run strix ($STRIX)
   -a: run acacia-bonsai ($ACABONSAI)
-  -+: run acacia-plus ($ACAPLUS)
   -V: run using Valgrind
   -v: verbose
   -c: prefix the executable with valgrind --tool=callgrind
@@ -158,8 +127,6 @@ for prog in $progs; do
     case $prog; in
         l) run_ltlsynt;;
         a) run_acacia_bonsai;;
-        s) run_strix;;
-        +) run_acacia_plus;;
     esac
     res=$?
     if (( res > 2 || (expect < 2 && res != expect) )); then

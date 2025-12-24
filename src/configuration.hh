@@ -12,10 +12,14 @@
 // define it if you want STATIC_ARRAY_CAP_MAX to be 0
 #endif
 
+// What follows are default values overriden by self-benchmark
+// or your meson setup.
+//
 // The defaults were copied from self-benchmark 21/12/2025
 
+// Overflow WARNING: Check VECTOR_ELT_T below before changing
 #ifndef DEFAULT_K
-# define DEFAULT_K 255
+# define DEFAULT_K 99
 #endif
 #ifndef DEFAULT_KMIN
 # define DEFAULT_KMIN 2
@@ -29,6 +33,8 @@
 #ifndef VECTOR_ELT_T
 # define VECTOR_ELT_T char
 #endif
+// End of overflow WARNING
+
 #ifndef STATIC_ARRAY_MAX
 # define STATIC_ARRAY_MAX 300
 #endif
@@ -39,8 +45,7 @@
 # define SIMD_IS_MAX true
 #endif
 #ifndef AUT_PREPROCESSOR
-//# define AUT_PREPROCESSOR aut_preprocessors::surely_losing
-# define AUT_PREPROCESSOR aut_preprocessors::standard
+# define AUT_PREPROCESSOR aut_preprocessors::surely_losing
 #endif
 #ifndef BOOLEAN_STATES
 # define BOOLEAN_STATES boolean_states::forward_saturation
