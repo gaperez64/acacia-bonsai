@@ -72,6 +72,17 @@ namespace {
   }
 }
 
+void add_x_to_outputs(spot::formula& formula, std::vector<std::string>& output_aps) {
+  verb_do (2, vout << "Adding X to the outputs in the formula\n");
+  auto rec = [output_aps] (auto&& self, spot::formula m) {
+    if (m.is (spot::op::ap) and
+        (std::ranges::find (output_aps, m.ap_name ()) != output_aps.end ()))
+      return spot::formula::X (m);
+    return m.map ([&] (spot::formula t) { return self (self, t); });
+  };
+  formula = formula.map ([&] (spot::formula t) { return rec (rec, t); });
+}
+
 bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
               std::vector<std::string> output_aps, spot::bdd_dict_ptr dict, VECTOR_ELT_T opt_k,
               VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc, std::string formula,
@@ -87,14 +98,7 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
     // Swapping them in the formula too
     if (*check_unreal == UNREAL_X_FORMULA) {
       // Add X at the outputs
-      verb_do (2, vout << "Adding X to the outputs in the formula\n");
-      auto rec = [output_aps] (auto&& self, spot::formula m) {
-        if (m.is (spot::op::ap) and
-            (std::ranges::find (output_aps, m.ap_name ()) != output_aps.end ()))
-          return spot::formula::X (m);
-        return m.map ([&] (spot::formula t) { return self (self, t); });
-      };
-      spot_formula = spot_formula.map ([&] (spot::formula t) { return rec (rec, t); });
+      add_x_to_outputs (spot_formula, output_aps);
     }
   } else  // all that is needed for real is to negate the formula
     spot_formula = spot::formula::Not (spot_formula);
