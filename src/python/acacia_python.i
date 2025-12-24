@@ -9,4 +9,8 @@
 %template(StringVector) std::vector<std::string>;
 
 // this file is included to make Spot objects non-opaque in the Python interface when returned by Acacia functions.
+// NOTE: this introduces ALL Spot functionality into the "acacia_python" package
 %include "impl.i"
+
+// this generates the Python bindings
+%include "python_interface.hh"
