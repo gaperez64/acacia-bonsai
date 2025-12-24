@@ -72,7 +72,7 @@ namespace {
   }
 }
 
-void add_x_to_outputs(spot::formula& formula, std::vector<std::string>& output_aps) {
+inline void add_x_to_outputs(spot::formula& formula, std::vector<std::string>& output_aps) {
   verb_do (2, vout << "Adding X to the outputs in the formula\n");
   auto rec = [output_aps] (auto&& self, spot::formula m) {
     if (m.is (spot::op::ap) and

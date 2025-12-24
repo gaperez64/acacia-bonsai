@@ -19,7 +19,7 @@ swig_gen = custom_target(
   install_dir: py.get_install_dir()
 )
 
-project_headers = include_directories('..')
+project_headers = include_directories('..')  # everything in /src/
 
 # Build the extension module
 module = py.extension_module('_acacia_python',
