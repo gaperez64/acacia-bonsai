@@ -13,7 +13,9 @@ TRAPTERM () {
 
 echoandrun () {
     echo "$@"
-    "$@"
+    "$@"&
+    childpid=$!
+    wait $childpid
 }
 
 parttoinsouts () {
