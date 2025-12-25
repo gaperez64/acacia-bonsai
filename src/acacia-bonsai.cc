@@ -61,6 +61,7 @@ int main (int argc, char** argv) {
   action.sa_handler = terminate;
   sigaction (SIGTERM, &action, nullptr);
   sigaction (SIGINT, &action, nullptr);
+  sigaction (SIGQUIT, &action, nullptr);
 
   try {
     // These options play a role in twaalgos.

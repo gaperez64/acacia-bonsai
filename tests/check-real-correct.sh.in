@@ -3,6 +3,21 @@
 ACABONSAI=@ACABONSAI@
 export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
+# Handling most common signals with a trap
+TRAPINT () { 
+  if [[ $childpid != '' ]]; then
+    kill -INT $childpid 2>/dev/null
+    wait $childpid
+  fi
+  exit
+}
+TRAPQUIT () { 
+  if [[ $childpid != '' ]]; then
+    kill -QUIT $childpid 2>/dev/null
+    wait $childpid
+  fi
+  exit
+}
 TRAPTERM () { 
   if [[ $childpid != '' ]]; then
     kill -TERM $childpid 2>/dev/null
