@@ -82,5 +82,15 @@ bool solve_acacia_safety_game (spot::twa_graph_ptr twa, bdd_io_spec& io_spec, in
   return res;
 }
 
+posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> get_winning_region_of_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int k_max, int k_min, int k_inc) {
+  // TODO: how to handle optional in Python? Can we return None?
+  //  Maybe we can already return here the begin() and end() pair.
+  //  Perhaps have a custom iteration class that has begin() and end() that points to vector<char>?
+
+  posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> winning_region
+    = get_winning_region (twa, k_max, k_min, k_inc, io_spec.inputs, io_spec.outputs).value ();
+
+  return winning_region;
+}
 
 

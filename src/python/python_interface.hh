@@ -43,3 +43,4 @@ void set_bool_thresh_forward_saturation(spot::twa_graph_ptr twa, int k_max);
 
 
 bool solve_acacia_safety_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int k_max, int k_min, int k_inc);
+
