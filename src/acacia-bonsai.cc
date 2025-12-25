@@ -50,27 +50,6 @@ void terminate ([[maybe_unused]] int signum) {
     _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
 }
 
-void sig_handler (int sig) {
-  spot::cleanup_tmpfiles ();
-  // Send the signal again, this time to the default handler, so that
-  // we return a meaningful error code.
-  raise (sig);
-}
-
-void setup_sig_handler () {
-  struct sigaction sa;
-  sa.sa_handler = sig_handler;
-  sigemptyset (&sa.sa_mask);
-  sa.sa_flags = SA_RESETHAND;
-  // Catch termination signals, so we can clean up temporary files.
-  sigaction (SIGALRM, &sa, nullptr);
-  sigaction (SIGHUP, &sa, nullptr);
-  sigaction (SIGINT, &sa, nullptr);
-  sigaction (SIGPIPE, &sa, nullptr);
-  sigaction (SIGQUIT, &sa, nullptr);
-  sigaction (SIGTERM, &sa, nullptr);
-}
-
 int main (int argc, char** argv) {
   // parse all arguments that were passed
   auto arg_values = arg_parser (argc, argv);
@@ -82,10 +61,6 @@ int main (int argc, char** argv) {
   action.sa_handler = terminate;
   sigaction (SIGTERM, &action, nullptr);
   sigaction (SIGINT, &action, nullptr);
-
-  // remove all spot temporary files
-  setup_sig_handler ();             // in case of a signal
-  atexit (spot::cleanup_tmpfiles);  // in case of exit
 
   try {
     // These options play a role in twaalgos.
