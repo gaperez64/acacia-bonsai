@@ -8,7 +8,6 @@ algorithms using antichain data structures.  The theory and practice is describe
 # Dependencies
 
 This program depends on:
-- [Boost C++ Library](https://www.boost.org/)
 - A modern C++ compiler (C++23 is used)
 - [The Meson Build System](https://mesonbuild.com/)
 - [The Downset Manipulation Library](https://github.com/michaelcadilhac/posets)
