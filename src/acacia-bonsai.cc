@@ -23,13 +23,6 @@
 
 #include <posets/downsets.hh>
 
-#define debug_(A...)               \
-  do {                             \
-    if (utils::verbose > 0) {      \
-      std::cout << A << std::endl; \
-    }                              \
-  } while (0)
-
 using namespace std::literals;
 
 // Definitions for some external/global variables.

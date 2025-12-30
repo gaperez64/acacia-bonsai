@@ -25,15 +25,6 @@
 #include <posets/utils/vector_mm.hh>
 #include <posets/vectors.hh>
 
-// #define debug(A...) do { std::cout << A << std::endl; } while (0)
-#define debug(A...)
-#define debug_(A...)             \
-  do {                           \
-    std::cout << A << std::endl; \
-  } while (0)
-// #define debug_(A...)
-// #define ASSERT(A...) assert (A)
-#define ASSERT(A...)
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.
 template <class SetOfStates, class IOsPrecomputationMaker, class ActionerMaker,

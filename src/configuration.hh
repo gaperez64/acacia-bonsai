@@ -12,6 +12,11 @@
 // define it if you want STATIC_ARRAY_CAP_MAX to be 0
 #endif
 
+#ifndef USE_BOOLVEC_OVER_BITSET
+// define it if you want to use boolean vectors when
+// defaulting to VECTOR_AND_BITSET_DOWNSET_IMPL
+#endif
+
 // What follows are default values overriden by self-benchmark
 // or your meson setup.
 //

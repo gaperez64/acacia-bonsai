@@ -18,7 +18,6 @@
 
 bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
                  bdd all_inputs, bdd all_outputs) {
-
   // Compute how many boolean states will actually be put in bitsets.
   constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
   auto nbitsetbools = aut->num_states () - posets::vectors::bool_threshold;
@@ -86,6 +85,7 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
         UNREACHABLE, actual_nonbools);
   }
   else {  // Vectors & Bitsets
+#ifndef USE_BOOLVEC_OVER_BITSET
     static_switch_t<STATIC_MAX_BITSETS> {}(
         [&] (auto vbitsets) {
           using SpecializedDownset =
@@ -102,6 +102,19 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
           realizable = skn.solve ().has_value ();
         },
         UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
+#else
+    using SpecializedDownset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<
+        posets::vectors::x_and_boolvec<posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>>>;
+
+    using IOsPrecomputationMaker = IOS_PRECOMPUTER;
+    using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
+    using InputPickerMaker = INPUT_PICKER;
+    auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
+                                           ActionerMaker, InputPickerMaker> (
+        aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
+        ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
+    realizable = skn.solve ().has_value ();
+#endif
   }
 
   return realizable;

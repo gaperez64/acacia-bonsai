@@ -48,7 +48,6 @@ EOF
 # These all differ from the base configuration by /one/ option.
 confs=(
     [base]=" "
-    [no_array_cap_max]="-DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
     [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
     [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
@@ -70,6 +69,8 @@ confs=(
     [inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
     [downset_vector_or_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
     [best]="$best"
+    [best_no_array_cap_max]="$best -DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
+    [best_no_bitsets]="$best -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"  # same, and x_and_boolvec used instead of x_and_bitset
     [best_mona]="$best -DIOS_PRECOMPUTER=ios_precomputers::mona"
     [best_nosimd]="$best -DNO_SIMD"
     [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
