@@ -32,44 +32,42 @@ spot::formula parse_ltl_string (const std::string& input) {
   return pf.f;
 }
 
-namespace {
-  // Changes q -> <i', o'> -> q' with saved o to
-  // q -> <i', o> -> {q' saved o}
-  spot::twa_graph_ptr push_outputs (const spot::twa_graph_ptr aut, bdd all_inputs,
-                                    bdd all_outputs) {
-    auto ret = spot::make_twa_graph (aut->get_dict ());
-    ret->copy_acceptance_of (aut);
-    ret->copy_ap_of (aut);
-    ret->prop_copy (aut, spot::twa::prop_set::all ());
-    ret->prop_universal (spot::trival::maybe ());
+// Changes q -> <i', o'> -> q' with saved o to
+// q -> <i', o> -> {q' saved o}
+spot::twa_graph_ptr push_outputs (const spot::twa_graph_ptr aut, bdd all_inputs,
+                                  bdd all_outputs) {
+  auto ret = spot::make_twa_graph (aut->get_dict ());
+  ret->copy_acceptance_of (aut);
+  ret->copy_ap_of (aut);
+  ret->prop_copy (aut, spot::twa::prop_set::all ());
+  ret->prop_universal (spot::trival::maybe ());
 
-    static auto cache = utils::make_cache<unsigned> (0u, 0u);
-    const auto build_aut = [&] (unsigned state, bdd saved_o, const auto& recurse) {
-      auto cached = cache.get (state, saved_o.id ());
-      if (cached)
-        return *cached;
-      auto ret_state = ret->new_state ();
-      cache (ret_state, state, saved_o.id ());
-      for (auto& e : aut->out (state)) {
-        auto cond = e.cond;
-        // e.cond = i1 & o1 || !i1 & !o1
+  static auto cache = utils::make_cache<unsigned> (0u, 0u);
+  const auto build_aut = [&] (unsigned state, bdd saved_o, const auto& recurse) {
+    auto cached = cache.get (state, saved_o.id ());
+    if (cached)
+      return *cached;
+    auto ret_state = ret->new_state ();
+    cache (ret_state, state, saved_o.id ());
+    for (auto& e : aut->out (state)) {
+      auto cond = e.cond;
+      // e.cond = i1 & o1 || !i1 & !o1
 
-        while (cond != bddfalse) {
-          // Pick one satisfying assignment where outputs all have values
-          bdd one_sat = bdd_satoneset (cond, all_outputs, bddtrue);
-          // Get the corresponding input bdd
-          bdd one_input_bdd = bdd_exist (cond & bdd_exist (one_sat, all_inputs), all_outputs);
-          ret->new_edge (ret_state,
-                         recurse (e.dst, bdd_exist (cond & one_input_bdd, all_inputs), recurse),
-                         saved_o & one_input_bdd, e.acc);
-          cond -= one_input_bdd;
-        }
+      while (cond != bddfalse) {
+        // Pick one satisfying assignment where outputs all have values
+        bdd one_sat = bdd_satoneset (cond, all_outputs, bddtrue);
+        // Get the corresponding input bdd
+        bdd one_input_bdd = bdd_exist (cond & bdd_exist (one_sat, all_inputs), all_outputs);
+        ret->new_edge (ret_state,
+                       recurse (e.dst, bdd_exist (cond & one_input_bdd, all_inputs), recurse),
+                       saved_o & one_input_bdd, e.acc);
+        cond -= one_input_bdd;
       }
-      return ret_state;
-    };
-    build_aut (aut->get_init_state_number (), bddtrue, build_aut);
-    return ret;
-  }
+    }
+    return ret_state;
+  };
+  build_aut (aut->get_init_state_number (), bddtrue, build_aut);
+  return ret;
 }
 
 bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
