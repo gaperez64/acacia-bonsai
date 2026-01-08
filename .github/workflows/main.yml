@@ -34,6 +34,10 @@ jobs:
         sudo ./configure --enable-max-accsets=64
         sudo make
         sudo make install
+    - name: Compile and test a debug configuration
+      run: |
+        export CXX=g++-14
+        ./self-benchmark.sh -c base -j -b ab/small
     - name: Compile and test all configurations
       run: |
         export CXX=g++-14
