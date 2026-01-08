@@ -58,7 +58,7 @@ class k_bounded_safety_aut_detail {
     }
 
     std::optional<SetOfStates> solve () {
-      int K = Kfrom;
+      VECTOR_ELT_T K = Kfrom;
 
       // Precompute the input and output actions.
       auto inputs_to_ios = get_inputs_to_ios ();
@@ -134,7 +134,7 @@ class k_bounded_safety_aut_detail {
 
   private:
     spot::twa_graph_ptr aut;
-    const int Kfrom, Kto, Kinc;
+    const VECTOR_ELT_T Kfrom, Kto, Kinc;
     bdd input_support, output_support;
     std::mt19937 gen;
     const IOsPrecomputationMaker& ios_precomputer_maker;
