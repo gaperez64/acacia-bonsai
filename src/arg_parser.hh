@@ -170,13 +170,17 @@ arg_parse_result arg_parser (int argc, char** argv) {
   if (retval.outputs.empty ())
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
 
-  // Adjust the value of K
-  if (sgn_kmin.has_value () and *sgn_kmin <= 0) {
-    verb_do (2, vout << "Kmin is being corrected since it was negative!\n");
-    retval.opt_kmin = retval.opt_k;
+  if (sgn_kmin.has_value ()) {
+    if (*sgn_kmin > 0) {
+      retval.opt_kmin = *sgn_kmin;
+    } else {
+      verb_do (2, vout << "Kmin is being corrected since it was not positive!\n");
+      retval.opt_kmin = retval.opt_k;
+    }
   }
+
   if (retval.opt_kmin > retval.opt_k or (retval.opt_kmin <= retval.opt_k and retval.opt_kinc == 0))
-    error (EXIT_CODE_ERROR, "Error: incompatible values for K (%d), Kmin (%d), and Kinc (%d).\n",
+    error (EXIT_CODE_ERROR, "Error: incompatible values for K (%u), Kmin (%u), and Kinc (%u).\n",
            retval.opt_k, retval.opt_kmin, retval.opt_kinc);
 
   return retval;
