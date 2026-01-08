@@ -29,7 +29,7 @@ struct arg_parse_result {
     VECTOR_ELT_T opt_k = DEFAULT_K;
     VECTOR_ELT_T opt_kinc = DEFAULT_KINC;
     std::optional<UNREAL_X_T> opt_unreal_x = std::make_optional<UNREAL_X_T> (DEFAULT_UNREAL_X);
-    unsigned int verbose_level = 0;
+    unsigned verbose_level = 0;
 };
 
 /**

@@ -37,11 +37,13 @@ jobs:
     - name: Compile and test a debug configuration
       run: |
         export CXX=g++-14
+        ./self-benchmark.sh -c base -j -b ab/tiny
         ./self-benchmark.sh -c base -j -b ab/small
+        ./self-benchmark.sh -c base -j -b ab/issue54
     - name: Compile and test all configurations
       run: |
         export CXX=g++-14
-        ./self-benchmark.sh -j -b ab/small
+        ./self-benchmark.sh -j -b ab/tiny
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
