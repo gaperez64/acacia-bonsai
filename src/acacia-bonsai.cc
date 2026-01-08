@@ -5,10 +5,10 @@
 #include <unordered_map>
 
 #include <algorithm>
+#include <csignal>
 #include <cstring>
 #include <memory>
 #include <optional>
-#include <signal.h>
 #include <spot/misc/optionmap.hh>
 #include <spot/misc/timer.hh>
 #include <spot/misc/tmpfile.hh>
@@ -27,12 +27,12 @@ using namespace std::literals;
 
 // Definitions for some external/global variables.
 // FIXME: Could be refactored.
-int utils::verbose = 0;
+unsigned utils::verbose = 0;
 utils::voutstream utils::vout;
 size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
-void terminate ([[maybe_unused]] int signum) {
+void static terminate ([[maybe_unused]] int signum) {
   if (getpgid (0) == getpid ()) {  // Main process
     signal (SIGTERM, SIG_IGN);
     kill (0, SIGTERM);
@@ -69,7 +69,7 @@ int main (int argc, char** argv) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     spot::translator trans (dict, &extra_options);
 
-    const auto start_proc = [&] (std::optional<unreal_x_t> unreal_x) {
+    const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
       if (fork () == 0) {
         utils::vout.set_prefix (
             std::string {"["} +
@@ -100,10 +100,10 @@ int main (int argc, char** argv) {
     if (arg_values.opt_unreal_x.has_value ()) {
       if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or
           *(arg_values.opt_unreal_x) == UNREAL_X_FORMULA)
-        start_proc (std::make_optional<unreal_x_t> (UNREAL_X_FORMULA));
+        start_proc (std::make_optional<UNREAL_X_T> (UNREAL_X_FORMULA));
       if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or
           *(arg_values.opt_unreal_x) == UNREAL_X_AUTOMATON)
-        start_proc (std::make_optional<unreal_x_t> (UNREAL_X_AUTOMATON));
+        start_proc (std::make_optional<UNREAL_X_T> (UNREAL_X_AUTOMATON));
     }
 
     int ret;
@@ -111,7 +111,7 @@ int main (int argc, char** argv) {
       ret = WEXITSTATUS (ret);
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else
-        terminate (0);        
+        terminate (0);
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
         else

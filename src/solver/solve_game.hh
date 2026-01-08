@@ -17,7 +17,7 @@
 #include <utility>
 
 bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
-                 bdd all_inputs, bdd all_outputs) {
+                 const bdd& all_inputs, const bdd& all_outputs) {
   // Compute how many boolean states will actually be put in bitsets.
   constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
   auto nbitsetbools = aut->num_states () - posets::vectors::bool_threshold;

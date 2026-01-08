@@ -1,6 +1,5 @@
 #pragma once
 
-#include "arg_parser.hh"
 #include "configuration.hh"
 #include "error_msg.hh"
 #include "solver/solver_invoker.hh"
@@ -29,7 +28,7 @@ struct arg_parse_result {
     VECTOR_ELT_T opt_kmin = DEFAULT_KMIN;
     VECTOR_ELT_T opt_k = DEFAULT_K;
     VECTOR_ELT_T opt_kinc = DEFAULT_KINC;
-    std::optional<unreal_x_t> opt_unreal_x = std::make_optional<unreal_x_t> (DEFAULT_UNREAL_X);
+    std::optional<UNREAL_X_T> opt_unreal_x = std::make_optional<UNREAL_X_T> (DEFAULT_UNREAL_X);
     unsigned int verbose_level = 0;
 };
 
@@ -96,10 +95,10 @@ void show_help (const char* program_name) {
             << "  -r                just check realizability, not unrealizability\n"
             << "  -v                verbose mode, can be repeated for more verbosity\n"
             << "Exit status:\n"
-            << "\t" << EXIT_CODE_REAL    << "   if the input problem is realizable\n"
-            << "\t" << EXIT_CODE_UNREAL  << "   if it is unrealizable\n"
+            << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
+            << "\t" << EXIT_CODE_UNREAL << "   if it is unrealizable\n"
             << "\t" << EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-            << "\t" << EXIT_CODE_ERROR   << "   if any error has been reported" << '\n'
+            << "\t" << EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
             << "Version: " << VERSION << '\n';
 }
 
@@ -114,18 +113,18 @@ bool case_insensitive_equals (std::string_view lhs, std::string_view rhs) {
 
 void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
   if (case_insensitive_equals (arg, "automaton"))
-    result.opt_unreal_x = std::make_optional<unreal_x_t> (UNREAL_X_AUTOMATON);
+    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_AUTOMATON);
   else if (case_insensitive_equals (arg, "formula"))
-    result.opt_unreal_x = std::make_optional<unreal_x_t> (UNREAL_X_FORMULA);
+    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_FORMULA);
   else if (case_insensitive_equals (arg, "both"))
-    result.opt_unreal_x = std::make_optional<unreal_x_t> (UNREAL_X_BOTH);
+    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_BOTH);
   else
     error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s\n", arg.c_str ());
 }
 
 void process_formula_file (const std::string& arg, arg_parse_result& result) {
   std::ifstream file (arg.c_str ());
-  if (!file)
+  if (not file)
     error (EXIT_CODE_ERROR, "Error: unable to open file %s\n", arg);
   std::stringstream buffer;
   buffer << file.rdbuf ();

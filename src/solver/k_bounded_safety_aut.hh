@@ -49,7 +49,7 @@ class k_bounded_safety_aut_detail {
         actioner_maker {actioner_maker},
         input_picker_maker {input_picker_maker} {}
 
-    spot::formula bdd_to_formula (bdd f) const {
+    [[nodiscard]] spot::formula bdd_to_formula (const bdd& f) const {
       return spot::bdd_to_formula (f, aut->get_dict ());
     }
 
@@ -102,7 +102,8 @@ class k_bounded_safety_aut_detail {
             verb_do (2, vout << "Early exit because the initial state is out\n");
             return std::nullopt;
           }
-          verb_do (1, vout << "Incrementing K from " << K << " to " << K + Kinc << std::endl);
+          verb_do (1, vout << "Incrementing K from " << (unsigned) K << " to "
+                           << (unsigned) (K + Kinc) << std::endl);
           K += Kinc;
           actioner.setK (K);
           verb_do (1, {
@@ -227,7 +228,7 @@ class k_bounded_safety_aut_detail {
       std::abort ();  // element should be found, if we reach this -> bad
     }
 
-    bdd binary_encode (unsigned int s, const std::vector<bdd>& src) const {
+    [[nodiscard]] bdd binary_encode (unsigned int s, const std::vector<bdd>& src) const {
       // ~ bdd_buildcube(s, src.size(), src.data())
       // turn the value into a BDD e.g. with 4 states so 2 variables:
       // state 0: !x1 & !x2

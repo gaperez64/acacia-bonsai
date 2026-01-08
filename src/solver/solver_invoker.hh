@@ -6,7 +6,6 @@
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solve_game.hh"
-#include "solver/solver_invoker.hh"
 #include "utils/cache.hh"
 
 #include <optional>
@@ -19,7 +18,7 @@
 #include <vector>
 
 // These are the valid ways of treating unrealizability
-enum unreal_x_t : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREAL_X_BOTH };
+enum UNREAL_X_T : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREAL_X_BOTH };
 
 spot::formula parse_ltl_string (const std::string& input) {
   auto pf = spot::parse_infix_psl (input, spot::default_environment::instance (), false, false);
@@ -34,8 +33,7 @@ spot::formula parse_ltl_string (const std::string& input) {
 
 // Changes q -> <i', o'> -> q' with saved o to
 // q -> <i', o> -> {q' saved o}
-spot::twa_graph_ptr push_outputs (const spot::twa_graph_ptr aut, bdd all_inputs,
-                                  bdd all_outputs) {
+spot::twa_graph_ptr push_outputs (const spot::twa_graph_ptr aut, bdd all_inputs, bdd all_outputs) {
   auto ret = spot::make_twa_graph (aut->get_dict ());
   ret->copy_acceptance_of (aut);
   ret->copy_ap_of (aut);
@@ -73,7 +71,7 @@ spot::twa_graph_ptr push_outputs (const spot::twa_graph_ptr aut, bdd all_inputs,
 bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
               std::vector<std::string> output_aps, spot::bdd_dict_ptr dict, VECTOR_ELT_T opt_k,
               VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc, std::string formula,
-              std::optional<unreal_x_t> check_unreal) {
+              std::optional<UNREAL_X_T> check_unreal) {
   spot::formula spot_formula = parse_ltl_string (formula);
 
   if (check_unreal.has_value ()) {
@@ -94,7 +92,8 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
       };
       spot_formula = spot_formula.map ([&] (spot::formula t) { return rec (rec, t); });
     }
-  } else  // all that is needed for real is to negate the formula
+  }
+  else  // all that is needed for real is to negate the formula
     spot_formula = spot::formula::Not (spot_formula);
 
   // Create BDDs for the input and output APs
