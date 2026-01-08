@@ -76,7 +76,7 @@ class k_bounded_safety_aut_detail {
       init[aut->get_init_state_number ()] = 0;
 
       // What are the safe states?
-      auto safe_vector = posets::utils::vector_mm<char> (aut->num_states (), K - 1);
+      auto safe_vector = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), K - 1);
       for (size_t i = posets::vectors::bool_threshold; i < aut->num_states (); ++i)
         safe_vector[i] = 0;
       SetOfStates F = SetOfStates (State (safe_vector));
