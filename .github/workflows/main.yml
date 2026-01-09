@@ -31,15 +31,15 @@ jobs:
         sudo wget http://www.lre.epita.fr/dload/spot/spot-2.14.4.tar.gz
         tar -xvzf spot-2.14.4.tar.gz
         cd spot-2.14.4
-        sudo ./configure --enable-max-accsets=64
+        sudo ./configure --enable-max-accsets=64 --disable-python
         sudo make
         sudo make install
     - name: Compile and test a debug configuration
       run: |
         export CXX=g++-14
         ./self-benchmark.sh -c base -j -b ab/tiny
-        ./self-benchmark.sh -c base -j -b ab/small
-        ./self-benchmark.sh -c base -j -b ab/issue54
+        meson test -C build_base --suite ab/small
+        meson test -C build_base --suite ab/issue54
     - name: Compile and test all configurations
       run: |
         export CXX=g++-14

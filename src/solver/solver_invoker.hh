@@ -9,9 +9,13 @@
 #include "utils/cache.hh"
 
 #include <optional>
+#include <spot/misc/optionmap.hh>
+#include <spot/misc/timer.hh>
+#include <spot/misc/tmpfile.hh>
 #include <spot/tl/formula.hh>
 #include <spot/tl/parse.hh>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/translate.hh>
 #include <string>
 #include <utility>
@@ -31,9 +35,13 @@ spot::formula parse_ltl_string (const std::string& input) {
   return pf.f;
 }
 
-// Changes q -> <i', o'> -> q' with saved o to
-// q -> <i', o> -> {q' saved o}
-spot::twa_graph_ptr push_outputs (const spot::twa_graph_ptr aut, bdd all_inputs, bdd all_outputs) {
+/** Changes q -> <i', o'> -> q' with saved o to
+ * q -> <i', o> -> {q' saved o'}.
+ * To be more precise, o stands for the atomic propositions whose conjunction
+ * is to_be_pushed and i stands for those whose conjunction (a cube) is
+ * all_others.
+ */
+spot::twa_graph_ptr push_aps (const spot::twa_graph_ptr aut, bdd to_be_pushed, bdd all_others) {
   auto ret = spot::make_twa_graph (aut->get_dict ());
   ret->copy_acceptance_of (aut);
   ret->copy_ap_of (aut);
@@ -53,11 +61,11 @@ spot::twa_graph_ptr push_outputs (const spot::twa_graph_ptr aut, bdd all_inputs,
 
       while (cond != bddfalse) {
         // Pick one satisfying assignment where outputs all have values
-        bdd one_sat = bdd_satoneset (cond, all_outputs, bddtrue);
+        bdd one_sat = bdd_satoneset (cond, to_be_pushed, bddtrue);
         // Get the corresponding input bdd
-        bdd one_input_bdd = bdd_exist (cond & bdd_exist (one_sat, all_inputs), all_outputs);
+        bdd one_input_bdd = bdd_exist (cond & bdd_exist (one_sat, all_others), to_be_pushed);
         ret->new_edge (ret_state,
-                       recurse (e.dst, bdd_exist (cond & one_input_bdd, all_inputs), recurse),
+                       recurse (e.dst, bdd_exist (cond & one_input_bdd, all_others), recurse),
                        saved_o & one_input_bdd, e.acc);
         cond -= one_input_bdd;
       }
@@ -68,10 +76,9 @@ spot::twa_graph_ptr push_outputs (const spot::twa_graph_ptr aut, bdd all_inputs,
   return ret;
 }
 
-bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
-              std::vector<std::string> output_aps, spot::bdd_dict_ptr dict, VECTOR_ELT_T opt_k,
-              VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc, std::string formula,
-              std::optional<UNREAL_X_T> check_unreal) {
+bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
+              VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
+              std::string formula, std::optional<UNREAL_X_T> check_unreal) {
   spot::formula spot_formula = parse_ltl_string (formula);
 
   if (check_unreal.has_value ()) {
@@ -79,14 +86,15 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
     // Swap I and O.
     verb_do (2, vout << "Swapping inputs and outputs\n");
     input_aps.swap (output_aps);
+    verb_do (3, vout << "Inputs: " << input_aps << std::endl);
+    verb_do (3, vout << "Outputs: " << output_aps << std::endl);
 
     // Swapping them in the formula too
     if (*check_unreal == UNREAL_X_FORMULA) {
-      // Add X at the outputs
-      verb_do (2, vout << "Adding X to the outputs in the formula\n");
-      auto rec = [output_aps] (auto&& self, spot::formula m) {
+      verb_do (2, vout << "Mealy-to-Moore: adding X to the inputs in the formula\n");
+      auto rec = [input_aps] (auto&& self, spot::formula m) {
         if (m.is (spot::op::ap) and
-            (std::ranges::find (output_aps, m.ap_name ()) != output_aps.end ()))
+            (std::ranges::find (input_aps, m.ap_name ()) != input_aps.end ()))
           return spot::formula::X (m);
         return m.map ([&] (spot::formula t) { return self (self, t); });
       };
@@ -95,6 +103,21 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
   }
   else  // all that is needed for real is to negate the formula
     spot_formula = spot::formula::Not (spot_formula);
+
+  // These options play a role in twaalgos.
+  spot::option_map extra_options;
+  extra_options.set ("simul", 0);
+  extra_options.set ("ba-simul", 0);
+  extra_options.set ("det-simul", 0);
+  extra_options.set ("tls-impl", 1);
+  extra_options.set ("wdba-minimize", 2);
+#ifndef NDEBUG
+  extra_options.report_unused_options ();
+#endif
+
+  // Setup the dictionary now: BuDDy's initialization
+  spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
+  spot::translator trans (dict, &extra_options);
 
   // Create BDDs for the input and output APs
   bdd all_inputs = bddtrue;
@@ -111,10 +134,10 @@ bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
   // Create the automaton for the formula we have prepared
   auto aut = create_automaton (std::move (spot_formula), trans);
 
-  // If unreal but we haven't pushed outputs yet using X on formula
+  // If unreal but we haven't pushed inputs yet using X on formula
   if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
-    verb_do (2, vout << "Pushing the outputs in the automaton\n");
-    aut = push_outputs (aut, all_inputs, all_outputs);
+    verb_do (2, vout << "Pushing the inputs in the automaton\n");
+    aut = push_aps (aut, all_inputs, all_outputs);
   }
 
   AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();

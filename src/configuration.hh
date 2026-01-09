@@ -36,7 +36,7 @@
 # define DEFAULT_UNREAL_X UNREAL_X_BOTH
 #endif
 #ifndef VECTOR_ELT_T
-# define VECTOR_ELT_T char
+# define VECTOR_ELT_T signed char
 #endif
 // End of overflow WARNING
 
