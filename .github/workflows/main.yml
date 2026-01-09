@@ -31,7 +31,7 @@ jobs:
         sudo wget http://www.lre.epita.fr/dload/spot/spot-2.14.4.tar.gz
         tar -xvzf spot-2.14.4.tar.gz
         cd spot-2.14.4
-        sudo ./configure --enable-max-accsets=64
+        sudo ./configure --enable-max-accsets=64 --disable-python
         sudo make
         sudo make install
     - name: Compile and test a debug configuration
