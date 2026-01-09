@@ -50,6 +50,7 @@ int main (int argc, char** argv) {
   sigaction (SIGTERM, &action, nullptr);
   sigaction (SIGINT, &action, nullptr);
   sigaction (SIGQUIT, &action, nullptr);
+  sigaction (SIGABRT, &action, nullptr);  // spot could abort internally!
 
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
