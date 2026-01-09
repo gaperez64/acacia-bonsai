@@ -30,6 +30,7 @@ struct arg_parse_result {
     VECTOR_ELT_T opt_kinc = DEFAULT_KINC;
     std::optional<UNREAL_X_T> opt_unreal_x = std::make_optional<UNREAL_X_T> (DEFAULT_UNREAL_X);
     unsigned verbose_level = 0;
+    bool check_real = true;
 };
 
 /**
@@ -82,8 +83,8 @@ void show_help (const char* program_name) {
             << "  -K VAL            final value of K, or unique value if M is not specified\n"
             << "  -M VAL            starting value of K\n"
             << "  -I VAL            increment value for K, used when M < K\n"
-            << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both] "
-            << "unrealizability is chedked by default with "
+            << "  -u VAL            use VAL from [automaton|formula|both] to check unrealizability\n"
+            << "                    by default, unrealizability is checked with "
 #if DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
             << "VAL = automaton"
 #elif DEFAULT_UNREAL_X == UNREAL_X_FORMULA
@@ -92,7 +93,8 @@ void show_help (const char* program_name) {
             << "VAL = both"
 #endif
             << std::endl
-            << "  -r                just check realizability, not unrealizability\n"
+            << "  -r                do NOT check for unrealizability\n"
+            << "  -U                do NOT check for realizability\n"
             << "  -v                verbose mode, can be repeated for more verbosity\n"
             << "Exit status:\n"
             << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
@@ -145,12 +147,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_kmin = std::nullopt;
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt (argc, argv, "hrVf:F:i:o:I:K:M:u:v")) != -1) {
+  while ((opt = getopt (argc, argv, "hUrVf:F:i:o:I:K:M:u:v")) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
       case 'V': std::cout << "Version: " << VERSION << '\n'; exit (EXIT_CODE_UNKNOWN);
       case 'f': retval.formula = optarg; break;
       case 'r': retval.opt_unreal_x = std::nullopt; break;
+      case 'U': retval.check_real = false; break;
       case 'F': process_formula_file (optarg, retval); break;
       case 'i': process_arg_input (optarg, retval); break;
       case 'o': process_arg_output (optarg, retval); break;

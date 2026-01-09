@@ -102,8 +102,8 @@ class k_bounded_safety_aut_detail {
             verb_do (2, vout << "Early exit because the initial state is out\n");
             return std::nullopt;
           }
-          verb_do (1, vout << "Incrementing K from " << (unsigned) K << " to "
-                           << (unsigned) (K + Kinc) << std::endl);
+          verb_do (1, vout << "Incrementing K from " << (int)K << " to "
+                           << (int)(K + Kinc) << std::endl);
           K += Kinc;
           actioner.setK (K);
           verb_do (1, {
@@ -194,112 +194,6 @@ class k_bounded_safety_aut_detail {
       //   F1i.intersect_with (std::move (F));
       //   F = std::move (F1i);
       verb_do (2, vout << "F = " << std::endl << F);
-    }
-
-    // get index of the first dominating element that dominates the vector v
-    // Container can be SetOfStates, or std::vector
-    template <class Container>
-    int get_dominating_index (const Container& saferegion, const State& v) const {
-      int i = 0;
-      auto it = saferegion.begin ();
-      while (it != saferegion.end ()) {
-        // FIXME: Avoid copying, maybe by keeping a SetOfStates on the side
-        // when using vector? Or using a specific SetOfStates like
-        // vector-based
-        // FIXME: Or just compare the two vectors!!!
-        if (SetOfStates ((*it).copy ()).contains (v))
-          return i;
-        i++;
-        ++it;
-      }
-      return -1;  // not found
-    }
-
-    template <class Container>
-    State get_dominating_element (const Container& saferegion, const State& v) const {
-      int i = 0;
-      auto it = saferegion.begin ();
-      while (it != saferegion.end ()) {
-        if (SetOfStates ((*it).copy ()).contains (v))
-          return (*it).copy ();
-        i++;
-        ++it;
-      }
-      std::abort ();  // element should be found, if we reach this -> bad
-    }
-
-    [[nodiscard]] bdd binary_encode (unsigned int s, const std::vector<bdd>& src) const {
-      // ~ bdd_buildcube(s, src.size(), src.data())
-      // turn the value into a BDD e.g. with 4 states so 2 variables:
-      // state 0: !x1 & !x2
-      // state 1:  x1 & !x2
-      // state 2: !x1 &  x2
-      // state 3:  x1 &  x2
-
-      bdd res = bddtrue;
-      for (const bdd& var : src) {
-        // use least significant bit for first variable, next bit for second variable, and so on
-        bool negate = (s & 1) == 0;
-        s >>= 1;
-        res &= negate ? (!var) : var;
-      }
-      assert (s == 0);
-      return res;
-    }
-
-    // could traverse the BDD instead but this is simpler, this function is only called on
-    // input/output support
-    std::vector<bdd> cube_to_vector (const bdd& cube) {
-      std::vector<bdd> res;
-      for (int i = 0; i < bdd_varnum (); i++) {
-        bdd var = bdd_ithvar (i);
-        if (cube == (cube & var))
-          res.push_back (var);
-      }
-      return res;
-    }
-
-    struct transition {
-        bdd IO;
-        int new_state = -1;
-    };
-
-    struct badtransition {
-        bdd IO;
-        State new_state;
-    };
-
-    // return IO + destination state (one IO, one destination state: deterministic)
-    template <typename Actions, typename Actioner>
-    std::pair<bdd, State> get_transition (const State& elem, const Actions& actions,
-                                          Actioner& actioner,
-                                          const SetOfStates& saferegion) const {
-      // action_vec maps each state q to a list of (p, is_q_accepting) tuples
-      // (vector<vector<tuple<unsigned int, bool>>>)
-      for (const auto& action_vec : actions) {
-        // calculate fwd(m, action), see if this is dominated by some element in the safe region
-        SetOfStates&& fwd =
-            SetOfStates (elem.copy ()).apply ([this, &action_vec, &actioner] (const auto& _m) {
-              auto&& ret = actioner.apply (_m, action_vec, actioners::direction::forward);
-              verb_do (3, vout << "  " << _m << " -> " << ret << std::endl);
-              return ret;
-            });
-
-        assert (fwd.size () == 1);
-
-        if (saferegion.contains (*fwd.begin ())) {
-          verb_do (
-              2, vout << "dominated with IO = " << bdd_to_formula (action_vec.IO) << ": " << fwd);
-          return {action_vec.IO,
-                  (*fwd.begin ())
-                      .copy ()};  // <- for deterministic policy using first IO that is found
-        }
-      }
-
-      utils::vout << "No transition found from " << elem << " with safe region " << saferegion
-                  << "\n";
-      assert (false);
-      return {bddfalse, elem.copy ()};
     }
 
     ////////////////////////////////////////////////
