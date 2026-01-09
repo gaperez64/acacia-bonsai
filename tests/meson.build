@@ -5,9 +5,49 @@ test_files = \
                'realizable' :
                  { 
                    'issue54': # These gave wrong answers for SYNTCOMP 2025
-                     [ 'KitchenTimerV7.ltl',
-                       'simple_arbiter_with_hints_pb_6_pe_.ltl',
-                       'simple_arbiter_with_hints_pb_8_pe_.ltl'
+                     [
+                       'KitchenTimerV7.ltl',
+                       'TorcsSimple.ltl',
+                       'zoo5.ltl',
+                       'escalator_counting_init.ltl',
+                       'SPIWriteSdi.ltl',
+                       'zoo0.ltl',
+                       'KitchenTimerV5.ltl',
+                       'Automata.ltl',
+                       'KitchenTimerV10.ltl',
+                       'load_balancer_7.ltl',
+                       'KitchenTimerV7.ltl',
+                       'loadfull5.ltl',
+                       'KitchenTimerV9.ltl',
+                       'load_balancer_6.ltl',
+                       'amba_decomposed_encode_6.ltl',
+                       'zoo10.ltl',
+                       'loadfull4.ltl',
+                       'TwoCountersInRangeA6.ltl',
+                       'SensorSubmodulChooser.ltl',
+                       'button.ltl',
+                       'EnemeyModule.ltl',
+                       'loadfull3.ltl',
+                       'load_balancer_5.ltl',
+                       'SensorRegister.ltl',
+                       'load_balancer_8.ltl',
+                       'loadcomp5.ltl',
+                       'EscalatorCountingInit.ltl',
+                       'zoo5.ltl',
+                       'KitchenTimerV0.ltl',
+                       'prioritized_arbiter_enc_4.ltl',
+                       'load_balancer_3.ltl',
+                       'KitchenTimerV6.ltl',
+                       'TwoCounters4.ltl',
+                       'Sensor.ltl',
+                       'zoo10.ltl',
+                       'lilydemo19.ltl',
+                       'loadcomp4.ltl',
+                       'ActionConverter.ltl',
+                       'load_balancer_4.ltl',
+                       'amba_decomposed_encode_8.ltl',
+                       'SensorInit.ltl',
+                       'loadfull2.ltl'
                      ],
 
                    'tiny' :  # Less than 50 bytes
@@ -230,7 +270,12 @@ test_files = \
                      
                  },
                'unrealizable' :
-                 { 'tiny' : # Smaller than 100 bytes
+                 { 
+                   'issue54': # These gave wrong answers for SYNTCOMP 2025
+                     [
+                       'TwoCountersGui.ltl'
+                     ],
+                   'tiny' : # Smaller than 100 bytes
 
                      [ 'ltl2dba_psi_1.ltl', 'ltl2dba_psi_2.ltl',
                        'ltl2dba_R_2.ltl', 'ltl2dba27.ltl',
