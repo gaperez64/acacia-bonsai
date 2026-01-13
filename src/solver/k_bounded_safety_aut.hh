@@ -92,6 +92,7 @@ class k_bounded_safety_aut_detail {
         if (not input.has_value ())  // No more inputs, and we just tested that init was present
         {
           // if (!synth.empty ()) synthesis (f, synth, actioner);
+          verb_do (3, vout << "Exit because of no more inputs being picked\n");
           return std::make_optional<SetOfStates> (std::move (f));
         }
 
@@ -102,8 +103,8 @@ class k_bounded_safety_aut_detail {
             verb_do (2, vout << "Early exit because the initial state is out\n");
             return std::nullopt;
           }
-          verb_do (1, vout << "Incrementing k from " << (int)k << " to "
-                           << (int)(k + kinc) << std::endl);
+          verb_do (1, vout << "Incrementing k from " << (int) k << " to " << (int) (k + kinc)
+                           << std::endl);
           k += kinc;
           actioner.setK (k);
           verb_do (1, {
@@ -137,7 +138,7 @@ class k_bounded_safety_aut_detail {
     spot::twa_graph_ptr aut;
     const VECTOR_ELT_T kfrom, kto, kinc;
     bdd input_support, output_support;
-    std::mt19937 gen { };
+    std::mt19937 gen {};
     const IOsPrecomputationMaker& ios_precomputer_maker;
     const ActionerMaker& actioner_maker;
     const InputPickerMaker& input_picker_maker;

@@ -55,6 +55,8 @@ int main (int argc, char** argv) {
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
       if (fork () == 0) {
+        // we check one thing at a time here
+        assert (not unreal_x.has_value () or *unreal_x != UNREAL_X_BOTH);
         utils::vout.set_prefix (
             std::string {"["} +
             (not unreal_x.has_value () ? "real" : std::string {"unreal-x="} + (char) *unreal_x) +
