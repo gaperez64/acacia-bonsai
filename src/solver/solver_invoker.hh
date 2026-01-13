@@ -151,7 +151,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create the automaton for the formula we have prepared
   auto aut = create_automaton (std::move (spot_formula), trans);
 
-  // Create BDDs for the input and output APs
+  // Create BDDs for the input and output APs. We register the APs with the
+  // automaton so that they are deregistered on destruction of the automaton.
   bdd all_inputs = bddtrue;
   bdd all_outputs = bddtrue;
   for (std::string ap : input_aps) {
