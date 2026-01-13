@@ -21,7 +21,6 @@
 using namespace std::literals;
 
 // Definitions for some external/global variables.
-// FIXME: Could be refactored.
 unsigned utils::verbose = 0;
 utils::voutstream utils::vout;
 size_t posets::vectors::bool_threshold = 0;
@@ -50,7 +49,6 @@ int main (int argc, char** argv) {
   sigaction (SIGTERM, &action, nullptr);
   sigaction (SIGINT, &action, nullptr);
   sigaction (SIGQUIT, &action, nullptr);
-  sigaction (SIGABRT, &action, nullptr);  // spot could abort internally!
 
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
