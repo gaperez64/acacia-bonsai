@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 // These are the possible return values for the solver
-enum SOLVER_RES : std::uint8_t {
+enum : std::uint8_t {
   EXIT_CODE_REAL = 0,
   EXIT_CODE_UNKNOWN = 2,
   EXIT_CODE_ERROR = 3,
@@ -32,6 +32,6 @@ inline void error_at_line (int status, const char* filename, unsigned int linenu
   vfprintf (stderr, format, args);
   va_end (args);
   fputc ('\n', stderr);
-  if (status)
+  if (status != 0)
     exit (status);
 }
