@@ -26,15 +26,17 @@ utils::voutstream utils::vout;
 size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
-void static terminate ([[maybe_unused]] int signum) {
-  if (getpgid (0) == getpid ()) {  // Main process
-    signal (SIGTERM, SIG_IGN);
-    kill (0, SIGTERM);
-    while (wait (nullptr) != -1)
-      /* no body */;
+namespace {
+  void terminate ([[maybe_unused]] int signum) {
+    if (getpgid (0) == getpid ()) {  // Main process
+      signal (SIGTERM, SIG_IGN);
+      kill (0, SIGTERM);
+      while (wait (nullptr) != -1)
+        /* no body */;
+    }
+    else
+      _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
   }
-  else
-    _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
 }
 
 int main (int argc, char** argv) {

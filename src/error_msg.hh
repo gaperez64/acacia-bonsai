@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 // These are the possible return values for the solver
-enum SOLVER_RES : int {
+enum SOLVER_RES : std::uint8_t {
   EXIT_CODE_REAL = 0,
   EXIT_CODE_UNKNOWN = 2,
   EXIT_CODE_ERROR = 3,

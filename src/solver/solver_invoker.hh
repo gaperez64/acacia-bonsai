@@ -17,6 +17,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/translate.hh>
+#include <spot/twaalgos/synthesis.hh>
 #include <string>
 #include <utility>
 #include <vector>
@@ -76,10 +77,31 @@ spot::twa_graph_ptr push_aps (const spot::twa_graph_ptr aut, bdd to_be_pushed, b
   return ret;
 }
 
+/**
+ * This is the function that calls our main algorithm on the given LTL
+ * formula. Depending on whether we want to check realizability or
+ * unrealizability (by changing between Mealy and Moore semantics via the
+ * formula or the automaton), we apply different transformations on the
+ * formula and resulting automaton. In addition, we make sure that the BDD
+ * variables for the inputs are ordered first if checking realizability, and
+ * after the variables for the outputs otherwise.
+ */
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal) {
   spot::formula spot_formula = parse_ltl_string (formula);
+
+  auto [forms, outs] = spot::split_independent_formulas(spot_formula, output_aps);
+  verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
+#ifndef NDEBUG
+  for (size_t i = 0; i < forms.size (); ++i) {
+    verb_do (2, vout << "Subformula " << i + 1 << ": " << forms[i] << std::endl);
+    verb_do (2, vout << "with output set:");
+    for (auto& sf: outs[i])
+      verb_do (2, vout << sf << " ");
+    verb_do (2, vout << "\n");
+  }
+#endif
 
   if (check_unreal.has_value ()) {
     assert (*check_unreal != UNREAL_X_BOTH);
@@ -119,20 +141,29 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
   spot::translator trans (dict, &extra_options);
 
-  // Create BDDs for the input and output APs
-  bdd all_inputs = bddtrue;
-  bdd all_outputs = bddtrue;
-  for (std::string ap : input_aps) {
-    const unsigned v = dict->register_proposition (spot::formula::ap (ap), nullptr);
-    all_inputs &= bdd_ithvar (v);
-  }
-  for (std::string ap : output_aps) {
-    const unsigned v = dict->register_proposition (spot::formula::ap (ap), nullptr);
-    all_outputs &= bdd_ithvar (v);
-  }
+  // At this point we have the formula we are going to compile and the BDD
+  // dictionary is set exactly as we need it. The only thing
+  // missing is to:
+  // 1. construct the automaton for the formula (and get some BDDs)
+  // 2. push the in-/out-puts if needed due to a Mealy-Moore change, and
+  // 3. solve the game
 
   // Create the automaton for the formula we have prepared
   auto aut = create_automaton (std::move (spot_formula), trans);
+
+  // Create BDDs for the input and output APs. We register the APs with the
+  // automaton so that they are deregistered on destruction of the automaton.
+  bdd all_inputs = bddtrue;
+  bdd all_outputs = bddtrue;
+  for (std::string ap : input_aps) {
+    const unsigned v = aut->register_ap (spot::formula::ap (ap));
+    all_inputs &= bdd_ithvar (v);
+  }
+  for (std::string ap : output_aps) {
+    const unsigned v = aut->register_ap (spot::formula::ap (ap));
+    all_outputs &= bdd_ithvar (v);
+  }
+
 
   // If unreal but we haven't pushed inputs yet using X on formula
   if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
@@ -145,9 +176,5 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
   verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
 
-  bool res = solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
-
-  dict->unregister_all_my_variables (nullptr);
-
-  return res;
+  return solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
 }
