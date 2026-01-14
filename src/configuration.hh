@@ -8,6 +8,10 @@
 # define CPRE_AVOID_UNIONS 0
 #endif
 
+#ifndef DECOMPOSE_SPEC
+# define DECOMPOSE_SPEC 1
+#endif
+
 #ifndef NO_ARRAY_CAP_MAX
 // define it if you want STATIC_ARRAY_CAP_MAX to be 0
 #endif

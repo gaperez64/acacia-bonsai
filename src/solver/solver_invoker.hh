@@ -9,6 +9,7 @@
 #include "utils/cache.hh"
 
 #include <optional>
+#include <ranges>
 #include <spot/misc/optionmap.hh>
 #include <spot/misc/timer.hh>
 #include <spot/misc/tmpfile.hh>
@@ -139,7 +140,6 @@ namespace {
       }
 
       ~run_one_ltl () {
-        verb_do (3, "Destroying the runner");
         // dict->dump (std::cout);
         dict->unregister_all_my_variables (this);
       }
@@ -210,11 +210,16 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
                       check_unreal);
 
   spot::formula spot_formula = parse_ltl_string (formula);
+
+#if DECOMPOSE_SPEC == 0
+  // just launch a monolothic runner
   return runner (spot_formula);
 
-#if 0
+#elif DECOMPOSE_SPEC == 1
+  // we are up for decomposition, so first we need to split the formula
   auto [forms, outs] = spot::split_independent_formulas(spot_formula, output_aps);
   verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
+
 # ifndef NDEBUG
   for (size_t i = 0; i < forms.size (); ++i) {
     verb_do (2, vout << "Subformula " << i + 1 << ": " << forms[i] << std::endl);
@@ -226,17 +231,20 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 # endif
 
   if (forms.size () <= 1)
-    return run_one_ltl (input_aps, output_aps, opt_k, opt_kmin, opt_kinc,
-                        spot_formula, check_unreal);
+    return runner (spot_formula);
 
   // Here's the real decomposition in terms of solving. If we found more than
-  // one formula, we're going to solve those instead. If we're checking
-  // realizability, all of the subgames must be realizable; conversely, for
-  // unrealizability, I just need one of them to be declared unrealizable to
-  // get a conclusive answer.
-  // TODO: via std::transform just use all_of and any_of?
-  if (check_unreal.has_value ()) {
-    ;
+  // one formula, we're going to solve those instead. 
+  // * If we're checking realizability, all of the subgames must be
+  //   realizable;
+  // * conversely, for unrealizability, I just need one of them to be declared
+  //   unrealizable to get a conclusive answer.
+  if (not check_unreal.has_value ()) {
+    return std::ranges::all_of (forms.begin (), forms.end (), runner);
+  } else {
+    return std::ranges::any_of (forms.begin (), forms.end (), runner);
   }
+#else
+  std::unreachable ();
 #endif
 }

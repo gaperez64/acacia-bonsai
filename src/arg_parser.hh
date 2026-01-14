@@ -97,10 +97,10 @@ void show_help (const char* program_name) {
             << "  -U                do NOT check for realizability\n"
             << "  -v                verbose mode, can be repeated for more verbosity\n"
             << "Exit status:\n"
-            << "\t" << EXIT_CODE_REAL << "   if the input problem is realizable\n"
-            << "\t" << EXIT_CODE_UNREAL << "   if it is unrealizable\n"
-            << "\t" << EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-            << "\t" << EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
+            << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
+            << "\t" << (int)EXIT_CODE_UNREAL << "   if it is unrealizable\n"
+            << "\t" << (int)EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
+            << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
             << "Version: " << VERSION << '\n';
 }
 
