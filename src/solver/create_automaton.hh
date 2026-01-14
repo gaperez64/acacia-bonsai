@@ -6,7 +6,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/translate.hh>
 
-spot::twa_graph_ptr create_automaton (spot::formula f, spot::translator& trans) {
+spot::twa_graph_ptr create_automaton (spot::formula& f, spot::translator& trans) {
   // To Universal co-Büchi Automaton
   trans.set_type (spot::postprocessor::BA);
   // "Desired characteristics": Small and state-based acceptance (implied by BA).
@@ -15,6 +15,6 @@ spot::twa_graph_ptr create_automaton (spot::formula f, spot::translator& trans) 
       // spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
       spot::postprocessor::SBAcc);  // state-based acceptacen
   verb_do (1, vout << "Formula: " << f << std::endl);
-  auto aut = trans.run (&f);
+  auto aut = trans.run (f);
   return aut;
 }
