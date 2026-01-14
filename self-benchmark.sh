@@ -70,7 +70,7 @@ confs=(
     [inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
     [downset_vector_or_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
     [best]="$best"
-    [best_decomp]="$best -DDECOMPOSE_SPEC=1"
+    # [best_decomp]="$best -DDECOMPOSE_SPEC=1"
     [best_no_array_cap_max]="$best -DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
     [best_no_bitsets]="$best -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"  # same, and x_and_boolvec used instead of x_and_bitset
     [best_mona]="$best -DIOS_PRECOMPUTER=ios_precomputers::mona"

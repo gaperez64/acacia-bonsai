@@ -9,7 +9,7 @@
 #endif
 
 #ifndef DECOMPOSE_SPEC
-# define DECOMPOSE_SPEC 1
+# define DECOMPOSE_SPEC 0
 #endif
 
 #ifndef NO_ARRAY_CAP_MAX
