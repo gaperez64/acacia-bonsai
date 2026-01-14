@@ -217,7 +217,10 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
 #elif DECOMPOSE_SPEC == 1
   // we are up for decomposition, so first we need to split the formula
-  auto [forms, outs] = spot::split_independent_formulas(spot_formula, output_aps);
+  // NOTE: we may have flipped inputs and outputs already, so we need to
+  // provide inputs to the split function in that case
+  auto [forms, outs] = spot::split_independent_formulas(spot_formula,
+                                                        check_unreal.has_value () ? input_aps : output_aps);
   verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
 
 # ifndef NDEBUG
