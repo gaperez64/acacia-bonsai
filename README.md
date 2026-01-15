@@ -26,18 +26,15 @@ Note that on macOS the compilation has to happen via GCC.
 GCC can be installed using Homebrew: `brew install gcc`. Once installed,
 meson needs to be told to use GCC instead of built-in Clang. This can be done
 using the meson-native file, or by setting the `CXX` and `CC` environment variables.
+For instance, do `export CXX=$(brew --prefix)/bin/g++-XX` before starting with
+meson.
 
-Boost has to be compiled using GCC and installed in a way that meson can find Boost.
-It might be true that the only boost libraries used in this project are header only.
-In that case, Boost can be installed using Homebrew.
-
-Spot has to be manually compiled using GCC and installed.
-It is necessary to ensure that meson can find Spot using `pkgconfig`.
-This can be done, for example, by setting the `pkg_config_path` in a meson-native file.
-
-## Installing dependencies on Ubuntu
-
-TODO: explain the trick currently used in the CI.
+Spot has to be manually compiled using GCC and installed. After compiling it
+and installing it, you still need to ensure that meson can find Spot using `pkgconfig`.
+This can be done, for example, by setting the `pkg_config_path` in a meson-native file
+or by issuing `export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig` before
+starting with meson (this works if you installed spot in the default
+location).
 
 # Compiling, running, benchmarking
 
@@ -55,12 +52,11 @@ REALIZABLE
 Another usage:
 ```
 $ src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant
-UNKNOWN
+UNREALIZABLE
 ```
 
 Note that this will compile a debug version of Acacia-Bonsai.  A benchmarking
 script is available at the root:
-
 ```
 $ ./self-benchmark.sh --help
 ```
