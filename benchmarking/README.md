@@ -35,7 +35,7 @@ to the mkplot format, one can use:
   $ meson-to-mkplot.sh 'Title of Plot' testlog.json > mkplottable.json
 ```
 
-Scatter plots are then generated using, for instance:
+Survival, a.k.a. cactus, plots are then generated using, for instance:
 ```
   $ mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to plot.pdf mkplottable/*.json
 ```
