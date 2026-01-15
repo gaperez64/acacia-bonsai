@@ -91,9 +91,6 @@ namespace {
   class run_one_ltl {
     private:
       spot::bdd_dict_ptr dict;
-      // NOTE: important that dict is before trans here! This determines which
-      // one is initialized first in the constructor below...
-      spot::translator trans;
       std::vector<std::string> input_aps;
       std::vector<std::string> output_aps;
       bdd all_inputs;
@@ -102,6 +99,7 @@ namespace {
       VECTOR_ELT_T opt_kmin;
       VECTOR_ELT_T opt_kinc;
       std::optional<UNREAL_X_T> check_unreal;
+      spot::option_map extra_options;
 
     public:
       /**
@@ -110,20 +108,28 @@ namespace {
        * so that we can ensure that the inputs are ordered before the outputs
        * (recall we already swapped them if needed!)
        */
-      run_one_ltl (spot::option_map& extra_options, std::vector<std::string> input_aps,
+      run_one_ltl (spot::bdd_dict_ptr dict, std::vector<std::string> input_aps,
                    std::vector<std::string> output_aps, VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin,
                    VECTOR_ELT_T opt_kinc, std::optional<UNREAL_X_T> check_unreal)
-        : dict {spot::make_bdd_dict ()},
-          trans (dict, &extra_options),
+        : //dict {spot::make_bdd_dict ()},
+          dict {dict},
           input_aps {input_aps},
           output_aps {output_aps},
           opt_k {opt_k},
           opt_kmin {opt_kmin},
           opt_kinc {opt_kinc},
           check_unreal {check_unreal} {
+
+        // These options play a role in twaalgos.
+        extra_options.set ("simul", 0);
+        extra_options.set ("ba-simul", 0);
+        extra_options.set ("det-simul", 0);
+        extra_options.set ("tls-impl", 1);
+        extra_options.set ("wdba-minimize", 2);
 #ifndef NDEBUG
         extra_options.report_unused_options ();
 #endif
+
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
         // them.
@@ -137,11 +143,12 @@ namespace {
           const unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
           all_outputs &= bdd_ithvar (v);
         }
+        verb_do (3, dict->dump (utils::vout));
       }
 
       ~run_one_ltl () {
-        // dict->dump (std::cout);
         dict->unregister_all_my_variables (this);
+        verb_do (3, dict->dump (utils::vout));
       }
 
       bool operator() (spot::formula spot_formula) {
@@ -166,7 +173,8 @@ namespace {
         // 2. solve the game
 
         // Create the automaton for the formula we have prepared
-        auto aut = create_automaton (std::move (spot_formula), trans);
+        spot::translator trans (dict, &extra_options);
+        auto aut = create_automaton (spot_formula, trans);
 
         // If unreal but we haven't pushed inputs yet using X on formula
         if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
@@ -178,6 +186,7 @@ namespace {
 
         posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
+        verb_do (3, dict->dump (utils::vout));
 
         return solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
       }
@@ -196,18 +205,14 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     verb_do (3, vout << "Outputs: " << output_aps << std::endl);
   }
 
-  // These options play a role in twaalgos.
-  spot::option_map extra_options;
-  extra_options.set ("simul", 0);
-  extra_options.set ("ba-simul", 0);
-  extra_options.set ("det-simul", 0);
-  extra_options.set ("tls-impl", 1);
-  extra_options.set ("wdba-minimize", 2);
+  // We keep a bdd_dict at this level so that we can do synthesis later if
+  // needed, we want BDDs for APs to be consistent through subformula/automata
+  spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
 
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check
-  run_one_ltl runner (extra_options, input_aps, output_aps, opt_k, opt_kmin, opt_kinc,
-                      check_unreal);
+  run_one_ltl runner (dict, input_aps, output_aps, opt_k,
+                      opt_kmin, opt_kinc, check_unreal);
 
   spot::formula spot_formula = parse_ltl_string (formula);
 
@@ -223,15 +228,14 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
                                                         check_unreal.has_value () ? input_aps : output_aps);
   verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
 
-# ifndef NDEBUG
   for (size_t i = 0; i < forms.size (); ++i) {
     verb_do (2, vout << "Subformula " << i + 1 << ": " << forms[i] << std::endl);
-    verb_do (2, vout << "with output set:");
-    for (auto& sf: outs[i])
+    verb_do (2, vout << "with output set: ");
+    for (auto& sf: outs[i]) {
       verb_do (2, vout << sf << " ");
+    }
     verb_do (2, vout << "\n");
   }
-# endif
 
   if (forms.size () <= 1)
     return runner (spot_formula);
