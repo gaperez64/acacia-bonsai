@@ -80,7 +80,6 @@ confs=(
     [best_noiosprecom]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
     [best_downset_vector_or_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
     [best_downset_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
-    [best_downset_vector]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
     [best_downset_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed'"
     [best_downset_simple_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed'"
     [best_downset_sharingtrie]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed'"
