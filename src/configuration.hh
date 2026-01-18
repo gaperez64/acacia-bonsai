@@ -1,6 +1,6 @@
 #pragma once
 
-#define VERSION 1.9  // Kasper + Guillermo determined this arbitrarily
+#define VERSION 1.9.1
 
 #include "utils/todo.hh"
 
@@ -21,10 +21,10 @@
 // defaulting to VECTOR_AND_BITSET_DOWNSET_IMPL
 #endif
 
-// What follows are default values overriden by self-benchmark
+// What follows are default values overriden by self-benchmark.sh
 // or your meson setup.
 //
-// The defaults were copied from self-benchmark 21/12/2025
+// The defaults were copied from self-benchmark.sh 21/12/2025
 
 // Overflow WARNING: Check VECTOR_ELT_T below before changing
 #ifndef DEFAULT_K
