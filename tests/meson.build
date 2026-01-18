@@ -3974,6 +3974,10 @@ benchmark_files += { 'syntcomp24': benchmark_files['syntcomp24'] + { 'all':
    benchmark_files['syntcomp24']['20s-100s'] +
    benchmark_files['syntcomp24']['100s-inf'] } }
 
+benchmark_files += { 'syntcomp24': benchmark_files['syntcomp24'] + { '0s-20s':
+   benchmark_files['syntcomp24']['0s-1s'] +
+   benchmark_files['syntcomp24']['1s-20s'] } }
+
 foreach folder, testsets : benchmark_files
   foreach set, files : testsets
     foreach file : files
