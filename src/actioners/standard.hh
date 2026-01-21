@@ -6,43 +6,12 @@
 
 namespace actioners {
   namespace detail {
-    template <typename State, typename Aut, typename IToIOs, bool include_IOs>
+    template <typename State, typename Aut, typename IToIOs>
     class standard {
       public:  // types
         using action =
             std::vector<std::pair<unsigned, bool>>;  // All these pairs are unique by construction.
-        using action_vec_default = std::vector<action>;  // Vector indexed by state number
-
-        // store action vector per state + IO
-        struct action_vec_IO {
-            action_vec_default
-                actions;  // index by state number q to get a vector of (p, is_q_accepting) tuples
-            bdd IO;       // the IO compatible with the input that yielded this action vector
-
-            action_vec_IO () = default;
-
-            explicit action_vec_IO (size_t size) : IO (bddfalse) { actions.resize (size); }
-
-            auto begin () const { return actions.begin (); }
-
-            auto end () const { return actions.end (); }
-
-            auto& operator[] (size_t i) { return actions[i]; }
-
-            const auto& operator[] (size_t i) const { return actions[i]; }
-
-            bool operator< (const action_vec_IO& rhs) const {
-              return (IO.id () < rhs.IO.id ()) ||
-                     ((IO.id () == rhs.IO.id ()) && (actions < rhs.actions));
-            }
-
-            size_t size () const { return actions.size (); }
-        };
-
-        // use the struct with the IO if include_IOs is true, otherwise use the normal action
-        // vector type
-        using action_vec = std::conditional<include_IOs, action_vec_IO, action_vec_default>::type;
-
+        using action_vec = std::vector<action>;  // Vector indexed by state number
         using action_vecs = std::list<action_vec>;
         using input_and_actions = std::pair<bdd, action_vecs>;
         struct compare_actions {
@@ -167,8 +136,6 @@ namespace actioners {
         auto compute_action_vec (const Set& transset) {
           // create action_vec and include transset.second = the IO if needed
           action_vec ret_fwd (aut->num_states ());
-          if constexpr (include_IOs)
-            ret_fwd.IO = transset.IO;
 
           TODO (
               "We have two representations of the same thing here; "
@@ -187,9 +154,9 @@ namespace actioners {
 
   template <typename State>
   struct standard {
-      template <typename Aut, typename IToIOs, bool include_IOs = false>
+      template <typename Aut, typename IToIOs>
       static auto make (const Aut& aut, const IToIOs& itoios, VECTOR_ELT_T K) {
-        return detail::standard<State, Aut, IToIOs, include_IOs> (aut, itoios, K);
+        return detail::standard<State, Aut, IToIOs> (aut, itoios, K);
       }
   };
 }
