@@ -91,7 +91,6 @@ class k_bounded_safety_aut_detail {
         auto&& input = input_picker (f);
         if (not input.has_value ())  // No more inputs, and we just tested that init was present
         {
-          // if (!synth.empty ()) synthesis (f, synth, actioner);
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
           return std::make_optional<SetOfStates> (std::move (f));
         }

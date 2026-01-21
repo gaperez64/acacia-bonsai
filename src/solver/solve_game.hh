@@ -18,9 +18,208 @@
 
 #define UNREACHABLE [] ([[maybe_unused]] int x) { std::unreachable (); }
 
+/**
+ * Function to treat the winning region of a game, if any. The winning region
+ * having a value means that it contains the initial state.
+ */
+template <class SetOfStates>
+bool post_real (std::optional<SetOfStates>&& winning_region,
+                const std::optional<std::string>& synth_fname) {
+  if (not winning_region.has_value () or not synth_fname.has_value ())
+    return winning_region.has_value ();
 
+  // What follows is mostly the synthesis procedure as ncharl intended
+  //auto actioner_factory = actioners::no_ios_precomputation<typename SetOfStates::value_type> ();
+
+#if 0
+  auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
+      auto maker = actioners::standard<typename SetOfStates::value_type> ();
+      // manually list the two template types so we can set the third (include IOs) to true
+      auto actioner = maker.template make <decltype (aut), decltype (inputs_to_ios), true> (aut, inputs_to_ios, Kfrom);
+
+      verb_do (2, vout << "Final F:\n" << F);
+      verb_do (1, vout << "F = downset of size " << F.size() << "\n");
+
+
+      // Latches in the AIGER file are initialized to zero, so it would be nice if index 0 is the initial state
+      // -> create new std::vector of dominating elements, start with only an initial one, and then add
+      //    the reachable ones
+      std::vector<State> states;
+
+      // initial vector = all -1, and 0 for the initial state
+      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
+      init_vector[aut->get_init_state_number ()] = 0;
+      int init_index = get_dominated_index (F, State (init_vector));
+      assert (init_index != -1);
+      verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
+      states.push_back (get_dominated_element (F, State (init_vector)));
+      verb_do (1, vout << "-> states = " << states << "\n\n");
+
+      // explore and store transitions
+      auto input_output_fwd_actions = actioner.actions ();
+
+
+      std::vector<std::vector<transition>> transitions; // for every state: a vector of transitions (one per input)
+      std::vector<unsigned int> states_todo = { 0 };
+
+      while (!states_todo.empty ()) {
+        // pop the last state (depth-first search)
+        unsigned int src = states_todo[states_todo.size () - 1];
+        states_todo.pop_back ();
+
+        verb_do (2, vout << "Element " << states[src] << "\n");
+
+        // make sure transitions vector is large enough
+        while (src >= transitions.size ()) {
+          transitions.push_back ({});
+        }
+
+        for (auto& tuple : input_output_fwd_actions) {
+          // .first = input (BDD)
+          // .second = list<action_vec>
+          //  -> for this input, a list (one per compatible IO) of actions
+          //  where an action maps each state q to a list of (p, is_q_accepting) tuples
+          //  + the action includes the IO
+          verb_do (2, vout << "Input: " << bdd_to_formula (tuple.first) << "\n");
+
+          // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
+          std::pair<bdd, State> p = get_transition (states[src], tuple.second, actioner, F);
+          // note: it may be that an IO is returned that keeps us in the safe region but requires adding a new element (index == -1)
+          // it could be that there does exist an IO that doesn't make us add a new maximal element, so we could add a new argument
+          // to get_transition to pass the current states, which would then be checked first - may make a slightly smaller circuit,
+          // at the cost of taking longer (as we no longer stop at the first IO)
+
+          int index = get_dominated_index (states, p.second);
+          // ^ returns index of FIRST element that dominates
+
+          if (index == -1) {
+            // we didn't know this state was reachable yet: it's not in states
+            // -> add it, and add it to states_todo so we also check its successors
+            index = states.size ();
+            states.push_back (get_dominated_element (F, p.second));
+            states_todo.push_back (index);
+          }
+
+          transitions[src].push_back ({ p.first, index });
+
+          verb_do (2, vout << "\n");
+        }
+
+        verb_do (2, vout << "\n");
+      }
+
+
+
+      verb_do (2, vout << "-> states = " << states << "\n");
+
+      // Print transitions
+      for (unsigned int i = 0; i < states.size (); i++) {
+        verb_do (2, vout << "State " << i << ":\n");
+        for (const auto& t : transitions[i]) {
+          verb_do (2, vout << bdd_to_formula (t.IO) << " -> state " << t.new_state << "\n");
+        }
+      }
+
+      verb_do (2, vout << "\n");
+
+      // create APs to encode the mapping of the automaton states to integers
+      // number of variables to encode the state
+      unsigned int mapping_bits = ceil (log2 (states.size ()));
+      assert (states.size () <= (1ull << mapping_bits));
+      verb_do (1, vout << states.size () << " reachable states -> " << mapping_bits << " bit(s)\n\n");
+
+
+
+      // create atomic propositions
+      std::vector<bdd> state_vars, state_vars_prime;
+      bdd state_vars_prime_cube = bddtrue;
+      for (unsigned int i = 0; i < mapping_bits; i++) {
+        unsigned int v = aut->register_ap (spot::formula::ap ("Y" + std::to_string (i)));
+        state_vars.push_back (bdd_ithvar (v)); // store v instead of the bdd object itself?
+
+        v = aut->register_ap (spot::formula::ap ("Z" + std::to_string (i)));
+        state_vars_prime.push_back (bdd_ithvar (v));
+        state_vars_prime_cube &= bdd_ithvar (v);
+      }
+
+
+      bdd encoding = bddfalse;
+
+      // create BDD encoding using the states & transitions
+      for (unsigned int i = 0; i < states.size (); i++) {
+        bdd state_encoding = binary_encode (i, state_vars);
+        bdd trans_encoding = bddfalse;
+        // for every transition from state i
+        for (const transition& ts : transitions[i]) {
+          trans_encoding |= ts.IO & binary_encode (ts.new_state, state_vars_prime);
+        }
+        encoding |= state_encoding & trans_encoding;
+      }
+
+      verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
+
+      // turn cube (single bdd) into vector<bdd>
+      std::vector<bdd> input_vector = cube_to_vector (input_support);
+      std::vector<bdd> output_vector = cube_to_vector (output_support);
+
+
+      // AIGER
+      aiger aig (input_vector, state_vars, output_vector, aut);
+
+
+      int i = 0;
+      // for each output: function(current_state, input) that says whether this output is made true
+      for (const bdd& o : output_vector) {
+        bdd pos = bdd_exist (encoding & o, output_support & state_vars_prime_cube);
+        bdd neg = !bdd_exist (encoding & (!o), output_support & state_vars_prime_cube);
+        bdd g_o = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
+        verb_do (2, vout << "g_" << bdd_to_formula (o) << ": " << bdd_to_formula (g_o) << "\n");
+        aig.add_output (i++, g_o);
+      }
+
+      i = 0;
+      // new state as function(current_state, input)
+      for (const bdd& m : state_vars_prime) {
+        bdd pos = bdd_exist (encoding & m, output_support & state_vars_prime_cube);
+        bdd neg = !bdd_exist (encoding & (!m), output_support & state_vars_prime_cube);
+        bdd f_l = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
+        verb_do (2, vout << "f_" << bdd_to_formula (m) << ": " << bdd_to_formula (f_l) << "\n");
+        aig.add_latch (i++, f_l);
+      }
+
+
+      if (synth_fname != "-") {
+        std::ofstream f (synth_fname);
+        aig.output (f, false);
+        f.close ();
+      } else {
+        utils::vout << "\n\n\n";
+        aig.output (utils::vout, true);
+      }
+
+      verb_do (1, vout << "\n\n");
+#endif
+
+  return true;
+}
+
+/**
+ * Complicated construction to make sure that we solve the game while making
+ * good use of the downsets library. In a nutshell, we check how many boolean
+ * states we have to fit their counters into an array of bitsets or a vector of bools
+ * while keeping the rest of the counters in a proper downset. Since array
+ * sizes have to be fixed during compile time, we need to prepare a few sizes
+ * in advance here and otherwise default to other means...
+ *
+ * Two macros can be used to control the switching:
+ * - NO_ARRAY_CAP_MAX
+ * - USE_BOOLVEC_OVER_BITSET
+ *
+ * (see also utils/static_switch.hh)
+ */
 bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
-                 const bdd& all_inputs, const bdd& all_outputs) {
+                 const bdd& all_inputs, const bdd& all_outputs,
+                 std::optional<std::string> synth_fname) {
   // Compute how many boolean states will actually be put in bitsets.
   constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
   auto nbitsetbools = aut->num_states () - posets::vectors::bool_threshold;
@@ -79,7 +278,7 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
                                                        ActionerMaker, InputPickerMaker> (
                     aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
                     ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-                realizable = skn.solve ().has_value ();
+                realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname);
               },
               UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
         },
@@ -100,7 +299,7 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
                                                  ActionerMaker, InputPickerMaker> (
               aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
               ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-          realizable = skn.solve ().has_value ();
+          realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname);
         },
         UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
 #else
@@ -114,7 +313,7 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
                                            ActionerMaker, InputPickerMaker> (
         aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
         ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-    realizable = skn.solve ().has_value ();
+    realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname);
 #endif
   }
 
