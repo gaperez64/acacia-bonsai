@@ -46,8 +46,8 @@ best=$(<<EOF
 EOF
     )
 
-# These all differ from the base configuration by /one/ option.
 confs=(
+    # These are variations on the default configuration
     [base]=" "
     # [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
     # [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
@@ -55,23 +55,24 @@ confs=(
     # [kmin2_kinc3]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=3"
     # [x_is_form]="-DDEFAULT_UNREAL_X=UNREAL_X_FORMULA"
     # [x_is_aut]="-DDEFAULT_UNREAL_X=UNREAL_X_AUTOMATON"
-    [nosimd]="-DNO_SIMD"
-    [simdnomax]="-DSIMD_IS_MAX=false"
-    [autpreproc_standard]="-DAUT_PREPROCESSOR=aut_preprocessors::standard"
-    [autpreproc_nopreproc]="-DAUT_PREPROCESSOR=aut_preprocessors::no_preprocessing"
-    [booleanstates_none]="-DBOOLEAN_STATES=boolean_states::no_boolean_states"
-    [iosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
-    [iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
-    [iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
-    [iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
-    [inputpicker_critical]="-DINPUT_PICKER=input_pickers::critical"
-    [inputpicker_critical_pq]="-DINPUT_PICKER=input_pickers::critical_pq"
-    [inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
-    [inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
-    [downset_vector_or_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
-    [downset_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
-    [downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
-    [downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DARRAY_IMPL=simd_array_backed_sum -DVECTOR_IMPL=simd_vector_backed"
+    [base_nosimd]="-DNO_SIMD"
+    [base_simdnomax]="-DSIMD_IS_MAX=false"
+    [base_autpreproc_standard]="-DAUT_PREPROCESSOR=aut_preprocessors::standard"
+    [base_autpreproc_nopreproc]="-DAUT_PREPROCESSOR=aut_preprocessors::no_preprocessing"
+    [base_booleanstates_none]="-DBOOLEAN_STATES=boolean_states::no_boolean_states"
+    [base_iosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
+    [base_iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
+    [base_iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
+    [base_iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
+    [base_actioner_no_ios_precomputer]="-DAUT_PREPROCESSOR='aut_preprocessors::standard'"
+    [base_inputpicker_critical_pq]="-DINPUT_PICKER=input_pickers::critical_pq"
+    [base_inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
+    [base_inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
+    [base_downset_vector_or_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
+    [base_downset_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
+    [base_downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
+    [base_downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DARRAY_IMPL=simd_array_backed_sum -DVECTOR_IMPL=simd_vector_backed"
+    # These are variations on the best configuration
     [best]="$best"
     [best_decomp]="$best -DDECOMPOSE_SPEC=1"
     [best_no_array_cap_max]="$best -DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
