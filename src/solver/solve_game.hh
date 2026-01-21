@@ -16,6 +16,9 @@
 #include <spot/twa/twa.hh>
 #include <utility>
 
+#define UNREACHABLE [] ([[maybe_unused]] int x) { std::unreachable (); }
+
+
 bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
                  const bdd& all_inputs, const bdd& all_outputs) {
   // Compute how many boolean states will actually be put in bitsets.
@@ -59,8 +62,6 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
   verb_do (1, vout << "Bitset threshold set at " << posets::vectors::bitset_threshold << "\n");
 
   bool realizable = false;
-
-#define UNREACHABLE [] ([[maybe_unused]] int x) { std::unreachable (); }
 
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) {  // Array & Bitsets
     static_switch_t<STATIC_ARRAY_CAP_MAX> {}(

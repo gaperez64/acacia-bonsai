@@ -72,7 +72,7 @@ namespace actioners {
         using input_and_actions_set = std::list<input_and_actions>;
 
       public:
-        standard (const Aut& aut, const IToIOs& inputs_to_ios, int K)
+        standard (const Aut& aut, const IToIOs& inputs_to_ios, VECTOR_ELT_T K)
           : aut {aut},
             K {(VECTOR_ELT_T) K},
             apply_out (aut->num_states ()),
@@ -118,7 +118,7 @@ namespace actioners {
           }
         }
 
-        void setK (int newK) {
+        void setK (VECTOR_ELT_T newK) {
           K = (VECTOR_ELT_T) newK;
           std::fill_n (backward_reset.begin (), posets::vectors::bool_threshold,
                        (VECTOR_ELT_T) (K - 1));
@@ -139,14 +139,14 @@ namespace actioners {
                 if (m[q] != -1)
                   apply_out[p] = std::max (
                       apply_out[p],
-                      std::min ((VECTOR_ELT_T) K,
-                                (VECTOR_ELT_T) (m[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
+                      std::min (K,
+                                (VECTOR_ELT_T)(m[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
               }
               else if (apply_out[q] != -1)
                 apply_out[q] =
                     std::min (apply_out[q],
                               std::max ((VECTOR_ELT_T) -1,
-                                        (VECTOR_ELT_T) (m[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
+                                        (VECTOR_ELT_T)(m[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
               if (dir == direction::forward && apply_out[p] == K)
@@ -188,7 +188,7 @@ namespace actioners {
   template <typename State>
   struct standard {
       template <typename Aut, typename IToIOs, bool include_IOs = false>
-      static auto make (const Aut& aut, const IToIOs& itoios, int K) {
+      static auto make (const Aut& aut, const IToIOs& itoios, VECTOR_ELT_T K) {
         return detail::standard<State, Aut, IToIOs, include_IOs> (aut, itoios, K);
       }
   };
