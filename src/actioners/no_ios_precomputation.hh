@@ -9,6 +9,11 @@
 #include <map>
 #include <vector>
 
+/**
+ * This actioner is different than the other ones and is meant to be used in
+ * combination with ios_precomputers::delegate.
+ */
+
 namespace actioners {
   namespace detail {
     template <typename State, typename Aut, typename Supports>
