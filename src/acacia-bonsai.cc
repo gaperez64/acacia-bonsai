@@ -51,6 +51,7 @@ int main (int argc, char** argv) {
   sigaction (SIGTERM, &action, nullptr);
   sigaction (SIGINT, &action, nullptr);
   sigaction (SIGQUIT, &action, nullptr);
+  sigaction (SIGABRT, &action, nullptr);
 
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
@@ -106,7 +107,7 @@ int main (int argc, char** argv) {
     error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
 
   } catch (const std::exception& e) {
-    error (EXIT_CODE_ERROR, "%s", e.what ());
+    error (EXIT_CODE_ERROR, "Exception caught: %s\n", e.what ());
   } catch (...) {
     error (EXIT_CODE_ERROR, "Unknown exception\n");
   }
