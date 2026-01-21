@@ -46,7 +46,7 @@ namespace actioners {
         using input_and_actions_set = std::list<input_and_actions>;
 
       public:
-        no_ios_precomputation (const Aut& aut, const Supports& supports, int K)
+        no_ios_precomputation (const Aut& aut, const Supports& supports, VECTOR_ELT_T K)
           : aut {aut},
             K {K},
             apply_out (aut->num_states ()) {
@@ -70,7 +70,7 @@ namespace actioners {
           }
         }
 
-        void setK (int newK) { K = newK; }
+        void setK (VECTOR_ELT_T newK) { K = newK; }
 
         auto& actions () { return input_output_fwd_actions; }
 
@@ -113,7 +113,7 @@ namespace actioners {
 
       private:
         const Aut& aut;
-        int K;
+        VECTOR_ELT_T K;
         posets::utils::vector_mm<VECTOR_ELT_T> apply_out;
         input_and_actions_set input_output_fwd_actions;
 
@@ -140,7 +140,7 @@ namespace actioners {
   template <typename State>
   struct no_ios_precomputation {
       template <typename Aut, typename Supports>
-      static auto make (const Aut& aut, const Supports& supports, int K) {
+      static auto make (const Aut& aut, const Supports& supports, VECTOR_ELT_T K) {
         return detail::no_ios_precomputation<State, Aut, Supports> (aut, supports, K);
       }
   };

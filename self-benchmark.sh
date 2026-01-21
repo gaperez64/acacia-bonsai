@@ -64,7 +64,6 @@ confs=(
     [base_iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
     [base_iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
     [base_iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
-    [base_actioner_no_ios_precomputer]="-DAUT_PREPROCESSOR='aut_preprocessors::standard'"
     [base_inputpicker_critical_pq]="-DINPUT_PICKER=input_pickers::critical_pq"
     [base_inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
     [base_inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
