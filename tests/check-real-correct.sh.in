@@ -58,7 +58,7 @@ run_ltlsynt () {
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
     echoandrun $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
-         ${=AB_OPTS} $extra_opts 
+         -l 4 ${=AB_OPTS} $extra_opts
 }
 
 PROG=$0
