@@ -32,6 +32,7 @@ struct arg_parse_result {
     unsigned verbose_level = 0;
     bool check_real = true;
     std::optional<std::string> synth_fname = std::nullopt;
+    std::optional<int> mem_limit = std::nullopt;
 };
 
 /**
@@ -96,14 +97,15 @@ void show_help (const char* program_name) {
       << "VAL = both"
 #endif
       << std::endl
+      << "  -l VAL            set the virtual memory limit to VAL GiBs\n"
       << "  -r                do NOT check for unrealizability\n"
       << "  -U                do NOT check for realizability\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
-      << "\t" << (int) EXIT_CODE_REAL << "   if the input problem is realizable\n"
-      << "\t" << (int) EXIT_CODE_UNREAL << "   if it is unrealizable\n"
-      << "\t" << (int) EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-      << "\t" << (int) EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
+      << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
+      << "\t" << (int)EXIT_CODE_UNREAL << "   if it is unrealizable\n"
+      << "\t" << (int)EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
+      << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
       << "Version: " << VERSION << '\n';
 }
 
@@ -150,7 +152,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_kmin = std::nullopt;
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:")) != -1) {
+  while ((opt = getopt (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:l:")) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
       case 'V': std::cout << "Version: " << VERSION << '\n'; exit (EXIT_CODE_UNKNOWN);
@@ -166,6 +168,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
       case 's': retval.synth_fname = optarg; break;
+      case 'l': retval.mem_limit = std::stoi (optarg); break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }
   }
