@@ -7,6 +7,7 @@
 #include "ios_precomputers.hh"
 #include "k_bounded_safety_aut.hh"
 #include "posets/downsets.hh"
+#include "posets/utils/vector_mm.hh"
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "solve_game.hh"
@@ -23,37 +24,49 @@
  * having a value means that it contains the initial state.
  */
 template <class SetOfStates>
-bool post_real (std::optional<SetOfStates>&& winning_region,
-                const std::optional<std::string>& synth_fname) {
-  if (not winning_region.has_value () or not synth_fname.has_value ())
-    return winning_region.has_value ();
+bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
+                const std::optional<std::string>& synth_fname, spot::twa_graph_ptr aut,
+                const bdd& all_inputs, const bdd& all_outputs) {
+  using state = typename SetOfStates::value_type;
+
+  if (not win_res.has_value () or not synth_fname.has_value ())
+    return win_res.has_value ();
+
+  const auto& [k, winning_region] = *win_res;
 
   // What follows is mostly the synthesis procedure as ncharl intended
-  //auto actioner_factory = actioners::no_ios_precomputation<typename SetOfStates::value_type> ();
+  auto actioner_factory = actioners::no_ios_precomputation<state> ();
+  auto inputs_to_ios = ios_precomputers::delegate::make (aut, all_inputs, all_outputs) ();
+  auto actioner = actioner_factory.make (aut, inputs_to_ios, k);
+
+  verb_do (2, vout << "Winning region = downset of size " << winning_region.size () << std::endl);
+  verb_do (2, vout << "Found using k = " << k << std::endl);
+
+  // We will use the maxima from the winning region downset as the state of
+  // the Mealy machine representation of the controller
+  std::vector<const state*> state_space;
+  state_space.reserve (winning_region.size ());
+
+  // First, let's find the index of the element that dominates the initial
+  // state from the universal co-Buchi automaton. Since we're looping over the
+  // antichain, we take the opportunity to populate the state_space.
+  auto init_vector = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
+  init_vector[aut->get_init_state_number ()] = 0;
+  state init_state (init_vector);
+  size_t init_idx = 0;
+  bool found = false;
+  for (const auto& elem_in_antichain : winning_region) {
+    state_space.push_back (&elem_in_antichain);
+    if (elem_in_antichain.partial_order (init_state).leq ())
+      found = true;
+    if (not found)
+      init_idx++;
+  }
+  assert (found and winning_region.size () == state_space.size ());
+  verb_do (
+      2, vout << "Index of max element dominating the initial state is " << init_idx << std::endl);
 
 #if 0
-  auto inputs_to_ios = ios_precomputers::standard::make (aut, input_support, output_support, invariant) ();
-      auto maker = actioners::standard<typename SetOfStates::value_type> ();
-      // manually list the two template types so we can set the third (include IOs) to true
-      auto actioner = maker.template make <decltype (aut), decltype (inputs_to_ios), true> (aut, inputs_to_ios, Kfrom);
-
-      verb_do (2, vout << "Final F:\n" << F);
-      verb_do (1, vout << "F = downset of size " << F.size() << "\n");
-
-
-      // Latches in the AIGER file are initialized to zero, so it would be nice if index 0 is the initial state
-      // -> create new std::vector of dominating elements, start with only an initial one, and then add
-      //    the reachable ones
-      std::vector<State> states;
-
-      // initial vector = all -1, and 0 for the initial state
-      auto init_vector = utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
-      init_vector[aut->get_init_state_number ()] = 0;
-      int init_index = get_dominated_index (F, State (init_vector));
-      assert (init_index != -1);
-      verb_do (1, vout << "Initial vector: " << State (init_vector) << " (index " << init_index << ")\n");
-      states.push_back (get_dominated_element (F, State (init_vector)));
-      verb_do (1, vout << "-> states = " << states << "\n\n");
 
       // explore and store transitions
       auto input_output_fwd_actions = actioner.actions ();
@@ -217,8 +230,8 @@ bool post_real (std::optional<SetOfStates>&& winning_region,
  *
  * (see also utils/static_switch.hh)
  */
-bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
-                 const bdd& all_inputs, const bdd& all_outputs,
+bool solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
+                 const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs,
                  std::optional<std::string> synth_fname) {
   // Compute how many boolean states will actually be put in bitsets.
   constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
@@ -278,7 +291,8 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
                                                        ActionerMaker, InputPickerMaker> (
                     aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
                     ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-                realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname);
+                realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname, aut,
+                                                            all_inputs, all_outputs);
               },
               UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
         },
@@ -299,7 +313,8 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
                                                  ActionerMaker, InputPickerMaker> (
               aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
               ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-          realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname);
+          realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname, aut, all_inputs,
+                                                      all_outputs);
         },
         UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
 #else
@@ -313,7 +328,8 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
                                            ActionerMaker, InputPickerMaker> (
         aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
         ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-    realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname);
+    realizable =
+        post_real<SpecializedDownset> (skn.solve (), synth_fname, aut, all_inputs, all_outputs);
 #endif
   }
 
