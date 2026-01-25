@@ -121,8 +121,6 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
         verb_do (2, vout << "\n");
       }
 
-
-
       verb_do (2, vout << "-> states = " << states << "\n");
 
       // Print transitions
@@ -141,8 +139,6 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
       assert (states.size () <= (1ull << mapping_bits));
       verb_do (1, vout << states.size () << " reachable states -> " << mapping_bits << " bit(s)\n\n");
 
-
-
       // create atomic propositions
       std::vector<bdd> state_vars, state_vars_prime;
       bdd state_vars_prime_cube = bddtrue;
@@ -155,62 +151,6 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
         state_vars_prime_cube &= bdd_ithvar (v);
       }
 
-
-      bdd encoding = bddfalse;
-
-      // create BDD encoding using the states & transitions
-      for (unsigned int i = 0; i < states.size (); i++) {
-        bdd state_encoding = binary_encode (i, state_vars);
-        bdd trans_encoding = bddfalse;
-        // for every transition from state i
-        for (const transition& ts : transitions[i]) {
-          trans_encoding |= ts.IO & binary_encode (ts.new_state, state_vars_prime);
-        }
-        encoding |= state_encoding & trans_encoding;
-      }
-
-      verb_do (2, vout << "Resulting BDD:\n" << bdd_to_formula (encoding) << "\n\n");
-
-      // turn cube (single bdd) into vector<bdd>
-      std::vector<bdd> input_vector = cube_to_vector (input_support);
-      std::vector<bdd> output_vector = cube_to_vector (output_support);
-
-
-      // AIGER
-      aiger aig (input_vector, state_vars, output_vector, aut);
-
-
-      int i = 0;
-      // for each output: function(current_state, input) that says whether this output is made true
-      for (const bdd& o : output_vector) {
-        bdd pos = bdd_exist (encoding & o, output_support & state_vars_prime_cube);
-        bdd neg = !bdd_exist (encoding & (!o), output_support & state_vars_prime_cube);
-        bdd g_o = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
-        verb_do (2, vout << "g_" << bdd_to_formula (o) << ": " << bdd_to_formula (g_o) << "\n");
-        aig.add_output (i++, g_o);
-      }
-
-      i = 0;
-      // new state as function(current_state, input)
-      for (const bdd& m : state_vars_prime) {
-        bdd pos = bdd_exist (encoding & m, output_support & state_vars_prime_cube);
-        bdd neg = !bdd_exist (encoding & (!m), output_support & state_vars_prime_cube);
-        bdd f_l = (bdd_nodecount (pos) < bdd_nodecount (neg)) ? pos : neg;
-        verb_do (2, vout << "f_" << bdd_to_formula (m) << ": " << bdd_to_formula (f_l) << "\n");
-        aig.add_latch (i++, f_l);
-      }
-
-
-      if (synth_fname != "-") {
-        std::ofstream f (synth_fname);
-        aig.output (f, false);
-        f.close ();
-      } else {
-        utils::vout << "\n\n\n";
-        aig.output (utils::vout, true);
-      }
-
-      verb_do (1, vout << "\n\n");
 #endif
 
   return true;
