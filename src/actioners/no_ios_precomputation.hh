@@ -19,35 +19,31 @@ namespace actioners {
     template <typename State, typename Aut, typename Supports>
     class no_ios_precomputation {
       public:  // types
-        using action =
-            std::vector<std::pair<unsigned, bool>>;  // All these pairs are unique by construction.
-        using action_vec = std::vector<action>;      // Vector indexed by state number
-        using action_vecs = std::list<action_vec>;
-        using input_and_actions = std::pair<bdd, action_vecs>;
-        struct compare_actions {
-            // WORST: all code with not
-            bool operator() (const input_and_actions& x, const input_and_actions& y) const {
-              return (x.second < y.second);
-              // Let's favor the actions with the most potential for -1.
-              auto num_accepting_of = [this] (const action_vecs& x) {
-                int num_accepting = 0;
-                for (const auto& tav : x)
-                  for (const auto& ta : tav)
-                    for (const auto& [_, accepting] : ta)
-                      if (accepting)
-                        num_accepting++;
-                return num_accepting;
-              };
-
-              auto x_acc = num_accepting_of (x.second), y_acc = num_accepting_of (y.second);
-
-              if (x_acc < y_acc)
-                return not true;
-              if (x_acc > y_acc)
-                return not false;
-              return not(x.second < y.second);
+        /**
+         * Why not a tuple instead of the struct below? We will be using
+         * action_vecs as keys in a map. For the default std::less to work
+         * well, we need to wrap the successor-is_final-letter triple so as to
+         * ignore the output_letter when comparing. This is because BDDs
+         * implement < as an operation and not as a comparison! Thankfully,
+         * the combination of successor and it being final forms a unique key.
+         */
+        struct single_trans {
+            unsigned successor;
+            bool is_final;
+            bdd output_letter;
+            single_trans (unsigned s, bool f, bdd o)
+              : successor {s},
+                is_final {f},
+                output_letter {o} {}
+            bool operator< (const single_trans& rhs) const {
+              return std::make_pair (successor, is_final) <
+                     std::make_pair (rhs.successor, rhs.is_final);
             }
         };
+        using action = std::vector<single_trans>;  // All these are unique by construction.
+        using action_vec = std::vector<action>;    // Vector indexed by state number
+        using action_vecs = std::list<action_vec>;
+        using input_and_actions = std::pair<bdd, action_vecs>;
         using input_and_actions_set = std::list<input_and_actions>;
 
       public:
@@ -63,7 +59,7 @@ namespace actioners {
             bdd output_letters = bddtrue;
             while (output_letters != bddfalse) {
               bdd one_output_letter = pick_one_letter (output_letters, supports.second);
-              const auto& fwd = compute_action (one_input_letter & one_output_letter);
+              const auto& fwd = compute_action (one_input_letter, one_output_letter);
               fwd_actions.push_back (std::move (fwd));
             }
             ioset[fwd_actions] = one_input_letter;
@@ -93,7 +89,10 @@ namespace actioners {
           }
 
           for (size_t p = 0; p < m.size (); ++p) {
-            for (const auto& [q, q_final] : avec[p]) {
+            for (const single_trans& act_trans : avec[p]) {
+              const unsigned q = act_trans.successor;
+              const bool q_final = act_trans.is_final;
+
               if (dir == direction::forward) {
                 if (m[q] != -1)
                   apply_out[p] = std::max (
@@ -122,14 +121,14 @@ namespace actioners {
         posets::utils::vector_mm<VECTOR_ELT_T> apply_out;
         input_and_actions_set input_output_fwd_actions;
 
-        auto compute_action (bdd letter) {
+        auto compute_action (bdd input_letter, bdd output_letter) {
           action_vec ret_fwd (aut->num_states ());
-
+          bdd letter = input_letter & output_letter;
           for (size_t p = 0; p < aut->num_states (); ++p) {
             for (const auto& e : aut->out (p)) {
               unsigned q = e.dst;
               if ((e.cond & letter) != bddfalse)
-                ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));
+                ret_fwd[q].emplace_back (p, aut->state_is_accepting (q), output_letter);
             }
           }
           return ret_fwd;

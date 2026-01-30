@@ -1,8 +1,8 @@
 #pragma once
 
-#include <set>
-
 #include "configuration.hh"
+
+#include <set>
 
 namespace actioners {
   namespace detail {
@@ -11,31 +11,18 @@ namespace actioners {
       public:  // types
         using action =
             std::vector<std::pair<unsigned, bool>>;  // All these pairs are unique by construction.
-        using action_vec = std::vector<action>;  // Vector indexed by state number
+        using action_vec = std::vector<action>;      // Vector indexed by state number
         using action_vecs = std::list<action_vec>;
         using input_and_actions = std::pair<bdd, action_vecs>;
+        /**
+         * Later, we'll be using an std::set of input_and_actions. We DO NOT
+         * want to end up comparing bdds using the default std::less because
+         * that's an actual bdd operation (not a comparison). This is why we
+         * have a comparison functor which ignores the bdd below.
+         */
         struct compare_actions {
-            // WORST: all code with not
             bool operator() (const input_and_actions& x, const input_and_actions& y) const {
               return (x.second < y.second);
-              // Let's favor the actions with the most potential for -1.
-              auto num_accepting_of = [this] (const action_vecs& x) {
-                int num_accepting = 0;
-                for (const auto& tav : x)
-                  for (const auto& ta : tav)
-                    for (const auto& [_, accepting] : ta)
-                      if (accepting)
-                        num_accepting++;
-                return num_accepting;
-              };
-
-              auto x_acc = num_accepting_of (x.second), y_acc = num_accepting_of (y.second);
-
-              if (x_acc < y_acc)
-                return not true;
-              if (x_acc > y_acc)
-                return not false;
-              return not(x.second < y.second);
             }
         };
         using input_and_actions_set = std::list<input_and_actions>;
@@ -108,14 +95,13 @@ namespace actioners {
                 if (m[q] != -1)
                   apply_out[p] = std::max (
                       apply_out[p],
-                      std::min (K,
-                                (VECTOR_ELT_T)(m[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
+                      std::min (K, (VECTOR_ELT_T) (m[q] + (VECTOR_ELT_T) (p_final ? 1 : 0))));
               }
               else if (apply_out[q] != -1)
                 apply_out[q] =
                     std::min (apply_out[q],
                               std::max ((VECTOR_ELT_T) -1,
-                                        (VECTOR_ELT_T)(m[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
+                                        (VECTOR_ELT_T) (m[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
 
               // If we reached the extreme value, stop going through states.
               if (dir == direction::forward && apply_out[p] == K)

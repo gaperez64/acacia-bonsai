@@ -12,8 +12,10 @@
 #include "posets/vectors/traits.hh"
 #include "solve_game.hh"
 #include "utils/static_switch.hh"
+#include <spot/twaalgos/mealy_machine.hh>
 
 #include <bddx.h>
+#include <spot/twa/acc.hh>
 #include <spot/twa/twa.hh>
 #include <utility>
 
@@ -34,10 +36,12 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
 
   const auto& [k, winning_region] = *win_res;
 
-  // What follows is mostly the synthesis procedure as ncharl intended
+  // What follows is mostly the synthesis procedure as ncharl intended, but
+  // rewritten by gaperez64 using spot instead of AIGER
   auto actioner_factory = actioners::no_ios_precomputation<state> ();
   auto inputs_to_ios = ios_precomputers::delegate::make (aut, all_inputs, all_outputs) ();
   auto actioner = actioner_factory.make (aut, inputs_to_ios, k);
+  auto io_fwd_actions = actioner.actions ();
 
   verb_do (2, vout << "Winning region = downset of size " << winning_region.size () << std::endl);
   verb_do (2, vout << "Found using k = " << k << std::endl);
@@ -53,7 +57,7 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
   auto init_vector = posets::utils::vector_mm<VECTOR_ELT_T> (aut->num_states (), -1);
   init_vector[aut->get_init_state_number ()] = 0;
   state init_state (init_vector);
-  size_t init_idx = 0;
+  unsigned init_idx = 0;
   bool found = false;
   for (const auto& elem_in_antichain : winning_region) {
     state_space.push_back (&elem_in_antichain);
@@ -66,92 +70,58 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
   verb_do (
       2, vout << "Index of max element dominating the initial state is " << init_idx << std::endl);
 
+  // We can now start creating the Mealy machine that represents the strategy.
+  // (Note that we will have some nondeterminism, it should be fine. Spot uses
+  // automata to store Mealy machines, minimize them, determinize, and then
+  // spit out small AIGER circuits for them.)
+  spot::twa_graph_ptr mealy = make_twa_graph (aut->get_dict ());
+  mealy->set_acceptance (spot::acc_cond::acc_code::t ());
+  bdd output_cube = all_outputs;
+  mealy->set_named_prop<bdd> ("synthesis-outputs", &output_cube);
+  mealy->new_states (winning_region.size ());
+  mealy->set_init_state (init_idx);
+
+  // To populate the Mealy machine, we will now explore the maxima in a DFS
+  // fashion from the initial state/maximum.
+  std::vector<unsigned> states_todo = {init_idx};
+  std::vector<bool> visited (state_space.size (), false);
+  while (not states_todo.empty ()) {
+    unsigned src = states_todo.back ();
+    states_todo.pop_back ();
+    visited[src] = true;
+
+    // loop through its transitions, if we reach an unexplored state, push it
+    // into the stack!
+    // TODO: This is not using the io_fwd_actions API
+    // recall we are using actioners::no_ios_precomputation; also
+    // get_dominating_index is not implemented
+    for (auto& [input_letter, action_vecs] : io_fwd_actions) {
+      // input_letter of type input (BDD)
+      //          this is an "action" --v.............................v
+      // action_vecs of type list<vector<vector<pair<unsigned, bool>>>>
+      //                          ^-- indexed by state number
+      //
+      // Essentially: for this input letter, a list (one per IO compatible
+      // with it) of actions, i.e. maps from states q to a list of
+      // (p, is_q_accepting) tuples
+      //  + the action includes the IO
 #if 0
+      verb_do (2, vout << "Input: " << bdd_to_formula (tuple.first) << "\n");
 
-      // explore and store transitions
-      auto input_output_fwd_actions = actioner.actions ();
+      // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
+      std::pair<bdd, State> p = get_transition (*(state_space[src]), tuple.second, actioner, F);
 
+      unsigned tgt = get_dominating_index (states, p.second);
+      // returns index of FIRST element that dominates
 
-      std::vector<std::vector<transition>> transitions; // for every state: a vector of transitions (one per input)
-      std::vector<unsigned int> states_todo = { 0 };
+      if (not visited[tgt])
+        states_todo.push_back (tgt);
 
-      while (!states_todo.empty ()) {
-        // pop the last state (depth-first search)
-        unsigned int src = states_todo[states_todo.size () - 1];
-        states_todo.pop_back ();
-
-        verb_do (2, vout << "Element " << states[src] << "\n");
-
-        // make sure transitions vector is large enough
-        while (src >= transitions.size ()) {
-          transitions.push_back ({});
-        }
-
-        for (auto& tuple : input_output_fwd_actions) {
-          // .first = input (BDD)
-          // .second = list<action_vec>
-          //  -> for this input, a list (one per compatible IO) of actions
-          //  where an action maps each state q to a list of (p, is_q_accepting) tuples
-          //  + the action includes the IO
-          verb_do (2, vout << "Input: " << bdd_to_formula (tuple.first) << "\n");
-
-          // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
-          std::pair<bdd, State> p = get_transition (states[src], tuple.second, actioner, F);
-          // note: it may be that an IO is returned that keeps us in the safe region but requires adding a new element (index == -1)
-          // it could be that there does exist an IO that doesn't make us add a new maximal element, so we could add a new argument
-          // to get_transition to pass the current states, which would then be checked first - may make a slightly smaller circuit,
-          // at the cost of taking longer (as we no longer stop at the first IO)
-
-          int index = get_dominated_index (states, p.second);
-          // ^ returns index of FIRST element that dominates
-
-          if (index == -1) {
-            // we didn't know this state was reachable yet: it's not in states
-            // -> add it, and add it to states_todo so we also check its successors
-            index = states.size ();
-            states.push_back (get_dominated_element (F, p.second));
-            states_todo.push_back (index);
-          }
-
-          transitions[src].push_back ({ p.first, index });
-
-          verb_do (2, vout << "\n");
-        }
-
-        verb_do (2, vout << "\n");
-      }
-
-      verb_do (2, vout << "-> states = " << states << "\n");
-
-      // Print transitions
-      for (unsigned int i = 0; i < states.size (); i++) {
-        verb_do (2, vout << "State " << i << ":\n");
-        for (const auto& t : transitions[i]) {
-          verb_do (2, vout << bdd_to_formula (t.IO) << " -> state " << t.new_state << "\n");
-        }
-      }
-
-      verb_do (2, vout << "\n");
-
-      // create APs to encode the mapping of the automaton states to integers
-      // number of variables to encode the state
-      unsigned int mapping_bits = ceil (log2 (states.size ()));
-      assert (states.size () <= (1ull << mapping_bits));
-      verb_do (1, vout << states.size () << " reachable states -> " << mapping_bits << " bit(s)\n\n");
-
-      // create atomic propositions
-      std::vector<bdd> state_vars, state_vars_prime;
-      bdd state_vars_prime_cube = bddtrue;
-      for (unsigned int i = 0; i < mapping_bits; i++) {
-        unsigned int v = aut->register_ap (spot::formula::ap ("Y" + std::to_string (i)));
-        state_vars.push_back (bdd_ithvar (v)); // store v instead of the bdd object itself?
-
-        v = aut->register_ap (spot::formula::ap ("Z" + std::to_string (i)));
-        state_vars_prime.push_back (bdd_ithvar (v));
-        state_vars_prime_cube &= bdd_ithvar (v);
-      }
-
+      transitions[src].push_back ({ p.first, index });
 #endif
+    }
+  }
+  assert (is_mealy (mealy));
 
   return true;
 }
