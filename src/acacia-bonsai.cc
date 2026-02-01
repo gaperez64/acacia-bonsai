@@ -75,7 +75,7 @@ int main (int argc, char** argv) {
             "] ");
         const bool res =
             run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
-                     arg_values.opt_kinc, arg_values.formula, unreal_x);
+                     arg_values.opt_kinc, arg_values.formula, unreal_x, arg_values.synth_fname);
         verb_do (1, vout << "returning " << res << "\n");
 
         if (unreal_x.has_value ())

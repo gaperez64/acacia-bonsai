@@ -57,7 +57,7 @@ class k_bounded_safety_aut_detail {
       return (ios_precomputer_maker.make (aut, input_support, output_support)) ();
     }
 
-    std::optional<SetOfStates> solve () {
+    std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> solve () {
       VECTOR_ELT_T k = kfrom;
 
       // Precompute the input and output actions.
@@ -91,9 +91,9 @@ class k_bounded_safety_aut_detail {
         auto&& input = input_picker (f);
         if (not input.has_value ())  // No more inputs, and we just tested that init was present
         {
-          // if (!synth.empty ()) synthesis (f, synth, actioner);
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
-          return std::make_optional<SetOfStates> (std::move (f));
+          return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
+              std::make_pair (k, std::move (f)));
         }
 
         cpre_inplace (f, *input, actioner);

@@ -90,16 +90,17 @@ namespace {
    */
   class run_one_ltl {
     private:
-      spot::bdd_dict_ptr dict;
-      std::vector<std::string> input_aps;
-      std::vector<std::string> output_aps;
+      const spot::bdd_dict_ptr dict;
+      const std::vector<std::string> input_aps;
+      const std::vector<std::string> output_aps;
       bdd all_inputs;
       bdd all_outputs;
-      VECTOR_ELT_T opt_k;
-      VECTOR_ELT_T opt_kmin;
-      VECTOR_ELT_T opt_kinc;
-      std::optional<UNREAL_X_T> check_unreal;
+      const VECTOR_ELT_T opt_k;
+      const VECTOR_ELT_T opt_kmin;
+      const VECTOR_ELT_T opt_kinc;
+      const std::optional<UNREAL_X_T> check_unreal;
       spot::option_map extra_options;
+      const std::optional<std::string> synth_fname;
 
     public:
       /**
@@ -108,18 +109,20 @@ namespace {
        * so that we can ensure that the inputs are ordered before the outputs
        * (recall we already swapped them if needed!)
        */
-      run_one_ltl (spot::bdd_dict_ptr dict, std::vector<std::string> input_aps,
-                   std::vector<std::string> output_aps, VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin,
-                   VECTOR_ELT_T opt_kinc, std::optional<UNREAL_X_T> check_unreal)
-        : //dict {spot::make_bdd_dict ()},
+      run_one_ltl (spot::bdd_dict_ptr dict, const std::vector<std::string>& input_aps,
+                   const std::vector<std::string>& output_aps, VECTOR_ELT_T opt_k,
+                   VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
+                   std::optional<UNREAL_X_T> check_unreal,
+                   const std::optional<std::string>& synth_fname)
+        :  // dict {spot::make_bdd_dict ()},
           dict {dict},
           input_aps {input_aps},
           output_aps {output_aps},
           opt_k {opt_k},
           opt_kmin {opt_kmin},
           opt_kinc {opt_kinc},
-          check_unreal {check_unreal} {
-
+          check_unreal {check_unreal},
+          synth_fname {synth_fname} {
         // These options play a role in twaalgos.
         extra_options.set ("simul", 0);
         extra_options.set ("ba-simul", 0);
@@ -188,14 +191,15 @@ namespace {
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
         verb_do (3, dict->dump (utils::vout));
 
-        return solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs);
+        return solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs, synth_fname);
       }
   };
 }
 
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
-              std::string formula, std::optional<UNREAL_X_T> check_unreal) {
+              std::string formula, std::optional<UNREAL_X_T> check_unreal,
+              const std::optional<std::string>& synth_fname) {
   if (check_unreal.has_value ()) {
     assert (*check_unreal != UNREAL_X_BOTH);
     // Swap I and O.
@@ -211,8 +215,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check
-  run_one_ltl runner (dict, input_aps, output_aps, opt_k,
-                      opt_kmin, opt_kinc, check_unreal);
+  run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
+                      synth_fname);
 
   spot::formula spot_formula = parse_ltl_string (formula);
 
@@ -224,16 +228,15 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // we are up for decomposition, so first we need to split the formula
   // NOTE: we may have flipped inputs and outputs already, so we need to
   // provide inputs to the split function in that case
-  auto [forms, outs] = spot::split_independent_formulas(spot_formula,
-                                                        check_unreal.has_value () ? input_aps : output_aps);
+  auto [forms, outs] = spot::split_independent_formulas (
+      spot_formula, check_unreal.has_value () ? input_aps : output_aps);
   verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
 
   for (size_t i = 0; i < forms.size (); ++i) {
     verb_do (2, vout << "Subformula " << i + 1 << ": " << forms[i] << std::endl);
     verb_do (2, vout << "with output set: ");
-    for (auto& sf: outs[i]) {
+    for (auto& sf : outs[i])
       verb_do (2, vout << sf << " ");
-    }
     verb_do (2, vout << "\n");
   }
 
@@ -241,16 +244,15 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     return runner (spot_formula);
 
   // Here's the real decomposition in terms of solving. If we found more than
-  // one formula, we're going to solve those instead. 
+  // one formula, we're going to solve those instead.
   // * If we're checking realizability, all of the subgames must be
   //   realizable;
   // * conversely, for unrealizability, I just need one of them to be declared
   //   unrealizable to get a conclusive answer.
-  if (not check_unreal.has_value ()) {
+  if (not check_unreal.has_value ())
     return std::ranges::all_of (forms.begin (), forms.end (), runner);
-  } else {
+  else
     return std::ranges::any_of (forms.begin (), forms.end (), runner);
-  }
 #else
   std::unreachable ();
 #endif
