@@ -15,8 +15,10 @@
 #include <spot/twaalgos/mealy_machine.hh>
 
 #include <bddx.h>
+#include <fstream>
 #include <spot/twa/acc.hh>
 #include <spot/twa/twa.hh>
+#include <spot/twaalgos/aiger.hh>
 #include <utility>
 
 #define UNREACHABLE [] ([[maybe_unused]] int x) { std::unreachable (); }
@@ -46,8 +48,8 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
   auto actioner = actioner_factory.make (aut, inputs_to_ios, k);
   auto io_fwd_actions = actioner.actions ();
 
-  verb_do (2, vout << "Winning region = downset of size " << winning_region.size () << std::endl);
-  verb_do (2, vout << "Found using k = " << k << std::endl);
+  verb_do (3, vout << "Winning region = downset of size " << winning_region.size () << std::endl);
+  verb_do (3, vout << "Found using k = " << (int) k << std::endl);
 
   // We will use the maxima from the winning region downset as the state of
   // the Mealy machine representation of the controller
@@ -79,7 +81,7 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
   // spit out small AIGER circuits for them.)
   spot::twa_graph_ptr mealy = make_twa_graph (aut->get_dict ());
   mealy->set_acceptance (spot::acc_cond::acc_code::t ());
-  bdd* output_cube = new bdd();
+  bdd* output_cube = new bdd ();
   *output_cube = all_outputs;
   mealy->set_named_prop<bdd> ("synthesis-outputs", output_cube);
   mealy->new_states (winning_region.size ());
@@ -105,8 +107,8 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
       // Essentially: for this input letter, a list (one per IO compatible
       // with it) of action vectors, i.e. a vector of similarly labelled
       // transitions along with the output letter that enables them
-      verb_do (2,
-               vout << "Input: " << spot::bdd_to_formula (input_letter, aut->get_dict ()) << "\n");
+      verb_do (2, vout << "Input: " << spot::bdd_to_formula (input_letter, aut->get_dict ())
+                       << std::endl);
 
       // look for compatible IOs that keep us in the safe region
       bdd strat;
@@ -124,7 +126,7 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
           strat = avec.output ();
           verb_do (2, vout << "dominated with IO = "
                            << spot::bdd_to_formula (input_letter & strat, aut->get_dict ()) << ": "
-                           << fwd << std::endl);
+                           << fwd);
           // get index of first element in winning region that dominates sucessor
           tgt = 0;
           for (const auto& elem_in_antichain : winning_region) {
@@ -143,8 +145,18 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
     }
   }
   assert (is_mealy (mealy));
+  assert (is_separated_mealy (mealy));  // transition conditions of form
+                                        // (in) & (out)
 
-  spot::print_hoa(std::cout, mealy);
+  // use bisimulation with out assignment, and no split output
+  spot::simplify_mealy_here (mealy, 2, false);
+  // try both ITE and SoP encodings
+  spot::aig_ptr mealy_aig = mealy_machine_to_aig (mealy, "both");
+  std::ofstream synthesis_file (*synth_fname);
+  if (synthesis_file)
+    spot::print_aiger (synthesis_file, mealy_aig);
+  else
+    std::cerr << "Failed to open the file to store controller!\n";
   return true;
 }
 
