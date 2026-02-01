@@ -37,7 +37,10 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
   const auto& [k, winning_region] = *win_res;
 
   // What follows is mostly the synthesis procedure as ncharl intended, but
-  // rewritten by gaperez64 using spot instead of AIGER
+  // rewritten by gaperez64 using spot instead of AIGER.
+  //
+  // Note: here we use a specific combination of ios_precomputer and actioner,
+  // these are NOT necessarily the one dictated by the macros
   auto actioner_factory = actioners::no_ios_precomputation<state> ();
   auto inputs_to_ios = ios_precomputers::delegate::make (aut, all_inputs, all_outputs) ();
   auto actioner = actioner_factory.make (aut, inputs_to_ios, k);
@@ -61,7 +64,7 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
   bool found = false;
   for (const auto& elem_in_antichain : winning_region) {
     state_space.push_back (&elem_in_antichain);
-    if (elem_in_antichain.partial_order (init_state).leq ())
+    if (elem_in_antichain.partial_order (init_state).geq ())
       found = true;
     if (not found)
       init_idx++;
@@ -76,10 +79,13 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
   // spit out small AIGER circuits for them.)
   spot::twa_graph_ptr mealy = make_twa_graph (aut->get_dict ());
   mealy->set_acceptance (spot::acc_cond::acc_code::t ());
-  bdd output_cube = all_outputs;
-  mealy->set_named_prop<bdd> ("synthesis-outputs", &output_cube);
+  bdd* output_cube = new bdd();
+  *output_cube = all_outputs;
+  mealy->set_named_prop<bdd> ("synthesis-outputs", output_cube);
   mealy->new_states (winning_region.size ());
   mealy->set_init_state (init_idx);
+  for (const auto& ap : aut->ap ())
+    mealy->register_ap (ap);
 
   // To populate the Mealy machine, we will now explore the maxima in a DFS
   // fashion from the initial state/maximum.
@@ -89,6 +95,7 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
     unsigned src = states_todo.back ();
     states_todo.pop_back ();
     visited[src] = true;
+    SetOfStates singleton (state_space[src]->copy ());
 
     // go through transitions, if we reach an unexplored state, push in stack
     for (auto& [input_letter, action_vecs] : io_fwd_actions) {
@@ -101,10 +108,10 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
       verb_do (2,
                vout << "Input: " << spot::bdd_to_formula (input_letter, aut->get_dict ()) << "\n");
 
-      // add a compatible IO that keeps us in the safe region
-      SetOfStates singleton (state_space[src]->copy ());
+      // look for compatible IOs that keep us in the safe region
       bdd strat;
       unsigned tgt;
+      bool at_least_one = false;
       for (const auto& avec : action_vecs) {
         SetOfStates fwd = singleton.apply ([&avec, &actioner] (const auto& max_elem) {
           auto&& ret = actioner.apply (max_elem, avec, actioners::direction::forward);
@@ -121,28 +128,23 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
           // get index of first element in winning region that dominates sucessor
           tgt = 0;
           for (const auto& elem_in_antichain : winning_region) {
-            if (elem_in_antichain.partial_order (*fwd.begin ()).leq ())
+            if (elem_in_antichain.partial_order (*fwd.begin ()).geq ())
               break;
             tgt++;
           }
           assert (tgt < winning_region.size ());
-          break;
-        }
-        else {
-          utils::vout << "No transition found from " << *state_space[src] << " with safe region "
-                      << winning_region << std::endl;
-          assert (false);
+          mealy->new_edge (src, tgt, input_letter & strat);
+          if (not visited[tgt])
+            states_todo.push_back (tgt);
+          at_least_one = true;
         }
       }
-
-      mealy->new_edge (src, tgt, input_letter & strat);
-
-      if (not visited[tgt])
-        states_todo.push_back (tgt);
+      assert (at_least_one);
     }
   }
   assert (is_mealy (mealy));
 
+  spot::print_hoa(std::cout, mealy);
   return true;
 }
 
