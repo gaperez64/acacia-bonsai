@@ -18,30 +18,53 @@ namespace actioners {
   namespace detail {
     template <typename State, typename Aut, typename Supports>
     class no_ios_precomputation {
-      public:  // types
+      public:
+        // Types/Vocabulary:
+        // action             - transitions from a single state (keeping track
+        //                      of whether the successor is accepting/final)
+        // action_vec         - collection of per_state single_state_trans
+        //                      and the bdd representing the output part
+        //                      of the IO that enabled the transitions
+        // action_vecs        - list of action_vecs compatible with a single
+        //                      input letter
+        //
+        using action = std::vector<std::pair<unsigned, bool>>;  // All these are unique by
+                                                                // construction.
         /**
-         * Why not a tuple instead of the struct below? We will be using
-         * action_vecs as keys in a map. For the default std::less to work
-         * well, we need to wrap the successor-is_final-letter triple so as to
-         * ignore the output_letter when comparing. This is because BDDs
-         * implement < as an operation and not as a comparison! Thankfully,
-         * the combination of successor and it being final forms a unique key.
+         * Why not just a vector? We want to keep track of the output-only bdd
+         * that gave rise to these per-state transitions. For most users, this
+         * is hidden by this wrapper exposing the main vector API
          */
-        struct single_trans {
-            unsigned successor;
-            bool is_final;
+        class action_vec {
+          private:
+            std::vector<action> actions;  // Vector indexed by state number
             bdd output_letter;
-            single_trans (unsigned s, bool f, bdd o)
-              : successor {s},
-                is_final {f},
-                output_letter {o} {}
-            bool operator< (const single_trans& rhs) const {
-              return std::make_pair (successor, is_final) <
-                     std::make_pair (rhs.successor, rhs.is_final);
-            }
+
+          public:
+            action_vec () = delete;
+            action_vec (const action_vec&) = default;  // static_switch needs
+                                                       // this it seems?
+            action_vec (action_vec&&) = default;
+            action_vec (std::vector<action>&& acts, bdd out)
+              : actions {std::move (acts)},
+                output_letter {out} {}
+            action_vec& operator= (const action_vec&) = delete;
+            action_vec& operator= (action_vec&&) = default;
+            bdd output () const { return output_letter; }
+
+            // Exposing the vector API
+            auto begin () const { return actions.begin (); }
+            auto end () const { return actions.end (); }
+            auto& operator[] (size_t i) { return actions[i]; }
+            const auto& operator[] (size_t i) const { return actions[i]; }
+            size_t size () const { return actions.size (); }
+
+            // Important for set and map usage of a vector of action_vec, for
+            // instance.
+            //
+            // Note that we ignore the output bdd; this is on purpose!
+            bool operator< (const action_vec& rhs) const { return actions < rhs.actions; }
         };
-        using action = std::vector<single_trans>;  // All these are unique by construction.
-        using action_vec = std::vector<action>;    // Vector indexed by state number
         using action_vecs = std::list<action_vec>;
         using input_and_actions = std::pair<bdd, action_vecs>;
         using input_and_actions_set = std::list<input_and_actions>;
@@ -89,10 +112,7 @@ namespace actioners {
           }
 
           for (size_t p = 0; p < m.size (); ++p) {
-            for (const single_trans& act_trans : avec[p]) {
-              const unsigned q = act_trans.successor;
-              const bool q_final = act_trans.is_final;
-
+            for (const auto& [q, q_final] : avec[p]) {
               if (dir == direction::forward) {
                 if (m[q] != -1)
                   apply_out[p] = std::max (
@@ -122,16 +142,16 @@ namespace actioners {
         input_and_actions_set input_output_fwd_actions;
 
         auto compute_action (bdd input_letter, bdd output_letter) {
-          action_vec ret_fwd (aut->num_states ());
+          std::vector<action> ret_fwd (aut->num_states ());
           bdd letter = input_letter & output_letter;
           for (size_t p = 0; p < aut->num_states (); ++p) {
             for (const auto& e : aut->out (p)) {
               unsigned q = e.dst;
               if ((e.cond & letter) != bddfalse)
-                ret_fwd[q].emplace_back (p, aut->state_is_accepting (q), output_letter);
+                ret_fwd[q].emplace_back (p, aut->state_is_accepting (q));
             }
           }
-          return ret_fwd;
+          return action_vec (std::move (ret_fwd), output_letter);
         }
         static bdd pick_one_letter (bdd& letter_set, const bdd& support) {
           bdd one_letter = bdd_satoneset (letter_set, support, bddtrue);

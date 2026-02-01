@@ -90,35 +90,55 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
     states_todo.pop_back ();
     visited[src] = true;
 
-    // loop through its transitions, if we reach an unexplored state, push it
-    // into the stack!
-    // TODO: This is not using the io_fwd_actions API
-    // recall we are using actioners::no_ios_precomputation; also
-    // get_dominating_index is not implemented
+    // go through transitions, if we reach an unexplored state, push in stack
     for (auto& [input_letter, action_vecs] : io_fwd_actions) {
       // input_letter of type input (BDD)
-      //          this is an "action" --v.............................v
-      // action_vecs of type list<vector<vector<pair<unsigned, bool>>>>
-      //                          ^-- indexed by state number
+      // action_vecs of type list<action_vec>
       //
       // Essentially: for this input letter, a list (one per IO compatible
-      // with it) of actions, i.e. maps from states q to a list of
-      // (p, is_q_accepting) tuples
-      //  + the action includes the IO
-#if 0
-      verb_do (2, vout << "Input: " << bdd_to_formula (tuple.first) << "\n");
+      // with it) of action vectors, i.e. a vector of similarly labelled
+      // transitions along with the output letter that enables them
+      verb_do (2,
+               vout << "Input: " << spot::bdd_to_formula (input_letter, aut->get_dict ()) << "\n");
 
-      // add all compatible IOs that keep us in the safe region (+ encoding of destination state)
-      std::pair<bdd, State> p = get_transition (*(state_space[src]), tuple.second, actioner, F);
+      // add a compatible IO that keeps us in the safe region
+      SetOfStates singleton (state_space[src]->copy ());
+      bdd strat;
+      unsigned tgt;
+      for (const auto& avec : action_vecs) {
+        SetOfStates fwd = singleton.apply ([&avec, &actioner] (const auto& max_elem) {
+          auto&& ret = actioner.apply (max_elem, avec, actioners::direction::forward);
+          verb_do (3, vout << " " << max_elem << " -> " << ret << std::endl);
+          return ret;
+        });
+        assert (fwd.size () == 1);
 
-      unsigned tgt = get_dominating_index (states, p.second);
-      // returns index of FIRST element that dominates
+        if (winning_region.contains (*fwd.begin ())) {
+          strat = avec.output ();
+          verb_do (2, vout << "dominated with IO = "
+                           << spot::bdd_to_formula (input_letter & strat, aut->get_dict ()) << ": "
+                           << fwd << std::endl);
+          // get index of first element in winning region that dominates sucessor
+          tgt = 0;
+          for (const auto& elem_in_antichain : winning_region) {
+            if (elem_in_antichain.partial_order (*fwd.begin ()).leq ())
+              break;
+            tgt++;
+          }
+          assert (tgt < winning_region.size ());
+          break;
+        }
+        else {
+          utils::vout << "No transition found from " << *state_space[src] << " with safe region "
+                      << winning_region << std::endl;
+          assert (false);
+        }
+      }
+
+      mealy->new_edge (src, tgt, input_letter & strat);
 
       if (not visited[tgt])
         states_todo.push_back (tgt);
-
-      transitions[src].push_back ({ p.first, index });
-#endif
     }
   }
   assert (is_mealy (mealy));
