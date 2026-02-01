@@ -4008,3 +4008,53 @@ foreach folder, testsets : benchmark_files
     endforeach
   endforeach
 endforeach
+
+#############################
+# Synthesis test suite
+#############################
+
+synthesis_tests_added = {}
+
+# From test_files
+foreach folder, testset : test_files
+  if folder == 'realizable'
+    foreach size, flist : testset
+      if not size.startswith ('!')
+        foreach f : flist
+          test_name = 'synthesis/' + folder + '/' + f
+          if not synthesis_tests_added.has_key(test_name)
+            filename = 'ltl' / folder / f
+            test(test_name,
+                 check_real_exe,
+                 args : [ '-p', '-a', '-F', files(filename), '--', '-s', 'out.aag' ],
+                 suite : 'synthesis',
+                 timeout : 30,
+                 depends : [ab_exe])
+            synthesis_tests_added += { test_name : true }
+          endif
+        endforeach
+      endif
+    endforeach
+  endif
+endforeach
+
+# From benchmark_files
+foreach folder, testsets : benchmark_files
+  if folder == 'realizable'
+    foreach set, flist : testsets
+      foreach f : flist
+        test_name = 'synthesis/' + folder + '/' + f
+        if not synthesis_tests_added.has_key(test_name)
+          filename = 'ltl' / folder / f
+          test(test_name,
+               check_real_exe,
+               args : [ '-p', '-a', '-F', files(filename), '--', '-s', 'out.aag' ],
+               suite : 'synthesis',
+               timeout : 30,
+               depends : [ab_exe])
+          synthesis_tests_added += { test_name : true }
+        endif
+      endforeach
+    endforeach
+  endif
+endforeach
