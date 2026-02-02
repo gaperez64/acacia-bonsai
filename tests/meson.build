@@ -4013,48 +4013,38 @@ endforeach
 # Synthesis test suite
 #############################
 
-synthesis_tests_added = {}
+# Collect all unique realizable benchmarks
+# filename -> true
+synthesis_benchmarks = {}
 
 # From test_files
-foreach folder, testset : test_files
-  if folder == 'realizable'
-    foreach size, flist : testset
-      if not size.startswith ('!')
-        foreach f : flist
-          test_name = 'synthesis/' + folder + '/' + f
-          if not synthesis_tests_added.has_key(test_name)
-            filename = 'ltl' / folder / f
-            test(test_name,
-                 check_real_exe,
-                 args : [ '-p', '-a', '-F', files(filename), '--', '-s', 'out.aag' ],
-                 suite : 'synthesis',
-                 timeout : 30,
-                 depends : [ab_exe])
-            synthesis_tests_added += { test_name : true }
-          endif
-        endforeach
-      endif
-    endforeach
-  endif
-endforeach
+if test_files.has_key('realizable')
+  foreach size, flist : test_files['realizable']
+    if not size.startswith('!')
+      foreach f : flist
+        synthesis_benchmarks += { f : true }
+      endforeach
+    endif
+  endforeach
+endif
 
 # From benchmark_files
-foreach folder, testsets : benchmark_files
-  if folder == 'realizable'
-    foreach set, flist : testsets
-      foreach f : flist
-        test_name = 'synthesis/' + folder + '/' + f
-        if not synthesis_tests_added.has_key(test_name)
-          filename = 'ltl' / folder / f
-          test(test_name,
-               check_real_exe,
-               args : [ '-p', '-a', '-F', files(filename), '--', '-s', 'out.aag' ],
-               suite : 'synthesis',
-               timeout : 30,
-               depends : [ab_exe])
-          synthesis_tests_added += { test_name : true }
-        endif
-      endforeach
+if benchmark_files.has_key('realizable')
+  foreach set, flist : benchmark_files['realizable']
+    foreach f : flist
+      synthesis_benchmarks += { f : true }
     endforeach
+  endforeach
+endif
+
+foreach f, _ : synthesis_benchmarks
+  filename = 'ltl/realizable' / f
+  if fs.exists(filename)
+    test('synthesis/' + f,
+         check_real_exe,
+         args : [ '-p', '-a', '-F', files(filename), '--', '-s', f + '.out.aag' ],
+         suite : 'synthesis',
+         timeout : 300,
+         depends : [ab_exe])
   endif
 endforeach
