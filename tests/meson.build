@@ -4008,3 +4008,43 @@ foreach folder, testsets : benchmark_files
     endforeach
   endforeach
 endforeach
+
+#############################
+# Synthesis test suite
+#############################
+
+# Collect all unique realizable benchmarks
+# filename -> true
+synthesis_benchmarks = {}
+
+# From test_files
+if test_files.has_key('realizable')
+  foreach size, flist : test_files['realizable']
+    if not size.startswith('!')
+      foreach f : flist
+        synthesis_benchmarks += { f : true }
+      endforeach
+    endif
+  endforeach
+endif
+
+# From benchmark_files
+if benchmark_files.has_key('realizable')
+  foreach set, flist : benchmark_files['realizable']
+    foreach f : flist
+      synthesis_benchmarks += { f : true }
+    endforeach
+  endforeach
+endif
+
+foreach f, _ : synthesis_benchmarks
+  filename = 'ltl/realizable' / f
+  if fs.exists(filename)
+    test('synthesis/' + f,
+         check_real_exe,
+         args : [ '-p', '-a', '-F', files(filename), '--', '-s', f + '.out.aag' ],
+         suite : 'synthesis',
+         timeout : 60,
+         depends : [ab_exe])
+  endif
+endforeach
