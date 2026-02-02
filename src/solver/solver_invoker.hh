@@ -116,8 +116,7 @@ namespace {
                    VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
                    std::optional<UNREAL_X_T> check_unreal,
                    const std::optional<std::string>& synth_fname)
-        :  // dict {spot::make_bdd_dict ()},
-          dict {dict},
+        : dict {dict},
           input_aps {input_aps},
           output_aps {output_aps},
           opt_k {opt_k},
@@ -227,7 +226,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
               const std::optional<std::string>& synth_fname) {
   if (check_unreal.has_value ()) {
+    // We only check one thing at a time
     assert (*check_unreal != UNREAL_X_BOTH);
+
     // Swap I and O.
     verb_do (2, vout << "Swapping inputs and outputs to check unrealizability\n");
     input_aps.swap (output_aps);
@@ -248,8 +249,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
 #if DECOMPOSE_SPEC == 0
   // just launch a monolothic runner
-  if (runner (spot_formula) and synth_fname.has_value ()) {
-    runner.synthesis ();
+  if (runner (spot_formula)) {
+    if (synth_fname.has_value ())
+      runner.synthesis ();
     return true;
   } else {
     return false;
@@ -271,23 +273,30 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     verb_do (2, vout << "\n");
   }
 
-  if (forms.size () <= 1)
-    return runner (spot_formula);
-
-  // Here's the real decomposition in terms of solving. If we found more than
-  // one formula, we're going to solve those instead.
-  // * If we're checking realizability, all of the subgames must be
-  //   realizable;
-  // * conversely, for unrealizability, I just need one of them to be declared
-  //   unrealizable to get a conclusive answer.
   bool result;
-  if (not check_unreal.has_value ())
-    result = std::ranges::all_of (forms.begin (), forms.end (), runner);
-  else
-    result = std::ranges::any_of (forms.begin (), forms.end (), runner);
-  if (result and synth_fname.has_value ())
-    runner.synthesis ();
-  return result;
+  if (forms.size () <= 1) {
+    result = runner (spot_formula);
+  } else {
+    // Here's the real decomposition in terms of solving. If we found more than
+    // one formula, we're going to solve those instead.
+    // * If we're checking realizability, all of the subgames must be
+    //   realizable;
+    // * conversely, for unrealizability, I just need one of them to be declared
+    //   unrealizable to get a conclusive answer.
+    if (not check_unreal.has_value ())
+      result = std::ranges::all_of (forms.begin (), forms.end (), runner);
+    else
+      result = std::ranges::any_of (forms.begin (), forms.end (), runner);
+    verb_do (3, vout << "Result of sub-calls to runner " << result << std::endl);
+  }
+
+  if (result) {
+    if (synth_fname.has_value ())
+      runner.synthesis ();
+    return true;
+  } else {
+    return false;
+  }
 
 #else
   std::unreachable ();
