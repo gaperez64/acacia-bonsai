@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <spot/twaalgos/aiger.hh>
 
 // These are the valid ways of treating unrealizability
 enum UNREAL_X_T : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREAL_X_BOTH };
@@ -101,6 +102,7 @@ namespace {
       const std::optional<UNREAL_X_T> check_unreal;
       spot::option_map extra_options;
       const std::optional<std::string> synth_fname;
+      std::vector<spot::const_twa_graph_ptr> strats;
 
     public:
       /**
@@ -154,6 +156,19 @@ namespace {
         verb_do (3, dict->dump (utils::vout));
       }
 
+      void synthesis () {
+        assert (synth_fname.has_value ());
+        assert (strats.size () > 0);
+        // try both ITE and SoP encodings
+        spot::aig_ptr mealy_aig = mealy_machines_to_aig (strats, "both");
+        std::ofstream synthesis_file (*synth_fname);
+        if (synthesis_file) {
+          spot::print_aiger (synthesis_file, mealy_aig);
+        } else {
+          std::cerr << "Failed to open the file to store controller!\n";
+        }
+      }
+
       bool operator() (spot::formula spot_formula) {
         if (check_unreal.has_value () and *check_unreal == UNREAL_X_FORMULA) {
           verb_do (2, vout << "Mealy-to-Moore: adding X to the inputs in the formula\n");
@@ -191,7 +206,18 @@ namespace {
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
         verb_do (3, dict->dump (utils::vout));
 
-        return solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs, synth_fname);
+        assert (not synth_fname.has_value () or not check_unreal.has_value ());
+        std::optional<spot::twa_graph_ptr> maybe_strat =
+          solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs,
+                      synth_fname.has_value ());
+
+        if (maybe_strat.has_value ()) {
+          if (synth_fname.has_value ())
+            strats.push_back (*maybe_strat);
+          return true;
+        } else {
+          return false;
+        }
       }
   };
 }
@@ -222,7 +248,12 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
 #if DECOMPOSE_SPEC == 0
   // just launch a monolothic runner
-  return runner (spot_formula);
+  if (runner (spot_formula) and synth_fname.has_value ()) {
+    runner.synthesis ();
+    return true;
+  } else {
+    return false;
+  }
 
 #elif DECOMPOSE_SPEC == 1
   // we are up for decomposition, so first we need to split the formula
@@ -249,10 +280,15 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   //   realizable;
   // * conversely, for unrealizability, I just need one of them to be declared
   //   unrealizable to get a conclusive answer.
+  bool result;
   if (not check_unreal.has_value ())
-    return std::ranges::all_of (forms.begin (), forms.end (), runner);
+    result = std::ranges::all_of (forms.begin (), forms.end (), runner);
   else
-    return std::ranges::any_of (forms.begin (), forms.end (), runner);
+    result = std::ranges::any_of (forms.begin (), forms.end (), runner);
+  if (result and synth_fname.has_value ())
+    runner.synthesis ();
+  return result;
+
 #else
   std::unreachable ();
 #endif
