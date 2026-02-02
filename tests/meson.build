@@ -4044,7 +4044,7 @@ foreach f, _ : synthesis_benchmarks
          check_real_exe,
          args : [ '-p', '-a', '-F', files(filename), '--', '-s', f + '.out.aag' ],
          suite : 'synthesis',
-         timeout : 300,
+         timeout : 60,
          depends : [ab_exe])
   endif
 endforeach

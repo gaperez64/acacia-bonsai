@@ -45,6 +45,8 @@ jobs:
         ./self-benchmark.sh -c base -j -b ab/small
         rm build_base/benchmarked
         ./self-benchmark.sh -c base -j -b ab/issue54
+        rm build_base/benchmarked
+        ./self-benchmark.sh -c base -j -b synthesis
     - name: Compile and test all configurations
       run: |
         export CXX=g++-14
