@@ -12,13 +12,12 @@
 #include "posets/vectors/traits.hh"
 #include "solve_game.hh"
 #include "utils/static_switch.hh"
-#include <spot/twaalgos/mealy_machine.hh>
 
+#include <spot/twaalgos/mealy_machine.hh>
 #include <bddx.h>
 #include <fstream>
 #include <spot/twa/acc.hh>
 #include <spot/twa/twa.hh>
-#include <spot/twaalgos/aiger.hh>
 #include <utility>
 
 #define UNREACHABLE [] ([[maybe_unused]] int x) { std::unreachable (); }
@@ -28,14 +27,18 @@
  * having a value means that it contains the initial state.
  */
 template <class SetOfStates>
-bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
-                const std::optional<std::string>& synth_fname, spot::twa_graph_ptr aut,
+std::optional<spot::twa_graph_ptr>
+post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
+                bool do_synthesis, spot::twa_graph_ptr aut,
                 const bdd& all_inputs, const bdd& all_outputs) {
   using state = typename SetOfStates::value_type;
 
-  if (not win_res.has_value () or not synth_fname.has_value ())
-    return win_res.has_value ();
+  if (not win_res.has_value ())
+    return std::nullopt;
+  if (not do_synthesis)
+    return aut;
 
+  // We got here, so there is a winning region and we need to do synthesis
   const auto& [k, winning_region] = *win_res;
 
   // What follows is mostly the synthesis procedure as ncharl intended, but
@@ -150,14 +153,8 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
 
   // use bisimulation with out assignment, and no split output
   spot::simplify_mealy_here (mealy, 2, false);
-  // try both ITE and SoP encodings
-  spot::aig_ptr mealy_aig = mealy_machine_to_aig (mealy, "both");
-  std::ofstream synthesis_file (*synth_fname);
-  if (synthesis_file)
-    spot::print_aiger (synthesis_file, mealy_aig);
-  else
-    std::cerr << "Failed to open the file to store controller!\n";
-  return true;
+
+  return mealy;
 }
 
 /**
@@ -174,9 +171,10 @@ bool post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
  *
  * (see also utils/static_switch.hh)
  */
-bool solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
+std::optional<spot::twa_graph_ptr>
+solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
                  const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs,
-                 std::optional<std::string> synth_fname) {
+                 bool do_synthesis) {
   // Compute how many boolean states will actually be put in bitsets.
   constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
   auto nbitsetbools = aut->num_states () - posets::vectors::bool_threshold;
@@ -217,7 +215,7 @@ bool solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR
 
   verb_do (1, vout << "Bitset threshold set at " << posets::vectors::bitset_threshold << "\n");
 
-  bool realizable = false;
+  std::optional<spot::twa_graph_ptr> res = std::nullopt;
 
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX) {  // Array & Bitsets
     static_switch_t<STATIC_ARRAY_CAP_MAX> {}(
@@ -235,8 +233,8 @@ bool solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR
                                                        ActionerMaker, InputPickerMaker> (
                     aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
                     ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-                realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname, aut,
-                                                            all_inputs, all_outputs);
+                res = post_real<SpecializedDownset> (skn.solve (), do_synthesis, aut,
+                                                     all_inputs, all_outputs);
               },
               UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
         },
@@ -257,8 +255,8 @@ bool solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR
                                                  ActionerMaker, InputPickerMaker> (
               aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
               ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-          realizable = post_real<SpecializedDownset> (skn.solve (), synth_fname, aut, all_inputs,
-                                                      all_outputs);
+          res = post_real<SpecializedDownset> (skn.solve (), do_synthesis, aut, all_inputs,
+                                               all_outputs);
         },
         UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
 #else
@@ -272,10 +270,9 @@ bool solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR
                                            ActionerMaker, InputPickerMaker> (
         aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
         ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-    realizable =
-        post_real<SpecializedDownset> (skn.solve (), synth_fname, aut, all_inputs, all_outputs);
+    res = post_real<SpecializedDownset> (skn.solve (), do_synthesis, aut, all_inputs, all_outputs);
 #endif
   }
 
-  return realizable;
+  return res;
 }
