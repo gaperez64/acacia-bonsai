@@ -22,7 +22,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <spot/twaalgos/aiger.hh>
 
 // These are the valid ways of treating unrealizability
 enum UNREAL_X_T : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREAL_X_BOTH };
@@ -147,25 +146,39 @@ namespace {
           const unsigned v = dict->register_proposition (spot::formula::ap (ap), this);
           all_outputs &= bdd_ithvar (v);
         }
-        verb_do (3, dict->dump (utils::vout));
+        verb_do (4, dict->dump (utils::vout));
       }
 
       ~run_one_ltl () {
         dict->unregister_all_my_variables (this);
-        verb_do (3, dict->dump (utils::vout));
+        verb_do (4, dict->dump (utils::vout));
       }
 
-      void synthesis () {
+      void synthesis (spot::formula spot_formula, std::vector<std::vector<std::string>> out_part) {
         assert (synth_fname.has_value ());
         assert (strats.size () > 0);
+        assert (strats.size () == out_part.size ());
         // try both ITE and SoP encodings
-        spot::aig_ptr mealy_aig = mealy_machines_to_aig (strats, "both");
+        spot::aig_ptr mealy_aig = mealy_machines_to_aig (strats, "isop",
+                                                         // make sure all
+                                                         // inputs and outputs
+                                                         // are in the AIG
+                                                         input_aps, out_part);
         std::ofstream synthesis_file (*synth_fname);
-        if (synthesis_file) {
+        if (synthesis_file)
           spot::print_aiger (synthesis_file, mealy_aig);
-        } else {
+        else
           std::cerr << "Failed to open the file to store controller!\n";
-        }
+#ifndef NDEBUG
+        spot::print_hoa (std::cout, mealy_aig->as_automaton (false));
+        spot_formula = spot::formula::Not (spot_formula);
+        verb_do (2, vout << "Model checking result by checking intersection with "
+                         << spot_formula << std::endl);
+        spot::translator trans (dict, &extra_options);
+        auto aut = create_automaton (spot_formula, trans);
+        assert (not aut->intersects (mealy_aig->as_automaton (false)));
+
+#endif
       }
 
       bool operator() (spot::formula spot_formula) {
@@ -203,18 +216,23 @@ namespace {
 
         posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
-        verb_do (3, dict->dump (utils::vout));
+        verb_do (4, dict->dump (utils::vout));
 
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
         std::optional<spot::twa_graph_ptr> maybe_strat =
-          solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs,
-                      synth_fname.has_value ());
+            solve_game (aut, opt_k, opt_kmin, opt_kinc,
+                        // we obtain the subset of inputs by projecting out the set of all
+                        // outputs from the cube of all atomic propositions
+                        bdd_exist (aut->ap_vars (), all_outputs),
+                        // same for the outputs
+                        bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value ());
 
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
             strats.push_back (*maybe_strat);
           return true;
-        } else {
+        }
+        else {
           return false;
         }
       }
@@ -250,10 +268,13 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 #if DECOMPOSE_SPEC == 0
   // just launch a monolothic runner
   if (runner (spot_formula)) {
-    if (synth_fname.has_value ())
-      runner.synthesis ();
+    if (synth_fname.has_value ()) {
+      std::vector<std::vector<std::string>> out_part = {output_aps};
+      runner.synthesis (spot_formula, out_part);
+    }
     return true;
-  } else {
+  }
+  else {
     return false;
   }
 
@@ -261,6 +282,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // we are up for decomposition, so first we need to split the formula
   // NOTE: we may have flipped inputs and outputs already, so we need to
   // provide inputs to the split function in that case
+  std::vector<std::vector<std::string>> out_part;
   auto [forms, outs] = spot::split_independent_formulas (
       spot_formula, check_unreal.has_value () ? input_aps : output_aps);
   verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
@@ -268,15 +290,20 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   for (size_t i = 0; i < forms.size (); ++i) {
     verb_do (2, vout << "Subformula " << i + 1 << ": " << forms[i] << std::endl);
     verb_do (2, vout << "with output set: ");
-    for (auto& sf : outs[i])
+    std::vector<std::string> temp;
+    for (auto& sf : outs[i]) {
       verb_do (2, vout << sf << " ");
+      temp.push_back (sf.ap_name ());
+    }
+    out_part.emplace_back (std::move (temp));
     verb_do (2, vout << "\n");
   }
 
   bool result;
   if (forms.size () <= 1) {
     result = runner (spot_formula);
-  } else {
+  }
+  else {
     // Here's the real decomposition in terms of solving. If we found more than
     // one formula, we're going to solve those instead.
     // * If we're checking realizability, all of the subgames must be
@@ -292,9 +319,10 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   if (result) {
     if (synth_fname.has_value ())
-      runner.synthesis ();
+      runner.synthesis (spot_formula, out_part);
     return true;
-  } else {
+  }
+  else {
     return false;
   }
 

@@ -12,8 +12,8 @@
 #include "posets/vectors/traits.hh"
 #include "solve_game.hh"
 #include "utils/static_switch.hh"
-
 #include <spot/twaalgos/mealy_machine.hh>
+
 #include <bddx.h>
 #include <fstream>
 #include <spot/twa/acc.hh>
@@ -27,10 +27,9 @@
  * having a value means that it contains the initial state.
  */
 template <class SetOfStates>
-std::optional<spot::twa_graph_ptr>
-post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
-                bool do_synthesis, spot::twa_graph_ptr aut,
-                const bdd& all_inputs, const bdd& all_outputs) {
+std::optional<spot::twa_graph_ptr> post_real (
+    std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res, bool do_synthesis,
+    spot::twa_graph_ptr aut, const bdd& all_inputs, const bdd& all_outputs) {
   using state = typename SetOfStates::value_type;
 
   if (not win_res.has_value ())
@@ -83,14 +82,13 @@ post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
   // automata to store Mealy machines, minimize them, determinize, and then
   // spit out small AIGER circuits for them.)
   spot::twa_graph_ptr mealy = make_twa_graph (aut->get_dict ());
+  mealy->copy_ap_of (aut);
   mealy->set_acceptance (spot::acc_cond::acc_code::t ());
   bdd* output_cube = new bdd ();
   *output_cube = all_outputs;
   mealy->set_named_prop<bdd> ("synthesis-outputs", output_cube);
   mealy->new_states (winning_region.size ());
   mealy->set_init_state (init_idx);
-  for (const auto& ap : aut->ap ())
-    mealy->register_ap (ap);
 
   // To populate the Mealy machine, we will now explore the maxima in a DFS
   // fashion from the initial state/maximum.
@@ -171,10 +169,11 @@ post_real (std::optional<std::pair<VECTOR_ELT_T, SetOfStates>>&& win_res,
  *
  * (see also utils/static_switch.hh)
  */
-std::optional<spot::twa_graph_ptr>
-solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
-                 const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs,
-                 bool do_synthesis) {
+std::optional<spot::twa_graph_ptr> solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax,
+                                               const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
+                                               const bdd& all_inputs, const bdd& all_outputs,
+                                               bool do_synthesis) {
+  assert (all_outputs != bddtrue);  // synthesis without outputs?
   // Compute how many boolean states will actually be put in bitsets.
   constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
   auto nbitsetbools = aut->num_states () - posets::vectors::bool_threshold;
@@ -233,8 +232,8 @@ solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_
                                                        ActionerMaker, InputPickerMaker> (
                     aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
                     ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
-                res = post_real<SpecializedDownset> (skn.solve (), do_synthesis, aut,
-                                                     all_inputs, all_outputs);
+                res = post_real<SpecializedDownset> (skn.solve (), do_synthesis, aut, all_inputs,
+                                                     all_outputs);
               },
               UNREACHABLE, posets::vectors::nbools_to_nbitsets (nbitsetbools));
         },
