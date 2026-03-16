@@ -31,6 +31,8 @@ struct arg_parse_result {
     std::optional<UNREAL_X_T> opt_unreal_x = std::make_optional<UNREAL_X_T> (DEFAULT_UNREAL_X);
     unsigned verbose_level = 0;
     bool check_real = true;
+    std::optional<std::string> synth_fname = std::nullopt;
+    std::optional<int> mem_limit = std::nullopt;
 };
 
 /**
@@ -69,39 +71,42 @@ void process_arg_output (const std::string& arg, arg_parse_result& result) {
  * Print the help menu for the specified program name.
  */
 void show_help (const char* program_name) {
-  std::cout << "Usage: " << program_name << " [OPTIONS]\n"
-            << "Check realizability for LTL specifications.\n\n"
-            << "Allowed options:\n"
-            << "  -h                print this help message\n"
-            << "  -V                print program version\n"
-            << "  -f STRING         process the formula STRING\n"
-            << "  -F VAL            process formula in file VAL\n"
-            << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
-               "atomic propositions\n"
-            << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
-               "propositions\n"
-            << "  -K VAL            final value of K, or unique value if M is not specified\n"
-            << "  -M VAL            starting value of K\n"
-            << "  -I VAL            increment value for K, used when M < K\n"
-            << "  -u VAL            use VAL from [automaton|formula|both] to check unrealizability\n"
-            << "                    by default, unrealizability is checked with "
+  std::cout
+      << "Usage: " << program_name << " [OPTIONS]\n"
+      << "Check realizability for LTL specifications.\n\n"
+      << "Allowed options:\n"
+      << "  -h                print this help message\n"
+      << "  -s FILE           synthesize controller and store in FILE\n"
+      << "  -V                print program version\n"
+      << "  -f STRING         process the formula STRING\n"
+      << "  -F VAL            process formula in file VAL\n"
+      << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
+         "atomic propositions\n"
+      << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
+         "propositions\n"
+      << "  -K VAL            final value of K, or unique value if M is not specified\n"
+      << "  -M VAL            starting value of K\n"
+      << "  -I VAL            increment value for K, used when M < K\n"
+      << "  -u VAL            use VAL from [automaton|formula|both] to check unrealizability\n"
+      << "                    by default, unrealizability is checked with "
 #if DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
-            << "VAL = automaton"
+      << "VAL = automaton"
 #elif DEFAULT_UNREAL_X == UNREAL_X_FORMULA
-            << "VAL = formula"
+      << "VAL = formula"
 #else
-            << "VAL = both"
+      << "VAL = both"
 #endif
-            << std::endl
-            << "  -r                do NOT check for unrealizability\n"
-            << "  -U                do NOT check for realizability\n"
-            << "  -v                verbose mode, can be repeated for more verbosity\n"
-            << "Exit status:\n"
-            << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
-            << "\t" << (int)EXIT_CODE_UNREAL << "   if it is unrealizable\n"
-            << "\t" << (int)EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-            << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
-            << "Version: " << VERSION << '\n';
+      << std::endl
+      << "  -l VAL            set the virtual memory limit to VAL GiBs\n"
+      << "  -r                do NOT check for unrealizability\n"
+      << "  -U                do NOT check for realizability\n"
+      << "  -v                verbose mode, can be repeated for more verbosity\n"
+      << "Exit status:\n"
+      << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
+      << "\t" << (int)EXIT_CODE_UNREAL << "   if it is unrealizable\n"
+      << "\t" << (int)EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
+      << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
+      << "Version: " << VERSION << '\n';
 }
 
 bool case_insensitive_char_equals (char a, char b) {
@@ -147,7 +152,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_kmin = std::nullopt;
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt (argc, argv, "hUrVf:F:i:o:I:K:M:u:v")) != -1) {
+  while ((opt = getopt (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:l:")) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
       case 'V': std::cout << "Version: " << VERSION << '\n'; exit (EXIT_CODE_UNKNOWN);
@@ -162,6 +167,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'M': sgn_kmin = std::make_optional<int> (std::stoi (optarg)); break;
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
+      case 's': retval.synth_fname = optarg; break;
+      case 'l': retval.mem_limit = std::stoi (optarg); break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }
   }
@@ -176,7 +183,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
   if (sgn_kmin.has_value ()) {
     if (*sgn_kmin > 0) {
       retval.opt_kmin = *sgn_kmin;
-    } else {
+    }
+    else {
       verb_do (2, vout << "Kmin is being corrected since it was not positive!\n");
       retval.opt_kmin = retval.opt_k;
     }

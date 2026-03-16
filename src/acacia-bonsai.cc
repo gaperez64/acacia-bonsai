@@ -11,6 +11,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utils/verbose.hh>
@@ -45,12 +46,23 @@ int main (int argc, char** argv) {
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;
 
+  // set up signal handlers to avoid crashing and reporting a wrong response
+  // on Ctrl-C, for instance
   struct sigaction action;
   memset (&action, 0, sizeof (struct sigaction));
   action.sa_handler = terminate;
   sigaction (SIGTERM, &action, nullptr);
   sigaction (SIGINT, &action, nullptr);
   sigaction (SIGQUIT, &action, nullptr);
+  sigaction (SIGABRT, &action, nullptr);
+
+  // set a (virtual) memory limit in GiBs, if needed
+  if (arg_values.mem_limit.has_value ()) {
+    struct rlimit limit;
+    limit.rlim_max = 1024L * 1024L * 1024L * (*arg_values.mem_limit);
+    limit.rlim_cur = limit.rlim_max;
+    setrlimit(RLIMIT_AS, &limit);
+  }
 
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
@@ -63,7 +75,8 @@ int main (int argc, char** argv) {
             "] ");
         const bool res =
             run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
-                     arg_values.opt_kinc, arg_values.formula, unreal_x);
+                     arg_values.opt_kinc, arg_values.formula, unreal_x,
+                     not unreal_x.has_value () ? arg_values.synth_fname : std::nullopt);
         verb_do (1, vout << "returning " << res << "\n");
 
         if (unreal_x.has_value ())
@@ -106,7 +119,7 @@ int main (int argc, char** argv) {
     error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
 
   } catch (const std::exception& e) {
-    error (EXIT_CODE_ERROR, "%s", e.what ());
+    error (EXIT_CODE_ERROR, "Exception caught: %s\n", e.what ());
   } catch (...) {
     error (EXIT_CODE_ERROR, "Unknown exception\n");
   }

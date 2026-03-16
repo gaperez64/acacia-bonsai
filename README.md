@@ -58,7 +58,7 @@ UNREALIZABLE
 Note that this will compile a debug version of Acacia-Bonsai.  A benchmarking
 script is available at the root:
 ```
-$ ./self-benchmark.sh --help
+$ ./self-benchmark.sh -h
 ```
 
 In particular, it can be used to build an optimized version of Acacia-Bonsai:
@@ -66,7 +66,7 @@ In particular, it can be used to build an optimized version of Acacia-Bonsai:
 $ ./self-benchmark.sh -c best -B
   [...]
 $ cd build_best
-$ src/acacia-bonsai --help
+$ src/acacia-bonsai -h
 $ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```

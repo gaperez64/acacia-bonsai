@@ -87,7 +87,8 @@ confs=(
     [best_decomp_kdtree_mona_no_bitsets]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
     [best_decomp_sharingtrie_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
     [best_decomp_sharingtrie_mona_no_bitsets]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_mona_no_bitsets]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
+    [best_decomp_mona_no_bitsets]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
+    [best_decomp_mona]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona"
 )
 
 mode= # print, list
