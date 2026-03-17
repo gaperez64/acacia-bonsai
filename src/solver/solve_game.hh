@@ -147,6 +147,9 @@ std::optional<spot::twa_graph_ptr> post_real (
       assert (at_least_one);
     }
   }
+  // Remove states not reachable from init (zombie states from pre-allocation)
+  mealy->purge_unreachable_states ();
+
   assert (is_mealy (mealy));
   assert (is_separated_mealy (mealy));  // transition conditions of form
                                         // (in) & (out)

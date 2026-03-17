@@ -159,7 +159,7 @@ namespace {
         assert (strats.size () > 0);
         assert (strats.size () == out_part.size ());
         // try both ITE and SoP encodings
-        spot::aig_ptr mealy_aig = mealy_machines_to_aig (strats, "isop",
+        spot::aig_ptr mealy_aig = mealy_machines_to_aig (strats, "both",
                                                          // make sure all
                                                          // inputs and outputs
                                                          // are in the AIG
