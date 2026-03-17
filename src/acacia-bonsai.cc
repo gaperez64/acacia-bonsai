@@ -55,6 +55,7 @@ int main (int argc, char** argv) {
   sigaction (SIGINT, &action, nullptr);
   sigaction (SIGQUIT, &action, nullptr);
   sigaction (SIGABRT, &action, nullptr);
+  sigaction (SIGPIPE, &action, nullptr);
 
   // set a (virtual) memory limit in GiBs, if needed
   if (arg_values.mem_limit.has_value ()) {
@@ -105,6 +106,8 @@ int main (int argc, char** argv) {
 
     int ret;
     while (wait (&ret) != -1) {  // as long as we have children to wait for
+      if (not WIFEXITED (ret))
+        continue;  // killed by signal; not a clean exit code
       ret = WEXITSTATUS (ret);
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else

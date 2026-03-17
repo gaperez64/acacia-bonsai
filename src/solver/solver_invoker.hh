@@ -170,7 +170,6 @@ namespace {
         else
           std::cerr << "Failed to open the file to store controller!\n";
 #ifndef NDEBUG
-        spot::print_hoa (std::cout, mealy_aig->as_automaton (false));
         spot_formula = spot::formula::Not (spot_formula);
         verb_do (2, vout << "Model checking result by checking intersection with "
                          << spot_formula << std::endl);
