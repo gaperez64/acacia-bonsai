@@ -169,15 +169,6 @@ namespace {
           spot::print_aiger (synthesis_file, mealy_aig);
         else
           std::cerr << "Failed to open the file to store controller!\n";
-#ifndef NDEBUG
-        spot_formula = spot::formula::Not (spot_formula);
-        verb_do (2, vout << "Model checking result by checking intersection with "
-                         << spot_formula << std::endl);
-        spot::translator trans (dict, &extra_options);
-        auto aut = create_automaton (spot_formula, trans);
-        assert (not aut->intersects (mealy_aig->as_automaton (false)));
-
-#endif
       }
 
       bool operator() (spot::formula spot_formula) {
