@@ -158,12 +158,8 @@ namespace {
         assert (synth_fname.has_value ());
         assert (strats.size () > 0);
         assert (strats.size () == out_part.size ());
-        // try both ITE and SoP encodings
-        spot::aig_ptr mealy_aig = mealy_machines_to_aig (strats, "both",
-                                                         // make sure all
-                                                         // inputs and outputs
-                                                         // are in the AIG
-                                                         input_aps, out_part);
+        // try both ITE and SoP encodings; use AP sets from the strats themselves
+        spot::aig_ptr mealy_aig = mealy_machines_to_aig (strats, "both");
         std::ofstream synthesis_file (*synth_fname);
         if (synthesis_file)
           spot::print_aiger (synthesis_file, mealy_aig);
