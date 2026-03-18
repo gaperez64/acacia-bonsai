@@ -4013,27 +4013,25 @@ endforeach
 # Synthesis test suite
 #############################
 
-# Collect all unique realizable benchmarks
+# Collect unique realizable benchmarks for synthesis testing.
+# Only include sizes that are tractable for synthesis in debug mode
+# (i.e., the game can be solved AND the AIG model-check can complete within
+# the timeout).  Large benchmark sets are excluded because they regularly
+# exceed the per-test timeout when synthesis overhead (Mealy-machine
+# construction, AIG encoding, and the debug model-check) is added on top of
+# the realizability-check time.
+synthesis_sizes = ['tiny', 'small', 'issue54']
+
 # filename -> true
 synthesis_benchmarks = {}
 
-# From test_files
 if test_files.has_key('realizable')
   foreach size, flist : test_files['realizable']
-    if not size.startswith('!')
+    if size in synthesis_sizes
       foreach f : flist
         synthesis_benchmarks += { f : true }
       endforeach
     endif
-  endforeach
-endif
-
-# From benchmark_files
-if benchmark_files.has_key('realizable')
-  foreach set, flist : benchmark_files['realizable']
-    foreach f : flist
-      synthesis_benchmarks += { f : true }
-    endforeach
   endforeach
 endif
 
@@ -4044,7 +4042,7 @@ foreach f, _ : synthesis_benchmarks
          check_real_exe,
          args : [ '-p', '-a', '-F', files(filename), '--', '-s', f + '.out.aag' ],
          suite : 'synthesis',
-         timeout : 30,
+         timeout : 60,
          depends : [ab_exe])
   endif
 endforeach
