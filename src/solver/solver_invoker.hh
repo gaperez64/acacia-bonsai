@@ -165,6 +165,14 @@ namespace {
           spot::print_aiger (synthesis_file, mealy_aig);
         else
           std::cerr << "Failed to open the file to store controller!\n";
+#ifndef NDEBUG
+        spot_formula = spot::formula::Not (spot_formula);
+        verb_do (2, vout << "Model checking result by checking intersection with "
+                         << spot_formula << std::endl);
+        spot::translator trans (dict, &extra_options);
+        auto aut = create_automaton (spot_formula, trans);
+        assert (not aut->intersects (mealy_aig->as_automaton (false)));
+#endif
       }
 
       bool operator() (spot::formula spot_formula) {
@@ -206,12 +214,8 @@ namespace {
 
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
         std::optional<spot::twa_graph_ptr> maybe_strat =
-            solve_game (aut, opt_k, opt_kmin, opt_kinc,
-                        // we obtain the subset of inputs by projecting out the set of all
-                        // outputs from the cube of all atomic propositions
-                        bdd_exist (aut->ap_vars (), all_outputs),
-                        // same for the outputs
-                        bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value ());
+            solve_game (aut, opt_k, opt_kmin, opt_kinc, all_inputs, all_outputs,
+                        synth_fname.has_value ());
 
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
