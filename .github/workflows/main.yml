@@ -29,7 +29,23 @@ jobs:
       uses: actions/checkout@v6
       with:
         submodules: recursive
+    - name: Restore Spot cache
+      id: spot-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          /usr/local/lib/libspot*
+          /usr/local/lib/libbddx*
+          /usr/local/include/spot
+          /usr/local/lib/pkgconfig/libspot.pc
+          /usr/local/lib/pkgconfig/libbddx.pc
+          /usr/local/bin/spot
+          /usr/local/bin/ltl*
+          /usr/local/bin/aut*
+          /usr/local/bin/ran*
+        key: spot-2.14.4-maxacc64-nopy-${{ runner.os }}
     - name: Install Spot
+      if: steps.spot-cache.outputs.cache-hit != 'true'
       run: |
         sudo wget http://www.lre.epita.fr/dload/spot/spot-2.14.4.tar.gz
         tar -xvzf spot-2.14.4.tar.gz
