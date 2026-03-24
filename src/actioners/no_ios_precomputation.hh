@@ -85,7 +85,11 @@ namespace actioners {
               const auto& fwd = compute_action (one_input_letter, one_output_letter);
               fwd_actions.push_back (std::move (fwd));
             }
-            ioset[fwd_actions] = one_input_letter;
+            if (ioset.find (fwd_actions) == ioset.end ()) {
+              ioset[fwd_actions] = one_input_letter;
+            } else {
+              ioset[fwd_actions] |= one_input_letter;
+            }
           }
 
           for (auto it = ioset.begin (); it != ioset.end ();) {
