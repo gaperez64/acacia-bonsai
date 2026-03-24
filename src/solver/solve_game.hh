@@ -97,6 +97,8 @@ std::optional<spot::twa_graph_ptr> post_real (
   while (not states_todo.empty ()) {
     unsigned src = states_todo.back ();
     states_todo.pop_back ();
+    if (visited[src])  // since states_todo is a vector, not a set...
+      continue;
     visited[src] = true;
     SetOfStates singleton (state_space[src]->copy ());
 
