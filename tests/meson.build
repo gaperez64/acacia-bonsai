@@ -4028,14 +4028,6 @@ if test_files.has_key('realizable')
   endforeach
 endif
 
-# From benchmark_files
-if benchmark_files.has_key('realizable')
-  foreach set, flist : benchmark_files['realizable']
-    foreach f : flist
-      synthesis_benchmarks += { f : true }
-    endforeach
-  endforeach
-endif
 
 foreach f, _ : synthesis_benchmarks
   filename = 'ltl/realizable' / f

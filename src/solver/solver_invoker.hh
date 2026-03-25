@@ -158,12 +158,25 @@ namespace {
         assert (synth_fname.has_value ());
         assert (strats.size () > 0);
         assert (strats.size () == out_part.size ());
+        // Sub-formulas with no assigned output APs (e.g. pure-input conjuncts
+        // produced by split_independent_formulas) yield trivial strategies with
+        // synthesis-outputs = bddtrue.  Filter those out before calling
+        // mealy_machines_to_aig, which may not handle empty output groups.
+        std::vector<spot::const_twa_graph_ptr> filtered_strats;
+        std::vector<std::vector<std::string>> filtered_out_part;
+        for (size_t i = 0; i < strats.size (); ++i)
+          if (not out_part[i].empty ()) {
+            filtered_strats.push_back (strats[i]);
+            filtered_out_part.push_back (out_part[i]);
+          }
+        if (filtered_strats.empty ())
+          return;  // trivially realizable with no outputs; nothing to synthesize
         // try both ITE and SoP encodings
-        spot::aig_ptr mealy_aig = mealy_machines_to_aig (strats, "isop",
+        spot::aig_ptr mealy_aig = mealy_machines_to_aig (filtered_strats, "isop",
                                                          // make sure all
                                                          // inputs and outputs
                                                          // are in the AIG
-                                                         input_aps, out_part);
+                                                         input_aps, filtered_out_part);
         std::ofstream synthesis_file (*synth_fname);
         if (synthesis_file)
           spot::print_aiger (synthesis_file, mealy_aig);
