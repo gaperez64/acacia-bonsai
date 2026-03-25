@@ -175,6 +175,9 @@ std::optional<spot::twa_graph_ptr> solve_game (spot::twa_graph_ptr aut, const VE
                                                const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
                                                const bdd& all_inputs, const bdd& all_outputs,
                                                bool do_synthesis) {
+  if (all_outputs == bddtrue)  // no output APs; system has no control
+    verb_do (2, vout << "Warning: synthesis without output APs\n");
+
   // Compute how many boolean states will actually be put in bitsets.
   constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
   auto nbitsetbools = aut->num_states () - posets::vectors::bool_threshold;
