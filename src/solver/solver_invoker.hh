@@ -8,6 +8,7 @@
 #include "solve_game.hh"
 #include "utils/cache.hh"
 
+#include <functional>
 #include <optional>
 #include <ranges>
 #include <spot/misc/optionmap.hh>
@@ -311,9 +312,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     // * conversely, for unrealizability, I just need one of them to be declared
     //   unrealizable to get a conclusive answer.
     if (not check_unreal.has_value ())
-      result = std::ranges::all_of (forms.begin (), forms.end (), runner);
+      result = std::ranges::all_of (forms.begin (), forms.end (), std::ref (runner));
     else
-      result = std::ranges::any_of (forms.begin (), forms.end (), runner);
+      result = std::ranges::any_of (forms.begin (), forms.end (), std::ref (runner));
     verb_do (3, vout << "Result of sub-calls to runner " << result << std::endl);
   }
 
