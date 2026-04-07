@@ -88,7 +88,7 @@ posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> get_w
   //  Perhaps have a custom iteration class that has begin() and end() that points to vector<char>?
 
   // TODO: this is the full type.
-  // posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>>
+  posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>>
 
   posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> winning_region
     = get_winning_region (twa, k_max, k_min, k_inc, io_spec.inputs, io_spec.outputs).value ();

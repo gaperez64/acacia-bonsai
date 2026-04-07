@@ -1,5 +1,6 @@
 #pragma once
 
+#include "solver/solver_invoker.hh" // TODO: can we include this?
 #include <bddx.h>
 #include <spot/tl/formula.hh>
 #include <spot/twa/bdddict.hh>
@@ -44,3 +45,60 @@ void set_bool_thresh_forward_saturation(spot::twa_graph_ptr twa, int k_max);
 
 bool solve_acacia_safety_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int k_max, int k_min, int k_inc);
 
+/**
+ * The type of vectors in a winning region.
+ */
+using vector_type = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+
+/**
+ * Exposes a single vector in a winning region as an iterator.
+ */
+class vector_iterator {
+  private:
+    decltype(((const vector_type*)nullptr)->begin()) cur;
+    decltype(((const vector_type*)nullptr)->end()) end;
+
+  public:
+    vector_iterator(const vector_type& v)
+        : cur(v.begin()), end(v.end()) {}
+
+    [[nodiscard]]
+    bool has_next() const {
+      return cur != end;
+    }
+
+    VECTOR_ELT_T next() {
+      VECTOR_ELT_T const value = *cur;
+      ++cur;
+      return value;
+    }
+};
+
+/**
+ * The type of winning region.
+ */
+using winreg_type = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vector_type>;
+
+/**
+ * Exposes a winning region as an iterator.
+ */
+class winreg_iterator {
+  private:
+    decltype(((const winreg_type*)nullptr)->begin()) cur;
+    decltype(((const winreg_type*)nullptr)->end()) end;
+
+  public:
+    winreg_iterator(const winreg_type& s)
+        : cur(s.begin()), end(s.end()) {}
+
+    [[nodiscard]]
+    bool has_next() const {
+      return cur != end;
+    }
+
+    const vector_type& next() {
+      const vector_type& value = *cur;
+      ++cur;
+      return value;
+    }
+};

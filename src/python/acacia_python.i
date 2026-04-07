@@ -14,3 +14,41 @@
 
 // this generates the Python bindings
 %include "python_interface.hh"
+
+
+%extend VECTOR_iter {
+    vector_iterator *__iter__() {
+        return $self;
+    }
+
+    VECTOR_ELT_T __next__() {
+        if (!$self->has_next()) {
+            PyErr_SetNone(PyExc_StopIteration);
+            return 0;
+        }
+        return $self->next();
+    }
+
+    vector_iterator __iter__() {
+        return vector_iterator(*$self);
+    }
+}
+
+%extend winreg_iterator {
+    winreg_iterator *__iter__() {
+        return $self;
+    }
+
+    const vector_iterator& __next__() {
+        if (!$self->has_next()) {
+            PyErr_SetNone(PyExc_StopIteration);
+            return *(vector_iterator*)0; // never used
+        }
+        return $self->next();
+    }
+
+    winreg_iterator __iter__() {
+        return winreg_iterator(*$self);
+    }
+}
+
