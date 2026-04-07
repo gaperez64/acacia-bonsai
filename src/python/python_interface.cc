@@ -82,31 +82,9 @@ bool solve_acacia_safety_game (spot::twa_graph_ptr twa, bdd_io_spec& io_spec, in
   return res;
 }
 
-posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> get_winning_region_of_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int k_max, int k_min, int k_inc) {
-  // TODO: how to handle optional in Python? Can we return None?
-  //  Maybe we can already return here the begin() and end() pair.
-  //  Perhaps have a custom iteration class that has begin() and end() that points to vector<char>?
+const winreg_iterator get_winning_region_of_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int k_max, int k_min, int k_inc) {
+  auto winning_region = get_winning_region (twa, k_max, k_min, k_inc, io_spec.inputs, io_spec.outputs).value ();
 
-  // TODO: this is the full type.
-  posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>>
-
-  posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> winning_region
-    = get_winning_region (twa, k_max, k_min, k_inc, io_spec.inputs, io_spec.outputs).value ();
-
-  // TODO: expose as "outer iterator"
-  auto begin = winning_region.begin ();
-  auto end = winning_region.end ();
-
-
-  // TODO: expose as "inner iterator"
-  const auto& elem = *begin;
-  const auto *inner_begin = elem.begin ();
-  const auto *inner_end = elem.begin ();
-
-  return winning_region;
+  // return iterator that has access to the winning region
+  return winreg_iterator{winning_region};
 }
-
-// TODO: make classes for inner and outer iterator
-//  Outer = set of vectors
-//  Inner = single vector. Each dimension is a state. Dtype = char
-

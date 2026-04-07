@@ -55,12 +55,12 @@ using vector_type = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
  */
 class vector_iterator {
   private:
-    decltype(((const vector_type*)nullptr)->begin()) cur;
-    decltype(((const vector_type*)nullptr)->end()) end;
+    decltype(static_cast<const vector_type*> (nullptr)->begin()) cur;
+    decltype(static_cast<const vector_type*> (nullptr)->end()) end;
 
   public:
     vector_iterator(const vector_type& v)
-        : cur(v.begin()), end(v.end()) {}
+        : cur{v.begin()}, end{v.end()} {}
 
     [[nodiscard]]
     bool has_next() const {
@@ -84,12 +84,12 @@ using winreg_type = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vector_type
  */
 class winreg_iterator {
   private:
-    decltype(((const winreg_type*)nullptr)->begin()) cur;
-    decltype(((const winreg_type*)nullptr)->end()) end;
+    decltype(static_cast<const winreg_type*> (nullptr)->begin()) cur;
+    decltype(static_cast<const winreg_type*> (nullptr)->end()) end;
 
   public:
     winreg_iterator(const winreg_type& s)
-        : cur(s.begin()), end(s.end()) {}
+        : cur{s.begin()}, end{s.end()} {}
 
     [[nodiscard]]
     bool has_next() const {
@@ -102,3 +102,6 @@ class winreg_iterator {
       return value;
     }
 };
+
+
+const winreg_iterator get_winning_region_of_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int k_max, int k_min, int k_inc);

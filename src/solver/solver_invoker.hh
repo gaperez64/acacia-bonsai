@@ -6,7 +6,6 @@
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solve_game.hh"
-#include "solver/solver_invoker.hh"
 #include "utils/cache.hh"
 
 #include <optional>
@@ -21,7 +20,7 @@
 // These are the valid ways of treating unrealizability
 enum unreal_x_t : char { UNREAL_X_FORMULA = 'f', UNREAL_X_AUTOMATON = 'a', UNREAL_X_BOTH };
 
-spot::formula parse_ltl_string (const std::string& input) {
+inline spot::formula parse_ltl_string (const std::string& input) {
   auto pf = spot::parse_infix_psl (input, spot::default_environment::instance (), false, false);
 
   if ((not pf.f) or (not pf.errors.empty ())) {
@@ -83,7 +82,7 @@ inline void add_x_to_outputs(spot::formula& formula, std::vector<std::string>& o
   formula = formula.map ([&] (spot::formula t) { return rec (rec, t); });
 }
 
-bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
+inline bool run_ltl (spot::translator& trans, std::vector<std::string> input_aps,
               std::vector<std::string> output_aps, spot::bdd_dict_ptr dict, VECTOR_ELT_T opt_k,
               VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc, std::string formula,
               std::optional<unreal_x_t> check_unreal) {

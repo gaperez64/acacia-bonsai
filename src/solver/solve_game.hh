@@ -16,7 +16,7 @@
 #include <spot/twa/twa.hh>
 #include <utility>
 
-bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
+inline bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
                  bdd all_inputs, bdd all_outputs) {
 
   // Compute how many boolean states will actually be put in bitsets.
@@ -107,7 +107,7 @@ bool solve_game (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, 
   return realizable;
 }
 
-auto get_winning_region(spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
+inline auto get_winning_region(spot::twa_graph_ptr aut, VECTOR_ELT_T kmax, VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
                  bdd all_inputs, bdd all_outputs) {
   // Compute how many boolean states will actually be put in bitsets.
   constexpr auto max_bools_in_bitsets = posets::vectors::nbitsets_to_nbools (STATIC_MAX_BITSETS);
