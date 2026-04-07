@@ -87,6 +87,9 @@ posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> get_w
   //  Maybe we can already return here the begin() and end() pair.
   //  Perhaps have a custom iteration class that has begin() and end() that points to vector<char>?
 
+  // TODO: this is the full type.
+  // posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>>
+
   posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> winning_region
     = get_winning_region (twa, k_max, k_min, k_inc, io_spec.inputs, io_spec.outputs).value ();
 
@@ -96,11 +99,14 @@ posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> get_w
 
 
   // TODO: expose as "inner iterator"
-  auto& elem = *begin;
-  auto inner_begin = elem.begin ();
-  auto inner_end = elem.begin ();
+  const auto& elem = *begin;
+  const auto *inner_begin = elem.begin ();
+  const auto *inner_end = elem.begin ();
 
   return winning_region;
 }
 
+// TODO: make classes for inner and outer iterator
+//  Outer = set of vectors
+//  Inner = single vector. Each dimension is a state. Dtype = char
 
