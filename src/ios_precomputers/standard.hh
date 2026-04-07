@@ -151,7 +151,7 @@ namespace ios_precomputers {
   struct standard {
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
-        return [&] () {
+        return [=] () {
           return detail::standard_container<Aut, TransSet> (aut, input_support, output_support);
         };
       }
