@@ -142,6 +142,7 @@ std::optional<spot::twa_graph_ptr> post_real (
           if (not visited[tgt])
             states_todo.push_back (tgt);
           at_least_one = true;
+          break;  // deterministic strategy: one output per (state, input)
         }
       }
       assert (at_least_one);
