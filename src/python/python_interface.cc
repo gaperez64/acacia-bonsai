@@ -90,6 +90,16 @@ posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> get_w
   posets::downsets::vector_backed<posets::vectors::simd_vector_backed<char>> winning_region
     = get_winning_region (twa, k_max, k_min, k_inc, io_spec.inputs, io_spec.outputs).value ();
 
+  // TODO: expose as "outer iterator"
+  auto begin = winning_region.begin ();
+  auto end = winning_region.end ();
+
+
+  // TODO: expose as "inner iterator"
+  auto& elem = *begin;
+  auto inner_begin = elem.begin ();
+  auto inner_end = elem.begin ();
+
   return winning_region;
 }
 
