@@ -1,5 +1,6 @@
 %module acacia_python
 %{
+#include "configuration.hh"
 #include "python_interface.hh"
 %}
 
@@ -16,21 +17,43 @@
 %include "python_interface.hh"
 
 
-%extend VECTOR_iter {
+%extend vector_wrapper {
+    vector_iterator __iter__() {
+        return vector_iterator(*$self);
+    }
+
+    size_t __len__() {
+        return $self->len();
+    }
+}
+
+// ---------------- VectorIterator ----------------
+%extend vector_iterator {
     vector_iterator *__iter__() {
         return $self;
     }
 
-    VECTOR_ELT_T __next__() {
+    // Note: I am using "char" here, since SWIG does not understand the #define in configuration.hh
+    char __next__() {
         if (!$self->has_next()) {
             PyErr_SetNone(PyExc_StopIteration);
-            return 0;
+            return (char)0;
         }
         return $self->next();
     }
 
-    vector_iterator __iter__() {
-        return vector_iterator(*$self);
+    size_t __len__() {
+        return $self->len();
+    }
+}
+
+%extend winreg_wrapper {
+    winreg_iterator __iter__() {
+        return winreg_iterator($self->get_region());
+    }
+
+    size_t __len__() {
+        return $self->len();
     }
 }
 
@@ -39,16 +62,15 @@
         return $self;
     }
 
-    const vector_iterator& __next__() {
+    vector_wrapper* __next__() {
         if (!$self->has_next()) {
             PyErr_SetNone(PyExc_StopIteration);
-            return *(vector_iterator*)0; // never used
+            return nullptr;
         }
         return $self->next();
     }
 
-    winreg_iterator __iter__() {
-        return winreg_iterator(*$self);
+    size_t __len__() {
+        return $self->len();
     }
 }
-

@@ -51,6 +51,28 @@ bool solve_acacia_safety_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int
 using vector_type = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
 
 /**
+ * The type of winning region.
+ */
+using winreg_type = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vector_type>;
+
+
+class vector_wrapper {
+  private:
+    const vector_type& vec;
+  public:
+    vector_wrapper(const vector_type& v) : vec{v} {}
+
+    [[nodiscard]]
+    std::size_t len() const { return vec.end() - vec.begin(); }
+
+    [[nodiscard]]
+    const vector_type& get_vec() const {
+      return vec;
+    }
+};
+
+
+/**
  * Exposes a single vector in a winning region as an iterator.
  */
 class vector_iterator {
@@ -59,8 +81,8 @@ class vector_iterator {
     decltype(static_cast<const vector_type*> (nullptr)->end()) end;
 
   public:
-    vector_iterator(const vector_type& v)
-        : cur{v.begin()}, end{v.end()} {}
+    explicit vector_iterator (const vector_wrapper& v)
+        : cur{v.get_vec ().begin()}, end{v.get_vec ().end()} {}
 
     [[nodiscard]]
     bool has_next() const {
@@ -72,12 +94,12 @@ class vector_iterator {
       ++cur;
       return value;
     }
-};
 
-/**
- * The type of winning region.
- */
-using winreg_type = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vector_type>;
+    [[nodiscard]]
+    size_t len() const {
+      return end - cur;
+    }
+};
 
 /**
  * Exposes a winning region as an iterator.
@@ -88,7 +110,7 @@ class winreg_iterator {
     decltype(static_cast<const winreg_type*> (nullptr)->end()) end;
 
   public:
-    winreg_iterator(const winreg_type& s)
+    explicit winreg_iterator (const winreg_type& s)
         : cur{s.begin()}, end{s.end()} {}
 
     [[nodiscard]]
@@ -96,12 +118,26 @@ class winreg_iterator {
       return cur != end;
     }
 
-    const vector_type& next() {
-      const vector_type& value = *cur;
+    vector_wrapper* next() {
+      vector_wrapper* value = new vector_wrapper(*cur);
       ++cur;
       return value;
     }
+
+    [[nodiscard]]
+    size_t len() const {
+      return end - cur;
+    }
 };
 
-
-const winreg_iterator get_winning_region_of_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int k_max, int k_min, int k_inc);
+/**
+ * Returns an iterator over the winning region if such a region exists, returns nullptr otherwise.
+ * @param twa
+ * @param io_spec
+ * @param k_max
+ * @param k_min
+ * @param k_inc
+ * @return
+ */
+const winreg_iterator* get_winning_region_of_game (spot::twa_graph_ptr twa, bdd_io_spec& io_spec,
+                                                   int k_max, int k_min, int k_inc);

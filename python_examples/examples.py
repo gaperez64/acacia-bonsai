@@ -1,7 +1,7 @@
 import spot
 import acacia_python
 s = "((G (F (req))) -> (G (F (grant))))"
-s = "((G (F (req))) <-> (G(!grant) ))"
+# s = "((G (F (req))) <-> (G(!grant) ))"
 f = spot.parse_formula(s)
 f = spot.formula_Not(f)
 inputs = ["req"]
@@ -11,12 +11,27 @@ ios2 = acacia_python.create_bdds(ios)
 twa = acacia_python.create_twa(f, ios2)
 acacia_python.preprocess_aut_standard(twa, ios2, k_max=99)
 acacia_python.set_bool_thresh_no_bool_states(twa, k_max=99)
-result = acacia_python.solve_safety_game(twa, ios2, k_max=99, k_min=2, k_inc=3)
 
+print("Solving safety game...")
+result = acacia_python.solve_acacia_safety_game(twa, ios2, k_max=99, k_min=2, k_inc=3)
+print("Done.")
+print("Solve result:", result)
+
+print("Retrieving winning region...")
 region = acacia_python.get_winning_region_of_game(twa, ios2, k_max=99, k_min=2, k_inc=3)
+print("Done")
 
+if result:
+    assert region is not None
+else:
+    assert region is None
+
+print("Printing region...")
+print("Region size", len(region))
 for vec in region:
     print("---")
-    for elem in vec:
-        print(elem)
+    print("\tVec length:", len(vec))
+    for i, elem in enumerate(vec):
+        print("\t", i, elem)
+print("Done")
 

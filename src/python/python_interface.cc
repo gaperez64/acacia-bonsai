@@ -82,9 +82,14 @@ bool solve_acacia_safety_game (spot::twa_graph_ptr twa, bdd_io_spec& io_spec, in
   return res;
 }
 
-const winreg_iterator get_winning_region_of_game(spot::twa_graph_ptr twa, bdd_io_spec& io_spec, int k_max, int k_min, int k_inc) {
-  auto winning_region = get_winning_region (twa, k_max, k_min, k_inc, io_spec.inputs, io_spec.outputs).value ();
+const winreg_iterator* get_winning_region_of_game (spot::twa_graph_ptr twa, bdd_io_spec& io_spec,
+                                                   int k_max, int k_min, int k_inc) {
+  auto winning_region = get_winning_region (twa, k_max, k_min, k_inc, io_spec.inputs, io_spec.outputs);
 
-  // return iterator that has access to the winning region
-  return winreg_iterator{winning_region};
+  if (winning_region.has_value ()) {
+    // return iterator that has access to the winning region
+    return new winreg_iterator{winning_region.value ()};
+  }
+
+  return nullptr;
 }
