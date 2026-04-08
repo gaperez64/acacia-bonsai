@@ -1,11 +1,10 @@
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+
 #include <stddef.h>
 
 #include "pybind_interface.hh"
 
-namespace py = pybind11;
+
 
 int add(int i, int j) {
   return i + j;
@@ -90,7 +89,11 @@ bdd_io_spec create_bdds (const io_spec& io_spec) {
   return bdd_io_spec {.inputs = all_inputs, .outputs = all_outputs, .dict = dict};
 }
 
-spot::twa_graph_ptr create_twa (spot::formula& formula, bdd_io_spec& io_spec) {
+// spot::twa_graph_ptr create_twa (spot::formula& formula, bdd_io_spec& io_spec) {
+// TODO: not yet compatible with spot::formula
+spot::twa_graph_ptr create_twa(py::object formula, bdd_io_spec& io_spec) {
+  spot::formula& f = formula.cast<spot::formula&>();
+
   spot::option_map extra_options;
   extra_options.set ("simul", 0);
   extra_options.set ("ba-simul", 0);
@@ -100,7 +103,7 @@ spot::twa_graph_ptr create_twa (spot::formula& formula, bdd_io_spec& io_spec) {
 
   spot::translator trans (io_spec.dict, &extra_options);
 
-  auto aut = create_automaton (formula, trans);
+  auto aut = create_automaton (f, trans);
 
   return aut;
 }
@@ -180,7 +183,8 @@ PYBIND11_MODULE(acacia_bonsai_pybind, m) {
   // Expose spot::bdd_dict_ptr as opaque
   py::class_<spot::bdd_dict, std::shared_ptr<spot::bdd_dict>>(m, "bdd_dict");
 
-
+  // py::class_<spot::formula>(m, "formula");
+  // py::class_<spot::twa_graph, spot::twa_graph_ptr>(m, "twa_graph");
 
   // Expose bdd_io_spec
   py::class_<bdd_io_spec>(m, "bdd_io_spec")

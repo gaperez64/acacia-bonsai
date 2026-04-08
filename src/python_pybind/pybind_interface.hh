@@ -7,6 +7,10 @@
 #include <spot/twa/bdddict.hh>
 #include <spot/twa/fwd.hh>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+namespace py = pybind11;
+
 struct io_spec {
   std::vector<std::string> input_aps;
   std::vector<std::string> output_aps;
@@ -26,7 +30,8 @@ struct bdd_io_spec {
 bdd_io_spec create_bdds(const io_spec& output_aps);
 
 
-spot::twa_graph_ptr create_twa(spot::formula& formula, bdd_io_spec& io_spec);
+// spot::twa_graph_ptr create_twa(spot::formula& formula, bdd_io_spec& io_spec);
+spot::twa_graph_ptr create_twa(py::object formula, bdd_io_spec& io_spec);
 
 // needed for UNREAL_X_AUTOMATON
 void prep_unreal_automaton(spot::twa_graph_ptr twa, bdd_io_spec& io_spec);
