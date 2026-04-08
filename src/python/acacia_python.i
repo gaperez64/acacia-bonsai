@@ -1,6 +1,5 @@
 %module acacia_python
 %{
-#include "configuration.hh"
 #include "python_interface.hh"
 %}
 

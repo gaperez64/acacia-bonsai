@@ -26,12 +26,28 @@ if result:
 else:
     assert region is None
 
+
+
 print("Printing region...")
+
+# it = acacia_python.char_iterator("abc", 3)
+# for c in it:
+#     print(c)
+
+container = acacia_python.CharContainer("Hello")
+# Clean for-loop usage
+# for i, ch in enumerate(container.begin()):
+#     print(i, ch)          # prints ASCII values: 0 72, 1 101, ...
+
+# # TODO: compare this to Acacia test suite.
 print("Region size", len(region))
 for vec in region:
     print("---")
     print("\tVec length:", len(vec))
     for i, elem in enumerate(vec):
-        print("\t", i, elem)
+        print("\t", i, ord(elem))
 print("Done")
+
+
+
 

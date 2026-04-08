@@ -1,6 +1,7 @@
 #pragma once
 
-#include "solver/solver_invoker.hh" // TODO: can we include this?
+// TODO: this uses the global default configuration.hh, but there might be a conflict somewhere, resulting in duplicate template instatiation
+#include "solver/solver_invoker.hh"
 #include <bddx.h>
 #include <spot/tl/formula.hh>
 #include <spot/twa/bdddict.hh>
@@ -89,10 +90,17 @@ class vector_iterator {
       return cur != end;
     }
 
+    // VECTOR_ELT_T next() {
+    //   VECTOR_ELT_T const value = *cur;
+    //   ++cur;
+    //   return value;
+    // }
+
     VECTOR_ELT_T next() {
-      VECTOR_ELT_T const value = *cur;
-      ++cur;
-      return value;
+      if (cur == end) {
+        throw std::out_of_range("iterator exhausted");
+      }
+      return *cur++;
     }
 
     [[nodiscard]]
