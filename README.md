@@ -8,7 +8,7 @@ algorithms using antichain data structures.  The theory and practice is describe
 # Docker image
 
 A pre-built Docker image with all dependencies and sources is available from
-GitHub Container Registry. It ships sources only — compilation happens inside
+the GitHub Container Registry. It ships sources only — compilation happens inside
 the container so that `-march=native` picks up the host's SIMD instruction set.
 
 Pull the image:
@@ -21,17 +21,14 @@ Run the container interactively:
 $ docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:latest
 ```
 
-Inside the container, compile Spot and all four optimized acacia-bonsai
+Inside the container, compile Spot and a number of optimized acacia-bonsai
 configurations:
 ```
 $ ./compile.sh
 ```
 
-This builds Spot from source and then compiles four configurations:
-`best_decomp_kdtree_mona`, `best_decomp_kdtree_mona_no_bitsets`,
-`best_decomp_mona_no_bitsets`, and `best_downset_vector_or_kdtree`.
-
-Run acacia-bonsai using the wrapper script:
+This builds Spot from source and then compiles all configurations. Now,
+you can run acacia-bonsai using the wrapper script:
 ```
 $ ./acacia-bonsai.sh best_decomp_kdtree_mona -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
