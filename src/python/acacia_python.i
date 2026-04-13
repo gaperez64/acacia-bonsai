@@ -27,6 +27,22 @@
 }
 
 // ---------------- VectorIterator ----------------
+// Override the global %exception (see impl.i) for __next__: after running the
+// action we check PyErr_Occurred() and SWIG_fail if set. Without this, setting
+// PyExc_StopIteration inside the method is not enough -- SWIG still wraps the
+// (dummy) return value into a non-NULL PyObject*, which makes CPython either
+// raise a SystemError ("returned a result with an error set") or silently
+// discard the StopIteration.
+%exception vector_iterator::__next__ {
+    try {
+        $action
+    } catch (...) {
+        handle_any_exception();
+        SWIG_fail;
+    }
+    if (PyErr_Occurred()) SWIG_fail;
+}
+
 %extend vector_iterator {
     vector_iterator *__iter__() {
         return $self;
@@ -54,6 +70,17 @@
     size_t __len__() {
         return $self->len();
     }
+}
+
+// Same StopIteration fix as for vector_iterator::__next__ above.
+%exception winreg_iterator::__next__ {
+    try {
+        $action
+    } catch (...) {
+        handle_any_exception();
+        SWIG_fail;
+    }
+    if (PyErr_Occurred()) SWIG_fail;
 }
 
 %extend winreg_iterator {
