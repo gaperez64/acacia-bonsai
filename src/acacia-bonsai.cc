@@ -32,7 +32,7 @@
 
 using namespace std::literals;
 
-// Definitions for some external variables.
+// Definitions for some external/global variables.
 // FIXME: Could be refactored.
 int utils::verbose = 0;
 utils::voutstream utils::vout;
