@@ -34,7 +34,7 @@ print("Printing region...")
 # for c in it:
 #     print(c)
 
-container = acacia_python.CharContainer("Hello")
+# container = acacia_python.CharContainer("Hello")
 # Clean for-loop usage
 # for i, ch in enumerate(container.begin()):
 #     print(i, ch)          # prints ASCII values: 0 72, 1 101, ...
