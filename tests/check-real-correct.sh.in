@@ -3,6 +3,21 @@
 ACABONSAI=@ACABONSAI@
 export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
+# Handling most common signals with a trap
+TRAPINT () { 
+  if [[ $childpid != '' ]]; then
+    kill -INT $childpid 2>/dev/null
+    wait $childpid
+  fi
+  exit
+}
+TRAPQUIT () { 
+  if [[ $childpid != '' ]]; then
+    kill -QUIT $childpid 2>/dev/null
+    wait $childpid
+  fi
+  exit
+}
 TRAPTERM () { 
   if [[ $childpid != '' ]]; then
     kill -TERM $childpid 2>/dev/null
@@ -43,7 +58,7 @@ run_ltlsynt () {
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
     echoandrun $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
-         ${=AB_OPTS} $extra_opts 
+         -l 4 ${=AB_OPTS} $extra_opts
 }
 
 PROG=$0
@@ -142,19 +157,22 @@ for prog in $progs; do
     if (( res > 2 || (expect < 2 && res != expect) )); then
         echo -n "FAILED: "
         if (( res > 128 )); then
-            echo 'CRASH'
+            echo "CRASH $res"
             ret=$res
         elif [[ $prog == 'l' ]]; then
             echo 'CRITICAL: ltlsynt failed.'
             ret=13
+        elif (( res == 2 )); then
+            echo "UNKNOWN RETURNED $res"
+            ret=3
         elif (( res == 3 )); then
-            echo 'UNKNOWN RETURNED'
+            echo "ERROR RETURNED $res"
             ret=3
         elif (( expect == 0 )); then
-            echo 'FALSE NEGATIVE'
+	    echo "FALSE NEGATIVE $res"
             ret=1
         elif (( expect == 1 )); then
-            echo 'FALSE POSITIVE'
+	    echo "FALSE POSITIVE $res"
             ret=2
         fi
     fi

@@ -50,19 +50,6 @@ namespace ios_precomputers {
             bdd letter_set, support, current_letter;
         };
 
-        // class that stores vector<pair<p, q>> and also the IO, iterating over it iterates over
-        // the (p, q) pairs
-        struct transitions_io_pair {
-          public:
-            TransSet transitions;
-            bdd IO;
-
-            auto begin () const { return transitions.begin (); }
-            auto end () const { return transitions.end (); }
-
-            auto& operator[] (size_t i) { return transitions[i]; }
-        };
-
         class ios_it : public bdd_it {
           public:
             using iterator_category = std::input_iterator_tag;
@@ -76,9 +63,7 @@ namespace ios_precomputers {
             }
 
             auto operator* () const {
-              // return current_io (vector<pair<p, q>>) AND the IO compatible with I that gave this
-              // action
-              return transitions_io_pair (current_io, letter);
+              return current_io;
             }
 
           private:
@@ -166,7 +151,7 @@ namespace ios_precomputers {
   struct standard {
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
-        return [&] () {
+        return [=] () {
           return detail::standard_container<Aut, TransSet> (aut, input_support, output_support);
         };
       }

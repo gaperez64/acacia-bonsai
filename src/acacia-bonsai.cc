@@ -5,17 +5,13 @@
 #include <unordered_map>
 
 #include <algorithm>
+#include <csignal>
 #include <cstring>
 #include <memory>
 #include <optional>
-#include <signal.h>
-#include <spot/misc/optionmap.hh>
-#include <spot/misc/timer.hh>
-#include <spot/misc/tmpfile.hh>
-#include <spot/twaalgos/aiger.hh>
-#include <spot/twaalgos/translate.hh>
 #include <sstream>
 #include <string>
+#include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utils/verbose.hh>
@@ -23,31 +19,25 @@
 
 #include <posets/downsets.hh>
 
-#define debug_(A...)               \
-  do {                             \
-    if (utils::verbose > 0) {      \
-      std::cout << A << std::endl; \
-    }                              \
-  } while (0)
-
 using namespace std::literals;
 
 // Definitions for some external/global variables.
-// FIXME: Could be refactored.
-int utils::verbose = 0;
+unsigned utils::verbose = 0;
 utils::voutstream utils::vout;
 size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
-void terminate ([[maybe_unused]] int signum) {
-  if (getpgid (0) == getpid ()) {  // Main process
-    signal (SIGTERM, SIG_IGN);
-    kill (0, SIGTERM);
-    while (wait (nullptr) != -1)
-      /* no body */;
+namespace {
+  void terminate ([[maybe_unused]] int signum) {
+    if (getpgid (0) == getpid ()) {  // Main process
+      signal (SIGTERM, SIG_IGN);
+      kill (0, SIGTERM);
+      while (wait (nullptr) != -1)
+        /* no body */;
+    }
+    else
+      _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
   }
-  else
-    _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
 }
 
 int main (int argc, char** argv) {
@@ -56,38 +46,38 @@ int main (int argc, char** argv) {
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;
 
+  // set up signal handlers to avoid crashing and reporting a wrong response
+  // on Ctrl-C, for instance
   struct sigaction action;
   memset (&action, 0, sizeof (struct sigaction));
   action.sa_handler = terminate;
   sigaction (SIGTERM, &action, nullptr);
   sigaction (SIGINT, &action, nullptr);
+  sigaction (SIGQUIT, &action, nullptr);
+  sigaction (SIGABRT, &action, nullptr);
+
+  // set a (virtual) memory limit in GiBs, if needed
+  if (arg_values.mem_limit.has_value ()) {
+    struct rlimit limit;
+    limit.rlim_max = 1024L * 1024L * 1024L * (*arg_values.mem_limit);
+    limit.rlim_cur = limit.rlim_max;
+    setrlimit(RLIMIT_AS, &limit);
+  }
 
   try {
-    // These options play a role in twaalgos.
-    spot::option_map extra_options;
-    extra_options.set ("simul", 0);
-    extra_options.set ("ba-simul", 0);
-    extra_options.set ("det-simul", 0);
-    extra_options.set ("tls-impl", 1);
-    extra_options.set ("wdba-minimize", 2);
-
-    // Setup the dictionary now: BuDDy's initialization
-    spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
-    spot::translator trans (dict, &extra_options);
-
-    const auto start_proc = [&] (std::optional<unreal_x_t> unreal_x) {
+    const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
       if (fork () == 0) {
+        // we check one thing at a time here
+        assert (not unreal_x.has_value () or *unreal_x != UNREAL_X_BOTH);
         utils::vout.set_prefix (
             std::string {"["} +
             (not unreal_x.has_value () ? "real" : std::string {"unreal-x="} + (char) *unreal_x) +
             "] ");
         const bool res =
-            run_ltl (trans, arg_values.inputs, arg_values.outputs, dict, arg_values.opt_k,
-                     arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula, unreal_x);
+            run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
+                     arg_values.opt_kinc, arg_values.formula, unreal_x,
+                     unreal_x.has_value () ? std::nullopt : arg_values.synth_fname);
         verb_do (1, vout << "returning " << res << "\n");
-
-        // Diagnose unused -x options, or not?
-        extra_options.report_unused_options ();
 
         if (unreal_x.has_value ())
           exit (res ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN);
@@ -100,16 +90,17 @@ int main (int argc, char** argv) {
     // return to process their exit codes
     setpgid (0, 0);
     assert (getpgid (0) == getpid ());
-    // We always start a realizability check
-    start_proc (std::nullopt);
+
+    if (arg_values.check_real)
+      start_proc (std::nullopt);
 
     if (arg_values.opt_unreal_x.has_value ()) {
       if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or
           *(arg_values.opt_unreal_x) == UNREAL_X_FORMULA)
-        start_proc (std::make_optional<unreal_x_t> (UNREAL_X_FORMULA));
+        start_proc (std::make_optional<UNREAL_X_T> (UNREAL_X_FORMULA));
       if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or
           *(arg_values.opt_unreal_x) == UNREAL_X_AUTOMATON)
-        start_proc (std::make_optional<unreal_x_t> (UNREAL_X_AUTOMATON));
+        start_proc (std::make_optional<UNREAL_X_T> (UNREAL_X_AUTOMATON));
     }
 
     int ret;
@@ -117,7 +108,7 @@ int main (int argc, char** argv) {
       ret = WEXITSTATUS (ret);
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else
-        terminate (0);        
+        terminate (0);
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
         else
@@ -128,7 +119,7 @@ int main (int argc, char** argv) {
     error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
 
   } catch (const std::exception& e) {
-    error (EXIT_CODE_ERROR, "%s", e.what ());
+    error (EXIT_CODE_ERROR, "Exception caught: %s\n", e.what ());
   } catch (...) {
     error (EXIT_CODE_ERROR, "Unknown exception\n");
   }

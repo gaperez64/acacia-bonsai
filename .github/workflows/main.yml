@@ -1,6 +1,9 @@
 name: CI
-on:
+on: 
   push:
+    branches:
+      - master
+  pull_request:
     branches:
       - master
 permissions:
@@ -23,29 +26,55 @@ jobs:
         sudo dpkg -i libltdl7_2.5.4-4build1_amd64.deb
         sudo apt -f install
     - name: Checkout repository and submodules
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         submodules: recursive
+    - name: Restore Spot cache
+      id: spot-cache
+      uses: actions/cache@v5
+      with:
+        path: |
+          /usr/local/lib/libspot*
+          /usr/local/lib/libbddx*
+          /usr/local/include/spot
+          /usr/local/lib/pkgconfig/libspot.pc
+          /usr/local/lib/pkgconfig/libbddx.pc
+          /usr/local/bin/spot
+          /usr/local/bin/ltl*
+          /usr/local/bin/aut*
+          /usr/local/bin/ran*
+        key: spot-2.14.4-maxacc64-nopy-${{ runner.os }}
     - name: Install Spot
+      if: steps.spot-cache.outputs.cache-hit != 'true'
       run: |
         sudo wget http://www.lre.epita.fr/dload/spot/spot-2.14.4.tar.gz
         tar -xvzf spot-2.14.4.tar.gz
         cd spot-2.14.4
-        sudo ./configure --enable-max-accsets=64
+        sudo ./configure --enable-max-accsets=64 --disable-python
         sudo make
         sudo make install
+    - name: Compile and test a debug configuration
+      run: |
+        export CXX=g++-14
+        ./self-benchmark.sh -c base -j -b ab/tiny
+        rm build_base/benchmarked
+        ./self-benchmark.sh -c base -j -b ab/small
+        rm build_base/benchmarked
+        ./self-benchmark.sh -c base -j -b ab/issue54
+        rm build_base/benchmarked
+        ./self-benchmark.sh -c base -j -b synthesis
     - name: Compile and test all configurations
       run: |
         export CXX=g++-14
         ./self-benchmark.sh -j -b ab/tiny
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: always()
       with:
         name: test-logs
         path: _bm-logs/
     - name: Upload compilation logs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: always()
       with:
         name: meson-logs

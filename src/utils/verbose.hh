@@ -60,7 +60,7 @@ namespace utils {
   };
 
   extern voutstream vout;
-  extern int verbose;
+  extern unsigned verbose;
 }
 
 #ifndef NO_VERBOSE

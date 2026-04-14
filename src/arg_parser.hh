@@ -1,6 +1,5 @@
 #pragma once
 
-#include "arg_parser.hh"
 #include "configuration.hh"
 #include "error_msg.hh"
 #include "solver/solver_invoker.hh"
@@ -29,8 +28,11 @@ struct arg_parse_result {
     VECTOR_ELT_T opt_kmin = DEFAULT_KMIN;
     VECTOR_ELT_T opt_k = DEFAULT_K;
     VECTOR_ELT_T opt_kinc = DEFAULT_KINC;
-    std::optional<unreal_x_t> opt_unreal_x = std::make_optional<unreal_x_t> (DEFAULT_UNREAL_X);
-    unsigned int verbose_level = 0;
+    std::optional<UNREAL_X_T> opt_unreal_x = std::make_optional<UNREAL_X_T> (DEFAULT_UNREAL_X);
+    unsigned verbose_level = 0;
+    bool check_real = true;
+    std::optional<std::string> synth_fname = std::nullopt;
+    std::optional<int> mem_limit = std::nullopt;
 };
 
 /**
@@ -69,38 +71,42 @@ void process_arg_output (const std::string& arg, arg_parse_result& result) {
  * Print the help menu for the specified program name.
  */
 void show_help (const char* program_name) {
-  std::cout << "Usage: " << program_name << " [OPTIONS]\n"
-            << "Check realizability for LTL specifications.\n\n"
-            << "Allowed options:\n"
-            << "  -h                print this help message\n"
-            << "  -V                print program version\n"
-            << "  -f STRING         process the formula STRING\n"
-            << "  -F VAL            process formula in file VAL\n"
-            << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
-               "atomic propositions\n"
-            << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
-               "propositions\n"
-            << "  -K VAL            final value of K, or unique value if M is not specified\n"
-            << "  -M VAL            starting value of K\n"
-            << "  -I VAL            increment value for K, used when M < K\n"
-            << "  -u VAL            check unrealizability; VAL should be [automaton|formula|both] "
-            << "unrealizability is chedked by default with "
+  std::cout
+      << "Usage: " << program_name << " [OPTIONS]\n"
+      << "Check realizability for LTL specifications.\n\n"
+      << "Allowed options:\n"
+      << "  -h                print this help message\n"
+      << "  -s FILE           synthesize controller and store in FILE\n"
+      << "  -V                print program version\n"
+      << "  -f STRING         process the formula STRING\n"
+      << "  -F VAL            process formula in file VAL\n"
+      << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
+         "atomic propositions\n"
+      << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
+         "propositions\n"
+      << "  -K VAL            final value of K, or unique value if M is not specified\n"
+      << "  -M VAL            starting value of K\n"
+      << "  -I VAL            increment value for K, used when M < K\n"
+      << "  -u VAL            use VAL from [automaton|formula|both] to check unrealizability\n"
+      << "                    by default, unrealizability is checked with "
 #if DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
-            << "VAL = automaton"
+      << "VAL = automaton"
 #elif DEFAULT_UNREAL_X == UNREAL_X_FORMULA
-            << "VAL = formula"
+      << "VAL = formula"
 #else
-            << "VAL = both"
+      << "VAL = both"
 #endif
-            << std::endl
-            << "  -r                just check realizability, not unrealizability\n"
-            << "  -v                verbose mode, can be repeated for more verbosity\n"
-            << "Exit status:\n"
-            << "\t" << EXIT_CODE_REAL    << "   if the input problem is realizable\n"
-            << "\t" << EXIT_CODE_UNREAL  << "   if it is unrealizable\n"
-            << "\t" << EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-            << "\t" << EXIT_CODE_ERROR   << "   if any error has been reported" << '\n'
-            << "Version: " << VERSION << '\n';
+      << std::endl
+      << "  -l VAL            set the virtual memory limit to VAL GiBs\n"
+      << "  -r                do NOT check for unrealizability\n"
+      << "  -U                do NOT check for realizability\n"
+      << "  -v                verbose mode, can be repeated for more verbosity\n"
+      << "Exit status:\n"
+      << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
+      << "\t" << (int)EXIT_CODE_UNREAL << "   if it is unrealizable\n"
+      << "\t" << (int)EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
+      << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
+      << "Version: " << VERSION << '\n';
 }
 
 bool case_insensitive_char_equals (char a, char b) {
@@ -114,18 +120,18 @@ bool case_insensitive_equals (std::string_view lhs, std::string_view rhs) {
 
 void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
   if (case_insensitive_equals (arg, "automaton"))
-    result.opt_unreal_x = std::make_optional<unreal_x_t> (UNREAL_X_AUTOMATON);
+    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_AUTOMATON);
   else if (case_insensitive_equals (arg, "formula"))
-    result.opt_unreal_x = std::make_optional<unreal_x_t> (UNREAL_X_FORMULA);
+    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_FORMULA);
   else if (case_insensitive_equals (arg, "both"))
-    result.opt_unreal_x = std::make_optional<unreal_x_t> (UNREAL_X_BOTH);
+    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_BOTH);
   else
     error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s\n", arg.c_str ());
 }
 
 void process_formula_file (const std::string& arg, arg_parse_result& result) {
   std::ifstream file (arg.c_str ());
-  if (!file)
+  if (not file)
     error (EXIT_CODE_ERROR, "Error: unable to open file %s\n", arg);
   std::stringstream buffer;
   buffer << file.rdbuf ();
@@ -146,12 +152,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_kmin = std::nullopt;
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt (argc, argv, "hrVf:F:i:o:I:K:M:u:v")) != -1) {
+  while ((opt = getopt (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:l:")) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
       case 'V': std::cout << "Version: " << VERSION << '\n'; exit (EXIT_CODE_UNKNOWN);
       case 'f': retval.formula = optarg; break;
       case 'r': retval.opt_unreal_x = std::nullopt; break;
+      case 'U': retval.check_real = false; break;
       case 'F': process_formula_file (optarg, retval); break;
       case 'i': process_arg_input (optarg, retval); break;
       case 'o': process_arg_output (optarg, retval); break;
@@ -160,6 +167,8 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'M': sgn_kmin = std::make_optional<int> (std::stoi (optarg)); break;
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
+      case 's': retval.synth_fname = optarg; break;
+      case 'l': retval.mem_limit = std::stoi (optarg); break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }
   }
@@ -171,13 +180,18 @@ arg_parse_result arg_parser (int argc, char** argv) {
   if (retval.outputs.empty ())
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
 
-  // Adjust the value of K
-  if (sgn_kmin.has_value () and *sgn_kmin <= 0) {
-    verb_do (2, vout << "Kmin is being corrected since it was negative!\n");
-    retval.opt_kmin = retval.opt_k;
+  if (sgn_kmin.has_value ()) {
+    if (*sgn_kmin > 0) {
+      retval.opt_kmin = *sgn_kmin;
+    }
+    else {
+      verb_do (2, vout << "Kmin is being corrected since it was not positive!\n");
+      retval.opt_kmin = retval.opt_k;
+    }
   }
+
   if (retval.opt_kmin > retval.opt_k or (retval.opt_kmin <= retval.opt_k and retval.opt_kinc == 0))
-    error (EXIT_CODE_ERROR, "Error: incompatible values for K (%d), Kmin (%d), and Kinc (%d).\n",
+    error (EXIT_CODE_ERROR, "Error: incompatible values for K (%u), Kmin (%u), and Kinc (%u).\n",
            retval.opt_k, retval.opt_kmin, retval.opt_kinc);
 
   return retval;

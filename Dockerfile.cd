@@ -1,0 +1,31 @@
+FROM gcc:14.2-bookworm
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Build tools (extends syntcomp_tgcc docker_full package list)
+RUN apt-get update && \
+    apt-get install -y wget cmake autoconf time python3-dev \
+        meson ninja-build pkg-config python3-pip \
+        automake libtool libltdl-dev bison flex zsh git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade meson (bookworm's version may be too old for C++23 project features)
+RUN pip3 install --break-system-packages --upgrade meson
+
+# Spot 2.14.4 sources — NOT compiled; user compiles with -march=native
+WORKDIR /opt/spot
+RUN wget -q http://www.lrde.epita.fr/dload/spot/spot-2.14.4.tar.gz \
+    && tar -xzf spot-2.14.4.tar.gz \
+    && rm spot-2.14.4.tar.gz
+
+# acacia-bonsai sources (with submodules, via checkout in the workflow)
+WORKDIR /opt/acacia-bonsai
+COPY . .
+
+# Pre-fetch std-simd meson wrap so compile.sh works fully offline
+RUN meson subprojects download std-simd || true
+
+RUN chmod +x compile.sh acacia-bonsai.sh
+
+WORKDIR /opt/acacia-bonsai
+ENTRYPOINT ["/bin/bash"]

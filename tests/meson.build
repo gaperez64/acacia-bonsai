@@ -5,9 +5,49 @@ test_files = \
                'realizable' :
                  { 
                    'issue54': # These gave wrong answers for SYNTCOMP 2025
-                     [ 'KitchenTimerV7.ltl',
-                       'simple_arbiter_with_hints_pb_6_pe_.ltl',
-                       'simple_arbiter_with_hints_pb_8_pe_.ltl'
+                     [
+                       'KitchenTimerV7.ltl',
+                       'TorcsSimple.ltl',
+                       'zoo5.ltl',
+                       'escalator_counting_init.ltl',
+                       'SPIWriteSdi.ltl',
+                       'zoo0.ltl',
+                       'KitchenTimerV5.ltl',
+                       'Automata.ltl',
+                       'KitchenTimerV10.ltl',
+                       'load_balancer_7.ltl',
+                       'KitchenTimerV7.ltl',
+                       'loadfull5.ltl',
+                       'KitchenTimerV9.ltl',
+                       'load_balancer_6.ltl',
+                       'amba_decomposed_encode_6.ltl',
+                       'zoo10.ltl',
+                       'loadfull4.ltl',
+                       'TwoCountersInRangeA6.ltl',
+                       'SensorSubmodulChooser.ltl',
+                       'button.ltl',
+                       'EnemeyModule.ltl',
+                       'loadfull3.ltl',
+                       'load_balancer_5.ltl',
+                       'SensorRegister.ltl',
+                       'load_balancer_8.ltl',
+                       'loadcomp5.ltl',
+                       'EscalatorCountingInit.ltl',
+                       'zoo5.ltl',
+                       'KitchenTimerV0.ltl',
+                       'prioritized_arbiter_enc_4.ltl',
+                       'load_balancer_3.ltl',
+                       'KitchenTimerV6.ltl',
+                       'TwoCounters4.ltl',
+                       'Sensor.ltl',
+                       'zoo10.ltl',
+                       'lilydemo19.ltl',
+                       'loadcomp4.ltl',
+                       'ActionConverter.ltl',
+                       'load_balancer_4.ltl',
+                       'amba_decomposed_encode_8.ltl',
+                       'SensorInit.ltl',
+                       'loadfull2.ltl'
                      ],
 
                    'tiny' :  # Less than 50 bytes
@@ -230,7 +270,12 @@ test_files = \
                      
                  },
                'unrealizable' :
-                 { 'tiny' : # Smaller than 100 bytes
+                 { 
+                   'issue54': # These gave wrong answers for SYNTCOMP 2025
+                     [
+                       'TwoCountersGui.ltl'
+                     ],
+                   'tiny' : # Smaller than 100 bytes
 
                      [ 'ltl2dba_psi_1.ltl', 'ltl2dba_psi_2.ltl',
                        'ltl2dba_R_2.ltl', 'ltl2dba27.ltl',
@@ -3929,6 +3974,10 @@ benchmark_files += { 'syntcomp24': benchmark_files['syntcomp24'] + { 'all':
    benchmark_files['syntcomp24']['20s-100s'] +
    benchmark_files['syntcomp24']['100s-inf'] } }
 
+benchmark_files += { 'syntcomp24': benchmark_files['syntcomp24'] + { '0s-20s':
+   benchmark_files['syntcomp24']['0s-1s'] +
+   benchmark_files['syntcomp24']['1s-20s'] } }
+
 foreach folder, testsets : benchmark_files
   foreach set, files : testsets
     foreach file : files
@@ -3958,4 +4007,44 @@ foreach folder, testsets : benchmark_files
       endforeach
     endforeach
   endforeach
+endforeach
+
+#############################
+# Synthesis test suite
+#############################
+
+# Collect all unique realizable benchmarks
+# filename -> true
+synthesis_benchmarks = {}
+
+# From test_files
+if test_files.has_key('realizable')
+  foreach size, flist : test_files['realizable']
+    if not size.startswith('!')
+      foreach f : flist
+        synthesis_benchmarks += { f : true }
+      endforeach
+    endif
+  endforeach
+endif
+
+# From benchmark_files
+if benchmark_files.has_key('realizable')
+  foreach set, flist : benchmark_files['realizable']
+    foreach f : flist
+      synthesis_benchmarks += { f : true }
+    endforeach
+  endforeach
+endif
+
+foreach f, _ : synthesis_benchmarks
+  filename = 'ltl/realizable' / f
+  if fs.exists(filename)
+    test('synthesis/' + f,
+         check_real_exe,
+         args : [ '-p', '-a', '-F', files(filename), '--', '-s', f + '.out.aag' ],
+         suite : 'synthesis',
+         timeout : 30,
+         depends : [ab_exe])
+  endif
 endforeach

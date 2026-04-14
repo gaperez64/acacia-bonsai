@@ -1,6 +1,6 @@
 #pragma once
 
-#define VERSION 1.9  // Kasper + Guillermo determined this arbitrarily
+#define VERSION "1.9.2"
 
 #include "utils/todo.hh"
 
@@ -8,14 +8,23 @@
 # define CPRE_AVOID_UNIONS 0
 #endif
 
+#ifndef DECOMPOSE_SPEC
+# define DECOMPOSE_SPEC 1
+#endif
+
 #ifndef NO_ARRAY_CAP_MAX
 // define it if you want STATIC_ARRAY_CAP_MAX to be 0
 #endif
 
-// What follows are default values overriden by self-benchmark
+#ifndef USE_BOOLVEC_OVER_BITSET
+// define it if you want to use boolean vectors when
+// defaulting to VECTOR_AND_BITSET_DOWNSET_IMPL
+#endif
+
+// What follows are default values overriden by self-benchmark.sh
 // or your meson setup.
 //
-// The defaults were copied from self-benchmark 21/12/2025
+// The defaults were copied from self-benchmark.sh 21/12/2025
 
 // Overflow WARNING: Check VECTOR_ELT_T below before changing
 #ifndef DEFAULT_K
@@ -31,7 +40,7 @@
 # define DEFAULT_UNREAL_X UNREAL_X_BOTH
 #endif
 #ifndef VECTOR_ELT_T
-# define VECTOR_ELT_T char
+# define VECTOR_ELT_T signed char
 #endif
 // End of overflow WARNING
 
