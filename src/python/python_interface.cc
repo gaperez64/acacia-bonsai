@@ -3,11 +3,11 @@
 
 #include "python_interface.hh"
 #include "solver/solver_invoker.hh"
+#include "utils/verbose.hh"
 
 
 utils::voutstream utils::vout;
-// TODO: this no longer works, why?
-int               utils::verbose = 0;
+unsigned int      utils::verbose = 0;
 
 // TODO We need to figure out some clean way to define these, instead of copying them everywhere
 size_t posets::vectors::bool_threshold = 0;
@@ -16,11 +16,6 @@ size_t posets::vectors::bitset_threshold = 0;
 
 io_spec get_io_spec(const std::vector<std::string>& input_aps, const std::vector<std::string>& output_aps) {
   return io_spec{.input_aps = input_aps, .output_aps = output_aps};
-}
-
-void prep_unreal_formula (spot::formula& formula, std::vector<std::string>& output_aps) {
-  // TODO: this no longer works
-  add_x_to_outputs (formula, output_aps);
 }
 
 bdd_io_spec create_bdds (const io_spec& io_spec) {
