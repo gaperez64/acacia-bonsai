@@ -12,6 +12,20 @@
 // NOTE: this introduces ALL Spot functionality into the "acacia_python" package
 %include "impl.i"
 
+// Functions that return heap-allocated objects owned by Python.
+%newobject create_twa;
+%newobject solve_acacia_safety_game;
+%newobject get_initial_state;
+// winreg_iterator::__next__ returns an owned vector_wrapper*
+%newobject winreg_iterator::__next__;
+
+// SWIG doesn't reliably handle rvalue-reference constructors. These wrapper
+// classes are produced by the C++ factory functions above, so Python never
+// needs to construct them directly.
+%ignore WinningRegion::WinningRegion;
+%ignore GameResult::GameResult;
+%ignore vector_wrapper::vector_wrapper;
+
 // this generates the Python bindings
 %include "python_interface.hh"
 
@@ -62,7 +76,7 @@
     }
 }
 
-%extend winreg_wrapper {
+%extend WinningRegion {
     winreg_iterator __iter__() {
         return winreg_iterator($self->get_region());
     }
