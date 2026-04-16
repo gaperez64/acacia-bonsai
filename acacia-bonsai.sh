@@ -47,4 +47,61 @@ if [ ! -x "$BINARY" ]; then
     exit 2
 fi
 
+# If any argument is a .tlsf file, translate it via syfco into the LTL
+# formula and the input/output partition that acacia-bonsai expects.
+# We also strip a preceding "-F" so callers can use either
+#     acacia-bonsai.sh <cfg> spec.tlsf
+# or  acacia-bonsai.sh <cfg> -F spec.tlsf [other flags]
+TLSF_FILE=""
+PASS_ARGS=()
+i=1
+while [ $i -le $# ]; do
+    arg="${!i}"
+    next_i=$((i + 1))
+    next_arg="${!next_i:-}"
+    if [ "$arg" = "-F" ] && [[ "$next_arg" == *.tlsf ]]; then
+        TLSF_FILE="$next_arg"
+        i=$((i + 2))
+        continue
+    fi
+    if [[ "$arg" == *.tlsf ]]; then
+        TLSF_FILE="$arg"
+        i=$((i + 1))
+        continue
+    fi
+    PASS_ARGS+=("$arg")
+    i=$((i + 1))
+done
+
+if [ -n "$TLSF_FILE" ]; then
+    SYFCO=$(command -v syfco)
+    if [ -z "$SYFCO" ]; then
+        echo "Error: '$TLSF_FILE' is a TLSF file but syfco was not found in PATH."
+        echo "Install syfco (https://github.com/reactive-systems/syfco) or pass an LTL spec instead."
+        exit 3
+    fi
+
+    PART=$(mktemp)
+    trap 'rm -f "$PART"' EXIT
+
+    LTL=$("$SYFCO" "$TLSF_FILE" -f ltlxba -m fully -pf "$PART") || {
+        echo "Error: syfco failed to translate '$TLSF_FILE'"
+        exit 4
+    }
+
+    ins=""
+    outs=""
+    while IFS= read -r line; do
+        line=$(echo "$line" | sed 's/[[:space:]]*$//;s/[[:space:]]\+/,/g')
+        head=${line/,*/}
+        args=${line/$head,/}
+        case "$head" in
+            .inputs)  ins=$args ;;
+            .outputs) outs=$args ;;
+        esac
+    done < "$PART"
+
+    exec "$BINARY" "${PASS_ARGS[@]}" -f "$LTL" -i "$ins" -o "$outs"
+fi
+
 exec "$BINARY" "$@"

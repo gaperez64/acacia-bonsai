@@ -1,3 +1,13 @@
+# --- syfco builder stage --------------------------------------------------
+# syfco (https://github.com/reactive-systems/syfco) translates TLSF specs
+# into the LTL + input/output partition that acacia-bonsai consumes.
+# Built here in a throwaway Haskell image so the final image only carries
+# the resulting ~5 MB binary instead of the full GHC/cabal toolchain.
+FROM haskell:9.6 AS syfco-builder
+RUN cabal update && \
+    cabal install --install-method=copy --installdir=/out syfco
+
+# --- main image -----------------------------------------------------------
 FROM gcc:14.2-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -8,6 +18,9 @@ RUN apt-get update && \
         meson ninja-build pkg-config python3-pip \
         automake libtool libltdl-dev bison flex zsh git \
     && rm -rf /var/lib/apt/lists/*
+
+# syfco binary copied from the builder stage above
+COPY --from=syfco-builder /out/syfco /usr/local/bin/syfco
 
 # Upgrade meson (bookworm's version may be too old for C++23 project features)
 RUN pip3 install --break-system-packages --upgrade meson
