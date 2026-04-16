@@ -73,6 +73,8 @@ def _check_real_(test_case: SynthesisProblem):
     # print("Solving safety game...")
     # type(game_result) = GameResult
     game_result = acacia_python.solve_acacia_safety_game(twa, k_max=99, k_min=2, k_inc=3)
+
+    return game_result.is_real()
     # print("Done.")
     # print("Solve result:", game_result.is_real())
 
