@@ -26,7 +26,9 @@ print("Solve result:", game_result.is_real())
 winning_region = game_result.get_winning_region()
 
 print("Does the game result contain the initial state?")
-assert winning_region.contains(acacia_python.get_initial_state(twa))
+contains = winning_region.contains(acacia_python.get_initial_state(twa))
+print("=>", contains)
+assert contains
 
 print("Region size", len(winning_region))
 for vec in winning_region:
