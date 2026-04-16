@@ -1,16 +1,49 @@
 %module acacia_python
 %{
 #include "python_interface.hh"
+
+// Lippincott-function for exception translation.
+static void handle_any_exception()
+{
+  try {
+    throw;
+  }
+  catch (const std::invalid_argument& e) {
+    SWIG_Error(SWIG_ValueError, e.what());
+  }
+  catch (const std::overflow_error& e) {
+    SWIG_Error(SWIG_OverflowError, e.what());
+  }
+  catch (const std::out_of_range& e) {
+    SWIG_Error(SWIG_IndexError, e.what());
+  }
+  catch (const std::runtime_error& e) {
+    SWIG_Error(SWIG_RuntimeError, e.what());
+  }
+}
 %}
 
-// Tell SWIG to wrap std::vector<std::string>
+// Tell SWIG to wrap std::string and std::vector<std::string>
 %include "std_string.i"
 %include "std_vector.i"
 %template(StringVector) std::vector<std::string>;
 
-// this file is included to make Spot objects non-opaque in the Python interface when returned by Acacia functions.
-// NOTE: this introduces ALL Spot functionality into the "acacia_python" package
-%include "impl.i"
+// Global exception handler for all wrapped functions.
+%exception {
+  try {
+    $action
+  }
+  catch (...) {
+    handle_any_exception();
+    SWIG_fail;
+  }
+}
+
+// Hide internal fields of Game; Python only needs the factory function.
+%ignore Game::twa;
+%ignore Game::inputs;
+%ignore Game::outputs;
+%ignore Game::dict;
 
 // Functions that return heap-allocated objects owned by Python.
 %newobject create_twa;
@@ -41,9 +74,9 @@
 }
 
 // ---------------- VectorIterator ----------------
-// Override the global %exception (see impl.i) for __next__: after running the
-// action we check PyErr_Occurred() and SWIG_fail if set. Without this, setting
-// PyExc_StopIteration inside the method is not enough -- SWIG still wraps the
+// Override the global %exception for __next__: after running the action we
+// check PyErr_Occurred() and SWIG_fail if set. Without this, setting
+// PyExc_StopIteration inside the method is not enough — SWIG still wraps the
 // (dummy) return value into a non-NULL PyObject*, which makes CPython either
 // raise a SystemError ("returned a result with an error set") or silently
 // discard the StopIteration.

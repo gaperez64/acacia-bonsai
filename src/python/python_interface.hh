@@ -1,12 +1,20 @@
 #pragma once
 
-// TODO: this uses the global default configuration.hh, but there might be a conflict somewhere, resulting in duplicate template instatiation
-#include "solver/solver_invoker.hh"
+// Only lightweight headers here — solver_invoker.hh / solve_game.hh /
+// create_automaton.hh all define non-inline functions, so they must only be
+// included in python_interface.cc (one translation unit). The SWIG wrapper
+// also includes this header, so pulling in solver_invoker.hh here would
+// produce duplicate-symbol linker errors.
+#include "configuration.hh"       // VECTOR_ELT_T, VECTOR_IMPL, VECTOR_AND_BITSET_DOWNSET_IMPL macros
+#include <posets/downsets.hh>     // posets::downsets::*
+#include <posets/vectors.hh>      // posets::vectors::*
 #include <bddx.h>
 #include <optional>
-#include <spot/tl/formula.hh>
-#include <spot/twa/bdddict.hh>
 #include <spot/twa/fwd.hh>
+#include <spot/twa/bdddict.hh>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 /**
  * The type of vectors in a winning region.
@@ -19,55 +27,51 @@ using vector_type = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
 using winreg_type = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vector_type>;
 
 
-struct io_spec {
-  std::vector<std::string> input_aps;
-  std::vector<std::string> output_aps;
-};
-
-io_spec get_io_spec(const std::vector<std::string>& input_aps, const std::vector<std::string>& output_aps);
-
-
-struct bdd_io_spec {
-    bdd inputs;
-    bdd outputs;
-    spot::bdd_dict_ptr dict;
-};
-
-bdd_io_spec create_bdds(const io_spec& output_aps);
-
-
 /**
  * Bundles a (universal co-Büchi) automaton together with the BDDs for its
  * input/output APs and the dictionary that produced them. This lives across
  * the calls used by the Python API (preprocessing, bool threshold, solving)
  * so we don't have to recompute the BDDs at every step.
+ *
+ * Member declaration order matters: C++ destroys members in reverse order, so
+ * twa (declared last) is destroyed first, allowing it to unregister its BDD
+ * variables before dict's destructor calls assert_emptiness().
  */
 struct Game {
-    spot::twa_graph_ptr twa;
-    bdd_io_spec ios;
+    bdd inputs;
+    bdd outputs;
+    spot::bdd_dict_ptr dict;
+    spot::twa_graph_ptr twa;   // destroyed first (last declared)
+
+    ~Game() {
+        // Unregister the input/output BDD variables that were registered with
+        // this Game* as owner in create_twa(). Must happen before twa and dict
+        // are destroyed.
+        if (dict)
+            dict->unregister_all_my_variables(this);
+    }
 };
 
 
-// Parses an LTL formula into a spot::formula, mirroring what
-// parse_ltl_string() in solver_invoker.hh does. Kept here so the Python API
-// can expose each step of run_ltl() independently.
-spot::formula parse_ltl(const std::string& formula);
-
-
-// needed for UNREAL_X_FORMULA
-void prep_unreal_formula(spot::formula& formula, std::vector<std::string>& output_aps);
+/**
+ * Creates a Game from the LTL formula string and the input/output AP lists.
+ *
+ * If unreal_x_formula is true, each input AP in the formula is wrapped in an
+ * X(...) modality before the automaton is built (the UNREAL_X_FORMULA
+ * transformation for checking unrealizability via Moore semantics).
+ *
+ * Ownership of the returned Game is transferred to the caller.
+ */
+Game* create_twa(const std::string& formula,
+                 const std::vector<std::string>& input_aps,
+                 const std::vector<std::string>& output_aps,
+                 bool unreal_x_formula = false);
 
 
 /**
- * Creates a Game from the LTL formula and the input/output AP lists. This
- * mirrors the "create BDDs + create TWA" portion of run_ltl() and bundles
- * them together so the later pipeline steps only need a Game handle.
+ * Applies the UNREAL_X_AUTOMATON transformation to game.twa: pushes the
+ * output APs into the next transition (Moore-semantics automaton).
  */
-Game* create_twa(spot::formula& formula,
-                 const std::vector<std::string>& input_aps,
-                 const std::vector<std::string>& output_aps);
-
-// needed for UNREAL_X_AUTOMATON
 void prep_unreal_automaton(Game& game);
 
 
@@ -219,6 +223,14 @@ class GameResult {
       return nullptr;
     }
 };
+
+
+/**
+ * Returns the automaton in HOA format as a string.
+ * Useful for passing the automaton back to the spot Python bindings:
+ *   aut = spot.automaton(acacia_python.get_aut_hoa(game))
+ */
+std::string get_aut_hoa(const Game& game);
 
 
 /**
