@@ -25,8 +25,26 @@ namespace ios_precomputers {
         auto operator() () const {
 
           // States are binary encoded using extra variables.
+          // We allocate them via spot's bdd_dict (rather than calling
+          // bdd_extvarnum directly) so the dict's internal var_refs
+          // bookkeeping stays in sync. Going around the dict has been
+          // observed to corrupt its state and either trigger
+          // "maps are empty but var_refs is not" diagnostics, std::bad_alloc,
+          // or glibc heap-corruption aborts on subsequent destruction.
           auto log_states = std::bit_width (aut->num_states ());
-          auto base_var = bdd_extvarnum (2 * log_states);
+          auto dict = aut->get_dict ();
+          // Owner token: any unique pointer scoped to this call works; we use
+          // a stack-allocated dummy and pair it with an RAII guard so the
+          // anonymous variables are released as soon as we are done with
+          // them (all local BDDs that reference them are destroyed before
+          // the guard fires, since they go out of scope at function exit).
+          int owner_tag = 0;
+          auto base_var = dict->register_anonymous_variables (2 * log_states, &owner_tag);
+          struct anon_guard {
+            spot::bdd_dict_ptr dict;
+            const void* owner;
+            ~anon_guard () { dict->unregister_all_my_variables (owner); }
+          } guard {dict, &owner_tag};
           auto  first_output = bdd_var (output_support),
             first_src_var = base_var,
             first_dst_var = base_var + log_states;

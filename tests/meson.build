@@ -273,7 +273,12 @@ test_files = \
                  { 
                    'issue54': # These gave wrong answers for SYNTCOMP 2025
                      [
-                       'TwoCountersGui.ltl'
+                       'TwoCountersGui.ltl',
+                       'Light_a50cadd7.ltl',
+                       'lilydemo04_modified.ltl',
+                       'lilydemo15.ltl',
+                       'lilydemo16.ltl',
+                       'UnderapproxDemo2.ltl'
                      ],
                    'tiny' : # Smaller than 100 bytes
 
@@ -290,10 +295,10 @@ test_files = \
                        'ltl2dba_theta_7.ltl', 'ltl2dba_psi_6.ltl',
                        'lilydemo01.ltl', 'ltl2dba_R_4.ltl',
                        'simple_arbiter_unreal2_2.ltl', 'ltl2dba_theta_6.ltl',
-                       'ltl2dba_R_3.ltl', 'ltl2dba_psi_7.ltl', 'lilydemo15.ltl',
+                       'ltl2dba_R_3.ltl', 'ltl2dba_psi_7.ltl',
                        'ltl2dba_R_5.ltl', 'ltl2dba_theta_4.ltl',
                        'lilydemo02.ltl', 'ltl2dba_theta_5.ltl',
-                       'detector_unreal_2.ltl', 'UnderapproxDemo2.ltl' ],
+                       'detector_unreal_2.ltl' ],
 
                    'large1' : # Bigger than 200 bytes
 
@@ -313,7 +318,7 @@ test_files = \
                        'round_robin_arbiter_unreal1_2_3.ltl',
                        'ltl2dba_theta_10.ltl', 'ltl2dba_psi_12.ltl',
                        'full_arbiter_unreal1_2_9.ltl', 'TwoCounters5.ltl',
-                       'lilydemo16.ltl', 'full_arbiter_unreal1_3_12.ltl',
+                       'full_arbiter_unreal1_3_12.ltl',
                        'full_arbiter_unreal1_3_10.ltl',
                        'TwoCountersDisButA3.ltl', 'detector_unreal_8.ltl',
                        'load_balancer_unreal1_2_4.ltl',

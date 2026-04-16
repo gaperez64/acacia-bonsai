@@ -103,9 +103,16 @@ int main (int argc, char** argv) {
         start_proc (std::make_optional<UNREAL_X_T> (UNREAL_X_AUTOMATON));
     }
 
-    int ret;
-    while (wait (&ret) != -1) {  // as long as we have children to wait for
-      ret = WEXITSTATUS (ret);
+    int status;
+    while (wait (&status) != -1) {  // as long as we have children to wait for
+      // A child killed by a signal (SIGSEGV, SIGABRT, ...) has WIFEXITED
+      // false; WEXITSTATUS would then return 0, which equals EXIT_CODE_REAL
+      // and would be silently misreported as "REALIZABLE". Skip such children
+      // so we either hear from a sibling that finished cleanly, or fall
+      // through to UNKNOWN below.
+      if (not WIFEXITED (status))
+        continue;
+      int ret = WEXITSTATUS (status);
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else
         terminate (0);
