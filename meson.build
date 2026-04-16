@@ -23,4 +23,6 @@ endif
 
 inc = include_directories ('src')
 subdir ('src')
-subdir ('tests')
+if get_option('build_tests')
+  subdir ('tests')
+endif
