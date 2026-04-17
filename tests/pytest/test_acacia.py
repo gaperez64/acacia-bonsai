@@ -56,10 +56,15 @@ def get_synthesis_problem(test_suite_name: str, test_name: str) -> SynthesisProb
 
 def _check_real_(test_case: SynthesisProblem):
 
-    # s = "!((G (F (req))) -> (G (F (grant))))"
-    # inputs = ["req"]
-    # outputs = ["grant"]
-    twa = acacia_python.create_twa(test_case.formula, test_case.inputs, test_case.outputs)
+    # acacia_python.create_twa builds the UCB automaton for whatever formula
+    # is passed in and the safety algorithm then asks "can the controller
+    # keep this formula falsified?". The C++ CLI negates the spec before
+    # translation when checking realizability (see solver_invoker.hh's
+    # run_one_ltl::operator() — "all that is needed for real is to negate
+    # the formula"). To get a realizability check from this API we have to
+    # do the same negation here.
+    negated = "!(" + test_case.formula + ")"
+    twa = acacia_python.create_twa(negated, test_case.inputs, test_case.outputs)
 
     # print("Automaton (HOA):")
     aut = spot.automaton(acacia_python.get_aut_hoa(twa))
@@ -88,8 +93,9 @@ def _check_real_(test_case: SynthesisProblem):
 
 
 def test_check_real_simple():
+    # The classic GR(1) request/grant spec — realizable.
     simple_test_case = SynthesisProblem(
-        formula = "!((G (F (req))) -> (G (F (grant))))",
+        formula = "(G (F (req))) -> (G (F (grant)))",
         inputs = ["req"],
         outputs = ["grant"]
     )
