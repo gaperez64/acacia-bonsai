@@ -1,0 +1,8 @@
+# # Added December 2020, favoring AB.
+ltl2dba_C2_12.ltl
+generalized_buffer_2.ltl
+amba_decomposed_lock_8.ltl
+Automata.ltl
+KitchenTimerV7.ltl
+full_arbiter_enc_4.ltl
+load_balancer_6.ltl

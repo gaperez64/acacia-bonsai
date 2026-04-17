@@ -1,6 +1,6 @@
 #pragma once
 
-#define VERSION "1.9.2"
+#define VERSION "2.0"
 
 #include "utils/todo.hh"
 

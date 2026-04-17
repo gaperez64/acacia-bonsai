@@ -1,0 +1,4 @@
+# Merge of the two shortest run-time buckets. Previously constructed
+# inside tests/meson.build via `0s-1s + 1s-20s`.
+@include 0s-1s
+@include 1s-20s

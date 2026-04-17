@@ -1,0 +1,6 @@
+# Every run-time bucket, aggregated. Previously constructed inside
+# tests/meson.build via `benchmark_files['syntcomp21']['0s-20s'] + ...`.
+@include 0s-20s
+@include 20s-100s
+@include 100s-1000s
+@include 1000s-inf

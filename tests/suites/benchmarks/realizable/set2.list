@@ -1,0 +1,17 @@
+# # Added December 2020, favoring ltlsynt
+SPI.ltl
+ltl2dba_E_8.ltl
+collector_v1_7.ltl
+KitchenTimerV10.ltl
+ltl2dba_C2_6.ltl
+simple_arbiter_enc_8.ltl
+GamemodeChooser.ltl
+KitchenTimerV9.ltl
+KitchenTimerV7.ltl
+KitchenTimerV8.ltl
+full_arbiter_enc_4.ltl
+ltl2dba_Q_7.ltl
+narylatch_8.ltl
+ltl2dba_S_8.ltl
+TwoCountersInRangeA6.ltl
+SensorSubmodulChooser.ltl
