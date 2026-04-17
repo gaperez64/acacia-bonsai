@@ -102,6 +102,8 @@ Game* create_twa (const std::string& formula_str,
   }
   game->inputs  = all_inputs;
   game->outputs = all_outputs;
+  game->input_aps  = input_aps;
+  game->output_aps = output_aps;
   return game;
 }
 
@@ -181,4 +183,94 @@ vector_wrapper* get_initial_state (Game& game) {
   posets::utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
   v[aut->get_init_state_number ()] = 0;
   return new vector_wrapper (vector_type (v));
+}
+
+std::vector<std::string> get_input_aps (const Game& game) {
+  return game.input_aps;
+}
+
+std::vector<std::string> get_output_aps (const Game& game) {
+  return game.output_aps;
+}
+
+unsigned num_states (const Game& game) {
+  return game.twa->num_states ();
+}
+
+unsigned initial_state_number (const Game& game) {
+  return game.twa->get_init_state_number ();
+}
+
+bool state_is_accepting (const Game& game, unsigned s) {
+  if (s >= game.twa->num_states ())
+    throw std::out_of_range ("state index out of range");
+  return game.twa->state_is_accepting (s);
+}
+
+vector_wrapper* make_vector (const Game& game,
+                             const std::vector<int>& entries) {
+  const auto n = game.twa->num_states ();
+  if (entries.size () != n)
+    throw std::invalid_argument ("vector size does not match number of states");
+  posets::utils::vector_mm<VECTOR_ELT_T> v (n, -1);
+  for (size_t i = 0; i < n; ++i)
+    v[i] = (VECTOR_ELT_T) entries[i];
+  return new vector_wrapper (vector_type (v));
+}
+
+// Build a cube (BDD conjunction of literals) for the given assignment. APs
+// not registered in the dictionary are silently ignored, letting callers
+// pass either "input-only", "output-only" or full IO assignments.
+static bdd cube_from_assignment (const Game& game,
+                                 const std::vector<std::string>& true_aps,
+                                 const std::vector<std::string>& false_aps) {
+  bdd cube = bddtrue;
+  auto encode = [&] (const std::string& ap, bool positive) {
+    auto f = spot::formula::ap (ap);
+    auto it = game.dict->var_map.find (f);
+    if (it == game.dict->var_map.end ())
+      throw std::invalid_argument ("AP not registered in dictionary: " + ap);
+    bdd lit = bdd_ithvar (it->second);
+    cube &= positive ? lit : bdd_not (lit);
+  };
+  for (const auto& ap : true_aps)  encode (ap, true);
+  for (const auto& ap : false_aps) encode (ap, false);
+  return cube;
+}
+
+vector_wrapper* successor (Game& game,
+                           const vector_wrapper& vw,
+                           const std::vector<std::string>& true_aps,
+                           const std::vector<std::string>& false_aps,
+                           int k_cap) {
+  auto aut = game.twa;
+  const auto n = aut->num_states ();
+  const auto& v = vw.get_vec ();
+  if ((size_t) (v.end () - v.begin ()) != n)
+    throw std::invalid_argument ("vector size does not match number of states");
+
+  bdd cube = cube_from_assignment (game, true_aps, false_aps);
+  if (cube == bddfalse)
+    throw std::invalid_argument ("inconsistent IO assignment");
+
+  const VECTOR_ELT_T K = (VECTOR_ELT_T) k_cap;
+  posets::utils::vector_mm<VECTOR_ELT_T> out (n, -1);
+
+  // Forward simulation: for every compatible edge src -> dst with v[src] != -1,
+  //   out[dst] = max(out[dst], min(K, v[src] + accepting(dst)))
+  // Matches actioners/standard.hh's forward-direction apply() and
+  // synth-learn/LTLsynthesis/UCBBuilder.py's get_transition_state.
+  for (unsigned src = 0; src < n; ++src) {
+    if (v[src] == -1)
+      continue;
+    for (auto& e : aut->out (src)) {
+      if ((e.cond & cube) == bddfalse)
+        continue;
+      unsigned dst = e.dst;
+      VECTOR_ELT_T candidate =
+          std::min (K, (VECTOR_ELT_T) (v[src] + (VECTOR_ELT_T) (aut->state_is_accepting (dst) ? 1 : 0)));
+      out[dst] = std::max (out[dst], candidate);
+    }
+  }
+  return new vector_wrapper (vector_type (out));
 }

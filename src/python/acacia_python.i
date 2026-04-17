@@ -27,6 +27,7 @@ static void handle_any_exception()
 %include "std_string.i"
 %include "std_vector.i"
 %template(StringVector) std::vector<std::string>;
+%template(IntVector) std::vector<int>;
 
 // Global exception handler for all wrapped functions.
 %exception {
@@ -44,11 +45,15 @@ static void handle_any_exception()
 %ignore Game::inputs;
 %ignore Game::outputs;
 %ignore Game::dict;
+%ignore Game::input_aps;
+%ignore Game::output_aps;
 
 // Functions that return heap-allocated objects owned by Python.
 %newobject create_twa;
 %newobject solve_acacia_safety_game;
 %newobject get_initial_state;
+%newobject successor;
+%newobject make_vector;
 // winreg_iterator::__next__ returns an owned vector_wrapper*
 %newobject winreg_iterator::__next__;
 
@@ -58,6 +63,25 @@ static void handle_any_exception()
 %ignore WinningRegion::WinningRegion;
 %ignore GameResult::GameResult;
 %ignore vector_wrapper::vector_wrapper;
+
+// WinningRegion is returned as a pointer into the GameResult's internal
+// std::optional; if the Python GameResult object is collected, that pointer
+// dangles. Attach a reference to the GameResult on the returned object so
+// Python's GC keeps the owner alive.
+%pythonappend GameResult::get_winning_region %{
+    if val is not None:
+        val._owner = self
+%}
+
+// Likewise, winreg_iterator borrows from the WinningRegion's downset.
+%pythonappend WinningRegion::__iter__ %{
+    val._owner = self
+%}
+
+// vector_iterator borrows from its vector_wrapper.
+%pythonappend vector_wrapper::__iter__ %{
+    val._owner = self
+%}
 
 // this generates the Python bindings
 %include "python_interface.hh"
@@ -70,6 +94,18 @@ static void handle_any_exception()
 
     size_t __len__() {
         return $self->len();
+    }
+
+    // Integer indexing. Python iteration over the wrapper already uses
+    // __iter__ above, but __getitem__ makes "for i,v in enumerate(w)"
+    // interactive-friendly and supports expressions like w[5].
+    int __getitem__(size_t i) {
+        if (i >= $self->len()) {
+            PyErr_SetString(PyExc_IndexError, "vector index out of range");
+            return 0;
+        }
+        // Promote to int so Python gets a number, not a single-char string.
+        return (int) $self->get_vec()[i];
     }
 }
 
@@ -95,13 +131,16 @@ static void handle_any_exception()
         return $self;
     }
 
-    // Note: I am using "char" here, since SWIG does not understand the #define in configuration.hh
-    char __next__() {
+    // Returning `int` rather than the storage type (signed char /
+    // VECTOR_ELT_T). SWIG maps `char` to a 1-char Python string, which would
+    // surface -1 as the Unicode escape sequence \udcff; using `int` yields
+    // proper Python numbers like -1, 0, 1, ...
+    int __next__() {
         if (!$self->has_next()) {
             PyErr_SetNone(PyExc_StopIteration);
-            return (char)0;
+            return 0;
         }
-        return $self->next();
+        return (int) $self->next();
     }
 
     size_t __len__() {
@@ -117,6 +156,11 @@ static void handle_any_exception()
     size_t __len__() {
         return $self->len();
     }
+
+    // VECTOR_ELT_T is a macro (signed char by default) that SWIG does not
+    // resolve through the #define; without this wrapper, get_k() surfaces a
+    // raw "VECTOR_ELT_T *" SWIG proxy. Expose it as a plain int instead.
+    int k() { return (int) $self->get_k(); }
 }
 
 // Same StopIteration fix as for vector_iterator::__next__ above.

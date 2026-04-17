@@ -40,6 +40,11 @@ using winreg_type = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<vector_type
 struct Game {
     bdd inputs;
     bdd outputs;
+    // Names of input/output APs in the order they were registered. Kept here
+    // so that Python callers can build BDD cubes, enumerate IO assignments,
+    // and translate between BDD variable indices and AP names.
+    std::vector<std::string> input_aps;
+    std::vector<std::string> output_aps;
     spot::bdd_dict_ptr dict;
     spot::twa_graph_ptr twa;   // destroyed first (last declared)
 
@@ -231,6 +236,69 @@ class GameResult {
  *   aut = spot.automaton(acacia_python.get_aut_hoa(game))
  */
 std::string get_aut_hoa(const Game& game);
+
+
+/**
+ * Returns the ordered list of input AP names that were registered when the
+ * game was created. Useful on the Python side for iterating IO assignments
+ * and translating AP names into BDD variable indices.
+ */
+std::vector<std::string> get_input_aps(const Game& game);
+
+
+/**
+ * Returns the ordered list of output AP names (same contract as
+ * get_input_aps).
+ */
+std::vector<std::string> get_output_aps(const Game& game);
+
+
+/**
+ * Number of states in the underlying UCB automaton.
+ */
+unsigned num_states(const Game& game);
+
+
+/**
+ * Initial state number of the underlying UCB automaton (use together with
+ * state_is_accepting).
+ */
+unsigned initial_state_number(const Game& game);
+
+
+/**
+ * Whether state s of the UCB is accepting (i.e. rejecting in the dual Büchi
+ * view that drives the counter increment in the downset successor).
+ */
+bool state_is_accepting(const Game& game, unsigned s);
+
+
+/**
+ * Computes the forward successor of a state vector under a full IO
+ * assignment, using the same update rule as the solver's standard actioner:
+ *   new[p] = max over edges p -> q compatible with the assignment of
+ *     min(k_cap, v[q] + (1 if q accepting else 0))
+ * (with -1 propagated as "absent"). The assignment is given as disjoint
+ * lists of true and false AP names; every AP appearing on an edge condition
+ * should be decided by (true_aps ∪ false_aps), otherwise the compatibility
+ * test is approximate (a partial cube is allowed — any edge whose condition
+ * is satisfied by the cube restriction is considered active).
+ *
+ * Returns a newly owned vector_wrapper.
+ */
+vector_wrapper* successor(Game& game,
+                          const vector_wrapper& v,
+                          const std::vector<std::string>& true_aps,
+                          const std::vector<std::string>& false_aps,
+                          int k_cap);
+
+
+/**
+ * Builds a state vector from a Python-side list of ints. Size must match the
+ * number of states of game.twa. Caller takes ownership.
+ */
+vector_wrapper* make_vector(const Game& game,
+                            const std::vector<int>& entries);
 
 
 /**
