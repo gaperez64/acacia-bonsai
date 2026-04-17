@@ -5,7 +5,44 @@ algorithms using antichain data structures.  The theory and practice is describe
 
    https://arxiv.org/abs/2204.06079
 
-# Docker image
+# Docker images
+
+Two pre-built images are published on the GitHub Container Registry. The
+Jupyter image is the easiest entry point for exploring acacia-bonsai
+interactively; the CLI image is what you want for benchmarking or scripting
+synthesis runs.
+
+## Jupyter image
+
+This image comes with Spot (built with Python bindings), the acacia-bonsai
+Python interface, and a Jupyter notebook server already wired together. It is
+the quickest way to play with the tool — no compilation required on your end.
+
+Pull the image:
+```
+$ docker pull ghcr.io/gaperez64/acacia-bonsai-jupyter:latest
+```
+
+Start the notebook server, exposing port 8888 on the host:
+```
+$ docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-bonsai-jupyter:latest
+```
+
+The container prints a URL with an access token (e.g.
+`http://127.0.0.1:8888/tree?token=...`) — open it in your browser. The
+working directory contains `python_examples/` with example scripts that
+import both `spot` and `acacia_python`.
+
+To mount a host directory of your own notebooks instead of the bundled
+examples:
+```
+$ docker run --rm -p 8888:8888 \
+    -v "$PWD/my_notebooks:/work" \
+    -e NOTEBOOK_DIR=/work \
+    ghcr.io/gaperez64/acacia-bonsai-jupyter:latest
+```
+
+## CLI image
 
 A pre-built Docker image with all dependencies and sources is available from
 the GitHub Container Registry. It ships sources only — compilation happens inside
@@ -32,6 +69,12 @@ you can run acacia-bonsai using the wrapper script:
 ```
 $ ./acacia-bonsai.sh best_decomp_kdtree_mona -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
+```
+
+The wrapper also accepts TLSF specs directly (translated to LTL via the
+bundled `syfco`):
+```
+$ ./acacia-bonsai.sh best_decomp_kdtree_mona spec.tlsf
 ```
 
 To see available configurations:
