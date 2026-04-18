@@ -53,9 +53,11 @@ Pull the image:
 $ docker pull ghcr.io/gaperez64/acacia-bonsai:latest
 ```
 
-Run the container interactively:
+Create a named container and start it interactively (note: we deliberately
+do *not* pass `--rm` — compilation happens inside the container, so removing
+it on exit would throw away the binaries you are about to build):
 ```
-$ docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:latest
+$ docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
 ```
 
 Inside the container, compile Spot and a number of optimized acacia-bonsai
@@ -78,9 +80,17 @@ the bundled `syfco`):
 $ cat spec.tlsf | ./scripts/acacia-bonsai.sh best_decomp_kdtree_mona --tlsf
 ```
 
-The same trick works from outside the container — pipe through `docker run -i`:
+When you exit the shell the container stops but is preserved. To re-enter
+it later with your compiled binaries intact:
 ```
-$ cat spec.tlsf | docker run --rm -i ghcr.io/gaperez64/acacia-bonsai:latest \
+$ docker start -ai acacia
+```
+
+From outside the container you can also pipe a TLSF spec into the running
+(or stopped-then-started) container via `docker exec` / `docker start`:
+```
+$ docker start acacia   # if it is stopped
+$ cat spec.tlsf | docker exec -i acacia \
       /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_kdtree_mona --tlsf
 ```
 
@@ -89,7 +99,7 @@ when the spec is realizable, use `acacia-synthesis.sh`. It accepts the same
 options as `acacia-bonsai.sh`; the REALIZABLE/UNREALIZABLE verdict goes to
 stderr so stdout carries only the AAG:
 ```
-$ cat spec.tlsf | docker run --rm -i ghcr.io/gaperez64/acacia-bonsai:latest \
+$ cat spec.tlsf | docker exec -i acacia \
       /opt/acacia-bonsai/scripts/acacia-synthesis.sh \
       best_decomp_kdtree_mona --tlsf > controller.aag
 ```
@@ -97,6 +107,11 @@ $ cat spec.tlsf | docker run --rm -i ghcr.io/gaperez64/acacia-bonsai:latest \
 To see available configurations:
 ```
 $ ./scripts/acacia-bonsai.sh
+```
+
+Once you are done with the container for good, remove it explicitly:
+```
+$ docker rm acacia
 ```
 
 # Dependencies
