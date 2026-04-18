@@ -61,25 +61,42 @@ $ docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:latest
 Inside the container, compile Spot and a number of optimized acacia-bonsai
 configurations:
 ```
-$ ./compile.sh
+$ ./scripts/compile.sh
 ```
 
 This builds Spot from source and then compiles all configurations. Now,
 you can run acacia-bonsai using the wrapper script:
 ```
-$ ./acacia-bonsai.sh best_decomp_kdtree_mona -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
+$ ./scripts/acacia-bonsai.sh best_decomp_kdtree_mona \
+      -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
-The wrapper also accepts TLSF specs directly (translated to LTL via the
-bundled `syfco`):
+The wrapper also accepts TLSF specs piped on stdin (translated to LTL via
+the bundled `syfco`):
 ```
-$ ./acacia-bonsai.sh best_decomp_kdtree_mona spec.tlsf
+$ cat spec.tlsf | ./scripts/acacia-bonsai.sh best_decomp_kdtree_mona --tlsf
+```
+
+The same trick works from outside the container — pipe through `docker run -i`:
+```
+$ cat spec.tlsf | docker run --rm -i ghcr.io/gaperez64/acacia-bonsai:latest \
+      /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_kdtree_mona --tlsf
+```
+
+To synthesize a controller (AIGER/AAG format) and have it printed on stdout
+when the spec is realizable, use `acacia-synthesis.sh`. It accepts the same
+options as `acacia-bonsai.sh`; the REALIZABLE/UNREALIZABLE verdict goes to
+stderr so stdout carries only the AAG:
+```
+$ cat spec.tlsf | docker run --rm -i ghcr.io/gaperez64/acacia-bonsai:latest \
+      /opt/acacia-bonsai/scripts/acacia-synthesis.sh \
+      best_decomp_kdtree_mona --tlsf > controller.aag
 ```
 
 To see available configurations:
 ```
-$ ./acacia-bonsai.sh
+$ ./scripts/acacia-bonsai.sh
 ```
 
 # Dependencies
