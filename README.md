@@ -109,7 +109,26 @@ To see available configurations:
 $ ./scripts/acacia-bonsai.sh
 ```
 
-Once you are done with the container for good, remove it explicitly:
+If you would rather not keep the `acacia` container around but still want
+to reuse the compiled binaries later, snapshot the container into a new
+image (we suggest the `compiled` tag to distinguish it from the source-only
+`latest`):
+```
+$ docker commit acacia ghcr.io/gaperez64/acacia-bonsai:compiled
+```
+
+From then on you can spin up fresh, throwaway containers that already
+have Spot and the acacia-bonsai configurations built in — `--rm` is fine
+here because there is nothing left to compile:
+```
+$ docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:compiled
+$ cat spec.tlsf | docker run --rm -i \
+      ghcr.io/gaperez64/acacia-bonsai:compiled \
+      /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_kdtree_mona --tlsf
+```
+
+Once you are done with the original container for good, remove it
+explicitly:
 ```
 $ docker rm acacia
 ```
