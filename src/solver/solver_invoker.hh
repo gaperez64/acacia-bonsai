@@ -7,6 +7,7 @@
 #include "posets/vectors/traits.hh"
 #include "solve_game.hh"
 #include "utils/cache.hh"
+#include "utils/push_aps.hh"
 
 #include <functional>
 #include <optional>
@@ -39,46 +40,7 @@ namespace {
     return pf.f;
   }
 
-  /** Changes q -> <i', o'> -> q' with saved o to
-   * q -> <i', o> -> {q' saved o'}.
-   * To be more precise, o stands for the atomic propositions whose conjunction
-   * is to_be_pushed and i stands for those whose conjunction (a cube) is
-   * all_others.
-   */
-  spot::twa_graph_ptr push_aps (const spot::twa_graph_ptr aut, bdd to_be_pushed, bdd all_others) {
-    auto ret = spot::make_twa_graph (aut->get_dict ());
-    ret->copy_acceptance_of (aut);
-    ret->copy_ap_of (aut);
-    ret->prop_copy (aut, spot::twa::prop_set::all ());
-    ret->prop_universal (spot::trival::maybe ());
-
-    static auto cache = utils::make_cache<unsigned> (0u, 0u);
-    const auto build_aut = [&] (unsigned state, bdd saved_o, const auto& recurse) {
-      auto cached = cache.get (state, saved_o.id ());
-      if (cached)
-        return *cached;
-      auto ret_state = ret->new_state ();
-      cache (ret_state, state, saved_o.id ());
-      for (auto& e : aut->out (state)) {
-        auto cond = e.cond;
-        // e.cond = i1 & o1 || !i1 & !o1
-
-        while (cond != bddfalse) {
-          // Pick one satisfying assignment where outputs all have values
-          bdd one_sat = bdd_satoneset (cond, to_be_pushed, bddtrue);
-          // Get the corresponding input bdd
-          bdd one_input_bdd = bdd_exist (cond & bdd_exist (one_sat, all_others), to_be_pushed);
-          ret->new_edge (ret_state,
-                         recurse (e.dst, bdd_exist (cond & one_input_bdd, all_others), recurse),
-                         saved_o & one_input_bdd, e.acc);
-          cond -= one_input_bdd;
-        }
-      }
-      return ret_state;
-    };
-    build_aut (aut->get_init_state_number (), bddtrue, build_aut);
-    return ret;
-  }
+  using utils::push_aps;
 
   /**
    * This is the functor that calls our main algorithm on the given LTL

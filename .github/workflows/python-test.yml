@@ -1,0 +1,84 @@
+name: Python interface tests
+
+# Compiles acacia-bonsai with the Python bindings enabled (the same
+# configuration used by the Jupyter Docker image) and runs the pytest
+# suite. This keeps the showcase examples for issues #51 and #72 from
+# silently rotting.
+
+on:
+  push:
+    branches: [master, python-interface-2]
+  pull_request:
+    branches: [master, python-interface-2]
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install packages
+        run: |
+          sudo apt update
+          sudo apt install -y zsh meson git g++-14 python-is-python3 \
+                      ninja-build gnupg wget python3-pip python3-dev \
+                      pkg-config libffi-dev swig \
+                      libtool gpg
+          sudo pip install --upgrade meson
+          sudo pip install pytest
+
+      - name: Install newer libltldl
+        run: |
+          sudo wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
+          sudo dpkg -i libltdl7_2.5.4-4build1_amd64.deb
+          sudo apt -f install
+
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Restore Spot cache
+        id: spot-cache
+        uses: actions/cache@v5
+        with:
+          # Distinct from main.yml's cache because that build uses
+          # --disable-python; mixing would skip rebuilding when switching
+          # jobs. Spot is installed into /opt/spot_install (matching
+          # Dockerfile.jupyter) rather than /usr/local so the Python
+          # bindings land in a predictable, cacheable location.
+          path: /opt/spot_install
+          key: spot-2.14.4-maxacc64-py-opt-${{ runner.os }}
+
+      - name: Install Spot (with Python bindings)
+        if: steps.spot-cache.outputs.cache-hit != 'true'
+        run: |
+          wget http://www.lre.epita.fr/dload/spot/spot-2.14.4.tar.gz
+          tar -xvzf spot-2.14.4.tar.gz
+          cd spot-2.14.4
+          sudo mkdir -p /opt/spot_install
+          sudo chown "$USER" /opt/spot_install
+          ./configure --enable-max-accsets=64 --prefix=/opt/spot_install
+          make -j"$(nproc)"
+          make install
+
+      - name: Register Spot shared libraries with ldconfig
+        run: |
+          echo "/opt/spot_install/lib" | sudo tee /etc/ld.so.conf.d/spot.conf
+          sudo ldconfig
+
+      - name: Compile acacia-bonsai with Python bindings
+        env:
+          PKG_CONFIG_PATH: /opt/spot_install/lib/pkgconfig
+        run: |
+          export CXX=g++-14
+          meson setup build_python --buildtype=release -Dbuild_python=true
+          meson compile -C build_python
+
+      - name: Run pytest
+        run: |
+          SPOT_PY_SITE="$(ls -d /opt/spot_install/lib/python*/site-packages | head -n1)"
+          export PYTHONPATH="${SPOT_PY_SITE}:${PWD}/build_python/src/python"
+          export LD_LIBRARY_PATH="/opt/spot_install/lib:${PWD}/build_python/src/python"
+          python3 -m pytest tests/pytest/ -v
