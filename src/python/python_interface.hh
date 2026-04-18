@@ -115,9 +115,14 @@ class vector_wrapper {
  * Exposes a single vector in a winning region as an iterator.
  */
 class vector_iterator {
+#ifndef SWIG
   private:
+    // SWIG <= 4.1 (e.g. the one shipped with Debian Bookworm, which is the
+    // base of the Jupyter Docker image) cannot parse decltype(expr) in member
+    // declarations. Hide these from SWIG; they are private members anyway.
     decltype(static_cast<const vector_type*> (nullptr)->begin()) cur;
     decltype(static_cast<const vector_type*> (nullptr)->end()) end;
+#endif
 
   public:
     explicit vector_iterator (const vector_wrapper& v)
@@ -145,9 +150,12 @@ class vector_iterator {
  * Exposes a winning region as an iterator.
  */
 class winreg_iterator {
+#ifndef SWIG
   private:
+    // See note on vector_iterator above.
     decltype(static_cast<const winreg_type*> (nullptr)->begin()) cur;
     decltype(static_cast<const winreg_type*> (nullptr)->end()) end;
+#endif
 
   public:
     explicit winreg_iterator (const winreg_type& s)
