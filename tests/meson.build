@@ -7,14 +7,24 @@ py = import ('python').find_installation ('python3')
 
 conf_data = configuration_data ()
 
-#ltlsynt_exe = find_program ('ltlsynt', required : false)
+# ltlsynt is shipped as a Spot binary, so we look for it under the same
+# install prefix that pkg-config reported for libspot. Fall back to PATH
+# if the pkg-config variable is not available (e.g. uninstalled builds).
+spot_prefix = spot_dep.get_variable (pkgconfig : 'prefix', default_value : '')
+if spot_prefix != ''
+  ltlsynt_exe = find_program (spot_prefix / 'bin' / 'ltlsynt', 'ltlsynt',
+                              required : false)
+else
+  ltlsynt_exe = find_program ('ltlsynt', required : false)
+endif
+
 #strix_exe = find_program ('strix', required : false)
 
-#if ltlsynt_exe.found ()
-#  conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
-#else
-#  conf_data.set_quoted ('LTLSYNT', '/bin/false')
-#endif
+if ltlsynt_exe.found ()
+  conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
+else
+  conf_data.set_quoted ('LTLSYNT', '/bin/false')
+endif
 
 #if strix_exe.found ()
 #  conf_data.set_quoted ('STRIX', strix_exe.full_path ())
@@ -38,10 +48,15 @@ check_real_file = configure_file (input : 'check-real-correct.sh.in',
                                   configuration : conf_data)
 check_real_exe = find_program (check_real_file)
 
-backends = { 'ab'      : '-a' }  # Default, start acacia-bonsai
-#if ltlsynt_exe.found ()
-#  backends += { 'ltlsynt' : '-l' }
-#endif
+# Tests (quick; `meson test`) are run with acacia-bonsai only.
+test_backends = { 'ab' : '-a' }
+
+# Benchmarks (heavier; `meson test --benchmark`) are also run against
+# ltlsynt when available so that we can compare on the same inputs.
+benchmark_backends = { 'ab' : '-a' }
+if ltlsynt_exe.found ()
+  benchmark_backends += { 'ltlsynt' : '-l' }
+endif
 
 #############################
 # Suite manifest
@@ -127,7 +142,7 @@ foreach folder, testset : test_files
         error ('File ' + filename + ' not found (referenced by '
                + folder + '/' + suite + ').')
       endif
-      foreach backend, opt : backends
+      foreach backend, opt : test_backends
         test (backend + '/' + file,
               check_real_exe,
               args : [ '-p',  ## prefix every line with the name of the test
@@ -163,7 +178,7 @@ foreach folder, testsets : benchmark_files
         error ('File ' + filename + ' not found (referenced by '
                + folder + '/' + suite + ').')
       endif
-      foreach backend, opt : backends
+      foreach backend, opt : benchmark_backends
         benchmark (backend + '/' + file,
                    check_real_exe,
                    args : [ '-p',  ## prefix every line with the name of the test

@@ -47,6 +47,10 @@ EOF
     )
 
 confs=(
+    # Dummy configuration: does not actually change any acacia-bonsai build
+    # flags, but tells the benchmark step below to run the `ltlsynt/…`
+    # meson suites (i.e. ltlsynt on the same inputs) instead of `ab/…`.
+    [ltlsynt]=" "
     # These are variations on the default configuration
     [base]=" "
     # [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
@@ -240,12 +244,23 @@ if ! (( $donot[(Ie)benchmark] )); then
             continue
         fi
         cd $build
-	if $justtest; then
-	    echo -n "testing $name on $benchsuites (logfile: $log)... "
-	    meson test $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
+	## For the dummy ltlsynt configuration, redirect every --suite=ab/…
+	## argument to --suite=ltlsynt/… so that the same meson run now
+	## picks up the ltlsynt-backed benchmarks instead of the ab ones.
+	if [[ $name == ltlsynt ]]; then
+	    this_suites=()
+	    for b in $benchsuites; do
+	        this_suites+=("${b//ab\//ltlsynt/}")
+	    done
 	else
-	    echo -n "benchmarking $name on $benchsuites (logfile: $log)... "
-	    meson test --benchmark $benchsuites -t $TIMEOUT_FACTOR &>> ../$log
+	    this_suites=($benchsuites)
+	fi
+	if $justtest; then
+	    echo -n "testing $name on $this_suites (logfile: $log)... "
+	    meson test $this_suites -t $TIMEOUT_FACTOR &>> ../$log
+	else
+	    echo -n "benchmarking $name on $this_suites (logfile: $log)... "
+	    meson test --benchmark $this_suites -t $TIMEOUT_FACTOR &>> ../$log
 	fi
         if grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
             echo "FAILED; testlog stored at $log, _bm-logs/$name.json left untouched"

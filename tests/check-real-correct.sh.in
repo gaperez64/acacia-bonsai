@@ -1,6 +1,7 @@
 #!/bin/zsh -f
 
 ACABONSAI=@ACABONSAI@
+LTLSYNT=@LTLSYNT@
 export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 # Handling most common signals with a trap
@@ -48,11 +49,11 @@ parttoinsouts () {
 
 run_ltlsynt () {
     echo "Running ltlsynt..."
-    echo "I don't know how though :("
-#     time echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs \
-#          ${=LTLSYNT_OPTS} $extra_opts
-#     # TODO: treat output to determine return code?
-#     # note that sed with q commands is a GNU-only thing
+    # ltlsynt --realizability exits 0 for REALIZABLE and 1 for UNREALIZABLE,
+    # which matches the expect==0 / expect==1 convention used below — so we
+    # rely on the exit status directly and do not need to parse stdout.
+    echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs \
+         ${=LTLSYNT_OPTS} $extra_opts
 }
 
 run_acacia_bonsai () {
