@@ -116,7 +116,7 @@ std::optional<spot::twa_graph_ptr> post_real (
       // look for compatible IOs that keep us in the safe region
       bdd strat;
       unsigned tgt;
-      bool at_least_one = false;
+      [[maybe_unused]] bool at_least_one = false;
       for (const auto& avec : action_vecs) {
         SetOfStates fwd = singleton.apply ([&avec, &actioner] (const auto& max_elem) {
           auto&& ret = actioner.apply (max_elem, avec, actioners::direction::forward);
