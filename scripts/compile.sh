@@ -52,4 +52,6 @@ for name in "${!CONFIGS[@]}"; do
 done
 
 echo ""
-echo "All configurations compiled. Use ./acacia-bonsai.sh <config> to run."
+echo "All configurations compiled. Use ./scripts/acacia-bonsai.sh <config> to run."
+echo "Tip: snapshot this container to reuse the compiled binaries later, e.g.:"
+echo "  docker commit <container> ghcr.io/gaperez64/acacia-bonsai:compiled"
