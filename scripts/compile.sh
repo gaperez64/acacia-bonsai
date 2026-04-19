@@ -31,10 +31,10 @@ BEST_BASE='-DDEFAULT_KMIN=2 -DDEFAULT_KINC=3 -DDEFAULT_UNREAL_X=UNREAL_X_BOTH
 -DDECOMPOSE_SPEC=0'
 
 declare -A CONFIGS
+CONFIGS[best_mona]="$BEST_BASE -DIOS_PRECOMPUTER=ios_precomputers::mona"
+CONFIGS[best_decomp_mona]="$BEST_BASE -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
+CONFIGS[base_iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
 CONFIGS[best_decomp_kdtree_mona]="$BEST_BASE -DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-CONFIGS[best_decomp_kdtree_mona_no_bitsets]="$BEST_BASE -DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-CONFIGS[best_decomp_mona_no_bitsets]="$BEST_BASE -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-CONFIGS[best_downset_vector_or_kdtree]="$BEST_BASE -DARRAY_AND_BITSET_DOWNSET_IMPL=vector_or_kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_or_kdtree_backed"
 
 cd /opt/acacia-bonsai
 

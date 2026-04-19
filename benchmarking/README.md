@@ -39,3 +39,17 @@ Survival, a.k.a. cactus, plots are then generated using, for instance:
 ```
   $ mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to plot.pdf mkplottable/*.json
 ```
+
+# Ranking configurations by PAR-2
+
+`rank_bm_logs.py` prints a table of all configurations in `_bm-logs/`
+sorted by PAR-2 score (each OK charged its wall-clock, each TIMEOUT
+charged `2 × timeout`). Useful for picking the strongest configurations
+after adding or re-running benchmarks:
+```
+  $ benchmarking/rank_bm_logs.py              # reads ../_bm-logs by default
+  $ benchmarking/rank_bm_logs.py path/to/logs # or a custom directory
+```
+The per-instance timeout cap defaults to the largest `duration` observed
+across the TIMEOUT entries in the logs; override it with
+`--timeout SECONDS` if you want a specific value.

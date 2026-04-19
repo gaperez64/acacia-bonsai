@@ -20,10 +20,10 @@
 set -e
 
 CONFIGS=(
+    best_mona
+    best_decomp_mona
+    base_iosprecom_mona
     best_decomp_kdtree_mona
-    best_decomp_kdtree_mona_no_bitsets
-    best_decomp_mona_no_bitsets
-    best_downset_vector_or_kdtree
 )
 
 usage() {
