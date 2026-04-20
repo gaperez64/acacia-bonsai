@@ -12,26 +12,27 @@ Jupyter image is the easiest entry point for exploring acacia-bonsai
 interactively; the CLI image is what you want for benchmarking or scripting
 synthesis runs.
 
-## Jupyter image
+## Boomslang image
 
-This image comes with Spot (built with Python bindings), the acacia-bonsai
-Python interface, and a Jupyter notebook server already wired together. It is
-the quickest way to play with the tool — no compilation required on your end.
+This image comes with Spot (built with Python bindings), the Acacia Boomslang
+Python interface (`acacia_boomslang`), and a Jupyter notebook server already
+wired together. It is the quickest way to play with the tool — no compilation
+required on your end.
 
 Pull the image:
 ```
-$ docker pull ghcr.io/gaperez64/acacia-bonsai-jupyter:latest
+$ docker pull ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 Start the notebook server, exposing port 8888 on the host:
 ```
-$ docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-bonsai-jupyter:latest
+$ docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 The container prints a URL with an access token (e.g.
 `http://127.0.0.1:8888/tree?token=...`) — open it in your browser. The
 working directory contains `python_examples/` with example scripts that
-import both `spot` and `acacia_python`.
+import both `spot` and `acacia_boomslang`.
 
 To mount a host directory of your own notebooks instead of the bundled
 examples:
@@ -39,7 +40,7 @@ examples:
 $ docker run --rm -p 8888:8888 \
     -v "$PWD/my_notebooks:/work" \
     -e NOTEBOOK_DIR=/work \
-    ghcr.io/gaperez64/acacia-bonsai-jupyter:latest
+    ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 ## CLI image

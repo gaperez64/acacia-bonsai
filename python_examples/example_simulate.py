@@ -34,7 +34,7 @@ automatically (useful as a smoke test); without it, the user is prompted.
 import itertools
 import sys
 
-import acacia_python as ap
+import acacia_boomslang as ab
 
 
 # -------------------------- configuration --------------------------
@@ -74,9 +74,9 @@ def label(true_aps, false_aps):
 
 def solve(game, k_max):
     """Solve (or re-solve) with a given bound.  Returns GameResult."""
-    ap.preprocess_aut_standard(game, k_max=k_max)
-    ap.set_bool_thresh_no_bool_states(game, k_max=k_max)
-    return ap.solve_acacia_safety_game(
+    ab.preprocess_aut_standard(game, k_max=k_max)
+    ab.set_bool_thresh_no_bool_states(game, k_max=k_max)
+    return ab.solve_acacia_safety_game(
         game, k_max=k_max, k_min=min(2, k_max), k_inc=K_STEP)
 
 
@@ -84,10 +84,10 @@ def classify_outputs(game, v, true_inputs, false_inputs, winreg, k_cap):
     """Split every output assignment into (winning, losing, successor)."""
     winning, losing = [], []
     for t_out, f_out in all_assignments(OUTPUTS):
-        s = ap.successor(
+        s = ab.successor(
             game, v,
-            ap.StringVector(true_inputs + t_out),
-            ap.StringVector(false_inputs + f_out),
+            ab.StringVector(true_inputs + t_out),
+            ab.StringVector(false_inputs + f_out),
             k_cap)
         if winreg.contains(s):
             winning.append((t_out, f_out, s))
@@ -136,10 +136,10 @@ def pick_output(winning, losing, interactive):
 def main(interactive):
     # Build the UCB once and reuse it across k bumps: the TWA/dict/APs are
     # independent of k, only the solver call itself changes.
-    game = ap.create_twa(SPEC, INPUTS, OUTPUTS)
-    n = ap.num_states(game)
+    game = ab.create_twa(SPEC, INPUTS, OUTPUTS)
+    n = ab.num_states(game)
     print(f"Built UCB with {n} states "
-          f"(initial state = {ap.initial_state_number(game)}).")
+          f"(initial state = {ab.initial_state_number(game)}).")
 
     k = INITIAL_K
     result = solve(game, k)
@@ -149,7 +149,7 @@ def main(interactive):
         return 1
 
     winreg = result.get_winning_region()
-    v = ap.get_initial_state(game)
+    v = ab.get_initial_state(game)
     assert winreg.contains(v), "initial state is not in winning region — bug?"
     print(f"Solved at k={k}; winning region has {len(winreg)} maximal vectors.")
 
@@ -195,7 +195,7 @@ def main(interactive):
             # Re-create the game because preprocess_aut_standard is
             # idempotent but set_bool_thresh_* mutates the global threshold
             # and rebuilding keeps things hygienic.
-            game2 = ap.create_twa(SPEC, INPUTS, OUTPUTS)
+            game2 = ab.create_twa(SPEC, INPUTS, OUTPUTS)
             result2 = solve(game2, new_k)
             if not result2.is_real():
                 continue
@@ -203,7 +203,7 @@ def main(interactive):
             # Re-cast the successor vector against the fresh game: since the
             # TWA is built deterministically from the same formula, the
             # state numbering matches.
-            s_new = ap.make_vector(game2, ap.IntVector(vec_to_list(s)))
+            s_new = ab.make_vector(game2, ab.IntVector(vec_to_list(s)))
             if winreg2.contains(s_new):
                 print(f"     now in winreg(k={new_k}) (size {len(winreg2)}); "
                       f"switching.")

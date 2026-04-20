@@ -8,9 +8,9 @@ spot_includedir = spot_dep.get_variable('includedir')
 message(spot_includedir)
 
 swig_gen = custom_target(
-  'acacia_python',
-  input: 'acacia_python.i',
-  output: ['acacia_python_wrap.cxx', 'acacia_python.py'],
+  'acacia_boomslang',
+  input: 'acacia_boomslang.i',
+  output: ['acacia_boomslang_wrap.cxx', 'acacia_boomslang.py'],
   command: [swig_cmd, '-c++', '-python', '-I' + spot_includedir, '-o', '@OUTPUT0@', '@INPUT@'],
   depend_files: files('python_interface.cc'),
 
@@ -22,7 +22,7 @@ swig_gen = custom_target(
 project_headers = include_directories('..')  # everything in /src/
 
 # Build the extension module
-module = py.extension_module('_acacia_python',
+module = py.extension_module('_acacia_boomslang',
   sources: [swig_gen, 'python_interface.cc'],
   dependencies: [spot_dep, posets_dep],
   include_directories: project_headers,

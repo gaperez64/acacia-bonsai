@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-import acacia_python as ap
+import acacia_boomslang as ab
 
 
 SPEC_REAL   = "!((G (F (req))) -> (G (F (grant))))"      # negated GR(1): real
@@ -24,43 +24,43 @@ OUTPUTS = ["grant"]
 # ---------- basic introspection ----------
 
 def test_aps_are_preserved():
-    g = ap.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
-    assert list(ap.get_input_aps(g))  == INPUTS
-    assert list(ap.get_output_aps(g)) == OUTPUTS
+    g = ab.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
+    assert list(ab.get_input_aps(g))  == INPUTS
+    assert list(ab.get_output_aps(g)) == OUTPUTS
 
 
 def test_num_states_matches_hoa():
     import spot
-    g = ap.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
-    aut = spot.automaton(ap.get_aut_hoa(g))
-    assert ap.num_states(g) == aut.num_states()
+    g = ab.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
+    aut = spot.automaton(ab.get_aut_hoa(g))
+    assert ab.num_states(g) == aut.num_states()
 
 
 def test_initial_state_vector_shape():
-    g = ap.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
-    v = ap.get_initial_state(g)
-    n = ap.num_states(g)
+    g = ab.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
+    v = ab.get_initial_state(g)
+    n = ab.num_states(g)
     assert len(v) == n
     # Exactly one entry should be 0 (the initial state), the rest -1.
     values = [v[i] for i in range(n)]
     assert values.count(0) == 1
     assert values.count(-1) == n - 1
-    assert values[ap.initial_state_number(g)] == 0
+    assert values[ab.initial_state_number(g)] == 0
 
 
 def test_make_vector_roundtrip():
-    g = ap.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
-    n = ap.num_states(g)
+    g = ab.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
+    n = ab.num_states(g)
     entries = [-1, 0, 1][:n] + [0] * max(0, n - 3)
     entries = entries[:n]
-    v = ap.make_vector(g, ap.IntVector(entries))
+    v = ab.make_vector(g, ab.IntVector(entries))
     assert [v[i] for i in range(n)] == entries
 
 
 def test_make_vector_rejects_wrong_size():
-    g = ap.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
+    g = ab.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
     with pytest.raises(Exception):
-        ap.make_vector(g, ap.IntVector([0]))
+        ab.make_vector(g, ab.IntVector([0]))
 
 
 # ---------- successor semantics ----------
@@ -70,9 +70,9 @@ def test_successor_matches_hoa_forward_simulation():
     hand-rolled spot-based simulation."""
     import spot
     import buddy
-    g = ap.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
-    n = ap.num_states(g)
-    aut = spot.automaton(ap.get_aut_hoa(g))
+    g = ab.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
+    n = ab.num_states(g)
+    aut = spot.automaton(ab.get_aut_hoa(g))
     # Register APs in aut so BDDs resolve.
     ap_vars = {p: buddy.bdd_ithvar(aut.register_ap(p)) for p in INPUTS + OUTPUTS}
 
@@ -102,23 +102,23 @@ def test_successor_matches_hoa_forward_simulation():
         (["req", "grant"],  []),
         ([],                ["req", "grant"]),
     ]:
-        vw = ap.make_vector(g, ap.IntVector(v0))
-        got = ap.successor(g, vw, ap.StringVector(tap), ap.StringVector(fap), 5)
+        vw = ab.make_vector(g, ab.IntVector(v0))
+        got = ab.successor(g, vw, ab.StringVector(tap), ab.StringVector(fap), 5)
         expected = ref_successor(v0, tap, fap, 5)
         assert [got[i] for i in range(n)] == expected, \
             f"mismatch for T={tap} F={fap}: got {[got[i] for i in range(n)]} vs {expected}"
 
 
 def test_successor_caps_at_k():
-    g = ap.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
-    n = ap.num_states(g)
+    g = ab.create_twa(SPEC_REAL, INPUTS, OUTPUTS)
+    n = ab.num_states(g)
     # Feed a vector that is already at the cap on an accepting state and make
     # sure we never see a value above k_cap coming back.
-    v = ap.make_vector(g, ap.IntVector([3] * n))
+    v = ab.make_vector(g, ab.IntVector([3] * n))
     for k_cap in [0, 1, 3, 10]:
-        s = ap.successor(g, v,
-                         ap.StringVector(["req"]),
-                         ap.StringVector(["grant"]),
+        s = ab.successor(g, v,
+                         ab.StringVector(["req"]),
+                         ab.StringVector(["grant"]),
                          k_cap)
         for x in s:
             assert x <= k_cap
@@ -127,10 +127,10 @@ def test_successor_caps_at_k():
 # ---------- winning region + solver ----------
 
 def _solve(spec, k):
-    g = ap.create_twa(spec, INPUTS, OUTPUTS)
-    ap.preprocess_aut_standard(g, k_max=k)
-    ap.set_bool_thresh_no_bool_states(g, k_max=k)
-    r = ap.solve_acacia_safety_game(g, k_max=k, k_min=min(2, k), k_inc=1)
+    g = ab.create_twa(spec, INPUTS, OUTPUTS)
+    ab.preprocess_aut_standard(g, k_max=k)
+    ab.set_bool_thresh_no_bool_states(g, k_max=k)
+    r = ab.solve_acacia_safety_game(g, k_max=k, k_min=min(2, k), k_inc=1)
     return g, r
 
 
@@ -138,7 +138,7 @@ def test_winreg_contains_initial_state_when_realizable():
     g, r = _solve(SPEC_REAL, k=2)
     assert r.is_real()
     w = r.get_winning_region()
-    v = ap.get_initial_state(g)
+    v = ab.get_initial_state(g)
     assert w.contains(v)
 
 
@@ -149,8 +149,8 @@ def test_winreg_does_not_contain_overflow_vector():
     # An "overflow" vector where every state is at the maximum counter
     # should not be in the winning region (it represents having already
     # seen too many accepting visits simultaneously everywhere).
-    n = ap.num_states(g)
-    bad = ap.make_vector(g, ap.IntVector([99] * n))
+    n = ab.num_states(g)
+    bad = ab.make_vector(g, ab.IntVector([99] * n))
     assert not w.contains(bad)
 
 

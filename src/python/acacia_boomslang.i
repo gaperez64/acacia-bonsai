@@ -1,4 +1,4 @@
-%module acacia_python
+%module acacia_boomslang
 %{
 #include "python_interface.hh"
 

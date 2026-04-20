@@ -36,7 +36,7 @@ COPY . .
 # Pre-fetch the std-simd meson wrap so the meson build works offline.
 RUN meson subprojects download std-simd || true
 
-# Build a single release configuration so src/python/_acacia_python.so exists.
+# Build a single release configuration so src/python/_acacia_boomslang.so exists.
 # PKG_CONFIG_PATH lets meson find Spot in the custom /opt/spot_install prefix.
 ENV PKG_CONFIG_PATH=/opt/spot_install/lib/pkgconfig
 RUN meson setup builddir --buildtype=release -Dbuild_python=true \

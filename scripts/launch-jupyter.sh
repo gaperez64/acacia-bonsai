@@ -18,7 +18,7 @@ fi
 
 ACACIA_PY_DIR="${ACACIA_ROOT}/builddir/src/python"
 if [[ ! -d "${ACACIA_PY_DIR}" ]]; then
-    echo "launch-jupyter: acacia python build dir not found at ${ACACIA_PY_DIR}" >&2
+    echo "launch-jupyter: acacia boomslang build dir not found at ${ACACIA_PY_DIR}" >&2
     exit 1
 fi
 

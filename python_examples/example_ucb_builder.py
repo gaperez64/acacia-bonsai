@@ -1,7 +1,7 @@
 """
 Showcase for issue #72: reimplement the `UCBBuilder.py` helper from
 synth-learn (https://github.com/mrudu/synth-learn) entirely in Python, using
-the acacia_python bindings — no subprocess call to the acacia binary, no
+the acacia_boomslang bindings — no subprocess call to the acacia binary, no
 parsing of --K output.
 
 Reference implementation:
@@ -11,17 +11,17 @@ Mapping from the reference to this implementation
 -------------------------------------------------
 Reference                              | Our port
 ---------------------------------------|------------------------------------
-subprocess call + ANTICHAIN parsing    | acacia_python.create_twa +
+subprocess call + ANTICHAIN parsing    | ab.create_twa +
                                        |   solve_acacia_safety_game
-spot.automata(AUTOMATA section)        | acacia_python.get_aut_hoa +
+spot.automata(AUTOMATA section)        | ab.get_aut_hoa +
                                        |   spot.automaton
-self.num_states                        | acacia_python.num_states(game)
+self.num_states                        | ab.num_states(game)
 self.antichain_heads (list of lists)   | WinningRegion (kept as-is) +
                                        |   WinningRegion.contains
 get_bdd_propositions(aps)              | unchanged — uses spot.automaton +
                                        |   buddy.bdd_ithvar exactly like
                                        |   the reference
-get_transition_state(v, edge_label)    | acacia_python.successor +
+get_transition_state(v, edge_label)    | ab.successor +
                                        |   classify_by_cube, no BDD needed
 is_safe(v)                             | WinningRegion.contains
 
@@ -36,7 +36,7 @@ import itertools
 from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
-import acacia_python as ap
+import acacia_boomslang as ab
 
 # The reference builds BDDs via the Spot/Buddy Python bindings. We keep
 # this optional — callers that only need `get_transition_state` and
@@ -59,9 +59,9 @@ class UCB:
     psi         : the (negated) LTL formula the UCB was built for
     inputs      : list of input AP names, in registration order
     outputs     : list of output AP names, in registration order
-    game        : the underlying acacia_python.Game (keeps TWA + BDD dict
+    game        : the underlying ab.Game (keeps TWA + BDD dict
                   alive for the lifetime of this UCB)
-    winreg      : acacia_python.WinningRegion — plays the role of the
+    winreg      : ab.WinningRegion — plays the role of the
                   antichain_heads field of the reference implementation
     num_states  : convenience copy of ap.num_states(game)
     """
@@ -70,8 +70,8 @@ class UCB:
     psi: str
     inputs: List[str]
     outputs: List[str]
-    game: "ap.Game"
-    winreg: "ap.WinningRegion"  # keeps the parent GameResult alive via ._owner
+    game: "ab.Game"
+    winreg: "ab.WinningRegion"  # keeps the parent GameResult alive via ._owner
     num_states: int
 
     # -------- construction --------

@@ -1,4 +1,4 @@
-name: Docker CD (Jupyter)
+name: Docker CD (Boomslang)
 
 on:
   release:
@@ -31,7 +31,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}-jupyter
+          images: ghcr.io/${{ github.repository_owner }}/acacia-boomslang
           tags: |
             type=raw,value=latest
             type=semver,pattern={{version}}
@@ -41,9 +41,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.jupyter
+          file: Dockerfile.boomslang
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=jupyter
-          cache-to: type=gha,mode=max,scope=jupyter
+          cache-from: type=gha,scope=boomslang
+          cache-to: type=gha,mode=max,scope=boomslang
