@@ -46,7 +46,7 @@ jobs:
           # Distinct from main.yml's cache because that build uses
           # --disable-python; mixing would skip rebuilding when switching
           # jobs. Spot is installed into /opt/spot_install (matching
-          # Dockerfile.jupyter) rather than /usr/local so the Python
+          # Dockerfile.boomslang) rather than /usr/local so the Python
           # bindings land in a predictable, cacheable location.
           path: /opt/spot_install
           key: spot-2.14.4-maxacc64-py-opt-${{ runner.os }}

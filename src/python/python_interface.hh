@@ -241,7 +241,7 @@ class GameResult {
 /**
  * Returns the automaton in HOA format as a string.
  * Useful for passing the automaton back to the spot Python bindings:
- *   aut = spot.automaton(acacia_python.get_aut_hoa(game))
+ *   aut = spot.automaton(acacia_boomslang.get_aut_hoa(game))
  */
 std::string get_aut_hoa(const Game& game);
 
