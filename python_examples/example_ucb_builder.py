@@ -63,7 +63,7 @@ class UCB:
                   alive for the lifetime of this UCB)
     winreg      : ab.WinningRegion — plays the role of the
                   antichain_heads field of the reference implementation
-    num_states  : convenience copy of ap.num_states(game)
+    num_states  : convenience copy of ab.num_states(game)
     """
 
     k: int
@@ -82,16 +82,16 @@ class UCB:
         """Mimic the reference's build_UCB: try increasing k until the
         spec is realisable at that bound (or we run out of budget)."""
         while k <= limit:
-            game = ap.create_twa(psi, inputs, outputs)
-            ap.preprocess_aut_standard(game, k_max=k)
-            ap.set_bool_thresh_no_bool_states(game, k_max=k)
-            result = ap.solve_acacia_safety_game(
+            game = ab.create_twa(psi, inputs, outputs)
+            ab.preprocess_aut_standard(game, k_max=k)
+            ab.set_bool_thresh_no_bool_states(game, k_max=k)
+            result = ab.solve_acacia_safety_game(
                 game, k_max=k, k_min=min(2, k), k_inc=1)
             if result.is_real():
                 return cls(
                     k=k, psi=psi, inputs=inputs, outputs=outputs,
                     game=game, winreg=result.get_winning_region(),
-                    num_states=ap.num_states(game))
+                    num_states=ab.num_states(game))
             k += 1
         return None
 
@@ -109,7 +109,7 @@ class UCB:
         # Need a spot automaton whose BDD dict was used to register these
         # APs. We parse our own HOA output; the dicts are separate but the
         # AP names match, which is all BDDs need to resolve.
-        aut = _spot.automaton(ap.get_aut_hoa(self.game))
+        aut = _spot.automaton(ab.get_aut_hoa(self.game))
         props = [_buddy.bdd_ithvar(aut.register_ap(p)) for p in aps]
         n = len(props)
         bdd_list = []
@@ -132,10 +132,10 @@ class UCB:
         lists that describe the cube, which is strictly more Pythonic and
         drops the buddy dependency for the common case.
         """
-        v = ap.make_vector(self.game, ap.IntVector(state_vector))
-        s = ap.successor(self.game, v,
-                         ap.StringVector(list(true_aps)),
-                         ap.StringVector(list(false_aps)),
+        v = ab.make_vector(self.game, ab.IntVector(state_vector))
+        s = ab.successor(self.game, v,
+                         ab.StringVector(list(true_aps)),
+                         ab.StringVector(list(false_aps)),
                          self.k)
         return [s[i] for i in range(len(s))]
 
@@ -143,13 +143,13 @@ class UCB:
         """Whether `state_vector` is still inside the winning region,
         which is exactly what the reference's antichain-head containment
         check computes."""
-        v = ap.make_vector(self.game, ap.IntVector(state_vector))
+        v = ab.make_vector(self.game, ab.IntVector(state_vector))
         return self.winreg.contains(v)
 
     # -------- helpers useful for callers --------
 
     def initial_state_vector(self) -> List[int]:
-        v = ap.get_initial_state(self.game)
+        v = ab.get_initial_state(self.game)
         return [v[i] for i in range(len(v))]
 
     def iter_io_cubes(self):
