@@ -24,10 +24,20 @@ Pull the image:
 $ docker pull ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
+**Note:** To specifically pull the `linux/amd64` image the following command can be used instead:
+```
+docker pull --platform linux/amd64 ghcr.io/gaperez64/acacia-boomslang:latest
+```
+
 Start the notebook server, exposing port 8888 on the host:
 ```
 $ docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 ```
+
+**Note:** To specifically run the `linux/amd64` image:
+``
+docker run --platform linux/amd64 --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
+``
 
 The container prints a URL with an access token (e.g.
 `http://127.0.0.1:8888/tree?token=...`) — open it in your browser. The
