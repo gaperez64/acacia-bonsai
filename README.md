@@ -69,7 +69,7 @@ $ ./scripts/compile.sh
 This builds Spot from source and then compiles all configurations. Now,
 you can run acacia-bonsai using the wrapper script:
 ```
-$ ./scripts/acacia-bonsai.sh best_mona \
+$ ./scripts/acacia-bonsai.sh best_decomp_mona \
       -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
@@ -77,7 +77,7 @@ REALIZABLE
 The wrapper also accepts TLSF specs piped on stdin (translated to LTL via
 the bundled `syfco`):
 ```
-$ cat spec.tlsf | ./scripts/acacia-bonsai.sh best_mona --tlsf
+$ cat spec.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 ```
 
 When you exit the shell the container stops but is preserved. To re-enter
@@ -91,7 +91,7 @@ From outside the container you can also pipe a TLSF spec into the running
 ```
 $ docker start acacia   # if it is stopped
 $ cat spec.tlsf | docker exec -i acacia \
-      /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_mona --tlsf
+      /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 ```
 
 To synthesize a controller (AIGER/AAG format) and have it printed on stdout
@@ -101,7 +101,7 @@ stderr so stdout carries only the AAG:
 ```
 $ cat spec.tlsf | docker exec -i acacia \
       /opt/acacia-bonsai/scripts/acacia-synthesis.sh \
-      best_mona --tlsf > controller.aag
+      best_decomp_mona --tlsf > controller.aag
 ```
 
 To see available configurations:
@@ -124,7 +124,7 @@ here because there is nothing left to compile:
 $ docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:compiled
 $ cat spec.tlsf | docker run --rm -i \
       ghcr.io/gaperez64/acacia-bonsai:compiled \
-      /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_mona --tlsf
+      /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 ```
 
 Once you are done with the original container for good, remove it

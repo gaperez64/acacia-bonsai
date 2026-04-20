@@ -31,10 +31,10 @@ BEST_BASE='-DDEFAULT_KMIN=2 -DDEFAULT_KINC=3 -DDEFAULT_UNREAL_X=UNREAL_X_BOTH
 -DDECOMPOSE_SPEC=0'
 
 declare -A CONFIGS
-CONFIGS[best_mona]="$BEST_BASE -DIOS_PRECOMPUTER=ios_precomputers::mona"
 CONFIGS[best_decomp_mona]="$BEST_BASE -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-CONFIGS[base_iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
 CONFIGS[best_decomp_kdtree_mona]="$BEST_BASE -DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
+CONFIGS[base_iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
+CONFIGS[best_decomp_sharingtrie_mona]="$BEST_BASE -DARRAY_AND_BITSET_DOWNSET_IMPL=sharingtrie_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=sharingtrie_backed -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
 
 cd /opt/acacia-bonsai
 
