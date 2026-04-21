@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt-get install -y wget cmake autoconf time python3-dev python3-pip \
         meson ninja-build pkg-config swig \
         automake libtool libltdl-dev bison flex git \
-        graphviz \
+        graphviz inkscape \
         pandoc texlive-xetex texlive-fonts-recommended texlive-plain-generic \
     && rm -rf /var/lib/apt/lists/*
 
