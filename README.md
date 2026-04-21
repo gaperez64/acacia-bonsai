@@ -76,9 +76,12 @@ REALIZABLE
 ```
 
 The wrapper also accepts TLSF specs piped on stdin (translated to LTL via
-the bundled `syfco`):
+the bundled `syfco`). The image ships example specs in `examples/`:
 ```
-$ cat spec.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+$ cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+REALIZABLE
+$ cat examples/unrealizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+UNREALIZABLE
 ```
 
 When you exit the shell the container stops but is preserved. To re-enter
@@ -91,7 +94,7 @@ From outside the container you can also pipe a TLSF spec into the running
 (or stopped-then-started) container via `docker exec` / `docker start`:
 ```
 $ docker start acacia   # if it is stopped
-$ cat spec.tlsf | docker exec -i acacia \
+$ cat examples/realizable.tlsf | docker exec -i acacia \
       /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 ```
 
@@ -100,7 +103,7 @@ when the spec is realizable, use `acacia-synthesis.sh`. It accepts the same
 options as `acacia-bonsai.sh`; the REALIZABLE/UNREALIZABLE verdict goes to
 stderr so stdout carries only the AAG:
 ```
-$ cat spec.tlsf | docker exec -i acacia \
+$ cat examples/realizable.tlsf | docker exec -i acacia \
       /opt/acacia-bonsai/scripts/acacia-synthesis.sh \
       best_decomp_mona --tlsf > controller.aag
 ```
@@ -123,7 +126,7 @@ have Spot and the acacia-bonsai configurations built in — `--rm` is fine
 here because there is nothing left to compile:
 ```
 $ docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:compiled
-$ cat spec.tlsf | docker run --rm -i \
+$ cat examples/realizable.tlsf | docker run --rm -i \
       ghcr.io/gaperez64/acacia-bonsai:compiled \
       /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 ```
