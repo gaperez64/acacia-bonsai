@@ -21,12 +21,12 @@ required on your end.
 
 Pull the image:
 ```
-$ docker pull ghcr.io/gaperez64/acacia-boomslang:latest
+docker pull ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 Start the notebook server, exposing port 8888 on the host:
 ```
-$ docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
+docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 The container prints a URL with an access token (e.g.
@@ -37,7 +37,7 @@ import both `spot` and `acacia_boomslang`.
 To mount a host directory of your own notebooks instead of the bundled
 examples:
 ```
-$ docker run --rm -p 8888:8888 \
+docker run --rm -p 8888:8888 \
     -v "$PWD/my_notebooks:/work" \
     -e NOTEBOOK_DIR=/work \
     ghcr.io/gaperez64/acacia-boomslang:latest
@@ -51,26 +51,26 @@ the container so that `-march=native` picks up the host's SIMD instruction set.
 
 Pull the image:
 ```
-$ docker pull ghcr.io/gaperez64/acacia-bonsai:latest
+docker pull ghcr.io/gaperez64/acacia-bonsai:latest
 ```
 
 Create a named container and start it interactively (note: we deliberately
 do *not* pass `--rm` — compilation happens inside the container, so removing
 it on exit would throw away the binaries you are about to build):
 ```
-$ docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
+docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
 ```
 
 Inside the container, compile Spot and a number of optimized acacia-bonsai
 configurations:
 ```
-$ ./scripts/compile.sh
+./scripts/compile.sh
 ```
 
 This builds Spot from source and then compiles all configurations. Now,
 you can run acacia-bonsai using the wrapper script:
 ```
-$ ./scripts/acacia-bonsai.sh best_decomp_mona \
+./scripts/acacia-bonsai.sh best_decomp_mona \
       -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
@@ -78,23 +78,23 @@ REALIZABLE
 The wrapper also accepts TLSF specs piped on stdin (translated to LTL via
 the bundled `syfco`). The image ships example specs in `examples/`:
 ```
-$ cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 REALIZABLE
-$ cat examples/unrealizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+cat examples/unrealizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 UNREALIZABLE
 ```
 
 When you exit the shell the container stops but is preserved. To re-enter
 it later with your compiled binaries intact:
 ```
-$ docker start -ai acacia
+docker start -ai acacia
 ```
 
 From outside the container you can also pipe a TLSF spec into the running
 (or stopped-then-started) container via `docker exec` / `docker start`:
 ```
-$ docker start acacia   # if it is stopped
-$ cat examples/realizable.tlsf | docker exec -i acacia \
+docker start acacia   # if it is stopped
+cat examples/realizable.tlsf | docker exec -i acacia \
       /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 ```
 
@@ -103,14 +103,14 @@ when the spec is realizable, use `acacia-synthesis.sh`. It accepts the same
 options as `acacia-bonsai.sh`; the REALIZABLE/UNREALIZABLE verdict goes to
 stderr so stdout carries only the AAG:
 ```
-$ cat examples/realizable.tlsf | docker exec -i acacia \
+cat examples/realizable.tlsf | docker exec -i acacia \
       /opt/acacia-bonsai/scripts/acacia-synthesis.sh \
       best_decomp_mona --tlsf > controller.aag
 ```
 
 To see available configurations:
 ```
-$ ./scripts/acacia-bonsai.sh
+./scripts/acacia-bonsai.sh
 ```
 
 If you would rather not keep the `acacia` container around but still want
@@ -118,15 +118,15 @@ to reuse the compiled binaries later, snapshot the container into a new
 image (we suggest the `compiled` tag to distinguish it from the source-only
 `latest`):
 ```
-$ docker commit acacia ghcr.io/gaperez64/acacia-bonsai:compiled
+docker commit acacia ghcr.io/gaperez64/acacia-bonsai:compiled
 ```
 
 From then on you can spin up fresh, throwaway containers that already
 have Spot and the acacia-bonsai configurations built in — `--rm` is fine
 here because there is nothing left to compile:
 ```
-$ docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:compiled
-$ cat examples/realizable.tlsf | docker run --rm -i \
+docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:compiled
+cat examples/realizable.tlsf | docker run --rm -i \
       ghcr.io/gaperez64/acacia-bonsai:compiled \
       /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 ```
@@ -134,7 +134,7 @@ $ cat examples/realizable.tlsf | docker run --rm -i \
 Once you are done with the original container for good, remove it
 explicitly:
 ```
-$ docker rm acacia
+docker rm acacia
 ```
 
 # Dependencies
@@ -172,34 +172,34 @@ location).
 
 To compile and run, use Meson:
 ```
-$ meson setup build
-$ cd build
-$ meson compile
-$ src/acacia-bonsai -h
+meson setup build
+cd build
+meson compile
+src/acacia-bonsai -h
   [...]
-$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
+src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
 Another usage:
 ```
-$ src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant
+src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant
 UNREALIZABLE
 ```
 
 Note that this will compile a debug version of Acacia-Bonsai.  A benchmarking
 script is available at the root:
 ```
-$ ./self-benchmark.sh -h
+./self-benchmark.sh -h
 ```
 
 In particular, it can be used to build an optimized version of Acacia-Bonsai:
 ```
-$ ./self-benchmark.sh -c best -B
+./self-benchmark.sh -c best -B
   [...]
-$ cd build_best
-$ src/acacia-bonsai -h
-$ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
+cd build_best
+src/acacia-bonsai -h
+src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
