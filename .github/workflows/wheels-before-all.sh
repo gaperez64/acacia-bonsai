@@ -44,7 +44,7 @@ make -j"$(nproc)"
 make install
 
 echo "/opt/spot_install/lib" > /etc/ld.so.conf.d/spot.conf
-ldconfig
+/sbin/ldconfig
 
 echo "== Spot installed =="
 pkg-config --modversion libspot
