@@ -14,9 +14,11 @@ swig_gen = custom_target(
   command: [swig_cmd, '-c++', '-python', '-I' + spot_includedir, '-o', '@OUTPUT0@', '@INPUT@'],
   depend_files: files('python_interface.cc'),
 
-  # Install generated files automatically into site-packages
+  # Only the .py wrapper goes to site-packages; the .cxx feeds into the
+  # extension_module build below and would just bloat the wheel otherwise.
   install: true,
-  install_dir: py.get_install_dir()
+  install_tag: [false, 'python-runtime'],
+  install_dir: [false, py.get_install_dir()]
 )
 
 project_headers = include_directories('..')  # everything in /src/
@@ -27,4 +29,5 @@ module = py.extension_module('_acacia_boomslang',
   dependencies: [spot_dep, posets_dep],
   include_directories: project_headers,
   install: true,
+  install_tag: 'python-runtime',
 )

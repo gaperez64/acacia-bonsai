@@ -1,4 +1,5 @@
 project ('Acacia Bonsai', ['c', 'cpp'],
+         version : '2.0.8',
          default_options : ['cpp_std=c++23', 'b_ndebug=if-release'],
          license : 'GPL-3.0')
 

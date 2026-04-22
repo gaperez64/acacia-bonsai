@@ -1,0 +1,118 @@
+name: Wheels (PyPI)
+
+# Build manylinux wheels for acacia-boomslang on linux/amd64 + linux/arm64
+# for CPython 3.13 and 3.14, plus an sdist, and publish everything to PyPI
+# via trusted publishing when a release is published.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SPOT_VERSION: 2.14.4
+
+jobs:
+  build_wheels:
+    name: Wheels ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            cibw_arch: x86_64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            cibw_arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.2
+        env:
+          CIBW_BUILD: cp313-manylinux_* cp314-manylinux_*
+          CIBW_ARCHS_LINUX: ${{ matrix.cibw_arch }}
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
+          # Build Spot once per-arch, before any wheels. The container is
+          # reused for BEFORE_BUILD / build / REPAIR within a given job so
+          # the Spot install at /opt/spot_install is visible throughout.
+          CIBW_BEFORE_ALL_LINUX: bash {project}/.github/workflows/wheels-before-all.sh
+          CIBW_ENVIRONMENT_LINUX: >-
+            PKG_CONFIG_PATH=/opt/spot_install/lib/pkgconfig
+            LD_LIBRARY_PATH=/opt/spot_install/lib
+            CC=/opt/rh/gcc-toolset-14/root/usr/bin/gcc
+            CXX=/opt/rh/gcc-toolset-14/root/usr/bin/g++
+            PATH=/opt/rh/gcc-toolset-14/root/usr/bin:/usr/local/bin:/usr/bin:/bin
+          # auditwheel needs to see libspot.so.* at repair time to vendor
+          # them into the wheel. Default search path in the container
+          # doesn't include /opt/spot_install/lib.
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: >-
+            LD_LIBRARY_PATH=/opt/spot_install/lib
+            auditwheel repair -w {dest_dir} {wheel}
+          CIBW_TEST_COMMAND: python -c "import acacia_boomslang; print(acacia_boomslang.__file__)"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v6
+        with:
+          name: wheels-${{ matrix.arch }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+          retention-days: 7
+
+  build_sdist:
+    name: Source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install build
+        run: python -m pip install --upgrade build
+
+      - name: Build sdist
+        run: python -m build --sdist
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v6
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish to PyPI
+    if: github.event_name == 'release'
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/acacia-boomslang
+    permissions:
+      id-token: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v6
+        with:
+          path: dist
+          pattern: "{wheels-*,sdist}"
+          merge-multiple: true
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1

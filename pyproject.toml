@@ -1,0 +1,39 @@
+[build-system]
+requires = ["meson-python>=0.16.0", "meson>=1.5.0", "ninja"]
+build-backend = "mesonpy"
+
+[project]
+name = "acacia-boomslang"
+dynamic = ["version"]
+description = "Python bindings for Acacia-Bonsai, an antichain-based LTL synthesis and safety-game solver"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Guillermo A. Perez" },
+    { name = "Michael Cadilhac" },
+]
+requires-python = ">=3.13"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/gaperez64/acacia-bonsai"
+Repository = "https://github.com/gaperez64/acacia-bonsai"
+Issues = "https://github.com/gaperez64/acacia-bonsai/issues"
+
+# Only the Python extension + its generated .py get packaged; the `acacia-bonsai`
+# CLI binary is tagged `cli` and left out of the wheel via `--tags=python-runtime`.
+# Tests are turned off since the wheel build has no use for them.
+[tool.meson-python.args]
+setup = ["-Dbuild_python=true", "-Dbuild_tests=false"]
+install = ["--tags=python-runtime"]
