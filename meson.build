@@ -12,7 +12,7 @@ extra_args = ['-ftrack-macro-expansion=0',
               '-fconcepts-diagnostics-depth=2',
               '-Wunused-function']
 
-add_global_arguments (extra_args, language: 'cpp')
+add_global_arguments (cpp.get_supported_arguments (extra_args), language: 'cpp')
 
 spot_dep = dependency ('libspot')
 bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy

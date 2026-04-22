@@ -67,12 +67,11 @@ jobs:
             LD_LIBRARY_PATH=/opt/spot_install/lib
             auditwheel repair -w {dest_dir} {wheel}
           CIBW_BEFORE_ALL_MACOS: bash {project}/.github/workflows/wheels-before-all-macos.sh
+          # Use Apple Clang (system default) — its runtime is a system library
+          # that delocate excludes, so only libspot/libbddx end up in the wheel.
           CIBW_ENVIRONMENT_MACOS: >-
             PKG_CONFIG_PATH=/opt/spot_install/lib/pkgconfig
             DYLD_LIBRARY_PATH=/opt/spot_install/lib
-            CC=/opt/homebrew/bin/gcc-14
-            CXX=/opt/homebrew/bin/g++-14
-            PATH=/opt/homebrew/bin:$PATH
           # delocate finds libspot.dylib via the LC_LOAD_DYLIB path embedded
           # at link time; DYLD_LIBRARY_PATH helps it resolve transitive deps.
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: >-

@@ -1,24 +1,29 @@
 #!/bin/bash
 # Runs directly on the macos-15 runner (no container) by cibuildwheel,
-# once per arch before any wheel is built. Installs the build toolchain
-# (GCC 14, SWIG) and compiles Spot from source into /opt/spot_install.
+# once per arch before any wheel is built. Installs SWIG and compiles Spot
+# from source into /opt/spot_install using Apple Clang (the system default).
 #
-# Mirrors wheels-before-all.sh but uses brew instead of yum, GCC 14 via
-# Homebrew, and sysctl for the CPU count. No ldconfig on macOS — delocate
-# finds libspot.dylib via the LC_LOAD_DYLIB paths embedded at link time.
+# We intentionally avoid Homebrew GCC: its libstdc++ is compiled against the
+# runner OS (macOS 15) and delocate rejects it when repairing a wheel tagged
+# macosx_11_0_arm64. Apple Clang's runtime is a system library that delocate
+# always excludes, so only libspot.dylib / libbddx.dylib end up in the wheel.
+#
+# MACOSX_DEPLOYMENT_TARGET=11.0 is set explicitly so libspot.dylib carries
+# the same minimum-OS guarantee as the wheel itself.
 
 set -euo pipefail
 
 : "${SPOT_VERSION:=2.14.4}"
 
 echo "== Installing build dependencies =="
-brew install autoconf automake libtool bison flex pkg-config git swig wget gcc@14
+brew install autoconf automake libtool bison flex pkg-config git swig wget
 
 # bison and flex are keg-only on macOS (avoids shadowing the system tools);
 # prepend their Homebrew prefix so Spot's configure uses the current versions.
 export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/opt/flex/bin:/opt/homebrew/bin:$PATH"
-export CC=/opt/homebrew/bin/gcc-14
-export CXX=/opt/homebrew/bin/g++-14
+
+# Build libspot.dylib targeting the same minimum OS as the arm64 wheel tag.
+export MACOSX_DEPLOYMENT_TARGET=11.0
 
 echo "== Building Spot ${SPOT_VERSION} =="
 workdir=$(mktemp -d)
