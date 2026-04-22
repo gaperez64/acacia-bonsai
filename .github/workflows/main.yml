@@ -63,10 +63,10 @@ jobs:
         ./self-benchmark.sh -c base -j -b ab/issue54
         rm build_base/benchmarked
         ./self-benchmark.sh -c base -j -b synthesis
-    - name: Compile and test all configurations
+    - name: Compile and test shipped configurations
       run: |
         export CXX=g++-14
-        ./self-benchmark.sh -j -b ab/tiny
+        ./self-benchmark.sh -c best_decomp_mona,best_decomp_kdtree_mona,base_iosprecom_mona,best_decomp_sharingtrie_mona -j -b ab/tiny
     - name: Upload test results
       uses: actions/upload-artifact@v7
       if: always()
