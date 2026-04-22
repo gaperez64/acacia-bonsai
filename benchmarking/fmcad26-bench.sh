@@ -26,21 +26,24 @@ SET2_CONFS=(ltlsynt best_decomp_mona best_decomp_kdtree_mona
 
 TIMEOUT_FACTOR=1.7
 quick_conf=
+native_file=
 
 usage() {
   cat <<EOF
-usage: $SCRIPT_NAME [-h] [-q CONF] [-t FACTOR]
-  -h          Print this message.
-  -q CONF     Quick-check: run only CONF on $SUITE_DEFAULT and plot that alone.
-  -t FACTOR   Timeout factor passed to meson test (default: $TIMEOUT_FACTOR).
+usage: $SCRIPT_NAME [-h] [-q CONF] [-t FACTOR] [-n NATIVE_FILE]
+  -h              Print this message.
+  -q CONF         Quick-check: run only CONF on $SUITE_DEFAULT and plot that alone.
+  -t FACTOR       Timeout factor passed to meson test (default: $TIMEOUT_FACTOR).
+  -n NATIVE_FILE  Path to a meson native file passed to \`meson setup\` via self-benchmark.sh.
 EOF
 }
 
-while getopts "hq:t:" opt; do
+while getopts "hq:t:n:" opt; do
   case $opt in
     h) usage; exit 0 ;;
     q) quick_conf=$OPTARG ;;
     t) TIMEOUT_FACTOR=$OPTARG ;;
+    n) native_file=$OPTARG ;;
     *) usage >&2; exit 2 ;;
   esac
 done
@@ -78,7 +81,9 @@ for run in $runs; do
 
   rm -rf _bm-logs
 
-  if ! ./self-benchmark.sh -b $suite -c $conflist -t $TIMEOUT_FACTOR -f; then
+  native_flag=()
+  [[ -n $native_file ]] && native_flag=(-n "$native_file")
+  if ! ./self-benchmark.sh -b $suite -c $conflist -t $TIMEOUT_FACTOR -f $native_flag; then
     print -u2 "WARN: self-benchmark.sh returned non-zero for run '$label'; continuing."
   fi
 
