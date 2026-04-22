@@ -82,6 +82,40 @@ jobs:
         with:
           python-version: "3.13"
 
+      # meson-python invokes `meson setup` as part of `meson dist`, which
+      # evaluates dependency('libspot') — so even though no compile happens,
+      # Spot must be resolvable via pkg-config. Mirrors main.yml's install
+      # (without Python bindings).
+      - name: Install Spot build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+              autoconf automake libtool bison flex pkg-config wget
+
+      - name: Restore Spot cache
+        id: spot-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            /usr/local/lib/libspot*
+            /usr/local/lib/libbddx*
+            /usr/local/include/spot
+            /usr/local/include/bddx*
+            /usr/local/lib/pkgconfig/libspot.pc
+            /usr/local/lib/pkgconfig/libbddx.pc
+          key: spot-${{ env.SPOT_VERSION }}-nopy-sdist-${{ runner.os }}
+
+      - name: Install Spot
+        if: steps.spot-cache.outputs.cache-hit != 'true'
+        run: |
+          wget -q "http://www.lrde.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz"
+          tar -xzf "spot-${SPOT_VERSION}.tar.gz"
+          cd "spot-${SPOT_VERSION}"
+          ./configure --enable-max-accsets=64 --disable-python --disable-static --disable-doxygen
+          make -j"$(nproc)"
+          sudo make install
+          sudo ldconfig
+
       - name: Install build
         run: python -m pip install --upgrade build
 
