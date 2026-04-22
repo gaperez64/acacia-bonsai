@@ -37,3 +37,7 @@ Issues = "https://github.com/gaperez64/acacia-bonsai/issues"
 [tool.meson-python.args]
 setup = ["-Dbuild_python=true", "-Dbuild_tests=false"]
 install = ["--tags=python-runtime"]
+# Bundle subproject sources (posets, std-simd) into the sdist so it's
+# self-contained — otherwise `pip install` from sdist can't resolve
+# dependency('posets') via its wrap fallback.
+dist = ["--include-subprojects"]
