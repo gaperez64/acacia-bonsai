@@ -51,7 +51,7 @@ jobs:
             LD_LIBRARY_PATH=/opt/spot_install/lib
             CC=/opt/rh/gcc-toolset-14/root/usr/bin/gcc
             CXX=/opt/rh/gcc-toolset-14/root/usr/bin/g++
-            PATH=/opt/rh/gcc-toolset-14/root/usr/bin:/usr/local/bin:/usr/bin:/bin
+            PATH=/opt/rh/gcc-toolset-14/root/usr/bin:$PATH
           # auditwheel needs to see libspot.so.* at repair time to vendor
           # them into the wheel. Default search path in the container
           # doesn't include /opt/spot_install/lib.
