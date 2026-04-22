@@ -100,6 +100,7 @@ confs=(
 mode= # print, list
 force=false
 justtest=false
+native_file=
 donot=()
 conflist=(${(k)confs})
 benchsuites=(--suite=$BENCHMARK_SUITE)
@@ -125,10 +126,10 @@ EOF
   echo "."
 fi
 
-while getopts "hplBCjRfb:t:c:" option; do
+while getopts "hplBCjRfb:t:c:n:" option; do
     case $option; in
         h) cat <<EOF
-usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
+usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-n NATIVE_FILE]
   -h: Print this message.
   -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
   -l: Do not build/compile/benchmark, instead, list configurations.
@@ -140,6 +141,7 @@ usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]]
   -b BENCHMARK: Run a specific benchmark suite (default: $BENCHMARK_SUITE).
   -t TIMEOUT: Use timeout factor TIMEOUT (default: $TIMEOUT_FACTOR).  Actual time is multiplied by 10.
   -c CONF,...: Only consider configurations listed.
+  -n NATIVE_FILE: Path to a meson native file passed to \`meson setup\`.
 EOF
            exit 1;;
         p) mode=print;;
@@ -154,7 +156,8 @@ EOF
 	b) benchsuites=()
 	   for b in ${(@s:,:)OPTARG}; do
 	     benchsuites+=(--suite="$b")
-	   done
+	   done;;
+	n) native_file=$OPTARG;;
     esac
 done
 
@@ -194,7 +197,9 @@ if ! (( $donot[(Ie)build] )); then
             echo -n "building $build (logfile: $log)... "
             # if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
 	    # defaults are set in configuration.hh
-            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
+            native_flag=()
+            [[ -n $native_file ]] && native_flag=(--native-file "$native_file")
+            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel $native_flag &>> $log; then
                 echo "done."
             else
                 echo "FAILED; please remove $build to recompile."
