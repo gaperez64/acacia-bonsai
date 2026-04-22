@@ -67,12 +67,17 @@ jobs:
             LD_LIBRARY_PATH=/opt/spot_install/lib
             auditwheel repair -w {dest_dir} {wheel}
           CIBW_BEFORE_ALL_MACOS: bash {project}/.github/workflows/wheels-before-all-macos.sh
+          # GCC 14 (needed for experimental/simd in the posets subproject) ships
+          # a libstdc++.6.dylib built against macOS 15 on this runner, so the
+          # wheel must declare the matching deployment target or delocate will
+          # refuse to bundle it.
           CIBW_ENVIRONMENT_MACOS: >-
             PKG_CONFIG_PATH=/opt/spot_install/lib/pkgconfig
             DYLD_LIBRARY_PATH=/opt/spot_install/lib
             CC=/opt/homebrew/bin/gcc-14
             CXX=/opt/homebrew/bin/g++-14
             PATH=/opt/homebrew/bin:$PATH
+            MACOSX_DEPLOYMENT_TARGET=15.0
           # delocate finds libspot.dylib via the LC_LOAD_DYLIB path embedded
           # at link time; DYLD_LIBRARY_PATH helps it resolve transitive deps.
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: >-
