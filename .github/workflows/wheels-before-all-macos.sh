@@ -32,6 +32,11 @@ wget -q "http://www.lrde.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz"
 tar -xzf "spot-${SPOT_VERSION}.tar.gz"
 cd "spot-${SPOT_VERSION}"
 
+# -static-libstdc++ / -static-libgcc embed the GCC runtime into libspot.dylib
+# and libbddx.dylib so the wheel has no dynamic dependency on GCC's
+# libstdc++.6.dylib or libgcc_s.1.1.dylib, which delocate may not follow
+# through @rpath chains correctly.
+LDFLAGS="-static-libstdc++ -static-libgcc" \
 ./configure \
     --prefix=/opt/spot_install \
     --enable-max-accsets=64 \

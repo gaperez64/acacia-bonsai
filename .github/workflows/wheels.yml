@@ -78,6 +78,7 @@ jobs:
             CXX=/opt/homebrew/bin/g++-14
             PATH=/opt/homebrew/bin:$PATH
             MACOSX_DEPLOYMENT_TARGET=15.0
+            LDFLAGS="-static-libstdc++ -static-libgcc"
           # delocate finds libspot.dylib via the LC_LOAD_DYLIB path embedded
           # at link time; DYLD_LIBRARY_PATH helps it resolve transitive deps.
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: >-
