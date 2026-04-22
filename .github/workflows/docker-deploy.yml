@@ -23,7 +23,7 @@ jobs:
         # (no spot/acacia compile happens at image-build time — the
         # user runs compile.sh inside the container with -march=native),
         # so the emulation overhead is small.
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
