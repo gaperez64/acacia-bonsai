@@ -5,7 +5,12 @@ mkdir -p _bm-logs
 BENCHMARK_SUITE=ab/syntcomp21/crit
 TIMEOUT_FACTOR=1.7
 
-opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
+# -fuse-linker-plugin requires the gold linker, which is unavailable on macOS
+if [[ "$(uname)" == Darwin ]]; then
+    opt='-march=native -Ofast -flto -pipe -DNO_VERBOSE -DNDEBUG'
+else
+    opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
+fi
 opt_justtest=''
 
 declare -A confs
