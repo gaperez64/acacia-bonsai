@@ -1,5 +1,9 @@
 project ('Acacia Bonsai', ['c', 'cpp'],
-         version : '2.0.8',
+         version : run_command(
+             'bash', '-c',
+             'v=$(git describe --tags --abbrev=0 2>/dev/null) && printf "%s" "${v#[vV]}" || printf "2.0"',
+             check: false
+         ).stdout().strip(),
          default_options : ['cpp_std=c++23', 'b_ndebug=if-release'],
          license : 'GPL-3.0')
 

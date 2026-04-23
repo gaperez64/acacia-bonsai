@@ -1,8 +1,9 @@
 name: Wheels (PyPI)
 
 # Build manylinux wheels for acacia-boomslang on linux/amd64 + linux/arm64
-# for CPython 3.13 and 3.14, plus an sdist, and publish everything to PyPI
-# via trusted publishing when a release is published.
+# and a native macOS arm64 wheel, for CPython 3.13 and 3.14, plus an sdist,
+# and publish everything to PyPI via trusted publishing when a release is
+# published.
 
 on:
   release:
@@ -25,9 +26,15 @@ jobs:
           - arch: amd64
             runner: ubuntu-latest
             cibw_arch: x86_64
+            cibw_build: "cp313-manylinux_* cp314-manylinux_*"
           - arch: arm64
             runner: ubuntu-24.04-arm
             cibw_arch: aarch64
+            cibw_build: "cp313-manylinux_* cp314-manylinux_*"
+          - arch: macos-arm64
+            runner: macos-15
+            cibw_arch: arm64
+            cibw_build: "cp313-macosx_* cp314-macosx_*"
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
@@ -38,8 +45,9 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4
         env:
-          CIBW_BUILD: cp313-manylinux_* cp314-manylinux_*
+          CIBW_BUILD: ${{ matrix.cibw_build }}
           CIBW_ARCHS_LINUX: ${{ matrix.cibw_arch }}
+          CIBW_ARCHS_MACOS: ${{ matrix.cibw_arch }}
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
           # Build Spot once per-arch, before any wheels. The container is
@@ -51,13 +59,31 @@ jobs:
             LD_LIBRARY_PATH=/opt/spot_install/lib
             CC=/opt/rh/gcc-toolset-14/root/usr/bin/gcc
             CXX=/opt/rh/gcc-toolset-14/root/usr/bin/g++
-            PATH=/opt/rh/gcc-toolset-14/root/usr/bin:/usr/local/bin:/usr/bin:/bin
+            PATH=/opt/rh/gcc-toolset-14/root/usr/bin:$PATH
           # auditwheel needs to see libspot.so.* at repair time to vendor
           # them into the wheel. Default search path in the container
           # doesn't include /opt/spot_install/lib.
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >-
             LD_LIBRARY_PATH=/opt/spot_install/lib
             auditwheel repair -w {dest_dir} {wheel}
+          CIBW_BEFORE_ALL_MACOS: bash {project}/.github/workflows/wheels-before-all-macos.sh
+          # GCC 14 (needed for experimental/simd in the posets subproject) ships
+          # a libstdc++.6.dylib built against macOS 15 on this runner, so the
+          # wheel must declare the matching deployment target or delocate will
+          # refuse to bundle it.
+          CIBW_ENVIRONMENT_MACOS: >-
+            PKG_CONFIG_PATH=/opt/spot_install/lib/pkgconfig
+            DYLD_LIBRARY_PATH=/opt/spot_install/lib
+            CC=/opt/homebrew/bin/gcc-14
+            CXX=/opt/homebrew/bin/g++-14
+            PATH=/opt/homebrew/bin:$PATH
+            MACOSX_DEPLOYMENT_TARGET=15.0
+            LDFLAGS="-static-libstdc++ -static-libgcc"
+          # delocate finds libspot.dylib via the LC_LOAD_DYLIB path embedded
+          # at link time; DYLD_LIBRARY_PATH helps it resolve transitive deps.
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: >-
+            DYLD_LIBRARY_PATH=/opt/spot_install/lib
+            delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
           CIBW_TEST_COMMAND: python -c "import acacia_boomslang; print(acacia_boomslang.__file__)"
 
       - name: Upload wheels

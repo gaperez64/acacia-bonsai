@@ -17,7 +17,7 @@ set -euo pipefail
 echo "== Installing build dependencies =="
 yum install -y --setopt=install_weak_deps=False \
     autoconf automake libtool bison flex \
-    swig wget \
+    git swig wget \
     gcc-toolset-14 gcc-toolset-14-gcc gcc-toolset-14-gcc-c++
 
 # Use GCC 14 for both Spot and the wheel compilation — the acacia-bonsai
@@ -44,7 +44,7 @@ make -j"$(nproc)"
 make install
 
 echo "/opt/spot_install/lib" > /etc/ld.so.conf.d/spot.conf
-ldconfig
+/sbin/ldconfig
 
 echo "== Spot installed =="
 pkg-config --modversion libspot
