@@ -103,7 +103,7 @@ trap 'rm -rf "$mkplot_dir"' EXIT
 
 print
 print "Cloning mkplot into $mkplot_dir..."
-if ! git clone --depth 1 $MKPLOT_REPO "$mkplot_dir"; then
+if ! git clone --depth 1 --quiet $MKPLOT_REPO "$mkplot_dir"; then
   print -u2
   print -u2 "============================================================"
   print -u2 "ERROR: failed to clone $MKPLOT_REPO"
@@ -136,6 +136,13 @@ if ! git clone --depth 1 $MKPLOT_REPO "$mkplot_dir"; then
   exit 1
 fi
 
+# mkplot requires matplotlib; install it into a throw-away venv that lives
+# inside $mkplot_dir and is removed with it on exit.
+print "Setting up matplotlib for mkplot..."
+python3 -m venv --quiet "$mkplot_dir/.venv"
+"$mkplot_dir/.venv/bin/pip" install --quiet matplotlib
+mkplot_python=$mkplot_dir/.venv/bin/python3
+
 # -- mkplottable + cactus plot + PAR-2 ----------------------------------------
 for run in $runs; do
   parts=("${(@s:|:)run}")
@@ -159,7 +166,7 @@ for run in $runs; do
     $SCRIPT_DIR/meson-to-mkplot.sh "${f:t:r}" "$f" > "$mkplottable_dir/${f:t}"
   done
 
-  if ! python3 "$mkplot_dir/mkplot.py" --lloc='upper left' --ymin=1e-2 --ylog \
+  if ! $mkplot_python "$mkplot_dir/mkplot.py" --lloc='upper left' --ymin=1e-2 --ylog \
          -b pdf --save-to "$plot_pdf" "$mkplottable_dir"/*.json; then
     print -u2 "WARN: mkplot.py failed for $label."
   else
