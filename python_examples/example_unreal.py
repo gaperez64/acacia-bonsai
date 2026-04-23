@@ -1,5 +1,9 @@
-import spot
 import acacia_boomslang as ab
+try:
+    import spot
+except ImportError:
+    print("Note: Spot is not available, some prints will be skipped")
+    spot = None
 
 # s = "!((G (F (req))) -> (G (F (grant))))"  # realizable — use example_real.py
 s = "!((G (F (req))) <-> (G(!grant)))"
@@ -7,9 +11,10 @@ inputs = ["req"]
 outputs = ["grant"]
 twa = ab.create_twa(s, inputs, outputs)
 
-print("Automaton (HOA):")
-aut = spot.automaton(ab.get_aut_hoa(twa))
-print(aut.to_str('hoa'))
+if spot is not None:
+    print("Automaton (HOA):")
+    aut = spot.automaton(ab.get_aut_hoa(twa))
+    print(aut.to_str('hoa'))
 
 
 ab.preprocess_aut_standard(twa, k_max=99)
