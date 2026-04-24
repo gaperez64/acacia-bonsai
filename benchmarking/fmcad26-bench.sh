@@ -139,7 +139,7 @@ fi
 # mkplot requires matplotlib; install it into a throw-away venv that lives
 # inside $mkplot_dir and is removed with it on exit.
 print "Setting up matplotlib for mkplot..."
-python3 -m venv --quiet "$mkplot_dir/.venv"
+python3 -m venv "$mkplot_dir/.venv"
 "$mkplot_dir/.venv/bin/pip" install --quiet matplotlib
 mkplot_python=$mkplot_dir/.venv/bin/python3
 
