@@ -175,7 +175,31 @@ namespace {
           aut = push_aps (aut, all_inputs, all_outputs);
         }
 
+        // The (negated/X-modified) formula can translate to a 0-state
+        // automaton when its language is empty. Downstream code calls
+        // aut->get_init_state_number(), which throws on such an automaton.
+        // On the realizability path the formula has been negated, so an
+        // empty language means the original spec is a tautology -> REAL.
+        // On the unrealizability paths we cannot soundly map an empty
+        // language to UNREAL (see issue #109 for the proper fast-path
+        // pre-check), so we return inconclusive there.
+        if (aut->num_states () == 0) {
+          verb_do (1, vout << "Automaton from translator is empty (formula unsat); "
+                           << (check_unreal.has_value () ? "inconclusive on unreal path"
+                                                         : "spec is valid, realizable")
+                           << std::endl);
+          return not check_unreal.has_value ();
+        }
+
         AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
+
+        // surely_losing can flush every reachable state and leave the
+        // automaton empty after purging. Map this to inconclusive on
+        // both paths rather than crashing downstream.
+        if (aut->num_states () == 0) {
+          verb_do (1, vout << "Automaton is empty after preprocessing; inconclusive\n");
+          return false;
+        }
 
         posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
