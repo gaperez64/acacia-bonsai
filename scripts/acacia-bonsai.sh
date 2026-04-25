@@ -86,13 +86,16 @@ if [ "$USE_TLSF" = true ]; then
 
     PART=$(mktemp)
     SPEC=$(mktemp)
-    trap 'rm -f "$PART" "$SPEC"' EXIT
+    LTL=$(mktemp)
+    trap 'rm -f "$PART" "$SPEC" "$LTL"' EXIT
 
     # syfco wants a file path; slurp stdin into a temp file so we can also
     # extract the input/output partition with -pf.
     cat > "$SPEC"
 
-    LTL=$("$SYFCO" "$SPEC" -f ltlxba -m fully -pf "$PART") || {
+    # Write the LTL to a file and pass it via -F: some TLSF specs translate
+    # to formulas too long to fit on a command line.
+    "$SYFCO" "$SPEC" -f ltlxba -m fully -pf "$PART" > "$LTL" || {
         echo "Error: syfco failed to translate the TLSF input from stdin" >&2
         exit 4
     }
@@ -109,7 +112,7 @@ if [ "$USE_TLSF" = true ]; then
         esac
     done < "$PART"
 
-    exec "$BINARY" "${PASS_ARGS[@]}" -f "$LTL" -i "$ins" -o "$outs"
+    exec "$BINARY" "${PASS_ARGS[@]}" -F "$LTL" -i "$ins" -o "$outs"
 fi
 
 exec "$BINARY" "${PASS_ARGS[@]}"
