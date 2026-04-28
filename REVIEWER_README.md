@@ -2,20 +2,18 @@
 
 ## Introduction
 
-This document provides concise instructions to reproduce the main functionality of the artifact. The artifact is organized into three independent components:
+This document provides concise instructions to reproduce the main functionality of the artifact. This readme contains the following four sections:
 
-- FMCAD 2026 benchmarking scripts (Section 1)
-- Benchmark log visualization (Section 2)
-- CLI toolchain (Section 3)
-- Jupyter environment (Section 4)
-
-The design goal is strict separation of concerns: each component can be validated independently without requiring execution of the others. This reduces setup complexity and isolates failure modes during evaluation.
+- Section 1: FMCAD 2026 benchmarking scripts
+- Section 2: Benchmark log visualization
+- Section 3: CLI toolchain
+- Section 4: Jupyter environment
 
 ---
 
 ## 1. FMCAD 2026 Benchmarks (Local Execution)
 
-This benchmark suite is designed to run without containerization. The intention is to keep execution transparent and allow inspection of all scripts.
+This benchmark suite is designed to run without containerization. All commands can be done on your local computer.
 
 ### Source archive
 
@@ -25,46 +23,42 @@ The full benchmark environment is distributed as a compressed archive:
 acacia-bonsai-2.0.17.zip
 ```
 
-This archive includes solver binaries, benchmark instances, and orchestration scripts.
-
 ---
 
 ### Step 1: Unpack the archive
 
-Unpacking initializes the working directory structure. No compilation is required at this stage.
+You first have to extract the zip archive.
 
 ```bash
 unzip acacia-bonsai-2.0.17.zip
 cd acacia-bonsai-2.0.17
 ```
 
-After extraction, the `benchmarking/` directory contains all execution scripts.
-
 ---
 
 ### Step 2: Run benchmark script
 
-The main entry point executes a curated subset of benchmarks designed for evaluation efficiency.
+The script `fmcad26-bench.sh` located in the `benchmarking` directory provides the entry point for the benchmarks. The `-q best_mona` argument allows you to quickly run a small subset for the benchmarks. The full benchmarks can take multiple hours to run.
 
 ```bash
 ./benchmarking/fmcad26-bench.sh -q best_mona
 ```
 
-The `best_mona` configuration selects a reduced but representative subset of solver settings. This is intended for artifact evaluation time constraints.
-
-If this flag is omitted, the script executes the full benchmark suite, which significantly increases runtime and is not required for validation.
-
 ---
 
 ### Optional configuration override
 
-Advanced users can override solver parameters using an INI-style configuration file. This allows controlled experimentation with heuristics and solver strategies.
+Advanced users can provide a "meson-native" configuration file. This allows one to specify, e.g., the desired compiler and location of dependencies, as described in the [Meson documentation](https://mesonbuild.com/Native-environments.html).
 
 ```bash
 ./benchmarking/fmcad26-bench.sh -q best_mona -n native_file.ini
 ```
 
 ---
+
+### Step 3: expected results
+
+A folder `_bm-logs-fmcad26-quick-best_mona` will have been created with an output file `best_mona.json`. In the root of the project you will now find a file `fmcad26-quick-best_mona.pdf` with a visualisation of the output.
 
 
 ## 2. Benchmark Log Visualization
@@ -74,9 +68,7 @@ The artifact includes precomputed benchmark logs:
 - `_bm-logs-all-on-2021crit.zip`
 - `_bm-logs-top4-on-2024_20s.zip`
 
-These archives contain JSON-encoded experimental traces. Each file corresponds to a single experimental configuration and contains performance metrics over time or instances.
-
-The visualization pipeline converts these raw logs into a uniform intermediate representation before plotting. This ensures consistent scaling and formatting across different experimental batches.
+These archives contain JSON-encoded experimental traces. Each file corresponds to a single experimental configuration and contains performance metrics. Below you will find information on how to convert these JSON files into PDF files with the visualisations. All figures are also present in the paper.
 
 ### Step 1: Create output directory
 
@@ -88,7 +80,7 @@ mkdir mkplottable
 
 ### Step 2: Convert raw logs into plottable format
 
-Each JSON file is processed independently. The script extracts relevant fields (e.g., runtime, success rates, instance metadata) and normalizes them.
+Each JSON file is processed independently. The script extracts relevant fields and turns it into a format that `mkplot.py` can read.
 
 ```bash
 for f in _bm-logs/*.json; do
@@ -96,11 +88,9 @@ for f in _bm-logs/*.json; do
 done
 ```
 
-This step is purely deterministic: the transformation is a syntactic reformatting plus metric extraction.
-
 ### Step 3: Generate aggregated plot
 
-The final plotting stage aggregates all processed benchmark files. The y-axis is logarithmic to emphasize performance differences across multiple orders of magnitude, which is standard in synthesis benchmarks.
+Next, we need to use `mkplot.py` to visualise the data.
 
 ```bash
 mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to plot.pdf mkplottable/*.json
@@ -113,13 +103,13 @@ The output `plot.pdf` reproduces the figures used in the paper.
 
 ## 3. CLI Toolchain (Docker Execution)
 
-The CLI toolchain provides a reproducible synthesis environment. It encapsulates all dependencies, including the Spot model checker and the synthesis backend, ensuring consistent behavior across machines.
+Aside from the source code and benchmarking scripts, we also provide a Docker container that contains Acacia-Bonsai as a CLI tool.
 
 ---
 
 ### Step 1: Load image
 
-The environment is distributed as prebuilt Docker images for different architectures.
+We provide prebuilt Docker images for different architectures.
 
 ```bash
 docker load -i docker_image_20260427_2322_acacia_cli_amd64.tar
@@ -131,13 +121,11 @@ or for ARM systems:
 docker load -i docker_image_20260427_2322_acacia_cli_arm64.tar
 ```
 
-Loading ensures all dependencies are available locally without compilation.
-
 ---
 
 ### Alternative: pull from registry
 
-If Docker Hub / GHCR access is available, the image can be fetched directly.
+If Docker Hub / GHCR access is available, then the image can be fetched directly.
 
 ```bash
 docker pull ghcr.io/gaperez64/acacia-bonsai:latest
@@ -147,36 +135,29 @@ docker pull ghcr.io/gaperez64/acacia-bonsai:latest
 
 ### Step 2: Verify installation
 
-This step ensures that Docker correctly registered the image.
+Once the image is loaded/pulled, you can verify that it is present on your system:
 
 ```bash
 docker images
 ```
 
-Expected output includes:
-- `ghcr.io/gaperez64/acacia-bonsai`
+Expected output: the image `ghcr.io/gaperez64/acacia-bonsai` should be present.
 
 ---
 
 ### Step 3: Start container
 
-The container provides an isolated execution environment with all toolchain components preconfigured.
+The container can be started as follows:
 
 ```bash
 docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
-```
-
-Alternatively, a local image identifier can be used.
-
-```bash
-docker run --name acacia -it <IMAGE_ID>
 ```
 
 ---
 
 ### Step 4: Compile toolchain inside container
 
-Compilation links solver components and builds optimized binaries.
+Once the container is started, the Acacia-bonsai tool has to be compiled:
 
 ```bash
 ./scripts/compile.sh
@@ -188,7 +169,9 @@ This step is required before executing synthesis tasks.
 
 ### Example: realizable instance (LTL formula)
 
-This specification encodes a liveness-style property: every request eventually leads to a grant under fairness assumptions.
+We will now provide a few examples to use within the container.
+
+It is possible to call Acacia using an LTL formula:
 
 ```bash
 ./scripts/acacia-bonsai.sh best_mona \
@@ -208,6 +191,12 @@ This example reads a TLSF specification from file.
 
 ```bash
 cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+REALIZABLE
+```
+
+Expected result:
+
+```text
 REALIZABLE
 ```
 
@@ -231,7 +220,8 @@ UNREALIZABLE
 
 ## 4. Jupyter Environment (Docker Execution)
 
-The Jupyter environment is intended for interactive exploration of synthesis workflows. It provides preinstalled notebooks and a configured kernel with all dependencies resolved.
+Acacia-Bonsai also comes with a Python interface (Acacia-Boomslang). To provide easy
+access to the Python interface, we provide a Docker image that contains a Jupyter server.
 
 ---
 
@@ -248,6 +238,21 @@ or:
 ```bash
 docker load -i docker_image_20260427_2322_acacia_boomslang_arm64.tar
 ```
+
+Alternatively, you can pull the image
+
+```bash
+docker pull ghcr.io/gaperez64/acacia-boomslang:latest
+```
+
+
+Once the image is loaded/pulled, you can verify that it is present on your system:
+
+```bash
+docker images
+```
+
+Expected output: the image `ghcr.io/gaperez64/acacia-boomslang` should be present.
 
 ---
 
@@ -274,10 +279,4 @@ This URL provides authenticated access to the notebook environment.
 The environment contains two primary notebooks:
 
 - `example_simulate.ipynb`  
-  Demonstrates simulation of synthesized strategies under trace execution.
-
 - `example_ucb_builder.ipynb`  
-  Demonstrates construction and exploration of synthesis configurations using UCB-style heuristics.
-
-These notebooks are intended as reproducibility anchors: they show how CLI-level synthesis integrates into higher-level experimental workflows.
-
