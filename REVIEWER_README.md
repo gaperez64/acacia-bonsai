@@ -15,6 +15,8 @@ This document provides concise instructions to reproduce the main functionality 
 
 This benchmark suite is designed to run without containerization. All commands can be done on your local computer.
 
+For this benchmark we require Z-shell to be installed.
+
 ### Source archive
 
 The full benchmark environment is distributed as a compressed archive:
