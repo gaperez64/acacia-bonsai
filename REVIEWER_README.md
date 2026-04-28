@@ -176,7 +176,7 @@ We will now provide a few examples to use within the container.
 It is possible to call Acacia using an LTL formula:
 
 ```bash
-./scripts/acacia-bonsai.sh best_mona \
+./scripts/acacia-bonsai.sh best_decomp_mona \
   -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 ```
 
@@ -193,7 +193,6 @@ This example reads a TLSF specification from file.
 
 ```bash
 cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
-REALIZABLE
 ```
 
 Expected result:
