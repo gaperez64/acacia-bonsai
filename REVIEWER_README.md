@@ -23,6 +23,9 @@ This first artifact allows one to install Acacia and its Python interface
 using `pip`. The artifact also includes two example Python files to demonstrate
 the functionality.
 
+**System requirements:** I ran this on a MacBook Pro M1 (2021, 16GB RAM, M1 Pro, macOS Tahoe),
+as well as an Acer Aspire A715 (2019, Intel(R) Core (TM) i7-8750H, 16GB RAM, Ubuntu 24.04).
+
 The pip packages on PyPi support Linux and macOS out of the box, on
 both ARM64 and AMD64 architectures. We support Python 3.13 and 3.14.
 
@@ -43,6 +46,9 @@ Concrete steps:
 The CLI of Acacia allows one to compute whether an (TODO) is
 or realisable or not. For this, we support both LTL formulas as strings,
 as well as `tlsf` files.
+
+**System requirements:** I ran this on a MacBook Pro M1 (2021, 16GB RAM, M1 Pro, macOS Tahoe),
+as well as an Acer Aspire A715 (2019, Intel(R) Core (TM) i7-8750H, 16GB RAM, Ubuntu 24.04).
 
 ### Step 1: loading the Docker image
 
@@ -107,6 +113,12 @@ This should output `UNREALIZABLE`
 
 ## Artifact 3: Jupyter server via Docker
 
+As a final artifact, we provide access to the Python API via interactive Jupyter notebooks.
+This is made possible by a Jupyter server that runs within a Docker container.
+
+**System requirements:** I ran this on a MacBook Pro M1 (2021, 16GB RAM, M1 Pro, macOS Tahoe),
+as well as an Acer Aspire A715 (2019, Intel(R) Core (TM) i7-8750H, 16GB RAM, Ubuntu 24.04).
+
 ### Step 1: loading the Docker image
 
 The artifact contains prebuilt Docker images as `tar` files.
@@ -133,7 +145,7 @@ Now, we can start the Docker container and launch the
 Jupyter server.
 
 ```bash
-
+docker pull ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 Once the container is fully started, you will see a URL like the following:
