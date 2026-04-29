@@ -15,7 +15,9 @@ For **reproducibility purposes** we also provide the full benchmarking
 setup as well as the benchmark data used to generate the two
 figures in the paper. This is rather an "expert thing", so we
 **do not recommend** doing this during artifact review, even though
-this is fully possible.
+this is fully possible. The data and benchmarks are provided to conform to the 
+[Call for Artifacts](https://fmcad.org/FMCAD26/cfa/) where it is  mentioned that
+"Ideally, an artifact also contains log-files and benchmarks [...]".
 
 ## Artifact 1: Python interface via PyPi.
 
