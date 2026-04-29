@@ -157,7 +157,7 @@ These can be opened and run.
 are the Acacia-Bonsai CLI and Acacia-Boomslang Python interface.**
 
 This step requires compiling and running Acacia-bonsai locally.
-We ran this ourselves on Fedora and Ubuntu. We require ZShell, and GCC14.
+We ran this ourselves on Fedora and Ubuntu. We require ZShell, and GCC14, as well as the meson build system.
 The GCC14 compiler MUST be set as the default, and needs to be invoked upon calling `gcc` and `g++`.   
 
 Once these conditions are met, the following command will compile and execute the benchmarks:
