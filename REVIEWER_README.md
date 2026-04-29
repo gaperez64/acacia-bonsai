@@ -147,7 +147,7 @@ Now, we can start the Docker container and launch the
 Jupyter server.
 
 ```bash
-docker pull ghcr.io/gaperez64/acacia-boomslang:latest
+docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
 Once the container is fully started, you will see a URL like the following:
