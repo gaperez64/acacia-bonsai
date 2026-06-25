@@ -48,6 +48,14 @@ check_real_file = configure_file (input : 'check-real-correct.sh.in',
                                   configuration : conf_data)
 check_real_exe = find_program (check_real_file)
 
+spot_nba_fastpath_test = executable ('spot-nba-fastpath-test',
+                                     'spot_nba_fastpath_test.cc',
+                                     include_directories : inc,
+                                     dependencies : [spot_dep, bddx_dep])
+test ('spot-nba-fastpath-classification',
+      spot_nba_fastpath_test,
+      suite : ['unit', 'spotfast'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 

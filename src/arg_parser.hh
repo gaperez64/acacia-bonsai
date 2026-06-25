@@ -9,6 +9,7 @@
 #include <cctype>
 #include <errno.h>
 #include <fstream>
+#include <getopt.h>
 #include <iostream>
 #include <optional>
 #include <sstream>
@@ -31,6 +32,7 @@ struct arg_parse_result {
     std::optional<UNREAL_X_T> opt_unreal_x = std::make_optional<UNREAL_X_T> (DEFAULT_UNREAL_X);
     unsigned verbose_level = 0;
     bool check_real = true;
+    SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     std::optional<int> mem_limit = std::nullopt;
 };
@@ -98,6 +100,7 @@ void show_help (const char* program_name) {
 #endif
       << std::endl
       << "  -l VAL            set the virtual memory limit to VAL GiBs\n"
+      << "  --spot-fast VAL   use Spot NBA fast path from [off|det|gfg-decision|all]\n"
       << "  -r                do NOT check for unrealizability\n"
       << "  -U                do NOT check for realizability\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
@@ -129,6 +132,19 @@ void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
     error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s\n", arg.c_str ());
 }
 
+void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
+  if (case_insensitive_equals (arg, "off"))
+    result.spot_fast = SPOT_FAST_OFF;
+  else if (case_insensitive_equals (arg, "det"))
+    result.spot_fast = SPOT_FAST_DET;
+  else if (case_insensitive_equals (arg, "gfg-decision"))
+    result.spot_fast = SPOT_FAST_GFG_DECISION;
+  else if (case_insensitive_equals (arg, "all"))
+    result.spot_fast = SPOT_FAST_ALL;
+  else
+    error (EXIT_CODE_ERROR, "Error: unexpected Spot fast-path option %s\n", arg.c_str ());
+}
+
 void process_formula_file (const std::string& arg, arg_parse_result& result) {
   std::ifstream file (arg.c_str ());
   if (not file)
@@ -150,9 +166,15 @@ arg_parse_result arg_parser (int argc, char** argv) {
   arg_parse_result retval;
   int opt;
   std::optional<int> sgn_kmin = std::nullopt;
+  static constexpr int OPT_SPOT_FAST = 1000;
+  static option long_options[] = {
+      {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
+      {nullptr, 0, nullptr, 0},
+  };
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:l:")) != -1) {
+  while ((opt = getopt_long (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:l:", long_options,
+                             nullptr)) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
       case 'V': std::cout << "Version: " << VERSION << '\n'; exit (EXIT_CODE_UNKNOWN);
@@ -169,6 +191,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'u': process_arg_unreal (optarg, retval); break;
       case 's': retval.synth_fname = optarg; break;
       case 'l': retval.mem_limit = std::stoi (optarg); break;
+      case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }
   }

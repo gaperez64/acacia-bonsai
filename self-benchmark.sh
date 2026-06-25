@@ -4,6 +4,10 @@ mkdir -p _bm-logs
 
 BENCHMARK_SUITE=ab/syntcomp21/crit
 TIMEOUT_FACTOR=1.7
+BENCHMARK_CGROUP=${BENCHMARK_CGROUP:-auto}
+BENCHMARK_CGROUP_MEMORY_MAX=${BENCHMARK_CGROUP_MEMORY_MAX:-}
+BENCHMARK_CGROUP_SWAP_MAX=${BENCHMARK_CGROUP_SWAP_MAX:-0}
+BENCHMARK_CGROUP_ENABLED=false
 
 # -fuse-linker-plugin requires the gold linker, which is unavailable on macOS
 if [[ "$(uname)" == Darwin ]]; then
@@ -100,6 +104,9 @@ confs=(
     [best_decomp_sharingtrie_mona_no_bitsets]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
     [best_decomp_mona_no_bitsets]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
     [best_decomp_mona]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona"
+    [best_decomp_mona_spotfast_off]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_OFF"
+    [best_decomp_mona_spotfast_det]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_DET"
+    [best_decomp_mona_spotfast_all]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_ALL"
     [best_decomp_skiplist_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
     [best_decomp_cst_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='cst_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='cst_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
 )
@@ -133,10 +140,10 @@ EOF
   echo "."
 fi
 
-while getopts "hplBCjRfb:t:c:n:" option; do
+while getopts "hplBCjRfb:t:c:m:n:" option; do
     case $option; in
         h) cat <<EOF
-usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-n NATIVE_FILE]
+usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-m MEMORY] [-n NATIVE_FILE]
   -h: Print this message.
   -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
   -l: Do not build/compile/benchmark, instead, list configurations.
@@ -148,7 +155,12 @@ usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-n NATIVE_
   -b BENCHMARK: Run a specific benchmark suite (default: $BENCHMARK_SUITE).
   -t TIMEOUT: Use timeout factor TIMEOUT (default: $TIMEOUT_FACTOR).  Actual time is multiplied by 10.
   -c CONF,...: Only consider configurations listed.
+  -m MEMORY: Cgroup MemoryMax for benchmark runs (default: 80% of RAM; use 'off' to disable).
   -n NATIVE_FILE: Path to a meson native file passed to \`meson setup\`.
+Environment:
+  BENCHMARK_CGROUP=auto|strict|off       Wrap benchmark runs in a systemd cgroup (default: auto).
+  BENCHMARK_CGROUP_MEMORY_MAX=MEMORY     Same as -m.
+  BENCHMARK_CGROUP_SWAP_MAX=MEMORY       systemd MemorySwapMax value (default: 0).
 EOF
            exit 1;;
         p) mode=print;;
@@ -160,6 +172,7 @@ EOF
         f) force=true;;
         c) conflist=(${(@s:,:)OPTARG});;
 	t) TIMEOUT_FACTOR=$OPTARG;;
+	m) BENCHMARK_CGROUP_MEMORY_MAX=$OPTARG;;
 	b) benchsuites=()
 	   for b in ${(@s:,:)OPTARG}; do
 	     benchsuites+=(--suite="$b")
@@ -175,6 +188,85 @@ if $justtest; then
     echo "Using opt $opt for faster compile-to-test times"
     rel=""
 fi
+
+default_benchmark_cgroup_memory_max() {
+    local mem_kib
+    mem_kib=$(awk '/^MemTotal:/ { print $2; exit }' /proc/meminfo 2>/dev/null)
+    if [[ $mem_kib == <-> ]]; then
+        local cap_mib=$(( mem_kib * 8 / 10 / 1024 ))
+        if (( cap_mib > 0 )); then
+            echo "${cap_mib}M"
+            return
+        fi
+    fi
+    echo 12G
+}
+
+configure_benchmark_cgroup() {
+    local mode=$BENCHMARK_CGROUP
+    local memory_max=$BENCHMARK_CGROUP_MEMORY_MAX
+    local swap_max=$BENCHMARK_CGROUP_SWAP_MAX
+
+    [[ -z $memory_max ]] && memory_max=$(default_benchmark_cgroup_memory_max)
+
+    case $mode in
+        auto|strict) ;;
+        off|none|false|0) BENCHMARK_CGROUP_ENABLED=false; return 0;;
+        *)
+            print -u2 "ERROR: BENCHMARK_CGROUP must be 'auto', 'strict', or 'off' (got '$mode')."
+            exit 2
+            ;;
+    esac
+
+    if [[ $memory_max == off || $memory_max == none || $memory_max == false || $memory_max == 0 ]]; then
+        BENCHMARK_CGROUP_ENABLED=false
+        return 0
+    fi
+
+    if ! command -v systemd-run >/dev/null; then
+        if [[ $mode == strict ]]; then
+            print -u2 "ERROR: systemd-run is required for BENCHMARK_CGROUP=strict."
+            exit 2
+        fi
+        print -u2 "WARN: systemd-run not found; benchmarks will run without a memory cgroup."
+        BENCHMARK_CGROUP_ENABLED=false
+        return 0
+    fi
+
+    local -a props
+    props=("--property=MemoryMax=$memory_max")
+    [[ -n $swap_max ]] && props+=("--property=MemorySwapMax=$swap_max")
+
+    if systemd-run --user --scope --quiet "--unit=acacia-bonsai-bench-preflight-$$" $props true >/dev/null 2>&1; then
+        BENCHMARK_CGROUP_MEMORY_MAX=$memory_max
+        BENCHMARK_CGROUP_SWAP_MAX=$swap_max
+        BENCHMARK_CGROUP_ENABLED=true
+        echo "Benchmark cgroup enabled: MemoryMax=$BENCHMARK_CGROUP_MEMORY_MAX MemorySwapMax=$BENCHMARK_CGROUP_SWAP_MAX"
+        return 0
+    fi
+
+    if [[ $mode == strict ]]; then
+        print -u2 "ERROR: failed to create a benchmark cgroup with systemd-run --user."
+        exit 2
+    fi
+    print -u2 "WARN: failed to create a benchmark cgroup with systemd-run --user; running benchmarks without a memory cgroup."
+    print -u2 "      Set BENCHMARK_CGROUP=off to silence this warning or BENCHMARK_CGROUP=strict to fail instead."
+    BENCHMARK_CGROUP_ENABLED=false
+}
+
+run_benchmark_command() {
+    local scope=$1
+    shift
+
+    if $BENCHMARK_CGROUP_ENABLED; then
+        local -a props
+        props=("--property=MemoryMax=$BENCHMARK_CGROUP_MEMORY_MAX")
+        [[ -n $BENCHMARK_CGROUP_SWAP_MAX ]] && props+=("--property=MemorySwapMax=$BENCHMARK_CGROUP_SWAP_MAX")
+        systemd-run --user --scope --quiet "--unit=acacia-bonsai-bench-$scope-$$" $props "$@"
+    else
+        "$@"
+    fi
+}
 
 ## Print and list mode
 if [[ $mode == print || $mode == list ]]; then
@@ -246,6 +338,7 @@ fi
 
 ## Benchmark
 if ! (( $donot[(Ie)benchmark] )); then
+    configure_benchmark_cgroup
     for name in $conflist; do
         build=build_$name
         log=_bm-logs/$name.log
@@ -269,14 +362,15 @@ if ! (( $donot[(Ie)benchmark] )); then
 	else
 	    this_suites=($benchsuites)
 	fi
+	test_status=0
 	if $justtest; then
 	    echo -n "testing $name on $this_suites (logfile: $log)... "
-	    meson test $this_suites -t $TIMEOUT_FACTOR &>> ../$log
+	    run_benchmark_command $name meson test $this_suites -t $TIMEOUT_FACTOR &>> ../$log || test_status=$?
 	else
 	    echo -n "benchmarking $name on $this_suites (logfile: $log)... "
-	    meson test --benchmark $this_suites -t $TIMEOUT_FACTOR &>> ../$log
+	    run_benchmark_command $name meson test --benchmark $this_suites -t $TIMEOUT_FACTOR &>> ../$log || test_status=$?
 	fi
-        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
+        if (( test_status != 0 )) || grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
             echo "FAILED; testlog stored at $log, _bm-logs/$name.json left untouched"
             $force || exit 5
         else

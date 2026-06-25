@@ -6,6 +6,7 @@
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solve_game.hh"
+#include "spot_nba_fastpath.hh"
 #include "utils/cache.hh"
 #include "utils/push_aps.hh"
 
@@ -62,6 +63,7 @@ namespace {
       const VECTOR_ELT_T opt_kmin;
       const VECTOR_ELT_T opt_kinc;
       const std::optional<UNREAL_X_T> check_unreal;
+      const SPOT_FAST_T spot_fast;
       spot::option_map extra_options;
       const std::optional<std::string> synth_fname;
       std::vector<spot::const_twa_graph_ptr> strats;
@@ -77,6 +79,7 @@ namespace {
                    const std::vector<std::string>& output_aps, VECTOR_ELT_T opt_k,
                    VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
                    std::optional<UNREAL_X_T> check_unreal,
+                   SPOT_FAST_T spot_fast,
                    const std::optional<std::string>& synth_fname)
         : dict {dict},
           input_aps {input_aps},
@@ -85,6 +88,7 @@ namespace {
           opt_kmin {opt_kmin},
           opt_kinc {opt_kinc},
           check_unreal {check_unreal},
+          spot_fast {spot_fast},
           synth_fname {synth_fname} {
         // These options play a role in twaalgos.
         extra_options.set ("simul", 0);
@@ -191,6 +195,23 @@ namespace {
           return not check_unreal.has_value ();
         }
 
+        const bool want_controller_strategy = synth_fname.has_value () and not check_unreal.has_value ();
+        // The nondeterministic GFG path is decision-only and currently validated
+        // only in the REAL-child orientation.  Keep unreal children on the
+        // deterministic fast path or the existing Acacia solver.
+        const bool allow_gfg_decision = not check_unreal.has_value ();
+        auto fast = acacia::spot_fastpath::try_spot_nba_fast_path (
+            aut, all_inputs, all_outputs, want_controller_strategy, allow_gfg_decision, spot_fast);
+        if (fast.conclusive) {
+          if (fast.strategy.has_value ()) {
+            assert (want_controller_strategy);
+            strats.push_back (*fast.strategy);
+          }
+          verb_do (1, vout << "Spot NBA fast path returning "
+                           << fast.current_output_player_wins << "\n");
+          return fast.current_output_player_wins;
+        }
+
         AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
 
         // surely_losing can flush every reachable state and leave the
@@ -229,6 +250,7 @@ namespace {
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
+              SPOT_FAST_T spot_fast,
               const std::optional<std::string>& synth_fname) {
   if (check_unreal.has_value ()) {
     // We only check one thing at a time
@@ -248,7 +270,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      synth_fname);
+                      spot_fast, synth_fname);
 
   spot::formula spot_formula = parse_ltl_string (formula);
 
