@@ -104,6 +104,7 @@ confs=(
     [best_decomp_sharingtrie_mona_no_bitsets]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
     [best_decomp_mona_no_bitsets]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
     [best_decomp_mona]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona"
+    [best_decomp_mona_elevator]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DENABLE_ELEVATOR_PREPROCESSOR=1 -DAUT_PREPROCESSOR=aut_preprocessors::elevator"
     [best_decomp_mona_spotfast_off]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_OFF"
     [best_decomp_mona_spotfast_det]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_DET"
     [best_decomp_mona_spotfast_all]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_ALL"

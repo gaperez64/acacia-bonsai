@@ -56,6 +56,14 @@ test ('spot-nba-fastpath-classification',
       spot_nba_fastpath_test,
       suite : ['unit', 'spotfast'])
 
+elevator_preprocessor_test = executable ('elevator-preprocessor-test',
+                                         'elevator_preprocessor_test.cc',
+                                         include_directories : inc,
+                                         dependencies : [spot_dep, bddx_dep])
+test ('elevator-preprocessor',
+      elevator_preprocessor_test,
+      suite : ['unit', 'elevator'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 
