@@ -8,6 +8,7 @@
 #include "boolean_states/forward_saturation.hh"
 #include "boolean_states/no_boolean_states.hh"
 #include "solver/create_automaton.hh"
+#include "solver/configured_components.hh"
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/push_aps.hh"
 #include "utils/verbose.hh"
