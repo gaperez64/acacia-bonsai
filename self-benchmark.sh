@@ -120,10 +120,7 @@ confs=(
     [best_decomp_mona_no_bitsets]="$best_mona_base -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
     [best_decomp_mona]="$best_mona_base -DDECOMPOSE_SPEC=1"
     [best_decomp_mona_elevator]="$best_common $autpreproc_elevator $boolean_forward_saturation $ios_mona $input_critical -DDECOMPOSE_SPEC=1"
-    [best_decomp_mona_spotfast_off]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_OFF"
-    [best_decomp_mona_spotfast_det]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_DET"
-    [best_decomp_mona_spotfast_gfg]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_GFG_DECISION"
-    [best_decomp_mona_spotfast_all]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_ALL"
+    [best_decomp_mona_spotfast_det_and_gfg]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_DET_AND_GFG"
     [best_decomp_skiplist_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DDECOMPOSE_SPEC=1"
     [best_decomp_cst_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='cst_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='cst_backed' -DDECOMPOSE_SPEC=1"
 )

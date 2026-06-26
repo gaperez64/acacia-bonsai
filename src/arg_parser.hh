@@ -100,7 +100,7 @@ void show_help (const char* program_name) {
 #endif
       << std::endl
       << "  -l VAL            set the virtual memory limit to VAL GiBs\n"
-      << "  --spot-fast VAL   use Spot NBA fast path from [off|det|gfg-decision|all]\n"
+      << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -r                do NOT check for unrealizability\n"
       << "  -U                do NOT check for realizability\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
@@ -137,10 +137,11 @@ void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
     result.spot_fast = SPOT_FAST_OFF;
   else if (case_insensitive_equals (arg, "det"))
     result.spot_fast = SPOT_FAST_DET;
-  else if (case_insensitive_equals (arg, "gfg-decision"))
-    result.spot_fast = SPOT_FAST_GFG_DECISION;
-  else if (case_insensitive_equals (arg, "all"))
-    result.spot_fast = SPOT_FAST_ALL;
+  else if (case_insensitive_equals (arg, "det-and-gfg") or
+           case_insensitive_equals (arg, "det_and_gfg") or
+           case_insensitive_equals (arg, "gfg-decision") or
+           case_insensitive_equals (arg, "gfg"))
+    result.spot_fast = SPOT_FAST_DET_AND_GFG;
   else
     error (EXIT_CODE_ERROR, "Error: unexpected Spot fast-path option %s\n", arg.c_str ());
 }

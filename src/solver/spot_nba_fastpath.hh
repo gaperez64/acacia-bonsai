@@ -23,7 +23,7 @@ enum SPOT_FAST_T : char {
   SPOT_FAST_OFF = 0,
   SPOT_FAST_DET = 1,
   SPOT_FAST_GFG_DECISION = 2,
-  SPOT_FAST_ALL = 3,
+  SPOT_FAST_DET_AND_GFG = 3,
 };
 
 namespace acacia::spot_fastpath {
@@ -417,7 +417,7 @@ namespace acacia::spot_fastpath {
                                                   bool want_controller_strategy,
                                                   bool allow_gfg_decision,
                                                   SPOT_FAST_T mode) {
-    if (mode == SPOT_FAST_OFF)
+    if (not detail::has_mode (mode, SPOT_FAST_DET))
       return {};
 
     const bool can_use_gfg_decision =
