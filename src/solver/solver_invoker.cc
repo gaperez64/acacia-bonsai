@@ -15,6 +15,7 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <ranges>
@@ -26,6 +27,7 @@
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/synthesis.hh>
 #include <spot/twaalgos/translate.hh>
+#include <spot/twaalgos/word.hh>
 #include <string>
 #include <utility>
 #include <vector>
@@ -50,6 +52,136 @@ namespace {
       os << 2 * (i + 1) << '\n';
     for (size_t i = 0; i < input_aps.size (); ++i)
       os << 'i' << i << ' ' << input_aps[i] << '\n';
+  }
+
+  bdd cube_for_state (const spot::aig_ptr& circuit, size_t state, unsigned n_latches) {
+    bdd cube = bddtrue;
+    for (unsigned bit = 0; bit < n_latches; ++bit) {
+      bdd lit = circuit->latch_bdd (bit);
+      cube &= ((state >> bit) & 1U) ? lit : !lit;
+    }
+    return cube;
+  }
+
+  unsigned aig_lit_for_bdd (const spot::aig_ptr& circuit, const bdd& func) {
+    if (func == bddtrue)
+      return spot::aig::aig_true ();
+    if (func == bddfalse)
+      return spot::aig::aig_false ();
+    return circuit->encode_bdd (func);
+  }
+
+  void write_no_input_strategy (const std::vector<std::string>& output_aps,
+                                const std::vector<std::vector<bool>>& values,
+                                size_t loop_start,
+                                const std::string& synth_fname) {
+    size_t capacity = 1;
+    unsigned n_latches = 0;
+    while (capacity < values.size ()) {
+      capacity <<= 1;
+      ++n_latches;
+    }
+
+    auto circuit = std::make_shared<spot::aig> (std::vector<std::string> {}, output_aps,
+                                                n_latches);
+    std::vector<bdd> state_cubes;
+    state_cubes.reserve (values.size ());
+    for (size_t state = 0; state < values.size (); ++state)
+      state_cubes.push_back (cube_for_state (circuit, state, n_latches));
+
+    for (size_t out = 0; out < output_aps.size (); ++out) {
+      bdd func = bddfalse;
+      for (size_t state = 0; state < values.size (); ++state) {
+        if (values[state][out])
+          func |= state_cubes[state];
+      }
+      circuit->set_output (out, aig_lit_for_bdd (circuit, func));
+    }
+
+    for (unsigned bit = 0; bit < n_latches; ++bit) {
+      bdd func = bddfalse;
+      for (size_t state = 0; state < values.size (); ++state) {
+        size_t next = state + 1;
+        if (next == values.size ())
+          next = loop_start;
+        if ((next >> bit) & 1U)
+          func |= state_cubes[state];
+      }
+      circuit->set_next_latch (bit, aig_lit_for_bdd (circuit, func));
+    }
+
+    std::ofstream synthesis_file (synth_fname);
+    if (synthesis_file)
+      spot::print_aiger (synthesis_file, circuit);
+    else
+      std::cerr << "Failed to open the file to store controller!\n";
+  }
+
+  bool run_no_input_ltl (const std::vector<std::string>& output_aps,
+                         const std::string& formula,
+                         std::optional<UNREAL_X_T> check_unreal,
+                         const std::optional<std::string>& synth_fname) {
+    spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
+    int owner = 0;
+    struct owner_cleanup {
+      spot::bdd_dict_ptr dict;
+      int* owner;
+      ~owner_cleanup () { dict->unregister_all_my_variables (owner); }
+    } cleanup {dict, &owner};
+
+    bdd all_outputs = bddtrue;
+    std::vector<int> output_vars;
+    output_vars.reserve (output_aps.size ());
+    for (const std::string& ap : output_aps) {
+      int v = dict->register_proposition (spot::formula::ap (ap), &owner);
+      all_outputs &= bdd_ithvar (v);
+      output_vars.push_back (v);
+    }
+
+    spot::formula spot_formula = parse_ltl_string (formula);
+    spot::option_map extra_options;
+    extra_options.set ("simul", 0);
+    extra_options.set ("ba-simul", 0);
+    extra_options.set ("det-simul", 0);
+    extra_options.set ("tls-impl", 1);
+    extra_options.set ("wdba-minimize", 2);
+
+    spot::translator trans (dict, &extra_options);
+    auto aut = create_automaton (spot_formula, trans);
+
+    spot::twa_word_ptr word = nullptr;
+    if (aut->num_states () != 0)
+      word = aut->accepting_word ();
+    const bool satisfiable = static_cast<bool> (word);
+    if (check_unreal.has_value ())
+      return not satisfiable;
+    if (not satisfiable)
+      return false;
+
+    if (synth_fname.has_value ()) {
+      word->simplify ();
+      word->use_all_aps (all_outputs);
+
+      std::vector<std::vector<bool>> values;
+      auto add_letter = [&] (const bdd& letter) {
+        bdd cube = bdd_satoneset (letter, all_outputs, bddtrue);
+        std::vector<bool> row;
+        row.reserve (output_vars.size ());
+        for (int var : output_vars)
+          row.push_back ((cube & bdd_ithvar (var)) != bddfalse);
+        values.push_back (std::move (row));
+      };
+      for (const bdd& letter : word->prefix)
+        add_letter (letter);
+      const size_t loop_start = values.size ();
+      for (const bdd& letter : word->cycle)
+        add_letter (letter);
+
+      if (values.empty ())
+        values.push_back (std::vector<bool> (output_aps.size (), false));
+      write_no_input_strategy (output_aps, values, loop_start, *synth_fname);
+    }
+    return true;
   }
 
   /**
@@ -273,6 +405,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
               SPOT_FAST_T spot_fast,
               const std::optional<std::string>& synth_fname) {
+  if (input_aps.empty ())
+    return run_no_input_ltl (output_aps, formula, check_unreal, synth_fname);
+
   if (check_unreal.has_value ()) {
     // We only check one thing at a time.
     assert (*check_unreal != UNREAL_X_BOTH);

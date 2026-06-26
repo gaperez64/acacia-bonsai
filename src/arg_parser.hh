@@ -36,6 +36,7 @@ struct arg_parse_result {
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     std::optional<int> mem_limit = std::nullopt;
+    bool inputs_specified = false;
 };
 
 /**
@@ -45,12 +46,14 @@ struct arg_parse_result {
  * @param result The struct that will contain the parsed and processed argument values.
  */
 void process_arg_input (const std::string& arg, arg_parse_result& result) {
+  result.inputs_specified = true;
   // very simple, we just split on comma "," and add every thing to the vector of inputs
   std::istringstream props (arg);
   std::string prop;
   while (std::getline (props, prop, ',')) {
     prop.erase (std::remove_if (prop.begin (), prop.end (), isspace), prop.end ());
-    result.inputs.push_back (prop);
+    if (not prop.empty ())
+      result.inputs.push_back (prop);
   }
 }
 
@@ -200,7 +203,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
 
   if (retval.formula.empty ())
     error (EXIT_CODE_ERROR, "Error: a formula must be specified (-f or -F).\n");
-  if (retval.inputs.empty ())
+  if (not retval.inputs_specified)
     error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
   if (retval.outputs.empty ())
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
