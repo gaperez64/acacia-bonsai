@@ -195,7 +195,7 @@ script is available at the root:
 
 In particular, it can be used to build an optimized version of Acacia-Bonsai:
 ```
-./self-benchmark.sh -c best -B
+./self-benchmark.sh -c best -R
   [...]
 cd build_best
 src/acacia-bonsai -h
@@ -203,8 +203,9 @@ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
-The `-c` option selects a configuration and the `-B` option deactivates actual
-benchmarking, so that only compilation is done.
+The `-c` option selects a configuration and the `-R` option disables the
+benchmarking step, so that only setup and compilation are done. If compilation
+memory is tight, add `-L` to use the low-memory compile profile.
 
 # Documentation
 
