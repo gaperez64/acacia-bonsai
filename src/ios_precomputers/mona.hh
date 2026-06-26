@@ -1,11 +1,13 @@
 #pragma once
 
 
-#include <type_traits>
-#include <numeric>
-#include <vector>
-#include <list>
+#include <bit>
 #include <bddx.h>
+#include <list>
+#include <numeric>
+#include <spot/twa/bdddict.hh>
+#include <type_traits>
+#include <vector>
 
 #include "utils/transition_enumerator.hh"
 

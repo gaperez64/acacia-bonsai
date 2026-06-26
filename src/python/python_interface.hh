@@ -1,10 +1,7 @@
 #pragma once
 
-// Only lightweight headers here — solver_invoker.hh / solve_game.hh /
-// create_automaton.hh all define non-inline functions, so they must only be
-// included in python_interface.cc (one translation unit). The SWIG wrapper
-// also includes this header, so pulling in solver_invoker.hh here would
-// produce duplicate-symbol linker errors.
+// Only lightweight headers here. The SWIG wrapper also includes this header,
+// so keep implementation-heavy dependencies in python_interface.cc.
 #include "configuration.hh"       // VECTOR_ELT_T, VECTOR_IMPL, VECTOR_AND_BITSET_DOWNSET_IMPL macros
 #include <posets/downsets.hh>     // posets::downsets::*
 #include <posets/vectors.hh>      // posets::vectors::*

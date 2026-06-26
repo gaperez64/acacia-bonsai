@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include <algorithm>
+#include <cassert>
 #include <csignal>
 #include <cstring>
 #include <memory>
@@ -17,7 +18,7 @@
 #include <utils/verbose.hh>
 #include <vector>
 
-#include <posets/downsets.hh>
+#include <posets/vectors/traits.hh>
 
 using namespace std::literals;
 

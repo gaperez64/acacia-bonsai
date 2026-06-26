@@ -3,6 +3,7 @@
 #include "configuration.hh"
 #include "error_msg.hh"
 #include "solver/solver_invoker.hh"
+#include "utils/verbose.hh"
 #include <string_view>
 
 #include <algorithm>

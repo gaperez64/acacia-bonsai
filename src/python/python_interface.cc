@@ -9,7 +9,6 @@
 #include "boolean_states/no_boolean_states.hh"
 #include "solver/create_automaton.hh"
 #include "solver/k_bounded_safety_aut.hh"
-#include "solver/solver_invoker.hh"
 #include "utils/push_aps.hh"
 #include "utils/verbose.hh"
 
@@ -30,8 +29,7 @@ size_t posets::vectors::bool_threshold = 0;
 size_t posets::vectors::bitset_threshold = 0;
 
 
-// Parse the LTL formula. Mirrors parse_ltl_string() from solver_invoker.hh
-// (which lives in an anonymous namespace and cannot be called from here).
+// Parse the LTL formula. Mirrors the CLI parser helper.
 static spot::formula parse_ltl (const std::string& input) {
   auto pf = spot::parse_infix_psl (input, spot::default_environment::instance (), false, false);
 
