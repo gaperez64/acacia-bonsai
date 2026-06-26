@@ -38,6 +38,7 @@ namespace acacia::spot_fastpath {
   struct fast_path_result {
       bool conclusive = false;
       bool current_output_player_wins = false;
+      std::optional<spot::region_t> current_output_player_winning_region = std::nullopt;
       std::optional<spot::twa_graph_ptr> strategy = std::nullopt;
   };
 
@@ -120,16 +121,14 @@ namespace acacia::spot_fastpath {
       return false;
 
     for (unsigned s = 0; s < aut->num_states (); ++s) {
-      std::vector<bdd> labels;
+      bdd covered = bddfalse;
       for (const auto& e : aut->out (s)) {
         if (e.cond == bddfalse)
           continue;
 
-        for (bdd old : labels)
-          if ((old & e.cond) != bddfalse)
-            return false;
-
-        labels.push_back (e.cond);
+        if ((covered & e.cond) != bddfalse)
+          return false;
+        covered |= e.cond;
       }
     }
 
@@ -368,7 +367,8 @@ namespace acacia::spot_fastpath {
   }
 
   inline fast_path_result deterministic_forbidden_fast_path (
-      const spot::twa_graph_ptr& aut_forbid, const bdd& all_outputs, bool want_strategy) {
+      const spot::twa_graph_ptr& aut_forbid, const bdd& all_outputs,
+      bool want_strategy, bool want_winning_region = false) {
     fast_path_result res;
 
     auto good = complete_copy_with_rejecting_sink (aut_forbid);
@@ -378,10 +378,19 @@ namespace acacia::spot_fastpath {
     spot::synthesis_info gi;
     gi.sp = spot::synthesis_info::splittype::AUTO;
     auto arena = spot::split_2step (good, gi);
-    const bool p_out_wins = spot::solve_game (arena, gi);
+    const bool p_out_wins = want_winning_region
+        ? spot::solve_parity_game (arena, true)
+        : spot::solve_game (arena, gi);
 
     res.conclusive = true;
     res.current_output_player_wins = p_out_wins;
+    if (want_winning_region) {
+      const auto& arena_winners = spot::get_state_winners (arena);
+      spot::region_t original_winners (aut_forbid->num_states (), false);
+      for (unsigned s = 0; s < aut_forbid->num_states (); ++s)
+        original_winners[s] = arena_winners[s];
+      res.current_output_player_winning_region = std::move (original_winners);
+    }
     if (p_out_wins and want_strategy)
       res.strategy = spot::solved_game_to_separated_mealy (arena, gi);
 

@@ -58,6 +58,31 @@ namespace {
     return aut;
   }
 
+  bool deterministic_winning_region_covers_all_original_states () {
+    auto dict = spot::make_bdd_dict ();
+    auto aut = spot::make_twa_graph (dict);
+    aut->set_acceptance (1, spot::acc_cond::acc_code::buchi ());
+    aut->new_states (2);
+    aut->set_init_state (0);
+    aut->new_acc_edge (0, 0, bddtrue, false);
+    aut->new_acc_edge (1, 1, bddtrue);
+
+    auto res = acacia::spot_fastpath::deterministic_forbidden_fast_path (
+        aut, bddtrue, false, true);
+    if (not res.conclusive or not res.current_output_player_winning_region.has_value ()) {
+      std::cerr << "det-region: no winning region returned\n";
+      return false;
+    }
+
+    const auto& region = *res.current_output_player_winning_region;
+    if (region.size () != 2 or not region[0] or region[1]) {
+      std::cerr << "det-region: expected only state 0 to be controller-winning\n";
+      return false;
+    }
+
+    return true;
+  }
+
   nba_fast_class classify_forbidden_ltl2dba27 () {
     auto dict = spot::make_bdd_dict ();
     int owner;
@@ -105,6 +130,7 @@ int main () {
   ok &= expect_class ("ltl2dba27-forbidden",
                       classify_forbidden_ltl2dba27 (),
                       nba_fast_class::non_gfg_buchi);
+  ok &= deterministic_winning_region_covers_all_original_states ();
 
   return ok ? 0 : 1;
 }

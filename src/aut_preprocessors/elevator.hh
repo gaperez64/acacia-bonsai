@@ -32,28 +32,30 @@ namespace aut_preprocessors {
               not aut->prop_state_acc ().is_true ())
             return;
 
-          spot::scc_info si (aut, spot::scc_info_options::ALL);
+          spot::scc_info si (aut, spot::scc_info_options::TRACK_STATES);
           std::optional<unsigned> safe_trap;
           unsigned safe_collapsed = 0;
           unsigned losing_collapsed = 0;
           unsigned strategy_dependent_winning = 0;
 
           for (unsigned scc = 0; scc < si.scc_count (); ++scc) {
-            if (not has_inner_edge (si, scc) or not is_closed_deterministic_scc (si, scc))
+            const auto cls = classify_scc (si, scc);
+            if (not cls.has_inner_edge or not cls.closed or not cls.deterministic)
               continue;
+
+            const auto& states = si.states_of (scc);
+            if (cls.rejecting) {
+              rewrite_as_safe_trap (states, safe_trap);
+              ++safe_collapsed;
+              continue;
+            }
 
             auto winner = controller_winner_for_scc (si, scc);
             if (not winner.has_value ())
               continue;
 
-            const auto& states = si.states_of (scc);
             if (*winner) {
-              if (is_rejecting_scc (states)) {
-                rewrite_as_safe_trap (states, safe_trap);
-                ++safe_collapsed;
-              } else {
-                ++strategy_dependent_winning;
-              }
+              ++strategy_dependent_winning;
             } else {
               rewrite_as_losing_trap (states);
               ++losing_collapsed;
@@ -83,33 +85,45 @@ namespace aut_preprocessors {
       private:
         static constexpr unsigned no_state = std::numeric_limits<unsigned>::max ();
 
-        bool has_inner_edge (const spot::scc_info& si, unsigned scc) const {
-          for (unsigned q : si.states_of (scc))
-            for (const auto& e : aut->out (q))
-              if (e.cond != bddfalse and not aut->is_univ_dest (e) and si.scc_of (e.dst) == scc)
-                return true;
-          return false;
-        }
+        struct scc_classification {
+            bool has_inner_edge = false;
+            bool closed = true;
+            bool deterministic = true;
+            bool rejecting = true;
+        };
 
-        bool is_closed_deterministic_scc (const spot::scc_info& si, unsigned scc) const {
+        scc_classification classify_scc (const spot::scc_info& si, unsigned scc) const {
+          scc_classification ret;
+
           for (unsigned q : si.states_of (scc)) {
-            std::vector<bdd> labels;
+            if (aut->state_is_accepting (q))
+              ret.rejecting = false;
 
+            bdd covered = bddfalse;
             for (const auto& e : aut->out (q)) {
               if (e.cond == bddfalse)
                 continue;
-              if (aut->is_univ_dest (e) or si.scc_of (e.dst) != scc)
-                return false;
 
-              for (bdd old : labels)
-                if ((old & e.cond) != bddfalse)
-                  return false;
+              if (aut->is_univ_dest (e)) {
+                ret.closed = false;
+                ret.deterministic = false;
+                continue;
+              }
 
-              labels.push_back (e.cond);
+              if (si.scc_of (e.dst) != scc) {
+                ret.closed = false;
+                continue;
+              }
+
+              ret.has_inner_edge = true;
+              if ((covered & e.cond) != bddfalse)
+                ret.deterministic = false;
+
+              covered |= e.cond;
             }
           }
 
-          return true;
+          return ret;
         }
 
         spot::twa_graph_ptr restricted_scc_copy (const spot::scc_info& si, unsigned scc) const {
@@ -145,18 +159,19 @@ namespace aut_preprocessors {
                                                        unsigned scc) const {
           const auto& states = si.states_of (scc);
           auto component = restricted_scc_copy (si, scc);
-          std::optional<bool> winner;
+          auto res = acacia::spot_fastpath::deterministic_forbidden_fast_path (
+              component, output_support, false, true);
+          if (not res.conclusive or not res.current_output_player_winning_region.has_value ())
+            return std::nullopt;
 
-          for (unsigned init = 0; init < states.size (); ++init) {
-            component->set_init_state (init);
-            auto res = acacia::spot_fastpath::deterministic_forbidden_fast_path (
-                component, output_support, false);
-            if (not res.conclusive)
+          const auto& winners = *res.current_output_player_winning_region;
+          if (winners.size () < states.size ())
+            return std::nullopt;
+
+          const bool winner = winners[0];
+          for (unsigned init = 1; init < states.size (); ++init)
+            if (winners[init] != winner)
               return std::nullopt;
-            if (winner.has_value () and *winner != res.current_output_player_wins)
-              return std::nullopt;
-            winner = res.current_output_player_wins;
-          }
 
           return winner;
         }
@@ -167,13 +182,6 @@ namespace aut_preprocessors {
             aut->new_acc_edge (*safe_trap, *safe_trap, bddtrue, false);
           }
           return *safe_trap;
-        }
-
-        bool is_rejecting_scc (const std::vector<unsigned>& states) const {
-          for (unsigned q : states)
-            if (aut->state_is_accepting (q))
-              return false;
-          return true;
         }
 
         void clear_outgoing (unsigned q) {
