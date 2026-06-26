@@ -23,6 +23,7 @@
 #include <spot/tl/parse.hh>
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
+#include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/synthesis.hh>
 #include <spot/twaalgos/translate.hh>
 #include <string>
