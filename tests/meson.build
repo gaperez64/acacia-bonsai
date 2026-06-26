@@ -38,6 +38,7 @@ endif
 # to implement a calling protocol in the calling script too.
 
 conf_data.set_quoted ('ACABONSAI', ab_exe.full_path ())
+conf_data.set_quoted ('REPO_ROOT', meson.project_source_root ())
 #conf_data.set_quoted ('ACAPLUS', acacia_plus_py[0].full_path ())
 #conf_data.set_quoted ('PYTHON3', py.full_path ())
 #conf_data.set_quoted ('ACACIA_PLUS_LIB', acplus_lib.full_path ())
@@ -48,12 +49,23 @@ check_real_file = configure_file (input : 'check-real-correct.sh.in',
                                   configuration : conf_data)
 check_real_exe = find_program (check_real_file)
 
+spot_nba_fastpath_test = executable ('spot-nba-fastpath-test',
+                                     'spot_nba_fastpath_test.cc',
+                                     include_directories : inc,
+                                     dependencies : [spot_dep, bddx_dep])
+test ('spot-nba-fastpath-classification',
+      spot_nba_fastpath_test,
+      suite : ['unit', 'spotfast'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 
 # Benchmarks (heavier; `meson test --benchmark`) are also run against
 # ltlsynt when available so that we can compare on the same inputs.
-benchmark_backends = { 'ab' : '-a' }
+benchmark_backends = {
+  'ab' : '-a',
+  'ab_tlsfprep' : '-t',
+}
 if ltlsynt_exe.found ()
   benchmark_backends += { 'ltlsynt' : '-l' }
 endif
@@ -179,6 +191,10 @@ foreach folder, testsets : benchmark_files
                + folder + '/' + suite + ').')
       endif
       foreach backend, opt : benchmark_backends
+        tlsf_filename = 'ltl' / folder / file.replace ('.ltl', '.tlsf')
+        if backend == 'ab_tlsfprep' and not fs.exists (tlsf_filename)
+          continue
+        endif
         benchmark (backend + '/' + file,
                    check_real_exe,
                    args : [ '-p',  ## prefix every line with the name of the test

@@ -2,6 +2,7 @@
 
 ACABONSAI=@ACABONSAI@
 LTLSYNT=@LTLSYNT@
+REPO_ROOT=@REPO_ROOT@
 export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 # Handling most common signals with a trap
@@ -62,14 +63,170 @@ run_acacia_bonsai () {
          -l 4 ${=AB_OPTS} $extra_opts
 }
 
+find_tlsf_tool () {
+    local tool=$1
+    local envvar=$2
+    local envval=${(P)envvar}
+    local candidate
+
+    if [[ -n $envval ]]; then
+        [[ -x $envval ]] && { print -r -- $envval; return 0; }
+        echo "error: $envvar is set to a non-executable path: $envval" >&2
+        return 1
+    fi
+
+    for candidate in \
+        $REPO_ROOT/subprojects/tlsf-tools/build-oxidd/$tool \
+        $REPO_ROOT/subprojects/tlsf-tools/build/$tool \
+        $REPO_ROOT/subprojects/tlsf-tools/build-research/$tool \
+        $REPO_ROOT/subprojects/tlsf-tools/build-min/$tool
+    do
+        [[ -x $candidate ]] && { print -r -- $candidate; return 0; }
+    done
+
+    if whence -p $tool >/dev/null; then
+        whence -p $tool
+        return 0
+    fi
+
+    echo "error: unable to find $tool; build subprojects/tlsf-tools/build-min or set $envvar" >&2
+    return 1
+}
+
+runcapture () {
+    local outfile=$1
+    shift
+    echo "$@ > $outfile"
+    "$@" > $outfile&
+    childpid=$!
+    wait $childpid
+}
+
+normalize_ltlxba_cluster () {
+    local cluster=$1
+    local cluster_ltl=$2
+
+    $PYTHON - "$cluster" "$cluster_ltl" <<'PY'
+import re
+import sys
+
+cluster, cluster_ltl = sys.argv[1], sys.argv[2]
+ins = ""
+outs = ""
+formula_lines = []
+
+with open(cluster, encoding="utf-8") as f:
+    for line in f:
+        if line.startswith("c ins="):
+            ins = line[len("c ins="):].strip()
+        elif line.startswith("c outs="):
+            outs = line[len("c outs="):].strip()
+        elif not line.startswith("c "):
+            formula_lines.append(line)
+
+def split_csv(csv):
+    return [part.strip() for part in csv.split(",") if part.strip()]
+
+ins_names = split_csv(ins)
+outs_names = split_csv(outs)
+names = ins_names + outs_names
+lower = {name: name.lower() for name in names}
+
+seen = {}
+for name in names:
+    lname = lower[name]
+    if lname in seen and seen[lname] != name:
+        print(
+            f"error: lowercasing cluster APs is ambiguous: {seen[lname]} and {name}",
+            file=sys.stderr,
+        )
+        sys.exit(3)
+    seen[lname] = name
+
+formula = "".join(formula_lines)
+if any(name != lower[name] for name in names):
+    token = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+    formula = token.sub(lambda m: lower.get(m.group(0), m.group(0)), formula)
+
+with open(cluster_ltl, "w", encoding="utf-8") as f:
+    f.write(formula)
+
+print(",".join(lower[name] for name in ins_names))
+print(",".join(lower[name] for name in outs_names))
+PY
+}
+
+run_acacia_cluster () {
+    local cluster=$1
+    local cluster_ins=$2
+    local cluster_outs=$3
+    local cluster_ltl=$4
+
+    [[ -n $cluster_ins ]] || cluster_ins=acacia_tlsfcompose_unused_input
+    [[ -n $cluster_outs ]] || cluster_outs=acacia_tlsfcompose_unused_output
+
+    echo "Running Acacia Bonsai on ${cluster:t}..."
+    echoandrun $prog_prefix $ACABONSAI -F $cluster_ltl -i $cluster_ins -o $cluster_outs \
+         -l 4 ${=AB_OPTS} $extra_opts
+}
+
+run_acacia_bonsai_tlsf_preprocessed () {
+    local tlsf=${ltl%.ltl}.tlsf
+    local tlsfcompose tmpdir compose_dir plan res clusters cluster cluster_ltl cluster_ins cluster_outs
+
+    echo "Running Acacia Bonsai via tlsfcompose preprocessing..."
+    if [[ ! -e $tlsf ]]; then
+        echo "error: TLSF preprocessor backend requires sibling TLSF file: $tlsf" >&2
+        return 3
+    fi
+
+    tlsfcompose=$(find_tlsf_tool tlsfcompose TLSFCOMPOSE) || return 3
+
+    tmpdir=$(mktemp -d "${TMPDIR:-/tmp}/acacia-tlsfprep.XXXXXX") || return 3
+    {
+        compose_dir=$tmpdir/compose
+        plan=$tmpdir/compose.plan
+        mkdir -p $compose_dir
+
+        runcapture $plan $tlsfcompose --split --output-dir $compose_dir ${=TLSFCOMPOSE_OPTS} $tlsf
+        res=$?
+        (( res == 0 )) || return 3
+
+        clusters=($compose_dir/cluster.*.ltl(Nn))
+        if (( ${#clusters} == 0 )); then
+            echo "tlsfcompose emitted no residual clusters; certified controllers solve the spec."
+            return 0
+        fi
+
+        for cluster in $clusters; do
+            cluster_ltl=$tmpdir/${cluster:t}.formula.ltl
+            local normalized
+            normalized=("${(@f)$(normalize_ltlxba_cluster $cluster $cluster_ltl)}") || return 3
+            cluster_ins=$normalized[1]
+            cluster_outs=$normalized[2]
+            run_acacia_cluster $cluster "$cluster_ins" "$cluster_outs" $cluster_ltl
+            res=$?
+            case $res in
+                0) ;;
+                1) return 1;;
+                *) return $res;;
+            esac
+        done
+        return 0
+    } always {
+        [[ -n $tmpdir && -d $tmpdir ]] && rm -rf $tmpdir
+    }
+}
+
 PROG=$0
 usage () {
     cat <<EOF
-Usage: $PROG [-p] -[la+] [-e PROG_PATH] -F LTL_FILE [-P PART_FILE] [-- OPTS...]
-Runs ltlsynt, acacia-bonsai, or acacia-+ on the input LTL_FILE:
+Usage: $PROG [-p] -[lat+] [-e PROG_PATH] -F LTL_FILE [-P PART_FILE] [-- OPTS...]
+Runs ltlsynt, acacia-bonsai, preprocessed acacia-bonsai, or acacia-+ on the input LTL_FILE:
   -p: prefix every line with the name of the test (useful for meson logging)
   -l: run ltlsynt ($LTLSYNT)
   -a: run acacia-bonsai ($ACABONSAI)
+  -t: run acacia-bonsai on tlsfcompose residual clusters
   -V: run using Valgrind
   -v: verbose
   -c: prefix the executable with valgrind --tool=callgrind
@@ -86,17 +243,17 @@ the correct answer.  Otherwise, ltlsynt is ran on it to have a reference point.
 The time printed is retrieved using time(1) (or the ZSH builtin).
 
 Additionally, extra options are passed to the tools using environment variables:
-LTLSYNT_OPTS, STRIX_OPTS, AB_OPTS, AP_OPTS.
+LTLSYNT_OPTS, STRIX_OPTS, AB_OPTS, AP_OPTS, TLSFCOMPOSE_OPTS.
 EOF
     exit 1
 }
 
 PYTHON=${PYTHON:-$(whence python3)}
 progs=()
-while getopts "vcplsa+Ve:o:F:P:hx" opt; do
+while getopts "vcplsat+Ve:o:F:P:hx" opt; do
     case $opt; in
         p) prefix=t;;
-        [lsa+]) progs+=$opt;;
+        [lsat+]) progs+=$opt;;
         V) prog_prefix=(valgrind --error-exitcode=18 --exit-on-first-error=yes);;
         c) prog_prefix=(valgrind --tool=callgrind);;
         e) forced_path=$OPTARG;;
@@ -153,6 +310,7 @@ for prog in $progs; do
     case $prog; in
         l) run_ltlsynt;;
         a) run_acacia_bonsai;;
+        t) run_acacia_bonsai_tlsf_preprocessed;;
     esac
     res=$?
     if (( res > 2 || (expect < 2 && res != expect) )); then

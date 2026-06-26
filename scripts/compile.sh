@@ -2,13 +2,14 @@
 set -e
 
 NPROC=$(nproc)
+SPOT_VERSION=${SPOT_VERSION:-2.15.1}
 
 # --- Compile and install Spot ---
 if pkg-config --exists libspot 2>/dev/null; then
     echo "Spot already installed, skipping."
 else
     echo "Compiling Spot (using $NPROC cores)..."
-    cd /opt/spot/spot-2.14.4
+    cd "/opt/spot/spot-$SPOT_VERSION"
     ./configure --enable-max-accsets=64 --disable-python
     make -j"$NPROC"
     make install
