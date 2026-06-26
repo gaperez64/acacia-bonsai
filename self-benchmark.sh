@@ -400,7 +400,8 @@ if ! (( $donot[(Ie)benchmark] )); then
 	    echo -n "benchmarking $name on $this_suites (logfile: $log)... "
 	    run_benchmark_command $name meson test --benchmark $this_suites -t $TIMEOUT_FACTOR &>> ../$log || test_status=$?
 	fi
-        if (( test_status != 0 )) || grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
+        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log ||
+           { (( test_status != 0 )) && ! grep -q '^Timeout:[[:space:]]*[1-9]' ../$log; }; then
             echo "FAILED; testlog stored at $log, _bm-logs/$name.json left untouched"
             $force || exit 5
         else

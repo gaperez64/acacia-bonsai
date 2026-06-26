@@ -58,7 +58,7 @@ jobs:
         export CXX=g++-14
         ./self-benchmark.sh -c base -j -b ab/tiny
         rm build_base/benchmarked
-        ./self-benchmark.sh -c base -j -b ab/small -t 3
+        ./self-benchmark.sh -c base -j -b ab/small
         rm build_base/benchmarked
         ./self-benchmark.sh -c base -j -b ab/issue54
         rm build_base/benchmarked
