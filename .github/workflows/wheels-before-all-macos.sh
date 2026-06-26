@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-: "${SPOT_VERSION:=2.14.4}"
+: "${SPOT_VERSION:=2.15.1}"
 
 echo "== Installing build dependencies =="
 brew install autoconf automake libtool bison flex pkg-config git swig wget gcc@14

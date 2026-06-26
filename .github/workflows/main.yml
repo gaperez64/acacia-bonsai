@@ -8,6 +8,10 @@ on:
       - master
 permissions:
   contents: read
+
+env:
+  SPOT_VERSION: 2.15.1
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -43,13 +47,13 @@ jobs:
           /usr/local/bin/ltl*
           /usr/local/bin/aut*
           /usr/local/bin/ran*
-        key: spot-2.14.4-maxacc64-nopy-${{ runner.os }}
+        key: spot-${{ env.SPOT_VERSION }}-maxacc64-nopy-${{ runner.os }}
     - name: Install Spot
       if: steps.spot-cache.outputs.cache-hit != 'true'
       run: |
-        sudo wget http://www.lre.epita.fr/dload/spot/spot-2.14.4.tar.gz
-        tar -xvzf spot-2.14.4.tar.gz
-        cd spot-2.14.4
+        sudo wget http://www.lre.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz
+        tar -xvzf spot-${SPOT_VERSION}.tar.gz
+        cd spot-${SPOT_VERSION}
         sudo ./configure --enable-max-accsets=64 --disable-python
         sudo make
         sudo make install

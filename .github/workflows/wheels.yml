@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 env:
-  SPOT_VERSION: 2.14.4
+  SPOT_VERSION: 2.15.1
 
 jobs:
   build_wheels:
