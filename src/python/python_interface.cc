@@ -3,6 +3,10 @@
 #include <utility>
 
 #include "python_interface.hh"
+#include "aut_preprocessors/standard.hh"
+#include "aut_preprocessors/surely_losing.hh"
+#include "boolean_states/forward_saturation.hh"
+#include "boolean_states/no_boolean_states.hh"
 #include "solver/create_automaton.hh"
 #include "solver/k_bounded_safety_aut.hh"
 #include "solver/solver_invoker.hh"

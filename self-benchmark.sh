@@ -8,6 +8,7 @@ BENCHMARK_CGROUP=${BENCHMARK_CGROUP:-auto}
 BENCHMARK_CGROUP_MEMORY_MAX=${BENCHMARK_CGROUP_MEMORY_MAX:-}
 BENCHMARK_CGROUP_SWAP_MAX=${BENCHMARK_CGROUP_SWAP_MAX:-0}
 BENCHMARK_CGROUP_ENABLED=false
+BENCHMARK_COMPILE_PROFILE=${BENCHMARK_COMPILE_PROFILE:-normal}
 
 # -fuse-linker-plugin requires the gold linker, which is unavailable on macOS
 if [[ "$(uname)" == Darwin ]]; then
@@ -16,6 +17,7 @@ else
     opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
 fi
 opt_justtest=''
+compile_args=()
 
 declare -A confs
 
@@ -39,21 +41,34 @@ declare -A confs
 # EOF
 #         )
 
+autpreproc_no_preprocessing="-DAUT_PREPROCESSOR='aut_preprocessors::no_preprocessing' -DACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING=0 -DACACIA_ENABLE_AUT_PREPROCESSOR_NO_PREPROCESSING=1"
+autpreproc_standard="-DAUT_PREPROCESSOR='aut_preprocessors::standard' -DACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING=0 -DACACIA_ENABLE_AUT_PREPROCESSOR_STANDARD=1"
+autpreproc_elevator="-DAUT_PREPROCESSOR='aut_preprocessors::elevator' -DACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING=0 -DACACIA_ENABLE_AUT_PREPROCESSOR_ELEVATOR=1"
+boolean_forward_saturation="-DBOOLEAN_STATES='boolean_states::forward_saturation' -DACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION=1"
+boolean_no_boolean_states="-DBOOLEAN_STATES='boolean_states::no_boolean_states' -DACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION=0 -DACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES=1"
+ios_delegate="-DIOS_PRECOMPUTER='ios_precomputers::delegate' -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_DELEGATE=1"
+ios_fake_vars="-DIOS_PRECOMPUTER='ios_precomputers::fake_vars' -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_FAKE_VARS=1"
+ios_powset="-DIOS_PRECOMPUTER='ios_precomputers::powset' -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_POWSET=1"
+ios_mona="-DIOS_PRECOMPUTER='ios_precomputers::mona' -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_MONA=1"
+actioner_no_ios="-DACTIONER='actioners::no_ios_precomputation' -DACACIA_ENABLE_ACTIONER_STANDARD=0 -DACACIA_ENABLE_ACTIONER_NO_IOS_PRECOMPUTATION=1"
+input_critical="-DINPUT_PICKER='input_pickers::critical' -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=0 -DACACIA_ENABLE_INPUT_PICKER_CRITICAL=1"
+input_critical_pq="-DINPUT_PICKER='input_pickers::critical_pq' -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=1"
+input_critical_rnd="-DINPUT_PICKER='input_pickers::critical_rnd' -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=0 -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_RND=1"
+input_critical_fullrnd="-DINPUT_PICKER='input_pickers::critical_fullrnd' -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=0 -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_FULLRND=1"
+
 # Experimentally determined
-best=$(<<EOF
+best_common=$(<<EOF
 -DDEFAULT_KMIN=2
 -DDEFAULT_KINC=3
 -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
--DAUT_PREPROCESSOR='aut_preprocessors::standard'
--DBOOLEAN_STATES='boolean_states::forward_saturation'
--DIOS_PRECOMPUTER='ios_precomputers::powset'
--DINPUT_PICKER='input_pickers::critical'
 -DSIMD_IS_MAX='false'
 -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
 -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
--DDECOMPOSE_SPEC=0
 EOF
     )
+best_powset="$best_common $autpreproc_standard $boolean_forward_saturation $ios_powset $input_critical"
+best_mona_base="$best_common $autpreproc_standard $boolean_forward_saturation $ios_mona $input_critical"
+best="$best_powset -DDECOMPOSE_SPEC=0"
 
 confs=(
     # Dummy configuration: does not actually change any acacia-bonsai build
@@ -70,47 +85,47 @@ confs=(
     # [x_is_aut]="-DDEFAULT_UNREAL_X=UNREAL_X_AUTOMATON"
     [base_nosimd]="-DNO_SIMD"
     [base_simdnomax]="-DSIMD_IS_MAX=false"
-    [base_autpreproc_standard]="-DAUT_PREPROCESSOR=aut_preprocessors::standard"
-    [base_autpreproc_nopreproc]="-DAUT_PREPROCESSOR=aut_preprocessors::no_preprocessing"
-    [base_booleanstates_none]="-DBOOLEAN_STATES=boolean_states::no_boolean_states"
-    [base_noiosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
-    [base_iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
-    [base_iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
-    [base_iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
-    [base_inputpicker_critical_pq]="-DINPUT_PICKER=input_pickers::critical_pq"
-    [base_inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
-    [base_inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
+    [base_autpreproc_standard]="$autpreproc_standard"
+    [base_autpreproc_nopreproc]="$autpreproc_no_preprocessing"
+    [base_booleanstates_none]="$boolean_no_boolean_states"
+    [base_noiosprecom_delegate]="$ios_delegate $actioner_no_ios"
+    [base_iosprecom_fake_vars]="$ios_fake_vars"
+    [base_iosprecom_powset]="$ios_powset"
+    [base_iosprecom_mona]="$ios_mona"
+    [base_inputpicker_critical_pq]="$input_critical_pq"
+    [base_inputpicker_critical_rnd]="$input_critical_rnd"
+    [base_inputpicker_critical_fullrnd]="$input_critical_fullrnd"
     [base_downset_vector_or_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
     [base_downset_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
     [base_downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
     [base_downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DARRAY_IMPL=simd_array_backed_sum -DVECTOR_IMPL=simd_vector_backed"
     # These are variations on the best configuration
     [best]="$best"
-    [best_decomp]="$best -DDECOMPOSE_SPEC=1"
+    [best_decomp]="$best_powset -DDECOMPOSE_SPEC=1"
     [best_no_array_cap_max]="$best -DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
     [best_no_bitsets]="$best -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"  # same, and x_and_boolvec used instead of x_and_bitset
-    [best_mona]="$best -DIOS_PRECOMPUTER=ios_precomputers::mona"
-    [best_noiosprecom_delegate]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
+    [best_mona]="$best_mona_base -DDECOMPOSE_SPEC=0"
+    [best_noiosprecom_delegate]="$best_common $autpreproc_standard $boolean_forward_saturation $ios_delegate $actioner_no_ios $input_critical -DDECOMPOSE_SPEC=0"
     [best_downset_vector_or_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
     [best_downset_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
     [best_downset_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed'"
     [best_downset_simple_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed'"
     [best_downset_sharingtrie]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed'"
-    [best_decomp_kdtree_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_kdtree_mona_no_bitsets]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_sharingtrie_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_simpsharingtree_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_sharingtree_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_sharingtrie_mona_no_bitsets]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_mona_no_bitsets]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_mona]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona"
-    [best_decomp_mona_elevator]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DAUT_PREPROCESSOR=aut_preprocessors::elevator"
-    [best_decomp_mona_spotfast_off]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_OFF"
-    [best_decomp_mona_spotfast_det]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_DET"
-    [best_decomp_mona_spotfast_gfg]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_GFG_DECISION"
-    [best_decomp_mona_spotfast_all]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DDEFAULT_SPOT_FAST=SPOT_FAST_ALL"
-    [best_decomp_skiplist_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_cst_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='cst_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='cst_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
+    [best_decomp_kdtree_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DDECOMPOSE_SPEC=1"
+    [best_decomp_kdtree_mona_no_bitsets]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
+    [best_decomp_sharingtrie_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DDECOMPOSE_SPEC=1"
+    [best_decomp_simpsharingtree_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DDECOMPOSE_SPEC=1"
+    [best_decomp_sharingtree_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DDECOMPOSE_SPEC=1"
+    [best_decomp_sharingtrie_mona_no_bitsets]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
+    [best_decomp_mona_no_bitsets]="$best_mona_base -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
+    [best_decomp_mona]="$best_mona_base -DDECOMPOSE_SPEC=1"
+    [best_decomp_mona_elevator]="$best_common $autpreproc_elevator $boolean_forward_saturation $ios_mona $input_critical -DDECOMPOSE_SPEC=1"
+    [best_decomp_mona_spotfast_off]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_OFF"
+    [best_decomp_mona_spotfast_det]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_DET"
+    [best_decomp_mona_spotfast_gfg]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_GFG_DECISION"
+    [best_decomp_mona_spotfast_all]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_ALL"
+    [best_decomp_skiplist_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DDECOMPOSE_SPEC=1"
+    [best_decomp_cst_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='cst_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='cst_backed' -DDECOMPOSE_SPEC=1"
 )
 
 mode= # print, list
@@ -142,15 +157,16 @@ EOF
   echo "."
 fi
 
-while getopts "hplBCjRfb:t:c:m:n:" option; do
+while getopts "hplBCLjRfb:t:c:m:n:" option; do
     case $option; in
         h) cat <<EOF
-usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-m MEMORY] [-n NATIVE_FILE]
+usage: $0 [-hplBCLjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-m MEMORY] [-n NATIVE_FILE]
   -h: Print this message.
   -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
   -l: Do not build/compile/benchmark, instead, list configurations.
   -B: Do not build.
   -C: Do not compile.
+  -L: Use low-memory non-debug compile flags (-O0 -g0, no LTO) and compile with one job.
   -j: Just test instead of benchmarking.
   -R: Do not benchmark.
   -f: Do not fail when a build, compile, or benchmark does, continue as if they passed.
@@ -163,12 +179,14 @@ Environment:
   BENCHMARK_CGROUP=auto|strict|off       Wrap benchmark runs in a systemd cgroup (default: auto).
   BENCHMARK_CGROUP_MEMORY_MAX=MEMORY     Same as -m.
   BENCHMARK_CGROUP_SWAP_MAX=MEMORY       systemd MemorySwapMax value (default: 0).
+  BENCHMARK_COMPILE_PROFILE=normal|lowmem
 EOF
            exit 1;;
         p) mode=print;;
         l) mode=list;;
         B) donot+=build;;
         C) donot+=compile;;
+        L) BENCHMARK_COMPILE_PROFILE=lowmem;;
 	j) justtest=true;;
         R) donot+=benchmark;;
         f) force=true;;
@@ -190,6 +208,19 @@ if $justtest; then
     echo "Using opt $opt for faster compile-to-test times"
     rel=""
 fi
+case $BENCHMARK_COMPILE_PROFILE in
+    normal) ;;
+    lowmem)
+        opt='-O0 -g0 -pipe -DNO_VERBOSE -DNDEBUG'
+        rel='--buildtype=plain'
+        compile_args=(-j 1)
+        echo "Using low-memory compile profile: opt $opt, compile jobs 1"
+        ;;
+    *)
+        print -u2 "ERROR: BENCHMARK_COMPILE_PROFILE must be 'normal' or 'lowmem' (got '$BENCHMARK_COMPILE_PROFILE')."
+        exit 2
+        ;;
+esac
 
 default_benchmark_cgroup_memory_max() {
     local mem_kib
@@ -326,7 +357,7 @@ if ! (( $donot[(Ie)compile] )); then
         fi
         cd $build
         echo -n "compiling $name (logfile: $log)... "
-        if meson compile &>> ../$log; then
+        if meson compile $compile_args &>> ../$log; then
             echo "done"
             touch compiled
         else

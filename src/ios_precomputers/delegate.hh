@@ -1,5 +1,10 @@
 #pragma once
 
+#include <bddx.h>
+
+#include <utility>
+#include <vector>
+
 namespace ios_precomputers {
   struct delegate {
       template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>

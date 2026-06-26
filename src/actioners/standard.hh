@@ -1,6 +1,8 @@
 #pragma once
 
+#include "actioners/direction.hh"
 #include "configuration.hh"
+#include "posets/utils/vector_mm.hh"
 
 #include <set>
 

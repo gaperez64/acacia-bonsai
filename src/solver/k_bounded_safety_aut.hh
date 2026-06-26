@@ -3,9 +3,7 @@
 #undef MAX_CRITICAL_INPUTS
 #define MAX_CRITICAL_INPUTS 1
 
-#include "actioners.hh"
-#include "input_pickers.hh"
-#include "ios_precomputers.hh"
+#include "actioners/direction.hh"
 #include "utils/bdd_helper.hh"
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"

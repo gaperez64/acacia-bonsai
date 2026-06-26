@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actioners.hh"
+#include "actioners/direction.hh"
 #include "utils/verbose.hh"
 
 #include <optional>
