@@ -1,0 +1,409 @@
+# Where & why ltlsynt beats acacia-bonsai — diagnostic findings
+
+Branch: `optimize-vs-ltlsynt` (off `spot-fastpath-no-tlsf-tools`).
+Data: SYNTCOMP-2024 `0s-20s`, 1011 shared instances, logs
+`../acacia-bonsai/_bm-logs-top4-on-2024_20s/`. Acacia reference config
+`best_decomp_mona` (plain `vector_backed` antichain + mona ios-precompute + decompose).
+Loss set produced by `benchmarking/loss-set.py` → `loss-set-2024_20s.csv`.
+
+## Headline numbers
+
+| category | total | real | unreal |
+|---|---|---|---|
+| both solved | 647 | 379 | 268 |
+| **ltlsynt-only (loss set)** | **192** | 108 | 80 |
+| acacia-only | 25 | 21 | 3 |
+| **acacia >2× slower (both solve)** | **64** | 28 | 36 |
+| neither | 83 | — | — |
+
+- Coverage: acacia 736 vs **ltlsynt 903** solved. PAR-2: acacia ~10127 vs **ltlsynt 4138** (~2.4×).
+
+## Finding 1 — The posets data structures are NOT the lever (user hypothesis refuted)
+
+Cross-backend coverage over the SAME suite (from the logs, no re-run):
+
+- solved: vector **736** · kdtree 730 · sharingtrie 726 · base 724 · skiplist 711.
+- **Union of ALL acacia backends (vector∪kdtree∪skiplist∪cst∪sharingtrie) = 741**, i.e. only
+  **+5 over vector alone**.
+- Of the 192 loss instances, a per-instance oracle over every backend rescues **5**; **187
+  remain lost**. (Rescues: sharingtrie 4, kdtree/base a couple, mostly `simple_arbiter_with_hints6`,
+  `finding_nemo_1`, `ltl2dba_Q7`, `round_robin_arbiter5`.)
+
+⇒ Optimizing/replacing the antichain data structure can recover **≤5 / 192**. The gap is
+algorithmic / pipeline, not data-structure. (Tuning the structures is still worth a little,
+but it is not where ltlsynt's advantage lives.)
+
+## The two bottlenecks (from an instrumented, verbose build — supersedes earlier guesses)
+
+Built `build_exp` (best_decomp_mona flags, system Spot 2.15.1, `-DNO_VERBOSE` removed) and
+read timestamped `-v1` stage markers. The concluding child exits via `exit()` so its verbose
+flushes. Result: the antichain data structure is almost never the cost. Losses split into two
+disjoint bottlenecks.
+
+### Finding 2 — Translation blow-up (dominates the unrealizable / long-X losses)
+
+Case `prioritized_arbiter_unreal12_16` (UNREALIZABLE; ltlsynt 0.00s / 18 MB, acacia 10.3s /
+403 MB). Timestamped `-U -u automaton -v1`:
+```
++ 0.00s  Formula: ... ((r_0 & Xr_1) -> XXXXXXXXXXXXXXXX(g_0 & g_1)) ...   <- 16 nested X
++10.28s  Spot NBA fast path classification: unsupported                  <- 10.28s in create_automaton()!
++10.30s  Make actions... ; Loop# 1..3, f of size 1                       <- fixpoint is trivial
++10.31s  UNREALIZABLE
+```
+- The **entire cost is `create_automaton()`**; the antichain fixpoint is ~0.01s (`f` size 1,
+  3 loops). Earlier guess ("antichain on the dualized game") was **wrong**.
+- The `-u both` default also forks the **formula** strategy, which adds `X` to the *formula*
+  before translation → an even harder translation (`-U -u formula` > 35s TIMEOUT vs
+  `-U -u automaton` 10.5s) on THIS instance. See the correction below though: `-u both` is
+  still correct to keep (Finding 2b).
+- This cluster owns 36 of 64 ">2× slower" (762×, 496×, 380×, 354×, 281×, 260×, 226×, all
+  `*_unreal*`/counter specs, ltlsynt ~0.02s) and 80 of 192 timeouts.
+
+#### Finding 2a — root cause is NOT `Small` vs `Any`; it's a missing pre-translation simplification
+
+Chasing "why does ltlsynt avoid this translation cost" (user follow-up) overturned the
+`Small`-minimization explanation:
+- Timing `ltl2tgba` on the exact (non-negated) formula with acacia's settings (`-B --small
+  --sbacc`) = **10.9s**; with ltlsynt's own `lar`-algo translator settings (`--generic
+  --deterministic`, from `synthesis.cc:2540-2541`, no `Small`, no `SBAcc`) = **11.2s — just as
+  slow.** So the output-preference knob is not what saves ltlsynt.
+- `ltlsynt --realizability --verbose` on the same instance shows the actual mechanism:
+  ```
+  the following signals can be temporarily removed:
+    r_0 := 1
+    r_1 := 1
+  new formula: GF!r_m -> (G(r_m -> X((!g_0&!g_1) U g_m)) & G(...& X^16(g_0&g_1)) & GFg_0 & GFg_1)
+  translating formula done in 0.00092139 seconds     <- automaton has 1 state!
+  ```
+  This is **`spot::realizability_simplifier`** (`spot/tl/apcollect.{hh,cc}`, `SPOT_API` public
+  class, `apcollect.cc:489`) — a formula-level, **realizability-preserving** simplification
+  that detects input APs whose value can be forced to a constant without changing the
+  verdict (options `polarity`, `global_equiv[_output_only|_moore]`), and rewrites the formula
+  before any translation. `ltlsynt --bypass=no` (disabling the *other* fast path,
+  `try_create_direct_strategy`) is still instant — the simplifier alone does the job, run
+  unconditionally in `ltlsynt.cc:648` before `ltl_to_game`.
+- **Directly confirmed on acacia's own construction**: feeding the *reduced* formula
+  (`r_0,r_1` substituted) into `ltl2tgba -B --small --sbacc` (acacia's exact
+  `create_automaton.hh` settings, unchanged) gives **2 states / 3 edges / 0.012s**, vs.
+  **30 states / 233 edges / 10.6s** on the original — an **~880× speedup**, with zero change
+  to acacia's translator preference.
+- ⇒ **This is the real, high-confidence lever for the long-X/unreal cluster** (bigger and
+  cleaner than the `Small`→`Any` tweak, and philosophically "acacia engine": acacia already
+  links libspot for parsing/translation, and `realizability_simplifier` is a public, reusable
+  Spot library API for formula preprocessing — not "delegate solving to ltlsynt").
+- Caveat for implementation: `realizability_simplifier` returns a `mapping_t` of substitutions.
+  For a pure realizability decision (acacia's `-r`/`-U -u *` paths) the mapping can be
+  discarded. For full synthesis (`-s`, AIGER output) the forced APs must be reintroduced via
+  the class's own `patch_mealy`/`patch_game` methods (`apcollect.hh:185-189`) so the emitted
+  controller still declares/handles the removed input signals.
+
+#### Finding 2b — `-u both` reconsidered: keep it (see backlog item 2)
+
+### Finding 3 — Antichain-size explosion in the fixpoint (dominates realizable arbiter family)
+
+Case `arbiter8` (8 in/8 out, realizable, times out). Timestamped `-r -v1`:
+```
++0.17s  translation done (negated formula -> ~35-state automaton: translation is NOT the cost)
++0.53s  Loop# 2, f of size 256
++10.8s  Loop# 4, f of size 6561          <- antichain size explodes
++45s    UNKNOWN (timeout)
+```
+- Here translation is fast; the **K-bounded safety fixpoint's antichain `f` blows up**
+  (1 → 256 → 6561 → …). This is why swapping antichain *backends* barely helps (Finding 1):
+  the problem is the antichain **size** (inherent to the K-encoding for n-client arbiters),
+  not the container's speed. (Correction: an earlier CLI `ltl2tgba --small` on the
+  *non-negated* formula gave 5888 states/24.7s, but acacia negates on the real path and gets
+  ~35 states in 0.17s — the CLI test used the wrong polarity.)
+- Same family: arbiter6/7, abcg_arbiter3/4, arbiter_with_buffer/cancel, full_arbiter_enc*.
+- Huge-alphabet specs (`amba_decomposed_lock150` 301 in, `lock200` 401 in) and many-output
+  specs are a further sub-case to confirm (io-action enumeration / cpre union width).
+
+#### Finding 3a — K-schedule tuning is RULED OUT for this cluster (tested, not assumed)
+
+Isolated the true per-K cost on `arbiter6`/`arbiter7` by forcing `-M k -K k` (single fixed K,
+no increment) for k=2..8, 30s cap each, real-only:
+```
+arbiter6:  K=2 0.7s(TO)  K=3 2.1s(TO)  K=4 6.1s(TO)  K=5..8 all 30s TIMEOUT (never converges)
+arbiter7:  K=2 12.7s(TO) K=3..8 all 30s TIMEOUT
+```
+K=4 is cheap but insufficient (fixpoint converges but excludes init); **K=5 alone is already
+intractable** (>30s just to reach *a* fixpoint, isolated from any increment overshoot).
+⇒ No `DEFAULT_KMIN`/`DEFAULT_KINC` schedule can help — the minimal *sufficient* K for n≥6
+independent-but-coupled clients is itself too expensive to compute. This is a genuine
+algorithmic scaling wall in the K-bounded safety-game encoding for this spec family, not a
+parameter-tuning problem. (Multi-K schedule trace for context: arbiter6 grinds K=5 for ~33s
+down to a converged-but-insufficient `f=729`, forcing K=8, which then explodes
+729→1359→2439→3879 in 4 loops and never converges in 150s.)
+
+## Implementation: `realizability_simplifier` + `Any` default (this round)
+
+Both changes landed in `src/solver/create_automaton.hh` and `src/solver/solver_invoker.cc`,
+built as `build_rs` (worktree binary; system Spot 2.15.1).
+
+- **`ACACIA_TRANSLATION_PREF` default flipped `Small` → `Any`** (`create_automaton.hh`).
+  Unconditional, no soundness dependency.
+- **`spot::realizability_simplifier` added** in `run_one_ltl::operator()`
+  (`solver_invoker.cc`), called on `spot_formula` right before the per-path
+  transforms (X-insertion / negation) and `create_automaton`.
+
+### ⚠️ Correctness bug found and fixed: the simplifier is UNSOUND under acacia's swapped unreal-check convention
+
+First attempt applied the simplifier unconditionally (all paths). This **broke soundness**:
+on `prioritized_arbiter_unreal12_16` (ground truth UNREALIZABLE), `-r` (real-check-only)
+started returning **REALIZABLE** (wrong) instead of the correct inconclusive `UNKNOWN`. Root
+cause: acacia's unrealizability check works by *swapping* which AP list is called "input" vs
+"output" (`run_ltl`, before constructing the runner) and then applying either an X-insertion
+(`UNREAL_X_FORMULA`) or a `push_aps` (`UNREAL_X_AUTOMATON`) reduction — a specific,
+self-contained correctness argument. `realizability_simplifier`'s own soundness proof is for
+the *classical* realizability question (matching exactly how `ltlsynt` uses it, on the
+plain declared spec) and does not obviously compose with acacia's swap-based dualization.
+Direct evidence: applying it to the swap-oriented formula for this instance collapsed the
+formula to literal `1` (tautology), and the resulting fast-path verdict (`0` = "output player
+does not win") **contradicted** the full antichain solver's own answer on the unsimplified
+automaton (`1`) for the exact same question — an internal inconsistency, not just a slowdown.
+
+**Fix**: scope the simplifier strictly to `not check_unreal.has_value ()` (the classical
+real-check path only) — mirrors `ltlsynt.cc:648`'s own usage exactly. Also skipped when
+`synth_fname.has_value ()` (an actual `-s` AIGER controller is requested), since the forced
+APs would need `patch_mealy`/`patch_game` to be reintroduced into the emitted strategy, not
+wired up here.
+
+**Consequence**: this closes off the ~880× win for the *unreal* cluster specifically (most of
+what Finding 2a measured) until the swap-compatible reduction is properly derived — flagged
+below as a distinct, higher-risk backlog item rather than folded into the safe win.
+
+**Correctness validated** (this scoped version): 120-instance sample (60 `realizable/` + 60
+`unrealizable/`, ground truth from directory), `/tmp/correctness_check.py`: 85 solved
+correctly, 31 timeouts (safe), 3 crash/no-match (reproduced identically on the pre-existing
+`build_exp` baseline — not a regression), **zero wrong-polarity answers**.
+
+**Final 3-way A/B** on the 106-instance regression set (45 `both_ok` + 36 unreal-slow + 25
+unreal-timeout), clean/idle machine, 20s timeout:
+```
+build_exp (Small, no simplifier)        81 solved / 634s
+build_any (Any,   no simplifier)        82 solved / 579s
+build_rs  (Any,   RS scoped-to-real)    82 solved / 579s
+```
+`build_rs` == `build_any` **exactly** on this set (matches on every instance, incl. sub-0.1s
+cases) — expected, since this set is dominated by the unreal cluster where the scoped
+simplifier correctly does not fire; it's a validated no-op here, not a regression. All of the
+measured win on this set comes from `Small`→`Any`. (Also: the earlier apparent "`ltl2dba_theta14`
+Any regression" — `Any` timing out while `Small` solved in 18.9s — did **not** reproduce on
+this clean/idle rerun: `Any` solved in 17.8-17.9s, i.e. equal-or-faster than `Small`. That was
+pure CPU-contention noise from an earlier run competing with other load, not a real effect.)
+
+## Quick acacia-vs-ltlsynt benchmark round (`build_rs`, this round's config)
+
+Ran `build_rs` (Any + RS scoped-to-real) over the full **loss set (192) + slow set (64) = 256
+instances**, 20s timeout, ltlsynt numbers reused from the cached `loss-set-2024_20s.csv`
+(ltlsynt itself unchanged, no need to re-run it). Script: `/tmp/quick_bench.py` →
+`/tmp/quick-bench-results.csv`.
+
+```
+Loss set (ltlsynt solved, OLD acacia didn't):     192
+  NOW solved by new acacia (Any+scoped-RS):         6  (3.1%)
+Slow set (both solved, OLD acacia >2x slower):     64
+  faster with new acacia:                          55
+  total time on slow set: old=190s  new=163s  (~14% reduction; new caps timeouts at 20s)
+```
+
+Newly-recovered loss instances: `ModdifiedLedMatrix5X`, `SensorPart`, `TwoCountersDisButA8/A9`,
+`ltl2dba_beta6`, `ltl2dba_theta14`.
+
+**Reading**: this round's two safe changes are a modest, real, validated improvement (6
+timeouts turned into solves, 55/64 slow instances sped up, ~14% less total time on the slow
+set) but do **not** close the big structural gap. The vast majority of the loss set (186/192)
+is still unreached — confirming Findings 1/1b/3: the fixpoint-explosion arbiter family
+(Finding 3) is untouched by either change, and the *unreal* translation-bound cluster (Finding
+2a's ~880× case) is still blocked behind the swap-path soundness issue (backlog item 1b).
+
+**Measurement caveat**: `TwoCountersGui` shows `old=OK/5.88s` (from the official cached
+`best_decomp_mona` benchmark, built with `-flto`, verbose off) but `new=UNKNOWN/6.34s` on
+`build_rs`. This is **not a regression from this round's code changes** — `build_exp` (no
+`Any`, no simplifier, same worktree build config) shows the identical `UNKNOWN` in the 3-way
+A/B above. It's a build-configuration artifact (missing `-flto` + verbose enabled in all three
+worktree binaries) affecting a fork-race outcome on this one instance, not something the
+patch touched.
+
+## `-u formula` unreal-path extension: attempted, safe but not yet a win (in progress)
+
+Per follow-up: is the same simplifier possible on the `UNREAL_X_FORMULA` strategy specifically
+(as opposed to `UNREAL_X_AUTOMATON`)? Since acacia's own code comments this X-insertion step as
+a "Mealy-to-Moore" conversion, and `spot::realizability_simplifier` has a
+`global_equiv_moore` option precisely for Moore semantics (`apcollect.cc:591-596`; the default
+`global_equiv` assumes Mealy — at most one input per equivalence class vs none for Moore), the
+theory was: apply the simplifier **after** the X-insertion, with `polarity | global_equiv_moore`
+instead of the default.
+
+Implemented in `solver_invoker.cc` inside the `UNREAL_X_FORMULA` branch, options gated behind
+`ACACIA_RS_UNREAL_FORMULA_OPTS` for easy override. Tested on the reference bug case
+(`prioritized_arbiter_unreal12_16`, ground truth UNREALIZABLE):
+
+- `-U -u formula`: went from a >35s TIMEOUT (no answer) to an instant `UNKNOWN` — **safe** (no
+  wrong polarity), but not yet useful.
+- Root cause (confirmed via verbose substitution log): the `polarity` chain is individually
+  sound here — `r_0 := 0`, `r_1 := 0`, then `g_0 := 1`, `g_1 := 1`, then `r_m := 1`, correctly
+  collapsing the formula step-by-step to a **tautology `1`**. The bug is downstream: a
+  deterministic-Büchi automaton for `1` (one state, self-loop, always accepting) should mean
+  the output player wins trivially (`current_output_player_wins = true`), but
+  `spot_nba_fastpath.hh`'s fast path returns `0` (false) for it, which surfaces as inconclusive
+  instead of the correct `UNREALIZABLE`.
+
+### Chased, and correctly abandoned: this is NOT a fixable bug, it's an open theoretical question
+
+Investigated `deterministic_forbidden_fast_path` (`spot_nba_fastpath.hh:363-392`) in detail.
+`current_output_player_wins = false` for the universal (always-accepting) automaton is
+**mathematically forced**, not a computation error: it treats `aut_forbid` as "the condition
+the output player must eventually-always avoid"; a 1-state always-accepting self-loop
+automaton triggers on *every* step of *every* play, so no strategy can ever avoid it — `false`
+is the only consistent answer to that sub-question. Whether "output loses the avoid-game on
+this un-negated, swapped, X-shifted automaton" correctly maps to "**original** spec is
+UNREALIZABLE" depends on the specific game-theoretic correspondence acacia's swap-and-X-insert
+reduction establishes (presumably proven in the underlying TACAS'23 paper) — not something
+derivable with confidence from the code alone.
+
+**Decisive evidence this needs its own careful derivation, not a guess**: the exact sibling
+degenerate case — an **empty** (0-state) automaton on an unreal path — is already flagged in
+the codebase itself (`solver_invoker.cc`, commit `57afe62f "fix: guard against empty automaton
+in run_one_ltl"`) with the comment *"we cannot soundly map an empty language to UNREAL (see
+issue #109 for the proper fast-path pre-check), so we return inconclusive there"*. The
+original author, facing the mirror-image of this exact problem, explicitly chose the safe
+conservative non-answer over guessing at the mapping. Given that precedent, and that I already
+shipped one unsound guess earlier this session (Finding 2a's original unscoped attempt),
+**I stopped here rather than hand-derive a fix**: the current behavior (safe `UNKNOWN`) is the
+theoretically-appropriate conservative answer for a genuinely open question, not a bug to
+patch. Revisit only with the actual paper's theorem in hand, or much more extensive validation
+infrastructure than a few hand-picked instances can provide.
+
+## FINAL FIX: sound up-front simplification (supersedes the `-u formula` attempt above)
+
+Read the acacia paper (Cadilhac & Pérez, TACAS'23, arXiv:2204.06079) §2 + §5 "Checking
+nonrealizability" to get the actual reduction, instead of guessing further. Confirmed via a
+full code trace against the paper:
+
+- **Realizability**: `BackwardRealizability(A)` is positive iff the output player can keep the
+  play *out of* `L(A)` (payoff = complement of `L(A)`). The real path feeds `A(¬φ)`, so "avoid
+  `¬φ`" = "enforce `φ`" = realizable.
+- **Unrealizability (§5)**: uses **determinacy** — build `B` from **`¬φ` with inputs/outputs
+  swapped and outputs pushed one step forward** (the `X`-shift / paper's Algorithm 3 =
+  `push_aps`), so that a *positive* `BackwardRealizability(B)` ⟺ the **input player** wins ⟺
+  the original spec is **unrealizable**. Crucially, the un-negated (swapped, shifted) formula
+  is fed into an **avoid/dual** game — acacia's own code never literally negates on the unreal
+  paths; the negation is implicit in the swap-and-shift construction.
+- **Root cause of the earlier bug**: `spot::realizability_simplifier` preserves "can the
+  OUTPUT player **enforce** this formula" (standard realizability). The real path is sound
+  because it simplifies `φ` (what the system enforces) *in the standard frame*, before
+  negating. My `-u formula` attempt simplified the swapped, `X`-shifted `φ'` directly — i.e. it
+  answered "can output enforce `φ'`" when the game actually asks "can output avoid `φ'`"
+  (equivalently enforce `¬φ'`) — the **wrong question**. That's why it spuriously collapsed a
+  genuinely-UNREALIZABLE formula to `1`, and — confirmed by an exhaustive check — why it
+  produced **2 actual wrong-polarity answers** (`simple_arbiter_10`,
+  `simple_arbiter_enc_pb_8_pe_`: ground truth REALIZABLE, buggy build said UNREALIZABLE in
+  0.01s).
+
+**The fix**: simplify the **original spec `φ` once, in the standard frame** (original inputs as
+inputs, default Mealy options `polarity | global_equiv`) — **before** the I/O swap, in `run_ltl`
+— so every forked child (real + both unreal strategies) inherits the smaller formula.
+**Soundness**: the simplifier preserves realizability of `φ`; by determinacy, "`φ` realizable"
+⟺ "`φ` not unrealizable", so the same rewrite equally preserves the unrealizability verdict.
+This is exactly how `ltlsynt` itself uses the class (`ltlsynt.cc:648`, once, up front, on the
+plain declared spec).
+
+**Implementation** (`src/solver/solver_invoker.cc`): removed both in-`operator()` simplifier
+calls (the real-only one and the unsound `UNREAL_X_FORMULA` Moore-aware one); added a single
+`spot::realizability_simplifier` call in `run_ltl`, right after parsing and before
+`input_aps.swap(output_aps)`, gated on `not synth_fname.has_value()`.
+
+### Validation (exhaustive, mandatory since this is a soundness fix)
+
+- **Correctness gate**: ran the fixed binary over the **full** `tests/ltl/realizable/` (487) +
+  `tests/ltl/unrealizable/` (415) = **902 labelled instances**, comparing every definitive
+  verdict to the directory ground truth. **Result: 0/902 wrong-polarity answers** (685 solved
+  correctly, 158 safe timeouts, 3 safe-inconclusive, 56 harness-level "no answer captured").
+  The known bug instances now correctly time out (matching the *un-patched* baseline —
+  confirmed `build_exp` also times out on both, ltlsynt says REALIZABLE) instead of falsely
+  reporting UNREALIZABLE.
+  - The 56 "harness" entries are **not** a regression: every one spot-checked (5+ instances,
+    including 5 repeated runs of one) reproduces the **correct** answer in isolation, and the
+    exact same behavior (an internal `std::bad_alloc`-and-recover path in acacia, unrelated to
+    this patch) reproduces identically on the pre-patch `build_exp` baseline. This looks like a
+    stale-process/memory-limit interaction across a long sequential batch in the test harness,
+    not a code defect — flagged for awareness, not blocking.
+- **Timing** (`/tmp/quick_bench.py`, 192 loss + 64 slow instances, 20s timeout, vs cached
+  ltlsynt times):
+
+  | | before this fix (unsound `-u formula` reverted) | **after this fix** |
+  |---|---|---|
+  | Loss set recovered | 6/192 (3.1%) | **71/192 (37.0%)** |
+  | Slow set faster | 55/64 | **56/64** |
+  | Slow-set total time | 190s → 163s (−14%) | **190s → 80s (−58%)** |
+
+  A 12× jump in loss-set recovery over the unsound attempt, and now fully sound. Virtually all
+  `*_arbiter_unreal*`/`prioritized_arbiter_unreal*`/`simple_arbiter_unreal*` instances that used
+  to time out at 17-20s now resolve in **~0.01s**, matching ltlsynt's own ~0.02s — the long-`X`
+  translation-blowup cluster (Finding 2/2a) is now closed via the sound route, not the
+  abandoned fast-path guess.
+- Remaining loss (121/192, mostly the fixpoint-explosion arbiter family, Finding 3/3a) is
+  **unaffected**, as expected — that bottleneck is structurally different (antichain-size
+  explosion, not translation cost) and this fix doesn't touch it.
+
+## Optimization backlog (acacia-engine only; no new Spot reliance)
+
+Ranked by (est. instances × confidence / effort):
+
+1. **`spot::realizability_simplifier`, applied once up front on the original spec** (Finding
+   2a, resolved) — ✅ **DONE: implemented, correctness-validated (0/902 wrong-polarity,
+   exhaustive), and delivers the big win.** Superseded two earlier, narrower attempts
+   (real-check-only scoping; an unsound `UNREAL_X_FORMULA`-specific extension) once the paper's
+   §5 reduction showed the sound fix is simpler: simplify `φ` once, in the standard frame,
+   before the I/O swap, so real + both unreal children all inherit it (sound by determinacy).
+   **71/192 (37.0%) loss-set instances recovered**, slow-set time cut 190s→80s (−58%). See "FINAL
+   FIX" section above for the full derivation and validation.
+2. **`Small` → `Any` translation preference** — ✅ **implemented as the new default**
+   (`create_automaton.hh`). **VALIDATED (small, zero-regression win).** A/B over 106
+   instances (45 `both_ok` regression sample + 36 unreal-slow + 25 unreal-timeout), 20s
+   timeout, no-leak runner:
+   - Small **81 solved / 638s**  vs  Any **82 solved / 583s** (+1 coverage, −9% time).
+   - Any recovered/sped **5** (OneCounterGuiA8, TwoCountersDisButA6/7/8/9). Any **regressed
+     0** instances.
+   - Does NOT help: fixpoint-bound arbiter timeouts, nor formulas where translation cost is
+     inherent.
+3. **Drop the `-u both` default to `-u automaton`** — ❌ **REFUTED, do NOT do this.** The two
+   unreal strategies are *complementary*, not redundant: `-u automaton` alone loses instances
+   where the `formula` strategy is the concluding path. Measured (`-u both` vs `-u automaton`,
+   first 8 unreal instances): automaton-only **failed 4/8** — `LightsTotal_2c5b09da`
+   (both 1.4s vs automaton TIMEOUT), `OneCounterGuiA6/A7/A8` (both <4s vs automaton UNKNOWN) —
+   while matching on `TwoCountersDisButA3-6`. Keep `-u both`. (Note: once item 1 makes
+   translation ~free, both unreal strategies become cheap to race anyway, further reducing the
+   incentive to drop one.)
+4. **Antichain-size explosion in the fixpoint** (Finding 3, realizable arbiter family, n≥6
+   clients) — ❌ **K-schedule tuning ruled out (Finding 3a, tested not assumed):** forcing single
+   fixed K values shows K=5 alone already exceeds 30s on `arbiter6` (K=4 is cheap but
+   insufficient) — no `DEFAULT_KMIN/KINC` schedule can dodge this, the *minimal sufficient* K
+   is itself intractable. This is the **largest remaining gap** but is a genuine algorithmic
+   scaling wall, not a tuning problem. Remaining untested ideas (higher effort, uncertain
+   payoff): backward boolean-state saturation (only *forward* saturation is implemented, see
+   `TODO` in `forward_saturation.hh:21`; backward could shrink the counting dimensions further),
+   alternative input-picker order, or exploiting arbiter symmetry/decomposition structurally
+   (`DECOMPOSE_SPEC` doesn't apply since clients share the resource / aren't independent).
+   Data-structure swaps do **not** help here (Finding 1).
+5. **Data-structure tuning** — low ceiling (≤5 instances); deprioritize as a *coverage* lever.
+
+## Measurement notes / gotchas
+- acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
+  **orphans the workers** (seen: 7 stray procs at 99% CPU for 12 min), which silently inflates
+  later timings. `benchmarking/run-subset.py` now runs each instance in its own process group
+  and `killpg`s on timeout. Always sanity-check `pgrep acacia-bonsai` between runs.
+- Experiment binaries live in the `optimize-vs-ltlsynt` worktree: `build_exp` (=best_decomp_mona
+  flags, verbose on, `Small`) and `build_any` (same + `-DACACIA_TRANSLATION_PREF=…::Any`), both
+  linking system Spot 2.15.1. They differ from the logged `best_decomp_mona` (no `-flto`,
+  verbose on), so use them for A/B against each other, not against the old logs.
+
+## Reproduce
+```
+python3 benchmarking/loss-set.py --logs ../acacia-bonsai/_bm-logs-top4-on-2024_20s \
+        --acacia best_decomp_mona --csv loss-set-2024_20s.csv
+```
+Backend coverage + per-path isolation: see commands in the session log (uses the prebuilt
+`../acacia-bonsai/build_*/src/acacia-bonsai` binaries; `-r` real-only, `-U -u {automaton,formula}`
+unreal-only).
