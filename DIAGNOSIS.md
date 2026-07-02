@@ -135,6 +135,76 @@ parameter-tuning problem. (Multi-K schedule trace for context: arbiter6 grinds K
 down to a converged-but-insufficient `f=729`, forcing K=8, which then explodes
 729→1359→2439→3879 in 4 loops and never converges in 150s.)
 
+#### Finding 3b — the exploding antichain has heavy combinatorial/symmetric structure (evidence for a symbolic/BDD downset)
+
+Dumped the actual antichain contents (not just size) via `-v -v` (level-2 verbosity prints the
+full vector list after each `cpre` step, `k_bounded_safety_aut.hh:195`). On `arbiter5`'s
+converged 743-vector antichain and `arbiter6`'s 2439-vector blowup, the vectors are **not**
+high-entropy — they share almost all coordinates:
+```
+arbiter5 (743 vectors, 23 dims):
+  { -1 4 4 4 4 4 3 3 3 3 3 -1 -1 -1 -1 -1 -1 0 0 0 0 0 -1 }
+  { -1 4 4 4 4 3 3 3 3 3 4 -1 -1 -1 -1 -1 -1 0 0 0 0 -1 -1 }
+  { -1 4 4 4 4 -1 3 3 3 3 4 -1 -1 -1 -1 -1 0 0 0 0 0 0 -1 }
+  ...
+arbiter6 (2439 vectors, 27 dims): identical pattern, scaled up
+  { -1 4 4 4 4 4 4 3 3 3 3 3 3 -1 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 -1 }
+  { -1 4 4 4 4 4 3 3 3 3 3 3 4 -1 -1 -1 -1 -1 -1 -1 0 0 0 0 0 -1 -1 }
+  ...
+```
+Position 0 is always `-1`; a fixed block of positions is always `-1`; a fixed block is always
+`0`; and the entire combinatorial blowup lives in a comparatively small run of positions taking
+values in `{-1, 3, 4}` — literally "which subset of the (per-client) slots holds which value",
+scaling combinatorially with the number of clients. Every element of the antichain differs from
+its neighbors in only a handful of coordinates.
+
+⇒ This is exactly the precondition for a symbolic (BDD) downset representation to pay off:
+the blowup is *representational* (many near-duplicate/permutation-symmetric vectors an explicit
+list must enumerate one-by-one) rather than *information-theoretically* large. A BDD over
+bit-blasted counters, with a variable ordering that interleaves per-client bits, should be able
+to share the common prefix/suffix and the combinatorial middle section in a canonical,
+polynomial-size structure — something no explicit-antichain backend (`vector`/`kdtree`/
+`skiplist`/`cst`) can do by construction, and consistent with Finding 1 (backend swaps don't
+help: the problem is representation *class*, not implementation quality within that class).
+Promotes backlog item 4 (data-structure tuning) from "low ceiling" to "worth a targeted
+prototype, scoped to this cluster" — see updated backlog below.
+
+#### Finding 3c — SPIKE RESULT: the BDD-compactness hypothesis (3b) is REFUTED (measured)
+
+Built a standalone BuDDy spike (`/tmp/bddspike.cc`): encode the downward closure of the actual
+dumped arbiter antichains as a BDD (per-coord counter bit-blasted, code = value+1), report
+`bdd_nodecount` under coord-major ordering with dynamic sifting (near-optimal order). Ran on the
+converged/last antichain for arbiter n = 3,4,5,6:
+
+```
+ n  antichain_vectors  sifted_BDD_nodes  nodes/vecs   vec_ratio  node_ratio
+ 3        45                211            4.69          -           -
+ 4       189                645            3.41         4.20        3.06
+ 5       743               2111            2.84         3.93        3.27
+ 6      2439               6257            2.57         3.28        2.96
+```
+
+- **Both grow exponentially at the same base (~3×/client).** `log(nodes)` is linear in `n` with
+  a constant step (~1.1) — the exponential signature; a fit gives nodes ≈ 3.1ⁿ, vectors ≈ 3.3ⁿ.
+- The BDD is a **constant ~2.5× *more* nodes** than the explicit antichain, and `nodes/vecs`
+  (4.69→3.41→2.84→2.57) is converging to a constant (~2), **not** heading below 1.
+- ⇒ A BDD gives **no sub-exponential representation** of this winning region. The "shared
+  prefix/suffix + combinatorial middle" structure (3b) does **not** linearize under any variable
+  ordering (coord-major and bit-plane both sift to ~the same size); the middle section is
+  genuinely ~3ⁿ bits of information (which client holds which of ~3 counter values, under the
+  mutual-exclusion + fairness constraints). **A BDD solver would push the OOM wall out by only a
+  constant factor, not break the exponential.** Finding 3b's optimism was wrong once measured.
+
+**Important caveat — a TIME win may still exist even without a size win.** The arbiter timeouts
+are driven by the antichain's **quadratic** meet-closure ops (`union_with`/`intersect_with` ~
+O(f²·d) on f in the thousands), whereas symbolic BDD CPre (`and`/`or`/`exist`) is ~linear in BDD
+size. So at the *same* ~3ⁿ representation size, per-step cost could drop from ~O(9ⁿ) to ~O(3ⁿ) —
+potentially rescuing the mid-size arbiters (arbiter7/8) that currently time out on operation
+cost, though not the large ones (memory still ~3ⁿ). Confirming this requires building the actual
+symbolic CPre (the expensive half of the spike) — **decision pending** (node-count half done).
+
+Spike reusable at `/tmp/bddspike.cc` (+ dumped antichains `/tmp/arb{3,4,5,6}.vecs`).
+
 ## Implementation: `realizability_simplifier` + `Any` default (this round)
 
 Both changes landed in `src/solver/create_automaton.hh` and `src/solver/solver_invoker.cc`,
@@ -377,17 +447,32 @@ Ranked by (est. instances × confidence / effort):
    translation ~free, both unreal strategies become cheap to race anyway, further reducing the
    incentive to drop one.)
 4. **Antichain-size explosion in the fixpoint** (Finding 3, realizable arbiter family, n≥6
-   clients) — ❌ **K-schedule tuning ruled out (Finding 3a, tested not assumed):** forcing single
-   fixed K values shows K=5 alone already exceeds 30s on `arbiter6` (K=4 is cheap but
-   insufficient) — no `DEFAULT_KMIN/KINC` schedule can dodge this, the *minimal sufficient* K
-   is itself intractable. This is the **largest remaining gap** but is a genuine algorithmic
-   scaling wall, not a tuning problem. Remaining untested ideas (higher effort, uncertain
-   payoff): backward boolean-state saturation (only *forward* saturation is implemented, see
-   `TODO` in `forward_saturation.hh:21`; backward could shrink the counting dimensions further),
-   alternative input-picker order, or exploiting arbiter symmetry/decomposition structurally
-   (`DECOMPOSE_SPEC` doesn't apply since clients share the resource / aren't independent).
-   Data-structure swaps do **not** help here (Finding 1).
-5. **Data-structure tuning** — low ceiling (≤5 instances); deprioritize as a *coverage* lever.
+   clients) — the **largest remaining gap** (most of the 121/192 loss still open after item 1).
+   ❌ **K-schedule tuning ruled out (Finding 3a, tested not assumed):** forcing single fixed K
+   values shows K=5 alone already exceeds 30s on `arbiter6` (K=4 is cheap but insufficient) —
+   no `DEFAULT_KMIN/KINC` schedule can dodge this, the *minimal sufficient* K is itself
+   intractable. Two concrete, ranked candidates now that Finding 3b shows *why* it's this bad:
+   - **(a) Symbolic/BDD downset backend, scoped to this cluster** — ⭐ promoted this round.
+     Finding 3b confirms the antichain's blowup is combinatorial/permutation-symmetric (near-
+     duplicate vectors differing in a handful of coordinates), not information-theoretically
+     large — exactly the case a BDD (bit-blasted counters, interleaved per-client variable
+     order) can share compactly, unlike any explicit-list backend (Finding 1). Acacia already
+     links a mature BDD engine (BuDDy via Spot) so the plumbing exists; the historical
+     `sharingtree_backed`/`sharingtrie_backed` attempt underperformed on the *whole suite*, but
+     that's an average-case argument this cluster-specific case is exempt from (measure
+     narrowly against arbiter5/6/7/8 + prioritized/round_robin_arbiter, not the full suite).
+     Not yet prototyped.
+   - **(b) Backward boolean-state saturation** — cheaper, complementary, do first. Only
+     *forward* saturation is implemented (`TODO` in `forward_saturation.hh:21`); the backward
+     variant (ac+ paper) finds strictly more boundable states, shrinking the counting
+     *dimensions* directly — reduces every vector's width before the antichain even forms,
+     independent of representation. Much smaller change than (a); worth trying regardless of
+     what a BDD prototype shows.
+   - Lower-priority/uncertain: alternative input-picker order; exploiting arbiter
+     symmetry/decomposition structurally (`DECOMPOSE_SPEC` doesn't apply since clients share
+     the resource / aren't independent).
+5. **Data-structure tuning (general, whole-suite)** — low ceiling (≤5 instances); deprioritize
+   as a general *coverage* lever. Superseded for the arbiter cluster specifically by item 4a.
 
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and

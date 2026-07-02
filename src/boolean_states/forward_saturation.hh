@@ -1,25 +1,23 @@
 #pragma once
 
-#include "utils/todo.hh"
 #include "utils/verbose.hh"
 
 #include <cassert>
 #include <spot/twa/acc.hh>
 
 // So-called "Optimization 1" in ac+.
-// A state is bounded if it cannot carry a counter value of at least k.
-/* Note: In ac+, this is computed backward:
-   while (has_changed)
-    for dst in aut
-      c_dst = c[dst]
-      for src s.t. (src, dst) in aut
-        t = min (nb_accepting_states + 1, c[src] + (accepting(src)?1:0))
-        if (t > c_dst) { c_dst = t; has_changed = true}
-      c[dst] = c_dst;
-   ... and uses a copy of c in each loop.  Not sure why. */
-
-TODO ("Implement backward saturation.");
-TODO ("Use Spot's SCC implementation.");
+// A state is bounded if it cannot carry a counter value of at least k, i.e. it
+// is NOT reachable from a Büchi state lying in a nontrivial SCC.
+//
+// The forward computation below is already EXACT for this definition: by
+// pigeonhole, c[q] can exceed nb_accepting_states only if some path to q
+// repeats an accepting state, i.e. q is reachable from an accepting state on a
+// cycle (a nontrivial SCC). Verified equal to a spot::scc_info-based
+// computation on the arbiter3..6 family (unbounded = 7/9/11/13 both ways), so a
+// "backward" or SCC-based reformulation would mark the identical set and buy
+// nothing (earlier TODOs to that effect dropped). Note this is distinct from
+// the `elevator` aut-preprocessor, which collapses whole determined SCCs
+// (safe/losing traps) rather than narrowing counter widths.
 
 namespace boolean_states {
   namespace detail {
