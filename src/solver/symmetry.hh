@@ -36,8 +36,25 @@
 
 namespace symmetry {
 
+  // Metadata for one indexed AP family (e.g. "r_" -> {0: ap(r_0), 1: ap(r_1), ...}).
+  struct family {
+      bool is_input;
+      std::map<long, spot::formula> idx2ap;
+  };
+
   struct group {
-      std::vector<std::vector<unsigned>> gens;  // each is a state permutation phi
+      std::vector<std::vector<unsigned>> gens;  // verified state-permutation generators
+      std::vector<long> indices;                // client indices, sorted (|indices| = n)
+      // True iff EVERY pairwise transposition on `indices` was verified, i.e. the
+      // verified group is (at least) the full symmetric group Sym(indices). This
+      // is the case the Young-subgroup orbit-of-input algorithm (DIAGNOSIS.md,
+      // "Symmetry reduction: design + status") applies to; a strict subgroup
+      // needs general orbit/stabilizer bookkeeping, not yet implemented, so
+      // callers should treat `full_symmetric=false` as "no exploitable symmetry"
+      // even if `gens` is nonempty.
+      bool full_symmetric = false;
+      std::map<std::string, family> families;    // AP family metadata, keyed by prefix
+
       bool empty () const { return gens.empty (); }
       size_t size () const { return gens.size (); }
   };
@@ -200,8 +217,6 @@ namespace symmetry {
     auto dict = aut->get_dict ();
 
     // Group indexed APs into families (prefix), tagged input/output.
-    struct fam { std::map<long, spot::formula> idx2ap; bool is_input; };
-    std::map<std::string, fam> families;
     for (const spot::formula& ap : aut->ap ()) {
       const int v = dict->varnum (ap);
       const bdd vbdd = bdd_ithvar (v);
@@ -209,61 +224,75 @@ namespace symmetry {
       std::string prefix; long idx;
       if (not detail::parse_indexed (ap.ap_name (), prefix, idx))
         continue;
-      auto& f = families[prefix];
+      auto& f = G.families[prefix];
       f.is_input = is_in;
       f.idx2ap[idx] = ap;
     }
-    if (families.empty ())
+    if (G.families.empty ())
       return G;
 
     // Client indices present in EVERY family.
     std::map<long, int> cnt;
-    for (auto& [pfx, f] : families)
+    for (auto& [pfx, f] : G.families)
       for (auto& [idx, ap] : f.idx2ap)
         ++cnt[idx];
-    std::vector<long> indices;
     for (auto& [idx, c] : cnt)
-      if (c == (int) families.size ())
-        indices.push_back (idx);
-    std::sort (indices.begin (), indices.end ());
-    if (indices.size () < 2)
+      if (c == (int) G.families.size ())
+        G.indices.push_back (idx);
+    std::sort (G.indices.begin (), G.indices.end ());
+    if (G.indices.size () < 2)
       return G;
 
     const auto oeA = detail::out_edges (aut);
     const auto sigA = detail::signatures (aut, oeA);
     const unsigned n = aut->num_states ();
+    const unsigned init = aut->get_init_state_number ();
 
-    for (size_t ia = 0; ia < indices.size (); ++ia)
-      for (size_t ib = ia + 1; ib < indices.size (); ++ib) {
-        const long a = indices[ia], b = indices[ib];
+    unsigned verified_pairs = 0;
+    const unsigned total_pairs =
+        (unsigned) (G.indices.size () * (G.indices.size () - 1) / 2);
+
+    for (size_t ia = 0; ia < G.indices.size (); ++ia)
+      for (size_t ib = ia + 1; ib < G.indices.size (); ++ib) {
+        const long a = G.indices[ia], b = G.indices[ib];
         // Build B = pi(A) with the transposition a<->b across all families.
         spot::relabeling_map rm;
-        for (auto& [pfx, f] : families) {
+        for (auto& [pfx, f] : G.families) {
           rm[f.idx2ap.at (a)] = f.idx2ap.at (b);
           rm[f.idx2ap.at (b)] = f.idx2ap.at (a);
         }
         auto B = spot::make_twa_graph (aut, spot::twa::prop_set::all ());
         spot::relabel_here (B, &rm);
-        if (B->get_init_state_number () != aut->get_init_state_number ())
+        if (B->get_init_state_number () != init)
           continue;  // shouldn't happen; be safe
 
         const auto oeB = detail::out_edges (B);
         const auto sigB = detail::signatures (B, oeB);
 
         detail::iso_finder f (n, oeA, oeB, sigA, sigB);
-        // Anchor: init -> init.
-        const unsigned init = aut->get_init_state_number ();
         if (sigA[init] != sigB[init] or not f.consistent (init, init))
           continue;
         f.assign (init, init);
-        if (f.search ())
+        if (f.search ()) {
           G.gens.push_back (f.phi);
+          ++verified_pairs;
+        }
       }
 
-    verb_do (1, vout << "[symmetry] verified " << G.gens.size () << "/"
-                     << (indices.size () * (indices.size () - 1) / 2)
-                     << " client-transposition generators over " << indices.size ()
-                     << " clients, aut has " << n << " states\n");
+    // The Young-subgroup orbit-of-input algorithm requires the verified
+    // generators to cover EVERY pairwise transposition on `indices`, i.e. the
+    // verified group to be (at least) the full symmetric group. A partial set
+    // of transpositions generates a strict, structurally different subgroup
+    // (e.g. adjacent transpositions alone generate all of S_n too, but a
+    // sparser set may not) -- so require ALL pairs verified, not just enough
+    // to generate S_n abstractly, to keep the orbit-of-input reasoning
+    // (Stab(i) = Young subgroup) directly applicable without further proof.
+    G.full_symmetric = (verified_pairs == total_pairs) and total_pairs > 0;
+
+    verb_do (1, vout << "[symmetry] verified " << G.gens.size () << "/" << total_pairs
+                     << " client-transposition generators over " << G.indices.size ()
+                     << " clients (full_symmetric=" << G.full_symmetric
+                     << "), aut has " << n << " states\n");
     return G;
   }
 

@@ -392,7 +392,9 @@ namespace {
         // [DIAG] symmetry detection on the final game automaton (verbose only).
         verb_do (1, {
           auto sg = symmetry::detect (aut, all_inputs, all_outputs);
-          vout << "[symmetry] generators=" << sg.size () << std::endl;
+          vout << "[symmetry] generators=" << sg.size ()
+               << " full_symmetric=" << sg.full_symmetric
+               << " clients=" << sg.indices.size () << std::endl;
         });
 
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
