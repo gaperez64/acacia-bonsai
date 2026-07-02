@@ -37,6 +37,10 @@ namespace symmetry {
       unsigned num_states = 0;
       unsigned num_clients = 0;   // n
       unsigned num_blocks = 0;    // B
+      // slot_to_index[slot] is the AP-level client index represented by this
+      // slot. Representative input letters and realized counter-vectors must
+      // agree on this identity.
+      std::vector<long> slot_to_index;
       std::vector<int> block_of;  // block_of[state] in [0,B), or -1 if shared
       std::vector<int> slot_of;   // slot_of[state] in [0,n), or -1 if shared
       std::vector<std::vector<unsigned>> block_slot_state;  // [block][slot] -> automaton state
@@ -128,6 +132,39 @@ namespace symmetry {
       for (unsigned k2 = k + 1; k2 < n; ++k2)
         if (ref_sig[k] == ref_sig[k2])
           return std::nullopt;  // reference block itself isn't cleanly separated: bail
+
+    // Match each recovered slot to the AP-level client index with the same
+    // stabilizer signature. Because symmetry::detect stores generators in
+    // sorted transposition-pair order when full_symmetric=true, the AP-side
+    // signature is reconstructible from G.indices alone.
+    std::vector<std::pair<long, long>> gen_pairs;
+    for (size_t ia = 0; ia < G.indices.size (); ++ia)
+      for (size_t ib = ia + 1; ib < G.indices.size (); ++ib)
+        gen_pairs.push_back ({G.indices[ia], G.indices[ib]});
+    if (gen_pairs.size () != G.gens.size ())
+      return std::nullopt;
+
+    L.slot_to_index.assign (n, -1);
+    for (unsigned k = 0; k < n; ++k) {
+      int matched_slot = -1;
+      for (unsigned slot = 0; slot < n; ++slot) {
+        std::vector<bool> idx_sig (G.gens.size ());
+        for (size_t g = 0; g < gen_pairs.size (); ++g) {
+          auto [a, b] = gen_pairs[g];
+          idx_sig[g] = (G.indices[k] != a and G.indices[k] != b);
+        }
+        if (idx_sig == ref_sig[slot]) {
+          matched_slot = (int) slot;
+          break;
+        }
+      }
+      if (matched_slot == -1 or L.slot_to_index[matched_slot] != -1)
+        return std::nullopt;
+      L.slot_to_index[matched_slot] = G.indices[k];
+    }
+    for (unsigned slot = 0; slot < n; ++slot)
+      if (L.slot_to_index[slot] == -1)
+        return std::nullopt;
 
     L.block_slot_state.assign (L.num_blocks, std::vector<unsigned> (n, (unsigned) -1));
     for (unsigned b = 0; b < L.num_blocks; ++b) {

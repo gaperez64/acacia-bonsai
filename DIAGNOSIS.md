@@ -730,6 +730,288 @@ No decision-vs-synthesis correctness issue is expected to be introduced by the p
 existing precomputer's data shape, an off-by-one in state/AP indexing) — exactly the kind of
 mistake the oracle gate in step 4 is designed to catch before anything is trusted.
 
+### Resume update — first live-pipeline wiring pass
+
+Implemented an **opt-in, decision-only** live symmetry path behind
+`ACACIA_ENABLE_SYMMETRIC_SOLVER` (default `0`, so normal builds are untouched):
+
+- `symmetric_blocks.hh`: `block_layout` now carries `slot_to_index`, matching recovered
+  automaton-state slots back to AP-level client indices via the same transposition stabilizer
+  signatures. This is required so representative input BDDs and realized counter-vectors talk
+  about the same physical client slots. Synthetic block/conversion tests were updated.
+- `symmetric_k_bounded_safety_aut.hh`: new experimental solver header. It builds
+  representative input letters from indexed input-family count distributions plus shared-input
+  assignments, enumerates compatible raw output letters using the existing `actioners::standard`
+  `PreHat` machinery, converts raw predecessors back to count-vectors, and runs the count-vector
+  GFP loop. Synthesis is deliberately unsupported; `solve_game.cc` falls back to the existing
+  solver unless the symmetric path proves a win.
+- Added explicit work caps (`ACACIA_SYMMETRY_MAX_PRE_WORK`, `ACACIA_SYMMETRY_MAX_TI_SIZE`) so the
+  opt-in prototype yields to the classic solver instead of monopolizing a run when `T_i`
+  construction grows too large.
+
+Validation so far:
+
+- Default `build_rs` (symmetry path disabled) compiles.
+- Opt-in `build_sym` (`-DACACIA_ENABLE_SYMMETRIC_SOLVER=1`, tests enabled) compiles.
+- `meson test -C build_sym --suite symmetry`: 4/4 pass.
+- Smoke: `arbiter_pb_5_pe_`, `-r -v -K 8`, detects full `S_5`, builds 6 representative input
+  orbits, then hits the `T_i` work cap and falls back; the classic solver returns `REALIZABLE`
+  and the wrapper passes.
+
+Important result: the remaining integration bottleneck is **not** symmetry detection, block
+layout, representative input construction, or dispatch. It is the **inner `T_i = union_o
+PreHat(f,i,o)` construction**: even with only one representative input orbit, raw output
+enumeration plus candidate split realizations can create enough count-vector candidates that the
+current exact incremental union/intersect path is too expensive. The next useful step is to
+apply a Young-subgroup/orbit argument to outputs too, or otherwise make `T_i` construction
+non-enumerative/strongly capped without losing all precision. Raising the caps merely recreates
+the earlier timeout; it is not a real fix.
+
+### Resume update — `union_o` output-orbit spike
+
+Implemented a default-off benchmark/diagnostic spike behind
+`ACACIA_SYMMETRY_UNIONO_SPIKE` (requires `ACACIA_ENABLE_SYMMETRIC_SOLVER=1`). It does **not**
+change the solver result path: the live solver still computes `T_i` from the raw compatible
+outputs and falls back exactly as before. The spike computes, logs, and unit-tests the
+stabilizer-aware output representatives that a later optimized `union_o` can use.
+
+- For each representative input, the code derives the Young-subgroup buckets induced by the
+  input count-vector, then enumerates one output assignment per orbit instead of every raw
+  output letter.
+- The diagnostic reports raw letters/actions, representative letters/actions, estimated raw vs.
+  representative work, a small hybrid action budget, and the size/cap status of the
+  representative-only `T_i`.
+- Added `symmetric-output-orbits-test`, covering the output-representative count formula,
+  cap behavior, and concrete representative assignments.
+
+Validation:
+
+- `meson compile -C build_rs` passes with the symmetry path disabled.
+- `meson compile -C build_sym` passes with
+  `-DACACIA_ENABLE_SYMMETRIC_SOLVER=1 -DACACIA_SYMMETRY_UNIONO_SPIKE=1`.
+- `meson test -C build_sym --suite symmetry`: 4/4 pass.
+- Smoke: `arbiter_pb_5_pe_`, `AB_OPTS='-r -v -K 8'`, returns `REALIZABLE` through the classic
+  fallback and emits the expected compression signal:
+  ```
+  raw_actions=32 rep_actions=6  raw_work=128  rep_work=24  rep_Ti=6
+  raw_actions=32 rep_actions=10 raw_work=768  rep_work=240 rep_Ti=5
+  raw_actions=32 rep_actions=12 raw_work=1152 rep_work=432 rep_Ti=8
+  ```
+
+This confirmed the right next implementation target: replace or augment raw output enumeration
+inside `union_o` with the stabilizer-aware representatives, plus a bounded fallback path for
+precision.
+
+### Resume update — optimized representative `union_o` first pass
+
+Implemented the first behavioral use of the output representatives. The optimization is still
+only reachable through the opt-in symmetric solver (`ACACIA_ENABLE_SYMMETRIC_SOLVER=1`), and is
+controlled separately by `ACACIA_SYMMETRY_OPTIMIZE_UNIONO` (default `1`). Normal builds still
+compile with the symmetric solver disabled by default.
+
+- Representative output actions are now built when either `ACACIA_SYMMETRY_OPTIMIZE_UNIONO` or
+  `ACACIA_SYMMETRY_UNIONO_SPIKE` is enabled.
+- In the symmetric solve loop, `union_o` uses `meta->output_rep_actions` whenever the
+  stabilizer-aware representatives are complete. If representative generation is unavailable or
+  capped, it keeps the old raw-output path. If the representative pre step itself exceeds the
+  work/Ti caps, the quotient solver returns `nullopt` and the classic solver fallback runs.
+- Spike diagnostics now reuse the representative `T_i` they compute for logging, so a spike
+  build no longer runs the same representative pre step twice.
+- Added an aggregate quotient-pre budget, `ACACIA_SYMMETRY_MAX_TOTAL_PRE_WORK` (default `8192`,
+  `0` disables it), so a sequence of individually permitted representative steps cannot consume
+  an entire benchmark timeout before fallback.
+
+Validation:
+
+- Default `build_rs`: compiles.
+- `build_sym` with `-DACACIA_ENABLE_SYMMETRIC_SOLVER=1`: compiles and
+  `meson test -C build_sym --suite symmetry` passes 4/4.
+- `build_sym` with
+  `-DACACIA_ENABLE_SYMMETRIC_SOLVER=1 -DACACIA_SYMMETRY_UNIONO_SPIKE=1`: compiles and
+  `meson test -C build_sym --suite symmetry` passes 4/4.
+- Smoke with default caps (`arbiter_pb_5_pe_`, `AB_OPTS='-r -v -K 8'`) now actually uses
+  representative outputs: it gets past the previous raw cap, increments from K=2 to K=5, then
+  falls back at loop 3 when representative work reaches `rep_work=1344` (the comparable raw work
+  would be `raw_work=3584`). The classic fallback returns `REALIZABLE` and the wrapper passes.
+- Before adding the aggregate budget, deliberately raising the per-step caps to
+  `ACACIA_SYMMETRY_MAX_PRE_WORK=8192` and `ACACIA_SYMMETRY_MAX_TI_SIZE=512` let the quotient loop
+  advance to K=8/loop 6, but the smoke then hit a 90s timeout. With the aggregate budget in
+  place, the same larger-cap experiment falls back at K=8/loop 4 (`aggregate quotient work budget
+  exceeded`) and the wrapper still returns `PASS`. So simply raising per-step caps is ruled out,
+  and the aggregate cap is the guard that keeps larger experiments bounded.
+
+Current conclusion: output-orbit representatives are soundly detected and used, and they remove
+the first raw `union_o` wall. The remaining blocker is no longer raw output enumeration alone;
+once the cap is raised, the quotient fixpoint/intersection work at higher K can still run too
+long. The next implementation target should be a stronger `T_i`/intersection approximation, not
+a larger per-step cap.
+
+### Resume update — stronger count-vector union/intersection pass
+
+Implemented the next implementation pass in the count-vector downset operations used by the
+opt-in symmetric solver:
+
+- `union_with` now builds the maximal antichain incrementally with `add_maximal` instead of
+  materializing all candidates and then pairwise-filtering the whole vector. This keeps
+  intermediate `T_i`/`f` sets smaller during representative `union_o` construction.
+- `intersect_with` now explores a bounded set of concrete Northwest-corner transportation plans
+  rather than a single ordering. It includes total-value ascending/descending orientations plus
+  per-client-coordinate orientations, capped by `ACACIA_SYMMETRY_INTERSECT_MAX_PLANS` (default
+  `20`). Each candidate is still induced by a valid explicit transportation plan, so the
+  operation remains a sound under-approximation: it may miss valid maximal meets, but it does
+  not invent invalid ones.
+
+Validation:
+
+- `build_sym` with `-DACACIA_ENABLE_SYMMETRIC_SOLVER=1 -DACACIA_SYMMETRY_UNIONO_SPIKE=1`
+  compiles.
+- `meson test -C build_sym --suite symmetry`: 4/4 pass.
+- `symmetric-downset-test`: 0 unsound points in 400 single-pair trials and 80
+  multi-element-antichain trials; informational single-pair completeness improved to 524/685
+  brute-force points found.
+- Default/non-symmetric `build_rs` still compiles.
+- A no-spike opt-in build (`-DACACIA_ENABLE_SYMMETRIC_SOLVER=1`) also compiles and passes the
+  symmetry suite.
+
+Smoke result on `arbiter_pb_5_pe_`, `AB_OPTS='-r -v -K 8'`: the quotient path still falls back
+to the classic solver and the wrapper returns `REALIZABLE`, but the strengthened approximation
+shrinks the last reached loop before fallback (`f` at loop 3 drops from 11 to 8). It now caps at
+`rep_work=1056` versus comparable `raw_work=2816`. Temporarily raising
+`ACACIA_SYMMETRY_MAX_PRE_WORK` to `1536` advanced to loop 4 (`f=22`) before fallback, but made
+the smoke slower; the default cap should stay conservative for benchmarking.
+
+Current conclusion after this pass: the optimized `union_o` path is benchmarkable and guarded
+well enough to compare against mainline. It is not yet expected to dominate the arbiter cluster,
+because the quotient still often yields to the classic solver before proving the instance.
+
+### Benchmark checkpoint — targeted TLSF arbiter subset vs `origin/master`
+
+Built two release/LTO benchmark binaries with comparable `best_decomp_mona` settings:
+
+- Baseline: `origin/master` at `593a9d8e`, built in `/tmp/acacia-master-bench/build_bench_main`.
+- Branch: `optimize-vs-ltlsynt`, built in `build_bench_sym` with
+  `-DACACIA_ENABLE_SYMMETRIC_SOLVER=1` and diagnostic spike logging off.
+
+Benchmark runner: `benchmarking/run-tlsf.py`, translating TLSF via syfco before timing acacia,
+running each solver invocation in its own process group, and killing the whole process group on
+timeout. The benchmark job itself was wrapped in a user-systemd cgroup after the OOM concern:
+`MemoryMax=8G`, `MemorySwapMax=0`, with acacia's own `-l 4` also passed. Flags were
+`-r -K 8`, timeout `30s`, selected TLSF corpus list `/tmp/tlsf-arbiter-target.list`.
+
+Result on 18 selected arbiter-family instances:
+
+```
+mainline: 11/18 solved, total solver time 210.965s
+branch:   11/18 solved, total solver time 211.562s
+verdict/result mismatches: 0
+```
+
+Hard timeout set was unchanged: `arbiter_pb_{6,7,8}`, `abcg_arbiter_pb_{3,4,5}`, and
+`round_robin_arbiter_pb_4` timed out on both binaries. Small arbiter cases show the expected
+prototype overhead before the quotient path either proves or falls back (`arbiter_pb_3`: 0.007s
+mainline vs 0.162s branch; `arbiter_pb_4`: 0.028s vs 0.307s; `arbiter_pb_5`: 0.568s vs 0.702s).
+
+Conclusion: the optimized representative-`union_o` path is now benchmarkable and bounded, but it
+does **not** yet improve coverage or time against mainline on the target TLSF arbiter subset.
+The next implementation pass needs to reduce quotient overhead/fallback at K>=5 before a broader
+full-corpus benchmark is likely to show a positive signal.
+
+### Resume update — dense/SIMD symmetry downset adapter
+
+Implemented the first serious SIMD-aware infrastructure pass for the symmetry pipeline, reusing
+the existing `posets` submodule where it matches the semantics:
+
+- Added `symmetric_dense_downset.hh`, a dense adapter over the existing sparse
+  `symmetric_downset::count_vector` representation. It interns client type-tuples into compact
+  type IDs, stores shared/count arrays in `posets::utils::vector_mm` for aligned storage, uses
+  `std::experimental::simd` for shared-coordinate dominance/min, and precomputes type-dominance
+  and type-meet tables per operation.
+- The live quotient loop now routes `union_with` and `intersect_with` through the dense adapter
+  behind `ACACIA_SYMMETRY_DENSE_SIMD` (default: same as `ACACIA_ENABLE_SYMMETRIC_SOLVER`). The
+  external solver state remains the sparse count-vector type for conservative integration.
+- Stock `posets::Downset::intersect_with` is deliberately **not** used for the symmetry path:
+  symmetry intersection is a bounded set of transportation-plan candidates, not a single
+  componentwise meet. `posets` is used for aligned/SIMD storage, not for owning the orbit
+  semantics.
+- Added profiling hooks behind `ACACIA_SYMMETRY_PROFILE=1`, with buckets for detection, block
+  layout, representative I/O setup, output representative construction, actioner build,
+  `pre_for_input`, realization, action apply, count conversion, dominance/union, intersection,
+  K-increment union, and total quotient solve time. The profiling build was compile-checked and
+  `build_sym` was restored afterward.
+- Added `ACACIA_SYMMETRY_USE_POSETS_UNION` as a default-off gate for future experiments with a
+  posets-backed exact union adapter. It is not used in the live path yet because the custom dense
+  antichain currently preserves the symmetry-specific control we need.
+
+Validation:
+
+- New `symmetric-dense-downset-test` passes: dense dominance and union are exact-equivalent to
+  the sparse implementation; dense intersection passed 300/300 brute-force soundness checks.
+- `meson compile -C build_sym`: passes with dense path and spike diagnostics.
+- `meson test -C build_sym --suite symmetry`: 5/5 pass.
+- No-spike opt-in build (`-DACACIA_ENABLE_SYMMETRIC_SOLVER=1`): compiles and the symmetry suite
+  passes 5/5.
+- Default/non-symmetric `build_rs`: compiles.
+- Arbiter smoke (`arbiter_pb_5_pe_`, `AB_OPTS='-r -v -K 8'`) still falls back safely and returns
+  `REALIZABLE`; dense path preserves the same loop/fallback shape as before this pass.
+
+Current limitation: `pre_for_input` still realizes raw vectors and converts them back to sparse
+count-vectors before dense union/intersection. The next performance pass should attack that
+conversion/action-apply boundary: cache realized raw buffers and then, if profiling confirms it,
+compile direct dense histogram predecessor transforms that bypass raw vectors entirely.
+
+### Resume update — dense intersection hot-path pass
+
+Profiled the dense/SIMD quotient path on the bounded `arbiter_pb_5_pe_` smoke
+(`AB_OPTS='-r -v -K 8'`, profile build). Before this pass the quotient setup was no longer
+detection-bound:
+
+```
+pre_for_input=121.386ms/12
+realize=0.932814ms/300
+action_apply=3.16466ms/2776
+count_conversion=7.19576ms/2776
+dominance_union=109.095ms/2776
+intersect=355.593ms/11
+solve_total=479.85ms/1
+```
+
+Implemented the measured-positive pieces:
+
+- Dense intersection now pre-sorts each dense vector's support once per merge plan instead of
+  re-sorting inside every `(u, v, plan)` northwest-corner merge.
+- Dense intersection now uses cheap pair pruning: if an existing intersection candidate already
+  dominates either side of a pair, all pair-generated meets are dominated and skipped; if the pair
+  is comparable, it inserts the smaller side directly rather than enumerating every merge plan.
+- `candidate_split_keys()` now returns a static array of function pointers instead of rebuilding a
+  `std::vector<std::function<...>>` on every pre call.
+- Added `realize_into()` and reused the raw vector/type-expansion scratch in `pre_for_input`.
+- `to_count_vector()` now reuses one client-type tuple buffer per conversion instead of allocating
+  a tuple per client slot.
+
+Final retained profile run on the same smoke:
+
+```
+pre_for_input=125.534ms/12
+realize=0.741139ms/300
+action_apply=3.36189ms/2776
+count_conversion=6.28494ms/2776
+dominance_union=114.091ms/2776
+intersect=293.759ms/11
+solve_total=423.153ms/1
+```
+
+The immediate post-intersection run was faster (`intersect=264.915ms`, `solve_total=376.372ms`),
+so the single-smoke timing has visible noise, but the intersection bucket consistently moved down
+from the original ~356ms. A batched `pre_for_input` union experiment was tried and backed out: it
+reduced dominance-union calls from 2776 to 89, but the dense batch rebuilds were heavier and
+regressed total quotient time (`solve_total=394.721ms` vs. 376.372ms on the comparable run).
+
+Validation:
+
+- `meson compile -C build_sym`: passes with profiling enabled during the pass.
+- `meson test -C build_sym --suite symmetry`: 5/5 pass.
+- Arbiter smoke still falls back safely and returns `REALIZABLE`.
+
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
   **orphans the workers** (seen: 7 stray procs at 99% CPU for 12 min), which silently inflates

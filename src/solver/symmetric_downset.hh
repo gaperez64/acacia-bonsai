@@ -36,7 +36,12 @@
 #include <numeric>
 #include <optional>
 #include <queue>
+#include <utility>
 #include <vector>
+
+#ifndef ACACIA_SYMMETRY_INTERSECT_MAX_PLANS
+# define ACACIA_SYMMETRY_INTERSECT_MAX_PLANS 20
+#endif
 
 namespace symmetric_downset {
 
@@ -48,6 +53,8 @@ namespace symmetric_downset {
   struct count_vector {
       std::vector<value_t> shared;
       std::map<type_t, long> counts;      // only types with count > 0
+
+      bool operator== (const count_vector&) const = default;
 
       long total_clients () const {
         long s = 0;
@@ -167,32 +174,34 @@ namespace symmetric_downset {
     return false;
   }
 
+  inline void add_maximal (std::vector<count_vector>& antichain, count_vector candidate) {
+    if (contains (antichain, candidate))
+      return;
+    antichain.erase (
+        std::remove_if (antichain.begin (), antichain.end (),
+                        [&] (const count_vector& existing) {
+                          return dominates (candidate, existing);
+                        }),
+        antichain.end ());
+    antichain.push_back (std::move (candidate));
+  }
+
   // Exact: antichain of maximal elements of A union B (pairwise dominance filter).
   inline std::vector<count_vector> union_with (const std::vector<count_vector>& A,
                                                const std::vector<count_vector>& B) {
-    std::vector<count_vector> all;
-    all.reserve (A.size () + B.size ());
-    all.insert (all.end (), A.begin (), A.end ());
-    all.insert (all.end (), B.begin (), B.end ());
     std::vector<count_vector> res;
-    for (size_t i = 0; i < all.size (); ++i) {
-      bool dominated = false;
-      for (size_t j = 0; j < all.size (); ++j) {
-        if (i == j) continue;
-        // Strict-or-equal domination by a DIFFERENT element drops i; ties broken
-        // by index to keep exactly one copy of duplicates.
-        if (dominates (all[j], all[i]) and (j < i or not dominates (all[i], all[j]))) {
-          dominated = true;
-          break;
-        }
-      }
-      if (not dominated)
-        res.push_back (all[i]);
-    }
+    res.reserve (A.size () + B.size ());
+    for (const auto& a : A)
+      add_maximal (res, a);
+    for (const auto& b : B)
+      add_maximal (res, b);
     return res;
   }
 
   namespace detail {
+    using key_fn = std::function<long (const type_t&)>;
+    using merge_plan = std::pair<key_fn, key_fn>;
+
     // Northwest-corner transportation plan between two type-multisets, using
     // the given per-side sort keys. ALWAYS a valid plan (respects supply and
     // demand exactly), size O(|u_counts|+|v_counts|), by construction -- so
@@ -234,6 +243,39 @@ namespace symmetric_downset {
       for (value_t v : t) s += v;
       return s;
     }
+
+    inline void append_plan_orientations (std::vector<merge_plan>& plans,
+                                          const key_fn& pos, const key_fn& neg) {
+      if (plans.size () < ACACIA_SYMMETRY_INTERSECT_MAX_PLANS)
+        plans.push_back ({pos, pos});
+      if (plans.size () < ACACIA_SYMMETRY_INTERSECT_MAX_PLANS)
+        plans.push_back ({neg, neg});
+      if (plans.size () < ACACIA_SYMMETRY_INTERSECT_MAX_PLANS)
+        plans.push_back ({pos, neg});
+      if (plans.size () < ACACIA_SYMMETRY_INTERSECT_MAX_PLANS)
+        plans.push_back ({neg, pos});
+    }
+
+    inline std::vector<merge_plan> intersect_merge_plans (size_t dimensions) {
+      const key_fn pos_sum = [] (const type_t& t) { return type_sum (t); };
+      const key_fn neg_sum = [] (const type_t& t) { return -type_sum (t); };
+
+      std::vector<merge_plan> plans;
+      plans.reserve (ACACIA_SYMMETRY_INTERSECT_MAX_PLANS);
+      append_plan_orientations (plans, pos_sum, neg_sum);
+      for (size_t b = 0; b < dimensions and
+                         plans.size () < ACACIA_SYMMETRY_INTERSECT_MAX_PLANS;
+           ++b) {
+        const key_fn pos_coord = [b] (const type_t& t) {
+          return b < t.size () ? (long) t[b] : 0L;
+        };
+        const key_fn neg_coord = [b] (const type_t& t) {
+          return b < t.size () ? -(long) t[b] : 0L;
+        };
+        append_plan_orientations (plans, pos_coord, neg_coord);
+      }
+      return plans;
+    }
   }  // namespace detail
 
   // Capped, SOUND under-approximation of downset(A) ∩ downset(B)'s canonical
@@ -247,9 +289,20 @@ namespace symmetric_downset {
   // acacia's greatest-fixed-point iteration (see DIAGNOSIS.md).
   inline std::vector<count_vector> intersect_with (const std::vector<count_vector>& A,
                                                     const std::vector<count_vector>& B) {
-    using key_fn = std::function<long (const type_t&)>;
-    const key_fn pos_sum = [] (const type_t& t) { return detail::type_sum (t); };
-    const key_fn neg_sum = [] (const type_t& t) { return -detail::type_sum (t); };
+    size_t dimensions = 0;
+    for (const auto& u : A)
+      if (not u.counts.empty ()) {
+        dimensions = u.counts.begin ()->first.size ();
+        break;
+      }
+    if (dimensions == 0) {
+      for (const auto& v : B)
+        if (not v.counts.empty ()) {
+          dimensions = v.counts.begin ()->first.size ();
+          break;
+        }
+    }
+    const auto plans = detail::intersect_merge_plans (dimensions);
 
     std::vector<count_vector> candidates;
     for (const auto& u : A) {
@@ -260,16 +313,16 @@ namespace symmetric_downset {
           base.shared[i] = std::min (u.shared[i], v.shared[i]);
 
         // Four Northwest-corner orientations: (descending,descending),
-        // (ascending,ascending), (descending,ascending), (ascending,descending).
-        for (const key_fn& ku : {pos_sum, neg_sum})
-          for (const key_fn& kv : {pos_sum, neg_sum}) {
-            count_vector cand = base;
-            cand.counts = detail::nw_corner_merge (u.counts, v.counts, ku, kv);
-            candidates.push_back (std::move (cand));
-          }
+        // (ascending,ascending), (descending,ascending), (ascending,descending),
+        // plus a bounded number of per-block coordinate orientations.
+        for (const auto& [ku, kv] : plans) {
+          count_vector cand = base;
+          cand.counts = detail::nw_corner_merge (u.counts, v.counts, ku, kv);
+          add_maximal (candidates, std::move (cand));
+        }
       }
     }
-    return union_with (candidates, {});  // dedupe + keep only maximal
+    return candidates;
   }
 
 }  // namespace symmetric_downset

@@ -26,6 +26,8 @@ namespace {
     L.num_states = (unsigned) (S + B * n);
     L.num_clients = (unsigned) n;
     L.num_blocks = (unsigned) B;
+    for (int slot = 0; slot < n; ++slot)
+      L.slot_to_index.push_back (slot);
     L.block_of.assign (L.num_states, -1);
     L.slot_of.assign (L.num_states, -1);
     L.block_slot_state.assign (B, std::vector<unsigned> (n));

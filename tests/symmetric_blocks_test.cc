@@ -74,6 +74,17 @@ int main () {
         if (layout.num_blocks != (unsigned) B) { ok = false; std::cerr << "  wrong num_blocks\n"; }
         if (layout.num_clients != (unsigned) n) { ok = false; std::cerr << "  wrong num_clients\n"; }
         if (layout.shared_states.size () != (size_t) S) { ok = false; std::cerr << "  wrong shared count\n"; }
+        if (layout.slot_to_index.size () != (size_t) n) {
+          ok = false;
+          std::cerr << "  wrong slot_to_index size\n";
+        }
+        for (int slot = 0; slot < n and ok; ++slot) {
+          if (layout.slot_to_index[slot] != slot) {
+            ok = false;
+            std::cerr << "  slot " << slot << ": expected AP index " << slot
+                      << " got " << layout.slot_to_index[slot] << "\n";
+          }
+        }
 
         for (int blk = 0; blk < B and ok; ++blk)
           for (int slot = 0; slot < n and ok; ++slot) {
