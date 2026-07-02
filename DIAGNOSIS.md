@@ -502,6 +502,74 @@ Ranked by (est. instances × confidence / effort):
 5. **Data-structure tuning (general, whole-suite)** — low ceiling (≤5 instances); deprioritize
    as a general *coverage* lever. Superseded for the arbiter cluster specifically by item 4a.
 
+## Symmetry reduction: design + status (item 4a, in progress)
+
+### Detection (done, committed — `src/solver/symmetry.hh`)
+
+Detects and **structurally verifies** client-index-transposition automorphisms `(φ,π)` of the
+game automaton: `π` permutes a pair of client indices across every indexed AP family (`r_i`,
+`g_i`, …, found via `atomic_prop_collect`/name parsing); `φ` is a state permutation found by a
+backtracking label-preserving isomorphism search `A → π(A)` (`π(A)` built via
+`spot::relabel_here`) — necessary because the game automaton is **nondeterministic**, so a
+simple forward-propagation match (my first attempt) fails. Every generator returned is verified;
+unverified candidates are silently dropped (conservative — fewer symmetries is always sound).
+Confirmed on the real automata: **full S_n detected on arbiter3..6** (3/3, 6/6, 10/10, 15/15
+generators), matching the offline Finding-3d spike.
+
+### The soundness subtlety that rules out a naive implementation
+
+`f` (the antichain) is Φ-invariant **only** at the safe set and at full-CPre fixpoints — **never
+mid-sweep**. acacia's `solve()` processes one input at a time (`k_bounded_safety_aut.hh`,
+`cpre_inplace`); after processing an arbitrary subset of inputs, `f` is invariant only under the
+subgroup fixing that subset, not full Φ. Canonicalizing a non-Φ-invariant `f` mid-loop is
+**unsound both directions** (∪-canonicalizing over-approximates → false REAL; ∩-canonicalizing
+under-approximates → false UNREAL). So "canonicalize `f` wherever convenient" is wrong; the
+reduction has to be built into the CPre step itself.
+
+### The sound, efficient algorithm (derived, not yet implemented)
+
+**Lemma.** For Φ-invariant `f` and any single input `i`, let `T_i := ∪_o PreHat(f,i,o)` (union
+over all outputs compatible with `i`). Then **`T_i` is `Stab(i)`-invariant** (the subgroup of Φ
+fixing `i` setwise): for `ψ ∈ Stab(i)`, equivariance of `PreHat` gives
+`ψ(T_i) = ∪_o PreHat(ψf,ψi,ψo) = ∪_o PreHat(f,i,ψo) = ∪_{o'} PreHat(f,i,o') = T_i` (the last step
+because `ψ` permutes the output alphabet bijectively, so `{ψo}` ranges over all `o` again).
+
+**Consequence.** For any set of coset representatives `{φ_1,…,φ_r}` of `Φ/Stab(i)` (r =
+orbit-size of `i`, NOT |Φ|), `f_new := f ∩ ⋂_k φ_k(T_i)` is **Φ-invariant** (a standard fact:
+intersecting `H`-invariant `X` over `G/H` coset representatives is `G`-invariant regardless of
+representative choice), and equals the result of applying `CPre_{i'}` for **every** `i'` in the
+orbit of `i`, batched. So: **compute `T_i` once per input-orbit representative, canonicalize it
+under `Stab(i)`, then combine across the (polynomially-many) coset representatives** — never
+materialize the full orbit or the full input alphabet.
+
+**Concrete structure for arbiters.** Φ = S_n acting on client indices; for a boolean input `i`
+(which clients currently request), `Stab(i)` is the **Young subgroup**
+`S_{|requesting|} × S_{|not requesting|}` (permute requesting clients among themselves, and
+non-requesting clients among themselves). Its cosets ↔ *which* subset of clients requests, for a
+**fixed request-count** — so **input-orbits = "how many clients request"**, collapsing `2ⁿ`
+raw inputs to **`n+1` orbit representatives**. `f` stays a canonical-rep antichain (polynomial,
+per Finding 3d) throughout; only the existing per-`(i,o)` `PreHat`/actioner computation
+(`actioners/standard.hh:93-121`, unchanged) needs to run once per orbit rep instead of once per
+raw input.
+
+**Scope of what's NOT yet handled**: this derivation folds symmetry into the **outer input
+loop** only; the **inner union over outputs** (`T_i` itself) is still computed by full
+enumeration over raw outputs compatible with `i` (as today). A parallel Young-subgroup argument
+likely applies there too (outputs also have client structure) but is deliberately deferred —
+implementing outer-loop-only first is lower-risk and still likely a major win (the outer loop is
+what iterates until fixpoint; collapsing `2ⁿ`→`n+1` representative inputs is the dominant
+saving). `-s` synthesis needs a canonical-representative tie-break to reconstruct a concrete
+(symmetry-*breaking*) strategy from the quotient — deferred to after the decision-only path is
+validated (task tracked separately; see plan file).
+
+### Status
+Detection: done, committed (`57684512`). Quotient CPre (the algorithm above): design derived,
+not yet implemented. Next: extend `symmetry::group` to retain the AP-level client-index pair
+per generator (needed to build BDD variable-swap pairs for permuting raw input/output letters,
+not just automaton states), then implement the Young-subgroup orbit-of-input enumeration and
+wire the batched `CPre` into `k_bounded_safety_aut::cpre_inplace`, gated by a flag, validated
+against the full ltlsynt-oracle corpus before any performance claim.
+
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
   **orphans the workers** (seen: 7 stray procs at 99% CPU for 12 min), which silently inflates
