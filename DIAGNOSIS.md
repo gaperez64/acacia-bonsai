@@ -1012,6 +1012,44 @@ Validation:
 - `meson test -C build_sym --suite symmetry`: 5/5 pass.
 - Arbiter smoke still falls back safely and returns `REALIZABLE`.
 
+### Classic-solver profile baseline
+
+Added compile-gated profile buckets for the classic K-bounded safety loop behind
+`ACACIA_SYMMETRY_PROFILE=1`. These buckets do not change the default build. The
+`classic_backward_apply` bucket is nested inside `classic_pre_build`, so its time is also counted
+in the enclosing pre-build bucket.
+
+Profile build: release `build_rs` flags plus `-DACACIA_SYMMETRY_PROFILE=1`, with tests enabled.
+Small AMBA decomposed arbiter runs:
+
+```
+amba_decomposed_arbiter_2:
+  classic_backward_apply=0.02868ms/556
+  classic_pre_build=0.048576ms/12
+  classic_intersect=0.005845ms/12
+  classic_solve_total=0.4256ms/1
+
+amba_decomposed_arbiter_3:
+  classic_backward_apply=0.219761ms/4832
+  classic_pre_build=0.356619ms/19
+  classic_intersect=0.052639ms/19
+  classic_solve_total=2.13078ms/1
+
+amba_decomposed_arbiter_4:
+  classic_backward_apply=2.98338ms/56528
+  classic_pre_build=4.39123ms/33
+  classic_intersect=0.843042ms/33
+  classic_solve_total=19.2115ms/1
+```
+
+Validation:
+
+- `meson compile -C build_rs`: passes with `ACACIA_SYMMETRY_PROFILE` disabled.
+- `meson setup build_prof ... -DACACIA_SYMMETRY_PROFILE=1`: configured with release flags and
+  tests enabled.
+- `meson compile -C build_prof`: passes.
+- Profile Meson tests for `ab/amba_decomposed_arbiter_{2,3,4}.ltl`: all pass.
+
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
   **orphans the workers** (seen: 7 stray procs at 99% CPU for 12 min), which silently inflates

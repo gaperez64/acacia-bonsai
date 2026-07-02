@@ -23,6 +23,10 @@ namespace acacia::solver_detail::symmetric::profile {
     intersect,
     k_increment_union,
     solve_total,
+    classic_backward_apply,
+    classic_pre_build,
+    classic_intersect,
+    classic_solve_total,
     count
   };
 
@@ -43,6 +47,10 @@ namespace acacia::solver_detail::symmetric::profile {
       case bucket::intersect: return "intersect";
       case bucket::k_increment_union: return "k_increment_union";
       case bucket::solve_total: return "solve_total";
+      case bucket::classic_backward_apply: return "classic_backward_apply";
+      case bucket::classic_pre_build: return "classic_pre_build";
+      case bucket::classic_intersect: return "classic_intersect";
+      case bucket::classic_solve_total: return "classic_solve_total";
       case bucket::count: break;
     }
     return "unknown";
