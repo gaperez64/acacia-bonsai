@@ -627,14 +627,71 @@ matching (swap flow between two compatible type-pairs) to catch nearby maximal o
 transportation plan, so validity (hence soundness) is trivial to assert per-candidate; only
 *completeness* (finding literally every maximal merge) is sacrificed.
 
+### Assembling the full CPre step: computing `T_i` for a representative input (derived, resolves the third gap)
+
+Processing a representative input `i` (e.g. "exactly `k` of `n` clients request", `Stab(i) ≅
+S_k × S_{n-k}`, a Young subgroup) needs `T_i = ∪_o PreHat(f,i,o)`, computed from `f`'s
+**Φ-canonical** (unsplit) antichain. The subtlety: since `f`'s count-vectors don't record which
+of their equal-typed clients are "the same physical client" from one orbit member to another,
+and `PreHat` under a *fixed* (non-symmetric) `i` is only `Stab(i)`-equivariant (not
+Φ-equivariant, per the derivation above), **different ways of assigning `u`'s counted clients
+into `i`'s REQ/NREQ groups can give genuinely different `PreHat` results** — there is no single
+canonical "the" split.
+
+**Resolution: reuse the exact soundness trick that already validated `intersect_with`.**
+`T_i` only ever appears as `f ∩ T_i`. If `T_i` is under-approximated (a genuine subset of the
+true `T_i`, never containing a spurious point), then `f ∩ T_i_approx ⊆ f ∩ T_i_true` — the same
+safe direction. So `T_i` is built from a **bounded set of candidate REQ/NREQ split
+assignments** per canonical `u` (e.g. sorted-highest-dominance-rank-to-REQ,
+sorted-lowest-to-REQ, a couple more — the same "few sort-key orientations" idea as
+`intersect_with`'s Northwest-corner candidates): realize each split as one concrete raw vector,
+apply the **existing, unmodified** `actioners::standard::apply` (reusing the already-correct
+`PreHat` machinery verbatim — no new game semantics to re-derive or re-validate), convert the
+raw result back to a Φ-canonical count-vector via `to_count`, and union everything. Every
+candidate is a genuinely achievable raw point by construction, so soundness is structural, not
+tested-in, exactly like `intersect_with`.
+
+**Getting back to Φ-canonical form is free, not lossy.** The REQ/NREQ tag used while building a
+candidate is bookkeeping tied to *which representative input* was used — it is never part of
+the raw vector itself. So merging same-type counts back together (forgetting which were "REQ"
+for this step) is an **exact, lossless projection** back to the unsplit canonical form, not an
+approximation — `to_count` applied directly to the raw `PreHat` result already produces this
+form with no separate "split representation" data structure needed at all.
+
+**The resulting algorithm** (per representative input `i`, replacing one `cpre_inplace` call):
+```
+T_i_candidates = {}
+for u in f.antichain:
+  for split in bounded_candidate_splits(u):        # e.g. 2-4 sorted-rank orientations
+    raw_u = realize (u, block_layout, split)         # one concrete raw vector for this split
+    for o in outputs compatible with i:
+      raw_result = actioner.apply (raw_u, action_for (i, o), backward)   # EXISTING, unmodified
+      T_i_candidates.push (to_count (raw_result, block_layout))
+T_i = union_with (T_i_candidates, {})                # exact, already validated
+f_new = intersect_with (f, T_i)                       # capped-sound, already validated
+```
+repeated over the representative inputs (one per input-orbit, e.g. `n+1` "how many clients
+request" categories for the arbiter family) until none change `f` — mirroring `solve()`'s
+existing outer loop shape, just over representatives instead of raw inputs and count-vector `f`
+instead of a raw antichain. Sound by composing two already-validated under-approximation
+arguments (candidate-split `T_i` construction, `intersect_with`); the overall GFP
+monotone-shrinking argument from `intersect_with`'s derivation extends unchanged: `f` can only
+end up smaller than the true fixpoint, so any DEFINITIVE verdict reached remains sound.
+
 ### Status
-Detection: done, committed (`57684512`, `146ee391`). Domination algebra (canonical count-vector
-form, exact `contains` via max-flow, exact `union_with`, capped-sound `intersect_with`): derived
-above, not yet implemented. Next: implement `contains`/`union_with` as a small, independently
-unit-testable module (cross-checked against brute-force enumeration on tiny synthetic cases)
-before wiring anything into the live solver; then the capped `intersect_with`; then wire into
-`k_bounded_safety_aut::cpre_inplace` behind a flag; then the full ltlsynt-oracle corpus gate
-before any performance claim.
+Detection (`symmetry.hh`): done, committed (`57684512`, `146ee391`), verified on real
+nondeterministic arbiter automata (full S_n, 3/6/10/15 generators for n=3..6). Domination algebra
+(`symmetric_downset.hh`: exact `contains` via max-flow, exact `union_with`, capped-sound
+`intersect_with`): done, committed (`74ab4708`, `be2b1a12`), validated with thousands of
+randomized cross-checks against brute-force enumeration, 0 unsound points across all trials
+(single-pair and multi-element-antichain shapes). Block/slot extraction (`symmetric_blocks.hh`):
+done, committed (`45205be5`), validated synthetically (24 configurations) AND against the real
+arbiter automata (blocks=4, shared=3 for n=3..6, matching the independent offline
+column-signature analysis exactly). Full-CPre-step assembly (this section): derived, not yet
+implemented. Next: the raw-vector <-> count-vector conversion layer (`realize`/`to_count` using
+`block_layout`), the bounded candidate-split enumeration, then the symmetric solve loop (mirroring
+`k_bounded_safety_aut::solve`) behind a flag, then the full ltlsynt-oracle corpus gate before any
+performance claim.
 
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
