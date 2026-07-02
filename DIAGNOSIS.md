@@ -679,6 +679,7 @@ monotone-shrinking argument from `intersect_with`'s derivation extends unchanged
 end up smaller than the true fixpoint, so any DEFINITIVE verdict reached remains sound.
 
 ### Status
+
 Detection (`symmetry.hh`): done, committed (`57684512`, `146ee391`), verified on real
 nondeterministic arbiter automata (full S_n, 3/6/10/15 generators for n=3..6). Domination algebra
 (`symmetric_downset.hh`: exact `contains` via max-flow, exact `union_with`, capped-sound
@@ -687,11 +688,47 @@ randomized cross-checks against brute-force enumeration, 0 unsound points across
 (single-pair and multi-element-antichain shapes). Block/slot extraction (`symmetric_blocks.hh`):
 done, committed (`45205be5`), validated synthetically (24 configurations) AND against the real
 arbiter automata (blocks=4, shared=3 for n=3..6, matching the independent offline
-column-signature analysis exactly). Full-CPre-step assembly (this section): derived, not yet
-implemented. Next: the raw-vector <-> count-vector conversion layer (`realize`/`to_count` using
-`block_layout`), the bounded candidate-split enumeration, then the symmetric solve loop (mirroring
-`k_bounded_safety_aut::solve`) behind a flag, then the full ltlsynt-oracle corpus gate before any
-performance claim.
+column-signature analysis exactly). Raw-vector <-> count-vector conversion
+(`symmetric_conversion.hh`: `to_count_vector`/`realize`/`candidate_split_keys`): done, committed
+(`06e48b37`), validated with round-trip tests over synthetic layouts. All four pieces pass
+together under `meson test --suite symmetry`.
+
+**Algorithm design is complete end-to-end** (detection → domination algebra → block extraction →
+conversion → the full-CPre-step assembly derived just above). Every layer is independently unit
+tested. **What's NOT yet done is wiring this into acacia's live pipeline** — a different kind of
+work (acacia-specific `ios_precomputer`/`actioner` plumbing, not further algorithm derivation),
+checkpointed here deliberately rather than rushed. Concretely, resuming needs:
+
+1. **Representative-input + compatible-output construction.** For each of the ~`n+1` orbit
+   representatives ("exactly `k` of `n` clients request"), build one concrete raw input `bdd`
+   from `group.families`/`group.indices` (e.g. via `bdd_ithvar` on the first `k` client APs'
+   variables), and find its compatible outputs. Reuse patterns from
+   `src/ios_precomputers/standard.hh` (`get_next_letter`/output enumeration) and
+   `src/actioners/standard.hh` (`compute_action_vec`) — read these fully before implementing;
+   they weren't explored in this session beyond the backward-step formula already reused
+   verbatim in the design (`actioners/standard.hh:93-121`).
+2. **The symmetric solve loop**, mirroring `k_bounded_safety_aut::solve()`/`cpre_inplace()`
+   shape but over: `f` as a `vector<symmetric_downset::count_vector>` (not a `SetOfStates`),
+   representative inputs instead of picked raw inputs, and the `T_i` construction algorithm
+   derived above (bounded candidate splits × `actioner.apply`, unioned, then
+   `intersect_with`). Needs the K-increment step re-derived for count-vector form (shift
+   counting-type coordinates by `kinc` — should be a direct map over `count_vector::counts`
+   keys, no new algebra) and the `contains(f, init)` convergence test (`symmetric_downset::
+   contains`, already exact).
+3. **Dispatch**: in `solve_game` (`src/solver/solve_game.cc`), call `symmetry::detect` +
+   `compute_block_layout` on the automaton; if a usable layout is found (and, for now, no
+   `-s`/synthesis requested — strategy lifting is Phase 2, not attempted), route to the new
+   symmetric solver; otherwise fall through unchanged to the existing antichain path. Gate
+   behind a flag so the default build is untouched.
+4. **Validation** (mandatory, same gate that validated every fix this session): the full
+   ltlsynt-oracle corpus (`tests/ltl/{realizable,unrealizable}`, zero wrong-polarity required)
+   before any performance claim; then arbiter-cluster timing (`arbiter5..10`,
+   `prioritized_/simple_/round_robin_arbiter*`) to measure the actual win.
+
+No decision-vs-synthesis correctness issue is expected to be introduced by the plumbing itself
+(the algebra is already sound); the risk in this phase is purely mechanical (misreading an
+existing precomputer's data shape, an off-by-one in state/AP indexing) — exactly the kind of
+mistake the oracle gate in step 4 is designed to catch before anything is trusted.
 
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
