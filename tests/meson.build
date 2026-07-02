@@ -103,6 +103,14 @@ test ('symmetric-output-orbits',
       symmetric_output_orbits_test,
       suite : ['unit', 'symmetry'])
 
+equivariant_pre_test = executable ('equivariant-pre-test',
+                                   'equivariant_pre_test.cc',
+                                   include_directories : inc,
+                                   dependencies : [spot_dep, bddx_dep, posets_dep])
+test ('equivariant-pre',
+      equivariant_pre_test,
+      suite : ['unit', 'symmetry'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 
