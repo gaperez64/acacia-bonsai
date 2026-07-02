@@ -71,6 +71,14 @@ test ('symmetric-downset',
       symmetric_downset_test,
       suite : ['unit', 'symmetry'])
 
+symmetric_blocks_test = executable ('symmetric-blocks-test',
+                                    'symmetric_blocks_test.cc',
+                                    include_directories : inc,
+                                    dependencies : [spot_dep, bddx_dep])
+test ('symmetric-blocks',
+      symmetric_blocks_test,
+      suite : ['unit', 'symmetry'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 

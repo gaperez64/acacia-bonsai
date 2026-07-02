@@ -6,6 +6,7 @@
 #include "solver/create_automaton.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
+#include "solver/symmetric_blocks.hh"
 #include "solver/symmetry.hh"
 #include "utils/push_aps.hh"
 #include "utils/typeinfo.hh"
@@ -395,6 +396,13 @@ namespace {
           vout << "[symmetry] generators=" << sg.size ()
                << " full_symmetric=" << sg.full_symmetric
                << " clients=" << sg.indices.size () << std::endl;
+          auto layout = symmetry::compute_block_layout (sg, aut->num_states ());
+          if (layout.has_value ())
+            vout << "[symmetry] block_layout: blocks=" << layout->num_blocks
+                 << " clients=" << layout->num_clients
+                 << " shared=" << layout->shared_states.size () << std::endl;
+          else
+            vout << "[symmetry] block_layout: none (declined)\n";
         });
 
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
