@@ -562,13 +562,79 @@ saving). `-s` synthesis needs a canonical-representative tie-break to reconstruc
 (symmetry-*breaking*) strategy from the quotient — deferred to after the decision-only path is
 validated (task tracked separately; see plan file).
 
+### Correction: naive coset-intersection over Φ/Stab(i) is NOT efficient
+
+Re-deriving the batched-orbit step more carefully: `⋂_{coset reps of Φ/Stab(i)} φ_k(T_i)` is
+algebraically equal to `⋂_{φ∈Φ} φ(T_i) = {v : orbit(v) ⊆ T_i}` (since `T_i` is `Stab(i)`-
+invariant, redundant terms within a coset collapse). But testing "is `v`'s **entire** orbit
+contained in `T_i`" by enumerating the orbit is exactly as expensive as the raw antichain —
+orbit sizes are multinomial coefficients, back to ~3ⁿ. **The coset-representative idea by
+itself does not avoid the blowup**; it needs to be paired with a genuinely compact
+representation and a non-enumerative domination test (below).
+
+### The actual polynomial representation: canonical count-vectors
+
+Since the per-client block width `B` and the current bound `K` are fixed (don't grow with `n`),
+there are only `r ≤ (K+2)^B` distinct **client value-tuple types**. Represent a canonical
+(orbit-representative) vector not as `n` per-client values but as a **count-vector**
+`c : types → ℕ`, `Σ c(t) = n` — "how many clients have each type". Two raw vectors are
+S_n-orbit-equivalent **iff** they have the same count-vector (a standard multiset-orbit fact).
+This is the actual polynomial representation (consistent with the measured linear orbit growth,
+Finding 3d) — `r` is a small constant, so `c` has boundedly-many nonzero-capacity coordinates
+regardless of `n`. Shared/singleton coordinates (outside all client blocks; Φ fixes them
+pointwise) are carried alongside unchanged, ordinary coordinate-wise.
+
+### Domination between count-vectors: exact, via max-flow (derived, provably polynomial)
+
+`contains(T, v)` — is count-vector `v` dominated by some count-vector `u` in antichain `T`? —
+reduces to **bipartite transportation feasibility**: left nodes = `u`'s types with supply
+`u(t)`, right nodes = `v`'s types with demand `v(t')`, edge `(t,t')` allowed iff `t ≥ t'`
+pointwise on the (fixed-length) type tuples; feasible iff max-flow = `n`. This is exactly "does
+there exist a per-client pairing (a bijection matching `u`'s realized clients to `v`'s) such
+that every paired client's `u`-value dominates their `v`-value" — the flow decomposition IS the
+pairing. Polynomial in `r` (a constant), independent of `n`. Shared coordinates are AND-ed in
+via a plain pointwise `≥` check.
+
+`union_with` reduces to pairwise all-against-all filtering by the same `contains` test
+(dominated count-vectors dropped) — no merge-enumeration needed, exact, polynomial.
+
+### `intersect_with`: no exact polynomial characterization found — capped, SOUND under-approximation instead
+
+The standard antichain identity `downset(A) ∩ downset(B) = downset({meet(a,b) : a∈A,b∈B})`
+still holds, but for count-vectors the *set of achievable merge outcomes* from pairing two
+type-distributions depends on **which** client-to-client pairing (transportation plan) is
+chosen — unlike `contains` (pure feasibility), `intersect` needs the *maximal achievable*
+merges, i.e. (a bound on) the extreme points of the transportation polytope between the two
+distributions, which is not obviously polynomial in `r` in general (no rearrangement/exchange
+argument found yet that bounds it).
+
+**Resolution (chosen): a capped, honestly-incomplete but SOUND under-approximation.**
+Key soundness fact: since acacia's fixpoint is a **greatest-fixed-point** (monotonically
+shrinking) Kleene iteration, an `intersect` that only ever **omits** some valid merge outcomes
+(never fabricates an invalid one) yields a result that is a **subset** of the exact intersection
+at every step. Subset-of-true means: any point that survives to the end (in particular `init`)
+is genuinely in the true winning region, so **every reached REALIZABLE/UNREALIZABLE verdict
+stays sound** — the only cost is precision (the algorithm may spuriously shrink `f` too far and
+fall back to `UNKNOWN`/an unnecessary K-increment where an exact computation would have
+concluded). This is the same conservative posture already used elsewhere in acacia (e.g. the
+empty-automaton special case in `solver_invoker.cc`), just applied to a new operation.
+
+Concrete capped algorithm per pair `(c_u ∈ f.antichain, c_v ∈ f1i.antichain)`: (1) one **greedy
+dominance-order matching** between the two type-distributions (always yields one valid, checkable
+candidate merge, `O(r log r)`); (2) a **bounded number of local flow-swap perturbations** of that
+matching (swap flow between two compatible type-pairs) to catch nearby maximal outcomes,
+`O(r²)` additional candidates. Every candidate is constructed as an explicit, checkable
+transportation plan, so validity (hence soundness) is trivial to assert per-candidate; only
+*completeness* (finding literally every maximal merge) is sacrificed.
+
 ### Status
-Detection: done, committed (`57684512`). Quotient CPre (the algorithm above): design derived,
-not yet implemented. Next: extend `symmetry::group` to retain the AP-level client-index pair
-per generator (needed to build BDD variable-swap pairs for permuting raw input/output letters,
-not just automaton states), then implement the Young-subgroup orbit-of-input enumeration and
-wire the batched `CPre` into `k_bounded_safety_aut::cpre_inplace`, gated by a flag, validated
-against the full ltlsynt-oracle corpus before any performance claim.
+Detection: done, committed (`57684512`, `146ee391`). Domination algebra (canonical count-vector
+form, exact `contains` via max-flow, exact `union_with`, capped-sound `intersect_with`): derived
+above, not yet implemented. Next: implement `contains`/`union_with` as a small, independently
+unit-testable module (cross-checked against brute-force enumeration on tiny synthetic cases)
+before wiring anything into the live solver; then the capped `intersect_with`; then wire into
+`k_bounded_safety_aut::cpre_inplace` behind a flag; then the full ltlsynt-oracle corpus gate
+before any performance claim.
 
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
