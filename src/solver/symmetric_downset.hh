@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <map>
 #include <numeric>
@@ -189,6 +190,86 @@ namespace symmetric_downset {
         res.push_back (all[i]);
     }
     return res;
+  }
+
+  namespace detail {
+    // Northwest-corner transportation plan between two type-multisets, using
+    // the given per-side sort keys. ALWAYS a valid plan (respects supply and
+    // demand exactly), size O(|u_counts|+|v_counts|), by construction -- so
+    // whatever merge count-vector it induces is a genuinely achievable point.
+    // Different key choices explore different (generally non-dominated w.r.t.
+    // each other) corners of the transportation polytope.
+    template <typename KeyU, typename KeyV>
+    inline std::map<type_t, long> nw_corner_merge (const std::map<type_t, long>& u_counts,
+                                                    const std::map<type_t, long>& v_counts,
+                                                    KeyU key_u, KeyV key_v) {
+      std::vector<std::pair<type_t, long>> U (u_counts.begin (), u_counts.end ());
+      std::vector<std::pair<type_t, long>> V (v_counts.begin (), v_counts.end ());
+      std::sort (U.begin (), U.end (),
+                 [&] (auto& a, auto& b) { return key_u (a.first) > key_u (b.first); });
+      std::sort (V.begin (), V.end (),
+                 [&] (auto& a, auto& b) { return key_v (a.first) > key_v (b.first); });
+
+      std::map<type_t, long> merged;
+      size_t i = 0, j = 0;
+      long rem_u = (i < U.size ()) ? U[i].second : 0;
+      long rem_v = (j < V.size ()) ? V[j].second : 0;
+      while (i < U.size () and j < V.size ()) {
+        const long take = std::min (rem_u, rem_v);
+        if (take > 0) {
+          type_t m (U[i].first.size ());
+          for (size_t b = 0; b < m.size (); ++b) m[b] = std::min (U[i].first[b], V[j].first[b]);
+          merged[m] += take;
+        }
+        rem_u -= take;
+        rem_v -= take;
+        if (rem_u == 0) { ++i; if (i < U.size ()) rem_u = U[i].second; }
+        if (rem_v == 0) { ++j; if (j < V.size ()) rem_v = V[j].second; }
+      }
+      return merged;
+    }
+
+    inline long type_sum (const type_t& t) {
+      long s = 0;
+      for (value_t v : t) s += v;
+      return s;
+    }
+  }  // namespace detail
+
+  // Capped, SOUND under-approximation of downset(A) ∩ downset(B)'s canonical
+  // antichain: for each pair (u,v), generate a bounded set of candidate
+  // merges via Northwest-corner transportation plans under a few different
+  // sort-key orientations (each one individually a valid achievable point by
+  // construction), then keep only the maximal ones. May miss some maximal
+  // achievable merges (no known polynomial characterization of ALL of them --
+  // see DIAGNOSIS.md); never fabricates an invalid one, so this can only make
+  // the result SMALLER than the true intersection, never larger -- sound for
+  // acacia's greatest-fixed-point iteration (see DIAGNOSIS.md).
+  inline std::vector<count_vector> intersect_with (const std::vector<count_vector>& A,
+                                                    const std::vector<count_vector>& B) {
+    using key_fn = std::function<long (const type_t&)>;
+    const key_fn pos_sum = [] (const type_t& t) { return detail::type_sum (t); };
+    const key_fn neg_sum = [] (const type_t& t) { return -detail::type_sum (t); };
+
+    std::vector<count_vector> candidates;
+    for (const auto& u : A) {
+      for (const auto& v : B) {
+        count_vector base;
+        base.shared.resize (u.shared.size ());
+        for (size_t i = 0; i < u.shared.size (); ++i)
+          base.shared[i] = std::min (u.shared[i], v.shared[i]);
+
+        // Four Northwest-corner orientations: (descending,descending),
+        // (ascending,ascending), (descending,ascending), (ascending,descending).
+        for (const key_fn& ku : {pos_sum, neg_sum})
+          for (const key_fn& kv : {pos_sum, neg_sum}) {
+            count_vector cand = base;
+            cand.counts = detail::nw_corner_merge (u.counts, v.counts, ku, kv);
+            candidates.push_back (std::move (cand));
+          }
+      }
+    }
+    return union_with (candidates, {});  // dedupe + keep only maximal
   }
 
 }  // namespace symmetric_downset

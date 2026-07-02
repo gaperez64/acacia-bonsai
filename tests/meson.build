@@ -64,6 +64,13 @@ test ('elevator-preprocessor',
       elevator_preprocessor_test,
       suite : ['unit', 'elevator'])
 
+symmetric_downset_test = executable ('symmetric-downset-test',
+                                     'symmetric_downset_test.cc',
+                                     include_directories : inc)
+test ('symmetric-downset',
+      symmetric_downset_test,
+      suite : ['unit', 'symmetry'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 
