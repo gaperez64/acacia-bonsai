@@ -46,6 +46,7 @@ int main () {
               phi[sb] = sa;
             }
             G.gens.push_back (std::move (phi));
+            G.gen_pairs.push_back ({a, b});
           }
         }
 
@@ -71,6 +72,18 @@ int main () {
           continue;
         }
         auto& layout = *L;
+        if (not generators_match_layout (G, layout)) {
+          ok = false;
+          std::cerr << "  generators do not match recovered layout\n";
+        }
+        if (ok and not G.gens.empty ()) {
+          group bad = G;
+          std::swap (bad.gens[0][0], bad.gens[0][num_states - 1]);
+          if (generators_match_layout (bad, layout)) {
+            ok = false;
+            std::cerr << "  corrupted generator unexpectedly matched layout\n";
+          }
+        }
         if (layout.num_blocks != (unsigned) B) { ok = false; std::cerr << "  wrong num_blocks\n"; }
         if (layout.num_clients != (unsigned) n) { ok = false; std::cerr << "  wrong num_clients\n"; }
         if (layout.shared_states.size () != (size_t) S) { ok = false; std::cerr << "  wrong shared count\n"; }

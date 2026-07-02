@@ -44,6 +44,9 @@ namespace symmetry {
 
   struct group {
       std::vector<std::vector<unsigned>> gens;  // verified state-permutation generators
+      // gen_pairs[t] is the client-index pair (a, b) whose verified transposition
+      // produced gens[t]. Same order and length as gens.
+      std::vector<std::pair<long, long>> gen_pairs;
       std::vector<long> indices;                // client indices, sorted (|indices| = n)
       // True iff EVERY pairwise transposition on `indices` was verified, i.e. the
       // verified group is (at least) the full symmetric group Sym(indices). This
@@ -275,6 +278,7 @@ namespace symmetry {
         f.assign (init, init);
         if (f.search ()) {
           G.gens.push_back (f.phi);
+          G.gen_pairs.push_back ({a, b});
           ++verified_pairs;
         }
       }

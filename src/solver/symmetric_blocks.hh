@@ -186,4 +186,35 @@ namespace symmetry {
     return L;
   }
 
+  // True iff every verified generator is EXACTLY the layout-induced block
+  // transposition for its AP index pair: identity everywhere except
+  // block_slot_state[b][slot(a)] <-> block_slot_state[b][slot(b)] in every
+  // block b. When this holds, the layout-induced map of ANY slot permutation
+  // is an automorphism (composition of verified transpositions), which is
+  // what the equivariant solver needs. Declining here is always sound.
+  inline bool generators_match_layout (const group& G, const block_layout& L) {
+    if (G.gens.size () != G.gen_pairs.size ())
+      return false;
+    std::map<long, unsigned> slot_of_index;
+    for (unsigned s = 0; s < L.slot_to_index.size (); ++s)
+      slot_of_index[L.slot_to_index[s]] = s;
+    for (size_t t = 0; t < G.gens.size (); ++t) {
+      const auto [a, b] = G.gen_pairs[t];
+      auto ita = slot_of_index.find (a), itb = slot_of_index.find (b);
+      if (ita == slot_of_index.end () or itb == slot_of_index.end ())
+        return false;
+      std::vector<unsigned> expected (L.num_states);
+      for (unsigned q = 0; q < L.num_states; ++q) expected[q] = q;
+      for (unsigned blk = 0; blk < L.num_blocks; ++blk) {
+        const unsigned sa = L.block_slot_state[blk][ita->second];
+        const unsigned sb = L.block_slot_state[blk][itb->second];
+        expected[sa] = sb;
+        expected[sb] = sa;
+      }
+      if (G.gens[t] != expected)
+        return false;
+    }
+    return true;
+  }
+
 }  // namespace symmetry
