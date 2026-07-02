@@ -18,6 +18,7 @@
 #include <posets/vectors.hh>
 
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <optional>
 #include <set>
@@ -308,6 +309,141 @@ namespace acacia::solver_detail::equivariant {
       if (not T.contains (m))
         return false;
     return true;
+  }
+
+  template <typename SetOfStates>
+  struct result {
+      bool attempted = false;
+      std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> win;
+  };
+
+  inline bool boolean_side_consistent (const symmetry::group& G) {
+    for (const auto& g : G.gens)
+      for (unsigned q = 0; q < g.size (); ++q)
+        if ((q < posets::vectors::bool_threshold) !=
+            (g[q] < posets::vectors::bool_threshold))
+          return false;
+    return true;
+  }
+
+  inline unsigned orbit_type_count (const std::vector<input_orbit>& orbits) {
+    unsigned count = 0;
+    for (const auto& orbit : orbits)
+      for (unsigned type : orbit.canonical_types)
+        count = std::max (count, type + 1);
+    return count;
+  }
+
+  template <typename SetOfStates>
+  result<SetOfStates> try_solve (spot::twa_graph_ptr aut, VECTOR_ELT_T kmax,
+                                 VECTOR_ELT_T kmin, VECTOR_ELT_T kinc,
+                                 const bdd& all_inputs, const bdd& all_outputs) {
+    using state = typename SetOfStates::value_type;
+    const unsigned num_states = aut->num_states ();
+
+    auto decline = [] (const char* reason) {
+      verb_do (1, vout << "[equivariant] declining: " << reason << "\n");
+      return result<SetOfStates> {false, std::nullopt};
+    };
+
+    if (num_states > ACACIA_EQUIVARIANT_MAX_STATES)
+      return decline ("too many automaton states");
+
+    const auto G = symmetry::detect (aut, all_inputs, all_outputs);
+    if (not G.full_symmetric)
+      return decline ("not a verified full symmetric group");
+
+    auto L = symmetry::compute_block_layout (G, num_states);
+    if (not L.has_value ())
+      return decline ("no usable block layout");
+
+    if (not symmetry::generators_match_layout (G, *L))
+      return decline ("generators do not match block layout");
+
+    if (not boolean_side_consistent (G))
+      return decline ("generator crosses boolean/counting threshold");
+
+    auto orbits = build_orbits (aut, all_inputs, all_outputs, G, *L);
+    if (not orbits.has_value () or orbits->empty ())
+      return decline ("input orbit construction failed or was capped");
+
+    const unsigned num_types = orbit_type_count (*orbits);
+    if (num_types == 0)
+      return decline ("empty input type universe");
+
+    verb_do (1, vout << "[equivariant] trying solver: clients=" << L->num_clients
+                     << " blocks=" << L->num_blocks
+                     << " orbits=" << orbits->size () << "\n");
+
+    std::vector<std::pair<bdd, std::vector<transset>>> empty_itoios;
+    VECTOR_ELT_T k = kmin;
+    auto actioner = actioners::standard<state>::make (aut, empty_itoios, k);
+
+    posets::utils::vector_mm<VECTOR_ELT_T> init (num_states);
+    init.assign (num_states, -1);
+    init[aut->get_init_state_number ()] = 0;
+
+    auto safe_vector = posets::utils::vector_mm<VECTOR_ELT_T> (num_states, k - 1);
+    for (size_t i = posets::vectors::bool_threshold; i < num_states; ++i)
+      safe_vector[i] = 0;
+    SetOfStates f = SetOfStates (state (safe_vector));
+
+    int loopcount = 0;
+    while (true) {
+      ++loopcount;
+      bool changed = false;
+      bool incremented = false;
+      verb_do (1, vout << "[equivariant] Loop# " << loopcount
+                       << ", f of size " << f.size ()
+                       << ", input orbits=" << orbits->size () << "\n");
+
+      for (const auto& orbit : *orbits) {
+        SetOfStates T_rep = compute_T (f, orbit.actions, actioner, num_states);
+        std::vector<unsigned> seq = orbit.canonical_types;
+        size_t members = 0;
+        do {
+          ++members;
+          const auto sigma = match_slots (orbit.canonical_types, seq, num_types);
+          const auto phi = phi_from_sigma (*L, sigma);
+          SetOfStates T_mem = permute (T_rep, phi);
+          if (not subset_of (f, T_mem)) {
+            f.intersect_with (std::move (T_mem));
+            changed = true;
+          }
+        } while (std::next_permutation (seq.begin (), seq.end ()));
+        verb_do (2, vout << "[equivariant] processed orbit with " << members
+                         << " members, f size=" << f.size () << "\n");
+
+        if (not f.contains (state (init))) {
+          if (k >= kmax) {
+            verb_do (1, vout << "[equivariant] initial state out at max K\n");
+            return {true, std::nullopt};
+          }
+          verb_do (1, vout << "[equivariant] Incrementing k from " << (int) k
+                           << " to " << (int) (k + kinc) << "\n");
+          k += kinc;
+          actioner.setK (k);
+          f = f.apply ([&] (const state& s) {
+            auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
+            for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
+              vec[i] = s[i] + kinc;
+            return state (vec);
+          });
+          incremented = true;
+          break;
+        }
+      }
+
+      if (incremented)
+        continue;
+      if (not changed) {
+        verb_do (1, vout << "[equivariant] fixed point reached at K=" << (int) k
+                         << ", f of size " << f.size () << "\n");
+        std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> win;
+        win.emplace (k, std::move (f));
+        return {true, std::move (win)};
+      }
+    }
   }
 
 }  // namespace acacia::solver_detail::equivariant
