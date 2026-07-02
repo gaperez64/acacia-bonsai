@@ -79,6 +79,14 @@ test ('symmetric-blocks',
       symmetric_blocks_test,
       suite : ['unit', 'symmetry'])
 
+symmetric_conversion_test = executable ('symmetric-conversion-test',
+                                        'symmetric_conversion_test.cc',
+                                        include_directories : inc,
+                                        dependencies : [spot_dep, bddx_dep, posets_dep])
+test ('symmetric-conversion',
+      symmetric_conversion_test,
+      suite : ['unit', 'symmetry'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 
