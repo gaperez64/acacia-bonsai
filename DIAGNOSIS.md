@@ -1050,6 +1050,141 @@ Validation:
 - `meson compile -C build_prof`: passes.
 - Profile Meson tests for `ab/amba_decomposed_arbiter_{2,3,4}.ltl`: all pass.
 
+### Equivariant solver validation and benchmark
+
+Implemented the exact equivariant solver behind `ACACIA_ENABLE_EQUIVARIANT_SOLVER=1` and kept
+the default build path unchanged. The implementation declines up front unless symmetry detection
+finds a verified full symmetric group, the induced block layout is available, every generator
+matches the layout transposition exactly, boolean/counting coordinates are not mixed by any
+generator, and all input orbits/output letters fit the structural caps. When those checks pass,
+the solver keeps the classic raw downset representation and computes one exact backward union per
+input-letter orbit representative, then permutes that result across the orbit members.
+
+Full `ab` oracle comparison, run serially (`-j1`) to avoid local memory pressure:
+
+```
+baseline build_e1_rs: 624 rows, 551 OK, 71 TIMEOUT, 2 FAIL3
+equivariant build_eq: 624 rows, 551 OK, 71 TIMEOUT, 2 FAIL3
+ordered outcome mismatches: 0
+multiset missing/extra rows: 0
+shared FAIL3 cases: ltl2dba_R_10.ltl, ltl2dba_R_12.ltl
+```
+
+Saved logs:
+
+- `/tmp/acacia-e1-baseline-testlog.txt`
+- `/tmp/acacia-e1-equivariant-testlog.txt`
+
+AMBA decomposed arbiter behavior check (`AB_OPTS='-v'`, 40s cap, baseline `build_e1_rs` versus
+equivariant `build_eq`):
+
+| n | Baseline | Eq | Eq behavior |
+| ---: | ---: | ---: | --- |
+| 2 | 0.013s | 0.012s | declined: not a verified full symmetric group |
+| 3 | 0.015s | 0.015s | declined: not a verified full symmetric group |
+| 4 | 0.034s | 0.035s | declined: not a verified full symmetric group |
+| 5 | 0.496s | 0.518s | declined: not a verified full symmetric group |
+| 6 | 12.384s | 14.306s | declined: not a verified full symmetric group |
+| 7 | timeout | timeout | timeout |
+| 8 | timeout | timeout | timeout |
+| 10 | timeout | timeout | timeout |
+| 12 | timeout | timeout | timeout |
+
+This is a negative but useful result: the `amba_decomposed_arbiter_*` LTL family does not exercise
+the equivariant solver under the current exact full-symmetry checks. Small instances decline
+before solving; larger instances still hit the cap in both builds. The plan's expected
+"eq solves amba_decomposed" shape was therefore wrong for this corpus slice.
+
+Timing benchmark used a release/LTO pair based on the `self-benchmark.sh` best-powset settings
+(`-DDECOMPOSE_SPEC=0`, `-Ofast -flto -fuse-linker-plugin`, tests disabled). The equivariant build
+adds only `-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1`. Runner:
+`python3 benchmarking/run-tlsf.py`, list `/tmp/acacia-e3-arbiter-tlsf.list`, corpus
+`tests/ltl/realizable/*arbiter*.tlsf`, timeout `30s`, each solver invocation in its own process
+group. No solver processes remained after either run.
+
+Summary:
+
+```
+baseline build_e3_base: 31/67 solved, 36 timeouts, total 1111.974s
+equivariant build_e3_eq: 31/67 solved, 36 timeouts, total 1106.300s
+verdict/result mismatches: 0
+timeout-set changes: 0
+largest solved-instance gain: full_arbiter_5.tlsf, 16.652s -> 11.436s
+largest solved-instance regression: prioritized_arbiter_enc_4.tlsf, 3.422s -> 3.682s
+```
+
+Per-instance table (`R` = realizable, `TO` = timeout):
+
+| Instance | Baseline | Eq | Delta |
+| --- | ---: | ---: | ---: |
+| `amba_decomposed_arbiter_2.tlsf` | R 0.011s | R 0.008s | -0.003s |
+| `amba_decomposed_arbiter_3.tlsf` | R 0.008s | R 0.008s | +0.000s |
+| `amba_decomposed_arbiter_4.tlsf` | R 0.024s | R 0.026s | +0.002s |
+| `amba_decomposed_arbiter_5.tlsf` | R 0.117s | R 0.111s | -0.006s |
+| `amba_decomposed_arbiter_6.tlsf` | R 2.747s | R 2.746s | -0.001s |
+| `amba_decomposed_arbiter_7.tlsf` | TO 30.01s | TO 30.03s | +0.023s |
+| `amba_decomposed_arbiter_8.tlsf` | TO 30.06s | TO 30.06s | -0.002s |
+| `amba_decomposed_arbiter_10.tlsf` | TO 30.06s | TO 30.07s | +0.006s |
+| `amba_decomposed_arbiter_12.tlsf` | TO 30.07s | TO 30.04s | -0.022s |
+| `full_arbiter-3.tlsf` | R 0.008s | R 0.008s | +0.000s |
+| `full_arbiter_2.tlsf` | R 0.006s | R 0.005s | -0.001s |
+| `full_arbiter_3.tlsf` | R 0.007s | R 0.008s | +0.001s |
+| `full_arbiter_4.tlsf` | R 0.070s | R 0.084s | +0.014s |
+| `full_arbiter_5.tlsf` | R 16.652s | R 11.436s | -5.216s |
+| `full_arbiter_6.tlsf` | TO 30.05s | TO 30.04s | -0.001s |
+| `full_arbiter_7.tlsf` | TO 30.06s | TO 30.05s | -0.009s |
+| `full_arbiter_8.tlsf` | TO 30.07s | TO 30.06s | -0.001s |
+| `full_arbiter_10.tlsf` | TO 30.07s | TO 30.05s | -0.015s |
+| `full_arbiter_12.tlsf` | TO 30.07s | TO 30.07s | +0.000s |
+| `full_arbiter_enc_2.tlsf` | R 0.006s | R 0.006s | +0.000s |
+| `full_arbiter_enc_4.tlsf` | R 2.979s | R 2.718s | -0.261s |
+| `full_arbiter_enc_6.tlsf` | TO 30.04s | TO 30.04s | +0.001s |
+| `full_arbiter_enc_8.tlsf` | TO 30.07s | TO 30.09s | +0.018s |
+| `full_arbiter_enc_10.tlsf` | TO 30.05s | TO 30.05s | -0.001s |
+| `full_arbiter_enc_12.tlsf` | TO 30.01s | TO 30.01s | +0.002s |
+| `prioritized_arbiter-3.tlsf` | R 0.006s | R 0.006s | +0.000s |
+| `prioritized_arbiter_1.tlsf` | R 0.005s | R 0.005s | +0.000s |
+| `prioritized_arbiter_2.tlsf` | R 0.005s | R 0.005s | +0.000s |
+| `prioritized_arbiter_3.tlsf` | R 0.005s | R 0.006s | +0.001s |
+| `prioritized_arbiter_4.tlsf` | R 0.006s | R 0.007s | +0.001s |
+| `prioritized_arbiter_5.tlsf` | R 0.032s | R 0.033s | +0.001s |
+| `prioritized_arbiter_6.tlsf` | R 3.981s | R 3.524s | -0.457s |
+| `prioritized_arbiter_7.tlsf` | TO 30.03s | TO 30.03s | +0.001s |
+| `prioritized_arbiter_8.tlsf` | TO 30.02s | TO 30.03s | +0.017s |
+| `prioritized_arbiter_10.tlsf` | TO 30.00s | TO 30.01s | +0.003s |
+| `prioritized_arbiter_12.tlsf` | TO 30.03s | TO 30.03s | -0.003s |
+| `prioritized_arbiter_enc_2.tlsf` | R 0.007s | R 0.006s | -0.001s |
+| `prioritized_arbiter_enc_4.tlsf` | R 3.422s | R 3.682s | +0.260s |
+| `prioritized_arbiter_enc_6.tlsf` | TO 30.04s | TO 30.02s | -0.020s |
+| `prioritized_arbiter_enc_8.tlsf` | TO 30.06s | TO 30.06s | +0.001s |
+| `prioritized_arbiter_enc_10.tlsf` | TO 30.03s | TO 30.04s | +0.013s |
+| `prioritized_arbiter_enc_12.tlsf` | TO 30.05s | TO 30.05s | +0.001s |
+| `round_robin_arbiter-3.tlsf` | R 0.031s | R 0.031s | +0.000s |
+| `round_robin_arbiter_2.tlsf` | R 0.006s | R 0.006s | +0.000s |
+| `round_robin_arbiter_3.tlsf` | R 0.031s | R 0.032s | +0.001s |
+| `round_robin_arbiter_4.tlsf` | TO 30.04s | TO 30.04s | +0.000s |
+| `round_robin_arbiter_5.tlsf` | TO 30.04s | TO 30.04s | +0.000s |
+| `round_robin_arbiter_6.tlsf` | TO 30.03s | TO 30.03s | +0.000s |
+| `round_robin_arbiter_7.tlsf` | TO 30.04s | TO 30.05s | +0.011s |
+| `round_robin_arbiter_8.tlsf` | TO 30.03s | TO 30.03s | -0.002s |
+| `round_robin_arbiter_10.tlsf` | TO 30.05s | TO 30.05s | -0.001s |
+| `round_robin_arbiter_12.tlsf` | TO 30.06s | TO 30.06s | -0.001s |
+| `simple_arbiter_2.tlsf` | R 0.005s | R 0.005s | +0.000s |
+| `simple_arbiter_3.tlsf` | R 0.005s | R 0.005s | +0.000s |
+| `simple_arbiter_4.tlsf` | R 0.005s | R 0.005s | +0.000s |
+| `simple_arbiter_5.tlsf` | R 0.006s | R 0.006s | +0.000s |
+| `simple_arbiter_6.tlsf` | R 0.226s | R 0.205s | -0.021s |
+| `simple_arbiter_7.tlsf` | TO 30.03s | TO 30.03s | -0.001s |
+| `simple_arbiter_8.tlsf` | TO 30.03s | TO 30.03s | +0.001s |
+| `simple_arbiter_10.tlsf` | TO 30.03s | TO 30.03s | +0.000s |
+| `simple_arbiter_12.tlsf` | TO 30.03s | TO 30.03s | +0.000s |
+| `simple_arbiter_enc_2.tlsf` | R 0.006s | R 0.006s | +0.000s |
+| `simple_arbiter_enc_4.tlsf` | R 0.007s | R 0.006s | -0.001s |
+| `simple_arbiter_enc_6.tlsf` | TO 30.03s | TO 30.03s | +0.000s |
+| `simple_arbiter_enc_8.tlsf` | TO 30.05s | TO 30.03s | -0.019s |
+| `simple_arbiter_enc_10.tlsf` | TO 30.05s | TO 30.06s | +0.008s |
+| `simple_arbiter_enc_12.tlsf` | TO 30.05s | TO 30.05s | +0.005s |
+
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
   **orphans the workers** (seen: 7 stray procs at 99% CPU for 12 min), which silently inflates
