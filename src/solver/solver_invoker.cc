@@ -6,6 +6,7 @@
 #include "solver/create_automaton.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
+#include "solver/symmetry.hh"
 #include "utils/push_aps.hh"
 #include "utils/typeinfo.hh"
 #include "utils/verbose.hh"
@@ -387,6 +388,12 @@ namespace {
         posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
         verb_do (4, dict->dump (utils::vout));
+
+        // [DIAG] symmetry detection on the final game automaton (verbose only).
+        verb_do (1, {
+          auto sg = symmetry::detect (aut, all_inputs, all_outputs);
+          vout << "[symmetry] generators=" << sg.size () << std::endl;
+        });
 
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
         std::optional<spot::twa_graph_ptr> maybe_strat =

@@ -205,6 +205,34 @@ symbolic CPre (the expensive half of the spike) — **decision pending** (node-c
 
 Spike reusable at `/tmp/bddspike.cc` (+ dumped antichains `/tmp/arb{3,4,5,6}.vecs`).
 
+#### Finding 3d — SPIKE RESULT: symmetry canonicalization collapses the arbiter antichain from exponential to LINEAR
+
+Where a BDD failed (3c), symmetry succeeds. The arbiter clients are interchangeable, so the
+winning region is invariant under the client-permutation group. Offline spike
+(`/tmp/orbit_spike.py` + column-signature block analysis) on the dumped antichains: the coords
+split into exactly **4 size-n blocks** (the 4 per-client states) + 3 shared singletons (= 4n+3),
+and a client swap `(a,b)` permutes position `a↔b` in all 4 blocks at once. Result:
+
+```
+ n(clients)  antichain_vectors  valid client-transpositions  orbits(canonical reps)  collapse
+ 3               45                    3/3  (full S_3)              13                  3.5x
+ 4              189                    6/6  (full S_4)              20                  9.4x
+ 5              743                   10/10 (full S_5)              27                 27.5x
+ 6             2439                   15/15 (full S_6)              34                 71.7x
+```
+
+- **Full S_n is a genuine symmetry** (every client-transposition preserves the antichain set).
+- Orbit count is **linear in n** (13,20,27,34 = 7n−8) while the raw antichain is ~3ⁿ. So
+  canonicalizing counter-vectors under S_n makes the arbiter winning region **polynomial
+  (linear!)** — the representation win the BDD couldn't deliver.
+- ⇒ Sound symmetry reduction (winning region is Φ-invariant; canonicalize to orbit reps) should
+  let acacia scale arbiters **linearly**, past the wall where BOTH acacia and ltlsynt currently
+  die (ltlsynt itself is exponential here, walling at arbiter9→10). This is the go-signal for the
+  symmetry-reduction build (detect+verify S_n from the spec via relabel+are_equivalent; canonical
+  ize completed cpre iterates with orbit-aware domination; canonical tie-break for `-s` strategy).
+  Caveat: this measures the antichain's own symmetry (an upper bound); the sound build uses
+  spec-verified Φ ⊆ these — but here all client-transpositions verify, so they coincide.
+
 ## Implementation: `realizability_simplifier` + `Any` default (this round)
 
 Both changes landed in `src/solver/create_automaton.hh` and `src/solver/solver_invoker.cc`,
