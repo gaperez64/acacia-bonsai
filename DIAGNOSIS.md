@@ -1185,6 +1185,19 @@ Per-instance table (`R` = realizable, `TO` = timeout):
 | `simple_arbiter_enc_10.tlsf` | TO 30.05s | TO 30.06s | +0.008s |
 | `simple_arbiter_enc_12.tlsf` | TO 30.05s | TO 30.05s | +0.005s |
 
+### Count-vector quotient pipeline: retired
+
+The count-vector quotient pipeline is kept in-tree behind `ACACIA_ENABLE_SYMMETRIC_SOLVER`
+(default off) as research code, but is superseded for this branch by the exact equivariant solver
+above. The targeted TLSF checkpoint showed no coverage or timing win for the quotient path
+(`11/18` solved on both mainline and branch, `211.562s` branch versus `210.965s` mainline), and
+the dense/SIMD follow-up showed that even after hot-path work the per-operation costs still
+compete with the orbit-collapse benefit at reachable sizes (`intersect` around `294ms` on the
+bounded smoke). More importantly, the count-vector meet remains a lossy under-approximation whose
+misses compound through the GFP, so the pipeline almost always falls back after paying its setup
+cost; the exact equivariant solver avoids that failure mode by keeping the classic raw downset
+semantics and using symmetry only to skip recomputation.
+
 ## Measurement notes / gotchas
 - acacia forks real+unreal worker children; `timeout`/`subprocess` kills only the parent and
   **orphans the workers** (seen: 7 stray procs at 99% CPU for 12 min), which silently inflates
