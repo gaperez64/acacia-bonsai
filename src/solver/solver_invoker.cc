@@ -6,6 +6,8 @@
 #include "solver/create_automaton.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
+#include "solver/symmetric_blocks.hh"
+#include "solver/symmetry.hh"
 #include "utils/push_aps.hh"
 #include "utils/typeinfo.hh"
 #include "utils/verbose.hh"
@@ -20,6 +22,7 @@
 #include <ostream>
 #include <ranges>
 #include <spot/misc/optionmap.hh>
+#include <spot/tl/apcollect.hh>
 #include <spot/tl/formula.hh>
 #include <spot/tl/parse.hh>
 #include <spot/twa/twagraph.hh>
@@ -308,6 +311,14 @@ namespace {
       }
 
       bool operator() (spot::formula spot_formula) {
+        // NOTE: realizability-preserving simplification (spot::realizability_
+        // simplifier) is applied ONCE up front in run_ltl, on the original
+        // spec in the standard (Mealy) frame, before the input/output swap --
+        // so it is already baked into spot_formula here for every orientation.
+        // It must NOT be re-applied on the swapped/X-shifted formula below:
+        // the unreal paths feed the un-negated formula into an avoid/dual
+        // game, so simplifying it in this frame answers the wrong question
+        // and is unsound (it flipped realizable instances to UNREALIZABLE).
         if (check_unreal.has_value () and *check_unreal == UNREAL_X_FORMULA) {
           verb_do (2, vout << "Mealy-to-Moore: adding X to the inputs in the formula\n");
           auto rec = [this] (auto&& self, spot::formula m) {
@@ -379,6 +390,25 @@ namespace {
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
         verb_do (4, dict->dump (utils::vout));
 
+        // [DIAG] symmetry detection on the final game automaton. Keep this
+        // behind an explicit macro so verbose timing runs do not pay for a
+        // duplicate recognition pass before solve_game().
+#if ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS
+        verb_do (1, {
+          auto sg = symmetry::detect (aut, all_inputs, all_outputs);
+          vout << "[symmetry] generators=" << sg.size ()
+               << " full_symmetric=" << sg.full_symmetric
+               << " clients=" << sg.indices.size () << std::endl;
+          auto layout = symmetry::compute_block_layout (sg, aut->num_states ());
+          if (layout.has_value ())
+            vout << "[symmetry] block_layout: blocks=" << layout->num_blocks
+                 << " clients=" << layout->num_clients
+                 << " shared=" << layout->shared_states.size () << std::endl;
+          else
+            vout << "[symmetry] block_layout: none (declined)\n";
+        });
+#endif
+
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
         std::optional<spot::twa_graph_ptr> maybe_strat =
             solve_game (aut, opt_k, opt_kmin, opt_kinc,
@@ -408,6 +438,27 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   if (input_aps.empty ())
     return run_no_input_ltl (output_aps, formula, check_unreal, synth_fname);
 
+  spot::formula spot_formula = parse_ltl_string (formula);
+
+  // Realizability-preserving simplification (spot::realizability_simplifier):
+  // force/remove input APs whose value cannot affect the verdict (e.g.
+  // single-polarity APs), shrinking the automaton before translation --
+  // measured ~880x on bounded-response specs with long X-chains.  Applied
+  // ONCE here, on the original spec in the standard (Mealy) frame, BEFORE the
+  // input/output swap below, so every forked child (real + both unreal
+  // strategies) inherits the smaller formula.  This is sound by determinacy:
+  // the simplifier preserves realizability of phi, and "phi realizable" <=>
+  // "phi not unrealizable", so it equally preserves the unrealizability
+  // verdict the unreal children compute.  Mirrors ltlsynt's own single,
+  // up-front use of the class.  Skipped when synthesizing a controller (-s):
+  // the removed APs would need patch_mealy/patch_game on the emitted strategy,
+  // which is not wired up here.
+  if (not synth_fname.has_value ()) {
+    spot::realizability_simplifier rsimp (spot_formula, input_aps);
+    spot_formula = rsimp.simplified_formula ();
+    verb_do (2, vout << "Simplified formula: " << spot_formula << std::endl);
+  }
+
   if (check_unreal.has_value ()) {
     // We only check one thing at a time.
     assert (*check_unreal != UNREAL_X_BOTH);
@@ -427,8 +478,6 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
                       spot_fast, synth_fname);
-
-  spot::formula spot_formula = parse_ltl_string (formula);
 
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.

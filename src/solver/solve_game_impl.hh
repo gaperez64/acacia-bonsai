@@ -7,6 +7,9 @@
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
+#if ACACIA_ENABLE_EQUIVARIANT_SOLVER
+# include "solver/equivariant_k_bounded_safety_aut.hh"
+#endif
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
 
@@ -153,6 +156,16 @@ namespace acacia::solver_detail {
   solve_with_downset (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax,
                       const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
                       const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis) {
+#if ACACIA_ENABLE_EQUIVARIANT_SOLVER
+    if (not do_synthesis) {
+      auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
+          aut, kmax, kmin, kinc, all_inputs, all_outputs);
+      if (eq.attempted)
+        return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut,
+                                              all_inputs, all_outputs);
+    }
+#endif
+
     using IOsPrecomputationMaker = IOS_PRECOMPUTER;
     using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
     using InputPickerMaker = INPUT_PICKER;

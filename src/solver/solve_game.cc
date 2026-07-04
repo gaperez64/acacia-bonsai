@@ -3,6 +3,9 @@
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/solve_game_branches.hh"
+#if ACACIA_ENABLE_SYMMETRIC_SOLVER
+# include "solver/symmetric_k_bounded_safety_aut.hh"
+#endif
 #include "utils/verbose.hh"
 
 #include <algorithm>
@@ -66,6 +69,16 @@ std::optional<spot::twa_graph_ptr> solve_game (spot::twa_graph_ptr aut, const VE
   posets::vectors::bitset_threshold = aut->num_states () - nbitsetbools;
 
   verb_do (1, vout << "Bitset threshold set at " << posets::vectors::bitset_threshold << "\n");
+
+#if ACACIA_ENABLE_SYMMETRIC_SOLVER
+  if (auto sym = acacia::solver_detail::symmetric::try_solve (
+          aut, kmax, kmin, kinc, all_inputs, all_outputs, do_synthesis);
+      sym.has_value ()) {
+    if (*sym)
+      return aut;
+    verb_do (1, vout << "[symmetry] quotient solver inconclusive; falling back\n");
+  }
+#endif
 
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX)
     return acacia::solver_detail::solve_game_array_bitset (
