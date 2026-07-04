@@ -4,6 +4,7 @@
 #define MAX_CRITICAL_INPUTS 1
 
 #include "actioners/direction.hh"
+#include "configuration.hh"
 #include "utils/bdd_helper.hh"
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"

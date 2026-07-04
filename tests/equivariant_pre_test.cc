@@ -27,8 +27,8 @@ namespace {
 
   namespace eq = acacia::solver_detail::equivariant;
 
-  using state = posets::vectors::vector_backed<VECTOR_ELT_T>;
-  using SetOfStates = posets::downsets::vector_backed<state>;
+  using state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
+  using SetOfStates = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<state>;
 
   constexpr VECTOR_ELT_T K = 3;
 

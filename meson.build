@@ -207,6 +207,94 @@ else
   build_conf.set ('VECTOR_IMPL_DEFINE', '#ifndef VECTOR_IMPL\n# define VECTOR_IMPL ' + get_option ('acacia_vector_impl') + '\n#endif')
 endif
 
+posets_gates = [
+  'POSETS_ENABLE_VECTOR_SIMD_ARRAY_BACKED',
+  'POSETS_ENABLE_VECTOR_SIMD_ARRAY_BACKED_SUM',
+  'POSETS_ENABLE_VECTOR_SIMD_ARRAY_PTR_BACKED',
+  'POSETS_ENABLE_VECTOR_SIMD_ARRAY_PTR_BACKED_SUM',
+  'POSETS_ENABLE_VECTOR_SIMD_VECTOR_BACKED',
+  'POSETS_ENABLE_VECTOR_SIMD_VECTOR_BACKED_SUM',
+  'POSETS_ENABLE_VECTOR_ARRAY_BACKED',
+  'POSETS_ENABLE_VECTOR_ARRAY_BACKED_SUM',
+  'POSETS_ENABLE_VECTOR_ARRAY_PTR_BACKED',
+  'POSETS_ENABLE_VECTOR_ARRAY_PTR_BACKED_SUM',
+  'POSETS_ENABLE_VECTOR_VECTOR_BACKED',
+  'POSETS_ENABLE_VECTOR_VECTOR_BACKED_SUM',
+  'POSETS_ENABLE_VECTOR_X_AND_BITSET',
+  'POSETS_ENABLE_VECTOR_X_AND_BOOLVEC',
+  'POSETS_ENABLE_DOWNSET_FULL_SET',
+  'POSETS_ENABLE_DOWNSET_KDTREE_BACKED',
+  'POSETS_ENABLE_DOWNSET_SET_BACKED',
+  'POSETS_ENABLE_DOWNSET_SHARINGTREE_BACKED',
+  'POSETS_ENABLE_DOWNSET_SHARINGTRIE_BACKED',
+  'POSETS_ENABLE_DOWNSET_SIMPLE_SHARINGTREE_BACKED',
+  'POSETS_ENABLE_DOWNSET_SKIPLIST_BACKED',
+  'POSETS_ENABLE_DOWNSET_VECTOR_BACKED',
+  'POSETS_ENABLE_DOWNSET_VECTOR_BACKED_BIN',
+  'POSETS_ENABLE_DOWNSET_VECTOR_BACKED_ONE_DIM_SPLIT_INTERSECTION_ONLY',
+  'POSETS_ENABLE_DOWNSET_VECTOR_OR_KDTREE_BACKED',
+  'POSETS_ENABLE_DOWNSET_CST_BACKED',
+]
+
+build_conf.set ('POSETS_CONFIGURED', 1)
+foreach gate : posets_gates
+  build_conf.set (gate, 0)
+endforeach
+
+if get_option ('acacia_compile_all_components')
+  build_conf.set ('POSETS_COMPILE_ALL_COMPONENTS', 1)
+  foreach gate : posets_gates
+    build_conf.set (gate, 1)
+  endforeach
+else
+  build_conf.set ('POSETS_COMPILE_ALL_COMPONENTS', 0)
+endif
+
+posets_array_impl = get_option ('acacia_array_impl')
+if posets_array_impl == 'auto'
+  if get_option ('acacia_no_simd')
+    posets_array_impl = 'array_backed_sum'
+  else
+    posets_array_impl = 'simd_array_backed_sum'
+  endif
+endif
+
+posets_vector_impl = get_option ('acacia_vector_impl')
+if posets_vector_impl == 'auto'
+  if get_option ('acacia_no_simd')
+    posets_vector_impl = 'vector_backed'
+  else
+    posets_vector_impl = 'simd_vector_backed'
+  endif
+endif
+
+posets_vector_impl_gates = {
+  'simd_array_backed_sum' : 'POSETS_ENABLE_VECTOR_SIMD_ARRAY_BACKED_SUM',
+  'array_backed_sum' : 'POSETS_ENABLE_VECTOR_ARRAY_BACKED_SUM',
+  'simd_vector_backed' : 'POSETS_ENABLE_VECTOR_SIMD_VECTOR_BACKED',
+  'vector_backed' : 'POSETS_ENABLE_VECTOR_VECTOR_BACKED',
+}
+build_conf.set (posets_vector_impl_gates[posets_array_impl], 1)
+build_conf.set (posets_vector_impl_gates[posets_vector_impl], 1)
+build_conf.set ('POSETS_ENABLE_VECTOR_X_AND_BITSET', 1)
+if get_option ('acacia_use_boolvec_over_bitset')
+  build_conf.set ('POSETS_ENABLE_VECTOR_X_AND_BOOLVEC', 1)
+endif
+
+posets_downset_gates = {
+  'vector_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED',
+  'vector_or_kdtree_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_OR_KDTREE_BACKED',
+  'kdtree_backed' : 'POSETS_ENABLE_DOWNSET_KDTREE_BACKED',
+  'sharingtree_backed' : 'POSETS_ENABLE_DOWNSET_SHARINGTREE_BACKED',
+  'simple_sharingtree_backed' : 'POSETS_ENABLE_DOWNSET_SIMPLE_SHARINGTREE_BACKED',
+  'sharingtrie_backed' : 'POSETS_ENABLE_DOWNSET_SHARINGTRIE_BACKED',
+  'skiplist_backed' : 'POSETS_ENABLE_DOWNSET_SKIPLIST_BACKED',
+  'cst_backed' : 'POSETS_ENABLE_DOWNSET_CST_BACKED',
+  'vector_backed_bin' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED_BIN',
+}
+build_conf.set (posets_downset_gates[get_option ('acacia_array_downset')], 1)
+build_conf.set (posets_downset_gates[get_option ('acacia_vector_downset')], 1)
+
 configure_file (input : 'src/config/acacia_build_config.hh.in',
                 output : 'acacia_build_config.hh',
                 configuration : build_conf)
