@@ -12,7 +12,6 @@
 #include <optional>
 #include <sstream>
 #include <string>
-#include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utils/verbose.hh>
@@ -56,14 +55,6 @@ int main (int argc, char** argv) {
   sigaction (SIGINT, &action, nullptr);
   sigaction (SIGQUIT, &action, nullptr);
   sigaction (SIGABRT, &action, nullptr);
-
-  // set a (virtual) memory limit in GiBs, if needed
-  if (arg_values.mem_limit.has_value ()) {
-    struct rlimit limit;
-    limit.rlim_max = 1024L * 1024L * 1024L * (*arg_values.mem_limit);
-    limit.rlim_cur = limit.rlim_max;
-    setrlimit(RLIMIT_AS, &limit);
-  }
 
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {

@@ -1,0 +1,198 @@
+{
+  "presets": {
+    "base": {},
+    "base_nosimd": {
+      "no_simd": true
+    },
+    "base_simdnomax": {
+      "simd_is_max": false
+    },
+    "base_autpreproc_standard": {
+      "aut_preprocessor": "standard"
+    },
+    "base_autpreproc_nopreproc": {
+      "aut_preprocessor": "no_preprocessing"
+    },
+    "base_booleanstates_none": {
+      "boolean_states": "no_boolean_states"
+    },
+    "base_noiosprecom_delegate": {
+      "ios_precomputer": "delegate",
+      "actioner": "no_ios_precomputation"
+    },
+    "base_iosprecom_fake_vars": {
+      "ios_precomputer": "fake_vars"
+    },
+    "base_iosprecom_powset": {
+      "ios_precomputer": "powset"
+    },
+    "base_iosprecom_mona": {
+      "ios_precomputer": "mona"
+    },
+    "base_inputpicker_critical_pq": {
+      "input_picker": "critical_pq"
+    },
+    "base_inputpicker_critical_rnd": {
+      "input_picker": "critical_rnd"
+    },
+    "base_inputpicker_critical_fullrnd": {
+      "input_picker": "critical_fullrnd"
+    },
+    "base_downset_vector_or_kdtree": {
+      "array_downset": "vector_or_kdtree_backed",
+      "vector_downset": "vector_or_kdtree_backed"
+    },
+    "base_downset_kdtree": {
+      "array_downset": "kdtree_backed",
+      "vector_downset": "kdtree_backed"
+    },
+    "base_downset_vector": {
+      "array_downset": "vector_backed",
+      "vector_downset": "vector_backed"
+    },
+    "base_downset_vectorbin": {
+      "array_downset": "vector_backed_bin",
+      "vector_downset": "vector_backed_bin",
+      "array_impl": "simd_array_backed_sum",
+      "vector_impl": "simd_vector_backed"
+    },
+
+    "best": {
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "powset",
+      "input_picker": "critical",
+      "simd_is_max": false,
+      "decompose_spec": false
+    },
+    "best_decomp": {
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "powset",
+      "input_picker": "critical",
+      "simd_is_max": false,
+      "decompose_spec": true
+    },
+    "best_no_array_cap_max": {
+      "inherits": "best",
+      "no_array_cap_max": true
+    },
+    "best_no_bitsets": {
+      "inherits": "best",
+      "no_array_cap_max": true,
+      "use_boolvec_over_bitset": true
+    },
+    "best_mona": {
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "mona",
+      "input_picker": "critical",
+      "simd_is_max": false,
+      "decompose_spec": false
+    },
+    "best_noiosprecom_delegate": {
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "delegate",
+      "actioner": "no_ios_precomputation",
+      "input_picker": "critical",
+      "simd_is_max": false,
+      "decompose_spec": false
+    },
+    "best_downset_vector_or_kdtree": {
+      "inherits": "best",
+      "array_downset": "vector_or_kdtree_backed",
+      "vector_downset": "vector_or_kdtree_backed"
+    },
+    "best_downset_kdtree": {
+      "inherits": "best",
+      "array_downset": "kdtree_backed",
+      "vector_downset": "kdtree_backed"
+    },
+    "best_downset_sharingtree": {
+      "inherits": "best",
+      "array_downset": "sharingtree_backed",
+      "vector_downset": "sharingtree_backed"
+    },
+    "best_downset_simple_sharingtree": {
+      "inherits": "best",
+      "array_downset": "simple_sharingtree_backed",
+      "vector_downset": "simple_sharingtree_backed"
+    },
+    "best_downset_sharingtrie": {
+      "inherits": "best",
+      "array_downset": "sharingtrie_backed",
+      "vector_downset": "sharingtrie_backed"
+    },
+
+    "best_decomp_mona": {
+      "aut_preprocessor": "standard",
+      "ios_precomputer": "mona",
+      "input_picker": "critical",
+      "simd_is_max": false,
+      "decompose_spec": true
+    },
+    "best_decomp_kdtree_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "kdtree_backed",
+      "vector_downset": "kdtree_backed"
+    },
+    "best_decomp_kdtree_mona_no_bitsets": {
+      "inherits": "best_decomp_kdtree_mona",
+      "no_array_cap_max": true,
+      "use_boolvec_over_bitset": true
+    },
+    "best_decomp_sharingtrie_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "sharingtrie_backed",
+      "vector_downset": "sharingtrie_backed"
+    },
+    "best_decomp_simpsharingtree_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "simple_sharingtree_backed",
+      "vector_downset": "simple_sharingtree_backed"
+    },
+    "best_decomp_sharingtree_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "sharingtree_backed",
+      "vector_downset": "sharingtree_backed"
+    },
+    "best_decomp_sharingtrie_mona_no_bitsets": {
+      "inherits": "best_decomp_sharingtrie_mona",
+      "no_array_cap_max": true,
+      "use_boolvec_over_bitset": true
+    },
+    "best_decomp_mona_no_bitsets": {
+      "inherits": "best_decomp_mona",
+      "no_array_cap_max": true,
+      "use_boolvec_over_bitset": true
+    },
+    "best_decomp_mona_elevator": {
+      "inherits": "best_decomp_mona",
+      "aut_preprocessor": "elevator"
+    },
+    "best_decomp_mona_spotfast_det_and_gfg": {
+      "inherits": "best_decomp_mona",
+      "default_spot_fast": "det_and_gfg"
+    },
+    "best_decomp_skiplist_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "skiplist_backed",
+      "vector_downset": "skiplist_backed"
+    },
+    "best_decomp_cst_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "cst_backed",
+      "vector_downset": "cst_backed"
+    }
+  },
+  "tool_baselines": {
+    "ltlsynt": {
+      "description": "external benchmark backend"
+    }
+  },
+  "groups": {
+    "docker_default": [
+      "best_decomp_mona",
+      "best_decomp_kdtree_mona",
+      "base_iosprecom_mona",
+      "best_decomp_sharingtrie_mona"
+    ]
+  }
+}

@@ -35,7 +35,6 @@ struct arg_parse_result {
     bool check_real = true;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
-    std::optional<int> mem_limit = std::nullopt;
     bool inputs_specified = false;
 };
 
@@ -103,7 +102,6 @@ void show_help (const char* program_name) {
       << "VAL = both"
 #endif
       << std::endl
-      << "  -l VAL            set the virtual memory limit to VAL GiBs\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -r                do NOT check for unrealizability\n"
       << "  -U                do NOT check for realizability\n"
@@ -178,7 +176,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   };
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt_long (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:l:", long_options,
+  while ((opt = getopt_long (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:", long_options,
                              nullptr)) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
@@ -195,7 +193,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
       case 's': retval.synth_fname = optarg; break;
-      case 'l': retval.mem_limit = std::stoi (optarg); break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }

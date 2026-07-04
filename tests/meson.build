@@ -111,6 +111,14 @@ test ('equivariant-pre',
       equivariant_pre_test,
       suite : ['unit', 'symmetry'])
 
+component_concepts_test = executable ('component-concepts-test',
+                                      'component_concepts_test.cc',
+                                      include_directories : inc,
+                                      dependencies : [posets_dep, spot_dep, bddx_dep])
+test ('component-concepts',
+      component_concepts_test,
+      suite : ['unit', 'component-concepts'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 

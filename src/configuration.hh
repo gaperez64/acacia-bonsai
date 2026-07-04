@@ -4,6 +4,10 @@
 
 #include "utils/todo.hh"
 
+#if __has_include("acacia_build_config.hh")
+# include "acacia_build_config.hh"
+#endif
+
 #ifndef CPRE_AVOID_UNIONS
 # define CPRE_AVOID_UNIONS 0
 #endif
@@ -187,6 +191,9 @@
 #ifndef ACACIA_ENABLE_INPUT_PICKER_CRITICAL_RND
 # define ACACIA_ENABLE_INPUT_PICKER_CRITICAL_RND 0
 #endif
+
+#include "config/derived_gates.hh"
+#include "config/validate.hh"
 
 #ifdef NO_SIMD
 # pragma message("Compiling without SIMD")

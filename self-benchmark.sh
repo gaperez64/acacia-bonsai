@@ -20,110 +20,11 @@ opt_justtest=''
 compile_args=()
 
 declare -A confs
-
-# WARNING: The actual defaults are set in configuration.hh
-# defaults=$(<<EOF 
-# -DDEFAULT_K=255
-# -DDEFAULT_KMIN=2
-# -DDEFAULT_KINC=3
-# -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
-# -DVECTOR_ELT_T='char'
-# -DSTATIC_ARRAY_MAX='300'
-# -DSTATIC_MAX_BITSETS='8ul'
-# -DSIMD_IS_MAX='true'
-# -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
-# -DBOOLEAN_STATES='boolean_states::forward_saturation'
-# -DIOS_PRECOMPUTER='ios_precomputers::standard'
-# -DACTIONER='actioners::standard'
-# -DINPUT_PICKER='input_pickers::critical_pq'
-# -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
-# -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
-# EOF
-#         )
-
-autpreproc_no_preprocessing="-DAUT_PREPROCESSOR='aut_preprocessors::no_preprocessing' -DACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING=0 -DACACIA_ENABLE_AUT_PREPROCESSOR_NO_PREPROCESSING=1"
-autpreproc_standard="-DAUT_PREPROCESSOR='aut_preprocessors::standard' -DACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING=0 -DACACIA_ENABLE_AUT_PREPROCESSOR_STANDARD=1"
-autpreproc_elevator="-DAUT_PREPROCESSOR='aut_preprocessors::elevator' -DACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING=0 -DACACIA_ENABLE_AUT_PREPROCESSOR_ELEVATOR=1"
-boolean_forward_saturation="-DBOOLEAN_STATES='boolean_states::forward_saturation' -DACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION=1"
-boolean_no_boolean_states="-DBOOLEAN_STATES='boolean_states::no_boolean_states' -DACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION=0 -DACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES=1"
-ios_delegate="-DIOS_PRECOMPUTER='ios_precomputers::delegate' -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_DELEGATE=1"
-ios_fake_vars="-DIOS_PRECOMPUTER='ios_precomputers::fake_vars' -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_FAKE_VARS=1"
-ios_powset="-DIOS_PRECOMPUTER='ios_precomputers::powset' -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_POWSET=1"
-ios_mona="-DIOS_PRECOMPUTER='ios_precomputers::mona' -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_MONA=1"
-actioner_no_ios="-DACTIONER='actioners::no_ios_precomputation' -DACACIA_ENABLE_ACTIONER_STANDARD=0 -DACACIA_ENABLE_ACTIONER_NO_IOS_PRECOMPUTATION=1"
-input_critical="-DINPUT_PICKER='input_pickers::critical' -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=0 -DACACIA_ENABLE_INPUT_PICKER_CRITICAL=1"
-input_critical_pq="-DINPUT_PICKER='input_pickers::critical_pq' -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=1"
-input_critical_rnd="-DINPUT_PICKER='input_pickers::critical_rnd' -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=0 -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_RND=1"
-input_critical_fullrnd="-DINPUT_PICKER='input_pickers::critical_fullrnd' -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=0 -DACACIA_ENABLE_INPUT_PICKER_CRITICAL_FULLRND=1"
-
-# Experimentally determined
-best_common=$(<<EOF
--DDEFAULT_KMIN=2
--DDEFAULT_KINC=3
--DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
--DSIMD_IS_MAX='false'
--DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
--DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
-EOF
-    )
-best_powset="$best_common $autpreproc_standard $boolean_forward_saturation $ios_powset $input_critical"
-best_mona_base="$best_common $autpreproc_standard $boolean_forward_saturation $ios_mona $input_critical"
-best="$best_powset -DDECOMPOSE_SPEC=0"
-
-confs=(
-    # Dummy configuration: does not actually change any acacia-bonsai build
-    # flags, but tells the benchmark step below to run the `ltlsynt/…`
-    # meson suites (i.e. ltlsynt on the same inputs) instead of `ab/…`.
-    [ltlsynt]=" "
-    # These are variations on the default configuration
-    [base]=" "
-    # [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
-    # [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
-    # [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
-    # [kmin2_kinc3]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=3"
-    # [x_is_form]="-DDEFAULT_UNREAL_X=UNREAL_X_FORMULA"
-    # [x_is_aut]="-DDEFAULT_UNREAL_X=UNREAL_X_AUTOMATON"
-    [base_nosimd]="-DNO_SIMD"
-    [base_simdnomax]="-DSIMD_IS_MAX=false"
-    [base_autpreproc_standard]="$autpreproc_standard"
-    [base_autpreproc_nopreproc]="$autpreproc_no_preprocessing"
-    [base_booleanstates_none]="$boolean_no_boolean_states"
-    [base_noiosprecom_delegate]="$ios_delegate $actioner_no_ios"
-    [base_iosprecom_fake_vars]="$ios_fake_vars"
-    [base_iosprecom_powset]="$ios_powset"
-    [base_iosprecom_mona]="$ios_mona"
-    [base_inputpicker_critical_pq]="$input_critical_pq"
-    [base_inputpicker_critical_rnd]="$input_critical_rnd"
-    [base_inputpicker_critical_fullrnd]="$input_critical_fullrnd"
-    [base_downset_vector_or_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
-    [base_downset_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
-    [base_downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
-    [base_downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DARRAY_IMPL=simd_array_backed_sum -DVECTOR_IMPL=simd_vector_backed"
-    # These are variations on the best configuration
-    [best]="$best"
-    [best_decomp]="$best_powset -DDECOMPOSE_SPEC=1"
-    [best_no_array_cap_max]="$best -DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
-    [best_no_bitsets]="$best -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"  # same, and x_and_boolvec used instead of x_and_bitset
-    [best_mona]="$best_mona_base -DDECOMPOSE_SPEC=0"
-    [best_noiosprecom_delegate]="$best_common $autpreproc_standard $boolean_forward_saturation $ios_delegate $actioner_no_ios $input_critical -DDECOMPOSE_SPEC=0"
-    [best_downset_vector_or_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
-    [best_downset_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
-    [best_downset_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed'"
-    [best_downset_simple_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed'"
-    [best_downset_sharingtrie]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed'"
-    [best_decomp_kdtree_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DDECOMPOSE_SPEC=1"
-    [best_decomp_kdtree_mona_no_bitsets]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_sharingtrie_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DDECOMPOSE_SPEC=1"
-    [best_decomp_simpsharingtree_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DDECOMPOSE_SPEC=1"
-    [best_decomp_sharingtree_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DDECOMPOSE_SPEC=1"
-    [best_decomp_sharingtrie_mona_no_bitsets]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_mona_no_bitsets]="$best_mona_base -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_mona]="$best_mona_base -DDECOMPOSE_SPEC=1"
-    [best_decomp_mona_elevator]="$best_common $autpreproc_elevator $boolean_forward_saturation $ios_mona $input_critical -DDECOMPOSE_SPEC=1"
-    [best_decomp_mona_spotfast_det_and_gfg]="$best_mona_base -DDECOMPOSE_SPEC=1 -DDEFAULT_SPOT_FAST=SPOT_FAST_DET_AND_GFG"
-    [best_decomp_skiplist_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DDECOMPOSE_SPEC=1"
-    [best_decomp_cst_mona]="$best_mona_base -DARRAY_AND_BITSET_DOWNSET_IMPL='cst_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='cst_backed' -DDECOMPOSE_SPEC=1"
-)
+config_helper=${ACACIA_CONFIG_HELPER:-./scripts/acacia-config.py}
+for name in ${(f)"$(python3 "$config_helper" list-presets)"}; do
+    confs[$name]="$(python3 "$config_helper" cxxflags "$name")"
+done
+confs[ltlsynt]="__external_ltlsynt__"
 
 mode= # print, list
 force=false
@@ -298,14 +199,43 @@ run_benchmark_command() {
     fi
 }
 
+benchmark_build_for() {
+    local name=$1
+    if [[ $name != ltlsynt ]]; then
+        echo "build_$name"
+        return
+    fi
+
+    local candidate
+    for candidate in build_base build_best_decomp_mona build_best; do
+        if [[ -e $candidate/compiled ]]; then
+            echo "$candidate"
+            return
+        fi
+    done
+    for candidate in build_*(N); do
+        if [[ -e $candidate/compiled ]]; then
+            echo "$candidate"
+            return
+        fi
+    done
+}
+
 ## Print and list mode
 if [[ $mode == print || $mode == list ]]; then
     for name in $conflist; do
+        if (( ! $+confs[$name] )); then
+            echo "error: $name, unknown configuration."
+            $force || exit 2
+            continue
+        fi
         echo -n "- $name"
         if [[ $mode == print ]]; then
-            # echo -n ": $opt $defaults $confs[$name]" | tr '\n' ' '
-	    # defaults are set in configuration.hh
-            echo -n ": $opt $confs[$name]" | tr '\n' ' '
+            if [[ $name == ltlsynt ]]; then
+                echo -n ": external benchmark backend"
+            else
+                echo -n ": $opt $confs[$name]" | tr '\n' ' '
+            fi
         fi
         echo
     done
@@ -315,20 +245,34 @@ fi
 ## Build
 if ! (( $donot[(Ie)build] )); then
     for name in $conflist; do
+        if (( ! $+confs[$name] )); then
+            echo "error: $name, unknown configuration."
+            $force || exit 2
+            continue
+        fi
+        if [[ $name == ltlsynt ]]; then
+            echo "ltlsynt is an external benchmark backend, not building an Acacia config."
+            continue
+        fi
         param=$confs[$name]
-        [[ $param == "" ]] && { echo "error: $name, unknown configuration."; $force || exit 2 }
         build=build_$name
         log=_bm-logs/$name.log
         rm -f $log
+        current_config="$(python3 "$config_helper" show "$name")"
         if [[ -e $build ]]; then
-            echo "$build exists, not rebuilding, remove folder to rebuild."
+            if [[ -e $build/.acacia-config.json ]] &&
+               ! cmp -s <(print -r -- "$current_config") $build/.acacia-config.json; then
+                echo "$build exists with stale Acacia config; remove folder to rebuild."
+                $force || exit 2
+            else
+                echo "$build exists, not rebuilding, remove folder to rebuild."
+            fi
         else
             echo -n "building $build (logfile: $log)... "
-            # if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
-	    # defaults are set in configuration.hh
             native_flag=()
             [[ -n $native_file ]] && native_flag=(--native-file "$native_file")
-            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel $native_flag &>> $log; then
+            if CXXFLAGS="$opt $param $CXXFLAGS" meson setup $build $rel $native_flag &>> $log; then
+                print -r -- "$current_config" > $build/.acacia-config.json
                 echo "done."
             else
                 echo "FAILED; please remove $build to recompile."
@@ -342,6 +286,15 @@ fi
 ## Compile
 if ! (( $donot[(Ie)compile] )); then
     for name in $conflist; do
+        if (( ! $+confs[$name] )); then
+            echo "error: $name, unknown configuration."
+            $force || exit 2
+            continue
+        fi
+        if [[ $name == ltlsynt ]]; then
+            echo "ltlsynt is an external benchmark backend, not compiling an Acacia config."
+            continue
+        fi
         build=build_$name
         log=_bm-logs/$name.log
         if [[ -e $build/compiled ]]; then
@@ -370,10 +323,22 @@ fi
 if ! (( $donot[(Ie)benchmark] )); then
     configure_benchmark_cgroup
     for name in $conflist; do
-        build=build_$name
+        if (( ! $+confs[$name] )); then
+            echo "error: $name, unknown configuration."
+            $force || exit 2
+            continue
+        fi
+        build=$(benchmark_build_for $name)
+        if [[ -z $build ]]; then
+            echo "skipping $name, no compiled Acacia build is available to host Meson test metadata"
+            $force || exit 4
+            continue
+        fi
         log=_bm-logs/$name.log
-        if [[ -e $build/benchmarked ]]; then
-            echo "skipping already benchmarked $name, remove $build/benchmarked to rebenchmark"
+        marker=$build/benchmarked
+        [[ $name == ltlsynt ]] && marker=$build/benchmarked-ltlsynt
+        if [[ -e $marker ]]; then
+            echo "skipping already benchmarked $name, remove $marker to rebenchmark"
             continue
         fi
         if [[ ! -e $build/compiled ]]; then
@@ -381,9 +346,9 @@ if ! (( $donot[(Ie)benchmark] )); then
             continue
         fi
         cd $build
-	## For the dummy ltlsynt configuration, redirect every --suite=ab/…
-	## argument to --suite=ltlsynt/… so that the same meson run now
-	## picks up the ltlsynt-backed benchmarks instead of the ab ones.
+	## For the external ltlsynt backend, redirect every --suite=ab/…
+	## argument to --suite=ltlsynt/… so that the same meson run picks up
+	## the ltlsynt-backed benchmarks instead of the ab ones.
 	if [[ $name == ltlsynt ]]; then
 	    this_suites=()
 	    for b in $benchsuites; do
@@ -406,7 +371,7 @@ if ! (( $donot[(Ie)benchmark] )); then
             $force || exit 5
         else
             echo "done; testlog stored at $log"
-            touch benchmarked
+            touch $marker:t
         fi
         cd ..
         cp $build/meson-logs/testlog.json _bm-logs/$name.json

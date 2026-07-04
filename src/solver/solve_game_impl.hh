@@ -1,6 +1,7 @@
 #pragma once
 
 #include "actioners/no_ios_precomputation.hh"
+#include "config/component_checks.hh"
 #include "ios_precomputers/delegate.hh"
 #include "posets/downsets.hh"
 #include "posets/utils/vector_mm.hh"
@@ -156,6 +157,7 @@ namespace acacia::solver_detail {
   solve_with_downset (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax,
                       const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
                       const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis) {
+    acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
     if (not do_synthesis) {
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (

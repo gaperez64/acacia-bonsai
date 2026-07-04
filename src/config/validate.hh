@@ -1,0 +1,38 @@
+#pragma once
+
+#if (ACACIA_ENABLE_AUT_PREPROCESSOR_NO_PREPROCESSING + \
+     ACACIA_ENABLE_AUT_PREPROCESSOR_STANDARD + \
+     ACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING + \
+     ACACIA_ENABLE_AUT_PREPROCESSOR_ELEVATOR) != 1
+# error "Exactly one automaton preprocessor must be selected"
+#endif
+
+#if (ACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION + \
+     ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES) != 1
+# error "Exactly one boolean-states implementation must be selected"
+#endif
+
+#if (ACACIA_ENABLE_IOS_PRECOMPUTER_DELEGATE + \
+     ACACIA_ENABLE_IOS_PRECOMPUTER_FAKE_VARS + \
+     ACACIA_ENABLE_IOS_PRECOMPUTER_POWSET + \
+     ACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD + \
+     ACACIA_ENABLE_IOS_PRECOMPUTER_MONA) != 1
+# error "Exactly one IOS precomputer must be selected"
+#endif
+
+#if (ACACIA_ENABLE_ACTIONER_NO_IOS_PRECOMPUTATION + \
+     ACACIA_ENABLE_ACTIONER_STANDARD) != 1
+# error "Exactly one actioner must be selected"
+#endif
+
+#if (ACACIA_ENABLE_INPUT_PICKER_CRITICAL + \
+     ACACIA_ENABLE_INPUT_PICKER_CRITICAL_FULLRND + \
+     ACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ + \
+     ACACIA_ENABLE_INPUT_PICKER_CRITICAL_RND) != 1
+# error "Exactly one input picker must be selected"
+#endif
+
+#if ACACIA_ENABLE_ACTIONER_NO_IOS_PRECOMPUTATION && \
+    !ACACIA_ENABLE_IOS_PRECOMPUTER_DELEGATE
+# error "no_ios_precomputation actioner requires delegate IOS precomputer"
+#endif

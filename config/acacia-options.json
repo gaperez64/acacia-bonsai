@@ -1,0 +1,150 @@
+{
+  "families": {
+    "aut_preprocessor": {
+      "default": "surely_losing",
+      "choices": {
+        "surely_losing": {
+          "type": "aut_preprocessors::surely_losing",
+          "gate": "ACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING"
+        },
+        "no_preprocessing": {
+          "type": "aut_preprocessors::no_preprocessing",
+          "gate": "ACACIA_ENABLE_AUT_PREPROCESSOR_NO_PREPROCESSING"
+        },
+        "standard": {
+          "type": "aut_preprocessors::standard",
+          "gate": "ACACIA_ENABLE_AUT_PREPROCESSOR_STANDARD"
+        },
+        "elevator": {
+          "type": "aut_preprocessors::elevator",
+          "gate": "ACACIA_ENABLE_AUT_PREPROCESSOR_ELEVATOR"
+        }
+      },
+      "macro": "AUT_PREPROCESSOR"
+    },
+    "boolean_states": {
+      "default": "forward_saturation",
+      "choices": {
+        "forward_saturation": {
+          "type": "boolean_states::forward_saturation",
+          "gate": "ACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION"
+        },
+        "no_boolean_states": {
+          "type": "boolean_states::no_boolean_states",
+          "gate": "ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES"
+        }
+      },
+      "macro": "BOOLEAN_STATES"
+    },
+    "ios_precomputer": {
+      "default": "standard",
+      "choices": {
+        "standard": {
+          "type": "ios_precomputers::standard",
+          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD"
+        },
+        "delegate": {
+          "type": "ios_precomputers::delegate",
+          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_DELEGATE"
+        },
+        "fake_vars": {
+          "type": "ios_precomputers::fake_vars",
+          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_FAKE_VARS"
+        },
+        "powset": {
+          "type": "ios_precomputers::powset",
+          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_POWSET"
+        },
+        "mona": {
+          "type": "ios_precomputers::mona",
+          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_MONA"
+        }
+      },
+      "macro": "IOS_PRECOMPUTER"
+    },
+    "actioner": {
+      "default": "standard",
+      "choices": {
+        "standard": {
+          "type": "actioners::standard",
+          "gate": "ACACIA_ENABLE_ACTIONER_STANDARD"
+        },
+        "no_ios_precomputation": {
+          "type": "actioners::no_ios_precomputation",
+          "gate": "ACACIA_ENABLE_ACTIONER_NO_IOS_PRECOMPUTATION"
+        }
+      },
+      "macro": "ACTIONER"
+    },
+    "input_picker": {
+      "default": "critical_pq",
+      "choices": {
+        "critical_pq": {
+          "type": "input_pickers::critical_pq",
+          "gate": "ACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ"
+        },
+        "critical": {
+          "type": "input_pickers::critical",
+          "gate": "ACACIA_ENABLE_INPUT_PICKER_CRITICAL"
+        },
+        "critical_rnd": {
+          "type": "input_pickers::critical_rnd",
+          "gate": "ACACIA_ENABLE_INPUT_PICKER_CRITICAL_RND"
+        },
+        "critical_fullrnd": {
+          "type": "input_pickers::critical_fullrnd",
+          "gate": "ACACIA_ENABLE_INPUT_PICKER_CRITICAL_FULLRND"
+        }
+      },
+      "macro": "INPUT_PICKER"
+    }
+  },
+  "scalar_defaults": {
+    "default_k": 99,
+    "default_kmin": 2,
+    "default_kinc": 3,
+    "default_unreal_x": "both",
+    "default_spot_fast": "det",
+    "static_array_max": 300,
+    "static_max_bitsets": 8,
+    "simd_is_max": true,
+    "decompose_spec": true,
+    "array_downset": "vector_backed",
+    "vector_downset": "vector_backed",
+    "array_impl": "auto",
+    "vector_impl": "auto",
+    "no_simd": false,
+    "no_array_cap_max": false,
+    "use_boolvec_over_bitset": false,
+    "cpre_avoid_unions": false,
+    "compile_all_components": false
+  },
+  "choices": {
+    "default_unreal_x": ["both", "automaton", "formula"],
+    "default_spot_fast": ["off", "det", "det_and_gfg"],
+    "array_downset": [
+      "vector_backed",
+      "vector_or_kdtree_backed",
+      "kdtree_backed",
+      "sharingtree_backed",
+      "simple_sharingtree_backed",
+      "sharingtrie_backed",
+      "skiplist_backed",
+      "cst_backed",
+      "vector_backed_bin"
+    ],
+    "vector_downset": [
+      "vector_backed",
+      "vector_or_kdtree_backed",
+      "kdtree_backed",
+      "sharingtree_backed",
+      "simple_sharingtree_backed",
+      "sharingtrie_backed",
+      "skiplist_backed",
+      "cst_backed",
+      "vector_backed_bin"
+    ],
+    "array_impl": ["auto", "simd_array_backed_sum", "array_backed_sum"],
+    "vector_impl": ["auto", "simd_vector_backed", "vector_backed"]
+  }
+}

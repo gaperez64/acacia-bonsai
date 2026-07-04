@@ -2,3 +2,72 @@ option('build_tests', type: 'boolean', value: true,
        description: 'Build the test suite')
 option('build_python', type: 'boolean', value: false,
        description: 'Build the Python interface (requires swig)')
+
+option('acacia_aut_preprocessor', type: 'combo',
+       choices: ['surely_losing', 'no_preprocessing', 'standard', 'elevator'],
+       value: 'surely_losing',
+       description: 'Compile-time automaton preprocessor selection')
+option('acacia_boolean_states', type: 'combo',
+       choices: ['forward_saturation', 'no_boolean_states'],
+       value: 'forward_saturation')
+option('acacia_ios_precomputer', type: 'combo',
+       choices: ['standard', 'delegate', 'fake_vars', 'powset', 'mona'],
+       value: 'standard')
+option('acacia_actioner', type: 'combo',
+       choices: ['standard', 'no_ios_precomputation'],
+       value: 'standard')
+option('acacia_input_picker', type: 'combo',
+       choices: ['critical_pq', 'critical', 'critical_rnd', 'critical_fullrnd'],
+       value: 'critical_pq')
+
+option('acacia_default_k', type: 'integer', value: 99)
+option('acacia_default_kmin', type: 'integer', value: 2)
+option('acacia_default_kinc', type: 'integer', value: 3)
+option('acacia_default_unreal_x', type: 'combo',
+       choices: ['both', 'automaton', 'formula'],
+       value: 'both')
+option('acacia_default_spot_fast', type: 'combo',
+       choices: ['off', 'det', 'det_and_gfg'],
+       value: 'det')
+option('acacia_static_array_max', type: 'integer', value: 300)
+option('acacia_static_max_bitsets', type: 'integer', value: 8)
+option('acacia_simd_is_max', type: 'boolean', value: true)
+option('acacia_decompose_spec', type: 'boolean', value: true)
+option('acacia_cpre_avoid_unions', type: 'boolean', value: false)
+option('acacia_no_simd', type: 'boolean', value: false)
+option('acacia_no_array_cap_max', type: 'boolean', value: false)
+option('acacia_use_boolvec_over_bitset', type: 'boolean', value: false)
+option('acacia_compile_all_components', type: 'boolean', value: false)
+
+option('acacia_array_downset', type: 'combo',
+       choices: [
+         'vector_backed',
+         'vector_or_kdtree_backed',
+         'kdtree_backed',
+         'sharingtree_backed',
+         'simple_sharingtree_backed',
+         'sharingtrie_backed',
+         'skiplist_backed',
+         'cst_backed',
+         'vector_backed_bin',
+       ],
+       value: 'vector_backed')
+option('acacia_vector_downset', type: 'combo',
+       choices: [
+         'vector_backed',
+         'vector_or_kdtree_backed',
+         'kdtree_backed',
+         'sharingtree_backed',
+         'simple_sharingtree_backed',
+         'sharingtrie_backed',
+         'skiplist_backed',
+         'cst_backed',
+         'vector_backed_bin',
+       ],
+       value: 'vector_backed')
+option('acacia_array_impl', type: 'combo',
+       choices: ['auto', 'simd_array_backed_sum', 'array_backed_sum'],
+       value: 'auto')
+option('acacia_vector_impl', type: 'combo',
+       choices: ['auto', 'simd_vector_backed', 'vector_backed'],
+       value: 'auto')

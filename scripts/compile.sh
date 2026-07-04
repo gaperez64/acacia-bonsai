@@ -18,43 +18,25 @@ else
     echo "Spot installed successfully."
 fi
 
-# --- Compile acacia-bonsai configurations ---
-OPT='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
-
-BEST_BASE='-DDEFAULT_KMIN=2 -DDEFAULT_KINC=3 -DDEFAULT_UNREAL_X=UNREAL_X_BOTH
--DAUT_PREPROCESSOR=aut_preprocessors::standard
--DACACIA_ENABLE_AUT_PREPROCESSOR_SURELY_LOSING=0
--DACACIA_ENABLE_AUT_PREPROCESSOR_STANDARD=1
--DBOOLEAN_STATES=boolean_states::forward_saturation
--DIOS_PRECOMPUTER=ios_precomputers::powset
--DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0
--DACACIA_ENABLE_IOS_PRECOMPUTER_POWSET=1
--DINPUT_PICKER=input_pickers::critical
--DACACIA_ENABLE_INPUT_PICKER_CRITICAL_PQ=0
--DACACIA_ENABLE_INPUT_PICKER_CRITICAL=1
--DSIMD_IS_MAX=false
--DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed
--DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed
--DDECOMPOSE_SPEC=0'
-
-declare -A CONFIGS
-MONA='-DIOS_PRECOMPUTER=ios_precomputers::mona -DACACIA_ENABLE_IOS_PRECOMPUTER_POWSET=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD=0 -DACACIA_ENABLE_IOS_PRECOMPUTER_MONA=1'
-CONFIGS[best_decomp_mona]="$BEST_BASE $MONA -DDECOMPOSE_SPEC=1"
-CONFIGS[best_decomp_kdtree_mona]="$BEST_BASE -DARRAY_AND_BITSET_DOWNSET_IMPL=kdtree_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=kdtree_backed $MONA -DDECOMPOSE_SPEC=1"
-CONFIGS[base_iosprecom_mona]="$MONA"
-CONFIGS[best_decomp_sharingtrie_mona]="$BEST_BASE -DARRAY_AND_BITSET_DOWNSET_IMPL=sharingtrie_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=sharingtrie_backed $MONA -DDECOMPOSE_SPEC=1"
-
 cd /opt/acacia-bonsai
 
-for name in "${!CONFIGS[@]}"; do
+OPT='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
+mapfile -t CONFIG_NAMES < <(python3 scripts/acacia-config.py list-group docker_default)
+
+meson_args_for_config() {
+    local name=$1
+    python3 scripts/acacia-config.py meson-args "$name"
+}
+
+for name in "${CONFIG_NAMES[@]}"; do
     build="build_$name"
     if [ -d "$build" ]; then
         echo "$build already exists, skipping (remove to rebuild)."
         continue
     fi
-    flags="${CONFIGS[$name]}"
+    meson_args=$(meson_args_for_config "$name")
     echo "Building $name..."
-    CXXFLAGS="$OPT $flags" meson setup "$build" --buildtype=release
+    CXXFLAGS="$OPT $CXXFLAGS" meson setup "$build" --buildtype=release $meson_args
     meson compile -C "$build"
     echo "$name compiled successfully."
 done

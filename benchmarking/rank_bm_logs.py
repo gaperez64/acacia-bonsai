@@ -9,20 +9,17 @@ and each TIMEOUT twice the timeout cap.
 
 import argparse
 import glob
-import json
 import os
 import sys
+
+from benchlib import load_meson_jsonl
 
 
 def load_config(path):
     ok = timeouts = 0
     t_ok = 0.0
     max_to = 0.0
-    for line in open(path):
-        line = line.strip()
-        if not line:
-            continue
-        obj = json.loads(line)
+    for obj in load_meson_jsonl(path):
         dur = obj.get("duration", 0.0)
         if obj.get("result") == "OK":
             ok += 1

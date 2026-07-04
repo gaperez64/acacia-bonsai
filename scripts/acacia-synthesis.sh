@@ -19,12 +19,9 @@
 
 set -e
 
-CONFIGS=(
-    best_decomp_mona
-    best_decomp_kdtree_mona
-    base_iosprecom_mona
-    best_decomp_sharingtrie_mona
-)
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+mapfile -t CONFIGS < <(python3 "$REPO_ROOT/scripts/acacia-config.py" list-group docker_default)
 
 usage() {
     cat <<EOF
