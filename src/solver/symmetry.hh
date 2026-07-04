@@ -21,12 +21,15 @@
 // automorphism, since B carries the pi-applied edge conditions). The automata
 // here are small (linear in the number of clients).
 
+#include "configuration.hh"
 #include "utils/verbose.hh"
 
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -48,18 +51,23 @@ namespace symmetry {
       // produced gens[t]. Same order and length as gens.
       std::vector<std::pair<long, long>> gen_pairs;
       std::vector<long> indices;                // client indices, sorted (|indices| = n)
-      // True iff EVERY pairwise transposition on `indices` was verified, i.e. the
-      // verified group is (at least) the full symmetric group Sym(indices). This
-      // is the case the Young-subgroup orbit-of-input algorithm (DIAGNOSIS.md,
-      // "Symmetry reduction: design + status") applies to; a strict subgroup
-      // needs general orbit/stabilizer bookkeeping, not yet implemented, so
-      // callers should treat `full_symmetric=false` as "no exploitable symmetry"
-      // even if `gens` is nonempty.
+      // True iff the verified transpositions generate the full symmetric group
+      // Sym(indices). The exhaustive detector verifies every pair; the
+      // equivariant fast detector verifies a star generating set.
       bool full_symmetric = false;
       std::map<std::string, family> families;    // AP family metadata, keyed by prefix
 
       bool empty () const { return gens.empty (); }
       size_t size () const { return gens.size (); }
+  };
+
+  struct indexed_ap_analysis {
+      std::map<std::string, family> families;
+      std::vector<long> indices;
+      unsigned input_families = 0;
+      unsigned output_families = 0;
+
+      bool empty () const { return families.empty (); }
   };
 
   namespace detail {
@@ -210,13 +218,40 @@ namespace symmetry {
           return true;
         }
     };
+
+    inline std::optional<std::vector<unsigned>> verify_transposition (
+        const spot::twa_graph_ptr& aut, const std::map<std::string, family>& families,
+        long a, long b, const std::vector<std::vector<out_edge>>& oeA,
+        const std::vector<std::string>& sigA) {
+      const unsigned n = aut->num_states ();
+      const unsigned init = aut->get_init_state_number ();
+
+      spot::relabeling_map rm;
+      for (auto& [pfx, f] : families) {
+        rm[f.idx2ap.at (a)] = f.idx2ap.at (b);
+        rm[f.idx2ap.at (b)] = f.idx2ap.at (a);
+      }
+      auto B = spot::make_twa_graph (aut, spot::twa::prop_set::all ());
+      spot::relabel_here (B, &rm);
+      if (B->get_init_state_number () != init)
+        return std::nullopt;
+
+      const auto oeB = out_edges (B);
+      const auto sigB = signatures (B, oeB);
+
+      iso_finder f (n, oeA, oeB, sigA, sigB);
+      if (sigA[init] != sigB[init] or not f.consistent (init, init))
+        return std::nullopt;
+      f.assign (init, init);
+      if (not f.search ())
+        return std::nullopt;
+      return f.phi;
+    }
   }  // namespace detail
 
-  // Detect verified client-transposition symmetries of `aut`. `all_inputs` /
-  // `all_outputs` are BDD cubes over the input/output APs (used to keep each
-  // transposition within one side of the I/O partition).
-  inline group detect (const spot::twa_graph_ptr& aut, bdd all_inputs, bdd all_outputs) {
-    group G;
+  inline indexed_ap_analysis analyze_indexed_aps (const spot::twa_graph_ptr& aut,
+                                                  bdd all_inputs, bdd all_outputs) {
+    indexed_ap_analysis analysis;
     auto dict = aut->get_dict ();
 
     // Group indexed APs into families (prefix), tagged input/output.
@@ -224,32 +259,54 @@ namespace symmetry {
       const int v = dict->varnum (ap);
       const bdd vbdd = bdd_ithvar (v);
       const bool is_in = (bdd_exist (all_inputs, vbdd) != all_inputs);
+      const bool is_out = (bdd_exist (all_outputs, vbdd) != all_outputs);
+      if (not is_in and not is_out)
+        continue;
       std::string prefix; long idx;
       if (not detail::parse_indexed (ap.ap_name (), prefix, idx))
         continue;
-      auto& f = G.families[prefix];
+      auto& f = analysis.families[prefix];
       f.is_input = is_in;
       f.idx2ap[idx] = ap;
     }
-    if (G.families.empty ())
-      return G;
+    if (analysis.families.empty ())
+      return analysis;
 
     // Client indices present in EVERY family.
     std::map<long, int> cnt;
-    for (auto& [pfx, f] : G.families)
+    for (auto& [pfx, f] : analysis.families) {
+      if (f.is_input)
+        ++analysis.input_families;
+      else
+        ++analysis.output_families;
       for (auto& [idx, ap] : f.idx2ap)
         ++cnt[idx];
+    }
     for (auto& [idx, c] : cnt)
-      if (c == (int) G.families.size ())
-        G.indices.push_back (idx);
-    std::sort (G.indices.begin (), G.indices.end ());
-    if (G.indices.size () < 2)
+      if (c == (int) analysis.families.size ())
+        analysis.indices.push_back (idx);
+    std::sort (analysis.indices.begin (), analysis.indices.end ());
+    return analysis;
+  }
+
+  inline group group_from_analysis (const indexed_ap_analysis& analysis) {
+    group G;
+    G.families = analysis.families;
+    G.indices = analysis.indices;
+    return G;
+  }
+
+  // Detect verified client-transposition symmetries of `aut`. `all_inputs` /
+  // `all_outputs` are BDD cubes over the input/output APs (used to keep each
+  // transposition within one side of the I/O partition).
+  inline group detect (const spot::twa_graph_ptr& aut,
+                       const indexed_ap_analysis& analysis) {
+    group G = group_from_analysis (analysis);
+    if (G.families.empty () or G.indices.size () < 2)
       return G;
 
     const auto oeA = detail::out_edges (aut);
     const auto sigA = detail::signatures (aut, oeA);
-    const unsigned n = aut->num_states ();
-    const unsigned init = aut->get_init_state_number ();
 
     unsigned verified_pairs = 0;
     const unsigned total_pairs =
@@ -258,46 +315,82 @@ namespace symmetry {
     for (size_t ia = 0; ia < G.indices.size (); ++ia)
       for (size_t ib = ia + 1; ib < G.indices.size (); ++ib) {
         const long a = G.indices[ia], b = G.indices[ib];
-        // Build B = pi(A) with the transposition a<->b across all families.
-        spot::relabeling_map rm;
-        for (auto& [pfx, f] : G.families) {
-          rm[f.idx2ap.at (a)] = f.idx2ap.at (b);
-          rm[f.idx2ap.at (b)] = f.idx2ap.at (a);
-        }
-        auto B = spot::make_twa_graph (aut, spot::twa::prop_set::all ());
-        spot::relabel_here (B, &rm);
-        if (B->get_init_state_number () != init)
-          continue;  // shouldn't happen; be safe
-
-        const auto oeB = detail::out_edges (B);
-        const auto sigB = detail::signatures (B, oeB);
-
-        detail::iso_finder f (n, oeA, oeB, sigA, sigB);
-        if (sigA[init] != sigB[init] or not f.consistent (init, init))
-          continue;
-        f.assign (init, init);
-        if (f.search ()) {
-          G.gens.push_back (f.phi);
+        auto phi = detail::verify_transposition (aut, G.families, a, b, oeA, sigA);
+        if (phi.has_value ()) {
+          G.gens.push_back (std::move (*phi));
           G.gen_pairs.push_back ({a, b});
           ++verified_pairs;
         }
       }
 
-    // The Young-subgroup orbit-of-input algorithm requires the verified
-    // generators to cover EVERY pairwise transposition on `indices`, i.e. the
-    // verified group to be (at least) the full symmetric group. A partial set
-    // of transpositions generates a strict, structurally different subgroup
-    // (e.g. adjacent transpositions alone generate all of S_n too, but a
-    // sparser set may not) -- so require ALL pairs verified, not just enough
-    // to generate S_n abstractly, to keep the orbit-of-input reasoning
-    // (Stab(i) = Young subgroup) directly applicable without further proof.
+    // This compatibility detector remains exhaustive: callers that use
+    // symmetry::detect directly still receive every verified pairwise
+    // transposition in deterministic order.
     G.full_symmetric = (verified_pairs == total_pairs) and total_pairs > 0;
 
     verb_do (1, vout << "[symmetry] verified " << G.gens.size () << "/" << total_pairs
                      << " client-transposition generators over " << G.indices.size ()
                      << " clients (full_symmetric=" << G.full_symmetric
-                     << "), aut has " << n << " states\n");
+                     << "), aut has " << aut->num_states () << " states\n");
     return G;
+  }
+
+  inline group detect (const spot::twa_graph_ptr& aut, bdd all_inputs, bdd all_outputs) {
+    return detect (aut, analyze_indexed_aps (aut, all_inputs, all_outputs));
+  }
+
+  inline group detect_full_symmetric_generators (const spot::twa_graph_ptr& aut,
+                                                 const indexed_ap_analysis& analysis) {
+#if ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT
+    return detect (aut, analysis);
+#else
+    group G = group_from_analysis (analysis);
+    if (G.families.empty () or G.indices.size () < 2)
+      return G;
+
+    const auto oeA = detail::out_edges (aut);
+    const auto sigA = detail::signatures (aut, oeA);
+    const long root = G.indices.front ();
+    unsigned verified = 0;
+
+    for (size_t i = 1; i < G.indices.size (); ++i) {
+      const long other = G.indices[i];
+      auto phi = detail::verify_transposition (aut, G.families, root, other, oeA, sigA);
+      if (not phi.has_value ()) {
+        G.full_symmetric = false;
+        break;
+      }
+      G.gens.push_back (std::move (*phi));
+      G.gen_pairs.push_back ({root, other});
+      ++verified;
+    }
+    G.full_symmetric = (verified + 1 == G.indices.size ()) and verified > 0;
+
+# if ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION
+    const group exhaustive = detect (aut, analysis);
+    const bool agrees = (G.full_symmetric == exhaustive.full_symmetric) and
+                        (G.indices == exhaustive.indices);
+    if (not agrees)
+      verb_do (1, vout << "[symmetry] fast/exhaustive recognition mismatch:"
+                       << " fast_full=" << G.full_symmetric
+                       << " exhaustive_full=" << exhaustive.full_symmetric
+                       << " clients=" << G.indices.size () << "\n");
+    assert (agrees);
+# endif
+
+    const unsigned needed = G.indices.size () > 0 ? (unsigned) G.indices.size () - 1 : 0;
+    verb_do (1, vout << "[symmetry] fast verified " << G.gens.size () << "/" << needed
+                     << " star transposition generators over " << G.indices.size ()
+                     << " clients (full_symmetric=" << G.full_symmetric
+                     << "), aut has " << aut->num_states () << " states\n");
+    return G;
+#endif
+  }
+
+  inline group detect_full_symmetric_generators (const spot::twa_graph_ptr& aut,
+                                                 bdd all_inputs, bdd all_outputs) {
+    return detect_full_symmetric_generators (
+        aut, analyze_indexed_aps (aut, all_inputs, all_outputs));
   }
 
 }  // namespace symmetry

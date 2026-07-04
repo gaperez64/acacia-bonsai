@@ -11,6 +11,7 @@
 #include "actioners/standard.hh"
 #include "configuration.hh"
 #include "solver/symmetric_blocks.hh"
+#include "solver/symmetric_profile.hh"
 #include "solver/symmetry.hh"
 #include "utils/verbose.hh"
 
@@ -213,8 +214,12 @@ namespace acacia::solver_detail::equivariant {
     if (shared_assignments * type_counts.size () > ACACIA_EQUIVARIANT_MAX_ORBITS)
       return std::nullopt;
 
-    auto output_letters = detail::enumerate_letters (all_outputs,
-                                                     ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS);
+    std::vector<bdd> output_letters;
+    {
+      ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_output_enumerate);
+      output_letters = detail::enumerate_letters (all_outputs,
+                                                  ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS);
+    }
     if (output_letters.empty ())
       return std::nullopt;
 
@@ -231,11 +236,14 @@ namespace acacia::solver_detail::equivariant {
           for (unsigned i = 0; i < counts[type]; ++i)
             orbit.canonical_types.push_back (type);
 
-        std::set<action_vec> uniq;
-        for (bdd output : output_letters)
-          uniq.insert (
-              detail::compute_action_vec (aut, detail::compute_transset (aut, input & output)));
-        orbit.actions.assign (uniq.begin (), uniq.end ());
+        {
+          ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_action_dedup);
+          std::set<action_vec> uniq;
+          for (bdd output : output_letters)
+            uniq.insert (
+                detail::compute_action_vec (aut, detail::compute_transset (aut, input & output)));
+          orbit.actions.assign (uniq.begin (), uniq.end ());
+        }
         orbits.push_back (std::move (orbit));
       }
     }
@@ -349,21 +357,56 @@ namespace acacia::solver_detail::equivariant {
     if (num_states > ACACIA_EQUIVARIANT_MAX_STATES)
       return decline ("too many automaton states");
 
-    const auto G = symmetry::detect (aut, all_inputs, all_outputs);
+    symmetry::indexed_ap_analysis indexed;
+    {
+      ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_ap_scan);
+      indexed = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs);
+    }
+    if (indexed.empty ())
+      return decline ("no indexed AP families");
+    if (indexed.input_families == 0)
+      return decline ("no indexed input AP families");
+    if (indexed.indices.size () < ACACIA_EQUIVARIANT_MIN_CLIENTS)
+      return decline ("too few indexed clients");
+
+    symmetry::group G;
+    {
+      ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_detect);
+      G = symmetry::detect_full_symmetric_generators (aut, indexed);
+    }
     if (not G.full_symmetric)
       return decline ("not a verified full symmetric group");
 
-    auto L = symmetry::compute_block_layout (G, num_states);
+    std::optional<symmetry::block_layout> L;
+    {
+      ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_block_layout);
+      L = symmetry::compute_block_layout (G, num_states);
+    }
     if (not L.has_value ())
       return decline ("no usable block layout");
 
-    if (not symmetry::generators_match_layout (G, *L))
-      return decline ("generators do not match block layout");
+    if (ACACIA_EQUIVARIANT_MIN_BLOCKS > 0 and L->num_blocks < ACACIA_EQUIVARIANT_MIN_BLOCKS) {
+      verb_do (1, vout << "[equivariant] declining: low block payoff"
+                       << " clients=" << L->num_clients
+                       << " blocks=" << L->num_blocks
+                       << " min_blocks=" << ACACIA_EQUIVARIANT_MIN_BLOCKS << "\n");
+      return result<SetOfStates> {false, std::nullopt};
+    }
+
+    {
+      ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_generator_match);
+      if (not symmetry::generators_match_layout (G, *L))
+        return decline ("generators do not match block layout");
+    }
 
     if (not boolean_side_consistent (G))
       return decline ("generator crosses boolean/counting threshold");
 
-    auto orbits = build_orbits (aut, all_inputs, all_outputs, G, *L);
+    std::optional<std::vector<input_orbit>> orbits;
+    {
+      ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_orbit_build);
+      orbits = build_orbits (aut, all_inputs, all_outputs, G, *L);
+    }
     if (not orbits.has_value () or orbits->empty ())
       return decline ("input orbit construction failed or was capped");
 
@@ -389,6 +432,7 @@ namespace acacia::solver_detail::equivariant {
     SetOfStates f = SetOfStates (state (safe_vector));
 
     int loopcount = 0;
+    ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_solve_loop);
     while (true) {
       ++loopcount;
       bool changed = false;

@@ -390,7 +390,10 @@ namespace {
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
         verb_do (4, dict->dump (utils::vout));
 
-        // [DIAG] symmetry detection on the final game automaton (verbose only).
+        // [DIAG] symmetry detection on the final game automaton. Keep this
+        // behind an explicit macro so verbose timing runs do not pay for a
+        // duplicate recognition pass before solve_game().
+#if ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS
         verb_do (1, {
           auto sg = symmetry::detect (aut, all_inputs, all_outputs);
           vout << "[symmetry] generators=" << sg.size ()
@@ -404,6 +407,7 @@ namespace {
           else
             vout << "[symmetry] block_layout: none (declined)\n";
         });
+#endif
 
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
         std::optional<spot::twa_graph_ptr> maybe_strat =

@@ -199,11 +199,30 @@ namespace {
     const fixture fx = make_aut (n);
     posets::vectors::bitset_threshold = fx.aut->num_states ();
 
-    const auto G = symmetry::detect (fx.aut, fx.all_inputs, fx.all_outputs);
     bool ok = true;
+    const auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs,
+                                                        fx.all_outputs);
+    ok &= expect ("indexed AP families detected", not indexed.empty ());
+    ok &= expect ("one indexed input family", indexed.input_families == 1);
+    ok &= expect ("one indexed output family", indexed.output_families == 1);
+    ok &= expect ("indexed client count", indexed.indices.size () == n);
+    if (not ok)
+      return false;
+
+    const auto exhaustive = symmetry::detect (fx.aut, indexed);
+    ok &= expect ("exhaustive full symmetric group detected", exhaustive.full_symmetric);
+    ok &= expect ("exhaustive indices size", exhaustive.indices.size () == n);
+    if (not ok)
+      return false;
+
+    const auto G = symmetry::detect_full_symmetric_generators (fx.aut, indexed);
     ok &= expect ("full symmetric group detected", G.full_symmetric);
     ok &= expect ("indices size", G.indices.size () == n);
     ok &= expect ("generator pair metadata size", G.gen_pairs.size () == G.gens.size ());
+#if !ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT
+    ok &= expect ("star generator count", G.gens.size () == n - 1);
+#endif
+    ok &= expect ("fast and exhaustive agree on indices", G.indices == exhaustive.indices);
     if (not ok)
       return false;
 

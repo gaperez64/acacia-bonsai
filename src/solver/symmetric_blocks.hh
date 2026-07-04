@@ -14,7 +14,7 @@
 // subset of `gens` fixing them. This is the correct characterization
 // precisely because every generator here originates from a single AP-level
 // client-index transposition applied UNIFORMLY across the whole automaton
-// (by construction in symmetry::detect), so the generating group acts
+// (by construction in the symmetry detectors), so the generating group acts
 // "diagonally" -- the same abstract permutation on every block. We VERIFY
 // this structural assumption at runtime (every block must have exactly one
 // state per distinct stabilizer-signature, matching every other block) and
@@ -134,26 +134,27 @@ namespace symmetry {
           return std::nullopt;  // reference block itself isn't cleanly separated: bail
 
     // Match each recovered slot to the AP-level client index with the same
-    // stabilizer signature. Because symmetry::detect stores generators in
-    // sorted transposition-pair order when full_symmetric=true, the AP-side
-    // signature is reconstructible from G.indices alone.
-    std::vector<std::pair<long, long>> gen_pairs;
-    for (size_t ia = 0; ia < G.indices.size (); ++ia)
-      for (size_t ib = ia + 1; ib < G.indices.size (); ++ib)
-        gen_pairs.push_back ({G.indices[ia], G.indices[ib]});
-    if (gen_pairs.size () != G.gens.size ())
+    // stabilizer signature. Use the actual verified generator pairs, so this
+    // works for both exhaustive all-pairs detection and star generating sets.
+    if (G.gen_pairs.size () != G.gens.size ())
       return std::nullopt;
+    std::vector<std::vector<bool>> index_sig (n, std::vector<bool> (G.gens.size ()));
+    for (unsigned k = 0; k < n; ++k) {
+      for (size_t g = 0; g < G.gen_pairs.size (); ++g) {
+        auto [a, b] = G.gen_pairs[g];
+        index_sig[k][g] = (G.indices[k] != a and G.indices[k] != b);
+      }
+    }
+    for (unsigned k = 0; k < n; ++k)
+      for (unsigned k2 = k + 1; k2 < n; ++k2)
+        if (index_sig[k] == index_sig[k2])
+          return std::nullopt;
 
     L.slot_to_index.assign (n, -1);
     for (unsigned k = 0; k < n; ++k) {
       int matched_slot = -1;
       for (unsigned slot = 0; slot < n; ++slot) {
-        std::vector<bool> idx_sig (G.gens.size ());
-        for (size_t g = 0; g < gen_pairs.size (); ++g) {
-          auto [a, b] = gen_pairs[g];
-          idx_sig[g] = (G.indices[k] != a and G.indices[k] != b);
-        }
-        if (idx_sig == ref_sig[slot]) {
+        if (index_sig[k] == ref_sig[slot]) {
           matched_slot = (int) slot;
           break;
         }

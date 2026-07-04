@@ -27,6 +27,14 @@ namespace acacia::solver_detail::symmetric::profile {
     classic_pre_build,
     classic_intersect,
     classic_solve_total,
+    equivariant_ap_scan,
+    equivariant_detect,
+    equivariant_block_layout,
+    equivariant_generator_match,
+    equivariant_orbit_build,
+    equivariant_output_enumerate,
+    equivariant_action_dedup,
+    equivariant_solve_loop,
     count
   };
 
@@ -51,6 +59,14 @@ namespace acacia::solver_detail::symmetric::profile {
       case bucket::classic_pre_build: return "classic_pre_build";
       case bucket::classic_intersect: return "classic_intersect";
       case bucket::classic_solve_total: return "classic_solve_total";
+      case bucket::equivariant_ap_scan: return "equivariant_ap_scan";
+      case bucket::equivariant_detect: return "equivariant_detect";
+      case bucket::equivariant_block_layout: return "equivariant_block_layout";
+      case bucket::equivariant_generator_match: return "equivariant_generator_match";
+      case bucket::equivariant_orbit_build: return "equivariant_orbit_build";
+      case bucket::equivariant_output_enumerate: return "equivariant_output_enumerate";
+      case bucket::equivariant_action_dedup: return "equivariant_action_dedup";
+      case bucket::equivariant_solve_loop: return "equivariant_solve_loop";
       case bucket::count: break;
     }
     return "unknown";
