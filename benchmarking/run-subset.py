@@ -16,58 +16,14 @@ Example:
 import argparse
 import csv
 import os
-import signal
-import subprocess
+import shlex
 import sys
-import time
+
+from benchlib import parse_acacia_result, read_part, run_process_group, write_csv
 
 
-def run_pg(cmd, timeout):
-    """Run cmd in its own process group; on timeout kill the WHOLE group.
-
-    acacia-bonsai forks real/unreal worker children; a plain timeout kills only
-    the parent and orphans the workers (they keep burning CPU and corrupt later
-    timings). start_new_session=True + killpg fixes that.
-    """
-    t0 = time.time()
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                         text=True, start_new_session=True)
-    try:
-        out, err = p.communicate(timeout=timeout)
-        return out, err, p.returncode, time.time() - t0, False
-    except subprocess.TimeoutExpired:
-        try:
-            os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        try:
-            out, err = p.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-            out, err = "", ""
-        return out, err, 124, time.time() - t0, True
-
-
-def read_part(inst_ltl):
-    part = os.path.splitext(inst_ltl)[0] + ".part"
-    ins = outs = ""
-    for line in open(part):
-        t = line.split()
-        if t and t[0] == ".inputs":
-            ins = ",".join(t[1:])
-        elif t and t[0] == ".outputs":
-            outs = ",".join(t[1:])
-    return ins, outs
-
-
-def parse_result(out):
-    # UNREALIZABLE before REALIZABLE (substring); UNKNOWN otherwise.
-    if "UNREALIZABLE" in out:
-        return "UNREALIZABLE"
-    if "REALIZABLE" in out:
-        return "REALIZABLE"
-    if "UNKNOWN" in out:
-        return "UNKNOWN"
-    return "?"
+def read_ltl_partition(inst_ltl):
+    return read_part(os.path.splitext(inst_ltl)[0] + ".part")
 
 
 def main():
@@ -83,7 +39,8 @@ def main():
                    help="filter: keep these realizability values (real/unreal)")
     p.add_argument("--list", help="alternatively, a file of instance basenames")
     p.add_argument("--flags", default="", help="extra acacia flags, e.g. '-U -u automaton'")
-    p.add_argument("--mem", default="4", help="-l memory limit (GB)")
+    p.add_argument("--runner-prefix", default="",
+                   help="optional external wrapper, e.g. systemd-run/cgexec/timeout")
     p.add_argument("--timeout", type=float, default=25.0)
     p.add_argument("--csv", default=None)
     p.add_argument("--limit", type=int, default=0, help="cap number of instances (0=all)")
@@ -104,7 +61,8 @@ def main():
     if args.limit:
         insts = insts[:args.limit]
 
-    extra = args.flags.split()
+    extra = shlex.split(args.flags)
+    runner_prefix = shlex.split(args.runner_prefix)
     rows = []
     solved = 0
     tot_time = 0.0
@@ -114,22 +72,20 @@ def main():
         if not os.path.exists(ltl):
             print(f"  {base:44s} MISSING")
             continue
-        ins, outs = read_part(ltl)
-        cmd = [args.bin, "-F", ltl, "-i", ins, "-o", outs, "-l", args.mem] + extra
-        out, err, rc, dt, timed_out = run_pg(cmd, args.timeout)
-        res = "TIMEOUT" if timed_out else parse_result(out + err)
+        ins, outs = read_ltl_partition(ltl)
+        cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
+        run = run_process_group(cmd, args.timeout)
+        res = "TIMEOUT" if run.timed_out else parse_acacia_result(run.stdout + run.stderr)
         ok = res in ("REALIZABLE", "UNREALIZABLE")
         solved += ok
-        tot_time += dt
-        rows.append({"instance": base, "result": res, "seconds": round(dt, 3), "exit": rc})
-        print(f"  {base:44s} {res:13s} {dt:7.2f}s")
+        tot_time += run.seconds
+        rows.append({"instance": base, "result": res, "seconds": round(run.seconds, 3),
+                     "exit": run.returncode})
+        print(f"  {base:44s} {res:13s} {run.seconds:7.2f}s")
 
     print(f"\nsolved {solved}/{len(rows)}   total {tot_time:.1f}s")
     if args.csv:
-        with open(args.csv, "w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=["instance", "result", "seconds", "exit"])
-            w.writeheader()
-            w.writerows(rows)
+        write_csv(args.csv, rows, ["instance", "result", "seconds", "exit"])
         print(f"wrote {args.csv}")
 
 

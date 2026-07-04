@@ -44,7 +44,7 @@ def run_process_group(cmd: list[str], timeout: float) -> RunResult:
             os.killpg(proc.pid, signal.SIGKILL)
             stdout, stderr = proc.communicate()
     seconds = time.monotonic() - started
-    return RunResult(stdout, stderr, proc.returncode, seconds, timed_out)
+    return RunResult(stdout, stderr, 124 if timed_out else proc.returncode, seconds, timed_out)
 
 
 def parse_acacia_result(stdout_stderr: str) -> str:

@@ -7,55 +7,17 @@ process group, and records result/time in CSV form.
 """
 
 import argparse
-import csv
 import os
-import signal
+import shlex
 import subprocess
 import sys
 import tempfile
-import time
+
+from benchlib import parse_acacia_result, read_part, run_process_group, write_csv
 
 
-def run_pg(cmd, timeout):
-    t0 = time.time()
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                         text=True, start_new_session=True)
-    try:
-        out, err = p.communicate(timeout=timeout)
-        return out, err, p.returncode, time.time() - t0, False
-    except subprocess.TimeoutExpired:
-        try:
-            os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        try:
-            out, err = p.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-            out, err = "", ""
-        return out, err, 124, time.time() - t0, True
-
-
-def parse_result(out):
-    if "UNREALIZABLE" in out:
-        return "UNREALIZABLE"
-    if "REALIZABLE" in out:
-        return "REALIZABLE"
-    if "UNKNOWN" in out:
-        return "UNKNOWN"
-    return "?"
-
-
-def parse_part(path):
-    ins = outs = ""
-    with open(path) as fh:
-        for line in fh:
-            parts = line.split()
-            if not parts:
-                continue
-            if parts[0] == ".inputs":
-                ins = ",".join(parts[1:])
-            elif parts[0] == ".outputs":
-                outs = ",".join(parts[1:])
+def parse_tlsf_part(path):
+    ins, outs = read_part(path)
     if not ins or not outs:
         raise RuntimeError(f"missing .inputs/.outputs in {path}")
     return ins, outs
@@ -67,7 +29,7 @@ def translate_tlsf(syfco, tlsf, workdir):
     with open(ltl, "w") as out:
         subprocess.run([syfco, tlsf, "-f", "ltlxba", "-m", "fully", "-pf", part],
                        stdout=out, stderr=subprocess.PIPE, text=True, check=True)
-    ins, outs = parse_part(part)
+    ins, outs = parse_tlsf_part(part)
     return ltl, ins, outs
 
 
@@ -99,7 +61,8 @@ def main():
     p.add_argument("--list", help="file containing TLSF paths")
     p.add_argument("--pattern", help="case-insensitive path substring filter")
     p.add_argument("--flags", default="", help="extra acacia flags")
-    p.add_argument("--mem", default="4", help="-l memory limit in GiB")
+    p.add_argument("--runner-prefix", default="",
+                   help="optional external wrapper, e.g. systemd-run/cgexec/timeout")
     p.add_argument("--timeout", type=float, default=25.0)
     p.add_argument("--csv")
     p.add_argument("--limit", type=int, default=0)
@@ -110,7 +73,8 @@ def main():
     if not insts:
         sys.exit("no TLSF instances selected")
 
-    extra = args.flags.split()
+    extra = shlex.split(args.flags)
+    runner_prefix = shlex.split(args.runner_prefix)
     rows = []
     solved = 0
     total = 0.0
@@ -122,9 +86,11 @@ def main():
         try:
             with tempfile.TemporaryDirectory(prefix="ab-tlsf-") as td:
                 ltl, ins, outs = translate_tlsf(args.syfco, tlsf, td)
-                cmd = [args.bin, "-F", ltl, "-i", ins, "-o", outs, "-l", args.mem] + extra
-                out, err, rc, dt, timed_out = run_pg(cmd, args.timeout)
-                res = "TIMEOUT" if timed_out else parse_result(out + err)
+                cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
+                run = run_process_group(cmd, args.timeout)
+                rc = run.returncode
+                dt = run.seconds
+                res = "TIMEOUT" if run.timed_out else parse_acacia_result(run.stdout + run.stderr)
         except subprocess.CalledProcessError as e:
             rc = e.returncode
             dt = 0.0
@@ -141,10 +107,7 @@ def main():
 
     print(f"\nsolved {solved}/{len(rows)}   total {total:.1f}s")
     if args.csv:
-        with open(args.csv, "w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=["instance", "result", "seconds", "exit"])
-            w.writeheader()
-            w.writerows(rows)
+        write_csv(args.csv, rows, ["instance", "result", "seconds", "exit"])
         print(f"wrote {args.csv}")
 
 
