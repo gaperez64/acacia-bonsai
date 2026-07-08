@@ -104,9 +104,17 @@ typical first pass is:
 ```
 ./self-benchmark.sh \
   -b ab/syntcomp21/crit \
-  -c ltlsynt,best_decomp_mona,best_mona,base_iosprecom_mona,best_decomp_kdtree_mona,best_decomp_sharingtrie_mona,best_decomp_mona_elevator,best_decomp_mona_spotfast_det_and_gfg \
+  -c ltlsynt,best_decomp_mona,best_mona,base_iosprecom_mona,best_decomp_kdtree_mona,best_decomp_sharingtrie_mona,best_decomp_sharingtree_mona,best_decomp_simpsharingtree_mona,best_decomp_skiplist_mona,best_decomp_cst_mona \
   -t 1.7 -f
 benchmarking/rank_bm_logs.py _bm-logs > _bm-logs/ranking.txt
+```
+
+For the cgrouped overnight campaign, the default Acacia set comes from the
+`local_tuning_default` preset group.  To run only the downset data-structure
+sweep against already-collected tool logs, use:
+```
+ACACIA_CONFIG_GROUP=posets_downset_sweep TOOL_CONFIGS= \
+  ./scripts/overnight-benchmark-session.sh
 ```
 
 Use the measured top four Acacia configurations from that ranking for the next

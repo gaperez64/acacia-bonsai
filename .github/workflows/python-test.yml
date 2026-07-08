@@ -33,9 +33,20 @@ jobs:
 
       - name: Install newer libltldl
         run: |
-          sudo wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
-          sudo dpkg -i libltdl7_2.5.4-4build1_amd64.deb
-          sudo apt -f install
+          set -euo pipefail
+          deb=libltdl7_2.5.4-4build1_amd64.deb
+          for url in \
+            http://archive.ubuntu.com/ubuntu/pool/main/libt/libtool/${deb} \
+            http://launchpadlibrarian.net/815947228/${deb}
+          do
+            if wget --tries=5 --waitretry=10 --retry-connrefused --retry-on-http-error=503,504 -O "${deb}" "${url}"; then
+              sudo dpkg -i "${deb}" || sudo apt -f install -y
+              sudo apt -f install -y
+              exit 0
+            fi
+          done
+          echo "failed to download ${deb}" >&2
+          exit 1
 
       - name: Checkout repository and submodules
         uses: actions/checkout@v6

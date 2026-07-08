@@ -20,7 +20,12 @@ SWAP_MAX=${SWAP_MAX:-0}
 SLICES=${SLICES:-4}
 TOOL_SLICES=${TOOL_SLICES:-$SLICES}
 
-ACACIA_CONFIGS=${ACACIA_CONFIGS-best_mona base_iosprecom_mona best_decomp_kdtree_mona best_decomp_sharingtrie_mona}
+ACACIA_CONFIG_GROUP=${ACACIA_CONFIG_GROUP:-local_tuning_default}
+if [[ -z ${ACACIA_CONFIGS+x} ]]; then
+  mapfile -t _ACACIA_CONFIG_GROUP_ROWS < <(python3 scripts/acacia-config.py list-group "$ACACIA_CONFIG_GROUP")
+  ACACIA_CONFIGS="${_ACACIA_CONFIG_GROUP_ROWS[*]}"
+  unset _ACACIA_CONFIG_GROUP_ROWS
+fi
 TOOL_CONFIGS=${TOOL_CONFIGS-ltlsynt_no_decompose ltlsynt_no_bypass ltlsynt_no_obligation ltlsynt_no_specials}
 
 export BENCHMARK_CGROUP=${BENCHMARK_CGROUP:-strict}
@@ -114,6 +119,7 @@ PY
 
 log "SESSION $SESSION_NAME"
 log "suite=$SUITE timeout_factor=$TIMEOUT_FACTOR slices=$SLICES tool_slices=$TOOL_SLICES memory=$BENCHMARK_CGROUP_MEMORY_MAX swap=$BENCHMARK_CGROUP_SWAP_MAX"
+log "acacia_config_group=$ACACIA_CONFIG_GROUP"
 log "acacia_configs=$ACACIA_CONFIGS"
 log "tool_configs=$TOOL_CONFIGS"
 

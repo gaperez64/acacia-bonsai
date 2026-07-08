@@ -20,7 +20,6 @@ fi
 
 cd /opt/acacia-bonsai
 
-OPT='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
 mapfile -t CONFIG_NAMES < <(python3 scripts/acacia-config.py list-group docker_default)
 
 meson_args_for_config() {
@@ -36,7 +35,7 @@ for name in "${CONFIG_NAMES[@]}"; do
     fi
     meson_args=$(meson_args_for_config "$name")
     echo "Building $name..."
-    CXXFLAGS="$OPT $CXXFLAGS" meson setup "$build" --buildtype=release $meson_args
+    meson setup "$build" --buildtype=release -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true -Dacacia_compiler_profile=release $meson_args
     meson compile -C "$build"
     echo "$name compiled successfully."
 done

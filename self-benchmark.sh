@@ -13,27 +13,20 @@ BENCHMARK_COMPILE_PROFILE=${BENCHMARK_COMPILE_PROFILE:-normal}
 BENCHMARK_COMPILE_JOBS=${BENCHMARK_COMPILE_JOBS:-1}
 BENCHMARK_TEST_JOBS=${BENCHMARK_TEST_JOBS:-1}
 
-# -fuse-linker-plugin requires the gold linker, which is unavailable on macOS
-if [[ "$(uname)" == Darwin ]]; then
-    opt='-march=native -Ofast -flto -pipe -DNO_VERBOSE -DNDEBUG'
-else
-    opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
-fi
-opt_justtest=''
 compile_args=()
 
-declare -A confs
+declare -A config_kinds
 declare -A meson_confs
 declare -A tool_descriptions
 declare -A tool_envs
 declare -A tool_suite_prefixes
 config_helper=${ACACIA_CONFIG_HELPER:-./scripts/acacia-config.py}
 for name in ${(f)"$(python3 "$config_helper" list-presets)"}; do
-    confs[$name]="$(python3 "$config_helper" cxxflags "$name")"
+    config_kinds[$name]="acacia"
     meson_confs[$name]="$(python3 "$config_helper" meson-args "$name")"
 done
 for name in ${(f)"$(python3 "$config_helper" list-tools)"}; do
-    confs[$name]="__external_tool__"
+    config_kinds[$name]="tool"
     tool_descriptions[$name]="$(python3 "$config_helper" tool-description "$name")"
     tool_envs[$name]="$(python3 "$config_helper" tool-env "$name")"
     tool_suite_prefixes[$name]="$(python3 "$config_helper" tool-suite-prefix "$name")"
@@ -44,7 +37,7 @@ force=false
 justtest=false
 native_file=
 donot=()
-conflist=(${(k)confs})
+conflist=(${(k)config_kinds})
 benchsuites=(--suite=$BENCHMARK_SUITE)
 meson_slice=()
 
@@ -52,7 +45,7 @@ if (( $# == 0 )); then
   secs=10
 
   cat <<EOF
-No option given; this will build, compile, and benchmark ${#confs} different configurations.
+No option given; this will build, compile, and benchmark ${#config_kinds} different configurations.
 To build/compile/benchmark with default (debug) options, run:
 
   $ meson setup build
@@ -74,11 +67,11 @@ while getopts "hplBCLjRfb:t:c:m:n:s:" option; do
         h) cat <<EOF
 usage: $0 [-hplBCLjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-m MEMORY] [-n NATIVE_FILE] [-s SLICE/N]
   -h: Print this message.
-  -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
+  -p: Do not build/compile/benchmark, instead, print the Meson setup arguments.
   -l: Do not build/compile/benchmark, instead, list configurations.
   -B: Do not build.
   -C: Do not compile.
-  -L: Use low-memory non-debug compile flags (-O0 -g0, no LTO) and compile with one job.
+  -L: Use the low-memory Meson compiler profile (-O0 -g0, no LTO) and compile with one job.
   -j: Just test instead of benchmarking.
   -R: Do not benchmark.
   -f: Do not fail when a build, compile, or benchmark does, continue as if they passed.
@@ -118,20 +111,18 @@ EOF
     esac
 done
 
-## If we're just testing, go for a fast compilation
-rel="--buildtype=release"
+## If we're just testing, go for a fast compilation.
+setup_args=(--buildtype=release -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true -Dacacia_compiler_profile=release)
 if $justtest; then
-    opt=$opt_justtest
-    echo "Using opt $opt for faster compile-to-test times"
-    rel=""
+    setup_args=()
+    echo "Using Meson default debug profile for faster compile-to-test times"
 fi
 case $BENCHMARK_COMPILE_PROFILE in
     normal) ;;
     lowmem)
-        opt='-O0 -g0 -pipe -DNO_VERBOSE -DNDEBUG'
-        rel='--buildtype=plain'
+        setup_args=(--buildtype=plain -Doptimization=0 -Ddebug=false -Db_lto=false -Db_ndebug=true -Dacacia_compiler_profile=lowmem)
         compile_args=(-j "$BENCHMARK_COMPILE_JOBS")
-        echo "Using low-memory compile profile: opt $opt, compile jobs $BENCHMARK_COMPILE_JOBS"
+        echo "Using low-memory Meson compile profile, compile jobs $BENCHMARK_COMPILE_JOBS"
         ;;
     *)
         print -u2 "ERROR: BENCHMARK_COMPILE_PROFILE must be 'normal' or 'lowmem' (got '$BENCHMARK_COMPILE_PROFILE')."
@@ -247,7 +238,7 @@ run_benchmark_command() {
 
 is_tool_config() {
     local name=$1
-    [[ ${confs[$name]} == __external_tool__ ]]
+    [[ ${config_kinds[$name]} == tool ]]
 }
 
 is_compiled_acacia_build() {
@@ -290,7 +281,7 @@ benchmark_build_for() {
 ## Print and list mode
 if [[ $mode == print || $mode == list ]]; then
     for name in $conflist; do
-        if (( ! $+confs[$name] )); then
+        if (( ! $+config_kinds[$name] )); then
             echo "error: $name, unknown configuration."
             $force || exit 2
             continue
@@ -303,7 +294,7 @@ if [[ $mode == print || $mode == list ]]; then
                     echo -n " env: ${tool_envs[$name]//$'\n'/ }"
                 fi
             else
-                echo -n ": CXXFLAGS='$opt' ${meson_confs[$name]}" | tr '\n' ' '
+                echo -n ": meson setup ${(j: :)setup_args} ${meson_confs[$name]}" | tr '\n' ' '
             fi
         fi
         echo
@@ -314,7 +305,7 @@ fi
 ## Build
 if ! (( $donot[(Ie)build] )); then
     for name in $conflist; do
-        if (( ! $+confs[$name] )); then
+        if (( ! $+config_kinds[$name] )); then
             echo "error: $name, unknown configuration."
             $force || exit 2
             continue
@@ -344,7 +335,7 @@ if ! (( $donot[(Ie)build] )); then
             echo -n "building $build (logfile: $log)... "
             native_flag=()
             [[ -n $native_file ]] && native_flag=(--native-file "$native_file")
-            if CXXFLAGS="$opt $CXXFLAGS" meson setup $build $rel $native_flag $meson_param &>> $log; then
+            if meson setup $build $setup_args $native_flag $meson_param &>> $log; then
                 print -r -- "$current_config" > $build/.acacia-config.json
                 echo "done."
             else
@@ -359,7 +350,7 @@ fi
 ## Compile
 if ! (( $donot[(Ie)compile] )); then
     for name in $conflist; do
-        if (( ! $+confs[$name] )); then
+        if (( ! $+config_kinds[$name] )); then
             echo "error: $name, unknown configuration."
             $force || exit 2
             continue
@@ -406,7 +397,7 @@ fi
 if ! (( $donot[(Ie)benchmark] )); then
     configure_benchmark_cgroup
     for name in $conflist; do
-        if (( ! $+confs[$name] )); then
+        if (( ! $+config_kinds[$name] )); then
             echo "error: $name, unknown configuration."
             $force || exit 2
             continue
@@ -482,7 +473,7 @@ if ! (( $donot[(Ie)benchmark] )); then
 	        fi
 	    else
 	        print -r -- "kind=acacia"
-	        print -r -- "cxxflags=$opt ${confs[$name]}"
+	        print -r -- "meson_setup_args=${(j: :)setup_args} ${meson_confs[$name]}"
 	        if [[ -e .acacia-config.json ]]; then
 	            print -r -- "normalized_config_json_begin"
 	            cat .acacia-config.json

@@ -216,7 +216,7 @@ memory is tight, add `-L` to use the low-memory compile profile.
 Acacia-Bonsai's optimized variants are compile-time configurations.  The
 configuration registry lives in `config/acacia-options.json` and
 `config/acacia-presets.json`; `scripts/acacia-config.py` validates presets and
-translates them either to Meson options or to legacy `CXXFLAGS` macros.
+translates them to Meson options.
 
 Useful commands:
 ```
@@ -230,7 +230,9 @@ For direct Meson builds, pass the generated option list:
 ```
 meson setup build_best_decomp_mona \
   $(python3 scripts/acacia-config.py meson-args best_decomp_mona) \
-  --buildtype=release
+  --buildtype=release \
+  -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true \
+  -Dacacia_compiler_profile=release
 meson compile -C build_best_decomp_mona
 ```
 

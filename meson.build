@@ -20,6 +20,38 @@ posets_dep = dependency ('posets')
 
 cpp = meson.get_compiler('cpp')
 
+compiler_profile = get_option ('acacia_compiler_profile')
+compiler_profile_args = []
+compiler_profile_link_args = []
+if compiler_profile == 'release'
+  compiler_profile_args = [
+    '-march=native',
+    '-Ofast',
+    '-pipe',
+    '-DNO_VERBOSE',
+    '-DNDEBUG',
+  ]
+  if host_machine.system () != 'darwin'
+    compiler_profile_args += ['-fuse-linker-plugin']
+    compiler_profile_link_args += ['-fuse-linker-plugin']
+  endif
+elif compiler_profile == 'lowmem'
+  compiler_profile_args = [
+    '-pipe',
+    '-DNO_VERBOSE',
+    '-DNDEBUG',
+  ]
+endif
+if compiler_profile_args.length () > 0
+  add_project_arguments (cpp.get_supported_arguments (compiler_profile_args),
+                         language: 'cpp')
+endif
+if compiler_profile_link_args.length () > 0
+  add_project_link_arguments (
+      cpp.get_supported_link_arguments (compiler_profile_link_args),
+      language: 'cpp')
+endif
+
 if cpp.has_header ('experimental/simd')
   stdsimd_dep = declare_dependency ()
 else

@@ -124,7 +124,7 @@ def bool_literal(value: bool) -> str:
     return "true" if value else "false"
 
 
-def cxxflags(options: dict[str, Any], values: dict[str, Any]) -> list[str]:
+def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[str]:
     flags: list[str] = [
         f"-DDEFAULT_K={values['default_k']}",
         f"-DDEFAULT_KMIN={values['default_kmin']}",
@@ -211,7 +211,7 @@ def meson_args(values: dict[str, Any]) -> list[str]:
 
 def emit_config_header(options: dict[str, Any], values: dict[str, Any], path: pathlib.Path) -> None:
     lines = ["#pragma once", ""]
-    for flag in cxxflags(options, values):
+    for flag in preprocessor_flags(options, values):
         if not flag.startswith("-D"):
             continue
         define = flag[2:]
@@ -263,8 +263,6 @@ def main() -> int:
     tool_env_p.add_argument("tool")
     hash_p = sub.add_parser("hash")
     hash_p.add_argument("preset")
-    flags_p = sub.add_parser("cxxflags")
-    flags_p.add_argument("preset")
     meson_p = sub.add_parser("meson-args")
     meson_p.add_argument("preset")
     emit_p = sub.add_parser("emit-config-header")
@@ -315,8 +313,6 @@ def main() -> int:
         print(json.dumps(values, sort_keys=True, indent=2))
     elif args.cmd == "hash":
         print(stable_hash(values))
-    elif args.cmd == "cxxflags":
-        print(" ".join(cxxflags(options, values)))
     elif args.cmd == "meson-args":
         print(" ".join(meson_args(values)))
     elif args.cmd == "emit-config-header":

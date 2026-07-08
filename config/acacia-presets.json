@@ -235,6 +235,26 @@
       "best_decomp_kdtree_mona",
       "base_iosprecom_mona",
       "best_decomp_sharingtrie_mona"
+    ],
+    "local_tuning_default": [
+      "best_decomp_mona",
+      "best_mona",
+      "base_iosprecom_mona",
+      "best_decomp_kdtree_mona",
+      "best_decomp_sharingtrie_mona",
+      "best_decomp_sharingtree_mona",
+      "best_decomp_simpsharingtree_mona",
+      "best_decomp_skiplist_mona",
+      "best_decomp_cst_mona"
+    ],
+    "posets_downset_sweep": [
+      "best_decomp_mona",
+      "best_decomp_kdtree_mona",
+      "best_decomp_sharingtrie_mona",
+      "best_decomp_sharingtree_mona",
+      "best_decomp_simpsharingtree_mona",
+      "best_decomp_skiplist_mona",
+      "best_decomp_cst_mona"
     ]
   }
 }
