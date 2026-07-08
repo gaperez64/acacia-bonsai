@@ -49,6 +49,13 @@ def preset_data(presets: dict[str, Any], name: str) -> dict[str, Any]:
         raise SystemExit(f"unknown Acacia preset: {name}") from exc
 
 
+def tool_data(presets: dict[str, Any], name: str) -> dict[str, Any]:
+    try:
+        return presets.get("tool_baselines", {})[name]
+    except KeyError as exc:
+        raise SystemExit(f"unknown benchmark tool baseline: {name}") from exc
+
+
 def normalize_preset(options: dict[str, Any], presets: dict[str, Any], name: str,
                      stack: tuple[str, ...] = ()) -> dict[str, Any]:
     if name in stack:
@@ -89,6 +96,22 @@ def validate_preset(options: dict[str, Any], presets: dict[str, Any], name: str)
         raise SystemExit(f"{name}: no_ios_precomputation requires delegate ios_precomputer")
 
 
+def validate_tool(presets: dict[str, Any], name: str) -> None:
+    data = tool_data(presets, name)
+    valid_keys = {"description", "suite_prefix", "env"}
+    for key in data:
+        if key not in valid_keys:
+            raise SystemExit(f"{name}: unknown tool-baseline key {key}")
+    env = data.get("env", {})
+    if not isinstance(env, dict):
+        raise SystemExit(f"{name}: tool-baseline env must be an object")
+    for key, value in env.items():
+        if not isinstance(key, str) or not key:
+            raise SystemExit(f"{name}: tool-baseline env keys must be non-empty strings")
+        if not isinstance(value, str):
+            raise SystemExit(f"{name}: tool-baseline env values must be strings")
+
+
 def normalized_json(values: dict[str, Any]) -> str:
     return json.dumps(values, sort_keys=True, separators=(",", ":"))
 
@@ -125,6 +148,12 @@ def cxxflags(options: dict[str, Any], values: dict[str, Any]) -> list[str]:
         flags.append("-DUSE_BOOLVEC_OVER_BITSET")
     if values["compile_all_components"]:
         flags.append("-DACACIA_COMPILE_ALL_COMPONENTS=1")
+    if values["enable_diagnostics"]:
+        flags.append("-DACACIA_ENABLE_DIAGNOSTICS=1")
+    if values["enable_equivariant_solver"]:
+        flags.append("-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1")
+    if values["enable_symmetric_solver"]:
+        flags.append("-DACACIA_ENABLE_SYMMETRIC_SOLVER=1")
     if values["array_impl"] != "auto":
         flags.append(f"-DARRAY_IMPL={values['array_impl']}")
     if values["vector_impl"] != "auto":
@@ -159,6 +188,9 @@ MESON_OPTION_NAMES = {
     "use_boolvec_over_bitset": "acacia_use_boolvec_over_bitset",
     "cpre_avoid_unions": "acacia_cpre_avoid_unions",
     "compile_all_components": "acacia_compile_all_components",
+    "enable_diagnostics": "acacia_enable_diagnostics",
+    "enable_equivariant_solver": "acacia_enable_equivariant_solver",
+    "enable_symmetric_solver": "acacia_enable_symmetric_solver",
     "aut_preprocessor": "acacia_aut_preprocessor",
     "boolean_states": "acacia_boolean_states",
     "ios_precomputer": "acacia_ios_precomputer",
@@ -199,6 +231,16 @@ def emit_config_header(options: dict[str, Any], values: dict[str, Any], path: pa
 def command_validate(options: dict[str, Any], presets: dict[str, Any]) -> None:
     for name in presets["presets"]:
         validate_preset(options, presets, name)
+    for name in presets.get("tool_baselines", {}):
+        validate_tool(presets, name)
+    for group_name, group in presets.get("groups", {}).items():
+        for name in group:
+            if name not in presets["presets"]:
+                raise SystemExit(f"{group_name}: unknown preset {name}")
+
+
+def tool_env_lines(data: dict[str, Any]) -> list[str]:
+    return [f"{key}={value}" for key, value in sorted(data.get("env", {}).items())]
 
 
 def main() -> int:
@@ -206,10 +248,19 @@ def main() -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("validate")
     sub.add_parser("list-presets")
+    sub.add_parser("list-tools")
     group_p = sub.add_parser("list-group")
     group_p.add_argument("group")
     show_p = sub.add_parser("show")
     show_p.add_argument("preset")
+    show_tool_p = sub.add_parser("show-tool")
+    show_tool_p.add_argument("tool")
+    tool_desc_p = sub.add_parser("tool-description")
+    tool_desc_p.add_argument("tool")
+    tool_prefix_p = sub.add_parser("tool-suite-prefix")
+    tool_prefix_p.add_argument("tool")
+    tool_env_p = sub.add_parser("tool-env")
+    tool_env_p.add_argument("tool")
     hash_p = sub.add_parser("hash")
     hash_p.add_argument("preset")
     flags_p = sub.add_parser("cxxflags")
@@ -230,6 +281,11 @@ def main() -> int:
         for name in sorted(presets["presets"]):
             print(name)
         return 0
+    if args.cmd == "list-tools":
+        for name in sorted(presets.get("tool_baselines", {})):
+            validate_tool(presets, name)
+            print(name)
+        return 0
     if args.cmd == "list-group":
         try:
             group = presets["groups"][args.group]
@@ -238,6 +294,19 @@ def main() -> int:
         for name in group:
             validate_preset(options, presets, name)
             print(name)
+        return 0
+    if args.cmd in {"show-tool", "tool-description", "tool-suite-prefix", "tool-env"}:
+        validate_tool(presets, args.tool)
+        data = tool_data(presets, args.tool)
+        if args.cmd == "show-tool":
+            print(json.dumps(data, sort_keys=True, indent=2))
+        elif args.cmd == "tool-description":
+            print(data.get("description", "external benchmark backend"))
+        elif args.cmd == "tool-suite-prefix":
+            print(data.get("suite_prefix", args.tool))
+        elif args.cmd == "tool-env":
+            for line in tool_env_lines(data):
+                print(line)
         return 0
 
     validate_preset(options, presets, args.preset)

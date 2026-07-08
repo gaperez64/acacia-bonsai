@@ -1,36 +1,32 @@
-# --- syfco builder stage --------------------------------------------------
-# syfco (https://github.com/reactive-systems/syfco) translates TLSF specs
-# into the LTL + input/output partition that acacia-bonsai consumes.
-# Built here in a throwaway Haskell image so the final image only carries
-# the resulting ~5 MB binary instead of the full GHC/cabal toolchain.
-FROM haskell:9.6 AS syfco-builder
-# The syfco-1.1.0.0 release on Hackage pins base < 4.10 (GHC <= 8.0), so
-# cabal install syfco fails against modern haskell images. Build from
-# the upstream git repo instead and pass --allow-newer=base so a stale
-# upper bound on base does not block the build on newer GHCs.
-RUN apt-get update && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
-RUN git clone --depth 1 https://github.com/reactive-systems/syfco.git /src/syfco
-WORKDIR /src/syfco
-RUN cabal update && \
-    cabal install --install-method=copy --installdir=/out \
-                  --allow-newer=base
-
-# --- main image -----------------------------------------------------------
 FROM gcc:14.2-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG SPOT_VERSION=2.15.1
+ARG TLSF_TOOLS_LINUX_X86_64_URL=https://github.com/gaperez64/tlsf-tools/releases/download/v1.3/tlsf-tools-v1.3-linux-x86_64-v2.tar.gz
 
 # Build tools (extends syntcomp_tgcc docker_full package list)
 RUN apt-get update && \
-    apt-get install -y wget cmake autoconf time python3-dev \
+    apt-get install -y ca-certificates wget cmake autoconf time python3-dev \
         meson ninja-build pkg-config python3-pip \
         automake libtool libltdl-dev bison flex zsh git \
     && rm -rf /var/lib/apt/lists/*
 
-# syfco binary copied from the builder stage above
-COPY --from=syfco-builder /out/syfco /usr/local/bin/syfco
+# TLSF frontend tools used by scripts/acacia-bonsai.sh --tlsf.
+RUN wget -q -O /tmp/tlsf-tools.tar.gz "$TLSF_TOOLS_LINUX_X86_64_URL" \
+    && mkdir -p /tmp/tlsf-tools \
+    && tar -xzf /tmp/tlsf-tools.tar.gz --strip-components=1 -C /tmp/tlsf-tools \
+    && cd /tmp/tlsf-tools \
+    && sha256sum -c SHA256SUMS \
+    && install -m 0755 \
+        /tmp/tlsf-tools/tlsf2ltl \
+        /tmp/tlsf-tools/tlsfinfo \
+        /tmp/tlsf-tools/tlsf2tlsf \
+        /tmp/tlsf-tools/tlsfnorm \
+        /tmp/tlsf-tools/mealy2moore \
+        /usr/local/bin/ \
+    && cd /tmp \
+    && rm -rf /tmp/tlsf-tools /tmp/tlsf-tools.tar.gz \
+    && tlsf2ltl --version
 
 # Upgrade meson (bookworm's version may be too old for C++23 project features)
 RUN pip3 install --break-system-packages --upgrade meson

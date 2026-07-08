@@ -8,6 +8,7 @@
 #include "utils/bdd_helper.hh"
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
+#include "solver/diagnostics.hh"
 #include "solver/symmetric_profile.hh"
 #include "utils/typeinfo.hh"
 
@@ -97,12 +98,14 @@ class k_bounded_safety_aut_detail {
 
       do {
         loopcount++;
+        acacia::diagnostics::observe_loop (f.size (), k);
         verb_do (1, vout << "Loop# " << loopcount << ", f of size " << f.size () << std::endl);
 
         auto&& input = input_picker (f);
         if (not input.has_value ())  // No more inputs, and we just tested that init was present
         {
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
+          acacia::diagnostics::set_final_reason ("fixedpoint");
           return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
               std::make_pair (k, std::move (f)));
         }
@@ -112,6 +115,7 @@ class k_bounded_safety_aut_detail {
         if (not f.contains (state (init))) {
           if (k >= kto) {
             verb_do (2, vout << "Early exit because the initial state is out\n");
+            acacia::diagnostics::set_final_reason ("kmax-initial-out");
             return std::nullopt;
           }
           verb_do (1, vout << "Incrementing k from " << (int) k << " to " << (int) (k + kinc)

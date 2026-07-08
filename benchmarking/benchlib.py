@@ -22,7 +22,7 @@ class RunResult:
     timed_out: bool
 
 
-def run_process_group(cmd: list[str], timeout: float) -> RunResult:
+def run_process_group(cmd: list[str], timeout: float, env: dict[str, str] | None = None) -> RunResult:
     """Run cmd in a new process group and kill the whole group on timeout."""
     started = time.monotonic()
     proc = subprocess.Popen(
@@ -30,6 +30,7 @@ def run_process_group(cmd: list[str], timeout: float) -> RunResult:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        env=env,
         start_new_session=True,
     )
     timed_out = False

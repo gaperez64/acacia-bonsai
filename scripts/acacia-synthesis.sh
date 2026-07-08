@@ -59,10 +59,14 @@ if [ "$valid" = false ]; then
 fi
 
 # Reject a user-supplied -s; we own that flag.
+USE_TLSF=false
 for arg in "$@"; do
     if [ "$arg" = "-s" ]; then
         echo "Error: -s is supplied by acacia-synthesis.sh; do not pass it yourself." >&2
         exit 3
+    fi
+    if [ "$arg" = "--tlsf" ]; then
+        USE_TLSF=true
     fi
 done
 
@@ -72,8 +76,30 @@ if [ ! -x "$WRAPPER" ]; then
     exit 3
 fi
 
+SPEC=""
+TLSF_TARGET=""
+if [ "$USE_TLSF" = true ]; then
+    TLSFINFO=$(command -v tlsfinfo || true)
+    MEALY2MOORE=$(command -v mealy2moore || true)
+    if [ -z "$TLSFINFO" ] || [ -z "$MEALY2MOORE" ]; then
+        echo "Error: TLSF synthesis requires tlsf-tools in PATH (tlsfinfo and mealy2moore)." >&2
+        exit 3
+    fi
+
+    SPEC=$(mktemp --suffix=.tlsf)
+    cat > "$SPEC"
+    TLSF_TARGET=$("$TLSFINFO" --target "$SPEC") || {
+        echo "Error: tlsfinfo failed to extract TLSF target" >&2
+        exit 4
+    }
+    TLSF_TARGET=${TLSF_TARGET//$'\n'/}
+    TLSF_TARGET=${TLSF_TARGET//$'\r'/}
+    TLSF_TARGET=${TLSF_TARGET//$'\t'/}
+    TLSF_TARGET=${TLSF_TARGET// /}
+fi
+
 OUT_AAG=$(mktemp --suffix=.aag)
-trap 'rm -f "$OUT_AAG"' EXIT
+trap 'rm -f "$OUT_AAG" "$SPEC"' EXIT
 
 # Run the wrapper with -s pointing at our temp file. Send acacia's own stdout
 # (which contains the REALIZABLE/UNREALIZABLE line) to stderr so callers can
@@ -82,11 +108,19 @@ trap 'rm -f "$OUT_AAG"' EXIT
 # `set -e` would kill us on a non-zero exit code, but UNREALIZABLE/UNKNOWN are
 # legitimate outcomes we need to propagate, so capture the status manually.
 status=0
-"$WRAPPER" "$CONFIG" "$@" -s "$OUT_AAG" 1>&2 || status=$?
+if [ "$USE_TLSF" = true ]; then
+    "$WRAPPER" "$CONFIG" "$@" -s "$OUT_AAG" 1>&2 < "$SPEC" || status=$?
+else
+    "$WRAPPER" "$CONFIG" "$@" -s "$OUT_AAG" 1>&2 || status=$?
+fi
 
 # Only on REALIZABLE (exit code 0) is an AAG file produced.
 if [ "$status" -eq 0 ] && [ -s "$OUT_AAG" ]; then
-    cat "$OUT_AAG"
+    if [ "$USE_TLSF" = true ] && [ "$TLSF_TARGET" = "Moore" ]; then
+        "$MEALY2MOORE" "$OUT_AAG"
+    else
+        cat "$OUT_AAG"
+    fi
 fi
 
 exit "$status"

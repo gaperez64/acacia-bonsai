@@ -171,6 +171,18 @@
       "inherits": "best_decomp_mona",
       "default_spot_fast": "det_and_gfg"
     },
+    "best_decomp_mona_equivariant": {
+      "inherits": "best_decomp_mona",
+      "enable_equivariant_solver": true
+    },
+    "best_decomp_mona_symmetric": {
+      "inherits": "best_decomp_mona",
+      "enable_symmetric_solver": true
+    },
+    "best_decomp_mona_diag": {
+      "inherits": "best_decomp_mona",
+      "enable_diagnostics": true
+    },
     "best_decomp_skiplist_mona": {
       "inherits": "best_decomp_mona",
       "array_downset": "skiplist_backed",
@@ -184,7 +196,37 @@
   },
   "tool_baselines": {
     "ltlsynt": {
-      "description": "external benchmark backend"
+      "description": "external benchmark backend",
+      "suite_prefix": "ltlsynt",
+      "env": {}
+    },
+    "ltlsynt_no_decompose": {
+      "description": "ltlsynt with decomposition disabled",
+      "suite_prefix": "ltlsynt",
+      "env": {
+        "LTLSYNT_OPTS": "--decompose=no"
+      }
+    },
+    "ltlsynt_no_bypass": {
+      "description": "ltlsynt with bypass/direct-strategy checks disabled",
+      "suite_prefix": "ltlsynt",
+      "env": {
+        "LTLSYNT_OPTS": "--bypass=no"
+      }
+    },
+    "ltlsynt_no_obligation": {
+      "description": "ltlsynt with obligation synthesis disabled",
+      "suite_prefix": "ltlsynt",
+      "env": {
+        "LTLSYNT_OPTS": "--obligation-synthesis=no"
+      }
+    },
+    "ltlsynt_no_specials": {
+      "description": "ltlsynt with decomposition, bypass, and obligation synthesis disabled",
+      "suite_prefix": "ltlsynt",
+      "env": {
+        "LTLSYNT_OPTS": "--decompose=no --bypass=no --obligation-synthesis=no"
+      }
     }
   },
   "groups": {

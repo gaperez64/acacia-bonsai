@@ -4,6 +4,7 @@
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
 #include "solver/create_automaton.hh"
+#include "solver/diagnostics.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/symmetric_blocks.hh"
@@ -36,6 +37,9 @@
 #include <vector>
 
 namespace {
+#define ACACIA_DIAG_STRINGIFY_INNER(x) #x
+#define ACACIA_DIAG_STRINGIFY(x) ACACIA_DIAG_STRINGIFY_INNER (x)
+
   spot::formula parse_ltl_string (const std::string& input) {
     auto pf = spot::parse_infix_psl (input, spot::default_environment::instance (), false, false);
 
@@ -48,6 +52,37 @@ namespace {
   }
 
   using utils::push_aps;
+
+#if ACACIA_ENABLE_DIAGNOSTICS
+  size_t edge_count (const spot::const_twa_graph_ptr& aut) {
+    size_t count = 0;
+    if (aut == nullptr)
+      return count;
+    for (unsigned s = 0; s < aut->num_states (); ++s)
+      for ([[maybe_unused]] const auto& e : aut->out (s))
+        ++count;
+    return count;
+  }
+
+  void observe_translated_automaton (const spot::const_twa_graph_ptr& aut) {
+    if (auto* diag = acacia::diagnostics::current ()) {
+      diag->aut_states = std::max<size_t> (diag->aut_states, aut->num_states ());
+      diag->aut_edges = std::max<size_t> (diag->aut_edges, edge_count (aut));
+    }
+  }
+#else
+  [[maybe_unused]] void observe_translated_automaton (const spot::const_twa_graph_ptr&) {}
+#endif
+
+  std::string child_path (std::optional<UNREAL_X_T> check_unreal) {
+    if (not check_unreal.has_value ())
+      return "real";
+    if (*check_unreal == UNREAL_X_FORMULA)
+      return "unreal-formula";
+    if (*check_unreal == UNREAL_X_AUTOMATON)
+      return "unreal-automaton";
+    return "unknown";
+  }
 
   void print_no_output_aag (std::ostream& os, const std::vector<std::string>& input_aps) {
     os << "aag " << input_aps.size () << ' ' << input_aps.size () << " 0 0 0\n";
@@ -150,7 +185,16 @@ namespace {
     extra_options.set ("wdba-minimize", 2);
 
     spot::translator trans (dict, &extra_options);
-    auto aut = create_automaton (spot_formula, trans);
+    spot::twa_graph_ptr aut;
+    {
+#if ACACIA_ENABLE_DIAGNOSTICS
+      auto* diag = acacia::diagnostics::current ();
+      acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
+#endif
+      aut = create_automaton (spot_formula, trans);
+    }
+    observe_translated_automaton (aut);
+    acacia::diagnostics::snapshot ("no-input-after-translation");
 
     spot::twa_word_ptr word = nullptr;
     if (aut->num_states () != 0)
@@ -304,7 +348,16 @@ namespace {
         verb_do (2, vout << "Model checking result by checking intersection with "
                          << spot_formula << std::endl);
         spot::translator trans (dict, &extra_options);
-        auto aut = create_automaton (spot_formula, trans);
+        spot::twa_graph_ptr aut;
+        {
+#if ACACIA_ENABLE_DIAGNOSTICS
+          auto* diag = acacia::diagnostics::current ();
+          acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
+#endif
+          aut = create_automaton (spot_formula, trans);
+        }
+        observe_translated_automaton (aut);
+        acacia::diagnostics::snapshot ("synthesis-check-after-translation");
         assert (not aut->intersects (mealy_aig->as_automaton (false)));
 
 #endif
@@ -335,12 +388,30 @@ namespace {
 
         // Create the automaton for the formula we have prepared.
         spot::translator trans (dict, &extra_options);
-        auto aut = create_automaton (spot_formula, trans);
+        spot::twa_graph_ptr aut;
+        {
+#if ACACIA_ENABLE_DIAGNOSTICS
+          auto* diag = acacia::diagnostics::current ();
+          acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
+#endif
+          aut = create_automaton (spot_formula, trans);
+        }
+        observe_translated_automaton (aut);
+        acacia::diagnostics::snapshot ("after-translation");
 
         // If unreal but we haven't pushed inputs yet using X on formula.
         if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
           verb_do (2, vout << "Pushing the inputs in the automaton\n");
           aut = push_aps (aut, all_inputs, all_outputs);
+          if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ()) {
+            [[maybe_unused]] const auto old_states = aut->num_states ();
+            aut = spot::sbacc (aut);
+            verb_do (1, vout << "Converted pushed automaton to state-based acceptance: "
+                             << old_states << " -> " << aut->num_states ()
+                             << " states." << std::endl);
+          }
+          observe_translated_automaton (aut);
+          acacia::diagnostics::snapshot ("after-input-push");
         }
 
         // The (negated/X-modified) formula can translate to a 0-state
@@ -356,7 +427,8 @@ namespace {
                            << (check_unreal.has_value () ? "inconclusive on unreal path"
                                                          : "spec is valid, realizable")
                            << std::endl);
-          return not check_unreal.has_value ();
+          return acacia::diagnostics::finish (not check_unreal.has_value (),
+                                              "empty-translated-automaton");
         }
 
         const bool want_controller_strategy = synth_fname.has_value () and not check_unreal.has_value ();
@@ -366,6 +438,23 @@ namespace {
         const bool allow_gfg_decision = not check_unreal.has_value ();
         auto fast = acacia::spot_fastpath::try_spot_nba_fast_path (
             aut, all_inputs, all_outputs, want_controller_strategy, allow_gfg_decision, spot_fast);
+#if ACACIA_ENABLE_DIAGNOSTICS
+        if (auto* diag = acacia::diagnostics::current ()) {
+          if (fast.classification_ran) {
+            diag->fast_class =
+                std::string (acacia::spot_fastpath::detail::class_name (fast.classification));
+            diag->fast_class_ms += fast.classification_ms;
+            diag->fast_solve_ms += fast.solve_ms;
+            diag->fast_verdict = fast.conclusive
+                ? (fast.current_output_player_wins ? "solved-winning" : "solved-losing")
+                : "fallback";
+          }
+          else {
+            diag->fast_class = "off";
+            diag->fast_verdict = "fallback";
+          }
+        }
+#endif
         if (fast.conclusive) {
           if (fast.strategy.has_value ()) {
             assert (want_controller_strategy);
@@ -373,20 +462,44 @@ namespace {
           }
           verb_do (1, vout << "Spot NBA fast path returning "
                            << fast.current_output_player_wins << "\n");
-          return fast.current_output_player_wins;
+          return acacia::diagnostics::finish (fast.current_output_player_wins, "spot-fast-path");
         }
+        acacia::diagnostics::snapshot ("after-spot-fast");
 
-        AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
+        {
+#if ACACIA_ENABLE_DIAGNOSTICS
+          auto* diag = acacia::diagnostics::current ();
+          if (diag != nullptr) {
+            diag->preprocessor = ACACIA_DIAG_STRINGIFY (AUT_PREPROCESSOR);
+            diag->preproc_states_before = aut->num_states ();
+            diag->preproc_edges_before = edge_count (aut);
+          }
+          acacia::diagnostics::scoped_timer timer (diag ? &diag->preproc_ms : nullptr);
+#endif
+          AUT_PREPROCESSOR::make (aut, all_inputs, all_outputs, opt_k) ();
+#if ACACIA_ENABLE_DIAGNOSTICS
+          if (diag != nullptr) {
+            diag->preproc_states_after = aut->num_states ();
+            diag->preproc_edges_after = edge_count (aut);
+          }
+#endif
+        }
+        acacia::diagnostics::snapshot ("after-preprocessing");
 
         // surely_losing can flush every reachable state and leave the
         // automaton empty after purging. Map this to inconclusive on
         // both paths rather than crashing downstream.
         if (aut->num_states () == 0) {
           verb_do (1, vout << "Automaton is empty after preprocessing; inconclusive\n");
-          return false;
+          return acacia::diagnostics::finish (false, "empty-after-preprocessing");
         }
 
         posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
+#if ACACIA_ENABLE_DIAGNOSTICS
+        if (auto* diag = acacia::diagnostics::current ())
+          diag->bool_threshold = posets::vectors::bool_threshold;
+#endif
+        acacia::diagnostics::snapshot ("before-solve");
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
         verb_do (4, dict->dump (utils::vout));
 
@@ -410,21 +523,32 @@ namespace {
 #endif
 
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
-        std::optional<spot::twa_graph_ptr> maybe_strat =
-            solve_game (aut, opt_k, opt_kmin, opt_kinc,
-                        // we obtain the subset of inputs by projecting out the set of all
-                        // outputs from the cube of all atomic propositions
-                        bdd_exist (aut->ap_vars (), all_outputs),
-                        // same for the outputs
-                        bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value ());
+        std::optional<spot::twa_graph_ptr> maybe_strat;
+        {
+#if ACACIA_ENABLE_DIAGNOSTICS
+          auto* diag = acacia::diagnostics::current ();
+          acacia::diagnostics::scoped_timer timer (diag ? &diag->solve_ms : nullptr);
+#endif
+          maybe_strat =
+              solve_game (aut, opt_k, opt_kmin, opt_kinc,
+                          // we obtain the subset of inputs by projecting out the set of all
+                          // outputs from the cube of all atomic propositions
+                          bdd_exist (aut->ap_vars (), all_outputs),
+                          // same for the outputs
+                          bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value ());
+        }
+#if ACACIA_ENABLE_DIAGNOSTICS
+        if (auto* diag = acacia::diagnostics::current ())
+          diag->bitset_threshold = posets::vectors::bitset_threshold;
+#endif
 
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
             strats.push_back (*maybe_strat);
-          return true;
+          return acacia::diagnostics::finish (true, "solve-game");
         }
         else {
-          return false;
+          return acacia::diagnostics::finish (false, "solve-game-inconclusive");
         }
       }
   };
@@ -435,8 +559,11 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
               SPOT_FAST_T spot_fast,
               const std::optional<std::string>& synth_fname) {
+  acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
+
   if (input_aps.empty ())
-    return run_no_input_ltl (output_aps, formula, check_unreal, synth_fname);
+    return acacia::diagnostics::finish (
+        run_no_input_ltl (output_aps, formula, check_unreal, synth_fname), "no-input-ltl");
 
   spot::formula spot_formula = parse_ltl_string (formula);
 
@@ -454,8 +581,20 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // the removed APs would need patch_mealy/patch_game on the emitted strategy,
   // which is not wired up here.
   if (not synth_fname.has_value ()) {
-    spot::realizability_simplifier rsimp (spot_formula, input_aps);
-    spot_formula = rsimp.simplified_formula ();
+    spot::formula before_simplification = spot_formula;
+    {
+#if ACACIA_ENABLE_DIAGNOSTICS
+      auto* diag = acacia::diagnostics::current ();
+      acacia::diagnostics::scoped_timer timer (diag ? &diag->rsimp_ms : nullptr);
+#endif
+      spot::realizability_simplifier rsimp (spot_formula, input_aps);
+      spot_formula = rsimp.simplified_formula ();
+    }
+#if ACACIA_ENABLE_DIAGNOSTICS
+    if (auto* diag = acacia::diagnostics::current ())
+      diag->rsimp_changed = before_simplification != spot_formula;
+#endif
+    acacia::diagnostics::snapshot ("after-rsimp");
     verb_do (2, vout << "Simplified formula: " << spot_formula << std::endl);
   }
 
@@ -486,10 +625,10 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
       std::vector<std::vector<std::string>> out_part = {output_aps};
       runner.synthesis (spot_formula, out_part);
     }
-    return true;
+    return acacia::diagnostics::finish (true, "monolithic");
   }
   else {
-    return false;
+    return acacia::diagnostics::finish (false, "monolithic");
   }
 
 #elif DECOMPOSE_SPEC == 1
@@ -499,6 +638,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   std::vector<std::vector<std::string>> out_part;
   auto [forms, outs] = spot::split_independent_formulas (
       spot_formula, check_unreal.has_value () ? input_aps : output_aps);
+  acacia::diagnostics::snapshot ("after-decomposition");
   verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
 
   for (size_t i = 0; i < forms.size (); ++i) {
@@ -534,10 +674,10 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   if (result) {
     if (synth_fname.has_value ())
       runner.synthesis (spot_formula, out_part);
-    return true;
+    return acacia::diagnostics::finish (true, "decomposition");
   }
   else {
-    return false;
+    return acacia::diagnostics::finish (false, "decomposition");
   }
 
 #else

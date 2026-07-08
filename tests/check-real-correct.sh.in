@@ -4,34 +4,74 @@ ACABONSAI=@ACABONSAI@
 LTLSYNT=@LTLSYNT@
 export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
-# Handling most common signals with a trap
-TRAPINT () { 
-  if [[ $childpid != '' ]]; then
-    kill -INT $childpid 2>/dev/null
-    wait $childpid
-  fi
-  exit
+childpid=
+childunit=
+
+test_cgroup_enabled () {
+    case ${ACACIA_TEST_CGROUP:-0} in
+        1|true|yes|on|auto|strict) return 0;;
+        *) return 1;;
+    esac
 }
-TRAPQUIT () { 
-  if [[ $childpid != '' ]]; then
-    kill -QUIT $childpid 2>/dev/null
-    wait $childpid
-  fi
-  exit
+
+resource_unknown_enabled () {
+    case ${ACACIA_TEST_RESOURCE_UNKNOWN:-0} in
+        1|true|yes|on) return 0;;
+        *) return 1;;
+    esac
 }
-TRAPTERM () { 
+
+stop_child () {
+  if [[ $childunit != '' ]]; then
+    systemctl --user stop "$childunit.scope" >/dev/null 2>&1
+  fi
   if [[ $childpid != '' ]]; then
     kill -TERM $childpid 2>/dev/null
-    wait $childpid
+    wait $childpid 2>/dev/null
   fi
+}
+
+# Handling most common signals with a trap
+TRAPINT () {
+  stop_child
+  exit
+}
+TRAPQUIT () {
+  stop_child
+  exit
+}
+TRAPTERM () {
+  stop_child
   exit
 }
 
 echoandrun () {
     echo "$@"
-    "$@"&
+    childunit=
+    if test_cgroup_enabled; then
+        local memory_max=${ACACIA_TEST_CGROUP_MEMORY_MAX:-}
+        if [[ -z $memory_max ]]; then
+            print -u2 -- 'error: ACACIA_TEST_CGROUP_MEMORY_MAX must be set when ACACIA_TEST_CGROUP is enabled.'
+            return 127
+        fi
+        local -a props
+        props=("--property=MemoryMax=$memory_max")
+        [[ -n ${ACACIA_TEST_CGROUP_SWAP_MAX:-} ]] && props+=("--property=MemorySwapMax=$ACACIA_TEST_CGROUP_SWAP_MAX")
+        childunit=acacia-bonsai-test-${$}-${RANDOM}
+        systemd-run --user --scope --quiet "--unit=$childunit" $props "$@"&
+    else
+        "$@"&
+    fi
     childpid=$!
     wait $childpid
+    local res=$?
+    childpid=
+    childunit=
+    if (( res == 137 )) && resource_unknown_enabled; then
+        print -u2 -- 'RESOURCE LIMIT: cgroup killed the solver process; treating this benchmark instance as UNKNOWN.'
+        return 2
+    fi
+    return $res
 }
 
 parttoinsouts () {
@@ -49,6 +89,10 @@ parttoinsouts () {
 
 run_ltlsynt () {
     echo "Running ltlsynt..."
+    if [[ ! -x $LTLSYNT ]]; then
+        print -u2 -- "error: ltlsynt executable is missing or not executable: $LTLSYNT"
+        return 127
+    fi
     # ltlsynt --realizability exits 0 for REALIZABLE and 1 for UNREALIZABLE,
     # which matches the expect==0 / expect==1 convention used below — so we
     # rely on the exit status directly and do not need to parse stdout.
@@ -58,7 +102,11 @@ run_ltlsynt () {
 
 run_acacia_bonsai () {
     echo "Running Acacia Bonsai..."
-    echoandrun $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
+    if [[ ! -x $ACABONSAI ]]; then
+        print -u2 -- "error: Acacia Bonsai executable is missing or not executable: $ACABONSAI"
+        return 127
+    fi
+    echoandrun env ACACIA_DIAG_INSTANCE=${ltl:t} $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
          ${=AB_OPTS} $extra_opts
 }
 
@@ -167,6 +215,9 @@ for prog in $progs; do
             echo "UNKNOWN RETURNED $res"
             ret=3
         elif (( res == 3 )); then
+            echo "ERROR RETURNED $res"
+            ret=3
+        elif (( res > 2 )); then
             echo "ERROR RETURNED $res"
             ret=3
         elif (( expect == 0 )); then

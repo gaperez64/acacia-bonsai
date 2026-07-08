@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/sbacc.hh>
 #include <spot/twaalgos/translate.hh>
 
 // Output preference passed to Spot's translator. Historically this was
@@ -28,5 +29,12 @@ spot::twa_graph_ptr create_automaton (spot::formula& f, spot::translator& trans)
       spot::postprocessor::SBAcc);  // state-based acceptacen
   verb_do (1, vout << "Formula: " << f << std::endl);
   auto aut = trans.run (f);
+  if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ()) {
+    [[maybe_unused]] const auto old_states = aut->num_states ();
+    aut = spot::sbacc (aut);
+    verb_do (1, vout << "Converted automaton to state-based acceptance: "
+                     << old_states << " -> " << aut->num_states ()
+                     << " states." << std::endl);
+  }
   return aut;
 }

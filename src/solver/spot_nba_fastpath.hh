@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <functional>
 #include <optional>
 #include <string_view>
@@ -26,23 +27,39 @@ namespace acacia::spot_fastpath {
     deterministic_buchi,
     gfg_buchi,
     non_gfg_buchi,
+    gfg_disabled,
+    gfg_budget_declined,
     unsupported,
   };
 
   struct fast_path_result {
       bool conclusive = false;
       bool current_output_player_wins = false;
+      nba_fast_class classification = nba_fast_class::unsupported;
+      bool classification_ran = false;
+      bool gfg_disabled = false;
+      bool gfg_budget_declined = false;
+      long long classification_ms = 0;
+      long long solve_ms = 0;
       std::optional<spot::region_t> current_output_player_winning_region = std::nullopt;
       std::optional<spot::twa_graph_ptr> strategy = std::nullopt;
   };
 
   namespace detail {
+    using clock = std::chrono::steady_clock;
+
+    inline long long elapsed_ms (clock::time_point started) {
+      return std::chrono::duration_cast<std::chrono::milliseconds> (clock::now () - started)
+          .count ();
+    }
 
     inline std::string_view class_name (nba_fast_class c) {
       switch (c) {
-        case nba_fast_class::deterministic_buchi: return "deterministic-buchi";
-        case nba_fast_class::gfg_buchi: return "gfg-buchi";
-        case nba_fast_class::non_gfg_buchi: return "non-gfg-buchi";
+        case nba_fast_class::deterministic_buchi: return "deterministic";
+        case nba_fast_class::gfg_buchi: return "gfg";
+        case nba_fast_class::non_gfg_buchi: return "non-gfg";
+        case nba_fast_class::gfg_disabled: return "gfg-disabled";
+        case nba_fast_class::gfg_budget_declined: return "budget-declined";
         case nba_fast_class::unsupported: return "unsupported";
       }
       return "unknown";
@@ -341,11 +358,11 @@ namespace acacia::spot_fastpath {
       return nba_fast_class::deterministic_buchi;
 
     if (not run_gfg_recognizer)
-      return nba_fast_class::unsupported;
+      return nba_fast_class::gfg_disabled;
 
     if (enforce_runtime_budget and
         not detail::within_two_token_runtime_budget (aut->num_states ()))
-      return nba_fast_class::unsupported;
+      return nba_fast_class::gfg_budget_declined;
 
     return detail::two_token_game_eve_wins (aut) ? nba_fast_class::gfg_buchi
                                                  : nba_fast_class::non_gfg_buchi;
@@ -417,23 +434,64 @@ namespace acacia::spot_fastpath {
     const bool can_use_gfg_decision =
         detail::has_mode (mode, SPOT_FAST_GFG_DECISION) and
         allow_gfg_decision and not want_controller_strategy;
-    nba_fast_class c = classify_nba_for_fast_path (aut_forbid, can_use_gfg_decision, true);
+    fast_path_result result;
+    result.classification_ran = true;
+    result.gfg_disabled = not can_use_gfg_decision;
+
+    const auto class_started = detail::clock::now ();
+    if (not is_plain_existential_buchi (aut_forbid)) {
+      result.classification = nba_fast_class::unsupported;
+    }
+    else if (is_syntactically_deterministic (aut_forbid)) {
+      result.classification = nba_fast_class::deterministic_buchi;
+    }
+    else if (not can_use_gfg_decision) {
+      result.classification = nba_fast_class::gfg_disabled;
+    }
+    else if (not detail::within_two_token_runtime_budget (aut_forbid->num_states ())) {
+      result.classification = nba_fast_class::gfg_budget_declined;
+      result.gfg_budget_declined = true;
+    }
+    else {
+      result.classification = detail::two_token_game_eve_wins (aut_forbid)
+          ? nba_fast_class::gfg_buchi
+          : nba_fast_class::non_gfg_buchi;
+    }
+    result.classification_ms = detail::elapsed_ms (class_started);
+
+    nba_fast_class c = result.classification;
     verb_do (1, utils::vout << "Spot NBA fast path classification: "
                             << detail::class_name (c) << std::endl);
 
     if (c == nba_fast_class::deterministic_buchi and detail::has_mode (mode, SPOT_FAST_DET)) {
+      const auto solve_started = detail::clock::now ();
       auto res = deterministic_forbidden_fast_path (aut_forbid, all_outputs,
                                                     want_controller_strategy);
+      res.classification = result.classification;
+      res.classification_ran = result.classification_ran;
+      res.gfg_disabled = result.gfg_disabled;
+      res.gfg_budget_declined = result.gfg_budget_declined;
+      res.classification_ms = result.classification_ms;
+      res.solve_ms = detail::elapsed_ms (solve_started);
       if (want_controller_strategy and not res.current_output_player_wins)
         return {};
       return res;
     }
 
     if (c == nba_fast_class::gfg_buchi and
-        can_use_gfg_decision)
-      return gfg_forbidden_decision_only_fast_path (aut_forbid, all_inputs, all_outputs);
+        can_use_gfg_decision) {
+      const auto solve_started = detail::clock::now ();
+      auto res = gfg_forbidden_decision_only_fast_path (aut_forbid, all_inputs, all_outputs);
+      res.classification = result.classification;
+      res.classification_ran = result.classification_ran;
+      res.gfg_disabled = result.gfg_disabled;
+      res.gfg_budget_declined = result.gfg_budget_declined;
+      res.classification_ms = result.classification_ms;
+      res.solve_ms = detail::elapsed_ms (solve_started);
+      return res;
+    }
 
-    return {};
+    return result;
   }
 
 }  // namespace acacia::spot_fastpath

@@ -69,6 +69,21 @@ if get_option ('acacia_compile_all_components')
 else
   build_conf.set ('ACACIA_COMPILE_ALL_COMPONENTS', 0)
 endif
+if get_option ('acacia_enable_diagnostics')
+  build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', 1)
+else
+  build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', 0)
+endif
+if get_option ('acacia_enable_equivariant_solver')
+  build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 1)
+else
+  build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 0)
+endif
+if get_option ('acacia_enable_symmetric_solver')
+  build_conf.set ('ACACIA_ENABLE_SYMMETRIC_SOLVER', 1)
+else
+  build_conf.set ('ACACIA_ENABLE_SYMMETRIC_SOLVER', 0)
+endif
 
 if get_option ('acacia_no_simd')
   build_conf.set ('NO_SIMD_DEFINE', '#ifndef NO_SIMD\n# define NO_SIMD 1\n#endif')

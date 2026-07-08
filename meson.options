@@ -38,6 +38,12 @@ option('acacia_no_simd', type: 'boolean', value: false)
 option('acacia_no_array_cap_max', type: 'boolean', value: false)
 option('acacia_use_boolvec_over_bitset', type: 'boolean', value: false)
 option('acacia_compile_all_components', type: 'boolean', value: false)
+option('acacia_enable_diagnostics', type: 'boolean', value: false,
+       description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
+option('acacia_enable_equivariant_solver', type: 'boolean', value: false,
+       description: 'Compile and enable the exact equivariant solver path')
+option('acacia_enable_symmetric_solver', type: 'boolean', value: false,
+       description: 'Compile and enable the symmetry quotient solver path')
 
 option('acacia_array_downset', type: 'combo',
        choices: [

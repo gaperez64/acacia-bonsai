@@ -117,7 +117,10 @@
     "no_array_cap_max": false,
     "use_boolvec_over_bitset": false,
     "cpre_avoid_unions": false,
-    "compile_all_components": false
+    "compile_all_components": false,
+    "enable_diagnostics": false,
+    "enable_equivariant_solver": false,
+    "enable_symmetric_solver": false
   },
   "choices": {
     "default_unreal_x": ["both", "automaton", "formula"],

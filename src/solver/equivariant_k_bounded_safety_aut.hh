@@ -10,6 +10,7 @@
 #include "actioners/direction.hh"
 #include "actioners/standard.hh"
 #include "configuration.hh"
+#include "solver/diagnostics.hh"
 #include "solver/symmetric_blocks.hh"
 #include "solver/symmetric_profile.hh"
 #include "solver/symmetry.hh"
@@ -351,6 +352,7 @@ namespace acacia::solver_detail::equivariant {
 
     auto decline = [] (const char* reason) {
       verb_do (1, vout << "[equivariant] declining: " << reason << "\n");
+      acacia::diagnostics::set_equivariant_decline (reason);
       return result<SetOfStates> {false, std::nullopt};
     };
 
@@ -417,6 +419,8 @@ namespace acacia::solver_detail::equivariant {
     verb_do (1, vout << "[equivariant] trying solver: clients=" << L->num_clients
                      << " blocks=" << L->num_blocks
                      << " orbits=" << orbits->size () << "\n");
+    acacia::diagnostics::set_equivariant_attempt (L->num_clients, L->num_blocks,
+                                                  orbits->size ());
 
     std::vector<std::pair<bdd, std::vector<transset>>> empty_itoios;
     VECTOR_ELT_T k = kmin;
@@ -435,6 +439,7 @@ namespace acacia::solver_detail::equivariant {
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_solve_loop);
     while (true) {
       ++loopcount;
+      acacia::diagnostics::observe_loop (f.size (), k);
       bool changed = false;
       bool incremented = false;
       verb_do (1, vout << "[equivariant] Loop# " << loopcount
