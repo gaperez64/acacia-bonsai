@@ -81,6 +81,20 @@ else
   build_conf.set ('DEFAULT_SPOT_FAST', 'SPOT_FAST_DET')
 endif
 
+if get_option ('acacia_translation_pref') == 'any'
+  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Any')
+elif get_option ('acacia_translation_pref') == 'deterministic'
+  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Deterministic')
+else
+  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Small')
+endif
+
+if get_option ('acacia_enable_realizability_simplifier')
+  build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 1)
+else
+  build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 0)
+endif
+
 if get_option ('acacia_simd_is_max')
   build_conf.set ('SIMD_IS_MAX', 'true')
 else

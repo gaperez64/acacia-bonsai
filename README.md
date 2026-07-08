@@ -241,6 +241,9 @@ is included by `src/configuration.hh`.  The generated header defines the same
 macro surface used by the solver templates: component choices such as
 `AUT_PREPROCESSOR`, scalar defaults such as `DEFAULT_K`, and feature gates such
 as `ACACIA_ENABLE_EQUIVARIANT_SOLVER` or `ACACIA_ENABLE_DIAGNOSTICS`.
+The Spot translator preference is also registry-backed as
+`acacia_translation_pref`; the default is `small`, while `any` is available for
+explicit ablation builds such as `best_decomp_mona_any`.
 
 To add a new compile-time switch, add the option to the registry, expose a
 matching `acacia_*` Meson option, map it in `scripts/acacia-config.py`, and

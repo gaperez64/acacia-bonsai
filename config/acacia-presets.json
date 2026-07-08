@@ -128,6 +128,14 @@
       "simd_is_max": false,
       "decompose_spec": true
     },
+    "best_decomp_mona_any": {
+      "inherits": "best_decomp_mona",
+      "translation_pref": "any"
+    },
+    "best_decomp_mona_no_rsimp": {
+      "inherits": "best_decomp_mona",
+      "enable_realizability_simplifier": false
+    },
     "best_decomp_kdtree_mona": {
       "inherits": "best_decomp_mona",
       "array_downset": "kdtree_backed",
@@ -238,6 +246,7 @@
     ],
     "local_tuning_default": [
       "best_decomp_mona",
+      "best_decomp_mona_any",
       "best_mona",
       "base_iosprecom_mona",
       "best_decomp_kdtree_mona",
@@ -249,6 +258,7 @@
     ],
     "posets_downset_sweep": [
       "best_decomp_mona",
+      "best_decomp_mona_any",
       "best_decomp_kdtree_mona",
       "best_decomp_sharingtrie_mona",
       "best_decomp_sharingtree_mona",

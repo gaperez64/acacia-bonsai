@@ -106,6 +106,12 @@
 #ifndef DEFAULT_SPOT_FAST
 # define DEFAULT_SPOT_FAST SPOT_FAST_DET
 #endif
+#ifndef ACACIA_TRANSLATION_PREF
+# define ACACIA_TRANSLATION_PREF spot::postprocessor::Small
+#endif
+#ifndef ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER
+# define ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER 1
+#endif
 #ifndef VECTOR_ELT_T
 # define VECTOR_ELT_T signed char
 #endif

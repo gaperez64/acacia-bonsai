@@ -105,6 +105,8 @@
     "default_kinc": 3,
     "default_unreal_x": "both",
     "default_spot_fast": "det",
+    "translation_pref": "small",
+    "enable_realizability_simplifier": true,
     "static_array_max": 300,
     "static_max_bitsets": 8,
     "simd_is_max": true,
@@ -125,6 +127,7 @@
   "choices": {
     "default_unreal_x": ["both", "automaton", "formula"],
     "default_spot_fast": ["off", "det", "det_and_gfg"],
+    "translation_pref": ["small", "any", "deterministic"],
     "array_downset": [
       "vector_backed",
       "vector_or_kdtree_backed",

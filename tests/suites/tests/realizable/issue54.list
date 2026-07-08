@@ -1,12 +1,9 @@
 # These gave wrong answers for SYNTCOMP 2025.
 #
-# EscalatorCountingInit currently returns UNKNOWN with the conservative
-# Small-based inclusion check. Keep it in the benchmark suites, but do not make
-# the CI correctness suite fail on this known non-definitive result until we
-# decide whether UNKNOWN should be accepted here.
 KitchenTimerV7.ltl
 TorcsSimple.ltl
 zoo5.ltl
+escalator_counting_init.ltl
 SPIWriteSdi.ltl
 zoo0.ltl
 KitchenTimerV5.ltl
@@ -29,6 +26,7 @@ load_balancer_5.ltl
 SensorRegister.ltl
 load_balancer_8.ltl
 loadcomp5.ltl
+EscalatorCountingInit.ltl
 zoo5.ltl
 KitchenTimerV0.ltl
 prioritized_arbiter_enc_4.ltl

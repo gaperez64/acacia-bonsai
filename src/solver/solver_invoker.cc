@@ -576,11 +576,12 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // strategies) inherits the smaller formula.  This is sound by determinacy:
   // the simplifier preserves realizability of phi, and "phi realizable" <=>
   // "phi not unrealizable", so it equally preserves the unrealizability
-  // verdict the unreal children compute.  Mirrors ltlsynt's own single,
-  // up-front use of the class.  Skipped when synthesizing a controller (-s):
-  // the removed APs would need patch_mealy/patch_game on the emitted strategy,
-  // which is not wired up here.
-  if (not synth_fname.has_value ()) {
+  // verdict the unreal children compute.  Mirrors ltlsynt's up-front use of
+  // the class; the decomposition branch below also mirrors ltlsynt's
+  // component-local pass for real, decision-only children.  Skipped when
+  // synthesizing a controller (-s): the removed APs would need
+  // patch_mealy/patch_game on the emitted strategy, which is not wired up here.
+  if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and not synth_fname.has_value ()) {
     spot::formula before_simplification = spot_formula;
     {
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -640,6 +641,31 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
       spot_formula, check_unreal.has_value () ? input_aps : output_aps);
   acacia::diagnostics::snapshot ("after-decomposition");
   verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
+
+  if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and forms.size () > 1 and
+      not check_unreal.has_value () and not synth_fname.has_value ()) {
+    bool any_component_simplified = false;
+    for (auto& sub_formula : forms) {
+      spot::formula before_simplification = sub_formula;
+      {
+#if ACACIA_ENABLE_DIAGNOSTICS
+        auto* diag = acacia::diagnostics::current ();
+        acacia::diagnostics::scoped_timer timer (diag ? &diag->rsimp_ms : nullptr);
+#endif
+        spot::realizability_simplifier rsimp (sub_formula, input_aps);
+        sub_formula = rsimp.simplified_formula ();
+      }
+      any_component_simplified = any_component_simplified or
+                                 before_simplification != sub_formula;
+    }
+#if ACACIA_ENABLE_DIAGNOSTICS
+    if (auto* diag = acacia::diagnostics::current ())
+      diag->rsimp_changed = diag->rsimp_changed or any_component_simplified;
+#endif
+    acacia::diagnostics::snapshot ("after-decomposition-rsimp");
+    verb_do (2, vout << "Simplified decomposed subformulas: "
+                     << (any_component_simplified ? "changed" : "unchanged") << std::endl);
+  }
 
   for (size_t i = 0; i < forms.size (); ++i) {
     verb_do (2, vout << "Subformula " << i + 1 << ": " << forms[i] << std::endl);

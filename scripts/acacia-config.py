@@ -25,6 +25,11 @@ SPOT_FAST = {
     "det": "SPOT_FAST_DET",
     "det_and_gfg": "SPOT_FAST_DET_AND_GFG",
 }
+TRANSLATION_PREF = {
+    "small": "spot::postprocessor::Small",
+    "any": "spot::postprocessor::Any",
+    "deterministic": "spot::postprocessor::Deterministic",
+}
 
 
 def load_json(path: pathlib.Path) -> dict[str, Any]:
@@ -131,6 +136,8 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         f"-DDEFAULT_KINC={values['default_kinc']}",
         f"-DDEFAULT_UNREAL_X={UNREAL_X[values['default_unreal_x']]}",
         f"-DDEFAULT_SPOT_FAST={SPOT_FAST[values['default_spot_fast']]}",
+        f"-DACACIA_TRANSLATION_PREF={TRANSLATION_PREF[values['translation_pref']]}",
+        f"-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER={int(values['enable_realizability_simplifier'])}",
         f"-DSTATIC_ARRAY_MAX={values['static_array_max']}",
         f"-DSTATIC_MAX_BITSETS={values['static_max_bitsets']}ul",
         f"-DSIMD_IS_MAX={bool_literal(values['simd_is_max'])}",
@@ -175,6 +182,8 @@ MESON_OPTION_NAMES = {
     "default_kinc": "acacia_default_kinc",
     "default_unreal_x": "acacia_default_unreal_x",
     "default_spot_fast": "acacia_default_spot_fast",
+    "translation_pref": "acacia_translation_pref",
+    "enable_realizability_simplifier": "acacia_enable_realizability_simplifier",
     "static_array_max": "acacia_static_array_max",
     "static_max_bitsets": "acacia_static_max_bitsets",
     "simd_is_max": "acacia_simd_is_max",
