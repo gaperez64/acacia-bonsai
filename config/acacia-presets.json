@@ -200,6 +200,16 @@
       "inherits": "best_decomp_mona",
       "array_downset": "cst_backed",
       "vector_downset": "cst_backed"
+    },
+    "best_decomp_rank_bucketed_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "rank_bucketed_vector_backed",
+      "vector_downset": "rank_bucketed_vector_backed"
+    },
+    "best_decomp_filtered_vector_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "filtered_vector_backed",
+      "vector_downset": "filtered_vector_backed"
     }
   },
   "tool_baselines": {
@@ -254,7 +264,9 @@
       "best_decomp_sharingtree_mona",
       "best_decomp_simpsharingtree_mona",
       "best_decomp_skiplist_mona",
-      "best_decomp_cst_mona"
+      "best_decomp_cst_mona",
+      "best_decomp_rank_bucketed_mona",
+      "best_decomp_filtered_vector_mona"
     ],
     "posets_downset_sweep": [
       "best_decomp_mona",
@@ -264,7 +276,9 @@
       "best_decomp_sharingtree_mona",
       "best_decomp_simpsharingtree_mona",
       "best_decomp_skiplist_mona",
-      "best_decomp_cst_mona"
+      "best_decomp_cst_mona",
+      "best_decomp_rank_bucketed_mona",
+      "best_decomp_filtered_vector_mona"
     ]
   }
 }

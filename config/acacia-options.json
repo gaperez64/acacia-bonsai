@@ -137,6 +137,8 @@
       "sharingtrie_backed",
       "skiplist_backed",
       "cst_backed",
+      "rank_bucketed_vector_backed",
+      "filtered_vector_backed",
       "vector_backed_bin"
     ],
     "vector_downset": [
@@ -148,6 +150,8 @@
       "sharingtrie_backed",
       "skiplist_backed",
       "cst_backed",
+      "rank_bucketed_vector_backed",
+      "filtered_vector_backed",
       "vector_backed_bin"
     ],
     "array_impl": ["auto", "simd_array_backed_sum", "array_backed_sum"],
