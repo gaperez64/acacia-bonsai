@@ -46,6 +46,14 @@
       "array_downset": "kdtree_backed",
       "vector_downset": "kdtree_backed"
     },
+    "base_downset_bboxtree": {
+      "array_downset": "bboxtree_backed",
+      "vector_downset": "bboxtree_backed"
+    },
+    "base_downset_comptrie": {
+      "array_downset": "comptrie_backed",
+      "vector_downset": "comptrie_backed"
+    },
     "base_downset_vector": {
       "array_downset": "vector_backed",
       "vector_downset": "vector_backed"
@@ -140,6 +148,24 @@
       "inherits": "best_decomp_mona",
       "array_downset": "kdtree_backed",
       "vector_downset": "kdtree_backed"
+    },
+    "best_decomp_bboxtree_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "bboxtree_backed",
+      "vector_downset": "bboxtree_backed"
+    },
+    "best_decomp_mona_cached_sum": {
+      "inherits": "best_decomp_mona",
+      "vector_impl": "simd_vector_backed_sum"
+    },
+    "best_decomp_bboxtree_mona_cached_sum": {
+      "inherits": "best_decomp_bboxtree_mona",
+      "vector_impl": "simd_vector_backed_sum"
+    },
+    "best_decomp_comptrie_mona": {
+      "inherits": "best_decomp_mona",
+      "array_downset": "comptrie_backed",
+      "vector_downset": "comptrie_backed"
     },
     "best_decomp_kdtree_mona_no_bitsets": {
       "inherits": "best_decomp_kdtree_mona",
@@ -260,6 +286,8 @@
       "best_mona",
       "base_iosprecom_mona",
       "best_decomp_kdtree_mona",
+      "best_decomp_bboxtree_mona",
+      "best_decomp_comptrie_mona",
       "best_decomp_sharingtrie_mona",
       "best_decomp_sharingtree_mona",
       "best_decomp_simpsharingtree_mona",
@@ -272,6 +300,8 @@
       "best_decomp_mona",
       "best_decomp_mona_any",
       "best_decomp_kdtree_mona",
+      "best_decomp_bboxtree_mona",
+      "best_decomp_comptrie_mona",
       "best_decomp_sharingtrie_mona",
       "best_decomp_sharingtree_mona",
       "best_decomp_simpsharingtree_mona",

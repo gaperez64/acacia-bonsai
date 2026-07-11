@@ -132,6 +132,8 @@
       "vector_backed",
       "vector_or_kdtree_backed",
       "kdtree_backed",
+      "bboxtree_backed",
+      "comptrie_backed",
       "sharingtree_backed",
       "simple_sharingtree_backed",
       "sharingtrie_backed",
@@ -145,6 +147,8 @@
       "vector_backed",
       "vector_or_kdtree_backed",
       "kdtree_backed",
+      "bboxtree_backed",
+      "comptrie_backed",
       "sharingtree_backed",
       "simple_sharingtree_backed",
       "sharingtrie_backed",
@@ -155,6 +159,6 @@
       "vector_backed_bin"
     ],
     "array_impl": ["auto", "simd_array_backed_sum", "array_backed_sum"],
-    "vector_impl": ["auto", "simd_vector_backed", "vector_backed"]
+    "vector_impl": ["auto", "simd_vector_backed", "simd_vector_backed_sum", "vector_backed"]
   }
 }
