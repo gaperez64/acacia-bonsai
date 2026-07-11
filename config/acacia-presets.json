@@ -277,7 +277,7 @@
     "docker_default": [
       "best_decomp_mona",
       "best_decomp_rank_bucketed_mona",
-      "base_iosprecom_mona",
+      "best_decomp_bboxtree_mona",
       "best_decomp_filtered_vector_mona"
     ],
     "local_tuning_default": [
