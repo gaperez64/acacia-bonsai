@@ -3,6 +3,7 @@
 
 #include "input_pickers/critical.hh"
 #include "ios_precomputers/mona.hh"
+#include "ios_precomputers/standard.hh"
 #include "solver/equivariant_k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
 
@@ -317,8 +318,15 @@ namespace {
     auto result = eq::try_solve<SetOfStates> (
         fx.aut, solve_kmax, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
         actioners::standard<state> (), input_pickers::critical ());
+    auto standard_result = eq::try_solve<SetOfStates> (
+        fx.aut, solve_kmax, 2, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::standard (),
+        actioners::standard<state> (), input_pickers::critical ());
     ok &= expect ("new solver attempted synthetic arbiter", result.attempted);
     ok &= expect ("new solver wins synthetic arbiter", result.win.has_value ());
+    ok &= expect ("standard-precomputer solver attempted synthetic arbiter",
+                  standard_result.attempted);
+    ok &= expect ("standard-precomputer solver wins synthetic arbiter",
+                  standard_result.win.has_value ());
     auto production_sweep =
         eq::solve_orbit_sweep<SetOfStates> (fx.aut, solve_kmax, 2, 1, fx.all_inputs,
                                             fx.all_outputs, G, L, actioners::standard<state> ());
@@ -326,13 +334,17 @@ namespace {
     ok &= expect ("production sweep wins synthetic arbiter", production_sweep.win.has_value ());
     auto reference = reference_sweep (fx, L, orbits, 2, solve_kmax, 1);
     ok &= expect ("reference sweep wins synthetic arbiter", reference.has_value ());
-    if (not result.win.has_value () or not production_sweep.win.has_value () or
-        not reference.has_value ())
+    if (not result.win.has_value () or not standard_result.win.has_value () or
+        not production_sweep.win.has_value () or not reference.has_value ())
       return false;
 
     const auto& [k, f] = *result.win;
     ok &= expect ("new/reference K agrees", k == reference->first);
     ok &= expect ("new/reference downset agrees", same_downset (f, reference->second));
+    ok &= expect ("standard-precomputer/reference K agrees",
+                  standard_result.win->first == reference->first);
+    ok &= expect ("standard-precomputer/reference downset agrees",
+                  same_downset (standard_result.win->second, reference->second));
     ok &= expect ("production sweep/reference K agrees",
                   production_sweep.win->first == reference->first);
     ok &= expect ("production sweep/reference downset agrees",

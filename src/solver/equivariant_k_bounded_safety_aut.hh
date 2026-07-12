@@ -314,14 +314,21 @@ namespace acacia::solver_detail::equivariant {
   template <typename InputsToIOs>
   void filter_to_representative_inputs (InputsToIOs& inputs_to_ios,
                                         const std::vector<bdd>& representatives) {
-    for (auto it = inputs_to_ios.begin (); it != inputs_to_ios.end ();) {
-      const bool covers_representative = std::ranges::any_of (
-          representatives,
-          [&] (bdd representative) { return (it->first & representative) != bddfalse; });
-      if (covers_representative)
-        ++it;
-      else
-        it = inputs_to_ios.erase (it);
+    bdd representative_inputs = bddfalse;
+    for (bdd representative : representatives)
+      representative_inputs |= representative;
+
+    if constexpr (requires { inputs_to_ios.restrict_inputs (representative_inputs); }) {
+      inputs_to_ios.restrict_inputs (representative_inputs);
+    }
+    else {
+      for (auto it = inputs_to_ios.begin (); it != inputs_to_ios.end ();) {
+        const bool covers_representative = (it->first & representative_inputs) != bddfalse;
+        if (covers_representative)
+          ++it;
+        else
+          it = inputs_to_ios.erase (it);
+      }
     }
   }
 
