@@ -88,7 +88,7 @@ jobs:
         run: |
           export CXX=g++-14
           meson setup build_python --buildtype=release -Dbuild_python=true
-          meson compile -C build_python
+          meson compile -C build_python -j1
 
       - name: Run pytest
         run: |
