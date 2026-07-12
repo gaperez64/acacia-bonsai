@@ -10,6 +10,7 @@ import pathlib
 import signal
 import subprocess
 import time
+import uuid
 from dataclasses import dataclass
 
 
@@ -39,6 +40,64 @@ def run_process_group(cmd: list[str], timeout: float, env: dict[str, str] | None
     except subprocess.TimeoutExpired:
         timed_out = True
         os.killpg(proc.pid, signal.SIGTERM)
+        try:
+            stdout, stderr = proc.communicate(timeout=2)
+        except subprocess.TimeoutExpired:
+            os.killpg(proc.pid, signal.SIGKILL)
+            stdout, stderr = proc.communicate()
+    seconds = time.monotonic() - started
+    return RunResult(stdout, stderr, 124 if timed_out else proc.returncode, seconds, timed_out)
+
+
+def run_systemd_scope(
+    cmd: list[str],
+    timeout: float,
+    memory_max: str,
+    memory_swap_max: str = "0",
+    env: dict[str, str] | None = None,
+    unit_prefix: str = "acacia-bench",
+) -> RunResult:
+    """Run cmd in a memory-limited user scope and stop the scope on timeout.
+
+    A process-group timeout alone is insufficient here: systemd migrates the
+    solver out of the systemd-run client's process group.  Naming the scope
+    lets the timeout path stop the solver and all decomposed children before
+    collecting the client's pipes.
+    """
+    unit = f"{unit_prefix}-{os.getpid()}-{uuid.uuid4().hex[:12]}"
+    scoped_cmd = [
+        "systemd-run",
+        "--user",
+        "--scope",
+        "--quiet",
+        f"--unit={unit}",
+        f"--property=MemoryMax={memory_max}",
+        f"--property=MemorySwapMax={memory_swap_max}",
+        *cmd,
+    ]
+    started = time.monotonic()
+    proc = subprocess.Popen(
+        scoped_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env,
+        start_new_session=True,
+    )
+    timed_out = False
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        subprocess.run(
+            ["systemctl", "--user", "stop", f"{unit}.scope"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+            check=False,
+        )
+        if proc.poll() is None:
+            os.killpg(proc.pid, signal.SIGTERM)
         try:
             stdout, stderr = proc.communicate(timeout=2)
         except subprocess.TimeoutExpired:

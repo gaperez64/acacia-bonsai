@@ -19,7 +19,13 @@ import os
 import shlex
 import sys
 
-from benchlib import parse_acacia_result, read_part, run_process_group, write_csv
+from benchlib import (
+    parse_acacia_result,
+    read_part,
+    run_process_group,
+    run_systemd_scope,
+    write_csv,
+)
 
 
 def read_ltl_partition(inst_ltl):
@@ -41,10 +47,16 @@ def main():
     p.add_argument("--flags", default="", help="extra acacia flags, e.g. '-U -u automaton'")
     p.add_argument("--runner-prefix", default="",
                    help="optional external wrapper, e.g. systemd-run/cgexec/timeout")
+    p.add_argument("--systemd-scope", action="store_true",
+                   help="run each solver in a named, memory-limited user scope")
+    p.add_argument("--memory-max", default="8G")
+    p.add_argument("--memory-swap-max", default="0")
     p.add_argument("--timeout", type=float, default=25.0)
     p.add_argument("--csv", default=None)
     p.add_argument("--limit", type=int, default=0, help="cap number of instances (0=all)")
     args = p.parse_args()
+    if args.systemd_scope and args.runner_prefix:
+        p.error("--systemd-scope and --runner-prefix are mutually exclusive")
 
     insts = []
     if args.from_csv:
@@ -74,7 +86,16 @@ def main():
             continue
         ins, outs = read_ltl_partition(ltl)
         cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
-        run = run_process_group(cmd, args.timeout)
+        if args.systemd_scope:
+            run = run_systemd_scope(
+                cmd,
+                args.timeout,
+                args.memory_max,
+                args.memory_swap_max,
+                unit_prefix="acacia-subset",
+            )
+        else:
+            run = run_process_group(cmd, args.timeout)
         res = "TIMEOUT" if run.timed_out else parse_acacia_result(run.stdout + run.stderr)
         ok = res in ("REALIZABLE", "UNREALIZABLE")
         solved += ok

@@ -245,6 +245,11 @@ The Spot translator preference is also registry-backed as
 `acacia_translation_pref`; the default is `small`, while `any` is available for
 explicit ablation builds such as `best_decomp_mona_any`.
 
+The shipping `best_decomp_mona` preset enables the exact equivariant solver.
+It automatically declines to the classic solver when no verified profitable
+symmetry is available.  Use `best_decomp_mona_noequivariant` for the explicit
+classic-only escape hatch and performance ablation.
+
 To add a new compile-time switch, add the option to the registry, expose a
 matching `acacia_*` Meson option, map it in `scripts/acacia-config.py`, and
 thread it through `src/config/acacia_build_config.hh.in`.  Presets should

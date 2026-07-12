@@ -8,12 +8,14 @@ import csv
 import os
 import pathlib
 import re
+import shlex
 import sys
 
-from benchlib import read_part, run_process_group
+from benchlib import read_part, run_process_group, run_systemd_scope
 
 
 DIAG_RE = re.compile(r"\bACACIA_DIAG\b(?P<body>.*)$")
+FIELD_RE = re.compile(r"(?:^|\s)(?P<key>[A-Za-z_][A-Za-z0-9_]*)=(?P<value>.*?)(?=\s[A-Za-z_][A-Za-z0-9_]*=|$)")
 
 
 def parse_diag(line: str) -> dict[str, str] | None:
@@ -21,11 +23,8 @@ def parse_diag(line: str) -> dict[str, str] | None:
     if not match:
         return None
     row: dict[str, str] = {}
-    for token in match.group("body").split():
-        if "=" not in token:
-            continue
-        key, value = token.split("=", 1)
-        row[key] = value
+    for field in FIELD_RE.finditer(match.group("body")):
+        row[field.group("key")] = field.group("value").strip()
     return row
 
 
@@ -37,20 +36,29 @@ def main() -> int:
     parser.add_argument("--memory-max", default="8G")
     parser.add_argument("--memory-swap-max", default="0")
     parser.add_argument("--progress-every", default="64")
+    parser.add_argument("--flags", default="", help="extra acacia-bonsai command-line flags")
     parser.add_argument(
         "--via-wrapper",
         action="store_true",
         help="run check-real-correct.sh instead of the diagnostics binary directly",
     )
+    parser.add_argument(
+        "--systemd-scope",
+        action="store_true",
+        help="run the direct diagnostics binary in a transient systemd memory-limited scope",
+    )
     parser.add_argument("--csv", required=True)
     parser.add_argument("targets", nargs="+", help="LTL filenames or paths")
     args = parser.parse_args()
+    extra_flags = shlex.split(args.flags)
 
     build = pathlib.Path(args.build)
     wrapper = build / "tests" / "check-real-correct.sh"
     binary = build / "src" / "acacia-bonsai"
     if args.via_wrapper and not wrapper.exists():
         sys.exit(f"missing wrapper: {wrapper}")
+    if args.via_wrapper and args.systemd_scope:
+        sys.exit("--via-wrapper and --systemd-scope are mutually exclusive")
     if not args.via_wrapper and not binary.exists():
         sys.exit(f"missing diagnostics binary: {binary}")
 
@@ -119,11 +127,39 @@ def main() -> int:
         run_env = env.copy()
         run_env["ACACIA_DIAG_INSTANCE"] = target_path.name
         if args.via_wrapper:
-            cmd = ["/bin/zsh", "-f", str(wrapper), "-p", "-a", "-F", str(target_path)]
+            cmd = [
+                "/bin/zsh",
+                "-f",
+                str(wrapper),
+                "-p",
+                "-a",
+                "-F",
+                str(target_path),
+                *extra_flags,
+            ]
         else:
             inputs, outputs = read_part(target_path.with_suffix(".part"))
-            cmd = [str(binary), "-F", str(target_path), "-i", inputs, "-o", outputs]
-        result = run_process_group(cmd, args.timeout, env=run_env)
+            cmd = [
+                str(binary),
+                "-F",
+                str(target_path),
+                "-i",
+                inputs,
+                "-o",
+                outputs,
+                *extra_flags,
+            ]
+        if args.systemd_scope:
+            result = run_systemd_scope(
+                cmd,
+                args.timeout,
+                args.memory_max,
+                args.memory_swap_max,
+                env=run_env,
+                unit_prefix="acacia-diag",
+            )
+        else:
+            result = run_process_group(cmd, args.timeout, env=run_env)
         text = f"{result.stdout}\n{result.stderr}"
         diag_rows = []
         for line in text.splitlines():

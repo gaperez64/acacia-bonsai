@@ -1,10 +1,14 @@
 #pragma once
 
 #include "actioners/direction.hh"
+#include "configuration.hh"
 #include "utils/verbose.hh"
 
+#include <functional>
+#include <list>
 #include <optional>
 #include <random>
+#include <vector>
 
 namespace input_pickers {
   namespace detail {

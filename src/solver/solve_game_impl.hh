@@ -161,7 +161,8 @@ namespace acacia::solver_detail {
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
     if (not do_synthesis) {
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
-          aut, kmax, kmin, kinc, all_inputs, all_outputs);
+          aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
+          ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
       if (eq.attempted)
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut,
                                               all_inputs, all_outputs);

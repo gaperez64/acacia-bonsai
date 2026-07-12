@@ -134,7 +134,12 @@
       "ios_precomputer": "mona",
       "input_picker": "critical",
       "simd_is_max": false,
-      "decompose_spec": true
+      "decompose_spec": true,
+      "enable_equivariant_solver": true
+    },
+    "best_decomp_mona_noequivariant": {
+      "inherits": "best_decomp_mona",
+      "enable_equivariant_solver": false
     },
     "best_decomp_mona_any": {
       "inherits": "best_decomp_mona",
@@ -208,6 +213,10 @@
     "best_decomp_mona_equivariant": {
       "inherits": "best_decomp_mona",
       "enable_equivariant_solver": true
+    },
+    "best_decomp_mona_equivariant_diag": {
+      "inherits": "best_decomp_mona_equivariant",
+      "enable_diagnostics": true
     },
     "best_decomp_mona_symmetric": {
       "inherits": "best_decomp_mona",

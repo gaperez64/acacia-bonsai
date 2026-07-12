@@ -60,6 +60,13 @@
 # define ACACIA_EQUIVARIANT_MIN_BLOCKS 8
 #endif
 
+// Generator-fixpoint closure can be more expensive than directly sweeping a
+// small input orbit.  Keep the representative/picker loop for larger groups,
+// where avoiding the full orbit has the highest payoff.
+#ifndef ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS
+# define ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS 4
+#endif
+
 #ifndef ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT
 # define ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT 0
 #endif

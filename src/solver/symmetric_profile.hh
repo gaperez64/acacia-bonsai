@@ -34,6 +34,9 @@ namespace acacia::solver_detail::symmetric::profile {
     equivariant_orbit_build,
     equivariant_output_enumerate,
     equivariant_action_dedup,
+    equivariant_representative_filter,
+    equivariant_cpre,
+    equivariant_closure,
     equivariant_solve_loop,
     count
   };
@@ -66,6 +69,9 @@ namespace acacia::solver_detail::symmetric::profile {
       case bucket::equivariant_orbit_build: return "equivariant_orbit_build";
       case bucket::equivariant_output_enumerate: return "equivariant_output_enumerate";
       case bucket::equivariant_action_dedup: return "equivariant_action_dedup";
+      case bucket::equivariant_representative_filter: return "equivariant_representative_filter";
+      case bucket::equivariant_cpre: return "equivariant_cpre";
+      case bucket::equivariant_closure: return "equivariant_closure";
       case bucket::equivariant_solve_loop: return "equivariant_solve_loop";
       case bucket::count: break;
     }
