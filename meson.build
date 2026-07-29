@@ -1,7 +1,7 @@
 project ('Acacia Bonsai', ['c', 'cpp'],
          version : run_command(
              'bash', '-c',
-             'v=$(git describe --tags --abbrev=0 2>/dev/null) && printf "%s" "${v#[vV]}" || printf "2.0"',
+             'v=$(git describe --tags --abbrev=0 2>/dev/null) && printf "%s" "${v#[vV]}" || printf "2"',
              check: false
          ).stdout().strip(),
          default_options : ['cpp_std=c++23', 'b_ndebug=if-release'],
@@ -59,6 +59,7 @@ else
 endif
 
 build_conf = configuration_data ()
+build_conf.set_quoted ('VERSION', meson.project_version ())
 build_conf.set ('DEFAULT_K', get_option ('acacia_default_k'))
 build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))

@@ -1,12 +1,14 @@
 #pragma once
 
-#define VERSION "2.0"
-
-#include "utils/todo.hh"
-
 #if __has_include("acacia_build_config.hh")
 # include "acacia_build_config.hh"
 #endif
+
+#ifndef VERSION
+# define VERSION "2"
+#endif
+
+#include "utils/todo.hh"
 
 #ifndef CPRE_AVOID_UNIONS
 # define CPRE_AVOID_UNIONS 0
