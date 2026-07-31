@@ -1,11 +1,13 @@
 #pragma once
 
 
-#include <type_traits>
-#include <numeric>
-#include <vector>
-#include <list>
+#include <bit>
 #include <bddx.h>
+#include <list>
+#include <numeric>
+#include <spot/twa/bdddict.hh>
+#include <type_traits>
+#include <vector>
 
 #include "utils/transition_enumerator.hh"
 
@@ -50,7 +52,7 @@ namespace ios_precomputers {
             first_dst_var = base_var + log_states;
 
           std::vector<int> state_vars (2 * log_states);
-          std::ranges::iota (state_vars, base_var);
+          std::iota (state_vars.begin (), state_vars.end (), base_var);
 
           // TODO Not sure if it's worth caching.
           auto encode_src = [&] (size_t s) {

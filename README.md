@@ -76,11 +76,12 @@ REALIZABLE
 ```
 
 The wrapper also accepts TLSF specs piped on stdin (translated to LTL via
-the bundled `syfco`). The image ships example specs in `examples/`:
+the bundled `tlsf-tools`: `tlsf2ltl`, `tlsfinfo`, and `mealy2moore`). The image
+ships example specs in `examples/`:
 ```
 cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 REALIZABLE
-cat examples/unrealizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+cat examples/unrealizable-small.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
 UNREALIZABLE
 ```
 
@@ -101,7 +102,10 @@ cat examples/realizable.tlsf | docker exec -i acacia \
 To synthesize a controller (AIGER/AAG format) and have it printed on stdout
 when the spec is realizable, use `acacia-synthesis.sh`. It accepts the same
 options as `acacia-bonsai.sh`; the REALIZABLE/UNREALIZABLE verdict goes to
-stderr so stdout carries only the AAG:
+stderr so stdout carries only the AAG. TLSF synthesis is solved in Acacia's
+Mealy frame by asking `tlsf2ltl` to translate to a Mealy target; if the original
+TLSF target is Moore, the wrapper converts the controller back with
+`mealy2moore` before writing it to stdout:
 ```
 cat examples/realizable.tlsf | docker exec -i acacia \
       /opt/acacia-bonsai/scripts/acacia-synthesis.sh \
@@ -195,7 +199,7 @@ script is available at the root:
 
 In particular, it can be used to build an optimized version of Acacia-Bonsai:
 ```
-./self-benchmark.sh -c best -B
+./self-benchmark.sh -c best -R
   [...]
 cd build_best
 src/acacia-bonsai -h
@@ -203,8 +207,54 @@ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
-The `-c` option selects a configuration and the `-B` option deactivates actual
-benchmarking, so that only compilation is done.
+The `-c` option selects a configuration and the `-R` option disables the
+benchmarking step, so that only setup and compilation are done. If compilation
+memory is tight, add `-L` to use the low-memory compile profile.
+
+# Compile-time configurations
+
+Acacia-Bonsai's optimized variants are compile-time configurations.  The
+configuration registry lives in `config/acacia-options.json` and
+`config/acacia-presets.json`; `scripts/acacia-config.py` validates presets and
+translates them to Meson options.
+
+Useful commands:
+```
+python3 scripts/acacia-config.py validate
+python3 scripts/acacia-config.py list-presets
+python3 scripts/acacia-config.py show best_decomp_mona
+python3 scripts/acacia-config.py meson-args best_decomp_mona
+```
+
+For direct Meson builds, pass the generated option list:
+```
+meson setup build_best_decomp_mona \
+  $(python3 scripts/acacia-config.py meson-args best_decomp_mona) \
+  --buildtype=release \
+  -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true \
+  -Dacacia_compiler_profile=release
+meson compile -C build_best_decomp_mona
+```
+
+`meson.build` writes the selected values into `acacia_build_config.hh`, which
+is included by `src/configuration.hh`.  The generated header defines the same
+macro surface used by the solver templates: component choices such as
+`AUT_PREPROCESSOR`, scalar defaults such as `DEFAULT_K`, and feature gates such
+as `ACACIA_ENABLE_EQUIVARIANT_SOLVER` or `ACACIA_ENABLE_DIAGNOSTICS`.
+The Spot translator preference is also registry-backed as
+`acacia_translation_pref`; the default is `small`, while `any` is available for
+explicit ablation builds such as `best_decomp_mona_any`.
+
+The shipping `best_decomp_mona` preset enables the exact equivariant solver.
+It automatically declines to the classic solver when no verified profitable
+symmetry is available.  Use `best_decomp_mona_noequivariant` for the explicit
+classic-only escape hatch and performance ablation.
+
+To add a new compile-time switch, add the option to the registry, expose a
+matching `acacia_*` Meson option, map it in `scripts/acacia-config.py`, and
+thread it through `src/config/acacia_build_config.hh.in`.  Presets should
+inherit from the nearest existing configuration and override only the values
+being tested.
 
 # Documentation
 

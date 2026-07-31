@@ -1,4 +1,5 @@
-# These gave wrong answers for SYNTCOMP 2025
+# These gave wrong answers for SYNTCOMP 2025.
+#
 KitchenTimerV7.ltl
 TorcsSimple.ltl
 zoo5.ltl

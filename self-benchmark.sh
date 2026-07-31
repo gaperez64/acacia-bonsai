@@ -4,119 +4,48 @@ mkdir -p _bm-logs
 
 BENCHMARK_SUITE=ab/syntcomp21/crit
 TIMEOUT_FACTOR=1.7
+BENCHMARK_CGROUP=${BENCHMARK_CGROUP:-auto}
+BENCHMARK_CGROUP_MEMORY_MAX=${BENCHMARK_CGROUP_MEMORY_MAX:-}
+BENCHMARK_CGROUP_SWAP_MAX=${BENCHMARK_CGROUP_SWAP_MAX:-0}
+BENCHMARK_CGROUP_ENABLED=false
+BENCHMARK_CGROUP_SCOPE=${BENCHMARK_CGROUP_SCOPE:-solver}
+BENCHMARK_COMPILE_PROFILE=${BENCHMARK_COMPILE_PROFILE:-normal}
+BENCHMARK_COMPILE_JOBS=${BENCHMARK_COMPILE_JOBS:-1}
+BENCHMARK_TEST_JOBS=${BENCHMARK_TEST_JOBS:-1}
 
-# -fuse-linker-plugin requires the gold linker, which is unavailable on macOS
-if [[ "$(uname)" == Darwin ]]; then
-    opt='-march=native -Ofast -flto -pipe -DNO_VERBOSE -DNDEBUG'
-else
-    opt='-march=native -Ofast -flto -fuse-linker-plugin -pipe -DNO_VERBOSE -DNDEBUG'
-fi
-opt_justtest=''
+compile_args=()
 
-declare -A confs
-
-# WARNING: The actual defaults are set in configuration.hh
-# defaults=$(<<EOF 
-# -DDEFAULT_K=255
-# -DDEFAULT_KMIN=2
-# -DDEFAULT_KINC=3
-# -DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
-# -DVECTOR_ELT_T='char'
-# -DSTATIC_ARRAY_MAX='300'
-# -DSTATIC_MAX_BITSETS='8ul'
-# -DSIMD_IS_MAX='true'
-# -DAUT_PREPROCESSOR='aut_preprocessors::surely_losing'
-# -DBOOLEAN_STATES='boolean_states::forward_saturation'
-# -DIOS_PRECOMPUTER='ios_precomputers::standard'
-# -DACTIONER='actioners::standard'
-# -DINPUT_PICKER='input_pickers::critical_pq'
-# -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
-# -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
-# EOF
-#         )
-
-# Experimentally determined
-best=$(<<EOF
--DDEFAULT_KMIN=2
--DDEFAULT_KINC=3
--DDEFAULT_UNREAL_X='UNREAL_X_BOTH'
--DAUT_PREPROCESSOR='aut_preprocessors::standard'
--DBOOLEAN_STATES='boolean_states::forward_saturation'
--DIOS_PRECOMPUTER='ios_precomputers::powset'
--DINPUT_PICKER='input_pickers::critical'
--DSIMD_IS_MAX='false'
--DARRAY_AND_BITSET_DOWNSET_IMPL='vector_backed'
--DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_backed'
--DDECOMPOSE_SPEC=0
-EOF
-    )
-
-confs=(
-    # Dummy configuration: does not actually change any acacia-bonsai build
-    # flags, but tells the benchmark step below to run the `ltlsynt/…`
-    # meson suites (i.e. ltlsynt on the same inputs) instead of `ab/…`.
-    [ltlsynt]=" "
-    # These are variations on the default configuration
-    [base]=" "
-    # [kmin5_kinc2]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=2"
-    # [kmin5_kinc1]="-DDEFAULT_KMIN=5 -DDEFAULT_KINC=1"
-    # [kmin2_kinc1]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=1"
-    # [kmin2_kinc3]="-DDEFAULT_KMIN=2 -DDEFAULT_KINC=3"
-    # [x_is_form]="-DDEFAULT_UNREAL_X=UNREAL_X_FORMULA"
-    # [x_is_aut]="-DDEFAULT_UNREAL_X=UNREAL_X_AUTOMATON"
-    [base_nosimd]="-DNO_SIMD"
-    [base_simdnomax]="-DSIMD_IS_MAX=false"
-    [base_autpreproc_standard]="-DAUT_PREPROCESSOR=aut_preprocessors::standard"
-    [base_autpreproc_nopreproc]="-DAUT_PREPROCESSOR=aut_preprocessors::no_preprocessing"
-    [base_booleanstates_none]="-DBOOLEAN_STATES=boolean_states::no_boolean_states"
-    [base_noiosprecom_delegate]="-DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
-    [base_iosprecom_fake_vars]="-DIOS_PRECOMPUTER=ios_precomputers::fake_vars"
-    [base_iosprecom_powset]="-DIOS_PRECOMPUTER=ios_precomputers::powset"
-    [base_iosprecom_mona]="-DIOS_PRECOMPUTER=ios_precomputers::mona"
-    [base_inputpicker_critical_pq]="-DINPUT_PICKER=input_pickers::critical_pq"
-    [base_inputpicker_critical_rnd]="-DINPUT_PICKER=input_pickers::critical_rnd"
-    [base_inputpicker_critical_fullrnd]="-DINPUT_PICKER=input_pickers::critical_fullrnd"
-    [base_downset_vector_or_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
-    [base_downset_kdtree]="-DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
-    [base_downset_vector]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed"
-    [base_downset_vectorbin]="-DARRAY_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DVECTOR_AND_BITSET_DOWNSET_IMPL=vector_backed_bin -DARRAY_IMPL=simd_array_backed_sum -DVECTOR_IMPL=simd_vector_backed"
-    # These are variations on the best configuration
-    [best]="$best"
-    [best_decomp]="$best -DDECOMPOSE_SPEC=1"
-    [best_no_array_cap_max]="$best -DNO_ARRAY_CAP_MAX"  # STATIC_ARRAY_CAP_MAX will be set to 0
-    [best_no_bitsets]="$best -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"  # same, and x_and_boolvec used instead of x_and_bitset
-    [best_mona]="$best -DIOS_PRECOMPUTER=ios_precomputers::mona"
-    [best_noiosprecom_delegate]="$best -DIOS_PRECOMPUTER=ios_precomputers::delegate -DACTIONER='actioners::no_ios_precomputation'"
-    [best_downset_vector_or_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='vector_or_kdtree_backed'"
-    [best_downset_kdtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed'"
-    [best_downset_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed'"
-    [best_downset_simple_sharingtree]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed'"
-    [best_downset_sharingtrie]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed'"
-    [best_decomp_kdtree_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_kdtree_mona_no_bitsets]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='kdtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_sharingtrie_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_simpsharingtree_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='simple_sharingtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_sharingtree_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtree_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_sharingtrie_mona_no_bitsets]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='sharingtrie_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1 -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_mona_no_bitsets]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona -DNO_ARRAY_CAP_MAX -DUSE_BOOLVEC_OVER_BITSET"
-    [best_decomp_mona]="$best -DDECOMPOSE_SPEC=1 -DIOS_PRECOMPUTER=ios_precomputers::mona"
-    [best_decomp_skiplist_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='skiplist_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-    [best_decomp_cst_mona]="$best -DARRAY_AND_BITSET_DOWNSET_IMPL='cst_backed' -DVECTOR_AND_BITSET_DOWNSET_IMPL='cst_backed' -DIOS_PRECOMPUTER=ios_precomputers::mona -DDECOMPOSE_SPEC=1"
-)
+declare -A config_kinds
+declare -A meson_confs
+declare -A tool_descriptions
+declare -A tool_envs
+declare -A tool_suite_prefixes
+config_helper=${ACACIA_CONFIG_HELPER:-./scripts/acacia-config.py}
+for name in ${(f)"$(python3 "$config_helper" list-presets)"}; do
+    config_kinds[$name]="acacia"
+    meson_confs[$name]="$(python3 "$config_helper" meson-args "$name")"
+done
+for name in ${(f)"$(python3 "$config_helper" list-tools)"}; do
+    config_kinds[$name]="tool"
+    tool_descriptions[$name]="$(python3 "$config_helper" tool-description "$name")"
+    tool_envs[$name]="$(python3 "$config_helper" tool-env "$name")"
+    tool_suite_prefixes[$name]="$(python3 "$config_helper" tool-suite-prefix "$name")"
+done
 
 mode= # print, list
 force=false
 justtest=false
 native_file=
 donot=()
-conflist=(${(k)confs})
+conflist=(${(k)config_kinds})
 benchsuites=(--suite=$BENCHMARK_SUITE)
+meson_slice=()
 
 if (( $# == 0 )); then
   secs=10
 
   cat <<EOF
-No option given; this will build, compile, and benchmark ${#confs} different configurations.
+No option given; this will build, compile, and benchmark ${#config_kinds} different configurations.
 To build/compile/benchmark with default (debug) options, run:
 
   $ meson setup build
@@ -133,33 +62,47 @@ EOF
   echo "."
 fi
 
-while getopts "hplBCjRfb:t:c:n:" option; do
+while getopts "hplBCLjRfb:t:c:m:n:s:" option; do
     case $option; in
         h) cat <<EOF
-usage: $0 [-hplBCjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-n NATIVE_FILE]
+usage: $0 [-hplBCLjR] [-b BENCHMARK[,BENCHMARK]] [-c CONF[,CONF,...]] [-m MEMORY] [-n NATIVE_FILE] [-s SLICE/N]
   -h: Print this message.
-  -p: Do not build/compile/benchmark, instead, print the CXXFLAGS.
+  -p: Do not build/compile/benchmark, instead, print the Meson setup arguments.
   -l: Do not build/compile/benchmark, instead, list configurations.
   -B: Do not build.
   -C: Do not compile.
+  -L: Use the low-memory Meson compiler profile (-O0 -g0, no LTO) and compile with one job.
   -j: Just test instead of benchmarking.
   -R: Do not benchmark.
   -f: Do not fail when a build, compile, or benchmark does, continue as if they passed.
   -b BENCHMARK: Run a specific benchmark suite (default: $BENCHMARK_SUITE).
   -t TIMEOUT: Use timeout factor TIMEOUT (default: $TIMEOUT_FACTOR).  Actual time is multiplied by 10.
   -c CONF,...: Only consider configurations listed.
+  -m MEMORY: Cgroup MemoryMax for benchmark runs (default: 80% of RAM; use 'off' to disable).
   -n NATIVE_FILE: Path to a meson native file passed to \`meson setup\`.
+  -s SLICE/N: Pass a Meson test slice, useful for smoke runs on large suites.
+Environment:
+  BENCHMARK_CGROUP=auto|strict|off       Memory-limit benchmark runs with systemd cgroups (default: auto).
+  BENCHMARK_CGROUP_SCOPE=solver|meson    Cgroup each solver process or the whole Meson run (default: solver).
+  BENCHMARK_CGROUP_MEMORY_MAX=MEMORY     Same as -m.
+  BENCHMARK_CGROUP_SWAP_MAX=MEMORY       systemd MemorySwapMax value (default: 0).
+  BENCHMARK_COMPILE_PROFILE=normal|lowmem
+  BENCHMARK_COMPILE_JOBS=N               Meson compile parallelism (default: 1).
+  BENCHMARK_TEST_JOBS=N                  Meson benchmark/test parallelism (default: 1).
 EOF
            exit 1;;
         p) mode=print;;
         l) mode=list;;
         B) donot+=build;;
         C) donot+=compile;;
+        L) BENCHMARK_COMPILE_PROFILE=lowmem;;
 	j) justtest=true;;
         R) donot+=benchmark;;
         f) force=true;;
         c) conflist=(${(@s:,:)OPTARG});;
 	t) TIMEOUT_FACTOR=$OPTARG;;
+	m) BENCHMARK_CGROUP_MEMORY_MAX=$OPTARG;;
+        s) meson_slice=(--slice="$OPTARG");;
 	b) benchsuites=()
 	   for b in ${(@s:,:)OPTARG}; do
 	     benchsuites+=(--suite="$b")
@@ -168,22 +111,191 @@ EOF
     esac
 done
 
-## If we're just testing, go for a fast compilation
-rel="--buildtype=release"
+## If we're just testing, go for a fast compilation.
+setup_args=(--buildtype=release -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true -Dacacia_compiler_profile=release)
 if $justtest; then
-    opt=$opt_justtest
-    echo "Using opt $opt for faster compile-to-test times"
-    rel=""
+    setup_args=()
+    echo "Using Meson default debug profile for faster compile-to-test times"
 fi
+case $BENCHMARK_COMPILE_PROFILE in
+    normal) ;;
+    lowmem)
+        setup_args=(--buildtype=plain -Doptimization=0 -Ddebug=false -Db_lto=false -Db_ndebug=true -Dacacia_compiler_profile=lowmem)
+        compile_args=(-j "$BENCHMARK_COMPILE_JOBS")
+        echo "Using low-memory Meson compile profile, compile jobs $BENCHMARK_COMPILE_JOBS"
+        ;;
+    *)
+        print -u2 "ERROR: BENCHMARK_COMPILE_PROFILE must be 'normal' or 'lowmem' (got '$BENCHMARK_COMPILE_PROFILE')."
+        exit 2
+        ;;
+esac
+if (( ${#compile_args} == 0 )); then
+    compile_args=(-j "$BENCHMARK_COMPILE_JOBS")
+fi
+
+if [[ $BENCHMARK_TEST_JOBS != <-> || $BENCHMARK_TEST_JOBS -lt 1 ]]; then
+    print -u2 "ERROR: BENCHMARK_TEST_JOBS must be a positive integer (got '$BENCHMARK_TEST_JOBS')."
+    exit 2
+fi
+if [[ $BENCHMARK_COMPILE_JOBS != <-> || $BENCHMARK_COMPILE_JOBS -lt 1 ]]; then
+    print -u2 "ERROR: BENCHMARK_COMPILE_JOBS must be a positive integer (got '$BENCHMARK_COMPILE_JOBS')."
+    exit 2
+fi
+case $BENCHMARK_CGROUP_SCOPE in
+    solver|meson) ;;
+    *)
+        print -u2 "ERROR: BENCHMARK_CGROUP_SCOPE must be 'solver' or 'meson' (got '$BENCHMARK_CGROUP_SCOPE')."
+        exit 2
+        ;;
+esac
+
+default_benchmark_cgroup_memory_max() {
+    local mem_kib
+    mem_kib=$(awk '/^MemTotal:/ { print $2; exit }' /proc/meminfo 2>/dev/null)
+    if [[ $mem_kib == <-> ]]; then
+        local cap_mib=$(( mem_kib * 8 / 10 / 1024 ))
+        if (( cap_mib > 0 )); then
+            echo "${cap_mib}M"
+            return
+        fi
+    fi
+    echo 12G
+}
+
+configure_benchmark_cgroup() {
+    local mode=$BENCHMARK_CGROUP
+    local memory_max=$BENCHMARK_CGROUP_MEMORY_MAX
+    local swap_max=$BENCHMARK_CGROUP_SWAP_MAX
+
+    [[ -z $memory_max ]] && memory_max=$(default_benchmark_cgroup_memory_max)
+
+    case $mode in
+        auto|strict) ;;
+        off|none|false|0) BENCHMARK_CGROUP_ENABLED=false; return 0;;
+        *)
+            print -u2 "ERROR: BENCHMARK_CGROUP must be 'auto', 'strict', or 'off' (got '$mode')."
+            exit 2
+            ;;
+    esac
+
+    if [[ $memory_max == off || $memory_max == none || $memory_max == false || $memory_max == 0 ]]; then
+        BENCHMARK_CGROUP_ENABLED=false
+        return 0
+    fi
+
+    if ! command -v systemd-run >/dev/null; then
+        if [[ $mode == strict ]]; then
+            print -u2 "ERROR: systemd-run is required for BENCHMARK_CGROUP=strict."
+            exit 2
+        fi
+        print -u2 "WARN: systemd-run not found; benchmarks will run without a memory cgroup."
+        BENCHMARK_CGROUP_ENABLED=false
+        return 0
+    fi
+
+    local -a props
+    props=("--property=MemoryMax=$memory_max")
+    [[ -n $swap_max ]] && props+=("--property=MemorySwapMax=$swap_max")
+
+    if systemd-run --user --scope --quiet "--unit=acacia-bonsai-bench-preflight-$$" $props true >/dev/null 2>&1; then
+        BENCHMARK_CGROUP_MEMORY_MAX=$memory_max
+        BENCHMARK_CGROUP_SWAP_MAX=$swap_max
+        BENCHMARK_CGROUP_ENABLED=true
+        echo "Benchmark cgroup enabled: scope=$BENCHMARK_CGROUP_SCOPE MemoryMax=$BENCHMARK_CGROUP_MEMORY_MAX MemorySwapMax=$BENCHMARK_CGROUP_SWAP_MAX"
+        return 0
+    fi
+
+    if [[ $mode == strict ]]; then
+        print -u2 "ERROR: failed to create a benchmark cgroup with systemd-run --user."
+        exit 2
+    fi
+    print -u2 "WARN: failed to create a benchmark cgroup with systemd-run --user; running benchmarks without a memory cgroup."
+    print -u2 "      Set BENCHMARK_CGROUP=off to silence this warning or BENCHMARK_CGROUP=strict to fail instead."
+    BENCHMARK_CGROUP_ENABLED=false
+}
+
+run_benchmark_command() {
+    local scope=$1
+    shift
+
+    if $BENCHMARK_CGROUP_ENABLED; then
+        local -a props
+        if [[ $BENCHMARK_CGROUP_SCOPE == meson ]]; then
+            props=("--property=MemoryMax=$BENCHMARK_CGROUP_MEMORY_MAX")
+            [[ -n $BENCHMARK_CGROUP_SWAP_MAX ]] && props+=("--property=MemorySwapMax=$BENCHMARK_CGROUP_SWAP_MAX")
+            systemd-run --user --scope --quiet "--unit=acacia-bonsai-bench-$scope-$$" $props "$@"
+        else
+            env ACACIA_TEST_CGROUP=1 \
+                ACACIA_TEST_CGROUP_MEMORY_MAX="$BENCHMARK_CGROUP_MEMORY_MAX" \
+                ACACIA_TEST_CGROUP_SWAP_MAX="$BENCHMARK_CGROUP_SWAP_MAX" \
+                ACACIA_TEST_RESOURCE_UNKNOWN=1 \
+                "$@"
+        fi
+    else
+        "$@"
+    fi
+}
+
+is_tool_config() {
+    local name=$1
+    [[ ${config_kinds[$name]} == tool ]]
+}
+
+is_compiled_acacia_build() {
+    local build=$1
+    [[ -e $build/compiled && -x $build/src/acacia-bonsai && -e $build/.acacia-config.json ]]
+}
+
+build_config_matches() {
+    local name=$1
+    local build=$2
+    local current_config
+
+    [[ -e $build/.acacia-config.json ]] || return 1
+    current_config="$(python3 "$config_helper" show "$name")"
+    cmp -s <(print -r -- "$current_config") $build/.acacia-config.json
+}
+
+benchmark_build_for() {
+    local name=$1
+    if ! is_tool_config $name; then
+        echo "build_$name"
+        return
+    fi
+
+    local candidate
+    for candidate in build_ltlsynt build_base build_best_decomp_mona build_best; do
+        if is_compiled_acacia_build $candidate; then
+            echo "$candidate"
+            return
+        fi
+    done
+    for candidate in build_*(N); do
+        if is_compiled_acacia_build $candidate; then
+            echo "$candidate"
+            return
+        fi
+    done
+}
 
 ## Print and list mode
 if [[ $mode == print || $mode == list ]]; then
     for name in $conflist; do
+        if (( ! $+config_kinds[$name] )); then
+            echo "error: $name, unknown configuration."
+            $force || exit 2
+            continue
+        fi
         echo -n "- $name"
         if [[ $mode == print ]]; then
-            # echo -n ": $opt $defaults $confs[$name]" | tr '\n' ' '
-	    # defaults are set in configuration.hh
-            echo -n ": $opt $confs[$name]" | tr '\n' ' '
+            if is_tool_config $name; then
+                echo -n ": ${tool_descriptions[$name]}"
+                if [[ -n ${tool_envs[$name]} ]]; then
+                    echo -n " env: ${tool_envs[$name]//$'\n'/ }"
+                fi
+            else
+                echo -n ": meson setup ${(j: :)setup_args} ${meson_confs[$name]}" | tr '\n' ' '
+            fi
         fi
         echo
     done
@@ -193,20 +305,38 @@ fi
 ## Build
 if ! (( $donot[(Ie)build] )); then
     for name in $conflist; do
-        param=$confs[$name]
-        [[ $param == "" ]] && { echo "error: $name, unknown configuration."; $force || exit 2 }
+        if (( ! $+config_kinds[$name] )); then
+            echo "error: $name, unknown configuration."
+            $force || exit 2
+            continue
+        fi
+        if is_tool_config $name; then
+            echo "$name is an external benchmark backend, not building an Acacia config."
+            continue
+        fi
+        meson_param=(${(z)meson_confs[$name]})
         build=build_$name
         log=_bm-logs/$name.log
         rm -f $log
+        current_config="$(python3 "$config_helper" show "$name")"
         if [[ -e $build ]]; then
-            echo "$build exists, not rebuilding, remove folder to rebuild."
+            if [[ ! -e $build/.acacia-config.json ]]; then
+                echo "$build exists without Acacia config metadata; remove folder to rebuild."
+                $force || exit 2
+                continue
+            elif ! cmp -s <(print -r -- "$current_config") $build/.acacia-config.json; then
+                echo "$build exists with stale Acacia config metadata; remove folder to rebuild."
+                $force || exit 2
+                continue
+            else
+                echo "$build exists, not rebuilding, remove folder to rebuild."
+            fi
         else
             echo -n "building $build (logfile: $log)... "
-            # if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel &>> $log; then
-	    # defaults are set in configuration.hh
             native_flag=()
             [[ -n $native_file ]] && native_flag=(--native-file "$native_file")
-            if CXXFLAGS="$opt $defaults $param $CXXFLAGS" meson setup $build $rel $native_flag &>> $log; then
+            if meson setup $build $setup_args $native_flag $meson_param &>> $log; then
+                print -r -- "$current_config" > $build/.acacia-config.json
                 echo "done."
             else
                 echo "FAILED; please remove $build to recompile."
@@ -220,9 +350,23 @@ fi
 ## Compile
 if ! (( $donot[(Ie)compile] )); then
     for name in $conflist; do
+        if (( ! $+config_kinds[$name] )); then
+            echo "error: $name, unknown configuration."
+            $force || exit 2
+            continue
+        fi
+        if is_tool_config $name; then
+            echo "$name is an external benchmark backend, not compiling an Acacia config."
+            continue
+        fi
         build=build_$name
         log=_bm-logs/$name.log
         if [[ -e $build/compiled ]]; then
+            if [[ ! -x $build/src/acacia-bonsai ]]; then
+                echo "$name has a stale compiled marker, but $build/src/acacia-bonsai is missing or not executable"
+                $force || exit 3
+                continue
+            fi
             echo "$name already compiled, remove $build/compiled to recompile"
             continue
         fi
@@ -230,9 +374,14 @@ if ! (( $donot[(Ie)compile] )); then
 	    echo "$name isn't built, skipping."
 	    continue
         fi
+        if ! build_config_matches $name $build; then
+            echo "$name build config metadata is missing or stale; remove $build to rebuild"
+            $force || exit 3
+            continue
+        fi
         cd $build
         echo -n "compiling $name (logfile: $log)... "
-        if meson compile &>> ../$log; then
+        if meson compile $compile_args &>> ../$log; then
             echo "done"
             touch compiled
         else
@@ -246,44 +395,130 @@ fi
 
 ## Benchmark
 if ! (( $donot[(Ie)benchmark] )); then
+    configure_benchmark_cgroup
     for name in $conflist; do
-        build=build_$name
-        log=_bm-logs/$name.log
-        if [[ -e $build/benchmarked ]]; then
-            echo "skipping already benchmarked $name, remove $build/benchmarked to rebenchmark"
+        if (( ! $+config_kinds[$name] )); then
+            echo "error: $name, unknown configuration."
+            $force || exit 2
             continue
         fi
+        build=$(benchmark_build_for $name)
+        if [[ -z $build ]]; then
+            echo "skipping $name, no compiled Acacia build is available to host Meson test metadata"
+            $force || exit 4
+            continue
+        fi
+        log_suffix=
+        if (( ${#meson_slice} )); then
+            slice_label=${meson_slice[1]#--slice=}
+            log_suffix=-slice-${slice_label/\//-of-}
+        fi
+        log=_bm-logs/$name$log_suffix.log
+        meta=_bm-logs/$name$log_suffix.meta
+        marker=$build/benchmarked$log_suffix
+        is_tool_config $name && marker=$build/benchmarked-$name$log_suffix
         if [[ ! -e $build/compiled ]]; then
             echo "skipping uncompiled $name, create $build/compiled if compiled by hand"
+            $force || exit 4
+            continue
+        fi
+        if ! is_tool_config $name && ! build_config_matches $name $build; then
+            echo "skipping stale-config $name, remove $build to rebuild with current preset metadata"
+            $force || exit 4
+            continue
+        fi
+        if ! is_tool_config $name && [[ ! -x $build/src/acacia-bonsai ]]; then
+            echo "skipping uncompiled $name, missing executable $build/src/acacia-bonsai"
+            $force || exit 4
+            continue
+        fi
+        if [[ -e $marker ]]; then
+            echo "skipping already benchmarked $name, remove $marker to rebenchmark"
             continue
         fi
         cd $build
-	## For the dummy ltlsynt configuration, redirect every --suite=ab/…
-	## argument to --suite=ltlsynt/… so that the same meson run now
-	## picks up the ltlsynt-backed benchmarks instead of the ab ones.
-	if [[ $name == ltlsynt ]]; then
+	rm -f ../$log
+	## For external benchmark backends, redirect every --suite=ab/…
+	## argument to the backend's Meson suite prefix so that the same meson
+	## run picks up the tool-backed benchmarks instead of the ab ones.
+	run_prefix=()
+	if is_tool_config $name; then
+	    suite_prefix=${tool_suite_prefixes[$name]:-$name}
 	    this_suites=()
 	    for b in $benchsuites; do
-	        this_suites+=("${b//ab\//ltlsynt/}")
+	        if [[ $b == --suite=ab/* ]]; then
+	            this_suites+=(--suite="${suite_prefix}/${b#--suite=ab/}")
+	        else
+	            this_suites+=("$b")
+	        fi
 	    done
+	    if [[ -n ${tool_envs[$name]} ]]; then
+	        env_args=("${(@f)tool_envs[$name]}")
+	        run_prefix=(env "${env_args[@]}")
+	    fi
 	else
 	    this_suites=($benchsuites)
 	fi
+	rm -f ../$meta
+	{
+	    print -r -- "config=$name"
+	    if is_tool_config $name; then
+	        print -r -- "kind=external-tool"
+	        print -r -- "description=${tool_descriptions[$name]}"
+	        print -r -- "suite_prefix=${tool_suite_prefixes[$name]:-$name}"
+	        if [[ -n ${tool_envs[$name]} ]]; then
+	            print -r -- "tool_env_begin"
+	            print -r -- "${tool_envs[$name]}"
+	            print -r -- "tool_env_end"
+	        fi
+	    else
+	        print -r -- "kind=acacia"
+	        print -r -- "meson_setup_args=${(j: :)setup_args} ${meson_confs[$name]}"
+	        if [[ -e .acacia-config.json ]]; then
+	            print -r -- "normalized_config_json_begin"
+	            cat .acacia-config.json
+	            print -r -- "normalized_config_json_end"
+	        fi
+	    fi
+	    print -r -- "build=$build"
+	    print -r -- "suites=${(j: :)this_suites}"
+	    print -r -- "slice=${(j: :)meson_slice}"
+	    print -r -- "timeout_factor=$TIMEOUT_FACTOR"
+	    print -r -- "justtest=$justtest"
+	    print -r -- "benchmark_cgroup_enabled=$BENCHMARK_CGROUP_ENABLED"
+	    print -r -- "benchmark_cgroup_scope=$BENCHMARK_CGROUP_SCOPE"
+	    print -r -- "benchmark_cgroup_memory_max=$BENCHMARK_CGROUP_MEMORY_MAX"
+	    print -r -- "benchmark_cgroup_swap_max=$BENCHMARK_CGROUP_SWAP_MAX"
+	    print -r -- "benchmark_compile_profile=$BENCHMARK_COMPILE_PROFILE"
+	    print -r -- "benchmark_compile_jobs=$BENCHMARK_COMPILE_JOBS"
+	    print -r -- "benchmark_test_jobs=$BENCHMARK_TEST_JOBS"
+	} > ../$meta
+	rm -f meson-logs/testlog.json
+	test_status=0
+	meson_jobs=(--num-processes "$BENCHMARK_TEST_JOBS")
 	if $justtest; then
 	    echo -n "testing $name on $this_suites (logfile: $log)... "
-	    meson test $this_suites -t $TIMEOUT_FACTOR &>> ../$log
+	    run_benchmark_command $name $run_prefix meson test --no-rebuild $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> ../$log || test_status=$?
 	else
 	    echo -n "benchmarking $name on $this_suites (logfile: $log)... "
-	    meson test --benchmark $this_suites -t $TIMEOUT_FACTOR &>> ../$log
+	    run_benchmark_command $name $run_prefix meson test --no-rebuild --benchmark $meson_jobs $this_suites $meson_slice -t $TIMEOUT_FACTOR &>> ../$log || test_status=$?
 	fi
-        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log; then
-            echo "FAILED; testlog stored at $log, _bm-logs/$name.json left untouched"
+        if [[ ! -s meson-logs/testlog.json ]]; then
+            echo "FAILED; Meson did not produce meson-logs/testlog.json for $this_suites"
+            $force || exit 5
+            cd ..
+            continue
+        fi
+        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log ||
+           grep -q 'FAILED:' ../$log ||
+           { (( test_status != 0 )) && ! grep -q '^Timeout:[[:space:]]*[1-9]' ../$log; }; then
+            echo "FAILED; testlog stored at $log, _bm-logs/$name$log_suffix.json left untouched"
             $force || exit 5
         else
             echo "done; testlog stored at $log"
-            touch benchmarked
+            touch $marker:t
         fi
         cd ..
-        cp $build/meson-logs/testlog.json _bm-logs/$name.json
+        cp $build/meson-logs/testlog.json _bm-logs/$name$log_suffix.json
     done
 fi

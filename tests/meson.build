@@ -48,6 +48,77 @@ check_real_file = configure_file (input : 'check-real-correct.sh.in',
                                   configuration : conf_data)
 check_real_exe = find_program (check_real_file)
 
+spot_nba_fastpath_test = executable ('spot-nba-fastpath-test',
+                                     'spot_nba_fastpath_test.cc',
+                                     include_directories : inc,
+                                     dependencies : [spot_dep, bddx_dep])
+test ('spot-nba-fastpath-classification',
+      spot_nba_fastpath_test,
+      suite : ['unit', 'spotfast'])
+
+elevator_preprocessor_test = executable ('elevator-preprocessor-test',
+                                         'elevator_preprocessor_test.cc',
+                                         include_directories : inc,
+                                         dependencies : [spot_dep, bddx_dep])
+test ('elevator-preprocessor',
+      elevator_preprocessor_test,
+      suite : ['unit', 'elevator'])
+
+symmetric_downset_test = executable ('symmetric-downset-test',
+                                     'symmetric_downset_test.cc',
+                                     include_directories : inc)
+test ('symmetric-downset',
+      symmetric_downset_test,
+      suite : ['unit', 'symmetry'])
+
+symmetric_dense_downset_test = executable ('symmetric-dense-downset-test',
+                                           'symmetric_dense_downset_test.cc',
+                                           include_directories : inc,
+                                           dependencies : [posets_dep])
+test ('symmetric-dense-downset',
+      symmetric_dense_downset_test,
+      suite : ['unit', 'symmetry'])
+
+symmetric_blocks_test = executable ('symmetric-blocks-test',
+                                    'symmetric_blocks_test.cc',
+                                    include_directories : inc,
+                                    dependencies : [spot_dep, bddx_dep])
+test ('symmetric-blocks',
+      symmetric_blocks_test,
+      suite : ['unit', 'symmetry'])
+
+symmetric_conversion_test = executable ('symmetric-conversion-test',
+                                        'symmetric_conversion_test.cc',
+                                        include_directories : inc,
+                                        dependencies : [spot_dep, bddx_dep, posets_dep])
+test ('symmetric-conversion',
+      symmetric_conversion_test,
+      suite : ['unit', 'symmetry'])
+
+symmetric_output_orbits_test = executable ('symmetric-output-orbits-test',
+                                           'symmetric_output_orbits_test.cc',
+                                           include_directories : inc,
+                                           dependencies : [spot_dep, bddx_dep, posets_dep])
+test ('symmetric-output-orbits',
+      symmetric_output_orbits_test,
+      suite : ['unit', 'symmetry'])
+
+equivariant_pre_test = executable ('equivariant-pre-test',
+                                   'equivariant_pre_test.cc',
+                                   include_directories : inc,
+                                   dependencies : [spot_dep, bddx_dep, posets_dep])
+test ('equivariant-pre',
+      equivariant_pre_test,
+      suite : ['unit', 'symmetry'])
+
+component_concepts_test = executable ('component-concepts-test',
+                                      'component_concepts_test.cc',
+                                      include_directories : inc,
+                                      dependencies : [posets_dep, spot_dep, bddx_dep])
+test ('component-concepts',
+      component_concepts_test,
+      suite : ['unit', 'component-concepts'])
+
 # Tests (quick; `meson test`) are run with acacia-bonsai only.
 test_backends = { 'ab' : '-a' }
 

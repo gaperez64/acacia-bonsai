@@ -5,19 +5,19 @@
 #include <unordered_map>
 
 #include <algorithm>
+#include <cassert>
 #include <csignal>
 #include <cstring>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
-#include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utils/verbose.hh>
 #include <vector>
 
-#include <posets/downsets.hh>
+#include <posets/vectors/traits.hh>
 
 using namespace std::literals;
 
@@ -56,14 +56,6 @@ int main (int argc, char** argv) {
   sigaction (SIGQUIT, &action, nullptr);
   sigaction (SIGABRT, &action, nullptr);
 
-  // set a (virtual) memory limit in GiBs, if needed
-  if (arg_values.mem_limit.has_value ()) {
-    struct rlimit limit;
-    limit.rlim_max = 1024L * 1024L * 1024L * (*arg_values.mem_limit);
-    limit.rlim_cur = limit.rlim_max;
-    setrlimit(RLIMIT_AS, &limit);
-  }
-
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
       if (fork () == 0) {
@@ -75,7 +67,7 @@ int main (int argc, char** argv) {
             "] ");
         const bool res =
             run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
-                     arg_values.opt_kinc, arg_values.formula, unreal_x,
+                     arg_values.opt_kinc, arg_values.formula, unreal_x, arg_values.spot_fast,
                      unreal_x.has_value () ? std::nullopt : arg_values.synth_fname);
         verb_do (1, vout << "returning " << res << "\n");
 

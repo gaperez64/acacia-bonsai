@@ -1,6 +1,7 @@
 #pragma once
 
-#include "actioners.hh"
+#include "actioners/direction.hh"
+#include "configuration.hh"
 #include "posets/utils/vector_mm.hh"
 #include "posets/vectors/traits.hh"
 

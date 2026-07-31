@@ -8,6 +8,10 @@ on:
       - master
 permissions:
   contents: read
+
+env:
+  SPOT_VERSION: 2.15.1
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -22,9 +26,20 @@ jobs:
         sudo pip install --upgrade meson
     - name: Install newer libltldl
       run: |
-        sudo wget http://launchpadlibrarian.net/815947228/libltdl7_2.5.4-4build1_amd64.deb
-        sudo dpkg -i libltdl7_2.5.4-4build1_amd64.deb
-        sudo apt -f install
+        set -euo pipefail
+        deb=libltdl7_2.5.4-4build1_amd64.deb
+        for url in \
+          http://archive.ubuntu.com/ubuntu/pool/main/libt/libtool/${deb} \
+          http://launchpadlibrarian.net/815947228/${deb}
+        do
+          if wget --tries=5 --waitretry=10 --retry-connrefused --retry-on-http-error=503,504 -O "${deb}" "${url}"; then
+            sudo dpkg -i "${deb}" || sudo apt -f install -y
+            sudo apt -f install -y
+            exit 0
+          fi
+        done
+        echo "failed to download ${deb}" >&2
+        exit 1
     - name: Checkout repository and submodules
       uses: actions/checkout@v6
       with:
@@ -43,13 +58,13 @@ jobs:
           /usr/local/bin/ltl*
           /usr/local/bin/aut*
           /usr/local/bin/ran*
-        key: spot-2.14.4-maxacc64-nopy-${{ runner.os }}
+        key: spot-${{ env.SPOT_VERSION }}-maxacc64-nopy-${{ runner.os }}
     - name: Install Spot
       if: steps.spot-cache.outputs.cache-hit != 'true'
       run: |
-        sudo wget http://www.lre.epita.fr/dload/spot/spot-2.14.4.tar.gz
-        tar -xvzf spot-2.14.4.tar.gz
-        cd spot-2.14.4
+        sudo wget http://www.lre.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz
+        tar -xvzf spot-${SPOT_VERSION}.tar.gz
+        cd spot-${SPOT_VERSION}
         sudo ./configure --enable-max-accsets=64 --disable-python
         sudo make
         sudo make install
@@ -66,7 +81,8 @@ jobs:
     - name: Compile and test shipped configurations
       run: |
         export CXX=g++-14
-        ./self-benchmark.sh -c best_decomp_mona,best_decomp_kdtree_mona,base_iosprecom_mona,best_decomp_sharingtrie_mona -j -b ab/tiny
+        configs=$(python3 scripts/acacia-config.py list-group docker_default | paste -sd, -)
+        ./self-benchmark.sh -L -c "$configs" -j -b ab/tiny
     - name: Upload test results
       uses: actions/upload-artifact@v7
       if: always()

@@ -1,4 +1,8 @@
 _bm-logs
+_bm-logs*/
+loss-set*.csv
+fmcad26-*.pdf
+mkplottable/
 build*/
 _trash
 builddir
@@ -12,6 +16,8 @@ doc/*.log
 doc/*.pdf
 *.o
 *~
+__pycache__/
+*.pyc
 .dumbjump
 tests/acacia-plus/*pyc
 tests/acacia-plus/__pycache__

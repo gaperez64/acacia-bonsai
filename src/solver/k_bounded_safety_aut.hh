@@ -3,12 +3,13 @@
 #undef MAX_CRITICAL_INPUTS
 #define MAX_CRITICAL_INPUTS 1
 
-#include "actioners.hh"
-#include "input_pickers.hh"
-#include "ios_precomputers.hh"
+#include "actioners/direction.hh"
+#include "configuration.hh"
 #include "utils/bdd_helper.hh"
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
+#include "solver/diagnostics.hh"
+#include "solver/symmetric_profile.hh"
 #include "utils/typeinfo.hh"
 
 #include <algorithm>
@@ -58,6 +59,17 @@ class k_bounded_safety_aut_detail {
     }
 
     std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> solve () {
+#if ACACIA_SYMMETRY_PROFILE
+      struct classic_profile_reporter {
+          ~classic_profile_reporter () {
+            acacia::solver_detail::symmetric::profile::global ().report ();
+          }
+      };
+      acacia::solver_detail::symmetric::profile::global ().reset ();
+      classic_profile_reporter profile_reporter;
+#endif
+      ACACIA_SYMMETRY_PROFILE_SCOPE (classic_solve_total);
+
       VECTOR_ELT_T k = kfrom;
 
       // Precompute the input and output actions.
@@ -86,12 +98,14 @@ class k_bounded_safety_aut_detail {
 
       do {
         loopcount++;
+        acacia::diagnostics::observe_loop (f.size (), k);
         verb_do (1, vout << "Loop# " << loopcount << ", f of size " << f.size () << std::endl);
 
         auto&& input = input_picker (f);
         if (not input.has_value ())  // No more inputs, and we just tested that init was present
         {
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
+          acacia::diagnostics::set_final_reason ("fixedpoint");
           return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
               std::make_pair (k, std::move (f)));
         }
@@ -101,6 +115,7 @@ class k_bounded_safety_aut_detail {
         if (not f.contains (state (init))) {
           if (k >= kto) {
             verb_do (2, vout << "Early exit because the initial state is out\n");
+            acacia::diagnostics::set_final_reason ("kmax-initial-out");
             return std::nullopt;
           }
           verb_do (1, vout << "Incrementing k from " << (int) k << " to " << (int) (k + kinc)
@@ -157,21 +172,25 @@ class k_bounded_safety_aut_detail {
       auto vv = typename SetOfStates::value_type (v);
       SetOfStates f1i (std::move (vv));
       bool first_turn = true;
-      for (const auto& action_vec : actions) {
-        verb_do (3, vout << "one_output_letter:" << std::endl);
+      {
+        ACACIA_SYMMETRY_PROFILE_SCOPE (classic_pre_build);
+        for (const auto& action_vec : actions) {
+          verb_do (3, vout << "one_output_letter:" << std::endl);
 
-        SetOfStates&& f1io = f.apply ([this, &action_vec, &actioner] (const auto& m) {
-          auto&& ret = actioner.apply (m, action_vec, actioners::direction::backward);
-          verb_do (3, vout << "  " << m << " -> " << ret << std::endl);
-          return std::move (ret);
-        });
+          SetOfStates&& f1io = f.apply ([this, &action_vec, &actioner] (const auto& m) {
+            ACACIA_SYMMETRY_PROFILE_SCOPE (classic_backward_apply);
+            auto&& ret = actioner.apply (m, action_vec, actioners::direction::backward);
+            verb_do (3, vout << "  " << m << " -> " << ret << std::endl);
+            return std::move (ret);
+          });
 
-        if (first_turn) {
-          f1i = std::move (f1io);
-          first_turn = false;
+          if (first_turn) {
+            f1i = std::move (f1io);
+            first_turn = false;
+          }
+          else
+            f1i.union_with (std::move (f1io));
         }
-        else
-          f1i.union_with (std::move (f1io));
       }
 #elif CPRE_AVOID_UNIONS == 1
       // Compute downset once, before intersection
@@ -190,7 +209,10 @@ class k_bounded_safety_aut_detail {
 # error Not implemented yet: Remove unions altogether and have intersect take a list
 #endif
 
-      f.intersect_with (std::move (f1i));
+      {
+        ACACIA_SYMMETRY_PROFILE_SCOPE (classic_intersect);
+        f.intersect_with (std::move (f1i));
+      }
       // Experimentally, this is not faster:
       //   f1i.intersect_with (std::move (f));
       //   f = std::move (f1i);

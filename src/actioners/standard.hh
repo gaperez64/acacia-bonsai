@@ -1,8 +1,16 @@
 #pragma once
 
+#include "actioners/direction.hh"
 #include "configuration.hh"
+#include "posets/utils/vector_mm.hh"
+#include "posets/vectors/traits.hh"
 
+#include <algorithm>
+#include <bddx.h>
+#include <list>
 #include <set>
+#include <utility>
+#include <vector>
 
 namespace actioners {
   namespace detail {

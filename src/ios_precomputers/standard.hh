@@ -10,19 +10,24 @@ namespace ios_precomputers {
         standard_container (Aut aut, bdd input_support, bdd output_support)
           : aut {aut},
             input_support {input_support},
-            output_support {output_support}
+            output_support {output_support},
+            input_letters {bddtrue}
         {}
 
       private:
         Aut aut;
-        bdd input_support, output_support;
+        bdd input_support, output_support, input_letters;
 
         class bdd_it {
           public:
             using iterator_category = std::input_iterator_tag;
             using value_type = bdd;
 
-            bdd_it (bdd support) : letter_set {bddtrue}, support {support} { get_next_letter (); }
+            bdd_it (bdd support) : bdd_it (support, bddtrue) {}
+
+            bdd_it (bdd support, bdd letters) : letter_set {letters}, support {support} {
+              get_next_letter ();
+            }
 
             virtual ~bdd_it () = default;
 
@@ -118,8 +123,8 @@ namespace ios_precomputers {
             using iterator_category = std::input_iterator_tag;
             using value_type = std::pair<bdd, ios>;
 
-            in_it (bdd input_support, bdd output_support, Aut aut)
-              : bdd_it (input_support),
+            in_it (bdd input_letters, bdd input_support, bdd output_support, Aut aut)
+              : bdd_it (input_support, input_letters),
                 current_ios (bdd_it::current_letter,
                              ios (bdd_it::current_letter, output_support, aut)),
                 output_support {output_support},
@@ -143,8 +148,11 @@ namespace ios_precomputers {
         };
 
       public:
-        in_it begin () const { return in_it (input_support, output_support, aut); }
-        in_it end () const { return in_it (bddfalse, bddfalse, aut); }
+        void restrict_inputs (bdd allowed_inputs) { input_letters &= allowed_inputs; }
+        bool empty () const { return input_letters == bddfalse; }
+
+        in_it begin () const { return in_it (input_letters, input_support, output_support, aut); }
+        in_it end () const { return in_it (bddfalse, bddfalse, bddfalse, aut); }
     };
   }
 
