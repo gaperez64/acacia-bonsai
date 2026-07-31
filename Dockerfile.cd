@@ -2,7 +2,7 @@ FROM gcc:14.2-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG SPOT_VERSION=2.15.1
-ARG TLSF_TOOLS_LINUX_X86_64_URL=https://github.com/gaperez64/tlsf-tools/releases/download/v1.3/tlsf-tools-v1.3-linux-x86_64-v2.tar.gz
+ARG TLSF_TOOLS_VERSION=v1.4
 
 # Build tools (extends syntcomp_tgcc docker_full package list)
 RUN apt-get update && \
@@ -11,25 +11,26 @@ RUN apt-get update && \
         automake libtool libltdl-dev bison flex zsh git \
     && rm -rf /var/lib/apt/lists/*
 
-# TLSF frontend tools used by scripts/acacia-bonsai.sh --tlsf.
-RUN wget -q -O /tmp/tlsf-tools.tar.gz "$TLSF_TOOLS_LINUX_X86_64_URL" \
-    && mkdir -p /tmp/tlsf-tools \
-    && tar -xzf /tmp/tlsf-tools.tar.gz --strip-components=1 -C /tmp/tlsf-tools \
-    && cd /tmp/tlsf-tools \
-    && sha256sum -c SHA256SUMS \
-    && install -m 0755 \
-        /tmp/tlsf-tools/tlsf2ltl \
-        /tmp/tlsf-tools/tlsfinfo \
-        /tmp/tlsf-tools/tlsf2tlsf \
-        /tmp/tlsf-tools/tlsfnorm \
-        /tmp/tlsf-tools/mealy2moore \
-        /usr/local/bin/ \
-    && cd /tmp \
-    && rm -rf /tmp/tlsf-tools /tmp/tlsf-tools.tar.gz \
-    && tlsf2ltl --version
-
 # Upgrade meson (bookworm's version may be too old for C++23 project features)
 RUN pip3 install --break-system-packages --upgrade meson
+
+# TLSF frontend tools used by scripts/acacia-bonsai.sh --tlsf.
+RUN wget -q -O /tmp/tlsf-tools.tar.gz \
+        "https://github.com/gaperez64/tlsf-tools/archive/refs/tags/${TLSF_TOOLS_VERSION}.tar.gz" \
+    && mkdir -p /tmp/tlsf-tools-src \
+    && tar -xzf /tmp/tlsf-tools.tar.gz --strip-components=1 -C /tmp/tlsf-tools-src \
+    && meson setup /tmp/tlsf-tools-build /tmp/tlsf-tools-src --buildtype=release \
+    && meson compile -C /tmp/tlsf-tools-build \
+    && install -m 0755 \
+        /tmp/tlsf-tools-build/tlsf2ltl \
+        /tmp/tlsf-tools-build/tlsfinfo \
+        /tmp/tlsf-tools-build/tlsf2tlsf \
+        /tmp/tlsf-tools-build/tlsfnorm \
+        /tmp/tlsf-tools-build/mealy2moore \
+        /usr/local/bin/ \
+    && rm -rf /tmp/tlsf-tools-src /tmp/tlsf-tools-build /tmp/tlsf-tools.tar.gz \
+    && tlsf2ltl --version \
+    && mealy2moore --version
 
 # Spot sources — NOT compiled; user compiles with -march=native
 WORKDIR /opt/spot
