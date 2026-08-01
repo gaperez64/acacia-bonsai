@@ -41,8 +41,9 @@ jobs:
         echo "failed to download ${deb}" >&2
         exit 1
     - name: Checkout repository and submodules
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
+        fetch-depth: 0
         submodules: recursive
     - name: Restore Spot cache
       id: spot-cache
@@ -83,6 +84,8 @@ jobs:
         export CXX=g++-14
         configs=$(python3 scripts/acacia-config.py list-group docker_default | paste -sd, -)
         ./self-benchmark.sh -L -c "$configs" -j -b ab/tiny
+    - name: Test version reporting
+      run: meson test -C build_base --suite version
     - name: Upload test results
       uses: actions/upload-artifact@v7
       if: always()

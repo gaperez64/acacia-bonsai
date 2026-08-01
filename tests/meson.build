@@ -48,6 +48,12 @@ check_real_file = configure_file (input : 'check-real-correct.sh.in',
                                   configuration : conf_data)
 check_real_exe = find_program (check_real_file)
 
+test ('version-output',
+      py,
+      args : [files ('check-version.py'), ab_exe],
+      suite : 'version',
+      depends : [ab_exe])
+
 spot_nba_fastpath_test = executable ('spot-nba-fastpath-test',
                                      'spot_nba_fastpath_test.cc',
                                      include_directories : inc,

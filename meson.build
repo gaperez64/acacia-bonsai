@@ -1,9 +1,6 @@
 project ('Acacia Bonsai', ['c', 'cpp'],
-         version : run_command(
-             'bash', '-c',
-             'v=$(git describe --tags --abbrev=0 2>/dev/null) && printf "%s" "${v#[vV]}" || printf "2"',
-             check: false
-         ).stdout().strip(),
+         version : run_command ('scripts/git-version.py', '--pep440',
+                                check : true).stdout ().strip (),
          default_options : ['cpp_std=c++23', 'b_ndebug=if-release'],
          license : 'GPL-3.0')
 
@@ -59,7 +56,6 @@ else
 endif
 
 build_conf = configuration_data ()
-build_conf.set_quoted ('VERSION', meson.project_version ())
 build_conf.set ('DEFAULT_K', get_option ('acacia_default_k'))
 build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
@@ -369,6 +365,14 @@ build_conf.set (posets_downset_gates[get_option ('acacia_vector_downset')], 1)
 configure_file (input : 'src/config/acacia_build_config.hh.in',
                 output : 'acacia_build_config.hh',
                 configuration : build_conf)
+
+version_h = vcs_tag (
+  command : ['scripts/git-version.py', '--dirty'],
+  input : 'src/version.hh.in',
+  output : 'acacia_version.hh',
+  fallback : meson.project_version (),
+  replace_string : '@VCS_TAG@',
+)
 
 inc = include_directories ('src', '.')
 subdir ('src')

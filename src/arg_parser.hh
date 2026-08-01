@@ -4,6 +4,7 @@
 #include "error_msg.hh"
 #include "solver/solver_invoker.hh"
 #include "utils/verbose.hh"
+#include "version.hh"
 #include <string_view>
 
 #include <algorithm>
@@ -110,8 +111,8 @@ void show_help (const char* program_name) {
       << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
       << "\t" << (int)EXIT_CODE_UNREAL << "   if it is unrealizable\n"
       << "\t" << (int)EXIT_CODE_UNKNOWN << "   if this could not be decided\n"
-      << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n'
-      << "Version: " << VERSION << '\n';
+      << "\t" << (int)EXIT_CODE_ERROR << "   if any error has been reported" << '\n';
+  print_version (std::cout);
 }
 
 bool case_insensitive_char_equals (char a, char b) {
@@ -180,7 +181,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
                              nullptr)) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
-      case 'V': std::cout << "Version: " << VERSION << '\n'; exit (EXIT_CODE_UNKNOWN);
+      case 'V': print_version (std::cout); exit (EXIT_CODE_UNKNOWN);
       case 'f': retval.formula = optarg; break;
       case 'r': retval.opt_unreal_x = std::nullopt; break;
       case 'U': retval.check_real = false; break;

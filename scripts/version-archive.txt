@@ -1,0 +1,2 @@
+describe=$Format:%(describe:tags=true,match=v*)$
+commit=$Format:%h$

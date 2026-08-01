@@ -1,9 +1,5 @@
 #pragma once
 
-#ifndef VERSION
-# define VERSION @VERSION@
-#endif
-
 #ifndef DEFAULT_K
 # define DEFAULT_K @DEFAULT_K@
 #endif

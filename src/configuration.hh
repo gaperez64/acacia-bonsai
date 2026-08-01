@@ -4,10 +4,6 @@
 # include "acacia_build_config.hh"
 #endif
 
-#ifndef VERSION
-# define VERSION "2"
-#endif
-
 #include "utils/todo.hh"
 
 #ifndef CPRE_AVOID_UNIONS

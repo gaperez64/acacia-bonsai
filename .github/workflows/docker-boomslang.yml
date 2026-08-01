@@ -26,8 +26,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
+          fetch-depth: 0
           submodules: recursive
 
       - name: Set up Docker Buildx
