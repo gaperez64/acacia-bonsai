@@ -61,6 +61,8 @@ build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
 build_conf.set ('STATIC_ARRAY_MAX', get_option ('acacia_static_array_max'))
 build_conf.set ('STATIC_MAX_BITSETS', get_option ('acacia_static_max_bitsets'))
+build_conf.set ('ACACIA_EQUIVARIANT_MIN_BLOCKS',
+                get_option ('acacia_equivariant_min_blocks'))
 
 if get_option ('acacia_default_unreal_x') == 'automaton'
   build_conf.set ('DEFAULT_UNREAL_X', 'UNREAL_X_AUTOMATON')

@@ -42,6 +42,14 @@ namespace acacia::diagnostics {
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
       std::string equivariant = "not-run";
+      std::string symmetry_families = "-";
+      std::string symmetry_indices = "-";
+      std::string symmetry_matrix = "-";
+      std::string symmetry_subsets = "-";
+      std::string symmetry_selected = "-";
+      std::string symmetry_orbit_sizes = "-";
+      std::string symmetry_blocks = "-";
+      std::string symmetry_shared = "-";
 
       long long total_ms = 0;
       long long rsimp_ms = 0;
@@ -145,6 +153,14 @@ namespace acacia::diagnostics {
          << " eq_clients=" << m.equivariant_clients
          << " eq_blocks=" << m.equivariant_blocks
          << " eq_orbits=" << m.equivariant_orbits
+         << " sym_families=" << m.symmetry_families
+         << " sym_indices=" << m.symmetry_indices
+         << " sym_matrix=" << m.symmetry_matrix
+         << " sym_subsets=" << m.symmetry_subsets
+         << " sym_selected=" << m.symmetry_selected
+         << " sym_orbit_sizes=" << m.symmetry_orbit_sizes
+         << " sym_blocks=" << m.symmetry_blocks
+         << " sym_shared=" << m.symmetry_shared
          << " solve_ms=" << m.solve_ms
          << " total_ms=" << m.total_ms
          << " result=" << m.result
@@ -248,6 +264,22 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_symmetry_structure (std::string families, std::string indices,
+                                      std::string matrix, std::string subsets,
+                                      std::string selected, std::string orbit_sizes,
+                                      std::string blocks, std::string shared) {
+    if (auto* m = current ()) {
+      m->symmetry_families = std::move (families);
+      m->symmetry_indices = std::move (indices);
+      m->symmetry_matrix = std::move (matrix);
+      m->symmetry_subsets = std::move (subsets);
+      m->symmetry_selected = std::move (selected);
+      m->symmetry_orbit_sizes = std::move (orbit_sizes);
+      m->symmetry_blocks = std::move (blocks);
+      m->symmetry_shared = std::move (shared);
+    }
+  }
+
 #else
 
   struct scoped_child {
@@ -269,6 +301,8 @@ namespace acacia::diagnostics {
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}
   inline void set_equivariant_attempt (size_t, size_t, size_t) {}
+  inline void set_symmetry_structure (std::string, std::string, std::string, std::string,
+                                      std::string, std::string, std::string, std::string) {}
 
 #endif
 

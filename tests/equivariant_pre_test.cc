@@ -431,6 +431,40 @@ namespace {
     return ok;
   }
 
+  bool run_partial_symmetry_case () {
+    constexpr unsigned n = 6;
+    fixture fx = make_aut (n);
+
+    // Give client 0 one structurally unique edge.  Swaps involving 0 must
+    // fail, while clients 1,...,5 still form a verified S_5 component.
+    fx.aut->new_acc_edge (1, 0, bddtrue, false);
+
+    const auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
+    const auto exhaustive = symmetry::largest_full_symmetric_subgroup (
+        symmetry::detect (fx.aut, indexed));
+    const auto G = symmetry::detect_full_symmetric_generators (fx.aut, indexed);
+    const std::vector<long> expected {1, 2, 3, 4, 5};
+
+    bool ok = true;
+    ok &= expect ("partial exhaustive component is S_5", exhaustive.full_symmetric);
+    ok &= expect ("partial exhaustive indices exclude fixed client",
+                  exhaustive.indices == expected);
+    ok &= expect ("partial fast component is S_5", G.full_symmetric);
+    ok &= expect ("partial fast indices exclude fixed client", G.indices == expected);
+    if (not ok)
+      return false;
+
+    const auto L = symmetry::compute_block_layout (G, fx.aut->num_states ());
+    ok &= expect ("partial symmetry layout exists", L.has_value ());
+    if (not L.has_value ())
+      return false;
+    ok &= expect ("partial symmetry has two client blocks", L->num_blocks == 2);
+    ok &= expect ("partial symmetry has five active clients", L->num_clients == 5);
+    ok &= expect ("fixed client states remain shared", L->shared_states.size () == 3);
+    ok &= expect ("partial generators match layout", symmetry::generators_match_layout (G, *L));
+    return ok;
+  }
+
   bool run_unreal_case () {
     constexpr unsigned n = 3;
     posets::vectors::bool_threshold = 1 + 2 * n;
@@ -470,6 +504,7 @@ int main () {
     ok &= run_case (n, 1 + 2 * n);
     ok &= run_case (n, 1 + n);
   }
+  ok &= run_partial_symmetry_case ();
   ok &= run_unreal_case ();
 
   posets::vectors::bool_threshold = old_bool_threshold;

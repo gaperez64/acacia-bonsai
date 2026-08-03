@@ -339,35 +339,146 @@ namespace symmetry {
     return detect (aut, analyze_indexed_aps (aut, all_inputs, all_outputs));
   }
 
+  // Directly verified AP-index transpositions, including the identity on the
+  // diagonal.  This is intentionally based on gen_pairs rather than the state
+  // permutations so diagnostics can display the exact recognition evidence.
+  inline std::vector<std::vector<bool>> verified_transposition_matrix (const group& G) {
+    const size_t n = G.indices.size ();
+    std::vector<std::vector<bool>> matrix (n, std::vector<bool> (n, false));
+    std::map<long, size_t> position;
+    for (size_t i = 0; i < n; ++i) {
+      position[G.indices[i]] = i;
+      matrix[i][i] = true;
+    }
+    for (const auto& [a, b] : G.gen_pairs) {
+      auto ia = position.find (a), ib = position.find (b);
+      if (ia == position.end () or ib == position.end ())
+        continue;
+      matrix[ia->second][ib->second] = true;
+      matrix[ib->second][ia->second] = true;
+    }
+    return matrix;
+  }
+
+  // Verified transpositions generate a full symmetric group on each connected
+  // component of this graph.  (The edge transpositions of any connected graph
+  // generate S_n.)  Components therefore are the maximal index subsets that
+  // the available structural evidence permits us to use symmetrically.
+  inline std::vector<std::vector<long>> maximal_full_symmetric_index_subsets (const group& G) {
+    const auto matrix = verified_transposition_matrix (G);
+    std::vector<bool> seen (G.indices.size (), false);
+    std::vector<std::vector<long>> subsets;
+    for (size_t start = 0; start < G.indices.size (); ++start) {
+      if (seen[start])
+        continue;
+      std::vector<size_t> todo {start};
+      seen[start] = true;
+      std::vector<long> subset;
+      while (not todo.empty ()) {
+        const size_t at = todo.back ();
+        todo.pop_back ();
+        subset.push_back (G.indices[at]);
+        for (size_t next = 0; next < G.indices.size (); ++next)
+          if (not seen[next] and matrix[at][next]) {
+            seen[next] = true;
+            todo.push_back (next);
+          }
+      }
+      std::sort (subset.begin (), subset.end ());
+      subsets.push_back (std::move (subset));
+    }
+    std::sort (subsets.begin (), subsets.end ());
+    return subsets;
+  }
+
+  inline group restrict_to_full_symmetric_subset (const group& G,
+                                                   const std::vector<long>& indices) {
+    group result;
+    result.families = G.families;
+    result.indices = indices;
+    for (size_t i = 0; i < G.gens.size () and i < G.gen_pairs.size (); ++i) {
+      const auto [a, b] = G.gen_pairs[i];
+      if (std::binary_search (indices.begin (), indices.end (), a) and
+          std::binary_search (indices.begin (), indices.end (), b)) {
+        result.gens.push_back (G.gens[i]);
+        result.gen_pairs.push_back ({a, b});
+      }
+    }
+    if (indices.size () >= 2) {
+      const auto components = maximal_full_symmetric_index_subsets (result);
+      result.full_symmetric =
+          components.size () == 1 and components.front ().size () == indices.size ();
+    }
+    return result;
+  }
+
+  inline group largest_full_symmetric_subgroup (const group& G) {
+    const auto subsets = maximal_full_symmetric_index_subsets (G);
+    if (subsets.empty ()) {
+      group result;
+      result.families = G.families;
+      return result;
+    }
+    const auto best = std::max_element (
+        subsets.begin (), subsets.end (), [] (const auto& lhs, const auto& rhs) {
+          if (lhs.size () != rhs.size ())
+            return lhs.size () < rhs.size ();
+          return lhs > rhs;  // deterministic tie-break: lexicographically first
+        });
+    return restrict_to_full_symmetric_subset (G, *best);
+  }
+
   inline group detect_full_symmetric_generators (const spot::twa_graph_ptr& aut,
                                                  const indexed_ap_analysis& analysis) {
 #if ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT
-    return detect (aut, analysis);
+    return largest_full_symmetric_subgroup (detect (aut, analysis));
 #else
-    group G = group_from_analysis (analysis);
-    if (G.families.empty () or G.indices.size () < 2)
-      return G;
+    const group base = group_from_analysis (analysis);
+    if (base.families.empty () or base.indices.size () < 2)
+      return base;
 
     const auto oeA = detail::out_edges (aut);
     const auto sigA = detail::signatures (aut, oeA);
-    const long root = G.indices.front ();
-    unsigned verified = 0;
+    std::map<std::pair<long, long>, std::optional<std::vector<unsigned>>> cache;
+    group G;
+    G.families = base.families;
 
-    for (size_t i = 1; i < G.indices.size (); ++i) {
-      const long other = G.indices[i];
-      auto phi = detail::verify_transposition (aut, G.families, root, other, oeA, sigA);
-      if (not phi.has_value ()) {
-        G.full_symmetric = false;
-        break;
+    // A verified star generates the full symmetric group on its vertices.
+    // Try every possible root after a failed edge and keep the largest star;
+    // indices outside that star remain ordinary shared AP/state structure.
+    for (long root : base.indices) {
+      group candidate;
+      candidate.families = base.families;
+      candidate.indices.push_back (root);
+      for (long other : base.indices) {
+        if (other == root)
+          continue;
+        const auto key = std::minmax (root, other);
+        auto [it, inserted] = cache.try_emplace (key, std::nullopt);
+        if (inserted)
+          it->second = detail::verify_transposition (
+              aut, base.families, root, other, oeA, sigA);
+        if (not it->second.has_value ())
+          continue;
+        candidate.indices.push_back (other);
+        candidate.gens.push_back (*it->second);
+        candidate.gen_pairs.push_back ({root, other});
       }
-      G.gens.push_back (std::move (*phi));
-      G.gen_pairs.push_back ({root, other});
-      ++verified;
+      std::sort (candidate.indices.begin (), candidate.indices.end ());
+      candidate.full_symmetric =
+          candidate.indices.size () >= 2 and
+          candidate.gens.size () + 1 == candidate.indices.size ();
+
+      if (candidate.indices.size () > G.indices.size () or
+          (candidate.indices.size () == G.indices.size () and
+           candidate.indices < G.indices))
+        G = std::move (candidate);
+      if (G.indices.size () == base.indices.size ())
+        break;
     }
-    G.full_symmetric = (verified + 1 == G.indices.size ()) and verified > 0;
 
 # if ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION
-    const group exhaustive = detect (aut, analysis);
+    const group exhaustive = largest_full_symmetric_subgroup (detect (aut, analysis));
     const bool agrees = (G.full_symmetric == exhaustive.full_symmetric) and
                         (G.indices == exhaustive.indices);
     if (not agrees)
@@ -378,7 +489,8 @@ namespace symmetry {
     assert (agrees);
 # endif
 
-    const unsigned needed = G.indices.size () > 0 ? (unsigned) G.indices.size () - 1 : 0;
+    [[maybe_unused]] const unsigned needed =
+        G.indices.size () > 0 ? (unsigned) G.indices.size () - 1 : 0;
     verb_do (1, vout << "[symmetry] fast verified " << G.gens.size () << "/" << needed
                      << " star transposition generators over " << G.indices.size ()
                      << " clients (full_symmetric=" << G.full_symmetric

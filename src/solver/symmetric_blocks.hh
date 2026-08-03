@@ -187,6 +187,19 @@ namespace symmetry {
     return L;
   }
 
+  inline std::vector<unsigned> orbit_sizes (const group& G, unsigned num_states) {
+    const auto roots = detail::compute_orbit_roots (G.gens, num_states);
+    std::map<unsigned, unsigned> counts;
+    for (unsigned root : roots)
+      ++counts[root];
+    std::vector<unsigned> sizes;
+    sizes.reserve (counts.size ());
+    for (const auto& [root, count] : counts)
+      sizes.push_back (count);
+    std::sort (sizes.begin (), sizes.end ());
+    return sizes;
+  }
+
   // True iff every verified generator is EXACTLY the layout-induced block
   // transposition for its AP index pair: identity everywhere except
   // block_slot_state[b][slot(a)] <-> block_slot_state[b][slot(b)] in every

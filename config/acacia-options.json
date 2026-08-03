@@ -122,6 +122,7 @@
     "compile_all_components": false,
     "enable_diagnostics": false,
     "enable_equivariant_solver": true,
+    "equivariant_min_blocks": 4,
     "enable_symmetric_solver": false
   },
   "choices": {

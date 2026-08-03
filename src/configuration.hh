@@ -55,7 +55,7 @@
 #endif
 
 #ifndef ACACIA_EQUIVARIANT_MIN_BLOCKS
-# define ACACIA_EQUIVARIANT_MIN_BLOCKS 8
+# define ACACIA_EQUIVARIANT_MIN_BLOCKS 4
 #endif
 
 // Generator-fixpoint closure can be more expensive than directly sweeping a
