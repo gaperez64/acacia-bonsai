@@ -122,6 +122,20 @@ comparison round.  Do not use a TLSF walk as the default evidence for an
 optimization unless the local Meson suites do not contain the family being
 diagnosed.
 
+The focused `ab/symmetry-2025` suite vendors a 24-instance panel from the 2025
+LTL selection: ten expected symmetry cases, four indexed protocol controls,
+and ten general controls.  Run the top-four on/off comparison with a 17-second
+per-instance limit as follows:
+```
+./self-benchmark.sh \
+  -b ab/symmetry-2025 \
+  -c best_decomp_mona,best_decomp_mona_noequivariant,best_decomp_rank_bucketed_mona,best_decomp_rank_bucketed_mona_noequivariant,best_decomp_bboxtree_mona,best_decomp_bboxtree_mona_noequivariant,best_decomp_filtered_vector_mona,best_decomp_filtered_vector_mona_noequivariant \
+  -t 1.7 -f
+```
+The source selection and category labels are recorded in
+`benchmarking/symmetry-2025-sample.tsv`; the default-on decision campaign is
+summarized in `benchmarking/symmetry-2025-results.md`.
+
 `self-benchmark.sh` also exposes ltlsynt ablation pseudo-configs.  They run the
 same local `ltlsynt/...` Meson suites as `ltlsynt`, but set `LTLSYNT_OPTS`:
 ```
