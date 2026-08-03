@@ -802,7 +802,8 @@ namespace acacia::solver_detail::symmetric {
     symmetry::group G;
     {
       ACACIA_SYMMETRY_PROFILE_SCOPE (detect);
-      G = symmetry::detect (aut, all_inputs, all_outputs);
+      G = symmetry::largest_full_symmetric_subgroup (
+          symmetry::detect (aut, all_inputs, all_outputs));
     }
     if (not G.full_symmetric) {
       profile::global ().report ();

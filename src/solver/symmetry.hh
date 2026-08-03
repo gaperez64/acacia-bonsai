@@ -45,6 +45,8 @@ namespace symmetry {
       std::map<long, spot::formula> idx2ap;
   };
 
+  using family_map = std::map<std::string, family>;
+
   struct group {
       std::vector<std::vector<unsigned>> gens;  // verified state-permutation generators
       // gen_pairs[t] is the client-index pair (a, b) whose verified transposition
@@ -55,19 +57,32 @@ namespace symmetry {
       // Sym(indices). The exhaustive detector verifies every pair; the
       // equivariant fast detector verifies a star generating set.
       bool full_symmetric = false;
-      std::map<std::string, family> families;    // AP family metadata, keyed by prefix
+      family_map families;                       // AP family metadata, keyed by prefix
 
       bool empty () const { return gens.empty (); }
       size_t size () const { return gens.size (); }
   };
 
   struct indexed_ap_analysis {
-      std::map<std::string, family> families;
+      family_map families;
       std::vector<long> indices;
       unsigned input_families = 0;
       unsigned output_families = 0;
 
       bool empty () const { return families.empty (); }
+  };
+
+  // Pre-formatted fields used by the compact solver diagnostics.  A field is
+  // "-" when the corresponding structure is absent.
+  struct structure_report {
+      std::string families = "-";
+      std::string indices = "-";
+      std::string matrix = "-";
+      std::string subsets = "-";
+      std::string selected = "-";
+      std::string orbit_sizes = "-";
+      std::string blocks = "-";
+      std::string shared = "-";
   };
 
   namespace detail {
@@ -220,7 +235,7 @@ namespace symmetry {
     };
 
     inline std::optional<std::vector<unsigned>> verify_transposition (
-        const spot::twa_graph_ptr& aut, const std::map<std::string, family>& families,
+        const spot::twa_graph_ptr& aut, const family_map& families,
         long a, long b, const std::vector<std::vector<out_edge>>& oeA,
         const std::vector<std::string>& sigA) {
       const unsigned n = aut->num_states ();
@@ -247,6 +262,29 @@ namespace symmetry {
         return std::nullopt;
       return f.phi;
     }
+
+    // Structural automorphisms are closed under conjugation, so verified
+    // (a,b) and (b,c) swaps force (a,c).  The verified-transposition graph is
+    // therefore a union of cliques: its largest star is its largest component.
+    struct transposition_oracle {
+        transposition_oracle (const spot::twa_graph_ptr& a, const family_map& f)
+          : aut {a}, families {f}, oeA {out_edges (a)}, sigA {signatures (a, oeA)} {}
+
+        const std::optional<std::vector<unsigned>>& verify (long a, long b) {
+          const std::pair<long, long> key = std::minmax (a, b);
+          auto [it, inserted] = memo.try_emplace (key, std::nullopt);
+          if (inserted)
+            it->second = verify_transposition (aut, families, key.first, key.second, oeA, sigA);
+          return it->second;
+        }
+
+      private:
+        spot::twa_graph_ptr aut;
+        const family_map& families;
+        std::vector<std::vector<out_edge>> oeA;
+        std::vector<std::string> sigA;
+        std::map<std::pair<long, long>, std::optional<std::vector<unsigned>>> memo;
+    };
   }  // namespace detail
 
   inline indexed_ap_analysis analyze_indexed_aps (const spot::twa_graph_ptr& aut,
@@ -296,6 +334,8 @@ namespace symmetry {
     return G;
   }
 
+  inline bool full_symmetric_on_indices (const group& G);
+
   // Detect verified client-transposition symmetries of `aut`. `all_inputs` /
   // `all_outputs` are BDD cubes over the input/output APs (used to keep each
   // transposition within one side of the I/O partition).
@@ -305,28 +345,24 @@ namespace symmetry {
     if (G.families.empty () or G.indices.size () < 2)
       return G;
 
-    const auto oeA = detail::out_edges (aut);
-    const auto sigA = detail::signatures (aut, oeA);
-
-    unsigned verified_pairs = 0;
-    const unsigned total_pairs =
+    [[maybe_unused]] const unsigned total_pairs =
         (unsigned) (G.indices.size () * (G.indices.size () - 1) / 2);
+    detail::transposition_oracle oracle {aut, G.families};
 
     for (size_t ia = 0; ia < G.indices.size (); ++ia)
       for (size_t ib = ia + 1; ib < G.indices.size (); ++ib) {
         const long a = G.indices[ia], b = G.indices[ib];
-        auto phi = detail::verify_transposition (aut, G.families, a, b, oeA, sigA);
+        const auto& phi = oracle.verify (a, b);
         if (phi.has_value ()) {
-          G.gens.push_back (std::move (*phi));
+          G.gens.push_back (*phi);
           G.gen_pairs.push_back ({a, b});
-          ++verified_pairs;
         }
       }
 
     // This compatibility detector remains exhaustive: callers that use
     // symmetry::detect directly still receive every verified pairwise
     // transposition in deterministic order.
-    G.full_symmetric = (verified_pairs == total_pairs) and total_pairs > 0;
+    G.full_symmetric = full_symmetric_on_indices (G);
 
     verb_do (1, vout << "[symmetry] verified " << G.gens.size () << "/" << total_pairs
                      << " client-transposition generators over " << G.indices.size ()
@@ -391,6 +427,13 @@ namespace symmetry {
     return subsets;
   }
 
+  inline bool full_symmetric_on_indices (const group& G) {
+    if (G.indices.size () < 2)
+      return false;
+    const auto components = maximal_full_symmetric_index_subsets (G);
+    return components.size () == 1 and components.front ().size () == G.indices.size ();
+  }
+
   inline group restrict_to_full_symmetric_subset (const group& G,
                                                    const std::vector<long>& indices) {
     group result;
@@ -404,11 +447,7 @@ namespace symmetry {
         result.gen_pairs.push_back ({a, b});
       }
     }
-    if (indices.size () >= 2) {
-      const auto components = maximal_full_symmetric_index_subsets (result);
-      result.full_symmetric =
-          components.size () == 1 and components.front ().size () == indices.size ();
-    }
+    result.full_symmetric = full_symmetric_on_indices (result);
     return result;
   }
 
@@ -437,9 +476,7 @@ namespace symmetry {
     if (base.families.empty () or base.indices.size () < 2)
       return base;
 
-    const auto oeA = detail::out_edges (aut);
-    const auto sigA = detail::signatures (aut, oeA);
-    std::map<std::pair<long, long>, std::optional<std::vector<unsigned>>> cache;
+    detail::transposition_oracle oracle {aut, base.families};
     group G;
     G.families = base.families;
 
@@ -453,21 +490,15 @@ namespace symmetry {
       for (long other : base.indices) {
         if (other == root)
           continue;
-        const auto key = std::minmax (root, other);
-        auto [it, inserted] = cache.try_emplace (key, std::nullopt);
-        if (inserted)
-          it->second = detail::verify_transposition (
-              aut, base.families, root, other, oeA, sigA);
-        if (not it->second.has_value ())
+        const auto& phi = oracle.verify (root, other);
+        if (not phi.has_value ())
           continue;
         candidate.indices.push_back (other);
-        candidate.gens.push_back (*it->second);
+        candidate.gens.push_back (*phi);
         candidate.gen_pairs.push_back ({root, other});
       }
       std::sort (candidate.indices.begin (), candidate.indices.end ());
-      candidate.full_symmetric =
-          candidate.indices.size () >= 2 and
-          candidate.gens.size () + 1 == candidate.indices.size ();
+      candidate.full_symmetric = full_symmetric_on_indices (candidate);
 
       if (candidate.indices.size () > G.indices.size () or
           (candidate.indices.size () == G.indices.size () and
@@ -504,5 +535,9 @@ namespace symmetry {
     return detect_full_symmetric_generators (
         aut, analyze_indexed_aps (aut, all_inputs, all_outputs));
   }
+
+  // Defined in symmetric_blocks.hh, after block-layout recovery is available.
+  inline structure_report describe (const indexed_ap_analysis& analysis, const group& G,
+                                    unsigned num_states);
 
 }  // namespace symmetry

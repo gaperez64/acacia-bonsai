@@ -1,3 +1,6 @@
+> Historical record, restored 2026-08-03; superseded by `doc/symmetry-reduction.md`.
+> Commands, paths, worktrees, and branch names below are stale and must not be executed as a current plan.
+
 # this-way.md — Replace the count-vector quotient solver with an exact equivariant solver
 
 Execution plan for a coding agent. Work in THIS worktree

@@ -511,62 +511,19 @@ namespace {
         {
           const auto analysis = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs);
           const auto sg = symmetry::detect (aut, analysis);
-          const auto matrix = symmetry::verified_transposition_matrix (sg);
-          const auto subsets = symmetry::maximal_full_symmetric_index_subsets (sg);
-          const auto selected = symmetry::largest_full_symmetric_subgroup (sg);
-          auto layout = symmetry::compute_block_layout (selected, aut->num_states ());
-
-          auto join_longs = [] (const auto& values, char separator = ',') {
-            std::ostringstream out;
-            for (size_t i = 0; i < values.size (); ++i) {
-              if (i != 0) out << separator;
-              out << values[i];
-            }
-            return out.str ();
-          };
-          std::ostringstream families;
-          bool first_family = true;
-          for (const auto& [prefix, family] : analysis.families) {
-            if (not first_family) families << '|';
-            first_family = false;
-            families << (family.is_input ? 'i' : 'o') << ':' << prefix << '[';
-            bool first_index = true;
-            for (const auto& [index, ap] : family.idx2ap) {
-              if (not first_index) families << ',';
-              first_index = false;
-              families << index;
-            }
-            families << ']';
-          }
-          std::ostringstream matrix_text;
-          for (size_t row = 0; row < matrix.size (); ++row) {
-            if (row != 0) matrix_text << ';';
-            for (bool verified : matrix[row]) matrix_text << (verified ? '1' : '0');
-          }
-          std::ostringstream subsets_text;
-          for (size_t i = 0; i < subsets.size (); ++i) {
-            if (i != 0) subsets_text << '|';
-            subsets_text << join_longs (subsets[i]);
-          }
-          const auto sizes = symmetry::orbit_sizes (selected, aut->num_states ());
-          acacia::diagnostics::set_symmetry_structure (
-              families.str ().empty () ? "-" : families.str (),
-              join_longs (analysis.indices), matrix_text.str (), subsets_text.str (),
-              join_longs (selected.indices), join_longs (sizes),
-              layout ? std::to_string (layout->num_blocks) : "-",
-              layout ? std::to_string (layout->shared_states.size ()) : "-");
+          const auto report = symmetry::describe (analysis, sg, aut->num_states ());
+          acacia::diagnostics::set_symmetry_structure (report);
           acacia::diagnostics::snapshot ("after-symmetry-diagnostics");
 
           verb_do (1, {
             vout << "[symmetry] generators=" << sg.size ()
                  << " full_symmetric=" << sg.full_symmetric
-                 << " indices=" << join_longs (analysis.indices)
-                 << " subsets=" << subsets_text.str ()
-                 << " selected=" << join_longs (selected.indices) << std::endl;
-            if (layout.has_value ())
-              vout << "[symmetry] block_layout: blocks=" << layout->num_blocks
-                   << " clients=" << layout->num_clients
-                   << " shared=" << layout->shared_states.size () << std::endl;
+                 << " indices=" << report.indices
+                 << " subsets=" << report.subsets
+                 << " selected=" << report.selected << std::endl;
+            if (report.blocks != "-")
+              vout << "[symmetry] block_layout: blocks=" << report.blocks
+                   << " shared=" << report.shared << std::endl;
             else
               vout << "[symmetry] block_layout: none (declined)\n";
           });

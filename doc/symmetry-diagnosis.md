@@ -1,3 +1,6 @@
+> Historical record, restored 2026-08-03; superseded by `doc/symmetry-reduction.md`.
+> Commands, paths, worktrees, and branch names below are stale and retained only as experimental context.
+
 # Where & why ltlsynt beats acacia-bonsai — diagnostic findings
 
 Branch: `optimize-vs-ltlsynt` (off `spot-fastpath-no-tlsf-tools`).

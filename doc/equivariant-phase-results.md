@@ -1,3 +1,6 @@
+> Historical record from 2026-07-12 through 2026-08-02, restored 2026-08-03; superseded by `doc/symmetry-reduction.md`.
+> Paths and branches below are stale, and the phase-3 “no partial subgroup” conclusion is now known to be an artifact of the fixed-root detector.
+
 # Equivariant solver phase results (2026-07-12)
 
 ## Implemented

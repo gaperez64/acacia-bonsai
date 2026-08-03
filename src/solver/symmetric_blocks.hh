@@ -29,6 +29,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <vector>
 
 namespace symmetry {
@@ -198,6 +199,77 @@ namespace symmetry {
       sizes.push_back (count);
     std::sort (sizes.begin (), sizes.end ());
     return sizes;
+  }
+
+  inline structure_report describe (const indexed_ap_analysis& analysis, const group& G,
+                                    unsigned num_states) {
+    structure_report report;
+    auto join_values = [] (const auto& values, char separator = ',') {
+      if (values.empty ())
+        return std::string {"-"};
+      std::ostringstream out;
+      for (size_t i = 0; i < values.size (); ++i) {
+        if (i != 0)
+          out << separator;
+        out << values[i];
+      }
+      return out.str ();
+    };
+
+    if (not analysis.families.empty ()) {
+      std::ostringstream families;
+      bool first_family = true;
+      for (const auto& [prefix, family] : analysis.families) {
+        if (not first_family)
+          families << '|';
+        first_family = false;
+        families << (family.is_input ? 'i' : 'o') << ':' << prefix << '[';
+        bool first_index = true;
+        for (const auto& [index, ap] : family.idx2ap) {
+          if (not first_index)
+            families << ',';
+          first_index = false;
+          families << index;
+        }
+        families << ']';
+      }
+      report.families = families.str ();
+    }
+    report.indices = join_values (analysis.indices);
+
+    const auto matrix = verified_transposition_matrix (G);
+    if (not matrix.empty ()) {
+      std::ostringstream matrix_text;
+      for (size_t row = 0; row < matrix.size (); ++row) {
+        if (row != 0)
+          matrix_text << ';';
+        for (bool verified : matrix[row])
+          matrix_text << (verified ? '1' : '0');
+      }
+      report.matrix = matrix_text.str ();
+    }
+
+    const auto subsets = maximal_full_symmetric_index_subsets (G);
+    if (not subsets.empty ()) {
+      std::ostringstream subsets_text;
+      for (size_t i = 0; i < subsets.size (); ++i) {
+        if (i != 0)
+          subsets_text << '|';
+        subsets_text << join_values (subsets[i]);
+      }
+      report.subsets = subsets_text.str ();
+    }
+
+    const auto selected = largest_full_symmetric_subgroup (G);
+    report.selected = join_values (selected.indices);
+    if (not selected.indices.empty ())
+      report.orbit_sizes = join_values (symmetry::orbit_sizes (selected, num_states));
+    const auto layout = compute_block_layout (selected, num_states);
+    if (layout.has_value ()) {
+      report.blocks = std::to_string (layout->num_blocks);
+      report.shared = std::to_string (layout->shared_states.size ());
+    }
+    return report;
   }
 
   // True iff every verified generator is EXACTLY the layout-induced block

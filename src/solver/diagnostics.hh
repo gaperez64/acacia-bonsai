@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "solver/symmetry.hh"
 
 #include <algorithm>
 #include <chrono>
@@ -42,6 +43,8 @@ namespace acacia::diagnostics {
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
       std::string equivariant = "not-run";
+      // sym_* covers every diagnostic recognition pass, including instances
+      // the solver declines; eq_* is populated only when solving is attempted.
       std::string symmetry_families = "-";
       std::string symmetry_indices = "-";
       std::string symmetry_matrix = "-";
@@ -264,19 +267,16 @@ namespace acacia::diagnostics {
     }
   }
 
-  inline void set_symmetry_structure (std::string families, std::string indices,
-                                      std::string matrix, std::string subsets,
-                                      std::string selected, std::string orbit_sizes,
-                                      std::string blocks, std::string shared) {
+  inline void set_symmetry_structure (symmetry::structure_report report) {
     if (auto* m = current ()) {
-      m->symmetry_families = std::move (families);
-      m->symmetry_indices = std::move (indices);
-      m->symmetry_matrix = std::move (matrix);
-      m->symmetry_subsets = std::move (subsets);
-      m->symmetry_selected = std::move (selected);
-      m->symmetry_orbit_sizes = std::move (orbit_sizes);
-      m->symmetry_blocks = std::move (blocks);
-      m->symmetry_shared = std::move (shared);
+      m->symmetry_families = std::move (report.families);
+      m->symmetry_indices = std::move (report.indices);
+      m->symmetry_matrix = std::move (report.matrix);
+      m->symmetry_subsets = std::move (report.subsets);
+      m->symmetry_selected = std::move (report.selected);
+      m->symmetry_orbit_sizes = std::move (report.orbit_sizes);
+      m->symmetry_blocks = std::move (report.blocks);
+      m->symmetry_shared = std::move (report.shared);
     }
   }
 
@@ -301,8 +301,7 @@ namespace acacia::diagnostics {
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}
   inline void set_equivariant_attempt (size_t, size_t, size_t) {}
-  inline void set_symmetry_structure (std::string, std::string, std::string, std::string,
-                                      std::string, std::string, std::string, std::string) {}
+  inline void set_symmetry_structure (symmetry::structure_report) {}
 
 #endif
 
