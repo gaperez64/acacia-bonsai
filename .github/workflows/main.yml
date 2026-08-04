@@ -11,10 +11,11 @@ permissions:
 
 env:
   SPOT_VERSION: 2.15.1
+  SPOT_PREFIX: /opt/spot_install
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - name: Install packages
       run: |
@@ -45,30 +46,39 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
+    - name: Prepare Spot install prefix
+      run: |
+        sudo mkdir -p "$SPOT_PREFIX"
+        sudo chown -R "$USER:$USER" "$SPOT_PREFIX"
     - name: Restore Spot cache
       id: spot-cache
       uses: actions/cache@v5
       with:
-        path: |
-          /usr/local/lib/libspot*
-          /usr/local/lib/libbddx*
-          /usr/local/include/spot
-          /usr/local/lib/pkgconfig/libspot.pc
-          /usr/local/lib/pkgconfig/libbddx.pc
-          /usr/local/bin/spot
-          /usr/local/bin/ltl*
-          /usr/local/bin/aut*
-          /usr/local/bin/ran*
-        key: spot-${{ env.SPOT_VERSION }}-maxacc64-nopy-${{ runner.os }}
+        # Unlike /usr/local, this prefix is writable during cache restore.
+        path: ${{ env.SPOT_PREFIX }}
+        key: spot-${{ env.SPOT_VERSION }}-ubuntu24.04-${{ runner.arch }}-gcc14-maxacc64-nopy-v2
+        save-always: true
     - name: Install Spot
       if: steps.spot-cache.outputs.cache-hit != 'true'
       run: |
-        sudo wget http://www.lre.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz
-        tar -xvzf spot-${SPOT_VERSION}.tar.gz
+        wget -q "https://www.lrde.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz"
+        tar -xzf "spot-${SPOT_VERSION}.tar.gz"
         cd spot-${SPOT_VERSION}
-        sudo ./configure --enable-max-accsets=64 --disable-python
-        sudo make
-        sudo make install
+        CC=gcc-14 CXX=g++-14 ./configure \
+          --prefix="$SPOT_PREFIX" \
+          --enable-max-accsets=64 \
+          --disable-python \
+          --disable-static \
+          --disable-doxygen
+        make -j"$(nproc)"
+        make install
+    - name: Register and verify Spot installation
+      run: |
+        echo "$SPOT_PREFIX/bin" >> "$GITHUB_PATH"
+        echo "PKG_CONFIG_PATH=$SPOT_PREFIX/lib/pkgconfig" >> "$GITHUB_ENV"
+        echo "LD_LIBRARY_PATH=$SPOT_PREFIX/lib" >> "$GITHUB_ENV"
+        PKG_CONFIG_PATH="$SPOT_PREFIX/lib/pkgconfig" pkg-config --modversion libspot
+        LD_LIBRARY_PATH="$SPOT_PREFIX/lib" "$SPOT_PREFIX/bin/ltlfilt" --version
     - name: Compile and test a debug configuration
       run: |
         export CXX=g++-14
