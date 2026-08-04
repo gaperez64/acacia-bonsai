@@ -38,6 +38,14 @@ namespace {
     else
       _exit (EXIT_CODE_UNKNOWN);  // child procs avoid cleaning on exit
   }
+
+  const char* unreal_strategy_name (UNREAL_X_T strategy) {
+    if (strategy == UNREAL_X_FORMULA)
+      return "formula";
+    if (strategy == UNREAL_X_AUTOMATON)
+      return "automaton";
+    return "unknown";
+  }
 }
 
 int main (int argc, char** argv) {
@@ -57,17 +65,22 @@ int main (int argc, char** argv) {
   sigaction (SIGABRT, &action, nullptr);
 
   try {
-    const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x) {
+    const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x,
+                                 TRANSLATION_PREF_T translation_pref) {
       if (fork () == 0) {
         // we check one thing at a time here
         assert (not unreal_x.has_value () or *unreal_x != UNREAL_X_BOTH);
         utils::vout.set_prefix (
             std::string {"["} +
-            (not unreal_x.has_value () ? "real" : std::string {"unreal-x="} + (char) *unreal_x) +
+            (not unreal_x.has_value ()
+                 ? std::string {"real="} + translation_pref_name (translation_pref)
+                 : std::string {"unreal="} + unreal_strategy_name (*unreal_x) +
+                       ",pref=" + translation_pref_name (translation_pref)) +
             "] ");
         const bool res =
             run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
-                     arg_values.opt_kinc, arg_values.formula, unreal_x, arg_values.spot_fast,
+                     arg_values.opt_kinc, arg_values.formula, unreal_x, translation_pref,
+                     arg_values.spot_fast,
                      unreal_x.has_value () ? std::nullopt : arg_values.synth_fname);
         verb_do (1, vout << "returning " << res << "\n");
 
@@ -83,17 +96,19 @@ int main (int argc, char** argv) {
     setpgid (0, 0);
     assert (getpgid (0) == getpid ());
 
-    if (arg_values.check_real)
-      start_proc (std::nullopt);
+    [[maybe_unused]] const size_t child_count =
+        (arg_values.real_strategies.has_value () ? arg_values.real_strategies->size () : 0) +
+        (arg_values.unreal_strategies.has_value () ? arg_values.unreal_strategies->size () : 0);
+    verb_do (1, vout << "Starting " << child_count << " solver children\n" << std::flush);
 
-    if (arg_values.opt_unreal_x.has_value ()) {
-      if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or
-          *(arg_values.opt_unreal_x) == UNREAL_X_FORMULA)
-        start_proc (std::make_optional<UNREAL_X_T> (UNREAL_X_FORMULA));
-      if (*(arg_values.opt_unreal_x) == UNREAL_X_BOTH or
-          *(arg_values.opt_unreal_x) == UNREAL_X_AUTOMATON)
-        start_proc (std::make_optional<UNREAL_X_T> (UNREAL_X_AUTOMATON));
-    }
+    if (arg_values.real_strategies.has_value ())
+      for (TRANSLATION_PREF_T preference : *arg_values.real_strategies)
+        start_proc (std::nullopt, preference);
+
+    if (arg_values.unreal_strategies.has_value ())
+      for (UNREAL_X_T strategy : *arg_values.unreal_strategies)
+        start_proc (std::make_optional<UNREAL_X_T> (strategy),
+                    arg_values.primary_translation_pref);
 
     int status;
     while (wait (&status) != -1) {  // as long as we have children to wait for

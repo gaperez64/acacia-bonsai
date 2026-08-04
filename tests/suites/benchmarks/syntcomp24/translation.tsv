@@ -1,0 +1,4 @@
+instance	expected	selection
+amba_decomposed_lock13.ltl	realizable	Any rescues the Small timeout
+amba_decomposed_lock14.ltl	realizable	Any rescues the Small timeout
+ltl2dba_beta6.ltl	realizable	Small guards against the Any timeout

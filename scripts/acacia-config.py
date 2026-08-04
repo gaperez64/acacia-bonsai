@@ -28,6 +28,13 @@ SPOT_FAST = {
 TRANSLATION_PREF = {
     "small": "spot::postprocessor::Small",
     "any": "spot::postprocessor::Any",
+    "small+any": "spot::postprocessor::Small",
+    "deterministic": "spot::postprocessor::Deterministic",
+}
+TRANSLATION_PREFS = {
+    "small": "spot::postprocessor::Small",
+    "any": "spot::postprocessor::Any",
+    "small+any": "spot::postprocessor::Small, spot::postprocessor::Any",
     "deterministic": "spot::postprocessor::Deterministic",
 }
 
@@ -137,6 +144,7 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         f"-DDEFAULT_UNREAL_X={UNREAL_X[values['default_unreal_x']]}",
         f"-DDEFAULT_SPOT_FAST={SPOT_FAST[values['default_spot_fast']]}",
         f"-DACACIA_TRANSLATION_PREF={TRANSLATION_PREF[values['translation_pref']]}",
+        f"-DACACIA_TRANSLATION_PREFS={TRANSLATION_PREFS[values['translation_pref']]}",
         f"-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER={int(values['enable_realizability_simplifier'])}",
         f"-DACACIA_ENABLE_SYNTACTIC_BYPASS={int(values['enable_syntactic_bypass'])}",
         f"-DSTATIC_ARRAY_MAX={values['static_array_max']}",

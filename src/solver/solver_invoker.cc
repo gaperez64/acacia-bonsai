@@ -161,6 +161,7 @@ namespace {
   bool run_no_input_ltl (const std::vector<std::string>& output_aps,
                          const std::string& formula,
                          std::optional<UNREAL_X_T> check_unreal,
+                         TRANSLATION_PREF_T translation_pref,
                          const std::optional<std::string>& synth_fname) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     int owner = 0;
@@ -190,7 +191,7 @@ namespace {
       auto* diag = acacia::diagnostics::current ();
       acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-      aut = create_automaton (spot_formula, trans);
+      aut = create_automaton (spot_formula, trans, translation_pref);
     }
     observe_translated_automaton (aut);
     acacia::diagnostics::snapshot ("no-input-after-translation");
@@ -250,6 +251,7 @@ namespace {
       const VECTOR_ELT_T opt_kmin;
       const VECTOR_ELT_T opt_kinc;
       const std::optional<UNREAL_X_T> check_unreal;
+      const TRANSLATION_PREF_T translation_pref;
       const SPOT_FAST_T spot_fast;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
@@ -266,6 +268,7 @@ namespace {
                    const std::vector<std::string>& output_aps, VECTOR_ELT_T opt_k,
                    VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
                    std::optional<UNREAL_X_T> check_unreal,
+                   TRANSLATION_PREF_T translation_pref,
                    SPOT_FAST_T spot_fast,
                    const std::optional<std::string>& synth_fname)
         : dict {dict},
@@ -275,6 +278,7 @@ namespace {
           opt_kmin {opt_kmin},
           opt_kinc {opt_kinc},
           check_unreal {check_unreal},
+          translation_pref {translation_pref},
           spot_fast {spot_fast},
           synth_fname {synth_fname} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
@@ -344,7 +348,7 @@ namespace {
           auto* diag = acacia::diagnostics::current ();
           acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-          aut = create_automaton (spot_formula, trans);
+          aut = create_automaton (spot_formula, trans, translation_pref);
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
@@ -385,7 +389,7 @@ namespace {
           auto* diag = acacia::diagnostics::current ();
           acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-          aut = create_automaton (spot_formula, trans);
+          aut = create_automaton (spot_formula, trans, translation_pref);
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("after-translation");
@@ -555,13 +559,18 @@ namespace {
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
-              SPOT_FAST_T spot_fast,
+              TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
               const std::optional<std::string>& synth_fname) {
   acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
+#if ACACIA_ENABLE_DIAGNOSTICS
+  if (auto* diag = acacia::diagnostics::current ())
+    diag->translation_pref = translation_pref_name (translation_pref);
+#endif
 
   if (input_aps.empty ())
     return acacia::diagnostics::finish (
-        run_no_input_ltl (output_aps, formula, check_unreal, synth_fname), "no-input-ltl");
+        run_no_input_ltl (output_aps, formula, check_unreal, translation_pref, synth_fname),
+        "no-input-ltl");
 
   spot::formula spot_formula = parse_ltl_string (formula);
 
@@ -649,7 +658,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      spot_fast, synth_fname);
+                      translation_pref, spot_fast, synth_fname);
 
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.

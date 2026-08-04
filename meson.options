@@ -34,9 +34,9 @@ option('acacia_default_spot_fast', type: 'combo',
        choices: ['off', 'det', 'det_and_gfg'],
        value: 'det')
 option('acacia_translation_pref', type: 'combo',
-       choices: ['small', 'any', 'deterministic'],
+       choices: ['small', 'any', 'small+any', 'deterministic'],
        value: 'small',
-       description: 'Spot translator postprocessor preference for LTL-to-BA construction')
+       description: 'Spot translator postprocessor preference list for realizability checks')
 option('acacia_enable_realizability_simplifier', type: 'boolean', value: true,
        description: 'Enable Spot realizability-preserving formula simplification before solving and after decomposition')
 option('acacia_enable_syntactic_bypass', type: 'boolean', value: true,

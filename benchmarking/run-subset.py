@@ -11,7 +11,7 @@ timeout yields result=TIMEOUT.
 Example:
   run-subset.py --bin ../acacia-bonsai/build_best_decomp_mona/src/acacia-bonsai \\
       --from-csv loss-set-2024_20s.csv --category acacia_slow --real unreal \\
-      --flags "-U -u automaton" --timeout 25 --csv out.csv
+      --flags "-u automaton" --timeout 25 --csv out.csv
 """
 import argparse
 import csv
@@ -44,7 +44,7 @@ def main():
     p.add_argument("--real", action="append", default=[],
                    help="filter: keep these realizability values (real/unreal)")
     p.add_argument("--list", help="alternatively, a file of instance basenames")
-    p.add_argument("--flags", default="", help="extra acacia flags, e.g. '-U -u automaton'")
+    p.add_argument("--flags", default="", help="extra acacia flags, e.g. '-u automaton'")
     p.add_argument("--runner-prefix", default="",
                    help="optional external wrapper, e.g. systemd-run/cgexec/timeout")
     p.add_argument("--systemd-scope", action="store_true",

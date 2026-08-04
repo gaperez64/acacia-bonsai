@@ -31,9 +31,10 @@ struct arg_parse_result {
     VECTOR_ELT_T opt_kmin = DEFAULT_KMIN;
     VECTOR_ELT_T opt_k = DEFAULT_K;
     VECTOR_ELT_T opt_kinc = DEFAULT_KINC;
-    std::optional<UNREAL_X_T> opt_unreal_x = std::make_optional<UNREAL_X_T> (DEFAULT_UNREAL_X);
+    std::optional<std::vector<TRANSLATION_PREF_T>> real_strategies = std::nullopt;
+    std::optional<std::vector<UNREAL_X_T>> unreal_strategies = std::nullopt;
+    TRANSLATION_PREF_T primary_translation_pref = ACACIA_TRANSLATION_PREF;
     unsigned verbose_level = 0;
-    bool check_real = true;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     bool inputs_specified = false;
@@ -93,19 +94,16 @@ void show_help (const char* program_name) {
       << "  -K VAL            final value of K, or unique value if M is not specified\n"
       << "  -M VAL            starting value of K\n"
       << "  -I VAL            increment value for K, used when M < K\n"
-      << "  -u VAL            use VAL from [automaton|formula|both] to check unrealizability\n"
-      << "                    by default, unrealizability is checked with "
-#if DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON
-      << "VAL = automaton"
-#elif DEFAULT_UNREAL_X == UNREAL_X_FORMULA
-      << "VAL = formula"
-#else
-      << "VAL = both"
-#endif
-      << std::endl
+      << "  -r LIST           check realizability using comma-separated [small|any]\n"
+      << "  -u LIST           check unrealizability using comma-separated\n"
+      << "                    [automaton|formula]; both is an alias for the pair\n"
+      << "                    mentioning a check selects it; mentioning neither runs\n"
+      << "                    both checks with their build defaults\n"
+      << "                    the head of -r is the primary translator preference used\n"
+      << "                    by unrealizability checks; -s truncates -r to its head\n"
+      << "                    migration: legacy bare -r and -U now fail; bare -u LIST\n"
+      << "                    now selects unrealizability only\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
-      << "  -r                do NOT check for unrealizability\n"
-      << "  -U                do NOT check for realizability\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
       << "\t" << (int)EXIT_CODE_REAL << "   if the input problem is realizable\n"
@@ -124,15 +122,82 @@ bool case_insensitive_equals (std::string_view lhs, std::string_view rhs) {
   return std::ranges::equal (lhs, rhs, case_insensitive_char_equals);
 }
 
+template <typename Strategy, typename AddValue>
+std::vector<Strategy> process_strategy_list (const std::string& arg,
+                                             const char* option,
+                                             AddValue add_value) {
+  std::vector<Strategy> strategies;
+  std::istringstream values (arg);
+  std::string value;
+  while (std::getline (values, value, ',')) {
+    const auto first = std::find_if_not (
+        value.begin (), value.end (), [] (unsigned char c) { return std::isspace (c); });
+    const auto last = std::find_if_not (
+                          value.rbegin (), value.rend (),
+                          [] (unsigned char c) { return std::isspace (c); })
+                          .base ();
+    if (first >= last)
+      error (EXIT_CODE_ERROR, "Error: empty strategy in -%s list.\n", option);
+    value = std::string (first, last);
+    add_value (value, strategies);
+  }
+  if (strategies.empty () or arg.back () == ',')
+    error (EXIT_CODE_ERROR, "Error: empty strategy in -%s list.\n", option);
+  return strategies;
+}
+
+template <typename Strategy>
+void append_strategy (Strategy strategy, std::vector<Strategy>& strategies,
+                      const char* option, const std::string& name) {
+  if (std::ranges::find (strategies, strategy) != strategies.end ())
+    error (EXIT_CODE_ERROR, "Error: duplicate strategy %s in -%s list.\n",
+           name.c_str (), option);
+  strategies.push_back (strategy);
+}
+
+void process_arg_real (const std::string& arg, arg_parse_result& result) {
+  result.real_strategies = process_strategy_list<TRANSLATION_PREF_T> (
+      arg, "r", [] (const std::string& value, auto& strategies) {
+        if (case_insensitive_equals (value, "small"))
+          append_strategy<TRANSLATION_PREF_T> (spot::postprocessor::Small, strategies,
+                                               "r", value);
+        else if (case_insensitive_equals (value, "any"))
+          append_strategy<TRANSLATION_PREF_T> (spot::postprocessor::Any, strategies,
+                                               "r", value);
+        else
+          error (EXIT_CODE_ERROR, "Error: unexpected realizability strategy %s.\n",
+                 value.c_str ());
+      });
+  result.primary_translation_pref = result.real_strategies->front ();
+}
+
 void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
-  if (case_insensitive_equals (arg, "automaton"))
-    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_AUTOMATON);
-  else if (case_insensitive_equals (arg, "formula"))
-    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_FORMULA);
-  else if (case_insensitive_equals (arg, "both"))
-    result.opt_unreal_x = std::make_optional<UNREAL_X_T> (UNREAL_X_BOTH);
-  else
-    error (EXIT_CODE_ERROR, "Error: unexpected unrealizble option %s\n", arg.c_str ());
+  result.unreal_strategies = process_strategy_list<UNREAL_X_T> (
+      arg, "u", [] (const std::string& value, auto& strategies) {
+        if (case_insensitive_equals (value, "automaton"))
+          append_strategy (UNREAL_X_AUTOMATON, strategies, "u", value);
+        else if (case_insensitive_equals (value, "formula"))
+          append_strategy (UNREAL_X_FORMULA, strategies, "u", value);
+        else if (case_insensitive_equals (value, "both")) {
+          append_strategy (UNREAL_X_FORMULA, strategies, "u", value);
+          append_strategy (UNREAL_X_AUTOMATON, strategies, "u", value);
+        }
+        else
+          error (EXIT_CODE_ERROR, "Error: unexpected unrealizability strategy %s.\n",
+                 value.c_str ());
+      });
+}
+
+std::vector<TRANSLATION_PREF_T> default_real_strategies () {
+  return {ACACIA_TRANSLATION_PREFS};
+}
+
+std::vector<UNREAL_X_T> default_unreal_strategies () {
+  if (DEFAULT_UNREAL_X == UNREAL_X_AUTOMATON)
+    return {UNREAL_X_AUTOMATON};
+  if (DEFAULT_UNREAL_X == UNREAL_X_FORMULA)
+    return {UNREAL_X_FORMULA};
+  return {UNREAL_X_FORMULA, UNREAL_X_AUTOMATON};
 }
 
 void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
@@ -177,14 +242,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
   };
 
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt_long (argc, argv, "hUrVvf:F:i:o:I:K:M:u:s:", long_options,
+  while ((opt = getopt_long (argc, argv, "hr:Vvf:F:i:o:I:K:M:u:s:", long_options,
                              nullptr)) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
       case 'V': print_version (std::cout); exit (EXIT_CODE_UNKNOWN);
       case 'f': retval.formula = optarg; break;
-      case 'r': retval.opt_unreal_x = std::nullopt; break;
-      case 'U': retval.check_real = false; break;
+      case 'r': process_arg_real (optarg, retval); break;
       case 'F': process_formula_file (optarg, retval); break;
       case 'i': process_arg_input (optarg, retval); break;
       case 'o': process_arg_output (optarg, retval); break;
@@ -205,6 +269,17 @@ arg_parse_result arg_parser (int argc, char** argv) {
     error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
   if (retval.outputs.empty ())
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
+
+  if (not retval.real_strategies.has_value () and
+      not retval.unreal_strategies.has_value ()) {
+    retval.real_strategies = default_real_strategies ();
+    retval.unreal_strategies = default_unreal_strategies ();
+    retval.primary_translation_pref = retval.real_strategies->front ();
+  }
+
+  if (retval.synth_fname.has_value () and retval.real_strategies.has_value () and
+      retval.real_strategies->size () > 1)
+    retval.real_strategies->resize (1);
 
   if (sgn_kmin.has_value ()) {
     if (*sgn_kmin > 0) {

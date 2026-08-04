@@ -78,6 +78,24 @@ test ('syntactic-bypass',
       syntactic_bypass_test,
       suite : ['unit', 'syntactic-bypass'])
 
+bash = find_program ('bash')
+default_real_children = 1
+if get_option ('acacia_translation_pref') == 'small+any'
+  default_real_children = 2
+endif
+default_unreal_children = 1
+if get_option ('acacia_default_unreal_x') == 'both'
+  default_unreal_children = 2
+endif
+default_check_children = default_real_children + default_unreal_children
+test ('check-selection',
+      bash,
+      args : [files ('check-selection.sh'), ab_exe,
+              default_check_children.to_string (),
+              (compiler_profile == 'debug').to_string ()],
+      suite : ['unit', 'check-selection'],
+      depends : [ab_exe])
+
 elevator_preprocessor_test = executable ('elevator-preprocessor-test',
                                          'elevator_preprocessor_test.cc',
                                          include_directories : inc,

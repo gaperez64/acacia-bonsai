@@ -80,12 +80,19 @@ else
   build_conf.set ('DEFAULT_SPOT_FAST', 'SPOT_FAST_DET')
 endif
 
-if get_option ('acacia_translation_pref') == 'any'
+if get_option ('acacia_translation_pref') == 'small+any'
+  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Small')
+  build_conf.set ('ACACIA_TRANSLATION_PREFS',
+                  'spot::postprocessor::Small, spot::postprocessor::Any')
+elif get_option ('acacia_translation_pref') == 'any'
   build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Any')
+  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Any')
 elif get_option ('acacia_translation_pref') == 'deterministic'
   build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Deterministic')
+  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Deterministic')
 else
   build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Small')
+  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Small')
 endif
 
 if get_option ('acacia_enable_realizability_simplifier')
