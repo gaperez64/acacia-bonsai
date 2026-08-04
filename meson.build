@@ -93,6 +93,11 @@ if get_option ('acacia_enable_realizability_simplifier')
 else
   build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 0)
 endif
+if get_option ('acacia_enable_syntactic_bypass')
+  build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 1)
+else
+  build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 0)
+endif
 
 if get_option ('acacia_simd_is_max')
   build_conf.set ('SIMD_IS_MAX', 'true')

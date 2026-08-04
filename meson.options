@@ -39,6 +39,8 @@ option('acacia_translation_pref', type: 'combo',
        description: 'Spot translator postprocessor preference for LTL-to-BA construction')
 option('acacia_enable_realizability_simplifier', type: 'boolean', value: true,
        description: 'Enable Spot realizability-preserving formula simplification before solving and after decomposition')
+option('acacia_enable_syntactic_bypass', type: 'boolean', value: true,
+       description: 'Enable Spot direct-strategy checks before automaton construction')
 option('acacia_static_array_max', type: 'integer', value: 300)
 option('acacia_static_max_bitsets', type: 'integer', value: 8)
 option('acacia_simd_is_max', type: 'boolean', value: true)

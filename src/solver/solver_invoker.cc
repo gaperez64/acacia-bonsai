@@ -9,6 +9,8 @@
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/symmetric_blocks.hh"
 #include "solver/symmetry.hh"
+#include "solver/syntactic_bypass.hh"
+#include "solver/translator_options.hh"
 #include "utils/push_aps.hh"
 #include "utils/typeinfo.hh"
 #include "utils/verbose.hh"
@@ -178,14 +180,10 @@ namespace {
     }
 
     spot::formula spot_formula = parse_ltl_string (formula);
-    spot::option_map extra_options;
-    extra_options.set ("simul", 0);
-    extra_options.set ("ba-simul", 0);
-    extra_options.set ("det-simul", 0);
-    extra_options.set ("tls-impl", 1);
-    extra_options.set ("wdba-minimize", 2);
+    spot::option_map extra_options = acacia::translation::make_options ();
 
     spot::translator trans (dict, &extra_options);
+    acacia::translation::validate_options (extra_options);
     spot::twa_graph_ptr aut;
     {
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -253,7 +251,7 @@ namespace {
       const VECTOR_ELT_T opt_kinc;
       const std::optional<UNREAL_X_T> check_unreal;
       const SPOT_FAST_T spot_fast;
-      spot::option_map extra_options;
+      spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
       std::vector<spot::const_twa_graph_ptr> strats;
 
@@ -279,16 +277,6 @@ namespace {
           check_unreal {check_unreal},
           spot_fast {spot_fast},
           synth_fname {synth_fname} {
-        // These options play a role in twaalgos.
-        extra_options.set ("simul", 0);
-        extra_options.set ("ba-simul", 0);
-        extra_options.set ("det-simul", 0);
-        extra_options.set ("tls-impl", 1);
-        extra_options.set ("wdba-minimize", 2);
-#ifndef NDEBUG
-        extra_options.report_unused_options ();
-#endif
-
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
         // them.
@@ -349,6 +337,7 @@ namespace {
         verb_do (2, vout << "Model checking result by checking intersection with "
                          << spot_formula << std::endl);
         spot::translator trans (dict, &extra_options);
+        acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
         {
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -389,6 +378,7 @@ namespace {
 
         // Create the automaton for the formula we have prepared.
         spot::translator trans (dict, &extra_options);
+        acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
         {
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -606,6 +596,40 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     acacia::diagnostics::snapshot ("after-rsimp");
     verb_do (2, vout << "Simplified formula: " << spot_formula << std::endl);
   }
+
+#if ACACIA_ENABLE_SYNTACTIC_BYPASS
+  // Spot's direct-strategy check is defined in the original Mealy frame, so
+  // it must run before the unreal children swap inputs and outputs.  It
+  // returns a formula verdict; map that verdict to the role of this child so
+  // only the matching child reports a definitive answer to the parent.
+  if (not synth_fname.has_value ()) {
+    acacia::syntactic_bypass::result direct;
+    {
+#if ACACIA_ENABLE_DIAGNOSTICS
+      auto* diag = acacia::diagnostics::current ();
+      acacia::diagnostics::scoped_timer timer (
+          diag ? &diag->syntactic_bypass_ms : nullptr);
+#endif
+      direct = acacia::syntactic_bypass::try_direct (spot_formula, output_aps);
+    }
+#if ACACIA_ENABLE_DIAGNOSTICS
+    if (auto* diag = acacia::diagnostics::current ())
+      diag->syntactic_bypass = acacia::syntactic_bypass::name (direct.value);
+#endif
+    if (direct.value != acacia::syntactic_bypass::verdict::unknown) {
+      const bool child_matches = acacia::syntactic_bypass::matches_worker (
+          direct.value, check_unreal.has_value ());
+      verb_do (1, vout << "Syntactic bypass found formula "
+                       << acacia::syntactic_bypass::name (direct.value) << '\n');
+      return acacia::diagnostics::finish (
+          child_matches,
+          child_matches ? "syntactic-bypass" : "syntactic-bypass-opposite-verdict");
+    }
+  }
+#elif ACACIA_ENABLE_DIAGNOSTICS
+  if (auto* diag = acacia::diagnostics::current ())
+    diag->syntactic_bypass = "off";
+#endif
 
   if (check_unreal.has_value ()) {
     // We only check one thing at a time.

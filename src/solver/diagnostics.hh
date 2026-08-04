@@ -39,6 +39,7 @@ namespace acacia::diagnostics {
       std::string path = "unknown";
       std::string result = "unknown";
       std::string final_reason = "unknown";
+      std::string syntactic_bypass = "not-run";
       std::string fast_class = "not-run";
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
@@ -56,6 +57,7 @@ namespace acacia::diagnostics {
 
       long long total_ms = 0;
       long long rsimp_ms = 0;
+      long long syntactic_bypass_ms = 0;
       long long translation_ms = 0;
       long long fast_class_ms = 0;
       long long fast_solve_ms = 0;
@@ -134,6 +136,8 @@ namespace acacia::diagnostics {
          << " path=" << m.path
          << " rsimp_ms=" << m.rsimp_ms
          << " rsimp_changed=" << (m.rsimp_changed ? 1 : 0)
+         << " syntactic_bypass=" << m.syntactic_bypass
+         << " syntactic_bypass_ms=" << m.syntactic_bypass_ms
          << " translation_ms=" << m.translation_ms
          << " aut_states=" << m.aut_states
          << " aut_edges=" << m.aut_edges

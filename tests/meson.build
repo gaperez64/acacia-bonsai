@@ -62,6 +62,22 @@ test ('spot-nba-fastpath-classification',
       spot_nba_fastpath_test,
       suite : ['unit', 'spotfast'])
 
+translator_options_test = executable ('translator-options-test',
+                                      'translator_options_test.cc',
+                                      include_directories : inc,
+                                      dependencies : [spot_dep, bddx_dep])
+test ('translator-options',
+      translator_options_test,
+      suite : ['unit', 'translator-options'])
+
+syntactic_bypass_test = executable ('syntactic-bypass-test',
+                                    'syntactic_bypass_test.cc',
+                                    include_directories : inc,
+                                    dependencies : [spot_dep, bddx_dep])
+test ('syntactic-bypass',
+      syntactic_bypass_test,
+      suite : ['unit', 'syntactic-bypass'])
+
 elevator_preprocessor_test = executable ('elevator-preprocessor-test',
                                          'elevator_preprocessor_test.cc',
                                          include_directories : inc,

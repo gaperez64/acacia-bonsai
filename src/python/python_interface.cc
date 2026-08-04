@@ -10,6 +10,7 @@
 #include "solver/create_automaton.hh"
 #include "solver/configured_components.hh"
 #include "solver/k_bounded_safety_aut.hh"
+#include "solver/translator_options.hh"
 #include "utils/push_aps.hh"
 #include "utils/verbose.hh"
 
@@ -60,14 +61,10 @@ static void prep_unreal_formula (spot::formula& formula,
 // Build the TWA for the given formula using an already-created dict.
 static spot::twa_graph_ptr build_twa (spot::formula& formula,
                                       spot::bdd_dict_ptr dict) {
-  spot::option_map extra_options;
-  extra_options.set ("simul", 0);
-  extra_options.set ("ba-simul", 0);
-  extra_options.set ("det-simul", 0);
-  extra_options.set ("tls-impl", 1);
-  extra_options.set ("wdba-minimize", 2);
+  spot::option_map extra_options = acacia::translation::make_options ();
 
   spot::translator trans (dict, &extra_options);
+  acacia::translation::validate_options (extra_options);
   return create_automaton (formula, trans);
 }
 
