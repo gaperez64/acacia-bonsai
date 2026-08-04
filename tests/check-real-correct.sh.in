@@ -203,22 +203,22 @@ for prog in $progs; do
         a) run_acacia_bonsai;;
     esac
     res=$?
-    if (( res > 2 || (expect < 2 && res != expect) )); then
+    if (( res == 2 || res > 2 || (expect < 2 && res != expect) )); then
         echo -n "FAILED: "
         if (( res > 128 )); then
-            echo "CRASH $res"
+            echo "ERROR: CRASH $res"
             ret=$res
-        elif [[ $prog == 'l' ]]; then
-            echo 'CRITICAL: ltlsynt failed.'
-            ret=13
         elif (( res == 2 )); then
-            echo "UNKNOWN RETURNED $res"
+            echo "NO VERDICT: UNKNOWN (return $res)"
             ret=3
+        elif [[ $prog == 'l' ]]; then
+            echo 'ERROR: ltlsynt failed.'
+            ret=13
         elif (( res == 3 )); then
-            echo "ERROR RETURNED $res"
+            echo "ERROR: RETURNED $res"
             ret=3
         elif (( res > 2 )); then
-            echo "ERROR RETURNED $res"
+            echo "ERROR: RETURNED $res"
             ret=3
         elif (( expect == 0 )); then
 	    echo "FALSE NEGATIVE $res"

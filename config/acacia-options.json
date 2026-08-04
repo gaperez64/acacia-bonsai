@@ -105,7 +105,7 @@
     "default_kinc": 3,
     "default_unreal_x": "both",
     "default_spot_fast": "det",
-    "translation_pref": "small",
+    "translation_pref": "small+any",
     "enable_realizability_simplifier": true,
     "enable_syntactic_bypass": true,
     "static_array_max": 300,

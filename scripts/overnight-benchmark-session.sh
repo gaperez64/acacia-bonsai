@@ -13,7 +13,7 @@ if [[ -d /usr/local/lib/pkgconfig ]]; then
 fi
 
 SESSION_NAME=${SESSION_NAME:-overnight-$(date +%Y%m%d-%H%M%S)}
-SUITE=${SUITE:-ab/syntcomp24/0s-1s}
+SUITE=${SUITE:-ab/syntcomp24/panel}
 TIMEOUT_FACTOR=${TIMEOUT_FACTOR:-1.7}
 MEMORY_MAX=${MEMORY_MAX:-8G}
 SWAP_MAX=${SWAP_MAX:-0}
@@ -38,6 +38,7 @@ export BENCHMARK_COMPILE_JOBS=${BENCHMARK_COMPILE_JOBS:-1}
 mkdir -p _bm-logs
 LOG="_bm-logs/${SESSION_NAME}.log"
 SUMMARY="_bm-logs/${SESSION_NAME}.summary"
+CAMPAIGN_META="_bm-logs/${SESSION_NAME}.campaign.meta"
 
 log() {
   printf '[%s] %s\n' "$(date --iso-8601=seconds)" "$*" | tee -a "$LOG"
@@ -55,11 +56,9 @@ run_step() {
   return "$status"
 }
 
-archive_untracked_build() {
+remove_stale_build() {
   local config=$1
   local build="build_${config}"
-  local stamp="${SESSION_NAME}"
-  local archived="${build}.pre-metadata.${stamp}"
 
   [[ -d "$build" ]] || return 0
   if [[ -e "$build/.acacia-config.json" ]] &&
@@ -67,15 +66,15 @@ archive_untracked_build() {
     return 0
   fi
 
-  log "ARCHIVE $build -> $archived"
-  mv "$build" "$archived"
+  log "REMOVE stale build $build"
+  rm -rf -- "$build"
 }
 
 run_acacia_config() {
   local config=$1
   local slice
 
-  archive_untracked_build "$config"
+  remove_stale_build "$config"
   run_step ./self-benchmark.sh -R -c "$config" -b "$SUITE" -t "$TIMEOUT_FACTOR" || return 0
 
   for (( slice = 1; slice <= SLICES; slice++ )); do
@@ -122,6 +121,15 @@ log "suite=$SUITE timeout_factor=$TIMEOUT_FACTOR slices=$SLICES tool_slices=$TOO
 log "acacia_config_group=$ACACIA_CONFIG_GROUP"
 log "acacia_configs=$ACACIA_CONFIGS"
 log "tool_configs=$TOOL_CONFIGS"
+{
+  echo "session=$SESSION_NAME"
+  echo "suite=$SUITE"
+  echo "timeout_factor=$TIMEOUT_FACTOR"
+  echo "cgroup_scope=$BENCHMARK_CGROUP_SCOPE"
+  echo "cgroup_memory_max=$BENCHMARK_CGROUP_MEMORY_MAX"
+  echo "cgroup_swap_max=$BENCHMARK_CGROUP_SWAP_MAX"
+  python3 scripts/spot-metadata.py
+} >"$CAMPAIGN_META"
 
 for config in $ACACIA_CONFIGS; do
   run_acacia_config "$config"

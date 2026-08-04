@@ -35,7 +35,7 @@ option('acacia_default_spot_fast', type: 'combo',
        value: 'det')
 option('acacia_translation_pref', type: 'combo',
        choices: ['small', 'any', 'small+any', 'deterministic'],
-       value: 'small',
+       value: 'small+any',
        description: 'Spot translator postprocessor preference list for realizability checks')
 option('acacia_enable_realizability_simplifier', type: 'boolean', value: true,
        description: 'Enable Spot realizability-preserving formula simplification before solving and after decomposition')

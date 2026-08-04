@@ -111,6 +111,7 @@ int main (int argc, char** argv) {
                     arg_values.primary_translation_pref);
 
     int status;
+    bool child_reported_error = false;
     while (wait (&status) != -1) {  // as long as we have children to wait for
       // A child killed by a signal (SIGSEGV, SIGABRT, ...) has WIFEXITED
       // false; WEXITSTATUS would then return 0, which equals EXIT_CODE_REAL
@@ -120,6 +121,10 @@ int main (int argc, char** argv) {
       if (not WIFEXITED (status))
         continue;
       int ret = WEXITSTATUS (status);
+      if (ret == EXIT_CODE_ERROR) {
+        child_reported_error = true;
+        continue;
+      }
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
         // One child has a definitive answer! Kill everyone else
         terminate (0);
@@ -130,6 +135,8 @@ int main (int argc, char** argv) {
         return ret;
       }
     }
+    if (child_reported_error)
+      error (EXIT_CODE_ERROR, "ERROR\n");
     error (EXIT_CODE_UNKNOWN, "UNKNOWN\n");
 
   } catch (const std::exception& e) {

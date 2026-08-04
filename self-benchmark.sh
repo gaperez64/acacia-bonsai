@@ -492,6 +492,7 @@ if ! (( $donot[(Ie)benchmark] )); then
 	    print -r -- "benchmark_compile_profile=$BENCHMARK_COMPILE_PROFILE"
 	    print -r -- "benchmark_compile_jobs=$BENCHMARK_COMPILE_JOBS"
 	    print -r -- "benchmark_test_jobs=$BENCHMARK_TEST_JOBS"
+	    python3 ../scripts/spot-metadata.py
 	} > ../$meta
 	rm -f meson-logs/testlog.json
 	test_status=0
@@ -509,15 +510,25 @@ if ! (( $donot[(Ie)benchmark] )); then
             cd ..
             continue
         fi
-        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log ||
-           grep -q 'FAILED:' ../$log ||
-           { (( test_status != 0 )) && ! grep -q '^Timeout:[[:space:]]*[1-9]' ../$log; }; then
-            echo "FAILED; testlog stored at $log, _bm-logs/$name$log_suffix.json left untouched"
-            $force || exit 5
-        else
-            echo "done; testlog stored at $log"
-            touch $marker:t
-        fi
+	# In benchmark mode, Meson status 1 is outcome data: strict UNKNOWN,
+	# resource-limit, and solver-error rows deliberately fail their tests and
+	# must still reach the JSON used by the ranker.  Statuses above 1 indicate
+	# a runner/infrastructure failure and remain fatal.  In ordinary test mode,
+	# preserve the traditional all-tests-must-pass behaviour.
+	if { $justtest && { grep -q '^Fail:[[:space:]]*[1-9]' ../$log ||
+	                    grep -q 'FAILED:' ../$log ||
+	                    (( test_status != 0 )); }; } ||
+	   { ! $justtest && (( test_status > 1 )); }; then
+	    echo "FAILED; testlog stored at $log, _bm-logs/$name$log_suffix.json left untouched"
+	    $force || exit 5
+	else
+	    if (( test_status == 0 )); then
+	        echo "done; testlog stored at $log"
+	    else
+	        echo "done with non-answers; testlog stored at $log"
+	    fi
+	    touch $marker:t
+	fi
         cd ..
         cp $build/meson-logs/testlog.json _bm-logs/$name$log_suffix.json
     done

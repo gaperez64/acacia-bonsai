@@ -145,9 +145,9 @@
       "inherits": "best_decomp_mona",
       "translation_pref": "any"
     },
-    "best_decomp_mona_race": {
+    "best_decomp_mona_small": {
       "inherits": "best_decomp_mona",
-      "translation_pref": "small+any"
+      "translation_pref": "small"
     },
     "best_decomp_mona_no_rsimp": {
       "inherits": "best_decomp_mona",
