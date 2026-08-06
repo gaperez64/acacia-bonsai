@@ -123,6 +123,7 @@ log "acacia_configs=$ACACIA_CONFIGS"
 log "tool_configs=$TOOL_CONFIGS"
 {
   echo "session=$SESSION_NAME"
+  echo "git_commit=$(git rev-parse HEAD)"
   echo "suite=$SUITE"
   echo "timeout_factor=$TIMEOUT_FACTOR"
   echo "cgroup_scope=$BENCHMARK_CGROUP_SCOPE"

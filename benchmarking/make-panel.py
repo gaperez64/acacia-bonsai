@@ -55,21 +55,31 @@ def standalone_verdict(stdout: str | None) -> str | None:
     return matches[-1]
 
 
-def instance_from_row(row: dict) -> str | None:
+def instance_from_row(row: dict, corpus_dir: pathlib.Path | None = None) -> str | None:
     command = row.get("command")
     if isinstance(command, list):
         for index, token in enumerate(command[:-1]):
             if token == "-F":
-                return pathlib.Path(command[index + 1]).name
+                path = pathlib.Path(command[index + 1])
+                if corpus_dir is not None and path.resolve().parent != corpus_dir.resolve():
+                    return None
+                return path.name
+    if corpus_dir is not None:
+        # A basename-only fallback cannot distinguish duplicate names from
+        # two suites in one Meson run.  Corpus-filtered references therefore
+        # require the normal explicit `-F PATH` command metadata.
+        return None
     name = str(row.get("name", ""))
     match = re.search(r"/([^/\s]+\.ltl)(?:\s|$)", name)
     return match.group(1) if match else None
 
 
-def load_tool(path: pathlib.Path, cap: float) -> dict[str, ToolResult]:
+def load_tool(
+    path: pathlib.Path, cap: float, corpus_dir: pathlib.Path | None = None
+) -> dict[str, ToolResult]:
     results: dict[str, ToolResult] = {}
     for row in load_meson_jsonl(path):
-        instance = instance_from_row(row)
+        instance = instance_from_row(row, corpus_dir)
         if instance is None:
             continue
         duration = float(row.get("duration", 0.0) or 0.0)
@@ -139,11 +149,17 @@ def assign_candidate(
 
 
 def load_references(
-    references: list[pathlib.Path], acacia_name: str, ltlsynt_name: str, cap: float
+    references: list[pathlib.Path],
+    acacia_name: str,
+    ltlsynt_name: str,
+    cap: float,
+    corpus_dir: pathlib.Path | None = None,
 ) -> tuple[dict[str, Candidate], set[str]]:
-    campaigns: list[tuple[pathlib.Path, dict[str, ToolResult], dict[str, ToolResult]]] = []
+    # References are ordered newest first.  Coverage is their union; when an
+    # instance occurs in more than one campaign, the first (latest) result is
+    # authoritative and its directory name is retained as provenance.
+    candidates: dict[str, Candidate] = {}
     observed: set[str] = set()
-    eligible: set[str] | None = None
     for reference in references:
         acacia_path = reference / f"{acacia_name}.json"
         ltlsynt_path = reference / f"{ltlsynt_name}.json"
@@ -151,22 +167,17 @@ def load_references(
             raise FileNotFoundError(
                 f"{reference} must contain {acacia_name}.json and {ltlsynt_name}.json"
             )
-        acacia = load_tool(acacia_path, cap)
-        ltlsynt = load_tool(ltlsynt_path, cap)
+        acacia = load_tool(acacia_path, cap, corpus_dir)
+        ltlsynt = load_tool(ltlsynt_path, cap, corpus_dir)
         shared = acacia.keys() & ltlsynt.keys()
         observed.update(shared)
-        eligible = set(shared) if eligible is None else eligible & shared
-        campaigns.append((reference, acacia, ltlsynt))
-
-    # Multiple campaigns establish union coverage, but selection uses their
-    # intersection so every eligible instance has comparable reference data.
-    # The first campaign is the preferred (normally newest) source of timings.
-    candidates: dict[str, Candidate] = {}
-    first_reference, first_acacia, first_ltlsynt = campaigns[0]
-    for instance in sorted(eligible or set()):
-        candidates[instance] = assign_candidate(
-            instance, first_acacia[instance], first_ltlsynt[instance], first_reference.name
-        )
+        for instance in sorted(shared):
+            candidates.setdefault(
+                instance,
+                assign_candidate(
+                    instance, acacia[instance], ltlsynt[instance], reference.name
+                ),
+            )
     return candidates, observed
 
 
@@ -265,7 +276,13 @@ def write_panel(prefix: pathlib.Path, selected: list[Candidate], metadata: list[
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--reference", action="append", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--reference",
+        action="append",
+        required=True,
+        type=pathlib.Path,
+        help="reference directory, repeat newest first (coverage is unioned)",
+    )
     parser.add_argument("--acacia", default="best_decomp_mona")
     parser.add_argument("--ltlsynt", default="ltlsynt")
     parser.add_argument("--corpus", required=True, type=pathlib.Path)
@@ -279,7 +296,9 @@ def main() -> int:
     parser.add_argument("--open", type=parse_quota, default=15)
     args = parser.parse_args()
 
-    candidates, observed = load_references(args.reference, args.acacia, args.ltlsynt, args.cap)
+    candidates, observed = load_references(
+        args.reference, args.acacia, args.ltlsynt, args.cap, args.corpus
+    )
     corpus = {path.name for path in args.corpus.glob("*.ltl")}
     covered = corpus & observed
     eligible = corpus & candidates.keys()
@@ -300,7 +319,13 @@ def main() -> int:
              if name in corpus and candidate.stratum == stratum),
             key=lambda candidate: candidate.instance,
         )
-        quota = len(pool) if quotas[stratum] is None else quotas[stratum]
+        requested = quotas[stratum]
+        quota = len(pool) if requested is None else min(requested, len(pool))
+        if requested is not None and requested > len(pool):
+            print(
+                f"{stratum}: requested={requested} exceeds pool={len(pool)}; "
+                "taking the complete pool"
+            )
         chosen = sample_stratum(pool, quota, args.seed + index * 1000)
         selected.extend(chosen)
         verdicts = collections.Counter(candidate.verdict or "UNKNOWN" for candidate in chosen)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import pathlib
 import sys
 
@@ -53,3 +54,68 @@ def test_family_round_robin_is_deterministic_and_balanced():
     assert first == second
     counts = {family: sum(row.family == family for row in first) for family in ("large", "medium", "small")}
     assert counts == {"large": 3, "medium": 3, "small": 3}
+
+
+def test_load_tool_filters_duplicate_basenames_by_corpus(tmp_path):
+    module = load_make_panel()
+    corpus = tmp_path / "syntcomp24"
+    other = tmp_path / "syntcomp21"
+    corpus.mkdir()
+    other.mkdir()
+    rows = [
+        {
+            "command": ["wrapper", "-F", str(corpus / "same.ltl")],
+            "result": "OK",
+            "duration": 0.2,
+            "stdout": "REALIZABLE\n",
+        },
+        {
+            "command": ["wrapper", "-F", str(other / "same.ltl")],
+            "result": "TIMEOUT",
+            "duration": 17.0,
+            "stdout": "",
+        },
+    ]
+    path = tmp_path / "combined.json"
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows))
+
+    results = module.load_tool(path, 17.0, corpus)
+
+    assert results == {
+        "same.ltl": module.ToolResult(0.2, "REALIZABLE", True),
+    }
+
+
+def test_load_references_unions_coverage_and_latest_campaign_wins(tmp_path):
+    module = load_make_panel()
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    newest = tmp_path / "newest"
+    older = tmp_path / "older"
+    newest.mkdir()
+    older.mkdir()
+
+    def write_tool(reference, tool, rows):
+        path = reference / f"{tool}.json"
+        path.write_text(
+            "".join(
+                f"{json.dumps({'command': ['solver', '-F', str(corpus / name)], 'result': 'OK', 'duration': duration, 'stdout': verdict + chr(10)})}\n"
+                for name, duration, verdict in rows
+            )
+        )
+
+    write_tool(newest, "acacia", [("overlap.ltl", 2.0, "REALIZABLE"), ("new.ltl", 0.2, "REALIZABLE")])
+    write_tool(newest, "ltlsynt", [("overlap.ltl", 0.1, "REALIZABLE"), ("new.ltl", 0.1, "REALIZABLE")])
+    write_tool(older, "acacia", [("overlap.ltl", 0.2, "REALIZABLE"), ("old.ltl", 18.0, "UNREALIZABLE")])
+    write_tool(older, "ltlsynt", [("overlap.ltl", 0.1, "REALIZABLE"), ("old.ltl", 0.1, "UNREALIZABLE")])
+
+    candidates, observed = module.load_references(
+        [newest, older], "acacia", "ltlsynt", 17.0, corpus
+    )
+
+    assert observed == {"new.ltl", "old.ltl", "overlap.ltl"}
+    assert set(candidates) == observed
+    assert candidates["overlap.ltl"].source_campaign == "newest"
+    assert candidates["overlap.ltl"].stratum == "border"
+    assert candidates["old.ltl"].source_campaign == "older"
+    assert candidates["old.ltl"].stratum == "gap"

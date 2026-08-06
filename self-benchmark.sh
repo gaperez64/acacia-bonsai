@@ -264,7 +264,18 @@ benchmark_build_for() {
     fi
 
     local candidate
-    for candidate in build_ltlsynt build_base build_best_decomp_mona build_best; do
+    if [[ -n ${BENCHMARK_TOOL_HOST_BUILD:-} ]]; then
+        if is_compiled_acacia_build "$BENCHMARK_TOOL_HOST_BUILD"; then
+            echo "$BENCHMARK_TOOL_HOST_BUILD"
+            return
+        fi
+        print -u2 -- "BENCHMARK_TOOL_HOST_BUILD is not a compiled Acacia build: $BENCHMARK_TOOL_HOST_BUILD"
+        return 1
+    fi
+    # Prefer the shipping build: it is the tree the current campaign has
+    # reconfigured, so its generated Meson metadata includes newly added
+    # suites and panels.  Older generic trees may be compiled but stale.
+    for candidate in build_best_decomp_mona build_ltlsynt build_base build_best; do
         if is_compiled_acacia_build $candidate; then
             echo "$candidate"
             return

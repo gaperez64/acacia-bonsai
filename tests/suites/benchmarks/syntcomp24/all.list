@@ -1,5 +1,5 @@
-# Every run-time bucket, aggregated. Previously constructed inside
-# tests/meson.build via `benchmark_files['syntcomp24']['0s-1s'] + ...`.
+# Routine nontrivial run-time buckets.  The historical 0s-1s suite remains
+# available by name but is intentionally excluded from this aggregate.
 @include 1s-20s
 @include 20s-100s
 @include 100s-inf
