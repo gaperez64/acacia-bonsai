@@ -1,0 +1,2 @@
+.inputs bin_st_0 bin_x1 bin_y1 bin_done2 pred__y_lt_yprev_ bin_done0 bin_y0 bin_x0 pred__x_lt_xprev_ pred__xprev_lt_x_ bin_done1
+.outputs decy changex

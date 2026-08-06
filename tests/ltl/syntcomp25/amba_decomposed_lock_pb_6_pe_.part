@@ -1,0 +1,2 @@
+.inputs decide hlock_0 hlock_1 hlock_2 hlock_3 hlock_4 hlock_5 hgrant_0 hgrant_1 hgrant_2 hgrant_3 hgrant_4 hgrant_5
+.outputs locked

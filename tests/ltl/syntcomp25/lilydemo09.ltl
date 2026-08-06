@@ -1,0 +1,1 @@
+((G (F (req))) -> (((G (((! (grant)) -> ((! (grant)) U (req))) && ((req) -> (F (grant))))) && (! (grant))) && (G (F (grant)))))

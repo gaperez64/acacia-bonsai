@@ -1,0 +1,1 @@
+((G ((! (((u0out0out) && (! (u0out0f1db1b))) <-> ((u0out0f1db1b) && (! (u0out0out))))) && (! (((u0out250out25) && (! (u0out250f1dfun0p1db0a1b1b))) <-> ((u0out250f1dfun0p1db0a1b1b) && (! (u0out250out25))))))) && (((G (F (p0b0a))) && (G (! ((p0b0a) && (p0b0c))))) -> ((G ((u0out0f1db1b) U (p0b0a))) && (G ((p0b0c) <-> (u0out250f1dfun0p1db0a1b1b))))))

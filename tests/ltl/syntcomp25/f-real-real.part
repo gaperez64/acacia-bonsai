@@ -1,0 +1,2 @@
+.inputs bin_y_sub_t0 pred___x_add__minus_t__lt__xprev_add__minus_tprev__ pred___xprev_add__minus_tprev__lt__x_add__minus_t__ pred___yprev_add__minus_tprev__lt__y_add__minus_t__ bin_x_sub_t0 pred___y_add__minus_t__lt__yprev_add__minus_tprev__ bin_st_0 e3 e2 e1 e0
+.outputs inc_x keep_t set_t
