@@ -28,6 +28,61 @@ def parse_diag(line: str) -> dict[str, str] | None:
     return row
 
 
+def compact_diagnostics(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Bound progress output while retaining each child's latest checkpoint."""
+    latest_progress: dict[tuple[str, str], dict[str, str]] = {}
+    terminal: list[dict[str, str]] = []
+    for row in rows:
+        if row.get("diag_kind") == "progress":
+            key = (row.get("pid", ""), row.get("checkpoint", ""))
+            latest_progress[key] = row
+        else:
+            terminal.append(row)
+    progress = [latest_progress[key] for key in sorted(latest_progress)]
+    return terminal + progress
+
+
+class DiagnosticAccumulator:
+    """Compact diagnostic lines as they stream from a long-running child."""
+
+    def __init__(self) -> None:
+        self.latest_progress: dict[tuple[str, str], dict[str, str]] = {}
+        self.terminal: list[dict[str, str]] = []
+
+    def add_line(self, line: str) -> None:
+        row = parse_diag(line)
+        if row is None:
+            return
+        if row.get("diag_kind") == "progress":
+            key = (row.get("pid", ""), row.get("checkpoint", ""))
+            self.latest_progress[key] = row
+        else:
+            self.terminal.append(row)
+
+    def rows(self) -> list[dict[str, str]]:
+        progress = [
+            self.latest_progress[key] for key in sorted(self.latest_progress)
+        ]
+        return self.terminal + progress
+
+
+def write_checkpoint(
+    output: pathlib.Path, rows: list[dict[str, str]], fieldnames: list[str]
+) -> None:
+    """Atomically persist all completed targets after each solver run."""
+    known = set(fieldnames)
+    extra_fields = sorted({key for row in rows for key in row if key not in known})
+    temporary = output.with_name(f".{output.name}.tmp")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with temporary.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames + extra_fields)
+        writer.writeheader()
+        writer.writerows(rows)
+        handle.flush()
+        os.fsync(handle.fileno())
+    temporary.replace(output)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", default="build_best_decomp_mona_diag")
@@ -74,6 +129,8 @@ def main() -> int:
             "ACACIA_TEST_RESOURCE_UNKNOWN": "1",
         }
     )
+    csv_path = pathlib.Path(args.csv)
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
 
     rows: list[dict[str, str]] = []
     fieldnames = [
@@ -83,11 +140,16 @@ def main() -> int:
         "checkpoint",
         "wrapper_returncode",
         "wrapper_timed_out",
+        "wrapper_stdout_bytes",
+        "wrapper_stderr_bytes",
         "pid",
         "instance",
         "path",
+        "translation_pref",
         "rsimp_ms",
         "rsimp_changed",
+        "syntactic_bypass",
+        "syntactic_bypass_ms",
         "translation_ms",
         "aut_states",
         "aut_edges",
@@ -104,8 +166,16 @@ def main() -> int:
         "bool_threshold",
         "bitset_threshold",
         "max_f",
+        "max_f_size",
         "loops",
         "k_attempts",
+        "cpre_ms",
+        "picker_ms",
+        "apply_ms",
+        "downset_ms",
+        "actions_seen",
+        "meets_computed",
+        "meet_batches",
         "equivariant",
         "eq_clients",
         "eq_blocks",
@@ -157,7 +227,9 @@ def main() -> int:
                 outputs,
                 *extra_flags,
             ]
+        accumulator = DiagnosticAccumulator() if args.systemd_scope else None
         if args.systemd_scope:
+            assert accumulator is not None
             result = run_systemd_scope(
                 cmd,
                 args.timeout,
@@ -165,15 +237,21 @@ def main() -> int:
                 args.memory_swap_max,
                 env=run_env,
                 unit_prefix="acacia-diag",
+                capture_consumer=accumulator.add_line,
             )
         else:
             result = run_process_group(cmd, args.timeout, env=run_env)
-        text = f"{result.stdout}\n{result.stderr}"
-        diag_rows = []
-        for line in text.splitlines():
-            parsed = parse_diag(line)
-            if parsed is not None:
-                diag_rows.append(parsed)
+        if accumulator is not None:
+            diag_rows = accumulator.rows()
+        else:
+            text = f"{result.stdout}\n{result.stderr}"
+            diag_rows = []
+            for line in text.splitlines():
+                parsed = parse_diag(line)
+                if parsed is not None:
+                    diag_rows.append(parsed)
+            if diag_rows:
+                diag_rows = compact_diagnostics(diag_rows)
         if not diag_rows:
             diag_rows = [{"instance": target_path.name, "result": "no-diagnostic-line"}]
 
@@ -184,16 +262,18 @@ def main() -> int:
             row["diag_index"] = str(index)
             row["wrapper_returncode"] = str(result.returncode)
             row["wrapper_timed_out"] = "1" if result.timed_out else "0"
+            row["wrapper_stdout_bytes"] = str(result.stdout_bytes)
+            row["wrapper_stderr_bytes"] = str(result.stderr_bytes)
             rows.append(row)
+        write_checkpoint(csv_path, rows, fieldnames)
         print(
             f"{target_path.name}: return={result.returncode} "
-            f"timeout={int(result.timed_out)} diag_lines={len(diag_rows)}"
+            f"timeout={int(result.timed_out)} diag_lines={len(diag_rows)} "
+            f"raw_bytes={result.stdout_bytes + result.stderr_bytes}",
+            flush=True,
         )
 
-    with pathlib.Path(args.csv).open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
+    write_checkpoint(csv_path, rows, fieldnames)
     print(f"wrote {len(rows)} diagnostic rows to {args.csv}")
     return 0
 

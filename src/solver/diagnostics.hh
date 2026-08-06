@@ -64,6 +64,10 @@ namespace acacia::diagnostics {
       long long fast_solve_ms = 0;
       long long preproc_ms = 0;
       long long solve_ms = 0;
+      double cpre_ms = 0.0;
+      double picker_ms = 0.0;
+      double apply_ms = 0.0;
+      double downset_ms = 0.0;
 
       bool rsimp_changed = false;
       size_t aut_states = 0;
@@ -75,6 +79,10 @@ namespace acacia::diagnostics {
       size_t bool_threshold = 0;
       size_t bitset_threshold = 0;
       size_t max_f = 0;
+      size_t max_f_size = 0;
+      unsigned long long actions_seen = 0;
+      unsigned long long meets_computed = 0;
+      unsigned long long meet_batches = 0;
       int loops = 0;
       int k_attempts = 0;
       int last_k = -1;
@@ -86,6 +94,7 @@ namespace acacia::diagnostics {
       void observe_loop (size_t f_size, int k) {
         ++loops;
         max_f = std::max (max_f, f_size);
+        max_f_size = std::max (max_f_size, f_size);
         if (last_k != k) {
           last_k = k;
           ++k_attempts;
@@ -100,6 +109,8 @@ namespace acacia::diagnostics {
   };
 
   inline thread_local child_metrics* current_child = nullptr;
+  inline thread_local child_metrics* active_cpre_metrics = nullptr;
+  inline thread_local clock::time_point active_cpre_started {};
 
   inline child_metrics* current () {
     return enabled () ? current_child : nullptr;
@@ -126,8 +137,21 @@ namespace acacia::diagnostics {
     return value;
   }
 
+  inline void flush_active_cpre () {
+    if (active_cpre_metrics == nullptr)
+      return;
+    const auto now = clock::now ();
+    active_cpre_metrics->cpre_ms +=
+        std::chrono::duration<double, std::milli> (now - active_cpre_started).count ();
+    active_cpre_started = now;
+  }
+
   inline void print (const child_metrics& m, std::string_view kind = "final",
                      std::string_view checkpoint = "final") {
+    // Progress can be emitted from inside a CPre that never returns before
+    // the wrapper terminates the child.  Charge the live interval before
+    // serializing so those snapshots still account for fixed-point time.
+    flush_active_cpre ();
     std::ostringstream line;
     line << "ACACIA_DIAG"
          << " pid=" << getpid ()
@@ -156,8 +180,16 @@ namespace acacia::diagnostics {
          << " bool_threshold=" << m.bool_threshold
          << " bitset_threshold=" << m.bitset_threshold
          << " max_f=" << m.max_f
+         << " max_f_size=" << m.max_f_size
          << " loops=" << m.loops
          << " k_attempts=" << m.k_attempts
+         << " cpre_ms=" << m.cpre_ms
+         << " picker_ms=" << m.picker_ms
+         << " apply_ms=" << m.apply_ms
+         << " downset_ms=" << m.downset_ms
+         << " actions_seen=" << m.actions_seen
+         << " meets_computed=" << m.meets_computed
+         << " meet_batches=" << m.meet_batches
          << " equivariant=" << m.equivariant
          << " eq_clients=" << m.equivariant_clients
          << " eq_blocks=" << m.equivariant_blocks
@@ -226,6 +258,113 @@ namespace acacia::diagnostics {
       long long* target = nullptr;
       clock::time_point started;
   };
+
+  enum class fine_metric { cpre, picker, apply };
+
+  class scoped_fine_timer {
+    public:
+      explicit scoped_fine_timer (fine_metric metric)
+        : metrics {current ()}, metric {metric}, started {clock::now ()} {
+        if (metrics != nullptr and metric == fine_metric::cpre) {
+          active_cpre_metrics = metrics;
+          active_cpre_started = started;
+        }
+      }
+
+      ~scoped_fine_timer () {
+        if (metrics == nullptr)
+          return;
+        if (metric == fine_metric::cpre) {
+          flush_active_cpre ();
+          active_cpre_metrics = nullptr;
+          return;
+        }
+        const double elapsed =
+            std::chrono::duration<double, std::milli> (clock::now () - started).count ();
+        switch (metric) {
+          case fine_metric::cpre:
+            break;
+          case fine_metric::picker:
+            metrics->picker_ms += elapsed;
+            break;
+          case fine_metric::apply:
+            metrics->apply_ms += elapsed;
+            break;
+        }
+      }
+
+    private:
+      child_metrics* metrics;
+      fine_metric metric;
+      clock::time_point started;
+  };
+
+  // Time a downset operation while excluding any nested actioner.apply()
+  // calls.  f.apply() interleaves both, so a plain nested timer would count
+  // the letter work twice and bias the second-level phase split.
+  class scoped_downset_timer {
+    public:
+      scoped_downset_timer ()
+        : metrics {current ()},
+          apply_before {metrics == nullptr ? 0.0 : metrics->apply_ms},
+          started {clock::now ()} {}
+
+      ~scoped_downset_timer () {
+        if (metrics == nullptr)
+          return;
+        const double elapsed =
+            std::chrono::duration<double, std::milli> (clock::now () - started).count ();
+        const double nested_apply = metrics->apply_ms - apply_before;
+        metrics->downset_ms += std::max (0.0, elapsed - nested_apply);
+      }
+
+    private:
+      child_metrics* metrics;
+      double apply_before;
+      clock::time_point started;
+  };
+
+  inline void observe_action () {
+    if (auto* m = current ())
+      ++m->actions_seen;
+  }
+
+  inline void snapshot_action_progress () {
+    if (auto* m = current ()) {
+      const auto count = m->actions_seen;
+      if (count <= 4 or (count & (count - 1)) == 0) {
+        m->refresh_total ();
+        print (*m, "progress", "cpre-after-action");
+      }
+    }
+  }
+
+  inline void observe_meets (size_t lhs, size_t rhs) {
+    if (auto* m = current ()) {
+      m->meets_computed += static_cast<unsigned long long> (lhs) * rhs;
+      ++m->meet_batches;
+    }
+  }
+
+  inline void snapshot_intersection_progress () {
+    if (auto* m = current ()) {
+      const auto count = m->meet_batches;
+      if (count <= 4 or (count & (count - 1)) == 0) {
+        m->refresh_total ();
+        print (*m, "progress", "cpre-before-intersection");
+      }
+    }
+  }
+
+  inline void snapshot_loop_progress (std::string_view checkpoint) {
+    if (auto* m = current ()) {
+      const auto count = static_cast<unsigned> (m->loops);
+      if (count <= 4 or (count & (count - 1)) == 0) {
+        m->refresh_total ();
+        print (*m, "progress", checkpoint);
+      }
+    }
+  }
 
   inline void observe_loop (size_t f_size, int k) {
     if (auto* m = current ()) {
@@ -301,7 +440,18 @@ namespace acacia::diagnostics {
       explicit scoped_timer (long long*) {}
   };
 
+  enum class fine_metric { cpre, picker, apply };
+  struct scoped_fine_timer {
+      explicit scoped_fine_timer (fine_metric) {}
+  };
+  struct scoped_downset_timer {};
+
   inline void observe_loop (size_t, int) {}
+  inline void observe_action () {}
+  inline void snapshot_action_progress () {}
+  inline void observe_meets (size_t, size_t) {}
+  inline void snapshot_intersection_progress () {}
+  inline void snapshot_loop_progress (std::string_view) {}
   inline void snapshot (std::string_view) {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }

@@ -412,15 +412,24 @@ namespace acacia::solver_detail::equivariant {
     SetOfStates T {typename SetOfStates::value_type (bot)};
     bool first = true;
     for (const auto& avec : actions) {
-      SetOfStates Tio = f.apply ([&] (const auto& m) {
-        return actioner.apply (m, avec, actioners::direction::backward);
-      });
+      acacia::diagnostics::observe_action ();
+      SetOfStates Tio = [&] {
+        acacia::diagnostics::scoped_downset_timer downset_timer;
+        return f.apply ([&] (const auto& m) {
+          acacia::diagnostics::scoped_fine_timer apply_timer {
+              acacia::diagnostics::fine_metric::apply};
+          return actioner.apply (m, avec, actioners::direction::backward);
+        });
+      } ();
       if (first) {
         T = std::move (Tio);
         first = false;
       }
-      else
+      else {
+        acacia::diagnostics::scoped_downset_timer downset_timer;
         T.union_with (std::move (Tio));
+      }
+      acacia::diagnostics::snapshot_action_progress ();
     }
     return T;
   }
@@ -473,22 +482,36 @@ namespace acacia::solver_detail::equivariant {
   void cpre_inplace (SetOfStates& f, const PickedInput& picked_input, Actioner& actioner,
                      unsigned num_states) {
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_cpre);
+    acacia::diagnostics::scoped_fine_timer cpre_timer {
+        acacia::diagnostics::fine_metric::cpre};
     const auto& [input, actions] = picked_input.get ();
     (void) input;
     posets::utils::vector_mm<VECTOR_ELT_T> bottom (num_states, -1);
     SetOfStates predecessors {typename SetOfStates::value_type (bottom)};
     bool first = true;
     for (const auto& action_vec : actions) {
-      SetOfStates for_output = f.apply ([&] (const auto& maximal) {
-        return actioner.apply (maximal, action_vec, actioners::direction::backward);
-      });
+      acacia::diagnostics::observe_action ();
+      SetOfStates for_output = [&] {
+        acacia::diagnostics::scoped_downset_timer downset_timer;
+        return f.apply ([&] (const auto& maximal) {
+          acacia::diagnostics::scoped_fine_timer apply_timer {
+              acacia::diagnostics::fine_metric::apply};
+          return actioner.apply (maximal, action_vec, actioners::direction::backward);
+        });
+      } ();
       if (first) {
         predecessors = std::move (for_output);
         first = false;
       }
-      else
+      else {
+        acacia::diagnostics::scoped_downset_timer downset_timer;
         predecessors.union_with (std::move (for_output));
+      }
+      acacia::diagnostics::snapshot_action_progress ();
     }
+    acacia::diagnostics::observe_meets (f.size (), predecessors.size ());
+    acacia::diagnostics::snapshot_intersection_progress ();
+    acacia::diagnostics::scoped_downset_timer downset_timer;
     f.intersect_with (std::move (predecessors));
   }
 
@@ -559,6 +582,7 @@ namespace acacia::solver_detail::equivariant {
     posets::utils::vector_mm<VECTOR_ELT_T> permute_in (num_states, 0);
     posets::utils::vector_mm<VECTOR_ELT_T> permute_out (num_states, 0);
 
+    acacia::diagnostics::snapshot ("after-action-construction");
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_solve_loop);
     while (true) {
       acacia::diagnostics::observe_loop (f.size (), k);
@@ -566,6 +590,8 @@ namespace acacia::solver_detail::equivariant {
       bool incremented = false;
 
       for (const auto& orbit : *orbits) {
+        acacia::diagnostics::scoped_fine_timer cpre_timer {
+            acacia::diagnostics::fine_metric::cpre};
         SetOfStates representative = compute_T (f, orbit.actions, actioner, num_states);
         std::vector<unsigned> sequence = orbit.canonical_types;
         do {
@@ -573,6 +599,9 @@ namespace acacia::solver_detail::equivariant {
           SetOfStates member =
               permute (representative, phi_from_sigma (L, sigma), permute_in, permute_out);
           if (not subset_of (f, member)) {
+            acacia::diagnostics::observe_meets (f.size (), member.size ());
+            acacia::diagnostics::snapshot_intersection_progress ();
+            acacia::diagnostics::scoped_downset_timer downset_timer;
             f.intersect_with (std::move (member));
             changed = true;
           }
@@ -736,6 +765,7 @@ namespace acacia::solver_detail::equivariant {
 #endif
 
     int loopcount = 0;
+    acacia::diagnostics::snapshot ("after-action-construction");
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_solve_loop);
     while (true) {
       ++loopcount;
@@ -743,8 +773,12 @@ namespace acacia::solver_detail::equivariant {
       verb_do (1, vout << "[equivariant] Loop# " << loopcount << ", f of size " << f.size ()
                        << ", representative inputs=" << fwd_actions.size () << "\n");
 
-      auto&& input = input_picker (f);
-      acacia::diagnostics::snapshot ("equivariant-after-picker");
+      auto input = [&] {
+        acacia::diagnostics::scoped_fine_timer timer {
+            acacia::diagnostics::fine_metric::picker};
+        return input_picker (f);
+      } ();
+      acacia::diagnostics::snapshot_loop_progress ("equivariant-after-picker");
       if (not input.has_value ()) {
         verb_do (1, vout << "[equivariant] fixed point reached at K=" << (int) k << ", f of size "
                          << f.size () << "\n");
@@ -755,9 +789,9 @@ namespace acacia::solver_detail::equivariant {
       }
 
       cpre_inplace (f, *input, actioner, num_states);
-      acacia::diagnostics::snapshot ("equivariant-after-cpre");
+      acacia::diagnostics::snapshot_loop_progress ("equivariant-after-cpre");
       close_under_generators (f, G, permute_in, permute_out);
-      acacia::diagnostics::snapshot ("equivariant-after-closure");
+      acacia::diagnostics::snapshot_loop_progress ("equivariant-after-closure");
 
       if (not f.contains (state (init))) {
         if (k >= kmax) {
@@ -775,7 +809,7 @@ namespace acacia::solver_detail::equivariant {
             vec[i] = s[i] + kinc;
           return state (vec);
         });
-        acacia::diagnostics::snapshot ("equivariant-after-k-bump");
+        acacia::diagnostics::snapshot_loop_progress ("equivariant-after-k-bump");
 #ifndef NDEBUG
         // The K-bump is uniform on every counting coordinate and generators
         // do not cross bool_threshold, so it commutes with every generator.

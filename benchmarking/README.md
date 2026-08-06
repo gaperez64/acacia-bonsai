@@ -43,9 +43,9 @@ mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to plot.pdf mkplo
 # Ranking configurations by PAR-2
 
 `rank_bm_logs.py` prints a table of all configurations in `_bm-logs/`
-sorted by PAR-2 score (each OK charged its wall-clock, each TIMEOUT
-charged `2 × timeout`). Useful for picking the strongest configurations
-after adding or re-running benchmarks:
+sorted by PAR-2 score. It reports timeout, UNKNOWN/resource-limit, and error
+separately; every non-answer is charged `2 × timeout`. Useful for picking the
+strongest configurations after adding or re-running benchmarks:
 ```
 benchmarking/rank_bm_logs.py              # reads ../_bm-logs by default
 benchmarking/rank_bm_logs.py path/to/logs # or a custom directory
@@ -88,14 +88,40 @@ and run selected LTL instances directly through the diagnostics binary:
 python3 benchmarking/run_diag_targets.py \
   --build build_best_decomp_mona_diag \
   --timeout 25 \
+  --systemd-scope --memory-max 8G --memory-swap-max 0 \
   --csv _bm-logs/best_decomp_mona_diag-targets.csv \
   ltl2dba_E8.ltl ltl2dba_Q6.ltl
 ```
 Direct mode is the default because it preserves `ACACIA_DIAG` progress lines
-when the process-group timeout kills the solver.  `--via-wrapper` is available
-when the `check-real-correct.sh` wrapper behavior itself is what needs testing.
-Use `--progress-every N` to control periodic solve-loop snapshots; `0` disables
-loop snapshots.
+when the timeout kills the solver. Use `--systemd-scope` for experiments so
+the solver and all forked children run in a named memory-limited cgroup;
+`--via-wrapper` is available when the `check-real-correct.sh` wrapper behavior
+itself is what needs testing. Use `--progress-every N` to control periodic
+solve-loop snapshots; `0` disables loop snapshots.
+
+`summarize-diag-phases.py` first separates translation, action construction,
+and fixed-point stalls.  Diagnostics builds also split fixed-point time into
+input picking, backward action application, and downset work; the summary
+labels a target `letter-loop-bound`, `downset-bound`, or `mixed` (within 20%).
+
+# Deterministic stratified panels
+
+`make-panel.py` builds a family-balanced easy/border/gap/open panel from paired
+Acacia and `ltlsynt` Meson JSON logs.  Repeat `--reference` with the newest
+campaign first: reference coverage is unioned, and the first campaign that
+contains an instance supplies its timings and `source_campaign` provenance.
+This lets a later full-corpus sweep repair or extend an older partial reference
+without the panel monotonically shrinking to the campaigns' intersection.
+
+For example:
+```
+python3 benchmarking/make-panel.py \
+  --reference _bm-logs/full-current \
+  --reference _bm-logs/older-supplement \
+  --corpus tests/ltl/syntcomp24 \
+  --output tests/suites/benchmarks/syntcomp24/panel \
+  --cap 17 --easy 40 --border 65 --gap 60 --open 15
+```
 
 # Local tuning protocol
 
