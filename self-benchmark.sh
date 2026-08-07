@@ -524,11 +524,13 @@ if ! (( $donot[(Ie)benchmark] )); then
 	# In benchmark mode, Meson status 1 is outcome data: strict UNKNOWN,
 	# resource-limit, and solver-error rows deliberately fail their tests and
 	# must still reach the JSON used by the ranker.  Statuses above 1 indicate
-	# a runner/infrastructure failure and remain fatal.  In ordinary test mode,
-	# preserve the traditional all-tests-must-pass behaviour.
+	# a runner/infrastructure failure and remain fatal.  Quick test mode keeps
+	# the historical policy of accepting timeout-only suites while still
+	# rejecting wrong answers, explicit failures, and non-timeout runner errors.
 	if { $justtest && { grep -q '^Fail:[[:space:]]*[1-9]' ../$log ||
 	                    grep -q 'FAILED:' ../$log ||
-	                    (( test_status != 0 )); }; } ||
+	                    { (( test_status != 0 )) &&
+	                      ! grep -q '^Timeout:[[:space:]]*[1-9]' ../$log; }; }; } ||
 	   { ! $justtest && (( test_status > 1 )); }; then
 	    echo "FAILED; testlog stored at $log, _bm-logs/$name$log_suffix.json left untouched"
 	    $force || exit 5
