@@ -1,4 +1,5 @@
 #include "solver/degenerate_io.hh"
+#include "utils/verbose.hh"
 
 #include <iostream>
 #include <string_view>
@@ -6,6 +7,11 @@
 
 #include <spot/tl/parse.hh>
 #include <spot/twaalgos/postproc.hh>
+
+namespace utils {
+  unsigned verbose = 0;
+  voutstream vout;
+}
 
 namespace {
   using acacia::degenerate_io::verdict;

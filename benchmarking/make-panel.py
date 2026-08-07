@@ -112,7 +112,20 @@ def family_of(instance: str) -> str:
         if match:
             return match.group(group)
 
-    family = re.sub(r"(?:[_-]?\d+)+(?:_\d+)*$", "", stem).rstrip("_-")
+    # Strip a trailing sequence of numeric parameters without a nested
+    # repetition regex.  The previous expression could backtrack
+    # exponentially on long digit runs that did not match at the end.
+    suffix_start = len(stem)
+    if suffix_start and stem[-1].isdigit():
+        while suffix_start:
+            while suffix_start and stem[suffix_start - 1].isdigit():
+                suffix_start -= 1
+            if suffix_start == 0 or stem[suffix_start - 1] not in "_-":
+                break
+            suffix_start -= 1
+            if suffix_start == 0 or not stem[suffix_start - 1].isdigit():
+                break
+    family = stem[:suffix_start].rstrip("_-")
     return family or "numeric"
 
 

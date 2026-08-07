@@ -52,13 +52,13 @@ jobs:
         sudo chown -R "$USER:$USER" "$SPOT_PREFIX"
     - name: Restore Spot cache
       id: spot-cache
-      uses: actions/cache@v5
+      uses: actions/cache/restore@v5
       with:
         # Unlike /usr/local, this prefix is writable during cache restore.
         path: ${{ env.SPOT_PREFIX }}
         key: spot-${{ env.SPOT_VERSION }}-ubuntu24.04-${{ runner.arch }}-gcc14-maxacc64-nopy-v2
-        save-always: true
     - name: Install Spot
+      id: install-spot
       if: steps.spot-cache.outputs.cache-hit != 'true'
       run: |
         wget -q "https://www.lrde.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz"
@@ -96,6 +96,15 @@ jobs:
         ./self-benchmark.sh -L -c "$configs" -j -b ab/tiny
     - name: Test version reporting
       run: meson test -C build_base --suite version
+    - name: Save Spot cache
+      if: >-
+        always() &&
+        steps.spot-cache.outputs.cache-hit != 'true' &&
+        steps.install-spot.outcome == 'success'
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ env.SPOT_PREFIX }}
+        key: ${{ steps.spot-cache.outputs.cache-primary-key }}
     - name: Upload test results
       uses: actions/upload-artifact@v7
       if: always()

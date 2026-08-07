@@ -32,6 +32,20 @@ def test_standalone_verdict_rejects_harness_prose_and_unknown():
     assert module.standalone_verdict("UNREALIZABLE\n") == "UNREALIZABLE"
 
 
+def test_family_numeric_suffix_stripping_is_linear_and_stable():
+    module = load_make_panel()
+
+    assert module.family_of("family_12_34.ltl") == "family"
+    assert module.family_of("family-12_34.ltl") == "family"
+    assert module.family_of("family12__34.ltl") == "family12"
+    assert module.family_of("family123__.ltl") == "family123"
+    assert module.family_of("999999.ltl") == "numeric"
+
+    digits = "9" * 100_000
+    assert module.family_of(f"family_{digits}.ltl") == "family"
+    assert module.family_of(f"family_{digits}x.ltl") == f"family_{digits}x"
+
+
 def test_family_round_robin_is_deterministic_and_balanced():
     module = load_make_panel()
     pool = []
