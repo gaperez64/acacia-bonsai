@@ -4,6 +4,7 @@
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
 #include "solver/create_automaton.hh"
+#include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
@@ -159,7 +160,7 @@ namespace {
   }
 
   bool run_no_input_ltl (const std::vector<std::string>& output_aps,
-                         const std::string& formula,
+                         spot::formula spot_formula,
                          std::optional<UNREAL_X_T> check_unreal,
                          TRANSLATION_PREF_T translation_pref,
                          const std::optional<std::string>& synth_fname) {
@@ -180,7 +181,6 @@ namespace {
       output_vars.push_back (v);
     }
 
-    spot::formula spot_formula = parse_ltl_string (formula);
     spot::option_map extra_options = acacia::translation::make_options ();
 
     spot::translator trans (dict, &extra_options);
@@ -567,11 +567,6 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     diag->translation_pref = translation_pref_name (translation_pref);
 #endif
 
-  if (input_aps.empty ())
-    return acacia::diagnostics::finish (
-        run_no_input_ltl (output_aps, formula, check_unreal, translation_pref, synth_fname),
-        "no-input-ltl");
-
   spot::formula spot_formula = parse_ltl_string (formula);
 
   // Realizability-preserving simplification (spot::realizability_simplifier):
@@ -604,6 +599,33 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 #endif
     acacia::diagnostics::snapshot ("after-rsimp");
     verb_do (2, vout << "Simplified formula: " << spot_formula << std::endl);
+  }
+
+  // Degenerate alphabets are language questions, not games.  Keep this in the
+  // original Mealy frame, after realizability simplification and before the
+  // unreal workers swap I/O.  Strategy-producing no-input requests retain the
+  // existing lasso-to-AIG path; this fast path is intentionally decision-only.
+  if (input_aps.empty () and synth_fname.has_value ())
+    return acacia::diagnostics::finish (
+        run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname),
+        "no-input-ltl-synthesis");
+
+  if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
+    acacia::degenerate_io::verdict direct;
+    {
+#if ACACIA_ENABLE_DIAGNOSTICS
+      auto* diag = acacia::diagnostics::current ();
+      acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
+#endif
+      direct = acacia::degenerate_io::try_direct (
+          spot_formula, input_aps, output_aps, translation_pref);
+    }
+    assert (direct != acacia::degenerate_io::verdict::unknown);
+    const bool child_matches = acacia::syntactic_bypass::matches_worker (
+        direct, check_unreal.has_value ());
+    return acacia::diagnostics::finish (
+        child_matches,
+        child_matches ? "degenerate-io" : "degenerate-io-opposite-verdict");
   }
 
 #if ACACIA_ENABLE_SYNTACTIC_BYPASS

@@ -78,6 +78,21 @@ test ('syntactic-bypass',
       syntactic_bypass_test,
       suite : ['unit', 'syntactic-bypass'])
 
+degenerate_io_test = executable ('degenerate-io-test',
+                                 'degenerate_io_test.cc',
+                                 include_directories : inc,
+                                 dependencies : [spot_dep, bddx_dep])
+test ('degenerate-io',
+      degenerate_io_test,
+      suite : ['unit', 'degenerate-io'])
+
+degenerate_io_cli = find_program ('check-degenerate-io-cli.sh')
+test ('degenerate-io-cli',
+      degenerate_io_cli,
+      args : [ab_exe],
+      suite : ['unit', 'degenerate-io'],
+      depends : [ab_exe])
+
 bash = find_program ('bash')
 default_real_children = 1
 if get_option ('acacia_translation_pref') == 'small+any'
