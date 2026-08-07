@@ -32,6 +32,15 @@ def read_ltl_partition(inst_ltl):
     return read_part(os.path.splitext(inst_ltl)[0] + ".part")
 
 
+def read_instance_list(path):
+    """Read a benchmark list, ignoring blank lines and manifest comments."""
+    return [
+        line
+        for raw in open(path)
+        if (line := raw.strip()) and not line.startswith("#")
+    ]
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -67,7 +76,7 @@ def main():
                 continue
             insts.append(row["instance"])
     elif args.list:
-        insts = [l.strip() for l in open(args.list) if l.strip()]
+        insts = read_instance_list(args.list)
     else:
         sys.exit("need --from-csv or --list")
     if args.limit:
