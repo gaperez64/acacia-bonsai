@@ -775,6 +775,22 @@ and guard therefore both pass.  The candidate CSV is
 `_bm-logs.step1-slice5/syntcomp21-crit.csv`; the guard table is
 `/tmp/posets-slice5-guard/results.tsv` for this run.
 
+The sixth slice split forward and backward apply kernels and hoisted the
+direction branch out of their transition loops.  Against the landed CSR
+slice, the same 94-case campaign retained 90 solves but moved PAR-2 from
+232.071 to 232.147 seconds, a 0.03% regression rather than a 5% improvement.
+The slice was dropped; its CSV is
+`_bm-logs.step1-slice6/syntcomp21-crit.csv` for this run.
+
+The seventh slice tested two independently gated allocation and threshold
+hoists.  Caching the global Posets threshold moved the pinned build and
+transfer phases by only +0.34% and +0.68%, respectively, so that sub-slice
+was dropped (`/tmp/posets-slice7/results.tsv`).  Reusing the Acacia picker
+and CPre buffers retained 90/94 solves and reduced PAR-2 from 232.071 to
+229.995 seconds, a 0.89% improvement rather than the required 5%.  It was
+also dropped; its campaign CSV is
+`_bm-logs.step1-slice7/syntcomp21-crit.csv` for this run.
+
 ## Final landing verification
 
 The final shipping and diagnostics builds were rebuilt sequentially in
