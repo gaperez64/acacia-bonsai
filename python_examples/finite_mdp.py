@@ -252,8 +252,28 @@ def _disjunction(parts: Iterable[str]) -> str:
     return "(" + " | ".join(parts) + ")"
 
 
-def bare_ltl(model: GridWorld | None = None) -> str:
-    """Return wall/gate, motion, monitor, and repeated-tour guarantees."""
+ASSUMPTION = "G F !blocked"
+
+GUARANTEE_GLOSS = {
+    "validEncoding": "every step names a real cell and a real stage, "
+                     "and the first move leaves the start legally",
+    "gateRespected": "never enter the gate while it is closed",
+    "legalStep": "each move goes to an adjacent cell",
+    "monitorUpdate": "the tour monitor advances deterministically",
+    "tourForever": "the ordered tour completes infinitely often",
+}
+
+
+def guarantees(model: GridWorld | None = None) -> dict[str, str]:
+    """The guarantees of :func:`bare_ltl`, grouped and named.
+
+    Grouping only: ``" & ".join(guarantees().values())`` is byte-for-byte the
+    string ``bare_ltl`` has always returned.  The order is load-bearing --- Spot
+    translates the formula as written, so permuting conjuncts would give a
+    different automaton and move every number the talk quotes.  That is also why
+    the gate clause sits between the encoding and the motion clauses rather than
+    beside the motion clauses, where it would read more naturally.
+    """
 
     world = model or paper_gridworld()
     cell_bits = OUTPUT_APS[:5]
@@ -263,20 +283,24 @@ def bare_ltl(model: GridWorld | None = None) -> str:
     valid_cell = _disjunction(cell(value) for value in world.physical_states)
     valid_stage = _disjunction(stage(value) for value in range(4))
 
-    clauses = [
+    encoding = [
         f"G({valid_cell})",
         f"G({valid_stage})",
         _disjunction(cell(value) for value in world.adjacent_cells(world.start)),
-        f"G(blocked -> !{cell(world.gate)})",
     ]
+
+    gate = [f"G(blocked -> !{cell(world.gate)})"]
+
+    motion = []
     for source in world.physical_states:
         legal = _disjunction(cell(value) for value in world.adjacent_cells(source))
-        clauses.append(f"G({cell(source)} -> X {legal})")
+        motion.append(f"G({cell(source)} -> X {legal})")
 
+    monitor = []
     for candidate in world.adjacent_cells(world.start):
         next_stage, completed = world.advance_progress(0, candidate)
         done = "tour_complete" if completed else "!tour_complete"
-        clauses.append(f"({cell(candidate)} -> ({stage(next_stage)} & {done}))")
+        monitor.append(f"({cell(candidate)} -> ({stage(next_stage)} & {done}))")
 
     for progress in range(4):
         updates = []
@@ -284,16 +308,32 @@ def bare_ltl(model: GridWorld | None = None) -> str:
             next_stage, completed = world.advance_progress(progress, candidate)
             done = "tour_complete" if completed else "!tour_complete"
             updates.append(f"({cell(candidate)} -> ({stage(next_stage)} & {done}))")
-        clauses.append(f"G({stage(progress)} -> X (" + " & ".join(updates) + "))")
+        monitor.append(f"G({stage(progress)} -> X (" + " & ".join(updates) + "))")
 
-    clauses.append("G F tour_complete")
-    return " & ".join(f"({clause})" for clause in clauses)
+    tour = ["G F tour_complete"]
+
+    def conjoin(clauses: Sequence[str]) -> str:
+        return " & ".join(f"({clause})" for clause in clauses)
+
+    return {
+        "validEncoding": conjoin(encoding),
+        "gateRespected": conjoin(gate),
+        "legalStep": conjoin(motion),
+        "monitorUpdate": conjoin(monitor),
+        "tourForever": conjoin(tour),
+    }
+
+
+def bare_ltl(model: GridWorld | None = None) -> str:
+    """Return wall/gate, motion, monitor, and repeated-tour guarantees."""
+
+    return " & ".join(guarantees(model).values())
 
 
 def assumed_ltl(model: GridWorld | None = None) -> str:
     """Return the operative specification with recurring gate availability."""
 
-    return f"(G F !blocked) -> ({bare_ltl(model)})"
+    return f"({ASSUMPTION}) -> ({bare_ltl(model)})"
 
 
 def _node_line(world: GridWorld, cell: int, *, shield: bool = False) -> str:
