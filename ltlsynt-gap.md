@@ -729,6 +729,52 @@ cgroups with `MemoryMax=8G` and `MemorySwapMax=0`.  The first release link
 peaked at 6.32 GiB inside that boundary.  The measurement extension is
 upstream in Posets commit `530d06a`; Acacia pins that exact revision.
 
+### Hot-loop slice results
+
+The first slice widened every SIMD block to `int` and used a horizontal
+reduction for the `HasSum` accumulation in `meet`, `join`, `meet_with`, and
+`join_with`.  Against Posets `530d06a`, the pinned CPre phase regressed by
+0.68% (10,568,578,870 to 10,640,514,908 cycles) instead of meeting the 5%
+improvement threshold.  The largest non-target movement was a 3.33% SIMD
+regression, still inside the ceiling.  The slice was therefore dropped; the
+full result table is `/tmp/posets-slice1/results.tsv` for this campaign run.
+
+The second slice added a one-direction `dominated_by` comparison and routed
+the shipping vector-backed `contains` query through it.  The pinned query
+phase regressed by 1.22% (301,884,989 to 305,567,158 cycles), while the
+non-target SIMD phase regressed by 6.22%, beyond the 5% ceiling.  It was also
+dropped.  Its full table is `/tmp/posets-slice2/results.tsv` for this run.
+
+The third slice added the shape-B dominated-`x` precheck to the vector and
+skip-list shape-A intersections.  It improved the pinned intersection phase
+by 3.57% (793,555,373 to 765,203,190 cycles), with no non-target regression
+over 1.05%, but still missed the fixed 5% landing threshold and was dropped.
+Its table is `/tmp/posets-slice3/results.tsv` for this run.
+
+The fourth slice reused rejected shape-A meet storage, replaced the
+post-meet equality check with an order probe, and reserved shape-A results
+and shape-B meet rows.  The pinned intersection phase improved by only 1.72%
+(800,261,125 to 786,530,346 cycles), with every non-target movement below
+1.9%.  It missed the 5% bar and was dropped; the full table is
+`/tmp/posets-slice4/results.tsv` for this run.
+
+The fifth slice replaces the standard actioner's per-state vectors of
+`(target, accepting)` pairs with shared CSR action tables and keeps compatible
+letters contiguous.  The critical picker preserves its MRU order through an
+index permutation rather than list splices.  Hoisting the CSR representation
+out of the heavily instantiated solver template was required to keep the
+release/LTO build below the fixed 8 GiB cap; two earlier forms were safely
+terminated by that cgroup at exactly 8 GiB.
+
+This solver-layer slice has no Posets target phase, so G2 used the Posets
+suite as a guard only: all phase movements were within 2.26%.  Its target was
+the frozen 94-case `syntcomp21/crit` campaign.  It solved 90 instead of 89
+cases, newly answering `collector_v215.ltl` in 14.57 seconds, lost no solved
+case, and improved PAR-2 by 9.48% (256.379 to 232.071 seconds).  The target
+and guard therefore both pass.  The candidate CSV is
+`_bm-logs.step1-slice5/syntcomp21-crit.csv`; the guard table is
+`/tmp/posets-slice5-guard/results.tsv` for this run.
+
 ## Final landing verification
 
 The final shipping and diagnostics builds were rebuilt sequentially in

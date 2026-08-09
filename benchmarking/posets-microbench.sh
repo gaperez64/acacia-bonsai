@@ -3,12 +3,13 @@ set -Eeuo pipefail
 
 usage() {
   cat <<EOF
-usage: $0 [--diff POSETS-REV] [--target PHASE[,PHASE...]] [--output DIR]
+usage: $0 [--diff POSETS-REV] [--target PHASE[,PHASE...] | --guard-only] [--output DIR]
 
 Run the pinned Posets downset/SIMD microbenchmarks under perf stat.  With
 --diff, compare the current submodule working tree against POSETS-REV.  The
 target may also be supplied as POSETS_MICROBENCH_TARGET; it is required for a
-diff gate.  POSETS_MICROBENCH_BACKENDS defaults to vector_backed.
+diff gate unless --guard-only is used for a target measured outside Posets.
+POSETS_MICROBENCH_BACKENDS defaults to vector_backed.
 EOF
   exit 2
 }
@@ -18,6 +19,7 @@ posets_src="$repo_root/subprojects/posets"
 candidate_build="$posets_src/build-hotloop"
 base_rev=""
 target=${POSETS_MICROBENCH_TARGET:-}
+guard_only=0
 output=""
 
 while (($#)); do
@@ -32,6 +34,10 @@ while (($#)); do
       target=$2
       shift 2
       ;;
+    --guard-only)
+      guard_only=1
+      shift
+      ;;
     --output)
       [[ $# -ge 2 ]] || usage
       output=$2
@@ -42,8 +48,12 @@ while (($#)); do
   esac
 done
 
-if [[ -n $base_rev && -z $target ]]; then
-  echo "GATE FAIL: --diff requires --target or POSETS_MICROBENCH_TARGET"
+if [[ -n $target && $guard_only == 1 ]]; then
+  echo "GATE FAIL: --target and --guard-only are mutually exclusive"
+  exit 1
+fi
+if [[ -n $base_rev && -z $target && $guard_only == 0 ]]; then
+  echo "GATE FAIL: --diff requires --target, POSETS_MICROBENCH_TARGET, or --guard-only"
   exit 1
 fi
 command -v perf >/dev/null || { echo "GATE FAIL: perf is not installed"; exit 1; }
@@ -204,8 +214,10 @@ fi
 set +e
 awk -F '\t' -v targets="$target" '
   BEGIN {
-    split(targets, target_names, ",")
-    for (i in target_names) target[target_names[i]]=1
+    if (targets != "") {
+      split(targets, target_names, ",")
+      for (i in target_names) target[target_names[i]]=1
+    }
   }
   NR == 1 { next }
   $1 == "base" { baseline[$4]+=$5; phases[$4]=1 }
