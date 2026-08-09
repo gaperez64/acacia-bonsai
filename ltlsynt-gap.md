@@ -701,6 +701,34 @@ Broad option recombination still has a measured coverage ceiling of six
 rescued instances, and SCC decomposition remains below these choices because
 `elevator` is already negative.
 
+## Hot-loop and native-front-end campaign (2026-08-09)
+
+### Measurement foundation
+
+The new campaign starts from the shipping `best_decomp_mona` preset and uses
+three explicit gates before any optimization is allowed to land.  G0 is the
+14-test Acacia unit suite plus the 14-test upstream Posets suite.  G1 is a
+frozen 40-instance verdict gate: 25 `syntcomp24` instances from 23 families
+and 15 `syntcomp25` instances from 14 families.  Each corpus contributes five
+10--16 second sentinels; the other rows are sub-two-second verdict checks.
+The first freeze deliberately rejected `collector_v215` and both copies of
+`05.ltl` after repeat runs crossed the 17-second boundary, replacing them
+with cases from the same immutable reference campaigns.  The resulting gate
+verified all 40 expected verdicts sequentially.
+
+G2 is a pinned upstream Posets microbenchmark built as C++23 with
+`-march=native -Ofast -DNDEBUG`.  It records cycles, instructions, cache and
+LLC misses, and branch misses for build, query, transfer, intersection,
+union, a CPre-shaped apply/union/intersection phase, and the SIMD reduction
+path.  Both dimension 10 and dimension 128 are covered; the latter includes
+a 32-coordinate Boolean tail.  A candidate slice must improve its target by
+at least 5% and may not regress any non-target phase by more than 5%.
+
+All builds and experiments in this campaign run sequentially in systemd
+cgroups with `MemoryMax=8G` and `MemorySwapMax=0`.  The first release link
+peaked at 6.32 GiB inside that boundary.  The measurement extension is
+upstream in Posets commit `530d06a`; Acacia pins that exact revision.
+
 ## Final landing verification
 
 The final shipping and diagnostics builds were rebuilt sequentially in
