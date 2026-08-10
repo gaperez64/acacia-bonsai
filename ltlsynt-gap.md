@@ -758,36 +758,43 @@ and shape-B meet rows.  The pinned intersection phase improved by only 1.72%
 1.9%.  It missed the 5% bar and was dropped; the full table is
 `/tmp/posets-slice4/results.tsv` for this run.
 
-The fifth slice replaces the standard actioner's per-state vectors of
-`(target, accepting)` pairs with shared CSR action tables and keeps compatible
-letters contiguous.  The critical picker preserves its MRU order through an
-index permutation rather than list splices.  Hoisting the CSR representation
-out of the heavily instantiated solver template was required to keep the
-release/LTO build below the fixed 8 GiB cap; two earlier forms were safely
-terminated by that cgroup at exactly 8 GiB.
+The fifth slice tested replacing the standard actioner's per-state vectors of
+`(target, accepting)` pairs with shared CSR action tables and keeping compatible
+letters contiguous.  Hoisting the CSR representation out of the heavily
+instantiated solver template was required to keep the release/LTO build below
+the fixed 8 GiB cap; two earlier forms were safely terminated by that cgroup at
+exactly 8 GiB.
 
 This solver-layer slice has no Posets target phase, so G2 used the Posets
-suite as a guard only: all phase movements were within 2.26%.  Its target was
-the frozen 94-case `syntcomp21/crit` campaign.  It solved 90 instead of 89
-cases, newly answering `collector_v215.ltl` in 14.57 seconds, lost no solved
-case, and improved PAR-2 by 9.48% (256.379 to 232.071 seconds).  The target
-and guard therefore both pass.  The candidate CSV is
-`_bm-logs.step1-slice5/syntcomp21-crit.csv`; the guard table is
+suite as a guard only: all phase movements were within 2.26%.  Its focused
+94-case `syntcomp21/crit` campaign initially solved 90 instead of 89 cases,
+newly answering `collector_v215.ltl` in 14.57 seconds, and improved PAR-2 by
+9.48% (256.379 to 232.071 seconds).  The post-batch G3 panel nevertheless
+exposed a hard coverage trade: `amba_decomposed_arbiter6.ltl` moved from a
+2.045-second baseline solve to timeout while `collector_v215.ltl` moved the
+other way.  The first CSR iterator also failed to carry the picker's MRU index
+permutation into CPre iteration.  After correcting that semantic mismatch, a
+focused rerun timed out on both cases.  The slice therefore fails the no-loss
+landing rule and was dropped.  The candidate CSV is
+`_bm-logs.step1-slice5/syntcomp21-crit.csv`, the failed G3 CSV is
+`_bm-logs.step1-final/best_decomp_mona-syntcomp24-panel.csv`, the corrected
+focused result is `/tmp/acacia-csr-order-pair.csv`, and the guard table is
 `/tmp/posets-slice5-guard/results.tsv` for this run.
 
 The sixth slice split forward and backward apply kernels and hoisted the
-direction branch out of their transition loops.  Against the landed CSR
+direction branch out of their transition loops.  Against the CSR candidate
 slice, the same 94-case campaign retained 90 solves but moved PAR-2 from
 232.071 to 232.147 seconds, a 0.03% regression rather than a 5% improvement.
-The slice was dropped; its CSV is
+The slice was dropped before the CSR candidate itself failed G3; its CSV is
 `_bm-logs.step1-slice6/syntcomp21-crit.csv` for this run.
 
 The seventh slice tested two independently gated allocation and threshold
 hoists.  Caching the global Posets threshold moved the pinned build and
 transfer phases by only +0.34% and +0.68%, respectively, so that sub-slice
 was dropped (`/tmp/posets-slice7/results.tsv`).  Reusing the Acacia picker
-and CPre buffers retained 90/94 solves and reduced PAR-2 from 232.071 to
-229.995 seconds, a 0.89% improvement rather than the required 5%.  It was
+and CPre buffers on top of the CSR candidate retained 90/94 solves and reduced
+PAR-2 from 232.071 to 229.995 seconds, a 0.89% improvement rather than the
+required 5%.  It was
 also dropped; its campaign CSV is
 `_bm-logs.step1-slice7/syntcomp21-crit.csv` for this run.
 

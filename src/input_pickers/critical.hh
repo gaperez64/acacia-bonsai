@@ -42,41 +42,16 @@ namespace input_pickers {
             for (auto it = Cbar.begin (); it != Cbar.end (); ++it) {
               auto& [input, actions] = it->get ();
               is_witness = true;
-              if constexpr (requires {
-                              actions.ordered (size_t {});
-                              actions.promote (size_t {});
-                            }) {
-                size_t action_position = 0;
-                for (; action_position < actions.size (); ++action_position) {
-                  auto fwdf = actioner.apply (f, actions.ordered (action_position),
-                                              actioners::direction::forward);
-                  verb_do (3,
-                           vout << "apply(" << f << ", <" << input << ", ?>) = " << fwdf << ": ");
-                  if (F.contains (fwdf)) {
-                    verb_do (3, vout << " is in F." << std::endl);
-                    is_witness = false;
-                    break;
-                  }
-                  verb_do (3, vout << " is not in F." << std::endl);
+              auto it_act = actions.begin ();
+              for (; it_act != actions.end (); ++it_act) {
+                auto fwdf = actioner.apply (f, *it_act, actioners::direction::forward);
+                verb_do (3, vout << "apply(" << f << ", <" << input << ", ?>) = " << fwdf << ": ");
+                if (F.contains (fwdf)) {
+                  verb_do (3, vout << " is in F." << std::endl);
+                  is_witness = false;
+                  break;
                 }
-                if (not is_witness and action_position != 0)
-                  actions.promote (action_position);
-              }
-              else {
-                auto it_act = actions.begin ();
-                for (; it_act != actions.end (); ++it_act) {
-                  auto fwdf = actioner.apply (f, *it_act, actioners::direction::forward);
-                  verb_do (3,
-                           vout << "apply(" << f << ", <" << input << ", ?>) = " << fwdf << ": ");
-                  if (F.contains (fwdf)) {
-                    verb_do (3, vout << " is in F." << std::endl);
-                    is_witness = false;
-                    break;
-                  }
-                  verb_do (3, vout << " is not in F." << std::endl);
-                }
-                if (not is_witness and it_act != actions.begin ())
-                  actions.splice (actions.begin (), actions, it_act);
+                verb_do (3, vout << " is not in F." << std::endl);
               }
 
               if (is_witness) {
@@ -88,6 +63,10 @@ namespace input_pickers {
                 critical_input = it;
                 break;
               }
+
+              TODO ("Try putting a weight, rather than pushing at the front.");
+              if (it_act != actions.begin ())
+                actions.splice (actions.begin (), actions, it_act);
             }
             if (critical_input != Cbar.end ())
               break;
