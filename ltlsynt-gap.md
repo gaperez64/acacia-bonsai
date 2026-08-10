@@ -850,6 +850,26 @@ regressed query by 8.01%, build by 9.66%, CPre by 6.30%, intersection by
 campaign.  This confirms that revisiting the cache depended on the Step-1
 horizontal-sum slice, which itself failed G2 and did not land.
 
+### AVX-512 VPOPCNTDQ result: shelved for the solver gate
+
+The final in-flight Step-2 slice added a compile-guarded 512-bit popcount to
+`x_and_bitset`, with `std::bitset::count()` retained as the portable fallback.
+The d512 benchmark initially looked suspicious because the raw random-vector
+generator emits values in `0..12`, but this was not a bug: `test_vector()`
+already normalizes every requested Boolean-tail coordinate to `-1` or `0`
+before constructing the vector.  A proposed duplicate normalization was
+therefore removed before measurement.
+
+With five external repeats of three internal rounds, the intrinsic improved
+median CPre by 8.50%, build by 4.97%, and union by 2.61%, but regressed whole
+intersection by 2.00% (`_bm-logs.step2-vpopcnt/microbench.tsv`).  Both G0
+halves passed 14/14 and G1 preserved all 40 frozen verdicts.  Because the
+revised protocol makes kernel G2 advisory and requires the real solver-level
+G2s profile before selection, this mixed result is neither landed nor
+rejected.  It is shelved on the Posets branch
+`codex/avx512-vpopcnt-experiment` at `f22c750`; Posets `main` contains only the
+separate CI-tidiness repair `36b66d2`.
+
 ## Final landing verification
 
 The final shipping and diagnostics builds were rebuilt sequentially in
