@@ -721,8 +721,8 @@ G2 is a pinned upstream Posets microbenchmark built as C++23 with
 LLC misses, and branch misses for build, query, transfer, intersection,
 union, a CPre-shaped apply/union/intersection phase, and the SIMD reduction
 path.  Both dimension 10 and dimension 128 are covered; the latter includes
-a 32-coordinate Boolean tail.  A candidate slice must improve its target by
-at least 5% and may not regress any non-target phase by more than 5%.
+a 32-coordinate Boolean tail.  The revised protocol makes this kernel gate
+advisory: it reports phase movements but does not veto a solver change.
 
 All builds and experiments in this campaign run sequentially in systemd
 cgroups with `MemoryMax=8G` and `MemorySwapMax=0`.  The first release link
@@ -868,7 +868,32 @@ revised protocol makes kernel G2 advisory and requires the real solver-level
 G2s profile before selection, this mixed result is neither landed nor
 rejected.  It is shelved on the Posets branch
 `codex/avx512-vpopcnt-experiment` at `f22c750`; Posets `main` contains only the
-separate CI-tidiness repair `36b66d2`.
+separate CI-tidiness repairs through `520dea1`.
+
+### Recalibrated hot-loop gates
+
+The Posets driver now has an explicit five-repeat calibration mode and keeps
+the individual cycle samples plus the computed noise floor.  On the shipping
+baseline, 12 of 13 phase/backend pairs had a full min-to-max spread no larger
+than 3.93%; the small-vector union phase reached 7.75%.  Both advisory
+microbenchmark thresholds are therefore 8%, strictly above the observed
+noise.  The complete tables are
+`_bm-logs.gates-20260810/posets-noise-samples.tsv` and
+`_bm-logs.gates-20260810/posets-noise-floor.tsv`.
+
+G2s profiles the real solver instead of inferring solver behavior from
+isolated kernels.  Its frozen panel has ten named fixpoint-bound instances,
+five from each of the 2024 and 2025 corpora and covering downset-bound,
+letter-loop-bound, and mixed cases.  Every repetition records cycles,
+instructions, LLC-load misses, branch misses, solver exit, and timeout status
+inside its own 8 GiB/no-swap cgroup.  Five baseline repetitions produced a
+0.85% aggregate-cycle spread.  The worst per-target spread was 5.45% on
+`syntcomp24/lift4.ltl`; the comparison thresholds are consequently a 5%
+aggregate improvement and a 6% maximum per-target regression.  Raw counters,
+per-target summaries, and the threshold record are in
+`_bm-logs.gates-20260810/solver-profile-noise-samples.tsv`,
+`_bm-logs.gates-20260810/solver-profile-noise-summary.tsv`, and
+`_bm-logs.gates-20260810/solver-profile-noise-aggregate.tsv`.
 
 ## Final landing verification
 

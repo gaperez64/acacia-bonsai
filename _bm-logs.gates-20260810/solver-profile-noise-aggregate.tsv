@@ -1,0 +1,3 @@
+metric	spread_percent	threshold_percent
+aggregate_cycles	0.85	5.00
+maximum_target_cycles	5.45	6.00
