@@ -737,26 +737,26 @@ reduction for the `HasSum` accumulation in `meet`, `join`, `meet_with`, and
 0.68% (10,568,578,870 to 10,640,514,908 cycles) instead of meeting the 5%
 improvement threshold.  The largest non-target movement was a 3.33% SIMD
 regression, still inside the ceiling.  The slice was therefore dropped; the
-full result table is `/tmp/posets-slice1/results.tsv` for this campaign run.
+full result table is `_bm-logs.step1-microbench/slice1.tsv` for this campaign run.
 
 The second slice added a one-direction `dominated_by` comparison and routed
 the shipping vector-backed `contains` query through it.  The pinned query
 phase regressed by 1.22% (301,884,989 to 305,567,158 cycles), while the
 non-target SIMD phase regressed by 6.22%, beyond the 5% ceiling.  It was also
-dropped.  Its full table is `/tmp/posets-slice2/results.tsv` for this run.
+dropped.  Its full table is `_bm-logs.step1-microbench/slice2.tsv` for this run.
 
 The third slice added the shape-B dominated-`x` precheck to the vector and
 skip-list shape-A intersections.  It improved the pinned intersection phase
 by 3.57% (793,555,373 to 765,203,190 cycles), with no non-target regression
 over 1.05%, but still missed the fixed 5% landing threshold and was dropped.
-Its table is `/tmp/posets-slice3/results.tsv` for this run.
+Its table is `_bm-logs.step1-microbench/slice3.tsv` for this run.
 
 The fourth slice reused rejected shape-A meet storage, replaced the
 post-meet equality check with an order probe, and reserved shape-A results
 and shape-B meet rows.  The pinned intersection phase improved by only 1.72%
 (800,261,125 to 786,530,346 cycles), with every non-target movement below
 1.9%.  It missed the 5% bar and was dropped; the full table is
-`/tmp/posets-slice4/results.tsv` for this run.
+`_bm-logs.step1-microbench/slice4.tsv` for this run.
 
 The fifth slice tested replacing the standard actioner's per-state vectors of
 `(target, accepting)` pairs with shared CSR action tables and keeping compatible
@@ -778,8 +778,8 @@ focused rerun timed out on both cases.  The slice therefore fails the no-loss
 landing rule and was dropped.  The candidate CSV is
 `_bm-logs.step1-slice5/syntcomp21-crit.csv`, the failed G3 CSV is
 `_bm-logs.step1-final/best_decomp_mona-syntcomp24-panel.csv`, the corrected
-focused result is `/tmp/acacia-csr-order-pair.csv`, and the guard table is
-`/tmp/posets-slice5-guard/results.tsv` for this run.
+focused result is `_bm-logs.step1-csr/order-pair.csv`, and the guard table is
+`_bm-logs.step1-microbench/slice5-guard.tsv` for this run.
 
 The sixth slice split forward and backward apply kernels and hoisted the
 direction branch out of their transition loops.  Against the CSR candidate
@@ -791,12 +791,64 @@ The slice was dropped before the CSR candidate itself failed G3; its CSV is
 The seventh slice tested two independently gated allocation and threshold
 hoists.  Caching the global Posets threshold moved the pinned build and
 transfer phases by only +0.34% and +0.68%, respectively, so that sub-slice
-was dropped (`/tmp/posets-slice7/results.tsv`).  Reusing the Acacia picker
+was dropped (`_bm-logs.step1-microbench/slice7.tsv`).  Reusing the Acacia picker
 and CPre buffers on top of the CSR candidate retained 90/94 solves and reduced
 PAR-2 from 232.071 to 229.995 seconds, a 0.89% improvement rather than the
 required 5%.  It was
 also dropped; its campaign CSV is
 `_bm-logs.step1-slice7/syntcomp21-crit.csv` for this run.
+
+### Arena/SoA antichain result: rejected
+
+The first Step-2 slice implemented a Posets `arena_backed` downset with a
+row-major signed-byte payload, parallel Boolean-tail masks, cached sums, and
+eight-row batched domination tests.  Its direct correctness matrix covered
+all ten vector representations and the full Posets suite passed 14/14.  The
+pinned microbenchmarks showed large kernel wins: build 31.73%, query 25.42%,
+transfer 40.10%, intersection 58.73%, union 52.98%, and the CPre-shaped phase
+58.21% faster (`_bm-logs.step2-arena/microbench.tsv`).
+
+Those isolated wins did not survive solver integration.  The initial G1 run
+lost six frozen sentinels to the 17-second timeout.  Materializing a
+synchronized vector cache removed reconstruction and allocation from ordinary
+downset traversal, but a focused rerun still timed out on all three 2024
+losses (`Morning_f1477cc5.ltl`, `Morning_f2774e0b.ltl`, and
+`load_balancer7.ltl`; `_bm-logs.step2-arena/syntcomp24-regress.csv`).  The slice therefore
+failed the verdict-only regression gate and was dropped before a full G3
+campaign.  No arena code, registry choice, preset, or Posets revision lands;
+the experiment shows that the solver needs locality across its complete
+apply/intersection dataflow, not only faster isolated antichain kernels.
+
+### Batched CPre result: rejected
+
+The next Step-2 slice enabled `CPRE_AVOID_UNIONS=1` and explicitly reduced its
+flat `|actions| × |f|` predecessor cloud with
+`posets::utils::reduce_to_maxima` before constructing the downset.  Both G0
+halves passed 14/14, but G1 lost four frozen answers to the 17-second timeout:
+`Morning_f1477cc5.ltl`, `Morning_f2774e0b.ltl`, `gf-unreal35.ltl`, and
+`infinite-race-u4.ltl`.  The slice was dropped before the focused
+`syntcomp21/crit` campaign.  Because mode 1 failed the mandatory verdict gate,
+the planned mode-2 whole-cloud intersection follow-up was not implemented.
+
+### Cached-sum big-vector result: rejected
+
+The existing `best_decomp_mona_cached_sum` preset was rebuilt with the same
+equivariant configuration as shipping.  It passed G0 (14/14) and all 40 G1
+verdicts.  It also preserved coverage on the 2024 panel (98/174) and 2021
+critical panel (89/94), but slowed PAR-2 from 2878.480 to 2889.942 seconds and
+from 256.379 to 258.190 seconds, respectively.  The campaign tables are
+`_bm-logs.step2-cached-sum/syntcomp24-panel.csv` and
+`_bm-logs.step2-cached-sum/syntcomp21-crit.csv`.
+
+The exact G2 ablation used the real >300-state representation at dimension
+384: dynamic SIMD storage wrapped by the one-word Boolean bitset, with and
+without its cached inner sum.  Against the uncached control, cached sum
+regressed query by 8.01%, build by 9.66%, CPre by 6.30%, intersection by
+10.30%, transfer by 6.02%, and union by 3.03%
+(`_bm-logs.step2-cached-sum/microbench.tsv`).  It therefore fails both the
+5% target and non-target ceilings and is rejected before the 2025 adoption
+campaign.  This confirms that revisiting the cache depended on the Step-1
+horizontal-sum slice, which itself failed G2 and did not land.
 
 ## Final landing verification
 
