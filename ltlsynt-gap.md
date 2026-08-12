@@ -867,8 +867,9 @@ halves passed 14/14 and G1 preserved all 40 frozen verdicts.  Because the
 revised protocol makes kernel G2 advisory and requires the real solver-level
 G2s profile before selection, this mixed result is neither landed nor
 rejected.  It is shelved on the Posets branch
-`codex/avx512-vpopcnt-experiment` at `f22c750`; Posets `main` contains only the
-separate CI-tidiness repairs through `520dea1`.
+`codex/avx512-vpopcnt-experiment` at `f22c750`.  The slice itself did not enter
+`main`; later independent correctness repairs and the rebuilt Step-1 stack did,
+through `46054a2` as described below.
 
 ### Recalibrated hot-loop gates
 
@@ -894,6 +895,45 @@ per-target summaries, and the threshold record are in
 `_bm-logs.gates-20260810/solver-profile-noise-samples.tsv`,
 `_bm-logs.gates-20260810/solver-profile-noise-summary.tsv`, and
 `_bm-logs.gates-20260810/solver-profile-noise-aggregate.tsv`.
+
+### Rebuilt Step-1 stack: rejected by the solver profile gate
+
+The revised batch rebuilt the previously positive-but-subthreshold shape-A
+intersection slices and Acacia picker/CPre buffer reuse.  While doing so it
+also exposed and fixed two Posets correctness defects: nested fixed storage
+was flattened across C++ subobject boundaries, and one-argument split-vector
+constructors left their cached sums indeterminate.  Posets commits
+`86de5ea..f169330` replace the flattening with indexed block/lane access,
+initialize the sums, and keep skip-list moves nonthrowing without allocating.
+The intersection stack in `46054a2` adds the dominated-`x` precheck, reusable
+meet storage, survivor-only copies, and result/cloud reserves.  Posets CI is
+green at `46054a2`, including its exact tidiness check, compile, and valgrind
+test job.
+
+The complete stack passed G0 (14/14 Acacia unit tests and all Posets tests)
+and G1 (all 40 frozen verdicts).  Advisory G2 confirmed that the intended
+intersection kernels improved: median small-vector intersection fell from
+526,901,220 to 492,635,903 cycles (6.50%), and the dimension-128 case from
+180,216,326 to 159,340,820 cycles (11.58%).  The CPre-shaped small-vector
+phase regressed 6.89%, still inside the calibrated 8% advisory noise ceiling.
+Raw samples and medians are in `_bm-logs.step1-stack/posets-samples.tsv` and
+`_bm-logs.step1-stack/posets-medians.tsv`.
+
+The decisive clean G2s rerun compared an exact `a542a195` + Posets `f169330`
+baseline against the same Acacia revision with buffer reuse and Posets
+`46054a2`.  All 60 repetitions ran sequentially in separate 8 GiB/no-swap
+services.  No target exceeded the 6% regression ceiling: the worst loss was
+3.82% on `syntcomp24/arbiter_with_buffer6.ltl`.  The strongest win was stable
+and real rather than a timeout artifact: `syntcomp25/g-unreal-116.ltl` solved
+in every run and improved 24.68% in median cycles.  The other nine targets
+mostly stayed close to neutral, leaving aggregate median cycles at
+4,756,574,020,982 versus 4,839,698,406,647, only a 1.72% improvement.  This
+misses the fixed 5% batch bar, so G2s prints `GATE FAIL`; G3 is not run and the
+Acacia buffer-reuse candidate is reverted.  The clean raw counters, summary,
+binary hashes, and exact provenance are in `_bm-logs.step1-stack/`.
+Acacia pins only the independent Posets correctness repairs through `f169330`;
+the performance stack remains available upstream at `46054a2` but is not
+adopted by this repository.
 
 ## Final landing verification
 
