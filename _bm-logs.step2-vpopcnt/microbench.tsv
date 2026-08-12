@@ -1,5 +1,0 @@
-phase	baseline_median_s	candidate_median_s	delta_percent
-build	0.00124527	0.00118337	-4.97
-cpre	0.300645	0.275072	-8.50
-intersection	9.29311	9.47873	2.00
-union	0.00287798	0.00280276	-2.61

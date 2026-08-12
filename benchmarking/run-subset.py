@@ -16,6 +16,7 @@ Example:
 import argparse
 import csv
 import os
+import pathlib
 import shlex
 import sys
 
@@ -26,6 +27,9 @@ from benchlib import (
     run_systemd_scope,
     write_csv,
 )
+
+
+DEFAULT_INSTANCES_DIR = pathlib.Path(__file__).resolve().parents[1] / "tests/ltl/syntcomp24"
 
 
 def read_ltl_partition(inst_ltl):
@@ -46,7 +50,7 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--bin", required=True)
     p.add_argument("--instances-dir",
-                   default="/home/gperez/GIT-repos/acacia-bonsai/tests/ltl/syntcomp24")
+                   default=str(DEFAULT_INSTANCES_DIR))
     p.add_argument("--from-csv", help="loss-set CSV to pick instances from")
     p.add_argument("--category", action="append", default=[],
                    help="filter: keep these categories (repeatable)")
