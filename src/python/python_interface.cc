@@ -1,5 +1,6 @@
 
 #include <ranges>
+#include <stdexcept>
 #include <utility>
 
 #include "python_interface.hh"
@@ -110,6 +111,8 @@ Game* create_twa (const std::string& formula_str,
 
 void prep_unreal_automaton (Game& game) {
   game.twa = utils::push_aps (game.twa, game.outputs, game.inputs);
+  if (game.twa == nullptr)
+    throw std::runtime_error ("input-push expansion limit reached");
 }
 
 

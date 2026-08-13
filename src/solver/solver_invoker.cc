@@ -398,6 +398,10 @@ namespace {
         if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
           verb_do (2, vout << "Pushing the inputs in the automaton\n");
           aut = push_aps (aut, all_inputs, all_outputs);
+          if (aut == nullptr) {
+            verb_do (1, vout << "Input-push expansion limit reached; inconclusive\n");
+            return acacia::diagnostics::finish (false, "input-push-limit");
+          }
           if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ()) {
             [[maybe_unused]] const auto old_states = aut->num_states ();
             aut = spot::sbacc (aut);

@@ -119,6 +119,12 @@ test ('elevator-preprocessor',
       elevator_preprocessor_test,
       suite : ['unit', 'elevator'])
 
+push_aps_test = executable ('push-aps-test',
+                            'push_aps_test.cc',
+                            include_directories : inc,
+                            dependencies : [spot_dep, bddx_dep])
+test ('push-aps', push_aps_test, suite : ['unit', 'push-aps'])
+
 symmetric_downset_test = executable ('symmetric-downset-test',
                                      'symmetric_downset_test.cc',
                                      include_directories : inc)
