@@ -1,5 +1,6 @@
 #include "solver/solver_invoker.hh"
 
+#include "aut_preprocessors/cap_census.hh"
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
@@ -33,6 +34,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/synthesis.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/word.hh>
@@ -483,7 +485,40 @@ namespace {
           }
 #endif
         }
+#if ACACIA_ENABLE_DIAGNOSTICS
+        const auto census_mode = acacia::diagnostics::preprocessing_census ();
+        if (auto* diag = acacia::diagnostics::current ();
+            diag != nullptr
+            and census_mode != acacia::diagnostics::preprocessing_census_mode::off) {
+          {
+            acacia::diagnostics::scoped_timer timer (&diag->cap_census_ms);
+            const auto census = aut_preprocessors::future_visit_cap_census (aut, opt_k);
+            diag->cap_k = opt_k;
+            diag->cap_states_at_k = census.states_at_k;
+            diag->cap_states_finite = census.finite_states;
+            diag->cap_states_zero = census.zero_states;
+            diag->cap_counting_states = census.counting_states;
+            diag->cap_finite_counting_states = census.finite_counting_states;
+          }
+          acacia::diagnostics::snapshot ("after-cap-census");
+          {
+            acacia::diagnostics::scoped_timer timer (&diag->simulation_census_ms);
+            const auto reduced = spot::reduce_direct_sim_sba (aut);
+            diag->simulation_states_after = reduced->num_states ();
+            diag->simulation_states_removed =
+                aut->num_states () > reduced->num_states ()
+                    ? aut->num_states () - reduced->num_states ()
+                    : 0;
+          }
+          acacia::diagnostics::snapshot ("after-simulation-census");
+        }
+#endif
         acacia::diagnostics::snapshot ("after-preprocessing");
+
+#if ACACIA_ENABLE_DIAGNOSTICS
+        if (census_mode == acacia::diagnostics::preprocessing_census_mode::census_only)
+          return acacia::diagnostics::finish (false, "census-only");
+#endif
 
         // surely_losing can flush every reachable state and leave the
         // automaton empty after purging. Map this to inconclusive on

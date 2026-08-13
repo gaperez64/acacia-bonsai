@@ -82,6 +82,30 @@ def test_write_checkpoint_replaces_complete_csv(tmp_path):
     assert not (output.parent / f".{output.name}.tmp").exists()
 
 
+def test_preprocessing_census_is_explicitly_opt_in():
+    module = load_run_diag_targets()
+    inherited = {"ACACIA_DIAG_PREPROCESSING_CENSUS": "only", "KEEP": "yes"}
+
+    ordinary = module.diagnostic_environment(
+        inherited,
+        progress_every="64",
+        memory_max="8G",
+        memory_swap_max="0",
+        preprocessing_census_only=False,
+    )
+    census = module.diagnostic_environment(
+        inherited,
+        progress_every="64",
+        memory_max="8G",
+        memory_swap_max="0",
+        preprocessing_census_only=True,
+    )
+
+    assert "ACACIA_DIAG_PREPROCESSING_CENSUS" not in ordinary
+    assert census["ACACIA_DIAG_PREPROCESSING_CENSUS"] == "only"
+    assert ordinary["KEEP"] == census["KEEP"] == "yes"
+
+
 def test_filter_stream_discards_raw_noise_without_losing_diagnostics():
     module = load_benchlib()
     raw = "noise\nACACIA_DIAG pid=1 checkpoint=solve-loop\nmore noise\n"

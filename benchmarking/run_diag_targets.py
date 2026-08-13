@@ -83,6 +83,33 @@ def write_checkpoint(
     temporary.replace(output)
 
 
+def diagnostic_environment(
+    base: dict[str, str],
+    *,
+    progress_every: str,
+    memory_max: str,
+    memory_swap_max: str,
+    preprocessing_census_only: bool,
+) -> dict[str, str]:
+    """Build the child environment, keeping the expensive census opt-in."""
+    env = base.copy()
+    env.update(
+        {
+            "ACACIA_DIAG": "1",
+            "ACACIA_DIAG_PROGRESS_EVERY": progress_every,
+            "ACACIA_TEST_CGROUP": "1",
+            "ACACIA_TEST_CGROUP_MEMORY_MAX": memory_max,
+            "ACACIA_TEST_CGROUP_SWAP_MAX": memory_swap_max,
+            "ACACIA_TEST_RESOURCE_UNKNOWN": "1",
+        }
+    )
+    if preprocessing_census_only:
+        env["ACACIA_DIAG_PREPROCESSING_CENSUS"] = "only"
+    else:
+        env.pop("ACACIA_DIAG_PREPROCESSING_CENSUS", None)
+    return env
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", default="build_best_decomp_mona_diag")
@@ -92,6 +119,11 @@ def main() -> int:
     parser.add_argument("--memory-swap-max", default="0")
     parser.add_argument("--progress-every", default="64")
     parser.add_argument("--flags", default="", help="extra acacia-bonsai command-line flags")
+    parser.add_argument(
+        "--preprocessing-census-only",
+        action="store_true",
+        help="measure cap and direct-simulation reductions, then stop before solving",
+    )
     parser.add_argument(
         "--via-wrapper",
         action="store_true",
@@ -118,16 +150,12 @@ def main() -> int:
         sys.exit(f"missing diagnostics binary: {binary}")
 
     suite_dir = pathlib.Path(args.suite_dir)
-    env = os.environ.copy()
-    env.update(
-        {
-            "ACACIA_DIAG": "1",
-            "ACACIA_DIAG_PROGRESS_EVERY": args.progress_every,
-            "ACACIA_TEST_CGROUP": "1",
-            "ACACIA_TEST_CGROUP_MEMORY_MAX": args.memory_max,
-            "ACACIA_TEST_CGROUP_SWAP_MAX": args.memory_swap_max,
-            "ACACIA_TEST_RESOURCE_UNKNOWN": "1",
-        }
+    env = diagnostic_environment(
+        os.environ,
+        progress_every=args.progress_every,
+        memory_max=args.memory_max,
+        memory_swap_max=args.memory_swap_max,
+        preprocessing_census_only=args.preprocessing_census_only,
     )
     csv_path = pathlib.Path(args.csv)
     csv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -163,6 +191,16 @@ def main() -> int:
         "preproc_states_after",
         "preproc_edges_before",
         "preproc_edges_after",
+        "cap_census_ms",
+        "cap_k",
+        "cap_states_at_k",
+        "cap_states_finite",
+        "cap_states_zero",
+        "cap_counting_states",
+        "cap_finite_counting_states",
+        "simulation_census_ms",
+        "simulation_states_after",
+        "simulation_states_removed",
         "bool_threshold",
         "bitset_threshold",
         "max_f",

@@ -23,13 +23,31 @@ namespace acacia::diagnostics {
 
   using clock = std::chrono::steady_clock;
 
+  inline bool env_flag_enabled (const char* name) {
+    const char* env = std::getenv (name);
+    if (env == nullptr or *env == '\0')
+      return false;
+    std::string_view v {env};
+    return v != "0" and v != "false" and v != "FALSE" and v != "off" and v != "OFF";
+  }
+
   inline bool enabled () {
-    static const bool value = [] {
-      const char* env = std::getenv ("ACACIA_DIAG");
+    static const bool value = env_flag_enabled ("ACACIA_DIAG");
+    return value;
+  }
+
+  enum class preprocessing_census_mode { off, continue_solving, census_only };
+
+  inline preprocessing_census_mode preprocessing_census () {
+    static const preprocessing_census_mode value = [] {
+      const char* env = std::getenv ("ACACIA_DIAG_PREPROCESSING_CENSUS");
       if (env == nullptr or *env == '\0')
-        return false;
-      std::string_view v {env};
-      return v != "0" and v != "false" and v != "FALSE" and v != "off" and v != "OFF";
+        return preprocessing_census_mode::off;
+      if (std::string_view {env} == "only")
+        return preprocessing_census_mode::census_only;
+      return env_flag_enabled ("ACACIA_DIAG_PREPROCESSING_CENSUS")
+          ? preprocessing_census_mode::continue_solving
+          : preprocessing_census_mode::off;
     } ();
     return value;
   }
@@ -63,6 +81,8 @@ namespace acacia::diagnostics {
       long long fast_class_ms = 0;
       long long fast_solve_ms = 0;
       long long preproc_ms = 0;
+      long long cap_census_ms = 0;
+      long long simulation_census_ms = 0;
       long long solve_ms = 0;
       double cpre_ms = 0.0;
       double picker_ms = 0.0;
@@ -76,6 +96,14 @@ namespace acacia::diagnostics {
       size_t preproc_states_after = 0;
       size_t preproc_edges_before = 0;
       size_t preproc_edges_after = 0;
+      size_t cap_k = 0;
+      size_t cap_states_at_k = 0;
+      size_t cap_states_finite = 0;
+      size_t cap_states_zero = 0;
+      size_t cap_counting_states = 0;
+      size_t cap_finite_counting_states = 0;
+      size_t simulation_states_after = 0;
+      size_t simulation_states_removed = 0;
       size_t bool_threshold = 0;
       size_t bitset_threshold = 0;
       size_t max_f = 0;
@@ -177,6 +205,16 @@ namespace acacia::diagnostics {
          << " preproc_states_after=" << m.preproc_states_after
          << " preproc_edges_before=" << m.preproc_edges_before
          << " preproc_edges_after=" << m.preproc_edges_after
+         << " cap_census_ms=" << m.cap_census_ms
+         << " cap_k=" << m.cap_k
+         << " cap_states_at_k=" << m.cap_states_at_k
+         << " cap_states_finite=" << m.cap_states_finite
+         << " cap_states_zero=" << m.cap_states_zero
+         << " cap_counting_states=" << m.cap_counting_states
+         << " cap_finite_counting_states=" << m.cap_finite_counting_states
+         << " simulation_census_ms=" << m.simulation_census_ms
+         << " simulation_states_after=" << m.simulation_states_after
+         << " simulation_states_removed=" << m.simulation_states_removed
          << " bool_threshold=" << m.bool_threshold
          << " bitset_threshold=" << m.bitset_threshold
          << " max_f=" << m.max_f

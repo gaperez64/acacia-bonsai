@@ -99,6 +99,11 @@ the solver and all forked children run in a named memory-limited cgroup;
 itself is what needs testing. Use `--progress-every N` to control periodic
 solve-loop snapshots; `0` disables loop snapshots.
 
+The cap and direct-simulation preprocessing census is deliberately excluded
+from ordinary diagnostics because it can be expensive. Add
+`--preprocessing-census-only` to measure those reductions and stop before the
+game solver; its CSV fields otherwise remain zero.
+
 `summarize-diag-phases.py` first separates translation, action construction,
 and fixed-point stalls.  Diagnostics builds also split fixed-point time into
 input picking, backward action application, and downset work; the summary
