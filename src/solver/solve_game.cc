@@ -38,7 +38,8 @@ namespace {
 std::optional<spot::twa_graph_ptr> solve_game (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax,
                                                const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
                                                const bdd& all_inputs, const bdd& all_outputs,
-                                               bool do_synthesis) {
+                                               bool do_synthesis,
+                                               const std::vector<symmetry::indexed_family_hint>& hints) {
   if (all_outputs == bddtrue)
     verb_do (2, vout << "Warning: synthesis without output APs\n");
 
@@ -83,13 +84,13 @@ std::optional<spot::twa_graph_ptr> solve_game (spot::twa_graph_ptr aut, const VE
   if (actual_nonbools <= STATIC_ARRAY_CAP_MAX)
     return acacia::solver_detail::solve_game_array_bitset (
         aut, kmax, kmin, kinc, all_inputs, all_outputs, actual_nonbools, nbitsetbools,
-        do_synthesis);
+        do_synthesis, hints);
 
 #ifndef USE_BOOLVEC_OVER_BITSET
   return acacia::solver_detail::solve_game_vector_bitset (
-      aut, kmax, kmin, kinc, all_inputs, all_outputs, nbitsetbools, do_synthesis);
+      aut, kmax, kmin, kinc, all_inputs, all_outputs, nbitsetbools, do_synthesis, hints);
 #else
   return acacia::solver_detail::solve_game_vector_boolvec (
-      aut, kmax, kmin, kinc, all_inputs, all_outputs, do_synthesis);
+      aut, kmax, kmin, kinc, all_inputs, all_outputs, do_synthesis, hints);
 #endif
 }

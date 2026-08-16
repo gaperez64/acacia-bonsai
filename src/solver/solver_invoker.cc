@@ -257,6 +257,7 @@ namespace {
       const SPOT_FAST_T spot_fast;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
+      const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
       std::vector<spot::const_twa_graph_ptr> strats;
 
     public:
@@ -272,7 +273,8 @@ namespace {
                    std::optional<UNREAL_X_T> check_unreal,
                    TRANSLATION_PREF_T translation_pref,
                    SPOT_FAST_T spot_fast,
-                   const std::optional<std::string>& synth_fname)
+                   const std::optional<std::string>& synth_fname,
+                   const std::vector<symmetry::indexed_family_hint>& indexed_family_hints)
         : dict {dict},
           input_aps {input_aps},
           output_aps {output_aps},
@@ -282,7 +284,8 @@ namespace {
           check_unreal {check_unreal},
           translation_pref {translation_pref},
           spot_fast {spot_fast},
-          synth_fname {synth_fname} {
+          synth_fname {synth_fname},
+          indexed_family_hints {indexed_family_hints} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
         // them.
@@ -549,7 +552,8 @@ namespace {
         // duplicate recognition pass before solve_game().
 #if ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS
         {
-          const auto analysis = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs);
+          const auto analysis = symmetry::analyze_indexed_aps (
+              aut, all_inputs, all_outputs, indexed_family_hints);
           const auto sg = symmetry::detect (aut, analysis);
           const auto report = symmetry::describe (analysis, sg, aut->num_states ());
           acacia::diagnostics::set_symmetry_structure (report);
@@ -583,7 +587,8 @@ namespace {
                           // outputs from the cube of all atomic propositions
                           bdd_exist (aut->ap_vars (), all_outputs),
                           // same for the outputs
-                          bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value ());
+                          bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value (),
+                          indexed_family_hints);
         }
 #if ACACIA_ENABLE_DIAGNOSTICS
         if (auto* diag = acacia::diagnostics::current ())
@@ -612,7 +617,6 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   if (check_unreal.has_value ())
     for (auto& hint : indexed_family_hints)
       hint.is_input = not hint.is_input;
-  symmetry::scoped_indexed_family_hints hint_scope {indexed_family_hints};
   acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
 #if ACACIA_ENABLE_DIAGNOSTICS
   if (auto* diag = acacia::diagnostics::current ()) {
@@ -738,7 +742,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      translation_pref, spot_fast, synth_fname);
+                      translation_pref, spot_fast, synth_fname, indexed_family_hints);
 
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.

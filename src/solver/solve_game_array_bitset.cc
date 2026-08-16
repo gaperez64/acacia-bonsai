@@ -36,7 +36,8 @@ namespace acacia::solver_detail {
   solve_game_array_bitset (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax,
                            const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
                            const bdd& all_inputs, const bdd& all_outputs,
-                           size_t actual_nonbools, size_t nbitsetbools, bool do_synthesis) {
+                           size_t actual_nonbools, size_t nbitsetbools, bool do_synthesis,
+                           const std::vector<symmetry::indexed_family_hint>& hints) {
     std::optional<spot::twa_graph_ptr> res = std::nullopt;
     static_capacity_switch_t<STATIC_ARRAY_CAP_MAX, array_capacity_step> {}(
         [&] (auto vnonbools) {
@@ -47,7 +48,7 @@ namespace acacia::solver_detail {
                         posets::vectors::ARRAY_IMPL<VECTOR_ELT_T, std::max (vnonbools.value, 1UL)>,
                         vbitsets.value>>;
                 res = solve_with_downset<SpecializedDownset> (aut, kmax, kmin, kinc, all_inputs,
-                                                              all_outputs, do_synthesis);
+                                                              all_outputs, do_synthesis, hints);
               },
               unreachable, posets::vectors::nbools_to_nbitsets (nbitsetbools));
         },

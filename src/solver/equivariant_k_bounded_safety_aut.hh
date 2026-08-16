@@ -642,7 +642,8 @@ namespace acacia::solver_detail::equivariant {
                                  VECTOR_ELT_T kinc, const bdd& all_inputs, const bdd& all_outputs,
                                  const IOsPrecomputerMaker& ios_precomputer_maker,
                                  const ActionerMaker& actioner_maker,
-                                 const InputPickerMaker& input_picker_maker) {
+                                 const InputPickerMaker& input_picker_maker,
+                                 const std::vector<symmetry::indexed_family_hint>& hints = {}) {
     using state = typename SetOfStates::value_type;
     const unsigned num_states = aut->num_states ();
 
@@ -661,14 +662,13 @@ namespace acacia::solver_detail::equivariant {
       return result<SetOfStates> {false, std::nullopt};
     };
 
-    if (num_states > ACACIA_EQUIVARIANT_MAX_STATES and
-        not symmetry::has_indexed_family_hint ())
+    if (num_states > ACACIA_EQUIVARIANT_MAX_STATES and hints.empty ())
       return decline ("too many automaton states");
 
     symmetry::indexed_ap_analysis indexed;
     {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_ap_scan);
-      indexed = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs);
+      indexed = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs, hints);
     }
     if (num_states > ACACIA_EQUIVARIANT_MAX_STATES and not indexed.syntax_hinted)
       return decline ("too many automaton states without a matching TLSF indexed-family hint");

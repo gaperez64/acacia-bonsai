@@ -473,18 +473,15 @@ namespace {
         {.is_input = false, .lo = 0, .hi = 2, .members = {"g_0", "g_1", "g_2"}},
     };
     bool ok = true;
-    {
-      symmetry::scoped_indexed_family_hints scope {hints};
-      const auto indexed =
-          symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
-      ok &= expect ("matching syntax families supply a hint", indexed.syntax_hinted);
-    }
+    const auto indexed =
+        symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs, hints);
+    ok &= expect ("matching syntax families supply a hint", indexed.syntax_hinted);
 
     hints[1].members[2] = "g_9";
     bool rejected = false;
     try {
-      symmetry::scoped_indexed_family_hints scope {hints};
-      (void) symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
+      (void) symmetry::analyze_indexed_aps (
+          fx.aut, fx.all_inputs, fx.all_outputs, hints);
     } catch (const std::runtime_error&) {
       rejected = true;
     }

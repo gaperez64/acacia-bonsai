@@ -150,7 +150,7 @@ if get_option ('acacia_enable_tlsf_frontend')
     '../src/tlsf_frontend.cc',
     'tlsf_frontend_test.cc',
     include_directories : inc,
-    dependencies : tlsf_deps,
+    dependencies : tlsf_deps + [spot_dep, bddx_dep],
   )
   test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
 

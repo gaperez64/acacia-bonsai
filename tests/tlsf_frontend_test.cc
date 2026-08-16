@@ -1,7 +1,10 @@
 #include "tlsf_frontend.hh"
+#include "solver/symmetry.hh"
 
 #include <algorithm>
+#include <bddx.h>
 #include <iostream>
+#include <spot/twa/twagraph.hh>
 #include <stdexcept>
 #include <string>
 
@@ -105,6 +108,22 @@ MAIN {
         not output_family.is_input and output_family.lo == 0 and output_family.hi == 2 and
             output_family.members == std::vector<std::string> ({"grant_0", "grant_1", "grant_2"}));
   }
+
+  bool malformed_hint_rejected = false;
+  try {
+    auto malformed_hints = indexed.metadata.tlsf_indexed_families;
+    malformed_hints.front ().members[1] = "req_9";
+    auto aut = spot::make_twa_graph (spot::make_bdd_dict ());
+    aut->new_states (1);
+    const int req_0 = aut->register_ap ("req_0");
+    (void) symmetry::analyze_indexed_aps (
+        aut, bdd_ithvar (req_0), bddtrue, malformed_hints);
+  }
+  catch (const std::runtime_error&) {
+    malformed_hint_rejected = true;
+  }
+  ok &= expect ("malformed indexed-family hints become diagnostics",
+                malformed_hint_rejected);
 
   const auto asymmetric_bus = acacia::tlsf_frontend::parse (R"TLSF(
 INFO { TITLE: "asymmetric bus" SEMANTICS: Mealy TARGET: Mealy }

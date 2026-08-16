@@ -165,7 +165,20 @@ per-instance limit as follows:
 ```
 The source selection and category labels are recorded in
 `benchmarking/symmetry-2025-sample.tsv`; the default-on decision campaign is
-summarized in `benchmarking/symmetry-2025-results.md`.
+summarized below. Across all four configuration pairs, enabling the exact
+equivariant path preserved every answer, gained two answers, reduced common
+solved time by 39.81% (97.870 s to 58.909 s), and improved PAR-2 from
+1117.870 s to 1032.447 s.
+
+| configuration | solved off/on | common time off/on (s) | gain | PAR-2 off/on (s) |
+|---|---:|---:|---:|---:|
+| `best_decomp_mona` | 17/17 | 37.760/16.358 | 56.68% | 275.760/254.358 |
+| `best_decomp_rank_bucketed_mona` | 17/17 | 11.875/8.993 | 24.26% | 249.875/246.993 |
+| `best_decomp_bboxtree_mona` | 16/17 | 22.253/19.075 | 14.28% | 294.253/273.911 |
+| `best_decomp_filtered_vector_mona` | 16/17 | 25.982/14.482 | 44.26% | 297.982/257.184 |
+
+See [NEGATIVE-RESULTS.md](NEGATIVE-RESULTS.md) for the durable record of
+optimization ideas rejected by the gates.
 
 `self-benchmark.sh` also exposes ltlsynt ablation pseudo-configs.  They run the
 same local `ltlsynt/...` Meson suites as `ltlsynt`, but set `LTLSYNT_OPTS`:
@@ -188,3 +201,54 @@ corresponding `-Dacacia_*` options, records the normalized preset in
 matches.  Add new benchmark variants as presets in `config/acacia-presets.json`
 instead of passing ad hoc macro flags, so benchmark logs and build directories
 remain reproducible.
+
+# Gates
+
+- **G0, correctness:** `meson test -C build --suite=unit` and
+  `meson test -C subprojects/posets/build`; both must report `Fail: 0`.
+- **G1, frozen verdicts:** `benchmarking/regression-gate.sh build`; all 40
+  sentinels must pass and the script must print `GATE PASS`.
+- **G2, Posets proxy (advisory):** `benchmarking/posets-microbench.sh`.
+- **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh build`.
+- **G3, landing bar:** run `benchmarking/landing-campaign.sh` with paired
+  binaries, suite lists, a 17-second timeout, and an output directory. It
+  invokes `benchmarking/landing-bar.py`; every suite must print `GATE PASS`.
+- **G4, corpus correctness:**
+  `meson test -C build --num-processes 1 --suite=ab/realizable --suite=ab/unrealizable`;
+  timeouts are allowed, but `Fail: 0` and no false-positive/negative marker are
+  required.
+- **G5, native TLSF parity:** run `benchmarking/tlsf-verdict-parity.py` and
+  `benchmarking/check-tlsf-conversion.py` against the selected TLSF corpus.
+
+# Native TLSF parity
+
+The native route was rechecked against tlsf-tools `338fdd3`. SyFCo is a
+compatibility reference, not the semantic oracle: the native frontend follows
+TLSF's Strict weak-until rules, semantics/target adaptation, and enum
+valuation-list, wildcard, and REQUIRE/ASSERT validity rules where they differ.
+
+| check | cohort | result |
+|---|---:|---|
+| solver verdicts | 1,579 | GATE PASS; 0 opposite verdicts, 0 errors, 1 native-only and 3 converted-only answers |
+| regenerated SyFCo pairs | 50 | 50/50 `.ltl`/`.part` pairs matched |
+| native formula semantics | 50 | 48 matches; 1 deliberate enum-validity divergence; 1 normalization exceeded 600 s |
+| native I/O lists | 50 | 49/49 classifiable comparisons matched; the normalization timeout was unclassified |
+
+The deliberate formula divergence is
+`amba_case_study_pb_2_pe_.tlsf`; the native route places enum validity according
+to TLSF rather than SyFCo. The unclassified normalization is
+`full_arbiter_unreal1_pb_3_16_pe_.tlsf`; its regenerated SyFCo pair still
+matched, but `ltlfilt` did not finish canonicalizing it within 600 seconds.
+Literal formula bytes matched 0/49 because the independent printers choose
+different parentheses and derived-operator spellings.
+
+# Measurement protocol
+
+Performance gates use a 17-second per-instance cap and run sequentially. Put
+each campaign in a user systemd scope with `MemoryMax=8G` and
+`MemorySwapMax=0`; the campaign tools use process groups for individual solver
+runs inside that outer scope. PAR-2 charges twice the cap for every timeout,
+UNKNOWN/resource-limit result, or error, while reporting those categories
+separately. If a lost baseline answer took more than 80% of the cap,
+`landing-bar.py` automatically re-measures both binaries at three times the
+cap before deciding the gate.

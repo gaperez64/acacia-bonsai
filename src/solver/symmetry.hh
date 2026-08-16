@@ -75,28 +75,6 @@ namespace symmetry {
       bool empty () const { return families.empty (); }
   };
 
-  inline thread_local const std::vector<indexed_family_hint>* current_indexed_family_hints =
-      nullptr;
-
-  class scoped_indexed_family_hints {
-    public:
-      explicit scoped_indexed_family_hints (const std::vector<indexed_family_hint>& hints)
-        : previous {current_indexed_family_hints} {
-        current_indexed_family_hints = &hints;
-      }
-
-      ~scoped_indexed_family_hints () {
-        current_indexed_family_hints = previous;
-      }
-
-    private:
-      const std::vector<indexed_family_hint>* previous;
-  };
-
-  inline bool has_indexed_family_hint () {
-    return current_indexed_family_hints != nullptr and not current_indexed_family_hints->empty ();
-  }
-
   // Pre-formatted fields used by the compact solver diagnostics.  A field is
   // "-" when the corresponding structure is absent.
   struct structure_report {
@@ -313,7 +291,8 @@ namespace symmetry {
   }  // namespace detail
 
   inline indexed_ap_analysis analyze_indexed_aps (const spot::twa_graph_ptr& aut,
-                                                  bdd all_inputs, bdd all_outputs) {
+                                                  bdd all_inputs, bdd all_outputs,
+                                                  const std::vector<indexed_family_hint>& hints = {}) {
     indexed_ap_analysis analysis;
     auto dict = aut->get_dict ();
 
@@ -332,9 +311,9 @@ namespace symmetry {
       f.is_input = is_in;
       f.idx2ap[idx] = ap;
     }
-    if (current_indexed_family_hints != nullptr) {
+    if (not hints.empty ()) {
       std::map<std::string, const indexed_family_hint*> hinted;
-      for (const auto& hint : *current_indexed_family_hints) {
+      for (const auto& hint : hints) {
         if (hint.members.empty ())
           continue;
         const auto expected_size = hint.hi >= hint.lo
