@@ -1,5 +1,10 @@
 _bm-logs
 _bm-logs*/
+selection-ltl-2025v2/
+.pytest_cache/
+virtenv/
+tags
+*.zip
 loss-set*.csv
 fmcad26-*.pdf
 mkplottable/
