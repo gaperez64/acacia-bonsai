@@ -1,0 +1,14 @@
+census checkpoints: 101 (58 targets)
+orientations: real=55 unreal=46
+missing orientations at 120 s: 15
+joint descents: 202
+median paths/nodes: 1.132585
+worst-case median with missing=+inf: 1.258698
+histogram:
+  [1,2): 169
+  [2,4): 15
+  [4,8): 7
+  [8,16): 3
+  [16,64): 0
+  [64,+inf): 8
+decision: STOP BEFORE STEP B

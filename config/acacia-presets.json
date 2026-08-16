@@ -234,6 +234,10 @@
       "inherits": "best_decomp_mona",
       "enable_diagnostics": true
     },
+    "best_decomp_mona_tlsf": {
+      "inherits": "best_decomp_mona",
+      "enable_tlsf_frontend": true
+    },
     "best_decomp_skiplist_mona": {
       "inherits": "best_decomp_mona",
       "array_downset": "skiplist_backed",

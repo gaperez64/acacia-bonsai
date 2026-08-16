@@ -1,0 +1,19 @@
+ 1/14 Posets_Library:antichains/vectors random                  OK              0.01s
+ 2/14 Posets_Library:antichains/vectors random d128             OK              0.06s
+ 3/14 Posets_Library:antichains/vectors simd benchmark          OK              0.00s
+ 4/14 Posets_Library:antichains/vectors implementations         OK              0.01s
+ 5/14 Posets_Library:antichains/vectors kdtests                 OK              0.00s
+ 6/14 Posets_Library:antichains/vectors sttests                 OK              0.00s
+ 7/14 Posets_Library:antichains/vectors csttests                OK              0.00s
+ 8/14 Posets_Library:antichains/vectors lcrstests               OK              0.00s
+ 9/14 Posets_Library:antichains/vectors reduce                  OK              0.01s
+10/14 Posets_Library:antichains/vectors bboxtree                OK              0.00s
+11/14 Posets_Library:antichains/vectors comptrie                OK              0.00s
+12/14 Posets_Library:antichains/vectors concept checks          OK              0.00s
+13/14 Posets_Library:antichains/vectors pruned concept checks   OK              0.00s
+14/14 Posets_Library:antichains/vector backed unchecked factory OK              0.00s
+
+Ok:                14  
+Fail:              0   
+
+Full log written to /tmp/acacia-posets-g0-20260814/meson-logs/stepc-g0-posets.txt

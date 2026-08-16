@@ -1,0 +1,11 @@
+ninja: Entering directory `/tmp/acacia-native-tlsf-clang-safe-20260813'
+[1/4] Generating acacia_version.hh with a custom command
+[2/3] Compiling C++ object src/acacia-bonsai.p/tlsf_frontend.cc.o
+In file included from ../../home/gperez/GIT-repos/acacia-bonsai/src/tlsf_frontend.cc:1:
+In file included from ../../home/gperez/GIT-repos/acacia-bonsai/src/tlsf_frontend.hh:3:
+In file included from ../../home/gperez/GIT-repos/acacia-bonsai/src/solver/solver_invoker.hh:3:
+../../home/gperez/GIT-repos/acacia-bonsai/src/configuration.hh:227:10: warning: Compiling with SIMD [-W#pragma-messages]
+  227 | # pragma message("Compiling with SIMD")
+      |          ^
+1 warning generated.
+[3/3] Linking target src/acacia-bonsai

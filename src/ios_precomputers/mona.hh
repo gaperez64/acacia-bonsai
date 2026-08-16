@@ -4,11 +4,15 @@
 #include <bit>
 #include <bddx.h>
 #include <list>
+#include <limits>
+#include <map>
 #include <numeric>
 #include <spot/twa/bdddict.hh>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
+#include "solver/diagnostics.hh"
 #include "utils/transition_enumerator.hh"
 
 namespace ios_precomputers {
@@ -113,6 +117,76 @@ namespace ios_precomputers {
               self (i_to_tss, bdd_high (bdd_iopq), bdd_input & bdd_ithvar (bdd_var (bdd_iopq)));
             }
           };
+
+#if ACACIA_ENABLE_DIAGNOSTICS
+          if (acacia::diagnostics::enabled ()) {
+            // Count DAG frontier nodes without changing the path-enumerating
+            // implementation being measured.  This runs before the expensive
+            // enumeration so even a child killed during action construction
+            // leaves the decisive census checkpoint behind.
+            auto collect_frontier = [&] (this const auto& self, bdd root,
+                                         int boundary,
+                                         std::unordered_set<int>& visited,
+                                         std::map<int, bdd>& frontier) -> void {
+              if (root == bddfalse)
+                return;
+              if (root == bddtrue or bdd_var (root) >= boundary) {
+                frontier.emplace (root.id (), root);
+                return;
+              }
+              if (not visited.emplace (root.id ()).second)
+                return;
+              self (bdd_low (root), boundary, visited, frontier);
+              self (bdd_high (root), boundary, visited, frontier);
+            };
+
+            auto count_paths = [&] (this const auto& self, bdd root,
+                                    int boundary,
+                                    std::map<int, unsigned long long>& memo)
+                -> unsigned long long {
+              if (root == bddfalse)
+                return 0;
+              if (root == bddtrue or bdd_var (root) >= boundary)
+                return 1;
+              if (auto found = memo.find (root.id ()); found != memo.end ())
+                return found->second;
+              const auto low = self (bdd_low (root), boundary, memo);
+              const auto high = self (bdd_high (root), boundary, memo);
+              const auto max = std::numeric_limits<unsigned long long>::max ();
+              const auto total = low > max - high ? max : low + high;
+              memo.emplace (root.id (), total);
+              return total;
+            };
+
+            std::unordered_set<int> input_visited;
+            std::map<int, bdd> input_frontier;
+            collect_frontier (bdd_iopq, first_output, input_visited, input_frontier);
+
+            std::map<int, unsigned long long> input_path_memo;
+            const auto input_paths =
+                count_paths (bdd_iopq, first_output, input_path_memo);
+            std::map<int, unsigned long long> output_path_memo;
+            const auto output_paths =
+                count_paths (bdd_iopq, first_src_var, output_path_memo);
+
+            unsigned long long output_nodes = 0;
+            for (const auto& [id, output_root] : input_frontier) {
+              (void) id;
+              std::unordered_set<int> output_visited;
+              std::map<int, bdd> output_frontier;
+              collect_frontier (output_root, first_src_var, output_visited,
+                                output_frontier);
+              output_nodes += output_frontier.size ();
+            }
+
+            acacia::diagnostics::set_alphabet_census (
+                input_paths, input_frontier.size (), output_paths,
+                output_nodes, bdd_nodecount (bdd_iopq));
+            acacia::diagnostics::snapshot ("alphabet-census");
+            if (acacia::diagnostics::alphabet_census_only ())
+              return input_to_ios_t {};
+          }
+#endif
 
           input_to_ios_t i_to_tss;
           recurse_inputs (i_to_tss, bdd_iopq, bddtrue);

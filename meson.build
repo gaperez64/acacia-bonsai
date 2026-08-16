@@ -9,13 +9,24 @@ extra_args = ['-ftrack-macro-expansion=0',
               '-fconcepts-diagnostics-depth=2',
               '-Wunused-function']
 
-add_global_arguments (extra_args, language: 'cpp')
+cpp = meson.get_compiler ('cpp')
+add_global_arguments (cpp.get_supported_arguments (extra_args), language: 'cpp')
 
 spot_dep = dependency ('libspot')
 bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 posets_dep = dependency ('posets')
-
-cpp = meson.get_compiler('cpp')
+tlsf_deps = []
+if get_option ('acacia_enable_tlsf_frontend')
+  tlsf_deps += dependency (
+    'tlsf',
+    fallback : ['tlsf-tools', 'tlsf_dep'],
+    default_options : [
+      'cpp_std=c++23',
+      'oxidd=disabled',
+      'research_tools=false',
+    ],
+  )
+endif
 
 compiler_profile = get_option ('acacia_compiler_profile')
 compiler_profile_args = []
@@ -104,6 +115,11 @@ if get_option ('acacia_enable_syntactic_bypass')
   build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 1)
 else
   build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 0)
+endif
+if get_option ('acacia_enable_tlsf_frontend')
+  build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 1)
+else
+  build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 0)
 endif
 
 if get_option ('acacia_simd_is_max')

@@ -432,6 +432,13 @@ namespace {
                                               "empty-translated-automaton");
         }
 
+#if ACACIA_ENABLE_DIAGNOSTICS
+        if (acacia::diagnostics::alphabet_census_only ()) {
+          (void) (IOS_PRECOMPUTER::make (aut, all_inputs, all_outputs)) ();
+          return acacia::diagnostics::finish (false, "alphabet-census-only");
+        }
+#endif
+
         const bool want_controller_strategy = synth_fname.has_value () and not check_unreal.has_value ();
         // The nondeterministic GFG path is decision-only and currently validated
         // only in the REAL-child orientation. Keep unreal children on the
@@ -599,11 +606,24 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
-              const std::optional<std::string>& synth_fname) {
+              const std::optional<std::string>& synth_fname,
+              const specification_metadata& metadata) {
+  auto indexed_family_certificates = metadata.tlsf_indexed_families;
+  if (check_unreal.has_value ())
+    for (auto& certificate : indexed_family_certificates)
+      certificate.is_input = not certificate.is_input;
+  symmetry::scoped_indexed_family_certificates certificate_scope {
+      indexed_family_certificates};
   acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
 #if ACACIA_ENABLE_DIAGNOSTICS
-  if (auto* diag = acacia::diagnostics::current ())
+  if (auto* diag = acacia::diagnostics::current ()) {
     diag->translation_pref = translation_pref_name (translation_pref);
+    diag->source_format = metadata.source_format;
+    diag->tlsf_semantics = metadata.tlsf_semantics;
+    diag->tlsf_target = metadata.tlsf_target;
+    diag->tlsf_effective_target = metadata.tlsf_effective_target;
+    diag->tlsf_gr_level = metadata.tlsf_gr_level;
+  }
 #endif
 
   spot::formula spot_formula = parse_ltl_string (formula);

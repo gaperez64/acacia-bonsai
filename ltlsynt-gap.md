@@ -896,7 +896,7 @@ per-target summaries, and the threshold record are in
 `_bm-logs.gates-20260810/solver-profile-noise-summary.tsv`, and
 `_bm-logs.gates-20260810/solver-profile-noise-aggregate.tsv`.
 
-### Rebuilt Step-1 stack: rejected by the solver profile gate
+### Rebuilt Step-1 stack: initially rejected by the solver profile gate
 
 The revised batch rebuilt the previously positive-but-subthreshold shape-A
 intersection slices and Acacia picker/CPre buffer reuse.  While doing so it
@@ -934,6 +934,105 @@ binary hashes, and exact provenance are in `_bm-logs.step1-stack/`.
 Acacia pins only the independent Posets correctness repairs through `f169330`;
 the performance stack remains available upstream at `46054a2` but is not
 adopted by this repository.
+
+### Critical-picker portfolio result: rejected
+
+A direct `perf record` run confirmed that the small
+`amba_decomposed_arbiter6.ltl` automaton is dominated by search-induced
+fixed-point work rather than translation or layout: the shipping MRU picker
+solved its 34-state/85-edge automaton in 29 loops with `max_f=904` and
+1,741,717 meets.  The profile attributed 57.40% to equivariant CPre (52.35%
+to downset intersection) and 20.57% directly to the critical picker.  A
+fixed-reverse picker did not improve this instance; it had already reached
+`max_f=904` and 1,408,083 meets at loop 24 when the MRU sibling answered.
+
+The attempted portfolio preserved the existing REAL child exactly and added
+a fixed-reverse/no-MRU REAL sibling, leaving both UNREAL children unchanged.
+It passed G0 (14/14 in both Acacia and Posets), the child-count checks, and all
+40 G1 verdicts.  G3 nevertheless rejected it.  On both the 2024 panel and
+2021 critical panel it lost only `collector_v215.ltl`: the baseline answered
+REALIZABLE in 15.876 and 16.042 seconds, while the four-child candidate timed
+out at 17.082 and 17.081 seconds.  The 2024 comparison fell from 99/174 to
+98/174 (PAR-2 2851.402 to 2897.506 seconds); crit fell from 90/94 to 89/94
+(233.260 to 259.398 seconds).  The 2025 overfitting panel retained 105/180
+with essentially neutral PAR-2, but cannot override either lost baseline
+answer.  No OOM or campaign crash accompanied the regression.
+
+This falsifies the proposed structural-protection argument: retaining the
+baseline process is insufficient under a wall-clock cap when an additional
+CPU-bound sibling changes the shared resource envelope.  The portfolio is
+reverted rather than staggered into a token late run with no demonstrated
+payoff.  Exact provenance and all six clean campaign CSVs are in
+`_bm-logs.step1-picker/`.
+
+### Step-3 cap census: reject three-band counters; pursue simulation
+
+The analysis-only future-visit census ran the shipping `standard` preprocessor
+followed by one SCC pass and a state-based direct-simulation probe.  Every
+solver child ran sequentially in its own 8 GiB/no-swap scope.  The standard
+17-second panel pass obtained completed census data for 158/174 2024 targets
+(354 solver paths) and 153/180 2025 targets (373 paths).  A 120-second
+completion pass covered all 29 classified 2024 fixpoint-bound targets and
+31/32 classified 2025 targets; only `LedMatrix.ltl` did not reach the census.
+
+The cap result is decisively negative.  Across every completed path, every
+state had `cap[q] = K`: the 2024/2025 fixpoint completion passes counted
+58,420 and 65,965 states at K, respectively, with zero positive-finite and
+zero zero-cap states.  Consequently all 60 observed per-instance shares of
+currently counting states receiving a finite cap below K are exactly 0%, and
+the combined median is 0%.  Even assigning the one missing target a 100%
+share cannot change that median.  This fails the plan's fixed 25% rule, so the
+three-band counter representation (Step 3c) will not be implemented.
+
+Direct simulation has real structural headroom.  It removed states on 15/29
+completed 2024 fixpoint instances and 23/31 completed 2025 instances.  At
+least one solver path crossed from 512 or more states to fewer than 512 on
+`robot_grid2_2.ltl` in 2024 and ten 2025 fixpoint targets, including
+`GF-G-contradiction4.ltl`, `g-unreal-116.ltl`, `heim-double-x11.ltl`,
+`tasks-unreal0.ltl`, and `thermostat-F-real.ltl`.  The largest reductions on
+the classified sets were 17,654 to 9,776 states for
+`prioritized_arbiter_enc8.ltl`, 15,231 to 962 for `robot-to-target0.ltl`, and
+10,107 to 839 for `F-G-contradiction-111.ltl`.  This justifies continuing
+with the direct-simulation preprocessing gates.
+The four campaign CSVs remain local under `/tmp/acacia-cap-census-*.csv` and
+are intentionally not tracked.
+
+### Surely-losing isolation: rejected
+
+The isolated `surely_losing` layer resolved the old unsubstantiated
+`merge_states()` crash note by making it a fair extension of `standard`, then
+passed G0 (16/16 Acacia and 14/14 Posets) and the full G4 correctness sweep
+(557 answers, 67 timeouts, zero wrong answers, crashes, or OOMs).  G1 rejected
+it: 39/40 frozen sentinels retained their verdict, but
+`syntcomp25/infinite-race-u4.ltl` changed from the expected UNREALIZABLE answer
+to a 17.05-second timeout.
+
+An isolated alternating probe confirmed that this was the layer rather than
+a one-off gate disturbance: the shipping `standard` binary answered
+UNREALIZABLE in 10.58 seconds under the same 17-second, 8 GiB/no-swap policy,
+while the `surely_losing` binary again timed out at 17.05 seconds.  Because G1
+is an exact preservation bar, the layer and its preset are reverted.  The
+focused measurements remain local in `/tmp/acacia-sl-g1-*.csv` and are not
+tracked.
+
+### Direct-simulation reduction: rejected
+
+The direct state-based simulation layer passed G0 (17/17 Acacia and 14/14
+Posets) and G4.  Its complete 624-case correctness sweep produced 566 correct
+answers and 58 timeouts, with zero wrong verdicts and no candidate core dump.
+G1 rejected it: 38/40 frozen sentinels retained their verdict, but both
+`syntcomp24/load_balancer7.ltl` and its 2025 analogue
+`load_balancer_pb_7_pe_.ltl` lost their expected REALIZABLE answer to the
+17-second timeout.
+
+An isolated reproduction removed portfolio contention as an explanation.  A
+shipping REAL-only child answered `load_balancer7.ltl` in 10.72 seconds; the
+direct-simulation REAL-only child timed out at 17.03 seconds.  The full default
+paths likewise measured 10.91 seconds versus a 17.03-second timeout.  Because
+the plan supplies no sound static profitability rule for selectively applying
+simulation and G1 is an exact preservation gate, the layer is reverted rather
+than tuned around these two fixtures.  Its gate output and focused CSVs remain
+local under `/tmp/acacia-reduce-*` and are intentionally not tracked.
 
 ## Final landing verification
 
@@ -977,3 +1076,156 @@ the two answers whose loss disqualified the race.
 - Do not adopt a default that regresses an already-observed solved file merely
   because its net solved count is positive; do not repeat a campaign unless a
   future decision genuinely depends on another sample.
+
+## Alphabet and native-TLSF follow-up (2026-08-14)
+
+### Gate repairs and recovered Step-1-stack result
+
+The regression and landing gates now distinguish a genuine lost answer from a
+17-second boundary artifact.  A baseline answer recorded above 80% of the cap
+that becomes a candidate timeout is rerun on both binaries at three times the
+cap; only a candidate that still fails to answer is rejected.  The frozen G1
+table now includes the 40 measured baseline seconds needed to apply that rule.
+The native-TLSF candidate then passed all 40 G1 verdicts in its clean detached
+run.  The amended rule does not excuse the previously rejected
+`surely_losing` or direct-simulation cases: their isolated regressions were
+well over 58%, not marginal cap crossings.
+
+G2s now scores the geometric mean of per-target cycle ratios and implements
+the specified proxy-pass case.  Rescoring the already collected Step-1-stack
+measurements gives a 1.02776 geometric-mean ratio (2.78% improvement), with no
+target beyond the 6% regression ceiling and a stable 24.68% improvement on
+`syntcomp25/g-unreal-116.ltl`.  It therefore passes the proxy to G3 under the
+new rule, but this is not retroactively called a landing: its aggregate result
+does not meet the primary 5% bar.  The recovered exact candidate was then
+rebuilt with the shipping GCC/release/LTO configuration and run through all
+three G3 panels.  The 2021 and 2024 panels passed, and the 2025 aggregate
+improved from 2811.292 to 2783.750 PAR-2 seconds at unchanged 105/180
+coverage.  It nevertheless lost
+`load_balancer_unreal2_pb_5_pe_.ltl`: the 11.559-second baseline answer became
+a 17.038-second timeout.  Because the baseline is only 68% of the cap, the
+80%-of-cap repair does not apply; this is a genuine regression.  The candidate
+is rejected, the picker/CPre reuse changes are not integrated, and Acacia
+keeps Posets `f169330` rather than adopting the performance stack at
+`46054a2`.  The rescore is in
+`_bm-logs.step1-stack/g2s-rescore-20260814.txt`; the final build and G3
+evidence are in `_bm-logs.step1-stack-g3-20260814/`.
+
+### Native TLSF overnight finding: infrastructure, not coverage
+
+The completed 1,586-instance native campaign is archived under
+`_bm-logs.tlsf-native-20260814/`.  Acacia answered 1,043 instances and
+`ltlsynt` 1,257; both answered 1,003, Acacia alone answered 40, `ltlsynt`
+alone answered 254, and neither answered 289.  There were no opposite
+verdicts among the common answers.  All seven `finding_nemo` specifications
+newly accepted by the native frontend timed out in Acacia, while `ltlsynt`
+answered five.  Thus the corrected 2025 denominator is 1,586 and the native
+frontend contributes zero solver coverage; it is retained only as parsing and
+semantics infrastructure and as a source of syntax-level symmetry evidence.
+
+The campaign runner no longer requires an `ltlsynt` half.  `run-tlsf.py`
+accepts `--ltlsynt` only when a fresh comparison is actually requested, so
+future native campaigns can reuse the existing reference rather than doubling
+their duration.
+
+### Step A alphabet census: stop before Step B
+
+The analysis-only MONA census ran the 26 classified 2024
+action-construction-bound targets and the 32 classified 2025 fixpoint-bound
+targets, with one REAL and one I/O-swapped UNREAL orientation and a 120-second
+target budget.  It records the current root-to-frontier path counts, distinct
+frontier-node counts, and whole-relation BDD size before action construction.
+The complete evidence is in `_bm-logs.alphabet-census-20260814/`.
+
+The 101 orientations that completed translation yielded 202 joint input and
+output descents.  Their `paths/nodes` median is **1.132585**.  The histogram is
+169 in `[1,2)`, 15 in `[2,4)`, 7 in `[4,8)`, 3 in `[8,16)`, none in
+`[16,64)`, and 8 in `[64,+inf)`.  Fifteen orientations did not complete
+translation within 120 seconds; assigning both missing descents of every one
+of them an infinite ratio still raises the median only to **1.258698**.
+
+This decisively fails the fixed threshold of 4.  The BDD is already close to
+tree-shaped on the joint median, so path-to-node alphabet collapse cannot be
+the corpus-wide lever hypothesized by the plan.  Step B is not implemented.
+Because Step B did not land, Step D's direct-simulation portfolio is closed as
+well.  This is the measured paradigm conclusion: Acacia's explicit-letter
+construction cannot close the input-heavy `ltlsynt` gap through this BDD-DAG
+deduplication alone.
+
+### Step C native TLSF infrastructure and certificates
+
+The native TLSF frontend is opt-in through `acacia_enable_tlsf_frontend`; the
+existing SyFCo route remains available.  The library path now deliberately
+matches SyFCo's `ltlxba` conversion contract rather than silently applying the
+standalone `tlsf-tools` target adaptation: original Mealy/Moore/Strict metadata
+is retained, formula composition uses SyFCo-compatible semantics, and scalar
+and expanded-bus signals use SyFCo's exact ordering.
+
+The planned literal formula-byte identity check was corrected during the
+comparison: SyFCo and tlsf-tools are independent serializers and deliberately
+spell the same AST differently (fully parenthesized expanded `U`/`G` versus
+compact `W`, among other formatting), so raw printer bytes are not an
+interface or semantic invariant.  The definitive 50-instance gate instead
+requires identical deterministic Spot AST keys after exact `R`/`W`/`M`
+unabbreviation and commutative Boolean canonicalization, plus byte-exact
+complete input/output lists.  The corrected `r4` run passed 50/50.  Literal
+formula bytes matched 0/50, as expected for the two serializers, and are
+reported separately rather than promoted to a false semantic requirement.
+The preceding `r3` attempt found one enum-specific compatibility gap:
+`tlsf-tools` emitted the three valid 2-bit cubes while SyFCo emitted the
+equivalent complement of the one invalid cube, and enum bus members occupied a
+different signal-order group.  The library now emits the compact all-but-one
+validity form and preserves enum-family provenance so Acacia reproduces
+SyFCo's scalar/ordinary-bus/enum-bus order.  All 151 upstream `tlsf-tools`
+tests pass with focused coverage for this case.
+
+Expanded TLSF bus declarations are also exported as provenance-preserving
+indexed-family certificates.  Acacia admits them as a hypothesis only for
+source containing indexed conjunction syntax, checks their ranges, scalar
+mangling, and I/O side against the name-derived families, and treats a mismatch
+as a hard error.  A matching certificate may bypass the equivariant solver's
+512-state hypothesis-selection cap, but it does not establish correctness:
+the existing structural automorphism test remains the final soundness gate.
+UNREAL children swap the certificate I/O side together with the game
+partition.
+
+The post-format candidate passed the focused frontend, canonicalizer,
+certificate, and upstream C++ API tests.  A preliminary Clang/low-memory build
+passed G0, G1, G4, and all three G3 panels, but those timings are retained only
+as supporting evidence because its toolchain differed from the baseline.
+
+The final candidate was rebuilt with the same GCC/release/LTO configuration as
+the baseline.  G0 passed 18/18 Acacia unit tests and 14/14 Posets tests.  G4
+covered all 624 labelled cases with 566 correct answers, 58 performance
+timeouts, `Fail: 0`, and no false-positive or false-negative marker.  G1
+preserved all 40 frozen verdicts; its PAR-2 was 107.140 seconds versus 102.226
+seconds, but G1 is a verdict-preservation gate rather than a timing adoption
+gate.  The decisive same-toolchain G3 results were:
+
+| panel | baseline solved / PAR-2 | candidate solved / PAR-2 |
+|---|---:|---:|
+| `syntcomp21/crit` | 90/94 / 233.260 s | 90/94 / 231.630 s |
+| `syntcomp24/panel` | 99/174 / 2851.402 s | 100/174 / 2818.051 s |
+| `syntcomp25/panel` | 105/180 / 2811.292 s | 106/180 / 2780.392 s |
+
+All three final landing reports pass, so the combined tree meets the final
+performance bar.
+
+G5 compared native TLSF with the checked-in SyFCo conversion on all 1,579
+common instances at 17 seconds and 8 GiB/no swap per solver.  It recorded
+1,574 matches, two native-only answers, two converted-only answers, and one
+nonsolved resource-limit/timeout difference, with zero opposite verdicts and
+zero frontend/process errors.  Three native and two converted invocations hit
+the explicit memory limit.  Because the enum compatibility repair followed
+that full run, every affected common input was enumerated from source and
+rerun with the final GCC binary: all nine enum-bearing instances matched, with
+zero errors or resource limits.  Together with the 50/50 formula/I/O gate,
+this closes the final-code invalidation without rerunning 1,570 byte-identical
+frontend paths.
+
+The preliminary gate logs and exact candidate CSVs are under
+`_bm-logs.stepc-correctness-20260814/`, `_bm-logs.stepc-g1-20260814/`, and
+`_bm-logs.stepc-g3-20260814/`.  Formula/I/O and full G5 evidence is under
+`_bm-logs.stepc-tlsf-parity-20260814/`; the final same-toolchain build,
+G0/G1/G3/G4 results, and enum-only G5 closure are under
+`_bm-logs.final-combined-20260815/`.

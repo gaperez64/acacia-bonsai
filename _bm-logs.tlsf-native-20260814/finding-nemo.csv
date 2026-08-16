@@ -1,0 +1,8 @@
+instance,acacia_result,acacia_seconds,acacia_exit,ltlsynt_result,ltlsynt_seconds,ltlsynt_exit,ltlsynt_comparison
+finding_nemo_pb_1_pe_.tlsf,TIMEOUT,17.025,124,REALIZABLE,0.027,0,SOLVED_ONLY_BY_LTLSYNT
+finding_nemo_pb_2_pe_.tlsf,TIMEOUT,17.049,124,REALIZABLE,0.036,0,SOLVED_ONLY_BY_LTLSYNT
+finding_nemo_pb_3_pe_.tlsf,TIMEOUT,17.033,124,REALIZABLE,0.083,0,SOLVED_ONLY_BY_LTLSYNT
+finding_nemo_pb_4_pe_.tlsf,TIMEOUT,17.049,124,REALIZABLE,0.422,0,SOLVED_ONLY_BY_LTLSYNT
+finding_nemo_pb_5_pe_.tlsf,TIMEOUT,17.049,124,REALIZABLE,6.221,0,SOLVED_ONLY_BY_LTLSYNT
+finding_nemo_pb_6_pe_.tlsf,TIMEOUT,17.049,124,TIMEOUT,17.049,124,
+finding_nemo_pb_7_pe_.tlsf,TIMEOUT,17.05,124,TIMEOUT,17.05,124,

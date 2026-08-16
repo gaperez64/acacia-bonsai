@@ -2,18 +2,35 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: $0 BUILD-DIR" >&2
+  echo "usage: $0 [--baseline-bin BIN] BUILD-DIR" >&2
   exit 2
 }
 
+baseline_bin="${REGRESSION_BASELINE_BIN:-}"
+if [[ ${1:-} == --baseline-bin ]]; then
+  [[ $# -ge 3 ]] || usage
+  baseline_bin=$(realpath "$2")
+  shift 2
+fi
 [[ $# -eq 1 ]] || usage
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 build_dir=$(realpath "$1")
+baseline_bin=${baseline_bin:-$repo_root/build_best_decomp_mona/src/acacia-bonsai}
 expected="$repo_root/tests/suites/benchmarks/regress-expected.tsv"
 testlog="$build_dir/meson-logs/testlog.json"
 scratch=$(mktemp -d /tmp/acacia-regression-gate.XXXXXX)
 trap 'rm -rf "$scratch"' EXIT
+
+outer_cgroup=${REGRESSION_OUTER_CGROUP:-0}
+if [[ $outer_cgroup == 1 || $outer_cgroup == true || $outer_cgroup == yes || $outer_cgroup == on ]]; then
+  benchmark_cgroup=0
+  test_cgroup=0
+  export ACACIA_OUTER_CGROUP=1
+else
+  benchmark_cgroup=strict
+  test_cgroup=1
+fi
 
 if [[ ! -x "$build_dir/src/acacia-bonsai" ]]; then
   echo "GATE FAIL: $build_dir/src/acacia-bonsai is not executable"
@@ -29,11 +46,11 @@ set +e
 env \
   MESON_TESTTHREADS=1 \
   BENCHMARK_TEST_JOBS=1 \
-  BENCHMARK_CGROUP=strict \
+  BENCHMARK_CGROUP="$benchmark_cgroup" \
   BENCHMARK_CGROUP_SCOPE=solver \
   BENCHMARK_CGROUP_MEMORY_MAX=8G \
   BENCHMARK_CGROUP_SWAP_MAX=0 \
-  ACACIA_TEST_CGROUP=1 \
+  ACACIA_TEST_CGROUP="$test_cgroup" \
   ACACIA_TEST_CGROUP_MEMORY_MAX=8G \
   ACACIA_TEST_CGROUP_SWAP_MAX=0 \
   ACACIA_TEST_RESOURCE_UNKNOWN=1 \
@@ -50,7 +67,8 @@ if [[ ! -s "$testlog" ]]; then
 fi
 
 set +e
-python3 - "$expected" "$testlog" "$meson_status" <<'PY'
+python3 - "$expected" "$testlog" "$meson_status" \
+  "$scratch/baseline.csv" "$scratch/candidate.csv" <<'PY'
 import csv
 import json
 import pathlib
@@ -61,6 +79,8 @@ import sys
 expected_path = pathlib.Path(sys.argv[1])
 testlog_path = pathlib.Path(sys.argv[2])
 meson_status = int(sys.argv[3])
+baseline_csv = pathlib.Path(sys.argv[4])
+candidate_csv = pathlib.Path(sys.argv[5])
 verdict_re = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
 
 
@@ -75,7 +95,13 @@ with expected_path.open(newline="") as handle:
         key = (row["suite"], row["instance"])
         if key in expected:
             raise SystemExit(f"GATE FAIL: duplicate expected row {key[0]}/{key[1]}")
-        expected[key] = row["verdict"]
+        try:
+            baseline_seconds = float(row["baseline_seconds"])
+        except (KeyError, ValueError) as exc:
+            raise SystemExit(
+                f"GATE FAIL: invalid baseline_seconds for {key[0]}/{key[1]}"
+            ) from exc
+        expected[key] = (row["verdict"], baseline_seconds)
 
 observed = {}
 problems = []
@@ -92,24 +118,24 @@ with testlog_path.open() as handle:
         result = row.get("result")
         if key in observed:
             problems.append(f"duplicate result {key[0]}/{key[1]}")
-        observed[key] = (result, answer)
+        duration = float(row.get("duration") or 0)
+        stdout = row.get("stdout") or ""
+        if answer is not None:
+            outcome = answer
+        elif result == "TIMEOUT":
+            outcome = "TIMEOUT"
+        elif "RESOURCE LIMIT" in stdout or "NO VERDICT" in stdout:
+            outcome = "UNKNOWN"
+        else:
+            outcome = "ERROR"
+        observed[key] = (outcome, duration, row.get("returncode", ""))
 
 for key in sorted(expected.keys() - observed.keys()):
     problems.append(f"missing {key[0]}/{key[1]}")
 for key in sorted(observed.keys() - expected.keys()):
     problems.append(f"unexpected {key[0]}/{key[1]}")
-for key in sorted(expected.keys() & observed.keys()):
-    result, answer = observed[key]
-    want = expected[key]
-    if result != "OK":
-        problems.append(f"{key[0]}/{key[1]}: Meson result {result}, expected {want}")
-    elif answer != want:
-        problems.append(f"{key[0]}/{key[1]}: verdict {answer or 'MISSING'}, expected {want}")
-
 if meson_status not in (0, 1):
     problems.append(f"Meson runner exited {meson_status}")
-elif meson_status != 0 and not problems:
-    problems.append("Meson exited 1 despite all parsed instances passing")
 
 if problems:
     for problem in problems:
@@ -117,14 +143,40 @@ if problems:
     print(f"GATE FAIL: {len(problems)} regression failure(s)")
     raise SystemExit(1)
 
-print(f"verified {len(expected)} frozen verdicts")
-print("GATE PASS")
+fields = ["suite", "instance", "result", "seconds", "exit"]
+with baseline_csv.open("w", newline="") as handle:
+    writer = csv.DictWriter(handle, fields)
+    writer.writeheader()
+    for (suite, instance), (answer, seconds) in sorted(expected.items()):
+        writer.writerow(
+            {"suite": suite, "instance": instance, "result": answer,
+             "seconds": seconds, "exit": 0 if answer == "REALIZABLE" else 1}
+        )
+with candidate_csv.open("w", newline="") as handle:
+    writer = csv.DictWriter(handle, fields)
+    writer.writeheader()
+    for (suite, instance), (answer, seconds, exit_code) in sorted(observed.items()):
+        writer.writerow(
+            {"suite": suite, "instance": instance, "result": answer,
+             "seconds": seconds, "exit": exit_code}
+        )
+
+print(f"verified {len(expected)} frozen regression rows")
 PY
-gate_status=$?
+parse_status=$?
 set -e
 
-if (( gate_status != 0 )); then
+if (( parse_status != 0 )); then
   echo "--- Meson tail ---"
   tail -80 "$scratch/meson.log"
+  exit "$parse_status"
 fi
-exit "$gate_status"
+
+python3 "$repo_root/benchmarking/landing-bar.py" \
+  "$scratch/baseline.csv" "$scratch/candidate.csv" \
+  --timeout 17 \
+  --baseline-bin "$baseline_bin" \
+  --candidate-bin "$build_dir/src/acacia-bonsai" \
+  --instances-dir "$repo_root/tests/ltl" \
+  --memory-max 8G \
+  --memory-swap-max 0

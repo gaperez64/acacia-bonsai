@@ -1,0 +1,4 @@
+source: selection-ltl-2025v2/selection-ltl-2025
+pattern: literal &&[
+instances: 730
+sorted-list-sha256: 899533a6e837c30ec9b86c1e8c3f4f9c52b90e67fdcfef6f7c75824588180efb

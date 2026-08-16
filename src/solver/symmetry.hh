@@ -22,6 +22,7 @@
 // here are small (linear in the number of clients).
 
 #include "configuration.hh"
+#include "solver/symmetry_certificate.hh"
 #include "utils/verbose.hh"
 
 #include <algorithm>
@@ -30,6 +31,7 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -68,9 +70,34 @@ namespace symmetry {
       std::vector<long> indices;
       unsigned input_families = 0;
       unsigned output_families = 0;
+      bool syntax_certified = false;
 
       bool empty () const { return families.empty (); }
   };
+
+  inline thread_local const std::vector<indexed_family_certificate>*
+      current_indexed_family_certificates = nullptr;
+
+  class scoped_indexed_family_certificates {
+    public:
+      explicit scoped_indexed_family_certificates (
+          const std::vector<indexed_family_certificate>& certificates)
+        : previous {current_indexed_family_certificates} {
+        current_indexed_family_certificates = &certificates;
+      }
+
+      ~scoped_indexed_family_certificates () {
+        current_indexed_family_certificates = previous;
+      }
+
+    private:
+      const std::vector<indexed_family_certificate>* previous;
+  };
+
+  inline bool has_indexed_family_certificate_hypothesis () {
+    return current_indexed_family_certificates != nullptr and
+           not current_indexed_family_certificates->empty ();
+  }
 
   // Pre-formatted fields used by the compact solver diagnostics.  A field is
   // "-" when the corresponding structure is absent.
@@ -307,6 +334,52 @@ namespace symmetry {
       f.is_input = is_in;
       f.idx2ap[idx] = ap;
     }
+    if (current_indexed_family_certificates != nullptr) {
+      std::map<std::string, const indexed_family_certificate*> certified;
+      for (const auto& certificate : *current_indexed_family_certificates) {
+        if (certificate.members.empty ())
+          continue;
+        const auto expected_size = certificate.hi >= certificate.lo
+            ? static_cast<unsigned long long> (certificate.hi - certificate.lo) + 1
+            : 0;
+        if (expected_size != certificate.members.size ())
+          throw std::runtime_error ("TLSF indexed-family certificate has an invalid range");
+
+        std::string family_prefix;
+        for (size_t position = 0; position < certificate.members.size (); ++position) {
+          std::string prefix;
+          long index = -1;
+          if (not detail::parse_indexed (certificate.members[position], prefix, index) or
+              index != certificate.lo + static_cast<long> (position))
+            throw std::runtime_error (
+                "TLSF indexed-family certificate disagrees with scalar AP mangling");
+          if (position == 0)
+            family_prefix = std::move (prefix);
+          else if (prefix != family_prefix)
+            throw std::runtime_error (
+                "TLSF indexed-family certificate spans multiple AP prefixes");
+        }
+        if (not certified.emplace (family_prefix, &certificate).second)
+          throw std::runtime_error ("duplicate TLSF indexed-family certificate prefix");
+      }
+
+      for (const auto& [prefix, certificate] : certified) {
+        auto family = analysis.families.find (prefix);
+        if (family == analysis.families.end ())
+          continue;  // This translated/decomposed component does not use it.
+        if (family->second.is_input != certificate->is_input)
+          throw std::runtime_error (
+              "TLSF indexed-family certificate disagrees with the I/O partition");
+        for (const auto& [index, ap] : family->second.idx2ap) {
+          if (index < certificate->lo or index > certificate->hi or
+              certificate->members[index - certificate->lo] != ap.ap_name ())
+            throw std::runtime_error (
+                "TLSF indexed-family certificate disagrees with name-derived APs");
+        }
+        analysis.syntax_certified = true;
+      }
+    }
+
     if (analysis.families.empty ())
       return analysis;
 

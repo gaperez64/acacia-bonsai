@@ -2,6 +2,8 @@ option('build_tests', type: 'boolean', value: true,
        description: 'Build the test suite')
 option('build_python', type: 'boolean', value: false,
        description: 'Build the Python interface (requires swig)')
+option('acacia_enable_tlsf_frontend', type: 'boolean', value: false,
+       description: 'Build the optional native TLSF frontend (requires flex and bison)')
 option('acacia_compiler_profile', type: 'combo',
        choices: ['debug', 'release', 'lowmem'],
        value: 'debug',

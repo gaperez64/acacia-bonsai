@@ -18,7 +18,7 @@ Options:
   --targets FILE          target TSV (default: frozen solver-profile.tsv)
   --timeout SECONDS       per-repetition wall budget (default: 60)
   --repetitions N         override 3 comparison / 5 calibration repetitions
-  --min-improvement PCT   aggregate cycle improvement required (default: 5)
+  --min-improvement PCT   geometric-mean ratio improvement required (default: 5)
   --max-regression PCT    per-target cycle regression ceiling (default: 6)
 EOF
   exit 2
@@ -273,41 +273,8 @@ if calibration:
     print(f"aggregate cycle spread: {aggregate_spread:.2f}%")
     raise SystemExit(0)
 
-medians = {
-    (label, suite, instance): statistics.median(values)
-    for (label, suite, instance, bucket), values in groups.items()
-}
-failures = []
-baseline_total = 0
-candidate_total = 0
-targets = sorted({(suite, instance) for _, suite, instance, _ in groups})
-for suite, instance in targets:
-    baseline = medians[("baseline", suite, instance)]
-    candidate = medians[("candidate", suite, instance)]
-    baseline_total += baseline
-    candidate_total += candidate
-    improvement = 100.0 * (baseline - candidate) / baseline
-    print(f"{suite}/{instance}: {improvement:+.2f}% cycles")
-    if improvement < -max_regression:
-        failures.append(
-            f"{suite}/{instance} regressed {-improvement:.2f}% (> {max_regression:.2f}%)"
-        )
-
-aggregate_improvement = 100.0 * (baseline_total - candidate_total) / baseline_total
-print(
-    f"aggregate: baseline={baseline_total:.0f} candidate={candidate_total:.0f} "
-    f"improvement={aggregate_improvement:.2f}%"
-)
-if aggregate_improvement < min_improvement:
-    failures.append(
-        f"aggregate improved only {aggregate_improvement:.2f}% (< {min_improvement:.2f}%)"
-    )
-if failures:
-    for failure in failures:
-        print(f"- {failure}")
-    raise SystemExit(1)
 PY
-compare_status=$?
+summary_status=$?
 set -e
 
 echo "samples: $samples"
@@ -315,8 +282,20 @@ echo "summary: $summary"
 if ((calibrate == 1)); then
   echo "calibration: $calibration_summary"
 fi
-if ((compare_status != 0)); then
-  echo "GATE FAIL: solver profile thresholds not met"
+if ((summary_status != 0)); then
+  echo "GATE FAIL: solver profile summary generation failed"
   exit 1
+fi
+if ((calibrate == 0)); then
+  set +e
+  python3 "$repo_root/benchmarking/solver-profile-score.py" "$summary" \
+    --min-improvement "$min_improvement" \
+    --max-regression "$max_regression"
+  score_status=$?
+  set -e
+  if ((score_status != 0)); then
+    echo "GATE FAIL: solver profile thresholds not met"
+    exit 1
+  fi
 fi
 echo "GATE PASS"

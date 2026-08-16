@@ -52,12 +52,21 @@ namespace acacia::diagnostics {
     return value;
   }
 
+  inline bool alphabet_census_only () {
+    static const bool value = env_flag_enabled ("ACACIA_DIAG_ALPHABET_CENSUS_ONLY");
+    return value;
+  }
+
   struct child_metrics {
       std::string instance = "-";
       std::string path = "unknown";
       std::string result = "unknown";
       std::string final_reason = "unknown";
       std::string translation_pref = "unknown";
+      std::string source_format = "ltl";
+      std::string tlsf_semantics = "-";
+      std::string tlsf_target = "-";
+      std::string tlsf_effective_target = "-";
       std::string syntactic_bypass = "not-run";
       std::string fast_class = "not-run";
       std::string fast_verdict = "fallback";
@@ -111,9 +120,15 @@ namespace acacia::diagnostics {
       unsigned long long actions_seen = 0;
       unsigned long long meets_computed = 0;
       unsigned long long meet_batches = 0;
+      unsigned long long alphabet_input_paths = 0;
+      unsigned long long alphabet_input_nodes = 0;
+      unsigned long long alphabet_output_paths = 0;
+      unsigned long long alphabet_output_nodes = 0;
+      unsigned long long alphabet_bdd_nodes = 0;
       int loops = 0;
       int k_attempts = 0;
       int last_k = -1;
+      int tlsf_gr_level = -1;
       size_t equivariant_clients = 0;
       size_t equivariant_blocks = 0;
       size_t equivariant_orbits = 0;
@@ -188,6 +203,11 @@ namespace acacia::diagnostics {
          << " instance=" << m.instance
          << " path=" << m.path
          << " translation_pref=" << m.translation_pref
+         << " source_format=" << m.source_format
+         << " tlsf_semantics=" << m.tlsf_semantics
+         << " tlsf_target=" << m.tlsf_target
+         << " tlsf_effective_target=" << m.tlsf_effective_target
+         << " tlsf_gr_level=" << m.tlsf_gr_level
          << " rsimp_ms=" << m.rsimp_ms
          << " rsimp_changed=" << (m.rsimp_changed ? 1 : 0)
          << " syntactic_bypass=" << m.syntactic_bypass
@@ -228,6 +248,11 @@ namespace acacia::diagnostics {
          << " actions_seen=" << m.actions_seen
          << " meets_computed=" << m.meets_computed
          << " meet_batches=" << m.meet_batches
+         << " alphabet_input_paths=" << m.alphabet_input_paths
+         << " alphabet_input_nodes=" << m.alphabet_input_nodes
+         << " alphabet_output_paths=" << m.alphabet_output_paths
+         << " alphabet_output_nodes=" << m.alphabet_output_nodes
+         << " alphabet_bdd_nodes=" << m.alphabet_bdd_nodes
          << " equivariant=" << m.equivariant
          << " eq_clients=" << m.equivariant_clients
          << " eq_blocks=" << m.equivariant_blocks
@@ -422,6 +447,20 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_alphabet_census (unsigned long long input_paths,
+                                   unsigned long long input_nodes,
+                                   unsigned long long output_paths,
+                                   unsigned long long output_nodes,
+                                   unsigned long long bdd_nodes) {
+    if (auto* m = current ()) {
+      m->alphabet_input_paths = input_paths;
+      m->alphabet_input_nodes = input_nodes;
+      m->alphabet_output_paths = output_paths;
+      m->alphabet_output_nodes = output_nodes;
+      m->alphabet_bdd_nodes = bdd_nodes;
+    }
+  }
+
   inline void set_final_reason (std::string reason) {
     if (auto* m = current ())
       m->final_reason = std::move (reason);
@@ -474,6 +513,8 @@ namespace acacia::diagnostics {
       noop* operator-> () { return nullptr; }
   };
 
+  inline bool alphabet_census_only () { return false; }
+
   struct scoped_timer {
       explicit scoped_timer (long long*) {}
   };
@@ -491,6 +532,9 @@ namespace acacia::diagnostics {
   inline void snapshot_intersection_progress () {}
   inline void snapshot_loop_progress (std::string_view) {}
   inline void snapshot (std::string_view) {}
+  inline void set_alphabet_census (unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long) {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}

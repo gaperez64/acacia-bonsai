@@ -5,10 +5,15 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import pathlib
+import shlex
 import sys
 from collections import Counter
 from dataclasses import dataclass
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from benchlib import parse_acacia_result, read_part, run_process_group, run_systemd_scope
 
 
 SOLVED = {"REALIZABLE", "UNREALIZABLE"}
@@ -98,11 +103,95 @@ def print_summary(label: str, rows: dict[str, Result], timeout: float) -> None:
     )
 
 
+def run_solver(
+    binary: pathlib.Path,
+    instances_dir: pathlib.Path,
+    key: str,
+    timeout: float,
+    memory_max: str,
+    memory_swap_max: str,
+) -> tuple[Result, str, str, list[str]]:
+    ltl = instances_dir / key
+    if not ltl.is_file():
+        ltl = instances_dir / pathlib.Path(key).name
+    if not ltl.is_file():
+        raise ValueError(f"cannot locate remeasurement target {key} below {instances_dir}")
+    part = ltl.with_suffix(".part")
+    if not part.is_file():
+        raise ValueError(f"missing partition file for remeasurement: {part}")
+    inputs, outputs = read_part(part)
+    if not inputs or not outputs:
+        raise ValueError(f"incomplete partition file for remeasurement: {part}")
+    command = [
+        str(binary),
+        "-F",
+        str(ltl),
+        "-i",
+        inputs,
+        "-o",
+        outputs,
+    ]
+    if os.environ.get("ACACIA_OUTER_CGROUP", "").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
+        run = run_process_group(command, timeout)
+    else:
+        run = run_systemd_scope(
+            command,
+            timeout,
+            memory_max,
+            memory_swap_max,
+            unit_prefix="acacia-landing-remeasure",
+        )
+    raw = "TIMEOUT" if run.timed_out else parse_acacia_result(run.stdout + run.stderr)
+    if raw in SOLVED:
+        result = Result(raw, "solved", run.seconds)
+    elif raw == "TIMEOUT":
+        result = Result(None, "timeout", run.seconds)
+    elif raw == "UNKNOWN":
+        result = Result(None, "unknown", run.seconds)
+    else:
+        result = Result(None, "error", run.seconds)
+    return result, run.stdout, run.stderr, command
+
+
+def print_rerun(
+    label: str,
+    result: Result,
+    stdout: str,
+    stderr: str,
+    command: list[str],
+) -> None:
+    answer = result.verdict or result.kind.upper()
+    print(f"REMEASURE {label}: command={shlex.join(command)}")
+    print(f"REMEASURE {label}: result={answer} seconds={result.seconds:.3f}")
+    if stdout:
+        print(f"REMEASURE {label} STDOUT BEGIN")
+        print(stdout, end="" if stdout.endswith("\n") else "\n")
+        print(f"REMEASURE {label} STDOUT END")
+    if stderr:
+        print(f"REMEASURE {label} STDERR BEGIN")
+        print(stderr, end="" if stderr.endswith("\n") else "\n")
+        print(f"REMEASURE {label} STDERR END")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("baseline", type=pathlib.Path)
     parser.add_argument("candidate", type=pathlib.Path)
     parser.add_argument("--timeout", type=float, default=17.0)
+    parser.add_argument("--baseline-bin", type=pathlib.Path)
+    parser.add_argument("--candidate-bin", type=pathlib.Path)
+    parser.add_argument(
+        "--instances-dir",
+        type=pathlib.Path,
+        default=pathlib.Path(__file__).resolve().parents[1] / "tests" / "ltl",
+    )
+    parser.add_argument("--memory-max", default="8G")
+    parser.add_argument("--memory-swap-max", default="0")
     args = parser.parse_args(argv)
 
     if args.timeout <= 0:
@@ -132,9 +221,60 @@ def main(argv: list[str] | None = None) -> int:
         if before.kind != "solved":
             continue
         if after.kind != "solved":
-            failures.append(
-                f"lost {key}: {before.verdict} -> {after.kind.upper()}"
+            eligible = (
+                after.kind == "timeout"
+                and before.seconds > 0.8 * args.timeout
             )
+            if not eligible:
+                failures.append(
+                    f"lost {key}: {before.verdict} -> {after.kind.upper()}"
+                )
+                continue
+            if args.baseline_bin is None or args.candidate_bin is None:
+                failures.append(
+                    f"lost {key}: cap remeasurement required but --baseline-bin and "
+                    "--candidate-bin were not both provided"
+                )
+                continue
+            extended_timeout = 3.0 * args.timeout
+            print(
+                f"REMEASURE {key}: baseline {before.seconds:.3f}s exceeds "
+                f"80% of {args.timeout:g}s; rerunning both sides at "
+                f"{extended_timeout:g}s"
+            )
+            try:
+                baseline_rerun = run_solver(
+                    args.baseline_bin,
+                    args.instances_dir,
+                    key,
+                    extended_timeout,
+                    args.memory_max,
+                    args.memory_swap_max,
+                )
+                candidate_rerun = run_solver(
+                    args.candidate_bin,
+                    args.instances_dir,
+                    key,
+                    extended_timeout,
+                    args.memory_max,
+                    args.memory_swap_max,
+                )
+            except (OSError, ValueError) as exc:
+                failures.append(f"lost {key}: remeasurement failed: {exc}")
+                continue
+            print_rerun("baseline", *baseline_rerun)
+            print_rerun("candidate", *candidate_rerun)
+            candidate_result = candidate_rerun[0]
+            if candidate_result.kind != "solved":
+                failures.append(
+                    f"lost {key} after {extended_timeout:g}s remeasurement: "
+                    f"{before.verdict} -> {candidate_result.kind.upper()}"
+                )
+            elif candidate_result.verdict != before.verdict:
+                failures.append(
+                    f"verdict changed {key} after remeasurement: "
+                    f"{before.verdict} -> {candidate_result.verdict}"
+                )
         elif before.verdict != after.verdict:
             failures.append(
                 f"verdict changed {key}: {before.verdict} -> {after.verdict}"

@@ -1,0 +1,10 @@
+instances: 1579
+opposite verdicts: 0
+frontend errors: 0
+native-only answers: 2
+converted-only answers: 2
+native resource limits: 3
+converted resource limits: 2
+per-solver memory max: 8G
+per-solver swap max: 0
+GATE PASS

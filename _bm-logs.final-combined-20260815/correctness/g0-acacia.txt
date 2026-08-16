@@ -1,0 +1,23 @@
+ 1/18 unit+tlsf - Acacia_Bonsai:ltl-formula-canonicalize             OK              0.01s
+ 2/18 unit+spotfast - Acacia_Bonsai:spot-nba-fastpath-classification OK              0.01s
+ 3/18 unit+translator-options - Acacia_Bonsai:translator-options     OK              0.01s
+ 4/18 unit+syntactic-bypass - Acacia_Bonsai:syntactic-bypass         OK              0.01s
+ 5/18 unit+degenerate-io - Acacia_Bonsai:degenerate-io               OK              0.01s
+ 6/18 unit+degenerate-io - Acacia_Bonsai:degenerate-io-cli           OK              0.04s
+ 7/18 unit+check-selection - Acacia_Bonsai:check-selection           OK              0.07s
+ 8/18 unit+elevator - Acacia_Bonsai:elevator-preprocessor            OK              0.01s
+ 9/18 unit+preprocessing - Acacia_Bonsai:cap-census                  OK              0.01s
+10/18 unit+push-aps - Acacia_Bonsai:push-aps                         OK              0.01s
+11/18 unit+tlsf - Acacia_Bonsai:tlsf-frontend                        OK              0.01s
+12/18 unit+symmetry - Acacia_Bonsai:symmetric-downset                OK              0.06s
+13/18 unit+symmetry - Acacia_Bonsai:symmetric-dense-downset          OK              0.05s
+14/18 unit+symmetry - Acacia_Bonsai:symmetric-blocks                 OK              0.00s
+15/18 unit+symmetry - Acacia_Bonsai:symmetric-conversion             OK              0.00s
+16/18 unit+symmetry - Acacia_Bonsai:symmetric-output-orbits          OK              0.00s
+17/18 unit+symmetry - Acacia_Bonsai:equivariant-pre                  OK              0.06s
+18/18 unit+component-concepts - Acacia_Bonsai:component-concepts     OK              0.00s
+
+Ok:                18  
+Fail:              0   
+
+Full log written to /tmp/acacia-final-gcc-release-20260815/meson-logs/stepc-g0.txt

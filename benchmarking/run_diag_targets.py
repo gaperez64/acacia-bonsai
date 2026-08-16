@@ -90,6 +90,7 @@ def diagnostic_environment(
     memory_max: str,
     memory_swap_max: str,
     preprocessing_census_only: bool,
+    alphabet_census_only: bool,
 ) -> dict[str, str]:
     """Build the child environment, keeping the expensive census opt-in."""
     env = base.copy()
@@ -107,6 +108,10 @@ def diagnostic_environment(
         env["ACACIA_DIAG_PREPROCESSING_CENSUS"] = "only"
     else:
         env.pop("ACACIA_DIAG_PREPROCESSING_CENSUS", None)
+    if alphabet_census_only:
+        env["ACACIA_DIAG_ALPHABET_CENSUS_ONLY"] = "1"
+    else:
+        env.pop("ACACIA_DIAG_ALPHABET_CENSUS_ONLY", None)
     return env
 
 
@@ -125,6 +130,11 @@ def main() -> int:
         help="measure cap and direct-simulation reductions, then stop before solving",
     )
     parser.add_argument(
+        "--alphabet-census-only",
+        action="store_true",
+        help="emit MONA alphabet census before preprocessing and stop",
+    )
+    parser.add_argument(
         "--via-wrapper",
         action="store_true",
         help="run check-real-correct.sh instead of the diagnostics binary directly",
@@ -133,6 +143,11 @@ def main() -> int:
         "--systemd-scope",
         action="store_true",
         help="run the direct diagnostics binary in a transient systemd memory-limited scope",
+    )
+    parser.add_argument(
+        "--stream-diagnostics",
+        action="store_true",
+        help="stream and retain only ACACIA_DIAG lines without a nested systemd scope",
     )
     parser.add_argument("--csv", required=True)
     parser.add_argument("targets", nargs="+", help="LTL filenames or paths")
@@ -156,6 +171,7 @@ def main() -> int:
         memory_max=args.memory_max,
         memory_swap_max=args.memory_swap_max,
         preprocessing_census_only=args.preprocessing_census_only,
+        alphabet_census_only=args.alphabet_census_only,
     )
     csv_path = pathlib.Path(args.csv)
     csv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -214,6 +230,11 @@ def main() -> int:
         "actions_seen",
         "meets_computed",
         "meet_batches",
+        "alphabet_input_paths",
+        "alphabet_input_nodes",
+        "alphabet_output_paths",
+        "alphabet_output_nodes",
+        "alphabet_bdd_nodes",
         "equivariant",
         "eq_clients",
         "eq_blocks",
@@ -265,7 +286,11 @@ def main() -> int:
                 outputs,
                 *extra_flags,
             ]
-        accumulator = DiagnosticAccumulator() if args.systemd_scope else None
+        accumulator = (
+            DiagnosticAccumulator()
+            if args.systemd_scope or args.stream_diagnostics
+            else None
+        )
         if args.systemd_scope:
             assert accumulator is not None
             result = run_systemd_scope(
@@ -278,7 +303,12 @@ def main() -> int:
                 capture_consumer=accumulator.add_line,
             )
         else:
-            result = run_process_group(cmd, args.timeout, env=run_env)
+            result = run_process_group(
+                cmd,
+                args.timeout,
+                env=run_env,
+                capture_consumer=(accumulator.add_line if accumulator else None),
+            )
         if accumulator is not None:
             diag_rows = accumulator.rows()
         else:

@@ -1,0 +1,10 @@
+instance,native_result,native_seconds,native_exit,converted_result,converted_seconds,converted_exit,comparison
+amba_case_study_pb_2_pe_.tlsf,REALIZABLE,1.618,0,REALIZABLE,1.618,0,MATCH
+amba_case_study_pb_3_pe_.tlsf,TIMEOUT,17.115,124,TIMEOUT,17.115,124,MATCH
+amba_case_study_pb_4_pe_.tlsf,TIMEOUT,17.033,124,TIMEOUT,17.033,124,MATCH
+amba_case_study_pb_5_pe_.tlsf,TIMEOUT,17.068,124,TIMEOUT,17.067,124,MATCH
+amba_case_study_pb_6_pe_.tlsf,TIMEOUT,17.067,124,TIMEOUT,17.033,124,MATCH
+amba_case_study_unreal_pb_2_pe_.tlsf,TIMEOUT,17.016,124,TIMEOUT,17.017,124,MATCH
+amba_case_study_unreal_pb_3_pe_.tlsf,TIMEOUT,17.065,124,TIMEOUT,17.065,124,MATCH
+amba_case_study_unreal_pb_4_pe_.tlsf,TIMEOUT,17.033,124,TIMEOUT,17.033,124,MATCH
+amba_case_study_unreal_pb_5_pe_.tlsf,TIMEOUT,17.066,124,TIMEOUT,17.033,124,MATCH

@@ -1,0 +1,4 @@
+baseline: total=180 solved=105 timeout=75 unknown=0 error=0 PAR-2=2811.292s
+candidate: total=180 solved=105 timeout=75 unknown=0 error=0 PAR-2=2783.750s
+- lost load_balancer_unreal2_pb_5_pe_.ltl: UNREALIZABLE -> TIMEOUT
+GATE FAIL: 1 instance comparison failure(s)

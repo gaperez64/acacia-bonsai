@@ -25,6 +25,7 @@ class RunResult:
     timed_out: bool
     stdout_bytes: int = 0
     stderr_bytes: int = 0
+    resource_limited: bool = False
 
 
 def filter_stream(stream, predicate: Callable[[str], bool]) -> tuple[list[str], int]:
@@ -38,7 +39,13 @@ def filter_stream(stream, predicate: Callable[[str], bool]) -> tuple[list[str], 
     return retained, raw_size
 
 
-def run_process_group(cmd: list[str], timeout: float, env: dict[str, str] | None = None) -> RunResult:
+def run_process_group(
+    cmd: list[str],
+    timeout: float,
+    env: dict[str, str] | None = None,
+    capture_filter: Callable[[str], bool] | None = None,
+    capture_consumer: Callable[[str], None] | None = None,
+) -> RunResult:
     """Run cmd in a new process group and kill the whole group on timeout."""
     started = time.monotonic()
     proc = subprocess.Popen(
@@ -50,18 +57,66 @@ def run_process_group(cmd: list[str], timeout: float, env: dict[str, str] | None
         start_new_session=True,
     )
     timed_out = False
-    try:
-        stdout, stderr = proc.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        os.killpg(proc.pid, signal.SIGTERM)
+    if capture_filter is None and capture_consumer is None:
         try:
-            stdout, stderr = proc.communicate(timeout=2)
+            stdout, stderr = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
-            os.killpg(proc.pid, signal.SIGKILL)
-            stdout, stderr = proc.communicate()
+            timed_out = True
+            os.killpg(proc.pid, signal.SIGTERM)
+            try:
+                stdout, stderr = proc.communicate(timeout=2)
+            except subprocess.TimeoutExpired:
+                os.killpg(proc.pid, signal.SIGKILL)
+                stdout, stderr = proc.communicate()
+        stdout_bytes = len(stdout.encode())
+        stderr_bytes = len(stderr.encode())
+    else:
+        retained_lines: list[list[str]] = [[], []]
+        raw_sizes = [0, 0]
+        consumer_lock = threading.Lock()
+
+        def drain(stream, index: int) -> None:
+            if capture_consumer is None:
+                assert capture_filter is not None
+                retained_lines[index], raw_sizes[index] = filter_stream(stream, capture_filter)
+                return
+            for line in stream:
+                raw_sizes[index] += len(line)
+                with consumer_lock:
+                    capture_consumer(line)
+
+        assert proc.stdout is not None and proc.stderr is not None
+        readers = [
+            threading.Thread(target=drain, args=(proc.stdout, 0), daemon=True),
+            threading.Thread(target=drain, args=(proc.stderr, 1), daemon=True),
+        ]
+        for reader in readers:
+            reader.start()
+        try:
+            proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            os.killpg(proc.pid, signal.SIGTERM)
+            try:
+                proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                os.killpg(proc.pid, signal.SIGKILL)
+                proc.wait()
+        for reader in readers:
+            reader.join()
+        stdout = "".join(retained_lines[0])
+        stderr = "".join(retained_lines[1])
+        stdout_bytes, stderr_bytes = raw_sizes
     seconds = time.monotonic() - started
-    return RunResult(stdout, stderr, 124 if timed_out else proc.returncode, seconds, timed_out)
+    return RunResult(
+        stdout,
+        stderr,
+        124 if timed_out else proc.returncode,
+        seconds,
+        timed_out,
+        stdout_bytes,
+        stderr_bytes,
+    )
 
 
 def run_systemd_scope(
@@ -171,6 +226,27 @@ def run_systemd_scope(
         stdout = "".join(retained_lines[0])
         stderr = "".join(retained_lines[1])
         stdout_bytes, stderr_bytes = raw_sizes
+    resource_limited = False
+    if not timed_out and proc.returncode != 0:
+        try:
+            unit_result = subprocess.run(
+                [
+                    "systemctl",
+                    "--user",
+                    "show",
+                    f"{unit}.scope",
+                    "--property=Result",
+                    "--value",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            resource_limited = unit_result.stdout.strip() == "oom-kill"
+        except subprocess.TimeoutExpired:
+            pass
     seconds = time.monotonic() - started
     return RunResult(
         stdout,
@@ -180,6 +256,7 @@ def run_systemd_scope(
         timed_out,
         stdout_bytes,
         stderr_bytes,
+        resource_limited,
     )
 
 

@@ -1,0 +1,41 @@
+[options]
+buildtype = release
+optimization = 3
+b_lto = true
+debug = false
+b_ndebug = true
+acacia_compiler_profile = release
+acacia_default_k = 99
+acacia_default_kmin = 2
+acacia_default_kinc = 3
+acacia_default_unreal_x = both
+acacia_default_spot_fast = det
+acacia_translation_pref = small
+acacia_enable_realizability_simplifier = true
+acacia_enable_syntactic_bypass = true
+acacia_enable_tlsf_frontend = true
+acacia_static_array_max = 300
+acacia_static_max_bitsets = 8
+acacia_simd_is_max = false
+acacia_decompose_spec = true
+acacia_array_downset = vector_backed
+acacia_vector_downset = vector_backed
+acacia_array_impl = auto
+acacia_vector_impl = auto
+acacia_no_simd = false
+acacia_no_array_cap_max = false
+acacia_use_boolvec_over_bitset = false
+acacia_cpre_avoid_unions = false
+acacia_compile_all_components = false
+acacia_enable_diagnostics = false
+acacia_enable_equivariant_solver = true
+acacia_equivariant_min_blocks = 4
+acacia_enable_symmetric_solver = false
+acacia_aut_preprocessor = standard
+acacia_boolean_states = forward_saturation
+acacia_ios_precomputer = mona
+acacia_actioner = standard
+acacia_input_picker = critical
+
+[properties]
+

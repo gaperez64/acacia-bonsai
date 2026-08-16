@@ -1,0 +1,16 @@
+GATE PASS
+
+== landing-syntcomp21.txt ==
+baseline: total=94 solved=90 timeout=4 unknown=0 error=0 PAR-2=233.260s
+candidate: total=94 solved=90 timeout=4 unknown=0 error=0 PAR-2=231.630s
+GATE PASS
+
+== landing-syntcomp24.txt ==
+baseline: total=174 solved=99 timeout=75 unknown=0 error=0 PAR-2=2851.402s
+candidate: total=174 solved=100 timeout=74 unknown=0 error=0 PAR-2=2818.051s
+GATE PASS
+
+== landing-syntcomp25.txt ==
+baseline: total=180 solved=105 timeout=75 unknown=0 error=0 PAR-2=2811.292s
+candidate: total=180 solved=106 timeout=74 unknown=0 error=0 PAR-2=2780.392s
+GATE PASS

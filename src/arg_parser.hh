@@ -3,6 +3,9 @@
 #include "configuration.hh"
 #include "error_msg.hh"
 #include "solver/solver_invoker.hh"
+#if ACACIA_ENABLE_TLSF_FRONTEND
+# include "tlsf_frontend.hh"
+#endif
 #include "utils/verbose.hh"
 #include "version.hh"
 #include <string_view>
@@ -37,8 +40,11 @@ struct arg_parse_result {
     unsigned verbose_level = 0;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
+    specification_metadata metadata;
+    bool formula_specified = false;
     bool inputs_specified = false;
     bool outputs_specified = false;
+    bool tlsf_specified = false;
 };
 
 /**
@@ -90,6 +96,9 @@ void show_help (const char* program_name) {
       << "  -V                print program version\n"
       << "  -f STRING         process the formula STRING\n"
       << "  -F VAL            process formula in file VAL\n"
+#if ACACIA_ENABLE_TLSF_FRONTEND
+      << "  -T, --tlsf FILE   process a TLSF specification natively\n"
+#endif
       << "  -i PROPS          comma-separated list of uncontrollable (a.k.a. input) "
          "atomic propositions\n"
       << "  -o PROPS          comma-separated list of controllable (a.k.a. output) atomic "
@@ -220,11 +229,30 @@ void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
 void process_formula_file (const std::string& arg, arg_parse_result& result) {
   std::ifstream file (arg.c_str ());
   if (not file)
-    error (EXIT_CODE_ERROR, "Error: unable to open file %s\n", arg);
+    error (EXIT_CODE_ERROR, "Error: unable to open file %s\n", arg.c_str ());
   std::stringstream buffer;
   buffer << file.rdbuf ();
   result.formula = buffer.str ();
 }
+
+#if ACACIA_ENABLE_TLSF_FRONTEND
+void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
+  try {
+    auto spec = acacia::tlsf_frontend::load (arg);
+    result.formula = std::move (spec.formula);
+    result.inputs = std::move (spec.inputs);
+    result.outputs = std::move (spec.outputs);
+    result.metadata = std::move (spec.metadata);
+    result.formula_specified = true;
+    result.inputs_specified = true;
+    result.outputs_specified = true;
+    result.tlsf_specified = true;
+  }
+  catch (const std::exception& exception) {
+    error (EXIT_CODE_ERROR, "Error: %s\n", exception.what ());
+  }
+}
+#endif
 
 /**
  * Function that parses the arguments into an ArgParseResult object.
@@ -241,20 +269,54 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_SPOT_FAST = 1000;
   static option long_options[] = {
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
+#if ACACIA_ENABLE_TLSF_FRONTEND
+      {"tlsf", required_argument, nullptr, 'T'},
+#endif
       {nullptr, 0, nullptr, 0},
   };
 
+#if ACACIA_ENABLE_TLSF_FRONTEND
+  static constexpr const char* short_options = "hr:Vvf:F:T:i:o:I:K:M:u:s:";
+#else
+  static constexpr const char* short_options = "hr:Vvf:F:i:o:I:K:M:u:s:";
+#endif
+
   // this goes over all provided arguments and returns the argument value.
-  while ((opt = getopt_long (argc, argv, "hr:Vvf:F:i:o:I:K:M:u:s:", long_options,
-                             nullptr)) != -1) {
+  while ((opt = getopt_long (argc, argv, short_options, long_options, nullptr)) != -1) {
     switch (opt) {
       case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
       case 'V': print_version (std::cout); exit (EXIT_CODE_UNKNOWN);
-      case 'f': retval.formula = optarg; break;
+      case 'f':
+        if (retval.tlsf_specified)
+          error (EXIT_CODE_ERROR, "Error: -f/-F and -T/--tlsf are mutually exclusive.\n");
+        retval.formula = optarg;
+        retval.formula_specified = true;
+        break;
       case 'r': process_arg_real (optarg, retval); break;
-      case 'F': process_formula_file (optarg, retval); break;
-      case 'i': process_arg_input (optarg, retval); break;
-      case 'o': process_arg_output (optarg, retval); break;
+      case 'F':
+        if (retval.tlsf_specified)
+          error (EXIT_CODE_ERROR, "Error: -f/-F and -T/--tlsf are mutually exclusive.\n");
+        process_formula_file (optarg, retval);
+        retval.formula_specified = true;
+        break;
+#if ACACIA_ENABLE_TLSF_FRONTEND
+      case 'T':
+        if (retval.formula_specified or retval.inputs_specified or retval.outputs_specified)
+          error (EXIT_CODE_ERROR,
+                 "Error: -T/--tlsf cannot be combined with -f/-F, -i, or -o.\n");
+        process_tlsf_file (optarg, retval);
+        break;
+#endif
+      case 'i':
+        if (retval.tlsf_specified)
+          error (EXIT_CODE_ERROR, "Error: -i/-o and -T/--tlsf are mutually exclusive.\n");
+        process_arg_input (optarg, retval);
+        break;
+      case 'o':
+        if (retval.tlsf_specified)
+          error (EXIT_CODE_ERROR, "Error: -i/-o and -T/--tlsf are mutually exclusive.\n");
+        process_arg_output (optarg, retval);
+        break;
       case 'I': retval.opt_kinc = std::stoi (optarg); break;
       case 'K': retval.opt_k = std::stoi (optarg); break;
       case 'M': sgn_kmin = std::make_optional<int> (std::stoi (optarg)); break;
@@ -267,7 +329,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (retval.formula.empty ())
+#if ACACIA_ENABLE_TLSF_FRONTEND
+    error (EXIT_CODE_ERROR,
+           "Error: a formula or TLSF specification must be specified (-f, -F, or -T).\n");
+#else
     error (EXIT_CODE_ERROR, "Error: a formula must be specified (-f or -F).\n");
+#endif
   if (not retval.inputs_specified)
     error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
   if (not retval.outputs_specified)

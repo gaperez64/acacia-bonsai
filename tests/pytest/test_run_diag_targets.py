@@ -92,6 +92,7 @@ def test_preprocessing_census_is_explicitly_opt_in():
         memory_max="8G",
         memory_swap_max="0",
         preprocessing_census_only=False,
+        alphabet_census_only=False,
     )
     census = module.diagnostic_environment(
         inherited,
@@ -99,6 +100,7 @@ def test_preprocessing_census_is_explicitly_opt_in():
         memory_max="8G",
         memory_swap_max="0",
         preprocessing_census_only=True,
+        alphabet_census_only=False,
     )
 
     assert "ACACIA_DIAG_PREPROCESSING_CENSUS" not in ordinary
@@ -116,3 +118,23 @@ def test_filter_stream_discards_raw_noise_without_losing_diagnostics():
 
     assert retained == ["ACACIA_DIAG pid=1 checkpoint=solve-loop\n"]
     assert raw_size == len(raw)
+
+
+def test_process_group_streaming_consumer_bounds_retained_output():
+    module = load_benchlib()
+    consumed: list[str] = []
+
+    result = module.run_process_group(
+        [
+            sys.executable,
+            "-c",
+            "import sys; print('noise'); print('ACACIA_DIAG checkpoint=test', file=sys.stderr)",
+        ],
+        5,
+        capture_consumer=lambda line: consumed.append(line),
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == result.stderr == ""
+    assert sorted(consumed) == ["ACACIA_DIAG checkpoint=test\n", "noise\n"]
+    assert result.stdout_bytes + result.stderr_bytes > 0

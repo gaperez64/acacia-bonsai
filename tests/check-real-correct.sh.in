@@ -106,15 +106,20 @@ run_acacia_bonsai () {
         print -u2 -- "error: Acacia Bonsai executable is missing or not executable: $ACABONSAI"
         return 127
     fi
-    echoandrun env ACACIA_DIAG_INSTANCE=${ltl:t} $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
-         ${=AB_OPTS} $extra_opts
+    if [[ -n $tlsf ]]; then
+        echoandrun env ACACIA_DIAG_INSTANCE=${tlsf:t} $prog_prefix $ACABONSAI -T $tlsf \
+             ${=AB_OPTS} $extra_opts
+    else
+        echoandrun env ACACIA_DIAG_INSTANCE=${ltl:t} $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
+             ${=AB_OPTS} $extra_opts
+    fi
 }
 
 PROG=$0
 usage () {
     cat <<EOF
-Usage: $PROG [-p] -[la+] [-e PROG_PATH] -F LTL_FILE [-P PART_FILE] [-- OPTS...]
-Runs ltlsynt, acacia-bonsai, or acacia-+ on the input LTL_FILE:
+Usage: $PROG [-p] -[la+] [-e PROG_PATH] (-F LTL_FILE [-P PART_FILE] | -T TLSF_FILE) [-- OPTS...]
+Runs ltlsynt or acacia-bonsai on an LTL file, or Acacia on a native TLSF file:
   -p: prefix every line with the name of the test (useful for meson logging)
   -l: run ltlsynt ($LTLSYNT)
   -a: run acacia-bonsai ($ACABONSAI)
@@ -125,6 +130,7 @@ Runs ltlsynt, acacia-bonsai, or acacia-+ on the input LTL_FILE:
   -o EXTRA_OPTS: extra options to the executable
   -F LTL_FILE: file to test
   -P PART_FILE: part file for LTL_FILE; if not provided, infered from LTL_FILE.
+  -T TLSF_FILE: TLSF file to pass directly to Acacia's native frontend.
 
 The leftover OPTS... are passed as options to the executable.
 
@@ -141,7 +147,7 @@ EOF
 
 PYTHON=${PYTHON:-$(whence python3)}
 progs=()
-while getopts "vcplsa+Ve:o:F:P:hx" opt; do
+while getopts "vcplsa+Ve:o:F:P:T:hx" opt; do
     case $opt; in
         p) prefix=t;;
         [lsa+]) progs+=$opt;;
@@ -150,13 +156,12 @@ while getopts "vcplsa+Ve:o:F:P:hx" opt; do
         e) forced_path=$OPTARG;;
         F) ltl=$OPTARG;;
         P) part=$OPTARG;;
+        T) tlsf=$OPTARG;;
         x) setopt xtrace;;
         v) verbose=t;;
         h|*) usage;;
     esac
 done
-
-part=${part:-${ltl/.ltl/.part}}
 
 shift $((OPTIND - 1))
 extra_opts+=("$@")
@@ -165,24 +170,41 @@ if (( ${#progs} == 0 )); then
     echo 'error: one program should be specified.'
     exit 7
 fi
-if ! [[ -e $ltl && -e $part ]]; then
-    echo "error: $ltl and $part should exist."
+if [[ -n $ltl && -n $tlsf ]]; then
+    echo 'error: -F and -T are mutually exclusive.'
     exit 8
 fi
-
-parttoinsouts $part
+if [[ -n $tlsf ]]; then
+    if ! [[ -e $tlsf ]]; then
+        echo "error: $tlsf should exist."
+        exit 8
+    fi
+    if (( ${progs[(Ie)l]} )); then
+        echo 'error: native TLSF mode is supported by Acacia only.'
+        exit 8
+    fi
+else
+    part=${part:-${ltl/.ltl/.part}}
+    if ! [[ -e $ltl && -e $part ]]; then
+        echo "error: $ltl and $part should exist."
+        exit 8
+    fi
+    parttoinsouts $part
+fi
 
 ## Prefix output with the test file name.
 if [[ $prefix ]]; then
-    shortfile=${ltl/*tests\//}
+    subject=${tlsf:-$ltl}
+    shortfile=${subject/*tests\//}
    exec >  >(sed "s!^![$shortfile] !")
    exec 2> >(sed "s!^![$shortfile] !" >&2)
 fi
 
-[[ $verbose ]] && echo "formula: $(cat $ltl)"
+[[ $verbose && -n $ltl ]] && echo "formula: $(cat $ltl)"
 
 ## Guess realizability, or find it
-case $ltl; in
+subject=${tlsf:-$ltl}
+case $subject; in
     */realizable/*)   expect=0;;
     */unrealizable/*) expect=1;;
     *) echo 'Realizability not established.'

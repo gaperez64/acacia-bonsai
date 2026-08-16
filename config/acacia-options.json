@@ -108,6 +108,7 @@
     "translation_pref": "small",
     "enable_realizability_simplifier": true,
     "enable_syntactic_bypass": true,
+    "enable_tlsf_frontend": false,
     "static_array_max": 300,
     "static_max_bitsets": 8,
     "simd_is_max": true,

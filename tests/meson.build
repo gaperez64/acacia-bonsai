@@ -1,6 +1,17 @@
 fs = import ('fs')
 py = import ('python').find_installation ('python3')
 
+ltl_formula_canonicalize = executable (
+  'ltl-formula-canonicalize',
+  'ltl_formula_canonicalize.cc',
+  include_directories : inc,
+  dependencies : [spot_dep],
+)
+test ('ltl-formula-canonicalize',
+      ltl_formula_canonicalize,
+      args : ['--self-test'],
+      suite : ['unit', 'tlsf'])
+
 #############################
 # Suite + backend configuration
 #############################
@@ -132,6 +143,25 @@ push_aps_test = executable ('push-aps-test',
                             include_directories : inc,
                             dependencies : [spot_dep, bddx_dep])
 test ('push-aps', push_aps_test, suite : ['unit', 'push-aps'])
+
+if get_option ('acacia_enable_tlsf_frontend')
+  tlsf_frontend_test = executable (
+    'tlsf-frontend-test',
+    '../src/tlsf_frontend.cc',
+    'tlsf_frontend_test.cc',
+    include_directories : inc,
+    dependencies : tlsf_deps,
+  )
+  test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
+
+  executable (
+    'tlsf-frontend-inspect',
+    '../src/tlsf_frontend.cc',
+    'tlsf_frontend_inspect.cc',
+    include_directories : inc,
+    dependencies : tlsf_deps,
+  )
+endif
 
 symmetric_downset_test = executable ('symmetric-downset-test',
                                      'symmetric_downset_test.cc',

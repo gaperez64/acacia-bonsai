@@ -81,7 +81,8 @@ int main (int argc, char** argv) {
             run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
                      arg_values.opt_kinc, arg_values.formula, unreal_x, translation_pref,
                      arg_values.spot_fast,
-                     unreal_x.has_value () ? std::nullopt : arg_values.synth_fname);
+                     unreal_x.has_value () ? std::nullopt : arg_values.synth_fname,
+                     arg_values.metadata);
         verb_do (1, vout << "returning " << res << "\n");
 
         if (unreal_x.has_value ())

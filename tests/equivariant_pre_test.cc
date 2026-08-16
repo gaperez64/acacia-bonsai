@@ -13,6 +13,7 @@
 #include <numeric>
 #include <random>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -465,6 +466,32 @@ namespace {
     return ok;
   }
 
+  bool run_syntax_certificate_case () {
+    fixture fx = make_aut (3);
+    std::vector<symmetry::indexed_family_certificate> certificates {
+        {.is_input = true, .lo = 0, .hi = 2, .members = {"r_0", "r_1", "r_2"}},
+        {.is_input = false, .lo = 0, .hi = 2, .members = {"g_0", "g_1", "g_2"}},
+    };
+    bool ok = true;
+    {
+      symmetry::scoped_indexed_family_certificates scope {certificates};
+      const auto indexed =
+          symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
+      ok &= expect ("matching syntax families are certified", indexed.syntax_certified);
+    }
+
+    certificates[1].members[2] = "g_9";
+    bool rejected = false;
+    try {
+      symmetry::scoped_indexed_family_certificates scope {certificates};
+      (void) symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
+    } catch (const std::runtime_error&) {
+      rejected = true;
+    }
+    ok &= expect ("mismatched syntax family is a hard error", rejected);
+    return ok;
+  }
+
   bool run_unreal_case () {
     constexpr unsigned n = 3;
     posets::vectors::bool_threshold = 1 + 2 * n;
@@ -505,6 +532,7 @@ int main () {
     ok &= run_case (n, 1 + n);
   }
   ok &= run_partial_symmetry_case ();
+  ok &= run_syntax_certificate_case ();
   ok &= run_unreal_case ();
 
   posets::vectors::bool_threshold = old_bool_threshold;
