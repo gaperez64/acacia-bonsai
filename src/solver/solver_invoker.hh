@@ -20,7 +20,7 @@ struct specification_metadata {
   std::string tlsf_target = "-";
   std::string tlsf_effective_target = "-";
   int tlsf_gr_level = -1;
-  std::vector<symmetry::indexed_family_certificate> tlsf_indexed_families;
+  std::vector<symmetry::indexed_family_hint> tlsf_indexed_families;
 };
 
 inline const char* translation_pref_name (TRANSLATION_PREF_T preference) {

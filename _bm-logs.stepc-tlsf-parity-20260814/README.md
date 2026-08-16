@@ -1,6 +1,8 @@
-# Step C TLSF parity evidence (2026-08-14--15)
+# Step C TLSF/SyFCo interoperability evidence (2026-08-14--15)
 
-This directory contains the native-TLSF compatibility gates.  Only the files
+This directory contains the historical native-TLSF compatibility comparison.  It
+is retained as legacy-route regression evidence, not as a semantic correctness
+gate: TLSF v1.1/v1.2 is authoritative where SyFCo diverges.  Only the files
 listed below are authoritative landing evidence; the other `debug-*`,
 `focused-r3` through `focused-r5`, `formula-io-50-final*`, and earlier
 50-instance runs are diagnostic attempts superseded by the final repairs.
@@ -21,11 +23,11 @@ Authoritative completed evidence:
   `indexed-conjunction-summary.txt`: the sorted 730-instance source-syntax
   cohort and its SHA-256 digest.
 
-The full G5 evidence is `g5-native-vs-syfco.csv`, `g5-status.txt`, and
+The full historical G5 evidence is `g5-native-vs-syfco.csv`, `g5-status.txt`, and
 `g5-summary.txt`.  The completed 1,579-instance run has zero opposite verdicts
 and zero frontend/process errors: 1,574 matches, two native-only answers, two
 converted-only answers, and one nonsolved resource-limit/timeout difference.
 Three native and two converted runs hit the explicit 8 GiB limit.  The
-enum-only invalidation closure made after the final compatibility repair is in
+enum-only comparison made after the former compatibility repair is in
 `_bm-logs.final-combined-20260815/g5-enum*` and passes all nine affected
 instances with no mismatch or resource limit.

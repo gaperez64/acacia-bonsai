@@ -1,6 +1,6 @@
 # Step C G3 evidence (2026-08-14)
 
-All three landing panels passed for the native TLSF and syntax-certificate
+All three landing panels passed for the native TLSF and indexed-family-hint
 candidate under the serial 17-second, 8 GiB/no-swap protocol.
 
 - `status.txt`: authoritative terminal `COMPLETE PASS` sentinel;

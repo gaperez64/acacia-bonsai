@@ -662,7 +662,7 @@ namespace acacia::solver_detail::equivariant {
     };
 
     if (num_states > ACACIA_EQUIVARIANT_MAX_STATES and
-        not symmetry::has_indexed_family_certificate_hypothesis ())
+        not symmetry::has_indexed_family_hint ())
       return decline ("too many automaton states");
 
     symmetry::indexed_ap_analysis indexed;
@@ -670,8 +670,8 @@ namespace acacia::solver_detail::equivariant {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_ap_scan);
       indexed = symmetry::analyze_indexed_aps (aut, all_inputs, all_outputs);
     }
-    if (num_states > ACACIA_EQUIVARIANT_MAX_STATES and not indexed.syntax_certified)
-      return decline ("too many automaton states without a matching syntax certificate");
+    if (num_states > ACACIA_EQUIVARIANT_MAX_STATES and not indexed.syntax_hinted)
+      return decline ("too many automaton states without a matching TLSF indexed-family hint");
     if (indexed.empty ())
       return decline ("no indexed AP families");
     if (indexed.input_families == 0)

@@ -608,12 +608,11 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
               const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata) {
-  auto indexed_family_certificates = metadata.tlsf_indexed_families;
+  auto indexed_family_hints = metadata.tlsf_indexed_families;
   if (check_unreal.has_value ())
-    for (auto& certificate : indexed_family_certificates)
-      certificate.is_input = not certificate.is_input;
-  symmetry::scoped_indexed_family_certificates certificate_scope {
-      indexed_family_certificates};
+    for (auto& hint : indexed_family_hints)
+      hint.is_input = not hint.is_input;
+  symmetry::scoped_indexed_family_hints hint_scope {indexed_family_hints};
   acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
 #if ACACIA_ENABLE_DIAGNOSTICS
   if (auto* diag = acacia::diagnostics::current ()) {

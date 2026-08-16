@@ -20,10 +20,9 @@ namespace acacia::tlsf_frontend {
     tlsf::Options options () {
       tlsf::Options value;
       value.format = tlsf::Format::Ltlxba;
-      // Match SyFCo's ltlxba/.part convention.  This also makes native
-      // formulas interchangeable with the checked-in converted corpus.
+      // Match the checked-in ltlxba/.part identifier convention.  TLSF
+      // semantics and target adaptation remain specification-defined.
       value.lowercase = true;
-      value.syfco_compatibility = true;
       return value;
     }
 
@@ -39,8 +38,8 @@ namespace acacia::tlsf_frontend {
       return false;
     }
 
-    void syfco_signal_order (std::vector<std::string>& signals,
-                             const std::vector<tlsf::IndexedFamily>& families, bool outputs) {
+    void stable_signal_order (std::vector<std::string>& signals,
+                              const std::vector<tlsf::IndexedFamily>& families, bool outputs) {
       std::unordered_set<std::string_view> bus_members;
       for (const auto& family : families)
         if (family.is_output == outputs)
@@ -67,8 +66,8 @@ namespace acacia::tlsf_frontend {
     if (finite_semantics (result.semantics))
       throw std::runtime_error ("finite TLSF semantics are not supported");
 
-    syfco_signal_order (result.inputs, result.indexed_families, false);
-    syfco_signal_order (result.outputs, result.indexed_families, true);
+    stable_signal_order (result.inputs, result.indexed_families, false);
+    stable_signal_order (result.outputs, result.indexed_families, true);
 
     specification value;
     value.metadata.source_format = "tlsf";
@@ -79,22 +78,22 @@ namespace acacia::tlsf_frontend {
     if (has_indexed_conjunction (text)) {
       value.metadata.tlsf_indexed_families.reserve (result.indexed_families.size ());
       for (auto& family : result.indexed_families) {
-        symmetry::indexed_family_certificate certificate;
-        certificate.is_input = not family.is_output;
-        certificate.lo = family.lo;
-        certificate.hi = family.hi;
-        certificate.members = std::move (family.members);
-        value.metadata.tlsf_indexed_families.push_back (std::move (certificate));
+        symmetry::indexed_family_hint hint;
+        hint.is_input = not family.is_output;
+        hint.lo = family.lo;
+        hint.hi = family.hi;
+        hint.members = std::move (family.members);
+        value.metadata.tlsf_indexed_families.push_back (std::move (hint));
       }
     }
 
     value.formula = std::move (result.preprocessed_ltl);
     value.inputs = std::move (result.inputs);
     value.outputs = std::move (result.outputs);
-    // SyFCo groups scalar declarations before ordinary buses and enum buses,
-    // reverses source order within each group, and keeps each bus's members in
-    // ascending index order.
-    // Certificate members use that same ascending index order.
+    // Stable serialization convention only; TLSF does not define a total AP
+    // order.  Scalars precede ordinary and enum buses, source declarations are
+    // reversed within each group, and bus members retain ascending index order.
+    // Indexed-family provenance uses the same member order.
     if (value.formula.empty ())
       throw std::runtime_error ("TLSF conversion produced an empty formula");
     return value;

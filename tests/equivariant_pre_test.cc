@@ -466,24 +466,24 @@ namespace {
     return ok;
   }
 
-  bool run_syntax_certificate_case () {
+  bool run_syntax_hint_case () {
     fixture fx = make_aut (3);
-    std::vector<symmetry::indexed_family_certificate> certificates {
+    std::vector<symmetry::indexed_family_hint> hints {
         {.is_input = true, .lo = 0, .hi = 2, .members = {"r_0", "r_1", "r_2"}},
         {.is_input = false, .lo = 0, .hi = 2, .members = {"g_0", "g_1", "g_2"}},
     };
     bool ok = true;
     {
-      symmetry::scoped_indexed_family_certificates scope {certificates};
+      symmetry::scoped_indexed_family_hints scope {hints};
       const auto indexed =
           symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
-      ok &= expect ("matching syntax families are certified", indexed.syntax_certified);
+      ok &= expect ("matching syntax families supply a hint", indexed.syntax_hinted);
     }
 
-    certificates[1].members[2] = "g_9";
+    hints[1].members[2] = "g_9";
     bool rejected = false;
     try {
-      symmetry::scoped_indexed_family_certificates scope {certificates};
+      symmetry::scoped_indexed_family_hints scope {hints};
       (void) symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
     } catch (const std::runtime_error&) {
       rejected = true;
@@ -532,7 +532,7 @@ int main () {
     ok &= run_case (n, 1 + n);
   }
   ok &= run_partial_symmetry_case ();
-  ok &= run_syntax_certificate_case ();
+  ok &= run_syntax_hint_case ();
   ok &= run_unreal_case ();
 
   posets::vectors::bool_threshold = old_bool_threshold;

@@ -70,33 +70,31 @@ namespace symmetry {
       std::vector<long> indices;
       unsigned input_families = 0;
       unsigned output_families = 0;
-      bool syntax_certified = false;
+      bool syntax_hinted = false;
 
       bool empty () const { return families.empty (); }
   };
 
-  inline thread_local const std::vector<indexed_family_certificate>*
-      current_indexed_family_certificates = nullptr;
+  inline thread_local const std::vector<indexed_family_hint>* current_indexed_family_hints =
+      nullptr;
 
-  class scoped_indexed_family_certificates {
+  class scoped_indexed_family_hints {
     public:
-      explicit scoped_indexed_family_certificates (
-          const std::vector<indexed_family_certificate>& certificates)
-        : previous {current_indexed_family_certificates} {
-        current_indexed_family_certificates = &certificates;
+      explicit scoped_indexed_family_hints (const std::vector<indexed_family_hint>& hints)
+        : previous {current_indexed_family_hints} {
+        current_indexed_family_hints = &hints;
       }
 
-      ~scoped_indexed_family_certificates () {
-        current_indexed_family_certificates = previous;
+      ~scoped_indexed_family_hints () {
+        current_indexed_family_hints = previous;
       }
 
     private:
-      const std::vector<indexed_family_certificate>* previous;
+      const std::vector<indexed_family_hint>* previous;
   };
 
-  inline bool has_indexed_family_certificate_hypothesis () {
-    return current_indexed_family_certificates != nullptr and
-           not current_indexed_family_certificates->empty ();
+  inline bool has_indexed_family_hint () {
+    return current_indexed_family_hints != nullptr and not current_indexed_family_hints->empty ();
   }
 
   // Pre-formatted fields used by the compact solver diagnostics.  A field is
@@ -334,49 +332,49 @@ namespace symmetry {
       f.is_input = is_in;
       f.idx2ap[idx] = ap;
     }
-    if (current_indexed_family_certificates != nullptr) {
-      std::map<std::string, const indexed_family_certificate*> certified;
-      for (const auto& certificate : *current_indexed_family_certificates) {
-        if (certificate.members.empty ())
+    if (current_indexed_family_hints != nullptr) {
+      std::map<std::string, const indexed_family_hint*> hinted;
+      for (const auto& hint : *current_indexed_family_hints) {
+        if (hint.members.empty ())
           continue;
-        const auto expected_size = certificate.hi >= certificate.lo
-            ? static_cast<unsigned long long> (certificate.hi - certificate.lo) + 1
+        const auto expected_size = hint.hi >= hint.lo
+            ? static_cast<unsigned long long> (hint.hi - hint.lo) + 1
             : 0;
-        if (expected_size != certificate.members.size ())
-          throw std::runtime_error ("TLSF indexed-family certificate has an invalid range");
+        if (expected_size != hint.members.size ())
+          throw std::runtime_error ("TLSF indexed-family hint has an invalid range");
 
         std::string family_prefix;
-        for (size_t position = 0; position < certificate.members.size (); ++position) {
+        for (size_t position = 0; position < hint.members.size (); ++position) {
           std::string prefix;
           long index = -1;
-          if (not detail::parse_indexed (certificate.members[position], prefix, index) or
-              index != certificate.lo + static_cast<long> (position))
+          if (not detail::parse_indexed (hint.members[position], prefix, index) or
+              index != hint.lo + static_cast<long> (position))
             throw std::runtime_error (
-                "TLSF indexed-family certificate disagrees with scalar AP mangling");
+                "TLSF indexed-family hint disagrees with scalar AP mangling");
           if (position == 0)
             family_prefix = std::move (prefix);
           else if (prefix != family_prefix)
             throw std::runtime_error (
-                "TLSF indexed-family certificate spans multiple AP prefixes");
+                "TLSF indexed-family hint spans multiple AP prefixes");
         }
-        if (not certified.emplace (family_prefix, &certificate).second)
-          throw std::runtime_error ("duplicate TLSF indexed-family certificate prefix");
+        if (not hinted.emplace (family_prefix, &hint).second)
+          throw std::runtime_error ("duplicate TLSF indexed-family hint prefix");
       }
 
-      for (const auto& [prefix, certificate] : certified) {
+      for (const auto& [prefix, hint] : hinted) {
         auto family = analysis.families.find (prefix);
         if (family == analysis.families.end ())
           continue;  // This translated/decomposed component does not use it.
-        if (family->second.is_input != certificate->is_input)
+        if (family->second.is_input != hint->is_input)
           throw std::runtime_error (
-              "TLSF indexed-family certificate disagrees with the I/O partition");
+              "TLSF indexed-family hint disagrees with the I/O partition");
         for (const auto& [index, ap] : family->second.idx2ap) {
-          if (index < certificate->lo or index > certificate->hi or
-              certificate->members[index - certificate->lo] != ap.ap_name ())
+          if (index < hint->lo or index > hint->hi or
+              hint->members[index - hint->lo] != ap.ap_name ())
             throw std::runtime_error (
-                "TLSF indexed-family certificate disagrees with name-derived APs");
+                "TLSF indexed-family hint disagrees with name-derived APs");
         }
-        analysis.syntax_certified = true;
+        analysis.syntax_hinted = true;
       }
     }
 

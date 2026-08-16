@@ -1152,47 +1152,52 @@ well.  This is the measured paradigm conclusion: Acacia's explicit-letter
 construction cannot close the input-heavy `ltlsynt` gap through this BDD-DAG
 deduplication alone.
 
-### Step C native TLSF infrastructure and certificates
+### Step C native TLSF infrastructure and indexed-family hints
 
 The native TLSF frontend is opt-in through `acacia_enable_tlsf_frontend`; the
-existing SyFCo route remains available.  The library path now deliberately
-matches SyFCo's `ltlxba` conversion contract rather than silently applying the
-standalone `tlsf-tools` target adaptation: original Mealy/Moore/Strict metadata
-is retained, formula composition uses SyFCo-compatible semantics, and scalar
-and expanded-bus signals use SyFCo's exact ordering.
+existing SyFCo route remains available for legacy conversion.  TLSF v1.1/v1.2
+is the semantic authority for the native path: Mealy/Moore target mismatches
+are adapted with `X`, and Strict semantics retains the specified weak-until
+formula.  Original semantics and target metadata are retained.  Lowercasing
+and scalar/bus ordering are only stable serialization conventions for the
+checked-in `.ltl`/`.part` ecosystem; TLSF does not define a total AP order.
 
-The planned literal formula-byte identity check was corrected during the
-comparison: SyFCo and tlsf-tools are independent serializers and deliberately
+The earlier literal formula-byte comparison remains useful as historical
+interoperability evidence on the sampled ordinary-Mealy subset: SyFCo and
+tlsf-tools are independent serializers and deliberately
 spell the same AST differently (fully parenthesized expanded `U`/`G` versus
 compact `W`, among other formatting), so raw printer bytes are not an
-interface or semantic invariant.  The definitive 50-instance gate instead
-requires identical deterministic Spot AST keys after exact `R`/`W`/`M`
-unabbreviation and commutative Boolean canonicalization, plus byte-exact
-complete input/output lists.  The corrected `r4` run passed 50/50.  Literal
-formula bytes matched 0/50, as expected for the two serializers, and are
-reported separately rather than promoted to a false semantic requirement.
-The preceding `r3` attempt found one enum-specific compatibility gap:
-`tlsf-tools` emitted the three valid 2-bit cubes while SyFCo emitted the
-equivalent complement of the one invalid cube, and enum bus members occupied a
-different signal-order group.  The library now emits the compact all-but-one
-validity form and preserves enum-family provenance so Acacia reproduces
-SyFCo's scalar/ordinary-bus/enum-bus order.  All 151 upstream `tlsf-tools`
-tests pass with focused coverage for this case.
+interface or semantic invariant.  The `r4` sample matched 50/50 after exact
+`R`/`W`/`M` unabbreviation and commutative Boolean canonicalization, with
+byte-exact input/output lists; literal formula bytes matched 0/50.  It is not a
+correctness oracle: subsequent specification review established that SyFCo
+does not implement target adaptation or Strict composition correctly.
 
-Expanded TLSF bus declarations are also exported as provenance-preserving
-indexed-family certificates.  Acacia admits them as a hypothesis only for
+Enum declarations now implement the full TLSF valuation syntax: `0`, `1`, and
+`*`, plus multiple comma-separated valuations per label.  The implicit input
+validity constraint is inserted as a raw `REQUIRE`, and output validity as a
+raw `ASSERT`, so both standard and Strict composition give them the temporal
+role prescribed by the specification.  Enum-family provenance is retained;
+the stable scalar/ordinary-bus/enum-bus output order is an engineering
+convention rather than a semantic claim.
+
+Expanded TLSF bus declarations are exported as provenance-preserving
+indexed-family hints.  Acacia admits them as a hypothesis only for
 source containing indexed conjunction syntax, checks their ranges, scalar
 mangling, and I/O side against the name-derived families, and treats a mismatch
-as a hard error.  A matching certificate may bypass the equivariant solver's
+as a hard error.  A matching hint may bypass the equivariant solver's
 512-state hypothesis-selection cap, but it does not establish correctness:
 the existing structural automorphism test remains the final soundness gate.
-UNREAL children swap the certificate I/O side together with the game
+UNREAL children swap the hint's I/O side together with the game
 partition.
 
-The post-format candidate passed the focused frontend, canonicalizer,
-certificate, and upstream C++ API tests.  A preliminary Clang/low-memory build
-passed G0, G1, G4, and all three G3 panels, but those timings are retained only
-as supporting evidence because its toolchain differed from the baseline.
+The specification correction passes all 153 upstream `tlsf-tools` tests,
+including focused target-adaptation, Strict, wildcard, multi-valuation, and
+enum-role cases.  Acacia's TLSF and equivariant-hint integration tests pass,
+the complete Acacia unit suite passes 18/18 in a fresh TLSF-enabled build, and
+all 1,586 SYNTCOMP 2025 TLSF sources parse through the corrected frontend.
+The prior G1/G3/G4 measurements below exercise `.ltl` inputs and are therefore
+unaffected by the optional frontend semantic correction.
 
 The final candidate was rebuilt with the same GCC/release/LTO configuration as
 the baseline.  G0 passed 18/18 Acacia unit tests and 14/14 Posets tests.  G4
@@ -1211,21 +1216,21 @@ gate.  The decisive same-toolchain G3 results were:
 All three final landing reports pass, so the combined tree meets the final
 performance bar.
 
-G5 compared native TLSF with the checked-in SyFCo conversion on all 1,579
-common instances at 17 seconds and 8 GiB/no swap per solver.  It recorded
-1,574 matches, two native-only answers, two converted-only answers, and one
-nonsolved resource-limit/timeout difference, with zero opposite verdicts and
-zero frontend/process errors.  Three native and two converted invocations hit
-the explicit memory limit.  Because the enum compatibility repair followed
-that full run, every affected common input was enumerated from source and
-rerun with the final GCC binary: all nine enum-bearing instances matched, with
-zero errors or resource limits.  Together with the 50/50 formula/I/O gate,
-this closes the final-code invalidation without rerunning 1,570 byte-identical
-frontend paths.
+The historical G5 run compared native TLSF with the checked-in SyFCo
+conversion on all 1,579 common instances at 17 seconds and 8 GiB/no swap per
+solver.  It recorded 1,574 matches, two native-only answers, two converted-only
+answers, and one nonsolved resource-limit/timeout difference, with zero
+opposite verdicts and zero frontend/process errors.  Three native and two
+converted invocations hit the explicit memory limit.  That remains useful
+legacy-route regression data, but it is no longer treated as a semantics gate:
+matching SyFCo on Strict or target-mismatch inputs would reproduce SyFCo's
+known deviation from TLSF.  Specification-derived unit formulas and the full
+1,586-source native parse sweep are the authoritative frontend checks.
 
 The preliminary gate logs and exact candidate CSVs are under
 `_bm-logs.stepc-correctness-20260814/`, `_bm-logs.stepc-g1-20260814/`, and
-`_bm-logs.stepc-g3-20260814/`.  Formula/I/O and full G5 evidence is under
+`_bm-logs.stepc-g3-20260814/`.  Historical Formula/I/O and G5 interoperability
+evidence is under
 `_bm-logs.stepc-tlsf-parity-20260814/`; the final same-toolchain build,
-G0/G1/G3/G4 results, and enum-only G5 closure are under
+G0/G1/G3/G4 results, and the superseded enum-only parity closure are under
 `_bm-logs.final-combined-20260815/`.

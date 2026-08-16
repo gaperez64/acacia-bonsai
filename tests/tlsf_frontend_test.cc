@@ -33,9 +33,9 @@ MAIN {
   const auto parsed = acacia::tlsf_frontend::parse (spec);
   bool ok = true;
   ok &= expect ("formula emitted", not parsed.formula.empty ());
-  ok &= expect ("input case matches SyFCo", parsed.inputs == std::vector<std::string> {"req"});
-  ok &= expect ("output case matches SyFCo", parsed.outputs == std::vector<std::string> {"grant"});
-  ok &= expect ("target does not rewrite SyFCo formula", parsed.formula == "G (req -> grant)");
+  ok &= expect ("input lowercase convention", parsed.inputs == std::vector<std::string> {"req"});
+  ok &= expect ("output lowercase convention", parsed.outputs == std::vector<std::string> {"grant"});
+  ok &= expect ("target adaptation follows TLSF", parsed.formula == "G (req -> X grant)");
   ok &= expect ("source format", parsed.metadata.source_format == "tlsf");
   ok &= expect ("original semantics", parsed.metadata.tlsf_semantics == "Mealy");
   ok &= expect ("original target", parsed.metadata.tlsf_target == "Moore");
@@ -58,8 +58,8 @@ MAIN {
   GUARANTEE { z; }
 }
 )TLSF");
-  ok &= expect ("strict sections match SyFCo's ltlxba pair",
-                strict.formula == "a -> x && (G b && c -> G y && z)");
+  ok &= expect ("strict sections follow TLSF weak-until semantics",
+                strict.formula == "a -> x && y W !b && (G b && c -> z)");
   ok &= expect ("strict metadata", strict.metadata.tlsf_semantics == "Strict,Mealy");
 
   bool finite_rejected = false;
@@ -91,17 +91,17 @@ MAIN {
       expect ("indexed input/output expansion",
               indexed.inputs == std::vector<std::string> ({"req_0", "req_1", "req_2"}) and
                   indexed.outputs == std::vector<std::string> ({"grant_0", "grant_1", "grant_2"}));
-  ok &= expect ("indexed conjunction certificates",
+  ok &= expect ("indexed conjunction provenance hints",
                 indexed.metadata.tlsf_indexed_families.size () == 2);
   if (indexed.metadata.tlsf_indexed_families.size () == 2) {
     const auto& input_family = indexed.metadata.tlsf_indexed_families[0];
     const auto& output_family = indexed.metadata.tlsf_indexed_families[1];
     ok &= expect (
-        "indexed input certificate",
+        "indexed input hint",
         input_family.is_input and input_family.lo == 0 and input_family.hi == 2 and
             input_family.members == std::vector<std::string> ({"req_0", "req_1", "req_2"}));
     ok &= expect (
-        "indexed output certificate",
+        "indexed output hint",
         not output_family.is_input and output_family.lo == 0 and output_family.hi == 2 and
             output_family.members == std::vector<std::string> ({"grant_0", "grant_1", "grant_2"}));
   }
@@ -115,7 +115,7 @@ MAIN {
   GUARANTEE { G (Req[0] -> Grant[0]); }
 }
 )TLSF");
-  ok &= expect ("bus declarations alone do not create syntax certificates",
+  ok &= expect ("bus declarations alone do not create symmetry hints",
                 asymmetric_bus.metadata.tlsf_indexed_families.empty ());
 
   const auto mixed = acacia::tlsf_frontend::parse (R"TLSF(
@@ -132,7 +132,7 @@ MAIN {
   GUARANTEE { G (Ready -> (Req[0] -> Grant[0])); }
 }
 )TLSF");
-  ok &= expect ("mixed bus sections preserve SyFCo order",
+  ok &= expect ("mixed bus sections preserve stable serialization order",
                 mixed.inputs == std::vector<std::string> ({"ready", "req_0", "req_1"}) and
                     mixed.outputs == std::vector<std::string> ({"done", "grant_0", "grant_1"}));
 
@@ -148,11 +148,34 @@ MAIN {
 }
 )TLSF");
   ok &= expect (
-      "enum buses follow ordinary buses in SyFCo order",
+      "enum buses follow ordinary buses in stable serialization order",
       enum_typed.inputs ==
           std::vector<std::string> ({"ready", "lock_0", "lock_1", "req_0", "req_1",
                                      "state_0", "state_1"}));
-  ok &= expect ("all-but-one enum validity matches SyFCo",
-                enum_typed.formula.find ("G (!state_0 || !state_1)") != std::string::npos);
+  ok &= expect (
+      "enum validity follows TLSF invariant semantics",
+      enum_typed.formula.find (
+          "G (!state_0 && !state_1 || !state_0 && state_1 || state_0 && !state_1)") !=
+          std::string::npos);
+
+  const auto strict_enum = acacia::tlsf_frontend::parse (R"TLSF(
+INFO { TITLE: "strict enum" SEMANTICS: Strict,Mealy TARGET: Mealy }
+GLOBAL {
+  DEFINITIONS {
+    enum InputMode = Active: 10,11;
+    enum OutputMode = Ready: 0*;
+  }
+}
+MAIN {
+  INPUTS { InputMode Request; }
+  OUTPUTS { OutputMode Response; ok; }
+  GUARANTEE { G ok; }
+}
+)TLSF");
+  ok &= expect (
+      "strict enum roles, wildcard, and multiple valuations follow TLSF",
+      strict_enum.formula ==
+          "!response_0 W !(request_0 && !request_1 || request_0 && request_1) && (G "
+          "(request_0 && !request_1 || request_0 && request_1) -> G ok)");
   return ok ? 0 : 1;
 }

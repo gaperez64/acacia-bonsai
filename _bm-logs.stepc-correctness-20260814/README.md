@@ -1,7 +1,7 @@
 # Step C G0 and G4 evidence (2026-08-14)
 
 This directory records the serial correctness gates for the native TLSF and
-syntax-certificate candidate.  The candidate was built and tested with one
+indexed-family-hint candidate.  The candidate was built and tested with one
 job at a time under the campaign's 8 GiB/no-swap outer cgroup policy.
 
 Authoritative terminal files:
