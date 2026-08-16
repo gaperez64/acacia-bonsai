@@ -1,0 +1,2 @@
+.inputs bin_st_0 pred__y_lt_yprev_ bin_y0 bin_y1 pred__yprev_lt_y_ eincx stax
+.outputs decy incy

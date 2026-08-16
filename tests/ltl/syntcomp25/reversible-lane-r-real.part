@@ -1,0 +1,2 @@
+.inputs pred__cr_lt_crprev_ pred__clprev_lt_cl_ bin_cr0 bin_cl1 pred__crprev_lt_cr_ bin_cr1 bin_st_0 bin_cl0 pred__cl_lt_clprev_ l2r exit_r exit_l entry_r entry_l
+.outputs stop_r stop_l

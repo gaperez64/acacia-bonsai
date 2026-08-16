@@ -1,0 +1,2 @@
+.inputs bin_st_0 bin_x0 pred__x_lt_xprev_ bin_y0 pred__xprev_lt_x_ pred__yprev_lt_y_ pred__y_lt_yprev_ e1 e0
+.outputs a

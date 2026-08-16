@@ -1,0 +1,28 @@
+# Frozen from _bm-logs.gap-plan-20260804/syntcomp24-rebaseline/
+# best_decomp_mona_small.json.  The first five are the 10--16 s sentinels;
+# the remainder are solved in under 2 s.  Do not resample this list.
+full_arbiter_unreal13_7.ltl
+load_balancer7.ltl
+load_balancer_unreal25.ltl
+Morning_f1477cc5.ltl
+Morning_f2774e0b.ltl
+ltl2dba_beta18.ltl
+ltl2dba_Q5.ltl
+mux16.ltl
+UnderapproxDemo.ltl
+CheckTime_3916ec59.ltl
+CheckWindows_2418b67e.ltl
+abcg_arbiter1.ltl
+generalized_buffer2.ltl
+simple_arbiter_unreal14_4.ltl
+Coffee_2c5b09da.ltl
+Assumptions_a50cadd7.ltl
+increment.ltl
+GamemodeChooser.ltl
+SensorSelector.ltl
+MusicAppFeedback.ltl
+SensorSubmodulChooser.ltl
+SingleContoller_d65ed84e.ltl
+TwoCountersInRangeA0.ltl
+rw_arbiter1.ltl
+OneCounterInRange.ltl
