@@ -7,139 +7,33 @@ algorithms using antichain data structures.  The theory and practice is describe
 
 # Docker images
 
-Two pre-built images are published on the GitHub Container Registry. The
-Jupyter image is the easiest entry point for exploring acacia-bonsai
-interactively; the CLI image is what you want for benchmarking or scripting
-synthesis runs.
+Two images are published on the GitHub Container Registry. Boomslang bundles
+Spot's Python bindings, `acacia_boomslang`, and Jupyter:
 
-## Boomslang image
-
-This image comes with Spot (built with Python bindings), the Acacia Boomslang
-Python interface (`acacia_boomslang`), and a Jupyter notebook server already
-wired together. It is the quickest way to play with the tool — no compilation
-required on your end.
-
-Pull the image:
 ```
 docker pull ghcr.io/gaperez64/acacia-boomslang:latest
-```
-
-Start the notebook server, exposing port 8888 on the host:
-```
 docker run --rm -p 8888:8888 ghcr.io/gaperez64/acacia-boomslang:latest
 ```
 
-The container prints a URL with an access token (e.g.
-`http://127.0.0.1:8888/tree?token=...`) — open it in your browser. The
-working directory contains `python_examples/` with example scripts that
-import both `spot` and `acacia_boomslang`.
+The CLI image contains the dependencies and sources. It compiles inside the
+container so `-march=native` can target the host:
 
-To mount a host directory of your own notebooks instead of the bundled
-examples:
-```
-docker run --rm -p 8888:8888 \
-    -v "$PWD/my_notebooks:/work" \
-    -e NOTEBOOK_DIR=/work \
-    ghcr.io/gaperez64/acacia-boomslang:latest
-```
-
-## CLI image
-
-A pre-built Docker image with all dependencies and sources is available from
-the GitHub Container Registry. It ships sources only — compilation happens inside
-the container so that `-march=native` picks up the host's SIMD instruction set.
-
-Pull the image:
 ```
 docker pull ghcr.io/gaperez64/acacia-bonsai:latest
-```
-
-Create a named container and start it interactively (note: we deliberately
-do *not* pass `--rm` — compilation happens inside the container, so removing
-it on exit would throw away the binaries you are about to build):
-```
 docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
-```
-
-Inside the container, compile Spot and a number of optimized acacia-bonsai
-configurations:
-```
 ./scripts/compile.sh
-```
-
-This builds Spot from source and then compiles all configurations. Now,
-you can run acacia-bonsai using the wrapper script:
-```
 ./scripts/acacia-bonsai.sh best_decomp_mona \
-      -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
-REALIZABLE
+  -f 'G F req -> G F grant' -i req -o grant
+cat examples/realizable.tlsf | \
+  ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+cat examples/realizable.tlsf | \
+  ./scripts/acacia-synthesis.sh best_decomp_mona --tlsf > controller.aag
 ```
 
-The wrapper also accepts TLSF specs piped on stdin (translated to LTL via
-the bundled `tlsf-tools`: `tlsf2ltl`, `tlsfinfo`, and `mealy2moore`). The image
-ships example specs in `examples/`:
-```
-cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
-REALIZABLE
-cat examples/unrealizable-small.tlsf | ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
-UNREALIZABLE
-```
-
-When you exit the shell the container stops but is preserved. To re-enter
-it later with your compiled binaries intact:
-```
-docker start -ai acacia
-```
-
-From outside the container you can also pipe a TLSF spec into the running
-(or stopped-then-started) container via `docker exec` / `docker start`:
-```
-docker start acacia   # if it is stopped
-cat examples/realizable.tlsf | docker exec -i acacia \
-      /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_mona --tlsf
-```
-
-To synthesize a controller (AIGER/AAG format) and have it printed on stdout
-when the spec is realizable, use `acacia-synthesis.sh`. It accepts the same
-options as `acacia-bonsai.sh`; the REALIZABLE/UNREALIZABLE verdict goes to
-stderr so stdout carries only the AAG. TLSF synthesis is solved in Acacia's
-Mealy frame by asking `tlsf2ltl` to translate to a Mealy target; if the original
-TLSF target is Moore, the wrapper converts the controller back with
-`mealy2moore` before writing it to stdout:
-```
-cat examples/realizable.tlsf | docker exec -i acacia \
-      /opt/acacia-bonsai/scripts/acacia-synthesis.sh \
-      best_decomp_mona --tlsf > controller.aag
-```
-
-To see available configurations:
-```
-./scripts/acacia-bonsai.sh
-```
-
-If you would rather not keep the `acacia` container around but still want
-to reuse the compiled binaries later, snapshot the container into a new
-image (we suggest the `compiled` tag to distinguish it from the source-only
-`latest`):
-```
-docker commit acacia ghcr.io/gaperez64/acacia-bonsai:compiled
-```
-
-From then on you can spin up fresh, throwaway containers that already
-have Spot and the acacia-bonsai configurations built in — `--rm` is fine
-here because there is nothing left to compile:
-```
-docker run --rm -it ghcr.io/gaperez64/acacia-bonsai:compiled
-cat examples/realizable.tlsf | docker run --rm -i \
-      ghcr.io/gaperez64/acacia-bonsai:compiled \
-      /opt/acacia-bonsai/scripts/acacia-bonsai.sh best_decomp_mona --tlsf
-```
-
-Once you are done with the original container for good, remove it
-explicitly:
-```
-docker rm acacia
-```
+The CLI example intentionally omits `--rm`: compilation happens inside the
+named container, so removing it on exit would discard the binaries. Re-enter
+it with `docker start -ai acacia`. Run the wrapper without arguments to list
+the configurations it accepts.
 
 # Dependencies
 
@@ -152,6 +46,13 @@ This program depends on:
   compilation with `g++` so to link against spot you need to compile it with
   `g++` too (set `CXX` before configuring, compiling, and installing).
 - [The Z shell](https://www.zsh.org/), for some scripts.
+
+Initialize the vendored Posets and TLSF-tools dependencies after cloning:
+```
+git submodule update --init
+```
+This is deliberately non-recursive; Acacia disables TLSF-tools' optional
+OxiDD backend.
 
 Some of the tests also depend on:
 - Valgrind
@@ -185,31 +86,28 @@ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
-Another usage:
+This produces a debug build. Build an optimized registered preset with:
 ```
-src/acacia-bonsai -f '((G (F (req))) <-> (G(!grant) ))' -i req -o grant
-UNREALIZABLE
-```
-
-Note that this will compile a debug version of Acacia-Bonsai.  A benchmarking
-script is available at the root:
-```
-./self-benchmark.sh -h
-```
-
-In particular, it can be used to build an optimized version of Acacia-Bonsai:
-```
-./self-benchmark.sh -c best -R
-  [...]
-cd build_best
-src/acacia-bonsai -h
-src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
-REALIZABLE
+./self-benchmark.sh -c best_decomp_mona -R
 ```
 
 The `-c` option selects a configuration and the `-R` option disables the
 benchmarking step, so that only setup and compilation are done. If compilation
 memory is tight, add `-L` to use the low-memory compile profile.
+
+The native TLSF frontend is optional and off by default. It requires Flex and
+Bison; enable it directly with `-Dacacia_enable_tlsf_frontend=true`, or build
+the `best_decomp_mona_tlsf` preset:
+```
+./self-benchmark.sh -L -R -c best_decomp_mona_tlsf
+build_best_decomp_mona_tlsf/src/acacia-bonsai -T spec.tlsf
+```
+`-T/--tlsf FILE` parses TLSF natively. The existing wrapper path through the
+bundled `tlsf2ltl` and `tlsfinfo` executables continues to work when the native
+frontend is disabled.
+
+Correctness and performance gates, including the sequential measurement
+protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
 
 # Compile-time configurations
 
@@ -218,7 +116,7 @@ configuration registry lives in `config/acacia-options.json` and
 `config/acacia-presets.json`; `scripts/acacia-config.py` validates presets and
 translates them to Meson options.
 
-Useful commands:
+Inspect and validate the registry with:
 ```
 python3 scripts/acacia-config.py validate
 python3 scripts/acacia-config.py list-presets
@@ -226,27 +124,19 @@ python3 scripts/acacia-config.py show best_decomp_mona
 python3 scripts/acacia-config.py meson-args best_decomp_mona
 ```
 
-For direct Meson builds, pass the generated option list:
-```
-meson setup build_best_decomp_mona \
-  $(python3 scripts/acacia-config.py meson-args best_decomp_mona) \
-  --buildtype=release \
-  -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true \
-  -Dacacia_compiler_profile=release
-meson compile -C build_best_decomp_mona
-```
+`meson.build` writes these choices into `acacia_build_config.hh`. The Spot
+translator preference is registry-backed as
+`acacia_translation_pref`; the default is `small`. The values `any` and
+`small+any` are available for ablation and racing presets such as
+`best_decomp_mona_any` and `best_decomp_mona_race`.
 
-`meson.build` writes the selected values into `acacia_build_config.hh`, which
-is included by `src/configuration.hh`.  The generated header defines the same
-macro surface used by the solver templates: component choices such as
-`AUT_PREPROCESSOR`, scalar defaults such as `DEFAULT_K`, and feature gates such
-as `ACACIA_ENABLE_DIAGNOSTICS`.
-
-To add a new compile-time switch, add the option to the registry, expose a
-matching `acacia_*` Meson option, map it in `scripts/acacia-config.py`, and
-thread it through `src/config/acacia_build_config.hh.in`.  Presets should
-inherit from the nearest existing configuration and override only the values
-being tested.
+The shipping `best_decomp_mona` preset enables the exact equivariant solver.
+It automatically declines to the classic solver when no verified profitable
+symmetry is available, or when fewer than `acacia_equivariant_min_blocks`
+client-state blocks are found (default 4). Use
+`best_decomp_mona_noequivariant` for the explicit classic-only escape hatch
+and performance ablation. New presets should inherit from the nearest existing
+configuration and override only the values being tested.
 
 # Documentation
 
