@@ -1,0 +1,6 @@
+[wrap-file]
+directory = tlsf-tools
+
+[provide]
+dependency_names = tlsf
+tlsf = tlsf_dep

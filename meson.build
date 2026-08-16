@@ -9,13 +9,24 @@ extra_args = ['-ftrack-macro-expansion=0',
               '-fconcepts-diagnostics-depth=2',
               '-Wunused-function']
 
-add_global_arguments (extra_args, language: 'cpp')
+cpp = meson.get_compiler ('cpp')
+add_global_arguments (cpp.get_supported_arguments (extra_args), language: 'cpp')
 
 spot_dep = dependency ('libspot')
 bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 posets_dep = dependency ('posets')
-
-cpp = meson.get_compiler('cpp')
+tlsf_deps = []
+if get_option ('acacia_enable_tlsf_frontend')
+  tlsf_deps += dependency (
+    'tlsf',
+    fallback : ['tlsf-tools', 'tlsf_dep'],
+    default_options : [
+      'cpp_std=c++23',
+      'oxidd=disabled',
+      'research_tools=false',
+    ],
+  )
+endif
 
 compiler_profile = get_option ('acacia_compiler_profile')
 compiler_profile_args = []
@@ -61,6 +72,8 @@ build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
 build_conf.set ('STATIC_ARRAY_MAX', get_option ('acacia_static_array_max'))
 build_conf.set ('STATIC_MAX_BITSETS', get_option ('acacia_static_max_bitsets'))
+build_conf.set ('ACACIA_EQUIVARIANT_MIN_BLOCKS',
+                get_option ('acacia_equivariant_min_blocks'))
 
 if get_option ('acacia_default_unreal_x') == 'automaton'
   build_conf.set ('DEFAULT_UNREAL_X', 'UNREAL_X_AUTOMATON')
@@ -78,18 +91,35 @@ else
   build_conf.set ('DEFAULT_SPOT_FAST', 'SPOT_FAST_DET')
 endif
 
-if get_option ('acacia_translation_pref') == 'any'
+if get_option ('acacia_translation_pref') == 'small+any'
+  build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Small')
+  build_conf.set ('ACACIA_TRANSLATION_PREFS',
+                  'spot::postprocessor::Small, spot::postprocessor::Any')
+elif get_option ('acacia_translation_pref') == 'any'
   build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Any')
+  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Any')
 elif get_option ('acacia_translation_pref') == 'deterministic'
   build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Deterministic')
+  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Deterministic')
 else
   build_conf.set ('ACACIA_TRANSLATION_PREF', 'spot::postprocessor::Small')
+  build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Small')
 endif
 
 if get_option ('acacia_enable_realizability_simplifier')
   build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 1)
 else
   build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 0)
+endif
+if get_option ('acacia_enable_syntactic_bypass')
+  build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 1)
+else
+  build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 0)
+endif
+if get_option ('acacia_enable_tlsf_frontend')
+  build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 1)
+else
+  build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 0)
 endif
 
 if get_option ('acacia_simd_is_max')

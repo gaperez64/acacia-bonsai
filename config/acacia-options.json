@@ -107,6 +107,8 @@
     "default_spot_fast": "det",
     "translation_pref": "small",
     "enable_realizability_simplifier": true,
+    "enable_syntactic_bypass": true,
+    "enable_tlsf_frontend": false,
     "static_array_max": 300,
     "static_max_bitsets": 8,
     "simd_is_max": true,
@@ -122,12 +124,13 @@
     "compile_all_components": false,
     "enable_diagnostics": false,
     "enable_equivariant_solver": true,
+    "equivariant_min_blocks": 4,
     "enable_symmetric_solver": false
   },
   "choices": {
     "default_unreal_x": ["both", "automaton", "formula"],
     "default_spot_fast": ["off", "det", "det_and_gfg"],
-    "translation_pref": ["small", "any", "deterministic"],
+    "translation_pref": ["small", "any", "small+any", "deterministic"],
     "array_downset": [
       "vector_backed",
       "vector_or_kdtree_backed",

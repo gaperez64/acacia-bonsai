@@ -1,6 +1,17 @@
 fs = import ('fs')
 py = import ('python').find_installation ('python3')
 
+ltl_formula_canonicalize = executable (
+  'ltl-formula-canonicalize',
+  'ltl_formula_canonicalize.cc',
+  include_directories : inc,
+  dependencies : [spot_dep],
+)
+test ('ltl-formula-canonicalize',
+      ltl_formula_canonicalize,
+      args : ['--self-test'],
+      suite : ['unit', 'tlsf'])
+
 #############################
 # Suite + backend configuration
 #############################
@@ -62,6 +73,55 @@ test ('spot-nba-fastpath-classification',
       spot_nba_fastpath_test,
       suite : ['unit', 'spotfast'])
 
+translator_options_test = executable ('translator-options-test',
+                                      'translator_options_test.cc',
+                                      include_directories : inc,
+                                      dependencies : [spot_dep, bddx_dep])
+test ('translator-options',
+      translator_options_test,
+      suite : ['unit', 'translator-options'])
+
+syntactic_bypass_test = executable ('syntactic-bypass-test',
+                                    'syntactic_bypass_test.cc',
+                                    include_directories : inc,
+                                    dependencies : [spot_dep, bddx_dep])
+test ('syntactic-bypass',
+      syntactic_bypass_test,
+      suite : ['unit', 'syntactic-bypass'])
+
+degenerate_io_test = executable ('degenerate-io-test',
+                                 'degenerate_io_test.cc',
+                                 include_directories : inc,
+                                 dependencies : [spot_dep, bddx_dep])
+test ('degenerate-io',
+      degenerate_io_test,
+      suite : ['unit', 'degenerate-io'])
+
+degenerate_io_cli = find_program ('check-degenerate-io-cli.sh')
+test ('degenerate-io-cli',
+      degenerate_io_cli,
+      args : [ab_exe],
+      suite : ['unit', 'degenerate-io'],
+      depends : [ab_exe])
+
+bash = find_program ('bash')
+default_real_children = 1
+if get_option ('acacia_translation_pref') == 'small+any'
+  default_real_children = 2
+endif
+default_unreal_children = 1
+if get_option ('acacia_default_unreal_x') == 'both'
+  default_unreal_children = 2
+endif
+default_check_children = default_real_children + default_unreal_children
+test ('check-selection',
+      bash,
+      args : [files ('check-selection.sh'), ab_exe,
+              default_check_children.to_string (),
+              (compiler_profile == 'debug').to_string ()],
+      suite : ['unit', 'check-selection'],
+      depends : [ab_exe])
+
 elevator_preprocessor_test = executable ('elevator-preprocessor-test',
                                          'elevator_preprocessor_test.cc',
                                          include_directories : inc,
@@ -69,6 +129,39 @@ elevator_preprocessor_test = executable ('elevator-preprocessor-test',
 test ('elevator-preprocessor',
       elevator_preprocessor_test,
       suite : ['unit', 'elevator'])
+
+cap_census_test = executable ('cap-census-test',
+                              'cap_census_test.cc',
+                              include_directories : inc,
+                              dependencies : [spot_dep, bddx_dep])
+test ('cap-census',
+      cap_census_test,
+      suite : ['unit', 'preprocessing'])
+
+push_aps_test = executable ('push-aps-test',
+                            'push_aps_test.cc',
+                            include_directories : inc,
+                            dependencies : [spot_dep, bddx_dep])
+test ('push-aps', push_aps_test, suite : ['unit', 'push-aps'])
+
+if get_option ('acacia_enable_tlsf_frontend')
+  tlsf_frontend_test = executable (
+    'tlsf-frontend-test',
+    '../src/tlsf_frontend.cc',
+    'tlsf_frontend_test.cc',
+    include_directories : inc,
+    dependencies : tlsf_deps + [spot_dep, bddx_dep],
+  )
+  test ('tlsf-frontend', tlsf_frontend_test, suite : ['unit', 'tlsf'])
+
+  executable (
+    'tlsf-frontend-inspect',
+    '../src/tlsf_frontend.cc',
+    'tlsf_frontend_inspect.cc',
+    include_directories : inc,
+    dependencies : tlsf_deps,
+  )
+endif
 
 symmetric_downset_test = executable ('symmetric-downset-test',
                                      'symmetric_downset_test.cc',

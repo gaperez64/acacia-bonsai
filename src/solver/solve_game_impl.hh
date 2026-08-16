@@ -156,13 +156,14 @@ namespace acacia::solver_detail {
   std::optional<spot::twa_graph_ptr>
   solve_with_downset (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax,
                       const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
-                      const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis) {
+                      const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
+                      [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints) {
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
     if (not do_synthesis) {
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
           aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
-          ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER ());
+          ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints);
       if (eq.attempted)
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut,
                                               all_inputs, all_outputs);

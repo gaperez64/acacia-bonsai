@@ -55,7 +55,7 @@
 #endif
 
 #ifndef ACACIA_EQUIVARIANT_MIN_BLOCKS
-# define ACACIA_EQUIVARIANT_MIN_BLOCKS 8
+# define ACACIA_EQUIVARIANT_MIN_BLOCKS 4
 #endif
 
 // Generator-fixpoint closure can be more expensive than directly sweeping a
@@ -114,8 +114,17 @@
 #ifndef ACACIA_TRANSLATION_PREF
 # define ACACIA_TRANSLATION_PREF spot::postprocessor::Small
 #endif
+#ifndef ACACIA_TRANSLATION_PREFS
+# define ACACIA_TRANSLATION_PREFS spot::postprocessor::Small
+#endif
 #ifndef ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER
 # define ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER 1
+#endif
+#ifndef ACACIA_ENABLE_SYNTACTIC_BYPASS
+# define ACACIA_ENABLE_SYNTACTIC_BYPASS 1
+#endif
+#ifndef ACACIA_ENABLE_TLSF_FRONTEND
+# define ACACIA_ENABLE_TLSF_FRONTEND 0
 #endif
 #ifndef VECTOR_ELT_T
 # define VECTOR_ELT_T signed char

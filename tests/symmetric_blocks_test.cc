@@ -140,6 +140,60 @@ int main () {
       }
     }
   }
+
+  // Partial client symmetry: the automaton has six indexed clients, but
+  // client 0 is fixed and the verified group is S_5 on indices {1,...,5}.
+  // Its one state in each client block must become ordinary shared state.
+  {
+    constexpr int total_clients = 6;
+    constexpr int active_clients = 5;
+    constexpr int B = 4;
+    constexpr int S = 3;
+    const unsigned num_states = S + B * total_clients;
+    group G;
+    G.full_symmetric = true;
+    for (int index = 1; index <= active_clients; ++index)
+      G.indices.push_back (index);
+    for (int other = 2; other <= active_clients; ++other) {
+      std::vector<unsigned> phi (num_states);
+      for (unsigned state = 0; state < num_states; ++state)
+        phi[state] = state;
+      for (int block = 0; block < B; ++block) {
+        const unsigned root_state = state_id (S, total_clients, block, 1);
+        const unsigned other_state = state_id (S, total_clients, block, other);
+        phi[root_state] = other_state;
+        phi[other_state] = root_state;
+      }
+      G.gens.push_back (std::move (phi));
+      G.gen_pairs.push_back ({1, other});
+    }
+
+    auto L = compute_block_layout (G, num_states);
+    bool ok = L.has_value ();
+    if (not ok) {
+      std::cerr << "FAIL (partial S_5 plus fixed client): no layout found\n";
+    } else {
+      ok &= generators_match_layout (G, *L);
+      ok &= L->num_clients == active_clients;
+      ok &= L->num_blocks == B;
+      ok &= L->shared_states.size () == (size_t) (S + B);
+      for (int slot = 0; slot < active_clients and ok; ++slot) {
+        ok &= L->slot_to_index[slot] == slot + 1;
+        for (int block = 0; block < B; ++block)
+          ok &= L->block_slot_state[block][slot] ==
+                state_id (S, total_clients, block, slot + 1);
+      }
+      for (int block = 0; block < B and ok; ++block) {
+        const unsigned fixed = state_id (S, total_clients, block, 0);
+        ok &= L->block_of[fixed] == -1 and L->slot_of[fixed] == -1;
+      }
+      if (not ok)
+        std::cerr << "FAIL (partial S_5 plus fixed client): incorrect layout\n";
+    }
+    if (not ok)
+      ++failures;
+  }
+
   if (failures == 0) {
     std::cout << "ALL symmetric_blocks synthetic tests PASSED\n";
     return 0;

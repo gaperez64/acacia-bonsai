@@ -22,6 +22,7 @@
 // here are small (linear in the number of clients).
 
 #include "configuration.hh"
+#include "solver/symmetry_certificate.hh"
 #include "utils/verbose.hh"
 
 #include <algorithm>
@@ -30,6 +31,7 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -45,6 +47,8 @@ namespace symmetry {
       std::map<long, spot::formula> idx2ap;
   };
 
+  using family_map = std::map<std::string, family>;
+
   struct group {
       std::vector<std::vector<unsigned>> gens;  // verified state-permutation generators
       // gen_pairs[t] is the client-index pair (a, b) whose verified transposition
@@ -55,19 +59,33 @@ namespace symmetry {
       // Sym(indices). The exhaustive detector verifies every pair; the
       // equivariant fast detector verifies a star generating set.
       bool full_symmetric = false;
-      std::map<std::string, family> families;    // AP family metadata, keyed by prefix
+      family_map families;                       // AP family metadata, keyed by prefix
 
       bool empty () const { return gens.empty (); }
       size_t size () const { return gens.size (); }
   };
 
   struct indexed_ap_analysis {
-      std::map<std::string, family> families;
+      family_map families;
       std::vector<long> indices;
       unsigned input_families = 0;
       unsigned output_families = 0;
+      bool syntax_hinted = false;
 
       bool empty () const { return families.empty (); }
+  };
+
+  // Pre-formatted fields used by the compact solver diagnostics.  A field is
+  // "-" when the corresponding structure is absent.
+  struct structure_report {
+      std::string families = "-";
+      std::string indices = "-";
+      std::string matrix = "-";
+      std::string subsets = "-";
+      std::string selected = "-";
+      std::string orbit_sizes = "-";
+      std::string blocks = "-";
+      std::string shared = "-";
   };
 
   namespace detail {
@@ -220,7 +238,7 @@ namespace symmetry {
     };
 
     inline std::optional<std::vector<unsigned>> verify_transposition (
-        const spot::twa_graph_ptr& aut, const std::map<std::string, family>& families,
+        const spot::twa_graph_ptr& aut, const family_map& families,
         long a, long b, const std::vector<std::vector<out_edge>>& oeA,
         const std::vector<std::string>& sigA) {
       const unsigned n = aut->num_states ();
@@ -247,10 +265,34 @@ namespace symmetry {
         return std::nullopt;
       return f.phi;
     }
+
+    // Structural automorphisms are closed under conjugation, so verified
+    // (a,b) and (b,c) swaps force (a,c).  The verified-transposition graph is
+    // therefore a union of cliques: its largest star is its largest component.
+    struct transposition_oracle {
+        transposition_oracle (const spot::twa_graph_ptr& a, const family_map& f)
+          : aut {a}, families {f}, oeA {out_edges (a)}, sigA {signatures (a, oeA)} {}
+
+        const std::optional<std::vector<unsigned>>& verify (long a, long b) {
+          const std::pair<long, long> key = std::minmax (a, b);
+          auto [it, inserted] = memo.try_emplace (key, std::nullopt);
+          if (inserted)
+            it->second = verify_transposition (aut, families, key.first, key.second, oeA, sigA);
+          return it->second;
+        }
+
+      private:
+        spot::twa_graph_ptr aut;
+        const family_map& families;
+        std::vector<std::vector<out_edge>> oeA;
+        std::vector<std::string> sigA;
+        std::map<std::pair<long, long>, std::optional<std::vector<unsigned>>> memo;
+    };
   }  // namespace detail
 
   inline indexed_ap_analysis analyze_indexed_aps (const spot::twa_graph_ptr& aut,
-                                                  bdd all_inputs, bdd all_outputs) {
+                                                  bdd all_inputs, bdd all_outputs,
+                                                  const std::vector<indexed_family_hint>& hints = {}) {
     indexed_ap_analysis analysis;
     auto dict = aut->get_dict ();
 
@@ -269,6 +311,52 @@ namespace symmetry {
       f.is_input = is_in;
       f.idx2ap[idx] = ap;
     }
+    if (not hints.empty ()) {
+      std::map<std::string, const indexed_family_hint*> hinted;
+      for (const auto& hint : hints) {
+        if (hint.members.empty ())
+          continue;
+        const auto expected_size = hint.hi >= hint.lo
+            ? static_cast<unsigned long long> (hint.hi - hint.lo) + 1
+            : 0;
+        if (expected_size != hint.members.size ())
+          throw std::runtime_error ("TLSF indexed-family hint has an invalid range");
+
+        std::string family_prefix;
+        for (size_t position = 0; position < hint.members.size (); ++position) {
+          std::string prefix;
+          long index = -1;
+          if (not detail::parse_indexed (hint.members[position], prefix, index) or
+              index != hint.lo + static_cast<long> (position))
+            throw std::runtime_error (
+                "TLSF indexed-family hint disagrees with scalar AP mangling");
+          if (position == 0)
+            family_prefix = std::move (prefix);
+          else if (prefix != family_prefix)
+            throw std::runtime_error (
+                "TLSF indexed-family hint spans multiple AP prefixes");
+        }
+        if (not hinted.emplace (family_prefix, &hint).second)
+          throw std::runtime_error ("duplicate TLSF indexed-family hint prefix");
+      }
+
+      for (const auto& [prefix, hint] : hinted) {
+        auto family = analysis.families.find (prefix);
+        if (family == analysis.families.end ())
+          continue;  // This translated/decomposed component does not use it.
+        if (family->second.is_input != hint->is_input)
+          throw std::runtime_error (
+              "TLSF indexed-family hint disagrees with the I/O partition");
+        for (const auto& [index, ap] : family->second.idx2ap) {
+          if (index < hint->lo or index > hint->hi or
+              hint->members[index - hint->lo] != ap.ap_name ())
+            throw std::runtime_error (
+                "TLSF indexed-family hint disagrees with name-derived APs");
+        }
+        analysis.syntax_hinted = true;
+      }
+    }
+
     if (analysis.families.empty ())
       return analysis;
 
@@ -296,6 +384,8 @@ namespace symmetry {
     return G;
   }
 
+  inline bool full_symmetric_on_indices (const group& G);
+
   // Detect verified client-transposition symmetries of `aut`. `all_inputs` /
   // `all_outputs` are BDD cubes over the input/output APs (used to keep each
   // transposition within one side of the I/O partition).
@@ -305,28 +395,24 @@ namespace symmetry {
     if (G.families.empty () or G.indices.size () < 2)
       return G;
 
-    const auto oeA = detail::out_edges (aut);
-    const auto sigA = detail::signatures (aut, oeA);
-
-    unsigned verified_pairs = 0;
-    const unsigned total_pairs =
+    [[maybe_unused]] const unsigned total_pairs =
         (unsigned) (G.indices.size () * (G.indices.size () - 1) / 2);
+    detail::transposition_oracle oracle {aut, G.families};
 
     for (size_t ia = 0; ia < G.indices.size (); ++ia)
       for (size_t ib = ia + 1; ib < G.indices.size (); ++ib) {
         const long a = G.indices[ia], b = G.indices[ib];
-        auto phi = detail::verify_transposition (aut, G.families, a, b, oeA, sigA);
+        const auto& phi = oracle.verify (a, b);
         if (phi.has_value ()) {
-          G.gens.push_back (std::move (*phi));
+          G.gens.push_back (*phi);
           G.gen_pairs.push_back ({a, b});
-          ++verified_pairs;
         }
       }
 
     // This compatibility detector remains exhaustive: callers that use
     // symmetry::detect directly still receive every verified pairwise
     // transposition in deterministic order.
-    G.full_symmetric = (verified_pairs == total_pairs) and total_pairs > 0;
+    G.full_symmetric = full_symmetric_on_indices (G);
 
     verb_do (1, vout << "[symmetry] verified " << G.gens.size () << "/" << total_pairs
                      << " client-transposition generators over " << G.indices.size ()
@@ -339,35 +425,141 @@ namespace symmetry {
     return detect (aut, analyze_indexed_aps (aut, all_inputs, all_outputs));
   }
 
+  // Directly verified AP-index transpositions, including the identity on the
+  // diagonal.  This is intentionally based on gen_pairs rather than the state
+  // permutations so diagnostics can display the exact recognition evidence.
+  inline std::vector<std::vector<bool>> verified_transposition_matrix (const group& G) {
+    const size_t n = G.indices.size ();
+    std::vector<std::vector<bool>> matrix (n, std::vector<bool> (n, false));
+    std::map<long, size_t> position;
+    for (size_t i = 0; i < n; ++i) {
+      position[G.indices[i]] = i;
+      matrix[i][i] = true;
+    }
+    for (const auto& [a, b] : G.gen_pairs) {
+      auto ia = position.find (a), ib = position.find (b);
+      if (ia == position.end () or ib == position.end ())
+        continue;
+      matrix[ia->second][ib->second] = true;
+      matrix[ib->second][ia->second] = true;
+    }
+    return matrix;
+  }
+
+  // Verified transpositions generate a full symmetric group on each connected
+  // component of this graph.  (The edge transpositions of any connected graph
+  // generate S_n.)  Components therefore are the maximal index subsets that
+  // the available structural evidence permits us to use symmetrically.
+  inline std::vector<std::vector<long>> maximal_full_symmetric_index_subsets (const group& G) {
+    const auto matrix = verified_transposition_matrix (G);
+    std::vector<bool> seen (G.indices.size (), false);
+    std::vector<std::vector<long>> subsets;
+    for (size_t start = 0; start < G.indices.size (); ++start) {
+      if (seen[start])
+        continue;
+      std::vector<size_t> todo {start};
+      seen[start] = true;
+      std::vector<long> subset;
+      while (not todo.empty ()) {
+        const size_t at = todo.back ();
+        todo.pop_back ();
+        subset.push_back (G.indices[at]);
+        for (size_t next = 0; next < G.indices.size (); ++next)
+          if (not seen[next] and matrix[at][next]) {
+            seen[next] = true;
+            todo.push_back (next);
+          }
+      }
+      std::sort (subset.begin (), subset.end ());
+      subsets.push_back (std::move (subset));
+    }
+    std::sort (subsets.begin (), subsets.end ());
+    return subsets;
+  }
+
+  inline bool full_symmetric_on_indices (const group& G) {
+    if (G.indices.size () < 2)
+      return false;
+    const auto components = maximal_full_symmetric_index_subsets (G);
+    return components.size () == 1 and components.front ().size () == G.indices.size ();
+  }
+
+  inline group restrict_to_full_symmetric_subset (const group& G,
+                                                   const std::vector<long>& indices) {
+    group result;
+    result.families = G.families;
+    result.indices = indices;
+    for (size_t i = 0; i < G.gens.size () and i < G.gen_pairs.size (); ++i) {
+      const auto [a, b] = G.gen_pairs[i];
+      if (std::binary_search (indices.begin (), indices.end (), a) and
+          std::binary_search (indices.begin (), indices.end (), b)) {
+        result.gens.push_back (G.gens[i]);
+        result.gen_pairs.push_back ({a, b});
+      }
+    }
+    result.full_symmetric = full_symmetric_on_indices (result);
+    return result;
+  }
+
+  inline group largest_full_symmetric_subgroup (const group& G) {
+    const auto subsets = maximal_full_symmetric_index_subsets (G);
+    if (subsets.empty ()) {
+      group result;
+      result.families = G.families;
+      return result;
+    }
+    const auto best = std::max_element (
+        subsets.begin (), subsets.end (), [] (const auto& lhs, const auto& rhs) {
+          if (lhs.size () != rhs.size ())
+            return lhs.size () < rhs.size ();
+          return lhs > rhs;  // deterministic tie-break: lexicographically first
+        });
+    return restrict_to_full_symmetric_subset (G, *best);
+  }
+
   inline group detect_full_symmetric_generators (const spot::twa_graph_ptr& aut,
                                                  const indexed_ap_analysis& analysis) {
 #if ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT
-    return detect (aut, analysis);
+    return largest_full_symmetric_subgroup (detect (aut, analysis));
 #else
-    group G = group_from_analysis (analysis);
-    if (G.families.empty () or G.indices.size () < 2)
-      return G;
+    const group base = group_from_analysis (analysis);
+    if (base.families.empty () or base.indices.size () < 2)
+      return base;
 
-    const auto oeA = detail::out_edges (aut);
-    const auto sigA = detail::signatures (aut, oeA);
-    const long root = G.indices.front ();
-    unsigned verified = 0;
+    detail::transposition_oracle oracle {aut, base.families};
+    group G;
+    G.families = base.families;
 
-    for (size_t i = 1; i < G.indices.size (); ++i) {
-      const long other = G.indices[i];
-      auto phi = detail::verify_transposition (aut, G.families, root, other, oeA, sigA);
-      if (not phi.has_value ()) {
-        G.full_symmetric = false;
-        break;
+    // A verified star generates the full symmetric group on its vertices.
+    // Try every possible root after a failed edge and keep the largest star;
+    // indices outside that star remain ordinary shared AP/state structure.
+    for (long root : base.indices) {
+      group candidate;
+      candidate.families = base.families;
+      candidate.indices.push_back (root);
+      for (long other : base.indices) {
+        if (other == root)
+          continue;
+        const auto& phi = oracle.verify (root, other);
+        if (not phi.has_value ())
+          continue;
+        candidate.indices.push_back (other);
+        candidate.gens.push_back (*phi);
+        candidate.gen_pairs.push_back ({root, other});
       }
-      G.gens.push_back (std::move (*phi));
-      G.gen_pairs.push_back ({root, other});
-      ++verified;
+      std::sort (candidate.indices.begin (), candidate.indices.end ());
+      candidate.full_symmetric = full_symmetric_on_indices (candidate);
+
+      if (candidate.indices.size () > G.indices.size () or
+          (candidate.indices.size () == G.indices.size () and
+           candidate.indices < G.indices))
+        G = std::move (candidate);
+      if (G.indices.size () == base.indices.size ())
+        break;
     }
-    G.full_symmetric = (verified + 1 == G.indices.size ()) and verified > 0;
 
 # if ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION
-    const group exhaustive = detect (aut, analysis);
+    const group exhaustive = largest_full_symmetric_subgroup (detect (aut, analysis));
     const bool agrees = (G.full_symmetric == exhaustive.full_symmetric) and
                         (G.indices == exhaustive.indices);
     if (not agrees)
@@ -378,7 +570,8 @@ namespace symmetry {
     assert (agrees);
 # endif
 
-    const unsigned needed = G.indices.size () > 0 ? (unsigned) G.indices.size () - 1 : 0;
+    [[maybe_unused]] const unsigned needed =
+        G.indices.size () > 0 ? (unsigned) G.indices.size () - 1 : 0;
     verb_do (1, vout << "[symmetry] fast verified " << G.gens.size () << "/" << needed
                      << " star transposition generators over " << G.indices.size ()
                      << " clients (full_symmetric=" << G.full_symmetric
@@ -392,5 +585,9 @@ namespace symmetry {
     return detect_full_symmetric_generators (
         aut, analyze_indexed_aps (aut, all_inputs, all_outputs));
   }
+
+  // Defined in symmetric_blocks.hh, after block-layout recovery is available.
+  inline structure_report describe (const indexed_ap_analysis& analysis, const group& G,
+                                    unsigned num_states);
 
 }  // namespace symmetry

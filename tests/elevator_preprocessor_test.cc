@@ -93,13 +93,14 @@ namespace {
   }
 
   bool nondeterministic_closed_scc_is_skipped () {
-    auto aut = make_aut (1);
+    auto aut = make_aut (2);
     aut->new_acc_edge (0, 0, bddtrue, false);
-    aut->new_acc_edge (0, 0, bddtrue, false);
+    aut->new_acc_edge (0, 1, bddtrue, false);
+    aut->new_acc_edge (1, 0, bddtrue, false);
 
     run_elevator (aut);
 
-    return expect ("nondeterministic SCC not collapsed", aut->num_states () == 1) and
+    return expect ("nondeterministic SCC not collapsed", aut->num_states () == 2) and
            expect ("both overlapping edges remain", count_edges_from (aut, 0) == 2);
   }
 

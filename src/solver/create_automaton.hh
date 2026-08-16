@@ -14,13 +14,15 @@
 #  define ACACIA_TRANSLATION_PREF spot::postprocessor::Small
 #endif
 
-spot::twa_graph_ptr create_automaton (spot::formula& f, spot::translator& trans) {
+spot::twa_graph_ptr create_automaton (
+    spot::formula& f, spot::translator& trans,
+    spot::postprocessor::output_pref preference = ACACIA_TRANSLATION_PREF) {
   // To Universal co-Büchi Automaton
   trans.set_type (spot::postprocessor::BA);
   // "Desired characteristics": state-based acceptance (implied by BA) plus the
   // configurable size/determinism preference above.
   trans.set_pref (
-      ACACIA_TRANSLATION_PREF |
+      preference |
       // spot::postprocessor::Complete | // TODO: We did not need that originally; do we now?
       spot::postprocessor::SBAcc);  // state-based acceptacen
   verb_do (1, vout << "Formula: " << f << std::endl);
