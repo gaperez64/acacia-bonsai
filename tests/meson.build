@@ -104,6 +104,15 @@ test ('degenerate-io-cli',
       suite : ['unit', 'degenerate-io'],
       depends : [ab_exe])
 
+mealy_to_moore_test = executable ('mealy-to-moore-test',
+                                  '../src/solver/mealy_to_moore.cc',
+                                  'mealy_to_moore_test.cc',
+                                  include_directories : inc,
+                                  dependencies : [spot_dep, bddx_dep])
+test ('mealy-to-moore',
+      mealy_to_moore_test,
+      suite : ['unit', 'tlsf', 'synthesis'])
+
 bash = find_program ('bash')
 default_real_children = 1
 if get_option ('acacia_translation_pref') == 'small+any'
@@ -159,7 +168,7 @@ if get_option ('acacia_enable_tlsf_frontend')
     '../src/tlsf_frontend.cc',
     'tlsf_frontend_inspect.cc',
     include_directories : inc,
-    dependencies : tlsf_deps,
+    dependencies : tlsf_deps + [spot_dep, bddx_dep],
   )
 endif
 

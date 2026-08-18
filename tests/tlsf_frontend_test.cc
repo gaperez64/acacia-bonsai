@@ -38,7 +38,7 @@ MAIN {
   ok &= expect ("formula emitted", not parsed.formula.empty ());
   ok &= expect ("input lowercase convention", parsed.inputs == std::vector<std::string> {"req"});
   ok &= expect ("output lowercase convention", parsed.outputs == std::vector<std::string> {"grant"});
-  ok &= expect ("target adaptation follows TLSF", parsed.formula == "G (req -> X grant)");
+  ok &= expect ("formula uses effective Mealy target", parsed.formula == "G (req -> grant)");
   ok &= expect ("source format", parsed.metadata.source_format == "tlsf");
   ok &= expect ("original semantics", parsed.metadata.tlsf_semantics == "Mealy");
   ok &= expect ("original target", parsed.metadata.tlsf_target == "Moore");

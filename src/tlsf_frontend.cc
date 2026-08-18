@@ -21,7 +21,7 @@ namespace acacia::tlsf_frontend {
       tlsf::Options value;
       value.format = tlsf::Format::Ltlxba;
       // Match the checked-in ltlxba/.part identifier convention.  TLSF
-      // semantics and target adaptation remain specification-defined.
+      // semantics remain specification-defined.
       value.lowercase = true;
       return value;
     }
@@ -62,9 +62,19 @@ namespace acacia::tlsf_frontend {
 
   specification parse (std::string_view text) {
     const std::string owned {text};
-    tlsf::Result result = tlsf::decompose (owned, options ());
+    tlsf::Options conversion_options = options ();
+    tlsf::Result result = tlsf::decompose (owned, conversion_options);
     if (finite_semantics (result.semantics))
       throw std::runtime_error ("finite TLSF semantics are not supported");
+
+    // Acacia solves in the Mealy frame.  Preserve the requested target for
+    // synthesis metadata, but ask the linked frontend for an effective Mealy
+    // formula so solving and controller conversion share one internal path.
+    const std::string source_target = result.target;
+    if (source_target != "Mealy") {
+      conversion_options.overwrite_target = "Mealy";
+      result = tlsf::decompose (owned, conversion_options);
+    }
 
     stable_signal_order (result.inputs, result.indexed_families, false);
     stable_signal_order (result.outputs, result.indexed_families, true);
@@ -72,8 +82,8 @@ namespace acacia::tlsf_frontend {
     specification value;
     value.metadata.source_format = "tlsf";
     value.metadata.tlsf_semantics = result.semantics;
-    value.metadata.tlsf_target = result.target;
-    value.metadata.tlsf_effective_target = "Mealy";
+    value.metadata.tlsf_target = source_target;
+    value.metadata.tlsf_effective_target = result.target;
     value.metadata.tlsf_gr_level = result.gr_level;
     if (has_indexed_conjunction (text)) {
       value.metadata.tlsf_indexed_families.reserve (result.indexed_families.size ());

@@ -1,6 +1,7 @@
 ab_sources = [
   'acacia-bonsai.cc',
   'version.cc',
+  'solver/mealy_to_moore.cc',
   'solver/solver_invoker.cc',
   'solver/solve_game.cc',
   'solver/solve_game_array_bitset.cc',

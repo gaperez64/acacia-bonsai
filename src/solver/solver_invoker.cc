@@ -7,6 +7,7 @@
 #include "solver/create_automaton.hh"
 #include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
+#include "solver/mealy_to_moore.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/symmetric_blocks.hh"
@@ -118,7 +119,8 @@ namespace {
   void write_no_input_strategy (const std::vector<std::string>& output_aps,
                                 const std::vector<std::vector<bool>>& values,
                                 size_t loop_start,
-                                const std::string& synth_fname) {
+                                const std::string& synth_fname,
+                                bool synthesize_moore) {
     size_t capacity = 1;
     unsigned n_latches = 0;
     while (capacity < values.size ()) {
@@ -155,8 +157,11 @@ namespace {
     }
 
     std::ofstream synthesis_file (synth_fname);
-    if (synthesis_file)
+    if (synthesis_file) {
+      if (synthesize_moore)
+        circuit = acacia::synthesis::mealy_to_moore (circuit);
       spot::print_aiger (synthesis_file, circuit);
+    }
     else
       std::cerr << "Failed to open the file to store controller!\n";
   }
@@ -165,7 +170,8 @@ namespace {
                          spot::formula spot_formula,
                          std::optional<UNREAL_X_T> check_unreal,
                          TRANSLATION_PREF_T translation_pref,
-                         const std::optional<std::string>& synth_fname) {
+                         const std::optional<std::string>& synth_fname,
+                         bool synthesize_moore) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     int owner = 0;
     struct owner_cleanup {
@@ -228,7 +234,8 @@ namespace {
 
       if (values.empty ())
         values.push_back (std::vector<bool> (output_aps.size (), false));
-      write_no_input_strategy (output_aps, values, loop_start, *synth_fname);
+      write_no_input_strategy (output_aps, values, loop_start, *synth_fname,
+                               synthesize_moore);
     }
     return true;
   }
@@ -257,6 +264,7 @@ namespace {
       const SPOT_FAST_T spot_fast;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
+      const bool synthesize_moore;
       const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
       std::vector<spot::const_twa_graph_ptr> strats;
 
@@ -274,6 +282,7 @@ namespace {
                    TRANSLATION_PREF_T translation_pref,
                    SPOT_FAST_T spot_fast,
                    const std::optional<std::string>& synth_fname,
+                   bool synthesize_moore,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints)
         : dict {dict},
           input_aps {input_aps},
@@ -285,6 +294,7 @@ namespace {
           translation_pref {translation_pref},
           spot_fast {spot_fast},
           synth_fname {synth_fname},
+          synthesize_moore {synthesize_moore},
           indexed_family_hints {indexed_family_hints} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
@@ -335,9 +345,12 @@ namespace {
                                                          // inputs and outputs
                                                          // are in the AIG
                                                          input_aps, nonempty_out_part);
+        spot::aig_ptr output_aig = synthesize_moore
+                                       ? acacia::synthesis::mealy_to_moore (mealy_aig)
+                                       : mealy_aig;
         std::ofstream synthesis_file (*synth_fname);
         if (synthesis_file)
-          spot::print_aiger (synthesis_file, mealy_aig);
+          spot::print_aiger (synthesis_file, output_aig);
         else
           std::cerr << "Failed to open the file to store controller!\n";
 #ifndef NDEBUG
@@ -613,6 +626,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
               const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata) {
+  const bool synthesize_moore =
+      metadata.source_format == "tlsf" and metadata.tlsf_target == "Moore";
   auto indexed_family_hints = metadata.tlsf_indexed_families;
   if (check_unreal.has_value ())
     for (auto& hint : indexed_family_hints)
@@ -669,7 +684,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // existing lasso-to-AIG path; this fast path is intentionally decision-only.
   if (input_aps.empty () and synth_fname.has_value ())
     return acacia::diagnostics::finish (
-        run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname),
+        run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname,
+                          synthesize_moore),
         "no-input-ltl-synthesis");
 
   if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
@@ -742,7 +758,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      translation_pref, spot_fast, synth_fname, indexed_family_hints);
+                      translation_pref, spot_fast, synth_fname, synthesize_moore,
+                      indexed_family_hints);
 
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.

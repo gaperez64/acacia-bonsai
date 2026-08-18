@@ -22,12 +22,12 @@ container so `-march=native` can target the host:
 docker pull ghcr.io/gaperez64/acacia-bonsai:latest
 docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
 ./scripts/compile.sh
-./scripts/acacia-bonsai.sh best_decomp_mona \
+./scripts/acacia-bonsai.sh best_decomp_rank_bucketed_mona_tlsf \
   -f 'G F req -> G F grant' -i req -o grant
 cat examples/realizable.tlsf | \
-  ./scripts/acacia-bonsai.sh best_decomp_mona --tlsf
+  ./scripts/acacia-bonsai.sh best_decomp_rank_bucketed_mona_tlsf --tlsf
 cat examples/realizable.tlsf | \
-  ./scripts/acacia-synthesis.sh best_decomp_mona --tlsf > controller.aag
+  ./scripts/acacia-synthesis.sh best_decomp_rank_bucketed_mona_tlsf --tlsf > controller.aag
 ```
 
 The CLI example intentionally omits `--rm`: compilation happens inside the
@@ -102,9 +102,10 @@ the `best_decomp_mona_tlsf` preset:
 ./self-benchmark.sh -L -R -c best_decomp_mona_tlsf
 build_best_decomp_mona_tlsf/src/acacia-bonsai -T spec.tlsf
 ```
-`-T/--tlsf FILE` parses TLSF natively. The existing wrapper path through the
-bundled `tlsf2ltl` and `tlsfinfo` executables continues to work when the native
-frontend is disabled.
+`-T/--tlsf FILE` parses TLSF natively. The wrapper accepts TLSF on standard
+input with `--tlsf` through the linked frontend; no external TLSF
+converter or metadata binary is used at runtime. Moore-target controller
+conversion is likewise performed inside Acacia.
 
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
