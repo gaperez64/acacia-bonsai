@@ -11,10 +11,11 @@ permissions:
 
 env:
   SPOT_VERSION: 2.15.1
+  SPOT_PREFIX: /opt/spot_install
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - name: Install packages
       run: |
@@ -22,7 +23,7 @@ jobs:
         sudo apt install -y zsh meson git g++-14 python-is-python3 \
                     ninja-build gnupg wget python3-pip \
                     pkg-config libffi-dev \
-                    libtool valgrind gpg
+                    libtool valgrind gpg flex bison
         sudo pip install --upgrade meson
     - name: Install newer libltldl
       run: |
@@ -44,31 +45,40 @@ jobs:
       uses: actions/checkout@v7
       with:
         fetch-depth: 0
-        submodules: recursive
+        submodules: true
+    - name: Prepare Spot install prefix
+      run: |
+        sudo mkdir -p "$SPOT_PREFIX"
+        sudo chown -R "$USER:$USER" "$SPOT_PREFIX"
     - name: Restore Spot cache
       id: spot-cache
-      uses: actions/cache@v5
+      uses: actions/cache/restore@v5
       with:
-        path: |
-          /usr/local/lib/libspot*
-          /usr/local/lib/libbddx*
-          /usr/local/include/spot
-          /usr/local/lib/pkgconfig/libspot.pc
-          /usr/local/lib/pkgconfig/libbddx.pc
-          /usr/local/bin/spot
-          /usr/local/bin/ltl*
-          /usr/local/bin/aut*
-          /usr/local/bin/ran*
-        key: spot-${{ env.SPOT_VERSION }}-maxacc64-nopy-${{ runner.os }}
+        # Unlike /usr/local, this prefix is writable during cache restore.
+        path: ${{ env.SPOT_PREFIX }}
+        key: spot-${{ env.SPOT_VERSION }}-ubuntu24.04-${{ runner.arch }}-gcc14-maxacc64-nopy-v2
     - name: Install Spot
+      id: install-spot
       if: steps.spot-cache.outputs.cache-hit != 'true'
       run: |
-        sudo wget http://www.lre.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz
-        tar -xvzf spot-${SPOT_VERSION}.tar.gz
+        wget -q "https://www.lrde.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz"
+        tar -xzf "spot-${SPOT_VERSION}.tar.gz"
         cd spot-${SPOT_VERSION}
-        sudo ./configure --enable-max-accsets=64 --disable-python
-        sudo make
-        sudo make install
+        CC=gcc-14 CXX=g++-14 ./configure \
+          --prefix="$SPOT_PREFIX" \
+          --enable-max-accsets=64 \
+          --disable-python \
+          --disable-static \
+          --disable-doxygen
+        make -j"$(nproc)"
+        make install
+    - name: Register and verify Spot installation
+      run: |
+        echo "$SPOT_PREFIX/bin" >> "$GITHUB_PATH"
+        echo "PKG_CONFIG_PATH=$SPOT_PREFIX/lib/pkgconfig" >> "$GITHUB_ENV"
+        echo "LD_LIBRARY_PATH=$SPOT_PREFIX/lib" >> "$GITHUB_ENV"
+        PKG_CONFIG_PATH="$SPOT_PREFIX/lib/pkgconfig" pkg-config --modversion libspot
+        LD_LIBRARY_PATH="$SPOT_PREFIX/lib" "$SPOT_PREFIX/bin/ltlfilt" --version
     - name: Compile and test a debug configuration
       run: |
         export CXX=g++-14
@@ -79,6 +89,14 @@ jobs:
         ./self-benchmark.sh -c base -j -b ab/issue54
         rm build_base/benchmarked
         ./self-benchmark.sh -c base -j -b synthesis
+    - name: Compile and test the native TLSF frontend
+      run: |
+        export CXX=g++-14
+        meson setup build_tlsf_ci --buildtype debug \
+          -Dacacia_enable_tlsf_frontend=true
+        meson compile -C build_tlsf_ci
+        meson test -C build_tlsf_ci --suite tlsf \
+          --num-processes 1 --print-errorlogs
     - name: Compile and test shipped configurations
       run: |
         export CXX=g++-14
@@ -86,6 +104,15 @@ jobs:
         ./self-benchmark.sh -L -c "$configs" -j -b ab/tiny
     - name: Test version reporting
       run: meson test -C build_base --suite version
+    - name: Save Spot cache
+      if: >-
+        always() &&
+        steps.spot-cache.outputs.cache-hit != 'true' &&
+        steps.install-spot.outcome == 'success'
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ env.SPOT_PREFIX }}
+        key: ${{ steps.spot-cache.outputs.cache-primary-key }}
     - name: Upload test results
       uses: actions/upload-artifact@v7
       if: always()

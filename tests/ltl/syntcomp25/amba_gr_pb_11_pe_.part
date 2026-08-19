@@ -1,0 +1,2 @@
+.inputs hburst1 hburst0 hlock10 hbusreq10 hlock9 hbusreq9 hlock8 hbusreq8 hlock7 hbusreq7 hlock6 hbusreq6 hlock5 hbusreq5 hlock4 hbusreq4 hlock3 hbusreq3 hlock2 hbusreq2 hlock1 hbusreq1 hlock0 hbusreq0 hready
+.outputs stateg10_10 stateg10_9 stateg10_8 stateg10_7 stateg10_6 stateg10_5 stateg10_4 stateg10_3 stateg10_2 stateg10_1 stateg3_2 stateg3_1 stateg3_0 stateg2 statea1_1 statea1_0 busreq hgrant10 hgrant9 hgrant8 hgrant7 hgrant6 hgrant5 hgrant4 hgrant3 hgrant2 hgrant1 hgrant0 locked decide start hmastlock hmaster3 hmaster2 hmaster1 hmaster0

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "solver/symmetry.hh"
 
 #include <algorithm>
 #include <chrono>
@@ -22,14 +23,37 @@ namespace acacia::diagnostics {
 
   using clock = std::chrono::steady_clock;
 
+  inline bool env_flag_enabled (const char* name) {
+    const char* env = std::getenv (name);
+    if (env == nullptr or *env == '\0')
+      return false;
+    std::string_view v {env};
+    return v != "0" and v != "false" and v != "FALSE" and v != "off" and v != "OFF";
+  }
+
   inline bool enabled () {
-    static const bool value = [] {
-      const char* env = std::getenv ("ACACIA_DIAG");
+    static const bool value = env_flag_enabled ("ACACIA_DIAG");
+    return value;
+  }
+
+  enum class preprocessing_census_mode { off, continue_solving, census_only };
+
+  inline preprocessing_census_mode preprocessing_census () {
+    static const preprocessing_census_mode value = [] {
+      const char* env = std::getenv ("ACACIA_DIAG_PREPROCESSING_CENSUS");
       if (env == nullptr or *env == '\0')
-        return false;
-      std::string_view v {env};
-      return v != "0" and v != "false" and v != "FALSE" and v != "off" and v != "OFF";
+        return preprocessing_census_mode::off;
+      if (std::string_view {env} == "only")
+        return preprocessing_census_mode::census_only;
+      return env_flag_enabled ("ACACIA_DIAG_PREPROCESSING_CENSUS")
+          ? preprocessing_census_mode::continue_solving
+          : preprocessing_census_mode::off;
     } ();
+    return value;
+  }
+
+  inline bool alphabet_census_only () {
+    static const bool value = env_flag_enabled ("ACACIA_DIAG_ALPHABET_CENSUS_ONLY");
     return value;
   }
 
@@ -38,18 +62,41 @@ namespace acacia::diagnostics {
       std::string path = "unknown";
       std::string result = "unknown";
       std::string final_reason = "unknown";
+      std::string translation_pref = "unknown";
+      std::string source_format = "ltl";
+      std::string tlsf_semantics = "-";
+      std::string tlsf_target = "-";
+      std::string tlsf_effective_target = "-";
+      std::string syntactic_bypass = "not-run";
       std::string fast_class = "not-run";
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
       std::string equivariant = "not-run";
+      // sym_* covers every diagnostic recognition pass, including instances
+      // the solver declines; eq_* is populated only when solving is attempted.
+      std::string symmetry_families = "-";
+      std::string symmetry_indices = "-";
+      std::string symmetry_matrix = "-";
+      std::string symmetry_subsets = "-";
+      std::string symmetry_selected = "-";
+      std::string symmetry_orbit_sizes = "-";
+      std::string symmetry_blocks = "-";
+      std::string symmetry_shared = "-";
 
       long long total_ms = 0;
       long long rsimp_ms = 0;
+      long long syntactic_bypass_ms = 0;
       long long translation_ms = 0;
       long long fast_class_ms = 0;
       long long fast_solve_ms = 0;
       long long preproc_ms = 0;
+      long long cap_census_ms = 0;
+      long long simulation_census_ms = 0;
       long long solve_ms = 0;
+      double cpre_ms = 0.0;
+      double picker_ms = 0.0;
+      double apply_ms = 0.0;
+      double downset_ms = 0.0;
 
       bool rsimp_changed = false;
       size_t aut_states = 0;
@@ -58,12 +105,30 @@ namespace acacia::diagnostics {
       size_t preproc_states_after = 0;
       size_t preproc_edges_before = 0;
       size_t preproc_edges_after = 0;
+      size_t cap_k = 0;
+      size_t cap_states_at_k = 0;
+      size_t cap_states_finite = 0;
+      size_t cap_states_zero = 0;
+      size_t cap_counting_states = 0;
+      size_t cap_finite_counting_states = 0;
+      size_t simulation_states_after = 0;
+      size_t simulation_states_removed = 0;
       size_t bool_threshold = 0;
       size_t bitset_threshold = 0;
       size_t max_f = 0;
+      size_t max_f_size = 0;
+      unsigned long long actions_seen = 0;
+      unsigned long long meets_computed = 0;
+      unsigned long long meet_batches = 0;
+      unsigned long long alphabet_input_paths = 0;
+      unsigned long long alphabet_input_nodes = 0;
+      unsigned long long alphabet_output_paths = 0;
+      unsigned long long alphabet_output_nodes = 0;
+      unsigned long long alphabet_bdd_nodes = 0;
       int loops = 0;
       int k_attempts = 0;
       int last_k = -1;
+      int tlsf_gr_level = -1;
       size_t equivariant_clients = 0;
       size_t equivariant_blocks = 0;
       size_t equivariant_orbits = 0;
@@ -72,6 +137,7 @@ namespace acacia::diagnostics {
       void observe_loop (size_t f_size, int k) {
         ++loops;
         max_f = std::max (max_f, f_size);
+        max_f_size = std::max (max_f_size, f_size);
         if (last_k != k) {
           last_k = k;
           ++k_attempts;
@@ -86,6 +152,8 @@ namespace acacia::diagnostics {
   };
 
   inline thread_local child_metrics* current_child = nullptr;
+  inline thread_local child_metrics* active_cpre_metrics = nullptr;
+  inline thread_local clock::time_point active_cpre_started {};
 
   inline child_metrics* current () {
     return enabled () ? current_child : nullptr;
@@ -112,8 +180,21 @@ namespace acacia::diagnostics {
     return value;
   }
 
+  inline void flush_active_cpre () {
+    if (active_cpre_metrics == nullptr)
+      return;
+    const auto now = clock::now ();
+    active_cpre_metrics->cpre_ms +=
+        std::chrono::duration<double, std::milli> (now - active_cpre_started).count ();
+    active_cpre_started = now;
+  }
+
   inline void print (const child_metrics& m, std::string_view kind = "final",
                      std::string_view checkpoint = "final") {
+    // Progress can be emitted from inside a CPre that never returns before
+    // the wrapper terminates the child.  Charge the live interval before
+    // serializing so those snapshots still account for fixed-point time.
+    flush_active_cpre ();
     std::ostringstream line;
     line << "ACACIA_DIAG"
          << " pid=" << getpid ()
@@ -121,8 +202,16 @@ namespace acacia::diagnostics {
          << " checkpoint=" << checkpoint
          << " instance=" << m.instance
          << " path=" << m.path
+         << " translation_pref=" << m.translation_pref
+         << " source_format=" << m.source_format
+         << " tlsf_semantics=" << m.tlsf_semantics
+         << " tlsf_target=" << m.tlsf_target
+         << " tlsf_effective_target=" << m.tlsf_effective_target
+         << " tlsf_gr_level=" << m.tlsf_gr_level
          << " rsimp_ms=" << m.rsimp_ms
          << " rsimp_changed=" << (m.rsimp_changed ? 1 : 0)
+         << " syntactic_bypass=" << m.syntactic_bypass
+         << " syntactic_bypass_ms=" << m.syntactic_bypass_ms
          << " translation_ms=" << m.translation_ms
          << " aut_states=" << m.aut_states
          << " aut_edges=" << m.aut_edges
@@ -136,15 +225,46 @@ namespace acacia::diagnostics {
          << " preproc_states_after=" << m.preproc_states_after
          << " preproc_edges_before=" << m.preproc_edges_before
          << " preproc_edges_after=" << m.preproc_edges_after
+         << " cap_census_ms=" << m.cap_census_ms
+         << " cap_k=" << m.cap_k
+         << " cap_states_at_k=" << m.cap_states_at_k
+         << " cap_states_finite=" << m.cap_states_finite
+         << " cap_states_zero=" << m.cap_states_zero
+         << " cap_counting_states=" << m.cap_counting_states
+         << " cap_finite_counting_states=" << m.cap_finite_counting_states
+         << " simulation_census_ms=" << m.simulation_census_ms
+         << " simulation_states_after=" << m.simulation_states_after
+         << " simulation_states_removed=" << m.simulation_states_removed
          << " bool_threshold=" << m.bool_threshold
          << " bitset_threshold=" << m.bitset_threshold
          << " max_f=" << m.max_f
+         << " max_f_size=" << m.max_f_size
          << " loops=" << m.loops
          << " k_attempts=" << m.k_attempts
+         << " cpre_ms=" << m.cpre_ms
+         << " picker_ms=" << m.picker_ms
+         << " apply_ms=" << m.apply_ms
+         << " downset_ms=" << m.downset_ms
+         << " actions_seen=" << m.actions_seen
+         << " meets_computed=" << m.meets_computed
+         << " meet_batches=" << m.meet_batches
+         << " alphabet_input_paths=" << m.alphabet_input_paths
+         << " alphabet_input_nodes=" << m.alphabet_input_nodes
+         << " alphabet_output_paths=" << m.alphabet_output_paths
+         << " alphabet_output_nodes=" << m.alphabet_output_nodes
+         << " alphabet_bdd_nodes=" << m.alphabet_bdd_nodes
          << " equivariant=" << m.equivariant
          << " eq_clients=" << m.equivariant_clients
          << " eq_blocks=" << m.equivariant_blocks
          << " eq_orbits=" << m.equivariant_orbits
+         << " sym_families=" << m.symmetry_families
+         << " sym_indices=" << m.symmetry_indices
+         << " sym_matrix=" << m.symmetry_matrix
+         << " sym_subsets=" << m.symmetry_subsets
+         << " sym_selected=" << m.symmetry_selected
+         << " sym_orbit_sizes=" << m.symmetry_orbit_sizes
+         << " sym_blocks=" << m.symmetry_blocks
+         << " sym_shared=" << m.symmetry_shared
          << " solve_ms=" << m.solve_ms
          << " total_ms=" << m.total_ms
          << " result=" << m.result
@@ -202,6 +322,113 @@ namespace acacia::diagnostics {
       clock::time_point started;
   };
 
+  enum class fine_metric { cpre, picker, apply };
+
+  class scoped_fine_timer {
+    public:
+      explicit scoped_fine_timer (fine_metric metric)
+        : metrics {current ()}, metric {metric}, started {clock::now ()} {
+        if (metrics != nullptr and metric == fine_metric::cpre) {
+          active_cpre_metrics = metrics;
+          active_cpre_started = started;
+        }
+      }
+
+      ~scoped_fine_timer () {
+        if (metrics == nullptr)
+          return;
+        if (metric == fine_metric::cpre) {
+          flush_active_cpre ();
+          active_cpre_metrics = nullptr;
+          return;
+        }
+        const double elapsed =
+            std::chrono::duration<double, std::milli> (clock::now () - started).count ();
+        switch (metric) {
+          case fine_metric::cpre:
+            break;
+          case fine_metric::picker:
+            metrics->picker_ms += elapsed;
+            break;
+          case fine_metric::apply:
+            metrics->apply_ms += elapsed;
+            break;
+        }
+      }
+
+    private:
+      child_metrics* metrics;
+      fine_metric metric;
+      clock::time_point started;
+  };
+
+  // Time a downset operation while excluding any nested actioner.apply()
+  // calls.  f.apply() interleaves both, so a plain nested timer would count
+  // the letter work twice and bias the second-level phase split.
+  class scoped_downset_timer {
+    public:
+      scoped_downset_timer ()
+        : metrics {current ()},
+          apply_before {metrics == nullptr ? 0.0 : metrics->apply_ms},
+          started {clock::now ()} {}
+
+      ~scoped_downset_timer () {
+        if (metrics == nullptr)
+          return;
+        const double elapsed =
+            std::chrono::duration<double, std::milli> (clock::now () - started).count ();
+        const double nested_apply = metrics->apply_ms - apply_before;
+        metrics->downset_ms += std::max (0.0, elapsed - nested_apply);
+      }
+
+    private:
+      child_metrics* metrics;
+      double apply_before;
+      clock::time_point started;
+  };
+
+  inline void observe_action () {
+    if (auto* m = current ())
+      ++m->actions_seen;
+  }
+
+  inline void snapshot_action_progress () {
+    if (auto* m = current ()) {
+      const auto count = m->actions_seen;
+      if (count <= 4 or (count & (count - 1)) == 0) {
+        m->refresh_total ();
+        print (*m, "progress", "cpre-after-action");
+      }
+    }
+  }
+
+  inline void observe_meets (size_t lhs, size_t rhs) {
+    if (auto* m = current ()) {
+      m->meets_computed += static_cast<unsigned long long> (lhs) * rhs;
+      ++m->meet_batches;
+    }
+  }
+
+  inline void snapshot_intersection_progress () {
+    if (auto* m = current ()) {
+      const auto count = m->meet_batches;
+      if (count <= 4 or (count & (count - 1)) == 0) {
+        m->refresh_total ();
+        print (*m, "progress", "cpre-before-intersection");
+      }
+    }
+  }
+
+  inline void snapshot_loop_progress (std::string_view checkpoint) {
+    if (auto* m = current ()) {
+      const auto count = static_cast<unsigned> (m->loops);
+      if (count <= 4 or (count & (count - 1)) == 0) {
+        m->refresh_total ();
+        print (*m, "progress", checkpoint);
+      }
+    }
+  }
+
   inline void observe_loop (size_t f_size, int k) {
     if (auto* m = current ()) {
       m->observe_loop (f_size, k);
@@ -217,6 +444,20 @@ namespace acacia::diagnostics {
     if (auto* m = current ()) {
       m->refresh_total ();
       print (*m, "progress", checkpoint);
+    }
+  }
+
+  inline void set_alphabet_census (unsigned long long input_paths,
+                                   unsigned long long input_nodes,
+                                   unsigned long long output_paths,
+                                   unsigned long long output_nodes,
+                                   unsigned long long bdd_nodes) {
+    if (auto* m = current ()) {
+      m->alphabet_input_paths = input_paths;
+      m->alphabet_input_nodes = input_nodes;
+      m->alphabet_output_paths = output_paths;
+      m->alphabet_output_nodes = output_nodes;
+      m->alphabet_bdd_nodes = bdd_nodes;
     }
   }
 
@@ -248,6 +489,19 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_symmetry_structure (symmetry::structure_report report) {
+    if (auto* m = current ()) {
+      m->symmetry_families = std::move (report.families);
+      m->symmetry_indices = std::move (report.indices);
+      m->symmetry_matrix = std::move (report.matrix);
+      m->symmetry_subsets = std::move (report.subsets);
+      m->symmetry_selected = std::move (report.selected);
+      m->symmetry_orbit_sizes = std::move (report.orbit_sizes);
+      m->symmetry_blocks = std::move (report.blocks);
+      m->symmetry_shared = std::move (report.shared);
+    }
+  }
+
 #else
 
   struct scoped_child {
@@ -259,16 +513,33 @@ namespace acacia::diagnostics {
       noop* operator-> () { return nullptr; }
   };
 
+  inline bool alphabet_census_only () { return false; }
+
   struct scoped_timer {
       explicit scoped_timer (long long*) {}
   };
 
+  enum class fine_metric { cpre, picker, apply };
+  struct scoped_fine_timer {
+      explicit scoped_fine_timer (fine_metric) {}
+  };
+  struct scoped_downset_timer {};
+
   inline void observe_loop (size_t, int) {}
+  inline void observe_action () {}
+  inline void snapshot_action_progress () {}
+  inline void observe_meets (size_t, size_t) {}
+  inline void snapshot_intersection_progress () {}
+  inline void snapshot_loop_progress (std::string_view) {}
   inline void snapshot (std::string_view) {}
+  inline void set_alphabet_census (unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long) {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}
   inline void set_equivariant_attempt (size_t, size_t, size_t) {}
+  inline void set_symmetry_structure (symmetry::structure_report) {}
 
 #endif
 

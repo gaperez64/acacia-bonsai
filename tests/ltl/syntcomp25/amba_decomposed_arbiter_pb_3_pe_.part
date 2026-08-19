@@ -1,0 +1,2 @@
+.inputs allready hbusreq_0 hbusreq_1 hbusreq_2
+.outputs decide busreq hgrant_0 hgrant_1 hgrant_2

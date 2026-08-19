@@ -1,0 +1,27 @@
+# Focused 2025 LTL-selection panel for the equivariant solver gate.
+# Expected symmetry families.
+amba_decomposed_arbiter_pb_4_pe_.ltl
+amba_decomposed_arbiter_pb_5_pe_.ltl
+amba_decomposed_arbiter_pb_6_pe_.ltl
+arbiter_on_inpchange_pb_4_pe_.ltl
+arbiter_on_inpchange_pb_5_pe_.ltl
+load_balancer_pb_4_pe_.ltl
+load_balancer_pb_5_pe_.ltl
+load_balancer_pb_6_pe_.ltl
+arbiter_pb_5_pe_.ltl
+arbiter_pb_6_pe_.ltl
+
+# Indexed protocol controls that should exercise or decline the gate cheaply.
+round_robin_arbiter_pb_5_pe_.ltl
+prioritized_arbiter_pb_6_pe_.ltl
+abcg_arbiter_pb_5_pe_.ltl
+arbiter_with_buffer_pb_5_pe_.ltl
+
+# General non-protocol controls.
+Automata16S.ltl
+KitchenTimerV7.ltl
+MusicAppFeedback.ltl
+SPIWriteManag.ltl
+EscalatorSmart.ltl
+Sensor.ltl
+Gamelogic.ltl

@@ -1,3 +1,6 @@
 [submodule "subprojects/posets"]
 	path = subprojects/posets
 	url = https://github.com/michaelcadilhac/posets.git
+[submodule "subprojects/tlsf-tools"]
+	path = subprojects/tlsf-tools
+	url = https://github.com/gaperez64/tlsf-tools.git

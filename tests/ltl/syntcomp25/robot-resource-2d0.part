@@ -1,0 +1,2 @@
+.inputs pred__resource_lt_resourceprev_ bin_resource0 pred__y_lt_yprev_ bin_st_2 pred__x_lt_xprev_ bin_st_1 bin_st_0 bin_x0 bin_y0 pred__xprev_lt_x_ bin_resource1 pred__yprev_lt_y_ xory inc
+.outputs cxory cdec cinc

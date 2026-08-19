@@ -1,0 +1,2 @@
+.inputs bin_timer1 bin_timer0 bin_pos1 bin_pos2 pred__timer_lt_timerprev_ bin_pos0 pred__timerprev_lt_timer_ bin_st_0 bin_timer2
+.outputs t p2 p1

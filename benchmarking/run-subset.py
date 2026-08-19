@@ -11,11 +11,12 @@ timeout yields result=TIMEOUT.
 Example:
   run-subset.py --bin ../acacia-bonsai/build_best_decomp_mona/src/acacia-bonsai \\
       --from-csv loss-set-2024_20s.csv --category acacia_slow --real unreal \\
-      --flags "-U -u automaton" --timeout 25 --csv out.csv
+      --flags "-u automaton" --timeout 25 --csv out.csv
 """
 import argparse
 import csv
 import os
+import pathlib
 import shlex
 import sys
 
@@ -28,8 +29,20 @@ from benchlib import (
 )
 
 
+DEFAULT_INSTANCES_DIR = pathlib.Path(__file__).resolve().parents[1] / "tests/ltl/syntcomp24"
+
+
 def read_ltl_partition(inst_ltl):
     return read_part(os.path.splitext(inst_ltl)[0] + ".part")
+
+
+def read_instance_list(path):
+    """Read a benchmark list, ignoring blank lines and manifest comments."""
+    return [
+        line
+        for raw in open(path)
+        if (line := raw.strip()) and not line.startswith("#")
+    ]
 
 
 def main():
@@ -37,14 +50,14 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--bin", required=True)
     p.add_argument("--instances-dir",
-                   default="/home/gperez/GIT-repos/acacia-bonsai/tests/ltl/syntcomp24")
+                   default=str(DEFAULT_INSTANCES_DIR))
     p.add_argument("--from-csv", help="loss-set CSV to pick instances from")
     p.add_argument("--category", action="append", default=[],
                    help="filter: keep these categories (repeatable)")
     p.add_argument("--real", action="append", default=[],
                    help="filter: keep these realizability values (real/unreal)")
     p.add_argument("--list", help="alternatively, a file of instance basenames")
-    p.add_argument("--flags", default="", help="extra acacia flags, e.g. '-U -u automaton'")
+    p.add_argument("--flags", default="", help="extra acacia flags, e.g. '-u automaton'")
     p.add_argument("--runner-prefix", default="",
                    help="optional external wrapper, e.g. systemd-run/cgexec/timeout")
     p.add_argument("--systemd-scope", action="store_true",
@@ -67,7 +80,7 @@ def main():
                 continue
             insts.append(row["instance"])
     elif args.list:
-        insts = [l.strip() for l in open(args.list) if l.strip()]
+        insts = read_instance_list(args.list)
     else:
         sys.exit("need --from-csv or --list")
     if args.limit:

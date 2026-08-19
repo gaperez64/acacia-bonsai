@@ -264,7 +264,18 @@ benchmark_build_for() {
     fi
 
     local candidate
-    for candidate in build_ltlsynt build_base build_best_decomp_mona build_best; do
+    if [[ -n ${BENCHMARK_TOOL_HOST_BUILD:-} ]]; then
+        if is_compiled_acacia_build "$BENCHMARK_TOOL_HOST_BUILD"; then
+            echo "$BENCHMARK_TOOL_HOST_BUILD"
+            return
+        fi
+        print -u2 -- "BENCHMARK_TOOL_HOST_BUILD is not a compiled Acacia build: $BENCHMARK_TOOL_HOST_BUILD"
+        return 1
+    fi
+    # Prefer the shipping build: it is the tree the current campaign has
+    # reconfigured, so its generated Meson metadata includes newly added
+    # suites and panels.  Older generic trees may be compiled but stale.
+    for candidate in build_best_decomp_mona build_ltlsynt build_base build_best; do
         if is_compiled_acacia_build $candidate; then
             echo "$candidate"
             return
@@ -492,6 +503,7 @@ if ! (( $donot[(Ie)benchmark] )); then
 	    print -r -- "benchmark_compile_profile=$BENCHMARK_COMPILE_PROFILE"
 	    print -r -- "benchmark_compile_jobs=$BENCHMARK_COMPILE_JOBS"
 	    print -r -- "benchmark_test_jobs=$BENCHMARK_TEST_JOBS"
+	    python3 ../scripts/spot-metadata.py
 	} > ../$meta
 	rm -f meson-logs/testlog.json
 	test_status=0
@@ -509,15 +521,27 @@ if ! (( $donot[(Ie)benchmark] )); then
             cd ..
             continue
         fi
-        if grep -q '^Fail:[[:space:]]*[1-9]' ../$log ||
-           grep -q 'FAILED:' ../$log ||
-           { (( test_status != 0 )) && ! grep -q '^Timeout:[[:space:]]*[1-9]' ../$log; }; then
-            echo "FAILED; testlog stored at $log, _bm-logs/$name$log_suffix.json left untouched"
-            $force || exit 5
-        else
-            echo "done; testlog stored at $log"
-            touch $marker:t
-        fi
+	# In benchmark mode, Meson status 1 is outcome data: strict UNKNOWN,
+	# resource-limit, and solver-error rows deliberately fail their tests and
+	# must still reach the JSON used by the ranker.  Statuses above 1 indicate
+	# a runner/infrastructure failure and remain fatal.  Quick test mode keeps
+	# the historical policy of accepting timeout-only suites while still
+	# rejecting wrong answers, explicit failures, and non-timeout runner errors.
+	if { $justtest && { grep -q '^Fail:[[:space:]]*[1-9]' ../$log ||
+	                    grep -q 'FAILED:' ../$log ||
+	                    { (( test_status != 0 )) &&
+	                      ! grep -q '^Timeout:[[:space:]]*[1-9]' ../$log; }; }; } ||
+	   { ! $justtest && (( test_status > 1 )); }; then
+	    echo "FAILED; testlog stored at $log, _bm-logs/$name$log_suffix.json left untouched"
+	    $force || exit 5
+	else
+	    if (( test_status == 0 )); then
+	        echo "done; testlog stored at $log"
+	    else
+	        echo "done with non-answers; testlog stored at $log"
+	    fi
+	    touch $marker:t
+	fi
         cd ..
         cp $build/meson-logs/testlog.json _bm-logs/$name$log_suffix.json
     done

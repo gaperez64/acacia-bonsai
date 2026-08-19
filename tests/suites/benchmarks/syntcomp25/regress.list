@@ -1,0 +1,18 @@
+# Frozen from _bm-logs.gap-plan-20260804/syntcomp25-reference/
+# best_decomp_mona.json.  The first five are the 10--16 s sentinels; the
+# remainder are solved in under 2 s.  Do not resample this list.
+09.ltl
+full_arbiter_unreal1_pb_3_7_pe_.ltl
+gf-unreal35.ltl
+infinite-race-u4.ltl
+load_balancer_pb_7_pe_.ltl
+ltl2dba26.ltl
+CheckRoom_2c5b09da.ltl
+EscalatorNonCounting.ltl
+Button.ltl
+HeatingMin_d6c5ac79.ltl
+Example1_d6376bf9.ltl
+gf-unreal2.ltl
+CoffeMachine_a50cadd7.ltl
+ActionConverter.ltl
+UnderapproxStrengthenedDemo.ltl

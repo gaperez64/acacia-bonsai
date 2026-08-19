@@ -28,6 +28,13 @@ SPOT_FAST = {
 TRANSLATION_PREF = {
     "small": "spot::postprocessor::Small",
     "any": "spot::postprocessor::Any",
+    "small+any": "spot::postprocessor::Small",
+    "deterministic": "spot::postprocessor::Deterministic",
+}
+TRANSLATION_PREFS = {
+    "small": "spot::postprocessor::Small",
+    "any": "spot::postprocessor::Any",
+    "small+any": "spot::postprocessor::Small, spot::postprocessor::Any",
     "deterministic": "spot::postprocessor::Deterministic",
 }
 
@@ -137,9 +144,13 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         f"-DDEFAULT_UNREAL_X={UNREAL_X[values['default_unreal_x']]}",
         f"-DDEFAULT_SPOT_FAST={SPOT_FAST[values['default_spot_fast']]}",
         f"-DACACIA_TRANSLATION_PREF={TRANSLATION_PREF[values['translation_pref']]}",
+        f"-DACACIA_TRANSLATION_PREFS={TRANSLATION_PREFS[values['translation_pref']]}",
         f"-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER={int(values['enable_realizability_simplifier'])}",
+        f"-DACACIA_ENABLE_SYNTACTIC_BYPASS={int(values['enable_syntactic_bypass'])}",
+        f"-DACACIA_ENABLE_TLSF_FRONTEND={int(values['enable_tlsf_frontend'])}",
         f"-DSTATIC_ARRAY_MAX={values['static_array_max']}",
         f"-DSTATIC_MAX_BITSETS={values['static_max_bitsets']}ul",
+        f"-DACACIA_EQUIVARIANT_MIN_BLOCKS={values['equivariant_min_blocks']}",
         f"-DSIMD_IS_MAX={bool_literal(values['simd_is_max'])}",
         f"-DDECOMPOSE_SPEC={int(values['decompose_spec'])}",
         f"-DCPRE_AVOID_UNIONS={int(values['cpre_avoid_unions'])}",
@@ -184,6 +195,8 @@ MESON_OPTION_NAMES = {
     "default_spot_fast": "acacia_default_spot_fast",
     "translation_pref": "acacia_translation_pref",
     "enable_realizability_simplifier": "acacia_enable_realizability_simplifier",
+    "enable_syntactic_bypass": "acacia_enable_syntactic_bypass",
+    "enable_tlsf_frontend": "acacia_enable_tlsf_frontend",
     "static_array_max": "acacia_static_array_max",
     "static_max_bitsets": "acacia_static_max_bitsets",
     "simd_is_max": "acacia_simd_is_max",
@@ -199,6 +212,7 @@ MESON_OPTION_NAMES = {
     "compile_all_components": "acacia_compile_all_components",
     "enable_diagnostics": "acacia_enable_diagnostics",
     "enable_equivariant_solver": "acacia_enable_equivariant_solver",
+    "equivariant_min_blocks": "acacia_equivariant_min_blocks",
     "enable_symmetric_solver": "acacia_enable_symmetric_solver",
     "aut_preprocessor": "acacia_aut_preprocessor",
     "boolean_states": "acacia_boolean_states",

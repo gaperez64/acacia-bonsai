@@ -1,0 +1,25 @@
+# category	instance
+symmetry	amba_decomposed_arbiter_pb_4_pe_.tlsf
+symmetry	amba_decomposed_arbiter_pb_5_pe_.tlsf
+symmetry	amba_decomposed_arbiter_pb_6_pe_.tlsf
+symmetry	arbiter_on_inpchange_pb_4_pe_.tlsf
+symmetry	arbiter_on_inpchange_pb_5_pe_.tlsf
+symmetry	load_balancer_pb_4_pe_.tlsf
+symmetry	load_balancer_pb_5_pe_.tlsf
+symmetry	load_balancer_pb_6_pe_.tlsf
+symmetry	arbiter_pb_5_pe_.tlsf
+symmetry	arbiter_pb_6_pe_.tlsf
+indexed-control	round_robin_arbiter_pb_5_pe_.tlsf
+indexed-control	prioritized_arbiter_pb_6_pe_.tlsf
+indexed-control	abcg_arbiter_pb_5_pe_.tlsf
+indexed-control	arbiter_with_buffer_pb_5_pe_.tlsf
+control	Automata16S.tlsf
+control	KitchenTimerV7.tlsf
+control	MusicAppFeedback.tlsf
+control	SPIWriteManag.tlsf
+control	EscalatorSmart.tlsf
+control	TwoCountersInRangeM2.tlsf
+control	Sensor.tlsf
+control	Gamelogic.tlsf
+control	F-G-contradiction-14.tlsf
+control	GF-G-contradiction4.tlsf

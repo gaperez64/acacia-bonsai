@@ -95,13 +95,19 @@ class k_bounded_safety_aut_detail {
 
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
       int loopcount = 0;
+      acacia::diagnostics::snapshot ("after-action-construction");
 
       do {
         loopcount++;
         acacia::diagnostics::observe_loop (f.size (), k);
         verb_do (1, vout << "Loop# " << loopcount << ", f of size " << f.size () << std::endl);
 
-        auto&& input = input_picker (f);
+        auto input = [&] {
+          acacia::diagnostics::scoped_fine_timer timer {
+              acacia::diagnostics::fine_metric::picker};
+          return input_picker (f);
+        } ();
+        acacia::diagnostics::snapshot_loop_progress ("classic-after-picker");
         if (not input.has_value ())  // No more inputs, and we just tested that init was present
         {
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
@@ -111,6 +117,7 @@ class k_bounded_safety_aut_detail {
         }
 
         cpre_inplace (f, *input, actioner);
+        acacia::diagnostics::snapshot_loop_progress ("classic-after-cpre");
 
         if (not f.contains (state (init))) {
           if (k >= kto) {
@@ -164,6 +171,8 @@ class k_bounded_safety_aut_detail {
     // f1io = PreHat (f, i, o)
     template <typename Action, typename Actioner>
     void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner) {
+      acacia::diagnostics::scoped_fine_timer cpre_timer {
+          acacia::diagnostics::fine_metric::cpre};
       verb_do (2, vout << "Computing cpre(f) with f = " << std::endl << f);
 
       const auto& [input, actions] = io_action.get ();
@@ -177,19 +186,28 @@ class k_bounded_safety_aut_detail {
         for (const auto& action_vec : actions) {
           verb_do (3, vout << "one_output_letter:" << std::endl);
 
-          SetOfStates&& f1io = f.apply ([this, &action_vec, &actioner] (const auto& m) {
-            ACACIA_SYMMETRY_PROFILE_SCOPE (classic_backward_apply);
-            auto&& ret = actioner.apply (m, action_vec, actioners::direction::backward);
-            verb_do (3, vout << "  " << m << " -> " << ret << std::endl);
-            return std::move (ret);
-          });
+          acacia::diagnostics::observe_action ();
+          SetOfStates f1io = [&] {
+            acacia::diagnostics::scoped_downset_timer downset_timer;
+            return f.apply ([this, &action_vec, &actioner] (const auto& m) {
+              ACACIA_SYMMETRY_PROFILE_SCOPE (classic_backward_apply);
+              acacia::diagnostics::scoped_fine_timer apply_timer {
+                  acacia::diagnostics::fine_metric::apply};
+              auto ret = actioner.apply (m, action_vec, actioners::direction::backward);
+              verb_do (3, vout << "  " << m << " -> " << ret << std::endl);
+              return ret;
+            });
+          } ();
 
           if (first_turn) {
             f1i = std::move (f1io);
             first_turn = false;
           }
-          else
+          else {
+            acacia::diagnostics::scoped_downset_timer downset_timer;
             f1i.union_with (std::move (f1io));
+          }
+          acacia::diagnostics::snapshot_action_progress ();
         }
       }
 #elif CPRE_AVOID_UNIONS == 1
@@ -198,10 +216,15 @@ class k_bounded_safety_aut_detail {
       std::vector<typename SetOfStates::value_type> f1i_vec;
       f1i_vec.reserve (actions.size () * f.size ());
       for (const auto& action_vec : actions) {
+        acacia::diagnostics::observe_action ();
         verb_do (3, vout << "one_output_letter:" << std::endl);
 
-        for (const auto& m : f)
+        acacia::diagnostics::scoped_downset_timer downset_timer;
+        for (const auto& m : f) {
+          acacia::diagnostics::scoped_fine_timer apply_timer {
+              acacia::diagnostics::fine_metric::apply};
           f1i_vec.push_back (actioner.apply (m, action_vec, actioners::direction::backward));
+        }
       }
 
       SetOfStates f1i (std::move (f1i_vec));
@@ -211,6 +234,9 @@ class k_bounded_safety_aut_detail {
 
       {
         ACACIA_SYMMETRY_PROFILE_SCOPE (classic_intersect);
+        acacia::diagnostics::observe_meets (f.size (), f1i.size ());
+        acacia::diagnostics::snapshot_intersection_progress ();
+        acacia::diagnostics::scoped_downset_timer downset_timer;
         f.intersect_with (std::move (f1i));
       }
       // Experimentally, this is not faster:

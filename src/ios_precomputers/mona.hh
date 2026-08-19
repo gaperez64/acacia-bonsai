@@ -9,6 +9,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "ios_precomputers/alphabet_census.hh"
+#include "solver/diagnostics.hh"
 #include "utils/transition_enumerator.hh"
 
 namespace ios_precomputers {
@@ -113,6 +115,18 @@ namespace ios_precomputers {
               self (i_to_tss, bdd_high (bdd_iopq), bdd_input & bdd_ithvar (bdd_var (bdd_iopq)));
             }
           };
+
+#if ACACIA_ENABLE_DIAGNOSTICS
+          if (acacia::diagnostics::enabled ()) {
+            // Count DAG frontier nodes without changing the path-enumerating
+            // implementation being measured.  This runs before the expensive
+            // enumeration so even a child killed during action construction
+            // leaves the decisive census checkpoint behind.
+            record_alphabet_census (bdd_iopq, first_output, first_src_var);
+            if (acacia::diagnostics::alphabet_census_only ())
+              return input_to_ios_t {};
+          }
+#endif
 
           input_to_ios_t i_to_tss;
           recurse_inputs (i_to_tss, bdd_iopq, bddtrue);

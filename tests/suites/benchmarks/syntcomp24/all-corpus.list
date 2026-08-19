@@ -1,0 +1,7 @@
+# Full-corpus reference sweep.  Unlike the routine `all` aggregate, this
+# intentionally includes the retired sub-second bucket.
+@include 0s-1s
+@include 1s-20s
+@include 20s-100s
+@include 100s-inf
+@include reference-unbucketed

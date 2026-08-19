@@ -1,0 +1,2 @@
+.inputs bin_resource1 bin_st_1 pred__x_lt_xprev_ pred__xprev_lt_x_ bin_st_0 bin_resource0 bin_x0 pred__resource_lt_resourceprev_ bin_st_2 inc stay
+.outputs cdec cinc

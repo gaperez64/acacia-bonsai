@@ -2,6 +2,8 @@ option('build_tests', type: 'boolean', value: true,
        description: 'Build the test suite')
 option('build_python', type: 'boolean', value: false,
        description: 'Build the Python interface (requires swig)')
+option('acacia_enable_tlsf_frontend', type: 'boolean', value: false,
+       description: 'Build the optional native TLSF frontend (requires flex and bison)')
 option('acacia_compiler_profile', type: 'combo',
        choices: ['debug', 'release', 'lowmem'],
        value: 'debug',
@@ -34,11 +36,13 @@ option('acacia_default_spot_fast', type: 'combo',
        choices: ['off', 'det', 'det_and_gfg'],
        value: 'det')
 option('acacia_translation_pref', type: 'combo',
-       choices: ['small', 'any', 'deterministic'],
+       choices: ['small', 'any', 'small+any', 'deterministic'],
        value: 'small',
-       description: 'Spot translator postprocessor preference for LTL-to-BA construction')
+       description: 'Spot translator postprocessor preference list for realizability checks')
 option('acacia_enable_realizability_simplifier', type: 'boolean', value: true,
        description: 'Enable Spot realizability-preserving formula simplification before solving and after decomposition')
+option('acacia_enable_syntactic_bypass', type: 'boolean', value: true,
+       description: 'Enable Spot direct-strategy checks before automaton construction')
 option('acacia_static_array_max', type: 'integer', value: 300)
 option('acacia_static_max_bitsets', type: 'integer', value: 8)
 option('acacia_simd_is_max', type: 'boolean', value: true)
@@ -52,6 +56,8 @@ option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
 option('acacia_enable_equivariant_solver', type: 'boolean', value: true,
        description: 'Compile and enable the exact equivariant solver path')
+option('acacia_equivariant_min_blocks', type: 'integer', value: 4, min: 0,
+       description: 'Minimum client-state block count required by the equivariant solver (0 disables this payoff gate)')
 option('acacia_enable_symmetric_solver', type: 'boolean', value: false,
        description: 'Compile and enable the symmetry quotient solver path')
 

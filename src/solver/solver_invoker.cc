@@ -1,14 +1,19 @@
 #include "solver/solver_invoker.hh"
 
+#include "aut_preprocessors/cap_census.hh"
 #include "error_msg.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
 #include "solver/create_automaton.hh"
+#include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
+#include "solver/mealy_to_moore.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/symmetric_blocks.hh"
 #include "solver/symmetry.hh"
+#include "solver/syntactic_bypass.hh"
+#include "solver/translator_options.hh"
 #include "utils/push_aps.hh"
 #include "utils/typeinfo.hh"
 #include "utils/verbose.hh"
@@ -22,6 +27,7 @@
 #include <optional>
 #include <ostream>
 #include <ranges>
+#include <sstream>
 #include <spot/misc/optionmap.hh>
 #include <spot/tl/apcollect.hh>
 #include <spot/tl/formula.hh>
@@ -29,6 +35,7 @@
 #include <spot/twa/twagraph.hh>
 #include <spot/twaalgos/aiger.hh>
 #include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/simulation.hh>
 #include <spot/twaalgos/synthesis.hh>
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/word.hh>
@@ -112,7 +119,8 @@ namespace {
   void write_no_input_strategy (const std::vector<std::string>& output_aps,
                                 const std::vector<std::vector<bool>>& values,
                                 size_t loop_start,
-                                const std::string& synth_fname) {
+                                const std::string& synth_fname,
+                                bool synthesize_moore) {
     size_t capacity = 1;
     unsigned n_latches = 0;
     while (capacity < values.size ()) {
@@ -149,16 +157,21 @@ namespace {
     }
 
     std::ofstream synthesis_file (synth_fname);
-    if (synthesis_file)
+    if (synthesis_file) {
+      if (synthesize_moore)
+        circuit = acacia::synthesis::mealy_to_moore (circuit);
       spot::print_aiger (synthesis_file, circuit);
+    }
     else
       std::cerr << "Failed to open the file to store controller!\n";
   }
 
   bool run_no_input_ltl (const std::vector<std::string>& output_aps,
-                         const std::string& formula,
+                         spot::formula spot_formula,
                          std::optional<UNREAL_X_T> check_unreal,
-                         const std::optional<std::string>& synth_fname) {
+                         TRANSLATION_PREF_T translation_pref,
+                         const std::optional<std::string>& synth_fname,
+                         bool synthesize_moore) {
     spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
     int owner = 0;
     struct owner_cleanup {
@@ -176,22 +189,17 @@ namespace {
       output_vars.push_back (v);
     }
 
-    spot::formula spot_formula = parse_ltl_string (formula);
-    spot::option_map extra_options;
-    extra_options.set ("simul", 0);
-    extra_options.set ("ba-simul", 0);
-    extra_options.set ("det-simul", 0);
-    extra_options.set ("tls-impl", 1);
-    extra_options.set ("wdba-minimize", 2);
+    spot::option_map extra_options = acacia::translation::make_options ();
 
     spot::translator trans (dict, &extra_options);
+    acacia::translation::validate_options (extra_options);
     spot::twa_graph_ptr aut;
     {
 #if ACACIA_ENABLE_DIAGNOSTICS
       auto* diag = acacia::diagnostics::current ();
       acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-      aut = create_automaton (spot_formula, trans);
+      aut = create_automaton (spot_formula, trans, translation_pref);
     }
     observe_translated_automaton (aut);
     acacia::diagnostics::snapshot ("no-input-after-translation");
@@ -226,7 +234,8 @@ namespace {
 
       if (values.empty ())
         values.push_back (std::vector<bool> (output_aps.size (), false));
-      write_no_input_strategy (output_aps, values, loop_start, *synth_fname);
+      write_no_input_strategy (output_aps, values, loop_start, *synth_fname,
+                               synthesize_moore);
     }
     return true;
   }
@@ -251,9 +260,12 @@ namespace {
       const VECTOR_ELT_T opt_kmin;
       const VECTOR_ELT_T opt_kinc;
       const std::optional<UNREAL_X_T> check_unreal;
+      const TRANSLATION_PREF_T translation_pref;
       const SPOT_FAST_T spot_fast;
-      spot::option_map extra_options;
+      spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
+      const bool synthesize_moore;
+      const std::vector<symmetry::indexed_family_hint>& indexed_family_hints;
       std::vector<spot::const_twa_graph_ptr> strats;
 
     public:
@@ -267,8 +279,11 @@ namespace {
                    const std::vector<std::string>& output_aps, VECTOR_ELT_T opt_k,
                    VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
                    std::optional<UNREAL_X_T> check_unreal,
+                   TRANSLATION_PREF_T translation_pref,
                    SPOT_FAST_T spot_fast,
-                   const std::optional<std::string>& synth_fname)
+                   const std::optional<std::string>& synth_fname,
+                   bool synthesize_moore,
+                   const std::vector<symmetry::indexed_family_hint>& indexed_family_hints)
         : dict {dict},
           input_aps {input_aps},
           output_aps {output_aps},
@@ -276,18 +291,11 @@ namespace {
           opt_kmin {opt_kmin},
           opt_kinc {opt_kinc},
           check_unreal {check_unreal},
+          translation_pref {translation_pref},
           spot_fast {spot_fast},
-          synth_fname {synth_fname} {
-        // These options play a role in twaalgos.
-        extra_options.set ("simul", 0);
-        extra_options.set ("ba-simul", 0);
-        extra_options.set ("det-simul", 0);
-        extra_options.set ("tls-impl", 1);
-        extra_options.set ("wdba-minimize", 2);
-#ifndef NDEBUG
-        extra_options.report_unused_options ();
-#endif
-
+          synth_fname {synth_fname},
+          synthesize_moore {synthesize_moore},
+          indexed_family_hints {indexed_family_hints} {
         // Create BDD "cubes" that represent the sets of inputs and outputs,
         // respectively. We associate them with this object when registering
         // them.
@@ -337,9 +345,12 @@ namespace {
                                                          // inputs and outputs
                                                          // are in the AIG
                                                          input_aps, nonempty_out_part);
+        spot::aig_ptr output_aig = synthesize_moore
+                                       ? acacia::synthesis::mealy_to_moore (mealy_aig)
+                                       : mealy_aig;
         std::ofstream synthesis_file (*synth_fname);
         if (synthesis_file)
-          spot::print_aiger (synthesis_file, mealy_aig);
+          spot::print_aiger (synthesis_file, output_aig);
         else
           std::cerr << "Failed to open the file to store controller!\n";
 #ifndef NDEBUG
@@ -348,13 +359,14 @@ namespace {
         verb_do (2, vout << "Model checking result by checking intersection with "
                          << spot_formula << std::endl);
         spot::translator trans (dict, &extra_options);
+        acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
         {
 #if ACACIA_ENABLE_DIAGNOSTICS
           auto* diag = acacia::diagnostics::current ();
           acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-          aut = create_automaton (spot_formula, trans);
+          aut = create_automaton (spot_formula, trans, translation_pref);
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
@@ -388,13 +400,14 @@ namespace {
 
         // Create the automaton for the formula we have prepared.
         spot::translator trans (dict, &extra_options);
+        acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
         {
 #if ACACIA_ENABLE_DIAGNOSTICS
           auto* diag = acacia::diagnostics::current ();
           acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-          aut = create_automaton (spot_formula, trans);
+          aut = create_automaton (spot_formula, trans, translation_pref);
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("after-translation");
@@ -403,6 +416,10 @@ namespace {
         if (check_unreal.has_value () and *check_unreal == UNREAL_X_AUTOMATON) {
           verb_do (2, vout << "Pushing the inputs in the automaton\n");
           aut = push_aps (aut, all_inputs, all_outputs);
+          if (aut == nullptr) {
+            verb_do (1, vout << "Input-push expansion limit reached; inconclusive\n");
+            return acacia::diagnostics::finish (false, "input-push-limit");
+          }
           if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ()) {
             [[maybe_unused]] const auto old_states = aut->num_states ();
             aut = spot::sbacc (aut);
@@ -430,6 +447,13 @@ namespace {
           return acacia::diagnostics::finish (not check_unreal.has_value (),
                                               "empty-translated-automaton");
         }
+
+#if ACACIA_ENABLE_DIAGNOSTICS
+        if (acacia::diagnostics::alphabet_census_only ()) {
+          (void) (IOS_PRECOMPUTER::make (aut, all_inputs, all_outputs)) ();
+          return acacia::diagnostics::finish (false, "alphabet-census-only");
+        }
+#endif
 
         const bool want_controller_strategy = synth_fname.has_value () and not check_unreal.has_value ();
         // The nondeterministic GFG path is decision-only and currently validated
@@ -484,7 +508,40 @@ namespace {
           }
 #endif
         }
+#if ACACIA_ENABLE_DIAGNOSTICS
+        const auto census_mode = acacia::diagnostics::preprocessing_census ();
+        if (auto* diag = acacia::diagnostics::current ();
+            diag != nullptr
+            and census_mode != acacia::diagnostics::preprocessing_census_mode::off) {
+          {
+            acacia::diagnostics::scoped_timer timer (&diag->cap_census_ms);
+            const auto census = aut_preprocessors::future_visit_cap_census (aut, opt_k);
+            diag->cap_k = opt_k;
+            diag->cap_states_at_k = census.states_at_k;
+            diag->cap_states_finite = census.finite_states;
+            diag->cap_states_zero = census.zero_states;
+            diag->cap_counting_states = census.counting_states;
+            diag->cap_finite_counting_states = census.finite_counting_states;
+          }
+          acacia::diagnostics::snapshot ("after-cap-census");
+          {
+            acacia::diagnostics::scoped_timer timer (&diag->simulation_census_ms);
+            const auto reduced = spot::reduce_direct_sim_sba (aut);
+            diag->simulation_states_after = reduced->num_states ();
+            diag->simulation_states_removed =
+                aut->num_states () > reduced->num_states ()
+                    ? aut->num_states () - reduced->num_states ()
+                    : 0;
+          }
+          acacia::diagnostics::snapshot ("after-simulation-census");
+        }
+#endif
         acacia::diagnostics::snapshot ("after-preprocessing");
+
+#if ACACIA_ENABLE_DIAGNOSTICS
+        if (census_mode == acacia::diagnostics::preprocessing_census_mode::census_only)
+          return acacia::diagnostics::finish (false, "census-only");
+#endif
 
         // surely_losing can flush every reachable state and leave the
         // automaton empty after purging. Map this to inconclusive on
@@ -507,19 +564,27 @@ namespace {
         // behind an explicit macro so verbose timing runs do not pay for a
         // duplicate recognition pass before solve_game().
 #if ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS
-        verb_do (1, {
-          auto sg = symmetry::detect (aut, all_inputs, all_outputs);
-          vout << "[symmetry] generators=" << sg.size ()
-               << " full_symmetric=" << sg.full_symmetric
-               << " clients=" << sg.indices.size () << std::endl;
-          auto layout = symmetry::compute_block_layout (sg, aut->num_states ());
-          if (layout.has_value ())
-            vout << "[symmetry] block_layout: blocks=" << layout->num_blocks
-                 << " clients=" << layout->num_clients
-                 << " shared=" << layout->shared_states.size () << std::endl;
-          else
-            vout << "[symmetry] block_layout: none (declined)\n";
-        });
+        {
+          const auto analysis = symmetry::analyze_indexed_aps (
+              aut, all_inputs, all_outputs, indexed_family_hints);
+          const auto sg = symmetry::detect (aut, analysis);
+          const auto report = symmetry::describe (analysis, sg, aut->num_states ());
+          acacia::diagnostics::set_symmetry_structure (report);
+          acacia::diagnostics::snapshot ("after-symmetry-diagnostics");
+
+          verb_do (1, {
+            vout << "[symmetry] generators=" << sg.size ()
+                 << " full_symmetric=" << sg.full_symmetric
+                 << " indices=" << report.indices
+                 << " subsets=" << report.subsets
+                 << " selected=" << report.selected << std::endl;
+            if (report.blocks != "-")
+              vout << "[symmetry] block_layout: blocks=" << report.blocks
+                   << " shared=" << report.shared << std::endl;
+            else
+              vout << "[symmetry] block_layout: none (declined)\n";
+          });
+        }
 #endif
 
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
@@ -535,7 +600,8 @@ namespace {
                           // outputs from the cube of all atomic propositions
                           bdd_exist (aut->ap_vars (), all_outputs),
                           // same for the outputs
-                          bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value ());
+                          bdd_exist (aut->ap_vars (), all_inputs), synth_fname.has_value (),
+                          indexed_family_hints);
         }
 #if ACACIA_ENABLE_DIAGNOSTICS
         if (auto* diag = acacia::diagnostics::current ())
@@ -557,13 +623,26 @@ namespace {
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
-              SPOT_FAST_T spot_fast,
-              const std::optional<std::string>& synth_fname) {
+              TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
+              const std::optional<std::string>& synth_fname,
+              const specification_metadata& metadata) {
+  const bool synthesize_moore =
+      metadata.source_format == "tlsf" and metadata.tlsf_target == "Moore";
+  auto indexed_family_hints = metadata.tlsf_indexed_families;
+  if (check_unreal.has_value ())
+    for (auto& hint : indexed_family_hints)
+      hint.is_input = not hint.is_input;
   acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
-
-  if (input_aps.empty ())
-    return acacia::diagnostics::finish (
-        run_no_input_ltl (output_aps, formula, check_unreal, synth_fname), "no-input-ltl");
+#if ACACIA_ENABLE_DIAGNOSTICS
+  if (auto* diag = acacia::diagnostics::current ()) {
+    diag->translation_pref = translation_pref_name (translation_pref);
+    diag->source_format = metadata.source_format;
+    diag->tlsf_semantics = metadata.tlsf_semantics;
+    diag->tlsf_target = metadata.tlsf_target;
+    diag->tlsf_effective_target = metadata.tlsf_effective_target;
+    diag->tlsf_gr_level = metadata.tlsf_gr_level;
+  }
+#endif
 
   spot::formula spot_formula = parse_ltl_string (formula);
 
@@ -599,6 +678,68 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     verb_do (2, vout << "Simplified formula: " << spot_formula << std::endl);
   }
 
+  // Degenerate alphabets are language questions, not games.  Keep this in the
+  // original Mealy frame, after realizability simplification and before the
+  // unreal workers swap I/O.  Strategy-producing no-input requests retain the
+  // existing lasso-to-AIG path; this fast path is intentionally decision-only.
+  if (input_aps.empty () and synth_fname.has_value ())
+    return acacia::diagnostics::finish (
+        run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname,
+                          synthesize_moore),
+        "no-input-ltl-synthesis");
+
+  if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
+    acacia::degenerate_io::verdict direct;
+    {
+#if ACACIA_ENABLE_DIAGNOSTICS
+      auto* diag = acacia::diagnostics::current ();
+      acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
+#endif
+      direct = acacia::degenerate_io::try_direct (
+          spot_formula, input_aps, output_aps, translation_pref);
+    }
+    assert (direct != acacia::degenerate_io::verdict::unknown);
+    const bool child_matches = acacia::syntactic_bypass::matches_worker (
+        direct, check_unreal.has_value ());
+    return acacia::diagnostics::finish (
+        child_matches,
+        child_matches ? "degenerate-io" : "degenerate-io-opposite-verdict");
+  }
+
+#if ACACIA_ENABLE_SYNTACTIC_BYPASS
+  // Spot's direct-strategy check is defined in the original Mealy frame, so
+  // it must run before the unreal children swap inputs and outputs.  It
+  // returns a formula verdict; map that verdict to the role of this child so
+  // only the matching child reports a definitive answer to the parent.
+  if (not synth_fname.has_value ()) {
+    acacia::syntactic_bypass::result direct;
+    {
+#if ACACIA_ENABLE_DIAGNOSTICS
+      auto* diag = acacia::diagnostics::current ();
+      acacia::diagnostics::scoped_timer timer (
+          diag ? &diag->syntactic_bypass_ms : nullptr);
+#endif
+      direct = acacia::syntactic_bypass::try_direct (spot_formula, output_aps);
+    }
+#if ACACIA_ENABLE_DIAGNOSTICS
+    if (auto* diag = acacia::diagnostics::current ())
+      diag->syntactic_bypass = acacia::syntactic_bypass::name (direct.value);
+#endif
+    if (direct.value != acacia::syntactic_bypass::verdict::unknown) {
+      const bool child_matches = acacia::syntactic_bypass::matches_worker (
+          direct.value, check_unreal.has_value ());
+      verb_do (1, vout << "Syntactic bypass found formula "
+                       << acacia::syntactic_bypass::name (direct.value) << '\n');
+      return acacia::diagnostics::finish (
+          child_matches,
+          child_matches ? "syntactic-bypass" : "syntactic-bypass-opposite-verdict");
+    }
+  }
+#elif ACACIA_ENABLE_DIAGNOSTICS
+  if (auto* diag = acacia::diagnostics::current ())
+    diag->syntactic_bypass = "off";
+#endif
+
   if (check_unreal.has_value ()) {
     // We only check one thing at a time.
     assert (*check_unreal != UNREAL_X_BOTH);
@@ -617,7 +758,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      spot_fast, synth_fname);
+                      translation_pref, spot_fast, synth_fname, synthesize_moore,
+                      indexed_family_hints);
 
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.

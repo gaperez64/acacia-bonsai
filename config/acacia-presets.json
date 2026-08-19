@@ -145,6 +145,14 @@
       "inherits": "best_decomp_mona",
       "translation_pref": "any"
     },
+    "best_decomp_mona_any_tlsf": {
+      "inherits": "best_decomp_mona_any",
+      "enable_tlsf_frontend": true
+    },
+    "best_decomp_mona_race": {
+      "inherits": "best_decomp_mona",
+      "translation_pref": "small+any"
+    },
     "best_decomp_mona_no_rsimp": {
       "inherits": "best_decomp_mona",
       "enable_realizability_simplifier": false
@@ -158,6 +166,18 @@
       "inherits": "best_decomp_mona",
       "array_downset": "bboxtree_backed",
       "vector_downset": "bboxtree_backed"
+    },
+    "best_decomp_bboxtree_mona_tlsf": {
+      "inherits": "best_decomp_bboxtree_mona",
+      "enable_tlsf_frontend": true
+    },
+    "best_decomp_bboxtree_mona_race": {
+      "inherits": "best_decomp_bboxtree_mona",
+      "translation_pref": "small+any"
+    },
+    "best_decomp_bboxtree_mona_noequivariant": {
+      "inherits": "best_decomp_bboxtree_mona",
+      "enable_equivariant_solver": false
     },
     "best_decomp_mona_cached_sum": {
       "inherits": "best_decomp_mona",
@@ -226,6 +246,10 @@
       "inherits": "best_decomp_mona",
       "enable_diagnostics": true
     },
+    "best_decomp_mona_tlsf": {
+      "inherits": "best_decomp_mona",
+      "enable_tlsf_frontend": true
+    },
     "best_decomp_skiplist_mona": {
       "inherits": "best_decomp_mona",
       "array_downset": "skiplist_backed",
@@ -241,10 +265,30 @@
       "array_downset": "rank_bucketed_vector_backed",
       "vector_downset": "rank_bucketed_vector_backed"
     },
+    "best_decomp_rank_bucketed_mona_tlsf": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "enable_tlsf_frontend": true
+    },
+    "best_decomp_rank_bucketed_mona_race": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "translation_pref": "small+any"
+    },
+    "best_decomp_rank_bucketed_mona_noequivariant": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "enable_equivariant_solver": false
+    },
     "best_decomp_filtered_vector_mona": {
       "inherits": "best_decomp_mona",
       "array_downset": "filtered_vector_backed",
       "vector_downset": "filtered_vector_backed"
+    },
+    "best_decomp_filtered_vector_mona_race": {
+      "inherits": "best_decomp_filtered_vector_mona",
+      "translation_pref": "small+any"
+    },
+    "best_decomp_filtered_vector_mona_noequivariant": {
+      "inherits": "best_decomp_filtered_vector_mona",
+      "enable_equivariant_solver": false
     }
   },
   "tool_baselines": {
@@ -284,10 +328,10 @@
   },
   "groups": {
     "docker_default": [
-      "best_decomp_mona",
-      "best_decomp_rank_bucketed_mona",
-      "best_decomp_bboxtree_mona",
-      "best_decomp_filtered_vector_mona"
+      "best_decomp_rank_bucketed_mona_tlsf",
+      "best_decomp_mona_tlsf",
+      "best_decomp_mona_any_tlsf",
+      "best_decomp_bboxtree_mona_tlsf"
     ],
     "local_tuning_default": [
       "best_decomp_mona",

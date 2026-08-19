@@ -1,0 +1,2 @@
+.inputs pred___atfloor_add__minus_target__lt__atfloorprev_add__minus_targetprev__ pred___atfloorprev_add__minus_targetprev__lt__atfloor_add__minus_target__ bin_st_0 bin_at_floor_sub_target1 bin_at_floor_sub_target0 dooropen inc
+.outputs notify down up
