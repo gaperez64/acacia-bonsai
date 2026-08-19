@@ -1,0 +1,2 @@
+.inputs bin_rx_sub_ox1 pred___rx_add__minus_ox__lt__rxprev_add__minus_oxprev__ pred___rxprev_add__minus_oxprev__lt__rx_add__minus_ox__ pred__rxprev_lt_rx_ bin_rx_sub_ox0 bin_st_1 bin_rx0 bin_st_0 pred__rx_lt_rxprev_ bin_st_2 bin_rx1 rxorox inc stay
+.outputs cdec cinc

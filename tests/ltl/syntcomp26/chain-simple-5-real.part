@@ -1,0 +1,2 @@
+.inputs pred__x_lt_xprev_ bin_st_0 bin_c1 pred__xprev_lt_x_ bin_c2 bin_st_3 bin_x1 bin_st_1 bin_x0 bin_c0 bin_st_2 stop inc
+.outputs setc cinc

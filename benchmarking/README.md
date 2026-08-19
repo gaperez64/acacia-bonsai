@@ -111,6 +111,22 @@ labels a target `letter-loop-bound`, `downset-bound`, or `mixed` (within 20%).
 
 # Deterministic stratified panels
 
+`convert-tlsf-corpus-native.py` materializes `.ltl`/`.part` pairs through the
+`tlsf-frontend-inspect` helper, which links the same frontend implementation as
+`acacia-bonsai -T`. It does not invoke SyFCo or any standalone tlsf-tools
+binary. Use `--selection` to reproduce a competition selection and
+`--list-output` to emit its Meson suite manifest; `conversion.tsv` records the
+source, formula, and partition hashes plus TLSF semantics/target metadata.
+
+For example:
+```
+python3 benchmarking/convert-tlsf-corpus-native.py \
+  selection-ltl-2026 tests/ltl/syntcomp26 \
+  --native-inspect build/tests/tlsf-frontend-inspect \
+  --selection syntcomp26.tlsf.list \
+  --list-output tests/suites/benchmarks/syntcomp26/all.list
+```
+
 `make-panel.py` builds a family-balanced easy/border/gap/open panel from paired
 Acacia and `ltlsynt` Meson JSON logs.  Repeat `--reference` with the newest
 campaign first: reference coverage is unioned, and the first campaign that
