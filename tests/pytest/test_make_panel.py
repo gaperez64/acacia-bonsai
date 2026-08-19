@@ -100,6 +100,50 @@ def test_load_tool_filters_duplicate_basenames_by_corpus(tmp_path):
     }
 
 
+def test_load_tool_restores_logical_name_from_shared_source(tmp_path):
+    module = load_make_panel()
+    source = (tmp_path / "syntcomp" / "pair-hash.ltl").resolve()
+    source.parent.mkdir()
+    row = {
+        "command": ["wrapper", "-F", str(source)],
+        "result": "OK",
+        "duration": 0.2,
+        "stdout": "REALIZABLE\n",
+    }
+    path = tmp_path / "combined.json"
+    path.write_text(json.dumps(row) + "\n")
+
+    results = module.load_tool(path, 17.0, sources={source: {"Alarm.ltl"}})
+
+    assert results == {
+        "Alarm.ltl": module.ToolResult(0.2, "REALIZABLE", True),
+    }
+
+
+def test_load_tool_disambiguates_shared_source_aliases_by_logical_test_name(tmp_path):
+    module = load_make_panel()
+    source = (tmp_path / "syntcomp" / "pair-hash.ltl").resolve()
+    source.parent.mkdir()
+    rows = [
+        {
+            "name": f"ab/{name}",
+            "command": ["wrapper", "-F", str(source)],
+            "result": "OK",
+            "duration": 0.2,
+            "stdout": "REALIZABLE\n",
+        }
+        for name in ("first.ltl", "alias.ltl")
+    ]
+    path = tmp_path / "combined.json"
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    results = module.load_tool(
+        path, 17.0, sources={source: {"first.ltl", "alias.ltl"}}
+    )
+
+    assert set(results) == {"first.ltl", "alias.ltl"}
+
+
 def test_load_references_unions_coverage_and_latest_campaign_wins(tmp_path):
     module = load_make_panel()
     corpus = tmp_path / "corpus"

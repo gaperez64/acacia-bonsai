@@ -27,9 +27,11 @@ from benchlib import (
     run_systemd_scope,
     write_csv,
 )
+from suite_paths import load_source_map
 
 
-DEFAULT_INSTANCES_DIR = pathlib.Path(__file__).resolve().parents[1] / "tests/ltl/syntcomp24"
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+DEFAULT_SOURCE_MAP = ROOT / "tests/suites/benchmarks/syntcomp24/sources.tsv"
 
 
 def read_ltl_partition(inst_ltl):
@@ -50,7 +52,12 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--bin", required=True)
     p.add_argument("--instances-dir",
-                   default=str(DEFAULT_INSTANCES_DIR))
+                   help="flat corpus override (disables the default source map)")
+    p.add_argument(
+        "--source-map",
+        default=str(DEFAULT_SOURCE_MAP),
+        help="suite sources.tsv used when --instances-dir is omitted",
+    )
     p.add_argument("--from-csv", help="loss-set CSV to pick instances from")
     p.add_argument("--category", action="append", default=[],
                    help="filter: keep these categories (repeatable)")
@@ -88,15 +95,17 @@ def main():
 
     extra = shlex.split(args.flags)
     runner_prefix = shlex.split(args.runner_prefix)
+    source_map = None if args.instances_dir else load_source_map(pathlib.Path(args.source_map))
     rows = []
     solved = 0
     tot_time = 0.0
     print(f"# bin={args.bin}\n# flags={args.flags!r}  timeout={args.timeout}s  n={len(insts)}")
     for base in insts:
-        ltl = os.path.join(args.instances_dir, base)
-        if not os.path.exists(ltl):
+        ltl_path = pathlib.Path(args.instances_dir) / base if args.instances_dir else source_map.get(base)
+        if ltl_path is None or not ltl_path.exists():
             print(f"  {base:44s} MISSING")
             continue
+        ltl = str(ltl_path)
         ins, outs = read_ltl_partition(ltl)
         cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
         if args.systemd_scope:

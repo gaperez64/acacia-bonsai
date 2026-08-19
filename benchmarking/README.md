@@ -111,20 +111,27 @@ labels a target `letter-loop-bound`, `downset-bound`, or `mixed` (within 20%).
 
 # Deterministic stratified panels
 
-`convert-tlsf-corpus-native.py` materializes `.ltl`/`.part` pairs through the
+`convert-tlsf-corpus-native.py` materializes a flat staging directory of
+`.ltl`/`.part` pairs through the
 `tlsf-frontend-inspect` helper, which links the same frontend implementation as
 `acacia-bonsai -T`. It does not invoke SyFCo or any standalone tlsf-tools
 binary. Use `--selection` to reproduce a competition selection and
 `--list-output` to emit its Meson suite manifest; `conversion.tsv` records the
 source, formula, and partition hashes plus TLSF semantics/target metadata.
+`syntcomp-pool.py` then imports exact pairs into the shared content-addressed
+`tests/ltl/syntcomp` corpus and writes the year-specific `sources.tsv` map.
 
 For example:
 ```
 python3 benchmarking/convert-tlsf-corpus-native.py \
-  selection-ltl-2026 tests/ltl/syntcomp26 \
+  selection-ltl-2026 /tmp/syntcomp26-stage \
   --native-inspect build/tests/tlsf-frontend-inspect \
   --selection syntcomp26.tlsf.list \
   --list-output tests/suites/benchmarks/syntcomp26/all.list
+
+python3 benchmarking/syntcomp-pool.py \
+  --pool tests/ltl/syntcomp --maps-root tests/suites/benchmarks \
+  --suite syntcomp26=/tmp/syntcomp26-stage
 ```
 
 `make-panel.py` builds a family-balanced easy/border/gap/open panel from paired
@@ -139,7 +146,7 @@ For example:
 python3 benchmarking/make-panel.py \
   --reference _bm-logs/full-current \
   --reference _bm-logs/older-supplement \
-  --corpus tests/ltl/syntcomp24 \
+  --source-map tests/suites/benchmarks/syntcomp24/sources.tsv \
   --output tests/suites/benchmarks/syntcomp24/panel \
   --cap 17 --easy 40 --border 65 --gap 60 --open 15
 ```

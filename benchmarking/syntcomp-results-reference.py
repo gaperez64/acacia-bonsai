@@ -8,6 +8,8 @@ import csv
 import json
 import pathlib
 
+from suite_paths import load_source_map
+
 
 VERDICTS = {"0": "REALIZABLE", "1": "UNREALIZABLE"}
 
@@ -26,7 +28,13 @@ def parse_series(raw: str) -> tuple[str, str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("results", type=pathlib.Path)
-    parser.add_argument("--corpus", required=True, type=pathlib.Path)
+    corpus_group = parser.add_mutually_exclusive_group(required=True)
+    corpus_group.add_argument("--corpus", type=pathlib.Path)
+    corpus_group.add_argument(
+        "--source-map",
+        type=pathlib.Path,
+        help="suite sources.tsv for a shared/content-addressed corpus",
+    )
     parser.add_argument("--tlsf-dir", required=True, type=pathlib.Path)
     parser.add_argument("--reference", required=True, type=pathlib.Path)
     parser.add_argument("--selection", required=True, type=pathlib.Path)
@@ -35,6 +43,8 @@ def main() -> int:
     parser.add_argument("--cap", type=float, default=17.0)
     parser.add_argument("--source-description", default="official SYNTCOMP results")
     args = parser.parse_args()
+
+    logical_sources = load_source_map(args.source_map) if args.source_map else None
 
     rows: list[dict[str, str]] = []
     with args.results.open(encoding="utf-8", newline="") as stream:
@@ -90,12 +100,21 @@ def main() -> int:
                         answered_count += 1
                         result = "OK"
                         stdout = f"[official] {verdict}\n"
+                if logical_sources is not None:
+                    try:
+                        ltl_path = logical_sources[f"{name}.ltl"]
+                    except KeyError as error:
+                        raise KeyError(
+                            f"{args.source_map}: no source for {name}.ltl"
+                        ) from error
+                else:
+                    ltl_path = args.corpus / f"{name}.ltl"
                 materialized = {
                     "name": f"official/{label}/{name}.ltl",
                     "command": [
                         "official-reference",
                         "-F",
-                        str((args.corpus / f"{name}.ltl").resolve()),
+                        str(ltl_path.resolve()),
                     ],
                     "result": result,
                     "duration": duration,

@@ -262,7 +262,7 @@ expand_res = run_command (py, expand_script, check : true)
 manifest = expand_res.stdout ().strip ().split ('\n')
 
 # Build the two dictionaries from the manifest.
-# Each meaningful line is: KIND \t FOLDER \t SUITE \t FILE
+# Each meaningful line is: KIND \t FOLDER \t SUITE \t FILE \t SOURCE
 # where KIND is one of { T, B, ST, SB } — the `S` prefix marks a skipped
 # suite (name starts with `!`); those lines are ignored here, matching
 # the old behaviour of skipping suites whose key started with `!`.
@@ -280,6 +280,7 @@ foreach line : manifest
   folder = parts[1]
   suite  = parts[2]
   file   = parts[3]
+  source = parts[4]
 
   if not _append.has_key (kind)
     # 'ST' / 'SB' — skipped, don't populate.
@@ -299,7 +300,7 @@ foreach line : manifest
   if not folder_map.has_key (suite)
     folder_map += { suite : [] }
   endif
-  folder_map += { suite : folder_map[suite] + [file] }
+  folder_map += { suite : folder_map[suite] + [file + '\t' + source] }
   d += { folder : folder_map }
 
   if kind == 'T'
@@ -315,8 +316,11 @@ endforeach
 
 foreach folder, testset : test_files
   foreach suite, files_in_suite : testset
-    foreach file : files_in_suite
-      filename = 'ltl' / folder / file
+    foreach record : files_in_suite
+      record_parts = record.split ('\t')
+      file = record_parts[0]
+      source = record_parts[1]
+      filename = 'ltl' / source
       if not fs.exists (filename)
         error ('File ' + filename + ' not found (referenced by '
                + folder + '/' + suite + ').')
@@ -351,8 +355,11 @@ endforeach
 
 foreach folder, testsets : benchmark_files
   foreach suite, files_in_suite : testsets
-    foreach file : files_in_suite
-      filename = 'ltl' / folder / file
+    foreach record : files_in_suite
+      record_parts = record.split ('\t')
+      file = record_parts[0]
+      source = record_parts[1]
+      filename = 'ltl' / source
       if not fs.exists (filename)
         error ('File ' + filename + ' not found (referenced by '
                + folder + '/' + suite + ').')
@@ -391,7 +398,8 @@ synthesis_benchmarks = {}
 
 if test_files.has_key ('realizable')
   foreach suite, flist : test_files['realizable']
-    foreach f : flist
+    foreach record : flist
+      f = record.split ('\t')[0]
       synthesis_benchmarks += { f : true }
     endforeach
   endforeach
@@ -399,7 +407,8 @@ endif
 
 if benchmark_files.has_key ('realizable')
   foreach suite, flist : benchmark_files['realizable']
-    foreach f : flist
+    foreach record : flist
+      f = record.split ('\t')[0]
       synthesis_benchmarks += { f : true }
     endforeach
   endforeach

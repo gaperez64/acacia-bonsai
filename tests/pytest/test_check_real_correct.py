@@ -3,9 +3,12 @@ from __future__ import annotations
 import os
 import pathlib
 import subprocess
+import sys
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "benchmarking"))
+from suite_paths import resolve_instance
 
 
 def run_fake(tmp_path, script, *, resource_unknown=False):
@@ -33,7 +36,12 @@ def run_fake(tmp_path, script, *, resource_unknown=False):
             str(wrapper),
             "-a",
             "-F",
-            str(ROOT / "tests/ltl/syntcomp24/lift4.ltl"),
+            str(
+                resolve_instance(
+                    ROOT / "tests/suites/benchmarks/syntcomp24/sources.tsv",
+                    "lift4.ltl",
+                )
+            ),
         ],
         capture_output=True,
         text=True,

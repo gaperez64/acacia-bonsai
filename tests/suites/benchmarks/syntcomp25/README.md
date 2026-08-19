@@ -4,8 +4,10 @@
 selection (`selection-ltl-2025v2/selection-ltl-2025`). The historical SyFCo
 conversion produced 1,579 `.ltl`/`.part` pairs. Seven `finding_nemo`
 specifications using strong next were excluded; their names and
-the conversion diagnostic are preserved in
-`tests/ltl/syntcomp25/skipped.tsv`.
+the conversion diagnostic are preserved in `skipped.tsv`.  The official names
+in `all.list` resolve through `sources.tsv` into the shared content-addressed
+corpus at `tests/ltl/syntcomp`; `CORPUS.md` records the historical conversion
+provenance.
 
 `panel.list` is a deterministic 180-instance subset of those 1,579 pairs. Its
 reference data is the full, paired, serialized campaign retained under
@@ -43,7 +45,7 @@ The generating command was equivalent to:
 python3 benchmarking/make-panel.py \
   --reference _bm-logs.gap-plan-20260804/syntcomp25-reference \
   --acacia best_decomp_mona --ltlsynt ltlsynt \
-  --corpus tests/ltl/syntcomp25 \
+  --source-map tests/suites/benchmarks/syntcomp25/sources.tsv \
   --output tests/suites/benchmarks/syntcomp25/panel \
   --cap 17 --seed 20260804 --easy 40 --border 65 --gap 60 --open 15
 ```

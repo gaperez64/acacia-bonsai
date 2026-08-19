@@ -28,7 +28,9 @@ def test_read_instance_list_ignores_comments_and_blank_lines(tmp_path):
     assert load_module().read_instance_list(manifest) == ["first.ltl", "second.ltl"]
 
 
-def test_default_instances_dir_is_derived_from_repository():
+def test_default_source_map_is_derived_from_repository():
     module = load_module()
 
-    assert module.DEFAULT_INSTANCES_DIR == ROOT / "tests/ltl/syntcomp24"
+    assert module.DEFAULT_SOURCE_MAP == (
+        ROOT / "tests/suites/benchmarks/syntcomp24/sources.tsv"
+    )

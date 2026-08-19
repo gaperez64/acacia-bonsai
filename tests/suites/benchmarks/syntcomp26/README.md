@@ -13,9 +13,10 @@ All 1,524 selected files were converted successfully by
 `benchmarking/convert-tlsf-corpus-native.py`, using the
 `tlsf-frontend-inspect` helper linked to the same frontend as
 `acacia-bonsai -T`. No SyFCo or standalone tlsf-tools executable was used.
-`tests/ltl/syntcomp26/conversion.tsv` records source/formula/partition hashes,
-I/O counts, and TLSF semantics/target metadata; `skipped.tsv` is empty apart
-from its header.
+`conversion.tsv` records source/formula/partition hashes, I/O counts, and TLSF
+semantics/target metadata; `skipped.tsv` is empty apart from its header.
+`sources.tsv` preserves all official logical names while pointing into the
+shared content-addressed corpus at `tests/ltl/syntcomp`.
 
 `panel.list` applies the same 180-instance construction as the 2025 panel: 40
 easy, 65 border, 60 gap, and 15 open; verdict-proportional allocation within
@@ -43,21 +44,26 @@ the linked frontend, and invoke the common sampler:
 
 ```sh
 python3 benchmarking/syntcomp-results-reference.py results.csv \
-  --tlsf-dir v2026/tlsf --corpus tests/ltl/syntcomp26 \
+  --tlsf-dir v2026/tlsf \
+  --source-map tests/suites/benchmarks/syntcomp26/sources.tsv \
   --reference syntcomp26-official-tgcc --selection syntcomp26.tlsf.list \
   --series official_acacia_decomp_mona=2 \
   --series official_ltlsynt_lar=6 --expected 1524 --cap 17 \
   --source-description 'SYNTCOMP 2026 tlsfReal/results.csv'
 
 python3 benchmarking/convert-tlsf-corpus-native.py v2026/tlsf \
-  tests/ltl/syntcomp26 --native-inspect build/tests/tlsf-frontend-inspect \
+  /tmp/syntcomp26-stage --native-inspect build/tests/tlsf-frontend-inspect \
   --selection syntcomp26.tlsf.list \
   --list-output tests/suites/benchmarks/syntcomp26/all.list
+
+python3 benchmarking/syntcomp-pool.py \
+  --pool tests/ltl/syntcomp --maps-root tests/suites/benchmarks \
+  --suite syntcomp26=/tmp/syntcomp26-stage
 
 python3 benchmarking/make-panel.py \
   --reference syntcomp26-official-tgcc \
   --acacia official_acacia_decomp_mona --ltlsynt official_ltlsynt_lar \
-  --corpus tests/ltl/syntcomp26 \
+  --source-map tests/suites/benchmarks/syntcomp26/sources.tsv \
   --output tests/suites/benchmarks/syntcomp26/panel \
   --cap 17 --seed 20260804 --easy 40 --border 65 --gap 60 --open 15
 ```

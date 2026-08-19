@@ -1,1 +1,0 @@
-(G (((hready) -> ((X (hmastlock)) <-> (locked))) && ((! (hready)) -> ((X (hmastlock)) <-> (hmastlock)))))
