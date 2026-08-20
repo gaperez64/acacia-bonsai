@@ -277,6 +277,30 @@
       "inherits": "best_decomp_rank_bucketed_mona",
       "enable_equivariant_solver": false
     },
+    "best_decomp_rank_bucketed_mona_eq_baseline": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "equivariant_max_states": 512,
+      "equivariant_min_clients": 3,
+      "equivariant_min_blocks": 4
+    },
+    "best_decomp_rank_bucketed_mona_eq_min_clients_2": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "equivariant_max_states": 512,
+      "equivariant_min_clients": 2,
+      "equivariant_min_blocks": 4
+    },
+    "best_decomp_rank_bucketed_mona_eq_max_states_2048": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "equivariant_max_states": 2048,
+      "equivariant_min_clients": 3,
+      "equivariant_min_blocks": 4
+    },
+    "best_decomp_rank_bucketed_mona_eq_min_blocks_2": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "equivariant_max_states": 512,
+      "equivariant_min_clients": 3,
+      "equivariant_min_blocks": 2
+    },
     "best_decomp_filtered_vector_mona": {
       "inherits": "best_decomp_mona",
       "array_downset": "filtered_vector_backed",

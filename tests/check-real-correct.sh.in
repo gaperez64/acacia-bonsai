@@ -49,6 +49,10 @@ echoandrun () {
     echo "$@"
     childunit=
     if test_cgroup_enabled; then
+        if ! systemctl --user show-environment >/dev/null 2>&1; then
+            print -u2 -- 'error: ACACIA_TEST_CGROUP is enabled, but the user systemd manager is unavailable.'
+            return 127
+        fi
         local memory_max=${ACACIA_TEST_CGROUP_MEMORY_MAX:-}
         if [[ -z $memory_max ]]; then
             print -u2 -- 'error: ACACIA_TEST_CGROUP_MEMORY_MAX must be set when ACACIA_TEST_CGROUP is enabled.'

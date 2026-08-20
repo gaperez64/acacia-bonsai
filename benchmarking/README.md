@@ -200,6 +200,19 @@ solved time by 39.81% (97.870 s to 58.909 s), and improved PAR-2 from
 | `best_decomp_bboxtree_mona` | 16/17 | 22.253/19.075 | 14.28% | 294.253/273.911 |
 | `best_decomp_filtered_vector_mona` | 16/17 | 25.982/14.482 | 44.26% | 297.982/257.184 |
 
+The August 2026 admission-gate campaign lowered the shipping
+`acacia_equivariant_min_blocks` threshold from 4 to 2.  It passed G1 at 40/40,
+preserved all SYNTCOMP26 panel answers, and converted
+`arbiter_with_buffer_pb_5_pe_.ltl` from a timeout to REALIZABLE in 7.011 s.
+
+| panel | solved, blocks 4/2 | PAR-2, blocks 4/2 (s) |
+|---|---:|---:|
+| SYNTCOMP25 | 106/107 | 2780.724/2746.223 |
+| SYNTCOMP26 | 134/134 | 1702.186/1706.153 |
+
+The four `best_decomp_rank_bucketed_mona_eq_*` experiment presets pin all three admission values,
+so the one-at-a-time comparisons remain reproducible after the shipping default changed.
+
 See [NEGATIVE-RESULTS.md](NEGATIVE-RESULTS.md) for the durable record of
 optimization ideas rejected by the gates.
 
@@ -224,6 +237,37 @@ corresponding `-Dacacia_*` options, records the normalized preset in
 matches.  Add new benchmark variants as presets in `config/acacia-presets.json`
 instead of passing ad hoc macro flags, so benchmark logs and build directories
 remain reproducible.
+
+# Acacia–ltlsynt gap diagnosis
+
+The August 2026 shipping-matched census covers all 156 frozen `ltlsynt_only` rows from the
+SYNTCOMP24/25/26 comparison plus 111 rows where both tools solve but Acacia is more than 2× slower
+and takes more than 0.3 s. See [GAP-CENSUS.md](GAP-CENSUS.md) for the 267-instance table and exact
+telemetry.
+
+| set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | total |
+|---|---:|---:|---:|---:|---:|---:|
+| all census rows | 112 | 66 | 54 | 9 | 26 | 267 |
+| `ltlsynt_only` | 47 | 37 | 51 | 9 | 12 | 156 |
+
+The measured outcomes are deliberately mechanism-specific:
+
+- Every `ltlsynt` feature to which the ablation attributed a win is present in Acacia; the
+  syntactic bypass captured 17/17 predicted instances.
+- 89/156 residual losses (57%) are instances `ltlsynt` answers in under 0.2 s. The largest
+  concentration is the parameterized arbiter/lift/AMBA block, but the census distinguishes its
+  letter-loop, downset, and translation modes.
+- The equivariant minimum-block threshold moved from 4 to 2, admitting verified two- and
+  three-block layouts. It gained one SYNTCOMP25 panel answer; the other recognition thresholds
+  gained none and remain unchanged.
+- The `simple_arbiter_unreal2` M3 anchor was Spot's 64-acceptance-set exception, not a translator
+  timeout or `push_aps` limit. A sound safety-core witness now solves the measured 25/50/60/75
+  family in 0.009–0.020 s.
+- A semantic whole-letter quotient cut action applications by 14.16–15.59× on the three M1 spike
+  targets but lost a frozen G1 answer, so it was removed. M4 had only 9 losses and did not meet the
+  plan's 15-instance implementation threshold.
+
+Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md).
 
 # Gates
 

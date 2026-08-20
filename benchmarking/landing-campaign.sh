@@ -158,13 +158,18 @@ PY
 run_side () {
   local binary=$1 suite=$2 list=$3 csv=$4
   local tmp="$csv.tmp"
+  local source_map
+  source_map="$(dirname "$list")/sources.tsv"
   rm -f "$tmp"
+  local -a source_args
+  if [[ -f $source_map ]]; then
+    source_args=(--source-map "$source_map")
+  else
+    source_args=(--instances-dir "$repo_root/tests/ltl/$suite")
+  fi
   python3 "$repo_root/benchmarking/run-subset.py" \
-    --bin "$binary" \
-    --instances-dir "$repo_root/tests/ltl/$suite" \
-    --list "$list" \
-    --timeout "$timeout" \
-    --csv "$tmp"
+    --bin "$binary" "${source_args[@]}" \
+    --list "$list" --timeout "$timeout" --csv "$tmp"
   mv "$tmp" "$csv"
 }
 
@@ -184,13 +189,19 @@ for i in "${!suites[@]}"; do
   fi
 
   report_tmp="$report.tmp"
+  source_map="$(dirname "$list")/sources.tsv"
+  if [[ -f $source_map ]]; then
+    remeasure_source=$source_map
+  else
+    remeasure_source="$repo_root/tests/ltl/$suite"
+  fi
   set +e
   python3 "$repo_root/benchmarking/landing-bar.py" \
     "$baseline_csv" "$candidate_csv" \
     --timeout "$timeout" \
     --baseline-bin "$baseline_bin" \
     --candidate-bin "$candidate_bin" \
-    --instances-dir "$repo_root/tests/ltl/$suite" \
+    --instances-dir "$remeasure_source" \
     > "$report_tmp" 2>&1
   rc=$?
   set -e

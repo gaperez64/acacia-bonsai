@@ -72,6 +72,10 @@ build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
 build_conf.set ('STATIC_ARRAY_MAX', get_option ('acacia_static_array_max'))
 build_conf.set ('STATIC_MAX_BITSETS', get_option ('acacia_static_max_bitsets'))
+build_conf.set ('ACACIA_EQUIVARIANT_MAX_STATES',
+                get_option ('acacia_equivariant_max_states'))
+build_conf.set ('ACACIA_EQUIVARIANT_MIN_CLIENTS',
+                get_option ('acacia_equivariant_min_clients'))
 build_conf.set ('ACACIA_EQUIVARIANT_MIN_BLOCKS',
                 get_option ('acacia_equivariant_min_blocks'))
 

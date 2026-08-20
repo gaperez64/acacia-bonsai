@@ -14,6 +14,7 @@ from dataclasses import dataclass
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from benchlib import parse_acacia_result, read_part, run_process_group, run_systemd_scope
+from suite_paths import load_source_map
 
 
 SOLVED = {"REALIZABLE", "UNREALIZABLE"}
@@ -111,11 +112,15 @@ def run_solver(
     memory_max: str,
     memory_swap_max: str,
 ) -> tuple[Result, str, str, list[str]]:
-    ltl = instances_dir / key
+    if instances_dir.is_file():
+        source_map = load_source_map(instances_dir)
+        ltl = source_map.get(pathlib.Path(key).name, pathlib.Path())
+    else:
+        ltl = instances_dir / key
+        if not ltl.is_file():
+            ltl = instances_dir / pathlib.Path(key).name
     if not ltl.is_file():
-        ltl = instances_dir / pathlib.Path(key).name
-    if not ltl.is_file():
-        raise ValueError(f"cannot locate remeasurement target {key} below {instances_dir}")
+        raise ValueError(f"cannot locate remeasurement target {key} through {instances_dir}")
     part = ltl.with_suffix(".part")
     if not part.is_file():
         raise ValueError(f"missing partition file for remeasurement: {part}")
@@ -189,6 +194,7 @@ def main(argv: list[str] | None = None) -> int:
         "--instances-dir",
         type=pathlib.Path,
         default=pathlib.Path(__file__).resolve().parents[1] / "tests" / "ltl",
+        help="flat corpus directory or a suite sources.tsv for cap remeasurements",
     )
     parser.add_argument("--memory-max", default="8G")
     parser.add_argument("--memory-swap-max", default="0")

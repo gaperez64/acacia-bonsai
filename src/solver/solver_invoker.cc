@@ -14,6 +14,7 @@
 #include "solver/symmetry.hh"
 #include "solver/syntactic_bypass.hh"
 #include "solver/translator_options.hh"
+#include "solver/unreal_safety_core_witnesses.hh"
 #include "utils/push_aps.hh"
 #include "utils/typeinfo.hh"
 #include "utils/verbose.hh"
@@ -40,6 +41,7 @@
 #include <spot/twaalgos/translate.hh>
 #include <spot/twaalgos/word.hh>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -89,6 +91,22 @@ namespace {
     if (*check_unreal == UNREAL_X_AUTOMATON)
       return "unreal-automaton";
     return "unknown";
+  }
+
+  spot::twa_graph_ptr translate_with_diagnostics (
+      spot::formula& formula, spot::translator& translator,
+      TRANSLATION_PREF_T preference) {
+    try {
+      return create_automaton (formula, translator, preference);
+    }
+    catch (const std::exception& exception) {
+      const std::string_view message {exception.what ()};
+      acacia::diagnostics::set_final_reason (
+          message.find ("Too many acceptance sets") != std::string_view::npos
+              ? "translation-acceptance-set-limit"
+              : "translation-exception");
+      throw;
+    }
   }
 
   void print_no_output_aag (std::ostream& os, const std::vector<std::string>& input_aps) {
@@ -199,7 +217,7 @@ namespace {
       auto* diag = acacia::diagnostics::current ();
       acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-      aut = create_automaton (spot_formula, trans, translation_pref);
+      aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
     }
     observe_translated_automaton (aut);
     acacia::diagnostics::snapshot ("no-input-after-translation");
@@ -366,7 +384,7 @@ namespace {
           auto* diag = acacia::diagnostics::current ();
           acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-          aut = create_automaton (spot_formula, trans, translation_pref);
+          aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("synthesis-check-after-translation");
@@ -407,7 +425,7 @@ namespace {
           auto* diag = acacia::diagnostics::current ();
           acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
 #endif
-          aut = create_automaton (spot_formula, trans, translation_pref);
+          aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
         }
         observe_translated_automaton (aut);
         acacia::diagnostics::snapshot ("after-translation");
@@ -760,6 +778,14 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
                       translation_pref, spot_fast, synth_fname, synthesize_moore,
                       indexed_family_hints);
+
+  if (check_unreal.has_value ()) {
+    auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (spot_formula);
+    if (std::ranges::any_of (witnesses, std::ref (runner))) {
+      acacia::diagnostics::set_final_reason ("unreal-safety-core-witness");
+      return acacia::diagnostics::finish (true, "unreal-safety-core-witness");
+    }
+  }
 
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.

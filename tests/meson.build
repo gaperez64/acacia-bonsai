@@ -81,6 +81,16 @@ test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
 
+unreal_safety_core_witnesses_test = executable (
+  'unreal-safety-core-witnesses-test',
+  'unreal_safety_core_witnesses_test.cc',
+  include_directories : inc,
+  dependencies : [spot_dep],
+)
+test ('unreal-safety-core-witnesses',
+      unreal_safety_core_witnesses_test,
+      suite : ['unit', 'translation'])
+
 syntactic_bypass_test = executable ('syntactic-bypass-test',
                                     'syntactic_bypass_test.cc',
                                     include_directories : inc,

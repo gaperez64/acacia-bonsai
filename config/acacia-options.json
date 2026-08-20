@@ -124,7 +124,9 @@
     "compile_all_components": false,
     "enable_diagnostics": false,
     "enable_equivariant_solver": true,
-    "equivariant_min_blocks": 4,
+    "equivariant_max_states": 512,
+    "equivariant_min_clients": 3,
+    "equivariant_min_blocks": 2,
     "enable_symmetric_solver": false
   },
   "choices": {
