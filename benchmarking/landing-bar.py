@@ -10,6 +10,7 @@ import pathlib
 import shlex
 import sys
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -106,27 +107,35 @@ def print_summary(label: str, rows: dict[str, Result], timeout: float) -> None:
 
 def run_solver(
     binary: pathlib.Path,
-    instances_dir: pathlib.Path,
+    instance_sources: pathlib.Path | Mapping[str, pathlib.Path],
     key: str,
     timeout: float,
     memory_max: str,
     memory_swap_max: str,
 ) -> tuple[Result, str, str, list[str]]:
-    if instances_dir.is_file():
-        source_map = load_source_map(instances_dir)
+    if isinstance(instance_sources, Mapping):
+        suite, separator, instance = key.partition("/")
+        source_map_path = instance_sources.get(suite)
+        if not separator or source_map_path is None:
+            ltl = pathlib.Path()
+        else:
+            source_map = load_source_map(source_map_path)
+            ltl = source_map.get(instance, pathlib.Path())
+    elif instance_sources.is_file():
+        source_map = load_source_map(instance_sources)
         ltl = source_map.get(pathlib.Path(key).name, pathlib.Path())
     else:
-        ltl = instances_dir / key
+        ltl = instance_sources / key
         if not ltl.is_file():
-            ltl = instances_dir / pathlib.Path(key).name
+            ltl = instance_sources / pathlib.Path(key).name
     if not ltl.is_file():
-        raise ValueError(f"cannot locate remeasurement target {key} through {instances_dir}")
+        raise ValueError(
+            f"cannot locate remeasurement target {key} through {instance_sources}"
+        )
     part = ltl.with_suffix(".part")
     if not part.is_file():
         raise ValueError(f"missing partition file for remeasurement: {part}")
     inputs, outputs = read_part(part)
-    if not inputs or not outputs:
-        raise ValueError(f"incomplete partition file for remeasurement: {part}")
     command = [
         str(binary),
         "-F",
@@ -196,12 +205,33 @@ def main(argv: list[str] | None = None) -> int:
         default=pathlib.Path(__file__).resolve().parents[1] / "tests" / "ltl",
         help="flat corpus directory or a suite sources.tsv for cap remeasurements",
     )
+    parser.add_argument(
+        "--source-map",
+        action="append",
+        default=[],
+        metavar="SUITE=PATH",
+        help="suite-specific sources.tsv; repeat for multi-suite remeasurements",
+    )
     parser.add_argument("--memory-max", default="8G")
     parser.add_argument("--memory-swap-max", default="0")
     args = parser.parse_args(argv)
 
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
+
+    instance_sources: pathlib.Path | dict[str, pathlib.Path] = args.instances_dir
+    if args.source_map:
+        instance_sources = {}
+        for spec in args.source_map:
+            suite, separator, raw_path = spec.partition("=")
+            if not separator or not suite or not raw_path:
+                parser.error("--source-map must have the form SUITE=PATH")
+            if suite in instance_sources:
+                parser.error(f"duplicate --source-map suite: {suite}")
+            source_map_path = pathlib.Path(raw_path)
+            if not source_map_path.is_file():
+                parser.error(f"--source-map is not a file: {source_map_path}")
+            instance_sources[suite] = source_map_path
 
     try:
         baseline = load_csv(args.baseline)
@@ -251,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 baseline_rerun = run_solver(
                     args.baseline_bin,
-                    args.instances_dir,
+                    instance_sources,
                     key,
                     extended_timeout,
                     args.memory_max,
@@ -259,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 candidate_rerun = run_solver(
                     args.candidate_bin,
-                    args.instances_dir,
+                    instance_sources,
                     key,
                     extended_timeout,
                     args.memory_max,

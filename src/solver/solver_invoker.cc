@@ -30,7 +30,6 @@
 #include <ranges>
 #include <sstream>
 #include <spot/misc/optionmap.hh>
-#include <spot/tl/apcollect.hh>
 #include <spot/tl/formula.hh>
 #include <spot/tl/parse.hh>
 #include <spot/twa/twagraph.hh>
@@ -331,6 +330,12 @@ namespace {
       }
 
       ~run_one_ltl () {
+        // These objects may be the last users of variables for interface APs
+        // that do not occur in the formula. Release their BDD references
+        // before unregistering this runner's dictionary ownership.
+        strats.clear ();
+        all_inputs = bddtrue;
+        all_outputs = bddtrue;
         dict->unregister_all_my_variables (this);
         verb_do (4, dict->dump (utils::vout));
       }
@@ -636,6 +641,19 @@ namespace {
         }
       }
   };
+  void validate_ltl_partition (const std::vector<std::string>& input_aps,
+                               const std::vector<std::string>& output_aps) {
+    const auto validate = [] (const std::vector<std::string>& declared,
+                              const char* kind) {
+      for (const std::string& ap : declared)
+        if (ap == ".inputs" or ap == ".outputs")
+          error (EXIT_CODE_ERROR,
+                 "Error: %s value '%s' is a partition marker, not an atomic proposition.\n",
+                 kind, ap.c_str ());
+    };
+    validate (input_aps, "input");
+    validate (output_aps, "output");
+  }
 }  // namespace
 
 bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> output_aps,
@@ -662,6 +680,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   }
 #endif
 
+  validate_ltl_partition (input_aps, output_aps);
   spot::formula spot_formula = parse_ltl_string (formula);
 
   // Realizability-preserving simplification (spot::realizability_simplifier):
@@ -781,9 +800,13 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
 
   if (check_unreal.has_value ()) {
     auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (spot_formula);
-    if (std::ranges::any_of (witnesses, std::ref (runner))) {
-      acacia::diagnostics::set_final_reason ("unreal-safety-core-witness");
-      return acacia::diagnostics::finish (true, "unreal-safety-core-witness");
+    for (const spot::formula& witness : witnesses) {
+      acacia::diagnostics::scoped_attempt diag_attempt;
+      if (runner (witness)) {
+        diag_attempt.commit ();
+        acacia::diagnostics::set_final_reason ("unreal-safety-core-witness");
+        return acacia::diagnostics::finish (true, "unreal-safety-core-witness");
+      }
     }
   }
 

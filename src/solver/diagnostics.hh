@@ -304,6 +304,32 @@ namespace acacia::diagnostics {
       clock::time_point started;
   };
 
+  // A speculative solve (for example, an unrealizability witness) must not
+  // make the enclosing formula look as though that attempt were its final
+  // path.  Roll all metrics back unless the caller explicitly commits the
+  // attempt.  Keeping the original start time in the snapshot means the
+  // enclosing child's total wall time still includes discarded attempts.
+  class scoped_attempt {
+    public:
+      scoped_attempt ()
+        : metrics {current ()}, before {metrics != nullptr ? *metrics : child_metrics {}} {}
+
+      scoped_attempt (const scoped_attempt&) = delete;
+      scoped_attempt& operator= (const scoped_attempt&) = delete;
+
+      ~scoped_attempt () {
+        if (metrics != nullptr and not committed)
+          *metrics = std::move (before);
+      }
+
+      void commit () { committed = true; }
+
+    private:
+      child_metrics* metrics = nullptr;
+      child_metrics before;
+      bool committed = false;
+  };
+
   class scoped_timer {
     public:
       explicit scoped_timer (long long* target)
@@ -511,6 +537,10 @@ namespace acacia::diagnostics {
           noop& operator= (T&&) { return *this; }
       };
       noop* operator-> () { return nullptr; }
+  };
+
+  struct scoped_attempt {
+      void commit () {}
   };
 
   inline bool alphabet_census_only () { return false; }

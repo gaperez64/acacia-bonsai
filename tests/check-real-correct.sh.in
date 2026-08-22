@@ -79,16 +79,38 @@ echoandrun () {
 }
 
 parttoinsouts () {
-    while IFS= read line; do
-	# Note the -r, it's mandatory for non-GNU sed implementations
-        line=$(echo "$line" | sed -r 's/[[:space:]]*$//;s/[[:space:]]+/,/g')
-        head=${line/,*/}
-        args=${line/$head,/}
-        case "$head" in
-            .inputs) ins=$args;;
-            .outputs) outs=$args;;
+    ins=
+    outs=
+    local target=
+    while IFS= read -r line || [[ -n $line ]]; do
+        # Match benchmarking/benchlib.py:read_part: ignore comments and
+        # whitespace, accept comma-separated lists and continuation lines,
+        # and preserve a declared empty side as an empty argument.
+        line=${line%%\#*}
+        # Note the -r, it's mandatory for non-GNU sed implementations.
+        line=$(print -r -- "$line" | sed -r \
+            's/^[[:space:],]+//;s/[[:space:],]+$//;s/[[:space:],]+/,/g')
+        [[ -z $line ]] && continue
+
+        case "${line:l}" in
+            .inputs*)
+                target=inputs
+                args=${line#???????}
+                args=${args#,}
+                ;;
+            .outputs*)
+                target=outputs
+                args=${line#????????}
+                args=${args#,}
+                ;;
+            *) args=$line;;
         esac
-    done < $1
+        [[ -z $args ]] && continue
+        case "$target" in
+            inputs) ins=${ins:+$ins,}$args;;
+            outputs) outs=${outs:+$outs,}$args;;
+        esac
+    done < "$1"
 }
 
 run_ltlsynt () {
@@ -100,7 +122,7 @@ run_ltlsynt () {
     # ltlsynt --realizability exits 0 for REALIZABLE and 1 for UNREALIZABLE,
     # which matches the expect==0 / expect==1 convention used below — so we
     # rely on the exit status directly and do not need to parse stdout.
-    echoandrun $prog_prefix $LTLSYNT --realizability -F $ltl --ins=$ins --outs=$outs \
+    echoandrun $prog_prefix "$LTLSYNT" --realizability -F "$ltl" --ins="$ins" --outs="$outs" \
          ${=LTLSYNT_OPTS} $extra_opts
 }
 
@@ -111,10 +133,10 @@ run_acacia_bonsai () {
         return 127
     fi
     if [[ -n $tlsf ]]; then
-        echoandrun env ACACIA_DIAG_INSTANCE=${tlsf:t} $prog_prefix $ACABONSAI -T $tlsf \
+        echoandrun env ACACIA_DIAG_INSTANCE=${tlsf:t} $prog_prefix "$ACABONSAI" -T "$tlsf" \
              ${=AB_OPTS} $extra_opts
     else
-        echoandrun env ACACIA_DIAG_INSTANCE=${ltl:t} $prog_prefix $ACABONSAI -F $ltl -i $ins -o $outs \
+        echoandrun env ACACIA_DIAG_INSTANCE=${ltl:t} $prog_prefix "$ACABONSAI" -F "$ltl" -i "$ins" -o "$outs" \
              ${=AB_OPTS} $extra_opts
     fi
 }
@@ -193,7 +215,7 @@ else
         echo "error: $ltl and $part should exist."
         exit 8
     fi
-    parttoinsouts $part
+    parttoinsouts "$part"
 fi
 
 ## Prefix output with the test file name.

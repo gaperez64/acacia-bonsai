@@ -139,3 +139,46 @@ def test_near_cap_timeout_still_fails_when_extended_run_does_not_answer(
     output = capsys.readouterr().out
     assert "lost panel/fragile.ltl after 51s remeasurement" in output
     assert output.rstrip().endswith("GATE FAIL: 1 instance comparison failure(s)")
+
+
+def test_multi_suite_source_maps_resolve_empty_partition_side(
+    tmp_path, monkeypatch
+):
+    ltl_root = tmp_path / "ltl"
+    ltl_root.mkdir()
+    ltl = ltl_root / "content.ltl"
+    ltl.write_text("G i\n")
+    ltl.with_suffix(".part").write_text(".inputs i\n.outputs\n")
+    source_map = tmp_path / "sources.tsv"
+    source_map.write_text("instance\tsource\nfragile.ltl\tcontent.ltl\n")
+
+    solver = tmp_path / "solver"
+    solver.write_text(
+        "#!/bin/sh\n"
+        "test \"$1\" = -F && test \"$3\" = -i && test \"$4\" = i && "
+        "test \"$5\" = -o && test \"$6\" = \"\" || exit 9\n"
+        "printf 'UNREALIZABLE\\n'\n"
+        "exit 1\n"
+    )
+    solver.chmod(0o755)
+    monkeypatch.setenv("ACACIA_OUTER_CGROUP", "1")
+    monkeypatch.setattr(
+        landing_bar,
+        "load_source_map",
+        lambda path: {"fragile.ltl": ltl} if path == source_map else {},
+    )
+
+    result, stdout, stderr, command = landing_bar.run_solver(
+        solver,
+        {"panel": source_map},
+        "panel/fragile.ltl",
+        1.0,
+        "8G",
+        "0",
+    )
+
+    assert result.verdict == "UNREALIZABLE"
+    assert result.kind == "solved"
+    assert stdout == "UNREALIZABLE\n"
+    assert stderr == ""
+    assert command[-2:] == ["-o", ""]

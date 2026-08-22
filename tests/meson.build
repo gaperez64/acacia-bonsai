@@ -91,6 +91,16 @@ test ('unreal-safety-core-witnesses',
       unreal_safety_core_witnesses_test,
       suite : ['unit', 'translation'])
 
+diagnostics_attempt_test = executable (
+  'diagnostics-attempt-test',
+  'diagnostics_attempt_test.cc',
+  include_directories : inc,
+  dependencies : [spot_dep],
+)
+test ('diagnostics-attempt',
+      diagnostics_attempt_test,
+      suite : ['unit', 'diagnostics'])
+
 syntactic_bypass_test = executable ('syntactic-bypass-test',
                                     'syntactic_bypass_test.cc',
                                     include_directories : inc,

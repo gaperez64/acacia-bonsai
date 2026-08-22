@@ -136,7 +136,20 @@ counter_value() {
 case_counter=0
 run_case() {
   local label=$1 binary=$2 suite=$3 instance=$4 bucket=$5 repetition=$6
-  local ltl="$repo_root/tests/ltl/$suite/$instance"
+  local source_map="$repo_root/tests/suites/benchmarks/$suite/sources.tsv"
+  if [[ ! -r $source_map ]]; then
+    echo "GATE FAIL: missing source map: $source_map"
+    exit 1
+  fi
+  local source
+  if ! source=$(awk -F '\t' -v instance="$instance" '
+      NR > 1 && $1 == instance { print $2; found=1; exit }
+      END { if (!found) exit 1 }
+    ' "$source_map"); then
+    echo "GATE FAIL: $source_map has no source for $instance"
+    exit 1
+  fi
+  local ltl="$repo_root/tests/ltl/$source"
   local part="${ltl%.ltl}.part"
   if [[ ! -r $ltl || ! -r $part ]]; then
     echo "GATE FAIL: missing $ltl or $part"
@@ -146,7 +159,8 @@ run_case() {
   local ins outs
   ins=$(part_value "$part" .inputs)
   outs=$(part_value "$part" .outputs)
-  if [[ -z $ins || -z $outs ]]; then
+  if ! awk '$1 == ".inputs" { found=1 } END { exit !found }' "$part" ||
+      ! awk '$1 == ".outputs" { found=1 } END { exit !found }' "$part"; then
     echo "GATE FAIL: incomplete partition file: $part"
     exit 1
   fi

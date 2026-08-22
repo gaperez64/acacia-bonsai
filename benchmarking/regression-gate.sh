@@ -239,6 +239,7 @@ python3 "$repo_root/benchmarking/landing-bar.py" \
   --timeout 17 \
   --baseline-bin "$baseline_bin" \
   --candidate-bin "$build_dir/src/acacia-bonsai" \
-  --instances-dir "$repo_root/tests/ltl" \
+  --source-map "syntcomp24=$repo_root/tests/suites/benchmarks/syntcomp24/sources.tsv" \
+  --source-map "syntcomp25=$repo_root/tests/suites/benchmarks/syntcomp25/sources.tsv" \
   --memory-max 8G \
   --memory-swap-max 0

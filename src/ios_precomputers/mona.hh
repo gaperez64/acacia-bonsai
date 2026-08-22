@@ -49,9 +49,14 @@ namespace ios_precomputers {
             const void* owner;
             ~anon_guard () { dict->unregister_all_my_variables (owner); }
           } guard {dict, &owner_tag};
-          auto  first_output = bdd_var (output_support),
-            first_src_var = base_var,
+          auto first_src_var = base_var,
             first_dst_var = base_var + log_states;
+          // Projection removes declared APs that do not occur in the
+          // automaton. If every output is unused, output_support is true and
+          // has no root variable; the output segment is then simply empty.
+          auto first_output = output_support == bddtrue
+                                ? first_src_var
+                                : bdd_var (output_support);
 
           std::vector<int> state_vars (2 * log_states);
           std::iota (state_vars.begin (), state_vars.end (), base_var);

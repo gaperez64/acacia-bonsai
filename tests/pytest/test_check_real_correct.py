@@ -11,7 +11,15 @@ sys.path.insert(0, str(ROOT / "benchmarking"))
 from suite_paths import resolve_instance
 
 
-def run_fake(tmp_path, script, *, resource_unknown=False, cgroup_unavailable=False):
+def run_fake(
+    tmp_path,
+    script,
+    *,
+    instance="lift4.ltl",
+    suite="syntcomp24",
+    resource_unknown=False,
+    cgroup_unavailable=False,
+):
     fake_acacia = tmp_path / "fake-acacia"
     fake_acacia.write_text(f"#!/bin/sh\n{script}\n")
     fake_acacia.chmod(0o755)
@@ -46,8 +54,8 @@ def run_fake(tmp_path, script, *, resource_unknown=False, cgroup_unavailable=Fal
             "-F",
             str(
                 resolve_instance(
-                    ROOT / "tests/suites/benchmarks/syntcomp24/sources.tsv",
-                    "lift4.ltl",
+                    ROOT / f"tests/suites/benchmarks/{suite}/sources.tsv",
+                    instance,
                 )
             ),
         ],
@@ -95,3 +103,29 @@ def test_cgroup_launcher_failure_cannot_pass_as_unrealizable(tmp_path):
     assert "user systemd manager is unavailable" in result.stderr
     assert "FAILED: ERROR: RETURNED 127" in result.stdout
     assert "PASS." not in result.stdout
+
+
+def test_declared_empty_outputs_are_passed_as_an_empty_argument(tmp_path):
+    result = run_fake(
+        tmp_path,
+        """\
+while [ "$#" -gt 0 ]; do
+    if [ "$1" = -o ]; then
+        shift
+        if [ "$1" = "" ]; then
+            printf 'EMPTY OUTPUTS PRESERVED\\n'
+            exit 1
+        fi
+        printf 'unexpected output: <%s>\\n' "$1"
+        exit 9
+    fi
+    shift
+done
+exit 9""",
+        instance="gf-unreal37.ltl",
+        suite="syntcomp25",
+    )
+
+    assert result.returncode == 0
+    assert "EMPTY OUTPUTS PRESERVED" in result.stdout
+    assert "PASS." in result.stdout

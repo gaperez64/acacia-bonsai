@@ -14,7 +14,8 @@ expect() {
     output=$("$binary" "$@" 2>&1)
     status=$?
     set -e
-    if [[ $status -ne $wanted_status || $output != *"$wanted_verdict"* ]]; then
+    if [[ $status -ne $wanted_status || $output != *"$wanted_verdict"* || \
+          $output == *'BDD error:'* ]]; then
         printf 'expected status=%s verdict=%s, got status=%s output=%q\n' \
             "$wanted_status" "$wanted_verdict" "$status" "$output" >&2
         return 1
@@ -25,3 +26,6 @@ expect 0 REALIZABLE -f 'G(i | !i)' -i i -o ''
 expect 1 UNREALIZABLE -f 'G(i)' -i i -o ''
 expect 0 REALIZABLE -f 'F(o)' -i '' -o o
 expect 1 UNREALIZABLE -f 'G(o) & G(!o)' -i '' -o o
+expect 1 UNREALIZABLE -f 'false & (i | o)' -i i -o o
+expect 3 "output value '.outputs' is a partition marker" \
+    -f 'G(i)' -i i -o .outputs
