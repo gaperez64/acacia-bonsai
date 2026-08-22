@@ -212,6 +212,9 @@ preserved all SYNTCOMP26 panel answers, and converted
 
 The four `best_decomp_rank_bucketed_mona_eq_*` experiment presets pin all three admission values,
 so the one-at-a-time comparisons remain reproducible after the shipping default changed.
+The combined minimum-block plus safety-core-witness head also passed the SYNTCOMP21 critical
+screen at 91/94; common solved time moved from 114.711 s with the four-block preset to 103.355 s
+with the two-block preset, with the same three timeouts.
 
 See [NEGATIVE-RESULTS.md](NEGATIVE-RESULTS.md) for the durable record of
 optimization ideas rejected by the gates.
@@ -240,21 +243,22 @@ remain reproducible.
 
 # Acacia–ltlsynt gap diagnosis
 
-The August 2026 shipping-matched census covers all 156 frozen `ltlsynt_only` rows from the
-SYNTCOMP24/25/26 comparison plus 111 rows where both tools solve but Acacia is more than 2× slower
-and takes more than 0.3 s. See [GAP-CENSUS.md](GAP-CENSUS.md) for the 267-instance table and exact
+The August 2026 shipping-matched census originally audited 267 rows. A corrected empty-partition
+wrapper reclassified six of them, leaving 153 `ltlsynt_only` rows plus 108 rows where both tools
+solve but Acacia is more than 2× slower and takes more than 0.3 s. See
+[GAP-CENSUS.md](GAP-CENSUS.md) for the 261-row residual census, the six-row audit trail, and exact
 telemetry.
 
-| set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | total |
+| set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | residual total |
 |---|---:|---:|---:|---:|---:|---:|
-| all census rows | 112 | 66 | 54 | 9 | 26 | 267 |
-| `ltlsynt_only` | 47 | 37 | 51 | 9 | 12 | 156 |
+| corrected census rows | 112 | 66 | 48 | 9 | 26 | 261 |
+| `ltlsynt_only` | 47 | 37 | 48 | 9 | 12 | 153 |
 
 The measured outcomes are deliberately mechanism-specific:
 
 - Every `ltlsynt` feature to which the ablation attributed a win is present in Acacia; the
   syntactic bypass captured 17/17 predicted instances.
-- 89/156 residual losses (57%) are instances `ltlsynt` answers in under 0.2 s. The largest
+- 86/153 residual losses (56%) are instances `ltlsynt` answers in under 0.2 s. The largest
   concentration is the parameterized arbiter/lift/AMBA block, but the census distinguishes its
   letter-loop, downset, and translation modes.
 - The equivariant minimum-block threshold moved from 4 to 2, admitting verified two- and
@@ -263,8 +267,14 @@ The measured outcomes are deliberately mechanism-specific:
 - The `simple_arbiter_unreal2` M3 anchor was Spot's 64-acceptance-set exception, not a translator
   timeout or `push_aps` limit. A sound safety-core witness now solves the measured 25/50/60/75
   family in 0.009–0.020 s.
+- Correct empty-side partitions raise the reported campaign coverage from 104/180 to 106/180 on
+  SYNTCOMP25 and from 133/180 to 134/180 on SYNTCOMP26; all 187 empty-side corpus instances solve
+  through the repaired wrapper.
 - A semantic whole-letter quotient cut action applications by 14.16–15.59× on the three M1 spike
-  targets but lost a frozen G1 answer, so it was removed. M4 had only 9 losses and did not meet the
+  targets. After correcting the baseline and corpus lookup, it passed G1 at 40/40 (PAR-2
+  101.867 → 87.880 s), gained two SYNTCOMP25 G3 answers, and preserved the SYNTCOMP26 panel.
+  G2s then exposed a 680.604% cycle regression on `round_robin_arbiter4` with three candidate
+  timeouts, so the quotient was rejected and removed. M4 had only 9 losses and did not meet the
   plan's 15-instance implementation threshold.
 
 Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md).
@@ -277,6 +287,10 @@ Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMAL
   sentinels must pass and the script must print `GATE PASS`.
 - **G2, Posets proxy (advisory):** `benchmarking/posets-microbench.sh`.
 - **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh build`.
+  The SYNTCOMP25 `mixed` profile target changed from `g-unreal-116.ltl` to `evasion0.ltl`
+  because the gap census classifies `g-unreal-116.ltl` as M1 letter-loop rather than mixed, so it
+  no longer represents the mixed fixed-point bucket whereas `evasion0.ltl` does (`aut_states`
+  8741, `max_f` 2902).
 - **G3, landing bar:** run `benchmarking/landing-campaign.sh` with paired
   binaries, suite lists, a 17-second timeout, and an output directory. It
   invokes `benchmarking/landing-bar.py`; every suite must print `GATE PASS`.
@@ -287,6 +301,20 @@ Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMAL
 - **G5, native TLSF parity:** run `benchmarking/tlsf-verdict-parity.py` and
   `benchmarking/check-tlsf-conversion.py` against the selected TLSF corpus.
 
+The frozen G1 timings in `tests/suites/benchmarks/regress-expected.tsv` were re-measured on
+2026-08-20 with the shipping `best_decomp_rank_bucketed_mona_eq_min_blocks_2` preset after the
+empty-partition wrapper repair. The producing executable's SHA-256 is
+`9c912bcc19d94f6271ad65fa83cf8e24cd940ff341c0b04c6ab839246f8f297d`; it solved 40/40 with
+PAR-2 101.867 s. In particular, `syntcomp24/Morning_f2774e0b.ltl` is frozen at 14.542 s, above
+the 13.6 s threshold that admits a 51 s cap remeasurement.
+
+The frozen timings were re-validated on the final tree after the empty-partition CLI validation
+and MONA empty-output-support fixes landed. The producing binary's SHA-256 is
+`6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`; G1 passed 40/40 with
+candidate PAR-2 93.346 s against the frozen 101.867 s. G4 reported 568 correct answers, 0 failures,
+and 56 allowed timeouts. The baselines were left unchanged because every slow sentinel measured
+faster than its frozen value.
+
 # Native TLSF parity
 
 The native route was rechecked against tlsf-tools `338fdd3`. SyFCo is a
@@ -296,7 +324,7 @@ valuation-list, wildcard, and REQUIRE/ASSERT validity rules where they differ.
 
 | check | cohort | result |
 |---|---:|---|
-| solver verdicts | 1,579 | GATE PASS; 0 opposite verdicts, 0 errors, 1 native-only and 3 converted-only answers |
+| solver verdicts | 1,579 | GATE PASS; 0 opposite verdicts, 0 errors, 2 native-only and 1 converted-only answers; 3 native and 2 converted resource limits |
 | regenerated SyFCo pairs | 50 | 50/50 `.ltl`/`.part` pairs matched |
 | native formula semantics | 50 | 48 matches; 1 deliberate enum-validity divergence; 1 normalization exceeded 600 s |
 | native I/O lists | 50 | 49/49 classifiable comparisons matched; the normalization timeout was unclassified |
@@ -319,3 +347,8 @@ UNKNOWN/resource-limit result, or error, while reporting those categories
 separately. If a lost baseline answer took more than 80% of the cap,
 `landing-bar.py` automatically re-measures both binaries at three times the
 cap before deciding the gate.
+
+Read PAR-2-only changes against the measured same-configuration noise floor. Three baseline runs
+spanned 2778.691–2799.825 s on SYNTCOMP25 (21.134 s) and 1702.186–1714.260 s on SYNTCOMP26
+(12.074 s). A change inside that spread is not performance evidence by itself; coverage changes
+and per-instance losses remain gate evidence.

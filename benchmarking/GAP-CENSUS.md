@@ -1,6 +1,6 @@
 # Acacia–ltlsynt gap census
 
-This census measures the residual FMCAD'26 gap at the current shipping configuration. It covers every logical `ltlsynt_only` row in the frozen SYNTCOMP24 0s–20s, SYNTCOMP25 panel, and SYNTCOMP26 panel crossovers, plus every `acacia_slow` instance that both tools solve where Acacia takes more than 2× ltlsynt and more than 0.3 s.
+This census measures the residual FMCAD'26 gap at the current shipping configuration. It covers every logical `ltlsynt_only` row in the frozen SYNTCOMP24 0s–20s, SYNTCOMP25 panel, and SYNTCOMP26 panel crossovers, plus every `acacia_slow` instance that both tools solve where Acacia takes more than 2× ltlsynt and more than 0.3 s. A later wrapper audit found six rows produced by a malformed empty-side partition; they remain in the instance table as an explicit audit trail but are excluded from the corrected residual counts.
 
 ## Instrument and gate
 
@@ -8,8 +8,9 @@ This census measures the residual FMCAD'26 gap at the current shipping configura
 - Diagnostics binary SHA-256: `5d114a793cb154acd4f29b7000558087a92b0ad8b4db45783df807b007b8975c`.
 - The 104 Meson options match the PR #118 campaign build exactly except
   `acacia_enable_diagnostics=false → true`.
-- `benchmarking/regression-gate.sh build_diag_shipping`: 40/40 frozen verdicts,
-  candidate PAR-2 112.198 s, `GATE PASS`.
+- Historical `benchmarking/regression-gate.sh build_diag_shipping`: 40/40 frozen verdicts and
+  `GATE PASS`. Its 112.198 s PAR-2 predates the empty-partition repair and is retained only as
+  provenance, not as same-configuration performance evidence.
 - The gate was repaired for the content-addressed corpus: results are keyed by logical
   suite/name through `sources.tsv`, including two regression hashes shared across suites.
   The wrapper now rejects an unavailable user systemd manager instead of mistaking the
@@ -19,23 +20,23 @@ Each target ran for 20 s with progress every 32 iterations in an 8 GiB, zero-swa
 
 ## Coverage and mechanism gate
 
-- Logical coverage: **156/156 `ltlsynt_only`** and **111/111 `acacia_slow`** rows (267 total).
-- Physical corpus coverage: 132 unique files for the loss set and 232 for the full census. The plan's predicted 75 unique loss files was stale; the checked-in post-deduplication maps resolve the 156 logical losses to 132 files.
+- Corrected logical coverage: **153/153 `ltlsynt_only`** and **108/108 `acacia_slow`** rows (261 residual rows), plus 6 wrapper-artifact rows retained for audit.
+- Physical corpus coverage: 129 unique files for the corrected loss set and 226 for the residual census. The plan's predicted 75 unique loss files was stale; the checked-in post-deduplication maps resolve the 153 logical losses to 129 files.
 - Classification: fixed-point children use `summarize-diag-phases.py`'s 20%
   `apply_ms`/`downset_ms` rule; action-construction stalls count as M1 because they
   materialize concrete letters before the loop; translation-depth stalls count as M3.
   M4 overrides those labels only when a timed-out target has a terminal
   `spot-fast-path` / `solved-losing` sibling. All other balanced fixed-point cases are mixed.
 
-| set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | total |
-|---|---:|---:|---:|---:|---:|---:|
-| syntcomp24 all | 23 | 39 | 11 | 8 | 12 | 93 |
-| syntcomp25 all | 55 | 17 | 26 | 1 | 6 | 105 |
-| syntcomp26 all | 34 | 10 | 17 | 0 | 8 | 69 |
-| **all census rows** | **112** | **66** | **54** | **9** | **26** | **267** |
-| **`ltlsynt_only` only** | **47** | **37** | **51** | **9** | **12** | **156** |
+| set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | residual total | wrapper artifacts |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| syntcomp24 all | 23 | 39 | 11 | 8 | 12 | 93 | 0 |
+| syntcomp25 all | 55 | 17 | 22 | 1 | 6 | 101 | 4 |
+| syntcomp26 all | 34 | 10 | 15 | 0 | 8 | 67 | 2 |
+| **corrected census rows** | **112** | **66** | **48** | **9** | **26** | **261** | **6** |
+| **`ltlsynt_only` only** | **47** | **37** | **48** | **9** | **12** | **153** | **3** |
 
-M1 (47 losses), M2 (37), and M3 (51) clear the plan's 15-instance gate. M4 has only 9 losses, so Step 6 is not admitted. The detector emitted the `0/0 star gens` decline on 51 logical census rows (28 losses).
+M1 (47 losses), M2 (37), and corrected M3 (48) clear the plan's 15-instance gate. M4 has only 9 losses, so Step 6 is not admitted. The detector emitted the `0/0 star gens` decline on 51 logical census rows (28 losses).
 
 ### Step 3a: `0/0 star gens` diagnosis
 
@@ -213,10 +214,10 @@ Numeric telemetry is the maximum reported by any forked child for the instance. 
 | syntcomp25 | `g-unreal-117.ltl` | ltlsynt_only | M1 letter-loop | 149504 | 464 | 128 | 793 | 44 | no indexed input AP families | 17.028147 | 0.034777 |
 | syntcomp25 | `g-unreal-19.ltl` | acacia_slow | M1 letter-loop | 66896 | 240 | 114 | 441 | 21 | no indexed input AP families | 2.502453 | 0.027151 |
 | syntcomp25 | `g-unreal-32.ltl` | acacia_slow | M1 letter-loop | 44100 | 1024 | 106 | 315 | 40 | too few indexed clients | 3.520284 | 0.026034 |
-| syntcomp25 | `gf-unreal21.ltl` | acacia_slow | M3 translation-stall | 0 | 0 | 0 | 0 | 4 | not run | 1.198384 | 0.024979 |
-| syntcomp25 | `gf-unreal28.ltl` | acacia_slow | M3 translation-stall | 0 | 0 | 0 | 0 | 5 | not run | 4.263204 | 0.026769 |
-| syntcomp25 | `gf-unreal37.ltl` | ltlsynt_only | M3 translation-stall | 0 | 0 | 0 | 0 | 8 | not run | 17.029753 | 0.032028 |
-| syntcomp25 | `gf-unreal46.ltl` | ltlsynt_only | M3 translation-stall | 0 | 0 | 0 | 0 | 10 | not run | 17.027692 | 0.033605 |
+| syntcomp25 | `gf-unreal21.ltl` | wrapper_artifact | resolved empty-side partition | 0 | 0 | 0 | 0 | 4 | not run | 0.010 | 0.024979 |
+| syntcomp25 | `gf-unreal28.ltl` | wrapper_artifact | resolved empty-side partition | 0 | 0 | 0 | 0 | 5 | not run | 0.010 | 0.026769 |
+| syntcomp25 | `gf-unreal37.ltl` | wrapper_artifact | resolved empty-side partition | 0 | 0 | 0 | 0 | 8 | not run | 0.015 | 0.032028 |
+| syntcomp25 | `gf-unreal46.ltl` | wrapper_artifact | resolved empty-side partition | 0 | 0 | 0 | 0 | 10 | not run | 0.017 | 0.033605 |
 | syntcomp25 | `heim-buechi-real.ltl` | acacia_slow | M1 letter-loop | 32768 | 318 | 31 | 3244 | 1828 | no indexed input AP families; too many automaton states | 2.046293 | 0.029513 |
 | syntcomp25 | `heim-double-x1.ltl` | acacia_slow | M1 letter-loop | 32768 | 1396 | 2357 | 253 | 68 | no indexed input AP families; too few indexed clients | 3.233697 | 0.024450 |
 | syntcomp25 | `heim-double-x11.ltl` | ltlsynt_only | M2 downset | 49152 | 1777 | 5209 | 1629 | 467 | no indexed input AP families; too many automaton states | 17.057388 | 0.031418 |
@@ -306,8 +307,8 @@ Numeric telemetry is the maximum reported by any forked child for the instance. 
 | syntcomp26 | `g-unreal-1-unreal.ltl` | ltlsynt_only | M1 letter-loop | 131072 | 512 | 110 | 957 | 55 | no indexed input AP families | 17.030941 | 0.037323 |
 | syntcomp26 | `g-unreal-113.ltl` | acacia_slow | M1 letter-loop | 108576 | 288 | 175 | 617 | 31 | no indexed input AP families | 6.197572 | 0.030614 |
 | syntcomp26 | `g-unreal-18.ltl` | acacia_slow | M1 letter-loop | 51976 | 228 | 90 | 397 | 19 | no indexed input AP families | 1.716537 | 0.029387 |
-| syntcomp26 | `gf-unreal20.ltl` | acacia_slow | M3 translation-stall | 0 | 0 | 0 | 0 | 4 | not run | 1.061075 | 0.026052 |
-| syntcomp26 | `gf-unreal46.ltl` | ltlsynt_only | M3 translation-stall | 0 | 0 | 0 | 0 | 9 | not run | 17.029041 | 0.034561 |
+| syntcomp26 | `gf-unreal20.ltl` | wrapper_artifact | resolved empty-side partition | 0 | 0 | 0 | 0 | 4 | not run | 0.010 | 0.026052 |
+| syntcomp26 | `gf-unreal46.ltl` | wrapper_artifact | resolved empty-side partition | 0 | 0 | 0 | 0 | 9 | not run | 0.016 | 0.034561 |
 | syntcomp26 | `heim-double-x-real.ltl` | ltlsynt_only | M2 downset | 49152 | 1777 | 1795 | 669 | 407 | no indexed input AP families; too many automaton states | 17.055654 | 0.034639 |
 | syntcomp26 | `heim-double-x1.ltl` | acacia_slow | M1 letter-loop | 32768 | 1396 | 2357 | 253 | 67 | no indexed input AP families; too few indexed clients | 3.014632 | 0.025106 |
 | syntcomp26 | `helipad-real.ltl` | ltlsynt_only | M3 translation-stall | 0 | 0 | 0 | 110 | 512 | too few indexed clients | 17.058163 | 0.818163 |
@@ -352,6 +353,23 @@ Numeric telemetry is the maximum reported by any forked child for the instance. 
 | syntcomp26 | `workstation_resupply_pb_3_pe_.ltl` | ltlsynt_only | M1 letter-loop | 93552 | 1683 | 11694 | 169 | 279 | no usable block layout; 0/0 star gens | 17.033184 | 0.192184 |
 | syntcomp26 | `workstation_resupply_pb_4_pe_.ltl` | ltlsynt_only | M1 letter-loop | 23648 | 1749 | 8 | 389 | 3360 | 0/0 star gens | 17.079396 | 1.939163 |
 
+## Empty-partition wrapper correction
+
+The six `wrapper_artifact` rows above were not solver stalls. The Meson wrapper turned a bare
+`.outputs` line into the literal output AP `.outputs` and invoked the binary with that undeclared
+name. The corrected parser preserves an empty argument and quotes both partition sides. A sweep of
+all 187 empty-side corpus partitions now produces 177 UNREALIZABLE and 10 REALIZABLE verdicts,
+with every case below 0.5 s. The CLI also rejects leaked literal `.inputs`/`.outputs` partition
+markers with an explicit argument error, while legitimate unused interface APs remain allowed.
+When simplification projects away every declared output, the MONA path now handles the empty
+output support directly instead of asking BuDDy for the variable of `bddtrue`.
+
+The panel pipeline already passed empty strings correctly, so its measurements give the corrected
+campaign headline: SYNTCOMP25 is 106/180 rather than 104/180 (`gf-unreal37` 0.015 s and
+`gf-unreal46` 0.017 s), and SYNTCOMP26 is 134/180 rather than 133/180 (`gf-unreal46` 0.016 s).
+The three other corrected rows (`gf-unreal21`, `gf-unreal28`, and SYNTCOMP26 `gf-unreal20`) also
+fall to about 0.01 s and no longer meet the slow-row definition.
+
 ## Confirmed anchor cases
 
 - `syntcomp25/Automata32S.ltl`: the unreal-automaton child terminates with
@@ -378,6 +396,30 @@ Numeric telemetry is the maximum reported by any forked child for the instance. 
   33,554,432 actions in one child, but `apply_ms` and `downset_ms` remain within the
   classifier's 20% band, so the instance is conservatively mixed.
 
+## Corrected M3 follow-up
+
+After removing the three empty-partition losses, M3 contains 48 loss rows. The safety-core
+witness addresses the 14 `*_arbiter_unreal2*` acceptance-set cases, leaving 34 genuine cases for
+the translation experiment (`follow2`, `follow3`, `robot_repair*`, `chomp*`,
+`arbiter_with_cancel7`, `ltl2dba_theta16`, and related logical duplicates).
+
+The proposed per-child translation budget is not applicable to the current process architecture:
+the real, unreal-formula, and unreal-automaton children are forked before the parent waits, and all
+consume the same external wall-clock interval concurrently. Ending one translating child early
+cannot transfer time to either sibling; it can only remove that portfolio member. The experiment
+therefore stopped before adding a timer that would strictly reduce available work.
+
+The remaining 34 genuine cases were then measured with the existing `small` portfolio and the
+proposed `any` race policy. Both modes returned 0/34 answers: all 4 SYNTCOMP24, 17 SYNTCOMP25,
+and 13 SYNTCOMP26 cases timed out. Aggregate wall times were effectively identical within each
+suite (68.167/68.164 s, 289.786/289.797 s, and 221.665/221.673 s for `small`/`any`). With no gain
+and no freed sibling budget, `any` is rejected and the shipping portfolio remains `small`.
+
+Witness attempts now run inside a diagnostics transaction. An inconclusive witness rolls back its
+phase timers, `result`, and `final_reason`; a proving witness commits them and is labeled
+`unreal-safety-core-witness`. This prevents a discarded speculative formula from masking the main
+formula's eventual diagnostic classification.
+
 ## M1 whole-letter action quotient spike
 
 M1 cleared the 15-instance census gate, so the fixed spike was run on the three highest-action
@@ -393,16 +435,38 @@ whole-letter actions before repeated CPre application.
 | SYNTCOMP26 `tmp_13cfc6f2.ltl` | 1,354,720 | 90,000 | 15.05× |
 | SYNTCOMP25 `f-real-real.ltl` | 1,070,280 | 75,568 | 14.16× |
 
-All three exceeded the preset 10× spike threshold, but integration was still subject to the
-ordinary landing gates. G1 lost `syntcomp24/Morning_f2774e0b.ltl` from UNREALIZABLE to timeout:
-the baseline was 40/40 with PAR-2 102.226 s and the candidate 39/40 with PAR-2 140.354 s.
-The prototype was therefore removed and is recorded as a rejected experiment rather than a
-partial kernel win.
+All three exceeded the preset 10× spike threshold. The first integration measurement appeared to
+lose `syntcomp24/Morning_f2774e0b.ltl`, but that comparison mixed a stale baseline timing and an
+incorrect flat corpus lookup. Repeating G1 with the re-frozen shipping baseline and suite source
+maps solved 40/40 on both sides: PAR-2 improved from 101.867 s to 87.880 s. The required 51 s
+remeasure also solved `Morning_f2774e0b.ltl` with both binaries (12.810/14.027 s).
+
+The corrected G3 panels then passed. SYNTCOMP25 improved from 109/180 solved and PAR-2 2681.692 s
+to 111/180 and 2590.800 s: `patrolling-alarm23.ltl` and `patrolling22.ltl` changed from timeout to
+UNREALIZABLE. SYNTCOMP26 preserved 134/180 answers while PAR-2 moved from 1707.675 s to
+1681.441 s.
+
+The mandatory G2s proxy nevertheless rejected the quotient. On
+`syntcomp24/round_robin_arbiter4.ltl`, the same-configuration median rose from 32,306,372,637 to
+252,184,896,339 cycles: a 680.604% regression, with all three quotient runs reaching the
+60-second cap. This is a decisive landing-gate failure despite the favorable G1 and G3 panels,
+so the prototype was removed from the final head.
 
 ## Final validation
 
-- Final release build: all 19 unit tests passed, including the safety-core witness test.
-- G1: 40/40 frozen verdicts; baseline PAR-2 102.226 s, candidate PAR-2 119.606 s; `GATE PASS`.
-- G3: the landed minimum-block change passed both 180-instance panels as reported above.
+- G0: all 20 release unit tests, all 14 Posets tests, and all 15 focused Python tests passed.
+- G1: 40/40 frozen verdicts; baseline PAR-2 101.867 s, final candidate PAR-2 93.346 s; this is the
+  re-validation on the final tree, measured after the partition-validation and MONA empty-output
+  fixes; `GATE PASS`.
+- G2s: all 60 solver-profile samples completed; geometric improvement 9.15%, worst regression
+  -3.08%; `GATE PASS`.
+- G3: the final minimum-block + safety-core-witness head, with the rejected quotient removed,
+  solved 109/180 on SYNTCOMP25 and 134/180 on SYNTCOMP26. The SYNTCOMP21 critical screen held
+  91/94 answers on both sides while aggregate time moved from 114.711 s to 103.355 s.
 - G4: 624 labeled realizable/unrealizable tests produced 568 correct answers, 56 allowed timeouts,
   0 failures, and 0 opposite-verdict markers.
+- G5: all 1,579 native/converted TLSF comparisons completed with 0 frontend errors and 0 opposite
+  verdicts; there were 2 native-only answers, 1 converted-only answer, and 3/2 native/converted
+  resource limits; `GATE PASS`. The independent 50-file conversion audit regenerated every pair:
+  48/50 formula ASTs matched, with one documented enum-validity divergence and one 600 s
+  normalization timeout, and all 49 classifiable I/O-list comparisons matched.
