@@ -286,11 +286,8 @@ Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMAL
 - **G1, frozen verdicts:** `benchmarking/regression-gate.sh build`; all 40
   sentinels must pass and the script must print `GATE PASS`.
 - **G2, Posets proxy (advisory):** `benchmarking/posets-microbench.sh`.
-- **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh build`.
-  The SYNTCOMP25 `mixed` profile target changed from `g-unreal-116.ltl` to `evasion0.ltl`
-  because the gap census classifies `g-unreal-116.ltl` as M1 letter-loop rather than mixed, so it
-  no longer represents the mixed fixed-point bucket whereas `evasion0.ltl` does (`aut_states`
-  8741, `max_f` 2902).
+- **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh build`. The SYNTCOMP25
+  `mixed` target is `evasion0.ltl`; `g-unreal-116.ltl` was retired (census: M1 letter-loop).
 - **G3, landing bar:** run `benchmarking/landing-campaign.sh` with paired
   binaries, suite lists, a 17-second timeout, and an output directory. It
   invokes `benchmarking/landing-bar.py`; every suite must print `GATE PASS`.
@@ -301,19 +298,12 @@ Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMAL
 - **G5, native TLSF parity:** run `benchmarking/tlsf-verdict-parity.py` and
   `benchmarking/check-tlsf-conversion.py` against the selected TLSF corpus.
 
-The frozen G1 timings in `tests/suites/benchmarks/regress-expected.tsv` were re-measured on
-2026-08-20 with the shipping `best_decomp_rank_bucketed_mona_eq_min_blocks_2` preset after the
-empty-partition wrapper repair. The producing executable's SHA-256 is
-`9c912bcc19d94f6271ad65fa83cf8e24cd940ff341c0b04c6ab839246f8f297d`; it solved 40/40 with
-PAR-2 101.867 s. In particular, `syntcomp24/Morning_f2774e0b.ltl` is frozen at 14.542 s, above
-the 13.6 s threshold that admits a 51 s cap remeasurement.
-
-The frozen timings were re-validated on the final tree after the empty-partition CLI validation
-and MONA empty-output-support fixes landed. The producing binary's SHA-256 is
-`6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`; G1 passed 40/40 with
-candidate PAR-2 93.346 s against the frozen 101.867 s. G4 reported 568 correct answers, 0 failures,
-and 56 allowed timeouts. The baselines were left unchanged because every slow sentinel measured
-faster than its frozen value.
+Frozen G1 baselines were measured with the shipping
+`best_decomp_rank_bucketed_mona_eq_min_blocks_2` preset and re-validated on the final tree; the
+producing binary's SHA-256 is
+`6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`.
+`syntcomp24/Morning_f2774e0b.ltl` is frozen at 14.542 s, above the 13.6 s threshold that admits a
+51 s cap remeasurement. Full gate results are in [GAP-CENSUS.md](GAP-CENSUS.md).
 
 # Native TLSF parity
 
