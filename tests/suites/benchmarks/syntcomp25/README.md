@@ -6,8 +6,8 @@ conversion produced 1,579 `.ltl`/`.part` pairs. Seven `finding_nemo`
 specifications using strong next were excluded; their names and
 the conversion diagnostic are preserved in `skipped.tsv`.  The official names
 in `all.list` resolve through `sources.tsv` into the shared content-addressed
-corpus at `tests/ltl/syntcomp`; `CORPUS.md` records the historical conversion
-provenance.
+corpus at `tests/ltl/syntcomp`; the corpus conversion provenance is recorded in
+the final section below.
 
 `panel.list` is a deterministic 180-instance subset of those 1,579 pairs. Its
 reference data is the full, paired, serialized campaign retained under
@@ -49,3 +49,19 @@ python3 benchmarking/make-panel.py \
   --output tests/suites/benchmarks/syntcomp25/panel \
   --cap 17 --seed 20260804 --easy 40 --border 65 --gap 60 --open 15
 ```
+
+## Corpus conversion provenance
+
+The original flat staging corpus was generated with:
+`python3 benchmarking/convert-tlsf-corpus.py selection-ltl-2025v2 /tmp/syntcomp25-stage --list-output tests/suites/benchmarks/syntcomp25/all.list`.
+It can then be imported without duplicating pairs already used by another
+year:
+
+```sh
+python3 benchmarking/syntcomp-pool.py \
+  --pool tests/ltl/syntcomp --maps-root tests/suites/benchmarks \
+  --suite syntcomp25=/tmp/syntcomp25-stage
+```
+
+SYNTCOMP accepts benchmark submissions under the Creative Commons Attribution
+(CC BY) licence; see https://www.syntcomp.org/submission/.
