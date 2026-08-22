@@ -25,6 +25,33 @@ per-instance landing bar.
 - **Equivariant minimum clients 3 → 2:** G1 passed 40/40, but the existing block-layout proof conservatively rejects two-client groups because one transposition cannot recover unique slot identities. Coverage was unchanged on both landing panels: SYNTCOMP25 stayed 106/180 (PAR-2 2799.825 → 2797.068 s) and SYNTCOMP26 stayed 134/180 (1712.260 → 1713.968 s). G3 passed, but the relaxation gained no usable solver admissions or answers; rejected.
 - **Equivariant maximum states 512 → 2048:** G1 passed 40/40 and the critical screen stayed 91/94 (114.7 → 106.2 s), but neither landing panel gained an answer. SYNTCOMP25 stayed 106/180 and moved from PAR-2 2778.691 to 2785.220 s. The capped SYNTCOMP26 run moved 134/180 → 133/180 and 1714.260 → 1731.718 s because `load_balancer_unreal2_pb_5_pe_.ltl` crossed the cap; G3's required 51 s remeasurement recovered the verdict (baseline 13.237 s, candidate 13.530 s), so formal G3 passed. With zero gains and extra recognition overhead, the relaxation was rejected. Its +6.529 s SYNTCOMP25 PAR-2 shift is inside the measured 21.134 s same-binary spread and is not independent rejection evidence.
 - **Whole-letter action quotient:** canonicalizing concrete output letters by their complete transition-relation action passed the fixed M1 spike bar on all three targets (1,482,720 → 95,120 actions, 15.59×; 1,354,720 → 90,000, 15.05×; 1,070,280 → 75,568, 14.16×). Corrected same-configuration runs passed G1 at 40/40 (PAR-2 101.867 → 87.880 s), gained two SYNTCOMP25 G3 answers (109/180 → 111/180), and preserved 134/180 on SYNTCOMP26. G2s then found `round_robin_arbiter4.ltl` regressing from 32,306,372,637 to 252,184,896,339 median cycles (680.604%), with all three quotient runs reaching the 60-second cap. The quotient was rejected and removed. It is distinct from the earlier BDD-DAG descent memoization experiment.
+- **Isotone dominance sketch for antichain downsets:** instrumentation on a
+  `sketch-survival-counters` branch of the `posets` subproject counted, per downset
+  structure, pairs considered, pairs rejected by the rank bound, full `partial_order`
+  calls, and mean vector dimension. It is guarded by `POSETS_DOMINANCE_STATS` and
+  compiles out when undefined; the Posets suite passed 14/14 both with and without it.
+  Six SYNTCOMP instances from the census M2 downset bucket were measured with the
+  shipping `rank_bucketed_vector_backed` configuration. The workload is bimodal in a
+  way that leaves no room for the sketch. Where vector dimension is high, the antichain
+  is tiny: `chain-simple-70-real` ran at dimension 4598 but performed only 2,947 pair
+  comparisons in the whole run, `chain-simple-50-real` 2,127 at dimension 3318, and
+  `chain-simple-30-real` 1,307 at dimension 2038. Where pair volume is large, dimension
+  collapses below one AVX2 register at `signed char`: `simple_arbiter_with_hints6` did
+  7,301,672,666 pair comparisons at dimension 19, and `load_balancer6` 47,930,606 at
+  dimension 39. A 16- or 32-coordinate sketch cannot beat a SIMD compare at those
+  dimensions. The rank bound was indeed weak, rejecting between 0.1% and 26.3% of
+  pairs, confirming the proposal's premise that most pairs reach an exact comparison;
+  but a weak rank filter does not imply that a sketch pays, because the payoff needs
+  pair volume and dimension together. Exactly one measured instance occupied the
+  targeted regime: `syntcomp24/round_robin_arbiter4.ltl`, whose dominant child ran at
+  dimension 453 with 1,772,263,327 pairs considered, 26.3% rejected by rank, and
+  766,464,322 surviving exact `partial_order` calls. At that dimension an exact compare
+  is roughly 15 AVX2 registers against one for the sketch. The proposed
+  `sketched_vector_backed` is not admitted as a default downset structure; if revisited,
+  it must be gated on a runtime dimension-and-population guard rather than enabled
+  globally, and validated specifically on `round_robin_arbiter4`. The counters perturb
+  what they measure, taking `round_robin_arbiter4` from about 11 s to over 90 s, so these
+  are structural counts, not timings.
 
 The corrected 261-row residual census shows a structural gap rather than a small constant factor. Its
 four-mechanism breakdown replaces the older two-corpus solve-rate summary:
