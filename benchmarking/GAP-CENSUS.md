@@ -409,11 +409,51 @@ consume the same external wall-clock interval concurrently. Ending one translati
 cannot transfer time to either sibling; it can only remove that portfolio member. The experiment
 therefore stopped before adding a timer that would strictly reduce available work.
 
-The remaining 34 genuine cases were then measured with the existing `small` portfolio and the
-proposed `any` race policy. Both modes returned 0/34 answers: all 4 SYNTCOMP24, 17 SYNTCOMP25,
-and 13 SYNTCOMP26 cases timed out. Aggregate wall times were effectively identical within each
-suite (68.167/68.164 s, 289.786/289.797 s, and 221.665/221.673 s for `small`/`any`). With no gain
-and no freed sibling budget, `any` is rejected and the shipping portfolio remains `small`.
+The `any` race policy answered 0/34 and is rejected; the shipping portfolio stays `small`. That
+experiment varied the postprocessor preference only. Because `src/solver/create_automaton.hh`
+hard-codes `trans.set_type (spot::postprocessor::BA)`, it could not test the census hypothesis
+that the gap comes from degeneralizing to Buechi where `ltlsynt` uses a deterministic parity
+automaton. That hypothesis was therefore measured directly, outside the solver.
+
+The 34 logical rows resolve to 31 unique corpus files. Each was translated with
+`ltl2tgba --ba --small`, `ltl2tgba --tgba --small`, and
+`ltl2tgba --deterministic --generic --parity`, on both the formula and its negation, sequentially,
+with a 15 s cap and `--stats=%s`. Raw data is kept
+outside the tree in `_bm-logs/gap-step7-translation-type/`. Six of these formulas exceed the
+128 KiB Linux per-argument limit and must be passed by file; formula size ranges from 210 B to
+822,990 B with a median of 58,869 B.
+
+The headline result is that there were zero files where the Buechi request capped while the TGBA
+request completed. Requesting `BA` costs nothing over a generalized automaton on this set, so the
+degeneralization hypothesis is falsified. Completion counts out of 31 files were: positive
+polarity `ba` 0, `tgba` 0, and `parity` 6; negated polarity `ba` 1, `tgba` 1, and `parity` 8.
+
+The 34 rows divide into three groups. Twelve are misclassified. The census telemetry itself
+records a translated automaton for them, with 105 to 775 states built in 250 to 7,728 ms, so
+translation succeeded and the child died in the fixed point instead. They are `LedMatrix` (both
+suites), `sort51`, `tasks-unreal0`, `tasks-unreal1`, `thermostat-GF-unreal2` (both),
+`unordered-visits-charging0` (both), `load_balancer_unreal1_pb_6_4_pe_` (both), and
+`helipad-real`.
+
+Four rows show a genuine parity advantage: no automaton is built, yet the deterministic parity
+route completes with 1 to 130 states while both Buechi and TGBA cap. They are
+`syntcomp25/robot-to-target-charging-real`, `syntcomp25/robot-to-target-charging19`,
+`syntcomp26/robot-to-target-charging-real`, and `syntcomp26/chomp_pb_2_5_pe_`; `ltlsynt` answers
+all four in 0.045 to 0.090 s. Acacia cannot exploit this: the K-bounded counting fixed point is
+defined on a universal co-Buechi automaton, so a parity or generalized automaton is not
+consumable, and a deterministic result is already claimed by the `spot_fast` short circuit before
+the fixed point runs.
+
+The remaining 18 rows are inherent translation hardness: every route caps at 15 s at both
+polarities. On five of these `ltlsynt` itself needs more than 10 s: `abcg_arbiter4` takes
+16.799 s, `arbiter_with_cancel7` 16.005 s, `arbiter_with_cancel_pb_7_pe_` 16.752 s and
+16.796 s, and `robot_repair5` 10.866 s. These clear the 17 s cap only narrowly, so they are not
+architectural losses.
+
+The architectural component of M3 is therefore 4 rows, not 48, and it is not actionable within
+Acacia's automaton contract. The one remaining lead is `robot-to-target-charging-real`: this
+129,272-byte formula yields a 1-state parity automaton, pointing at formula-level simplification
+rather than automaton type.
 
 Witness attempts now run inside a diagnostics transaction. An inconclusive witness rolls back its
 phase timers, `result`, and `final_reason`; a proving witness commits them and is labeled
