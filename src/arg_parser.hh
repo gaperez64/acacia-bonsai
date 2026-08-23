@@ -16,6 +16,7 @@
 #include <fstream>
 #include <getopt.h>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -317,9 +318,42 @@ arg_parse_result arg_parser (int argc, char** argv) {
           error (EXIT_CODE_ERROR, "Error: -i/-o and -T/--tlsf are mutually exclusive.\n");
         process_arg_output (optarg, retval);
         break;
-      case 'I': retval.opt_kinc = std::stoi (optarg); break;
-      case 'K': retval.opt_k = std::stoi (optarg); break;
-      case 'M': sgn_kmin = std::make_optional<int> (std::stoi (optarg)); break;
+      case 'I': {
+        const int value = std::stoi (optarg);
+        const int min_value =
+            std::max (0, static_cast<int> (std::numeric_limits<VECTOR_ELT_T>::min ()));
+        const int max_value = static_cast<int> (std::numeric_limits<VECTOR_ELT_T>::max ());
+        if (value < min_value or value > max_value)
+          error (EXIT_CODE_ERROR,
+                 "Error: -I value %d is out of range; must be between %d and %d.\n", value,
+                 min_value, max_value);
+        retval.opt_kinc = value;
+        break;
+      }
+      case 'K': {
+        const int value = std::stoi (optarg);
+        const int min_value =
+            std::max (1, static_cast<int> (std::numeric_limits<VECTOR_ELT_T>::min ()));
+        const int max_value = static_cast<int> (std::numeric_limits<VECTOR_ELT_T>::max ());
+        if (value < min_value or value > max_value)
+          error (EXIT_CODE_ERROR,
+                 "Error: -K value %d is out of range; must be between %d and %d.\n", value,
+                 min_value, max_value);
+        retval.opt_k = value;
+        break;
+      }
+      case 'M': {
+        const int value = std::stoi (optarg);
+        const int min_value =
+            std::max (1, static_cast<int> (std::numeric_limits<VECTOR_ELT_T>::min ()));
+        const int max_value = static_cast<int> (std::numeric_limits<VECTOR_ELT_T>::max ());
+        if (value < min_value or value > max_value)
+          error (EXIT_CODE_ERROR,
+                 "Error: -M value %d is out of range; must be between %d and %d.\n", value,
+                 min_value, max_value);
+        sgn_kmin = std::make_optional<int> (value);
+        break;
+      }
       case 'v': retval.verbose_level++; break;
       case 'u': process_arg_unreal (optarg, retval); break;
       case 's': retval.synth_fname = optarg; break;

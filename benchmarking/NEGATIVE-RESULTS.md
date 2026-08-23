@@ -74,10 +74,12 @@ per-instance landing bar.
   large-antichain instances (`lift5`, `lift_unary_enc3`, `robot_grid2_2`,
   `robot_grid4_4`, and `tmp_13cfc6f2`), the sharing-trie representation is more than
   ten times faster: it completes the bounded search and returns `UNKNOWN` in 4.66 to
-  9.05 s, while the vector representation cannot finish within 90 s. Raising the sweep
-  ceiling from the default `-M 2 -K 99 -I 3` to `-M 2 -K 300 -I 3` and
-  `-M 2 -K 300 -I 10` changed neither verdict nor runtime, so the ceiling is not the
-  binding constraint. On the same family, `ltlsynt` solves seven of nine:
+  9.05 s, while the vector representation cannot finish within 90 s. The attempt to raise
+  the sweep ceiling from the default `-M 2 -K 99 -I 3` to `-M 2 -K 300 -I 3` and
+  `-M 2 -K 300 -I 10` was invalid: `-K 300` silently narrowed to a signed char, so those
+  runs executed at `k=44`, below the default 99. `VECTOR_ELT_T` caps `k` at 127 regardless,
+  so whether a larger `k` decides this family is OPEN, pending a build with a wider element
+  type. On the same family, `ltlsynt` solves seven of nine:
   `lift4` in 0.04 s, `lift_unary_enc3` in 0.04 s, `lift5` in 0.13 s,
   `finding_nemo_1` in 0.02 s, `robot_grid2_2` in 0.63 s, `lift_unary_enc4` in 0.63 s,
   and `tmp_13cfc6f2` in 1.05 s. Every answer is `REALIZABLE`, while both the PR head
