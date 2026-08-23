@@ -109,6 +109,8 @@ conversion is likewise performed inside Acacia.
 
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
+The current comparison with `ltlsynt`, residual gap analysis, and durable experiment record are
+in [benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
 
 # Compile-time configurations
 

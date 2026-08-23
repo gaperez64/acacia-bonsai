@@ -216,8 +216,8 @@ The combined minimum-block plus safety-core-witness head also passed the SYNTCOM
 screen at 91/94; common solved time moved from 114.711 s with the four-block preset to 103.355 s
 with the two-block preset, with the same three timeouts.
 
-See [NEGATIVE-RESULTS.md](NEGATIVE-RESULTS.md) for the durable record of
-optimization ideas rejected by the gates.
+See [LTLSYNT-GAP.md](LTLSYNT-GAP.md) for the current comparison with `ltlsynt`, the residual gap
+analysis, and the durable record of optimization ideas rejected by the gates.
 
 `self-benchmark.sh` also exposes ltlsynt ablation pseudo-configs.  They run the
 same local `ltlsynt/...` Meson suites as `ltlsynt`, but set `LTLSYNT_OPTS`:
@@ -246,8 +246,8 @@ remain reproducible.
 The August 2026 shipping-matched census originally audited 267 rows. A corrected empty-partition
 wrapper reclassified six of them, leaving 153 `ltlsynt_only` rows plus 108 rows where both tools
 solve but Acacia is more than 2× slower and takes more than 0.3 s. See
-[GAP-CENSUS.md](GAP-CENSUS.md) for the 261-row residual census, the six-row audit trail, and exact
-telemetry.
+[LTLSYNT-GAP.md](LTLSYNT-GAP.md) for the 261-row residual census, the six-row audit trail, and
+exact telemetry.
 
 | set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | residual total |
 |---|---:|---:|---:|---:|---:|---:|
@@ -303,7 +303,7 @@ Frozen G1 baselines were measured with the shipping
 producing binary's SHA-256 is
 `6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`.
 `syntcomp24/Morning_f2774e0b.ltl` is frozen at 14.542 s, above the 13.6 s threshold that admits a
-51 s cap remeasurement. Full gate results are in [GAP-CENSUS.md](GAP-CENSUS.md).
+51 s cap remeasurement. Full gate results are in [LTLSYNT-GAP.md](LTLSYNT-GAP.md).
 
 # Native TLSF parity
 
