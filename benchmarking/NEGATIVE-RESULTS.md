@@ -70,23 +70,28 @@ per-instance landing bar.
   costs answers precisely there. A targeted rerun on the 18 expected-improvement
   instances gave 7/18 for both variants, again zero gains and zero losses. None of
   those 18 appears in either the 2025 or 2026 panel. Rejected and not landed.
-- **K-bounded search terminates inconclusively on the lift/robot_grid family:** on five
-  large-antichain instances (`lift5`, `lift_unary_enc3`, `robot_grid2_2`,
-  `robot_grid4_4`, and `tmp_13cfc6f2`), the sharing-trie representation is more than
-  ten times faster: it completes the bounded search and returns `UNKNOWN` in 4.66 to
-  9.05 s, while the vector representation cannot finish within 90 s. The attempt to raise
-  the sweep ceiling from the default `-M 2 -K 99 -I 3` to `-M 2 -K 300 -I 3` and
-  `-M 2 -K 300 -I 10` was invalid: `-K 300` silently narrowed to a signed char, so those
-  runs executed at `k=44`, below the default 99. `VECTOR_ELT_T` caps `k` at 127 regardless,
-  so whether a larger `k` decides this family is OPEN, pending a build with a wider element
-  type. On the same family, `ltlsynt` solves seven of nine:
-  `lift4` in 0.04 s, `lift_unary_enc3` in 0.04 s, `lift5` in 0.13 s,
-  `finding_nemo_1` in 0.02 s, `robot_grid2_2` in 0.63 s, `lift_unary_enc4` in 0.63 s,
-  and `tmp_13cfc6f2` in 1.05 s. Every answer is `REALIZABLE`, while both the PR head
-  and Acacia 1.x time out on all nine. Since K-boundedness is complete for realizable
-  specifications, a sweep that converges to `UNKNOWN` on a realizable input points to
-  how the bound is applied rather than solver throughput. This remains an open lead
-  and is the next thing to investigate for the M2 downset bucket.
+- **K-bounded search on the lift/robot_grid family is a resource question:** two
+  option-handling defects invalidated the earlier experiments, and both are now fixed.
+  First, `-K` was silently narrowed into `VECTOR_ELT_T` (a signed char by default), so
+  `-K 300` ran as `k=44`. Second, `-K` alone never set the starting bound despite the
+  help text promising a "unique value if M is not specified": `opt_kmin` stayed at its
+  default of 2, so every run swept upward from 2 rather than solving the requested bound.
+  The fast `UNKNOWN` results that prompted the original claim came from the rejected
+  sharing-trie hybrid, not from the bounded search. At the same 17 s cap, the plain
+  `rank_bucketed` baseline does not conclude: `lift_unary_enc3` is `TIMEOUT` at 17.0 s
+  versus hybrid `UNKNOWN` at 8.4 s, `lift5` is `TIMEOUT` at 17.0 s versus `UNKNOWN` at
+  7.0 s, and `robot_grid2_2` is `TIMEOUT` at 17.0 s versus `UNKNOWN` at 9.5 s. Code
+  reading attributes the hybrid's early `UNKNOWN` to a resource failure in the
+  sharing-trie path being surfaced as a verdict rather than an error, but instrumentation
+  has not yet independently confirmed that attribution. With both defects fixed and a
+  genuine unique bound, the baseline behaves as expected: at `k=50` it runs 260
+  fixed-point iterations and the antichain reaches 151,792 elements; at `k=500` it
+  terminates and reports `UNKNOWN`. The bound was never what stopped the search; the cost
+  is antichain growth, the M2 downset story already recorded by the census. What remains
+  open is that `ltlsynt` proves `lift_unary_enc3` `REALIZABLE` in 0.04 s, `lift5` in
+  0.13 s, and `robot_grid2_2` in 0.63 s, while Acacia does not decide them. The earlier
+  framing as an incompleteness of K-boundedness is retracted; it is a resource question
+  until shown otherwise.
 
 The corrected 261-row residual census shows a structural gap rather than a small constant factor. Its
 four-mechanism breakdown replaces the older two-corpus solve-rate summary:

@@ -266,6 +266,7 @@ void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
 arg_parse_result arg_parser (int argc, char** argv) {
   arg_parse_result retval;
   int opt;
+  std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
   static constexpr int OPT_SPOT_FAST = 1000;
   static option long_options[] = {
@@ -339,6 +340,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
           error (EXIT_CODE_ERROR,
                  "Error: -K value %d is out of range; must be between %d and %d.\n", value,
                  min_value, max_value);
+        sgn_k = std::make_optional<int> (value);
         retval.opt_k = value;
         break;
       }
@@ -393,6 +395,9 @@ arg_parse_result arg_parser (int argc, char** argv) {
       verb_do (2, vout << "Kmin is being corrected since it was not positive!\n");
       retval.opt_kmin = retval.opt_k;
     }
+  }
+  else if (sgn_k.has_value ()) {
+    retval.opt_kmin = *sgn_k;
   }
 
   if (retval.opt_kmin > retval.opt_k or (retval.opt_kmin <= retval.opt_k and retval.opt_kinc == 0))

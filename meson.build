@@ -393,6 +393,9 @@ posets_downset_gates = {
   'filtered_vector_backed' : 'POSETS_ENABLE_DOWNSET_FILTERED_VECTOR_BACKED',
   'vector_backed_bin' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED_BIN',
 }
+foreach choice, gate : posets_downset_gates
+  build_conf.set (gate, 0)
+endforeach
 build_conf.set (posets_downset_gates[get_option ('acacia_array_downset')], 1)
 build_conf.set (posets_downset_gates[get_option ('acacia_vector_downset')], 1)
 
