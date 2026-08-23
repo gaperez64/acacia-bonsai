@@ -52,6 +52,39 @@ per-instance landing bar.
   globally, and validated specifically on `round_robin_arbiter4`. The counters perturb
   what they measure, taking `round_robin_arbiter4` from about 11 s to over 90 s, so these
   are structural counts, not timings.
+- **Sharing-trie dispatch for large antichains:** a hybrid downset on Posets branch
+  `hybrid-sharingtrie-dispatch` stored the antichain in `rank_bucketed_vector_backed`
+  and migrated one-way to `sharingtrie_backed` once it reached the runtime threshold
+  `POSETS_SHARINGTRIE_MIN_SIZE`, whose default is 4096. The motivation was a July 2026
+  comparison in which `sharingtrie_backed` solved 18 instances that `vector_backed`
+  missed, including the three largest measured antichains: `lift_unary_enc3` at
+  `max_f = 18404`, `robot_grid2_2` at 9383, and `lift5` at 6915. Both binaries were
+  built from one tree, differing only in `acacia_array_downset` and
+  `acacia_vector_downset`, and every solver invocation ran in its own 8 GiB zero-swap
+  cgroup at a 17 s cap. On SYNTCOMP25, base was 111/180 with PAR-2 2648.3 s versus
+  hybrid 109/180 with PAR-2 2692.5 s; on SYNTCOMP26, base was 136/180 with PAR-2
+  1642.2 s versus hybrid 135/180 with PAR-2 1665.4 s: zero gains and three losses. The
+  median time ratio on mutually solved instances was only 1.01 to 1.04, but all three
+  lost instances were already within 1.5 s of the cap: `infinite-race-u5` at 16.58 s,
+  and `patrolling-alarm21` at 16.77 s and 15.68 s. Even a small dispatch tax therefore
+  costs answers precisely there. A targeted rerun on the 18 expected-improvement
+  instances gave 7/18 for both variants, again zero gains and zero losses. None of
+  those 18 appears in either the 2025 or 2026 panel. Rejected and not landed.
+- **K-bounded search terminates inconclusively on the lift/robot_grid family:** on five
+  large-antichain instances (`lift5`, `lift_unary_enc3`, `robot_grid2_2`,
+  `robot_grid4_4`, and `tmp_13cfc6f2`), the sharing-trie representation is more than
+  ten times faster: it completes the bounded search and returns `UNKNOWN` in 4.66 to
+  9.05 s, while the vector representation cannot finish within 90 s. Raising the sweep
+  ceiling from the default `-M 2 -K 99 -I 3` to `-M 2 -K 300 -I 3` and
+  `-M 2 -K 300 -I 10` changed neither verdict nor runtime, so the ceiling is not the
+  binding constraint. On the same family, `ltlsynt` solves seven of nine:
+  `lift4` in 0.04 s, `lift_unary_enc3` in 0.04 s, `lift5` in 0.13 s,
+  `finding_nemo_1` in 0.02 s, `robot_grid2_2` in 0.63 s, `lift_unary_enc4` in 0.63 s,
+  and `tmp_13cfc6f2` in 1.05 s. Every answer is `REALIZABLE`, while both the PR head
+  and Acacia 1.x time out on all nine. Since K-boundedness is complete for realizable
+  specifications, a sweep that converges to `UNKNOWN` on a realizable input points to
+  how the bound is applied rather than solver throughput. This remains an open lead
+  and is the next thing to investigate for the M2 downset bucket.
 
 The corrected 261-row residual census shows a structural gap rather than a small constant factor. Its
 four-mechanism breakdown replaces the older two-corpus solve-rate summary:
