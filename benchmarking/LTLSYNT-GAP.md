@@ -313,35 +313,46 @@ so the prototype was removed from the final head.
 
 ## What has been tried
 
-- **Static-sizing specialisation does not pay for itself:** Acacia compiles template
-  machinery to specialise on statically sized arrays and bitsets, controlled by the Meson
-  options `acacia_static_array_max` (default 300) and `acacia_static_max_bitsets` (default
-  8). `src/utils/static_switch.hh` already falls back to a dynamic path when the runtime
-  index exceeds the compile-time bound, so lowering both options to 0 routes everything
-  through the dynamic path without removing any code. Four variants were built with
-  otherwise identical default release flags and single-job compilation, then run on the
-  frozen SYNTCOMP 2025 and 2026 panels at a 17 s cap, with each solver invocation in its
-  own 8 GiB zero-swap cgroup. Build cost was: v0 shipping (300, 8), 446 s, 6.2 GiB peak
-  RSS, and a 13.8 MiB binary; v1 (300, 0), 121 s, 1.2 GiB, and 1.8 MiB; v2 (0, 8), 114 s,
-  0.8 GiB, and 1.6 MiB; and v3 fully dynamic (0, 0), 84 s, 0.6 GiB, and 0.5 MiB. On
-  SYNTCOMP25, v0/v1/v2/v3 solved 110/110/109/111 instances; on SYNTCOMP26, they solved
-  136/136/135/136. The fully dynamic build gained one instance on 2025, matched v0 on
-  2026, and lost nothing on either panel. Its median time ratio against v0 on mutually
-  solved instances was 0.891 on 2025 and 0.989 on 2026, but this machine thermally
-  throttles, so those sub-1.0 ratios should be read as "no slower", not as a speedup.
-  Restricted to the instances every variant solved (71 on 2025, 68 on 2026, above 0.05 s),
-  total solve time was v0 270.4 s / v1 242.5 s / v2 270.7 s / v3 226.1 s on 2025, and
-  v0 127.9 s / v1 121.2 s / v2 133.1 s / v3 122.7 s on 2026: `v3` is fastest or tied and
-  only `v2` is ever slower than shipping. The four configurations are selected purely by
-  Meson options, `-Dacacia_static_array_max` and `-Dacacia_static_max_bitsets`, set to
-  (300, 8), (300, 0), (0, 8) and (0, 0) respectively; a bound of 0 makes every runtime
-  index exceed it, so `static_switch_t` takes its existing fallback branch.
-  `patrolling-alarm21` was lost by v1 and v2 but not by v3; it is a known cap-edge
-  instance that has flipped in several experiments, so this is borderline rather than a
-  v2 regression. The specialisation therefore costs 5.3x build time, 10.5x peak build
-  memory, and 27x binary size while buying no coverage. Removing it is recommended and
-  would also unblock downset work: an experimental hybrid downset previously exhausted
-  memory purely on instantiation breadth.
+- **Static-sizing specialisation does not pay for itself:** Acacia packs Boolean automaton
+  states into a bitset tail appended to the counting vector. The
+  `posets::vectors::x_and_bitset<X, NBitsets, Bools>` size is a template parameter, so
+  `src/solver/solve_game_vector_bitset.cc` dispatches through
+  `static_switch_t<STATIC_MAX_BITSETS>`, instantiating the whole downset and solver stack
+  once per word count: nine copies at the default of 8.
+  `src/solver/solve_game.cc` clamps the requested count to the compile-time bound and
+  spills the remainder to ordinary vectors, so setting `acacia_static_max_bitsets` to 0
+  is safe and simply means no bitset packing. On a sample instance the solver wanted 945
+  Boolean-for-bitset states: shipping packs 512 and spills 433, while the zero
+  configuration spills all 945. All configurations were built from one tree through
+  Meson options only, with default release flags and a single job, then run under the
+  standard protocol at a 17 s cap with each solver in its own 8 GiB zero-swap cgroup.
+  Build cost was: `c0` shipping (`array_max=300`, `max_bitsets=8`), 421 s, 6.5 GiB peak
+  RSS, and a 14.5 MiB binary; `c1` no bitset packing (`0`, `0`), 76 s, 0.6 GiB, and
+  0.5 MiB; and `c3` Boolean vectors (`0`, `0`, `use_boolvec_over_bitset=true`), 78 s,
+  0.6 GiB, and 0.5 MiB. Boolvec replaces the bitset tail with
+  `posets::vectors::x_and_boolvec<X>`, whose tail is a runtime-sized
+  `std::vector<bool>`, so it needs no specialisation at all. On the 94-instance
+  `syntcomp21` critical panel and the 180-instance `syntcomp25` and `syntcomp26` panels,
+  respectively, `c0` solved `91/111/136 = 338`, `c1` solved `91/111/136 = 338`, and
+  `c3` solved `90/101/131 = 322`. On the full 1,011-instance `syntcomp24` 0s--20s panel,
+  `c0` solved 868 and `c1` solved 867, with zero verdict disagreements; `c1` gained
+  `load_balancer_unreal15_5` and lost `Morning_14a3b3a2` and `Morning_4b5e6eaa`.
+  Re-running those three in isolation five times per configuration at the same 17 s cap,
+  all three solved 5/5 under both configurations, so the panel differences were timeouts
+  under load rather than capability differences. Those reruns do show a reproducible
+  effect: `c1` is about 1.5 s slower on the two bitset-heavy Morning instances (roughly
+  14 to 15 s and 13.5 to 15.4 s) and unaffected on `load_balancer_unreal15_5`. Overall,
+  the median `c1/c0` time ratio on mutually solved `syntcomp24` instances is 0.992. This
+  machine thermally throttles, so aggregate timings are directional. Capability is
+  identical between `c0` and `c1` across all four panels, 1,465 instances. The
+  specialisation buys a real but small speedup on instances with many Boolean states,
+  large enough to matter only within a second or two of the cap, at a cost of 5.5x build
+  time, 10x peak build memory, and 27x binary size. Removing it is recommended. The
+  Boolean-vector alternative is not the replacement: it is the principled runtime-sized
+  design but measures worse than both, losing 16 instances and roughly doubling solve
+  time on the three smaller panels. This is a genuine trade rather than a free win: the
+  specialisation does something, just not enough to justify nine precompiled copies of
+  the solver.
 
 These measurements are the durable record of explored ideas that did not meet
 the landing gates.  G1 is the frozen 40-verdict regression gate, G2 the
