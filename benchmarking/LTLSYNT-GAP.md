@@ -313,6 +313,36 @@ so the prototype was removed from the final head.
 
 ## What has been tried
 
+- **Static-sizing specialisation does not pay for itself:** Acacia compiles template
+  machinery to specialise on statically sized arrays and bitsets, controlled by the Meson
+  options `acacia_static_array_max` (default 300) and `acacia_static_max_bitsets` (default
+  8). `src/utils/static_switch.hh` already falls back to a dynamic path when the runtime
+  index exceeds the compile-time bound, so lowering both options to 0 routes everything
+  through the dynamic path without removing any code. Four variants were built with
+  otherwise identical default release flags and single-job compilation, then run on the
+  frozen SYNTCOMP 2025 and 2026 panels at a 17 s cap, with each solver invocation in its
+  own 8 GiB zero-swap cgroup. Build cost was: v0 shipping (300, 8), 446 s, 6.2 GiB peak
+  RSS, and a 13.8 MiB binary; v1 (300, 0), 121 s, 1.2 GiB, and 1.8 MiB; v2 (0, 8), 114 s,
+  0.8 GiB, and 1.6 MiB; and v3 fully dynamic (0, 0), 84 s, 0.6 GiB, and 0.5 MiB. On
+  SYNTCOMP25, v0/v1/v2/v3 solved 110/110/109/111 instances; on SYNTCOMP26, they solved
+  136/136/135/136. The fully dynamic build gained one instance on 2025, matched v0 on
+  2026, and lost nothing on either panel. Its median time ratio against v0 on mutually
+  solved instances was 0.891 on 2025 and 0.989 on 2026, but this machine thermally
+  throttles, so those sub-1.0 ratios should be read as "no slower", not as a speedup.
+  Restricted to the instances every variant solved (71 on 2025, 68 on 2026, above 0.05 s),
+  total solve time was v0 270.4 s / v1 242.5 s / v2 270.7 s / v3 226.1 s on 2025, and
+  v0 127.9 s / v1 121.2 s / v2 133.1 s / v3 122.7 s on 2026: `v3` is fastest or tied and
+  only `v2` is ever slower than shipping. The four configurations are selected purely by
+  Meson options, `-Dacacia_static_array_max` and `-Dacacia_static_max_bitsets`, set to
+  (300, 8), (300, 0), (0, 8) and (0, 0) respectively; a bound of 0 makes every runtime
+  index exceed it, so `static_switch_t` takes its existing fallback branch.
+  `patrolling-alarm21` was lost by v1 and v2 but not by v3; it is a known cap-edge
+  instance that has flipped in several experiments, so this is borderline rather than a
+  v2 regression. The specialisation therefore costs 5.3x build time, 10.5x peak build
+  memory, and 27x binary size while buying no coverage. Removing it is recommended and
+  would also unblock downset work: an experimental hybrid downset previously exhausted
+  memory purely on instantiation breadth.
+
 These measurements are the durable record of explored ideas that did not meet
 the landing gates.  G1 is the frozen 40-verdict regression gate, G2 the
 advisory Posets microbenchmark, G2s the solver-profile proxy, and G3 the
