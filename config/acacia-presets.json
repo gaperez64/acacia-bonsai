@@ -79,15 +79,6 @@
       "simd_is_max": false,
       "decompose_spec": true
     },
-    "best_no_array_cap_max": {
-      "inherits": "best",
-      "no_array_cap_max": true
-    },
-    "best_no_bitsets": {
-      "inherits": "best",
-      "no_array_cap_max": true,
-      "use_boolvec_over_bitset": true
-    },
     "best_mona": {
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
@@ -192,11 +183,6 @@
       "array_downset": "comptrie_backed",
       "vector_downset": "comptrie_backed"
     },
-    "best_decomp_kdtree_mona_no_bitsets": {
-      "inherits": "best_decomp_kdtree_mona",
-      "no_array_cap_max": true,
-      "use_boolvec_over_bitset": true
-    },
     "best_decomp_sharingtrie_mona": {
       "inherits": "best_decomp_mona",
       "array_downset": "sharingtrie_backed",
@@ -211,16 +197,6 @@
       "inherits": "best_decomp_mona",
       "array_downset": "sharingtree_backed",
       "vector_downset": "sharingtree_backed"
-    },
-    "best_decomp_sharingtrie_mona_no_bitsets": {
-      "inherits": "best_decomp_sharingtrie_mona",
-      "no_array_cap_max": true,
-      "use_boolvec_over_bitset": true
-    },
-    "best_decomp_mona_no_bitsets": {
-      "inherits": "best_decomp_mona",
-      "no_array_cap_max": true,
-      "use_boolvec_over_bitset": true
     },
     "best_decomp_mona_elevator": {
       "inherits": "best_decomp_mona",
@@ -276,6 +252,30 @@
     "best_decomp_rank_bucketed_mona_noequivariant": {
       "inherits": "best_decomp_rank_bucketed_mona",
       "enable_equivariant_solver": false
+    },
+    "best_decomp_rank_bucketed_mona_eq_baseline": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "equivariant_max_states": 512,
+      "equivariant_min_clients": 3,
+      "equivariant_min_blocks": 4
+    },
+    "best_decomp_rank_bucketed_mona_eq_min_clients_2": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "equivariant_max_states": 512,
+      "equivariant_min_clients": 2,
+      "equivariant_min_blocks": 4
+    },
+    "best_decomp_rank_bucketed_mona_eq_max_states_2048": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "equivariant_max_states": 2048,
+      "equivariant_min_clients": 3,
+      "equivariant_min_blocks": 4
+    },
+    "best_decomp_rank_bucketed_mona_eq_min_blocks_2": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "equivariant_max_states": 512,
+      "equivariant_min_clients": 3,
+      "equivariant_min_blocks": 2
     },
     "best_decomp_filtered_vector_mona": {
       "inherits": "best_decomp_mona",

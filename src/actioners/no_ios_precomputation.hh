@@ -43,8 +43,7 @@ namespace actioners {
 
           public:
             action_vec () = delete;
-            action_vec (const action_vec&) = default;  // static_switch needs
-                                                       // this it seems?
+            action_vec (const action_vec&) = default;
             action_vec (action_vec&&) = default;
             action_vec (std::vector<action>&& acts, bdd out)
               : actions {std::move (acts)},
@@ -86,11 +85,10 @@ namespace actioners {
               const auto& fwd = compute_action (one_input_letter, one_output_letter);
               fwd_actions.push_back (std::move (fwd));
             }
-            if (ioset.find (fwd_actions) == ioset.end ()) {
+            if (ioset.find (fwd_actions) == ioset.end ())
               ioset[fwd_actions] = one_input_letter;
-            } else {
+            else
               ioset[fwd_actions] |= one_input_letter;
-            }
           }
 
           for (auto it = ioset.begin (); it != ioset.end ();) {

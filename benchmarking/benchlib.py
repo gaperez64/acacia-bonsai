@@ -28,6 +28,42 @@ class RunResult:
     resource_limited: bool = False
 
 
+def _terminate_process_group(proc: subprocess.Popen, grace: float = 2.0) -> None:
+    """Terminate a still-running process group, escalating after a short grace period."""
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    deadline = time.monotonic() + grace
+    while time.monotonic() < deadline:
+        proc.poll()
+        try:
+            os.killpg(proc.pid, 0)
+        except ProcessLookupError:
+            return
+        time.sleep(0.05)
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
+    if proc.poll() is None:
+        proc.wait()
+
+
+def _stop_user_scope(unit: str) -> None:
+    """Stop a named user scope and every process in its control group."""
+    try:
+        subprocess.run(
+            ["systemctl", "--user", "stop", f"{unit}.scope"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        pass
+
+
 def filter_stream(stream, predicate: Callable[[str], bool]) -> tuple[list[str], int]:
     """Drain a text stream, retaining selected lines and counting raw size."""
     retained: list[str] = []
@@ -56,67 +92,86 @@ def run_process_group(
         env=env,
         start_new_session=True,
     )
-    timed_out = False
-    if capture_filter is None and capture_consumer is None:
-        try:
-            stdout, stderr = proc.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            timed_out = True
-            os.killpg(proc.pid, signal.SIGTERM)
+    try:
+        timed_out = False
+        if capture_filter is None and capture_consumer is None:
             try:
-                stdout, stderr = proc.communicate(timeout=2)
+                stdout, stderr = proc.communicate(timeout=timeout)
             except subprocess.TimeoutExpired:
-                os.killpg(proc.pid, signal.SIGKILL)
-                stdout, stderr = proc.communicate()
-        stdout_bytes = len(stdout.encode())
-        stderr_bytes = len(stderr.encode())
-    else:
-        retained_lines: list[list[str]] = [[], []]
-        raw_sizes = [0, 0]
-        consumer_lock = threading.Lock()
+                timed_out = True
+                try:
+                    os.killpg(proc.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    stdout, stderr = proc.communicate(timeout=2)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    stdout, stderr = proc.communicate()
+            stdout_bytes = len(stdout.encode())
+            stderr_bytes = len(stderr.encode())
+        else:
+            retained_lines: list[list[str]] = [[], []]
+            raw_sizes = [0, 0]
+            consumer_lock = threading.Lock()
 
-        def drain(stream, index: int) -> None:
-            if capture_consumer is None:
-                assert capture_filter is not None
-                retained_lines[index], raw_sizes[index] = filter_stream(stream, capture_filter)
-                return
-            for line in stream:
-                raw_sizes[index] += len(line)
-                with consumer_lock:
-                    capture_consumer(line)
+            def drain(stream, index: int) -> None:
+                if capture_consumer is None:
+                    assert capture_filter is not None
+                    retained_lines[index], raw_sizes[index] = filter_stream(stream, capture_filter)
+                    return
+                for line in stream:
+                    raw_sizes[index] += len(line)
+                    with consumer_lock:
+                        capture_consumer(line)
 
-        assert proc.stdout is not None and proc.stderr is not None
-        readers = [
-            threading.Thread(target=drain, args=(proc.stdout, 0), daemon=True),
-            threading.Thread(target=drain, args=(proc.stderr, 1), daemon=True),
-        ]
-        for reader in readers:
-            reader.start()
-        try:
-            proc.wait(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            timed_out = True
-            os.killpg(proc.pid, signal.SIGTERM)
+            assert proc.stdout is not None and proc.stderr is not None
+            readers = [
+                threading.Thread(target=drain, args=(proc.stdout, 0), daemon=True),
+                threading.Thread(target=drain, args=(proc.stderr, 1), daemon=True),
+            ]
+            for reader in readers:
+                reader.start()
             try:
-                proc.wait(timeout=2)
+                proc.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
-                os.killpg(proc.pid, signal.SIGKILL)
-                proc.wait()
-        for reader in readers:
-            reader.join()
-        stdout = "".join(retained_lines[0])
-        stderr = "".join(retained_lines[1])
-        stdout_bytes, stderr_bytes = raw_sizes
-    seconds = time.monotonic() - started
-    return RunResult(
-        stdout,
-        stderr,
-        124 if timed_out else proc.returncode,
-        seconds,
-        timed_out,
-        stdout_bytes,
-        stderr_bytes,
-    )
+                timed_out = True
+                try:
+                    os.killpg(proc.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    proc.wait()
+            for reader in readers:
+                reader.join()
+            stdout = "".join(retained_lines[0])
+            stderr = "".join(retained_lines[1])
+            stdout_bytes, stderr_bytes = raw_sizes
+        seconds = time.monotonic() - started
+        result = RunResult(
+            stdout,
+            stderr,
+            124 if timed_out else proc.returncode,
+            seconds,
+            timed_out,
+            stdout_bytes,
+            stderr_bytes,
+        )
+        return result
+    finally:
+        # A successful group leader may still have forked descendants.  Probe
+        # the process group even after normal completion so the driver never
+        # leaves those children behind.
+        _terminate_process_group(proc)
 
 
 def run_systemd_scope(
@@ -143,6 +198,7 @@ def run_systemd_scope(
         "--scope",
         "--quiet",
         f"--unit={unit}",
+        "--property=KillMode=control-group",
         f"--property=MemoryMax={memory_max}",
         f"--property=MemorySwapMax={memory_swap_max}",
         *cmd,
@@ -156,108 +212,139 @@ def run_systemd_scope(
         env=env,
         start_new_session=True,
     )
-    timed_out = False
-    if capture_filter is None and capture_consumer is None:
-        try:
-            stdout, stderr = proc.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            timed_out = True
-            subprocess.run(
-                ["systemctl", "--user", "stop", f"{unit}.scope"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=5,
-                check=False,
-            )
-            if proc.poll() is None:
-                os.killpg(proc.pid, signal.SIGTERM)
-            try:
-                stdout, stderr = proc.communicate(timeout=2)
-            except subprocess.TimeoutExpired:
-                os.killpg(proc.pid, signal.SIGKILL)
-                stdout, stderr = proc.communicate()
-        stdout_bytes = len(stdout.encode())
-        stderr_bytes = len(stderr.encode())
-    else:
-        # communicate() retains all raw output in RAM.  Drain both pipes as
-        # the child runs and keep only diagnostic lines, so even a worker that
-        # emits gigabytes of non-diagnostic text has bounded runner memory.
-        retained_lines: list[list[str]] = [[], []]
-        raw_sizes = [0, 0]
-        consumer_lock = threading.Lock()
+    previous_handlers: dict[signal.Signals, object] = {}
+    if threading.current_thread() is threading.main_thread():
+        for handled_signal in (signal.SIGTERM, signal.SIGHUP):
+            previous_handlers[handled_signal] = signal.getsignal(handled_signal)
 
-        def drain(stream, index: int) -> None:
-            if capture_consumer is None:
-                assert capture_filter is not None
-                retained_lines[index], raw_sizes[index] = filter_stream(stream, capture_filter)
-                return
-            for line in stream:
-                raw_sizes[index] += len(line)
-                with consumer_lock:
-                    capture_consumer(line)
+        def cleanup_on_signal(signum, frame) -> None:
+            # systemd may signal the benchmark driver while its solver lives in
+            # a sibling transient scope.  Clean that scope synchronously before
+            # delegating to the caller's handler or terminating the driver.
+            for handled_signal in previous_handlers:
+                signal.signal(handled_signal, signal.SIG_IGN)
+            _stop_user_scope(unit)
+            _terminate_process_group(proc)
+            previous = previous_handlers[signal.Signals(signum)]
+            if callable(previous):
+                previous(signum, frame)
+            raise SystemExit(128 + signum)
 
-        assert proc.stdout is not None and proc.stderr is not None
-        readers = [
-            threading.Thread(target=drain, args=(proc.stdout, 0), daemon=True),
-            threading.Thread(target=drain, args=(proc.stderr, 1), daemon=True),
-        ]
-        for reader in readers:
-            reader.start()
-        try:
-            proc.wait(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            timed_out = True
-            subprocess.run(
-                ["systemctl", "--user", "stop", f"{unit}.scope"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=5,
-                check=False,
-            )
-            if proc.poll() is None:
-                os.killpg(proc.pid, signal.SIGTERM)
+        for handled_signal in previous_handlers:
+            signal.signal(handled_signal, cleanup_on_signal)
+    try:
+        timed_out = False
+        if capture_filter is None and capture_consumer is None:
             try:
-                proc.wait(timeout=2)
+                stdout, stderr = proc.communicate(timeout=timeout)
             except subprocess.TimeoutExpired:
-                os.killpg(proc.pid, signal.SIGKILL)
-                proc.wait()
-        for reader in readers:
-            reader.join()
-        stdout = "".join(retained_lines[0])
-        stderr = "".join(retained_lines[1])
-        stdout_bytes, stderr_bytes = raw_sizes
-    resource_limited = False
-    if not timed_out and proc.returncode != 0:
-        try:
-            unit_result = subprocess.run(
-                [
-                    "systemctl",
-                    "--user",
-                    "show",
-                    f"{unit}.scope",
-                    "--property=Result",
-                    "--value",
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                text=True,
-                timeout=5,
-                check=False,
-            )
-            resource_limited = unit_result.stdout.strip() == "oom-kill"
-        except subprocess.TimeoutExpired:
-            pass
-    seconds = time.monotonic() - started
-    return RunResult(
-        stdout,
-        stderr,
-        124 if timed_out else proc.returncode,
-        seconds,
-        timed_out,
-        stdout_bytes,
-        stderr_bytes,
-        resource_limited,
-    )
+                timed_out = True
+                _stop_user_scope(unit)
+                if proc.poll() is None:
+                    try:
+                        os.killpg(proc.pid, signal.SIGTERM)
+                    except ProcessLookupError:
+                        pass
+                try:
+                    stdout, stderr = proc.communicate(timeout=2)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    stdout, stderr = proc.communicate()
+            stdout_bytes = len(stdout.encode())
+            stderr_bytes = len(stderr.encode())
+        else:
+            # communicate() retains all raw output in RAM.  Drain both pipes as
+            # the child runs and keep only diagnostic lines, so even a worker that
+            # emits gigabytes of non-diagnostic text has bounded runner memory.
+            retained_lines: list[list[str]] = [[], []]
+            raw_sizes = [0, 0]
+            consumer_lock = threading.Lock()
+
+            def drain(stream, index: int) -> None:
+                if capture_consumer is None:
+                    assert capture_filter is not None
+                    retained_lines[index], raw_sizes[index] = filter_stream(stream, capture_filter)
+                    return
+                for line in stream:
+                    raw_sizes[index] += len(line)
+                    with consumer_lock:
+                        capture_consumer(line)
+
+            assert proc.stdout is not None and proc.stderr is not None
+            readers = [
+                threading.Thread(target=drain, args=(proc.stdout, 0), daemon=True),
+                threading.Thread(target=drain, args=(proc.stderr, 1), daemon=True),
+            ]
+            for reader in readers:
+                reader.start()
+            try:
+                proc.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                timed_out = True
+                _stop_user_scope(unit)
+                if proc.poll() is None:
+                    try:
+                        os.killpg(proc.pid, signal.SIGTERM)
+                    except ProcessLookupError:
+                        pass
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    proc.wait()
+            for reader in readers:
+                reader.join()
+            stdout = "".join(retained_lines[0])
+            stderr = "".join(retained_lines[1])
+            stdout_bytes, stderr_bytes = raw_sizes
+        resource_limited = False
+        if not timed_out and proc.returncode != 0:
+            try:
+                unit_result = subprocess.run(
+                    [
+                        "systemctl",
+                        "--user",
+                        "show",
+                        f"{unit}.scope",
+                        "--property=Result",
+                        "--value",
+                    ],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    timeout=5,
+                    check=False,
+                )
+                resource_limited = unit_result.stdout.strip() == "oom-kill"
+            except subprocess.TimeoutExpired:
+                pass
+        seconds = time.monotonic() - started
+        result = RunResult(
+            stdout,
+            stderr,
+            124 if timed_out else proc.returncode,
+            seconds,
+            timed_out,
+            stdout_bytes,
+            stderr_bytes,
+            resource_limited,
+        )
+        return result
+    finally:
+        # systemd-run can finish after the command's group leader while other
+        # processes remain in the scope.  Always stop the named scope, then
+        # clean up any descendants still attached to the client's process
+        # group.
+        _stop_user_scope(unit)
+        _terminate_process_group(proc)
+        for handled_signal, previous in previous_handlers.items():
+            signal.signal(handled_signal, previous)
 
 
 def parse_acacia_result(stdout_stderr: str) -> str:
@@ -269,6 +356,19 @@ def parse_acacia_result(stdout_stderr: str) -> str:
     if "TIMEOUT" in text:
         return "TIMEOUT"
     return "UNKNOWN"
+
+
+def classify_acacia_run(run: RunResult) -> str:
+    """Classify a bounded Acacia run, requiring output/exit-code agreement."""
+    if run.timed_out:
+        return "TIMEOUT"
+    if run.resource_limited:
+        return "RESOURCE_LIMIT"
+    result = parse_acacia_result(run.stdout + run.stderr)
+    expected_exit = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2}
+    if run.returncode == expected_exit.get(result):
+        return result
+    return "ERROR"
 
 
 def read_part(path: str | pathlib.Path) -> tuple[str, str]:

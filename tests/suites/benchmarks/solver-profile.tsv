@@ -6,6 +6,6 @@ syntcomp24	round_robin_arbiter4.ltl	mixed
 syntcomp24	workstation_resupply_3.ltl	letter-loop-bound
 syntcomp25	amba_case_study_unreal_pb_2_pe_.ltl	letter-loop-bound
 syntcomp25	arbiter_with_buffer_pb_5_pe_.ltl	downset-bound
-syntcomp25	g-unreal-116.ltl	mixed
+syntcomp25	evasion0.ltl	mixed
 syntcomp25	lift_pb_3_pe_.ltl	downset-bound
 syntcomp25	workstation_resupply_pb_3_pe_.ltl	letter-loop-bound

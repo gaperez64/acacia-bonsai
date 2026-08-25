@@ -12,6 +12,7 @@ import shlex
 import sys
 
 from benchlib import read_part, run_process_group, run_systemd_scope
+from suite_paths import load_source_map
 
 
 DIAG_RE = re.compile(r"\bACACIA_DIAG\b(?P<body>.*)$")
@@ -118,7 +119,12 @@ def diagnostic_environment(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", default="build_best_decomp_mona_diag")
-    parser.add_argument("--suite-dir", default="tests/ltl/syntcomp24")
+    parser.add_argument("--suite-dir", help="flat corpus override")
+    parser.add_argument(
+        "--source-map",
+        default="tests/suites/benchmarks/syntcomp24/sources.tsv",
+        help="suite sources.tsv used when --suite-dir is omitted",
+    )
     parser.add_argument("--timeout", type=float, default=25.0)
     parser.add_argument("--memory-max", default="8G")
     parser.add_argument("--memory-swap-max", default="0")
@@ -164,7 +170,8 @@ def main() -> int:
     if not args.via_wrapper and not binary.exists():
         sys.exit(f"missing diagnostics binary: {binary}")
 
-    suite_dir = pathlib.Path(args.suite_dir)
+    suite_dir = pathlib.Path(args.suite_dir) if args.suite_dir else None
+    suite_sources = None if suite_dir else load_source_map(pathlib.Path(args.source_map))
     env = diagnostic_environment(
         os.environ,
         progress_every=args.progress_every,
@@ -218,7 +225,6 @@ def main() -> int:
         "simulation_states_after",
         "simulation_states_removed",
         "bool_threshold",
-        "bitset_threshold",
         "max_f",
         "max_f_size",
         "loops",
@@ -254,15 +260,16 @@ def main() -> int:
     ]
 
     for target in args.targets:
+        target_name = pathlib.Path(target).name
         target_path = pathlib.Path(target)
         if not target_path.exists():
-            target_path = suite_dir / target
-        if not target_path.exists():
+            target_path = suite_dir / target if suite_dir else suite_sources.get(target)
+        if target_path is None or not target_path.exists():
             print(f"skip missing target: {target}", file=sys.stderr)
             continue
 
         run_env = env.copy()
-        run_env["ACACIA_DIAG_INSTANCE"] = target_path.name
+        run_env["ACACIA_DIAG_INSTANCE"] = target_name
         if args.via_wrapper:
             cmd = [
                 "/bin/zsh",
@@ -321,12 +328,12 @@ def main() -> int:
             if diag_rows:
                 diag_rows = compact_diagnostics(diag_rows)
         if not diag_rows:
-            diag_rows = [{"instance": target_path.name, "result": "no-diagnostic-line"}]
+            diag_rows = [{"instance": target_name, "result": "no-diagnostic-line"}]
 
         for index, diag in enumerate(diag_rows, start=1):
             row = {name: "" for name in fieldnames}
             row.update(diag)
-            row["target"] = target_path.name
+            row["target"] = target_name
             row["diag_index"] = str(index)
             row["wrapper_returncode"] = str(result.returncode)
             row["wrapper_timed_out"] = "1" if result.timed_out else "0"
@@ -335,7 +342,7 @@ def main() -> int:
             rows.append(row)
         write_checkpoint(csv_path, rows, fieldnames)
         print(
-            f"{target_path.name}: return={result.returncode} "
+            f"{target_name}: return={result.returncode} "
             f"timeout={int(result.timed_out)} diag_lines={len(diag_rows)} "
             f"raw_bytes={result.stdout_bytes + result.stderr_bytes}",
             flush=True,

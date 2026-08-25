@@ -99,6 +99,11 @@ the solver and all forked children run in a named memory-limited cgroup;
 itself is what needs testing. Use `--progress-every N` to control periodic
 solve-loop snapshots; `0` disables loop snapshots.
 
+The shared bounded-runner path uses `KillMode=control-group` and tears down both
+the named user scope and the launcher's process group on every return path. It
+accepts a printed Acacia verdict only when the documented process exit code
+agrees, and classifies timeouts or resource limits before parsing solver output.
+
 The cap and direct-simulation preprocessing census is deliberately excluded
 from ordinary diagnostics because it can be expensive. Add
 `--preprocessing-census-only` to measure those reductions and stop before the
@@ -110,6 +115,29 @@ input picking, backward action application, and downset work; the summary
 labels a target `letter-loop-bound`, `downset-bound`, or `mixed` (within 20%).
 
 # Deterministic stratified panels
+
+`convert-tlsf-corpus-native.py` materializes a flat staging directory of
+`.ltl`/`.part` pairs through the
+`tlsf-frontend-inspect` helper, which links the same frontend implementation as
+`acacia-bonsai -T`. It does not invoke SyFCo or any standalone tlsf-tools
+binary. Use `--selection` to reproduce a competition selection and
+`--list-output` to emit its Meson suite manifest; `conversion.tsv` records the
+source, formula, and partition hashes plus TLSF semantics/target metadata.
+`syntcomp-pool.py` then imports exact pairs into the shared content-addressed
+`tests/ltl/syntcomp` corpus and writes the year-specific `sources.tsv` map.
+
+For example:
+```
+python3 benchmarking/convert-tlsf-corpus-native.py \
+  selection-ltl-2026 /tmp/syntcomp26-stage \
+  --native-inspect build/tests/tlsf-frontend-inspect \
+  --selection syntcomp26.tlsf.list \
+  --list-output tests/suites/benchmarks/syntcomp26/all.list
+
+python3 benchmarking/syntcomp-pool.py \
+  --pool tests/ltl/syntcomp --maps-root tests/suites/benchmarks \
+  --suite syntcomp26=/tmp/syntcomp26-stage
+```
 
 `make-panel.py` builds a family-balanced easy/border/gap/open panel from paired
 Acacia and `ltlsynt` Meson JSON logs.  Repeat `--reference` with the newest
@@ -123,7 +151,7 @@ For example:
 python3 benchmarking/make-panel.py \
   --reference _bm-logs/full-current \
   --reference _bm-logs/older-supplement \
-  --corpus tests/ltl/syntcomp24 \
+  --source-map tests/suites/benchmarks/syntcomp24/sources.tsv \
   --output tests/suites/benchmarks/syntcomp24/panel \
   --cap 17 --easy 40 --border 65 --gap 60 --open 15
 ```
@@ -177,8 +205,24 @@ solved time by 39.81% (97.870 s to 58.909 s), and improved PAR-2 from
 | `best_decomp_bboxtree_mona` | 16/17 | 22.253/19.075 | 14.28% | 294.253/273.911 |
 | `best_decomp_filtered_vector_mona` | 16/17 | 25.982/14.482 | 44.26% | 297.982/257.184 |
 
-See [NEGATIVE-RESULTS.md](NEGATIVE-RESULTS.md) for the durable record of
-optimization ideas rejected by the gates.
+The August 2026 admission-gate campaign lowered the shipping
+`acacia_equivariant_min_blocks` threshold from 4 to 2.  It passed G1 at 40/40,
+preserved all SYNTCOMP26 panel answers, and converted
+`arbiter_with_buffer_pb_5_pe_.ltl` from a timeout to REALIZABLE in 7.011 s.
+
+| panel | solved, blocks 4/2 | PAR-2, blocks 4/2 (s) |
+|---|---:|---:|
+| SYNTCOMP25 | 106/107 | 2780.724/2746.223 |
+| SYNTCOMP26 | 134/134 | 1702.186/1706.153 |
+
+The four `best_decomp_rank_bucketed_mona_eq_*` experiment presets pin all three admission values,
+so the one-at-a-time comparisons remain reproducible after the shipping default changed.
+The combined minimum-block plus safety-core-witness head also passed the SYNTCOMP21 critical
+screen at 91/94; common solved time moved from 114.711 s with the four-block preset to 103.355 s
+with the two-block preset, with the same three timeouts.
+
+See [LTLSYNT-GAP.md](LTLSYNT-GAP.md) for the current comparison with `ltlsynt`, the residual gap
+analysis, and the durable record of optimization ideas rejected by the gates.
 
 `self-benchmark.sh` also exposes ltlsynt ablation pseudo-configs.  They run the
 same local `ltlsynt/...` Meson suites as `ltlsynt`, but set `LTLSYNT_OPTS`:
@@ -202,6 +246,47 @@ matches.  Add new benchmark variants as presets in `config/acacia-presets.json`
 instead of passing ad hoc macro flags, so benchmark logs and build directories
 remain reproducible.
 
+# Acacia–ltlsynt gap diagnosis
+
+The August 2026 shipping-matched census originally audited 267 rows. A corrected empty-partition
+wrapper reclassified six of them, leaving 153 `ltlsynt_only` rows plus 108 rows where both tools
+solve but Acacia is more than 2× slower and takes more than 0.3 s. See
+[LTLSYNT-GAP.md](LTLSYNT-GAP.md) for the 261-row residual census, the six-row audit trail, and
+exact telemetry.
+
+| set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | residual total |
+|---|---:|---:|---:|---:|---:|---:|
+| corrected census rows | 122 | 68 | 36 | 9 | 26 | 261 |
+| `ltlsynt_only` | 57 | 39 | 36 | 9 | 12 | 153 |
+
+The measured outcomes are deliberately mechanism-specific:
+
+- Every `ltlsynt` feature to which the ablation attributed a win is present in Acacia; the
+  syntactic bypass captured 17/17 predicted instances.
+- 86/153 residual losses (56%) are instances `ltlsynt` answers in under 0.2 s. The largest
+  concentration is the parameterized arbiter/lift/AMBA block, but the census distinguishes its
+  letter-loop, downset, and translation modes.
+- The equivariant minimum-block threshold moved from 4 to 2, admitting verified two- and
+  three-block layouts. It gained one SYNTCOMP25 panel answer; the other recognition thresholds
+  gained none and remain unchanged.
+- The `simple_arbiter_unreal2` M3 anchor was Spot's 64-acceptance-set exception, not a translator
+  timeout or `push_aps` limit. A sound safety-core witness now solves the measured 25/50/60/75
+  family in 0.009–0.020 s.
+- Twelve rows formerly labeled M3 had already built a 105–775-state automaton. Two `LedMatrix`
+  rows are now M2 and the other ten are M1, leaving 36 M3 losses. Only four rows in the original
+  48-row M3 cohort show an architectural parity-translation advantage.
+- Correct empty-side partitions raise the reported campaign coverage from 104/180 to 106/180 on
+  SYNTCOMP25 and from 133/180 to 134/180 on SYNTCOMP26; all 187 empty-side corpus instances solve
+  through the repaired wrapper.
+- A semantic whole-letter quotient cut action applications by 14.16–15.59× on the three M1 spike
+  targets. After correcting the baseline and corpus lookup, it passed G1 at 40/40 (PAR-2
+  101.867 → 87.880 s), gained two SYNTCOMP25 G3 answers, and preserved the SYNTCOMP26 panel.
+  G2s then exposed a 680.604% cycle regression on `round_robin_arbiter4` with three candidate
+  timeouts, so the quotient was rejected and removed. M4 had only 9 losses and did not meet the
+  plan's 15-instance implementation threshold.
+
+Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md).
+
 # Gates
 
 - **G0, correctness:** `meson test -C build --suite=unit` and
@@ -209,7 +294,8 @@ remain reproducible.
 - **G1, frozen verdicts:** `benchmarking/regression-gate.sh build`; all 40
   sentinels must pass and the script must print `GATE PASS`.
 - **G2, Posets proxy (advisory):** `benchmarking/posets-microbench.sh`.
-- **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh build`.
+- **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh build`. The SYNTCOMP25
+  `mixed` target is `evasion0.ltl`; `g-unreal-116.ltl` was retired (census: M1 letter-loop).
 - **G3, landing bar:** run `benchmarking/landing-campaign.sh` with paired
   binaries, suite lists, a 17-second timeout, and an output directory. It
   invokes `benchmarking/landing-bar.py`; every suite must print `GATE PASS`.
@@ -220,6 +306,13 @@ remain reproducible.
 - **G5, native TLSF parity:** run `benchmarking/tlsf-verdict-parity.py` and
   `benchmarking/check-tlsf-conversion.py` against the selected TLSF corpus.
 
+Frozen G1 baselines were measured with the shipping
+`best_decomp_rank_bucketed_mona_eq_min_blocks_2` preset and re-validated on the final tree; the
+producing binary's SHA-256 is
+`6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`.
+`syntcomp24/Morning_f2774e0b.ltl` is frozen at 14.542 s, above the 13.6 s threshold that admits a
+51 s cap remeasurement. Full gate results are in [LTLSYNT-GAP.md](LTLSYNT-GAP.md).
+
 # Native TLSF parity
 
 The native route was rechecked against tlsf-tools `338fdd3`. SyFCo is a
@@ -229,7 +322,7 @@ valuation-list, wildcard, and REQUIRE/ASSERT validity rules where they differ.
 
 | check | cohort | result |
 |---|---:|---|
-| solver verdicts | 1,579 | GATE PASS; 0 opposite verdicts, 0 errors, 1 native-only and 3 converted-only answers |
+| solver verdicts | 1,579 | GATE PASS; 0 opposite verdicts, 0 errors, 2 native-only and 1 converted-only answers; 3 native and 2 converted resource limits |
 | regenerated SyFCo pairs | 50 | 50/50 `.ltl`/`.part` pairs matched |
 | native formula semantics | 50 | 48 matches; 1 deliberate enum-validity divergence; 1 normalization exceeded 600 s |
 | native I/O lists | 50 | 49/49 classifiable comparisons matched; the normalization timeout was unclassified |
@@ -252,3 +345,8 @@ UNKNOWN/resource-limit result, or error, while reporting those categories
 separately. If a lost baseline answer took more than 80% of the cap,
 `landing-bar.py` automatically re-measures both binaries at three times the
 cap before deciding the gate.
+
+Read PAR-2-only changes against the measured same-configuration noise floor. Three baseline runs
+spanned 2778.691–2799.825 s on SYNTCOMP25 (21.134 s) and 1702.186–1714.260 s on SYNTCOMP26
+(12.074 s). A change inside that spread is not performance evidence by itself; coverage changes
+and per-instance losses remain gate evidence.

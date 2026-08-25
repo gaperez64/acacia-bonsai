@@ -1,9 +1,16 @@
+import sys
+
+import acacia_boomslang as ab
 import pytest
 import spot
-import acacia_boomslang as ab
 
 from dataclasses import dataclass
 from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "benchmarking"))
+from suite_paths import resolve_instance
 
 
 @dataclass
@@ -18,20 +25,21 @@ def get_synthesis_problem(test_suite_name: str, test_name: str) -> SynthesisProb
         Read the formula, inputs, and outputs of the specified test
         in the /tests/ltl/ folder.
     """
-    base = Path("./tests/ltl") / test_suite_name
-
+    base = ROOT / "tests/ltl" / test_suite_name
     ltl_path = base / f"{test_name}.ltl"
-    part_path = base / f"{test_name}.part"
-
-    if not base.is_dir():
-        print(f"Error: dir not found '{base}'")
-        exit(1)
+    if not ltl_path.is_file():
+        source_map = (
+            ROOT / "tests/suites/benchmarks" / test_suite_name / "sources.tsv"
+        )
+        if source_map.is_file():
+            ltl_path = resolve_instance(source_map, f"{test_name}.ltl")
+    part_path = ltl_path.with_suffix(".part")
 
     if not ltl_path.is_file():
         print(f"Error: file not found '{ltl_path}'")
         exit(1)
 
-    if not ltl_path.is_file():
+    if not part_path.is_file():
         print(f"Error: file not found '{part_path}'")
         exit(1)
 

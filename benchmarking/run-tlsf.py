@@ -11,7 +11,7 @@ import subprocess
 import sys
 import tempfile
 
-from benchlib import RunResult, parse_acacia_result, run_process_group, run_systemd_scope
+from benchlib import RunResult, classify_acacia_run, run_process_group, run_systemd_scope
 
 
 SOLVED = {"REALIZABLE", "UNREALIZABLE"}
@@ -54,9 +54,7 @@ def run_bounded(
 
 
 def acacia_result(run: RunResult) -> str:
-    if run.timed_out:
-        return "TIMEOUT"
-    return parse_acacia_result(run.stdout + run.stderr)
+    return classify_acacia_run(run)
 
 
 def ltlsynt_result(run: RunResult) -> str:

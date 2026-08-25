@@ -25,7 +25,6 @@ using namespace std::literals;
 unsigned utils::verbose = 0;
 utils::voutstream utils::vout;
 size_t posets::vectors::bool_threshold = 0;
-size_t posets::vectors::bitset_threshold = 0;
 
 namespace {
   void terminate ([[maybe_unused]] int signum) {
@@ -77,12 +76,11 @@ int main (int argc, char** argv) {
                  : std::string {"unreal="} + unreal_strategy_name (*unreal_x) +
                        ",pref=" + translation_pref_name (translation_pref)) +
             "] ");
-        const bool res =
-            run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k, arg_values.opt_kmin,
-                     arg_values.opt_kinc, arg_values.formula, unreal_x, translation_pref,
-                     arg_values.spot_fast,
-                     unreal_x.has_value () ? std::nullopt : arg_values.synth_fname,
-                     arg_values.metadata);
+        const bool res = run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k,
+                                  arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
+                                  unreal_x, translation_pref, arg_values.spot_fast,
+                                  unreal_x.has_value () ? std::nullopt : arg_values.synth_fname,
+                                  arg_values.metadata);
         verb_do (1, vout << "returning " << res << "\n");
 
         if (unreal_x.has_value ())

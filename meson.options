@@ -26,9 +26,12 @@ option('acacia_input_picker', type: 'combo',
        choices: ['critical_pq', 'critical', 'critical_rnd', 'critical_fullrnd'],
        value: 'critical_pq')
 
-option('acacia_default_k', type: 'integer', value: 99)
-option('acacia_default_kmin', type: 'integer', value: 2)
-option('acacia_default_kinc', type: 'integer', value: 3)
+option('acacia_default_k', type: 'integer', value: 99, min: 1, max: 127,
+       description: 'Default final K (bounded by the signed-char counter representation)')
+option('acacia_default_kmin', type: 'integer', value: 2, min: 1, max: 127,
+       description: 'Default initial K (must not exceed acacia_default_k at runtime)')
+option('acacia_default_kinc', type: 'integer', value: 3, min: 1, max: 127,
+       description: 'Default K increment')
 option('acacia_default_unreal_x', type: 'combo',
        choices: ['both', 'automaton', 'formula'],
        value: 'both')
@@ -43,20 +46,20 @@ option('acacia_enable_realizability_simplifier', type: 'boolean', value: true,
        description: 'Enable Spot realizability-preserving formula simplification before solving and after decomposition')
 option('acacia_enable_syntactic_bypass', type: 'boolean', value: true,
        description: 'Enable Spot direct-strategy checks before automaton construction')
-option('acacia_static_array_max', type: 'integer', value: 300)
-option('acacia_static_max_bitsets', type: 'integer', value: 8)
 option('acacia_simd_is_max', type: 'boolean', value: true)
 option('acacia_decompose_spec', type: 'boolean', value: true)
 option('acacia_cpre_avoid_unions', type: 'boolean', value: false)
 option('acacia_no_simd', type: 'boolean', value: false)
-option('acacia_no_array_cap_max', type: 'boolean', value: false)
-option('acacia_use_boolvec_over_bitset', type: 'boolean', value: false)
 option('acacia_compile_all_components', type: 'boolean', value: false)
 option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
 option('acacia_enable_equivariant_solver', type: 'boolean', value: true,
        description: 'Compile and enable the exact equivariant solver path')
-option('acacia_equivariant_min_blocks', type: 'integer', value: 4, min: 0,
+option('acacia_equivariant_max_states', type: 'integer', value: 512, min: 1,
+       description: 'Maximum automaton states admitted to unhinted equivariant recognition')
+option('acacia_equivariant_min_clients', type: 'integer', value: 3, min: 2,
+       description: 'Minimum indexed client count admitted to equivariant recognition')
+option('acacia_equivariant_min_blocks', type: 'integer', value: 2, min: 0,
        description: 'Minimum client-state block count required by the equivariant solver (0 disables this payoff gate)')
 option('acacia_enable_symmetric_solver', type: 'boolean', value: false,
        description: 'Compile and enable the symmetry quotient solver path')

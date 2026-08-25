@@ -109,6 +109,8 @@ conversion is likewise performed inside Acacia.
 
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
+The current comparison with `ltlsynt`, residual gap analysis, and durable experiment record are
+in [benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
 
 # Compile-time configurations
 
@@ -134,7 +136,7 @@ translator preference is registry-backed as
 The shipping `best_decomp_mona` preset enables the exact equivariant solver.
 It automatically declines to the classic solver when no verified profitable
 symmetry is available, or when fewer than `acacia_equivariant_min_blocks`
-client-state blocks are found (default 4). Use
+client-state blocks are found (default 2). Use
 `best_decomp_mona_noequivariant` for the explicit classic-only escape hatch
 and performance ablation. New presets should inherit from the nearest existing
 configuration and override only the values being tested.

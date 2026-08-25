@@ -2,6 +2,7 @@
 
 #include "configuration.hh"
 #include "solver/symmetry.hh"
+#include <string_view>
 
 #include <algorithm>
 #include <chrono>
@@ -10,7 +11,6 @@
 #include <limits>
 #include <sstream>
 #include <string>
-#include <string_view>
 #include <unistd.h>
 
 #ifndef ACACIA_ENABLE_DIAGNOSTICS
@@ -46,9 +46,9 @@ namespace acacia::diagnostics {
       if (std::string_view {env} == "only")
         return preprocessing_census_mode::census_only;
       return env_flag_enabled ("ACACIA_DIAG_PREPROCESSING_CENSUS")
-          ? preprocessing_census_mode::continue_solving
-          : preprocessing_census_mode::off;
-    } ();
+                 ? preprocessing_census_mode::continue_solving
+                 : preprocessing_census_mode::off;
+    }();
     return value;
   }
 
@@ -114,7 +114,6 @@ namespace acacia::diagnostics {
       size_t simulation_states_after = 0;
       size_t simulation_states_removed = 0;
       size_t bool_threshold = 0;
-      size_t bitset_threshold = 0;
       size_t max_f = 0;
       size_t max_f_size = 0;
       unsigned long long actions_seen = 0;
@@ -145,8 +144,7 @@ namespace acacia::diagnostics {
       }
 
       void refresh_total () {
-        total_ms = std::chrono::duration_cast<std::chrono::milliseconds> (
-                       clock::now () - started)
+        total_ms = std::chrono::duration_cast<std::chrono::milliseconds> (clock::now () - started)
                        .count ();
       }
   };
@@ -155,9 +153,7 @@ namespace acacia::diagnostics {
   inline thread_local child_metrics* active_cpre_metrics = nullptr;
   inline thread_local clock::time_point active_cpre_started {};
 
-  inline child_metrics* current () {
-    return enabled () ? current_child : nullptr;
-  }
+  inline child_metrics* current () { return enabled () ? current_child : nullptr; }
 
   inline std::string env_or_dash (const char* name) {
     const char* value = std::getenv (name);
@@ -176,7 +172,7 @@ namespace acacia::diagnostics {
       if (parsed > std::numeric_limits<unsigned>::max ())
         return std::numeric_limits<unsigned>::max ();
       return static_cast<unsigned> (parsed);
-    } ();
+    }();
     return value;
   }
 
@@ -197,36 +193,24 @@ namespace acacia::diagnostics {
     flush_active_cpre ();
     std::ostringstream line;
     line << "ACACIA_DIAG"
-         << " pid=" << getpid ()
-         << " diag_kind=" << kind
-         << " checkpoint=" << checkpoint
-         << " instance=" << m.instance
-         << " path=" << m.path
-         << " translation_pref=" << m.translation_pref
-         << " source_format=" << m.source_format
-         << " tlsf_semantics=" << m.tlsf_semantics
-         << " tlsf_target=" << m.tlsf_target
+         << " pid=" << getpid () << " diag_kind=" << kind << " checkpoint=" << checkpoint
+         << " instance=" << m.instance << " path=" << m.path
+         << " translation_pref=" << m.translation_pref << " source_format=" << m.source_format
+         << " tlsf_semantics=" << m.tlsf_semantics << " tlsf_target=" << m.tlsf_target
          << " tlsf_effective_target=" << m.tlsf_effective_target
-         << " tlsf_gr_level=" << m.tlsf_gr_level
-         << " rsimp_ms=" << m.rsimp_ms
+         << " tlsf_gr_level=" << m.tlsf_gr_level << " rsimp_ms=" << m.rsimp_ms
          << " rsimp_changed=" << (m.rsimp_changed ? 1 : 0)
          << " syntactic_bypass=" << m.syntactic_bypass
          << " syntactic_bypass_ms=" << m.syntactic_bypass_ms
-         << " translation_ms=" << m.translation_ms
-         << " aut_states=" << m.aut_states
-         << " aut_edges=" << m.aut_edges
-         << " fast_class=" << m.fast_class
-         << " fast_class_ms=" << m.fast_class_ms
-         << " fast_solve_ms=" << m.fast_solve_ms
-         << " fast_verdict=" << m.fast_verdict
-         << " preproc=" << m.preprocessor
-         << " preproc_ms=" << m.preproc_ms
-         << " preproc_states_before=" << m.preproc_states_before
+         << " translation_ms=" << m.translation_ms << " aut_states=" << m.aut_states
+         << " aut_edges=" << m.aut_edges << " fast_class=" << m.fast_class
+         << " fast_class_ms=" << m.fast_class_ms << " fast_solve_ms=" << m.fast_solve_ms
+         << " fast_verdict=" << m.fast_verdict << " preproc=" << m.preprocessor
+         << " preproc_ms=" << m.preproc_ms << " preproc_states_before=" << m.preproc_states_before
          << " preproc_states_after=" << m.preproc_states_after
          << " preproc_edges_before=" << m.preproc_edges_before
          << " preproc_edges_after=" << m.preproc_edges_after
-         << " cap_census_ms=" << m.cap_census_ms
-         << " cap_k=" << m.cap_k
+         << " cap_census_ms=" << m.cap_census_ms << " cap_k=" << m.cap_k
          << " cap_states_at_k=" << m.cap_states_at_k
          << " cap_states_finite=" << m.cap_states_finite
          << " cap_states_zero=" << m.cap_states_zero
@@ -235,41 +219,25 @@ namespace acacia::diagnostics {
          << " simulation_census_ms=" << m.simulation_census_ms
          << " simulation_states_after=" << m.simulation_states_after
          << " simulation_states_removed=" << m.simulation_states_removed
-         << " bool_threshold=" << m.bool_threshold
-         << " bitset_threshold=" << m.bitset_threshold
-         << " max_f=" << m.max_f
-         << " max_f_size=" << m.max_f_size
-         << " loops=" << m.loops
-         << " k_attempts=" << m.k_attempts
-         << " cpre_ms=" << m.cpre_ms
-         << " picker_ms=" << m.picker_ms
-         << " apply_ms=" << m.apply_ms
-         << " downset_ms=" << m.downset_ms
-         << " actions_seen=" << m.actions_seen
-         << " meets_computed=" << m.meets_computed
-         << " meet_batches=" << m.meet_batches
+         << " bool_threshold=" << m.bool_threshold << " max_f=" << m.max_f
+         << " max_f_size=" << m.max_f_size << " loops=" << m.loops
+         << " k_attempts=" << m.k_attempts << " cpre_ms=" << m.cpre_ms
+         << " picker_ms=" << m.picker_ms << " apply_ms=" << m.apply_ms
+         << " downset_ms=" << m.downset_ms << " actions_seen=" << m.actions_seen
+         << " meets_computed=" << m.meets_computed << " meet_batches=" << m.meet_batches
          << " alphabet_input_paths=" << m.alphabet_input_paths
          << " alphabet_input_nodes=" << m.alphabet_input_nodes
          << " alphabet_output_paths=" << m.alphabet_output_paths
          << " alphabet_output_nodes=" << m.alphabet_output_nodes
-         << " alphabet_bdd_nodes=" << m.alphabet_bdd_nodes
-         << " equivariant=" << m.equivariant
-         << " eq_clients=" << m.equivariant_clients
-         << " eq_blocks=" << m.equivariant_blocks
-         << " eq_orbits=" << m.equivariant_orbits
-         << " sym_families=" << m.symmetry_families
-         << " sym_indices=" << m.symmetry_indices
-         << " sym_matrix=" << m.symmetry_matrix
-         << " sym_subsets=" << m.symmetry_subsets
-         << " sym_selected=" << m.symmetry_selected
-         << " sym_orbit_sizes=" << m.symmetry_orbit_sizes
-         << " sym_blocks=" << m.symmetry_blocks
-         << " sym_shared=" << m.symmetry_shared
-         << " solve_ms=" << m.solve_ms
-         << " total_ms=" << m.total_ms
-         << " result=" << m.result
-         << " final_reason=" << m.final_reason
-         << '\n';
+         << " alphabet_bdd_nodes=" << m.alphabet_bdd_nodes << " equivariant=" << m.equivariant
+         << " eq_clients=" << m.equivariant_clients << " eq_blocks=" << m.equivariant_blocks
+         << " eq_orbits=" << m.equivariant_orbits << " sym_families=" << m.symmetry_families
+         << " sym_indices=" << m.symmetry_indices << " sym_matrix=" << m.symmetry_matrix
+         << " sym_subsets=" << m.symmetry_subsets << " sym_selected=" << m.symmetry_selected
+         << " sym_orbit_sizes=" << m.symmetry_orbit_sizes << " sym_blocks=" << m.symmetry_blocks
+         << " sym_shared=" << m.symmetry_shared << " solve_ms=" << m.solve_ms
+         << " total_ms=" << m.total_ms << " result=" << m.result
+         << " final_reason=" << m.final_reason << '\n';
     const std::string text = line.str ();
     [[maybe_unused]] const auto written = ::write (STDERR_FILENO, text.data (), text.size ());
   }
@@ -295,13 +263,40 @@ namespace acacia::diagnostics {
         }
       }
 
-      child_metrics* operator-> () { return current (); }
+      child_metrics* operator->() { return current (); }
       child_metrics& get () { return metrics; }
 
     private:
       child_metrics metrics;
       child_metrics* previous = nullptr;
       clock::time_point started;
+  };
+
+  // A speculative solve (for example, an unrealizability witness) must not
+  // make the enclosing formula look as though that attempt were its final
+  // path.  Roll all metrics back unless the caller explicitly commits the
+  // attempt.  Keeping the original start time in the snapshot means the
+  // enclosing child's total wall time still includes discarded attempts.
+  class scoped_attempt {
+    public:
+      scoped_attempt ()
+        : metrics {current ()},
+          before {metrics != nullptr ? *metrics : child_metrics {}} {}
+
+      scoped_attempt (const scoped_attempt&) = delete;
+      scoped_attempt& operator= (const scoped_attempt&) = delete;
+
+      ~scoped_attempt () {
+        if (metrics != nullptr and not committed)
+          *metrics = std::move (before);
+      }
+
+      void commit () { committed = true; }
+
+    private:
+      child_metrics* metrics = nullptr;
+      child_metrics before;
+      bool committed = false;
   };
 
   class scoped_timer {
@@ -312,9 +307,9 @@ namespace acacia::diagnostics {
 
       ~scoped_timer () {
         if (target != nullptr)
-          *target += std::chrono::duration_cast<std::chrono::milliseconds> (
-                         clock::now () - started)
-                         .count ();
+          *target +=
+              std::chrono::duration_cast<std::chrono::milliseconds> (clock::now () - started)
+                  .count ();
       }
 
     private:
@@ -327,7 +322,9 @@ namespace acacia::diagnostics {
   class scoped_fine_timer {
     public:
       explicit scoped_fine_timer (fine_metric metric)
-        : metrics {current ()}, metric {metric}, started {clock::now ()} {
+        : metrics {current ()},
+          metric {metric},
+          started {clock::now ()} {
         if (metrics != nullptr and metric == fine_metric::cpre) {
           active_cpre_metrics = metrics;
           active_cpre_started = started;
@@ -345,14 +342,9 @@ namespace acacia::diagnostics {
         const double elapsed =
             std::chrono::duration<double, std::milli> (clock::now () - started).count ();
         switch (metric) {
-          case fine_metric::cpre:
-            break;
-          case fine_metric::picker:
-            metrics->picker_ms += elapsed;
-            break;
-          case fine_metric::apply:
-            metrics->apply_ms += elapsed;
-            break;
+          case fine_metric::cpre: break;
+          case fine_metric::picker: metrics->picker_ms += elapsed; break;
+          case fine_metric::apply: metrics->apply_ms += elapsed; break;
         }
       }
 
@@ -447,11 +439,9 @@ namespace acacia::diagnostics {
     }
   }
 
-  inline void set_alphabet_census (unsigned long long input_paths,
-                                   unsigned long long input_nodes,
+  inline void set_alphabet_census (unsigned long long input_paths, unsigned long long input_nodes,
                                    unsigned long long output_paths,
-                                   unsigned long long output_nodes,
-                                   unsigned long long bdd_nodes) {
+                                   unsigned long long output_nodes, unsigned long long bdd_nodes) {
     if (auto* m = current ()) {
       m->alphabet_input_paths = input_paths;
       m->alphabet_input_nodes = input_nodes;
@@ -508,9 +498,15 @@ namespace acacia::diagnostics {
       explicit scoped_child (std::string) {}
       struct noop {
           template <typename T>
-          noop& operator= (T&&) { return *this; }
+          noop& operator= (T&&) {
+            return *this;
+          }
       };
-      noop* operator-> () { return nullptr; }
+      noop* operator->() { return nullptr; }
+  };
+
+  struct scoped_attempt {
+      void commit () {}
   };
 
   inline bool alphabet_census_only () { return false; }
@@ -532,9 +528,8 @@ namespace acacia::diagnostics {
   inline void snapshot_intersection_progress () {}
   inline void snapshot_loop_progress (std::string_view) {}
   inline void snapshot (std::string_view) {}
-  inline void set_alphabet_census (unsigned long long, unsigned long long,
-                                   unsigned long long, unsigned long long,
-                                   unsigned long long) {}
+  inline void set_alphabet_census (unsigned long long, unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long) {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}

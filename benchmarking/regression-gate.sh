@@ -68,7 +68,8 @@ fi
 
 set +e
 python3 - "$expected" "$testlog" "$meson_status" \
-  "$scratch/baseline.csv" "$scratch/candidate.csv" <<'PY'
+  "$scratch/baseline.csv" "$scratch/candidate.csv" "$repo_root" <<'PY'
+from collections import defaultdict
 import csv
 import json
 import pathlib
@@ -81,6 +82,7 @@ testlog_path = pathlib.Path(sys.argv[2])
 meson_status = int(sys.argv[3])
 baseline_csv = pathlib.Path(sys.argv[4])
 candidate_csv = pathlib.Path(sys.argv[5])
+repo_root = pathlib.Path(sys.argv[6])
 verdict_re = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
 
 
@@ -90,6 +92,8 @@ def verdict(stdout):
 
 
 expected = {}
+expected_sources = {}
+source_maps = {}
 with expected_path.open(newline="") as handle:
     for row in csv.DictReader(handle, delimiter="\t"):
         key = (row["suite"], row["instance"])
@@ -103,6 +107,31 @@ with expected_path.open(newline="") as handle:
             ) from exc
         expected[key] = (row["verdict"], baseline_seconds)
 
+        source_map_path = expected_path.parent / key[0] / "sources.tsv"
+        if source_map_path.is_file():
+            if source_map_path not in source_maps:
+                with source_map_path.open(newline="") as source_handle:
+                    source_maps[source_map_path] = {
+                        source_row["instance"]: (
+                            repo_root / "tests" / "ltl" / source_row["source"]
+                        ).resolve()
+                        for source_row in csv.DictReader(source_handle, delimiter="\t")
+                    }
+            try:
+                expected_sources[key] = source_maps[source_map_path][key[1]]
+            except KeyError as exc:
+                raise SystemExit(
+                    f"GATE FAIL: {source_map_path}: no source for {key[1]!r}"
+                ) from exc
+        else:
+            expected_sources[key] = (
+                repo_root / "tests" / "ltl" / key[0] / key[1]
+            ).resolve()
+
+source_to_expected = defaultdict(list)
+for key, source in expected_sources.items():
+    source_to_expected[source].append(key)
+
 observed = {}
 problems = []
 with testlog_path.open() as handle:
@@ -112,8 +141,41 @@ with testlog_path.open() as handle:
         if "-F" not in command:
             problems.append(f"testlog line {line_no}: command has no -F input")
             continue
-        instance_path = pathlib.Path(command[command.index("-F") + 1])
-        key = (instance_path.parent.name, instance_path.name)
+        instance_path = pathlib.Path(command[command.index("-F") + 1]).resolve()
+        candidates = source_to_expected.get(instance_path, [])
+        if not candidates:
+            problems.append(
+                f"testlog line {line_no}: unexpected input {instance_path}"
+            )
+            continue
+        if len(candidates) == 1:
+            key = candidates[0]
+        else:
+            # Content-addressed corpus entries may be shared across suites.  The
+            # Meson test name preserves the logical filename and suite labels,
+            # so use those to disambiguate without collapsing duplicate hashes.
+            test_name = row.get("name") or ""
+            marker = " - Acacia_Bonsai:ab/"
+            logical_instance = (
+                test_name.rsplit(marker, 1)[1] if marker in test_name else ""
+            )
+            suite_labels = set(test_name.split(" - ", 1)[0].split("+"))
+            named_candidates = [
+                candidate
+                for candidate in candidates
+                if candidate[1] == logical_instance
+                and f"ab/{candidate[0]}" in suite_labels
+            ]
+            if len(named_candidates) != 1:
+                rendered = ", ".join(
+                    f"{suite}/{instance}" for suite, instance in candidates
+                )
+                problems.append(
+                    f"testlog line {line_no}: cannot disambiguate {instance_path} "
+                    f"among {rendered} from test name {test_name!r}"
+                )
+                continue
+            key = named_candidates[0]
         answer = verdict(row.get("stdout"))
         result = row.get("result")
         if key in observed:
@@ -177,6 +239,7 @@ python3 "$repo_root/benchmarking/landing-bar.py" \
   --timeout 17 \
   --baseline-bin "$baseline_bin" \
   --candidate-bin "$build_dir/src/acacia-bonsai" \
-  --instances-dir "$repo_root/tests/ltl" \
+  --source-map "syntcomp24=$repo_root/tests/suites/benchmarks/syntcomp24/sources.tsv" \
+  --source-map "syntcomp25=$repo_root/tests/suites/benchmarks/syntcomp25/sources.tsv" \
   --memory-max 8G \
   --memory-swap-max 0

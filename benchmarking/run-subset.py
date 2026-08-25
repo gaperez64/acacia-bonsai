@@ -5,8 +5,8 @@ Reusable validation workhorse for the optimize-vs-ltlsynt experiments: pick a
 subset (e.g. all unrealizable loss instances) from the loss-set CSV, run a given
 binary+flags on each, and emit a CSV of {instance, result, seconds, exit}.
 
-Result is parsed from stdout (REALIZABLE / UNREALIZABLE / UNKNOWN); a wall-clock
-timeout yields result=TIMEOUT.
+Results require stdout and exit-code agreement (REALIZABLE / UNREALIZABLE /
+UNKNOWN); wall-clock and cgroup failures are classified before solver output.
 
 Example:
   run-subset.py --bin ../acacia-bonsai/build_best_decomp_mona/src/acacia-bonsai \\
@@ -17,19 +17,22 @@ import argparse
 import csv
 import os
 import pathlib
+import signal
 import shlex
 import sys
 
 from benchlib import (
-    parse_acacia_result,
+    classify_acacia_run,
     read_part,
     run_process_group,
     run_systemd_scope,
     write_csv,
 )
+from suite_paths import load_source_map
 
 
-DEFAULT_INSTANCES_DIR = pathlib.Path(__file__).resolve().parents[1] / "tests/ltl/syntcomp24"
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+DEFAULT_SOURCE_MAP = ROOT / "tests/suites/benchmarks/syntcomp24/sources.tsv"
 
 
 def read_ltl_partition(inst_ltl):
@@ -45,12 +48,21 @@ def read_instance_list(path):
     ]
 
 
+def classify_run(run):
+    return classify_acacia_run(run)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--bin", required=True)
     p.add_argument("--instances-dir",
-                   default=str(DEFAULT_INSTANCES_DIR))
+                   help="flat corpus override (disables the default source map)")
+    p.add_argument(
+        "--source-map",
+        default=str(DEFAULT_SOURCE_MAP),
+        help="suite sources.tsv used when --instances-dir is omitted",
+    )
     p.add_argument("--from-csv", help="loss-set CSV to pick instances from")
     p.add_argument("--category", action="append", default=[],
                    help="filter: keep these categories (repeatable)")
@@ -88,15 +100,17 @@ def main():
 
     extra = shlex.split(args.flags)
     runner_prefix = shlex.split(args.runner_prefix)
+    source_map = None if args.instances_dir else load_source_map(pathlib.Path(args.source_map))
     rows = []
     solved = 0
     tot_time = 0.0
     print(f"# bin={args.bin}\n# flags={args.flags!r}  timeout={args.timeout}s  n={len(insts)}")
     for base in insts:
-        ltl = os.path.join(args.instances_dir, base)
-        if not os.path.exists(ltl):
+        ltl_path = pathlib.Path(args.instances_dir) / base if args.instances_dir else source_map.get(base)
+        if ltl_path is None or not ltl_path.exists():
             print(f"  {base:44s} MISSING")
             continue
+        ltl = str(ltl_path)
         ins, outs = read_ltl_partition(ltl)
         cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
         if args.systemd_scope:
@@ -109,7 +123,7 @@ def main():
             )
         else:
             run = run_process_group(cmd, args.timeout)
-        res = "TIMEOUT" if run.timed_out else parse_acacia_result(run.stdout + run.stderr)
+        res = classify_run(run)
         ok = res in ("REALIZABLE", "UNREALIZABLE")
         solved += ok
         tot_time += run.seconds
@@ -124,4 +138,9 @@ def main():
 
 
 if __name__ == "__main__":
+    def exit_on_signal(signum, _frame):
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGTERM, exit_on_signal)
+    signal.signal(signal.SIGHUP, exit_on_signal)
     main()

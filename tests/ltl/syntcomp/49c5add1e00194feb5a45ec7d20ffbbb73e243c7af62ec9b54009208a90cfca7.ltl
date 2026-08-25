@@ -1,0 +1,1 @@
+(G F pred__xprev_lt_x_ -> G F bin_x0) && (!bin_st_0 && !pred__xprev_lt_x_ && !bin_x0) && (!X bin_st_0 && X pred__xprev_lt_x_ && !X bin_x0) && G (!bin_st_0 -> X pred__xprev_lt_x_ && (bin_x0 && X bin_x0 || !bin_x0 && (X bin_x0 || !X bin_x0)) && !X bin_st_0 || X pred__xprev_lt_x_ && (bin_x0 && X bin_x0 || !bin_x0 && (X bin_x0 || !X bin_x0)) && !X bin_st_0) && true -> G F !bin_x0

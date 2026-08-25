@@ -1,0 +1,2 @@
+.inputs bin_y0 bin_x1 bin_y1 bin_x2 bin_st_0 pred__y_eq_yprev_ in_loop0_0 bin_x0 bin_st_1 bin_y2 pred__x_lt_xprev_ pred__yprev_lt_y_ pred__y_eq__yprev_add__minus_1__ pred__y_lt_yprev_ pred__xprev_lt_x_ e1 e0
+.outputs c5 c4 c3 c2

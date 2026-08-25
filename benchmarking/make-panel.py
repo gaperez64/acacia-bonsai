@@ -19,6 +19,7 @@ import re
 from dataclasses import dataclass
 
 from benchlib import load_meson_jsonl
+from suite_paths import load_source_map
 
 
 VERDICT_RE = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
@@ -55,31 +56,50 @@ def standalone_verdict(stdout: str | None) -> str | None:
     return matches[-1]
 
 
-def instance_from_row(row: dict, corpus_dir: pathlib.Path | None = None) -> str | None:
-    command = row.get("command")
-    if isinstance(command, list):
-        for index, token in enumerate(command[:-1]):
-            if token == "-F":
-                path = pathlib.Path(command[index + 1])
-                if corpus_dir is not None and path.resolve().parent != corpus_dir.resolve():
-                    return None
-                return path.name
-    if corpus_dir is not None:
-        # A basename-only fallback cannot distinguish duplicate names from
-        # two suites in one Meson run.  Corpus-filtered references therefore
-        # require the normal explicit `-F PATH` command metadata.
-        return None
+def instance_from_name(row: dict) -> str | None:
     name = str(row.get("name", ""))
     match = re.search(r"/([^/\s]+\.ltl)(?:\s|$)", name)
     return match.group(1) if match else None
 
 
+def instance_from_row(
+    row: dict,
+    corpus_dir: pathlib.Path | None = None,
+    sources: dict[pathlib.Path, set[str]] | None = None,
+) -> str | None:
+    command = row.get("command")
+    if isinstance(command, list):
+        for index, token in enumerate(command[:-1]):
+            if token == "-F":
+                path = pathlib.Path(command[index + 1])
+                if sources is not None:
+                    candidates = sources.get(path.resolve())
+                    if not candidates:
+                        return None
+                    if len(candidates) == 1:
+                        return next(iter(candidates))
+                    named = instance_from_name(row)
+                    return named if named in candidates else None
+                if corpus_dir is not None and path.resolve().parent != corpus_dir.resolve():
+                    return None
+                return path.name
+    if corpus_dir is not None or sources is not None:
+        # A basename-only fallback cannot distinguish duplicate names from
+        # two suites in one Meson run.  Corpus-filtered references therefore
+        # require the normal explicit `-F PATH` command metadata.
+        return None
+    return instance_from_name(row)
+
+
 def load_tool(
-    path: pathlib.Path, cap: float, corpus_dir: pathlib.Path | None = None
+    path: pathlib.Path,
+    cap: float,
+    corpus_dir: pathlib.Path | None = None,
+    sources: dict[pathlib.Path, set[str]] | None = None,
 ) -> dict[str, ToolResult]:
     results: dict[str, ToolResult] = {}
     for row in load_meson_jsonl(path):
-        instance = instance_from_row(row, corpus_dir)
+        instance = instance_from_row(row, corpus_dir, sources)
         if instance is None:
             continue
         duration = float(row.get("duration", 0.0) or 0.0)
@@ -167,6 +187,7 @@ def load_references(
     ltlsynt_name: str,
     cap: float,
     corpus_dir: pathlib.Path | None = None,
+    sources: dict[pathlib.Path, set[str]] | None = None,
 ) -> tuple[dict[str, Candidate], set[str]]:
     # References are ordered newest first.  Coverage is their union; when an
     # instance occurs in more than one campaign, the first (latest) result is
@@ -180,8 +201,8 @@ def load_references(
             raise FileNotFoundError(
                 f"{reference} must contain {acacia_name}.json and {ltlsynt_name}.json"
             )
-        acacia = load_tool(acacia_path, cap, corpus_dir)
-        ltlsynt = load_tool(ltlsynt_path, cap, corpus_dir)
+        acacia = load_tool(acacia_path, cap, corpus_dir, sources)
+        ltlsynt = load_tool(ltlsynt_path, cap, corpus_dir, sources)
         shared = acacia.keys() & ltlsynt.keys()
         observed.update(shared)
         for instance in sorted(shared):
@@ -298,7 +319,13 @@ def main() -> int:
     )
     parser.add_argument("--acacia", default="best_decomp_mona")
     parser.add_argument("--ltlsynt", default="ltlsynt")
-    parser.add_argument("--corpus", required=True, type=pathlib.Path)
+    corpus_group = parser.add_mutually_exclusive_group(required=True)
+    corpus_group.add_argument("--corpus", type=pathlib.Path)
+    corpus_group.add_argument(
+        "--source-map",
+        type=pathlib.Path,
+        help="suite sources.tsv for a shared/content-addressed corpus",
+    )
     parser.add_argument("--output", required=True, type=pathlib.Path,
                         help="output prefix; .list and .tsv are appended")
     parser.add_argument("--cap", type=float, default=17.0)
@@ -309,10 +336,18 @@ def main() -> int:
     parser.add_argument("--open", type=parse_quota, default=15)
     args = parser.parse_args()
 
+    if args.source_map:
+        logical_sources = load_source_map(args.source_map)
+        sources: dict[pathlib.Path, set[str]] = collections.defaultdict(set)
+        for instance, path in logical_sources.items():
+            sources[path.resolve()].add(instance)
+        corpus = set(logical_sources)
+    else:
+        sources = None
+        corpus = {path.name for path in args.corpus.glob("*.ltl")}
     candidates, observed = load_references(
-        args.reference, args.acacia, args.ltlsynt, args.cap, args.corpus
+        args.reference, args.acacia, args.ltlsynt, args.cap, args.corpus, sources
     )
-    corpus = {path.name for path in args.corpus.glob("*.ltl")}
     covered = corpus & observed
     eligible = corpus & candidates.keys()
     uncovered = corpus - covered

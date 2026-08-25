@@ -1,0 +1,2 @@
+.inputs bin_st_1 pred_free pred__ack_lt_ackprev_ bin_evactimer2 bin_st_0 bin__min_evactime0 pred__evactimer_lt_evactimerprev_ bin_evactimer1 pred___minus_evactime_lt__minus_evactimeprev_ bin_ack1 bin_ack0 pred___minus_evactimeprev_lt__minus_evactime_ bin_ack2 pred__ackprev_lt_ack_ pred__evactimerprev_lt_evactimer_ bin_st_2 bin_evactimer0 r2 r1 emergency land depart
+.outputs a2 a1 e2 e1 f

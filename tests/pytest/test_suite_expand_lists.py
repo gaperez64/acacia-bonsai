@@ -4,6 +4,8 @@ import importlib.util
 import io
 import pathlib
 
+import pytest
+
 
 SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "suites" / "expand-lists.py"
 
@@ -66,6 +68,38 @@ def test_skipped_suites_emit_skipped_records(tmp_path):
     module.main(out)
 
     assert out.getvalue().splitlines() == [
-        "ST\trealizable\t!skip\ttest.ltl",
-        "SB\trealizable\t!skip\tbench.ltl",
+        "ST\trealizable\t!skip\ttest.ltl\trealizable/test.ltl",
+        "SB\trealizable\t!skip\tbench.ltl\trealizable/bench.ltl",
     ]
+
+
+def test_source_map_redirects_storage_without_changing_logical_name(tmp_path):
+    module = load_expand_lists()
+    root = tmp_path / "suites"
+    folder = root / "benchmarks" / "syntcomp26"
+    folder.mkdir(parents=True)
+    (folder / "panel.list").write_text("Alarm.ltl\n")
+    (folder / "sources.tsv").write_text(
+        "instance\tsource\nAlarm.ltl\tsyntcomp/abc.ltl\n"
+    )
+    module.ROOT = root
+
+    out = io.StringIO()
+    module.main(out)
+
+    assert out.getvalue().splitlines() == [
+        "B\tsyntcomp26\tpanel\tAlarm.ltl\tsyntcomp/abc.ltl"
+    ]
+
+
+def test_source_map_requires_every_listed_instance(tmp_path):
+    module = load_expand_lists()
+    root = tmp_path / "suites"
+    folder = root / "benchmarks" / "syntcomp26"
+    folder.mkdir(parents=True)
+    (folder / "panel.list").write_text("missing.ltl\n")
+    (folder / "sources.tsv").write_text("instance\tsource\n")
+    module.ROOT = root
+
+    with pytest.raises(KeyError, match="no source for 'missing.ltl'"):
+        module.main(io.StringIO())

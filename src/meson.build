@@ -4,9 +4,7 @@ ab_sources = [
   'solver/mealy_to_moore.cc',
   'solver/solver_invoker.cc',
   'solver/solve_game.cc',
-  'solver/solve_game_array_bitset.cc',
-  'solver/solve_game_vector_bitset.cc',
-  'solver/solve_game_vector_boolvec.cc',
+  'solver/solve_game_zero_tail.cc',
 ]
 if get_option ('acacia_enable_tlsf_frontend')
   ab_sources += 'tlsf_frontend.cc'
