@@ -225,7 +225,6 @@ def main() -> int:
         "simulation_states_after",
         "simulation_states_removed",
         "bool_threshold",
-        "bitset_threshold",
         "max_f",
         "max_f_size",
         "loops",

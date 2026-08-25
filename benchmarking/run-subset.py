@@ -5,8 +5,8 @@ Reusable validation workhorse for the optimize-vs-ltlsynt experiments: pick a
 subset (e.g. all unrealizable loss instances) from the loss-set CSV, run a given
 binary+flags on each, and emit a CSV of {instance, result, seconds, exit}.
 
-Result is parsed from stdout (REALIZABLE / UNREALIZABLE / UNKNOWN); a wall-clock
-timeout yields result=TIMEOUT.
+Results require stdout and exit-code agreement (REALIZABLE / UNREALIZABLE /
+UNKNOWN); wall-clock and cgroup failures are classified before solver output.
 
 Example:
   run-subset.py --bin ../acacia-bonsai/build_best_decomp_mona/src/acacia-bonsai \\
@@ -17,11 +17,12 @@ import argparse
 import csv
 import os
 import pathlib
+import signal
 import shlex
 import sys
 
 from benchlib import (
-    parse_acacia_result,
+    classify_acacia_run,
     read_part,
     run_process_group,
     run_systemd_scope,
@@ -45,6 +46,10 @@ def read_instance_list(path):
         for raw in open(path)
         if (line := raw.strip()) and not line.startswith("#")
     ]
+
+
+def classify_run(run):
+    return classify_acacia_run(run)
 
 
 def main():
@@ -118,7 +123,7 @@ def main():
             )
         else:
             run = run_process_group(cmd, args.timeout)
-        res = "TIMEOUT" if run.timed_out else parse_acacia_result(run.stdout + run.stderr)
+        res = classify_run(run)
         ok = res in ("REALIZABLE", "UNREALIZABLE")
         solved += ok
         tot_time += run.seconds
@@ -133,4 +138,9 @@ def main():
 
 
 if __name__ == "__main__":
+    def exit_on_signal(signum, _frame):
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGTERM, exit_on_signal)
+    signal.signal(signal.SIGHUP, exit_on_signal)
     main()

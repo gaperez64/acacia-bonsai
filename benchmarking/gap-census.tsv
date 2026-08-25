@@ -7,7 +7,7 @@ syntcomp24	FelixSpecFixed4_3916ec59.ltl	ltlsynt_only	M4 one-sided-race	0	0	0	2	6
 syntcomp24	FelixSpecFixed4_dd3a27e1.ltl	ltlsynt_only	M4 one-sided-race	0	0	0	2	65	not run	17.067925	0.029553
 syntcomp24	FelixSpecFixed_2418b67e.ltl	ltlsynt_only	M4 one-sided-race	0	0	0	2	62	not run	17.064967	0.028883
 syntcomp24	KitchenTimerV9.ltl	acacia_slow	mixed	16832	3504	1052	146	282	no indexed AP families	0.613594	0.028215
-syntcomp24	LedMatrix.ltl	ltlsynt_only	M3 translation-stall	1006	1	302	775	6770	no indexed AP families	17.059467	0.365001
+syntcomp24	LedMatrix.ltl	ltlsynt_only	M2 downset	1006	1	302	775	6770	no indexed AP families	17.059467	0.365001
 syntcomp24	OneCounter.ltl	acacia_slow	M1 letter-loop	2571128	6	6560	67	2963	no indexed AP families	2.618658	0.023377
 syntcomp24	OneCounterGuiA6.ltl	acacia_slow	M1 letter-loop	250824	94	4480	55	315	no indexed AP families	0.334154	0.019073
 syntcomp24	OneCounterGuiA7.ltl	acacia_slow	M1 letter-loop	672966	121	6867	55	901	no indexed AP families	0.847893	0.018517
@@ -99,7 +99,7 @@ syntcomp25	F-G-contradiction-14.ltl	acacia_slow	mixed	32956	4096	108	649	47	no i
 syntcomp25	GF-G-contradiction2.ltl	acacia_slow	M1 letter-loop	35280	768	85	317	40	too few indexed clients	1.588270	0.029109
 syntcomp25	GF-G-contradiction4.ltl	ltlsynt_only	M1 letter-loop	82120	4335	18	1922	725	too few indexed clients; too many automaton states	17.072921	0.100188
 syntcomp25	GF-G-contradiction6.ltl	ltlsynt_only	M1 letter-loop	0	0	0	119	13131	too few indexed clients	17.037886	4.548886
-syntcomp25	LedMatrix.ltl	ltlsynt_only	M3 translation-stall	1006	1	302	775	6928	no indexed AP families	17.061334	0.363401
+syntcomp25	LedMatrix.ltl	ltlsynt_only	M2 downset	1006	1	302	775	6928	no indexed AP families	17.061334	0.363401
 syntcomp25	OneCounterGuiA8.ltl	acacia_slow	M1 letter-loop	1345932	242	6867	67	3404	no indexed AP families	3.265683	0.025476
 syntcomp25	TwoCounters3.ltl	acacia_slow	M2 downset	31714	1	101	26	1589	no indexed AP families	1.407102	0.023237
 syntcomp25	amba_case_study_unreal_pb_2_pe_.ltl	ltlsynt_only	M1 letter-loop	1008512	152	4653	700	704	too few indexed clients	17.029116	9.854469
@@ -146,7 +146,7 @@ syntcomp25	infinite-race-unequal-22.ltl	acacia_slow	mixed	108736	2688	416	964	32
 syntcomp25	infinite-race-unequal-26.ltl	ltlsynt_only	M3 translation-stall	0	0	0	0	0	not run	17.049490	4.556982
 syntcomp25	lift_gr1_pb_3_pe_.ltl	ltlsynt_only	mixed	4105200	9066	256576	225	22	too few indexed clients	17.030876	0.086468
 syntcomp25	lift_pb_3_pe_.ltl	ltlsynt_only	M2 downset	1528	14060	192	169	10	too few indexed clients	17.030066	0.026541
-syntcomp25	load_balancer_unreal1_pb_6_4_pe_.ltl	ltlsynt_only	M3 translation-stall	14284	245	237	214	714	0/0 star gens	17.057717	16.617502
+syntcomp25	load_balancer_unreal1_pb_6_4_pe_.ltl	ltlsynt_only	M1 letter-loop	14284	245	237	214	714	0/0 star gens	17.057717	16.617502
 syntcomp25	ltl2dba_C2_unreal_pb_14_pe_.ltl	acacia_slow	M2 downset	1470	2	736	50	2516	no indexed input AP families; 0/0 star gens	3.296036	0.144633
 syntcomp25	ltl2dba_C2_unreal_pb_15_pe_.ltl	acacia_slow	M2 downset	1726	2	864	53	6803	no indexed input AP families; 0/0 star gens	7.835383	0.305850
 syntcomp25	ltl2dba_C2_unreal_pb_16_pe_.ltl	ltlsynt_only	M2 downset	1278	2	640	56	16508	no indexed input AP families; 0/0 star gens	17.073740	0.674709
@@ -188,14 +188,14 @@ syntcomp25	simple_arbiter_unreal2_pb_60_pe_.ltl	ltlsynt_only	M3 translation-stal
 syntcomp25	simple_arbiter_unreal2_pb_75_pe_.ltl	ltlsynt_only	M3 translation-stall	0	0	0	0	22	not run	17.057081	0.060483
 syntcomp25	simple_arbiter_with_hints_pb_10_pe_.ltl	ltlsynt_only	M1 letter-loop	8192	103	8	6153	10342	0/0 star gens	17.166705	8.507592
 syntcomp25	sort40.ltl	acacia_slow	M1 letter-loop	57258	384	8	78	170	too few indexed clients	2.679675	0.042922
-syntcomp25	sort51.ltl	ltlsynt_only	M3 translation-stall	0	0	0	137	7728	too few indexed clients	17.058729	0.372187
+syntcomp25	sort51.ltl	ltlsynt_only	M1 letter-loop	0	0	0	137	7728	too few indexed clients	17.058729	0.372187
 syntcomp25	square5x51.ltl	ltlsynt_only	M1 letter-loop	42624	1056	8	270	1248	no indexed input AP families	17.081451	0.093111
-syntcomp25	tasks-unreal0.ltl	ltlsynt_only	M3 translation-stall	56055	4645	16	105	304	too few indexed clients	17.068459	0.073626
+syntcomp25	tasks-unreal0.ltl	ltlsynt_only	M1 letter-loop	56055	4645	16	105	304	too few indexed clients	17.068459	0.073626
 syntcomp25	taxi-service-u-unreal.ltl	acacia_slow	M1 letter-loop	16480	392	6	106	55	no indexed input AP families	1.452662	0.045052
 syntcomp25	thermostat-F-real.ltl	ltlsynt_only	M1 letter-loop	149504	1044	1659	1569	1478	no indexed input AP families; too many automaton states	17.034986	0.034791
-syntcomp25	thermostat-GF-unreal2.ltl	ltlsynt_only	M3 translation-stall	0	0	0	119	1277	not run	17.031730	1.500196
+syntcomp25	thermostat-GF-unreal2.ltl	ltlsynt_only	M1 letter-loop	0	0	0	119	1277	not run	17.031730	1.500196
 syntcomp25	tmp_13cfc6f2.ltl	ltlsynt_only	M1 letter-loop	1381344	614	43168	566	556	no indexed AP families; too many automaton states	17.033455	1.091749
-syntcomp25	unordered-visits-charging0.ltl	ltlsynt_only	M3 translation-stall	0	0	0	147	250	too few indexed clients	17.049591	2.750413
+syntcomp25	unordered-visits-charging0.ltl	ltlsynt_only	M1 letter-loop	0	0	0	147	250	too few indexed clients	17.049591	2.750413
 syntcomp25	workstation_resupply_pb_3_pe_.ltl	ltlsynt_only	M1 letter-loop	93552	1683	11694	169	291	no usable block layout; 0/0 star gens	17.033066	0.194710
 syntcomp26	F-G-contradiction-111.ltl	ltlsynt_only	M1 letter-loop	131072	1024	17	10226	6184	no indexed input AP families; too many automaton states	17.107910	0.071184
 syntcomp26	F-G-contradiction-15.ltl	acacia_slow	mixed	35708	8192	114	721	58	no indexed input AP families; too many automaton states	1.734967	0.032692
@@ -225,11 +225,11 @@ syntcomp26	gf-unreal20.ltl	wrapper_artifact	resolved empty-side partition	0	0	0	
 syntcomp26	gf-unreal46.ltl	wrapper_artifact	resolved empty-side partition	0	0	0	0	9	not run	0.016	0.034561
 syntcomp26	heim-double-x-real.ltl	ltlsynt_only	M2 downset	49152	1777	1795	669	407	no indexed input AP families; too many automaton states	17.055654	0.034639
 syntcomp26	heim-double-x1.ltl	acacia_slow	M1 letter-loop	32768	1396	2357	253	67	no indexed input AP families; too few indexed clients	3.014632	0.025106
-syntcomp26	helipad-real.ltl	ltlsynt_only	M3 translation-stall	0	0	0	110	512	too few indexed clients	17.058163	0.818163
+syntcomp26	helipad-real.ltl	ltlsynt_only	M1 letter-loop	0	0	0	110	512	too few indexed clients	17.058163	0.818163
 syntcomp26	infinite-race-u3.ltl	acacia_slow	M1 letter-loop	131072	285	36	1874	487	no indexed input AP families; too many automaton states	2.275215	0.034992
 syntcomp26	infinite-race-unequal-22.ltl	acacia_slow	mixed	108736	2688	416	964	323	no indexed input AP families; too many automaton states	2.559135	0.034288
 syntcomp26	lift_pb_6_pe_.ltl	ltlsynt_only	M2 downset	2048	1310	32	5550	2538	too many automaton states	17.078465	0.682833
-syntcomp26	load_balancer_unreal1_pb_6_4_pe_.ltl	ltlsynt_only	M3 translation-stall	14284	245	237	214	722	0/0 star gens	17.063187	16.959755
+syntcomp26	load_balancer_unreal1_pb_6_4_pe_.ltl	ltlsynt_only	M1 letter-loop	14284	245	237	214	722	0/0 star gens	17.063187	16.959755
 syntcomp26	ltl2dba_C2_unreal_pb_12_pe_.ltl	acacia_slow	M2 downset	1150	2	576	44	386	no indexed input AP families; 0/0 star gens	0.565276	0.054929
 syntcomp26	ltl2dba_theta_pb_12_pe_.ltl	acacia_slow	M1 letter-loop	159744	26	160	59	2412	no indexed input AP families; 0/0 star gens	3.800093	0.099975
 syntcomp26	ltl2dba_theta_pb_16_pe_.ltl	ltlsynt_only	M3 translation-stall	0	0	0	0	0	not run	17.051093	2.770736
@@ -258,11 +258,11 @@ syntcomp26	simple_arbiter_unreal2_pb_25_pe_.ltl	ltlsynt_only	M3 translation-stal
 syntcomp26	simple_arbiter_unreal2_pb_75_pe_.ltl	ltlsynt_only	M3 translation-stall	0	0	0	0	24	not run	17.055249	0.057956
 syntcomp26	sort40.ltl	acacia_slow	M1 letter-loop	57258	384	8	78	178	too few indexed clients	2.878450	0.040358
 syntcomp26	square5x5-real.ltl	ltlsynt_only	M2 downset	65536	640	6	519	10332	no indexed input AP families; too many automaton states	17.081977	0.229203
-syntcomp26	tasks-unreal1.ltl	ltlsynt_only	M3 translation-stall	32768	1547	5	130	752	too few indexed clients	17.107008	0.107700
+syntcomp26	tasks-unreal1.ltl	ltlsynt_only	M1 letter-loop	32768	1547	5	130	752	too few indexed clients	17.107008	0.107700
 syntcomp26	taxi-service-u-unreal.ltl	acacia_slow	M1 letter-loop	16480	392	6	106	53	no indexed input AP families	1.474394	0.048672
-syntcomp26	thermostat-GF-unreal2.ltl	ltlsynt_only	M3 translation-stall	0	0	0	119	1261	not run	17.044012	1.551799
+syntcomp26	thermostat-GF-unreal2.ltl	ltlsynt_only	M1 letter-loop	0	0	0	119	1261	not run	17.044012	1.551799
 syntcomp26	tmp_13cfc6f2.ltl	ltlsynt_only	M1 letter-loop	1354720	614	42336	566	561	no indexed AP families; too many automaton states	17.031721	1.120885
-syntcomp26	unordered-visits-charging0.ltl	ltlsynt_only	M3 translation-stall	0	0	0	147	253	too few indexed clients	17.055614	2.741578
+syntcomp26	unordered-visits-charging0.ltl	ltlsynt_only	M1 letter-loop	0	0	0	147	253	too few indexed clients	17.055614	2.741578
 syntcomp26	workstation_resupply_pb_2_pe_.ltl	acacia_slow	mixed	23696	315	5924	84	22	too few indexed clients	0.612807	0.037964
 syntcomp26	workstation_resupply_pb_3_pe_.ltl	ltlsynt_only	M1 letter-loop	93552	1683	11694	169	279	no usable block layout; 0/0 star gens	17.033184	0.192184
 syntcomp26	workstation_resupply_pb_4_pe_.ltl	ltlsynt_only	M1 letter-loop	23648	1749	8	389	3360	0/0 star gens	17.079396	1.939163

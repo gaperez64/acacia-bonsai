@@ -37,8 +37,6 @@ TRANSLATION_PREFS = {
     "small+any": "spot::postprocessor::Small, spot::postprocessor::Any",
     "deterministic": "spot::postprocessor::Deterministic",
 }
-
-
 def load_json(path: pathlib.Path) -> dict[str, Any]:
     return json.loads(path.read_text())
 
@@ -148,8 +146,6 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         f"-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER={int(values['enable_realizability_simplifier'])}",
         f"-DACACIA_ENABLE_SYNTACTIC_BYPASS={int(values['enable_syntactic_bypass'])}",
         f"-DACACIA_ENABLE_TLSF_FRONTEND={int(values['enable_tlsf_frontend'])}",
-        f"-DSTATIC_ARRAY_MAX={values['static_array_max']}",
-        f"-DSTATIC_MAX_BITSETS={values['static_max_bitsets']}ul",
         f"-DACACIA_EQUIVARIANT_MAX_STATES={values['equivariant_max_states']}",
         f"-DACACIA_EQUIVARIANT_MIN_CLIENTS={values['equivariant_min_clients']}",
         f"-DACACIA_EQUIVARIANT_MIN_BLOCKS={values['equivariant_min_blocks']}",
@@ -162,10 +158,6 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
 
     if values["no_simd"]:
         flags.append("-DNO_SIMD")
-    if values["no_array_cap_max"]:
-        flags.append("-DNO_ARRAY_CAP_MAX")
-    if values["use_boolvec_over_bitset"]:
-        flags.append("-DUSE_BOOLVEC_OVER_BITSET")
     if values["compile_all_components"]:
         flags.append("-DACACIA_COMPILE_ALL_COMPONENTS=1")
     if values["enable_diagnostics"]:
@@ -199,8 +191,6 @@ MESON_OPTION_NAMES = {
     "enable_realizability_simplifier": "acacia_enable_realizability_simplifier",
     "enable_syntactic_bypass": "acacia_enable_syntactic_bypass",
     "enable_tlsf_frontend": "acacia_enable_tlsf_frontend",
-    "static_array_max": "acacia_static_array_max",
-    "static_max_bitsets": "acacia_static_max_bitsets",
     "simd_is_max": "acacia_simd_is_max",
     "decompose_spec": "acacia_decompose_spec",
     "array_downset": "acacia_array_downset",
@@ -208,8 +198,6 @@ MESON_OPTION_NAMES = {
     "array_impl": "acacia_array_impl",
     "vector_impl": "acacia_vector_impl",
     "no_simd": "acacia_no_simd",
-    "no_array_cap_max": "acacia_no_array_cap_max",
-    "use_boolvec_over_bitset": "acacia_use_boolvec_over_bitset",
     "cpre_avoid_unions": "acacia_cpre_avoid_unions",
     "compile_all_components": "acacia_compile_all_components",
     "enable_diagnostics": "acacia_enable_diagnostics",

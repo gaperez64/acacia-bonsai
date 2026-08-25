@@ -79,15 +79,6 @@
       "simd_is_max": false,
       "decompose_spec": true
     },
-    "best_no_array_cap_max": {
-      "inherits": "best",
-      "no_array_cap_max": true
-    },
-    "best_no_bitsets": {
-      "inherits": "best",
-      "no_array_cap_max": true,
-      "use_boolvec_over_bitset": true
-    },
     "best_mona": {
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
@@ -192,11 +183,6 @@
       "array_downset": "comptrie_backed",
       "vector_downset": "comptrie_backed"
     },
-    "best_decomp_kdtree_mona_no_bitsets": {
-      "inherits": "best_decomp_kdtree_mona",
-      "no_array_cap_max": true,
-      "use_boolvec_over_bitset": true
-    },
     "best_decomp_sharingtrie_mona": {
       "inherits": "best_decomp_mona",
       "array_downset": "sharingtrie_backed",
@@ -211,16 +197,6 @@
       "inherits": "best_decomp_mona",
       "array_downset": "sharingtree_backed",
       "vector_downset": "sharingtree_backed"
-    },
-    "best_decomp_sharingtrie_mona_no_bitsets": {
-      "inherits": "best_decomp_sharingtrie_mona",
-      "no_array_cap_max": true,
-      "use_boolvec_over_bitset": true
-    },
-    "best_decomp_mona_no_bitsets": {
-      "inherits": "best_decomp_mona",
-      "no_array_cap_max": true,
-      "use_boolvec_over_bitset": true
     },
     "best_decomp_mona_elevator": {
       "inherits": "best_decomp_mona",

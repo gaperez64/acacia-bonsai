@@ -81,15 +81,6 @@
 # define DECOMPOSE_SPEC 1
 #endif
 
-#ifndef NO_ARRAY_CAP_MAX
-// define it if you want STATIC_ARRAY_CAP_MAX to be 0
-#endif
-
-#ifndef USE_BOOLVEC_OVER_BITSET
-// define it if you want to use boolean vectors when
-// defaulting to VECTOR_AND_BITSET_DOWNSET_IMPL
-#endif
-
 // What follows are default values overriden by self-benchmark.sh
 // or your meson setup.
 //
@@ -131,12 +122,6 @@
 #endif
 // End of overflow WARNING
 
-#ifndef STATIC_ARRAY_MAX
-# define STATIC_ARRAY_MAX 300
-#endif
-#ifndef STATIC_MAX_BITSETS
-# define STATIC_MAX_BITSETS 8ul
-#endif
 #ifndef SIMD_IS_MAX
 # define SIMD_IS_MAX true
 #endif

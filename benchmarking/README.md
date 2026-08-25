@@ -99,6 +99,11 @@ the solver and all forked children run in a named memory-limited cgroup;
 itself is what needs testing. Use `--progress-every N` to control periodic
 solve-loop snapshots; `0` disables loop snapshots.
 
+The shared bounded-runner path uses `KillMode=control-group` and tears down both
+the named user scope and the launcher's process group on every return path. It
+accepts a printed Acacia verdict only when the documented process exit code
+agrees, and classifies timeouts or resource limits before parsing solver output.
+
 The cap and direct-simulation preprocessing census is deliberately excluded
 from ordinary diagnostics because it can be expensive. Add
 `--preprocessing-census-only` to measure those reductions and stop before the
@@ -251,8 +256,8 @@ exact telemetry.
 
 | set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | residual total |
 |---|---:|---:|---:|---:|---:|---:|
-| corrected census rows | 112 | 66 | 48 | 9 | 26 | 261 |
-| `ltlsynt_only` | 47 | 37 | 48 | 9 | 12 | 153 |
+| corrected census rows | 122 | 68 | 36 | 9 | 26 | 261 |
+| `ltlsynt_only` | 57 | 39 | 36 | 9 | 12 | 153 |
 
 The measured outcomes are deliberately mechanism-specific:
 
@@ -267,6 +272,9 @@ The measured outcomes are deliberately mechanism-specific:
 - The `simple_arbiter_unreal2` M3 anchor was Spot's 64-acceptance-set exception, not a translator
   timeout or `push_aps` limit. A sound safety-core witness now solves the measured 25/50/60/75
   family in 0.009–0.020 s.
+- Twelve rows formerly labeled M3 had already built a 105–775-state automaton. Two `LedMatrix`
+  rows are now M2 and the other ten are M1, leaving 36 M3 losses. Only four rows in the original
+  48-row M3 cohort show an architectural parity-translation advantage.
 - Correct empty-side partitions raise the reported campaign coverage from 104/180 to 106/180 on
   SYNTCOMP25 and from 133/180 to 134/180 on SYNTCOMP26; all 187 empty-side corpus instances solve
   through the repaired wrapper.

@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from benchlib import parse_acacia_result, read_part, run_process_group, run_systemd_scope
+from benchlib import classify_acacia_run, read_part, run_process_group, run_systemd_scope
 from suite_paths import load_source_map
 
 
@@ -160,7 +160,7 @@ def run_solver(
             memory_swap_max,
             unit_prefix="acacia-landing-remeasure",
         )
-    raw = "TIMEOUT" if run.timed_out else parse_acacia_result(run.stdout + run.stderr)
+    raw = classify_acacia_run(run)
     if raw in SOLVED:
         result = Result(raw, "solved", run.seconds)
     elif raw == "TIMEOUT":

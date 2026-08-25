@@ -19,6 +19,7 @@
 
 #include <posets/downsets.hh>
 #include <posets/vectors.hh>
+#include <posets/vectors/traits.hh>
 
 namespace utils {
   unsigned verbose = 0;
@@ -27,7 +28,6 @@ namespace utils {
 
 namespace posets::vectors {
   size_t bool_threshold = 0;
-  size_t bitset_threshold = 0;
 }
 
 namespace {
@@ -376,7 +376,6 @@ namespace {
   bool run_case (unsigned n, size_t bool_threshold) {
     posets::vectors::bool_threshold = bool_threshold;
     const fixture fx = make_aut (n);
-    posets::vectors::bitset_threshold = fx.aut->num_states ();
 
     bool ok = true;
     const auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
@@ -441,15 +440,15 @@ namespace {
     fx.aut->new_acc_edge (1, 0, bddtrue, false);
 
     const auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
-    const auto exhaustive = symmetry::largest_full_symmetric_subgroup (
-        symmetry::detect (fx.aut, indexed));
+    const auto exhaustive =
+        symmetry::largest_full_symmetric_subgroup (symmetry::detect (fx.aut, indexed));
     const auto G = symmetry::detect_full_symmetric_generators (fx.aut, indexed);
     const std::vector<long> expected {1, 2, 3, 4, 5};
 
     bool ok = true;
     ok &= expect ("partial exhaustive component is S_5", exhaustive.full_symmetric);
-    ok &= expect ("partial exhaustive indices exclude fixed client",
-                  exhaustive.indices == expected);
+    ok &=
+        expect ("partial exhaustive indices exclude fixed client", exhaustive.indices == expected);
     ok &= expect ("partial fast component is S_5", G.full_symmetric);
     ok &= expect ("partial fast indices exclude fixed client", G.indices == expected);
     if (not ok)
@@ -480,8 +479,7 @@ namespace {
     hints[1].members[2] = "g_9";
     bool rejected = false;
     try {
-      (void) symmetry::analyze_indexed_aps (
-          fx.aut, fx.all_inputs, fx.all_outputs, hints);
+      (void) symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs, hints);
     } catch (const std::runtime_error&) {
       rejected = true;
     }
@@ -493,7 +491,6 @@ namespace {
     constexpr unsigned n = 3;
     posets::vectors::bool_threshold = 1 + 2 * n;
     const fixture fx = make_aut (n, true);
-    posets::vectors::bitset_threshold = fx.aut->num_states ();
     const auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
     const auto G = symmetry::detect_full_symmetric_generators (fx.aut, indexed);
     auto L = symmetry::compute_block_layout (G, fx.aut->num_states ());
@@ -521,7 +518,6 @@ namespace {
 
 int main () {
   const size_t old_bool_threshold = posets::vectors::bool_threshold;
-  const size_t old_bitset_threshold = posets::vectors::bitset_threshold;
 
   bool ok = true;
   for (unsigned n : {3U, 4U}) {
@@ -533,7 +529,6 @@ int main () {
   ok &= run_unreal_case ();
 
   posets::vectors::bool_threshold = old_bool_threshold;
-  posets::vectors::bitset_threshold = old_bitset_threshold;
 
   if (ok) {
     std::cout << "ALL equivariant_pre oracle tests PASSED\n";

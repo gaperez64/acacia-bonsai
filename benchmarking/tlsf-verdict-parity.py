@@ -7,7 +7,7 @@ import argparse
 import csv
 import pathlib
 
-from benchlib import parse_acacia_result, read_part, run_systemd_scope
+from benchlib import classify_acacia_run, read_part, run_systemd_scope
 
 
 SOLVED = {"REALIZABLE", "UNREALIZABLE"}
@@ -22,15 +22,7 @@ def keep_verdict_line(line: str) -> bool:
 
 
 def classify(run) -> str:
-    if run.timed_out:
-        return "TIMEOUT"
-    if getattr(run, "resource_limited", False):
-        return "RESOURCE_LIMIT"
-    result = parse_acacia_result(run.stdout + run.stderr)
-    expected_exit = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2}
-    if result in expected_exit and run.returncode == expected_exit[result]:
-        return result
-    return "ERROR"
+    return classify_acacia_run(run)
 
 
 def write_rows(path: pathlib.Path, rows: list[dict[str, object]]) -> None:

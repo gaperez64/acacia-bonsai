@@ -91,13 +91,13 @@ scope. Raw solver streams were filtered online; only compact diagnostic CSVs und
 
 | set | M1 letter-loop | M2 downset | M3 translation-stall | M4 one-sided-race | mixed | residual total | wrapper artifacts |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| syntcomp24 all | 23 | 39 | 11 | 8 | 12 | 93 | 0 |
-| syntcomp25 all | 55 | 17 | 22 | 1 | 6 | 101 | 4 |
-| syntcomp26 all | 34 | 10 | 15 | 0 | 8 | 67 | 2 |
-| **corrected census rows** | **112** | **66** | **48** | **9** | **26** | **261** | **6** |
-| **`ltlsynt_only` only** | **47** | **37** | **48** | **9** | **12** | **153** | **3** |
+| syntcomp24 all | 23 | 40 | 10 | 8 | 12 | 93 | 0 |
+| syntcomp25 all | 60 | 18 | 16 | 1 | 6 | 101 | 4 |
+| syntcomp26 all | 39 | 10 | 10 | 0 | 8 | 67 | 2 |
+| **corrected census rows** | **122** | **68** | **36** | **9** | **26** | **261** | **6** |
+| **`ltlsynt_only` only** | **57** | **39** | **36** | **9** | **12** | **153** | **3** |
 
-M1 (47 losses), M2 (37), and corrected M3 (48) clear the plan's 15-instance gate. M4 has only 9
+M1 (57 losses), M2 (39), and corrected M3 (36) clear the plan's 15-instance gate. M4 has only 9
 losses, so Step 6 is not admitted. The detector emitted the `0/0 star gens` decline on 51
 logical census rows (28 losses).
 
@@ -198,10 +198,12 @@ fall to about 0.01 s and no longer meet the slow-row definition.
 
 ### Corrected M3 follow-up
 
-After removing the three empty-partition losses, M3 contains 48 loss rows. The safety-core
-witness addresses the 14 `*_arbiter_unreal2*` acceptance-set cases, leaving 34 genuine cases for
-the translation experiment (`follow2`, `follow3`, `robot_repair*`, `chomp*`,
-`arbiter_with_cancel7`, `ltl2dba_theta16`, and related logical duplicates).
+After removing the three empty-partition losses, the original M3 cohort contained 48 loss rows.
+The safety-core witness addresses the 14 `*_arbiter_unreal2*` acceptance-set cases, leaving 34
+cases for the translation experiment (`follow2`, `follow3`, `robot_repair*`, `chomp*`,
+`arbiter_with_cancel7`, `ltl2dba_theta16`, and related logical duplicates). The follow-up then
+showed that 12 of those rows had been misclassified, so the checked-in census now contains 36 M3
+losses: the 14 acceptance-set rows plus 22 genuine translation cases.
 
 The proposed per-child translation budget is not applicable to the current process architecture:
 the real, unreal-formula, and unreal-automaton children are forked before the parent waits, and all
@@ -228,10 +230,12 @@ request completed. Requesting `BA` costs nothing over a generalized automaton on
 degeneralization hypothesis is falsified. Completion counts out of 31 files were: positive
 polarity `ba` 0, `tgba` 0, and `parity` 6; negated polarity `ba` 1, `tgba` 1, and `parity` 8.
 
-The 34 rows divide into three groups. Twelve are misclassified. The census telemetry itself
+The 34-row experiment divides into three groups. Twelve were misclassified. The census telemetry itself
 records a translated automaton for them, with 105 to 775 states built in 250 to 7,728 ms, so
-translation succeeded and the child died in the fixed point instead. They are `LedMatrix` (both
-suites), `sort51`, `tasks-unreal0`, `tasks-unreal1`, `thermostat-GF-unreal2` (both),
+translation succeeded. `LedMatrix` (both suites) reached an unfinished downset intersection and
+is now M2; the other ten rows either spent the budget in the letter loop or stalled while
+constructing actions after translation and are now M1. They are `sort51`, `tasks-unreal0`,
+`tasks-unreal1`, `thermostat-GF-unreal2` (both),
 `unordered-visits-charging0` (both), `load_balancer_unreal1_pb_6_4_pe_` (both), and
 `helipad-real`.
 
@@ -250,7 +254,7 @@ polarities. On five of these `ltlsynt` itself needs more than 10 s: `abcg_arbite
 16.796 s, and `robot_repair5` 10.866 s. These clear the 17 s cap only narrowly, so they are not
 architectural losses.
 
-The architectural component of M3 is therefore 4 rows, not 48, and it is not actionable within
+The architectural component of the original M3 cohort is therefore 4 rows, not 48, and it is not actionable within
 Acacia's automaton contract. The one remaining lead is `robot-to-target-charging-real`: this
 129,272-byte formula yields a 1-state parity automaton, pointing at formula-level simplification
 rather than automaton type.
@@ -313,52 +317,107 @@ so the prototype was removed from the final head.
 
 ## What has been tried
 
-- **Static-sizing specialisation does not pay for itself:** Acacia packs Boolean automaton
-  states into a bitset tail appended to the counting vector. The
-  `posets::vectors::x_and_bitset<X, NBitsets, Bools>` size is a template parameter, so
-  `src/solver/solve_game_vector_bitset.cc` dispatches through
-  `static_switch_t<STATIC_MAX_BITSETS>`, instantiating the whole downset and solver stack
-  once per word count: nine copies at the default of 8.
-  `src/solver/solve_game.cc` clamps the requested count to the compile-time bound and
-  spills the remainder to ordinary vectors, so setting `acacia_static_max_bitsets` to 0
-  is safe and simply means no bitset packing. On a sample instance the solver wanted 945
-  Boolean-for-bitset states: shipping packs 512 and spills 433, while the zero
-  configuration spills all 945. All configurations were built from one tree through
-  Meson options only, with default release flags and a single job, then run under the
-  standard protocol at a 17 s cap with each solver in its own 8 GiB zero-swap cgroup.
-  Build cost was: `c0` shipping (`array_max=300`, `max_bitsets=8`), 421 s, 6.5 GiB peak
-  RSS, and a 14.5 MiB binary; `c1` no bitset packing (`0`, `0`), 76 s, 0.6 GiB, and
-  0.5 MiB; and `c3` Boolean vectors (`0`, `0`, `use_boolvec_over_bitset=true`), 78 s,
-  0.6 GiB, and 0.5 MiB. Boolvec replaces the bitset tail with
-  `posets::vectors::x_and_boolvec<X>`, whose tail is a runtime-sized
-  `std::vector<bool>`, so it needs no specialisation at all. On the 94-instance
-  `syntcomp21` critical panel and the 180-instance `syntcomp25` and `syntcomp26` panels,
-  respectively, `c0` solved `91/111/136 = 338`, `c1` solved `91/111/136 = 338`, and
-  `c3` solved `90/101/131 = 322`. On the full 1,011-instance `syntcomp24` 0s--20s panel,
-  `c0` solved 868 and `c1` solved 867, with zero verdict disagreements; `c1` gained
-  `load_balancer_unreal15_5` and lost `Morning_14a3b3a2` and `Morning_4b5e6eaa`.
-  Re-running those three in isolation five times per configuration at the same 17 s cap,
-  all three solved 5/5 under both configurations, so the panel differences were timeouts
-  under load rather than capability differences. Those reruns do show a reproducible
-  effect: `c1` is about 1.5 s slower on the two bitset-heavy Morning instances (roughly
-  14 to 15 s and 13.5 to 15.4 s) and unaffected on `load_balancer_unreal15_5`. Overall,
-  the median `c1/c0` time ratio on mutually solved `syntcomp24` instances is 0.992. This
-  machine thermally throttles, so aggregate timings are directional. Capability is
-  identical between `c0` and `c1` across all four panels, 1,465 instances. The
-  specialisation buys a real but small speedup on instances with many Boolean states,
-  large enough to matter only within a second or two of the cap, at a cost of 5.5x build
-  time, 10x peak build memory, and 27x binary size. Removing it is recommended. The
-  Boolean-vector alternative is not the replacement: it is the principled runtime-sized
-  design but measures worse than both, losing 16 instances and roughly doubling solve
-  time on the three smaller panels. This is a genuine trade rather than a free win: the
-  specialisation does something, just not enough to justify nine precompiled copies of
-  the solver.
+- **Static sizing was deleted; the zero-tail specialization remains:** the former shipping
+  path instantiated the complete solver once for every `x_and_bitset<X, N>` tail size and
+  selected among nine copies through a compile-time dispatcher. The four sizing controls, the
+  array/vector/Boolean-tail branches, the clamps, and both static-switch helpers are now gone.
+  The sole path is hardwired to `x_and_bitset<X, 0>`: it stores no bitset words, but preserves
+  the zero-tail wrapper's element type and forwarding operations.
+
+  Clean release/LTO builds used one compile job. The final build includes the residual-work
+  changes and Posets `7562564163741d7378d4bbacd7d6d5e7b856d20d`:
+
+  | build | wall time | peak RSS | binary |
+  |---|---:|---:|---:|
+  | shipping static `c0` | 421.19 s | 6,459,456 KiB | 14,482,048 B |
+  | hardwired zero-tail | 61.24 s | 586,940 KiB | 454,432 B |
+
+  This is a 6.88x faster build, 11.01x less peak memory, and a 31.87x smaller binary. Coverage
+  used the standard 17 s, 8 GiB, zero-swap, one-solver-per-scope protocol. Acacia 1.x is the
+  archived `best23` campaign rather than a rerun:
+
+  | panel | shipping static | zero-tail | Acacia 1.x |
+  |---|---:|---:|---:|
+  | SYNTCOMP21 (94) | 91 | 91 | 90 |
+  | SYNTCOMP24 (1,011) | 868 | 867 | 750 |
+  | SYNTCOMP25 (180) | 111 | 111 | 95 |
+  | SYNTCOMP26 (180) | 136 | 136 | 104 |
+
+  There were zero opposite verdicts. On SYNTCOMP24, zero-tail gained
+  `load_balancer_unreal15_5` and lost two `Morning` instances in the raw panel; all three
+  solved 5/5 under both configurations when isolated at the same cap. The median zero-tail/
+  shipping ratio on mutually solved SYNTCOMP24 rows was 0.992, although fine timing on this
+  thermally throttled machine is directional.
+
+  Collapsing one step further to the bare `X` type was rejected. Although bare and
+  `x_and_bitset<X,0>` carry the same counter payload, they instantiate a different templated
+  downset and solver stack. Six apparent bare losses were measured five times with shipping,
+  zero-tail, and bare binaries in one 20 s campaign:
+
+  | instance | shipping median | zero-tail median | bare |
+  |---|---:|---:|---:|
+  | SYNTCOMP21 `round_robin_arbiter4` | 7.408 s | 12.118 s | 0/5, >20 s |
+  | SYNTCOMP25 `arbiter_with_buffer_pb_5_pe_` | 11.853 s | 5.583 s | 0/5, >20 s |
+  | SYNTCOMP25 `robot-resource-1d-unreal` | 12.846 s | 12.595 s | 16.885 s |
+  | SYNTCOMP24 `arbiter_with_buffer5` | 11.885 s | 5.538 s | 0/5, >20 s |
+  | SYNTCOMP24 `round_robin_arbiter4` | 7.768 s | 12.257 s | 0/5, >20 s |
+  | SYNTCOMP24 `simple_arbiter_with_hints6` | 11.590 s | 5.418 s | 0/5, >20 s |
+
+  Bare was 34% slower on the one case it completed and at least 63--269% slower on the five
+  capped cases. Its 30 runs consumed 584.179 s versus 266.831 s for zero-tail, a censored lower
+  bound of 119% more wall time. The storage-equivalent but code-generation-distinct behavior is
+  deliberately left for a follow-up profile/disassembly experiment; removing the wrapper is not
+  part of this change.
+
+  The alternative dynamic Boolean tails also remain rejected: `x_and_boolvec` solved 322 of
+  the three smaller panels' 338 shipping answers, while the word-parallel `x_and_wordvec`
+  recovered ten of those losses to reach 332. The word-packed implementation and the boolvec
+  reserve fix were nevertheless merged upstream in Posets PR #30, together with the empty-
+  downset regression in #31, so the experiment is reproducible without Acacia selecting either
+  representation.
 
 These measurements are the durable record of explored ideas that did not meet
 the landing gates.  G1 is the frozen 40-verdict regression gate, G2 the
 advisory Posets microbenchmark, G2s the solver-profile proxy, and G3 the
 per-instance landing bar.
 
+- **Delta2 normalization and the specialized MP-NBA are not safe global frontends:** B1 applied
+  Spot's `to_delta2` after the Mealy/Moore `X` shift and realizability negation. B3 constructed a
+  deterministic monitor for the Delta2 formula, enumerated capped falsifying cubes, and expanded
+  the monitor into an exact commitment/progress NBA before feeding the unchanged solver. The B3
+  language test compared 11 targeted formulas (including `true` and `false`) plus 24 seeded random
+  formulas with Spot's NBA and exercised the cube-cap fallback; all comparisons passed. The
+  experiment used local Spot `spot-2-15-1-112-g6ae49107e`; shipping CI is pinned to release
+  2.15.1.
+
+  The standard 17 s, 8 GiB, zero-swap residual screen produced:
+
+  | residual screen | zero-tail baseline | B1 Delta2 | B3 MP-NBA |
+  |---|---:|---:|---:|
+  | SYNTCOMP24 (43) | 17 / 501.3 s | 14 / 526.8 s | 12 / 565.6 s |
+  | SYNTCOMP25 (20) | 10 / 202.0 s | 9 / 215.3 s | 9 / 224.4 s |
+  | SYNTCOMP26 (12) | 7 / 98.2 s | 7 / 94.1 s | 4 / 124.1 s |
+
+  Each cell is answers / total wall time; timing comparisons against the archived baseline are
+  directional on this thermally throttled machine. B1 gained no answers and lost four: the three
+  familiar 2024 arbiter cases plus `arbiter_with_buffer_pb_5_pe_` in 2025. B3 was a genuine but
+  unstable trade. It gained `lift_gr13`, `robot_grid2_2`, `amba_decomposed_lock_pb_13_pe_`, both
+  `heim-double-x` cases, and `lift_gr1_pb_3_pe_`, but lost 15 baseline answers. Median B3/baseline
+  time ratios on mutually solved rows were 0.664, 1.029, and 0.611, respectively, so several
+  successful translations were much faster even though the global frontend lost coverage and
+  wall time. Neither variant produced an opposite verdict.
+
+  The decisive `lift_unary_enc3` target remained a timeout in all three builds. B1 left all three
+  child formulas unchanged at lengths 232, 233, and 288. B3 instead generated monitors ranging
+  from 325 states / 6,758 edges to 1,370 / 73,149, then NBAs ranging from 715 / 22,477 to 2,739 /
+  218,936, without deciding the target. B4 was therefore not admitted. Both prototypes and their
+  configuration surface were removed; the B3 gains are retained here as evidence for a future
+  explicitly guarded or portfolio experiment, not as a shipping global replacement.
+- **Harness resource and descendant handling:** all benchmark frontends now classify timeout and
+  cgroup resource failures before parsing output, require verdict/exit-code agreement, launch
+  scopes with `KillMode=control-group`, and tear down both the named scope and process group on
+  normal return, timeout, or driver termination. A live stop test killed an outer driver while two
+  solver descendants were active and immediately left zero `acacia-bonsai` processes or scopes.
 - **Wide SIMD accumulation:** horizontal `int` reductions regressed the pinned CPre phase by
   0.68% (10,568,578,870 to 10,640,514,908 cycles); rejected by G2.
 - **One-way domination:** `dominated_by` regressed query by 1.22% and SIMD by 6.22%; rejected

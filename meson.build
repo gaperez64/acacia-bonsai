@@ -70,8 +70,6 @@ build_conf = configuration_data ()
 build_conf.set ('DEFAULT_K', get_option ('acacia_default_k'))
 build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
-build_conf.set ('STATIC_ARRAY_MAX', get_option ('acacia_static_array_max'))
-build_conf.set ('STATIC_MAX_BITSETS', get_option ('acacia_static_max_bitsets'))
 build_conf.set ('ACACIA_EQUIVARIANT_MAX_STATES',
                 get_option ('acacia_equivariant_max_states'))
 build_conf.set ('ACACIA_EQUIVARIANT_MIN_CLIENTS',
@@ -167,17 +165,6 @@ if get_option ('acacia_no_simd')
 else
   build_conf.set ('NO_SIMD_DEFINE', '')
 endif
-if get_option ('acacia_no_array_cap_max')
-  build_conf.set ('NO_ARRAY_CAP_MAX_DEFINE', '#ifndef NO_ARRAY_CAP_MAX\n# define NO_ARRAY_CAP_MAX 1\n#endif')
-else
-  build_conf.set ('NO_ARRAY_CAP_MAX_DEFINE', '')
-endif
-if get_option ('acacia_use_boolvec_over_bitset')
-  build_conf.set ('USE_BOOLVEC_OVER_BITSET_DEFINE', '#ifndef USE_BOOLVEC_OVER_BITSET\n# define USE_BOOLVEC_OVER_BITSET 1\n#endif')
-else
-  build_conf.set ('USE_BOOLVEC_OVER_BITSET_DEFINE', '')
-endif
-
 aut_preprocessor = get_option ('acacia_aut_preprocessor')
 aut_preprocessor_types = {
   'surely_losing' : 'aut_preprocessors::surely_losing',
@@ -313,7 +300,6 @@ posets_gates = [
   'POSETS_ENABLE_VECTOR_VECTOR_BACKED',
   'POSETS_ENABLE_VECTOR_VECTOR_BACKED_SUM',
   'POSETS_ENABLE_VECTOR_X_AND_BITSET',
-  'POSETS_ENABLE_VECTOR_X_AND_BOOLVEC',
   'POSETS_ENABLE_DOWNSET_FULL_SET',
   'POSETS_ENABLE_DOWNSET_KDTREE_BACKED',
   'POSETS_ENABLE_DOWNSET_BBOXTREE_BACKED',
@@ -374,10 +360,6 @@ posets_vector_impl_gates = {
 build_conf.set (posets_vector_impl_gates[posets_array_impl], 1)
 build_conf.set (posets_vector_impl_gates[posets_vector_impl], 1)
 build_conf.set ('POSETS_ENABLE_VECTOR_X_AND_BITSET', 1)
-if get_option ('acacia_use_boolvec_over_bitset')
-  build_conf.set ('POSETS_ENABLE_VECTOR_X_AND_BOOLVEC', 1)
-endif
-
 posets_downset_gates = {
   'vector_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED',
   'vector_or_kdtree_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_OR_KDTREE_BACKED',

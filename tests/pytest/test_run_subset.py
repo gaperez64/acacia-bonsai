@@ -1,6 +1,7 @@
 import importlib.util
 import pathlib
 import sys
+from types import SimpleNamespace
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -34,3 +35,42 @@ def test_default_source_map_is_derived_from_repository():
     assert module.DEFAULT_SOURCE_MAP == (
         ROOT / "tests/suites/benchmarks/syntcomp24/sources.tsv"
     )
+
+
+def test_resource_limit_is_not_reported_as_unknown():
+    module = load_module()
+    run = SimpleNamespace(
+        timed_out=False,
+        resource_limited=True,
+        stdout="UNKNOWN\n",
+        stderr="",
+        returncode=3,
+    )
+
+    assert module.classify_run(run) == "RESOURCE_LIMIT"
+
+
+def test_failed_run_is_not_accepted_as_a_printed_verdict():
+    module = load_module()
+    run = SimpleNamespace(
+        timed_out=False,
+        resource_limited=False,
+        stdout="REALIZABLE\n",
+        stderr="solver failed after printing",
+        returncode=3,
+    )
+
+    assert module.classify_run(run) == "ERROR"
+
+
+def test_unknown_requires_the_documented_exit_code():
+    module = load_module()
+    run = SimpleNamespace(
+        timed_out=False,
+        resource_limited=False,
+        stdout="UNKNOWN\n",
+        stderr="",
+        returncode=2,
+    )
+
+    assert module.classify_run(run) == "UNKNOWN"

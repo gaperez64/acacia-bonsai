@@ -13,6 +13,7 @@
 #endif
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
+#include <spot/twaalgos/mealy_machine.hh>
 
 #include <bddx.h>
 #include <cassert>
@@ -20,7 +21,6 @@
 #include <optional>
 #include <spot/twa/acc.hh>
 #include <spot/twa/twagraph.hh>
-#include <spot/twaalgos/mealy_machine.hh>
 #include <utility>
 #include <vector>
 
@@ -79,8 +79,8 @@ namespace acacia::solver_detail {
         init_idx++;
     }
     assert (found and winning_region.size () == state_space.size ());
-    verb_do (
-        2, vout << "Index of max element dominating the initial state is " << init_idx << std::endl);
+    verb_do (2, vout << "Index of max element dominating the initial state is " << init_idx
+                     << std::endl);
 
     // We can now start creating the Mealy machine that represents the strategy.
     // It may contain nondeterminism; Spot can handle this when minimizing and
@@ -153,11 +153,10 @@ namespace acacia::solver_detail {
   }
 
   template <class SpecializedDownset>
-  std::optional<spot::twa_graph_ptr>
-  solve_with_downset (spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax,
-                      const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
-                      const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
-                      [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints) {
+  std::optional<spot::twa_graph_ptr> solve_with_downset (
+      spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
+      const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
+      [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints) {
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
     if (not do_synthesis) {
@@ -165,8 +164,8 @@ namespace acacia::solver_detail {
           aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
           ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints);
       if (eq.attempted)
-        return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut,
-                                              all_inputs, all_outputs);
+        return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut, all_inputs,
+                                              all_outputs);
     }
 #endif
 
