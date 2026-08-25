@@ -65,6 +65,15 @@ test ('version-output',
       suite : 'version',
       depends : [ab_exe])
 
+if get_option ('build_research_tools')
+  research_tools_smoke = find_program ('check-research-tools.sh')
+  test ('research-tools-smoke',
+        research_tools_smoke,
+        args : [acacia_automata_study_exe, acacia_hoa_replay_exe],
+        suite : ['unit', 'research'],
+        depends : [acacia_automata_study_exe, acacia_hoa_replay_exe])
+endif
+
 spot_nba_fastpath_test = executable ('spot-nba-fastpath-test',
                                      'spot_nba_fastpath_test.cc',
                                      include_directories : inc,

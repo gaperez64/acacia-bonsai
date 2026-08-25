@@ -7,8 +7,7 @@
 
 int main () {
   using Vector = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
-  using Downset =
-      posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<posets::vectors::x_and_bitset<Vector, 0>>;
+  using Downset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<Vector>;
   acacia::config::checks::check_solver_components<Downset> ();
   return 0;
 }

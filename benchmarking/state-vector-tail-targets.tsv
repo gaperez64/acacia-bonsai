@@ -1,0 +1,7 @@
+label	suite	instance
+syntcomp21-round-robin-4	syntcomp21	round_robin_arbiter4.ltl
+syntcomp25-buffer-pb-5	syntcomp25	arbiter_with_buffer_pb_5_pe_.ltl
+syntcomp25-robot-resource-1d	syntcomp25	robot-resource-1d-unreal.ltl
+syntcomp24-buffer-5	syntcomp24	arbiter_with_buffer5.ltl
+syntcomp24-round-robin-4	syntcomp24	round_robin_arbiter4.ltl
+syntcomp24-hints-6	syntcomp24	simple_arbiter_with_hints6.ltl

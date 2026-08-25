@@ -10,7 +10,7 @@
 
 namespace acacia::solver_detail {
 
-  std::optional<spot::twa_graph_ptr> solve_game_zero_tail (
+  std::optional<spot::twa_graph_ptr> solve_game_vector (
       spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
       const std::vector<symmetry::indexed_family_hint>& hints);

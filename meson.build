@@ -359,7 +359,6 @@ posets_vector_impl_gates = {
 }
 build_conf.set (posets_vector_impl_gates[posets_array_impl], 1)
 build_conf.set (posets_vector_impl_gates[posets_vector_impl], 1)
-build_conf.set ('POSETS_ENABLE_VECTOR_X_AND_BITSET', 1)
 posets_downset_gates = {
   'vector_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED',
   'vector_or_kdtree_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_OR_KDTREE_BACKED',

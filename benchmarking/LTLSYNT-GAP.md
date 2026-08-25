@@ -317,12 +317,12 @@ so the prototype was removed from the final head.
 
 ## What has been tried
 
-- **Static sizing was deleted; the zero-tail specialization remains:** the former shipping
+- **Static sizing and the zero-tail wrapper were deleted:** the former shipping
   path instantiated the complete solver once for every `x_and_bitset<X, N>` tail size and
   selected among nine copies through a compile-time dispatcher. The four sizing controls, the
   array/vector/Boolean-tail branches, the clamps, and both static-switch helpers are now gone.
-  The sole path is hardwired to `x_and_bitset<X, 0>`: it stores no bitset words, but preserves
-  the zero-tail wrapper's element type and forwarding operations.
+  The sole path instantiates the configured vector directly; there is no storage-policy option
+  or zero-length tail type in Acacia's solver or Python interface.
 
   Clean release/LTO builds used one compile job. The final build includes the residual-work
   changes and Posets `7562564163741d7378d4bbacd7d6d5e7b856d20d`:
@@ -330,7 +330,8 @@ so the prototype was removed from the final head.
   | build | wall time | peak RSS | binary |
   |---|---:|---:|---:|
   | shipping static `c0` | 421.19 s | 6,459,456 KiB | 14,482,048 B |
-  | hardwired zero-tail | 61.24 s | 586,940 KiB | 454,432 B |
+  | hardwired zero-tail validation build | 61.24 s | 586,940 KiB | 454,432 B |
+  | exact bare-vector twin | 60.24 s | 586,752 KiB | 453,816 B |
 
   This is a 6.88x faster build, 11.01x less peak memory, and a 31.87x smaller binary. Coverage
   used the standard 17 s, 8 GiB, zero-swap, one-solver-per-scope protocol. Acacia 1.x is the
@@ -349,25 +350,16 @@ so the prototype was removed from the final head.
   shipping ratio on mutually solved SYNTCOMP24 rows was 0.992, although fine timing on this
   thermally throttled machine is directional.
 
-  Collapsing one step further to the bare `X` type was rejected. Although bare and
-  `x_and_bitset<X,0>` carry the same counter payload, they instantiate a different templated
-  downset and solver stack. Six apparent bare losses were measured five times with shipping,
-  zero-tail, and bare binaries in one 20 s campaign:
-
-  | instance | shipping median | zero-tail median | bare |
-  |---|---:|---:|---:|
-  | SYNTCOMP21 `round_robin_arbiter4` | 7.408 s | 12.118 s | 0/5, >20 s |
-  | SYNTCOMP25 `arbiter_with_buffer_pb_5_pe_` | 11.853 s | 5.583 s | 0/5, >20 s |
-  | SYNTCOMP25 `robot-resource-1d-unreal` | 12.846 s | 12.595 s | 16.885 s |
-  | SYNTCOMP24 `arbiter_with_buffer5` | 11.885 s | 5.538 s | 0/5, >20 s |
-  | SYNTCOMP24 `round_robin_arbiter4` | 7.768 s | 12.257 s | 0/5, >20 s |
-  | SYNTCOMP24 `simple_arbiter_with_hints6` | 11.590 s | 5.418 s | 0/5, >20 s |
-
-  Bare was 34% slower on the one case it completed and at least 63--269% slower on the five
-  capped cases. Its 30 runs consumed 584.179 s versus 266.831 s for zero-tail, a censored lower
-  bound of 119% more wall time. The storage-equivalent but code-generation-distinct behavior is
-  deliberately left for a follow-up profile/disassembly experiment; removing the wrapper is not
-  part of this change.
+  Collapsing one step further to the bare `X` type is now the default. The earlier 119% regression
+  claim did not survive an exact-twin rerun. Five 20-second repetitions
+  over the six suspected cases produced the same LTO coverage (all capped) and identical solver
+  work. Without LTO, the one mutually solved case was 1.69% slower for bare while retiring 0.06%
+  fewer instructions; the other five capped under both. Profiles put about 90% of cycles in the
+  same downset comparison path, and the dominant 192-byte partial-order kernel is byte-identical.
+  The controlled measurements and disassembly are recorded in
+  `benchmarking/STATE-VECTOR-TAIL-STUDY.md`. They show no mechanism or consistent measurement by
+  which the zero-length wrapper outperforms the underlying vector, so the redundant type was
+  removed.
 
   The alternative dynamic Boolean tails also remain rejected: `x_and_boolvec` solved 322 of
   the three smaller panels' 338 shipping answers, while the word-parallel `x_and_wordvec`

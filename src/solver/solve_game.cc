@@ -25,6 +25,6 @@ std::optional<spot::twa_graph_ptr> solve_game (
   }
 #endif
 
-  return acacia::solver_detail::solve_game_zero_tail (aut, kmax, kmin, kinc, all_inputs,
-                                                      all_outputs, do_synthesis, hints);
+  return acacia::solver_detail::solve_game_vector (aut, kmax, kmin, kinc, all_inputs, all_outputs,
+                                                   do_synthesis, hints);
 }
