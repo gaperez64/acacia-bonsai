@@ -10,26 +10,6 @@
 # define CPRE_AVOID_UNIONS 0
 #endif
 
-#ifndef ACACIA_ENABLE_SYMMETRIC_SOLVER
-# define ACACIA_ENABLE_SYMMETRIC_SOLVER 0
-#endif
-
-#ifndef ACACIA_SYMMETRY_OPTIMIZE_UNIONO
-# define ACACIA_SYMMETRY_OPTIMIZE_UNIONO 1
-#endif
-
-#ifndef ACACIA_SYMMETRY_UNIONO_SPIKE
-# define ACACIA_SYMMETRY_UNIONO_SPIKE 0
-#endif
-
-#ifndef ACACIA_SYMMETRY_DENSE_SIMD
-# define ACACIA_SYMMETRY_DENSE_SIMD ACACIA_ENABLE_SYMMETRIC_SOLVER
-#endif
-
-#ifndef ACACIA_SYMMETRY_USE_POSETS_UNION
-# define ACACIA_SYMMETRY_USE_POSETS_UNION 0
-#endif
-
 #ifndef ACACIA_SYMMETRY_PROFILE
 # define ACACIA_SYMMETRY_PROFILE 0
 #endif
@@ -202,25 +182,16 @@
 
 #ifdef NO_SIMD
 # pragma message("Compiling without SIMD")
-# ifndef ARRAY_IMPL
-#  define ARRAY_IMPL array_backed_sum
-# endif
 # ifndef VECTOR_IMPL
 #  define VECTOR_IMPL vector_backed
 # endif
 #else
 # pragma message("Compiling with SIMD")
-# ifndef ARRAY_IMPL
-#  define ARRAY_IMPL simd_array_backed_sum
-# endif
 # ifndef VECTOR_IMPL
 #  define VECTOR_IMPL simd_vector_backed
 # endif
 #endif
 
-#ifndef ARRAY_AND_BITSET_DOWNSET_IMPL
-# define ARRAY_AND_BITSET_DOWNSET_IMPL vector_backed
-#endif
 #ifndef VECTOR_AND_BITSET_DOWNSET_IMPL
 # define VECTOR_AND_BITSET_DOWNSET_IMPL vector_backed
 #endif

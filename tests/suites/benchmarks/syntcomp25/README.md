@@ -36,8 +36,7 @@ robot-grid, and collector families. Deterministic shuffling uses seed
 `panel.tsv` is the audit trail: it records every selected instance's stratum,
 two reference times, verdict, normalized family, and source campaign. The
 header comments in `panel.list` record the complete pool and selected
-composition. `baseline-panel.csv` is a later measurement on the frozen panel;
-it was not an input to selection.
+composition.
 
 The generating command was equivalent to:
 

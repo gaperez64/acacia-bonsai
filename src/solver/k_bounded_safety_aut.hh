@@ -9,7 +9,7 @@
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
 #include "solver/diagnostics.hh"
-#include "solver/symmetric_profile.hh"
+#include "solver/symmetry_profile.hh"
 #include "utils/typeinfo.hh"
 
 #include <algorithm>

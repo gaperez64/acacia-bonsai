@@ -25,7 +25,6 @@ seed `20260804`.
 
 `panel.tsv` is the audit trail for every selected logical instance, including
 stratum, reference times, verdict, normalized family, and source campaign.
-`baseline-panel.csv` is a later measurement and was not an input to selection.
 The generating command was equivalent to:
 
 ```sh

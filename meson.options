@@ -63,26 +63,7 @@ option('acacia_equivariant_min_clients', type: 'integer', value: 3, min: 2,
        description: 'Minimum indexed client count admitted to equivariant recognition')
 option('acacia_equivariant_min_blocks', type: 'integer', value: 2, min: 0,
        description: 'Minimum client-state block count required by the equivariant solver (0 disables this payoff gate)')
-option('acacia_enable_symmetric_solver', type: 'boolean', value: false,
-       description: 'Compile and enable the symmetry quotient solver path')
 
-option('acacia_array_downset', type: 'combo',
-       choices: [
-         'vector_backed',
-         'vector_or_kdtree_backed',
-         'kdtree_backed',
-         'bboxtree_backed',
-         'comptrie_backed',
-         'sharingtree_backed',
-         'simple_sharingtree_backed',
-         'sharingtrie_backed',
-         'skiplist_backed',
-         'cst_backed',
-         'rank_bucketed_vector_backed',
-         'filtered_vector_backed',
-         'vector_backed_bin',
-       ],
-       value: 'vector_backed')
 option('acacia_vector_downset', type: 'combo',
        choices: [
          'vector_backed',
@@ -100,9 +81,6 @@ option('acacia_vector_downset', type: 'combo',
          'vector_backed_bin',
        ],
        value: 'vector_backed')
-option('acacia_array_impl', type: 'combo',
-       choices: ['auto', 'simd_array_backed_sum', 'array_backed_sum'],
-       value: 'auto')
 option('acacia_vector_impl', type: 'combo',
        choices: ['auto', 'simd_vector_backed', 'simd_vector_backed_sum', 'vector_backed'],
        value: 'auto')

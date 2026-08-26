@@ -13,8 +13,7 @@ the selections out of `tests/meson.build` and deduplicated the files without
 changing their logical names.
 
 `crit.list` is the 94-instance local critical set selected from targets that
-historically took roughly 1–15 seconds in Acacia. `baseline-crit.csv` is a
-later measurement of that frozen list and was not used to import the corpus.
+historically took roughly 1–15 seconds in Acacia.
 The other lists are historical runtime or data-structure slices; `all.list`
 is an include-only aggregate, not an independently sampled panel.
 

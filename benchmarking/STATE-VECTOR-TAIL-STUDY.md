@@ -10,9 +10,9 @@ later memory-limit follow-up also gives the two types identical outcomes and
 production type or source-level branch. The ordinary build also stops enabling
 Posets' `x_and_bitset` component; it remains available only through the
 explicit compile-all-components developer configuration.
-`state_vector_tail_study.py` accepts externally built twins and remains as the
-reproducible harness. Resume mode validates the harness, binaries, targets,
-and run settings before appending samples.
+The study is closed. Its harness, `benchmarking/state_vector_tail_study.py`,
+was removed once the decision landed; recover it from the history of this file
+if the tail representation is ever revisited.
 
 ## Controlled twins and protocol
 

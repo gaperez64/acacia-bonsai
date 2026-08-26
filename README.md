@@ -133,13 +133,20 @@ translator preference is registry-backed as
 `small+any` are available for ablation and racing presets such as
 `best_decomp_mona_any` and `best_decomp_mona_race`.
 
-The shipping `best_decomp_mona` preset enables the exact equivariant solver.
-It automatically declines to the classic solver when no verified profitable
-symmetry is available, or when fewer than `acacia_equivariant_min_blocks`
-client-state blocks are found (default 2). Use
-`best_decomp_mona_noequivariant` for the explicit classic-only escape hatch
-and performance ablation. New presets should inherit from the nearest existing
-configuration and override only the values being tested.
+The shipping configuration is `best_decomp_rank_bucketed_mona`; the Docker
+image and the TLSF examples above build its frontend-enabled variant
+`best_decomp_rank_bucketed_mona_tlsf`, and the correctness and performance
+gates are frozen against it. `best_decomp_mona` is the same configuration over
+the plain vector-backed downset, kept as the reference point for downset
+comparisons.
+
+The shipping preset enables the exact equivariant solver. It automatically
+declines to the classic solver when no verified profitable symmetry is
+available, or when fewer than `acacia_equivariant_min_blocks` client-state
+blocks are found (default 2). Use `best_decomp_rank_bucketed_mona_noequivariant`
+for the explicit classic-only escape hatch and performance ablation. New
+presets should inherit from the nearest existing configuration and override
+only the values being tested.
 
 # Documentation
 

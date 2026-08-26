@@ -201,43 +201,12 @@ if get_option ('acacia_enable_tlsf_frontend')
   )
 endif
 
-symmetric_downset_test = executable ('symmetric-downset-test',
-                                     'symmetric_downset_test.cc',
-                                     include_directories : inc)
-test ('symmetric-downset',
-      symmetric_downset_test,
-      suite : ['unit', 'symmetry'])
-
-symmetric_dense_downset_test = executable ('symmetric-dense-downset-test',
-                                           'symmetric_dense_downset_test.cc',
-                                           include_directories : inc,
-                                           dependencies : [posets_dep])
-test ('symmetric-dense-downset',
-      symmetric_dense_downset_test,
-      suite : ['unit', 'symmetry'])
-
-symmetric_blocks_test = executable ('symmetric-blocks-test',
-                                    'symmetric_blocks_test.cc',
+symmetry_blocks_test = executable ('symmetry-blocks-test',
+                                    'symmetry_blocks_test.cc',
                                     include_directories : inc,
                                     dependencies : [spot_dep, bddx_dep])
-test ('symmetric-blocks',
-      symmetric_blocks_test,
-      suite : ['unit', 'symmetry'])
-
-symmetric_conversion_test = executable ('symmetric-conversion-test',
-                                        'symmetric_conversion_test.cc',
-                                        include_directories : inc,
-                                        dependencies : [spot_dep, bddx_dep, posets_dep])
-test ('symmetric-conversion',
-      symmetric_conversion_test,
-      suite : ['unit', 'symmetry'])
-
-symmetric_output_orbits_test = executable ('symmetric-output-orbits-test',
-                                           'symmetric_output_orbits_test.cc',
-                                           include_directories : inc,
-                                           dependencies : [spot_dep, bddx_dep, posets_dep])
-test ('symmetric-output-orbits',
-      symmetric_output_orbits_test,
+test ('symmetry-blocks',
+      symmetry_blocks_test,
       suite : ['unit', 'symmetry'])
 
 equivariant_pre_test = executable ('equivariant-pre-test',

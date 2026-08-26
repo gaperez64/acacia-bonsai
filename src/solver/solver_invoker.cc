@@ -10,7 +10,7 @@
 #include "solver/mealy_to_moore.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
-#include "solver/symmetric_blocks.hh"
+#include "solver/symmetry_blocks.hh"
 #include "solver/symmetry.hh"
 #include "solver/syntactic_bypass.hh"
 #include "solver/translator_options.hh"

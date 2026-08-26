@@ -13,8 +13,8 @@
 #include "actioners/standard.hh"
 #include "configuration.hh"
 #include "solver/diagnostics.hh"
-#include "solver/symmetric_blocks.hh"
-#include "solver/symmetric_profile.hh"
+#include "solver/symmetry_blocks.hh"
+#include "solver/symmetry_profile.hh"
 #include "solver/symmetry.hh"
 #include "utils/verbose.hh"
 

@@ -1,4 +1,4 @@
-// Correctness test for src/solver/symmetric_blocks.hh: build a SYNTHETIC
+// Correctness test for src/solver/symmetry_blocks.hh: build a SYNTHETIC
 // group emulating an n-client, B-block automaton (plus S shared states) with
 // the natural "swap slot a,b across every block simultaneously" generators,
 // and verify compute_block_layout recovers a valid, consistent slot
@@ -7,7 +7,7 @@
 // single AP-level client-index transposition applied uniformly across the
 // whole automaton).
 
-#include "solver/symmetric_blocks.hh"
+#include "solver/symmetry_blocks.hh"
 
 #include <cassert>
 #include <iostream>
@@ -195,7 +195,7 @@ int main () {
   }
 
   if (failures == 0) {
-    std::cout << "ALL symmetric_blocks synthetic tests PASSED\n";
+    std::cout << "ALL symmetry_blocks synthetic tests PASSED\n";
     return 0;
   }
   std::cout << failures << " FAILURES\n";

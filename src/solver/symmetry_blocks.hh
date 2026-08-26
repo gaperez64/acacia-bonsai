@@ -5,8 +5,7 @@
 // generator) and CLIENT-BLOCK "slots": B blocks of size n = |indices|
 // (number of clients), with a consistent per-client slot identity across
 // blocks -- this is exactly the (shared, client-owned-coordinate) split
-// symmetric_downset.hh's count_vector needs (DIAGNOSIS.md, "Symmetry
-// reduction: design + status").
+// the count_vector representation needs.
 //
 // Consistency (why "slot" identity across DIFFERENT blocks is well-defined):
 // two client-block states s (in block i) and s' (in block j != i) are the

@@ -114,11 +114,8 @@ and fixed-point stalls.  Diagnostics builds also split fixed-point time into
 input picking, backward action application, and downset work; the summary
 labels a target `letter-loop-bound`, `downset-bound`, or `mixed` (within 20%).
 
-For a controlled zero-tail versus bare-vector ablation, use
-`state_vector_tail_study.py` with two externally built binaries. It alternates
-pair order, records cgroup peak memory, hardware counters, and optional
-diagnostics atomically, and supports resume. The completed five-by-20-second
-LTO/no-LTO, profile, and disassembly comparison is in
+The completed zero-tail versus bare-vector ablation — five-by-20-second
+LTO/no-LTO runs, profile, and disassembly comparison — is in
 [STATE-VECTOR-TAIL-STUDY.md](STATE-VECTOR-TAIL-STUDY.md). The TLSF
 normalization/HOA replay outcome is in
 [TLSF-NORMALIZATION-STUDY.md](TLSF-NORMALIZATION-STUDY.md).
@@ -317,8 +314,9 @@ Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMAL
 - **G5, native TLSF parity:** run `benchmarking/tlsf-verdict-parity.py` and
   `benchmarking/check-tlsf-conversion.py` against the selected TLSF corpus.
 
-Frozen G1 baselines were measured with the shipping
-`best_decomp_rank_bucketed_mona_eq_min_blocks_2` preset and re-validated on the final tree; the
+Frozen G1 baselines were measured with the shipping preset (see the top-level README) through its
+pinned twin `best_decomp_rank_bucketed_mona_eq_min_blocks_2`, which resolves to an identical option
+set now that `acacia_equivariant_min_blocks` defaults to 2, and re-validated on the final tree; the
 producing binary's SHA-256 is
 `6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`.
 `syntcomp24/Morning_f2774e0b.ltl` is frozen at 14.542 s, above the 13.6 s threshold that admits a

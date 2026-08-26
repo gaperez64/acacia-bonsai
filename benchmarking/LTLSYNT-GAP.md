@@ -555,6 +555,30 @@ per-instance landing bar.
   incompleteness of K-boundedness is retracted; it is a resource question until shown
   otherwise.
 
+- **The symmetry quotient solver was removed:** it landed default-off in `d12104d0` and was
+  never enabled by any campaign or preset that the gates or the panels used. Its successor, the
+  exact equivariant solver, is default-on, documented, and carries the measured symmetry gains
+  recorded above. Deleted: `symmetric_k_bounded_safety_aut.hh`, `symmetric_dense_downset.hh`,
+  `symmetric_downset.hh`, `symmetric_conversion.hh` and their four unit tests (1,797 src +
+  591 test lines), the `acacia_enable_symmetric_solver` option, the
+  `best_decomp_mona_symmetric` preset, and the `ACACIA_SYMMETRY_{OPTIMIZE_UNIONO,UNIONO_SPIKE,
+  DENSE_SIMD,USE_POSETS_UNION}` macros. `symmetry.hh`, `symmetry_certificate.hh`,
+  `symmetry_blocks.hh` and `symmetry_profile.hh` are retained — the equivariant and classic
+  solvers use them — and the latter two were renamed from `symmetric_*` so the prefix no longer
+  implies a solver that no longer exists. Recover the deleted work from `d0935a9c~`.
+
+- **Two compile-time knobs were dead and are gone:** `acacia_array_downset` and
+  `acacia_array_impl` outlived the static-sizing deletion above. No source file read `ARRAY_IMPL`
+  or `ARRAY_AND_BITSET_DOWNSET_IMPL`, and every preset set `array_downset` equal to
+  `vector_downset`, so removing them changes no build. The preset registry was cut from 65 to 30
+  in the same pass, dropping every preset that no document, script, CI job or preset group named.
+
+  All three deletions were verified behaviour-neutral against the shipping preset: rebuilding
+  before and after in an identically-named build directory left `.text`, `.rodata` and
+  `.data.rel.ro` byte-identical in every translation unit. Only `solve_game.cc.o` changed at all,
+  and only in its debug line table, because the edit shifted line numbers. Build cost was
+  unaffected (25.1 s versus 25.2 s, 872 MB peak, `-j1`).
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and
