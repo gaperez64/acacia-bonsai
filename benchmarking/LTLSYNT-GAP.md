@@ -579,6 +579,43 @@ per-instance landing bar.
   and only in its debug line table, because the edit shifted line numbers. Build cost was
   unaffected (25.1 s versus 25.2 s, 872 MB peak, `-j1`).
 
+- **A fourth solver child costs nothing, and the `any` race policy is not dead after all:** before
+  reimplementing the B3 MP-NBA as a portfolio member, the concurrency cost of adding a fourth
+  forked child was measured directly, using the existing `small+any` translation preference as a
+  stand-in. Arms were the shipping preset (3 children: 1 real + 2 unreal) and
+  `best_decomp_rank_bucketed_mona_race` (4 children: 2 real + 2 unreal), differing in exactly one
+  option. Standard protocol, 17 s cap, one 8 GiB zero-swap scope per invocation, serialized from a
+  detached unit. Arm order was alternated between panels with a 120 s cooldown between arms, so
+  thermal drift on this throttling machine could not systematically favour either arm.
+
+  | panel | arm | solved | REAL | UNREAL | timeout | PAR-2 |
+  |---|---|---:|---:|---:|---:|---:|
+  | SYNTCOMP25 (180) | 3 children | 111 | 39 | 72 | 69 | 2606.6 |
+  | SYNTCOMP25 (180) | 4 children | **112** | 40 | 72 | 68 | 2583.5 |
+  | SYNTCOMP26 (180) | 3 children | 136 | 46 | 90 | 44 | 1635.5 |
+  | SYNTCOMP26 (180) | 4 children | **137** | 47 | 90 | 43 | 1606.9 |
+
+  Zero losses and zero opposite verdicts on either panel; the fourth child gained one instance on
+  each. The 3-child arm reproduced the published campaign coverage exactly (111 and 136), which
+  validates the run despite the machine sitting at its 100 C throttle plateau throughout. PAR-2
+  moved less than the measured same-configuration noise floor (21.134 s on SYNTCOMP25, 12.074 s on
+  SYNTCOMP26) and is not evidence by itself.
+
+  Both gains are the same instance, `amba_decomposed_lock_pb_13_pe_`, re-run five times in
+  isolation at the 17 s cap: the 3-child arm timed out 5/5 (17.18-17.28 s) and the 4-child arm
+  answered REALIZABLE 5/5 in 3.95-4.55 s. The gain is reproducible, not panel noise.
+
+  This corrects the earlier entry above that recorded the `any` race policy as answering 0/34 and
+  rejected it. That measurement was taken on the 34-row residual screen of hard instances, which
+  could not see a gain on an instance the screen did not contain. On full panels `small+any` is
+  worth one instance on each of SYNTCOMP25 and SYNTCOMP26 at no measured cost. Whether it should
+  become the shipping default is a separate decision needing G1 and a SYNTCOMP24 run.
+
+  **Scope of what this de-risks:** it shows the process architecture absorbs a fourth concurrent
+  child without contention losses under the shared 8 GiB cap on a 16-thread machine. It does not
+  de-risk B3's own memory appetite -- its monitors reached 2,739 states / 218,936 edges, far heavier
+  than an `any`-preference child -- so B3 still has to be measured on its own once built.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and

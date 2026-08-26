@@ -94,6 +94,10 @@
       "inherits": "best_decomp_mona",
       "vector_downset": "rank_bucketed_vector_backed"
     },
+    "best_decomp_rank_bucketed_mona_race": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "translation_pref": "small+any"
+    },
     "best_decomp_rank_bucketed_mona_tlsf": {
       "inherits": "best_decomp_rank_bucketed_mona",
       "enable_tlsf_frontend": true
