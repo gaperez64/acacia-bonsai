@@ -122,6 +122,8 @@ LTO/no-LTO, profile, and disassembly comparison is in
 [STATE-VECTOR-TAIL-STUDY.md](STATE-VECTOR-TAIL-STUDY.md). The TLSF
 normalization/HOA replay outcome is in
 [TLSF-NORMALIZATION-STUDY.md](TLSF-NORMALIZATION-STUDY.md).
+The checksum-verified final current-versus-Acacia-1.x cactus plots are in
+[plots/final-v1-current-20260825](plots/final-v1-current-20260825/README.md).
 
 # Deterministic stratified panels
 
