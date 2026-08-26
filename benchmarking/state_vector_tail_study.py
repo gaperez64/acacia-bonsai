@@ -40,6 +40,7 @@ SAMPLE_FIELDS = (
     "returncode",
     "timed_out",
     "resource_limited",
+    "memory_peak_bytes",
     "cycles",
     "instructions",
     "llc_load_misses",
@@ -176,6 +177,16 @@ def paired_rows(samples: list[dict]) -> list[dict]:
                     float(bare["seconds"]) if same_solved else None,
                     float(zero["seconds"]) if same_solved else None,
                 ),
+                "zero_memory_peak_bytes": zero["memory_peak_bytes"],
+                "bare_memory_peak_bytes": bare["memory_peak_bytes"],
+                "bare_over_zero_memory_peak": ratio(
+                    int(bare["memory_peak_bytes"])
+                    if bare["memory_peak_bytes"]
+                    else None,
+                    int(zero["memory_peak_bytes"])
+                    if zero["memory_peak_bytes"]
+                    else None,
+                ),
                 "zero_cycles": zero["cycles"],
                 "bare_cycles": bare["cycles"],
                 "bare_over_zero_cycles": ratio(
@@ -235,6 +246,14 @@ def summary_rows(samples: list[dict], pairs: list[dict]) -> list[dict]:
             row[f"{variant}_median_cycles"] = (
                 f"{statistics.median(counters):.0f}" if counters else ""
             )
+            memory_peaks = [
+                int(sample["memory_peak_bytes"])
+                for sample in selected
+                if sample["memory_peak_bytes"]
+            ]
+            row[f"{variant}_median_memory_peak_bytes"] = (
+                f"{statistics.median(memory_peaks):.0f}" if memory_peaks else ""
+            )
         time_ratios = [
             float(pair["bare_over_zero_seconds"])
             for pair in label_pairs
@@ -250,6 +269,11 @@ def summary_rows(samples: list[dict], pairs: list[dict]) -> list[dict]:
             for pair in label_pairs
             if pair["bare_over_zero_instructions"]
         ]
+        memory_peak_ratios = [
+            float(pair["bare_over_zero_memory_peak"])
+            for pair in label_pairs
+            if pair["bare_over_zero_memory_peak"]
+        ]
         row["paired_median_time_ratio"] = (
             f"{statistics.median(time_ratios):.9f}" if time_ratios else ""
         )
@@ -259,6 +283,11 @@ def summary_rows(samples: list[dict], pairs: list[dict]) -> list[dict]:
         row["paired_median_instruction_ratio"] = (
             f"{statistics.median(instruction_ratios):.9f}"
             if instruction_ratios
+            else ""
+        )
+        row["paired_median_memory_peak_ratio"] = (
+            f"{statistics.median(memory_peak_ratios):.9f}"
+            if memory_peak_ratios
             else ""
         )
         result.append(row)
@@ -313,7 +342,7 @@ def main() -> int:
     }
 
     metadata = {
-        "schema": 1,
+        "schema": 2,
         "harness_sha256": file_sha256(pathlib.Path(__file__)),
         "git_revision": subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -455,6 +484,7 @@ def main() -> int:
                             run.stdout_bytes,
                             run.stderr_bytes,
                             run.resource_limited,
+                            run.memory_peak_bytes,
                         )
                     counters = parse_perf_stat(perf_path)
                 samples.append(
@@ -470,6 +500,7 @@ def main() -> int:
                         "returncode": run.returncode,
                         "timed_out": str(run.timed_out).lower(),
                         "resource_limited": str(run.resource_limited).lower(),
+                        "memory_peak_bytes": run.memory_peak_bytes or "",
                         "cycles": counters["cycles"] or "",
                         "instructions": counters["instructions"] or "",
                         "llc_load_misses": counters["LLC-load-misses"] or "",

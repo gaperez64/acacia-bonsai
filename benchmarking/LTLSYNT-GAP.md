@@ -5,44 +5,58 @@ remaining gap comes from, and the durable record of what has been tried.
 
 ## Current standing
 
-The current campaign is archived at
-`_bm-logs.fmcad26-head-6dda2f3b-20260822`; this gitignored directory is the provenance for the
-figures below.
+The final current-versus-Acacia-1.x campaign is archived at
+`_bm-logs.final-v1-current-1d48a15f-20260825`; this gitignored directory contains the frozen
+sources, manifests, raw rows, validation summaries, and SHA-256 provenance for the fresh rows
+below. The `ltlsynt` rows are retained from the preceding three-solver campaign at
+`_bm-logs.fmcad26-head-6dda2f3b-20260822` and are marked as such.
 
 | panel | solver | solved | PAR-2 |
 |---|---|---:|---:|
-| syntcomp21 crit (94 instances) | `head` | **91** | 199.965 |
-| syntcomp21 crit (94 instances) | `ltlsynt` | 86 | 333.015 |
-| syntcomp21 crit (94 instances) | `best23` | 90 | 304.272 |
-| syntcomp24 0s-20s (1011) | `head` | 871 | 5149.970 |
-| syntcomp24 0s-20s (1011) | `ltlsynt` | **897** | 4163.157 |
-| syntcomp24 0s-20s (1011) | `best23` | 750 | 9304.980 |
-| syntcomp25 panel (180) | `head` | 111 | 2606.453 |
-| syntcomp25 panel (180) | `ltlsynt` | **158** | 925.201 |
-| syntcomp25 panel (180) | `best23` | 95 | 3117.684 |
-| syntcomp26 panel (180) | `head` | 136 | 1635.101 |
-| syntcomp26 panel (180) | `ltlsynt` | **165** | 632.701 |
-| syntcomp26 panel (180) | `best23` | 104 | 2709.740 |
+| syntcomp21 crit (94 instances) | current, fresh | **91** | 202.352 |
+| syntcomp21 crit (94 instances) | `ltlsynt`, prior | 86 | 333.015 |
+| syntcomp21 crit (94 instances) | Acacia 1.x, fresh | 90 | 304.527 |
+| syntcomp24 0s-20s (1011) | current, fresh | 871 | 5191.507 |
+| syntcomp24 0s-20s (1011) | `ltlsynt`, prior | **897** | 4163.157 |
+| syntcomp24 0s-20s (1011) | Acacia 1.x, fresh | 745 | 9470.106 |
+| syntcomp25 panel (180) | current, fresh | 111 | 2597.586 |
+| syntcomp25 panel (180) | `ltlsynt`, prior | **158** | 925.201 |
+| syntcomp25 panel (180) | Acacia 1.x, fresh | 95 | 3124.637 |
+| syntcomp26 panel (180) | current, fresh | 136 | 1627.912 |
+| syntcomp26 panel (180) | `ltlsynt`, prior | **165** | 632.701 |
+| syntcomp26 panel (180) | Acacia 1.x, fresh | 104 | 2709.865 |
 
 This section is replaced wholesale by each new campaign rather than appended to, so it never
 accumulates stale runs.
 
-Versus the previously published PR #118 figures, `head` gained on both modern panels:
+The fresh current and Acacia 1.x invocations were serialized and each solver ran in its own
+8 GiB, zero-swap user-systemd scope with a 17-second deadline. Current reproduces the prior
+coverage exactly on all four panels. Fine PAR-2 comparisons to the retained `ltlsynt` campaign
+remain directional: per-invocation scope startup alone added about 0.048 s to each successful
+SYNTCOMP24 current row. The frozen revisions are Acacia `1d48a15f`, Posets `4f79e9f`,
+tlsf-tools `ca27906`, and Acacia 1.x `5ffd8f99`.
+
+Versus the previously published PR #118 figures, current gained on both modern panels:
 SYNTCOMP25 moved from 104 to 111 and SYNTCOMP26 from 133 to 136. `ltlsynt` also moved, from 156
 to 158 and from 164 to 165, because a wrapper defect had been feeding both tools the same
 malformed empty-side partitions. The 2024 Acacia 1.x series is new in this campaign.
+The final pass reported here reran both current and Acacia 1.x on all four panels instead of
+reusing that archived v1 series.
 
-**Caveat:** the machine thermally throttled during these runs: package temperature ranged from
+**Caveat:** the machine thermally throttled across these campaigns: package temperature ranged from
 85 to 100 C while the clock swung between 4452 and 2107 MHz. Coverage figures are robust, but
 fine-grained PAR-2 deltas should not be quoted as precise.
 
 ## Verdict correctness
 
 The campaign compared every verdict against the SYNTCOMP `//STATUS` metadata. Acacia 1.x
-(`best23`) produced wrong answers: 2 on 2024, 2 on 2025, and 1 on 2026, plus 9 instances on
-2024 where it contradicted both other solvers. On the three with declared status
-(`TwoCountersDisButA6`, `TwoCountersDisButA7`, and `TwoCountersGui`), it answered
-REALIZABLE against a declared UNREALIZABLE, taking up to 8.8 s.
+produced wrong answers: 2 on 2024, 2 on 2025, and 1 on 2026. On 2024 it also disagreed with
+current on six instances without decisive panel metadata. The strict fresh runner rejected four
+additional v1 wrapper results as unknown because the wrapper reported `CRASH (exit 0)` instead
+of a consistent verdict: `SPIPureNext`, `TwoCountersDisButA6`, `TwoCountersDisButA7`, and
+`TwoCountersGui`. Together with `detector_unreal15` moving from a 15.0 s answer to a 17 s
+timeout, that explains why the fresh v1 count is 745 rather than the archived 750; current's
+coverage is unchanged.
 
 `ltlsynt` answered UNREALIZABLE on `LedMatrix` on both 2024 and 2025, against a declared
 REALIZABLE; see [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md). On `lilydemo04_modified`, all three
@@ -334,15 +348,15 @@ so the prototype was removed from the final head.
   | exact bare-vector twin | 60.24 s | 586,752 KiB | 453,816 B |
 
   This is a 6.88x faster build, 11.01x less peak memory, and a 31.87x smaller binary. Coverage
-  used the standard 17 s, 8 GiB, zero-swap, one-solver-per-scope protocol. Acacia 1.x is the
-  archived `best23` campaign rather than a rerun:
+  used the standard 17 s, 8 GiB, zero-swap protocol. The final bare-vector and Acacia 1.x
+  columns are the fresh, one-solver-per-scope rerun:
 
-  | panel | shipping static | zero-tail | Acacia 1.x |
-  |---|---:|---:|---:|
-  | SYNTCOMP21 (94) | 91 | 91 | 90 |
-  | SYNTCOMP24 (1,011) | 868 | 867 | 750 |
-  | SYNTCOMP25 (180) | 111 | 111 | 95 |
-  | SYNTCOMP26 (180) | 136 | 136 | 104 |
+  | panel | shipping static | zero-tail | bare vector | Acacia 1.x |
+  |---|---:|---:|---:|---:|
+  | SYNTCOMP21 (94) | 91 | 91 | 91 | 90 |
+  | SYNTCOMP24 (1,011) | 868 | 867 | 871 | 745 |
+  | SYNTCOMP25 (180) | 111 | 111 | 111 | 95 |
+  | SYNTCOMP26 (180) | 136 | 136 | 136 | 104 |
 
   There were zero opposite verdicts. On SYNTCOMP24, zero-tail gained
   `load_balancer_unreal15_5` and lost two `Morning` instances in the raw panel; all three
@@ -360,6 +374,15 @@ so the prototype was removed from the final head.
   `benchmarking/STATE-VECTOR-TAIL-STUDY.md`. They show no mechanism or consistent measurement by
   which the zero-length wrapper outperforms the underlying vector, so the redundant type was
   removed.
+
+  The fresh per-solver cgroup run exposed two SYNTCOMP24 resource limits: `robot_grid6_6` and
+  `robot_grid7_7` both reached the 8 GiB ceiling. This initially looked like a bare-vector memory
+  regression because the older aggregate run had labelled one timeout and one unknown. An exact
+  LTO-twin follow-up alternated bare and zero-tail for five 20-second repetitions per target and
+  recorded cgroup `MemoryPeak`. Both variants resource-limited 5/5 on both targets, and all 20
+  runs peaked at exactly 8 GiB. Median time-to-limit was 8.35/8.63 s bare/zero on grid6 and
+  15.08/14.93 s on grid7: small differences in opposite directions. The differing panel labels
+  came from resource isolation/classification, not a memory benefit from the zero-length tail.
 
   The alternative dynamic Boolean tails also remain rejected: `x_and_boolvec` solved 322 of
   the three smaller panels' 338 shipping answers, while the word-parallel `x_and_wordvec`

@@ -13,13 +13,21 @@ sys.modules[SPEC.name] = STUDY
 SPEC.loader.exec_module(STUDY)
 
 
-def sample(variant, seconds, cycles, verdict="REALIZABLE", repetition="1"):
+def sample(
+    variant,
+    seconds,
+    cycles,
+    verdict="REALIZABLE",
+    repetition="1",
+    memory_peak_bytes=100,
+):
     return {
         "label": "case",
         "repetition": repetition,
         "variant": variant,
         "verdict": verdict,
         "seconds": str(seconds),
+        "memory_peak_bytes": str(memory_peak_bytes),
         "cycles": str(cycles),
         "instructions": str(cycles * 2),
         "llc_load_misses": str(cycles * 3),
@@ -32,6 +40,7 @@ def test_paired_rows_times_only_solved_but_counters_matching_verdicts():
     assert pairs[0]["verdict_match"] == "true"
     assert float(pairs[0]["bare_over_zero_seconds"]) == 1.5
     assert float(pairs[0]["bare_over_zero_cycles"]) == 1.5
+    assert float(pairs[0]["bare_over_zero_memory_peak"]) == 1.0
 
     timeout = STUDY.paired_rows(
         [sample("zero", 20, 200, "TIMEOUT"), sample("bare", 20, 200, "TIMEOUT")]
@@ -51,6 +60,7 @@ def test_summary_uses_within_pair_ratios():
     summary = STUDY.summary_rows(samples, STUDY.paired_rows(samples))[0]
     assert float(summary["paired_median_time_ratio"]) == 1.0
     assert float(summary["paired_median_cycle_ratio"]) == 1.0
+    assert float(summary["paired_median_memory_peak_ratio"]) == 1.0
 
 
 def test_inner_timeout_is_not_reported_as_an_error():

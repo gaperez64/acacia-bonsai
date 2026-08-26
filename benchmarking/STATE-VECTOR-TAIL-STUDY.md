@@ -5,12 +5,14 @@
 Use the bare `Vector` as the default. The controlled study does not reproduce
 the previously reported catastrophic bare-vector regression: exact twins
 execute the same solver work and the same dominant machine-code kernel. The
-zero-length wrapper therefore does not justify a permanent production type or
-source-level branch. The ordinary build also stops enabling Posets'
-`x_and_bitset` component; it remains available only through the explicit
-compile-all-components developer configuration. `state_vector_tail_study.py` accepts externally built
-twins and remains as the reproducible harness. Resume mode validates the
-harness, binaries, targets, and run settings before appending samples.
+later memory-limit follow-up also gives the two types identical outcomes and
+8 GiB peaks. The zero-length wrapper therefore does not justify a permanent
+production type or source-level branch. The ordinary build also stops enabling
+Posets' `x_and_bitset` component; it remains available only through the
+explicit compile-all-components developer configuration.
+`state_vector_tail_study.py` accepts externally built twins and remains as the
+reproducible harness. Resume mode validates the harness, binaries, targets,
+and run settings before appending samples.
 
 ## Controlled twins and protocol
 
@@ -65,6 +67,28 @@ exact work counts. On `hints6`, both performed 30 loops, three K attempts,
 in 18.955 s. The round-robin and robot paths likewise matched their loop,
 action, and meet counts. Diagnostics change code generation and are therefore
 directional evidence only.
+
+## Memory-limit follow-up
+
+The final full-panel rerun placed every invocation in its own 8 GiB, zero-swap
+cgroup. Bare vector reached that limit on `robot_grid6_6` and `robot_grid7_7`,
+where the older aggregate zero-tail campaign had recorded one timeout and one
+unknown. To distinguish a representation regression from a harness-label
+difference, the release/LTO exact twins above were rerun in alternating order
+for five 20-second repetitions on each target. The harness recorded cgroup
+`MemoryPeak`; hardware counters were disabled for this memory-focused pass.
+
+| target | zero-tail outcomes / median limit time | bare outcomes / median limit time | median peak, both |
+|---|---:|---:|---:|
+| `robot_grid6_6` | 5/5 resource / 8.63 s | 5/5 resource / 8.35 s | 8 GiB |
+| `robot_grid7_7` | 5/5 resource / 14.93 s | 5/5 resource / 15.08 s | 8 GiB |
+
+All 20 samples hit exactly 8,589,934,592 bytes. The small time-to-limit
+differences reverse direction across the two targets; they do not show a
+zero-tail advantage. The full-panel classification difference was caused by
+the newer per-invocation resource isolation and strict OOM detection, not by
+collapsing the wrapper to its underlying vector. Raw samples and hashes live
+under `_bm-logs.final-v1-current-1d48a15f-20260825/tail-memory-5x20`.
 
 ## Profile and disassembly
 

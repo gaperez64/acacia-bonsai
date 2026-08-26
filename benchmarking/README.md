@@ -116,9 +116,9 @@ labels a target `letter-loop-bound`, `downset-bound`, or `mixed` (within 20%).
 
 For a controlled zero-tail versus bare-vector ablation, use
 `state_vector_tail_study.py` with two externally built binaries. It alternates
-pair order, records hardware counters and optional diagnostics atomically, and
-supports resume. The completed five-by-20-second LTO/no-LTO, profile, and
-disassembly comparison is in
+pair order, records cgroup peak memory, hardware counters, and optional
+diagnostics atomically, and supports resume. The completed five-by-20-second
+LTO/no-LTO, profile, and disassembly comparison is in
 [STATE-VECTOR-TAIL-STUDY.md](STATE-VECTOR-TAIL-STUDY.md). The TLSF
 normalization/HOA replay outcome is in
 [TLSF-NORMALIZATION-STUDY.md](TLSF-NORMALIZATION-STUDY.md).

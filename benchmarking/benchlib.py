@@ -26,6 +26,7 @@ class RunResult:
     stdout_bytes: int = 0
     stderr_bytes: int = 0
     resource_limited: bool = False
+    memory_peak_bytes: int | None = None
 
 
 def _terminate_process_group(proc: subprocess.Popen, grace: float = 2.0) -> None:
@@ -303,28 +304,40 @@ def run_systemd_scope(
             stdout = "".join(retained_lines[0])
             stderr = "".join(retained_lines[1])
             stdout_bytes, stderr_bytes = raw_sizes
+        finished = time.monotonic()
         resource_limited = False
-        if not timed_out and proc.returncode != 0:
-            try:
-                unit_result = subprocess.run(
-                    [
-                        "systemctl",
-                        "--user",
-                        "show",
-                        f"{unit}.scope",
-                        "--property=Result",
-                        "--value",
-                    ],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-                resource_limited = unit_result.stdout.strip() == "oom-kill"
-            except subprocess.TimeoutExpired:
-                pass
-        seconds = time.monotonic() - started
+        memory_peak_bytes = None
+        try:
+            unit_result = subprocess.run(
+                [
+                    "systemctl",
+                    "--user",
+                    "show",
+                    f"{unit}.scope",
+                    "--property=Result,MemoryPeak",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            properties = dict(
+                line.split("=", 1)
+                for line in unit_result.stdout.splitlines()
+                if "=" in line
+            )
+            peak = properties.get("MemoryPeak", "")
+            if peak.isdigit():
+                memory_peak_bytes = int(peak)
+            resource_limited = (
+                not timed_out
+                and proc.returncode != 0
+                and properties.get("Result") == "oom-kill"
+            )
+        except subprocess.TimeoutExpired:
+            pass
+        seconds = finished - started
         result = RunResult(
             stdout,
             stderr,
@@ -334,6 +347,7 @@ def run_systemd_scope(
             stdout_bytes,
             stderr_bytes,
             resource_limited,
+            memory_peak_bytes,
         )
         return result
     finally:
