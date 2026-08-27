@@ -26,6 +26,10 @@
 #include "boolean_states/no_boolean_states.hh"
 #endif
 
+#if ACACIA_COMPILE_BOOLEAN_STATES_TRANSITION_CORE
+#include "boolean_states/transition_core.hh"
+#endif
+
 #include "actioners/direction.hh"
 
 #if ACACIA_COMPILE_ACTIONER_NO_IOS_PRECOMPUTATION

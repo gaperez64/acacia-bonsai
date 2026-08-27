@@ -16,8 +16,9 @@ option('acacia_aut_preprocessor', type: 'combo',
        value: 'surely_losing',
        description: 'Compile-time automaton preprocessor selection')
 option('acacia_boolean_states', type: 'combo',
-       choices: ['forward_saturation', 'no_boolean_states'],
-       value: 'forward_saturation')
+       choices: ['forward_saturation', 'no_boolean_states', 'transition_core'],
+       value: 'forward_saturation',
+       description: 'Which states get numeric rank coordinates; transition_core is the transition-acceptance counterpart of forward_saturation')
 option('acacia_ios_precomputer', type: 'combo',
        choices: ['standard', 'delegate', 'fake_vars', 'powset', 'mona'],
        value: 'standard')

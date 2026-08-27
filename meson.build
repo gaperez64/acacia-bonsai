@@ -197,10 +197,12 @@ boolean_states = get_option ('acacia_boolean_states')
 boolean_states_types = {
   'forward_saturation' : 'boolean_states::forward_saturation',
   'no_boolean_states' : 'boolean_states::no_boolean_states',
+  'transition_core' : 'boolean_states::transition_core',
 }
 boolean_states_gates = {
   'forward_saturation' : 'ACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION',
   'no_boolean_states' : 'ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES',
+  'transition_core' : 'ACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE',
 }
 build_conf.set ('BOOLEAN_STATES', boolean_states_types[boolean_states])
 foreach choice, gate : boolean_states_gates

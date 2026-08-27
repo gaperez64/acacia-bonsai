@@ -12,14 +12,23 @@ namespace acacia::acceptance_core {
       size_t global_core = 0;
       size_t accepting_sccs = 0;
       size_t states = 0;
+      /// in_global_core[q] iff state q is reachable from an accepting SCC,
+      /// i.e. iff q can carry an unbounded acceptance count.  Empty unless
+      /// compute() was asked for it.
+      std::vector<bool> in_global_core;
   };
 
-  inline census compute (const spot::const_twa_graph_ptr& aut) {
+  /// \param want_membership also fill census::in_global_core, which the
+  ///        transition-based booleanization needs to order states.
+  inline census compute (const spot::const_twa_graph_ptr& aut,
+                         bool want_membership = false) {
     census result;
     if (not aut)
       return result;
 
     result.states = aut->num_states ();
+    if (want_membership)
+      result.in_global_core.assign (result.states, false);
     if (result.states == 0 or aut->num_sets () == 0)
       return result;
 
@@ -61,8 +70,12 @@ namespace acacia::acceptance_core {
     }
 
     for (unsigned number = 0; number < scc.scc_count (); ++number)
-      if (in_core[number])
+      if (in_core[number]) {
         result.global_core += scc.states_of (number).size ();
+        if (want_membership)
+          for (unsigned state : scc.states_of (number))
+            result.in_global_core[state] = true;
+      }
     return result;
   }
 

@@ -108,6 +108,14 @@ test ('acceptance-core',
       acceptance_core_test,
       suite : ['unit', 'acceptance-core'])
 
+transition_core_test = executable ('transition-core-test',
+                                   'transition_core_test.cc',
+                                   include_directories : inc,
+                                   dependencies : [spot_dep, bddx_dep])
+test ('transition-core',
+      transition_core_test,
+      suite : ['unit', 'transition-core'])
+
 mp_nba_test = executable ('mp-nba-test',
                           'mp_nba_test.cc',
                           include_directories : inc,
