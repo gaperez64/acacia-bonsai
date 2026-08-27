@@ -6,12 +6,15 @@
 #include "error_msg.hh"
 #include "solver/acceptance_core.hh"
 #include "solver/create_automaton.hh"
+#include "solver/direct_simulation.hh"
 #include "solver/translator_options.hh"
 #include "utils/verbose.hh"
 #include "version.hh"
 
+#include <charconv>
 #include <cstdlib>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <set>
@@ -52,6 +55,8 @@ namespace {
       form_mode forms = form_mode::current;
       spot::postprocessor::output_pref preference = spot::postprocessor::Small;
       bool realizability_simplify = false;
+      bool simulation_density = false;
+      size_t simulation_cap = 400;
       bool header = true;
   };
 
@@ -65,6 +70,15 @@ namespace {
     return argv[index];
   }
 
+  size_t parse_size (const std::string& text, const std::string& option) {
+    size_t result = 0;
+    const auto parsed = std::from_chars (text.data (), text.data () + text.size (), result);
+    if (text.empty () or parsed.ec != std::errc {} or
+        parsed.ptr != text.data () + text.size ())
+      fail (option + " requires a non-negative integer");
+    return result;
+  }
+
   void usage (std::ostream& out, const char* program) {
     out << "Usage: " << program << " [OPTIONS]\n"
         << "Materialize Acacia's LTL-to-HOA research boundary.\n"
@@ -76,6 +90,8 @@ namespace {
         << "  --orientation real|direct|unreal-formula|unreal-automaton\n"
         << "  --preference any|small|deterministic (default small)\n"
         << "  --forms current|all         translation forms (default current)\n"
+        << "  --simulation-density        append direct-simulation density metrics\n"
+        << "  --simulation-cap N          relation state cap (default 400)\n"
         << "  --realizability-simplify    mirror Acacia's up-front simplifier\n"
         << "  --no-header                 omit the TSV header\n"
         << "  --version, --help\n";
@@ -132,6 +148,11 @@ namespace {
       }
       else if (argument == "--realizability-simplify")
         result.realizability_simplify = true;
+      else if (argument == "--simulation-density")
+        result.simulation_density = true;
+      else if (argument == "--simulation-cap")
+        result.simulation_cap =
+            parse_size (need_arg (i, argc, argv), "--simulation-cap");
       else if (argument == "--no-header")
         result.header = false;
       else if (argument == "--version") {
@@ -219,6 +240,48 @@ namespace {
     return signatures.size ();
   }
 
+  void write_simulation_header (std::ostream& out) {
+    out << "\tsim_computed\tsim_strict_pairs\tsim_pair_density\tsim_dominated\t"
+           "sim_dominated_frac\tsim_equivalent\tsim_counting_dom\tsim_tail_dom\t"
+           "sim_iterations";
+  }
+
+  void write_simulation_density (
+      std::ostream& out, const spot::const_twa_graph_ptr& aut, size_t state_cap,
+      const acacia::acceptance_core::census& core) {
+    const auto simulation = acacia::direct_simulation::compute (aut, state_cap);
+    size_t counting_dominated = 0;
+    size_t tail_dominated = 0;
+    if (simulation.computed)
+      for (size_t state = 0; state < simulation.simulators.size (); ++state)
+        if (not simulation.simulators[state].empty ()) {
+          if (core.in_global_core[state])
+            ++counting_dominated;
+          else
+            ++tail_dominated;
+        }
+
+    const double pair_density = simulation.computed and simulation.states != 0
+                                    ? static_cast<double> (simulation.strict_pairs) /
+                                          (static_cast<double> (simulation.states) *
+                                           simulation.states)
+                                    : 0.0;
+    const double dominated_fraction = simulation.states != 0
+                                          ? static_cast<double> (
+                                                simulation.dominated_states) /
+                                                simulation.states
+                                          : 0.0;
+    const auto flags = out.flags ();
+    const auto precision = out.precision ();
+    out << '\t' << (simulation.computed ? 1 : 0) << '\t' << simulation.strict_pairs
+        << '\t' << std::fixed << std::setprecision (6) << pair_density << '\t'
+        << simulation.dominated_states << '\t' << dominated_fraction << '\t'
+        << simulation.equivalent_pairs << '\t' << counting_dominated << '\t'
+        << tail_dominated << '\t' << simulation.iterations;
+    out.flags (flags);
+    out.precision (precision);
+  }
+
   std::string form_hoa_path (const std::string& path, const std::string& form) {
     const size_t slash = path.find_last_of ("/\\");
     const size_t basename = slash == std::string::npos ? 0 : slash + 1;
@@ -286,12 +349,17 @@ int main (int argc, char** argv) {
       hoa->flush ();
 
       const spot::scc_info scc (automaton);
-      if (arguments.header)
+      if (arguments.header) {
         std::cout << "schema_version\tname\tschedule\torientation\tpreference\t"
                      "inputs\toutputs\tformula_nodes\tstates\tedges\tacceptance_sets\t"
-                     "sccs\tstate_acc\tdeterministic\tcomplete\tuniversal\thoa\n";
-      if (arguments.hoa_path != "-")
-        std::cout << "1\t" << arguments.name << '\t' << arguments.schedule << '\t'
+                     "sccs\tstate_acc\tdeterministic\tcomplete\tuniversal\thoa";
+        if (arguments.simulation_density)
+          write_simulation_header (std::cout);
+        std::cout << '\n';
+      }
+      if (arguments.hoa_path != "-") {
+        std::cout << (arguments.simulation_density ? 3 : 1) << '\t'
+                  << arguments.name << '\t' << arguments.schedule << '\t'
                   << orientation_name (arguments.worker) << '\t'
                   << preference_name (arguments.preference) << '\t' << arguments.inputs << '\t'
                   << arguments.outputs << '\t' << spot::length (formula) << '\t'
@@ -300,7 +368,14 @@ int main (int argc, char** argv) {
                   << automaton->prop_state_acc ().is_true () << '\t'
                   << spot::is_deterministic (automaton) << '\t'
                   << spot::is_complete (automaton) << '\t'
-                  << spot::is_universal (automaton) << '\t' << arguments.hoa_path << '\n';
+                  << spot::is_universal (automaton) << '\t' << arguments.hoa_path;
+        if (arguments.simulation_density) {
+          const auto core = acacia::acceptance_core::compute (automaton, true);
+          write_simulation_density (
+              std::cout, automaton, arguments.simulation_cap, core);
+        }
+        std::cout << '\n';
+      }
     }
     else {
       spot::translator b_native_translator (dictionary, &translation_options);
@@ -327,12 +402,16 @@ int main (int argc, char** argv) {
         {"S-from-G", s_from_g},
       };
 
-      if (arguments.header)
+      if (arguments.header) {
         std::cout << "schema_version\tname\tschedule\torientation\tpreference\t"
                      "inputs\toutputs\tformula_nodes\tstates\tedges\tacceptance_sets\t"
                      "sccs\tstate_acc\tdeterministic\tcomplete\tuniversal\thoa\t"
                      "form\tlocal_core\tglobal_core\taccepting_sccs\t"
-                     "action_signatures\n";
+                     "action_signatures";
+        if (arguments.simulation_density)
+          write_simulation_header (std::cout);
+        std::cout << '\n';
+      }
 
       for (const auto& [form, current] : forms) {
         const std::string hoa_path = arguments.hoa_path == "-"
@@ -342,8 +421,10 @@ int main (int argc, char** argv) {
           write_hoa (hoa_path, current);
 
         const spot::scc_info scc (current);
-        const auto core = acacia::acceptance_core::compute (current);
-        std::cout << "2\t" << arguments.name << '\t' << arguments.schedule << '\t'
+        const auto core = acacia::acceptance_core::compute (
+            current, arguments.simulation_density);
+        std::cout << (arguments.simulation_density ? 3 : 2) << '\t'
+                  << arguments.name << '\t' << arguments.schedule << '\t'
                   << orientation_name (arguments.worker) << '\t'
                   << preference_name (arguments.preference) << '\t' << arguments.inputs << '\t'
                   << arguments.outputs << '\t' << spot::length (formula) << '\t'
@@ -354,7 +435,11 @@ int main (int argc, char** argv) {
                   << spot::is_complete (current) << '\t'
                   << spot::is_universal (current) << '\t' << hoa_path << '\t'
                   << form << '\t' << core.local_core << '\t' << core.global_core << '\t'
-                  << core.accepting_sccs << '\t' << action_signatures (current) << '\n';
+                  << core.accepting_sccs << '\t' << action_signatures (current);
+        if (arguments.simulation_density)
+          write_simulation_density (
+              std::cout, current, arguments.simulation_cap, core);
+        std::cout << '\n';
       }
     }
     dictionary->unregister_all_my_variables (&owner);

@@ -108,6 +108,14 @@ test ('acceptance-core',
       acceptance_core_test,
       suite : ['unit', 'acceptance-core'])
 
+direct_simulation_test = executable ('direct-simulation-test',
+                                   'direct_simulation_test.cc',
+                                   include_directories : inc,
+                                   dependencies : [spot_dep, bddx_dep])
+test ('direct-simulation',
+      direct_simulation_test,
+      suite : ['unit', 'direct-simulation'])
+
 transition_core_test = executable ('transition-core-test',
                                    'transition_core_test.cc',
                                    include_directories : inc,

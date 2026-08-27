@@ -59,6 +59,10 @@ def main() -> int:
     p.add_argument("--timeout", type=float, default=60.0,
                    help="per (instance, orientation) wall-clock cap, seconds")
     p.add_argument("--limit", type=int, default=0, help="cap instances (0 = all)")
+    p.add_argument("--simulation-density", action="store_true",
+                   help="also emit direct-simulation density columns (schema 3)")
+    p.add_argument("--simulation-cap", type=int, default=400,
+                   help="state cap for the simulation relation")
     args = p.parse_args()
 
     source_map = load_source_map(pathlib.Path(args.source_map))
@@ -90,6 +94,9 @@ def main() -> int:
                     "--realizability-simplify",
                     "--inputs", inputs, "--outputs", outputs,
                 ]
+                if args.simulation_density:
+                    cmd += ["--simulation-density",
+                            "--simulation-cap", str(args.simulation_cap)]
                 if header_written:
                     cmd.append("--no-header")
                 try:
