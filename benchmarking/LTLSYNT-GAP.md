@@ -616,6 +616,42 @@ per-instance landing bar.
   de-risk B3's own memory appetite -- its monitors reached 2,739 states / 218,936 edges, far heavier
   than an `any`-preference child -- so B3 still has to be measured on its own once built.
 
+- **`small+any` is rejected as a shipping default, on four paired panels:** the fourth-child
+  measurement above gained an instance on two panels, so the `any` translation preference was
+  validated properly, with both arms run paired on every panel rather than only the two where it
+  had looked good.
+
+  | panel | `small` | `small+any` | delta | PAR-2 `small` | PAR-2 `small+any` |
+  |---|---:|---:|---:|---:|---:|
+  | SYNTCOMP21 crit (94) | **91** | 90 | -1 | 204.4 | 232.6 |
+  | SYNTCOMP24 0s-20s (1011) | **870** | 868 | -2 | 5193.8 | 5229.5 |
+  | SYNTCOMP25 panel (180) | 111 | **112** | +1 | 2606.6 | 2583.5 |
+  | SYNTCOMP26 panel (180) | 136 | **137** | +1 | 1635.5 | 1606.9 |
+  | total | **1208** | 1207 | -1 | | |
+
+  Zero opposite verdicts anywhere. The median `small+any`/`small` time ratio on the 866 mutually
+  solved SYNTCOMP24 rows is 1.026, and 1.060 on SYNTCOMP21 crit, so the second real child costs a
+  few percent of wall time on every instance it does not help.
+
+  Every SYNTCOMP24 loss has the same signature -- an instance solving within a few seconds of the
+  cap, pushed past it: `06.ltl` 16.77 s, `Morning_c92eb242` 14.86 s, `Morning_f2774e0b` 13.94 s and
+  `collector_v215` 14.02 s all became timeouts. Re-running all six changed rows five times in
+  isolation: `06.ltl` (4/5 vs 0/5) and `Morning_f2774e0b` (5/5 vs 4/5) are confirmed losses;
+  `Morning_c92eb242` and `collector_v215` solve 5/5 under both but land 2.2-2.5 s slower and within
+  1-2 s of the cap, so they flip with machine conditions rather than being robustly lost.
+
+  Both gains are the same family and are robust and large: `amba_decomposed_lock13` (5/5 at 3.83 s
+  versus 0/5) and `amba_decomposed_lock14` (5/5 at 14.21 s versus 0/5). The `small` portfolio
+  cannot solve either at any observed timing. So `any` is not useless -- it unlocks one family
+  outright -- but as a global default it pays for that with a few percent on everything else and a
+  net instance loss.
+
+  This supersedes the reasoning, though not the conclusion, of the earlier `0/34` rejection
+  recorded above: that screen contained only hard residual instances and could not have observed
+  either the gains or the cap-adjacent losses. The right reason to keep `small` is the paired
+  four-panel result here. The natural next step for the `amba_decomposed_lock` family is a
+  portfolio member with a trigger, not a global preference change.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and
