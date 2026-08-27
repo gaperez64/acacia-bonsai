@@ -146,6 +146,8 @@ namespace ios_precomputers {
   }
 
   struct mona {
+      // MONA encodes endpoints as bit pairs; carrying acceptance here needs a
+      // separate design from the transition payload used by other precomputers.
       template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
         return detail::mona<Aut, TransSet> (aut, input_support, output_support);

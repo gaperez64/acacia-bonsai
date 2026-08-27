@@ -8,6 +8,7 @@
 
 #include <bddx.h>
 
+#include "solver/transition_payload.hh"
 #include "utils/transition_enumerator.hh"
 #include "utils/bdd_helper.hh"
 
@@ -105,7 +106,10 @@ namespace ios_precomputers {
           using input_to_ios_t = typename std::map<bdd_t, std::list<TransSet>>;
 
           auto crossings = power_fakevars<crossings_t> (
-              transition_enumerator (aut, transition_formater::src_and_dst (aut)),
+              transition_enumerator (
+                  aut, [] (const auto& e) {
+                    return acacia::transitions::make (e.src, e.dst, e);
+                  }),
               [] (bdd b) { return b; });
 
           return power_fakevars<input_to_ios_t> (
@@ -120,7 +124,8 @@ namespace ios_precomputers {
   }
 
   struct fake_vars {
-      template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
+      template <typename Aut,
+                typename TransSet = std::vector<acacia::transitions::element>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
         return detail::fake_vars<Aut, TransSet> (aut, input_support, output_support);
       }

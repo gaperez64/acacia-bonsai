@@ -160,6 +160,11 @@ if get_option ('acacia_enable_equivariant_solver')
 else
   build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 0)
 endif
+if get_option ('acacia_transition_acceptance')
+  build_conf.set ('ACACIA_TRANSITION_ACCEPTANCE', 1)
+else
+  build_conf.set ('ACACIA_TRANSITION_ACCEPTANCE', 0)
+endif
 
 if get_option ('acacia_no_simd')
   build_conf.set ('NO_SIMD_DEFINE', '#ifndef NO_SIMD\n# define NO_SIMD 1\n#endif')

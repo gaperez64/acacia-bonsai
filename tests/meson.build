@@ -90,6 +90,16 @@ test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
 
+transition_payload_test = executable (
+  'transition-payload-test',
+  'transition_payload_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('transition-payload',
+      transition_payload_test,
+      suite : ['unit', 'transition-payload'])
+
 acceptance_core_test = executable ('acceptance-core-test',
                                    'acceptance_core_test.cc',
                                    include_directories : inc,

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "solver/transition_payload.hh"
+
 #include <bddx.h>
 
 namespace ios_precomputers {
@@ -78,14 +80,14 @@ namespace ios_precomputers {
             }
 
             void update_transset () {
-              // this updates current_io (set of (p, q) pairs)
+              // this updates current_io (set of transitions)
               letter = input & bdd_it::current_letter;
               current_io.clear ();
               for (size_t p = 0; p < aut->num_states (); ++p) {
                 for (const auto& e : aut->out (p)) {
                   unsigned q = e.dst;
                   if ((e.cond & letter) != bddfalse)
-                    current_io.push_back (std::pair (p, q));
+                    current_io.push_back (acacia::transitions::make (p, q, e));
                 }
               }
             }
@@ -157,7 +159,8 @@ namespace ios_precomputers {
   }
 
   struct standard {
-      template <typename Aut, typename TransSet = std::vector<std::pair<int, int>>>
+      template <typename Aut,
+                typename TransSet = std::vector<acacia::transitions::element>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
         return [=] () {
           return detail::standard_container<Aut, TransSet> (aut, input_support, output_support);

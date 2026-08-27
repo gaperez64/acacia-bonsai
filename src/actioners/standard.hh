@@ -4,6 +4,7 @@
 #include "configuration.hh"
 #include "posets/utils/vector_mm.hh"
 #include "posets/vectors/traits.hh"
+#include "solver/transition_payload.hh"
 
 #include <algorithm>
 #include <bddx.h>
@@ -50,19 +51,19 @@ namespace actioners {
 
           std::set<input_and_actions, compare_actions> ioset;
 
-          // inputs_to_ios: a map [input i, set of sets of pairs (p, q)].  Each set of pairs (p, q)
-          // corresponds to an i-compatible IO x in the natural way; that is, it is the set
-          // of pairs (p, q) such that p -> q is compatible with x.
-          // This set of pairs (p, q) also includes a BDD = the IO
+          // inputs_to_ios maps each input i to transition sets.  Each set
+          // corresponds to an i-compatible IO x and contains every transition
+          // p -> q compatible with x.  The IO's BDD is stored alongside it.
           for (const auto& [input, ios] : inputs_to_ios) {
             // input: bdd
-            // ios: set of pairs of (sets (p, q) and IO)
+            // ios: transition sets and their IOs
             std::list<action_vec> fwd_actions;
             // action_vec : vector<vector<pair<unsigned int, bool>>>
             for (const auto& transset : ios) {
-              // transset: transitions_io_pair (stores vector<pair<p, q>> and IO)
-              // turn this into a vector that maps q to a list of tuples (p, is_q_accepting) and
-              // keep the IO insert this map for every transset
+              // transset: transitions compatible with one IO
+              // Turn this into a vector that maps q to a list of tuples
+              // (p, increment).  The increment comes from the edge when
+              // transition acceptance is enabled, and from q otherwise.
               fwd_actions.push_back (compute_action_vec (transset));
               // type that is being inserted: action_vec (ios_precomputers/standard.hh)
               // with current configuration.hh at the time of writing
@@ -77,7 +78,7 @@ namespace actioners {
             // what is being inserted:
             // pair<bdd, list<vector<vector<pair<unsigned int, bool>>>>>
             // -> for every input, a list (one per compatible IO) of actions
-            // where an action maps each state q to a list of (p, is_q_accepting) tuples
+            // where an action maps each state q to a list of (p, increment) tuples
             input_output_fwd_actions.push_back (std::move (ioset.extract (it++).value ()));
           }
         }
@@ -136,10 +137,12 @@ namespace actioners {
               "see if we can narrow it down to one.");
 
           // ret_fwd: vector<vector<pair<unsigned int, bool>>>
-          // first index = state q, map each state q to a list of tuples (p, is_q_accepting)
+          // first index = state q, map each state q to a list of tuples (p, increment)
 
-          for (const auto& [p, q] : transset)
-            ret_fwd[q].push_back (std::make_pair (p, aut->state_is_accepting (q)));
+          for (const auto& t : transset)
+            ret_fwd[acacia::transitions::dest (t)].push_back (
+                std::make_pair (acacia::transitions::source (t),
+                                acacia::transitions::increment (t, aut)));
 
           return ret_fwd;
         }
