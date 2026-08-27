@@ -758,6 +758,57 @@ per-instance landing bar.
   full determinization to produce non-degenerate acceptance, which is the architecture this project
   chose not to adopt.
 
+- **Structural Gate T passes: state-based acceptance is what inflates Acacia's counting core.**
+  Acacia asks Spot for `postprocessor::BA` (which Spot documents as implying `SBAcc`), adds `SBAcc`
+  to the preference, and calls `spot::sbacc` again. `forward_saturation` then derives the counting
+  core from `state_is_accepting`, and its result becomes `posets::vectors::bool_threshold` -- the
+  numeric dimension of the solver's downset vectors. So the request for state-based acceptance is
+  paid for directly in solver dimension. Spot offers `Buchi` (transition-based, no `SBAcc`) and
+  `GeneralizedBuchi` natively.
+
+  Census over the SYNTCOMP25 and SYNTCOMP26 panels, three worker orientations, five translation
+  forms from one prepared formula and one BDD dictionary (`benchmarking/translation-census.py`,
+  `translation-gate.py`, and `--forms all` in `acacia-automata-study`):
+
+  | | SYNTCOMP25 | SYNTCOMP26 | combined |
+  |---|---:|---:|---:|
+  | workers compared | 371 | 381 | 648 |
+  | median `B-native`/`S-current` core | 0.833 | 0.875 | 0.862 |
+  | at or below 80% | 46.6% | 39.4% | **41.4%** |
+  | at or below 70% | 103 | 85 | 157 |
+  | worse than `S-current` | 7 | 4 | 10 |
+  | rejected for action blowup | 0 | 0 | 0 |
+  | families covered | 61 | 68 | 92 |
+
+  Gate T criterion 1 needs 20% of workers at or below 80% across at least two families: measured
+  41.4% across 92. Criterion 2 needs 20 qualifying workers on hard/timeout instances across two
+  families: measured **69 across 38**. Both clear independently. Action signatures *fell* in every
+  qualifying case rather than rising.
+
+  Median counting core by form is `S-current` 10, `B-native` 8, `G-native` 7, `B-from-G` 8,
+  `S-from-G` 10. `S-from-G` returning to `S-current` is the check that the conversion chain
+  rebuilds today's automaton, and it localizes the cost: on `lift_gr13` the chain reads 46, 46, 91,
+  so degeneralizing TGBA to Buchi is free and the entire counting-core cost is the final
+  state-based lowering. Gate G also clears -- `G-native` is at or below 75% of `B-native` on 28.9%
+  of workers, median action ratio 1.000, acceptance sets median 1 / p95 7 / max 14 -- but TGBA
+  ranks stay gated behind a measured TBA gain.
+
+  **Two caveats, both material.** First, the census cap of 45 s per worker means 307 of 360
+  instances have at least one completed worker, and **41 of the 113 failures (36%) are invisible to
+  it**. The gate therefore says: among instances whose translation completes, transition acceptance
+  materially shrinks the counting core, including on ones Acacia currently fails. It says nothing
+  about the hardest third of the gap. Second, the core predicts runtime only moderately --
+  Spearman 0.509 against solve time on 124 solved SYNTCOMP26 rows, with median solve time rising
+  0.033 s to 1.236 s and timeout rate 4% to 23% across core buckets, and median core 10.5 on solved
+  versus 25.0 on failed. So a structural win of this size forecasts a handful of instances and
+  essentially flat PAR-2, not a step change: PAR-2 here is dominated by timeouts charged at twice
+  the cap, so it moves only if coverage moves.
+
+  The realistic candidates are failing instances with both a large core and a large reduction:
+  `prioritized_arbiter_enc_pb_10_pe_` 54 to 27, `prioritized_arbiter_pb_9_pe_` 22 to 11,
+  `prioritized_arbiter_pb_8_pe_` 20 to 10, `scheduler-real` 20 to 11, `robot-to-target-charging6`
+  20 to 12, `robot_collect_samples_v1-real` 19 to 10, `thermostat-GF-unreal2` 16 to 10.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and
