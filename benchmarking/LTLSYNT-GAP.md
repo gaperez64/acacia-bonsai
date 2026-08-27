@@ -652,6 +652,53 @@ per-instance landing bar.
   four-panel result here. The natural next step for the `amba_decomposed_lock` family is a
   portfolio member with a trigger, not a global preference change.
 
+- **The MP-NBA construction is rebuilt and correct, but it cannot reach real benchmarks yet:**
+  the B3 prototype was never committed -- nothing in any ref of this repository, the pinned
+  `tlsf-tools`, or the stale sibling clone contains `mp_nba`, `to_delta2` or `falsifying`. Its
+  design survives in the flat k-safety handoff, so Level A was reimplemented from that
+  specification as `src/solver/mp_nba.hh`, compiled out by default behind
+  `acacia_ltl_frontend` (`baseline`/`mp_nba`, default `baseline`), included by nothing but its own
+  test.
+
+  The construction follows the handoff exactly. With `Inf(a) = GF a` and `Fin(b) = FG !b`, the
+  target is `Phi = AND_j ( OR_{a in R_j} Inf(a) OR OR_{b in P_j} Fin(b) )`, whose negation is a
+  disjunction of falsifying cubes `AND_{a in R_j} Fin(a) AND AND_{b in P_j} Inf(b)`. Per cube: an
+  uncommitted mode guesses that the last `R_j` color has passed; once committed any `R_j` color
+  kills the branch; the `P_j` colors are cycled in fixed order and completing a cycle is accepting;
+  cubes are joined by nondeterministic union, under a hard cap with fallback.
+
+  Correctness is established by language equivalence against Spot's automaton for `!phi`
+  (`spot::are_equivalent`): 10 targeted formulas including `true` and `false`, plus 4 of 24 seeded
+  random formulas that the extractor accepts. The check discriminates -- the same automaton tests
+  equivalent to `!phi` and not equivalent to `phi`.
+
+  **The blocking measurement.** Over 300 corpus formulas, `spot::to_delta2` succeeds on all 300
+  (258 are already Delta2), but cube extraction accepts only **2**. Classifying the top-level
+  conjuncts after `nnf(to_delta2)` shows why:
+
+  | shape | conjuncts |
+  |---|---:|
+  | `G(...)` safety | 513 |
+  | `OR` mixed | 289 |
+  | other | 60 |
+  | boolean | 18 |
+  | `GF(temporal)` | 3 |
+  | **`OR` of `GF`/`FG` over Boolean state formulas** | **1** |
+
+  Real specifications are overwhelmingly safety conjuncts and mixed disjunctions, not limit
+  clauses. This is precisely the gap the handoff names: "Efficient Delta2 normalization is a useful
+  first step, but it does not by itself hand us MP-CNF... A separate transformation is needed to
+  expose recurrence/persistence over deterministic finite-prefix monitors." Reaching MP-CNF
+  requires compiling each `G(...)` conjunct into a deterministic finite-prefix monitor and
+  re-expressing the limit behaviour over monitor outputs. That transformation is the actual
+  project; the NBA construction downstream of it is done and verified.
+
+  A latent defect found while probing this is also fixed: `extract_cubes` registered BDD variables
+  that only `build_violation_nba` released, so extracting without building aborted the `bdd_dict`
+  with "some maps are not empty". Ownership is now RAII in a move-only `cube_set` that transfers
+  registrations with `register_all_variables_of` on move, with regression tests for both
+  extract-without-build and automaton-outlives-cube_set.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and

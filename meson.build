@@ -108,6 +108,12 @@ else
   build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Small')
 endif
 
+if get_option ('acacia_ltl_frontend') == 'mp_nba'
+  build_conf.set ('ACACIA_LTL_FRONTEND', 'ACACIA_LTL_FRONTEND_MP_NBA')
+else
+  build_conf.set ('ACACIA_LTL_FRONTEND', 'ACACIA_LTL_FRONTEND_BASELINE')
+endif
+
 if get_option ('acacia_enable_realizability_simplifier')
   build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 1)
 else

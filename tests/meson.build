@@ -90,6 +90,14 @@ test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
 
+mp_nba_test = executable ('mp-nba-test',
+                          'mp_nba_test.cc',
+                          include_directories : inc,
+                          dependencies : [spot_dep, bddx_dep])
+test ('mp-nba',
+      mp_nba_test,
+      suite : ['unit', 'mp-nba'])
+
 unreal_safety_core_witnesses_test = executable (
   'unreal-safety-core-witnesses-test',
   'unreal_safety_core_witnesses_test.cc',
