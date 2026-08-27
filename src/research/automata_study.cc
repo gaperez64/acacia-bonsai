@@ -312,7 +312,11 @@ int main (int argc, char** argv) {
       g_native_translator.set_type (spot::postprocessor::GeneralizedBuchi);
       g_native_translator.set_pref (arguments.preference);
       auto g_native = g_native_translator.run (formula);
-      auto b_from_g = spot::degeneralize (g_native);
+      // degeneralize() already lowers to STATE-based acceptance, which would
+      // make B-from-G a duplicate of S-from-G and hide where the chain loses
+      // structure.  degeneralize_tba() keeps acceptance on transitions, so the
+      // chain reads G-native -> (transition-based) B-from-G -> S-from-G.
+      auto b_from_g = spot::degeneralize_tba (g_native);
       auto s_from_g = spot::sbacc (b_from_g);
 
       const std::vector<std::pair<std::string, spot::twa_graph_ptr>> forms {
