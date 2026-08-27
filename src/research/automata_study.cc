@@ -4,27 +4,32 @@
 
 #include "configuration.hh"
 #include "error_msg.hh"
+#include "solver/acceptance_core.hh"
 #include "solver/create_automaton.hh"
 #include "solver/translator_options.hh"
 #include "utils/verbose.hh"
 #include "version.hh"
-#include <unordered_set>
 
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <set>
 #include <spot/tl/apcollect.hh>
 #include <spot/tl/formula.hh>
 #include <spot/tl/length.hh>
 #include <spot/tl/parse.hh>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/isdet.hh>
+#include <spot/twaalgos/sbacc.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twaalgos/translate.hh>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -34,6 +39,7 @@ utils::voutstream utils::vout;
 namespace {
 
   enum class orientation { real, direct, unreal_formula, unreal_automaton };
+  enum class form_mode { current, all };
 
   struct options {
       std::string formula_path;
@@ -43,6 +49,7 @@ namespace {
       std::string inputs;
       std::string outputs;
       orientation worker = orientation::real;
+      form_mode forms = form_mode::current;
       spot::postprocessor::output_pref preference = spot::postprocessor::Small;
       bool realizability_simplify = false;
       bool header = true;
@@ -68,6 +75,7 @@ namespace {
         << "  --inputs CSV --outputs CSV  game partition\n"
         << "  --orientation real|direct|unreal-formula|unreal-automaton\n"
         << "  --preference any|small|deterministic (default small)\n"
+        << "  --forms current|all         translation forms (default current)\n"
         << "  --realizability-simplify    mirror Acacia's up-front simplifier\n"
         << "  --no-header                 omit the TSV header\n"
         << "  --version, --help\n";
@@ -113,6 +121,15 @@ namespace {
         else
           fail ("unknown preference " + value);
       }
+      else if (argument == "--forms") {
+        const std::string value = need_arg (i, argc, argv);
+        if (value == "current")
+          result.forms = form_mode::current;
+        else if (value == "all")
+          result.forms = form_mode::all;
+        else
+          fail ("unknown forms mode " + value);
+      }
       else if (argument == "--realizability-simplify")
         result.realizability_simplify = true;
       else if (argument == "--no-header")
@@ -130,7 +147,10 @@ namespace {
     }
     if (result.formula_path.empty () or result.hoa_path.empty ())
       fail ("--formula and --hoa are required");
-    if (result.hoa_path == "-")
+    // Writing the HOA to stdout would interleave it with the TSV, so the
+    // header is suppressed there.  All-forms mode prints no HOA to stdout, so
+    // the header is both safe and needed to identify the schema-2 columns.
+    if (result.hoa_path == "-" and result.forms == form_mode::current)
       result.header = false;
     return result;
   }
@@ -191,6 +211,31 @@ namespace {
     return recurse (recurse, std::move (formula));
   }
 
+  size_t action_signatures (const spot::const_twa_graph_ptr& aut) {
+    std::set<std::tuple<unsigned, unsigned, spot::acc_cond::mark_t>> signatures;
+    for (unsigned source = 0; source < aut->num_states (); ++source)
+      for (const auto& edge : aut->out (source))
+        signatures.emplace (source, edge.dst, edge.acc);
+    return signatures.size ();
+  }
+
+  std::string form_hoa_path (const std::string& path, const std::string& form) {
+    const size_t slash = path.find_last_of ("/\\");
+    const size_t basename = slash == std::string::npos ? 0 : slash + 1;
+    const size_t extension = path.find_last_of ('.');
+    if (extension == std::string::npos or extension <= basename)
+      return path + '.' + form;
+    return path.substr (0, extension) + '.' + form + path.substr (extension);
+  }
+
+  void write_hoa (const std::string& path, const spot::const_twa_graph_ptr& aut) {
+    std::ofstream output {path};
+    if (not output)
+      fail ("cannot write " + path);
+    spot::print_hoa (output, aut);
+    output.flush ();
+  }
+
 }  // namespace
 
 int main (int argc, char** argv) {
@@ -228,32 +273,86 @@ int main (int argc, char** argv) {
     acacia::translation::validate_options (translation_options);
     auto automaton = create_automaton (formula, translator, arguments.preference);
 
-    std::ostream* hoa = &std::cout;
-    std::ofstream hoa_file;
-    if (arguments.hoa_path != "-") {
-      hoa_file.open (arguments.hoa_path);
-      if (not hoa_file)
-        fail ("cannot write " + arguments.hoa_path);
-      hoa = &hoa_file;
-    }
-    spot::print_hoa (*hoa, automaton);
-    hoa->flush ();
+    if (arguments.forms == form_mode::current) {
+      std::ostream* hoa = &std::cout;
+      std::ofstream hoa_file;
+      if (arguments.hoa_path != "-") {
+        hoa_file.open (arguments.hoa_path);
+        if (not hoa_file)
+          fail ("cannot write " + arguments.hoa_path);
+        hoa = &hoa_file;
+      }
+      spot::print_hoa (*hoa, automaton);
+      hoa->flush ();
 
-    const spot::scc_info scc (automaton);
-    if (arguments.header)
-      std::cout << "schema_version\tname\tschedule\torientation\tpreference\t"
-                   "inputs\toutputs\tformula_nodes\tstates\tedges\tacceptance_sets\t"
-                   "sccs\tstate_acc\tdeterministic\tcomplete\tuniversal\thoa\n";
-    if (arguments.hoa_path != "-")
-      std::cout << "1\t" << arguments.name << '\t' << arguments.schedule << '\t'
-                << orientation_name (arguments.worker) << '\t'
-                << preference_name (arguments.preference) << '\t' << arguments.inputs << '\t'
-                << arguments.outputs << '\t' << spot::length (formula) << '\t'
-                << automaton->num_states () << '\t' << automaton->num_edges () << '\t'
-                << automaton->num_sets () << '\t' << scc.scc_count () << '\t'
-                << automaton->prop_state_acc ().is_true () << '\t'
-                << spot::is_deterministic (automaton) << '\t' << spot::is_complete (automaton)
-                << '\t' << spot::is_universal (automaton) << '\t' << arguments.hoa_path << '\n';
+      const spot::scc_info scc (automaton);
+      if (arguments.header)
+        std::cout << "schema_version\tname\tschedule\torientation\tpreference\t"
+                     "inputs\toutputs\tformula_nodes\tstates\tedges\tacceptance_sets\t"
+                     "sccs\tstate_acc\tdeterministic\tcomplete\tuniversal\thoa\n";
+      if (arguments.hoa_path != "-")
+        std::cout << "1\t" << arguments.name << '\t' << arguments.schedule << '\t'
+                  << orientation_name (arguments.worker) << '\t'
+                  << preference_name (arguments.preference) << '\t' << arguments.inputs << '\t'
+                  << arguments.outputs << '\t' << spot::length (formula) << '\t'
+                  << automaton->num_states () << '\t' << automaton->num_edges () << '\t'
+                  << automaton->num_sets () << '\t' << scc.scc_count () << '\t'
+                  << automaton->prop_state_acc ().is_true () << '\t'
+                  << spot::is_deterministic (automaton) << '\t'
+                  << spot::is_complete (automaton) << '\t'
+                  << spot::is_universal (automaton) << '\t' << arguments.hoa_path << '\n';
+    }
+    else {
+      spot::translator b_native_translator (dictionary, &translation_options);
+      b_native_translator.set_type (spot::postprocessor::Buchi);
+      b_native_translator.set_pref (arguments.preference);
+      auto b_native = b_native_translator.run (formula);
+
+      spot::translator g_native_translator (dictionary, &translation_options);
+      g_native_translator.set_type (spot::postprocessor::GeneralizedBuchi);
+      g_native_translator.set_pref (arguments.preference);
+      auto g_native = g_native_translator.run (formula);
+      auto b_from_g = spot::degeneralize (g_native);
+      auto s_from_g = spot::sbacc (b_from_g);
+
+      const std::vector<std::pair<std::string, spot::twa_graph_ptr>> forms {
+        {"S-current", automaton},
+        {"B-native", b_native},
+        {"G-native", g_native},
+        {"B-from-G", b_from_g},
+        {"S-from-G", s_from_g},
+      };
+
+      if (arguments.header)
+        std::cout << "schema_version\tname\tschedule\torientation\tpreference\t"
+                     "inputs\toutputs\tformula_nodes\tstates\tedges\tacceptance_sets\t"
+                     "sccs\tstate_acc\tdeterministic\tcomplete\tuniversal\thoa\t"
+                     "form\tlocal_core\tglobal_core\taccepting_sccs\t"
+                     "action_signatures\n";
+
+      for (const auto& [form, current] : forms) {
+        const std::string hoa_path = arguments.hoa_path == "-"
+                                         ? "-"
+                                         : form_hoa_path (arguments.hoa_path, form);
+        if (arguments.hoa_path != "-")
+          write_hoa (hoa_path, current);
+
+        const spot::scc_info scc (current);
+        const auto core = acacia::acceptance_core::compute (current);
+        std::cout << "2\t" << arguments.name << '\t' << arguments.schedule << '\t'
+                  << orientation_name (arguments.worker) << '\t'
+                  << preference_name (arguments.preference) << '\t' << arguments.inputs << '\t'
+                  << arguments.outputs << '\t' << spot::length (formula) << '\t'
+                  << current->num_states () << '\t' << current->num_edges () << '\t'
+                  << current->num_sets () << '\t' << scc.scc_count () << '\t'
+                  << current->prop_state_acc ().is_true () << '\t'
+                  << spot::is_deterministic (current) << '\t'
+                  << spot::is_complete (current) << '\t'
+                  << spot::is_universal (current) << '\t' << hoa_path << '\t'
+                  << form << '\t' << core.local_core << '\t' << core.global_core << '\t'
+                  << core.accepting_sccs << '\t' << action_signatures (current) << '\n';
+      }
+    }
     dictionary->unregister_all_my_variables (&owner);
   } catch (const std::exception& error) {
     std::cerr << error.what () << '\n';

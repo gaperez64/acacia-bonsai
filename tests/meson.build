@@ -90,6 +90,14 @@ test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
 
+acceptance_core_test = executable ('acceptance-core-test',
+                                   'acceptance_core_test.cc',
+                                   include_directories : inc,
+                                   dependencies : [spot_dep, bddx_dep])
+test ('acceptance-core',
+      acceptance_core_test,
+      suite : ['unit', 'acceptance-core'])
+
 mp_nba_test = executable ('mp-nba-test',
                           'mp_nba_test.cc',
                           include_directories : inc,
