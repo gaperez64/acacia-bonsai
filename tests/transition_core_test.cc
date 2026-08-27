@@ -12,6 +12,8 @@
 #include <spot/tl/parse.hh>
 #include <bddx.h>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/postproc.hh>
+#include <spot/twaalgos/sbacc.hh>
 #include <spot/twaalgos/translate.hh>
 #include <string>
 #include <string_view>
@@ -23,6 +25,24 @@ namespace utils {
 }
 
 namespace {
+
+  // Always state-based, whatever the build's frontend setting is: these tests
+  // compare the two booleanizations, so the state-based side must exist even
+  // when create_automaton is configured to keep acceptance on transitions.
+  spot::twa_graph_ptr build_state_based (std::string_view text) {
+    spot::parsed_formula parsed = spot::parse_infix_psl (std::string {text});
+    if (not parsed.f or not parsed.errors.empty ())
+      return nullptr;
+    auto dictionary = spot::make_bdd_dict ();
+    spot::translator translator (dictionary);
+    translator.set_type (spot::postprocessor::BA);
+    translator.set_pref (spot::postprocessor::Small | spot::postprocessor::SBAcc);
+    auto aut = translator.run (parsed.f);
+    if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ())
+      aut = spot::sbacc (aut);
+    return aut;
+  }
+
 
   constexpr std::string_view formulas[] = {
     "GF a",
@@ -39,23 +59,14 @@ namespace {
     "X X G F a",
   };
 
-  spot::twa_graph_ptr build (std::string_view text) {
-    spot::parsed_formula parsed = spot::parse_infix_psl (std::string {text});
-    if (not parsed.f or not parsed.errors.empty ())
-      return nullptr;
-    auto dictionary = spot::make_bdd_dict ();
-    spot::translator translator (dictionary);
-    spot::formula formula = parsed.f;
-    return create_automaton (formula, translator);
-  }
 
   // A state-based Buchi automaton is also a legitimate transition-based one,
   // so the two passes must select the same number of counting states.
   bool check_agreement () {
     bool ok = true;
     for (std::string_view text : formulas) {
-      auto state_based = build (text);
-      auto transition_based = build (text);
+      auto state_based = build_state_based (text);
+      auto transition_based = build_state_based (text);
       if (not state_based or not transition_based) {
         std::cerr << "could not build " << text << '\n';
         ok = false;
@@ -78,7 +89,7 @@ namespace {
   bool check_ordering () {
     bool ok = true;
     for (std::string_view text : formulas) {
-      auto aut = build (text);
+      auto aut = build_state_based (text);
       if (not aut)
         continue;
       const size_t threshold = boolean_states::transition_core::make (aut, 10) ();
@@ -107,7 +118,7 @@ namespace {
   bool check_tail_never_increments () {
     bool ok = true;
     for (std::string_view text : formulas) {
-      auto aut = build (text);
+      auto aut = build_state_based (text);
       if (not aut)
         continue;
       const size_t threshold = boolean_states::transition_core::make (aut, 10) ();

@@ -6,6 +6,8 @@
 #include <bddx.h>
 #include <spot/tl/parse.hh>
 #include <spot/twa/twagraph.hh>
+#include <spot/twaalgos/postproc.hh>
+#include <spot/twaalgos/sbacc.hh>
 #include <spot/twaalgos/translate.hh>
 
 #include <iostream>
@@ -19,6 +21,24 @@ namespace utils {
 }
 
 namespace {
+
+  // Always state-based, whatever the build's frontend setting is: these tests
+  // compare the two booleanizations, so the state-based side must exist even
+  // when create_automaton is configured to keep acceptance on transitions.
+  spot::twa_graph_ptr build_state_based (std::string_view text) {
+    spot::parsed_formula parsed = spot::parse_infix_psl (std::string {text});
+    if (not parsed.f or not parsed.errors.empty ())
+      return nullptr;
+    auto dictionary = spot::make_bdd_dict ();
+    spot::translator translator (dictionary);
+    translator.set_type (spot::postprocessor::BA);
+    translator.set_pref (spot::postprocessor::Small | spot::postprocessor::SBAcc);
+    auto aut = translator.run (parsed.f);
+    if (aut->num_states () > 0 and not aut->prop_state_acc ().is_true ())
+      aut = spot::sbacc (aut);
+    return aut;
+  }
+
 
   bool expect_census (std::string_view name,
                       const acacia::acceptance_core::census& got,
@@ -153,10 +173,12 @@ namespace {
         continue;
       }
 
-      auto dictionary = spot::make_bdd_dict ();
-      spot::translator translator (dictionary);
-      spot::formula formula = parsed.f;
-      auto aut = create_automaton (formula, translator);
+      auto aut = build_state_based (text);
+      if (not aut) {
+        std::cerr << "could not build " << text << '\n';
+        ok = false;
+        continue;
+      }
       const auto census = acacia::acceptance_core::compute (aut);
       const size_t saturation =
           boolean_states::forward_saturation::make (aut, 10) ();
