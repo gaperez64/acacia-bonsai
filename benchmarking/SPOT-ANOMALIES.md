@@ -1,7 +1,10 @@
 # Spot `ltlsynt` anomaly reproducers
 
-These commands revalidate two upstream-facing observations from the August 2026 Acacia–ltlsynt
-gap campaign. They were run with `ltlsynt (spot) 2.15.1.dev`; the local executable SHA-256 was
+These commands revalidate two observations from the August 2026 Acacia–ltlsynt gap campaign.
+Only the first is upstream-facing: the acceptance-set limit below turned out to be this
+repository's own Spot build configuration, and the correction is recorded in that section.
+
+They were run with `ltlsynt (spot) 2.15.1.dev`; the local executable SHA-256 was
 `ea761a1c0594278bd4b525369977677520c8b9d3dcc2f5a45dab91d961663900`.
 
 This file is a prepared report, not evidence that an external issue or email has been sent.
@@ -23,6 +26,16 @@ The default command prints `UNREALIZABLE`; the second prints `REALIZABLE`. Both 
 The wrapper prints the fully expanded `ltlsynt --ins=... --outs=...` command before executing it.
 
 ## Acceptance-set limit with the same flags
+
+**Correction: this is our own build configuration, not a Spot defect, and it should not be
+reported upstream.** Spot's acceptance-set capacity is a compile-time option,
+`--enable-max-accsets=N`, whose default is `8*sizeof(unsigned)` = 32 and which must be a multiple
+of that. `.github/workflows/main.yml:69` sets `--enable-max-accsets=64`, and the local install
+reports `SPOT_MAX_ACCSETS 64` in `spot/misc/_config.h`, so we already doubled the default and then
+hit the value we chose. Raising it further (128, 256) is a rebuild, not an upstream change.
+Whether that actually decides these instances is untested -- they may simply exhaust time or memory
+at a higher limit instead. The reproducer below is retained because the failure is real and
+reproducible; only its attribution was wrong.
 
 The plan described six status-2 rows. Revalidation of the distinct SYNTCOMP25 formula/partition
 pairs found five immediate status-2 failures and corrected the physical-instance count; the
