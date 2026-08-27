@@ -699,6 +699,65 @@ per-instance landing bar.
   registrations with `register_all_variables_of` on move, with regression tests for both
   extract-without-build and automaton-outlives-cube_set.
 
+- **The MP-CNF route is retired: the structure is absent exactly where the gap is.** The plan for
+  completing MP extraction gated all implementation on one measurement, and the measurement says
+  stop.
+
+  The framing first: MP-CNF needs no new normal form. `Phi = AND_j (OR Inf(a) OR OR Fin(b))` *is*
+  generalized Streett acceptance and its negation is Rabin, so `acc_cond::is_rabin_like` /
+  `is_streett_like` read the cubes directly off any automaton. That part was never the problem.
+
+  On the five instances the residual census names as decisive, all automata built for `!phi` so the
+  comparison is apples to apples:
+
+  | instance | baseline `BA(!phi)` | MP limit automaton | safety conjuncts | monitor states | pairs |
+  |---|---:|---:|---:|---:|---:|
+  | `lift5` | 1127 (6.9 s) | 1239 (10.3 s) | 0 | 0 | 1 |
+  | `lift_gr13` | 173 (0.67 s) | 148 (1.50 s) | 0 | 0 | 1 |
+  | `lift_unary_enc3` | 178 (0.95 s) | 205 (1.03 s) | 0 | 0 | 1 |
+  | `robot_grid2_2` | 98 (0.22 s) | 58 (0.25 s) | 0 | 0 | 1 |
+  | `amba_decomposed_lock13` | 5 | 5 | 0 | 0 | 1 |
+
+  Three findings, each fatal on its own. **There is no safety/limit split**: after
+  `nnf(to_delta2)` every one of these is a single non-`G` conjunct, so the monitor-only
+  architecture has nothing to monitor and contributes `M = 0`. **The acceptance is degenerate**:
+  Spot lands on `Inf(0)`, plain Buechi with one set, and every Buechi condition is trivially both
+  Rabin-like and Streett-like with one pair, so `p = 1` reports no structure at all. **There is no
+  size win**: the limit automaton is 0.6x to 1.1x the baseline, and Level A would product it with
+  the cube structure, roughly doubling it.
+
+  Widening to the whole SYNTCOMP26 panel shows the structure does exist elsewhere -- 45 of 180
+  instances have multi-set acceptance, up to 15 clauses -- but cross-tabulating it against whether
+  Acacia actually solves the instance shows it sits on the wrong side:
+
+  | acceptance sets | Acacia solves | Acacia fails |
+  |---|---:|---:|
+  | 1 (Buechi, degenerate) | 67 | 2 |
+  | 2-4 sets | 22 | 4 |
+  | 5+ sets | 23 | 12 |
+  | translation did not finish in 20 s | 24 | 26 |
+  | total | 136 | 44 |
+
+  **26 of the 44 failures are instances where the translation itself does not finish.** MP
+  extraction is strictly downstream of that translation -- it reads acceptance off an automaton it
+  must first build -- so it cannot help them. At most 16 failures carry exploitable structure, and
+  on those the size measurement above says the result would be no smaller.
+
+  Caveat on that last table: the probe translates the whole formula monolithically, while Acacia
+  decomposes first, so its "did not finish" column overstates what Acacia's own pipeline stalls on
+  and should not be read as an M3 count. The three findings on the decisive instances were measured
+  directly and do not depend on it.
+
+  What this also explains: B3's 6 gains were never structural. There is no MP structure on those
+  formulas to exploit. They were a different translation path happening to suit a few instances --
+  the same phenomenon as `small+any` unlocking `amba_decomposed_lock` and nothing else. That is an
+  argument for the racing portfolio, which is already measured as free, and against any specialized
+  frontend.
+
+  The Level A construction stays in the tree, compiled out, correct and tested. Reviving it needs
+  full determinization to produce non-degenerate acceptance, which is the architecture this project
+  chose not to adopt.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and
