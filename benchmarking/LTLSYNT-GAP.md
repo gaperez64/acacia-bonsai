@@ -809,6 +809,59 @@ per-instance landing bar.
   `prioritized_arbiter_pb_8_pe_` 20 to 10, `scheduler-real` 20 to 11, `robot-to-target-charging6`
   20 to 12, `robot_collect_samples_v1-real` 19 to 10, `thermostat-GF-unreal2` 16 to 10.
 
+- **Transition-based Buchi: structural gate passed, solver gate failed. The custom-frontend
+  programme is rejected for the current architecture.** This is the decisive result of the
+  translation sprint, and it is a clean negative: the counting core shrank exactly as predicted and
+  the solver did not care.
+
+  The prototype is real and end-to-end. `create_automaton` emits `postprocessor::Buchi` without
+  `SBAcc` under `-Dacacia_transition_acceptance=true`; the rank increment travels from the edge
+  through `solver/transition_payload.hh` into the action vectors; and
+  `boolean_states::transition_core` replaces the state-acceptance booleanization using the SCC
+  census. `apply()` was never touched -- it was already a transition-based update.
+
+  Measured against a matched control that differs in *only* the two acceptance options -- same
+  release flags, same `no_preprocessing`, equivariant off on both -- on the SYNTCOMP26 panel at the
+  17 s cap:
+
+  | arm | solved | REAL | UNREAL | timeout | PAR-2 |
+  |---|---:|---:|---:|---:|---:|
+  | control, state-based | **125** | 43 | 82 | 55 | **2022.3** |
+  | TBA, transition-based | 124 | 43 | 81 | 56 | 2046.2 |
+
+  Against the sprint's own TBA success criterion: zero semantic errors, **pass**; non-worse PAR-2,
+  **fail**; three new solves in two families, **fail** (zero new solves); 10% geometric-mean
+  speedup, **fail** (median time ratio on the 124 mutually solved workers is 1.000); 20% lower peak
+  RSS on a hard cohort, **fail** (median 0.982 over ten instances taking more than 3 s, a 1.8%
+  reduction).
+
+  The single lost instance is not noise. `robot-cat-unreal-1d-unreal` re-run five times in
+  isolation solves 5/5 under both arms, but at 12.66-13.95 s state-based against 15.72-16.77 s
+  transition-based -- a consistent 24% slowdown that pushes it over the cap. It accounts for
+  essentially the whole PAR-2 difference.
+
+  **What this establishes is more useful than the prototype.** The structural claim was correct and
+  is now measured twice: transition acceptance cuts the median counting core from 10 to 8, with
+  41.4% of 648 workers at or below 80% and action signatures falling rather than rising. The
+  counting core *is* `posets::vectors::bool_threshold`, the numeric dimension of the downset
+  vectors. And shrinking it by that much changed nothing. So the dimension of the vectors is not
+  what governs solver cost on this corpus; the antichain size at a given dimension is, which is the
+  M2 bucket the census already pointed at and which no frontend change can reach.
+
+  Gate G is therefore moot in practice. `G-native` sits a further 12.5% below `B-native` (median
+  core 7 versus 8) on 28.9% of workers, but a 20% reduction produced zero runtime effect, so a
+  further 12.5% has no mechanism by which to produce one. Per the sprint's stop criterion -- TBA
+  passes the structural gate but does not improve the solver, and TGBA shows no much-stronger
+  structural reduction -- the conclusion is **reject the custom frontend for the current Acacia
+  architecture**, retaining what was built as research infrastructure.
+
+  One hazard found on the way is worth keeping even though the programme stops: Spot's
+  `state_is_accepting()` throws on a transition-based automaton, and
+  `equivariant_k_bounded_safety_aut.hh:188` calls it while the equivariant solver is on by default.
+  A transition-acceptance build is only sound with that path disabled. `surely_losing`, `elevator`,
+  `cap_census`, `no_ios_precomputation` and the Python interface share the restriction. Anyone
+  reviving this must port those call sites rather than discover the throw at runtime.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and
