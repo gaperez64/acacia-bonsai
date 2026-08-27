@@ -138,8 +138,11 @@ namespace acacia::mp_nba {
       bdd support = bdd_support (color);
       while (support != bddtrue) {
         const int variable = bdd_var (support);
-        if (spot::formula ap = dict->ap_from_var (variable))
-          aut->register_ap (ap);
+        // bdd_dict::ap_from_var was added after Spot 2.15.1, which CI pins;
+        // read the public variable table directly so both versions build.
+        if (unsigned (variable) < dict->bdd_map.size ()
+            and dict->bdd_map[variable].type == spot::bdd_dict::var)
+          aut->register_ap (dict->bdd_map[variable].f);
         support = bdd_high (support);
       }
     }
