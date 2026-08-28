@@ -986,6 +986,50 @@ per-instance landing bar.
   of each spec. Putting both tools on tlsf-tools' `tlsf2ltl` plus
   `tlsfinfo --expanded-ins/--expanded-outs` would remove that confound regardless of solver payoff.
 
+- **Gate M0 fails absolutely: the MP fragment is empty on this corpus, and the direct cube-counter
+  sprint terminates before the solver.** The combined-frontend proposal rested on Manna-Pnueli cube
+  extraction succeeding on the formula components the solver actually sees. Its section 10.2 made a
+  fair objection to the earlier 2-of-300 measurement: that was taken on *undecomposed* formulas,
+  and Acacia decomposes first. So the census was rebuilt around exactly the solver's front path --
+  `realizability_simplifier`, then `split_independent_formulas` on the output APs, then extraction
+  per component on the safe formula before the REAL path negates it.
+
+  Over 345 instances (the M2 cohort plus both panels), 956 rows:
+
+  | level | rows | accepted | **nontrivial** |
+  |---|---:|---:|---:|
+  | whole undecomposed formula | 428 | 4 | **0** |
+  | decomposed components | 528 | 4 | **0** |
+
+  524 of 528 components report `unsupported`. All four accepts are the constant formulas `1` and
+  `0` -- instances the simplifier had already reduced to a constant -- with zero predicates. **No
+  instance in the corpus has a single component with nontrivial MP structure.**
+
+  Decomposition therefore does not lift reach at all: 4 degenerate accepts before, 4 after. That
+  settles the one legitimate reason to doubt the earlier measurement.
+
+  The shapes explain why. Of the unsupported components, 273 begin with a Boolean combination, 140
+  with `G(`, 42 with `G!`, and only 41 with `GF` -- and even those are not conjunctions of
+  GF/FG-over-Boolean clauses. Real specifications are safety-dominant, which is the same thing the
+  earlier MP-CNF measurement found from the automaton side (`Inf(0)`, one acceptance set, zero
+  safety conjuncts after Delta2 on the decisive instances).
+
+  The agreed fallback -- build the solver on whatever M0 accepts and let Gate M1 judge the
+  mechanism -- is vacuous here, because M0 accepts nothing. Gate M1 compares direct counters
+  against the explicit MP-NBA on covered workers, and the covered cohort is empty, so the
+  comparison is undefined. Implementing `k_bounded_mp_direct` would produce a solver that provably
+  cannot fire on any benchmark instance, so it was not implemented.
+
+  This is the sixth frontend negative and it is the handoff's own outcome 4: no frontend
+  representation tested materially changes the geometry. Together with the two mechanism results
+  above -- dimension is not the lever, and the antichains are already simulation-closed -- the
+  evidence is that the M2 bottleneck is intrinsic to the bounded-safety game. Further effort
+  belongs in the downset/solver representation or in the external fast path, not in the frontend.
+
+  Retained as research infrastructure: `extract_cubes` now reports `extraction_stats` with a
+  precise decline status and node/cube/predicate caps, and `src/research/mp_census.cc` plus
+  `benchmarking/mp-census.py` reproduce this census.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and

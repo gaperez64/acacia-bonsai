@@ -96,6 +96,63 @@ namespace {
     return false;
   }
 
+  bool check_extraction_stats () {
+    auto formula = parse ("GF a | FG b");
+    if (not formula)
+      return false;
+
+    auto dict = spot::make_bdd_dict ();
+    acacia::mp_nba::extraction_options options;
+    acacia::mp_nba::extraction_stats stats;
+    auto cubes = acacia::mp_nba::extract_cubes (*formula, dict, options,
+                                                 &stats);
+    if (not cubes
+        or stats.status != acacia::mp_nba::extraction_status::accepted
+        or stats.nodes_before == 0 or stats.nodes_after_delta2 == 0
+        or stats.cubes != 1 or stats.predicates != 2
+        or stats.max_inf_width != 1) {
+      std::cerr << "stats: accepted extraction reported incorrect metrics\n";
+      return false;
+    }
+
+    options.node_cap = 1;
+    if (acacia::mp_nba::extract_cubes (*formula, dict, options, &stats)
+        or stats.status != acacia::mp_nba::extraction_status::node_cap
+        or stats.nodes_before == 0 or stats.nodes_after_delta2 <= 1) {
+      std::cerr << "stats: node cap was not reported precisely\n";
+      return false;
+    }
+
+    options.node_cap = 0;
+    options.cube_cap = 0;
+    if (acacia::mp_nba::extract_cubes (*formula, dict, options, &stats)
+        or stats.status != acacia::mp_nba::extraction_status::cube_cap) {
+      std::cerr << "stats: cube cap was not reported precisely\n";
+      return false;
+    }
+
+    options.cube_cap = 1024;
+    options.predicate_cap = 1;
+    if (acacia::mp_nba::extract_cubes (*formula, dict, options, &stats)
+        or stats.status != acacia::mp_nba::extraction_status::predicate_cap
+        or stats.predicates != 2) {
+      std::cerr << "stats: predicate cap was not reported precisely\n";
+      return false;
+    }
+
+    auto unsupported = parse ("a U b");
+    if (not unsupported)
+      return false;
+    options.predicate_cap = 0;
+    if (acacia::mp_nba::extract_cubes (*unsupported, dict, options, &stats)
+        or stats.status != acacia::mp_nba::extraction_status::unsupported
+        or stats.nodes_before == 0 or stats.nodes_after_delta2 == 0) {
+      std::cerr << "stats: unsupported shape was not reported precisely\n";
+      return false;
+    }
+    return true;
+  }
+
   bool check_cube_set_lifetimes () {
     auto formula = parse ("GF a | FG b");
     if (not formula)
@@ -170,6 +227,7 @@ int main () {
   ok &= check_targeted_formulas ();
   ok &= check_rejected_formula ();
   ok &= check_cube_cap ();
+  ok &= check_extraction_stats ();
   ok &= check_cube_set_lifetimes ();
   ok &= check_random_formulas ();
   return ok ? 0 : 1;

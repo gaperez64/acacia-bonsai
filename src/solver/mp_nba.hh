@@ -1,17 +1,43 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <optional>
+#include <set>
 #include <utility>
 #include <vector>
 
 #include <bddx.h>
 #include <spot/tl/delta2.hh>
+#include <spot/tl/length.hh>
 #include <spot/tl/nenoform.hh>
 #include <spot/twa/formula2bdd.hh>
 #include <spot/twa/twagraph.hh>
 
 namespace acacia::mp_nba {
+
+  struct extraction_options {
+    size_t cube_cap = 1024;
+    size_t node_cap = 0;
+    size_t predicate_cap = 0;
+  };
+
+  enum class extraction_status {
+    accepted,
+    unsupported,
+    node_cap,
+    cube_cap,
+    predicate_cap,
+  };
+
+  struct extraction_stats {
+    size_t nodes_before = 0;
+    size_t nodes_after_delta2 = 0;
+    size_t cubes = 0;
+    size_t predicates = 0;
+    size_t max_inf_width = 0;
+    extraction_status status = extraction_status::unsupported;
+  };
 
   struct cube {
     std::vector<bdd> fin;  // Colors that must occur only finitely often.
@@ -77,6 +103,10 @@ namespace acacia::mp_nba {
 
     friend std::optional<cube_set>
     extract_cubes (spot::formula, const spot::bdd_dict_ptr&, size_t);
+
+    friend std::optional<cube_set>
+    extract_cubes (spot::formula, const spot::bdd_dict_ptr&,
+                   const extraction_options&, extraction_stats*);
 
     spot::bdd_dict_ptr dict_;
     std::vector<cube> cubes_;
@@ -155,35 +185,94 @@ namespace acacia::mp_nba {
         aut->new_edge (source, destination, condition, acceptance);
     }
 
+    inline void fill_formula_stats (const std::vector<formula_cube>& cubes,
+                                    extraction_stats* stats) {
+      if (not stats)
+        return;
+
+      stats->cubes = cubes.size ();
+      std::set<spot::formula> predicates;
+      for (const formula_cube& cube : cubes) {
+        predicates.insert (cube.fin.begin (), cube.fin.end ());
+        predicates.insert (cube.inf.begin (), cube.inf.end ());
+        stats->max_inf_width =
+            std::max (stats->max_inf_width, cube.inf.size ());
+      }
+      stats->predicates = predicates.size ();
+    }
+
   }  // namespace detail
 
   inline std::optional<cube_set>
   extract_cubes (spot::formula f, const spot::bdd_dict_ptr& dict,
-                 size_t cube_cap) {
-    if (not f or not dict)
+                 const extraction_options& options,
+                 extraction_stats* stats) {
+    if (stats)
+      *stats = {};
+    if (not f)
       return std::nullopt;
 
     try {
+      if (stats)
+        stats->nodes_before = spot::length (f);
+      if (not dict)
+        return std::nullopt;
+
       cube_set result {dict};
       const spot::formula normalized =
           spot::negative_normal_form (spot::to_delta2 (f));
+      const size_t normalized_nodes = spot::length (normalized);
+      if (stats)
+        stats->nodes_after_delta2 = normalized_nodes;
+      if (options.node_cap != 0 and normalized_nodes > options.node_cap) {
+        if (stats)
+          stats->status = extraction_status::node_cap;
+        return std::nullopt;
+      }
+
       std::vector<detail::formula_cube> formula_cubes;
 
-      if (normalized.is (spot::op::tt))
+      if (normalized.is (spot::op::tt)) {
+        if (stats)
+          stats->status = extraction_status::accepted;
         return result;
+      }
 
       if (normalized.is (spot::op::And)) {
         for (spot::formula clause : normalized) {
           if (clause.is (spot::op::tt))
             continue;
-          if (formula_cubes.size () == cube_cap
-              or not detail::append_clause (clause, formula_cubes))
+          if (not detail::append_clause (clause, formula_cubes))
             return std::nullopt;
+          if (formula_cubes.size () > options.cube_cap) {
+            detail::fill_formula_stats (formula_cubes, stats);
+            if (stats)
+              stats->status = extraction_status::cube_cap;
+            return std::nullopt;
+          }
         }
       }
       else {
-        if (cube_cap == 0
-            or not detail::append_clause (normalized, formula_cubes))
+        if (not detail::append_clause (normalized, formula_cubes))
+          return std::nullopt;
+        if (formula_cubes.size () > options.cube_cap) {
+          detail::fill_formula_stats (formula_cubes, stats);
+          if (stats)
+            stats->status = extraction_status::cube_cap;
+          return std::nullopt;
+        }
+      }
+
+      detail::fill_formula_stats (formula_cubes, stats);
+      if (options.predicate_cap != 0 and stats
+          and stats->predicates > options.predicate_cap) {
+        stats->status = extraction_status::predicate_cap;
+        return std::nullopt;
+      }
+      if (options.predicate_cap != 0 and not stats) {
+        extraction_stats measured;
+        detail::fill_formula_stats (formula_cubes, &measured);
+        if (measured.predicates > options.predicate_cap)
           return std::nullopt;
       }
 
@@ -200,11 +289,21 @@ namespace acacia::mp_nba {
               spot::formula_to_bdd (color, dict, &result));
         result.cubes_.push_back (std::move (converted));
       }
+      if (stats)
+        stats->status = extraction_status::accepted;
       return result;
     }
     catch (...) {
       return std::nullopt;
     }
+  }
+
+  inline std::optional<cube_set>
+  extract_cubes (spot::formula f, const spot::bdd_dict_ptr& dict,
+                 size_t cube_cap) {
+    extraction_options options;
+    options.cube_cap = cube_cap;
+    return extract_cubes (std::move (f), dict, options, nullptr);
   }
 
   inline spot::twa_graph_ptr

@@ -52,4 +52,11 @@ if get_option('build_research_tools')
     install: false,
     dependencies: [spot_dep, bddx_dep],
   )
+  acacia_mp_census_exe = executable(
+    'acacia-mp-census',
+    'research/mp_census.cc',
+    include_directories: inc,
+    install: false,
+    dependencies: [spot_dep, bddx_dep],
+  )
 endif
