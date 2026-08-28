@@ -35,6 +35,15 @@ if get_option('build_research_tools')
     install: false,
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
   )
+  if get_option ('acacia_enable_diagnostics')
+    acacia_antichain_replay_exe = executable(
+      'acacia-antichain-replay',
+      'research/antichain_replay.cc',
+      include_directories: inc,
+      install: false,
+      dependencies: [spot_dep, bddx_dep],
+    )
+  endif
   acacia_automata_study_exe = executable(
     'acacia-automata-study',
     ['research/automata_study.cc', 'version.cc'],

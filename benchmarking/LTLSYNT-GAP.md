@@ -903,6 +903,53 @@ per-instance landing bar.
   snapshots taken from the solver's own automaton rather than on this census, or it would measure
   the wrong thing.
 
+- **Gate S fails: the antichains are already simulation-closed, so the width is intrinsic.** The
+  density pre-gate above showed abundant dominance structure, so the next question was whether
+  saturating rank vectors along the simulation preorder collapses the antichain. It does not, and
+  the reason is sharper than "no effect".
+
+  Method: dump the solver's real antichain (`src/solver/antichain_snapshot.hh`, behind
+  `ACACIA_ENABLE_DIAGNOSTICS` and an environment variable, so both the shipping build and an
+  ordinary diagnostics build are unaffected), then replay it offline
+  (`src/research/antichain_replay.cc`): compute the relation, apply
+  `cl(v)[p] = max (v[p], max over q simulating p of cap_p (v[q]))` with `cap_p` the identity on
+  counting coordinates and `{-1 to -1, >=0 to 0}` on the Boolean tail, re-prune with the ordinary
+  coordinatewise order, and report the survivor ratio.
+
+  Over the M2 cohort -- 298 measurements, 40 instances, 25 families, 109 workers with an antichain
+  of at least 8 maxima spanning 29 instances and 16 families:
+
+  | | |
+  |---|---|
+  | survivor ratio | median **1.0000**, min 1.0000, max 1.0000 |
+  | workers at or below 0.5 | **0 / 109** (Gate S needs a median at or below 0.5) |
+  | workers at or below 0.2 | **0** (Gate S needs at least three) |
+  | workers where the closure changed *any* vector | **0 / 109** |
+  | total dominance pairs across them | 329,306 |
+  | closure inflationary / idempotent | 271 / 271 both |
+
+  It holds on the largest antichains in the corpus: `robot_grid2_2` 18,432 maxima,
+  `lift3` 14,034, `finding_nemo_1` 7,869, `round_robin_arbiter4` 4,552 with 25,749 dominance pairs,
+  `lift_unary_enc4` 4,032 with **70,417** dominance pairs -- and not one coordinate raised. A
+  single-instance drill-down confirmed it independently: 0 of 2,589,216 coordinates raised.
+
+  **The mechanism.** Acacia's `cpre` propagates ranks backward along every edge, so when `q`
+  simulates `p` the fixed point has already credited `p` with everything `q` could give it. The
+  maxima come out of the computation already closed. Saturation therefore has nothing to add, and
+  the antichain's elements are genuinely incomparable *semantically*, not merely coordinatewise.
+
+  Taken with the transition-based Buchi result above, two independent representation changes have
+  now failed for complementary reasons: reducing the vector dimension by 20% changed nothing, and
+  the vectors are already saturated with respect to the strongest cheap semantic order available.
+  That is evidence the M2 antichain width is intrinsic to the bounded-safety game rather than an
+  artefact of how Acacia encodes it, which is where any further effort should be pointed.
+
+  Per the sprint's own rule the live saturated solver is not implemented; the snapshot and replay
+  tooling stays as research infrastructure. Two defects were fixed while building it and are worth
+  knowing for anyone reusing the snapshots: the parent forks one child per strategy and
+  `DECOMPOSE_SPEC` splits further, so a per-process counter made every child write `aut-0` and
+  mixed vectors of different lengths under one automaton; the directory key now includes the pid.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and
