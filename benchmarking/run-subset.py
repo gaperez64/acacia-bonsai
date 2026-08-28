@@ -79,6 +79,14 @@ def main():
     p.add_argument("--timeout", type=float, default=25.0)
     p.add_argument("--csv", default=None)
     p.add_argument("--limit", type=int, default=0, help="cap number of instances (0=all)")
+    p.add_argument(
+        "--tlsf-map",
+        help="TSV of 'instance<TAB>path.tlsf'; when given, feed Acacia the TLSF "
+             "source with -T instead of the converted .ltl/.part pair.  Only the "
+             "TLSF route carries TLSF's indexed-family metadata, which the "
+             "equivariant solver consumes as symmetry hints, so the two routes "
+             "are not equivalent inputs.",
+    )
     args = p.parse_args()
     if args.systemd_scope and args.runner_prefix:
         p.error("--systemd-scope and --runner-prefix are mutually exclusive")
@@ -101,18 +109,33 @@ def main():
     extra = shlex.split(args.flags)
     runner_prefix = shlex.split(args.runner_prefix)
     source_map = None if args.instances_dir else load_source_map(pathlib.Path(args.source_map))
+    tlsf_map = {}
+    if args.tlsf_map:
+        for raw in pathlib.Path(args.tlsf_map).read_text().splitlines():
+            if not raw.strip():
+                continue
+            name, path = raw.split("\t")
+            tlsf_map[name] = path
     rows = []
     solved = 0
     tot_time = 0.0
     print(f"# bin={args.bin}\n# flags={args.flags!r}  timeout={args.timeout}s  n={len(insts)}")
     for base in insts:
-        ltl_path = pathlib.Path(args.instances_dir) / base if args.instances_dir else source_map.get(base)
-        if ltl_path is None or not ltl_path.exists():
-            print(f"  {base:44s} MISSING")
-            continue
-        ltl = str(ltl_path)
-        ins, outs = read_ltl_partition(ltl)
-        cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
+        if tlsf_map:
+            tlsf = tlsf_map.get(base)
+            if tlsf is None or not pathlib.Path(tlsf).exists():
+                print(f"  {base:44s} MISSING-TLSF")
+                continue
+            cmd = runner_prefix + [args.bin, "-T", tlsf] + extra
+        else:
+            ltl_path = (pathlib.Path(args.instances_dir) / base
+                        if args.instances_dir else source_map.get(base))
+            if ltl_path is None or not ltl_path.exists():
+                print(f"  {base:44s} MISSING")
+                continue
+            ltl = str(ltl_path)
+            ins, outs = read_ltl_partition(ltl)
+            cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
         if args.systemd_scope:
             run = run_systemd_scope(
                 cmd,
