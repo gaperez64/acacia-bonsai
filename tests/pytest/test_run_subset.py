@@ -37,6 +37,37 @@ def test_default_source_map_is_derived_from_repository():
     )
 
 
+def test_read_tlsf_map_accepts_headered_input(tmp_path):
+    tlsf_map = tmp_path / "tlsf-sources.tsv"
+    tlsf_map.write_text("instance\ttlsf\nAlarm.ltl\tAlarm.tlsf\n")
+
+    assert load_module().read_tlsf_map(tlsf_map) == {"Alarm.ltl": "Alarm.tlsf"}
+
+
+def test_read_tlsf_map_accepts_headerless_input(tmp_path):
+    tlsf_map = tmp_path / "ad-hoc.tsv"
+    tlsf_map.write_text("Alarm.ltl\tAlarm.tlsf\n")
+
+    assert load_module().read_tlsf_map(tlsf_map) == {"Alarm.ltl": "Alarm.tlsf"}
+
+
+def test_read_tlsf_map_keeps_paths_relative_without_corpus(tmp_path):
+    tlsf_map = tmp_path / "ad-hoc.tsv"
+    tlsf_map.write_text("Alarm.ltl\tnested/Alarm.tlsf\n")
+
+    assert load_module().read_tlsf_map(tlsf_map)["Alarm.ltl"] == "nested/Alarm.tlsf"
+
+
+def test_read_tlsf_map_resolves_paths_from_corpus(tmp_path):
+    tlsf_map = tmp_path / "tlsf-sources.tsv"
+    tlsf_map.write_text("instance\ttlsf\nAlarm.ltl\tnested/Alarm.tlsf\n")
+    corpus = tmp_path / "corpus"
+
+    assert load_module().read_tlsf_map(tlsf_map, corpus)["Alarm.ltl"] == str(
+        corpus / "nested/Alarm.tlsf"
+    )
+
+
 def test_parse_tlsf_semantics_is_order_insensitive():
     parse = load_module()._parse_tlsf_semantics
 

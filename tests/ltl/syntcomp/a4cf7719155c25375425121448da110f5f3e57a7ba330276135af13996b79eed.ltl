@@ -1,1 +1,0 @@
-G ((g_0 && G !X r_0 -> F !g_0) && (g_0 && X (!X r_0 && !g_0) -> X (X r_0 R !g_0)) && ((g_1 && G !X r_1 -> F !g_1) && (g_1 && X (!X r_1 && !g_1) -> X (X r_1 R !g_1))) && (!g_0 && true || true && !g_1) && ((X r_0 && X X r_1 -> X X X X X X X X X (g_0 && g_1)) && true)) && (X r_0 R !g_0 && G (X r_0 -> F g_0) && (X r_1 R !g_1 && G (X r_1 -> F g_1)))

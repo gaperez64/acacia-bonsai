@@ -1,2 +1,0 @@
-.inputs pred__x6prev_lt_x6_ bin_x50 bin_x40 bin_st_2 bin_st_3 pred__x7_lt_x7prev_ bin_x60 bin_x41 bin_x51 bin_x71 pred__x3prev_lt_x3_ pred__x7prev_lt_x7_ pred__x2prev_lt_x2_ bin_x30 bin_c0 bin_st_1 bin_x70 pred__x3_lt_x3prev_ bin_x11 pred__x2_lt_x2prev_ bin_st_0 bin_c2 bin_x31 pred__x1_lt_x1prev_ bin_x20 pred__x6_lt_x6prev_ bin_x21 bin_c1 pred__x4prev_lt_x4_ bin_x10 pred__x4_lt_x4prev_ bin_x61 pred__x5prev_lt_x5_ pred__x5_lt_x5prev_ pred__x1prev_lt_x1_ stop inc
-.outputs setc cinc

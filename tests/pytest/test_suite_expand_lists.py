@@ -68,8 +68,8 @@ def test_skipped_suites_emit_skipped_records(tmp_path):
     module.main(out)
 
     assert out.getvalue().splitlines() == [
-        "ST\trealizable\t!skip\ttest.ltl\trealizable/test.ltl",
-        "SB\trealizable\t!skip\tbench.ltl\trealizable/bench.ltl",
+        "ST\trealizable\t!skip\ttest.ltl\trealizable/test.ltl\t",
+        "SB\trealizable\t!skip\tbench.ltl\trealizable/bench.ltl\t",
     ]
 
 
@@ -88,7 +88,7 @@ def test_source_map_redirects_storage_without_changing_logical_name(tmp_path):
     module.main(out)
 
     assert out.getvalue().splitlines() == [
-        "B\tsyntcomp26\tpanel\tAlarm.ltl\tsyntcomp/abc.ltl"
+        "B\tsyntcomp26\tpanel\tAlarm.ltl\tsyntcomp/abc.ltl\t"
     ]
 
 
@@ -103,3 +103,100 @@ def test_source_map_requires_every_listed_instance(tmp_path):
 
     with pytest.raises(KeyError, match="no source for 'missing.ltl'"):
         module.main(io.StringIO())
+
+
+def test_records_have_six_tab_separated_fields(tmp_path):
+    module = load_expand_lists()
+    root = tmp_path / "suites"
+    folder = root / "tests" / "realizable"
+    folder.mkdir(parents=True)
+    (folder / "smoke.list").write_text("test.ltl\n")
+    module.ROOT = root
+
+    out = io.StringIO()
+    module.main(out)
+
+    assert out.getvalue().splitlines()[0].split("\t") == [
+        "T",
+        "realizable",
+        "smoke",
+        "test.ltl",
+        "realizable/test.ltl",
+        "",
+    ]
+
+
+def test_tlsf_source_allows_missing_ltl_source(tmp_path):
+    module = load_expand_lists()
+    root = tmp_path / "suites"
+    folder = root / "benchmarks" / "syntcomp26"
+    folder.mkdir(parents=True)
+    (folder / "panel.list").write_text("Alarm.ltl\n")
+    (folder / "sources.tsv").write_text("instance\tsource\n")
+    (folder / "tlsf-sources.tsv").write_text(
+        "instance\ttlsf\nAlarm.ltl\tAlarm.tlsf\n"
+    )
+    module.ROOT = root
+
+    out = io.StringIO()
+    module.main(out)
+
+    assert out.getvalue().splitlines() == [
+        "B\tsyntcomp26\tpanel\tAlarm.ltl\t\tAlarm.tlsf"
+    ]
+
+
+def test_tlsf_source_without_ltl_source_map_emits_empty_ltl_field(tmp_path):
+    module = load_expand_lists()
+    root = tmp_path / "suites"
+    folder = root / "benchmarks" / "syntcomp26"
+    folder.mkdir(parents=True)
+    (folder / "panel.list").write_text("Alarm.ltl\n")
+    (folder / "tlsf-sources.tsv").write_text(
+        "instance\ttlsf\nAlarm.ltl\tAlarm.tlsf\n"
+    )
+    module.ROOT = root
+
+    out = io.StringIO()
+    module.main(out)
+
+    assert out.getvalue().splitlines() == [
+        "B\tsyntcomp26\tpanel\tAlarm.ltl\t\tAlarm.tlsf"
+    ]
+
+
+def test_ltl_only_source_emits_empty_tlsf_field(tmp_path):
+    module = load_expand_lists()
+    root = tmp_path / "suites"
+    folder = root / "benchmarks" / "syntcomp26"
+    folder.mkdir(parents=True)
+    (folder / "panel.list").write_text("Alarm.ltl\n")
+    (folder / "sources.tsv").write_text(
+        "instance\tsource\nAlarm.ltl\tsyntcomp/abc.ltl\n"
+    )
+    (folder / "tlsf-sources.tsv").write_text("instance\ttlsf\n")
+    module.ROOT = root
+
+    out = io.StringIO()
+    module.main(out)
+
+    assert out.getvalue().splitlines() == [
+        "B\tsyntcomp26\tpanel\tAlarm.ltl\tsyntcomp/abc.ltl\t"
+    ]
+
+
+def test_tlsf_source_map_rejects_unsafe_paths(tmp_path):
+    module = load_expand_lists()
+    root = tmp_path / "suites"
+    folder = root / "benchmarks" / "syntcomp26"
+    folder.mkdir(parents=True)
+    (folder / "panel.list").write_text("Alarm.ltl\n")
+    (folder / "sources.tsv").write_text("instance\tsource\n")
+    module.ROOT = root
+
+    for invalid in ("/corpus/Alarm.tlsf", "nested/../Alarm.tlsf"):
+        (folder / "tlsf-sources.tsv").write_text(
+            f"instance\ttlsf\nAlarm.ltl\t{invalid}\n"
+        )
+        with pytest.raises(ValueError, match="invalid tlsf"):
+            module.main(io.StringIO())

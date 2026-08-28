@@ -56,6 +56,24 @@ def read_instance_list(path):
     ]
 
 
+def read_tlsf_map(path, tlsf_corpus=None):
+    """Read a headered suite map or a headerless ad-hoc TLSF map."""
+    tlsf_map = {}
+    first_row = True
+    for raw in pathlib.Path(path).read_text().splitlines():
+        if not raw.strip():
+            continue
+        name, tlsf = raw.split("\t")
+        if first_row and (name, tlsf) == ("instance", "tlsf"):
+            first_row = False
+            continue
+        first_row = False
+        if tlsf_corpus is not None:
+            tlsf = str(pathlib.Path(tlsf_corpus) / tlsf)
+        tlsf_map[name] = tlsf
+    return tlsf_map
+
+
 def classify_run(run, tool="acacia"):
     if tool == "ltlsynt":
         return classify_ltlsynt_run(run)
@@ -153,7 +171,12 @@ def main():
     p.add_argument("--limit", type=int, default=0, help="cap number of instances (0=all)")
     p.add_argument(
         "--tlsf-map",
-        help="TSV of 'instance<TAB>path.tlsf'.  With --tool acacia, feed the "
+        help="TSV of 'instance<TAB>path.tlsf'.  Both suite tlsf-sources.tsv "
+             "files with an 'instance<TAB>tlsf' header and headerless ad-hoc "
+             "maps are accepted.  Relative paths are resolved from the "
+             "current working directory unless --tlsf-corpus names the "
+             "corpus directory produced by benchmarking/syntcomp-corpus.py "
+             "materialize.  With --tool acacia, feed the "
              "TLSF source with -T instead of the converted .ltl/.part pair; only "
              "this native TLSF route carries TLSF's indexed-family metadata, "
              "which the equivariant solver consumes as symmetry hints, so the "
@@ -162,6 +185,12 @@ def main():
              "temporary .ltl/.part pair together with ltlsynt's explicit "
              "--semantics flag.  This is both entrant-realistic and stronger "
              "than adapting the formula.",
+    )
+    p.add_argument(
+        "--tlsf-corpus",
+        metavar="DIR",
+        help="resolve --tlsf-map paths relative to the corpus directory produced "
+             "by benchmarking/syntcomp-corpus.py materialize",
     )
     p.add_argument("--syfco", default="syfco")
     p.add_argument("--syfco-cache", metavar="DIR",
@@ -190,11 +219,7 @@ def main():
     source_map = None if args.instances_dir else load_source_map(pathlib.Path(args.source_map))
     tlsf_map = {}
     if args.tlsf_map:
-        for raw in pathlib.Path(args.tlsf_map).read_text().splitlines():
-            if not raw.strip():
-                continue
-            name, path = raw.split("\t")
-            tlsf_map[name] = path
+        tlsf_map = read_tlsf_map(args.tlsf_map, args.tlsf_corpus)
     temporary_cache = None
     syfco_cache = None
     if args.tool == "ltlsynt" and tlsf_map:

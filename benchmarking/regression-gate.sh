@@ -68,7 +68,8 @@ fi
 
 set +e
 python3 - "$expected" "$testlog" "$meson_status" \
-  "$scratch/baseline.csv" "$scratch/candidate.csv" "$repo_root" <<'PY'
+  "$scratch/baseline.csv" "$scratch/candidate.csv" "$repo_root" \
+  "$build_dir" "$scratch/tlsf-corpus-dir" <<'PY'
 from collections import defaultdict
 import csv
 import json
@@ -83,7 +84,10 @@ meson_status = int(sys.argv[3])
 baseline_csv = pathlib.Path(sys.argv[4])
 candidate_csv = pathlib.Path(sys.argv[5])
 repo_root = pathlib.Path(sys.argv[6])
+build_dir = pathlib.Path(sys.argv[7])
+tlsf_corpus_out = pathlib.Path(sys.argv[8])
 verdict_re = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
+materialize_command = "python3 benchmarking/syntcomp-corpus.py materialize --out DIR"
 
 
 def verdict(stdout):
@@ -91,9 +95,91 @@ def verdict(stdout):
     return matches[-1] if matches and len(set(matches)) == 1 else None
 
 
+def tlsf_failure(key, detail):
+    suite, instance = key
+    raise SystemExit(
+        f"GATE FAIL: {suite}/{instance} needs its TLSF source, but {detail}; "
+        f"run `{materialize_command}` and configure the build with "
+        "-Dacacia_tlsf_corpus_dir=DIR"
+    )
+
+
+tlsf_corpus = None
+
+
+def configured_tlsf_corpus(key):
+    global tlsf_corpus
+    if tlsf_corpus is not None:
+        return tlsf_corpus
+    options_path = build_dir / "meson-info" / "intro-buildoptions.json"
+    try:
+        options = json.loads(options_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        tlsf_failure(key, f"cannot read {options_path}: {exc}")
+    if not isinstance(options, list):
+        tlsf_failure(key, f"{options_path} does not contain a Meson option list")
+    raw_corpus = next(
+        (
+            option.get("value")
+            for option in options
+            if isinstance(option, dict)
+            and option.get("name") == "acacia_tlsf_corpus_dir"
+        ),
+        None,
+    )
+    if not isinstance(raw_corpus, str) or not raw_corpus.strip():
+        tlsf_failure(
+            key,
+            f"acacia_tlsf_corpus_dir is unset in {options_path}",
+        )
+    tlsf_corpus = pathlib.Path(raw_corpus).expanduser().resolve()
+    return tlsf_corpus
+
+
+def load_map(path, value_field):
+    with path.open(newline="") as handle:
+        reader = csv.DictReader(handle, delimiter="\t")
+        expected_header = ["instance", value_field]
+        if reader.fieldnames != expected_header:
+            rendered_header = "\t".join(expected_header)
+            raise SystemExit(
+                f"GATE FAIL: {path}: expected header "
+                f"{rendered_header!r}"
+            )
+        entries = {}
+        for line_no, row in enumerate(reader, start=2):
+            instance = row["instance"]
+            source = row[value_field]
+            source_path = pathlib.PurePosixPath(source)
+            expected_suffix = ".ltl" if value_field == "source" else ".tlsf"
+            if (
+                pathlib.PurePosixPath(instance).name != instance
+                or not instance.endswith(".ltl")
+            ):
+                raise SystemExit(
+                    f"GATE FAIL: {path}:{line_no}: invalid instance {instance!r}"
+                )
+            if (
+                source_path.is_absolute()
+                or ".." in source_path.parts
+                or not source.endswith(expected_suffix)
+            ):
+                raise SystemExit(
+                    f"GATE FAIL: {path}:{line_no}: invalid {value_field} "
+                    f"{source!r}"
+                )
+            if instance in entries:
+                raise SystemExit(
+                    f"GATE FAIL: {path}:{line_no}: duplicate instance {instance!r}"
+                )
+            entries[instance] = source
+    return entries
+
+
 expected = {}
 expected_sources = {}
 source_maps = {}
+test_sources = defaultdict(set)
 with expected_path.open(newline="") as handle:
     for row in csv.DictReader(handle, delimiter="\t"):
         key = (row["suite"], row["instance"])
@@ -107,30 +193,66 @@ with expected_path.open(newline="") as handle:
             ) from exc
         expected[key] = (row["verdict"], baseline_seconds)
 
-        source_map_path = expected_path.parent / key[0] / "sources.tsv"
+        suite_dir = expected_path.parent / key[0]
+        source_map_path = suite_dir / "sources.tsv"
+        tlsf_source_map_path = suite_dir / "tlsf-sources.tsv"
+        ltl_source = None
+        tlsf_source = None
         if source_map_path.is_file():
             if source_map_path not in source_maps:
-                with source_map_path.open(newline="") as source_handle:
-                    source_maps[source_map_path] = {
-                        source_row["instance"]: (
-                            repo_root / "tests" / "ltl" / source_row["source"]
-                        ).resolve()
-                        for source_row in csv.DictReader(source_handle, delimiter="\t")
-                    }
-            try:
-                expected_sources[key] = source_maps[source_map_path][key[1]]
-            except KeyError as exc:
+                source_maps[source_map_path] = load_map(source_map_path, "source")
+            raw_ltl_source = source_maps[source_map_path].get(key[1])
+            if raw_ltl_source is not None:
+                ltl_source = (
+                    repo_root / "tests" / "ltl" / raw_ltl_source
+                ).resolve()
+        if tlsf_source_map_path.is_file():
+            if tlsf_source_map_path not in source_maps:
+                source_maps[tlsf_source_map_path] = load_map(
+                    tlsf_source_map_path, "tlsf"
+                )
+            raw_tlsf_source = source_maps[tlsf_source_map_path].get(key[1])
+            if raw_tlsf_source is not None:
+                corpus_dir = configured_tlsf_corpus(key)
+                tlsf_source = (corpus_dir / raw_tlsf_source).resolve()
+                if not tlsf_source.is_file():
+                    tlsf_failure(key, f"{tlsf_source} is absent")
+
+        # regress-expected.tsv froze baseline_seconds on the vendored LTL basis,
+        # so landing-bar remeasures there even though Meson now uses -T.  The
+        # syntcomp25 panel bases matched across four arms: 111 solved, 0
+        # differing instances.
+        if ltl_source is not None:
+            if not ltl_source.is_file():
                 raise SystemExit(
-                    f"GATE FAIL: {source_map_path}: no source for {key[1]!r}"
-                ) from exc
+                    f"GATE FAIL: cannot locate expected source for "
+                    f"{key[0]}/{key[1]}: {ltl_source} is absent"
+                )
+            expected_sources[key] = ltl_source
+        elif tlsf_source is not None:
+            expected_sources[key] = tlsf_source
+        elif source_map_path.is_file() or tlsf_source_map_path.is_file():
+            raise SystemExit(
+                f"GATE FAIL: {suite_dir}: no source for {key[1]!r}"
+            )
         else:
             expected_sources[key] = (
                 repo_root / "tests" / "ltl" / key[0] / key[1]
             ).resolve()
 
+        test_sources[key].add(expected_sources[key])
+        if tlsf_source is not None:
+            # TLSF-driven Meson suites use -T even when landing-bar can retain
+            # the existing vendored LTL as its remeasurement basis.
+            test_sources[key].add(tlsf_source)
+
+if tlsf_corpus is not None:
+    tlsf_corpus_out.write_text(str(tlsf_corpus), encoding="utf-8")
+
 source_to_expected = defaultdict(list)
-for key, source in expected_sources.items():
-    source_to_expected[source].append(key)
+for key, sources in test_sources.items():
+    for source in sources:
+        source_to_expected[source].append(key)
 
 observed = {}
 problems = []
@@ -138,10 +260,25 @@ with testlog_path.open() as handle:
     for line_no, line in enumerate(handle, start=1):
         row = json.loads(line)
         command = row.get("command") or []
-        if "-F" not in command:
-            problems.append(f"testlog line {line_no}: command has no -F input")
+        input_flags = [flag for flag in ("-F", "-T") if flag in command]
+        if not input_flags:
+            problems.append(
+                f"testlog line {line_no}: command has no -F or -T input"
+            )
             continue
-        instance_path = pathlib.Path(command[command.index("-F") + 1]).resolve()
+        if len(input_flags) != 1:
+            problems.append(
+                f"testlog line {line_no}: command has both -F and -T inputs"
+            )
+            continue
+        input_flag = input_flags[0]
+        input_index = command.index(input_flag)
+        if input_index + 1 >= len(command):
+            problems.append(
+                f"testlog line {line_no}: command has no value after {input_flag}"
+            )
+            continue
+        instance_path = pathlib.Path(command[input_index + 1]).resolve()
         candidates = source_to_expected.get(instance_path, [])
         if not candidates:
             problems.append(
@@ -234,6 +371,16 @@ if (( parse_status != 0 )); then
   exit "$parse_status"
 fi
 
+landing_tlsf_args=()
+if [[ -s "$scratch/tlsf-corpus-dir" ]]; then
+  tlsf_corpus_dir=$(<"$scratch/tlsf-corpus-dir")
+  landing_tlsf_args=(
+    --tlsf-source-map
+    "syntcomp25=$repo_root/tests/suites/benchmarks/syntcomp25/tlsf-sources.tsv"
+    --tlsf-corpus "$tlsf_corpus_dir"
+  )
+fi
+
 python3 "$repo_root/benchmarking/landing-bar.py" \
   "$scratch/baseline.csv" "$scratch/candidate.csv" \
   --timeout 17 \
@@ -241,5 +388,6 @@ python3 "$repo_root/benchmarking/landing-bar.py" \
   --candidate-bin "$build_dir/src/acacia-bonsai" \
   --source-map "syntcomp24=$repo_root/tests/suites/benchmarks/syntcomp24/sources.tsv" \
   --source-map "syntcomp25=$repo_root/tests/suites/benchmarks/syntcomp25/sources.tsv" \
+  "${landing_tlsf_args[@]}" \
   --memory-max 8G \
   --memory-swap-max 0

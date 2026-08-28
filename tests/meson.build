@@ -306,10 +306,11 @@ endif
 # iteration below (historically used to disable `large` suites).
 expand_script = files ('suites' / 'expand-lists.py')
 expand_res = run_command (py, expand_script, check : true)
-manifest = expand_res.stdout ().strip ().split ('\n')
+manifest = expand_res.stdout ().split ('\n')
 
 # Build the two dictionaries from the manifest.
-# Each meaningful line is: KIND \t FOLDER \t SUITE \t FILE \t SOURCE
+# Each meaningful line is:
+# KIND \t FOLDER \t SUITE \t FILE \t SOURCE \t TLSF_SOURCE
 # where KIND is one of { T, B, ST, SB } — the `S` prefix marks a skipped
 # suite (name starts with `!`); those lines are ignored here, matching
 # the old behaviour of skipping suites whose key started with `!`.
@@ -328,6 +329,7 @@ foreach line : manifest
   suite  = parts[2]
   file   = parts[3]
   source = parts[4]
+  tlsf_source = parts[5]
 
   if not _append.has_key (kind)
     # 'ST' / 'SB' — skipped, don't populate.
@@ -347,7 +349,9 @@ foreach line : manifest
   if not folder_map.has_key (suite)
     folder_map += { suite : [] }
   endif
-  folder_map += { suite : folder_map[suite] + [file + '\t' + source] }
+  folder_map += {
+    suite : folder_map[suite] + [file + '\t' + source + '\t' + tlsf_source]
+  }
   d += { folder : folder_map }
 
   if kind == 'T'
@@ -361,23 +365,35 @@ endforeach
 # Test suite (`meson test`)
 #############################
 
+tlsf_corpus_dir = get_option ('acacia_tlsf_corpus_dir')
+skipped_tlsf_entries = 0
+
 foreach folder, testset : test_files
   foreach suite, files_in_suite : testset
     foreach record : files_in_suite
       record_parts = record.split ('\t')
       file = record_parts[0]
       source = record_parts[1]
-      filename = 'ltl' / source
-      if not fs.exists (filename)
-        error ('File ' + filename + ' not found (referenced by '
-               + folder + '/' + suite + ').')
+      tlsf_source = record_parts[2]
+      if tlsf_source != ''
+        if tlsf_corpus_dir == ''
+          skipped_tlsf_entries += 1
+          continue
+        endif
+        source_args = ['-T', tlsf_corpus_dir / tlsf_source]
+      else
+        filename = 'ltl' / source
+        if not fs.exists (filename)
+          error ('File ' + filename + ' not found (referenced by '
+                 + folder + '/' + suite + ').')
+        endif
+        source_args = ['-F', files (filename)]
       endif
       foreach backend, opt : test_backends
         test (backend + '/' + file,
               check_real_exe,
-              args : [ '-p',  ## prefix every line with the name of the test
-                       opt,   ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
-                       '-F', files (filename) ],
+              # opt selects acacia-bonsai (-a) or another configured backend.
+              args : ['-p', opt] + source_args,
               suite : [
                 backend,
                 backend + '/' + suite,
@@ -406,17 +422,26 @@ foreach folder, testsets : benchmark_files
       record_parts = record.split ('\t')
       file = record_parts[0]
       source = record_parts[1]
-      filename = 'ltl' / source
-      if not fs.exists (filename)
-        error ('File ' + filename + ' not found (referenced by '
-               + folder + '/' + suite + ').')
+      tlsf_source = record_parts[2]
+      if tlsf_source != ''
+        if tlsf_corpus_dir == ''
+          skipped_tlsf_entries += 1
+          continue
+        endif
+        source_args = ['-T', tlsf_corpus_dir / tlsf_source]
+      else
+        filename = 'ltl' / source
+        if not fs.exists (filename)
+          error ('File ' + filename + ' not found (referenced by '
+                 + folder + '/' + suite + ').')
+        endif
+        source_args = ['-F', files (filename)]
       endif
       foreach backend, opt : benchmark_backends
         benchmark (backend + '/' + file,
                    check_real_exe,
-                   args : [ '-p',  ## prefix every line with the name of the test
-                            opt,   ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
-                            '-F', files (filename) ],
+                   # opt selects acacia-bonsai (-a) or another configured backend.
+                   args : ['-p', opt] + source_args,
                    suite : [
                      backend,
                      backend + '/' + suite,
@@ -434,6 +459,15 @@ foreach folder, testsets : benchmark_files
     endforeach
   endforeach
 endforeach
+
+if skipped_tlsf_entries > 0
+  message (
+    skipped_tlsf_entries.to_string ()
+    + ' TLSF suite entries were skipped because acacia_tlsf_corpus_dir is empty. '
+    + 'Materialize them with `python3 benchmarking/syntcomp-corpus.py '
+    + 'materialize --out DIR` and configure with -Dacacia_tlsf_corpus_dir=DIR.'
+  )
+endif
 
 #############################
 # Synthesis test suite

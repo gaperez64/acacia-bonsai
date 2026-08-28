@@ -1,2 +1,0 @@
-.inputs bin_x1 bin_x0 pred___xprev_add__minus_txprev__lt__x_add__minus_tx__ pred__x_lt_xprev_ pred___x_add__minus_tx__lt__xprev_add__minus_txprev__ bin_x_sub_tx1 bin_st_2 pred__xprev_lt_x_ bin_st_1 bin_x_sub_tx0 bin_st_0 inc stay
-.outputs cdec cinc

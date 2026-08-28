@@ -6,6 +6,8 @@ option('build_research_tools', type: 'boolean', value: false,
        description: 'Build uninstalled experiment helpers such as HOA replay')
 option('acacia_enable_tlsf_frontend', type: 'boolean', value: false,
        description: 'Build the optional native TLSF frontend (requires flex and bison)')
+option('acacia_tlsf_corpus_dir', type: 'string', value: '',
+       description: 'Path to the directory produced by benchmarking/syntcomp-corpus.py materialize')
 option('acacia_compiler_profile', type: 'combo',
        choices: ['debug', 'release', 'lowmem'],
        value: 'debug',

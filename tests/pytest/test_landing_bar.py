@@ -2,6 +2,7 @@ import csv
 import importlib.util
 import pathlib
 import sys
+from unittest import mock
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -182,3 +183,109 @@ def test_multi_suite_source_maps_resolve_empty_partition_side(
     assert stdout == "UNREALIZABLE\n"
     assert stderr == ""
     assert command[-2:] == ["-o", ""]
+
+
+def test_run_solver_builds_tlsf_command(tmp_path):
+    tlsf = tmp_path / "example.tlsf"
+    tlsf.write_text("INFO {}\nMAIN {}\n")
+    solver = tmp_path / "solver"
+    solver.write_text("#!/bin/sh\nprintf 'REALIZABLE\\n'\n")
+    solver.chmod(0o755)
+
+    with mock.patch.dict("os.environ", {"ACACIA_OUTER_CGROUP": "1"}):
+        result, stdout, stderr, command = landing_bar.run_solver(
+            solver,
+            tmp_path,
+            tlsf.name,
+            1.0,
+            "8G",
+            "0",
+        )
+
+    assert result.verdict == "REALIZABLE"
+    assert stdout == "REALIZABLE\n"
+    assert stderr == ""
+    assert command == [str(solver), "-T", str(tlsf)]
+
+
+def test_run_solver_keeps_ltl_partition_command(tmp_path):
+    suite_dir = tmp_path / "tests" / "suites" / "benchmarks" / "panel"
+    suite_dir.mkdir(parents=True)
+    ltl_root = tmp_path / "tests" / "ltl"
+    ltl_root.mkdir(parents=True)
+    ltl = ltl_root / "content.ltl"
+    ltl.write_text("G request\n")
+    ltl.with_suffix(".part").write_text(".inputs request\n.outputs grant\n")
+    source_map = suite_dir / "sources.tsv"
+    source_map.write_text("instance\tsource\nexample.ltl\tcontent.ltl\n")
+    tlsf_source_map = suite_dir / "tlsf-sources.tsv"
+    tlsf_source_map.write_text("instance\ttlsf\nexample.ltl\texample.tlsf\n")
+    tlsf_corpus = tmp_path / "corpus"
+    tlsf_corpus.mkdir()
+    (tlsf_corpus / "example.tlsf").write_text("INFO {}\nMAIN {}\n")
+    solver = tmp_path / "solver"
+    solver.write_text("#!/bin/sh\nprintf 'REALIZABLE\\n'\n")
+    solver.chmod(0o755)
+
+    with mock.patch.dict("os.environ", {"ACACIA_OUTER_CGROUP": "1"}):
+        result, stdout, stderr, command = landing_bar.run_solver(
+            solver,
+            {"panel": source_map},
+            "panel/example.ltl",
+            1.0,
+            "8G",
+            "0",
+            tlsf_source_maps={"panel": tlsf_source_map},
+            tlsf_corpus=tlsf_corpus,
+        )
+
+    assert result.verdict == "REALIZABLE"
+    assert stdout == "REALIZABLE\n"
+    assert stderr == ""
+    assert command == [
+        str(solver),
+        "-F",
+        str(ltl),
+        "-i",
+        "request",
+        "-o",
+        "grant",
+    ]
+
+
+def test_tlsf_source_map_resolves_through_cli_corpus(tmp_path):
+    baseline = tmp_path / "baseline.csv"
+    candidate = tmp_path / "candidate.csv"
+    write_rows(baseline, [row("fragile.ltl", "REALIZABLE", 15.9)])
+    write_rows(candidate, [row("fragile.ltl", "TIMEOUT", 17.0)])
+
+    corpus = tmp_path / "corpus"
+    nested = corpus / "nested"
+    nested.mkdir(parents=True)
+    tlsf = nested / "fragile.tlsf"
+    tlsf.write_text("INFO {}\nMAIN {}\n")
+    tlsf_source_map = tmp_path / "tlsf-sources.tsv"
+    tlsf_source_map.write_text(
+        "instance\ttlsf\nfragile.ltl\tnested/fragile.tlsf\n"
+    )
+    solver = tmp_path / "solver"
+    solver.write_text("#!/bin/sh\nprintf 'REALIZABLE\\n'\n")
+    solver.chmod(0o755)
+
+    with mock.patch.dict("os.environ", {"ACACIA_OUTER_CGROUP": "1"}):
+        status = landing_bar.main(
+            [
+                str(baseline),
+                str(candidate),
+                "--baseline-bin",
+                str(solver),
+                "--candidate-bin",
+                str(solver),
+                "--tlsf-source-map",
+                f"panel={tlsf_source_map}",
+                "--tlsf-corpus",
+                str(corpus),
+            ]
+        )
+
+    assert status == 0

@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from benchlib import classify_acacia_run, read_part, run_process_group, run_systemd_scope
-from suite_paths import load_source_map
+from suite_paths import load_source_map, load_tlsf_source_map
 
 
 SOLVED = {"REALIZABLE", "UNREALIZABLE"}
@@ -112,39 +112,65 @@ def run_solver(
     timeout: float,
     memory_max: str,
     memory_swap_max: str,
+    *,
+    tlsf_source_maps: Mapping[str, pathlib.Path] | None = None,
+    tlsf_corpus: pathlib.Path | None = None,
 ) -> tuple[Result, str, str, list[str]]:
+    suite, separator, instance = key.partition("/")
+    target = pathlib.Path()
+    has_ltl_source = False
     if isinstance(instance_sources, Mapping):
-        suite, separator, instance = key.partition("/")
         source_map_path = instance_sources.get(suite)
-        if not separator or source_map_path is None:
-            ltl = pathlib.Path()
-        else:
+        if separator and source_map_path is not None:
             source_map = load_source_map(source_map_path)
-            ltl = source_map.get(instance, pathlib.Path())
+            if instance in source_map:
+                target = source_map[instance]
+                has_ltl_source = True
     elif instance_sources.is_file():
         source_map = load_source_map(instance_sources)
-        ltl = source_map.get(pathlib.Path(key).name, pathlib.Path())
+        instance_name = pathlib.Path(key).name
+        if instance_name in source_map:
+            target = source_map[instance_name]
+            has_ltl_source = True
     else:
-        ltl = instance_sources / key
-        if not ltl.is_file():
-            ltl = instance_sources / pathlib.Path(key).name
-    if not ltl.is_file():
+        target = instance_sources / key
+        if not target.is_file():
+            target = instance_sources / pathlib.Path(key).name
+
+    if (
+        not target.is_file()
+        and not has_ltl_source
+        and tlsf_source_maps is not None
+        and tlsf_corpus is not None
+        and separator
+    ):
+        tlsf_source_map_path = tlsf_source_maps.get(suite)
+        if tlsf_source_map_path is not None:
+            tlsf_source_map = load_tlsf_source_map(
+                tlsf_source_map_path, tlsf_corpus=tlsf_corpus
+            )
+            target = tlsf_source_map.get(instance, pathlib.Path())
+
+    if not target.is_file():
         raise ValueError(
             f"cannot locate remeasurement target {key} through {instance_sources}"
         )
-    part = ltl.with_suffix(".part")
-    if not part.is_file():
-        raise ValueError(f"missing partition file for remeasurement: {part}")
-    inputs, outputs = read_part(part)
-    command = [
-        str(binary),
-        "-F",
-        str(ltl),
-        "-i",
-        inputs,
-        "-o",
-        outputs,
-    ]
+    if target.suffix.lower() == ".tlsf":
+        command = [str(binary), "-T", str(target)]
+    else:
+        part = target.with_suffix(".part")
+        if not part.is_file():
+            raise ValueError(f"missing partition file for remeasurement: {part}")
+        inputs, outputs = read_part(part)
+        command = [
+            str(binary),
+            "-F",
+            str(target),
+            "-i",
+            inputs,
+            "-o",
+            outputs,
+        ]
     if os.environ.get("ACACIA_OUTER_CGROUP", "").lower() in {
         "1",
         "true",
@@ -212,6 +238,18 @@ def main(argv: list[str] | None = None) -> int:
         metavar="SUITE=PATH",
         help="suite-specific sources.tsv; repeat for multi-suite remeasurements",
     )
+    parser.add_argument(
+        "--tlsf-source-map",
+        action="append",
+        default=[],
+        metavar="SUITE=PATH",
+        help="suite-specific tlsf-sources.tsv; repeat for multi-suite remeasurements",
+    )
+    parser.add_argument(
+        "--tlsf-corpus",
+        type=pathlib.Path,
+        help="directory produced by syntcomp-corpus.py materialize",
+    )
     parser.add_argument("--memory-max", default="8G")
     parser.add_argument("--memory-swap-max", default="0")
     args = parser.parse_args(argv)
@@ -232,6 +270,24 @@ def main(argv: list[str] | None = None) -> int:
             if not source_map_path.is_file():
                 parser.error(f"--source-map is not a file: {source_map_path}")
             instance_sources[suite] = source_map_path
+
+    tlsf_source_maps: dict[str, pathlib.Path] = {}
+    for spec in args.tlsf_source_map:
+        suite, separator, raw_path = spec.partition("=")
+        if not separator or not suite or not raw_path:
+            parser.error("--tlsf-source-map must have the form SUITE=PATH")
+        if suite in tlsf_source_maps:
+            parser.error(f"duplicate --tlsf-source-map suite: {suite}")
+        tlsf_source_map_path = pathlib.Path(raw_path)
+        if not tlsf_source_map_path.is_file():
+            parser.error(
+                f"--tlsf-source-map is not a file: {tlsf_source_map_path}"
+            )
+        tlsf_source_maps[suite] = tlsf_source_map_path
+    if tlsf_source_maps and args.tlsf_corpus is None:
+        parser.error("--tlsf-corpus is required with --tlsf-source-map")
+    if args.tlsf_corpus is not None and not args.tlsf_corpus.is_dir():
+        parser.error(f"--tlsf-corpus is not a directory: {args.tlsf_corpus}")
 
     try:
         baseline = load_csv(args.baseline)
@@ -279,6 +335,14 @@ def main(argv: list[str] | None = None) -> int:
                 f"{extended_timeout:g}s"
             )
             try:
+                tlsf_args = (
+                    {
+                        "tlsf_source_maps": tlsf_source_maps,
+                        "tlsf_corpus": args.tlsf_corpus,
+                    }
+                    if tlsf_source_maps
+                    else {}
+                )
                 baseline_rerun = run_solver(
                     args.baseline_bin,
                     instance_sources,
@@ -286,6 +350,7 @@ def main(argv: list[str] | None = None) -> int:
                     extended_timeout,
                     args.memory_max,
                     args.memory_swap_max,
+                    **tlsf_args,
                 )
                 candidate_rerun = run_solver(
                     args.candidate_bin,
@@ -294,6 +359,7 @@ def main(argv: list[str] | None = None) -> int:
                     extended_timeout,
                     args.memory_max,
                     args.memory_swap_max,
+                    **tlsf_args,
                 )
             except (OSError, ValueError) as exc:
                 failures.append(f"lost {key}: remeasurement failed: {exc}")

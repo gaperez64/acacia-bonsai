@@ -1,2 +1,0 @@
-.inputs pred__y_lt_yprev_ pred__yprev_lt_y_ bin_y0 bin_st_0 done incy
-.outputs updatey updatex

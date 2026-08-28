@@ -76,15 +76,13 @@ ltlsynt: toparity.cc:1874: bool spot::to_parity_generator::try_parity_prefix(
 The process dumps core, so the validation wrapper sees signal 6 and no verdict.
 
 ```sh
-for hash in \
-  67433b94e7a18971c343c4b090042aae3d061a017fc42bebd987dee1fd61fabe \
-  6e39bce10cb9ccb7635992803b30d3049e63921f72934fb7cbc4119f9c925da9
-do
-  /bin/zsh -f build_tlsf/tests/check-real-correct.sh -l -F "tests/ltl/syntcomp/$hash.ltl"
+python3 benchmarking/syntcomp-corpus.py materialize --out tlsf-corpus
+for name in helipad-contradict0 package-delivery-real; do
+  /bin/zsh -f build_tlsf/tests/check-real-correct.sh -l -T "tlsf-corpus/$name.tlsf"
 done
 ```
 
-The hashes are `helipad-contradict0` and `package-delivery-real`. The abort is independent of
+The abort is independent of
 which converter produced the input: it reproduces identically on the vendored pairs and on pairs
 converted by SyFCo from the same TLSF, in all four arms of the converter-basis campaign, at
 5.3--5.4 s and 0.62--0.63 s respectively. Both instances therefore count as unanswered for
