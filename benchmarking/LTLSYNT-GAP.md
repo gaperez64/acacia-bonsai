@@ -862,6 +862,47 @@ per-instance landing bar.
   `cap_census`, `no_ios_precomputation` and the Python interface share the restriction. Anyone
   reviving this must port those call sites rather than discover the throw at runtime.
 
+- **Simulation-density pre-gate passes: the dominance structure the antichains would need is
+  there.** After the TBA negative established that a smaller counting core does not imply a smaller
+  antichain, the next mechanism is semantic dominance -- saturating rank vectors along the direct
+  simulation preorder so the existing coordinatewise SIMD comparison detects simulation-induced
+  dominance without being replaced. Before building antichain snapshots, the cheap question was
+  whether any dominance exists to exploit.
+
+  `src/solver/direct_simulation.hh` computes the greatest direct simulation in the orientation the
+  closure needs (`p <= q` iff `q` simulates `p`, matching each `p --(g,mu)--> p'` by
+  `q --(h,nu)--> q'` with `nu >= mu` and `p' <= q'`). Census over the 68 M2 rows of
+  `gap-census.tsv`, three worker orientations, 1200-state cap:
+
+  | | |
+  |---|---|
+  | S-current workers measured | 152 (21 hit the cap) |
+  | M2 instances covered | 63 of 65, across 24 families |
+  | pair density | median 0.044, p90 0.203 |
+  | states with a strict simulator | median **87.9%**, min 20.3% |
+  | workers above 50% dominated | 128 / 152 |
+  | workers below 10% dominated | **0 / 152** |
+  | equivalent pairs | median **0**, nonzero on 22 / 152 |
+
+  It holds exactly where the antichains hurt: `lift_unary_enc3` 99.8% of 615 states dominated
+  against a peak antichain of 18,404; `robot_grid2_2` 99.9% of 1,185 against 9,383;
+  `round_robin_arbiter4` 98.9% of 453 against 7,154; `lift5` 99.8% of 489 against 6,915.
+
+  The zero-equivalence result is what distinguishes this from what has already been measured.
+  Acacia's existing preprocessing census calls `spot::reduce_direct_sim_sba` and records how many
+  states a *quotient* would merge, which is near zero -- and that is consistent with these numbers,
+  because the simulation *equivalence* really is empty. The one-way *preorder* is dense in the same
+  automata. Those are different objects and only the preorder is what saturation exploits, so the
+  existing census was never evidence against this route.
+
+  **Caveat that constrains the next step.** `automata_study.cc` translates the undecomposed
+  formula, while the solver runs `DECOMPOSE_SPEC` and solves sub-specs: `arbiter8` reads 35 states
+  here against `aut_states=5888` in the census row. These densities are therefore measured on a
+  different, smaller object than the one whose antichain reaches 18,404. Dominance is dense at
+  every scale visible here, which is encouraging, but Gate S must be evaluated on antichain
+  snapshots taken from the solver's own automaton rather than on this census, or it would measure
+  the wrong thing.
+
 ## Open leads
 
 `ltlsynt` proves `lift_unary_enc3` REALIZABLE in 0.04 s, `lift5` in 0.13 s, and
