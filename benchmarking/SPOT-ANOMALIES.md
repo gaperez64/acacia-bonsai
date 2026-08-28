@@ -61,3 +61,34 @@ The hashes correspond to `prioritized_arbiter_unreal2` with 100 and 60 clients a
 `Too many acceptance sets used. The limit is 64.` and exits 2; the validation wrapper maps that
 non-verdict to exit 3. The independently converted SYNTCOMP26 pairs reproduce the same five
 family/size failures.
+
+## `to_parity` assertion failure on two SYNTCOMP26 panel instances
+
+`ltlsynt` aborts with a failed assertion, not a resource limit, on two instances of the
+SYNTCOMP26 panel:
+
+```
+ltlsynt: toparity.cc:1874: bool spot::to_parity_generator::try_parity_prefix(
+    const spot::zielonka_tree&, const spot::twa_graph_ptr&):
+    Assertion `max_scc_color_rec > 0' failed.
+```
+
+The process dumps core, so the validation wrapper sees signal 6 and no verdict.
+
+```sh
+for hash in \
+  67433b94e7a18971c343c4b090042aae3d061a017fc42bebd987dee1fd61fabe \
+  6e39bce10cb9ccb7635992803b30d3049e63921f72934fb7cbc4119f9c925da9
+do
+  /bin/zsh -f build_tlsf/tests/check-real-correct.sh -l -F "tests/ltl/syntcomp/$hash.ltl"
+done
+```
+
+The hashes are `helipad-contradict0` and `package-delivery-real`. The abort is independent of
+which converter produced the input: it reproduces identically on the vendored pairs and on pairs
+converted by SyFCo from the same TLSF, in all four arms of the converter-basis campaign, at
+5.3--5.4 s and 0.62--0.63 s respectively. Both instances therefore count as unanswered for
+`ltlsynt` in every published panel figure, which is why the panel total is 165 and not 167.
+
+This is an assertion inside Spot's Zielonka-tree parity construction, so unlike the acceptance-set
+limit above it is not a knob we chose; it is an upstream defect.

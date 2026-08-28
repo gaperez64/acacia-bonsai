@@ -385,6 +385,21 @@ def classify_acacia_run(run: RunResult) -> str:
     return "ERROR"
 
 
+def classify_ltlsynt_run(run: RunResult) -> str:
+    """Classify a bounded ltlsynt run, requiring output/exit-code agreement."""
+    if run.timed_out:
+        return "TIMEOUT"
+    if run.resource_limited:
+        return "RESOURCE_LIMIT"
+    result = parse_acacia_result(run.stdout + run.stderr)
+    expected_exit = {"REALIZABLE": 0, "UNREALIZABLE": 1}
+    if run.returncode == expected_exit.get(result):
+        return result
+    if result == "UNKNOWN" and run.returncode == 2:
+        return "UNKNOWN"
+    return "ERROR"
+
+
 def read_part(path: str | pathlib.Path) -> tuple[str, str]:
     """Read a TLSF-style .part file as input/output proposition lists."""
     inputs: list[str] = []

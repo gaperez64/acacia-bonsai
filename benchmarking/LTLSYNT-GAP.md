@@ -27,7 +27,9 @@ below. The `ltlsynt` rows are retained from the preceding three-solver campaign 
 | syntcomp26 panel (180) | Acacia 1.x, fresh | 104 | 2709.865 |
 
 This section is replaced wholesale by each new campaign rather than appended to, so it never
-accumulates stale runs.
+accumulates stale runs. The `ltlsynt` rows were measured on the pairs Acacia's own frontend
+produced; a four-arm campaign confirmed that moving `ltlsynt` to its own SyFCo route changes
+none of them, so they stand as measured. See *Comparison basis* below.
 
 The fresh current and Acacia 1.x invocations were serialized and each solver ran in its own
 8 GiB, zero-swap user-systemd scope with a 17-second deadline. Current reproduces the prior
@@ -1029,6 +1031,76 @@ per-instance landing bar.
   Retained as research infrastructure: `extract_cubes` now reports `extraction_stats` with a
   precise decline status and node/cube/predicate caps, and `src/research/mp_census.cc` plus
   `benchmarking/mp-census.py` reproduce this census.
+
+## Comparison basis: each tool converts the TLSF itself
+
+Until 2026-08-28 both tools were fed the same `.ltl`/`.part` corpus, and that corpus was produced
+by **Acacia's own TLSF frontend** (`convert-tlsf-corpus-native.py --native-inspect`). One
+contestant defined the other's input. The basis is now: both tools start from the common `.tlsf`,
+Acacia through its native frontend (`-T`), `ltlsynt` through SyFCo, which is the TLSF reference
+converter and what entrants use. `benchmarking/run-subset.py --tool ltlsynt --tlsf-map` and
+`tests/check-real-correct.sh -l -T` both implement that route, and the latter logs the converter
+and its version into the meson log so no figure can be read without knowing its basis.
+
+The campaign behind this section is archived at `_bm-logs.ltlsynt-route-20260828`.
+
+### The old basis did not distort any published figure
+
+Divergence between the two converters, measured over all 180 SYNTCOMP26 panel instances with
+`benchmarking/check-tlsf-conversion.py`:
+
+| | |
+|---|---:|
+| identical formula AST, after canonicalizing commutative operands | 176 / 180 |
+| identical formula **bytes** | **0 / 180** |
+| genuinely divergent | 4 |
+
+`ltlsynt` was then run on both bases under the standard protocol -- 17 s cap, 8 GiB zero-swap user
+scopes, two passes with the arm order alternated. All four arms scored **165 solved (65 realizable,
+100 unrealizable, 13 timeout, 2 abort) and agreed on all 180 instances**, with zero difference
+between passes. No published `ltlsynt` figure needs re-baselining.
+
+The 2 aborts are a Spot assertion failure that reproduces on both bases; see `SPOT-ANOMALIES.md`.
+
+### Why `ltlsynt` gets `--semantics`, not an adapted formula
+
+The four divergences are not printing artifacts. They have two causes, both about TLSF semantics:
+
+- **SyFCo does not adapt `SEMANTICS` to `TARGET`; Acacia does.** SyFCo's `ltlxba` output prints the
+  formula under the declared `SEMANTICS`, so for a `SEMANTICS: Moore, TARGET: Mealy` file it emits
+  the Moore reading, while Acacia's frontend shifts the inputs to deliver the declared Mealy
+  target. This affects **56 of the 1,586** corpus files.
+- **TLSF `Strict` has no SyFCo or `ltlsynt` counterpart.** Under `Mealy,Strict` Acacia asserts the
+  safety guarantees unconditionally and puts only liveness under the assumption implication; SyFCo
+  emits the plain `A -> G` reading, because the strict form needs `X[!]`, which its `ltlxba`
+  printer refuses. This affects **22 of the 1,586** files, and on those instances `ltlsynt` really
+  is solving a different specification. The wrapper warns when it happens.
+
+The remaining panel divergence is `amba_case_study_unreal_pb_4_pe_`, the known enum-validity
+constraint our frontend emits and SyFCo does not.
+
+The first cause admits two fixes, and the choice between them is measured rather than assumed. On
+the 47 Moore instances of the SYNTCOMP26 selection, at the same cap and protocol, over two passes
+that agreed exactly:
+
+| route | specification | solved |
+|---|---|---:|
+| SyFCo plain output + `ltlsynt --semantics=Moore` | correct | **28** |
+| SyFCo `--overwrite-semantics Mealy` + default Mealy | correct | 25 |
+| SyFCo plain output + default Mealy | **wrong** | 28 |
+
+The first two rows are the same specification and never disagree on a verdict, so the difference is
+purely that `ltlsynt` handles Moore semantics natively far more cheaply than it solves the
+`X`-shifted Mealy encoding: it decides `full_arbiter_unreal1_pb_2_16_pe_`, `_pb_3_7_pe_` and
+`_pb_4_4_pe_` in seconds one way and times out the other. **Adapting the formula would have cost
+`ltlsynt` three instances**, so the harness passes SyFCo's unadapted output together with an
+explicit `--semantics=<declared model>`.
+
+The third row scores 28 only by coincidence; it answers a different specification and is unsound as
+a basis regardless of its total.
+
+Restricted to the 52 non-plain-Mealy instances of the SYNTCOMP26 selection, `ltlsynt` on the SyFCo
+route and on the vendored pairs agree on **all 52, in both passes**, once the semantics are handled.
 
 ## Open leads
 

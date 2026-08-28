@@ -2,10 +2,12 @@
 
 ACABONSAI=@ACABONSAI@
 LTLSYNT=@LTLSYNT@
+SYFCO=@SYFCO@
 export LD_LIBRARY_PATH=${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib:${ACABONSAI:h}/../subprojects/spot/dist/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 childpid=
 childunit=
+ltlsynt_tmp=
 
 test_cgroup_enabled () {
     case ${ACACIA_TEST_CGROUP:-0} in
@@ -31,17 +33,28 @@ stop_child () {
   fi
 }
 
+cleanup_ltlsynt_tmp () {
+  if [[ -n $ltlsynt_tmp ]]; then
+    rm -f -- "$ltlsynt_tmp" "$ltlsynt_tmp.ltl" "$ltlsynt_tmp.part" \
+        "$ltlsynt_tmp.err"
+    ltlsynt_tmp=
+  fi
+}
+
 # Handling most common signals with a trap
 TRAPINT () {
   stop_child
+  cleanup_ltlsynt_tmp
   exit
 }
 TRAPQUIT () {
   stop_child
+  cleanup_ltlsynt_tmp
   exit
 }
 TRAPTERM () {
   stop_child
+  cleanup_ltlsynt_tmp
   exit
 }
 
@@ -114,16 +127,76 @@ parttoinsouts () {
 }
 
 run_ltlsynt () {
+    local syfco_semantics syfco_component machine_model strict
+    local -a semantics_opts
+    semantics_opts=()
+    if [[ -n $tlsf ]]; then
+        if [[ ! -x $SYFCO ]]; then
+            print -u2 -- "error: syfco executable is missing or not executable: $SYFCO"
+            return 127
+        fi
+        ltlsynt_tmp=$(mktemp "${TMPDIR:-/tmp}/check-real-correct.XXXXXXXXXX") || {
+            print -u2 -- 'error: could not create temporary files for syfco.'
+            return 127
+        }
+        if ! syfco_semantics=$("$SYFCO" --print-semantics "$tlsf" \
+                                  2> "$ltlsynt_tmp.err"); then
+            print -u2 -- "error: syfco could not read the semantics of $tlsf"
+            [[ -s $ltlsynt_tmp.err ]] && print -u2 -- "$(<$ltlsynt_tmp.err)"
+            cleanup_ltlsynt_tmp
+            return 127
+        fi
+        machine_model=
+        strict=
+        for syfco_component in ${(s:,:)syfco_semantics}; do
+            syfco_component=${syfco_component//[[:space:]]/}
+            case ${syfco_component:l} in
+                mealy) machine_model=Mealy;;
+                moore) machine_model=Moore;;
+                strict) strict=t;;
+                *)
+                    print -u2 -- "error: unsupported TLSF semantics reported by syfco: $syfco_semantics"
+                    cleanup_ltlsynt_tmp
+                    return 127
+                    ;;
+            esac
+        done
+        if [[ -z $machine_model ]]; then
+            print -u2 -- "error: unsupported TLSF semantics reported by syfco: $syfco_semantics"
+            cleanup_ltlsynt_tmp
+            return 127
+        fi
+
+        if [[ -n $strict ]]; then
+            print -u2 -- 'warning: ltlsynt has no strict-semantics support and is being given the non-strict reading.'
+        fi
+        semantics_opts=("--semantics=$machine_model")
+        if ! "$SYFCO" --format ltlxba --mode fully \
+             --part-file "$ltlsynt_tmp.part" "$tlsf" \
+             > "$ltlsynt_tmp.ltl" 2> "$ltlsynt_tmp.err"; then
+            print -u2 -- "error: syfco could not convert $tlsf"
+            [[ -s $ltlsynt_tmp.err ]] && print -u2 -- "$(<$ltlsynt_tmp.err)"
+            cleanup_ltlsynt_tmp
+            return 127
+        fi
+        ltl=$ltlsynt_tmp.ltl
+        parttoinsouts "$ltlsynt_tmp.part"
+        echo "TLSF converter: $SYFCO ($("$SYFCO" --version))"
+    fi
     echo "Running ltlsynt..."
     if [[ ! -x $LTLSYNT ]]; then
         print -u2 -- "error: ltlsynt executable is missing or not executable: $LTLSYNT"
+        cleanup_ltlsynt_tmp
         return 127
     fi
     # ltlsynt --realizability exits 0 for REALIZABLE and 1 for UNREALIZABLE,
     # which matches the expect==0 / expect==1 convention used below — so we
     # rely on the exit status directly and do not need to parse stdout.
     echoandrun $prog_prefix "$LTLSYNT" --realizability -F "$ltl" --ins="$ins" --outs="$outs" \
-         ${=LTLSYNT_OPTS} $extra_opts
+         $semantics_opts ${=LTLSYNT_OPTS} $extra_opts
+    local res=$?
+    cleanup_ltlsynt_tmp
+    return $res
 }
 
 run_acacia_bonsai () {
@@ -145,9 +218,9 @@ PROG=$0
 usage () {
     cat <<EOF
 Usage: $PROG [-p] -[la+] [-e PROG_PATH] (-F LTL_FILE [-P PART_FILE] | -T TLSF_FILE) [-- OPTS...]
-Runs ltlsynt or acacia-bonsai on an LTL file, or Acacia on a native TLSF file:
+Runs ltlsynt or acacia-bonsai on an LTL or TLSF file:
   -p: prefix every line with the name of the test (useful for meson logging)
-  -l: run ltlsynt ($LTLSYNT)
+  -l: run ltlsynt ($LTLSYNT); with -T, convert the TLSF using syfco first
   -a: run acacia-bonsai ($ACABONSAI)
   -V: run using Valgrind
   -v: verbose
@@ -156,7 +229,7 @@ Runs ltlsynt or acacia-bonsai on an LTL file, or Acacia on a native TLSF file:
   -o EXTRA_OPTS: extra options to the executable
   -F LTL_FILE: file to test
   -P PART_FILE: part file for LTL_FILE; if not provided, infered from LTL_FILE.
-  -T TLSF_FILE: TLSF file to pass directly to Acacia's native frontend.
+  -T TLSF_FILE: TLSF file to pass natively to Acacia or convert for ltlsynt.
 
 The leftover OPTS... are passed as options to the executable.
 
@@ -203,10 +276,6 @@ fi
 if [[ -n $tlsf ]]; then
     if ! [[ -e $tlsf ]]; then
         echo "error: $tlsf should exist."
-        exit 8
-    fi
-    if (( ${progs[(Ie)l]} )); then
-        echo 'error: native TLSF mode is supported by Acacia only.'
         exit 8
     fi
 else

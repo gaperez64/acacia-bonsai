@@ -37,6 +37,55 @@ def test_default_source_map_is_derived_from_repository():
     )
 
 
+def test_parse_tlsf_semantics_is_order_insensitive():
+    parse = load_module()._parse_tlsf_semantics
+
+    assert parse("Strict,Mealy") == ("Mealy", True)
+    assert parse("Moore, Strict") == ("Moore", True)
+    assert parse(" Mealy ") == ("Mealy", False)
+    assert parse("Strict") is None
+    assert parse("Mealy,Moore") is None
+    assert parse("Mealy,Weak") is None
+
+
+def test_convert_tlsf_returns_declared_model_without_overwriting_semantics(tmp_path):
+    module = load_module()
+    tlsf = tmp_path / "example.tlsf"
+    tlsf.write_text("INFO {}\n")
+    output_dir = tmp_path / "converted"
+    output_dir.mkdir()
+    log = tmp_path / "syfco.log"
+    syfco = tmp_path / "syfco"
+    syfco.write_text(
+        "#!/usr/bin/env python3\n"
+        "import pathlib\n"
+        "import sys\n"
+        f"log = pathlib.Path({str(log)!r})\n"
+        "with log.open('a') as stream:\n"
+        "    stream.write(' '.join(sys.argv[1:]) + '\\n')\n"
+        "if sys.argv[1] == '--print-semantics':\n"
+        "    print('Strict,Moore')\n"
+        "else:\n"
+        "    part = pathlib.Path(sys.argv[sys.argv.index('--part-file') + 1])\n"
+        "    part.write_text('.inputs: i\\n.outputs: o\\n')\n"
+        "    print('G(i -> o)')\n"
+    )
+    syfco.chmod(0o755)
+
+    expected = (output_dir / "example.ltl", "Moore")
+    assert module.convert_tlsf(str(syfco), tlsf, output_dir) == expected
+    assert module.convert_tlsf(str(syfco), tlsf, output_dir) == expected
+
+    calls = log.read_text().splitlines()
+    assert calls == [
+        f"--print-semantics {tlsf}",
+        "--format ltlxba --mode fully "
+        f"--part-file {output_dir / 'example.part'} {tlsf}",
+        f"--print-semantics {tlsf}",
+    ]
+    assert "--overwrite-semantics" not in log.read_text()
+
+
 def test_resource_limit_is_not_reported_as_unknown():
     module = load_module()
     run = SimpleNamespace(

@@ -28,6 +28,7 @@ if spot_prefix != ''
 else
   ltlsynt_exe = find_program ('ltlsynt', required : false)
 endif
+syfco_exe = find_program ('syfco', required : false)
 
 #strix_exe = find_program ('strix', required : false)
 
@@ -35,6 +36,12 @@ if ltlsynt_exe.found ()
   conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
 else
   conf_data.set_quoted ('LTLSYNT', '/bin/false')
+endif
+
+if syfco_exe.found ()
+  conf_data.set_quoted ('SYFCO', syfco_exe.full_path ())
+else
+  conf_data.set_quoted ('SYFCO', '/bin/false')
 endif
 
 #if strix_exe.found ()
