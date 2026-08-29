@@ -24,12 +24,6 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
-
 SOLVED_RESULTS = frozenset(("REALIZABLE", "UNREALIZABLE"))
 NON_SOLVED_RESULTS = (
     "TIMEOUT",
@@ -243,6 +237,11 @@ def write_cactus_plot(
     out_prefix: pathlib.Path,
 ) -> tuple[pathlib.Path, pathlib.Path]:
     """Write PNG and PDF cactus plots and return their paths."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
     figure, axis = plt.subplots(figsize=(8, 5))
     colormap = matplotlib.colormaps["viridis"]
     denominator = max(len(series) - 1, 1)
@@ -297,14 +296,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--out-prefix",
-        required=True,
         type=pathlib.Path,
         metavar="PATH",
         help="write PATH.png and PATH.pdf",
     )
     parser.add_argument(
         "--markdown",
-        required=True,
         type=pathlib.Path,
         metavar="PATH",
         help="write the PAR-2 Markdown table to PATH",
@@ -324,6 +321,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if not math.isfinite(args.timeout) or args.timeout <= 0:
         parser.error("--timeout must be finite and greater than zero")
+    if args.out_prefix is None and args.markdown is None:
+        parser.error("at least one of --out-prefix or --markdown is required")
 
     try:
         series: dict[str, dict[str, RunResult]] = {}
@@ -356,14 +355,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         summaries = [
             summarize(label, rows, args.timeout) for label, rows in series.items()
         ]
-        write_markdown(args.markdown, summaries)
-        png, pdf = write_cactus_plot(series, args.title, args.out_prefix)
+        if args.markdown is not None:
+            write_markdown(args.markdown, summaries)
+        if args.out_prefix is not None:
+            try:
+                png, pdf = write_cactus_plot(series, args.title, args.out_prefix)
+            except ImportError as exc:
+                missing_module = exc.name or "matplotlib"
+                raise ValueError(
+                    f"plotting requires the missing module {missing_module!r}; "
+                    "the Markdown table can still be produced by omitting "
+                    "--out-prefix"
+                ) from exc
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
 
-    print(f"wrote {args.markdown}")
-    print(f"wrote {png}")
-    print(f"wrote {pdf}")
+    if args.markdown is not None:
+        print(f"wrote {args.markdown}")
+    if args.out_prefix is not None:
+        print(f"wrote {png}")
+        print(f"wrote {pdf}")
     return 0
 
 

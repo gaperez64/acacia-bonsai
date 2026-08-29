@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import csv
 import importlib.util
+import os
 import pathlib
 import subprocess
 import sys
+
+import pytest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -38,7 +41,7 @@ def row(instance, result, seconds):
     }
 
 
-def test_par2_arithmetic_and_output_files(tmp_path):
+def test_par2_arithmetic_and_markdown(tmp_path):
     module = load_cactus_report()
     source = tmp_path / "solver.csv"
     write_rows(
@@ -58,7 +61,6 @@ def test_par2_arithmetic_and_output_files(tmp_path):
     assert summary.par2 == 24.0
     assert summary.non_solved == {"TIMEOUT": 1}
 
-    prefix = tmp_path / "plots" / "tiny"
     markdown = tmp_path / "plots" / "tiny.md"
     assert module.main(
         [
@@ -68,16 +70,12 @@ def test_par2_arithmetic_and_output_files(tmp_path):
             "Tiny example",
             "--timeout",
             "10",
-            "--out-prefix",
-            str(prefix),
             "--markdown",
             str(markdown),
         ]
     ) == 0
-    outputs = (pathlib.Path(f"{prefix}.png"), pathlib.Path(f"{prefix}.pdf"), markdown)
-    for output in outputs:
-        assert output.is_file()
-        assert output.stat().st_size > 0
+    assert markdown.is_file()
+    assert markdown.stat().st_size > 0
 
     table = markdown.read_text()
     assert "| series | solved | of | PAR-2 (s) | total time on solved (s) |" in table
@@ -86,16 +84,26 @@ def test_par2_arithmetic_and_output_files(tmp_path):
 
 def test_virtual_best_uses_per_instance_minimum_and_keeps_failure(tmp_path):
     module = load_cactus_report()
-    first = {
-        "a.ltl": module.RunResult("REALIZABLE", 5.0),
-        "b.ltl": module.RunResult("TIMEOUT", 17.0),
-        "c.ltl": module.RunResult("UNKNOWN", 0.2),
-    }
-    second = {
-        "a.ltl": module.RunResult("UNREALIZABLE", 2.0),
-        "b.ltl": module.RunResult("REALIZABLE", 3.0),
-        "c.ltl": module.RunResult("ERROR", 0.1),
-    }
+    first_path = tmp_path / "first.csv"
+    second_path = tmp_path / "second.csv"
+    write_rows(
+        first_path,
+        [
+            row("a.ltl", "REALIZABLE", 5.0),
+            row("b.ltl", "TIMEOUT", 17.0),
+            row("c.ltl", "UNKNOWN", 0.2),
+        ],
+    )
+    write_rows(
+        second_path,
+        [
+            row("a.ltl", "UNREALIZABLE", 2.0),
+            row("b.ltl", "REALIZABLE", 3.0),
+            row("c.ltl", "ERROR", 0.1),
+        ],
+    )
+    first = module.load_csv(first_path)
+    second = module.load_csv(second_path)
 
     portfolio = module.make_virtual_best([first, second])
 
@@ -107,6 +115,27 @@ def test_virtual_best_uses_per_instance_minimum_and_keeps_failure(tmp_path):
     assert summary.solved == 2
     assert summary.solved_time == 5.0
     assert summary.par2 == 39.0
+
+    markdown = tmp_path / "portfolio.md"
+    assert module.main(
+        [
+            "--csv",
+            f"first={first_path}",
+            "--csv",
+            f"second={second_path}",
+            "--virtual-best",
+            "portfolio=first,second",
+            "--title",
+            "Portfolio",
+            "--timeout",
+            "17",
+            "--markdown",
+            str(markdown),
+        ]
+    ) == 0
+
+    table = markdown.read_text()
+    assert "| portfolio | **2** | 3 | **39.000** | 5.000 |" in table
 
 
 def test_mismatched_instance_sets_exit_nonzero_and_name_differences(tmp_path):
@@ -151,3 +180,94 @@ def test_mismatched_instance_sets_exit_nonzero_and_name_differences(tmp_path):
     assert "only-first.ltl" in completed.stderr
     assert "only-second.ltl" in completed.stderr
     assert not (tmp_path / "unused.png").exists()
+
+
+def test_figure_files(tmp_path):
+    pytest.importorskip("matplotlib")
+    module = load_cactus_report()
+    source = tmp_path / "solver.csv"
+    write_rows(
+        source,
+        [
+            row("a.ltl", "REALIZABLE", 1.25),
+            row("b.ltl", "UNREALIZABLE", 2.75),
+            row("c.ltl", "TIMEOUT", 10.0),
+        ],
+    )
+
+    prefix = tmp_path / "plots" / "tiny"
+    assert module.main(
+        [
+            "--csv",
+            f"solver={source}",
+            "--title",
+            "Tiny example",
+            "--timeout",
+            "10",
+            "--out-prefix",
+            str(prefix),
+        ]
+    ) == 0
+
+    for output in (pathlib.Path(f"{prefix}.png"), pathlib.Path(f"{prefix}.pdf")):
+        assert output.is_file()
+        assert output.stat().st_size > 0
+
+
+def test_out_prefix_without_matplotlib_exits_with_actionable_message(tmp_path):
+    source = tmp_path / "solver.csv"
+    write_rows(source, [row("a.ltl", "REALIZABLE", 1.0)])
+    shim = tmp_path / "no-matplotlib"
+    shim.mkdir()
+    (shim / "matplotlib.py").write_text(
+        'raise ImportError("simulated missing matplotlib")\n'
+    )
+    env = os.environ.copy()
+    pythonpath = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = os.pathsep.join(
+        [str(shim), *([pythonpath] if pythonpath else [])]
+    )
+
+    prefix = tmp_path / "missing" / "plot"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--csv",
+            f"solver={source}",
+            "--title",
+            "Missing dependency",
+            "--out-prefix",
+            str(prefix),
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+    assert completed.returncode != 0
+    assert "matplotlib" in completed.stderr
+    assert "omitting --out-prefix" in completed.stderr
+    assert not pathlib.Path(f"{prefix}.png").exists()
+    assert not pathlib.Path(f"{prefix}.pdf").exists()
+
+
+def test_requires_at_least_one_output(tmp_path):
+    source = tmp_path / "solver.csv"
+    write_rows(source, [row("a.ltl", "REALIZABLE", 1.0)])
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--csv",
+            f"solver={source}",
+            "--title",
+            "No output",
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode != 0
+    assert "at least one of --out-prefix or --markdown is required" in completed.stderr
