@@ -9,14 +9,39 @@ the official realizability run are not part of this suite.
 
 The release ZIP has SHA-256
 `8a7038322ec6c4f7ca7754d3660c3e3b6c79fecab8c41b1304ed0a0589a89843`.
-All 1,524 selected files were converted successfully by
+Historically, all 1,524 selected files were converted successfully by
 `benchmarking/convert-tlsf-corpus-native.py`, using the
 `tlsf-frontend-inspect` helper linked to the same frontend as
-`acacia-bonsai -T`. No SyFCo or standalone tlsf-tools executable was used.
-`conversion.tsv` records source/formula/partition hashes, I/O counts, and TLSF
-semantics/target metadata; `skipped.tsv` is empty apart from its header.
-`sources.tsv` preserves all official logical names while pointing into the
-shared content-addressed corpus at `tests/ltl/syntcomp`.
+`acacia-bonsai -T`. That conversion used no SyFCo or standalone tlsf-tools
+executable. `conversion.tsv` records source/formula/partition hashes, I/O
+counts, and TLSF semantics/target metadata; `skipped.tsv` is empty apart from
+its header.
+Those converted pairs are no longer the suite input, and `sources.tsv` was
+deleted entirely. The suite now runs from TLSF: `tlsf-sources.tsv`, with the
+tab-separated header `instance\ttlsf`, maps all 1,524 official logical names to
+flat TLSF filenames. Meson resolves them against the directory produced by
+`python3 benchmarking/syntcomp-corpus.py materialize --out DIR`; the build
+receives that directory as `-Dacacia_tlsf_corpus_dir=DIR` and passes each source
+to the wrapper with `-T`.
+
+The flat 1,586-file corpus is reconstructed from the
+`tests/syntcomp-benchmarks` submodule of
+[SYNTCOMP/benchmarks](https://github.com/SYNTCOMP/benchmarks), pinned at tag
+`v2026`, rather than kept as a local unpacked release archive. Its checkout is
+sparse to `tlsf/`, shallow, and blobless: 42 MB rather than 4.9 GB. It is
+registered with `update = none`, so plain `git submodule update --init` skips
+it; `syntcomp-corpus.py init` is the opt-in path. Upstream does not carry the
+flat competition corpus: 807 files come from the checkout directly and 779 are
+reconstructed by expanding its parametric templates. Every file is verified
+against the SHA-256 manifest at `tests/suites/benchmarks/tlsf-manifest.tsv`.
+An independent byte comparison against the release archive found 0 missing, 0
+extra, and 0 mismatching files.
+
+The vendored pairs formerly used by the 2025 and 2026 suites were deleted:
+1,932 pooled instances, 3,864 files, and 74.6 MiB. The 2025 `sources.tsv`
+retains only the 1,171 pooled instances also referenced by `syntcomp21` and
+`syntcomp24`; those two suites have no TLSF provenance and remain on vendored
+`.ltl` files.
 
 `panel.list` applies the same 180-instance construction as the 2025 panel: 40
 easy, 65 border, 60 gap, and 15 open; verdict-proportional allocation within
@@ -38,32 +63,17 @@ as unanswered. This yields the following pools before deterministic sampling:
 | open | 267 | 15 | 0 | 0 | 15 |
 
 `panel.tsv` preserves every selected instance's official reference times,
-stratum, verdict, family, and source campaign. To reproduce the selection,
-first materialize the official references and exact TLSF list, convert through
-the linked frontend, and invoke the common sampler:
+stratum, verdict, family, and source campaign. The current TLSF input basis is
+materialized and enabled with:
 
 ```sh
-python3 benchmarking/syntcomp-results-reference.py results.csv \
-  --tlsf-dir v2026/tlsf \
-  --source-map tests/suites/benchmarks/syntcomp26/sources.tsv \
-  --reference syntcomp26-official-tgcc --selection syntcomp26.tlsf.list \
-  --series official_acacia_decomp_mona=2 \
-  --series official_ltlsynt_lar=6 --expected 1524 --cap 17 \
-  --source-description 'SYNTCOMP 2026 tlsfReal/results.csv'
-
-python3 benchmarking/convert-tlsf-corpus-native.py v2026/tlsf \
-  /tmp/syntcomp26-stage --native-inspect build/tests/tlsf-frontend-inspect \
-  --selection syntcomp26.tlsf.list \
-  --list-output tests/suites/benchmarks/syntcomp26/all.list
-
-python3 benchmarking/syntcomp-pool.py \
-  --pool tests/ltl/syntcomp --maps-root tests/suites/benchmarks \
-  --suite syntcomp26=/tmp/syntcomp26-stage
-
-python3 benchmarking/make-panel.py \
-  --reference syntcomp26-official-tgcc \
-  --acacia official_acacia_decomp_mona --ltlsynt official_ltlsynt_lar \
-  --source-map tests/suites/benchmarks/syntcomp26/sources.tsv \
-  --output tests/suites/benchmarks/syntcomp26/panel \
-  --cap 17 --seed 20260804 --easy 40 --border 65 --gap 60 --open 15
+python3 benchmarking/syntcomp-corpus.py init
+python3 benchmarking/syntcomp-corpus.py materialize --out /tmp/syntcomp-tlsf
+meson setup build -Dacacia_enable_tlsf_frontend=true \
+  -Dacacia_tlsf_corpus_dir=/tmp/syntcomp-tlsf
 ```
+
+`ltlsynt` is no longer fed pairs produced by Acacia's frontend. With `-T`, the
+wrapper converts the TLSF with SyFCo itself and passes an explicit
+`--semantics`; see
+[Comparison basis: each tool converts the TLSF itself](../../../../benchmarking/LTLSYNT-GAP.md#comparison-basis-each-tool-converts-the-tlsf-itself).

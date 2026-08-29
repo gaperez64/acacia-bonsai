@@ -5,6 +5,7 @@
 #include <list>
 #include <bddx.h>
 
+#include "solver/transition_payload.hh"
 #include "utils/transition_enumerator.hh"
 
 namespace ios_precomputers {
@@ -118,7 +119,10 @@ namespace ios_precomputers {
           using input_to_ios_t = typename std::list<std::pair<bdd, std::list<TransSet>>>;
 
           auto crossings = power<crossings_t> (
-              transition_enumerator (aut, transition_formater::src_and_dst (aut)),
+              transition_enumerator (
+                  aut, [] (const auto& e) {
+                    return acacia::transitions::make (e.src, e.dst, e);
+                  }),
               [] (bdd b) { return b; });
 
           return power<input_to_ios_t> (crossings,
@@ -133,7 +137,8 @@ namespace ios_precomputers {
   }
 
   struct powset {
-      template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
+      template <typename Aut,
+                typename TransSet = std::vector<acacia::transitions::element>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
         return detail::powset<Aut, TransSet> (aut, input_support, output_support);
       }

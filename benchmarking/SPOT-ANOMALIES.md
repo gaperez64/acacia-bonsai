@@ -1,7 +1,10 @@
 # Spot `ltlsynt` anomaly reproducers
 
-These commands revalidate two upstream-facing observations from the August 2026 Acacia–ltlsynt
-gap campaign. They were run with `ltlsynt (spot) 2.15.1.dev`; the local executable SHA-256 was
+These commands revalidate two observations from the August 2026 Acacia–ltlsynt gap campaign.
+Only the first is upstream-facing: the acceptance-set limit below turned out to be this
+repository's own Spot build configuration, and the correction is recorded in that section.
+
+They were run with `ltlsynt (spot) 2.15.1.dev`; the local executable SHA-256 was
 `ea761a1c0594278bd4b525369977677520c8b9d3dcc2f5a45dab91d961663900`.
 
 This file is a prepared report, not evidence that an external issue or email has been sent.
@@ -23,6 +26,16 @@ The default command prints `UNREALIZABLE`; the second prints `REALIZABLE`. Both 
 The wrapper prints the fully expanded `ltlsynt --ins=... --outs=...` command before executing it.
 
 ## Acceptance-set limit with the same flags
+
+**Correction: this is our own build configuration, not a Spot defect, and it should not be
+reported upstream.** Spot's acceptance-set capacity is a compile-time option,
+`--enable-max-accsets=N`, whose default is `8*sizeof(unsigned)` = 32 and which must be a multiple
+of that. `.github/workflows/main.yml:69` sets `--enable-max-accsets=64`, and the local install
+reports `SPOT_MAX_ACCSETS 64` in `spot/misc/_config.h`, so we already doubled the default and then
+hit the value we chose. Raising it further (128, 256) is a rebuild, not an upstream change.
+Whether that actually decides these instances is untested -- they may simply exhaust time or memory
+at a higher limit instead. The reproducer below is retained because the failure is real and
+reproducible; only its attribution was wrong.
 
 The plan described six status-2 rows. Revalidation of the distinct SYNTCOMP25 formula/partition
 pairs found five immediate status-2 failures and corrected the physical-instance count; the
@@ -48,3 +61,32 @@ The hashes correspond to `prioritized_arbiter_unreal2` with 100 and 60 clients a
 `Too many acceptance sets used. The limit is 64.` and exits 2; the validation wrapper maps that
 non-verdict to exit 3. The independently converted SYNTCOMP26 pairs reproduce the same five
 family/size failures.
+
+## `to_parity` assertion failure on two SYNTCOMP26 panel instances
+
+`ltlsynt` aborts with a failed assertion, not a resource limit, on two instances of the
+SYNTCOMP26 panel:
+
+```
+ltlsynt: toparity.cc:1874: bool spot::to_parity_generator::try_parity_prefix(
+    const spot::zielonka_tree&, const spot::twa_graph_ptr&):
+    Assertion `max_scc_color_rec > 0' failed.
+```
+
+The process dumps core, so the validation wrapper sees signal 6 and no verdict.
+
+```sh
+python3 benchmarking/syntcomp-corpus.py materialize --out tlsf-corpus
+for name in helipad-contradict0 package-delivery-real; do
+  /bin/zsh -f build_tlsf/tests/check-real-correct.sh -l -T "tlsf-corpus/$name.tlsf"
+done
+```
+
+The abort is independent of
+which converter produced the input: it reproduces identically on the vendored pairs and on pairs
+converted by SyFCo from the same TLSF, in all four arms of the converter-basis campaign, at
+5.3--5.4 s and 0.62--0.63 s respectively. Both instances therefore count as unanswered for
+`ltlsynt` in every published panel figure, which is why the panel total is 165 and not 167.
+
+This is an assertion inside Spot's Zielonka-tree parity construction, so unlike the acceptance-set
+limit above it is not a knob we chose; it is an upstream defect.

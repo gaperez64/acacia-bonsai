@@ -108,12 +108,10 @@
     "translation_pref": "small",
     "enable_realizability_simplifier": true,
     "enable_syntactic_bypass": true,
-    "enable_tlsf_frontend": false,
+    "enable_tlsf_frontend": true,
     "simd_is_max": true,
     "decompose_spec": true,
-    "array_downset": "vector_backed",
     "vector_downset": "vector_backed",
-    "array_impl": "auto",
     "vector_impl": "auto",
     "no_simd": false,
     "cpre_avoid_unions": false,
@@ -122,28 +120,12 @@
     "enable_equivariant_solver": true,
     "equivariant_max_states": 512,
     "equivariant_min_clients": 3,
-    "equivariant_min_blocks": 2,
-    "enable_symmetric_solver": false
+    "equivariant_min_blocks": 2
   },
   "choices": {
     "default_unreal_x": ["both", "automaton", "formula"],
     "default_spot_fast": ["off", "det", "det_and_gfg"],
     "translation_pref": ["small", "any", "small+any", "deterministic"],
-    "array_downset": [
-      "vector_backed",
-      "vector_or_kdtree_backed",
-      "kdtree_backed",
-      "bboxtree_backed",
-      "comptrie_backed",
-      "sharingtree_backed",
-      "simple_sharingtree_backed",
-      "sharingtrie_backed",
-      "skiplist_backed",
-      "cst_backed",
-      "rank_bucketed_vector_backed",
-      "filtered_vector_backed",
-      "vector_backed_bin"
-    ],
     "vector_downset": [
       "vector_backed",
       "vector_or_kdtree_backed",
@@ -159,7 +141,6 @@
       "filtered_vector_backed",
       "vector_backed_bin"
     ],
-    "array_impl": ["auto", "simd_array_backed_sum", "array_backed_sum"],
     "vector_impl": ["auto", "simd_vector_backed", "simd_vector_backed_sum", "vector_backed"]
   }
 }

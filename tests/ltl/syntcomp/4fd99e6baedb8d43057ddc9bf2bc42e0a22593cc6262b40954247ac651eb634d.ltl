@@ -1,1 +1,0 @@
-F (p && X (q && X F r)) <-> G F acc

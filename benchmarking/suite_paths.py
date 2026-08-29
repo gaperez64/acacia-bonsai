@@ -1,4 +1,4 @@
-"""Resolve logical benchmark-suite names to their stored LTL files."""
+"""Resolve logical benchmark-suite names to their stored source files."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import pathlib
 
 
 SOURCE_MAP_HEADER = "instance\tsource"
+TLSF_SOURCE_MAP_HEADER = "instance\ttlsf"
 
 
 def load_source_map(
@@ -41,6 +42,53 @@ def load_source_map(
             raise ValueError(f"{path}:{line_number}: duplicate instance {instance!r}")
         sources[instance] = (ltl_root / pathlib.Path(*source_path.parts)).resolve()
     return sources
+
+
+def read_tlsf_source_entries(path: pathlib.Path) -> dict[str, str]:
+    """Read and validate ``tlsf-sources.tsv`` without resolving its sources."""
+    path = pathlib.Path(path)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0] != TLSF_SOURCE_MAP_HEADER:
+        raise ValueError(f"{path}: expected {TLSF_SOURCE_MAP_HEADER!r} header")
+
+    sources: dict[str, str] = {}
+    for line_number, raw in enumerate(lines[1:], 2):
+        if not raw or raw.startswith("#"):
+            continue
+        fields = raw.split("\t")
+        if len(fields) != 2:
+            raise ValueError(f"{path}:{line_number}: expected two tab-separated fields")
+        instance, source = fields
+        if (
+            pathlib.PurePosixPath(instance).name != instance
+            or not instance.endswith(".ltl")
+        ):
+            raise ValueError(f"{path}:{line_number}: invalid instance {instance!r}")
+        source_path = pathlib.PurePosixPath(source)
+        if (
+            source_path.is_absolute()
+            or ".." in source_path.parts
+            or not source.endswith(".tlsf")
+        ):
+            raise ValueError(f"{path}:{line_number}: invalid TLSF source {source!r}")
+        if instance in sources:
+            raise ValueError(f"{path}:{line_number}: duplicate instance {instance!r}")
+        sources[instance] = source
+    return sources
+
+
+def load_tlsf_source_map(
+    path: pathlib.Path, *, tlsf_corpus: pathlib.Path
+) -> dict[str, pathlib.Path]:
+    """Load ``tlsf-sources.tsv`` relative to a materialized TLSF corpus."""
+    sources = read_tlsf_source_entries(path)
+    tlsf_corpus = pathlib.Path(tlsf_corpus).resolve()
+    return {
+        instance: (
+            tlsf_corpus / pathlib.Path(*pathlib.PurePosixPath(source).parts)
+        ).resolve()
+        for instance, source in sources.items()
+    }
 
 
 def resolve_instance(source_map: pathlib.Path, instance: str) -> pathlib.Path:

@@ -13,11 +13,14 @@ The list files are plain-text:
 
 An optional ``sources.tsv`` beside the list files maps logical filenames to a
 shared corpus path relative to ``tests/ltl``.  Its tab-separated header is
-``instance\tsource``.  When present, every listed instance must be mapped.
+``instance\tsource``.  When present, every listed instance must be mapped
+unless it has a TLSF source.  A second optional ``tlsf-sources.tsv`` maps
+logical filenames to paths relative to a materialized TLSF corpus, using the
+header ``instance\ttlsf``.
 
 Output format (one record per line, tab-separated):
 
-    KIND \\t FOLDER \\t SUITE \\t FILE \\t SOURCE
+    KIND \\t FOLDER \\t SUITE \\t FILE \\t SOURCE \\t TLSF
 
 where KIND is one of:
     T  — tests() entry, suite is active
@@ -64,11 +67,17 @@ def parse_list(path: pathlib.Path, seen: Set[pathlib.Path] = None) -> List[str]:
     return entries
 
 
-def parse_sources(path: pathlib.Path) -> Dict[str, str]:
-    """Read a logical-instance to ``tests/ltl``-relative source map."""
+def parse_sources(
+    path: pathlib.Path,
+    *,
+    source_field: str = "source",
+    source_suffix: str = ".ltl",
+) -> Dict[str, str]:
+    """Read and validate a logical-instance to relative-source map."""
     lines = path.read_text(encoding="utf-8").splitlines()
-    if not lines or lines[0] != "instance\tsource":
-        raise ValueError(f"{path}: expected 'instance\\tsource' header")
+    header = f"instance\t{source_field}"
+    if not lines or lines[0] != header:
+        raise ValueError(f"{path}: expected {header!r} header")
     sources: Dict[str, str] = {}
     for line_number, raw in enumerate(lines[1:], 2):
         if not raw or raw.startswith("#"):
@@ -80,8 +89,14 @@ def parse_sources(path: pathlib.Path) -> Dict[str, str]:
         if pathlib.PurePosixPath(instance).name != instance or not instance.endswith(".ltl"):
             raise ValueError(f"{path}:{line_number}: invalid instance {instance!r}")
         source_path = pathlib.PurePosixPath(source)
-        if source_path.is_absolute() or ".." in source_path.parts or not source.endswith(".ltl"):
-            raise ValueError(f"{path}:{line_number}: invalid source {source!r}")
+        if (
+            source_path.is_absolute()
+            or ".." in source_path.parts
+            or not source.endswith(source_suffix)
+        ):
+            raise ValueError(
+                f"{path}:{line_number}: invalid {source_field} {source!r}"
+            )
         if instance in sources:
             raise ValueError(f"{path}:{line_number}: duplicate instance {instance!r}")
         sources[instance] = source
@@ -97,22 +112,39 @@ def main(out=sys.stdout):
             folder = folder_dir.name
             sources_path = folder_dir / "sources.tsv"
             sources = parse_sources(sources_path) if sources_path.is_file() else None
+            tlsf_sources_path = folder_dir / "tlsf-sources.tsv"
+            tlsf_sources = (
+                parse_sources(
+                    tlsf_sources_path,
+                    source_field="tlsf",
+                    source_suffix=".tlsf",
+                )
+                if tlsf_sources_path.is_file()
+                else {}
+            )
             for list_file in sorted(folder_dir.glob("*.list")):
                 suite = list_file.stem
                 skipped = suite.startswith("!")
                 active = ("S" + kind_char) if skipped else kind_char
                 for entry in parse_list(list_file):
+                    tlsf_source = tlsf_sources.get(entry, "")
                     if sources is None:
-                        source = f"{folder}/{entry}"
+                        source = "" if tlsf_source else f"{folder}/{entry}"
                     else:
                         try:
                             source = sources[entry]
                         except KeyError as error:
-                            raise KeyError(
-                                f"{sources_path}: no source for {entry!r} "
-                                f"referenced by {list_file.name}"
-                            ) from error
-                    out.write(f"{active}\t{folder}\t{suite}\t{entry}\t{source}\n")
+                            if tlsf_source:
+                                source = ""
+                            else:
+                                raise KeyError(
+                                    f"{sources_path}: no source for {entry!r} "
+                                    f"referenced by {list_file.name}"
+                                ) from error
+                    out.write(
+                        f"{active}\t{folder}\t{suite}\t{entry}\t{source}"
+                        f"\t{tlsf_source}\n"
+                    )
 
 
 if __name__ == "__main__":

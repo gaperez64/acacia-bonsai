@@ -1,1 +1,0 @@
-G ((G !allfinished -> G !finished_0 || G !finished_1 || G !finished_2) && ((allfinished -> X (!allfinished W finished_0)) && (allfinished -> X (!allfinished W finished_1)) && (allfinished -> X (!allfinished W finished_2))))

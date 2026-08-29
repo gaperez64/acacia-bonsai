@@ -1,2 +1,0 @@
-.inputs bin_x0 bin_st_0 bin_dx1 pred__xprev_lt_x_ pred__x_lt_xprev_ bin_dx2 bin_x1 bin_dx0
-.outputs flipx

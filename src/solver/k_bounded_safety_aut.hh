@@ -8,8 +8,9 @@
 #include "utils/bdd_helper.hh"
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
+#include "solver/antichain_snapshot.hh"
 #include "solver/diagnostics.hh"
-#include "solver/symmetric_profile.hh"
+#include "solver/symmetry_profile.hh"
 #include "utils/typeinfo.hh"
 
 #include <algorithm>
@@ -70,6 +71,10 @@ class k_bounded_safety_aut_detail {
 #endif
       ACACIA_SYMMETRY_PROFILE_SCOPE (classic_solve_total);
 
+#if ACACIA_ENABLE_DIAGNOSTICS
+      acacia::antichain_snapshot::configure (aut);
+#endif
+
       VECTOR_ELT_T k = kfrom;
 
       // Precompute the input and output actions.
@@ -100,6 +105,9 @@ class k_bounded_safety_aut_detail {
       do {
         loopcount++;
         acacia::diagnostics::observe_loop (f.size (), k);
+#if ACACIA_ENABLE_DIAGNOSTICS
+        acacia::antichain_snapshot::observe (f, k, loopcount);
+#endif
         verb_do (1, vout << "Loop# " << loopcount << ", f of size " << f.size () << std::endl);
 
         auto input = [&] {

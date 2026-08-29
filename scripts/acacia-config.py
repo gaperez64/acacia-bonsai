@@ -152,7 +152,6 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         f"-DSIMD_IS_MAX={bool_literal(values['simd_is_max'])}",
         f"-DDECOMPOSE_SPEC={int(values['decompose_spec'])}",
         f"-DCPRE_AVOID_UNIONS={int(values['cpre_avoid_unions'])}",
-        f"-DARRAY_AND_BITSET_DOWNSET_IMPL={values['array_downset']}",
         f"-DVECTOR_AND_BITSET_DOWNSET_IMPL={values['vector_downset']}",
     ]
 
@@ -164,10 +163,6 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         flags.append("-DACACIA_ENABLE_DIAGNOSTICS=1")
     if values["enable_equivariant_solver"]:
         flags.append("-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1")
-    if values["enable_symmetric_solver"]:
-        flags.append("-DACACIA_ENABLE_SYMMETRIC_SOLVER=1")
-    if values["array_impl"] != "auto":
-        flags.append(f"-DARRAY_IMPL={values['array_impl']}")
     if values["vector_impl"] != "auto":
         flags.append(f"-DVECTOR_IMPL={values['vector_impl']}")
 
@@ -193,9 +188,7 @@ MESON_OPTION_NAMES = {
     "enable_tlsf_frontend": "acacia_enable_tlsf_frontend",
     "simd_is_max": "acacia_simd_is_max",
     "decompose_spec": "acacia_decompose_spec",
-    "array_downset": "acacia_array_downset",
     "vector_downset": "acacia_vector_downset",
-    "array_impl": "acacia_array_impl",
     "vector_impl": "acacia_vector_impl",
     "no_simd": "acacia_no_simd",
     "cpre_avoid_unions": "acacia_cpre_avoid_unions",
@@ -205,7 +198,6 @@ MESON_OPTION_NAMES = {
     "equivariant_max_states": "acacia_equivariant_max_states",
     "equivariant_min_clients": "acacia_equivariant_min_clients",
     "equivariant_min_blocks": "acacia_equivariant_min_blocks",
-    "enable_symmetric_solver": "acacia_enable_symmetric_solver",
     "aut_preprocessor": "acacia_aut_preprocessor",
     "boolean_states": "acacia_boolean_states",
     "ios_precomputer": "acacia_ios_precomputer",

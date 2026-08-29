@@ -122,8 +122,8 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 exit 9""",
-        instance="gf-unreal37.ltl",
-        suite="syntcomp25",
+        instance="CheckRoom_06e9cad4.ltl",
+        suite="syntcomp24",
     )
 
     assert result.returncode == 0

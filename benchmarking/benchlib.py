@@ -26,6 +26,7 @@ class RunResult:
     stdout_bytes: int = 0
     stderr_bytes: int = 0
     resource_limited: bool = False
+    memory_peak_bytes: int | None = None
 
 
 def _terminate_process_group(proc: subprocess.Popen, grace: float = 2.0) -> None:
@@ -303,28 +304,40 @@ def run_systemd_scope(
             stdout = "".join(retained_lines[0])
             stderr = "".join(retained_lines[1])
             stdout_bytes, stderr_bytes = raw_sizes
+        finished = time.monotonic()
         resource_limited = False
-        if not timed_out and proc.returncode != 0:
-            try:
-                unit_result = subprocess.run(
-                    [
-                        "systemctl",
-                        "--user",
-                        "show",
-                        f"{unit}.scope",
-                        "--property=Result",
-                        "--value",
-                    ],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                    timeout=5,
-                    check=False,
-                )
-                resource_limited = unit_result.stdout.strip() == "oom-kill"
-            except subprocess.TimeoutExpired:
-                pass
-        seconds = time.monotonic() - started
+        memory_peak_bytes = None
+        try:
+            unit_result = subprocess.run(
+                [
+                    "systemctl",
+                    "--user",
+                    "show",
+                    f"{unit}.scope",
+                    "--property=Result,MemoryPeak",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            properties = dict(
+                line.split("=", 1)
+                for line in unit_result.stdout.splitlines()
+                if "=" in line
+            )
+            peak = properties.get("MemoryPeak", "")
+            if peak.isdigit():
+                memory_peak_bytes = int(peak)
+            resource_limited = (
+                not timed_out
+                and proc.returncode != 0
+                and properties.get("Result") == "oom-kill"
+            )
+        except subprocess.TimeoutExpired:
+            pass
+        seconds = finished - started
         result = RunResult(
             stdout,
             stderr,
@@ -334,6 +347,7 @@ def run_systemd_scope(
             stdout_bytes,
             stderr_bytes,
             resource_limited,
+            memory_peak_bytes,
         )
         return result
     finally:
@@ -358,17 +372,42 @@ def parse_acacia_result(stdout_stderr: str) -> str:
     return "UNKNOWN"
 
 
-def classify_acacia_run(run: RunResult) -> str:
-    """Classify a bounded Acacia run, requiring output/exit-code agreement."""
+TOOL_EXIT_CODES = {
+    "acacia": {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2},
+    # Acacia v1 reports UNKNOWN as 3, not 2.
+    "acacia1x": {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 3},
+    # Verified behaviorally identical to Acacia: ltlsynt previously expressed
+    # UNKNOWN=2 as a trailing special case instead of including it in its table.
+    "ltlsynt": {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2},
+}
+
+
+def classify_run(run: RunResult, tool: str = "acacia") -> str:
+    """Classify a bounded tool run, requiring output/exit-code agreement."""
+    try:
+        expected_exit = TOOL_EXIT_CODES[tool]
+    except KeyError:
+        raise ValueError(f"unknown tool: {tool!r}") from None
     if run.timed_out:
         return "TIMEOUT"
     if run.resource_limited:
         return "RESOURCE_LIMIT"
     result = parse_acacia_result(run.stdout + run.stderr)
-    expected_exit = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2}
     if run.returncode == expected_exit.get(result):
         return result
     return "ERROR"
+
+
+def classify_acacia_run(run: RunResult) -> str:
+    return classify_run(run, "acacia")
+
+
+def classify_acacia1x_run(run: RunResult) -> str:
+    return classify_run(run, "acacia1x")
+
+
+def classify_ltlsynt_run(run: RunResult) -> str:
+    return classify_run(run, "ltlsynt")
 
 
 def read_part(path: str | pathlib.Path) -> tuple[str, str]:

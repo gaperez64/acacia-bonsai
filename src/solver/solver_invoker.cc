@@ -10,7 +10,7 @@
 #include "solver/mealy_to_moore.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
-#include "solver/symmetric_blocks.hh"
+#include "solver/symmetry_blocks.hh"
 #include "solver/symmetry.hh"
 #include "solver/syntactic_bypass.hh"
 #include "solver/translator_options.hh"
@@ -624,6 +624,187 @@ namespace {
         }
       }
   };
+
+  bool apply_realizability_simplifier (spot::formula& formula,
+                                       const std::vector<std::string>& input_aps) {
+    spot::formula before_simplification = formula;
+    {
+#if ACACIA_ENABLE_DIAGNOSTICS
+      auto* diag = acacia::diagnostics::current ();
+      acacia::diagnostics::scoped_timer timer (diag ? &diag->rsimp_ms : nullptr);
+#endif
+      spot::realizability_simplifier rsimp (formula, input_aps);
+      formula = rsimp.simplified_formula ();
+    }
+    return before_simplification != formula;
+  }
+
+  std::optional<bool> try_degenerate_io (
+      const std::vector<std::string>& input_aps, const std::vector<std::string>& output_aps,
+      const spot::formula& spot_formula, std::optional<UNREAL_X_T> check_unreal,
+      TRANSLATION_PREF_T translation_pref, const std::optional<std::string>& synth_fname,
+      bool synthesize_moore) {
+    // Degenerate alphabets are language questions, not games.  Keep this in the
+    // original Mealy frame, after realizability simplification and before the
+    // unreal workers swap I/O.  Strategy-producing no-input requests retain the
+    // existing lasso-to-AIG path; this fast path is intentionally decision-only.
+    if (input_aps.empty () and synth_fname.has_value ())
+      return std::optional<bool> {acacia::diagnostics::finish (
+          run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname,
+                            synthesize_moore),
+          "no-input-ltl-synthesis")};
+
+    if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
+      acacia::degenerate_io::verdict direct;
+      {
+#if ACACIA_ENABLE_DIAGNOSTICS
+        auto* diag = acacia::diagnostics::current ();
+        acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
+#endif
+        direct = acacia::degenerate_io::try_direct (spot_formula, input_aps, output_aps,
+                                                    translation_pref);
+      }
+      assert (direct != acacia::degenerate_io::verdict::unknown);
+      const bool child_matches =
+          acacia::syntactic_bypass::matches_worker (direct, check_unreal.has_value ());
+      return std::optional<bool> {acacia::diagnostics::finish (
+          child_matches, child_matches ? "degenerate-io" : "degenerate-io-opposite-verdict")};
+    }
+
+    return std::nullopt;
+  }
+
+  std::optional<bool> try_syntactic_bypass (
+      [[maybe_unused]] const spot::formula& spot_formula,
+      [[maybe_unused]] const std::vector<std::string>& output_aps,
+      [[maybe_unused]] std::optional<UNREAL_X_T> check_unreal,
+      [[maybe_unused]] const std::optional<std::string>& synth_fname) {
+#if ACACIA_ENABLE_SYNTACTIC_BYPASS
+    // Spot's direct-strategy check is defined in the original Mealy frame, so
+    // it must run before the unreal children swap inputs and outputs.  It
+    // returns a formula verdict; map that verdict to the role of this child so
+    // only the matching child reports a definitive answer to the parent.
+    if (not synth_fname.has_value ()) {
+      acacia::syntactic_bypass::result direct;
+      {
+# if ACACIA_ENABLE_DIAGNOSTICS
+        auto* diag = acacia::diagnostics::current ();
+        acacia::diagnostics::scoped_timer timer (diag ? &diag->syntactic_bypass_ms : nullptr);
+# endif
+        direct = acacia::syntactic_bypass::try_direct (spot_formula, output_aps);
+      }
+# if ACACIA_ENABLE_DIAGNOSTICS
+      if (auto* diag = acacia::diagnostics::current ())
+        diag->syntactic_bypass = acacia::syntactic_bypass::name (direct.value);
+# endif
+      if (direct.value != acacia::syntactic_bypass::verdict::unknown) {
+        const bool child_matches =
+            acacia::syntactic_bypass::matches_worker (direct.value, check_unreal.has_value ());
+        verb_do (1, vout << "Syntactic bypass found formula "
+                         << acacia::syntactic_bypass::name (direct.value) << '\n');
+        return std::optional<bool> {acacia::diagnostics::finish (
+            child_matches,
+            child_matches ? "syntactic-bypass" : "syntactic-bypass-opposite-verdict")};
+      }
+    }
+#elif ACACIA_ENABLE_DIAGNOSTICS
+    if (auto* diag = acacia::diagnostics::current ())
+      diag->syntactic_bypass = "off";
+#endif
+    return std::nullopt;
+  }
+
+  std::optional<bool> try_unreal_safety_core_witnesses (
+      const spot::formula& spot_formula, std::optional<UNREAL_X_T> check_unreal,
+      run_one_ltl& runner) {
+    if (check_unreal.has_value ()) {
+      auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (spot_formula);
+      for (const spot::formula& witness : witnesses) {
+        acacia::diagnostics::scoped_attempt diag_attempt;
+        if (runner (witness)) {
+          diag_attempt.commit ();
+          acacia::diagnostics::set_final_reason ("unreal-safety-core-witness");
+          return std::optional<bool> {
+              acacia::diagnostics::finish (true, "unreal-safety-core-witness")};
+        }
+      }
+    }
+    return std::nullopt;
+  }
+
+#if DECOMPOSE_SPEC == 1
+  bool solve_decomposed (const spot::formula& spot_formula,
+                         const std::vector<std::string>& input_aps,
+                         const std::vector<std::string>& output_aps,
+                         std::optional<UNREAL_X_T> check_unreal,
+                         const std::optional<std::string>& synth_fname, run_one_ltl& runner) {
+    // We are up for decomposition, so first we need to split the formula.
+    // NOTE: we may have flipped inputs and outputs already, so we need to
+    // provide inputs to the split function in that case.
+    std::vector<std::vector<std::string>> out_part;
+    auto [forms, outs] = spot::split_independent_formulas (
+        spot_formula, check_unreal.has_value () ? input_aps : output_aps);
+    acacia::diagnostics::snapshot ("after-decomposition");
+    verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
+
+    if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and forms.size () > 1 and
+        not check_unreal.has_value () and not synth_fname.has_value ()) {
+      bool any_component_simplified = false;
+      for (auto& sub_formula : forms) {
+        const bool component_simplified =
+            apply_realizability_simplifier (sub_formula, input_aps);
+        any_component_simplified = any_component_simplified or component_simplified;
+      }
+# if ACACIA_ENABLE_DIAGNOSTICS
+      if (auto* diag = acacia::diagnostics::current ())
+        diag->rsimp_changed = diag->rsimp_changed or any_component_simplified;
+# endif
+      acacia::diagnostics::snapshot ("after-decomposition-rsimp");
+      verb_do (2, vout << "Simplified decomposed subformulas: "
+                       << (any_component_simplified ? "changed" : "unchanged") << std::endl);
+    }
+
+    for (size_t i = 0; i < forms.size (); ++i) {
+      verb_do (2, vout << "Subformula " << i + 1 << ": " << forms[i] << std::endl);
+      verb_do (2, vout << "with output set: ");
+      std::vector<std::string> temp;
+      for (auto& sf : outs[i]) {
+        verb_do (2, vout << sf << " ");
+        temp.push_back (sf.ap_name ());
+      }
+      out_part.emplace_back (std::move (temp));
+      verb_do (2, vout << "\n");
+    }
+
+    bool result;
+    if (forms.size () <= 1) {
+      result = runner (spot_formula);
+    }
+    else {
+      // Here's the real decomposition in terms of solving. If we found more than
+      // one formula, we're going to solve those instead.
+      // * If we're checking realizability, all of the subgames must be
+      //   realizable;
+      // * conversely, for unrealizability, I just need one of them to be declared
+      //   unrealizable to get a conclusive answer.
+      if (not check_unreal.has_value ())
+        result = std::ranges::all_of (forms.begin (), forms.end (), std::ref (runner));
+      else
+        result = std::ranges::any_of (forms.begin (), forms.end (), std::ref (runner));
+      verb_do (3, vout << "Result of sub-calls to runner " << result << std::endl);
+    }
+
+    if (result) {
+      if (synth_fname.has_value ())
+        runner.synthesis (spot_formula, out_part);
+      return acacia::diagnostics::finish (true, "decomposition");
+    }
+    else {
+      return acacia::diagnostics::finish (false, "decomposition");
+    }
+  }
+#endif
+
   void validate_ltl_partition (const std::vector<std::string>& input_aps,
                                const std::vector<std::string>& output_aps) {
     const auto validate = [] (const std::vector<std::string>& declared, const char* kind) {
@@ -680,81 +861,25 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // synthesizing a controller (-s): the removed APs would need
   // patch_mealy/patch_game on the emitted strategy, which is not wired up here.
   if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and not synth_fname.has_value ()) {
-    spot::formula before_simplification = spot_formula;
-    {
-#if ACACIA_ENABLE_DIAGNOSTICS
-      auto* diag = acacia::diagnostics::current ();
-      acacia::diagnostics::scoped_timer timer (diag ? &diag->rsimp_ms : nullptr);
-#endif
-      spot::realizability_simplifier rsimp (spot_formula, input_aps);
-      spot_formula = rsimp.simplified_formula ();
-    }
+    [[maybe_unused]] const bool formula_simplified =
+        apply_realizability_simplifier (spot_formula, input_aps);
 #if ACACIA_ENABLE_DIAGNOSTICS
     if (auto* diag = acacia::diagnostics::current ())
-      diag->rsimp_changed = before_simplification != spot_formula;
+      diag->rsimp_changed = formula_simplified;
 #endif
     acacia::diagnostics::snapshot ("after-rsimp");
     verb_do (2, vout << "Simplified formula: " << spot_formula << std::endl);
   }
 
-  // Degenerate alphabets are language questions, not games.  Keep this in the
-  // original Mealy frame, after realizability simplification and before the
-  // unreal workers swap I/O.  Strategy-producing no-input requests retain the
-  // existing lasso-to-AIG path; this fast path is intentionally decision-only.
-  if (input_aps.empty () and synth_fname.has_value ())
-    return acacia::diagnostics::finish (
-        run_no_input_ltl (output_aps, spot_formula, check_unreal, translation_pref, synth_fname,
-                          synthesize_moore),
-        "no-input-ltl-synthesis");
+  if (auto answer = try_degenerate_io (input_aps, output_aps, spot_formula, check_unreal,
+                                       translation_pref, synth_fname, synthesize_moore);
+      answer.has_value ())
+    return *answer;
 
-  if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
-    acacia::degenerate_io::verdict direct;
-    {
-#if ACACIA_ENABLE_DIAGNOSTICS
-      auto* diag = acacia::diagnostics::current ();
-      acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
-#endif
-      direct = acacia::degenerate_io::try_direct (spot_formula, input_aps, output_aps,
-                                                  translation_pref);
-    }
-    assert (direct != acacia::degenerate_io::verdict::unknown);
-    const bool child_matches =
-        acacia::syntactic_bypass::matches_worker (direct, check_unreal.has_value ());
-    return acacia::diagnostics::finish (
-        child_matches, child_matches ? "degenerate-io" : "degenerate-io-opposite-verdict");
-  }
-
-#if ACACIA_ENABLE_SYNTACTIC_BYPASS
-  // Spot's direct-strategy check is defined in the original Mealy frame, so
-  // it must run before the unreal children swap inputs and outputs.  It
-  // returns a formula verdict; map that verdict to the role of this child so
-  // only the matching child reports a definitive answer to the parent.
-  if (not synth_fname.has_value ()) {
-    acacia::syntactic_bypass::result direct;
-    {
-# if ACACIA_ENABLE_DIAGNOSTICS
-      auto* diag = acacia::diagnostics::current ();
-      acacia::diagnostics::scoped_timer timer (diag ? &diag->syntactic_bypass_ms : nullptr);
-# endif
-      direct = acacia::syntactic_bypass::try_direct (spot_formula, output_aps);
-    }
-# if ACACIA_ENABLE_DIAGNOSTICS
-    if (auto* diag = acacia::diagnostics::current ())
-      diag->syntactic_bypass = acacia::syntactic_bypass::name (direct.value);
-# endif
-    if (direct.value != acacia::syntactic_bypass::verdict::unknown) {
-      const bool child_matches =
-          acacia::syntactic_bypass::matches_worker (direct.value, check_unreal.has_value ());
-      verb_do (1, vout << "Syntactic bypass found formula "
-                       << acacia::syntactic_bypass::name (direct.value) << '\n');
-      return acacia::diagnostics::finish (
-          child_matches, child_matches ? "syntactic-bypass" : "syntactic-bypass-opposite-verdict");
-    }
-  }
-#elif ACACIA_ENABLE_DIAGNOSTICS
-  if (auto* diag = acacia::diagnostics::current ())
-    diag->syntactic_bypass = "off";
-#endif
+  if (auto answer =
+          try_syntactic_bypass (spot_formula, output_aps, check_unreal, synth_fname);
+      answer.has_value ())
+    return *answer;
 
   if (check_unreal.has_value ()) {
     // We only check one thing at a time.
@@ -777,17 +902,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
                       translation_pref, spot_fast, synth_fname, synthesize_moore,
                       indexed_family_hints);
 
-  if (check_unreal.has_value ()) {
-    auto witnesses = acacia::unreal_witnesses::make_safety_core_witnesses (spot_formula);
-    for (const spot::formula& witness : witnesses) {
-      acacia::diagnostics::scoped_attempt diag_attempt;
-      if (runner (witness)) {
-        diag_attempt.commit ();
-        acacia::diagnostics::set_final_reason ("unreal-safety-core-witness");
-        return acacia::diagnostics::finish (true, "unreal-safety-core-witness");
-      }
-    }
-  }
+  if (auto answer = try_unreal_safety_core_witnesses (spot_formula, check_unreal, runner);
+      answer.has_value ())
+    return *answer;
 
 #if DECOMPOSE_SPEC == 0
   // Just launch a monolithic runner.
@@ -803,77 +920,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   }
 
 #elif DECOMPOSE_SPEC == 1
-  // We are up for decomposition, so first we need to split the formula.
-  // NOTE: we may have flipped inputs and outputs already, so we need to
-  // provide inputs to the split function in that case.
-  std::vector<std::vector<std::string>> out_part;
-  auto [forms, outs] = spot::split_independent_formulas (
-      spot_formula, check_unreal.has_value () ? input_aps : output_aps);
-  acacia::diagnostics::snapshot ("after-decomposition");
-  verb_do (2, vout << "Decomposed the input into " << forms.size () << " subformulas\n");
-
-  if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and forms.size () > 1 and
-      not check_unreal.has_value () and not synth_fname.has_value ()) {
-    bool any_component_simplified = false;
-    for (auto& sub_formula : forms) {
-      spot::formula before_simplification = sub_formula;
-      {
-# if ACACIA_ENABLE_DIAGNOSTICS
-        auto* diag = acacia::diagnostics::current ();
-        acacia::diagnostics::scoped_timer timer (diag ? &diag->rsimp_ms : nullptr);
-# endif
-        spot::realizability_simplifier rsimp (sub_formula, input_aps);
-        sub_formula = rsimp.simplified_formula ();
-      }
-      any_component_simplified = any_component_simplified or before_simplification != sub_formula;
-    }
-# if ACACIA_ENABLE_DIAGNOSTICS
-    if (auto* diag = acacia::diagnostics::current ())
-      diag->rsimp_changed = diag->rsimp_changed or any_component_simplified;
-# endif
-    acacia::diagnostics::snapshot ("after-decomposition-rsimp");
-    verb_do (2, vout << "Simplified decomposed subformulas: "
-                     << (any_component_simplified ? "changed" : "unchanged") << std::endl);
-  }
-
-  for (size_t i = 0; i < forms.size (); ++i) {
-    verb_do (2, vout << "Subformula " << i + 1 << ": " << forms[i] << std::endl);
-    verb_do (2, vout << "with output set: ");
-    std::vector<std::string> temp;
-    for (auto& sf : outs[i]) {
-      verb_do (2, vout << sf << " ");
-      temp.push_back (sf.ap_name ());
-    }
-    out_part.emplace_back (std::move (temp));
-    verb_do (2, vout << "\n");
-  }
-
-  bool result;
-  if (forms.size () <= 1) {
-    result = runner (spot_formula);
-  }
-  else {
-    // Here's the real decomposition in terms of solving. If we found more than
-    // one formula, we're going to solve those instead.
-    // * If we're checking realizability, all of the subgames must be
-    //   realizable;
-    // * conversely, for unrealizability, I just need one of them to be declared
-    //   unrealizable to get a conclusive answer.
-    if (not check_unreal.has_value ())
-      result = std::ranges::all_of (forms.begin (), forms.end (), std::ref (runner));
-    else
-      result = std::ranges::any_of (forms.begin (), forms.end (), std::ref (runner));
-    verb_do (3, vout << "Result of sub-calls to runner " << result << std::endl);
-  }
-
-  if (result) {
-    if (synth_fname.has_value ())
-      runner.synthesis (spot_formula, out_part);
-    return acacia::diagnostics::finish (true, "decomposition");
-  }
-  else {
-    return acacia::diagnostics::finish (false, "decomposition");
-  }
+  return solve_decomposed (spot_formula, input_aps, output_aps, check_unreal, synth_fname, runner);
 
 #else
   std::unreachable ();

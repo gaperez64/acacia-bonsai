@@ -125,7 +125,7 @@ std::string get_aut_hoa (const Game& game) {
   return os.str ();
 }
 
-// Python-specific solver using the same fixed zero-tail downset type as the
+// Python-specific solver using the same bare vector downset type as the
 // command-line solver.
 static std::optional<std::pair<VECTOR_ELT_T, winreg_type>> solve_game_python (
     spot::twa_graph_ptr aut, VECTOR_ELT_T k_max, VECTOR_ELT_T k_min, VECTOR_ELT_T k_inc,

@@ -4,7 +4,7 @@ ab_sources = [
   'solver/mealy_to_moore.cc',
   'solver/solver_invoker.cc',
   'solver/solve_game.cc',
-  'solver/solve_game_zero_tail.cc',
+  'solver/solve_game_vector.cc',
 ]
 if get_option ('acacia_enable_tlsf_frontend')
   ab_sources += 'tlsf_frontend.cc'
@@ -20,3 +20,43 @@ ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
                      install: true,
                      install_tag: 'cli',
                      dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+
+if get_option('build_research_tools')
+  acacia_hoa_replay_exe = executable(
+    'acacia-hoa-replay',
+    [
+      'research/hoa_replay.cc',
+      'version.cc',
+      'solver/solve_game.cc',
+      'solver/solve_game_vector.cc',
+    ],
+    version_h,
+    include_directories: inc,
+    install: false,
+    dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+  )
+  if get_option ('acacia_enable_diagnostics')
+    acacia_antichain_replay_exe = executable(
+      'acacia-antichain-replay',
+      'research/antichain_replay.cc',
+      include_directories: inc,
+      install: false,
+      dependencies: [spot_dep, bddx_dep],
+    )
+  endif
+  acacia_automata_study_exe = executable(
+    'acacia-automata-study',
+    ['research/automata_study.cc', 'version.cc'],
+    version_h,
+    include_directories: inc,
+    install: false,
+    dependencies: [spot_dep, bddx_dep],
+  )
+  acacia_mp_census_exe = executable(
+    'acacia-mp-census',
+    'research/mp_census.cc',
+    include_directories: inc,
+    install: false,
+    dependencies: [spot_dep, bddx_dep],
+  )
+endif

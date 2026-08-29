@@ -28,6 +28,7 @@ if spot_prefix != ''
 else
   ltlsynt_exe = find_program ('ltlsynt', required : false)
 endif
+syfco_exe = find_program ('syfco', required : false)
 
 #strix_exe = find_program ('strix', required : false)
 
@@ -35,6 +36,12 @@ if ltlsynt_exe.found ()
   conf_data.set_quoted ('LTLSYNT', ltlsynt_exe.full_path ())
 else
   conf_data.set_quoted ('LTLSYNT', '/bin/false')
+endif
+
+if syfco_exe.found ()
+  conf_data.set_quoted ('SYFCO', syfco_exe.full_path ())
+else
+  conf_data.set_quoted ('SYFCO', '/bin/false')
 endif
 
 #if strix_exe.found ()
@@ -65,6 +72,15 @@ test ('version-output',
       suite : 'version',
       depends : [ab_exe])
 
+if get_option ('build_research_tools')
+  research_tools_smoke = find_program ('check-research-tools.sh')
+  test ('research-tools-smoke',
+        research_tools_smoke,
+        args : [acacia_automata_study_exe, acacia_hoa_replay_exe],
+        suite : ['unit', 'research'],
+        depends : [acacia_automata_study_exe, acacia_hoa_replay_exe])
+endif
+
 spot_nba_fastpath_test = executable ('spot-nba-fastpath-test',
                                      'spot_nba_fastpath_test.cc',
                                      include_directories : inc,
@@ -80,6 +96,48 @@ translator_options_test = executable ('translator-options-test',
 test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
+
+transition_payload_test = executable (
+  'transition-payload-test',
+  'transition_payload_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('transition-payload',
+      transition_payload_test,
+      suite : ['unit', 'transition-payload'])
+
+acceptance_core_test = executable ('acceptance-core-test',
+                                   'acceptance_core_test.cc',
+                                   include_directories : inc,
+                                   dependencies : [spot_dep, bddx_dep])
+test ('acceptance-core',
+      acceptance_core_test,
+      suite : ['unit', 'acceptance-core'])
+
+direct_simulation_test = executable ('direct-simulation-test',
+                                   'direct_simulation_test.cc',
+                                   include_directories : inc,
+                                   dependencies : [spot_dep, bddx_dep])
+test ('direct-simulation',
+      direct_simulation_test,
+      suite : ['unit', 'direct-simulation'])
+
+transition_core_test = executable ('transition-core-test',
+                                   'transition_core_test.cc',
+                                   include_directories : inc,
+                                   dependencies : [spot_dep, bddx_dep])
+test ('transition-core',
+      transition_core_test,
+      suite : ['unit', 'transition-core'])
+
+mp_nba_test = executable ('mp-nba-test',
+                          'mp_nba_test.cc',
+                          include_directories : inc,
+                          dependencies : [spot_dep, bddx_dep])
+test ('mp-nba',
+      mp_nba_test,
+      suite : ['unit', 'mp-nba'])
 
 unreal_safety_core_witnesses_test = executable (
   'unreal-safety-core-witnesses-test',
@@ -192,43 +250,12 @@ if get_option ('acacia_enable_tlsf_frontend')
   )
 endif
 
-symmetric_downset_test = executable ('symmetric-downset-test',
-                                     'symmetric_downset_test.cc',
-                                     include_directories : inc)
-test ('symmetric-downset',
-      symmetric_downset_test,
-      suite : ['unit', 'symmetry'])
-
-symmetric_dense_downset_test = executable ('symmetric-dense-downset-test',
-                                           'symmetric_dense_downset_test.cc',
-                                           include_directories : inc,
-                                           dependencies : [posets_dep])
-test ('symmetric-dense-downset',
-      symmetric_dense_downset_test,
-      suite : ['unit', 'symmetry'])
-
-symmetric_blocks_test = executable ('symmetric-blocks-test',
-                                    'symmetric_blocks_test.cc',
+symmetry_blocks_test = executable ('symmetry-blocks-test',
+                                    'symmetry_blocks_test.cc',
                                     include_directories : inc,
                                     dependencies : [spot_dep, bddx_dep])
-test ('symmetric-blocks',
-      symmetric_blocks_test,
-      suite : ['unit', 'symmetry'])
-
-symmetric_conversion_test = executable ('symmetric-conversion-test',
-                                        'symmetric_conversion_test.cc',
-                                        include_directories : inc,
-                                        dependencies : [spot_dep, bddx_dep, posets_dep])
-test ('symmetric-conversion',
-      symmetric_conversion_test,
-      suite : ['unit', 'symmetry'])
-
-symmetric_output_orbits_test = executable ('symmetric-output-orbits-test',
-                                           'symmetric_output_orbits_test.cc',
-                                           include_directories : inc,
-                                           dependencies : [spot_dep, bddx_dep, posets_dep])
-test ('symmetric-output-orbits',
-      symmetric_output_orbits_test,
+test ('symmetry-blocks',
+      symmetry_blocks_test,
       suite : ['unit', 'symmetry'])
 
 equivariant_pre_test = executable ('equivariant-pre-test',
@@ -279,10 +306,11 @@ endif
 # iteration below (historically used to disable `large` suites).
 expand_script = files ('suites' / 'expand-lists.py')
 expand_res = run_command (py, expand_script, check : true)
-manifest = expand_res.stdout ().strip ().split ('\n')
+manifest = expand_res.stdout ().split ('\n')
 
 # Build the two dictionaries from the manifest.
-# Each meaningful line is: KIND \t FOLDER \t SUITE \t FILE \t SOURCE
+# Each meaningful line is:
+# KIND \t FOLDER \t SUITE \t FILE \t SOURCE \t TLSF_SOURCE
 # where KIND is one of { T, B, ST, SB } — the `S` prefix marks a skipped
 # suite (name starts with `!`); those lines are ignored here, matching
 # the old behaviour of skipping suites whose key started with `!`.
@@ -301,6 +329,7 @@ foreach line : manifest
   suite  = parts[2]
   file   = parts[3]
   source = parts[4]
+  tlsf_source = parts[5]
 
   if not _append.has_key (kind)
     # 'ST' / 'SB' — skipped, don't populate.
@@ -320,7 +349,9 @@ foreach line : manifest
   if not folder_map.has_key (suite)
     folder_map += { suite : [] }
   endif
-  folder_map += { suite : folder_map[suite] + [file + '\t' + source] }
+  folder_map += {
+    suite : folder_map[suite] + [file + '\t' + source + '\t' + tlsf_source]
+  }
   d += { folder : folder_map }
 
   if kind == 'T'
@@ -330,42 +361,65 @@ foreach line : manifest
   endif
 endforeach
 
+tlsf_corpus_dir = get_option ('acacia_tlsf_corpus_dir')
+skipped_tlsf_entries = 0
+expanded = { 'test' : [], 'benchmark' : [] }
+
+foreach kind, kind_files : { 'test' : test_files, 'benchmark' : benchmark_files }
+  entries = []
+  foreach folder, testset : kind_files
+    foreach suite, files_in_suite : testset
+      foreach record : files_in_suite
+        record_parts = record.split ('\t')
+        file = record_parts[0]
+        source = record_parts[1]
+        tlsf_source = record_parts[2]
+        if tlsf_source != ''
+          if tlsf_corpus_dir == ''
+            skipped_tlsf_entries += 1
+            continue
+          endif
+          source_args = ['-T', tlsf_corpus_dir / tlsf_source]
+        else
+          filename = 'ltl' / source
+          if not fs.exists (filename)
+            error ('File ' + filename + ' not found (referenced by '
+                   + folder + '/' + suite + ').')
+          endif
+          source_args = ['-F', files (filename)]
+        endif
+        entries += [{
+          'file' : file,
+          'args' : source_args,
+          'suffixes' : ['', '/' + suite, '/' + folder + '/' + suite,
+                        '/' + folder],
+          'all_suites' : ['all/' + file, 'all', 'all/' + suite,
+                          'all/' + folder + '/' + suite,
+                          'all/' + folder],
+        }]
+      endforeach
+    endforeach
+  endforeach
+  expanded += { kind : entries }
+endforeach
+
 #############################
 # Test suite (`meson test`)
 #############################
 
-foreach folder, testset : test_files
-  foreach suite, files_in_suite : testset
-    foreach record : files_in_suite
-      record_parts = record.split ('\t')
-      file = record_parts[0]
-      source = record_parts[1]
-      filename = 'ltl' / source
-      if not fs.exists (filename)
-        error ('File ' + filename + ' not found (referenced by '
-               + folder + '/' + suite + ').')
-      endif
-      foreach backend, opt : test_backends
-        test (backend + '/' + file,
-              check_real_exe,
-              args : [ '-p',  ## prefix every line with the name of the test
-                       opt,   ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
-                       '-F', files (filename) ],
-              suite : [
-                backend,
-                backend + '/' + suite,
-                backend + '/' + folder + '/' + suite,
-                backend + '/' + folder,
-                'all/' + file,
-                'all',
-                'all' + '/' + suite,
-                'all' + '/' + folder + '/' + suite,
-                'all' + '/' + folder
-              ],
-              timeout: 30,
-              depends : [ab_exe])
-      endforeach
+foreach entry : expanded['test']
+  foreach backend, opt : test_backends
+    backend_suites = []
+    foreach suffix : entry['suffixes']
+      backend_suites += [backend + suffix]
     endforeach
+    test (backend + '/' + entry['file'],
+          check_real_exe,
+          # opt selects acacia-bonsai (-a) or another configured backend.
+          args : ['-p', opt] + entry['args'],
+          suite : backend_suites + entry['all_suites'],
+          timeout: 30,
+          depends : [ab_exe])
   endforeach
 endforeach
 
@@ -373,40 +427,30 @@ endforeach
 # Benchmark suite (`meson test --benchmark`)
 #############################
 
-foreach folder, testsets : benchmark_files
-  foreach suite, files_in_suite : testsets
-    foreach record : files_in_suite
-      record_parts = record.split ('\t')
-      file = record_parts[0]
-      source = record_parts[1]
-      filename = 'ltl' / source
-      if not fs.exists (filename)
-        error ('File ' + filename + ' not found (referenced by '
-               + folder + '/' + suite + ').')
-      endif
-      foreach backend, opt : benchmark_backends
-        benchmark (backend + '/' + file,
-                   check_real_exe,
-                   args : [ '-p',  ## prefix every line with the name of the test
-                            opt,   ## use acacia-bonsai.  -+: acaplus, -l: ltlsync
-                            '-F', files (filename) ],
-                   suite : [
-                     backend,
-                     backend + '/' + suite,
-                     backend + '/' + folder + '/' + suite,
-                     backend + '/' + folder,
-                     'all/' + file,
-                     'all',
-                     'all' + '/' + suite,
-                     'all' + '/' + folder + '/' + suite,
-                     'all' + '/' + folder
-                   ],
-                   timeout: 10,
-                   depends: [ab_exe])
-      endforeach
+foreach entry : expanded['benchmark']
+  foreach backend, opt : benchmark_backends
+    backend_suites = []
+    foreach suffix : entry['suffixes']
+      backend_suites += [backend + suffix]
     endforeach
+    benchmark (backend + '/' + entry['file'],
+               check_real_exe,
+               # opt selects acacia-bonsai (-a) or another configured backend.
+               args : ['-p', opt] + entry['args'],
+               suite : backend_suites + entry['all_suites'],
+               timeout: 10,
+               depends: [ab_exe])
   endforeach
 endforeach
+
+if skipped_tlsf_entries > 0
+  message (
+    skipped_tlsf_entries.to_string ()
+    + ' TLSF suite entries were skipped because acacia_tlsf_corpus_dir is empty. '
+    + 'Materialize them with `python3 benchmarking/syntcomp-corpus.py '
+    + 'materialize --out DIR` and configure with -Dacacia_tlsf_corpus_dir=DIR.'
+  )
+endif
 
 #############################
 # Synthesis test suite

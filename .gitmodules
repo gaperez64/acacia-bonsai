@@ -4,3 +4,8 @@
 [submodule "subprojects/tlsf-tools"]
 	path = subprojects/tlsf-tools
 	url = https://github.com/gaperez64/tlsf-tools.git
+[submodule "tests/syntcomp-benchmarks"]
+	path = tests/syntcomp-benchmarks
+	url = https://github.com/SYNTCOMP/benchmarks.git
+	shallow = true
+	update = none

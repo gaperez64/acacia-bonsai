@@ -108,6 +108,12 @@ else
   build_conf.set ('ACACIA_TRANSLATION_PREFS', 'spot::postprocessor::Small')
 endif
 
+if get_option ('acacia_ltl_frontend') == 'mp_nba'
+  build_conf.set ('ACACIA_LTL_FRONTEND', 'ACACIA_LTL_FRONTEND_MP_NBA')
+else
+  build_conf.set ('ACACIA_LTL_FRONTEND', 'ACACIA_LTL_FRONTEND_BASELINE')
+endif
+
 if get_option ('acacia_enable_realizability_simplifier')
   build_conf.set ('ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER', 1)
 else
@@ -154,10 +160,10 @@ if get_option ('acacia_enable_equivariant_solver')
 else
   build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 0)
 endif
-if get_option ('acacia_enable_symmetric_solver')
-  build_conf.set ('ACACIA_ENABLE_SYMMETRIC_SOLVER', 1)
+if get_option ('acacia_transition_acceptance')
+  build_conf.set ('ACACIA_TRANSITION_ACCEPTANCE', 1)
 else
-  build_conf.set ('ACACIA_ENABLE_SYMMETRIC_SOLVER', 0)
+  build_conf.set ('ACACIA_TRANSITION_ACCEPTANCE', 0)
 endif
 
 if get_option ('acacia_no_simd')
@@ -191,10 +197,12 @@ boolean_states = get_option ('acacia_boolean_states')
 boolean_states_types = {
   'forward_saturation' : 'boolean_states::forward_saturation',
   'no_boolean_states' : 'boolean_states::no_boolean_states',
+  'transition_core' : 'boolean_states::transition_core',
 }
 boolean_states_gates = {
   'forward_saturation' : 'ACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION',
   'no_boolean_states' : 'ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES',
+  'transition_core' : 'ACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE',
 }
 build_conf.set ('BOOLEAN_STATES', boolean_states_types[boolean_states])
 foreach choice, gate : boolean_states_gates
@@ -272,14 +280,8 @@ foreach choice, gate : input_picker_gates
   build_conf.set (gate, enabled)
 endforeach
 
-build_conf.set ('ARRAY_AND_BITSET_DOWNSET_IMPL', get_option ('acacia_array_downset'))
 build_conf.set ('VECTOR_AND_BITSET_DOWNSET_IMPL', get_option ('acacia_vector_downset'))
 
-if get_option ('acacia_array_impl') == 'auto'
-  build_conf.set ('ARRAY_IMPL_DEFINE', '')
-else
-  build_conf.set ('ARRAY_IMPL_DEFINE', '#ifndef ARRAY_IMPL\n# define ARRAY_IMPL ' + get_option ('acacia_array_impl') + '\n#endif')
-endif
 if get_option ('acacia_vector_impl') == 'auto'
   build_conf.set ('VECTOR_IMPL_DEFINE', '')
 else
@@ -332,15 +334,6 @@ else
   build_conf.set ('POSETS_COMPILE_ALL_COMPONENTS', 0)
 endif
 
-posets_array_impl = get_option ('acacia_array_impl')
-if posets_array_impl == 'auto'
-  if get_option ('acacia_no_simd')
-    posets_array_impl = 'array_backed_sum'
-  else
-    posets_array_impl = 'simd_array_backed_sum'
-  endif
-endif
-
 posets_vector_impl = get_option ('acacia_vector_impl')
 if posets_vector_impl == 'auto'
   if get_option ('acacia_no_simd')
@@ -357,9 +350,7 @@ posets_vector_impl_gates = {
   'simd_vector_backed_sum' : 'POSETS_ENABLE_VECTOR_SIMD_VECTOR_BACKED_SUM',
   'vector_backed' : 'POSETS_ENABLE_VECTOR_VECTOR_BACKED',
 }
-build_conf.set (posets_vector_impl_gates[posets_array_impl], 1)
 build_conf.set (posets_vector_impl_gates[posets_vector_impl], 1)
-build_conf.set ('POSETS_ENABLE_VECTOR_X_AND_BITSET', 1)
 posets_downset_gates = {
   'vector_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_BACKED',
   'vector_or_kdtree_backed' : 'POSETS_ENABLE_DOWNSET_VECTOR_OR_KDTREE_BACKED',
@@ -378,7 +369,6 @@ posets_downset_gates = {
 foreach choice, gate : posets_downset_gates
   build_conf.set (gate, 0)
 endforeach
-build_conf.set (posets_downset_gates[get_option ('acacia_array_downset')], 1)
 build_conf.set (posets_downset_gates[get_option ('acacia_vector_downset')], 1)
 
 configure_file (input : 'src/config/acacia_build_config.hh.in',

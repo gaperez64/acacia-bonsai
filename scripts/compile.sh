@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 NPROC=$(nproc)
 SPOT_VERSION=${SPOT_VERSION:-2.15.1}

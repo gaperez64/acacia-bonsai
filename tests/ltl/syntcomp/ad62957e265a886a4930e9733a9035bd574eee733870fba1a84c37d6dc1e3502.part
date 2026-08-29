@@ -1,2 +1,0 @@
-.inputs bin_x0 bin_y1 bin_x1 pred__x_lt_xprev_ bin_y0 bin_done2 pred__xprev_lt_x_ bin_done1 pred__yprev_lt_y_ bin_st_0 pred__y_lt_yprev_ bin_done0
-.outputs cd cy2 cy1 cx2 cx1

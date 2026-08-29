@@ -8,7 +8,8 @@
 #endif
 
 #if (ACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION + \
-     ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES) != 1
+     ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES + \
+     ACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE) != 1
 # error "Exactly one boolean-states implementation must be selected"
 #endif
 

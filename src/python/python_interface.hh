@@ -19,8 +19,7 @@
 /**
  * The type of vectors in a winning region.
  */
-using counter_vector_type = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
-using vector_type = posets::vectors::x_and_bitset<counter_vector_type, 0>;
+using vector_type = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
 
 /**
  * The type of winning region.

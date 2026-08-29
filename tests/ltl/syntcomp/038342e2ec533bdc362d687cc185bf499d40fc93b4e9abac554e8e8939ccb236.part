@@ -1,2 +1,0 @@
-.inputs bin_sense0 bin_temp1 bin_st_0 bin_temp0 bin_sense1 pred__temp_lt_tempprev_ bin_mode0 pred__tempprev_lt_temp_ pred__senseprev_lt_sense_ pred__sense_lt_senseprev_ bin_mode2 bin_mode1 e2 e1
-.outputs t2 t1 m1 m0

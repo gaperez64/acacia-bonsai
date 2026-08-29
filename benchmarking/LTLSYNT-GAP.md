@@ -5,44 +5,60 @@ remaining gap comes from, and the durable record of what has been tried.
 
 ## Current standing
 
-The current campaign is archived at
-`_bm-logs.fmcad26-head-6dda2f3b-20260822`; this gitignored directory is the provenance for the
-figures below.
+The final current-versus-Acacia-1.x campaign is archived at
+`_bm-logs.final-v1-current-1d48a15f-20260825`; this gitignored directory contains the frozen
+sources, manifests, raw rows, validation summaries, and SHA-256 provenance for the fresh rows
+below. The `ltlsynt` rows are retained from the preceding three-solver campaign at
+`_bm-logs.fmcad26-head-6dda2f3b-20260822` and are marked as such.
 
 | panel | solver | solved | PAR-2 |
 |---|---|---:|---:|
-| syntcomp21 crit (94 instances) | `head` | **91** | 199.965 |
-| syntcomp21 crit (94 instances) | `ltlsynt` | 86 | 333.015 |
-| syntcomp21 crit (94 instances) | `best23` | 90 | 304.272 |
-| syntcomp24 0s-20s (1011) | `head` | 871 | 5149.970 |
-| syntcomp24 0s-20s (1011) | `ltlsynt` | **897** | 4163.157 |
-| syntcomp24 0s-20s (1011) | `best23` | 750 | 9304.980 |
-| syntcomp25 panel (180) | `head` | 111 | 2606.453 |
-| syntcomp25 panel (180) | `ltlsynt` | **158** | 925.201 |
-| syntcomp25 panel (180) | `best23` | 95 | 3117.684 |
-| syntcomp26 panel (180) | `head` | 136 | 1635.101 |
-| syntcomp26 panel (180) | `ltlsynt` | **165** | 632.701 |
-| syntcomp26 panel (180) | `best23` | 104 | 2709.740 |
+| syntcomp21 crit (94 instances) | current, fresh | **91** | 202.352 |
+| syntcomp21 crit (94 instances) | `ltlsynt`, prior | 86 | 333.015 |
+| syntcomp21 crit (94 instances) | Acacia 1.x, fresh | 90 | 304.527 |
+| syntcomp24 0s-20s (1011) | current, fresh | 871 | 5191.507 |
+| syntcomp24 0s-20s (1011) | `ltlsynt`, prior | **897** | 4163.157 |
+| syntcomp24 0s-20s (1011) | Acacia 1.x, fresh | 745 | 9470.106 |
+| syntcomp25 panel (180) | current, fresh | 111 | 2597.586 |
+| syntcomp25 panel (180) | `ltlsynt`, prior | **158** | 925.201 |
+| syntcomp25 panel (180) | Acacia 1.x, fresh | 95 | 3124.637 |
+| syntcomp26 panel (180) | current, fresh | 136 | 1627.912 |
+| syntcomp26 panel (180) | `ltlsynt`, prior | **165** | 632.701 |
+| syntcomp26 panel (180) | Acacia 1.x, fresh | 104 | 2709.865 |
 
 This section is replaced wholesale by each new campaign rather than appended to, so it never
-accumulates stale runs.
+accumulates stale runs. The `ltlsynt` rows were measured on the pairs Acacia's own frontend
+produced; a four-arm campaign confirmed that moving `ltlsynt` to its own SyFCo route changes
+none of them, so they stand as measured. See *Comparison basis* below.
 
-Versus the previously published PR #118 figures, `head` gained on both modern panels:
+The fresh current and Acacia 1.x invocations were serialized and each solver ran in its own
+8 GiB, zero-swap user-systemd scope with a 17-second deadline. Current reproduces the prior
+coverage exactly on all four panels. Fine PAR-2 comparisons to the retained `ltlsynt` campaign
+remain directional: per-invocation scope startup alone added about 0.048 s to each successful
+SYNTCOMP24 current row. The frozen revisions are Acacia `1d48a15f`, Posets `4f79e9f`,
+tlsf-tools `ca27906`, and Acacia 1.x `5ffd8f99`.
+
+Versus the previously published PR #118 figures, current gained on both modern panels:
 SYNTCOMP25 moved from 104 to 111 and SYNTCOMP26 from 133 to 136. `ltlsynt` also moved, from 156
 to 158 and from 164 to 165, because a wrapper defect had been feeding both tools the same
 malformed empty-side partitions. The 2024 Acacia 1.x series is new in this campaign.
+The final pass reported here reran both current and Acacia 1.x on all four panels instead of
+reusing that archived v1 series.
 
-**Caveat:** the machine thermally throttled during these runs: package temperature ranged from
+**Caveat:** the machine thermally throttled across these campaigns: package temperature ranged from
 85 to 100 C while the clock swung between 4452 and 2107 MHz. Coverage figures are robust, but
 fine-grained PAR-2 deltas should not be quoted as precise.
 
 ## Verdict correctness
 
 The campaign compared every verdict against the SYNTCOMP `//STATUS` metadata. Acacia 1.x
-(`best23`) produced wrong answers: 2 on 2024, 2 on 2025, and 1 on 2026, plus 9 instances on
-2024 where it contradicted both other solvers. On the three with declared status
-(`TwoCountersDisButA6`, `TwoCountersDisButA7`, and `TwoCountersGui`), it answered
-REALIZABLE against a declared UNREALIZABLE, taking up to 8.8 s.
+produced wrong answers: 2 on 2024, 2 on 2025, and 1 on 2026. On 2024 it also disagreed with
+current on six instances without decisive panel metadata. The strict fresh runner rejected four
+additional v1 wrapper results as unknown because the wrapper reported `CRASH (exit 0)` instead
+of a consistent verdict: `SPIPureNext`, `TwoCountersDisButA6`, `TwoCountersDisButA7`, and
+`TwoCountersGui`. Together with `detector_unreal15` moving from a 15.0 s answer to a 17 s
+timeout, that explains why the fresh v1 count is 745 rather than the archived 750; current's
+coverage is unchanged.
 
 `ltlsynt` answered UNREALIZABLE on `LedMatrix` on both 2024 and 2025, against a declared
 REALIZABLE; see [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md). On `lilydemo04_modified`, all three
@@ -317,12 +333,12 @@ so the prototype was removed from the final head.
 
 ## What has been tried
 
-- **Static sizing was deleted; the zero-tail specialization remains:** the former shipping
+- **Static sizing and the zero-tail wrapper were deleted:** the former shipping
   path instantiated the complete solver once for every `x_and_bitset<X, N>` tail size and
   selected among nine copies through a compile-time dispatcher. The four sizing controls, the
   array/vector/Boolean-tail branches, the clamps, and both static-switch helpers are now gone.
-  The sole path is hardwired to `x_and_bitset<X, 0>`: it stores no bitset words, but preserves
-  the zero-tail wrapper's element type and forwarding operations.
+  The sole path instantiates the configured vector directly; there is no storage-policy option
+  or zero-length tail type in Acacia's solver or Python interface.
 
   Clean release/LTO builds used one compile job. The final build includes the residual-work
   changes and Posets `7562564163741d7378d4bbacd7d6d5e7b856d20d`:
@@ -330,18 +346,19 @@ so the prototype was removed from the final head.
   | build | wall time | peak RSS | binary |
   |---|---:|---:|---:|
   | shipping static `c0` | 421.19 s | 6,459,456 KiB | 14,482,048 B |
-  | hardwired zero-tail | 61.24 s | 586,940 KiB | 454,432 B |
+  | hardwired zero-tail validation build | 61.24 s | 586,940 KiB | 454,432 B |
+  | exact bare-vector twin | 60.24 s | 586,752 KiB | 453,816 B |
 
   This is a 6.88x faster build, 11.01x less peak memory, and a 31.87x smaller binary. Coverage
-  used the standard 17 s, 8 GiB, zero-swap, one-solver-per-scope protocol. Acacia 1.x is the
-  archived `best23` campaign rather than a rerun:
+  used the standard 17 s, 8 GiB, zero-swap protocol. The final bare-vector and Acacia 1.x
+  columns are the fresh, one-solver-per-scope rerun:
 
-  | panel | shipping static | zero-tail | Acacia 1.x |
-  |---|---:|---:|---:|
-  | SYNTCOMP21 (94) | 91 | 91 | 90 |
-  | SYNTCOMP24 (1,011) | 868 | 867 | 750 |
-  | SYNTCOMP25 (180) | 111 | 111 | 95 |
-  | SYNTCOMP26 (180) | 136 | 136 | 104 |
+  | panel | shipping static | zero-tail | bare vector | Acacia 1.x |
+  |---|---:|---:|---:|---:|
+  | SYNTCOMP21 (94) | 91 | 91 | 91 | 90 |
+  | SYNTCOMP24 (1,011) | 868 | 867 | 871 | 745 |
+  | SYNTCOMP25 (180) | 111 | 111 | 111 | 95 |
+  | SYNTCOMP26 (180) | 136 | 136 | 136 | 104 |
 
   There were zero opposite verdicts. On SYNTCOMP24, zero-tail gained
   `load_balancer_unreal15_5` and lost two `Morning` instances in the raw panel; all three
@@ -349,25 +366,25 @@ so the prototype was removed from the final head.
   shipping ratio on mutually solved SYNTCOMP24 rows was 0.992, although fine timing on this
   thermally throttled machine is directional.
 
-  Collapsing one step further to the bare `X` type was rejected. Although bare and
-  `x_and_bitset<X,0>` carry the same counter payload, they instantiate a different templated
-  downset and solver stack. Six apparent bare losses were measured five times with shipping,
-  zero-tail, and bare binaries in one 20 s campaign:
+  Collapsing one step further to the bare `X` type is now the default. The earlier 119% regression
+  claim did not survive an exact-twin rerun. Five 20-second repetitions
+  over the six suspected cases produced the same LTO coverage (all capped) and identical solver
+  work. Without LTO, the one mutually solved case was 1.69% slower for bare while retiring 0.06%
+  fewer instructions; the other five capped under both. Profiles put about 90% of cycles in the
+  same downset comparison path, and the dominant 192-byte partial-order kernel is byte-identical.
+  The controlled measurements and disassembly are recorded in
+  `benchmarking/STATE-VECTOR-TAIL-STUDY.md`. They show no mechanism or consistent measurement by
+  which the zero-length wrapper outperforms the underlying vector, so the redundant type was
+  removed.
 
-  | instance | shipping median | zero-tail median | bare |
-  |---|---:|---:|---:|
-  | SYNTCOMP21 `round_robin_arbiter4` | 7.408 s | 12.118 s | 0/5, >20 s |
-  | SYNTCOMP25 `arbiter_with_buffer_pb_5_pe_` | 11.853 s | 5.583 s | 0/5, >20 s |
-  | SYNTCOMP25 `robot-resource-1d-unreal` | 12.846 s | 12.595 s | 16.885 s |
-  | SYNTCOMP24 `arbiter_with_buffer5` | 11.885 s | 5.538 s | 0/5, >20 s |
-  | SYNTCOMP24 `round_robin_arbiter4` | 7.768 s | 12.257 s | 0/5, >20 s |
-  | SYNTCOMP24 `simple_arbiter_with_hints6` | 11.590 s | 5.418 s | 0/5, >20 s |
-
-  Bare was 34% slower on the one case it completed and at least 63--269% slower on the five
-  capped cases. Its 30 runs consumed 584.179 s versus 266.831 s for zero-tail, a censored lower
-  bound of 119% more wall time. The storage-equivalent but code-generation-distinct behavior is
-  deliberately left for a follow-up profile/disassembly experiment; removing the wrapper is not
-  part of this change.
+  The fresh per-solver cgroup run exposed two SYNTCOMP24 resource limits: `robot_grid6_6` and
+  `robot_grid7_7` both reached the 8 GiB ceiling. This initially looked like a bare-vector memory
+  regression because the older aggregate run had labelled one timeout and one unknown. An exact
+  LTO-twin follow-up alternated bare and zero-tail for five 20-second repetitions per target and
+  recorded cgroup `MemoryPeak`. Both variants resource-limited 5/5 on both targets, and all 20
+  runs peaked at exactly 8 GiB. Median time-to-limit was 8.35/8.63 s bare/zero on grid6 and
+  15.08/14.93 s on grid7: small differences in opposite directions. The differing panel labels
+  came from resource isolation/classification, not a memory benefit from the zero-length tail.
 
   The alternative dynamic Boolean tails also remain rejected: `x_and_boolvec` solved 322 of
   the three smaller panels' 338 shipping answers, while the word-parallel `x_and_wordvec`
@@ -539,6 +556,551 @@ per-instance landing bar.
   `robot_grid2_2` in 0.63 s, while Acacia does not decide them. The earlier framing as an
   incompleteness of K-boundedness is retracted; it is a resource question until shown
   otherwise.
+
+- **The symmetry quotient solver was removed:** it landed default-off in `d12104d0` and was
+  never enabled by any campaign or preset that the gates or the panels used. Its successor, the
+  exact equivariant solver, is default-on, documented, and carries the measured symmetry gains
+  recorded above. Deleted: `symmetric_k_bounded_safety_aut.hh`, `symmetric_dense_downset.hh`,
+  `symmetric_downset.hh`, `symmetric_conversion.hh` and their four unit tests (1,797 src +
+  591 test lines), the `acacia_enable_symmetric_solver` option, the
+  `best_decomp_mona_symmetric` preset, and the `ACACIA_SYMMETRY_{OPTIMIZE_UNIONO,UNIONO_SPIKE,
+  DENSE_SIMD,USE_POSETS_UNION}` macros. `symmetry.hh`, `symmetry_certificate.hh`,
+  `symmetry_blocks.hh` and `symmetry_profile.hh` are retained — the equivariant and classic
+  solvers use them — and the latter two were renamed from `symmetric_*` so the prefix no longer
+  implies a solver that no longer exists. Recover the deleted work from `d0935a9c~`.
+
+- **Two compile-time knobs were dead and are gone:** `acacia_array_downset` and
+  `acacia_array_impl` outlived the static-sizing deletion above. No source file read `ARRAY_IMPL`
+  or `ARRAY_AND_BITSET_DOWNSET_IMPL`, and every preset set `array_downset` equal to
+  `vector_downset`, so removing them changes no build. The preset registry was cut from 65 to 30
+  in the same pass, dropping every preset that no document, script, CI job or preset group named.
+
+  All three deletions were verified behaviour-neutral against the shipping preset: rebuilding
+  before and after in an identically-named build directory left `.text`, `.rodata` and
+  `.data.rel.ro` byte-identical in every translation unit. Only `solve_game.cc.o` changed at all,
+  and only in its debug line table, because the edit shifted line numbers. Build cost was
+  unaffected (25.1 s versus 25.2 s, 872 MB peak, `-j1`).
+
+- **A fourth solver child costs nothing, and the `any` race policy is not dead after all:** before
+  reimplementing the B3 MP-NBA as a portfolio member, the concurrency cost of adding a fourth
+  forked child was measured directly, using the existing `small+any` translation preference as a
+  stand-in. Arms were the shipping preset (3 children: 1 real + 2 unreal) and
+  `best_decomp_rank_bucketed_mona_race` (4 children: 2 real + 2 unreal), differing in exactly one
+  option. Standard protocol, 17 s cap, one 8 GiB zero-swap scope per invocation, serialized from a
+  detached unit. Arm order was alternated between panels with a 120 s cooldown between arms, so
+  thermal drift on this throttling machine could not systematically favour either arm.
+
+  | panel | arm | solved | REAL | UNREAL | timeout | PAR-2 |
+  |---|---|---:|---:|---:|---:|---:|
+  | SYNTCOMP25 (180) | 3 children | 111 | 39 | 72 | 69 | 2606.6 |
+  | SYNTCOMP25 (180) | 4 children | **112** | 40 | 72 | 68 | 2583.5 |
+  | SYNTCOMP26 (180) | 3 children | 136 | 46 | 90 | 44 | 1635.5 |
+  | SYNTCOMP26 (180) | 4 children | **137** | 47 | 90 | 43 | 1606.9 |
+
+  Zero losses and zero opposite verdicts on either panel; the fourth child gained one instance on
+  each. The 3-child arm reproduced the published campaign coverage exactly (111 and 136), which
+  validates the run despite the machine sitting at its 100 C throttle plateau throughout. PAR-2
+  moved less than the measured same-configuration noise floor (21.134 s on SYNTCOMP25, 12.074 s on
+  SYNTCOMP26) and is not evidence by itself.
+
+  Both gains are the same instance, `amba_decomposed_lock_pb_13_pe_`, re-run five times in
+  isolation at the 17 s cap: the 3-child arm timed out 5/5 (17.18-17.28 s) and the 4-child arm
+  answered REALIZABLE 5/5 in 3.95-4.55 s. The gain is reproducible, not panel noise.
+
+  This corrects the earlier entry above that recorded the `any` race policy as answering 0/34 and
+  rejected it. That measurement was taken on the 34-row residual screen of hard instances, which
+  could not see a gain on an instance the screen did not contain. On full panels `small+any` is
+  worth one instance on each of SYNTCOMP25 and SYNTCOMP26 at no measured cost. Whether it should
+  become the shipping default is a separate decision needing G1 and a SYNTCOMP24 run.
+
+  **Scope of what this de-risks:** it shows the process architecture absorbs a fourth concurrent
+  child without contention losses under the shared 8 GiB cap on a 16-thread machine. It does not
+  de-risk B3's own memory appetite -- its monitors reached 2,739 states / 218,936 edges, far heavier
+  than an `any`-preference child -- so B3 still has to be measured on its own once built.
+
+- **`small+any` is rejected as a shipping default, on four paired panels:** the fourth-child
+  measurement above gained an instance on two panels, so the `any` translation preference was
+  validated properly, with both arms run paired on every panel rather than only the two where it
+  had looked good.
+
+  | panel | `small` | `small+any` | delta | PAR-2 `small` | PAR-2 `small+any` |
+  |---|---:|---:|---:|---:|---:|
+  | SYNTCOMP21 crit (94) | **91** | 90 | -1 | 204.4 | 232.6 |
+  | SYNTCOMP24 0s-20s (1011) | **870** | 868 | -2 | 5193.8 | 5229.5 |
+  | SYNTCOMP25 panel (180) | 111 | **112** | +1 | 2606.6 | 2583.5 |
+  | SYNTCOMP26 panel (180) | 136 | **137** | +1 | 1635.5 | 1606.9 |
+  | total | **1208** | 1207 | -1 | | |
+
+  Zero opposite verdicts anywhere. The median `small+any`/`small` time ratio on the 866 mutually
+  solved SYNTCOMP24 rows is 1.026, and 1.060 on SYNTCOMP21 crit, so the second real child costs a
+  few percent of wall time on every instance it does not help.
+
+  Every SYNTCOMP24 loss has the same signature -- an instance solving within a few seconds of the
+  cap, pushed past it: `06.ltl` 16.77 s, `Morning_c92eb242` 14.86 s, `Morning_f2774e0b` 13.94 s and
+  `collector_v215` 14.02 s all became timeouts. Re-running all six changed rows five times in
+  isolation: `06.ltl` (4/5 vs 0/5) and `Morning_f2774e0b` (5/5 vs 4/5) are confirmed losses;
+  `Morning_c92eb242` and `collector_v215` solve 5/5 under both but land 2.2-2.5 s slower and within
+  1-2 s of the cap, so they flip with machine conditions rather than being robustly lost.
+
+  Both gains are the same family and are robust and large: `amba_decomposed_lock13` (5/5 at 3.83 s
+  versus 0/5) and `amba_decomposed_lock14` (5/5 at 14.21 s versus 0/5). The `small` portfolio
+  cannot solve either at any observed timing. So `any` is not useless -- it unlocks one family
+  outright -- but as a global default it pays for that with a few percent on everything else and a
+  net instance loss.
+
+  This supersedes the reasoning, though not the conclusion, of the earlier `0/34` rejection
+  recorded above: that screen contained only hard residual instances and could not have observed
+  either the gains or the cap-adjacent losses. The right reason to keep `small` is the paired
+  four-panel result here. The natural next step for the `amba_decomposed_lock` family is a
+  portfolio member with a trigger, not a global preference change.
+
+- **The MP-NBA construction is rebuilt and correct, but it cannot reach real benchmarks yet:**
+  the B3 prototype was never committed -- nothing in any ref of this repository, the pinned
+  `tlsf-tools`, or the stale sibling clone contains `mp_nba`, `to_delta2` or `falsifying`. Its
+  design survives in the flat k-safety handoff, so Level A was reimplemented from that
+  specification as `src/solver/mp_nba.hh`, compiled out by default behind
+  `acacia_ltl_frontend` (`baseline`/`mp_nba`, default `baseline`), included by nothing but its own
+  test.
+
+  The construction follows the handoff exactly. With `Inf(a) = GF a` and `Fin(b) = FG !b`, the
+  target is `Phi = AND_j ( OR_{a in R_j} Inf(a) OR OR_{b in P_j} Fin(b) )`, whose negation is a
+  disjunction of falsifying cubes `AND_{a in R_j} Fin(a) AND AND_{b in P_j} Inf(b)`. Per cube: an
+  uncommitted mode guesses that the last `R_j` color has passed; once committed any `R_j` color
+  kills the branch; the `P_j` colors are cycled in fixed order and completing a cycle is accepting;
+  cubes are joined by nondeterministic union, under a hard cap with fallback.
+
+  Correctness is established by language equivalence against Spot's automaton for `!phi`
+  (`spot::are_equivalent`): 10 targeted formulas including `true` and `false`, plus 4 of 24 seeded
+  random formulas that the extractor accepts. The check discriminates -- the same automaton tests
+  equivalent to `!phi` and not equivalent to `phi`.
+
+  **The blocking measurement.** Over 300 corpus formulas, `spot::to_delta2` succeeds on all 300
+  (258 are already Delta2), but cube extraction accepts only **2**. Classifying the top-level
+  conjuncts after `nnf(to_delta2)` shows why:
+
+  | shape | conjuncts |
+  |---|---:|
+  | `G(...)` safety | 513 |
+  | `OR` mixed | 289 |
+  | other | 60 |
+  | boolean | 18 |
+  | `GF(temporal)` | 3 |
+  | **`OR` of `GF`/`FG` over Boolean state formulas** | **1** |
+
+  Real specifications are overwhelmingly safety conjuncts and mixed disjunctions, not limit
+  clauses. This is precisely the gap the handoff names: "Efficient Delta2 normalization is a useful
+  first step, but it does not by itself hand us MP-CNF... A separate transformation is needed to
+  expose recurrence/persistence over deterministic finite-prefix monitors." Reaching MP-CNF
+  requires compiling each `G(...)` conjunct into a deterministic finite-prefix monitor and
+  re-expressing the limit behaviour over monitor outputs. That transformation is the actual
+  project; the NBA construction downstream of it is done and verified.
+
+  A latent defect found while probing this is also fixed: `extract_cubes` registered BDD variables
+  that only `build_violation_nba` released, so extracting without building aborted the `bdd_dict`
+  with "some maps are not empty". Ownership is now RAII in a move-only `cube_set` that transfers
+  registrations with `register_all_variables_of` on move, with regression tests for both
+  extract-without-build and automaton-outlives-cube_set.
+
+- **The MP-CNF route is retired: the structure is absent exactly where the gap is.** The plan for
+  completing MP extraction gated all implementation on one measurement, and the measurement says
+  stop.
+
+  The framing first: MP-CNF needs no new normal form. `Phi = AND_j (OR Inf(a) OR OR Fin(b))` *is*
+  generalized Streett acceptance and its negation is Rabin, so `acc_cond::is_rabin_like` /
+  `is_streett_like` read the cubes directly off any automaton. That part was never the problem.
+
+  On the five instances the residual census names as decisive, all automata built for `!phi` so the
+  comparison is apples to apples:
+
+  | instance | baseline `BA(!phi)` | MP limit automaton | safety conjuncts | monitor states | pairs |
+  |---|---:|---:|---:|---:|---:|
+  | `lift5` | 1127 (6.9 s) | 1239 (10.3 s) | 0 | 0 | 1 |
+  | `lift_gr13` | 173 (0.67 s) | 148 (1.50 s) | 0 | 0 | 1 |
+  | `lift_unary_enc3` | 178 (0.95 s) | 205 (1.03 s) | 0 | 0 | 1 |
+  | `robot_grid2_2` | 98 (0.22 s) | 58 (0.25 s) | 0 | 0 | 1 |
+  | `amba_decomposed_lock13` | 5 | 5 | 0 | 0 | 1 |
+
+  Three findings, each fatal on its own. **There is no safety/limit split**: after
+  `nnf(to_delta2)` every one of these is a single non-`G` conjunct, so the monitor-only
+  architecture has nothing to monitor and contributes `M = 0`. **The acceptance is degenerate**:
+  Spot lands on `Inf(0)`, plain Buechi with one set, and every Buechi condition is trivially both
+  Rabin-like and Streett-like with one pair, so `p = 1` reports no structure at all. **There is no
+  size win**: the limit automaton is 0.6x to 1.1x the baseline, and Level A would product it with
+  the cube structure, roughly doubling it.
+
+  Widening to the whole SYNTCOMP26 panel shows the structure does exist elsewhere -- 45 of 180
+  instances have multi-set acceptance, up to 15 clauses -- but cross-tabulating it against whether
+  Acacia actually solves the instance shows it sits on the wrong side:
+
+  | acceptance sets | Acacia solves | Acacia fails |
+  |---|---:|---:|
+  | 1 (Buechi, degenerate) | 67 | 2 |
+  | 2-4 sets | 22 | 4 |
+  | 5+ sets | 23 | 12 |
+  | translation did not finish in 20 s | 24 | 26 |
+  | total | 136 | 44 |
+
+  **26 of the 44 failures are instances where the translation itself does not finish.** MP
+  extraction is strictly downstream of that translation -- it reads acceptance off an automaton it
+  must first build -- so it cannot help them. At most 16 failures carry exploitable structure, and
+  on those the size measurement above says the result would be no smaller.
+
+  Caveat on that last table: the probe translates the whole formula monolithically, while Acacia
+  decomposes first, so its "did not finish" column overstates what Acacia's own pipeline stalls on
+  and should not be read as an M3 count. The three findings on the decisive instances were measured
+  directly and do not depend on it.
+
+  What this also explains: B3's 6 gains were never structural. There is no MP structure on those
+  formulas to exploit. They were a different translation path happening to suit a few instances --
+  the same phenomenon as `small+any` unlocking `amba_decomposed_lock` and nothing else. That is an
+  argument for the racing portfolio, which is already measured as free, and against any specialized
+  frontend.
+
+  The Level A construction stays in the tree, compiled out, correct and tested. Reviving it needs
+  full determinization to produce non-degenerate acceptance, which is the architecture this project
+  chose not to adopt.
+
+- **Structural Gate T passes: state-based acceptance is what inflates Acacia's counting core.**
+  Acacia asks Spot for `postprocessor::BA` (which Spot documents as implying `SBAcc`), adds `SBAcc`
+  to the preference, and calls `spot::sbacc` again. `forward_saturation` then derives the counting
+  core from `state_is_accepting`, and its result becomes `posets::vectors::bool_threshold` -- the
+  numeric dimension of the solver's downset vectors. So the request for state-based acceptance is
+  paid for directly in solver dimension. Spot offers `Buchi` (transition-based, no `SBAcc`) and
+  `GeneralizedBuchi` natively.
+
+  Census over the SYNTCOMP25 and SYNTCOMP26 panels, three worker orientations, five translation
+  forms from one prepared formula and one BDD dictionary (`benchmarking/translation-census.py`,
+  `translation-gate.py`, and `--forms all` in `acacia-automata-study`):
+
+  | | SYNTCOMP25 | SYNTCOMP26 | combined |
+  |---|---:|---:|---:|
+  | workers compared | 371 | 381 | 648 |
+  | median `B-native`/`S-current` core | 0.833 | 0.875 | 0.862 |
+  | at or below 80% | 46.6% | 39.4% | **41.4%** |
+  | at or below 70% | 103 | 85 | 157 |
+  | worse than `S-current` | 7 | 4 | 10 |
+  | rejected for action blowup | 0 | 0 | 0 |
+  | families covered | 61 | 68 | 92 |
+
+  Gate T criterion 1 needs 20% of workers at or below 80% across at least two families: measured
+  41.4% across 92. Criterion 2 needs 20 qualifying workers on hard/timeout instances across two
+  families: measured **69 across 38**. Both clear independently. Action signatures *fell* in every
+  qualifying case rather than rising.
+
+  Median counting core by form is `S-current` 10, `B-native` 8, `G-native` 7, `B-from-G` 8,
+  `S-from-G` 10. `S-from-G` returning to `S-current` is the check that the conversion chain
+  rebuilds today's automaton, and it localizes the cost: on `lift_gr13` the chain reads 46, 46, 91,
+  so degeneralizing TGBA to Buchi is free and the entire counting-core cost is the final
+  state-based lowering. Gate G also clears -- `G-native` is at or below 75% of `B-native` on 28.9%
+  of workers, median action ratio 1.000, acceptance sets median 1 / p95 7 / max 14 -- but TGBA
+  ranks stay gated behind a measured TBA gain.
+
+  **Two caveats, both material.** First, the census cap of 45 s per worker means 307 of 360
+  instances have at least one completed worker, and **41 of the 113 failures (36%) are invisible to
+  it**. The gate therefore says: among instances whose translation completes, transition acceptance
+  materially shrinks the counting core, including on ones Acacia currently fails. It says nothing
+  about the hardest third of the gap. Second, the core predicts runtime only moderately --
+  Spearman 0.509 against solve time on 124 solved SYNTCOMP26 rows, with median solve time rising
+  0.033 s to 1.236 s and timeout rate 4% to 23% across core buckets, and median core 10.5 on solved
+  versus 25.0 on failed. So a structural win of this size forecasts a handful of instances and
+  essentially flat PAR-2, not a step change: PAR-2 here is dominated by timeouts charged at twice
+  the cap, so it moves only if coverage moves.
+
+  The realistic candidates are failing instances with both a large core and a large reduction:
+  `prioritized_arbiter_enc_pb_10_pe_` 54 to 27, `prioritized_arbiter_pb_9_pe_` 22 to 11,
+  `prioritized_arbiter_pb_8_pe_` 20 to 10, `scheduler-real` 20 to 11, `robot-to-target-charging6`
+  20 to 12, `robot_collect_samples_v1-real` 19 to 10, `thermostat-GF-unreal2` 16 to 10.
+
+- **Transition-based Buchi: structural gate passed, solver gate failed. The custom-frontend
+  programme is rejected for the current architecture.** This is the decisive result of the
+  translation sprint, and it is a clean negative: the counting core shrank exactly as predicted and
+  the solver did not care.
+
+  The prototype is real and end-to-end. `create_automaton` emits `postprocessor::Buchi` without
+  `SBAcc` under `-Dacacia_transition_acceptance=true`; the rank increment travels from the edge
+  through `solver/transition_payload.hh` into the action vectors; and
+  `boolean_states::transition_core` replaces the state-acceptance booleanization using the SCC
+  census. `apply()` was never touched -- it was already a transition-based update.
+
+  Measured against a matched control that differs in *only* the two acceptance options -- same
+  release flags, same `no_preprocessing`, equivariant off on both -- on the SYNTCOMP26 panel at the
+  17 s cap:
+
+  | arm | solved | REAL | UNREAL | timeout | PAR-2 |
+  |---|---:|---:|---:|---:|---:|
+  | control, state-based | **125** | 43 | 82 | 55 | **2022.3** |
+  | TBA, transition-based | 124 | 43 | 81 | 56 | 2046.2 |
+
+  Against the sprint's own TBA success criterion: zero semantic errors, **pass**; non-worse PAR-2,
+  **fail**; three new solves in two families, **fail** (zero new solves); 10% geometric-mean
+  speedup, **fail** (median time ratio on the 124 mutually solved workers is 1.000); 20% lower peak
+  RSS on a hard cohort, **fail** (median 0.982 over ten instances taking more than 3 s, a 1.8%
+  reduction).
+
+  The single lost instance is not noise. `robot-cat-unreal-1d-unreal` re-run five times in
+  isolation solves 5/5 under both arms, but at 12.66-13.95 s state-based against 15.72-16.77 s
+  transition-based -- a consistent 24% slowdown that pushes it over the cap. It accounts for
+  essentially the whole PAR-2 difference.
+
+  **What this establishes is more useful than the prototype.** The structural claim was correct and
+  is now measured twice: transition acceptance cuts the median counting core from 10 to 8, with
+  41.4% of 648 workers at or below 80% and action signatures falling rather than rising. The
+  counting core *is* `posets::vectors::bool_threshold`, the numeric dimension of the downset
+  vectors. And shrinking it by that much changed nothing. So the dimension of the vectors is not
+  what governs solver cost on this corpus; the antichain size at a given dimension is, which is the
+  M2 bucket the census already pointed at and which no frontend change can reach.
+
+  Gate G is therefore moot in practice. `G-native` sits a further 12.5% below `B-native` (median
+  core 7 versus 8) on 28.9% of workers, but a 20% reduction produced zero runtime effect, so a
+  further 12.5% has no mechanism by which to produce one. Per the sprint's stop criterion -- TBA
+  passes the structural gate but does not improve the solver, and TGBA shows no much-stronger
+  structural reduction -- the conclusion is **reject the custom frontend for the current Acacia
+  architecture**, retaining what was built as research infrastructure.
+
+  One hazard found on the way is worth keeping even though the programme stops: Spot's
+  `state_is_accepting()` throws on a transition-based automaton, and
+  `equivariant_k_bounded_safety_aut.hh:188` calls it while the equivariant solver is on by default.
+  A transition-acceptance build is only sound with that path disabled. `surely_losing`, `elevator`,
+  `cap_census`, `no_ios_precomputation` and the Python interface share the restriction. Anyone
+  reviving this must port those call sites rather than discover the throw at runtime.
+
+- **Simulation-density pre-gate passes: the dominance structure the antichains would need is
+  there.** After the TBA negative established that a smaller counting core does not imply a smaller
+  antichain, the next mechanism is semantic dominance -- saturating rank vectors along the direct
+  simulation preorder so the existing coordinatewise SIMD comparison detects simulation-induced
+  dominance without being replaced. Before building antichain snapshots, the cheap question was
+  whether any dominance exists to exploit.
+
+  `src/solver/direct_simulation.hh` computes the greatest direct simulation in the orientation the
+  closure needs (`p <= q` iff `q` simulates `p`, matching each `p --(g,mu)--> p'` by
+  `q --(h,nu)--> q'` with `nu >= mu` and `p' <= q'`). Census over the 68 M2 rows of
+  `gap-census.tsv`, three worker orientations, 1200-state cap:
+
+  | | |
+  |---|---|
+  | S-current workers measured | 152 (21 hit the cap) |
+  | M2 instances covered | 63 of 65, across 24 families |
+  | pair density | median 0.044, p90 0.203 |
+  | states with a strict simulator | median **87.9%**, min 20.3% |
+  | workers above 50% dominated | 128 / 152 |
+  | workers below 10% dominated | **0 / 152** |
+  | equivalent pairs | median **0**, nonzero on 22 / 152 |
+
+  It holds exactly where the antichains hurt: `lift_unary_enc3` 99.8% of 615 states dominated
+  against a peak antichain of 18,404; `robot_grid2_2` 99.9% of 1,185 against 9,383;
+  `round_robin_arbiter4` 98.9% of 453 against 7,154; `lift5` 99.8% of 489 against 6,915.
+
+  The zero-equivalence result is what distinguishes this from what has already been measured.
+  Acacia's existing preprocessing census calls `spot::reduce_direct_sim_sba` and records how many
+  states a *quotient* would merge, which is near zero -- and that is consistent with these numbers,
+  because the simulation *equivalence* really is empty. The one-way *preorder* is dense in the same
+  automata. Those are different objects and only the preorder is what saturation exploits, so the
+  existing census was never evidence against this route.
+
+  **Caveat that constrains the next step.** `automata_study.cc` translates the undecomposed
+  formula, while the solver runs `DECOMPOSE_SPEC` and solves sub-specs: `arbiter8` reads 35 states
+  here against `aut_states=5888` in the census row. These densities are therefore measured on a
+  different, smaller object than the one whose antichain reaches 18,404. Dominance is dense at
+  every scale visible here, which is encouraging, but Gate S must be evaluated on antichain
+  snapshots taken from the solver's own automaton rather than on this census, or it would measure
+  the wrong thing.
+
+- **Gate S fails: the antichains are already simulation-closed, so the width is intrinsic.** The
+  density pre-gate above showed abundant dominance structure, so the next question was whether
+  saturating rank vectors along the simulation preorder collapses the antichain. It does not, and
+  the reason is sharper than "no effect".
+
+  Method: dump the solver's real antichain (`src/solver/antichain_snapshot.hh`, behind
+  `ACACIA_ENABLE_DIAGNOSTICS` and an environment variable, so both the shipping build and an
+  ordinary diagnostics build are unaffected), then replay it offline
+  (`src/research/antichain_replay.cc`): compute the relation, apply
+  `cl(v)[p] = max (v[p], max over q simulating p of cap_p (v[q]))` with `cap_p` the identity on
+  counting coordinates and `{-1 to -1, >=0 to 0}` on the Boolean tail, re-prune with the ordinary
+  coordinatewise order, and report the survivor ratio.
+
+  Over the M2 cohort -- 298 measurements, 40 instances, 25 families, 109 workers with an antichain
+  of at least 8 maxima spanning 29 instances and 16 families:
+
+  | | |
+  |---|---|
+  | survivor ratio | median **1.0000**, min 1.0000, max 1.0000 |
+  | workers at or below 0.5 | **0 / 109** (Gate S needs a median at or below 0.5) |
+  | workers at or below 0.2 | **0** (Gate S needs at least three) |
+  | workers where the closure changed *any* vector | **0 / 109** |
+  | total dominance pairs across them | 329,306 |
+  | closure inflationary / idempotent | 271 / 271 both |
+
+  It holds on the largest antichains in the corpus: `robot_grid2_2` 18,432 maxima,
+  `lift3` 14,034, `finding_nemo_1` 7,869, `round_robin_arbiter4` 4,552 with 25,749 dominance pairs,
+  `lift_unary_enc4` 4,032 with **70,417** dominance pairs -- and not one coordinate raised. A
+  single-instance drill-down confirmed it independently: 0 of 2,589,216 coordinates raised.
+
+  **The mechanism.** Acacia's `cpre` propagates ranks backward along every edge, so when `q`
+  simulates `p` the fixed point has already credited `p` with everything `q` could give it. The
+  maxima come out of the computation already closed. Saturation therefore has nothing to add, and
+  the antichain's elements are genuinely incomparable *semantically*, not merely coordinatewise.
+
+  Taken with the transition-based Buchi result above, two independent representation changes have
+  now failed for complementary reasons: reducing the vector dimension by 20% changed nothing, and
+  the vectors are already saturated with respect to the strongest cheap semantic order available.
+  That is evidence the M2 antichain width is intrinsic to the bounded-safety game rather than an
+  artefact of how Acacia encodes it, which is where any further effort should be pointed.
+
+  Per the sprint's own rule the live saturated solver is not implemented; the snapshot and replay
+  tooling stays as research infrastructure. Two defects were fixed while building it and are worth
+  knowing for anyone reusing the snapshots: the parent forks one child per strategy and
+  `DECOMPOSE_SPEC` splits further, so a per-process counter made every child write `aut-0` and
+  mixed vectors of different lengths under one automaton; the directory key now includes the pid.
+
+- **Native TLSF input is a null result: the indexed-family hints are redundant with unhinted
+  detection.** `src/tlsf_frontend.cc:89-97` turns TLSF's bus declarations into
+  `symmetry::indexed_family_hint`, and `solver_invoker.cc:649` feeds them to the equivariant
+  solver. The converted `.ltl`/`.part` path structurally cannot carry them, so this was repeatedly
+  described in these notes as the largest independent prize. It is not.
+
+  Measured with the *same binary* on the SYNTCOMP26 panel, the only difference being whether Acacia
+  is fed the `.tlsf` source or the converted pair (`run-subset.py --tlsf-map`), 17 s cap, standard
+  protocol:
+
+  | arm | solved | timeout | PAR-2 |
+  |---|---:|---:|---:|
+  | `.ltl`, no hints | 135 | 45 | 1668.5 |
+  | TLSF, with hints | 136 | 44 | 1646.6 |
+
+  Zero opposite verdicts, median time ratio 0.977. The apparent +1 does not survive: the gained
+  instance `patrolling-alarm21` declares no bus and therefore produces no hints at all, and five
+  isolated runs solve it 2/5 under `.ltl` and 4/5 under TLSF, all between 16.2 and 17.0 s against a
+  17 s cap. It is a straddler, not a mechanism.
+
+  The decisive figure is the hint-capable cohort: **88 of the 180 panel instances declare buses,
+  and both arms solve 73 of them.** Zero difference where the mechanism can act at all.
+
+  The hints are genuinely produced and delivered -- the diagnostics confirm `source_format=tlsf` on
+  the TLSF route -- but the equivariant solver reaches the same decision either way, with identical
+  `bool_threshold` and identical decline reasons (`declined:too few indexed clients`, `not-run`)
+  across the bus-declaring sample. The unhinted structural detector already recovers what the hints
+  would supply, and where it declines it declines on the client-count and block-count admission
+  gates, which hints do not affect.
+
+  What this does *not* settle is a methodology defect that remains worth fixing independently: the
+  `.ltl` corpus is generated by `convert-tlsf-corpus-native.py --native-inspect`, that is by
+  Acacia's own TLSF frontend, so every published `ltlsynt` comparison has run on Acacia's reading
+  of each spec. Putting both tools on tlsf-tools' `tlsf2ltl` plus
+  `tlsfinfo --expanded-ins/--expanded-outs` would remove that confound regardless of solver payoff.
+
+- **Gate M0 fails absolutely: the MP fragment is empty on this corpus, and the direct cube-counter
+  sprint terminates before the solver.** The combined-frontend proposal rested on Manna-Pnueli cube
+  extraction succeeding on the formula components the solver actually sees. Its section 10.2 made a
+  fair objection to the earlier 2-of-300 measurement: that was taken on *undecomposed* formulas,
+  and Acacia decomposes first. So the census was rebuilt around exactly the solver's front path --
+  `realizability_simplifier`, then `split_independent_formulas` on the output APs, then extraction
+  per component on the safe formula before the REAL path negates it.
+
+  Over 345 instances (the M2 cohort plus both panels), 956 rows:
+
+  | level | rows | accepted | **nontrivial** |
+  |---|---:|---:|---:|
+  | whole undecomposed formula | 428 | 4 | **0** |
+  | decomposed components | 528 | 4 | **0** |
+
+  524 of 528 components report `unsupported`. All four accepts are the constant formulas `1` and
+  `0` -- instances the simplifier had already reduced to a constant -- with zero predicates. **No
+  instance in the corpus has a single component with nontrivial MP structure.**
+
+  Decomposition therefore does not lift reach at all: 4 degenerate accepts before, 4 after. That
+  settles the one legitimate reason to doubt the earlier measurement.
+
+  The shapes explain why. Of the unsupported components, 273 begin with a Boolean combination, 140
+  with `G(`, 42 with `G!`, and only 41 with `GF` -- and even those are not conjunctions of
+  GF/FG-over-Boolean clauses. Real specifications are safety-dominant, which is the same thing the
+  earlier MP-CNF measurement found from the automaton side (`Inf(0)`, one acceptance set, zero
+  safety conjuncts after Delta2 on the decisive instances).
+
+  The agreed fallback -- build the solver on whatever M0 accepts and let Gate M1 judge the
+  mechanism -- is vacuous here, because M0 accepts nothing. Gate M1 compares direct counters
+  against the explicit MP-NBA on covered workers, and the covered cohort is empty, so the
+  comparison is undefined. Implementing `k_bounded_mp_direct` would produce a solver that provably
+  cannot fire on any benchmark instance, so it was not implemented.
+
+  This is the sixth frontend negative and it is the handoff's own outcome 4: no frontend
+  representation tested materially changes the geometry. Together with the two mechanism results
+  above -- dimension is not the lever, and the antichains are already simulation-closed -- the
+  evidence is that the M2 bottleneck is intrinsic to the bounded-safety game. Further effort
+  belongs in the downset/solver representation or in the external fast path, not in the frontend.
+
+  Retained as research infrastructure: `extract_cubes` now reports `extraction_stats` with a
+  precise decline status and node/cube/predicate caps, and `src/research/mp_census.cc` plus
+  `benchmarking/mp-census.py` reproduce this census.
+
+## Comparison basis: each tool converts the TLSF itself
+
+Until 2026-08-28 both tools were fed the same `.ltl`/`.part` corpus, and that corpus was produced
+by **Acacia's own TLSF frontend** (`convert-tlsf-corpus-native.py --native-inspect`). One
+contestant defined the other's input. The basis is now: both tools start from the common `.tlsf`,
+Acacia through its native frontend (`-T`), `ltlsynt` through SyFCo, which is the TLSF reference
+converter and what entrants use. `benchmarking/run-subset.py --tool ltlsynt --tlsf-map` and
+`tests/check-real-correct.sh -l -T` both implement that route, and the latter logs the converter
+and its version into the meson log so no figure can be read without knowing its basis.
+
+The campaign behind this section is archived at `_bm-logs.ltlsynt-route-20260828`.
+
+### The old basis did not distort any published figure
+
+Divergence between the two converters, measured over all 180 SYNTCOMP26 panel instances with
+`benchmarking/check-tlsf-conversion.py`:
+
+| | |
+|---|---:|
+| identical formula AST, after canonicalizing commutative operands | 176 / 180 |
+| identical formula **bytes** | **0 / 180** |
+| genuinely divergent | 4 |
+
+`ltlsynt` was then run on both bases under the standard protocol -- 17 s cap, 8 GiB zero-swap user
+scopes, two passes with the arm order alternated. All four arms scored **165 solved (65 realizable,
+100 unrealizable, 13 timeout, 2 abort) and agreed on all 180 instances**, with zero difference
+between passes. No published `ltlsynt` figure needs re-baselining.
+
+The 2 aborts are a Spot assertion failure that reproduces on both bases; see `SPOT-ANOMALIES.md`.
+
+### Why `ltlsynt` gets `--semantics`, not an adapted formula
+
+The four divergences are not printing artifacts. They have two causes, both about TLSF semantics:
+
+- **SyFCo does not adapt `SEMANTICS` to `TARGET`; Acacia does.** SyFCo's `ltlxba` output prints the
+  formula under the declared `SEMANTICS`, so for a `SEMANTICS: Moore, TARGET: Mealy` file it emits
+  the Moore reading, while Acacia's frontend shifts the inputs to deliver the declared Mealy
+  target. This affects **56 of the 1,586** corpus files.
+- **TLSF `Strict` has no SyFCo or `ltlsynt` counterpart.** Under `Mealy,Strict` Acacia asserts the
+  safety guarantees unconditionally and puts only liveness under the assumption implication; SyFCo
+  emits the plain `A -> G` reading, because the strict form needs `X[!]`, which its `ltlxba`
+  printer refuses. This affects **22 of the 1,586** files, and on those instances `ltlsynt` really
+  is solving a different specification. The wrapper warns when it happens.
+
+The remaining panel divergence is `amba_case_study_unreal_pb_4_pe_`, the known enum-validity
+constraint our frontend emits and SyFCo does not.
+
+The first cause admits two fixes, and the choice between them is measured rather than assumed. On
+the 47 Moore instances of the SYNTCOMP26 selection, at the same cap and protocol, over two passes
+that agreed exactly:
+
+| route | specification | solved |
+|---|---|---:|
+| SyFCo plain output + `ltlsynt --semantics=Moore` | correct | **28** |
+| SyFCo `--overwrite-semantics Mealy` + default Mealy | correct | 25 |
+| SyFCo plain output + default Mealy | **wrong** | 28 |
+
+The first two rows are the same specification and never disagree on a verdict, so the difference is
+purely that `ltlsynt` handles Moore semantics natively far more cheaply than it solves the
+`X`-shifted Mealy encoding: it decides `full_arbiter_unreal1_pb_2_16_pe_`, `_pb_3_7_pe_` and
+`_pb_4_4_pe_` in seconds one way and times out the other. **Adapting the formula would have cost
+`ltlsynt` three instances**, so the harness passes SyFCo's unadapted output together with an
+explicit `--semantics=<declared model>`.
+
+The third row scores 28 only by coincidence; it answers a different specification and is unsound as
+a basis regardless of its total.
+
+Restricted to the 52 non-plain-Mealy instances of the SYNTCOMP26 selection, `ltlsynt` on the SyFCo
+route and on the vendored pairs agree on **all 52, in both passes**, once the semantics are handled.
 
 ## Open leads
 

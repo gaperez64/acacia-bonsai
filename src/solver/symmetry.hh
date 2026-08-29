@@ -586,7 +586,7 @@ namespace symmetry {
         aut, analyze_indexed_aps (aut, all_inputs, all_outputs));
   }
 
-  // Defined in symmetric_blocks.hh, after block-layout recovery is available.
+  // Defined in symmetry_blocks.hh, after block-layout recovery is available.
   inline structure_report describe (const indexed_ap_analysis& analysis, const group& G,
                                     unsigned num_states);
 

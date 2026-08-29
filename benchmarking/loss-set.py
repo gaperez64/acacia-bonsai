@@ -28,7 +28,6 @@ import argparse
 import json
 import os
 import sys
-from collections import Counter
 
 
 def instance_from_name(name):
@@ -144,7 +143,6 @@ def main():
         })
 
     # ---- summary ----
-    cats = Counter(r["category"] for r in rows)
     print(f"acacia config : {args.acacia}")
     print(f"ltlsynt config: {args.ltlsynt}")
     print(f"common instances: {len(rows)}\n")
