@@ -59,7 +59,7 @@ def test_materialize_fails_when_source_no_longer_matches_manifest_hash(tmp_path)
     manifest.write_text(
         module.MANIFEST_HEADER
         + "\n"
-        + f"example.tlsf\tdirect:tlsf/family/example.tlsf\t"
+        + "example.tlsf\tdirect:tlsf/family/example.tlsf\t"
         + hashlib.sha256(good).hexdigest()
         + "\n"
     )

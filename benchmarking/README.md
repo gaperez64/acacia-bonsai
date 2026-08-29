@@ -124,27 +124,44 @@ The checksum-verified final current-versus-Acacia-1.x cactus plots are in
 
 # Deterministic stratified panels
 
-`convert-tlsf-corpus-native.py` materializes a flat staging directory of
-`.ltl`/`.part` pairs through the
-`tlsf-frontend-inspect` helper, which links the same frontend implementation as
-`acacia-bonsai -T`. It does not invoke SyFCo or any standalone tlsf-tools
-binary. Use `--selection` to reproduce a competition selection and
-`--list-output` to emit its Meson suite manifest; `conversion.tsv` records the
-source, formula, and partition hashes plus TLSF semantics/target metadata.
-`syntcomp-pool.py` then imports exact pairs into the shared content-addressed
-`tests/ltl/syntcomp` corpus and writes the year-specific `sources.tsv` map.
+The current flow for the TLSF-backed `syntcomp25` and `syntcomp26` suites
+reconstructs the SYNTCOMP TLSF corpus from the `tests/syntcomp-benchmarks`
+submodule. `syntcomp-corpus.py materialize` verifies and writes a flat corpus,
+and `-Dacacia_tlsf_corpus_dir` makes that directory available to Meson. Each
+suite's `tlsf-sources.tsv` maps its logical `.ltl` instance names to the TLSF
+sources passed to the configured backend.
 
 For example:
 ```
+python3 benchmarking/syntcomp-corpus.py materialize \
+  --out /tmp/syntcomp-tlsf
+
+meson setup build \
+  -Dacacia_tlsf_corpus_dir=/tmp/syntcomp-tlsf
+```
+
+The retained flow applies to the `syntcomp21` and `syntcomp24` suites.
+`convert-tlsf-corpus-native.py` produced their still-vendored `.ltl`/`.part`
+pairs through the linked `tlsf-frontend-inspect` implementation, and
+`syntcomp-pool.py` imported those pairs into the shared content-addressed
+`tests/ltl/syntcomp` corpus with year-specific `sources.tsv` maps. Their
+upstream TLSF provenance was not retained, so those suites cannot be
+reconstructed from the TLSF submodule and remain vendored. Both tools remain
+the supported conversion and import path when the original TLSF corpus and
+selection are available; the converter records conversion metadata without
+invoking SyFCo or a standalone tlsf-tools binary.
+
+For example, given the original `syntcomp24` inputs:
+```
 python3 benchmarking/convert-tlsf-corpus-native.py \
-  selection-ltl-2026 /tmp/syntcomp26-stage \
+  /path/to/syntcomp24-tlsf /tmp/syntcomp24-stage \
   --native-inspect build/tests/tlsf-frontend-inspect \
-  --selection syntcomp26.tlsf.list \
-  --list-output tests/suites/benchmarks/syntcomp26/all.list
+  --selection /path/to/syntcomp24.tlsf.list \
+  --list-output /tmp/syntcomp24.list
 
 python3 benchmarking/syntcomp-pool.py \
   --pool tests/ltl/syntcomp --maps-root tests/suites/benchmarks \
-  --suite syntcomp26=/tmp/syntcomp26-stage
+  --suite syntcomp24=/tmp/syntcomp24-stage
 ```
 
 `make-panel.py` builds a family-balanced easy/border/gap/open panel from paired

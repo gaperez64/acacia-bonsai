@@ -25,7 +25,6 @@ import csv
 import pathlib
 import re
 import statistics
-import sys
 
 FORMS = ("S-current", "B-native", "G-native", "B-from-G", "S-from-G")
 
@@ -137,7 +136,7 @@ def main() -> int:
                   f"   (n={len(per_form_core[form])})")
 
     share = len(gained) / len(ratios)
-    print(f"\nGATE T criterion 1: core <= 80% and actions <= +25%")
+    print("\nGATE T criterion 1: core <= 80% and actions <= +25%")
     print(f"  qualifying workers : {len(gained)} / {len(ratios)} = {100*share:.1f}%  "
           f"(need >= 20%)")
     print(f"  families covered   : {len(gained_fams)}  (need >= 2)")
