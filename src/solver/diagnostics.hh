@@ -519,7 +519,12 @@ namespace acacia::diagnostics {
   struct scoped_fine_timer {
       explicit scoped_fine_timer (fine_metric) {}
   };
-  struct scoped_downset_timer {};
+  struct scoped_downset_timer {
+      // Keep this diagnostics-off RAII stub non-trivial so named timer objects
+      // do not trigger -Wunused-variable.  The empty inline bodies generate no code.
+      scoped_downset_timer () {}
+      ~scoped_downset_timer () {}
+  };
 
   inline void observe_loop (size_t, int) {}
   inline void observe_action () {}
