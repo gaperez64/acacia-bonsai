@@ -79,6 +79,9 @@ jobs:
         echo "LD_LIBRARY_PATH=$SPOT_PREFIX/lib" >> "$GITHUB_ENV"
         PKG_CONFIG_PATH="$SPOT_PREFIX/lib/pkgconfig" pkg-config --modversion libspot
         LD_LIBRARY_PATH="$SPOT_PREFIX/lib" "$SPOT_PREFIX/bin/ltlfilt" --version
+    - name: Validate the configuration registry
+      run: |
+        python3 scripts/acacia-config.py validate
     - name: Compile and test a debug configuration
       run: |
         export CXX=g++-14
