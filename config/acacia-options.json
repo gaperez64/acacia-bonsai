@@ -108,7 +108,7 @@
     "translation_pref": "small",
     "enable_realizability_simplifier": true,
     "enable_syntactic_bypass": true,
-    "enable_tlsf_frontend": false,
+    "enable_tlsf_frontend": true,
     "simd_is_max": true,
     "decompose_spec": true,
     "vector_downset": "vector_backed",

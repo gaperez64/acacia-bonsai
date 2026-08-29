@@ -22,12 +22,12 @@ container so `-march=native` can target the host:
 docker pull ghcr.io/gaperez64/acacia-bonsai:latest
 docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
 ./scripts/compile.sh
-./scripts/acacia-bonsai.sh best_decomp_rank_bucketed_mona_tlsf \
+./scripts/acacia-bonsai.sh best_decomp_rank_bucketed_mona \
   -f 'G F req -> G F grant' -i req -o grant
 cat examples/realizable.tlsf | \
-  ./scripts/acacia-bonsai.sh best_decomp_rank_bucketed_mona_tlsf --tlsf
+  ./scripts/acacia-bonsai.sh best_decomp_rank_bucketed_mona --tlsf
 cat examples/realizable.tlsf | \
-  ./scripts/acacia-synthesis.sh best_decomp_rank_bucketed_mona_tlsf --tlsf > controller.aag
+  ./scripts/acacia-synthesis.sh best_decomp_rank_bucketed_mona --tlsf > controller.aag
 ```
 
 The CLI example intentionally omits `--rm`: compilation happens inside the
@@ -95,12 +95,12 @@ The `-c` option selects a configuration and the `-R` option disables the
 benchmarking step, so that only setup and compilation are done. If compilation
 memory is tight, add `-L` to use the low-memory compile profile.
 
-The native TLSF frontend is optional and off by default. It requires Flex and
-Bison; enable it directly with `-Dacacia_enable_tlsf_frontend=true`, or build
-the `best_decomp_mona_tlsf` preset:
+The Meson option `acacia_enable_tlsf_frontend` is off by default, so a bare
+`meson setup build` does not require Flex and Bison. Every configuration preset
+enables the frontend, so any `self-benchmark.sh -c NAME` build includes it:
 ```
-./self-benchmark.sh -L -R -c best_decomp_mona_tlsf
-build_best_decomp_mona_tlsf/src/acacia-bonsai -T spec.tlsf
+./self-benchmark.sh -L -R -c best_decomp_mona
+build_best_decomp_mona/src/acacia-bonsai -T spec.tlsf
 ```
 `-T/--tlsf FILE` parses TLSF natively. The wrapper accepts TLSF on standard
 input with `--tlsf` through the linked frontend; no external TLSF
@@ -134,8 +134,7 @@ translator preference is registry-backed as
 `best_decomp_mona_any` and `best_decomp_mona_race`.
 
 The shipping configuration is `best_decomp_rank_bucketed_mona`; the Docker
-image and the TLSF examples above build its frontend-enabled variant
-`best_decomp_rank_bucketed_mona_tlsf`, and the correctness and performance
+image and the TLSF examples above build it, and the correctness and performance
 gates are frozen against it. `best_decomp_mona` is the same configuration over
 the plain vector-backed downset, kept as the reference point for downset
 comparisons.
