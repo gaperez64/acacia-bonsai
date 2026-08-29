@@ -361,54 +361,65 @@ foreach line : manifest
   endif
 endforeach
 
+tlsf_corpus_dir = get_option ('acacia_tlsf_corpus_dir')
+skipped_tlsf_entries = 0
+expanded = { 'test' : [], 'benchmark' : [] }
+
+foreach kind, kind_files : { 'test' : test_files, 'benchmark' : benchmark_files }
+  entries = []
+  foreach folder, testset : kind_files
+    foreach suite, files_in_suite : testset
+      foreach record : files_in_suite
+        record_parts = record.split ('\t')
+        file = record_parts[0]
+        source = record_parts[1]
+        tlsf_source = record_parts[2]
+        if tlsf_source != ''
+          if tlsf_corpus_dir == ''
+            skipped_tlsf_entries += 1
+            continue
+          endif
+          source_args = ['-T', tlsf_corpus_dir / tlsf_source]
+        else
+          filename = 'ltl' / source
+          if not fs.exists (filename)
+            error ('File ' + filename + ' not found (referenced by '
+                   + folder + '/' + suite + ').')
+          endif
+          source_args = ['-F', files (filename)]
+        endif
+        entries += [{
+          'file' : file,
+          'args' : source_args,
+          'suffixes' : ['', '/' + suite, '/' + folder + '/' + suite,
+                        '/' + folder],
+          'all_suites' : ['all/' + file, 'all', 'all/' + suite,
+                          'all/' + folder + '/' + suite,
+                          'all/' + folder],
+        }]
+      endforeach
+    endforeach
+  endforeach
+  expanded += { kind : entries }
+endforeach
+
 #############################
 # Test suite (`meson test`)
 #############################
 
-tlsf_corpus_dir = get_option ('acacia_tlsf_corpus_dir')
-skipped_tlsf_entries = 0
-
-foreach folder, testset : test_files
-  foreach suite, files_in_suite : testset
-    foreach record : files_in_suite
-      record_parts = record.split ('\t')
-      file = record_parts[0]
-      source = record_parts[1]
-      tlsf_source = record_parts[2]
-      if tlsf_source != ''
-        if tlsf_corpus_dir == ''
-          skipped_tlsf_entries += 1
-          continue
-        endif
-        source_args = ['-T', tlsf_corpus_dir / tlsf_source]
-      else
-        filename = 'ltl' / source
-        if not fs.exists (filename)
-          error ('File ' + filename + ' not found (referenced by '
-                 + folder + '/' + suite + ').')
-        endif
-        source_args = ['-F', files (filename)]
-      endif
-      foreach backend, opt : test_backends
-        test (backend + '/' + file,
-              check_real_exe,
-              # opt selects acacia-bonsai (-a) or another configured backend.
-              args : ['-p', opt] + source_args,
-              suite : [
-                backend,
-                backend + '/' + suite,
-                backend + '/' + folder + '/' + suite,
-                backend + '/' + folder,
-                'all/' + file,
-                'all',
-                'all' + '/' + suite,
-                'all' + '/' + folder + '/' + suite,
-                'all' + '/' + folder
-              ],
-              timeout: 30,
-              depends : [ab_exe])
-      endforeach
+foreach entry : expanded['test']
+  foreach backend, opt : test_backends
+    backend_suites = []
+    foreach suffix : entry['suffixes']
+      backend_suites += [backend + suffix]
     endforeach
+    test (backend + '/' + entry['file'],
+          check_real_exe,
+          # opt selects acacia-bonsai (-a) or another configured backend.
+          args : ['-p', opt] + entry['args'],
+          suite : backend_suites + entry['all_suites'],
+          timeout: 30,
+          depends : [ab_exe])
   endforeach
 endforeach
 
@@ -416,47 +427,19 @@ endforeach
 # Benchmark suite (`meson test --benchmark`)
 #############################
 
-foreach folder, testsets : benchmark_files
-  foreach suite, files_in_suite : testsets
-    foreach record : files_in_suite
-      record_parts = record.split ('\t')
-      file = record_parts[0]
-      source = record_parts[1]
-      tlsf_source = record_parts[2]
-      if tlsf_source != ''
-        if tlsf_corpus_dir == ''
-          skipped_tlsf_entries += 1
-          continue
-        endif
-        source_args = ['-T', tlsf_corpus_dir / tlsf_source]
-      else
-        filename = 'ltl' / source
-        if not fs.exists (filename)
-          error ('File ' + filename + ' not found (referenced by '
-                 + folder + '/' + suite + ').')
-        endif
-        source_args = ['-F', files (filename)]
-      endif
-      foreach backend, opt : benchmark_backends
-        benchmark (backend + '/' + file,
-                   check_real_exe,
-                   # opt selects acacia-bonsai (-a) or another configured backend.
-                   args : ['-p', opt] + source_args,
-                   suite : [
-                     backend,
-                     backend + '/' + suite,
-                     backend + '/' + folder + '/' + suite,
-                     backend + '/' + folder,
-                     'all/' + file,
-                     'all',
-                     'all' + '/' + suite,
-                     'all' + '/' + folder + '/' + suite,
-                     'all' + '/' + folder
-                   ],
-                   timeout: 10,
-                   depends: [ab_exe])
-      endforeach
+foreach entry : expanded['benchmark']
+  foreach backend, opt : benchmark_backends
+    backend_suites = []
+    foreach suffix : entry['suffixes']
+      backend_suites += [backend + suffix]
     endforeach
+    benchmark (backend + '/' + entry['file'],
+               check_real_exe,
+               # opt selects acacia-bonsai (-a) or another configured backend.
+               args : ['-p', opt] + entry['args'],
+               suite : backend_suites + entry['all_suites'],
+               timeout: 10,
+               depends: [ab_exe])
   endforeach
 endforeach
 
