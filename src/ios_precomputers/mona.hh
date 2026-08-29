@@ -3,8 +3,10 @@
 
 #include <bit>
 #include <bddx.h>
+#include <chrono>
 #include <list>
 #include <numeric>
+#include <unordered_set>
 #include <spot/twa/bdddict.hh>
 #include <type_traits>
 #include <vector>
@@ -95,12 +97,29 @@ namespace ios_precomputers {
             }
           };
 
+#if ACACIA_ENABLE_DIAGNOSTICS
+          // Sprint A validation counters.  `decoded` is how many transition
+          // sets this expansion built; `residual_roots` is how many distinct
+          // residual relations those decodes covered, per input class.  A
+          // pre-decoding equality quotient must decode exactly the second
+          // number, so the two together bound what the quotient can save.
+          unsigned long long decoded = 0, unique_decoded = 0;
+          const bool count_residuals = acacia::diagnostics::semantic_decode_census ();
+          std::unordered_set<int> residual_roots;
+#endif
+
           auto recurse_outputs = [&] (this const auto& self, auto& tss, bdd bdd_opq) {
             if (bdd_opq == bddfalse)
               return;
             // TODO There may be more than one way to reach this bdd_pq; cache.
-            if (bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var)
+            if (bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var) {
+#if ACACIA_ENABLE_DIAGNOSTICS
+              ++decoded;
+              if (count_residuals and residual_roots.emplace (bdd_opq.id ()).second)
+                ++unique_decoded;
+#endif
               add_src_dst (tss.emplace_back (), bdd_opq);
+            }
             else {
               self (tss, bdd_high (bdd_opq));
               self (tss, bdd_low (bdd_opq));
@@ -113,6 +132,9 @@ namespace ios_precomputers {
             if (bdd_iopq == bddtrue or bdd_var (bdd_iopq) >= first_output) {
               using vt = typename std::remove_cvref_t<decltype (i_to_tss)>::value_type;
               i_to_tss.emplace_back (vt (bdd_input, {}));
+#if ACACIA_ENABLE_DIAGNOSTICS
+              residual_roots.clear ();
+#endif
               recurse_outputs (i_to_tss.back ().second, bdd_iopq);
             }
             else {
@@ -134,7 +156,17 @@ namespace ios_precomputers {
 #endif
 
           input_to_ios_t i_to_tss;
+#if ACACIA_ENABLE_DIAGNOSTICS
+          const auto decode_started = acacia::diagnostics::clock::now ();
+#endif
           recurse_inputs (i_to_tss, bdd_iopq, bddtrue);
+#if ACACIA_ENABLE_DIAGNOSTICS
+          acacia::diagnostics::set_decode_census (
+              decoded, unique_decoded,
+              (unsigned long long) std::chrono::duration_cast<std::chrono::milliseconds> (
+                  acacia::diagnostics::clock::now () - decode_started)
+                  .count ());
+#endif
           return i_to_tss;
         }
 

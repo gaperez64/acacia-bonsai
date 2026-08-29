@@ -82,6 +82,10 @@
       "inherits": "best_decomp_mona",
       "vector_downset": "rank_bucketed_vector_backed"
     },
+    "best_decomp_rank_bucketed_mona_diag": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "enable_diagnostics": true
+    },
     "best_decomp_rank_bucketed_mona_race": {
       "inherits": "best_decomp_rank_bucketed_mona",
       "translation_pref": "small+any"

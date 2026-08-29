@@ -57,6 +57,22 @@ namespace acacia::diagnostics {
     return value;
   }
 
+  // The semantic-action census extends the alphabet census with the numbers
+  // Sprint A needs: the per-input maxima, the inclusion-minimal residual-root
+  // count, and how many transition sets the expansion actually decoded.  The
+  // per-input maxima ride along on the walk the alphabet census already makes,
+  // so they are free; dominance and decode-side validation each cost real work
+  // and get their own switch.
+  inline bool semantic_dominance_census () {
+    static const bool value = env_flag_enabled ("ACACIA_DIAG_SEMANTIC_DOMINANCE");
+    return value;
+  }
+
+  inline bool semantic_decode_census () {
+    static const bool value = env_flag_enabled ("ACACIA_DIAG_SEMANTIC_DECODE");
+    return value;
+  }
+
   struct child_metrics {
       std::string instance = "-";
       std::string path = "unknown";
@@ -124,6 +140,16 @@ namespace acacia::diagnostics {
       unsigned long long alphabet_output_paths = 0;
       unsigned long long alphabet_output_nodes = 0;
       unsigned long long alphabet_bdd_nodes = 0;
+      unsigned long long alphabet_max_output_paths = 0;
+      unsigned long long alphabet_max_output_nodes = 0;
+      unsigned long long alphabet_minimal_output_nodes = 0;
+      unsigned long long alphabet_dominance_tests = 0;
+      unsigned long long alphabet_dominance_declines = 0;
+      unsigned long long alphabet_census_ms = 0;
+      unsigned long long alphabet_dominance_ms = 0;
+      unsigned long long decoded_transition_sets = 0;
+      unsigned long long decoded_unique_transition_sets = 0;
+      unsigned long long decode_ms = 0;
       int loops = 0;
       int k_attempts = 0;
       int last_k = -1;
@@ -229,7 +255,17 @@ namespace acacia::diagnostics {
          << " alphabet_input_nodes=" << m.alphabet_input_nodes
          << " alphabet_output_paths=" << m.alphabet_output_paths
          << " alphabet_output_nodes=" << m.alphabet_output_nodes
-         << " alphabet_bdd_nodes=" << m.alphabet_bdd_nodes << " equivariant=" << m.equivariant
+         << " alphabet_bdd_nodes=" << m.alphabet_bdd_nodes
+         << " alphabet_max_output_paths=" << m.alphabet_max_output_paths
+         << " alphabet_max_output_nodes=" << m.alphabet_max_output_nodes
+         << " alphabet_minimal_output_nodes=" << m.alphabet_minimal_output_nodes
+         << " alphabet_dominance_tests=" << m.alphabet_dominance_tests
+         << " alphabet_dominance_declines=" << m.alphabet_dominance_declines
+         << " alphabet_census_ms=" << m.alphabet_census_ms
+         << " alphabet_dominance_ms=" << m.alphabet_dominance_ms
+         << " decoded_transition_sets=" << m.decoded_transition_sets
+         << " decoded_unique_transition_sets=" << m.decoded_unique_transition_sets
+         << " decode_ms=" << m.decode_ms << " equivariant=" << m.equivariant
          << " eq_clients=" << m.equivariant_clients << " eq_blocks=" << m.equivariant_blocks
          << " eq_orbits=" << m.equivariant_orbits << " sym_families=" << m.symmetry_families
          << " sym_indices=" << m.symmetry_indices << " sym_matrix=" << m.symmetry_matrix
@@ -451,6 +487,34 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_semantic_action_census (unsigned long long max_output_paths,
+                                          unsigned long long max_output_nodes,
+                                          unsigned long long minimal_output_nodes,
+                                          unsigned long long dominance_tests,
+                                          unsigned long long dominance_declines,
+                                          unsigned long long census_ms,
+                                          unsigned long long dominance_ms) {
+    if (auto* m = current ()) {
+      m->alphabet_max_output_paths = max_output_paths;
+      m->alphabet_max_output_nodes = max_output_nodes;
+      m->alphabet_minimal_output_nodes = minimal_output_nodes;
+      m->alphabet_dominance_tests = dominance_tests;
+      m->alphabet_dominance_declines = dominance_declines;
+      m->alphabet_census_ms = census_ms;
+      m->alphabet_dominance_ms = dominance_ms;
+    }
+  }
+
+  inline void set_decode_census (unsigned long long transition_sets,
+                                 unsigned long long unique_transition_sets,
+                                 unsigned long long elapsed_ms) {
+    if (auto* m = current ()) {
+      m->decoded_transition_sets = transition_sets;
+      m->decoded_unique_transition_sets = unique_transition_sets;
+      m->decode_ms = elapsed_ms;
+    }
+  }
+
   inline void set_final_reason (std::string reason) {
     if (auto* m = current ())
       m->final_reason = std::move (reason);
@@ -535,6 +599,11 @@ namespace acacia::diagnostics {
   inline void snapshot (std::string_view) {}
   inline void set_alphabet_census (unsigned long long, unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long) {}
+  inline void set_semantic_action_census (unsigned long long, unsigned long long,
+                                          unsigned long long, unsigned long long,
+                                          unsigned long long, unsigned long long,
+                                          unsigned long long) {}
+  inline void set_decode_census (unsigned long long, unsigned long long, unsigned long long) {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}
