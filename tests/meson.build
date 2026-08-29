@@ -266,6 +266,14 @@ test ('equivariant-pre',
       equivariant_pre_test,
       suite : ['unit', 'symmetry'])
 
+semantic_mona_test = executable ('semantic-mona-test',
+                                 'semantic_mona_test.cc',
+                                 include_directories : inc,
+                                 dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('semantic-mona',
+      semantic_mona_test,
+      suite : ['unit', 'ios-precomputer'])
+
 component_concepts_test = executable ('component-concepts-test',
                                       'component_concepts_test.cc',
                                       include_directories : inc,

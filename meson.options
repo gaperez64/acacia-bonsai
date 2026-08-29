@@ -22,7 +22,8 @@ option('acacia_boolean_states', type: 'combo',
        value: 'forward_saturation',
        description: 'Which states get numeric rank coordinates; transition_core is the transition-acceptance counterpart of forward_saturation')
 option('acacia_ios_precomputer', type: 'combo',
-       choices: ['standard', 'delegate', 'fake_vars', 'powset', 'mona'],
+       choices: ['standard', 'delegate', 'fake_vars', 'powset', 'mona',
+                 'semantic_mona'],
        value: 'standard')
 option('acacia_actioner', type: 'combo',
        choices: ['standard', 'no_ios_precomputation'],

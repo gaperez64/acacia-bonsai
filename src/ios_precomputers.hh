@@ -21,3 +21,6 @@
 #if ACACIA_COMPILE_IOS_PRECOMPUTER_MONA
 #include "ios_precomputers/mona.hh"
 #endif
+#if ACACIA_COMPILE_IOS_PRECOMPUTER_SEMANTIC_MONA
+#include "ios_precomputers/semantic_mona.hh"
+#endif

@@ -86,6 +86,14 @@
       "inherits": "best_decomp_rank_bucketed_mona",
       "enable_diagnostics": true
     },
+    "best_decomp_rank_bucketed_semantic_mona": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "ios_precomputer": "semantic_mona"
+    },
+    "best_decomp_rank_bucketed_semantic_mona_diag": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "enable_diagnostics": true
+    },
     "best_decomp_rank_bucketed_mona_race": {
       "inherits": "best_decomp_rank_bucketed_mona",
       "translation_pref": "small+any"
