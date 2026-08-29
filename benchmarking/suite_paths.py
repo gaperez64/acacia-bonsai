@@ -44,17 +44,14 @@ def load_source_map(
     return sources
 
 
-def load_tlsf_source_map(
-    path: pathlib.Path, *, tlsf_corpus: pathlib.Path
-) -> dict[str, pathlib.Path]:
-    """Load ``tlsf-sources.tsv`` relative to a materialized TLSF corpus."""
+def read_tlsf_source_entries(path: pathlib.Path) -> dict[str, str]:
+    """Read and validate ``tlsf-sources.tsv`` without resolving its sources."""
     path = pathlib.Path(path)
     lines = path.read_text(encoding="utf-8").splitlines()
     if not lines or lines[0] != TLSF_SOURCE_MAP_HEADER:
         raise ValueError(f"{path}: expected {TLSF_SOURCE_MAP_HEADER!r} header")
-    tlsf_corpus = pathlib.Path(tlsf_corpus).resolve()
 
-    sources: dict[str, pathlib.Path] = {}
+    sources: dict[str, str] = {}
     for line_number, raw in enumerate(lines[1:], 2):
         if not raw or raw.startswith("#"):
             continue
@@ -76,10 +73,22 @@ def load_tlsf_source_map(
             raise ValueError(f"{path}:{line_number}: invalid TLSF source {source!r}")
         if instance in sources:
             raise ValueError(f"{path}:{line_number}: duplicate instance {instance!r}")
-        sources[instance] = (
-            tlsf_corpus / pathlib.Path(*source_path.parts)
-        ).resolve()
+        sources[instance] = source
     return sources
+
+
+def load_tlsf_source_map(
+    path: pathlib.Path, *, tlsf_corpus: pathlib.Path
+) -> dict[str, pathlib.Path]:
+    """Load ``tlsf-sources.tsv`` relative to a materialized TLSF corpus."""
+    sources = read_tlsf_source_entries(path)
+    tlsf_corpus = pathlib.Path(tlsf_corpus).resolve()
+    return {
+        instance: (
+            tlsf_corpus / pathlib.Path(*pathlib.PurePosixPath(source).parts)
+        ).resolve()
+        for instance, source in sources.items()
+    }
 
 
 def resolve_instance(source_map: pathlib.Path, instance: str) -> pathlib.Path:

@@ -372,47 +372,42 @@ def parse_acacia_result(stdout_stderr: str) -> str:
     return "UNKNOWN"
 
 
-def classify_acacia_run(run: RunResult) -> str:
-    """Classify a bounded Acacia run, requiring output/exit-code agreement."""
+TOOL_EXIT_CODES = {
+    "acacia": {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2},
+    # Acacia v1 reports UNKNOWN as 3, not 2.
+    "acacia1x": {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 3},
+    # Verified behaviorally identical to Acacia: ltlsynt previously expressed
+    # UNKNOWN=2 as a trailing special case instead of including it in its table.
+    "ltlsynt": {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2},
+}
+
+
+def classify_run(run: RunResult, tool: str = "acacia") -> str:
+    """Classify a bounded tool run, requiring output/exit-code agreement."""
+    try:
+        expected_exit = TOOL_EXIT_CODES[tool]
+    except KeyError:
+        raise ValueError(f"unknown tool: {tool!r}") from None
     if run.timed_out:
         return "TIMEOUT"
     if run.resource_limited:
         return "RESOURCE_LIMIT"
     result = parse_acacia_result(run.stdout + run.stderr)
-    expected_exit = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2}
     if run.returncode == expected_exit.get(result):
         return result
     return "ERROR"
+
+
+def classify_acacia_run(run: RunResult) -> str:
+    return classify_run(run, "acacia")
 
 
 def classify_acacia1x_run(run: RunResult) -> str:
-    """Classify a bounded Acacia 1.x run, requiring output/exit-code agreement."""
-    if run.timed_out:
-        return "TIMEOUT"
-    if run.resource_limited:
-        return "RESOURCE_LIMIT"
-    result = parse_acacia_result(run.stdout + run.stderr)
-    # The only exit-code difference from current Acacia is UNKNOWN: v1 uses 3,
-    # not 2.
-    expected_exit = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 3}
-    if run.returncode == expected_exit.get(result):
-        return result
-    return "ERROR"
+    return classify_run(run, "acacia1x")
 
 
 def classify_ltlsynt_run(run: RunResult) -> str:
-    """Classify a bounded ltlsynt run, requiring output/exit-code agreement."""
-    if run.timed_out:
-        return "TIMEOUT"
-    if run.resource_limited:
-        return "RESOURCE_LIMIT"
-    result = parse_acacia_result(run.stdout + run.stderr)
-    expected_exit = {"REALIZABLE": 0, "UNREALIZABLE": 1}
-    if run.returncode == expected_exit.get(result):
-        return result
-    if result == "UNKNOWN" and run.returncode == 2:
-        return "UNKNOWN"
-    return "ERROR"
+    return classify_run(run, "ltlsynt")
 
 
 def read_part(path: str | pathlib.Path) -> tuple[str, str]:

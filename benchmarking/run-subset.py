@@ -30,15 +30,17 @@ import sys
 import tempfile
 
 from benchlib import (
-    classify_acacia1x_run,
-    classify_acacia_run,
-    classify_ltlsynt_run,
+    classify_run,
     read_part,
     run_process_group,
     run_systemd_scope,
     write_csv,
 )
-from suite_paths import load_source_map
+from suite_paths import (
+    TLSF_SOURCE_MAP_HEADER,
+    load_source_map,
+    read_tlsf_source_entries,
+)
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -58,30 +60,67 @@ def read_instance_list(path):
     ]
 
 
-def read_tlsf_map(path, tlsf_corpus=None):
-    """Read a headered suite map or a headerless ad-hoc TLSF map."""
+def read_adhoc_tlsf_map(path, tlsf_corpus=None):
+    """Read a headerless ad-hoc TLSF map."""
+    # One-off campaign maps intentionally retain their historical, unvalidated
+    # format; maintained suite maps use read_tlsf_source_entries instead.
     tlsf_map = {}
-    first_row = True
     for raw in pathlib.Path(path).read_text().splitlines():
         if not raw.strip():
             continue
         name, tlsf = raw.split("\t")
-        if first_row and (name, tlsf) == ("instance", "tlsf"):
-            first_row = False
-            continue
-        first_row = False
         if tlsf_corpus is not None:
             tlsf = str(pathlib.Path(tlsf_corpus) / tlsf)
         tlsf_map[name] = tlsf
     return tlsf_map
 
 
-def classify_run(run, tool="acacia"):
-    if tool == "ltlsynt":
-        return classify_ltlsynt_run(run)
+def read_tlsf_map(path, tlsf_corpus=None):
+    """Read a validated suite map or an explicitly headerless ad-hoc map."""
+    path = pathlib.Path(path)
+    lines = path.read_text().splitlines()
+    if not lines or lines[0] != TLSF_SOURCE_MAP_HEADER:
+        return read_adhoc_tlsf_map(path, tlsf_corpus)
+
+    tlsf_map = read_tlsf_source_entries(path)
+    if tlsf_corpus is not None:
+        return {
+            name: str(pathlib.Path(tlsf_corpus) / source)
+            for name, source in tlsf_map.items()
+        }
+    return tlsf_map
+
+
+def build_command(tool, binary, ltl, ins, outs, semantics=None):
+    """Return the argv for one tool on one .ltl/.part pair."""
+    # This is the single place where each tool's CLI shape is defined.
+    if tool == "acacia":
+        return [binary, "-F", ltl, "-i", ins, "-o", outs]
     if tool == "acacia1x":
-        return classify_acacia1x_run(run)
-    return classify_acacia_run(run)
+        return [
+            binary,
+            "-c",
+            "BOTH",
+            "-F",
+            ltl,
+            "--ins",
+            ins,
+            "--outs",
+            outs,
+        ]
+    if tool == "ltlsynt":
+        cmd = [
+            binary,
+            "--realizability",
+            "-F",
+            ltl,
+            f"--ins={ins}",
+            f"--outs={outs}",
+        ]
+        if semantics is not None:
+            cmd.append(f"--semantics={semantics}")
+        return cmd
+    raise ValueError(f"unknown tool: {tool}")
 
 
 def _parse_tlsf_semantics(semantics):
@@ -251,7 +290,8 @@ def main():
                 print(f"  {base:44s} MISSING-TLSF")
                 continue
             if args.tool == "acacia":
-                cmd = runner_prefix + [args.bin, "-T", tlsf] + extra
+                # Acacia's native TLSF route does not use an .ltl/.part pair.
+                cmd = [args.bin, "-T", tlsf]
             else:
                 converted = convert_tlsf(args.syfco, tlsf, syfco_cache)
                 if converted is None:
@@ -262,15 +302,9 @@ def main():
                 ltl_path, machine_model = converted
                 ltl = str(ltl_path)
                 ins, outs = read_ltl_partition(ltl)
-                cmd = runner_prefix + [
-                    args.bin,
-                    "--realizability",
-                    "-F",
-                    ltl,
-                    f"--ins={ins}",
-                    f"--outs={outs}",
-                    f"--semantics={machine_model}",
-                ] + extra
+                cmd = build_command(
+                    args.tool, args.bin, ltl, ins, outs, machine_model
+                )
         else:
             ltl_path = (pathlib.Path(args.instances_dir) / base
                         if args.instances_dir else source_map.get(base))
@@ -279,29 +313,10 @@ def main():
                 continue
             ltl = str(ltl_path)
             ins, outs = read_ltl_partition(ltl)
-            if args.tool == "acacia":
-                cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
-            elif args.tool == "acacia1x":
-                cmd = runner_prefix + [
-                    args.bin,
-                    "-c",
-                    "BOTH",
-                    "-F",
-                    ltl,
-                    "--ins",
-                    ins,
-                    "--outs",
-                    outs,
-                ] + extra
-            else:
-                cmd = runner_prefix + [
-                    args.bin,
-                    "--realizability",
-                    "-F",
-                    ltl,
-                    f"--ins={ins}",
-                    f"--outs={outs}",
-                ] + extra
+            # Plain .ltl inputs carry no semantics, so only the TLSF route adds
+            # ltlsynt's --semantics flag.
+            cmd = build_command(args.tool, args.bin, ltl, ins, outs)
+        cmd = runner_prefix + cmd + extra
         if args.systemd_scope:
             run = run_systemd_scope(
                 cmd,
