@@ -6,8 +6,9 @@ runs. Rejected experiments move to [What has been tried](#what-has-been-tried) a
 
 ## Decision
 
-**In progress.** No stage has reached a landing verdict yet. The current stage is A0, the
-semantic-action census.
+**In progress.** Gate A0 passes: the equality quotient has a large, family-spanning target and
+inclusion dominance has a second one on top of it. Stage A1 is implemented and exactly validated
+against the baseline. The landing gates are running.
 
 ## Why this sprint exists
 
@@ -107,46 +108,131 @@ equivariant interaction.
 
 ### Stage A0: semantic action census
 
-Status: **in progress.**
+**Gate A0 passes.** The equality quotient has a large, family-spanning target, and inclusion
+dominance has a second one on top of it.
 
-The decisive ratio is `raw_output_paths / unique_residual_roots`. Acacia already measures its
-aggregate form: `src/ios_precomputers/alphabet_census.hh` counts distinct BDD nodes at the
-state-variable frontier (`collect_frontier` against `first_state`) and paths to that same boundary
-(`count_paths`). What A0 adds is per-input granularity, the inclusion-dominance count, decoded and
-action-vector counts for validation, and a phase split across traversal, dedup, dominance and
-decode.
+Raw data: `benchmarking/semantic-action-census.tsv`, campaign directory
+`_bm-logs.semantic-census-20260829/`. Cohort: every M1 and M2 row of
+[gap-census.tsv](gap-census.tsv), taken from the table itself rather than a hand-kept copy --
+190 distinct instances, 470 worker rows, 0 skipped. Preset
+`best_decomp_rank_bucketed_mona_diag`, 25-second cap, one 8 GiB zero-swap user-systemd scope per
+invocation, per-input dominance budget 1500 ms. syntcomp26 has no `.ltl` source map, so its 49
+rows ran through the native TLSF frontend.
 
-Prior structural evidence, from the archived alphabet census of 2026-08-14
-(`_bm-logs.alphabet-census-20260814/descents.tsv`, a different tree — recorded here as motivation,
-not as a gate result). Over 101 output-descent rows from 58 targets:
+Equality: `raw_output_paths / unique_residual_roots`.
 
-| `raw_output_paths / unique_residual_roots` | rows |
+| ratio | workers |
 |---|---:|
-| exactly 1, the quotient is a no-op | 34 |
-| at least 2 | 22 |
-| at least 8 | 6 |
+| exactly 1, the quotient is a no-op | 112 |
+| at least 2 | 173, across 31 families |
+| at least 8 | 37 |
+| at least 100 | 18 |
 
-| target | path | raw output paths | residual roots | ratio |
+Median 1.542; maximum 3,591,372.8. Gate A0 asked for ten workers from two families at ratio at
+least 2, or one stall at ratio at least 8; both clauses are met many times over.
+
+| instance | worker | raw output paths | residual roots | ratio |
 |---|---|---:|---:|---:|
-| `amba_decomposed_lock16.ltl` | real | 4,194,304 | 8 | 524,288.0 |
-| `amba_decomposed_lock15.ltl` | real | 1,966,080 | 8 | 245,760.0 |
-| `FelixSpecFixed2_fa4d4ce3.ltl` | unreal-formula | 138,022 | 2 | 69,011.0 |
-| `FelixSpecFixed3_b0840146.ltl` | unreal-formula | 138,022 | 2 | 69,011.0 |
-| `Automata16S.ltl` | real | 491 | 43 | 11.4 |
-| `workstation_resupply_4.ltl` | unreal-formula | 3,584 | 384 | 9.3 |
-| `workstation_resupply_3.ltl` | unreal-formula | 1,184 | 160 | 7.4 |
-| `f-real-real.ltl` | real | 1,952 | 608 | 3.2 |
-| `tmp_13cfc6f2.ltl` | real | 1,594 | 558 | 2.9 |
-| `abcg_arbiter3.ltl` | real | 18,432 | 18,432 | 1.0 |
+| `syntcomp24/amba_decomposed_lock16` | unreal-automaton | 35,913,728 | 10 | 3,591,372.8 |
+| `syntcomp24/amba_decomposed_lock15` | unreal-automaton | 15,859,712 | 10 | 1,585,971.2 |
+| `syntcomp24/amba_decomposed_lock16` | real | 4,194,304 | 8 | 524,288.0 |
+| `syntcomp25/amba_decomposed_lock_pb_13_pe_` | unreal-automaton | 3,014,656 | 10 | 301,465.6 |
+| `syntcomp24/amba_decomposed_lock12` | unreal-automaton | 1,294,336 | 10 | 129,433.6 |
 
-Gate A0 asks for ten hard workers from at least two families at ratio at least 2, or any
-action-construction stall at ratio at least 8. The archive meets both clauses. The third of rows
-sitting at exactly 1.0 sets the other requirement: the quotient must cost approximately nothing
-where it buys nothing.
+Dominance: `unique_residual_roots / minimal_residual_roots`, keeping the inclusion-minimal
+residual relations because more universal successors is worse for the controller.
+
+| ratio | workers |
+|---|---:|
+| at least 1.5 | 80, across 22 families |
+| at least 2 | 67 |
+| at least 4 | 33 |
+| at least 8 | 9 |
+
+| instance | worker | residual roots | minimal | ratio |
+|---|---|---:|---:|---:|
+| `syntcomp24/prioritized_arbiter7` | real | 512 | 18 | 28.4 |
+| `syntcomp24/prioritized_arbiter6` | real | 256 | 16 | 16.0 |
+| `syntcomp24/OneCounter` | unreal-formula | 9,497 | 1,013 | 9.4 |
+| `syntcomp24/workstation_resupply_3` | real | 1,748 | 187 | 9.3 |
+| `syntcomp24/TwoCountersDisButAC` | unreal-automaton | 9,800 | 1,262 | 7.8 |
+
+Split by mechanism, the equality quotient is not an M1-only phenomenon:
+
+| cohort | workers | median ratio | ratio >= 2 | ratio >= 8 | dominance >= 1.5 |
+|---|---:|---:|---:|---:|---:|
+| M1 letter-loop | 304 | 1.71 | 121 | 18 | 57 |
+| M2 downset | 166 | 1.40 | 52 | 19 | 23 |
+
+Three caveats the numbers carry, stated so later campaigns read them correctly.
+
+**The dominance figures are lower bounds.** 170 of 470 workers exhausted the 1500 ms per-input
+budget and were recorded as having no reduction, which is the conservative direction. The
+`dominance_declines` column marks them, so a bail-out is never mistaken for a measured absence of
+dominance.
+
+**Census-only mode measures the automaton before preprocessing.** `ACACIA_DIAG_ALPHABET_CENSUS_ONLY`
+short-circuits ahead of the automaton preprocessor and the Boolean-state pass, so its numbers are
+close to but not identical with what the solver's own expansion sees. On `OneCounter`'s
+realizability worker the path count agrees exactly at 40,448 while the residual-root count is
+7,711 here against 7,965 in a full run. Structural conclusions are unaffected; exact per-run
+validation belongs to the decode mode below.
+
+**The `census_ms` and `dominance_ms` columns were measured under light concurrent load** (a
+two-job `nice -19` compile ran during part of the campaign). They are diagnostic, not gate inputs;
+the structural counts are load-independent. Stage A2 re-measures them on a quiet machine before
+using them to judge whether dominance pays for itself.
+
+`census_ms` covers traversal and residual-root dedup together. They are one memoized DAG walk, and
+separating them would mean walking twice and reporting something other than the implementation
+being measured.
+
+### What the duplication actually is
+
+Writing the stage A1 test turned up the mechanism, and it is not the obvious one. Duplication does
+**not** come from unused output propositions: the BDD never branches on a variable that occurs in
+no guard, so a don't-care output costs no extra path. It comes from **disjunctive guards**, where
+several output branches reach one endpoint relation. A first test fixture built on the don't-care
+assumption quotiented nothing at all.
+
+That also explains the shape of the distribution above. The 112 workers at exactly 1.0 are those
+whose guards partition the output space; the `amba_decomposed_lock` family, where a wide
+disjunction guards a handful of destinations, is the opposite extreme at six decimal digits of
+ratio.
 
 ### Stage A1: equality quotient before relation decoding
 
-Status: not started.
+Status: **implemented and validated; landing gates in progress.**
+
+`ios_precomputers::semantic_mona` keeps the first output path that reaches each residual BDD node.
+It is a template parameter on the existing descent rather than a second copy of it, so there is
+one implementation of the traversal and not two that must be kept identical by hand.
+
+The differential unit test asserts the exact claim: the quotient's action list equals the
+first-occurrence dedup of the baseline's, the input cubes keep their order, the union over outputs
+agrees on every rank vector in `{-1..K}^states` exhaustively, and the verdict and winning bound
+match. It also asserts that the baseline really does decode duplicates on the duplicating fixture,
+so the test cannot pass vacuously if the quotient stops working.
+
+Head-to-head on the real solver, `--spot-fast off` with a single orientation selected so the two
+binaries expand the same automaton:
+
+| instance | worker | decoded, base -> quotient | unique | decode ms, base -> quotient |
+|---|---|---|---:|---|
+| `syntcomp24/OneCounter` | real | 40,448 -> 7,965 | 7,965 | 923 -> 193 |
+| `syntcomp24/amba_decomposed_lock10` | unreal-automaton | 229,376 -> 10 | 10 | 349 -> 5 |
+| `syntcomp24/round_robin_arbiter4` | real | 256 -> 256 | 256 | 12 -> 11 |
+
+The quotient decodes exactly the unique count in every case, which is the invariant stage A1 has
+to satisfy.
+
+The third row is the one that matters for the landing argument. `round_robin_arbiter4` is the
+instance whose 680.604% G2s regression rejected the previous whole-letter quotient. Its ratio is
+exactly 1: the quotient removes nothing, so the two binaries build *identical* action lists there.
+That closes both order channels on that instance at once -- not only the per-input action order,
+but also the input order, since `actioners::standard` keys its set on the per-input action list
+and that key is unchanged. G2s on this target is therefore a prediction, not a hope: it must show
+no change beyond noise.
 
 ### Stage A2: inclusion-dominance pruning before decoding
 
