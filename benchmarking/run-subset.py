@@ -10,8 +10,9 @@ uses its native TLSF frontend while ltlsynt receives syfco's unadapted formula
 plus its own --semantics flag.  This is both the entrant-realistic route and the
 stronger one for ltlsynt.
 
-Results require stdout and exit-code agreement (REALIZABLE / UNREALIZABLE /
-UNKNOWN); wall-clock and cgroup failures are classified before solver output.
+Results use each tool's output and exit-code conventions (REALIZABLE /
+UNREALIZABLE / UNKNOWN); wall-clock and cgroup failures are classified before
+solver output.
 
 Example:
   run-subset.py --bin ../acacia-bonsai/build_best_decomp_mona/src/acacia-bonsai \\
@@ -29,6 +30,7 @@ import sys
 import tempfile
 
 from benchlib import (
+    classify_acacia1x_run,
     classify_acacia_run,
     classify_ltlsynt_run,
     read_part,
@@ -77,6 +79,8 @@ def read_tlsf_map(path, tlsf_corpus=None):
 def classify_run(run, tool="acacia"):
     if tool == "ltlsynt":
         return classify_ltlsynt_run(run)
+    if tool == "acacia1x":
+        return classify_acacia1x_run(run)
     return classify_acacia_run(run)
 
 
@@ -145,7 +149,9 @@ def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--bin", required=True)
-    p.add_argument("--tool", choices=("acacia", "ltlsynt"), default="acacia")
+    p.add_argument(
+        "--tool", choices=("acacia", "acacia1x", "ltlsynt"), default="acacia"
+    )
     p.add_argument("--instances-dir",
                    help="flat corpus override (disables the default source map)")
     p.add_argument(
@@ -198,6 +204,11 @@ def main():
     args = p.parse_args()
     if args.systemd_scope and args.runner_prefix:
         p.error("--systemd-scope and --runner-prefix are mutually exclusive")
+    if args.tool == "acacia1x" and args.tlsf_map:
+        p.error(
+            "Acacia v1 predates the TLSF frontend and must be fed converted "
+            ".ltl/.part pairs"
+        )
 
     insts = []
     if args.from_csv:
@@ -270,6 +281,18 @@ def main():
             ins, outs = read_ltl_partition(ltl)
             if args.tool == "acacia":
                 cmd = runner_prefix + [args.bin, "-F", ltl, "-i", ins, "-o", outs] + extra
+            elif args.tool == "acacia1x":
+                cmd = runner_prefix + [
+                    args.bin,
+                    "-c",
+                    "BOTH",
+                    "-F",
+                    ltl,
+                    "--ins",
+                    ins,
+                    "--outs",
+                    outs,
+                ] + extra
             else:
                 cmd = runner_prefix + [
                     args.bin,

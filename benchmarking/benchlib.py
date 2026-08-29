@@ -385,6 +385,21 @@ def classify_acacia_run(run: RunResult) -> str:
     return "ERROR"
 
 
+def classify_acacia1x_run(run: RunResult) -> str:
+    """Classify a bounded Acacia 1.x run, requiring output/exit-code agreement."""
+    if run.timed_out:
+        return "TIMEOUT"
+    if run.resource_limited:
+        return "RESOURCE_LIMIT"
+    result = parse_acacia_result(run.stdout + run.stderr)
+    # The only exit-code difference from current Acacia is UNKNOWN: v1 uses 3,
+    # not 2.
+    expected_exit = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 3}
+    if run.returncode == expected_exit.get(result):
+        return result
+    return "ERROR"
+
+
 def classify_ltlsynt_run(run: RunResult) -> str:
     """Classify a bounded ltlsynt run, requiring output/exit-code agreement."""
     if run.timed_out:

@@ -1,5 +1,6 @@
 import importlib.util
 import pathlib
+import subprocess
 import sys
 from types import SimpleNamespace
 
@@ -154,3 +155,91 @@ def test_unknown_requires_the_documented_exit_code():
     )
 
     assert module.classify_run(run) == "UNKNOWN"
+
+
+def test_acacia1x_accepts_unrealizable_at_exit_one():
+    module = load_module()
+    run = SimpleNamespace(
+        timed_out=False,
+        resource_limited=False,
+        stdout="UNREALIZABLE\n",
+        stderr="",
+        returncode=1,
+    )
+
+    assert module.classify_run(run, "acacia1x") == "UNREALIZABLE"
+
+
+def test_acacia1x_rejects_unrealizable_at_exit_zero():
+    module = load_module()
+    run = SimpleNamespace(
+        timed_out=False,
+        resource_limited=False,
+        stdout="UNREALIZABLE\n",
+        stderr="",
+        returncode=0,
+    )
+
+    assert module.classify_run(run, "acacia1x") == "ERROR"
+
+
+def test_acacia1x_accepts_unknown_at_exit_three():
+    module = load_module()
+    run = SimpleNamespace(
+        timed_out=False,
+        resource_limited=False,
+        stdout="UNKNOWN\n",
+        stderr="",
+        returncode=3,
+    )
+
+    assert module.classify_run(run, "acacia1x") == "UNKNOWN"
+
+
+def test_acacia1x_rejects_unknown_at_exit_two():
+    module = load_module()
+    run = SimpleNamespace(
+        timed_out=False,
+        resource_limited=False,
+        stdout="UNKNOWN\n",
+        stderr="",
+        returncode=2,
+    )
+
+    assert module.classify_run(run, "acacia1x") == "ERROR"
+
+
+def test_acacia1x_rejects_nonzero_exit_with_verdict():
+    module = load_module()
+    run = SimpleNamespace(
+        timed_out=False,
+        resource_limited=False,
+        stdout="REALIZABLE\n",
+        stderr="",
+        returncode=3,
+    )
+
+    assert module.classify_run(run, "acacia1x") == "ERROR"
+
+
+def test_acacia1x_rejects_tlsf_map():
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--bin",
+            "acacia-v1",
+            "--tool",
+            "acacia1x",
+            "--tlsf-map",
+            "unused.tsv",
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert (
+        "Acacia v1 predates the TLSF frontend and must be fed converted "
+        ".ltl/.part pairs"
+    ) in result.stderr
