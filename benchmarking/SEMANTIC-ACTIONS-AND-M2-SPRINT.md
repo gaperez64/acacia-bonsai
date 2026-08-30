@@ -325,15 +325,63 @@ That makes the `patrolling` block the natural first cohort for A2 rather than a 
 
 ## Sprint B: static obligation-scheduling risk detector
 
-Status: not started.
+**Gate B fails. The detector stays research diagnostics and is not wired into runtime routing.**
 
-`tlsf-tools` already recognizes most of the required syntactic structure. `include/tlsf/recognize.h`
-matches response `G(r -> F g)`, pure recurrence `G F x`, mutex `G(!(a && b) ...)` and
-temporal-free safety invariants `G(B)`, and it already forms a multi-constraint
-`arbiter_candidate` block from responses plus a grant mutex — which is the scheduling signature
-this sprint hypothesizes. `include/tlsf/liveness_class.h` already reports `n_response`,
-`n_recurrence`, `n_eventual` and `n_until`. Stage B0 is therefore an export of `ConstraintCover`
-data with a stable schema, not a new analyzer.
+The hypothesis was that a large family of simultaneously live, persistent obligations sharing a
+low-capacity service resource is what produces many distinct urgency orders, giving a risk score
+around `m/c`.
+
+Stage B0 turned out to be mostly an export rather than an implementation. `tlsf-tools`
+`recognize.h` already matches response `G(r -> F g)`, pure recurrence `G F x`, mutex
+`G(!(a && b) ...)` and a multi-constraint arbiter block; the work was to walk those candidates
+into a stable schema. That is `tlsftemplates --format obligations`, in
+gaperez64/tlsf-tools#27.
+
+Run over all 1,586 corpus specs, the two halves of the hypothesis live in disjoint places:
+
+| | |
+|---|---:|
+| specs with at least one recognized obligation | 389 (24.5%) |
+| largest obligation family | 100, of a single type |
+| specs with a family of eight or more | 43 |
+| specs with **any** recognized mutual exclusion | **5** |
+| largest exclusion clique anywhere in the corpus | **2** |
+| specs producing an arbiter block | **0** |
+| of the 43 large-family specs, how many carry a mutex | **0** |
+
+`c` is therefore not recoverable from the specification. The exclusion that would pin service
+capacity is never syntactically present alongside the families that would need it, so `m/c` cannot
+be instantiated at all -- not estimated badly, but not defined.
+
+What is left, `m` and its relatives, does not predict. Joining the census to
+[gap-census.tsv](gap-census.tsv) on the 174 rows that map through the TLSF source maps, against
+`log1p(max_f)`:
+
+| feature | Spearman rho |
+|---|---:|
+| `obligation_count` | -0.028 |
+| `indexed_obligation_count` | -0.051 |
+| `obligation_types` | +0.008 |
+| `max_family_size` | -0.051 |
+| `coactivation_candidate_count` | -0.003 |
+| `persistent_trigger_count` | -0.003 |
+
+Nothing is distinguishable from zero. As a classifier for the M2 bucket (28 of the 174 rows), the
+best threshold rule reaches precision 0.38 and recall 0.29, against Gate B's bar of 0.8 precision
+across two families.
+
+This is a negative result about the *specification level*, not about the hypothesis itself. Acacia
+runs realizability simplification, decomposition, worker orientation and Büchi translation before
+the fixed point ever sees a component, and the sprint brief says as much. What B0 establishes is
+that the syntactic view cannot supply the service-capacity feature, so any detector has to be
+built after those stages, on the automaton Acacia actually solves.
+
+Stages B1 and B2, the post-simplification and automaton-side censuses, are therefore not
+attempted here. They would be testing whether the information B0 could not find appears later, and
+that question is better answered by the Sprint C measurements, which observe the solved automaton
+directly and are on the critical path for M2. Sprint D's early dynamic probe is the mechanism the
+brief itself points to when the static detector fails, and it needs the Sprint C representation
+census first.
 
 ## Sprint C: operation-aware M2 representation census
 
