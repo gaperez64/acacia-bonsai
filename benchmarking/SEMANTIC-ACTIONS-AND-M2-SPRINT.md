@@ -6,15 +6,53 @@ runs. Rejected experiments move to [What has been tried](#what-has-been-tried) a
 
 ## Decision
 
-**Sprint A stage A1 LANDS.**
+**M1 lands. M2 is closed as a representation problem, on evidence, and the next implementation
+should not be a compressed downset.**
 
-Gate A0 passes; the equality quotient has a large, family-spanning target and inclusion dominance
-has a second one on top of it. Stage A1 is implemented, exactly validated against the baseline,
-and clears G0, G1 and G3: 40/40 frozen verdicts, three gained SYNTCOMP25 answers with zero losses
-and zero opposite verdicts on either panel, and PAR-2 improvements outside the measured noise
-floor on both, and G2s over all ten targets at a 2.55% geometric cycle improvement with a worst
-per-target regression of +1.33% against a 6% ceiling. The target that rejected the previous
-attempt comes back flat, as the census predicted it would.
+Sprint A's pre-decoding semantic action quotient (`ios_precomputers::semantic_mona`) clears every
+gate and is the sprint's production outcome: G1 40/40 with PAR-2 98.855 → 92.224 s, G2s at a 2.55%
+geometric cycle improvement with a worst per-target regression of +1.33% against a 6% ceiling, and
+G3 gaining three SYNTCOMP25 answers with zero losses and zero opposite verdicts on either panel.
+The target whose 680.604% regression rejected the previous attempt at this optimization comes back
+flat, as the census predicted before the gate ran.
+
+Sprints B and C produce decisive negatives rather than partial results, and between them they rule
+out the whole compressed-region branch for the instances that motivated the sprint:
+
+| stage | verdict |
+|---|---|
+| A0 census | pass: 173 workers at ratio >= 2 across 31 families |
+| A1 quotient | **LAND** |
+| A2 dominance | not attempted; structurally admitted, gated on A1 landing |
+| B static detector | **STOP**: service capacity is undefined at the specification level, and what remains does not predict |
+| C-orbit | **STOP**: no verified permutation group where the frontier is largest, confirmed exhaustively |
+| C-BDD | **STOP**: the encoding starts larger than the explicit form and the update explodes |
+| C7 MDD | not attempted; its stated precondition is not met |
+| D, E | unreachable |
+
+### What the next implementation should be
+
+Not a compressed rank-region representation. Three independent measurements point the same way.
+The hard M2 automata have no symmetry to canonicalize under, so orbit and histogram
+representations are not merely weak there but undefined. The threshold-BDD encoding of a single
+rank vector over hundreds of coordinates is already larger than the vector, so no symbolic region
+representation of this family starts ahead of an antichain. And the specification carries no
+recoverable service-capacity structure, so a static router cannot decide when to switch to one
+even if it existed.
+
+What the sprint does establish about M2 is where the cost actually sits. The C2 counters exist to
+measure it, and they already point at one concrete thing inside the explicit backend:
+`rank_bucketed_vector_backed::rebuild_buckets` runs on every successful insert and walks the whole
+backing vector, and no query reads the structure it maintains. That is a per-insert linear cost in
+the container the M2 cohort lives in, and removing it needs no new representation, no recognizer
+and no routing decision.
+
+The second lead is M1-shaped rather than M2-shaped. Stage A0 found 52 M2-classified workers at an
+equality ratio of 2 or more and 19 at 8 or more: an instance that is downset-bound can still be
+paying for duplicate actions on every iteration over that downset. A2, inclusion-dominance pruning
+before decoding, is the direct continuation and its structural precondition is already met, with
+80 workers at 1.5x or more across 22 families and `patrolling-alarm23`'s worker dropping from
+1,979 residual roots to 326.
 
 ## Why this sprint exists
 

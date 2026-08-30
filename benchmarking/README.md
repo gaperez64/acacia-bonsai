@@ -114,6 +114,11 @@ and fixed-point stalls.  Diagnostics builds also split fixed-point time into
 input picking, backward action application, and downset work; the summary
 labels a target `letter-loop-bound`, `downset-bound`, or `mixed` (within 20%).
 
+The semantic-action and M2 sprint -- the pre-decoding action quotient that landed, and the
+representation measurements that closed the compressed-downset branch -- is in
+[SEMANTIC-ACTIONS-AND-M2-SPRINT.md](SEMANTIC-ACTIONS-AND-M2-SPRINT.md), with its census in
+[semantic-action-census.tsv](semantic-action-census.tsv).
+
 The completed zero-tail versus bare-vector ablation — five-by-20-second
 LTO/no-LTO runs, profile, and disassembly comparison — is in
 [STATE-VECTOR-TAIL-STUDY.md](STATE-VECTOR-TAIL-STUDY.md). The TLSF
@@ -324,6 +329,10 @@ Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMAL
 - **G3, landing bar:** run `benchmarking/landing-campaign.sh` with paired
   binaries, suite lists, a 17-second timeout, and an output directory. It
   invokes `benchmarking/landing-bar.py`; every suite must print `GATE PASS`.
+  The syntcomp25 and syntcomp26 panels are reconstructed from the TLSF
+  submodule and have no `.ltl` pair for 77 of 180 and 180 of 180 of their rows,
+  so both G2s and G3 need `--tlsf-corpus DIR` (or `ACACIA_TLSF_CORPUS`) naming
+  a materialized corpus; without it neither gate can resolve those panels.
 - **G4, corpus correctness:**
   `meson test -C build --num-processes 1 --suite=ab/realizable --suite=ab/unrealizable`;
   timeouts are allowed, but `Fail: 0` and no false-positive/negative marker are
