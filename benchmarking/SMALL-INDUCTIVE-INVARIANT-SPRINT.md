@@ -358,13 +358,67 @@ The same diagnostics surfaced a second waster that the per-bound ceiling also st
 `finding_nemo_2`'s unreal-automaton worker spent **3,203,392 forward applications over 35 runs**
 for nothing.
 
+### The re-run, and why no budget fixes it
+
+The tuned budgets cut the regression from 29.4% to **6.23%**, against a 6.00% ceiling. G2s fails
+again, by 0.23 points, and the panel around it is the strongest the sprint has produced:
+
+| target | cycles | ratio |
+|---|---:|---:|
+| `syntcomp25/lift_pb_3_pe_` | **+98.98%** | 98.13x |
+| `syntcomp24/finding_nemo_2` | **+89.63%** | 9.65x |
+| `syntcomp24/lift4` | +3.28% | |
+| `syntcomp24/workstation_resupply_3` | +1.75% | |
+| `syntcomp25/arbiter_with_buffer_pb_5_pe_` | +0.24% | |
+| `syntcomp24/arbiter_with_buffer6` | -0.12% | |
+| `syntcomp25/workstation_resupply_pb_3_pe_` | -1.73% | |
+| `syntcomp25/amba_case_study_unreal_pb_2_pe_` | -2.02% | |
+| `syntcomp25/evasion0` | -5.36% | |
+| `syntcomp24/round_robin_arbiter4` | **-6.23%** | fails |
+
+Geometric mean ratio 1.96510, a 96.51% improvement. A per-target failure is decisive regardless of
+the mean, which is the point of the ceiling.
+
+A per-probe trace (`ACACIA_LOCAL_CERTIFICATE_TRACE`) settles what the aggregate counters could not,
+and it killed two plausible fixes before either was implemented.
+
+**Probing once per bound would lose the wins.** Every win in the panel arrives *after* probes at
+the same bound that exhaust their budget and conclude nothing:
+
+| worker | probes at the winning bound (region size -> status) |
+|---|---|
+| `finding_nemo_2`, k=5 | 46 exhausted, 87 exhausted, **389 win** |
+| `lift3`, k=5 | 24 exhausted, 144 exhausted, 264 exhausted, **3768 win** |
+| `round_robin_arbiter4`, k=2 | 1, 16, 76, 552 -- all exhausted, no win |
+
+**Pruning the size-mark schedule would also lose wins**, because every tier is the one that pays
+for some winner: `robot_grid2_2` wins on the first-loop probe at region size 1, `finding_nemo_1` at
+size 29, `finding_nemo_2` at 389, `lift3` at 3768.
+
+**And no cumulative ceiling separates the waster from the winner.** Lowering it to 300,000 was
+measured rather than argued: `lift3` times out with eight probes skipped, because its win is the
+fourth probe at k=5. `round_robin_arbiter4` also takes four probes at one bound, at the same
+per-run cap. Any ceiling that admits the one admits the other.
+
+That is a structural result, not a tuning failure. It says the probe cannot become the default on
+the strength of this panel, and it is why `acacia_local_certificate` stays `value: false` in
+`meson.options` -- which is the shape stage U2 specified for it from the start. What ships by
+default is unchanged; what the preset buys is 98x and 9.6x on the panel and four answers the
+baseline does not produce at all, against 6.23% on one instance.
+
+The trace also exposes waste that no gate would have caught, because it costs nothing on a solved
+instance: `finding_nemo_1` and `finding_nemo_2`'s losing workers re-run a byte-identical probe at
+every bound raise -- `fwd=36398 nodes=63` at k=11 through k=101, more than thirty times, because
+lifting the region by `kinc` leaves the search isomorphic. Memoising that is the obvious next
+optimisation and is not attempted here.
+
 ### Gates
 
 | gate | result |
 |---|---|
 | G0 | 25/25 Acacia unit, 18/18 Posets, 183 Python; registry validates |
 | G1 | **`GATE PASS`**, 40/40 frozen verdicts; PAR-2 101.867 s frozen, 92.224 s without the probe, **90.651 s with it** |
-| G2s | first run **`GATE FAIL`** on `round_robin_arbiter4` at +29.4%; re-running with the tuned budgets |
+| G2s | **`GATE FAIL`** on `round_robin_arbiter4`: 29.4% first run, **6.23%** tuned, against a 6.00% ceiling. Geomean 96.51%. Not fixable by budget; the probe stays opt-in |
 | G3 | pending |
 | G4 | pending |
 
