@@ -316,13 +316,55 @@ One earlier reading recorded `Morning_f1477cc5` improving from 14.04 s to 7.13 s
 while a compile was running. Re-measured quiet it is 13.23 s to 15.03 s, a regression, and the
 earlier figure is withdrawn.
 
+### What G2s caught, and the per-bound budget
+
+G2s failed on `syntcomp24/round_robin_arbiter4`: **+29.4% cycles**, against a 6% per-target
+ceiling. The panel geometric mean was a 90.9% improvement at the time -- `lift3` 100x faster,
+`finding_nemo_2` 8.9x -- which is exactly the shape the per-target ceiling exists to catch, and
+the same instance that rejected the previous sprint's quotient.
+
+The diagnostics said why without a bisection. The real worker ran the probe **six times at a
+single bound**, spent the full 100,000 forward applications each time, concluded nothing, and
+never raised the bound. The winners look nothing like it: `robot_grid2_2` one run at 3,225
+applications, `finding_nemo_1` two at 6,290, `finding_nemo_2` five at 297,649, `lift3` six at
+347,382 -- but those six are spread across bounds, not spent at one.
+
+That is the distinction the first budget missed. A per-run budget bounds one search; it does not
+bound how many times a worker may re-run a search that cannot succeed. So the budget became
+**cumulative per bound, reset when the bound is raised** -- a new bound is a new problem, and both
+`lift3` and `finding_nemo_2` win only after a raise, so evidence from the old bound must not
+carry over.
+
+The **generator budget drops from 64 to 32**. Every verified certificate in the campaign is
+smaller: 6 generators for `robot_grid2_2`, 8 for `finding_nemo_1`, 16 for `finding_nemo_2`, 26 for
+`lift3`. A larger cap cannot find a certificate that a smaller one misses here, and it makes every
+*failing* search more expensive, because each node rescans every generator against every input and
+action.
+
+Neither change works alone, which is worth recording. A cumulative cap by itself cannot separate
+the cases -- `lift3` needs more than 200,000 at one bound, and `round_robin_arbiter4` wastes
+600,000 at one bound. Lowering the generator cap is what makes 400,000 workable.
+
+| budget | `round_robin_arbiter4` | `lift3` |
+|---|---:|---:|
+| B=64, per-run 100,000 | +29.4%, over ceiling | REALIZABLE |
+| B=32, cumulative 400,000 | **+4.7%** | **REALIZABLE, 0.51 s** |
+
+Measured at `B=32` and `CUM=400,000`, all four wins survive -- `robot_grid2_2` 0.02 s,
+`finding_nemo_1` 0.10 s, `lift3` 0.55 s, `finding_nemo_2` 5.50 s -- against a baseline that
+answers none of them, and `Morning_f2774e0b` sits at 6.2%, inside the cap.
+
+The same diagnostics surfaced a second waster that the per-bound ceiling also stops:
+`finding_nemo_2`'s unreal-automaton worker spent **3,203,392 forward applications over 35 runs**
+for nothing.
+
 ### Gates
 
 | gate | result |
 |---|---|
 | G0 | 25/25 Acacia unit, 18/18 Posets, 183 Python; registry validates |
 | G1 | **`GATE PASS`**, 40/40 frozen verdicts; PAR-2 101.867 s frozen, 92.224 s without the probe, **90.651 s with it** |
-| G2s | running |
+| G2s | first run **`GATE FAIL`** on `round_robin_arbiter4` at +29.4%; re-running with the tuned budgets |
 | G3 | pending |
 | G4 | pending |
 
