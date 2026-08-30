@@ -284,6 +284,14 @@ test ('small-invariant',
       small_invariant_test,
       suite : ['unit', 'small-invariant'])
 
+local_certificate_test = executable ('local-certificate-test',
+                                     'local_certificate_test.cc',
+                                     include_directories : inc,
+                                     dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('local-certificate',
+      local_certificate_test,
+      suite : ['unit', 'local-certificate'])
+
 semantic_mona_test = executable ('semantic-mona-test',
                                  'semantic_mona_test.cc',
                                  include_directories : inc,

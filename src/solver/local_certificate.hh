@@ -12,8 +12,17 @@
 
 namespace acacia::solver_detail {
 
+  /// Sized by measurement, not taste.  Every verified certificate in the
+  /// campaign fits: robot_grid2_2 needs 3,834 forward applications,
+  /// finding_nemo_1 4,314, finding_nemo_2 139,143 -- but lift3 and
+  /// finding_nemo_2 both fall to UNKNOWN at 20,000, so the budget cannot go
+  /// much lower.  Above this it stops paying: at 2,000,000 the frozen sentinel
+  /// Morning_f2774e0b goes from 13.70 s to 17.78 s and crosses the 17-second
+  /// cap, while at 100,000 it costs 14.30 s and every win is still found.
+  /// The scans this excludes are the expensive ones -- prioritized_arbiter
+  /// needs 1.8 to 4.3 million, and scanning the safe set reached 145 million.
   inline constexpr unsigned long long default_local_certificate_forward_application_budget =
-      2000000;
+      100000;
 
   enum class local_certificate_status {
     unknown,
