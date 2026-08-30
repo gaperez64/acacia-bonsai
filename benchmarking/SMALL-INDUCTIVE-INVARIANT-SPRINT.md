@@ -446,6 +446,23 @@ at all, returned in well under a second.
 The syntcomp26 PAR-2 improvement of 22.3 s is outside that panel's 12.074 s noise floor, but it is
 carried by the extra answer and should not be read as a separate speed result.
 
+### G4, correctness and a third corpus
+
+624 tests, single process, both builds run back to back so the counts are comparable.
+
+| build | correct | timeouts | wrong verdicts |
+|---|---|---|---|
+| baseline | 568 | 56 | 0 |
+| candidate | **569** | 55 | **0** |
+
+No false verdict anywhere, which is what G4 gates on. The one difference is `simple_arbiter_8`,
+which the baseline does not answer in 30 s and the probe answers in **0.48 s** -- a 63x margin
+under the cap, so it is the probe and not cap noise. No instance was lost.
+
+The baseline figure was measured in this session rather than carried over from the previous
+sprint's 568, because two runs on different builds under different machine conditions cannot be
+subtracted.
+
 ### Gates
 
 | gate | result |
@@ -454,7 +471,7 @@ carried by the extra answer and should not be read as a separate speed result.
 | G1 | **`GATE PASS`**, 40/40 frozen verdicts; PAR-2 101.867 s frozen, 92.224 s without the probe, **90.651 s with it** |
 | G2s | **`GATE FAIL`** on `round_robin_arbiter4`: 29.4% first run, **6.23%** tuned, against a 6.00% ceiling. Geomean 96.51%. Not fixable by budget; the probe stays opt-in |
 | G3 | **`GATE PASS`** both panels: syntcomp25 1 gain / 1 loss / 0 flips, syntcomp26 **+1 answer** / 0 losses / 0 flips |
-| G4 | running |
+| G4 | **`Fail: 0`**, 569 correct against the baseline's 568, **0 wrong verdicts**; gains `simple_arbiter_8` (30 s timeout -> 0.48 s), loses nothing |
 
 ## Stage S3: checkpointed width schedule
 
