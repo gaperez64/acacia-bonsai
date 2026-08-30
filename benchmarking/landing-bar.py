@@ -140,16 +140,28 @@ def run_solver(
     if (
         not target.is_file()
         and not has_ltl_source
-        and tlsf_source_maps is not None
+        and tlsf_source_maps
         and tlsf_corpus is not None
-        and separator
     ):
-        tlsf_source_map_path = tlsf_source_maps.get(suite)
+        # The campaign runs one suite per invocation and keys its rows by bare
+        # instance name, so there is usually no suite prefix to look up.  Only
+        # requiring the prefixed form left this fallback unreachable from the
+        # caller that needs it most, and a TLSF-only instance near the cap was
+        # reported as a lost answer rather than remeasured.
+        if separator:
+            tlsf_source_map_path = tlsf_source_maps.get(suite)
+            tlsf_instance = instance
+        elif len(tlsf_source_maps) == 1:
+            (tlsf_source_map_path,) = tlsf_source_maps.values()
+            tlsf_instance = pathlib.Path(key).name
+        else:
+            tlsf_source_map_path = None
+            tlsf_instance = ""
         if tlsf_source_map_path is not None:
             tlsf_source_map = load_tlsf_source_map(
                 tlsf_source_map_path, tlsf_corpus=tlsf_corpus
             )
-            target = tlsf_source_map.get(instance, pathlib.Path())
+            target = tlsf_source_map.get(tlsf_instance, pathlib.Path())
 
     if not target.is_file():
         raise ValueError(

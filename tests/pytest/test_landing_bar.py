@@ -289,3 +289,39 @@ def test_tlsf_source_map_resolves_through_cli_corpus(tmp_path):
         )
 
     assert status == 0
+
+
+def test_tlsf_fallback_reaches_bare_instance_keys(tmp_path):
+    """The campaign keys rows by bare instance name, with no suite prefix.
+
+    A TLSF-only instance that lands near the cap has to be remeasurable through
+    that call shape; requiring `suite/instance` made the fallback unreachable
+    and turned the remeasurement into a reported loss.
+    """
+    suite_dir = tmp_path / "tests" / "suites" / "benchmarks" / "panel"
+    suite_dir.mkdir(parents=True)
+    source_map = suite_dir / "sources.tsv"
+    source_map.write_text("instance\tsource\nother.ltl\tother.ltl\n")
+    tlsf_source_map = suite_dir / "tlsf-sources.tsv"
+    tlsf_source_map.write_text("instance\ttlsf\ntlsf-only.ltl\ttlsf-only.tlsf\n")
+    tlsf_corpus = tmp_path / "corpus"
+    tlsf_corpus.mkdir()
+    (tlsf_corpus / "tlsf-only.tlsf").write_text("INFO {}\nMAIN {}\n")
+    solver = tmp_path / "solver"
+    solver.write_text("#!/bin/sh\nprintf 'REALIZABLE\\n'\n")
+    solver.chmod(0o755)
+
+    with mock.patch.dict("os.environ", {"ACACIA_OUTER_CGROUP": "1"}):
+        result, _stdout, _stderr, command = landing_bar.run_solver(
+            solver,
+            source_map,
+            "tlsf-only.ltl",
+            1.0,
+            "8G",
+            "0",
+            tlsf_source_maps={"panel": tlsf_source_map},
+            tlsf_corpus=tlsf_corpus,
+        )
+
+    assert result.verdict == "REALIZABLE"
+    assert command == [str(solver), "-T", str(tlsf_corpus / "tlsf-only.tlsf")]
