@@ -68,12 +68,26 @@ namespace acacia::solver_detail {
   /// and a larger cap only makes a failing search more expensive, since each
   /// node rescans every generator against every input and action.
   ///
-  /// 400,000 cumulative forward applications per bound: lift3 wins only above
-  /// 200,000 at a single bound, so the ceiling cannot be tighter, while
-  /// round_robin_arbiter4 would otherwise spend 600,000 at one bound to no
-  /// effect and cost 29.4% extra cycles, over the 6% per-target ceiling.  With
-  /// both numbers in place it costs 4.7%, and lift3 still wins in 0.5 s where
-  /// the baseline does not answer at all.
+  /// 400,000 cumulative forward applications per bound, which is four probes
+  /// at the 100,000 per-run cap.  Four is what the winners need, and it was
+  /// measured from per-probe traces rather than inferred: every win arrives on
+  /// the last probe its bound allows.  finding_nemo_2 wins on the third at
+  /// region size 389 having already spent 200,000; lift3 wins on the fourth at
+  /// size 3768 having spent 300,000.  A 300,000 ceiling was tried and loses
+  /// lift3 outright -- it times out with eight probes skipped.
+  ///
+  /// This is also why the ceiling cannot be tightened to fix G2s.
+  /// round_robin_arbiter4 probes four times at k=2, concludes nothing, and
+  /// costs 6.23% extra cycles against a 6% per-target ceiling.  It and lift3
+  /// take the same number of probes at the same per-run cap, so no cumulative
+  /// budget separates them: any cap that admits lift3's fourth probe admits
+  /// round_robin_arbiter4's fourth.  The probe is therefore opt-in, and
+  /// acacia_local_certificate stays default-off in meson.options.
+  ///
+  /// The schedule cannot be pruned instead.  Each size mark is the one that
+  /// pays for some winner: robot_grid2_2 wins on the first-loop probe at
+  /// region size 1, finding_nemo_1 at size 29, finding_nemo_2 at 389, lift3 at
+  /// 3768.  Dropping any tier drops an answer.
   inline std::size_t configured_local_certificate_generator_budget () {
     static const std::size_t value =
         acacia::diagnostics::env_size ("ACACIA_LOCAL_CERTIFICATE_BUDGET", 32, true);
@@ -207,6 +221,8 @@ class k_bounded_safety_aut_detail {
               acacia::solver_detail::
                   configured_local_certificate_cumulative_forward_application_budget ()) {
             acacia::diagnostics::set_local_probe_skipped_over_budget ();
+            acacia::diagnostics::trace_local_probe (
+                (int) k, loopcount, f.size (), "skipped-over-budget", 0, 0);
           }
           else {
             auto local = acacia::solver_detail::find_local_certificate (
@@ -217,6 +233,8 @@ class k_bounded_safety_aut_detail {
             local_probe_bound_forward_applications += local.forward_applications;
             if (local.status ==
                 acacia::solver_detail::local_certificate_status::win_certificate) {
+              acacia::diagnostics::trace_local_probe (
+                  (int) k, loopcount, f.size (), "win", local.forward_applications, local.nodes);
               acacia::diagnostics::set_local_probe (
                   "win", local.forward_applications, local.nodes, true, false);
               acacia::diagnostics::set_final_reason ("local-win-certificate");
@@ -224,6 +242,9 @@ class k_bounded_safety_aut_detail {
                   std::make_pair (k, std::move (*local.win)));
             }
             if (local.status == acacia::solver_detail::local_certificate_status::root_refuted) {
+              acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (),
+                                                      "root-refuted", local.forward_applications,
+                                                      local.nodes);
               const bool bound_raised = raise_bound_or_give_up (f, k, actioner);
               acacia::diagnostics::set_local_probe (
                   "root-refuted", local.forward_applications, local.nodes, true, bound_raised);
@@ -232,12 +253,19 @@ class k_bounded_safety_aut_detail {
               continue;
             }
             if (local.status ==
-                acacia::solver_detail::local_certificate_status::budget_exhausted)
+                acacia::solver_detail::local_certificate_status::budget_exhausted) {
+              acacia::diagnostics::trace_local_probe (
+                  (int) k, loopcount, f.size (), "budget-exhausted",
+                  local.forward_applications, local.nodes);
               acacia::diagnostics::set_local_probe (
                   "budget-exhausted", local.forward_applications, local.nodes, false, false);
-            else
+            }
+            else {
+              acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (), "unknown",
+                                                      local.forward_applications, local.nodes);
               acacia::diagnostics::set_local_probe (
                   "unknown", local.forward_applications, local.nodes, false, false);
+            }
           }
         }
 #endif

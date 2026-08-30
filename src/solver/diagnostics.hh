@@ -555,6 +555,19 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void trace_local_probe (int k, unsigned long long loop, std::size_t region_size,
+                                 const char* status, unsigned long long forward_apps,
+                                 unsigned long long nodes) {
+    static const bool enabled = [] {
+      const char* env = std::getenv ("ACACIA_LOCAL_CERTIFICATE_TRACE");
+      return env != nullptr and *env != '\0';
+    } ();
+    if (enabled)
+      std::cerr << "ACACIA_PROBE k=" << k << " loop=" << loop << " size=" << region_size
+                << " status=" << status << " fwd=" << forward_apps << " nodes=" << nodes
+                << '\n';
+  }
+
   inline void set_local_probe_skipped_over_budget () {
     if (auto* m = current ())
       ++m->local_probe_skipped_over_budget;
@@ -650,6 +663,8 @@ namespace acacia::diagnostics {
                                           unsigned long long) {}
   inline void set_decode_census (unsigned long long, unsigned long long, unsigned long long) {}
   inline void set_local_probe (std::string, unsigned long long, unsigned long long, bool, bool) {}
+  inline void trace_local_probe (int, unsigned long long, std::size_t, const char*,
+                                 unsigned long long, unsigned long long) {}
   inline void set_local_probe_skipped_over_budget () {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
