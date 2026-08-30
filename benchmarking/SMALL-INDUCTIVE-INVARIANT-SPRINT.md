@@ -236,6 +236,64 @@ A live probe therefore needs a forward-application budget, not only a node budge
 it must return `unknown` rather than anything else. This is the difference between a probe that
 pays for itself and one that becomes the new bottleneck.
 
+## Stage U2: the live two-sided probe
+
+`src/solver/local_certificate.hh`, behind `acacia_local_certificate`, default off. At a loop head
+it first tries a root refutation, then a bounded forward kernel search, and falls through to the
+ordinary picker and CPre when neither returns a certificate.
+
+### Trigger policy
+
+The probe runs on the first loop at the current bound, and on the first crossing of frontier sizes
+16, 64, 256, 1024, 4096 and 16384. Each mark latches, so a region oscillating around a mark does
+not re-probe. A bound raise resets every mark and the first-loop flag, because the lift re-inflates
+the region and a fresh set of crossings follows. It mirrors `antichain_snapshot::observe` so the
+offline checkpoints and the live probe fire in the same places.
+
+The marks are not validated by the offline campaign, and it would be circular to claim they are:
+the snapshot only records at those same marks, so every measured result could only have been found
+at one. What the campaign does show is that each refuted worker's *earliest* refutation sits at a
+frontier of 16 to 101 maxima, so probing the low marks acts early. Whether certificates exist
+strictly between marks is untested.
+
+### Budgets, and why they are not optional
+
+Generator budget 64, node budget 200,000, forward-application budget 2,000,000, each overridable
+by environment variable so a campaign can sweep without a rebuild. The forward-application budget
+is the one that matters: the U1 census shows the same scan costs 35 forward applications on
+`lift3` and 4,281,384 on `prioritized_arbiter10`, and scanning the safe set at loop 1 reached
+145,769,784 on `finding_nemo_2`'s unreal-formula worker. The default admits `lift` at 12,692,
+`robot_grid2_2` at 5,320 and `prioritized_arbiter9` at 1,767,460 while excluding the
+hundred-million-scale pathologies.
+
+**A root scan that exhausts its budget mid-input reports `budget_exhausted`, never
+`root_refuted`.** An untested action might have kept the initial vector inside, so promoting a
+partial scan would be a wrong verdict rather than a slow one. The check sits before each forward
+application, not after the loop.
+
+### First measurements
+
+Targeted, at a 25-second cap, against the same tree without the probe. Not a panel and not a gate.
+
+| instance | baseline | with probe | `ltlsynt` | verdict |
+|---|---|---:|---:|---|
+| `robot_grid2_2` | timeout | **0.02 s** | 0.66 s | REALIZABLE, agrees |
+| `finding_nemo_1` | timeout | **0.10 s** | 0.026 s | REALIZABLE, agrees |
+| `lift3` | timeout | **0.81 s** | 0.010 s | REALIZABLE, agrees |
+| `finding_nemo_2` | timeout | **5.35 s** | 0.039 s | REALIZABLE, agrees |
+
+All four are M2 or mixed rows that Acacia does not answer today and that only `ltlsynt` decides.
+Every verdict was checked against `ltlsynt` on the same formula and partition.
+
+`lift3` is the clearest demonstration of the two sides working together. Offline, its winning
+certificate was only found from a 26,317-maximum envelope, and cost 5.3 seconds of search there.
+Live it finishes in 0.81 seconds total, because the refutation fires first at k=2 and raises the
+bound without building the k=2 frontier at all; the positive search then succeeds at k=5 from a
+region far smaller than the one the offline campaign had to reach.
+
+This is a targeted result on four instances. Whether it lands is decided by G1, G2s, G3 and G4,
+which measure what the probe costs on the workers it cannot help.
+
 ## Stage S3: checkpointed width schedule
 
 Implemented as a control. On `SPI`'s fixed point, widths 1, 2, 4 and 8 all lose the initial vector

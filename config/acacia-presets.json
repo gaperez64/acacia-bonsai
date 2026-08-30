@@ -86,6 +86,14 @@
       "inherits": "best_decomp_rank_bucketed_mona",
       "enable_diagnostics": true
     },
+    "best_decomp_rank_bucketed_semantic_mona_local": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "local_certificate": true
+    },
+    "best_decomp_rank_bucketed_semantic_mona_local_diag": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_local",
+      "enable_diagnostics": true
+    },
     "best_decomp_rank_bucketed_mona_diag_eq_relaxed": {
       "inherits": "best_decomp_rank_bucketed_mona_diag",
       "equivariant_min_clients": 2,

@@ -19,6 +19,17 @@
 
 namespace acacia::diagnostics {
 
+  inline size_t env_size (const char* name, size_t fallback, bool allow_zero) {
+    const char* text = std::getenv (name);
+    if (text == nullptr or *text == '\0')
+      return fallback;
+    char* end = nullptr;
+    const unsigned long value = std::strtoul (text, &end, 10);
+    if (end == text or *end != '\0' or (value == 0 and not allow_zero))
+      return fallback;
+    return static_cast<size_t> (value);
+  }
+
 #if ACACIA_ENABLE_DIAGNOSTICS
 
   using clock = std::chrono::steady_clock;
@@ -88,6 +99,7 @@ namespace acacia::diagnostics {
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
       std::string equivariant = "not-run";
+      std::string local_probe_status = "none";
       // sym_* covers every diagnostic recognition pass, including instances
       // the solver declines; eq_* is populated only when solving is attempted.
       std::string symmetry_families = "-";
@@ -132,6 +144,11 @@ namespace acacia::diagnostics {
       size_t bool_threshold = 0;
       size_t max_f = 0;
       size_t max_f_size = 0;
+      unsigned long long local_probe_runs = 0;
+      unsigned long long local_probe_forward_apps = 0;
+      unsigned long long local_probe_nodes = 0;
+      unsigned long long cpre_skipped = 0;
+      unsigned long long k_bumped_by_local_refutation = 0;
       unsigned long long actions_seen = 0;
       unsigned long long meets_computed = 0;
       unsigned long long meet_batches = 0;
@@ -247,7 +264,13 @@ namespace acacia::diagnostics {
          << " simulation_states_removed=" << m.simulation_states_removed
          << " bool_threshold=" << m.bool_threshold << " max_f=" << m.max_f
          << " max_f_size=" << m.max_f_size << " loops=" << m.loops
-         << " k_attempts=" << m.k_attempts << " cpre_ms=" << m.cpre_ms
+         << " k_attempts=" << m.k_attempts << " local_probe_runs=" << m.local_probe_runs
+         << " local_probe_status=" << m.local_probe_status
+         << " local_probe_forward_apps=" << m.local_probe_forward_apps
+         << " local_probe_nodes=" << m.local_probe_nodes
+         << " cpre_skipped=" << m.cpre_skipped
+         << " k_bumped_by_local_refutation=" << m.k_bumped_by_local_refutation
+         << " cpre_ms=" << m.cpre_ms
          << " picker_ms=" << m.picker_ms << " apply_ms=" << m.apply_ms
          << " downset_ms=" << m.downset_ms << " actions_seen=" << m.actions_seen
          << " meets_computed=" << m.meets_computed << " meet_batches=" << m.meet_batches
@@ -515,6 +538,21 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_local_probe (std::string status, unsigned long long forward_applications,
+                               unsigned long long nodes, bool skipped_cpre,
+                               bool bumped_k) {
+    if (auto* m = current ()) {
+      ++m->local_probe_runs;
+      m->local_probe_status = std::move (status);
+      m->local_probe_forward_apps += forward_applications;
+      m->local_probe_nodes += nodes;
+      if (skipped_cpre)
+        ++m->cpre_skipped;
+      if (bumped_k)
+        ++m->k_bumped_by_local_refutation;
+    }
+  }
+
   inline void set_final_reason (std::string reason) {
     if (auto* m = current ())
       m->final_reason = std::move (reason);
@@ -604,6 +642,7 @@ namespace acacia::diagnostics {
                                           unsigned long long, unsigned long long,
                                           unsigned long long) {}
   inline void set_decode_census (unsigned long long, unsigned long long, unsigned long long) {}
+  inline void set_local_probe (std::string, unsigned long long, unsigned long long, bool, bool) {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}

@@ -9,6 +9,7 @@
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
 #include "solver/antichain_snapshot.hh"
+#include "solver/local_certificate.hh"
 
 #include <sstream>
 #include "solver/diagnostics.hh"
@@ -16,6 +17,7 @@
 #include "utils/typeinfo.hh"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <fstream>
 #include <functional>
@@ -28,6 +30,58 @@
 
 #include <posets/utils/vector_mm.hh>
 #include <posets/vectors.hh>
+
+#if ACACIA_LOCAL_CERTIFICATE
+namespace acacia::solver_detail {
+
+  struct local_probe_frontier {
+      std::array<std::size_t, 6> size_marks {16, 64, 256, 1024, 4096, 16384};
+      std::array<bool, 6> mark_taken {};
+      bool first_loop_taken = false;
+
+      [[nodiscard]] bool observe (std::size_t size) {
+        bool wanted = false;
+        if (not first_loop_taken) {
+          first_loop_taken = true;
+          wanted = true;
+        }
+        for (std::size_t i = 0; i < size_marks.size (); ++i)
+          if (not mark_taken[i] and size >= size_marks[i]) {
+            mark_taken[i] = true;
+            wanted = true;
+          }
+        return wanted;
+      }
+
+      void restart () {
+        mark_taken.fill (false);
+        first_loop_taken = false;
+      }
+
+      void reset_marks () { mark_taken.fill (false); }
+  };
+
+  inline std::size_t configured_local_certificate_generator_budget () {
+    static const std::size_t value =
+        acacia::diagnostics::env_size ("ACACIA_LOCAL_CERTIFICATE_BUDGET", 64, true);
+    return value;
+  }
+
+  inline unsigned long long configured_local_certificate_node_budget () {
+    static const unsigned long long value =
+        acacia::diagnostics::env_size ("ACACIA_LOCAL_CERTIFICATE_NODES", 200000, true);
+    return value;
+  }
+
+  inline unsigned long long configured_local_certificate_forward_application_budget () {
+    static const unsigned long long value = acacia::diagnostics::env_size (
+        "ACACIA_LOCAL_CERTIFICATE_FORWARD_APPS",
+        default_local_certificate_forward_application_budget, true);
+    return value;
+  }
+
+}  // namespace acacia::solver_detail
+#endif
 
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.
@@ -105,6 +159,9 @@ class k_bounded_safety_aut_detail {
 
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
       int loopcount = 0;
+#if ACACIA_LOCAL_CERTIFICATE
+      local_probe_schedule.restart ();
+#endif
       acacia::diagnostics::snapshot ("after-action-construction");
 
       do {
@@ -114,6 +171,39 @@ class k_bounded_safety_aut_detail {
         acacia::antichain_snapshot::observe (f, k, loopcount);
 #endif
         verb_do (1, vout << "Loop# " << loopcount << ", f of size " << f.size () << std::endl);
+
+#if ACACIA_LOCAL_CERTIFICATE
+        if (local_probe_schedule.observe (f.size ())) {
+          auto local = acacia::solver_detail::find_local_certificate (
+              f, init, input_output_fwd_actions, actioner, k,
+              acacia::solver_detail::configured_local_certificate_generator_budget (),
+              acacia::solver_detail::configured_local_certificate_node_budget (),
+              acacia::solver_detail::configured_local_certificate_forward_application_budget ());
+          if (local.status ==
+              acacia::solver_detail::local_certificate_status::win_certificate) {
+            acacia::diagnostics::set_local_probe (
+                "win", local.forward_applications, local.nodes, true, false);
+            acacia::diagnostics::set_final_reason ("local-win-certificate");
+            return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
+                std::make_pair (k, std::move (*local.win)));
+          }
+          if (local.status == acacia::solver_detail::local_certificate_status::root_refuted) {
+            const bool bound_raised = raise_bound_or_give_up (f, k, actioner);
+            acacia::diagnostics::set_local_probe (
+                "root-refuted", local.forward_applications, local.nodes, true, bound_raised);
+            if (not bound_raised)
+              return std::nullopt;
+            continue;
+          }
+          if (local.status ==
+              acacia::solver_detail::local_certificate_status::budget_exhausted)
+            acacia::diagnostics::set_local_probe (
+                "budget-exhausted", local.forward_applications, local.nodes, false, false);
+          else
+            acacia::diagnostics::set_local_probe (
+                "unknown", local.forward_applications, local.nodes, false, false);
+        }
+#endif
 
         auto input = [&] {
           acacia::diagnostics::scoped_fine_timer timer {
@@ -136,30 +226,8 @@ class k_bounded_safety_aut_detail {
         acacia::diagnostics::snapshot_loop_progress ("classic-after-cpre");
 
         if (not f.contains (state (init))) {
-          if (k >= kto) {
-            verb_do (2, vout << "Early exit because the initial state is out\n");
-            acacia::diagnostics::set_final_reason ("kmax-initial-out");
+          if (not raise_bound_or_give_up (f, k, actioner))
             return std::nullopt;
-          }
-          verb_do (1, vout << "Incrementing k from " << (int) k << " to " << (int) (k + kinc)
-                           << std::endl);
-          k += kinc;
-          actioner.setK (k);
-#if ACACIA_ENABLE_DIAGNOSTICS
-          acacia::antichain_snapshot::note_bound_raised ();
-#endif
-          verb_do (1, {
-            vout << "Adding kinc to every vector...";
-            vout.flush ();
-          });
-          f = f.apply ([&] (const state& s) {
-            auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
-            for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
-              vec[i] = s[i] + kinc;
-            // Other entries are set to 0 by initialization, since they are bool.
-            return state (vec);
-          });
-          verb_do (1, vout << "Done" << std::endl);
           continue;
         }
 
@@ -183,6 +251,44 @@ class k_bounded_safety_aut_detail {
     const IOsPrecomputationMaker& ios_precomputer_maker;
     const ActionerMaker& actioner_maker;
     const InputPickerMaker& input_picker_maker;
+#if ACACIA_LOCAL_CERTIFICATE
+    acacia::solver_detail::local_probe_frontier local_probe_schedule;
+#endif
+
+    // This is also sound when `f` is the pre-CPre region X.  The post-CPre
+    // region Y is a subset of X, and the lift is monotone, so lifting X gives a
+    // larger, still-sound warm start for the next bound.
+    template <typename Actioner>
+    bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {
+      if (k >= kto) {
+        verb_do (2, vout << "Early exit because the initial state is out\n");
+        acacia::diagnostics::set_final_reason ("kmax-initial-out");
+        return false;
+      }
+      verb_do (1, vout << "Incrementing k from " << (int) k << " to " << (int) (k + kinc)
+                       << std::endl);
+      k += kinc;
+      actioner.setK (k);
+#if ACACIA_LOCAL_CERTIFICATE
+      local_probe_schedule.reset_marks ();
+#endif
+#if ACACIA_ENABLE_DIAGNOSTICS
+      acacia::antichain_snapshot::note_bound_raised ();
+#endif
+      verb_do (1, {
+        vout << "Adding kinc to every vector...";
+        vout.flush ();
+      });
+      f = f.apply ([&] (const state& s) {
+        auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
+        for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
+          vec[i] = s[i] + kinc;
+        // Other entries are set to 0 by initialization, since they are bool.
+        return state (vec);
+      });
+      verb_do (1, vout << "Done" << std::endl);
+      return true;
+    }
 
     // This computes f = CPre(f), in the following way:
     // UPre(f) = f \cap f1i

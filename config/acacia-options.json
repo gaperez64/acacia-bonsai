@@ -121,6 +121,7 @@
     "cpre_avoid_unions": false,
     "compile_all_components": false,
     "enable_diagnostics": false,
+    "local_certificate": false,
     "enable_equivariant_solver": true,
     "equivariant_max_states": 512,
     "equivariant_min_clients": 3,
