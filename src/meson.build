@@ -43,6 +43,15 @@ if get_option('build_research_tools')
       install: false,
       dependencies: [spot_dep, bddx_dep],
     )
+    # Replays a recorded CPre update against the real downset and vector types,
+    # so unlike the antichain replay beside it this one needs posets and stdsimd.
+    acacia_cpre_replay_exe = executable(
+      'acacia-cpre-replay',
+      'research/cpre_replay.cc',
+      include_directories: inc,
+      install: false,
+      dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+    )
   endif
   acacia_automata_study_exe = executable(
     'acacia-automata-study',

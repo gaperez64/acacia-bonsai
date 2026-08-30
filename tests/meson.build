@@ -72,6 +72,16 @@ test ('version-output',
       suite : 'version',
       depends : [ab_exe])
 
+if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
+  cpre_replay_smoke = find_program ('check-cpre-replay.sh')
+  test ('cpre-replay-smoke',
+        cpre_replay_smoke,
+        args : [ab_exe, acacia_cpre_replay_exe,
+                files ('ltl/realizable/06.ltl')],
+        suite : ['unit', 'research'],
+        depends : [ab_exe, acacia_cpre_replay_exe])
+endif
+
 if get_option ('build_research_tools')
   research_tools_smoke = find_program ('check-research-tools.sh')
   test ('research-tools-smoke',

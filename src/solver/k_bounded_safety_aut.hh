@@ -9,6 +9,8 @@
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
 #include "solver/antichain_snapshot.hh"
+
+#include <sstream>
 #include "solver/diagnostics.hh"
 #include "solver/symmetry_profile.hh"
 #include "utils/typeinfo.hh"
@@ -124,7 +126,7 @@ class k_bounded_safety_aut_detail {
               std::make_pair (k, std::move (f)));
         }
 
-        cpre_inplace (f, *input, actioner);
+        cpre_inplace (f, *input, actioner, k, loopcount);
         acacia::diagnostics::snapshot_loop_progress ("classic-after-cpre");
 
         if (not f.contains (state (init))) {
@@ -178,12 +180,23 @@ class k_bounded_safety_aut_detail {
     // f1i = \cup_{o \in O} f1io
     // f1io = PreHat (f, i, o)
     template <typename Action, typename Actioner>
-    void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner) {
+    void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner,
+                       [[maybe_unused]] int k = -1, [[maybe_unused]] int loop = -1) {
       acacia::diagnostics::scoped_fine_timer cpre_timer {
           acacia::diagnostics::fine_metric::cpre};
       verb_do (2, vout << "Computing cpre(f) with f = " << std::endl << f);
 
       const auto& [input, actions] = io_action.get ();
+#if ACACIA_ENABLE_DIAGNOSTICS
+      // The action vectors determine this update completely, so recording them
+      // with the region before and after makes it replayable offline without
+      // the automaton or any BDD.
+      const bool recording_cpre = [&] {
+        std::ostringstream cube;
+        cube << bdd_to_formula (input);
+        return acacia::antichain_snapshot::record_cpre_before (f, k, loop, cube.str (), actions);
+      } ();
+#endif
 #if CPRE_AVOID_UNIONS == 0
       posets::utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
       auto vv = typename SetOfStates::value_type (v);
@@ -247,6 +260,10 @@ class k_bounded_safety_aut_detail {
         acacia::diagnostics::scoped_downset_timer downset_timer;
         f.intersect_with (std::move (f1i));
       }
+#if ACACIA_ENABLE_DIAGNOSTICS
+      if (recording_cpre)
+        acacia::antichain_snapshot::record_cpre_after (f);
+#endif
       // Experimentally, this is not faster:
       //   f1i.intersect_with (std::move (f));
       //   f = std::move (f1i);

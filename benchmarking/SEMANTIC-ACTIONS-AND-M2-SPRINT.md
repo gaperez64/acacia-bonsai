@@ -385,14 +385,73 @@ census first.
 
 ## Sprint C: operation-aware M2 representation census
 
-Status: not started.
+### Stage C1: exact CPre replay
 
-The decisive question is not static compression. It is whether one complete input-conditioned
-update `D <- D ∩ ⋃_o Pre_{i,o}(D)` stays compact and cheaper in the compressed representation.
-Answering it exactly requires snapshot data Acacia does not record today:
-`src/solver/antichain_snapshot.hh` dumps one antichain per loop at the loop *head*, before the
-picker and before CPre, with no schema version, no selected input, no action profiles, no
-orientation and no symmetry layout, and it is never called from the equivariant solver.
+**Done. The invariant holds: an offline replay reproduces the solver's own update exactly.**
+
+The decisive question for M2 is not whether a region compresses but whether one complete
+input-conditioned update
+
+    D <- D intersect union over outputs of Pre (D)
+
+stays compact under the compressed representation. That question cannot be asked honestly until
+the *explicit* update can be reproduced outside the solver, because otherwise a compressed result
+has nothing exact to be compared against.
+
+The snapshot could not support that. It wrote one antichain per loop, taken at the loop head --
+before the picker and before CPre -- with no schema version, no selected input, no action
+profiles, and no call at all from the equivariant solver. Loop `L` and `L+1` bracket the picker,
+the update, the closure and a possible bound bump, so CPre's own contribution was not isolable.
+
+Snapshot schema 2 adds a `cpre-<loop>.tsv` event carrying the region before the update, the
+complete ordered action list, and the region after. The action vectors determine the update
+completely -- they are the whole of what `actioners::standard::apply` reads -- so a replay needs
+no automaton, no BDD library and no Spot dictionary. Events are opt-in
+(`ACACIA_ANTICHAIN_SNAPSHOT_CPRE`), separately capped, and an input class whose action list
+exceeds the cap is recorded as skipped rather than silently omitted.
+
+`src/research/cpre_replay.cc` reads an event, recomputes the update against the real downset and
+vector types, and compares generator-wise against what the solver recorded.
+
+| instance | loop | before | actions | solver after | replay after | exact |
+|---|---:|---:|---:|---:|---:|---|
+| `round_robin_arbiter4` | 1 | 1 | 16 | 1 | 1 | yes |
+| `round_robin_arbiter4` | 2 | 1 | 16 | 1 | 1 | yes |
+| `round_robin_arbiter4` | 3 | 1 | 16 | 4 | 4 | yes |
+| `lift4` | 1 | 1 | 32 | 4 | 4 | yes |
+| `lift4` | 2 | 4 | 32 | 12 | 12 | yes |
+| `lift4` | 3 | 12 | 32 | 48 | 48 | yes |
+| `lift4` | 4 | 48 | 32 | 240 | 240 | yes |
+| `lift4` | 5 | 240 | 32 | 400 | 400 | yes |
+| `lift4` | 6 | 400 | 32 | 620 | 620 | yes |
+
+`lift4` is the useful one: six consecutive updates, with the frontier growing 1, 4, 12, 48, 240,
+400, 620. That growth is the M2 mechanism itself, and the replay tracks it exactly, so the
+measurements the rest of Sprint C depends on now have a ground truth.
+
+A smoke test in the unit suite records events from a committed instance and asserts every replayed
+update is exact, so the invariant cannot rot.
+
+While in the neighbouring file: `antichain_replay.cc` sorted snapshots by filename, so
+`antichain-10.tsv` came before `antichain-2.tsv` and any run of ten or more loops was replayed out
+of order. Both tools now sort numerically.
+
+### Stage C2: posets instrumentation
+
+Counters behind `POSETS_RANK_STATS` on `rank_bucketed_vector_backed`, in
+michaelcadilhac/posets#33. They exist to make the comparison in C3 onwards honest: a compressed
+one-step operation has to be measured against the explicit work it replaces, not against a guess.
+
+The instrumentation surfaced one thing worth acting on separately: `rebuild_buckets()` runs on
+every successful insert and walks the whole backing vector, and no query reads `buckets` --
+`contains`, `insert` and `intersect_with` all binary-search `ranks` instead. The counters size
+that before anyone removes it. By contrast the linear scan in `contains()` is *not* waste: a
+dominator `w` of `v` has `v <= w` componentwise, so `rank (w) >= rank (v)` and there is no upper
+bound that could stop the scan early.
+
+### Stages C3 to C7
+
+Not started. C1 and C2 are their prerequisites and are now in place.
 
 ## Sprints D and E: adaptive probe and compressed backend
 
