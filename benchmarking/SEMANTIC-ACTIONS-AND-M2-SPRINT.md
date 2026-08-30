@@ -502,16 +502,82 @@ a backend that by construction cannot reach the cases the sprint exists to fix. 
 other branch -- "orbit compression weak" -> threshold BDD replay -- is the one the evidence
 selects, and it needs no symmetry at all.
 
-### Stages C4 to C7
+### Stages C4 and C5
 
-C4 and C5, the scalar-cap and tuple-histogram censuses, are specializations of the orbit
-representation and inherit its precondition, so they are not attempted for the same reason.
+The scalar-cap and tuple-histogram censuses are specializations of the orbit representation and
+inherit its precondition, so they are not attempted for the same reason.
 
-C6, the threshold-BDD replay, is the branch the evidence selects. It is next.
+### Stage C6: threshold-BDD replay
+
+**Gate C-BDD fails. The representation is never smaller than the explicit one to begin with, and
+the update destroys what little structure it has.**
+
+`src/research/bdd_cpre_replay.cc` recomputes a recorded update over the unary threshold encoding
+`x[q,l] = rank (q) >= l` and compares the result to the recorded region by BDD equality, so it
+never has to extract maxima.
+
+The update needs no quantifier. `W` is downward closed, so for a fixed image point `v` the
+constraint `v <= apply (m, a)` is exactly `m >= g_a (v)` for a least witness, and "some `m` in `W`
+lies above `g_a (v)`" is equivalent to "`g_a (v)` is itself in `W`". Hence
+`Pre_a (W) (v) = W (g_a (v))`, which is a variable substitution into `W` rather than a relational
+image, and one copy of the variables suffices. The relational form -- build `T_a (m, v)` over two
+variable copies and quantify `m` away -- is also correct and was tried first; it does not finish
+on the smallest recorded event. That is a fact about the formulation, not the representation,
+which is why the substitution is what is measured.
+
+`syntcomp24/lift4`, 437 states of which 129 numeric, `k = 2`, 695 BDD variables, coordinate-major
+order, 20 M node table:
+
+| loop | explicit before → after | BDD nodes before → after | peak |
+|---|---|---|---:|
+| 1 | 1 → 4 | 387 → 1,021 | 1,021 |
+| 2 | 4 → 12 | 1,021 → 3,156 | 3,156 |
+| 3 | 12 → 48 | 3,156 → 23,693 | 23,693 |
+| 4 | 48 → 240 | did not complete | > 120,000,000 |
+
+Every completed event is exact. Loop 4 ran the node table through thirteen garbage collections up
+to 120 million nodes without finishing, to compute a region the explicit antichain holds in 240
+vectors.
+
+`syntcomp24/round_robin_arbiter4`, 453 states of which 405 numeric, `k = 2`, 1,263 variables:
+
+| loop | explicit before → after | BDD nodes before → after | peak | exact |
+|---|---|---|---:|---|
+| 1 | 1 → 1 | 1,215 → 1,207 | 38,263 | yes |
+| 2 | 1 → 1 | 1,207 → 1,160 | 1,160 | yes |
+| 3 | 1 → 4 | 1,160 → 3,127 | 139,270 | yes |
+
+The gate asks for four things. Exactness holds. The other three do not:
+
+- **No memory advantage, in the wrong direction.** A single explicit maximum costs 387 BDD nodes
+  on `lift4` and 1,215 on `round_robin_arbiter4`. The threshold encoding of one vector over
+  hundreds of coordinates is already larger than the vector, so there is no size regime in which
+  this representation starts ahead.
+- **Node growth is catastrophic and super-linear in the explicit size.** Nodes per explicit maximum
+  run 387, 255, 263, 494 and then unbounded, while the explicit antichain is still quadrupling
+  politely from 1 to 240.
+- **CPre time is not competitive.** The explicit update at these sizes takes microseconds; the
+  symbolic one takes milliseconds and then fails to terminate.
+
+Variable order does not rescue it, and its dependence is itself pathological. Level-major ordering
+-- grouping every coordinate's level `l` together, which is the layout that ought to suit an action
+that shifts by one level -- completed **zero** events on `lift4` in 180 s and zero on
+`round_robin_arbiter4` in 90 s, against 3 ms of CPre time for coordinate-major on the same events.
+The results above are from the better of the two orders.
+
+### Stage C7: MDD
+
+**Not attempted, and its precondition is explicitly not met.** The brief admits an MDD prototype
+only if BDDs lose *because* `K * numeric_coordinates` creates too many Boolean variables. Here
+`K = 2` and the numeric core is 129 coordinates, giving 695 variables in total. That is a small
+encoding by any measure, and it still explodes. The blow-up is not a variable-count problem, so
+moving to a multi-valued diagram would not address it.
 
 ## Sprints D and E: adaptive probe and compressed backend
 
-Status: not started; gated on Sprint C.
+**Not reachable.** Sprint D is a transactional probe that admits a candidate compressed
+representation for one real update; no candidate survived Sprint C to be probed. Sprint E is the
+specialized backend for a representation D admitted. The decision tree terminates at C.
 
 ## What has been tried
 
