@@ -6,9 +6,15 @@ runs. Rejected experiments move to [What has been tried](#what-has-been-tried) a
 
 ## Decision
 
-**In progress.** Gate A0 passes: the equality quotient has a large, family-spanning target and
-inclusion dominance has a second one on top of it. Stage A1 is implemented and exactly validated
-against the baseline. The landing gates are running.
+**Sprint A stage A1 is a LAND candidate**, pending the full ten-target G2s.
+
+Gate A0 passes; the equality quotient has a large, family-spanning target and inclusion dominance
+has a second one on top of it. Stage A1 is implemented, exactly validated against the baseline,
+and clears G0, G1 and G3: 40/40 frozen verdicts, three gained SYNTCOMP25 answers with zero losses
+and zero opposite verdicts on either panel, and PAR-2 improvements outside the measured noise
+floor on both. The syntcomp24 half of G2s shows no regression and clears the target that rejected
+the previous attempt; the syntcomp25 half could not run until the gate itself was repaired, and
+the complete run is outstanding.
 
 ## Why this sprint exists
 
@@ -264,6 +270,53 @@ That is a question about the landing policy for a change whose target families a
 panel, not a regression; it is recorded here rather than argued away, and the full ten-target
 result follows.
 
+**G1 passes.** 40/40 frozen verdicts, `GATE PASS`. PAR-2 98.855 s on the same-tree baseline
+against 92.224 s for the candidate.
+
+**G3 passes on both panels, and gains three answers.**
+
+| panel | baseline solved | candidate solved | baseline PAR-2 | candidate PAR-2 | gains | losses | opposite verdicts |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| SYNTCOMP25 | 111/180 | **114/180** | 2592.191 s | 2479.043 s | 3 | 0 | 0 |
+| SYNTCOMP26 | 136/180 | 136/180 | 1629.917 s | 1597.041 s | 0 | 0 | 0 |
+
+Both PAR-2 movements are outside the measured same-configuration spread -- 113.1 s against a
+21.134 s floor on SYNTCOMP25, 32.9 s against 12.074 s on SYNTCOMP26 -- so they are evidence
+rather than noise. The largest per-instance slowdown anywhere on either panel is
+`Morning_f2774e0b.ltl` at +0.321 s.
+
+| gained | verdict | candidate time |
+|---|---|---:|
+| `syntcomp25/patrolling-alarm23.ltl` | UNREALIZABLE | 7.875 s |
+| `syntcomp25/patrolling22.ltl` | UNREALIZABLE | 6.699 s |
+| `syntcomp25/robot-resource-2d1.ltl` | UNREALIZABLE | 16.200 s |
+
+### The census predicted exactly these instances
+
+This is the part worth keeping. Every gain and every large speedup is a worker the stage A0
+census had already flagged, and the workers that did the deciding are the ones with the
+duplication:
+
+| instance | worker | raw paths | residual roots | ratio |
+|---|---|---:|---:|---:|
+| `patrolling22` | unreal-automaton | 7,519 | 1,901 | 3.96 |
+| `robot-resource-2d1` | unreal-automaton | 89,376 | 22,650 | 3.95 |
+| `patrolling-alarm23` | unreal-automaton | 6,500 | 1,979 | 3.28 |
+| `patrolling15` | unreal-automaton | 6,319 | 1,355 | 4.66 |
+| `patrolling-alarm21` | unreal-automaton | 5,964 | 1,823 | 3.27 |
+
+All three gains are UNREALIZABLE, decided by the `unreal-formula` and `unreal-automaton` workers
+-- which are precisely the workers carrying ratios of 2.15 to 3.96. The `real` worker of each of
+those same instances sits at 1.00 to 1.33 and contributes nothing. The census did not merely
+correlate with the outcome; it named the workers that produced it.
+
+The commonly-solved speedups follow the same rule: `patrolling-alarm21` 13.833 s to 5.767 s,
+`infinite-race-u5` 14.009 s to 6.774 s, `patrolling15` 5.722 s to 1.708 s.
+
+Two of the three gains, `patrolling-alarm23` and `patrolling22`, are the same two the previous
+whole-letter quotient gained before G2s rejected it. This candidate gains those two plus
+`robot-resource-2d1`, and does so without the regression.
+
 ### The G2s panel could not resolve two of its own targets
 
 Running the gate exposed a fault that predates this sprint. `solver-profile-gate.sh` resolved
@@ -286,6 +339,11 @@ untested.
 Status: not started; gated on A1 landing. Gate A2's structural precondition is already met -- 80
 workers at 1.5x or more across 22 families, 33 at 4x -- but the census timings that decide whether
 inclusion checking pays for itself must be re-measured on a quiet machine first.
+
+The families A1 just gained answers on are also where the remaining dominance headroom is:
+`patrolling-alarm23`'s unreal-automaton worker goes from 1,979 residual roots to 326 under
+inclusion dominance, a further 6.07x on top of the 3.28x the equality quotient already took.
+That makes the `patrolling` block the natural first cohort for A2 rather than a fresh one.
 
 ## Sprint B: static obligation-scheduling risk detector
 
