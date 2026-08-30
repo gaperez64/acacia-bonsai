@@ -7,7 +7,7 @@ own section rather than appending. Rejected experiments move to
 
 ## Decision
 
-**Gate 0 passes. Gate 1A fails. Gate 3A passes. Gate U1 passes.**
+**Gate 0, Gate 3A, Gate U1, G0 and G1 pass. Gate 1A fails. The landing panels decide.**
 
 The generator-subset core is dead: it finds nothing before the solver converges, and its cost is
 already twice the landing cap at a fifth of the frontier sizes that matter. The forward bounded
@@ -293,6 +293,38 @@ region far smaller than the one the offline campaign had to reach.
 
 This is a targeted result on four instances. Whether it lands is decided by G1, G2s, G3 and G4,
 which measure what the probe costs on the workers it cannot help.
+
+### Budget tuning, which the gate would otherwise have caught
+
+The first default, 2,000,000 forward applications, fails G1. On a quiet machine the frozen
+sentinel `Morning_f2774e0b` goes from 13.70 s to **17.78 s** and crosses the 17-second cap. A sweep
+settles it:
+
+| forward-application budget | `Morning_f2774e0b` | wins still found |
+|---:|---:|---|
+| 20,000 | 14.01 s | `lift3` and `finding_nemo_2` fall back to UNKNOWN |
+| **100,000** | **14.69 s** | **all four** |
+| 500,000 | 15.02 s | all four |
+| 2,000,000 | 17.78 s, over cap | all four |
+
+100,000 is the default. Every verified certificate fits -- `robot_grid2_2` needs 3,834 forward
+applications, `finding_nemo_1` 4,314, `finding_nemo_2` 139,143 -- and what it excludes is the tail
+that was never going to pay: `prioritized_arbiter` at 1.8 to 4.3 million, and the safe-set scan at
+145 million.
+
+One earlier reading recorded `Morning_f1477cc5` improving from 14.04 s to 7.13 s. That was taken
+while a compile was running. Re-measured quiet it is 13.23 s to 15.03 s, a regression, and the
+earlier figure is withdrawn.
+
+### Gates
+
+| gate | result |
+|---|---|
+| G0 | 25/25 Acacia unit, 18/18 Posets, 183 Python; registry validates |
+| G1 | **`GATE PASS`**, 40/40 frozen verdicts; PAR-2 101.867 s frozen, 92.224 s without the probe, **90.651 s with it** |
+| G2s | running |
+| G3 | pending |
+| G4 | pending |
 
 ## Stage S3: checkpointed width schedule
 
