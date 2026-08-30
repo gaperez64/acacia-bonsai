@@ -234,9 +234,58 @@ but also the input order, since `actioners::standard` keys its set on the per-in
 and that key is unchanged. G2s on this target is therefore a prediction, not a hope: it must show
 no change beyond noise.
 
+### Stage A1 gates
+
+**G2s, syntcomp24 half: no regression, and the historically decisive target is clean.**
+
+The gate aborted before its syntcomp25 half on an infrastructure fault, not on the candidate --
+see below. The five syntcomp24 targets completed with three repetitions per binary.
+
+| target | bucket | baseline cycles | candidate cycles | change | hit the 60 s cap |
+|---|---|---:|---:|---:|---|
+| `arbiter_with_buffer6` | downset-bound | 472,613,300,806 | 464,085,407,231 | -1.80% | yes |
+| `finding_nemo_2` | letter-loop-bound | 262,843,644,863 | 261,843,817,677 | -0.38% | yes |
+| `lift4` | downset-bound | 736,424,366,575 | 739,622,922,631 | +0.43% | yes |
+| `round_robin_arbiter4` | mixed | 51,212,809,263 | 50,646,348,805 | **-1.11%** | no |
+| `workstation_resupply_3` | letter-loop-bound | 499,871,157,195 | 499,428,771,670 | -0.09% | yes |
+
+Geometric mean 0.9941, worst per-target regression +0.43% against a 6% ceiling.
+
+`round_robin_arbiter4` is the whole point. It is the instance that moved from 32,306,372,637 to
+252,184,896,339 median cycles under the previous whole-letter quotient -- a 680.604% regression
+with all three runs hitting the cap -- and it is the only target here that finishes inside the
+cap, so its cycles are a real workload rather than a fixed-budget reading. It comes back at
+-1.11%. The census explains why: its ratio is exactly 1, the two binaries build identical action
+lists, and so both order channels are closed on it by construction. The prediction was made
+before the gate ran and the gate agreed with it.
+
+The gate's own threshold also requires a 5% geometric improvement, which -0.59% does not meet.
+That is a question about the landing policy for a change whose target families are not in this
+panel, not a regression; it is recorded here rather than argued away, and the full ten-target
+result follows.
+
+### The G2s panel could not resolve two of its own targets
+
+Running the gate exposed a fault that predates this sprint. `solver-profile-gate.sh` resolved
+every target through `sources.tsv` alone. When syntcomp25 moved to the corpus reconstructed from
+the TLSF submodule, `amba_case_study_unreal_pb_2_pe_.ltl` and `evasion0.ltl` lost their `.ltl`
+entries, so the gate aborted with "has no source" -- after spending most of an hour on the five
+targets it could still resolve. `evasion0.ltl` is the SYNTCOMP25 `mixed` target the census
+deliberately moved into this panel, so G2 has been unable to complete since the corpus
+reconstruction landed.
+
+The gate now falls back to `tlsf-sources.tsv` and invokes `-T`, which is what `run-subset.py` and
+`landing-bar.py` already do, with the corpus given by `--tlsf-corpus` or `ACACIA_TLSF_CORPUS`.
+The ten targets stay frozen: retargeting the panel to whatever still resolved would have quietly
+changed what the gate measures. A data test now asserts that every frozen target resolves through
+one of the two maps, and that at least one still needs the TLSF route so the fallback cannot rot
+untested.
+
 ### Stage A2: inclusion-dominance pruning before decoding
 
-Status: not started; gated on A1.
+Status: not started; gated on A1 landing. Gate A2's structural precondition is already met -- 80
+workers at 1.5x or more across 22 families, 33 at 4x -- but the census timings that decide whether
+inclusion checking pays for itself must be re-measured on a quiet machine first.
 
 ## Sprint B: static obligation-scheduling risk detector
 
