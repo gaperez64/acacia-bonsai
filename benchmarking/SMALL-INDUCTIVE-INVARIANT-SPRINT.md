@@ -412,6 +412,40 @@ every bound raise -- `fwd=36398 nodes=63` at k=11 through k=101, more than thirt
 lifting the region by `kinc` leaves the search isomorphic. Memoising that is the obvious next
 optimisation and is not attempted here.
 
+### G3, where the probe is supposed to pay
+
+G2s measures cycles on instances both solvers already answer, so it is blind to the thing the
+probe exists for. G3 runs 360 instances at the frozen 17 s cap and counts answers.
+
+| panel | solved | PAR-2 | gains | losses | flips |
+|---|---|---|---|---|---|
+| syntcomp25 | 114 -> 114 | 2473.521 s -> 2483.084 s | 1 | 1 | 0 |
+| syntcomp26 | 136 -> **137** | 1598.954 s -> **1576.649 s** | 1 | 0 | 0 |
+
+Both panels `GATE PASS`, and no verdict flipped anywhere in 360 instances.
+
+| | instance | baseline | candidate |
+|---|---|---|---|
+| gain | `lift_pb_3_pe_` | TIMEOUT 17.017 s | REALIZABLE **0.572 s** |
+| gain | `box-real` | TIMEOUT 17.021 s | REALIZABLE **0.034 s** |
+| loss | `robot-resource-2d1` | UNREALIZABLE 16.196 s | TIMEOUT 17.029 s |
+
+The loss is the failure mode G2s predicted, arriving where it was expected to. The probe costs
+`robot-resource-2d1` about 4%, which is far below the 6% ceiling and would be unremarkable at
+12 s; the instance was answering at 16.196 s, so 4% crossed the cap. The protocol remeasures
+near-cap instances at three times the cap, and there both sides return UNREALIZABLE -- 17.041 s
+baseline against 17.743 s candidate -- so it is adjudicated a cap artifact rather than a lost
+answer. That is the right call for a gate. It is still an answer a user loses at 17 s.
+
+**The panels understate that risk rather than clearing it.** Only instances answering near the cap
+can be pushed over it, and there are just two of them in syntcomp25 and none in syntcomp26. The
+probe lost one of the two. syntcomp26's clean sheet is in part an artifact of having nothing in the
+danger zone. The gains are not marginal in the same way: both are instances Acacia does not answer
+at all, returned in well under a second.
+
+The syntcomp26 PAR-2 improvement of 22.3 s is outside that panel's 12.074 s noise floor, but it is
+carried by the extra answer and should not be read as a separate speed result.
+
 ### Gates
 
 | gate | result |
@@ -419,8 +453,8 @@ optimisation and is not attempted here.
 | G0 | 25/25 Acacia unit, 18/18 Posets, 183 Python; registry validates |
 | G1 | **`GATE PASS`**, 40/40 frozen verdicts; PAR-2 101.867 s frozen, 92.224 s without the probe, **90.651 s with it** |
 | G2s | **`GATE FAIL`** on `round_robin_arbiter4`: 29.4% first run, **6.23%** tuned, against a 6.00% ceiling. Geomean 96.51%. Not fixable by budget; the probe stays opt-in |
-| G3 | pending |
-| G4 | pending |
+| G3 | **`GATE PASS`** both panels: syntcomp25 1 gain / 1 loss / 0 flips, syntcomp26 **+1 answer** / 0 losses / 0 flips |
+| G4 | running |
 
 ## Stage S3: checkpointed width schedule
 
