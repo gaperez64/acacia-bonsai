@@ -42,6 +42,7 @@ namespace {
   };
 
   int failures = 0;
+  unsigned cache_equivalence_cases = 0;
 
   bool expect (const std::string& what, bool condition) {
     if (condition)
@@ -49,6 +50,39 @@ namespace {
     std::cerr << "FAIL: " << what << '\n';
     ++failures;
     return false;
+  }
+
+  void expect_cache_equivalent (
+      const std::string& label,
+      const acacia::solver_detail::local_certificate_result<SetOfStates>& cached,
+      const acacia::solver_detail::local_certificate_result<SetOfStates>& uncached) {
+    expect (label + ": status", cached.status == uncached.status);
+    expect (label + ": nodes", cached.nodes == uncached.nodes);
+    expect (label + ": forward applications",
+            cached.forward_applications == uncached.forward_applications);
+    expect (label + ": refuting input",
+            cached.refuting_input == uncached.refuting_input);
+
+    const bool same_presence = cached.win.has_value () == uncached.win.has_value ();
+    expect (label + ": certificate presence", same_presence);
+    if (not same_presence or not cached.win.has_value ())
+      return;
+
+    expect (label + ": certificate generator count",
+            cached.win->size () == uncached.win->size ());
+    bool cached_generators_are_contained = true;
+    for (const auto& generator : *cached.win)
+      cached_generators_are_contained =
+          cached_generators_are_contained and uncached.win->contains (generator);
+    expect (label + ": cached generators occur in the uncached certificate",
+            cached_generators_are_contained);
+
+    bool uncached_generators_are_contained = true;
+    for (const auto& generator : *uncached.win)
+      uncached_generators_are_contained =
+          uncached_generators_are_contained and cached.win->contains (generator);
+    expect (label + ": uncached generators occur in the cached certificate",
+            uncached_generators_are_contained);
   }
 
   /// The actioner is intentionally built over a pointer-like duck-typed
@@ -200,6 +234,32 @@ namespace {
     return tiny_game {2, static_cast<VECTOR_ELT_T> (1), std::move (inputs)};
   }
 
+  tiny_game backtracking_cache_game () {
+    action_vec first_a (2), first_b (2);
+    first_a[0].emplace_back (1, true);
+    first_a[1].emplace_back (0, false);
+    first_b[0].emplace_back (0, true);
+    first_b[0].emplace_back (1, false);
+    first_b[1].emplace_back (1, false);
+
+    action_vec second_a (2), second_b (2);
+    second_a[0].emplace_back (0, false);
+    second_a[0].emplace_back (1, true);
+    second_a[1].emplace_back (0, false);
+    second_b[0].emplace_back (1, true);
+    second_b[1].emplace_back (0, true);
+    second_b[1].emplace_back (1, false);
+
+    action_vec third (2);
+    third[0].emplace_back (0, false);
+
+    input_classes inputs;
+    inputs.emplace_back (0, std::list<action_vec> {first_a, first_b});
+    inputs.emplace_back (1, std::list<action_vec> {second_a, second_b});
+    inputs.emplace_back (2, std::list<action_vec> {third});
+    return tiny_game {2, static_cast<VECTOR_ELT_T> (2), std::move (inputs)};
+  }
+
   void check_budget_exhaustion_is_inconclusive () {
     const tiny_game game = two_action_refutable_game ();
     constexpr size_t threshold = 2;
@@ -245,6 +305,57 @@ namespace {
       expect ("an unresolved candidate obligation is not a root refutation",
               result.status != acacia::solver_detail::local_certificate_status::root_refuted
                   and result.refuting_input < 0);
+    });
+  }
+
+  void check_partial_cache_equivalence () {
+    action_vec increment (1);
+    increment[0].emplace_back (0, true);
+    input_classes inputs;
+    inputs.emplace_back (0, std::list<action_vec> {increment});
+    const tiny_game game {1, static_cast<VECTOR_ELT_T> (2), std::move (inputs)};
+    constexpr size_t threshold = 1;
+    const rank_vector initial = initial_vector (game.states, 0);
+
+    with_actioner (game, threshold, [&] (auto& actioner) {
+      auto envelope = principal_downset (safe_vector (game.states, game.K, threshold));
+      const auto cached = acacia::solver_detail::find_local_certificate (
+          envelope, initial, game.inputs, actioner, game.K, 2, 100, 100);
+      const auto uncached = acacia::solver_detail::find_local_certificate (
+          envelope, initial, game.inputs, actioner, game.K, 2, 100, 100, 0);
+      const auto partially_cached = acacia::solver_detail::find_local_certificate (
+          envelope, initial, game.inputs, actioner, game.K, 2, 100, 100, 1);
+
+      expect ("the partial-cache fixture searches a pushed generator",
+              partially_cached.nodes == 2);
+      expect_cache_equivalent ("partial-cache fixture: default and uncached search",
+                               cached, uncached);
+      expect_cache_equivalent ("partial-cache fixture: default and one-entry cache",
+                               cached, partially_cached);
+      ++cache_equivalence_cases;
+    });
+  }
+
+  void check_backtracking_cache_equivalence () {
+    const tiny_game game = backtracking_cache_game ();
+    constexpr size_t threshold = 2;
+    const rank_vector initial = initial_vector (game.states, 0);
+
+    with_actioner (game, threshold, [&] (auto& actioner) {
+      auto envelope = principal_downset (safe_vector (game.states, game.K, threshold));
+      const auto cached = acacia::solver_detail::find_local_certificate (
+          envelope, initial, game.inputs, actioner, game.K, 8, 4096, 131072);
+      const auto uncached = acacia::solver_detail::find_local_certificate (
+          envelope, initial, game.inputs, actioner, game.K, 8, 4096, 131072, 0);
+
+      // UNKNOWN after visiting child nodes means every pushed choice was
+      // popped.  Reusing its generator id for the next sibling would make the
+      // default cache return images computed for the popped generator.
+      expect ("the cache-id fixture visits pushed generators", cached.nodes == 8);
+      expect ("the cache-id fixture backtracks after its pushed generators",
+              cached.status == acacia::solver_detail::local_certificate_status::unknown);
+      expect_cache_equivalent ("backtracking cache fixture", cached, uncached);
+      ++cache_equivalence_cases;
     });
   }
 
@@ -314,6 +425,11 @@ namespace {
 
         const auto certificate = acacia::solver_detail::find_local_certificate (
             full, initial, game.inputs, actioner, game.K, 8, 4096, 131072);
+        const auto uncached_certificate = acacia::solver_detail::find_local_certificate (
+            full, initial, game.inputs, actioner, game.K, 8, 4096, 131072, 0);
+        expect_cache_equivalent (label + ": cached and uncached search",
+                                 certificate, uncached_certificate);
+        ++cache_equivalence_cases;
         if (certificate.status
             == acacia::solver_detail::local_certificate_status::win_certificate) {
           ++win_certificates;
@@ -349,12 +465,16 @@ int main () {
   check_random_games ();
   check_budget_exhaustion_is_inconclusive ();
   check_candidate_envelope_separation ();
+  check_partial_cache_equivalence ();
+  check_backtracking_cache_equivalence ();
   check_refutations_survive_envelope_shrinkage ();
 
   if (failures != 0) {
     std::cerr << failures << " check(s) failed\n";
     return 1;
   }
+  std::cout << "local-certificate: cache equivalence assertions passed for "
+            << cache_equivalence_cases << " cases\n";
   std::cout << "local-certificate: all checks passed\n";
   return 0;
 }

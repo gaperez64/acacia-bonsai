@@ -23,6 +23,7 @@ namespace acacia::solver_detail {
   /// needs 1.8 to 4.3 million, and scanning the safe set reached 145 million.
   inline constexpr unsigned long long default_local_certificate_forward_application_budget =
       100000;
+  inline constexpr std::size_t default_local_certificate_cache_entry_budget = 200000;
 
   enum class local_certificate_status {
     unknown,
@@ -93,14 +94,22 @@ namespace acacia::solver_detail {
                        Actioner& actioner, std::size_t generator_budget,
                        unsigned long long node_budget,
                        unsigned long long forward_application_budget,
-                       local_certificate_result<SetOfStates>& result)
+                       local_certificate_result<SetOfStates>& result,
+                       std::size_t cache_entry_budget)
           : envelope {envelope},
             input_output_fwd_actions {input_output_fwd_actions},
             actioner {actioner},
             generator_budget {generator_budget},
             node_budget {node_budget},
             forward_application_budget {forward_application_budget},
-            result {result} {}
+            result {result},
+            cache_entry_budget {cache_entry_budget} {
+          for (const auto& input_and_actions : input_output_fwd_actions) {
+            input_action_base.push_back (total_actions);
+            total_actions += input_and_actions.second.size ();
+          }
+          generator_ids.push_back (next_generator_id++);
+        }
 
         [[nodiscard]] bool budget_was_exhausted () const { return exhausted; }
 
@@ -116,27 +125,58 @@ namespace acacia::solver_detail {
           // state.  Only successors outside `envelope` are inadmissible.
           bool found_obligation = false;
           std::vector<state> best_choices;
-          for (const auto& generator : generators)
-            for (const auto& input_and_actions : input_output_fwd_actions) {
+          for (std::size_t generator_ordinal = 0;
+               generator_ordinal < generators.size (); ++generator_ordinal) {
+            const auto& generator = generators[generator_ordinal];
+            auto input_it = input_output_fwd_actions.begin ();
+            for (std::size_t input_ordinal = 0;
+                 input_it != input_output_fwd_actions.end ();
+                 ++input_it, ++input_ordinal) {
+              const auto& input_and_actions = *input_it;
               bool discharged = false;
               std::vector<state> choices;
-              for (const auto& action : input_and_actions.second) {
+              auto action_it = input_and_actions.second.begin ();
+              for (std::size_t action_ordinal = 0;
+                   action_it != input_and_actions.second.end ();
+                   ++action_it, ++action_ordinal) {
+                const auto& action = *action_it;
                 if (result.forward_applications >= forward_application_budget) {
                   exhausted = true;
                   return false;
                 }
                 ++result.forward_applications;
-                auto image =
-                    actioner.apply (generator, action, actioners::direction::forward);
-                if (not envelope.contains (image))
+                const std::size_t flat_action_index =
+                    input_action_base[input_ordinal] + action_ordinal;
+                cache_entry* cached = cache_for (
+                    generator_ids[generator_ordinal], flat_action_index);
+                std::optional<state> uncached_image;
+                const state* image;
+                bool in_envelope;
+                if (cached == nullptr) {
+                  uncached_image.emplace (actioner.apply (
+                      generator, action, actioners::direction::forward));
+                  image = &*uncached_image;
+                  in_envelope = envelope.contains (*image);
+                } else {
+                  if (not cached->computed) {
+                    cached->image.emplace (actioner.apply (
+                        generator, action, actioners::direction::forward));
+                    cached->in_envelope = envelope.contains (*cached->image);
+                    cached->computed = true;
+                  }
+                  image = &*cached->image;
+                  in_envelope = cached->in_envelope;
+                }
+                if (not in_envelope)
                   continue;
-                if (covered (generators, image)) {
+                if (covered (generators, *image)) {
                   discharged = true;
                   break;
                 }
                 if (std::ranges::none_of (
-                        choices, [&image] (const state& choice) { return choice == image; }))
-                  choices.push_back (std::move (image));
+                        choices,
+                        [image] (const state& choice) { return choice == *image; }))
+                  choices.push_back (image->copy ());
               }
 
               if (discharged)
@@ -148,6 +188,7 @@ namespace acacia::solver_detail {
                 best_choices = std::move (choices);
               }
             }
+          }
 
           if (not found_obligation)
             return true;
@@ -162,9 +203,11 @@ namespace acacia::solver_detail {
           });
           for (const auto& choice : best_choices) {
             generators.push_back (choice.copy ());
+            generator_ids.push_back (next_generator_id++);
             if (search (generators))
               return true;
             generators.pop_back ();
+            generator_ids.pop_back ();
           }
           return false;
         }
@@ -178,6 +221,35 @@ namespace acacia::solver_detail {
         unsigned long long forward_application_budget;
         local_certificate_result<SetOfStates>& result;
         bool exhausted = false;
+        std::vector<std::size_t> input_action_base;
+        std::size_t total_actions = 0;
+        std::vector<std::size_t> generator_ids;
+        std::size_t next_generator_id = 0;
+
+        struct cache_entry {
+            bool computed = false;
+            bool in_envelope = false;
+            std::optional<state> image;
+        };
+
+        std::vector<std::vector<cache_entry>> image_cache;
+        std::size_t cached_image_entries = 0;
+        std::size_t cache_entry_budget;
+
+        cache_entry* cache_for (std::size_t generator_id,
+                                std::size_t flat_action_index) {
+          if (generator_id >= image_cache.size ())
+            image_cache.resize (generator_id + 1);
+          auto& generator_cache = image_cache[generator_id];
+          if (generator_cache.empty ()) {
+            if (cached_image_entries >= cache_entry_budget or
+                total_actions > cache_entry_budget - cached_image_entries)
+              return nullptr;
+            generator_cache.resize (total_actions);
+            cached_image_entries += total_actions;
+          }
+          return &generator_cache[flat_action_index];
+        }
 
         static long long rank (const state& value) {
           long long sum = 0;
@@ -260,7 +332,9 @@ namespace acacia::solver_detail {
       [[maybe_unused]] VECTOR_ELT_T k, std::size_t generator_budget,
       unsigned long long node_budget,
       unsigned long long forward_application_budget =
-          default_local_certificate_forward_application_budget) {
+          default_local_certificate_forward_application_budget,
+      std::size_t cache_entry_budget =
+          default_local_certificate_cache_entry_budget) {
     using state = typename SetOfStates::value_type;
     local_certificate_result<SetOfStates> result;
     const auto root = root_refutation (
@@ -291,7 +365,7 @@ namespace acacia::solver_detail {
     generators.push_back (initial_state.copy ());
     local_certificate_detail::kernel_search search {
         envelope, input_output_fwd_actions, actioner, generator_budget, node_budget,
-        forward_application_budget, result};
+        forward_application_budget, result, cache_entry_budget};
     const bool found = search.search (generators);
     if (not found) {
       result.status = search.budget_was_exhausted ()
