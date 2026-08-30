@@ -7,7 +7,15 @@ own section rather than appending. Rejected experiments move to
 
 ## Decision
 
-**In progress.** Gate 0 passes; the S1 census is running.
+**Gate 0 passes. Gate 1A fails. Gate 3A passes.**
+
+The generator-subset core is dead: it finds nothing before the solver converges, and its cost is
+already twice the landing cap at a fifth of the frontier sizes that matter. The forward bounded
+kernel search is alive and stronger than expected -- verified certificates on 6 workers across 5
+families, four of them instances Acacia currently cannot answer at all, one of them found in a
+millisecond from the safe set.
+
+Live integration is next, and is what decides whether this becomes a production result.
 
 ## Why this sprint exists
 
@@ -102,37 +110,97 @@ point.
 
 ## Stage S1: generator-subset core
 
-Status: **census running.**
+**Gate 1A fails, on both clauses.**
 
-Peeling is decremental: a witness per `(generator, input)`, lazy reverse dependencies, and an
-active-subset dominator lookup that mirrors the rank-sum prefilter
-`rank_bucketed_vector_backed::contains` uses — starting the scan at the first generator whose
-coordinate sum is at least the query's, because `v ≤ w` implies `rank(v) ≤ rank(w)`.
+Over 21 checkpoints from 7 workers, two have a non-empty core and **zero** were found before the
+solver converged. Both non-empty cores are at the fixed point itself -- `SPI` peels 15 to 15,
+`TwoCountersDisButA8` 1 to 1 -- which is trivially guaranteed, because at the fixed point every
+generator satisfies the criterion and that is precisely why the input picker returns nothing.
+`LedMatrix` peels to zero at every checkpoint through 5,190 maxima.
 
-The shape of the answer is constrained in advance. At the solver's fixed point every generator
-already satisfies the criterion — that is why the picker returns nothing — so peeling can remove
-nothing there. Both behaviours are visible on `SPI`: the loop-5 fixed point peels 15 to 15 and
-verifies, while the loop-1 safe set peels 1 to 0. **The whole question is whether a support-closed
-subset containing the initial vector appears at an intermediate checkpoint, before the exact
-iteration converges, and how much earlier.**
+The reason is structural and the brief anticipated it: the winning region's generators are
+generally *interior* points of an over-approximation, not its maximal generators, so no subset of
+the maxima can find them.
 
-### Gate 1A, pre-committed
+The probe cost disqualifies it independently:
 
-Continue to live integration only if, before the baseline fixed point, at least 5 expensive
-winning workers from at least 2 families produce a core containing the initial vector, and the
-median `core_maxima / checkpoint_maxima` is at most 0.5. A timeout solved by a core counts more
-strongly than the ratio.
+| checkpoint maxima | peel time |
+|---:|---:|
+| 20 | 42 ms |
+| 480 | 295 ms |
+| 1,120 | 3.5 s |
+| 5,190 | **38 s** |
 
-### Gate 1B, pre-committed
+Super-linear, and already twice the 17-second landing cap at 5,190 maxima, against frontiers of
+18,404 in the target cohort. That is Gate 1B's own stop criterion. S1 is retained as a cheap
+diagnostic and a possible seed source, not as a candidate algorithm.
 
-Land a live probe only if it solves at least 2 current 17-second M2 timeouts from at least 2
-families, or gives a robust panel improvement with no losses; with probe overhead on unsuccessful
-workers inside the landing threshold, and G0, G1, G2s, G3 and G4 all passing.
+**`core = 0` says nothing against a small interior invariant.** On `SPI`'s loop-1 checkpoint the
+core is empty and the forward kernel search finds a verified six-generator certificate.
 
-## Stages S2 to S4
+## Stage S2: forward bounded strategy kernel
 
-Not started. S2 is the forward bounded strategy kernel, S3 the checkpointed width schedule as an
-exact control, S4 fixed-policy meet templates.
+**Gate 3A passes: 6 distinct workers with verified kernels at budget <= 64, across 5 families.**
+
+Campaign `_bm-logs.small-invariant-20260830/`, 18-instance anchor cohort, 120-second research cap,
+one solver per 8 GiB zero-swap scope. Every kernel below was re-verified from scratch against the
+reduced antichain -- forward images recomputed, initial containment rechecked, every generator
+checked against the safe vector -- before being counted.
+
+| worker | k | checkpoint maxima | kernel | search | compression |
+|---|---:|---:|---:|---:|---:|
+| `robot_grid2_2` real | 2 | **1** | **6** | **1 ms** | from the safe set |
+| `robot_grid2_2` real | 2 | 18,432 | 6 | 113 ms | 3,072x |
+| `finding_nemo_1` real | 5 | 29 | 8 | 8 ms | 3.6x |
+| `finding_nemo_1` real | 5 | 16,400 | 8 | 48 ms | 2,050x |
+| `finding_nemo_2` real | 5 | 9,586 | 16 | 2.8 s | 599x |
+| `lift3` real | 5 | 26,317 | 26 | 5.3 s | 1,012x |
+| `SPI` real | 2 | 1 | 6 | 34 ms | from the safe set |
+| `TwoCountersDisButA8` unreal-automaton | 2 | 1 | 2 | 26 ms | from the safe set |
+
+**Four of the six are instances Acacia does not currently answer at all.**
+
+| instance | mechanism | Acacia | `ltlsynt` | `max_f` |
+|---|---|---:|---:|---:|
+| `lift3` | M2 downset | 17.03 s, timeout | 0.028 s | 14,060 |
+| `robot_grid2_2` | M2 downset | 17.03 s, timeout | 0.660 s | 9,383 |
+| `finding_nemo_1` | M2 downset | 17.03 s, timeout | 0.026 s | 574 |
+| `finding_nemo_2` | mixed | 17.03 s, timeout | 0.039 s | 87 |
+
+`robot_grid2_2` is the sharpest case: a verified six-generator winning certificate, found **from
+the safe set in one millisecond**, on an instance whose exact frontier reaches 18,432 maxima and
+which Acacia currently times out on.
+
+### How much the envelope matters is instance-specific
+
+An earlier reading of the `lift3` result alone suggested the search always needs a refined
+envelope. The cohort refutes that. `robot_grid2_2`, `SPI` and `TwoCountersDisButA8` all succeed at
+the loop-1 checkpoint, where the region is still the whole safe set and the exact iteration has
+contributed nothing.
+
+`lift3` genuinely does need it. Measured directly: at k=5 with the envelope replaced by the safe
+set alone, the same search exhausts a 200,064-node budget and 327 million forward applications in
+197 seconds and finds nothing, where the exact 26,317-maximum envelope lets it succeed in 31 nodes.
+
+So the envelope is a refinement oracle for the hard cases, not a precondition for the method. A
+live probe should therefore run **early and again later**: it costs a millisecond when it works.
+
+### The negative side
+
+The same search refutes as well as proves. When every action of some input class sends the initial
+vector outside the exact envelope, the initial vector is not in the winning region at that bound --
+because the envelope contains it. On `lift3` at k=2 that fires at loop 6, on a 72-maximum
+checkpoint, after **35 forward applications**, while the solver goes on to 26,317 maxima at k=2
+before raising the bound. The same shape appears on `lift4` and `lift_unary_enc3`.
+
+This is a fixed-K refutation, never a top-level unrealizability verdict: it licenses exactly the
+insufficient-bound transition ordinary Acacia would eventually take.
+
+## Stage S3: checkpointed width schedule
+
+Implemented as a control. On `SPI`'s fixed point, widths 1, 2, 4 and 8 all lose the initial vector
+-- width 8 even grows to eleven maxima as exact CPre creates new interior meets -- and only the
+full width retains it. Deprioritised in favour of the two-sided local search.
 
 ## Known coverage gap
 
