@@ -146,6 +146,7 @@ namespace acacia::diagnostics {
       size_t max_f_size = 0;
       unsigned long long local_probe_runs = 0;
       unsigned long long local_probe_forward_apps = 0;
+      unsigned long long local_probe_skipped_over_budget = 0;
       unsigned long long local_probe_nodes = 0;
       unsigned long long cpre_skipped = 0;
       unsigned long long k_bumped_by_local_refutation = 0;
@@ -267,6 +268,7 @@ namespace acacia::diagnostics {
          << " k_attempts=" << m.k_attempts << " local_probe_runs=" << m.local_probe_runs
          << " local_probe_status=" << m.local_probe_status
          << " local_probe_forward_apps=" << m.local_probe_forward_apps
+         << " local_probe_skipped_over_budget=" << m.local_probe_skipped_over_budget
          << " local_probe_nodes=" << m.local_probe_nodes
          << " cpre_skipped=" << m.cpre_skipped
          << " k_bumped_by_local_refutation=" << m.k_bumped_by_local_refutation
@@ -553,6 +555,11 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_local_probe_skipped_over_budget () {
+    if (auto* m = current ())
+      ++m->local_probe_skipped_over_budget;
+  }
+
   inline void set_final_reason (std::string reason) {
     if (auto* m = current ())
       m->final_reason = std::move (reason);
@@ -643,6 +650,7 @@ namespace acacia::diagnostics {
                                           unsigned long long) {}
   inline void set_decode_census (unsigned long long, unsigned long long, unsigned long long) {}
   inline void set_local_probe (std::string, unsigned long long, unsigned long long, bool, bool) {}
+  inline void set_local_probe_skipped_over_budget () {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}

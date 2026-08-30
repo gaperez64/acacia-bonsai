@@ -258,6 +258,7 @@ def main() -> int:
         "local_probe_runs",
         "local_probe_status",
         "local_probe_forward_apps",
+        "local_probe_skipped_over_budget",
         "local_probe_nodes",
         "cpre_skipped",
         "k_bumped_by_local_refutation",

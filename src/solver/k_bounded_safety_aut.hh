@@ -61,9 +61,22 @@ namespace acacia::solver_detail {
       void reset_marks () { mark_taken.fill (false); }
   };
 
+  /// Both budgets are sized by measurement against the G2s panel.
+  ///
+  /// 32 generators: every certificate the campaign verified is smaller --
+  /// robot_grid2_2 needs 6, finding_nemo_1 8, finding_nemo_2 16, lift3 26 --
+  /// and a larger cap only makes a failing search more expensive, since each
+  /// node rescans every generator against every input and action.
+  ///
+  /// 400,000 cumulative forward applications per bound: lift3 wins only above
+  /// 200,000 at a single bound, so the ceiling cannot be tighter, while
+  /// round_robin_arbiter4 would otherwise spend 600,000 at one bound to no
+  /// effect and cost 29.4% extra cycles, over the 6% per-target ceiling.  With
+  /// both numbers in place it costs 4.7%, and lift3 still wins in 0.5 s where
+  /// the baseline does not answer at all.
   inline std::size_t configured_local_certificate_generator_budget () {
     static const std::size_t value =
-        acacia::diagnostics::env_size ("ACACIA_LOCAL_CERTIFICATE_BUDGET", 64, true);
+        acacia::diagnostics::env_size ("ACACIA_LOCAL_CERTIFICATE_BUDGET", 32, true);
     return value;
   }
 
@@ -77,6 +90,13 @@ namespace acacia::solver_detail {
     static const unsigned long long value = acacia::diagnostics::env_size (
         "ACACIA_LOCAL_CERTIFICATE_FORWARD_APPS",
         default_local_certificate_forward_application_budget, true);
+    return value;
+  }
+
+  inline unsigned long long
+  configured_local_certificate_cumulative_forward_application_budget () {
+    static const unsigned long long value = acacia::diagnostics::env_size (
+        "ACACIA_LOCAL_CERTIFICATE_CUMULATIVE_FORWARD_APPS", 400000, true);
     return value;
   }
 
@@ -161,6 +181,7 @@ class k_bounded_safety_aut_detail {
       int loopcount = 0;
 #if ACACIA_LOCAL_CERTIFICATE
       local_probe_schedule.restart ();
+      local_probe_bound_forward_applications = 0;
 #endif
       acacia::diagnostics::snapshot ("after-action-construction");
 
@@ -174,34 +195,46 @@ class k_bounded_safety_aut_detail {
 
 #if ACACIA_LOCAL_CERTIFICATE
         if (local_probe_schedule.observe (f.size ())) {
-          auto local = acacia::solver_detail::find_local_certificate (
-              f, init, input_output_fwd_actions, actioner, k,
-              acacia::solver_detail::configured_local_certificate_generator_budget (),
-              acacia::solver_detail::configured_local_certificate_node_budget (),
-              acacia::solver_detail::configured_local_certificate_forward_application_budget ());
-          if (local.status ==
-              acacia::solver_detail::local_certificate_status::win_certificate) {
-            acacia::diagnostics::set_local_probe (
-                "win", local.forward_applications, local.nodes, true, false);
-            acacia::diagnostics::set_final_reason ("local-win-certificate");
-            return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
-                std::make_pair (k, std::move (*local.win)));
+          // Sized by measurement, not taste.  round_robin_arbiter4 spent 600,000
+          // forward applications at one bound to no effect, while every winner
+          // concluded within 347,382 across two bounds.  A 200,000 per-bound
+          // ceiling cuts the former without suppressing the latter.
+          if (local_probe_bound_forward_applications >=
+              acacia::solver_detail::
+                  configured_local_certificate_cumulative_forward_application_budget ()) {
+            acacia::diagnostics::set_local_probe_skipped_over_budget ();
           }
-          if (local.status == acacia::solver_detail::local_certificate_status::root_refuted) {
-            const bool bound_raised = raise_bound_or_give_up (f, k, actioner);
-            acacia::diagnostics::set_local_probe (
-                "root-refuted", local.forward_applications, local.nodes, true, bound_raised);
-            if (not bound_raised)
-              return std::nullopt;
-            continue;
+          else {
+            auto local = acacia::solver_detail::find_local_certificate (
+                f, init, input_output_fwd_actions, actioner, k,
+                acacia::solver_detail::configured_local_certificate_generator_budget (),
+                acacia::solver_detail::configured_local_certificate_node_budget (),
+                acacia::solver_detail::configured_local_certificate_forward_application_budget ());
+            local_probe_bound_forward_applications += local.forward_applications;
+            if (local.status ==
+                acacia::solver_detail::local_certificate_status::win_certificate) {
+              acacia::diagnostics::set_local_probe (
+                  "win", local.forward_applications, local.nodes, true, false);
+              acacia::diagnostics::set_final_reason ("local-win-certificate");
+              return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
+                  std::make_pair (k, std::move (*local.win)));
+            }
+            if (local.status == acacia::solver_detail::local_certificate_status::root_refuted) {
+              const bool bound_raised = raise_bound_or_give_up (f, k, actioner);
+              acacia::diagnostics::set_local_probe (
+                  "root-refuted", local.forward_applications, local.nodes, true, bound_raised);
+              if (not bound_raised)
+                return std::nullopt;
+              continue;
+            }
+            if (local.status ==
+                acacia::solver_detail::local_certificate_status::budget_exhausted)
+              acacia::diagnostics::set_local_probe (
+                  "budget-exhausted", local.forward_applications, local.nodes, false, false);
+            else
+              acacia::diagnostics::set_local_probe (
+                  "unknown", local.forward_applications, local.nodes, false, false);
           }
-          if (local.status ==
-              acacia::solver_detail::local_certificate_status::budget_exhausted)
-            acacia::diagnostics::set_local_probe (
-                "budget-exhausted", local.forward_applications, local.nodes, false, false);
-          else
-            acacia::diagnostics::set_local_probe (
-                "unknown", local.forward_applications, local.nodes, false, false);
         }
 #endif
 
@@ -253,6 +286,7 @@ class k_bounded_safety_aut_detail {
     const InputPickerMaker& input_picker_maker;
 #if ACACIA_LOCAL_CERTIFICATE
     acacia::solver_detail::local_probe_frontier local_probe_schedule;
+    unsigned long long local_probe_bound_forward_applications = 0;
 #endif
 
     // This is also sound when `f` is the pre-CPre region X.  The post-CPre
@@ -271,6 +305,7 @@ class k_bounded_safety_aut_detail {
       actioner.setK (k);
 #if ACACIA_LOCAL_CERTIFICATE
       local_probe_schedule.reset_marks ();
+      local_probe_bound_forward_applications = 0;
 #endif
 #if ACACIA_ENABLE_DIAGNOSTICS
       acacia::antichain_snapshot::note_bound_raised ();
