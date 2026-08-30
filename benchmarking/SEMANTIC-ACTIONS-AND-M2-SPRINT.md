@@ -357,8 +357,26 @@ Nothing has been rejected in this sprint yet. Rejections from earlier campaigns 
 
 ## Final validation
 
-Not yet run. The sprint closes with a G0–G5 checklist in this section, each line carrying the
-tool's literal verdict string.
+Stage A1, candidate preset `best_decomp_rank_bucketed_semantic_mona` against the shipping
+`best_decomp_rank_bucketed_mona`, both built from this tree.
+
+- **G0:** 23/23 Acacia unit tests, 18/18 Posets tests (including both the enabled and compiled-out
+  builds of the new counter test), 162 focused Python tests, and
+  `scripts/acacia-config.py validate` clean. `Fail: 0` throughout.
+- **G1:** 40/40 frozen verdicts; baseline PAR-2 98.855 s, candidate 92.224 s; `GATE PASS`.
+- **G2s:** all 60 solver-profile samples completed over the repaired ten-target panel; geometric
+  mean candidate/baseline 0.9745, worst per-target regression +1.33% against a 6% ceiling;
+  `GATE PASS`.
+- **G3:** SYNTCOMP25 111/180 → 114/180 with PAR-2 2592.191 → 2479.043 s; SYNTCOMP26 136/180 →
+  136/180 with PAR-2 1629.917 → 1597.041 s; zero losses and zero opposite verdicts on either
+  panel; `GATE PASS`.
+- **G4:** 624 labeled realizable/unrealizable tests gave 568 correct answers, 56 allowed timeouts,
+  0 failures and 0 opposite-verdict markers.
+- **G5:** not run, and not applicable to this change. G5 gates the native TLSF frontend against
+  SyFCo conversion. `check-tlsf-conversion.py` never invokes the solver, so a precomputer change
+  cannot affect it; `tlsf-verdict-parity.py` would re-cover verdict agreement that G1's 40, G3's
+  360 and G4's 624 instances already establish with zero opposite verdicts. The next change that
+  touches `src/tlsf_frontend.cc` or tlsf-tools must run it.
 
 ## Next experiment boundary
 
