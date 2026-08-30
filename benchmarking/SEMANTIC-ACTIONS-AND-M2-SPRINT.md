@@ -449,9 +449,65 @@ that before anyone removes it. By contrast the linear scan in `contains()` is *n
 dominator `w` of `v` has `v <= w` componentwise, so `rank (w) >= rank (v)` and there is no upper
 bound that could stop the scan early.
 
-### Stages C3 to C7
+### Stage C3: orbit compression
 
-Not started. C1 and C2 are their prerequisites and are now in place.
+**Gate C-orbit is not reachable on the cohort that motivated the sprint. Orbit canonicalization
+is undefined exactly where the frontier is largest.**
+
+Canonicalizing a rank vector under the client permutation group presupposes that such a group has
+been verified. Across the 68 M2 rows, the equivariant path was declined on 61 and ran on 7.
+Restricted to the rows that matter, those with `max_f >= 1000` (n=38), a group was verified for 5.
+Of the nine rows with `max_f >= 4000`, exactly one.
+
+A decline is not automatically an absence, so the fourteen rows declined on an admission
+*threshold* rather than on a finding were re-probed with recognition unconstrained -- preset
+`best_decomp_rank_bucketed_mona_diag_eq_relaxed`, minimum clients 2, minimum blocks 2, maximum
+states 32,768:
+
+| instance | `max_f` | with recognition unconstrained |
+|---|---:|---|
+| `lift3` | 14,060 | no verified group |
+| `robot_grid2_2` | 9,383 | no indexed input AP families |
+| `lift5` | 6,915 | no verified group |
+| `lift4` | 5,580 | no verified group |
+| `arbiter_with_buffer5` | 3,872 | **group verified** |
+| `lift_unary_enc4` | 2,794 | no verified group |
+| `arbiter_with_buffer6` | 1,984 | **group verified** |
+| `abcg_arbiter3` | 1,884 | **group verified** |
+| `prioritized_arbiter_enc8` | 1,567 | **group verified** |
+| `lift6` | 1,310 | no verified group |
+
+Four of the ten do have a group once the thresholds stop refusing to look, which raises the
+`max_f >= 1000` cohort from 5 to 9. The other six do not, and they are the top of the
+distribution.
+
+Because "no group" from the fast star detector is a heuristic result, the four anchors this sprint
+opened with were re-run against the **exhaustive all-pairs** detector as well
+(`ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT=1`, which routes recognition through
+`largest_full_symmetric_subgroup (detect (...))`), with the admission thresholds still relaxed.
+`lift_unary_enc3` (18,404), `lift3` (14,060), `lift4` (5,580) and `round_robin_arbiter4` (7,154)
+all still report no verified full symmetric group. The absence is a property of those automata,
+not of the recognizer's budget or its heuristic.
+
+So the cohort where orbit compression is even *defined* is the arbiter block -- `arbiter`,
+`arbiter_with_buffer`, `abcg_arbiter`, `prioritized_arbiter_enc`, `arbiter_with_cancel`,
+`full_arbiter_enc`, `load_balancer`, with `max_f` from 128 to 6,561 -- and it excludes every
+instance in the open-leads paragraph this sprint started from. `ltlsynt` proves `lift_unary_enc3`
+in 0.04 s, `lift5` in 0.13 s and `robot_grid2_2` in 0.63 s; an orbit backend could not be applied
+to any of them.
+
+Gate C-orbit's numeric bar could still be measured on the arbiter block, and the replay
+infrastructure from C1 would support it. It is not measured here, because passing it would license
+a backend that by construction cannot reach the cases the sprint exists to fix. The decision tree's
+other branch -- "orbit compression weak" -> threshold BDD replay -- is the one the evidence
+selects, and it needs no symmetry at all.
+
+### Stages C4 to C7
+
+C4 and C5, the scalar-cap and tuple-histogram censuses, are specializations of the orbit
+representation and inherit its precondition, so they are not attempted for the same reason.
+
+C6, the threshold-BDD replay, is the branch the evidence selects. It is next.
 
 ## Sprints D and E: adaptive probe and compressed backend
 
