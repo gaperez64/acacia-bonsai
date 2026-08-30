@@ -195,10 +195,14 @@ class k_bounded_safety_aut_detail {
 
 #if ACACIA_LOCAL_CERTIFICATE
         if (local_probe_schedule.observe (f.size ())) {
-          // Sized by measurement, not taste.  round_robin_arbiter4 spent 600,000
-          // forward applications at one bound to no effect, while every winner
-          // concluded within 347,382 across two bounds.  A 200,000 per-bound
-          // ceiling cuts the former without suppressing the latter.
+          // Per bound, not per run, and not for the whole solve: a per-run
+          // budget bounds one search but not how many times a worker re-runs a
+          // search that cannot succeed.  round_robin_arbiter4 probed six times
+          // at a single bound, spent the full per-run budget each time and
+          // concluded nothing.  lift3 also probes six times, but across bounds,
+          // and wins -- so the counter resets in raise_bound_or_give_up, where
+          // a new bound makes the old evidence irrelevant.  The ceiling itself
+          // is documented with the budget defaults above.
           if (local_probe_bound_forward_applications >=
               acacia::solver_detail::
                   configured_local_certificate_cumulative_forward_application_budget ()) {
