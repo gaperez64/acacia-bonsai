@@ -7,7 +7,7 @@ own section rather than appending. Rejected experiments move to
 
 ## Decision
 
-**Gate 0 passes. Gate 1A fails. Gate 3A passes.**
+**Gate 0 passes. Gate 1A fails. Gate 3A passes. Gate U1 passes.**
 
 The generator-subset core is dead: it finds nothing before the solver converges, and its cost is
 already twice the landing cap at a fifth of the frontier sizes that matter. The forward bounded
@@ -195,6 +195,46 @@ before raising the bound. The same shape appears on `lift4` and `lift_unary_enc3
 
 This is a fixed-K refutation, never a top-level unrealizability verdict: it licenses exactly the
 insufficient-bound transition ordinary Acacia would eventually take.
+
+## Stage U1: fixed-bound root refutation
+
+**Gate U1 passes.**
+
+When every action of some input class sends the initial vector outside the exact region, the
+initial vector is not winning at that bound: the region contains the winning region, so a winning
+initial vector would have to keep some successor inside it. The refuting input is also a
+legitimate critical input -- for the maximum `m >= r_init`, monotonicity and downward closure give
+`tau(m) outside X` for every action -- so acting on it does not invent a schedule Acacia would not
+have taken.
+
+Measured on the same campaign, comparing where the refutation fires against the largest frontier
+the solver itself reached at that bound:
+
+| worker | k | refuted at loop | frontier there | forward applications | solver peak at that k | ratio |
+|---|---:|---:|---:|---:|---:|---:|
+| `lift6` real | 2 | 3 | 30 | 12,692 | 28,662 | **955x** |
+| `lift4` real | 2 | 4 | 48 | 478 | 16,740 | **349x** |
+| `lift5` real | 2 | 3 | 20 | 6,444 | 6,915 | **346x** |
+| `lift_unary_enc3` real | 2 | 6 | 69 | 6,491 | 19,656 | **285x** |
+| `lift3` real | 2 | 6 | 72 | **35** | 8,266 | **115x** |
+| `prioritized_arbiter10` real | 5 | 8 | 101 | 4,281,384 | 5,761 | 57x |
+| `prioritized_arbiter9` real | 5 | 8 | 82 | 1,767,460 | 3,529 | 43x |
+
+Seven workers across three families -- `lift`, `prioritized_arbiter`, `finding_nemo` -- are refuted
+at a frontier at least twice smaller than the solver's own peak, and five of them are current
+17-second timeouts. The gate asked for five workers from two families refuted at least two updates
+earlier; `lift3` is refuted at loop 6 on 72 maxima where the solver goes on past 8,266.
+
+### The scan must be budgeted, and this is why
+
+The cost is not uniform. `lift3` is refuted in 35 forward applications; `prioritized_arbiter10`
+needs 4,281,384. Worse, refuting the *safe set* at loop 1 -- before any CPre has narrowed
+anything -- reached 145,769,784 forward applications on `finding_nemo_2`'s unreal-formula worker
+and 132,345,097 on `prioritized_arbiter10`'s unreal-automaton worker.
+
+A live probe therefore needs a forward-application budget, not only a node budget, and exhausting
+it must return `unknown` rather than anything else. This is the difference between a probe that
+pays for itself and one that becomes the new bottleneck.
 
 ## Stage S3: checkpointed width schedule
 
