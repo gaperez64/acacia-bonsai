@@ -11,6 +11,8 @@
 ///   continue  reproduce the ordinary exact fixed point from a checkpoint.
 ///             This is the gate: if the offline continuation does not agree
 ///             with the solver, nothing measured afterwards means anything.
+///   width     restart the exact fixed point from progressively wider prefixes
+///             of the checkpoint maxima.
 ///   core      peel the checkpoint's own maxima to the greatest subset that
 ///             satisfies the criterion using only those generators.
 ///
@@ -22,6 +24,7 @@
 #include <posets/vectors.hh>
 #include "research/rank_action_replay.hh"
 
+#include <algorithm>
 #include <chrono>
 #include <deque>
 #include <iostream>
@@ -278,9 +281,225 @@ namespace {
     return region;
   }
 
+  std::vector<rank_vector> width_selection_order (const std::vector<rank_vector>& maxima,
+                                                  const rank_vector& init) {
+    generator_index index {maxima};
+    unsigned long long checks = 0;
+    const size_t first = index.find_dominator (init, checks);
+
+    std::vector<size_t> order;
+    order.reserve (maxima.size ());
+    if (first != generator_index::npos)
+      order.push_back (first);
+    for (size_t i = 0; i < maxima.size (); ++i)
+      if (i != first)
+        order.push_back (i);
+
+    // Keeping an initial dominator first makes every non-empty prefix relevant;
+    // stable descending coordinate sum makes the remaining priority reproducible.
+    auto rest = order.begin ();
+    if (first != generator_index::npos)
+      ++rest;
+    std::stable_sort (rest, order.end (), [&] (size_t a, size_t b) {
+      return rank_of (maxima[a]) > rank_of (maxima[b]);
+    });
+
+    std::vector<rank_vector> selected;
+    selected.reserve (maxima.size ());
+    for (const size_t i : order)
+      selected.push_back (maxima[i]);
+    return selected;
+  }
+
+  std::vector<size_t> width_schedule (size_t full_width, size_t max_width) {
+    std::vector<size_t> widths;
+    for (size_t width = 1; width <= 256 and width <= max_width and width < full_width;
+         width *= 2)
+      widths.push_back (width);
+    widths.push_back (full_width);
+    return widths;
+  }
+
+  bool same_region (const SetOfStates& a, const SetOfStates& b) {
+    for (const auto& m : a)
+      if (not b.contains (m))
+        return false;
+    for (const auto& m : b)
+      if (not a.contains (m))
+        return false;
+    return true;
+  }
+
+  struct width_result {
+      size_t width;
+      size_t iterations;
+      SetOfStates region;
+      bool contains_init;
+      long long branch_ms;
+  };
+
+  struct kernel_result {
+      bool verified = false;
+      size_t generators = 0;
+      unsigned long long nodes = 0;
+      unsigned long long dead_ends = 0;
+      unsigned long long envelope_rejections = 0;
+      unsigned long long forward_applications = 0;
+  };
+
+  struct kernel_search {
+      const input_action_table& table;
+      VECTOR_ELT_T K;
+      const std::vector<rank_vector>& envelope;  ///< the exact approximation's maxima
+      rank_vector safe;
+      size_t budget;
+      unsigned long long node_limit;
+      kernel_result stats;
+
+      /// Inside the current approximation.  The approximation contains the true
+      /// winning region, so every genuine strategy from the initial vector can
+      /// stay inside it -- which makes it a sound pruning envelope, never a
+      /// source of candidates.
+      [[nodiscard]] bool in_envelope (const rank_vector& v) const {
+        for (const auto& m : envelope)
+          if (leq (v, m))
+            return true;
+        return false;
+      }
+
+      [[nodiscard]] bool covered (const std::vector<rank_vector>& G,
+                                  const rank_vector& v) const {
+        for (const auto& g : G)
+          if (leq (v, g))
+            return true;
+        return false;
+      }
+
+      /// Depth-first over choices of action for the least-resolved obligation.
+      ///
+      /// Coverage is monotone in G -- adding a generator never unresolves a
+      /// pair -- so an obligation once discharged stays discharged along a
+      /// branch, and only the current frontier has to be rescanned.
+      bool search (std::vector<rank_vector>& G) {
+        if (++stats.nodes > node_limit)
+          return false;
+
+        // Fail first: the obligation with the fewest admissible actions is the
+        // one most likely to refute this branch, and refuting early is the
+        // whole value of a bounded search.
+        size_t best_g = G.size ();
+        std::vector<rank_vector> best_choices;
+        for (size_t g = 0; g < G.size (); ++g)
+          for (size_t i = 0; i < table.input_count (); ++i) {
+            std::vector<rank_vector> choices;
+            bool already = false;
+            for (const auto& avec : table.actions[i]) {
+              ++stats.forward_applications;
+              const rank_vector y = apply_forward (G[g], avec, K);
+              if (not leq (y, safe))
+                continue;
+              if (not in_envelope (y)) {
+                ++stats.envelope_rejections;
+                continue;
+              }
+              if (covered (G, y)) {
+                already = true;
+                break;
+              }
+              bool seen = false;
+              for (const auto& c : choices)
+                if (leq (c, y) and leq (y, c)) { seen = true; break; }
+              if (not seen)
+                choices.push_back (y);
+            }
+            if (already)
+              continue;  // this obligation is already discharged
+            if (choices.empty ()) {
+              ++stats.dead_ends;
+              return false;  // no admissible action at all: this branch is dead
+            }
+            if (choices.size () < best_choices.size () or best_g == G.size ()) {
+              best_g = g;
+              best_choices = std::move (choices);
+            }
+          }
+
+        if (best_g == G.size ())
+          return true;  // every obligation discharged: G is inductive
+        if (G.size () >= budget)
+          return false;
+
+        // Prefer a successor that costs least: a lower rank sum is closer to
+        // the reachable states of an actual strategy than an envelope corner.
+        std::ranges::sort (best_choices, [] (const rank_vector& a, const rank_vector& b) {
+          return rank_of (a) < rank_of (b);
+        });
+        for (const auto& y : best_choices) {
+          G.push_back (y);
+          if (search (G))
+            return true;
+          G.pop_back ();
+        }
+        return false;
+      }
+  };
+
+  /// Grow a candidate invariant from the initial vector, inside the envelope.
+  ///
+  /// More powerful than peeling the checkpoint's own maxima, because the
+  /// successors it adds are interior vectors of the approximation rather than
+  /// its maximal generators -- and the maxima of an over-approximation are
+  /// exactly the vectors most likely to be pruned later.
+  kernel_result find_kernel (const checkpoint& point, const input_action_table& table,
+                             const rank_vector& init, const rank_vector& safe,
+                             size_t budget, unsigned long long node_limit) {
+    kernel_search search {table, static_cast<VECTOR_ELT_T> (point.k), point.maxima, safe,
+                          budget, node_limit, {}};
+    std::vector<rank_vector> G {init};
+    const bool found = search.search (G);
+    search.stats.verified = found;
+    search.stats.generators = G.size ();
+
+    if (found) {
+      // Independent re-verification: recompute every forward image against the
+      // reduced antichain. The search is a heuristic until this passes.
+      std::vector<rank_vector> reduced;
+      for (const auto& g : G) {
+        bool dominated = false;
+        for (const auto& h : G)
+          if (&g != &h and leq (g, h) and not leq (h, g)) { dominated = true; break; }
+        if (not dominated)
+          reduced.push_back (g);
+      }
+      generator_index fresh {reduced};
+      unsigned long long checks = 0;
+      bool ok = fresh.find_dominator (init, checks) != generator_index::npos;
+      for (size_t g = 0; ok and g < fresh.size (); ++g) {
+        if (not leq (fresh[g], safe))
+          ok = false;
+        for (size_t i = 0; ok and i < table.input_count (); ++i) {
+          bool supported = false;
+          for (const auto& avec : table.actions[i])
+            if (fresh.find_dominator (apply_forward (fresh[g], avec,
+                                                     static_cast<VECTOR_ELT_T> (point.k)),
+                                      checks)
+                != generator_index::npos) {
+              supported = true;
+              break;
+            }
+          ok = ok and supported;
+        }
+      }
+      search.stats.verified = ok;
+      search.stats.generators = reduced.size ();
+    }
+    return search.stats;
+  }
+
   void usage (std::ostream& out, const char* program) {
-    out << "usage: " << program << " --dir DIR --mode continue|core [--no-header]\n"
-        << "                 [--max-iterations N]\n"
+    out << "usage: " << program
+        << " --dir DIR --mode continue|core|kernel|width [--no-header]\n"
+        << "                 [--max-iterations N] [--max-width W] [--budget B] [--nodes N]\n"
         << "  DIR is an ACACIA_ANTICHAIN_SNAPSHOT_DIR automaton directory holding\n"
         << "  meta.tsv (schema 3), all-input-actions.tsv and antichain-<loop>.tsv.\n";
   }
@@ -291,6 +510,9 @@ int main (int argc, char** argv) {
   std::string dir, mode = "core";
   bool header = true;
   size_t max_iterations = 100000;
+  size_t max_width = 256;
+  size_t budget = 64;
+  unsigned long long node_limit = 200000;
   for (int i = 1; i < argc; ++i) {
     const std::string arg = argv[i];
     if (arg == "--dir" and i + 1 < argc)
@@ -299,6 +521,12 @@ int main (int argc, char** argv) {
       mode = argv[++i];
     else if (arg == "--max-iterations" and i + 1 < argc)
       max_iterations = std::strtoull (argv[++i], nullptr, 10);
+    else if (arg == "--max-width" and i + 1 < argc)
+      max_width = std::strtoull (argv[++i], nullptr, 10);
+    else if (arg == "--budget" and i + 1 < argc)
+      budget = std::strtoull (argv[++i], nullptr, 10);
+    else if (arg == "--nodes" and i + 1 < argc)
+      node_limit = std::strtoull (argv[++i], nullptr, 10);
     else if (arg == "--no-header")
       header = false;
     else if (arg == "--help") {
@@ -310,7 +538,8 @@ int main (int argc, char** argv) {
       return 2;
     }
   }
-  if (dir.empty () or (mode != "core" and mode != "continue")) {
+  if (dir.empty () or (mode != "core" and mode != "continue" and mode != "kernel"
+                       and mode != "width")) {
     usage (std::cerr, argv[0]);
     return 2;
   }
@@ -325,11 +554,18 @@ int main (int argc, char** argv) {
     const rank_vector init = initial_vector (states, init_state);
 
     if (header) {
-      if (mode == "core")
+      if (mode == "kernel")
+        std::cout << "loop\tk\tcheckpoint_maxima\tbudget\tkernel_maxima\tverified"
+                     "\tsearch_nodes\tdead_ends\tenvelope_rejections"
+                     "\tforward_applications\tsearch_ms\n";
+      else if (mode == "core")
         std::cout << "loop\tk\tafter_bound_raise\tcheckpoint_maxima\tcore_maxima"
                      "\tcore_contains_init\tverified\tforward_applications"
                      "\tpartial_order_checks\twitness_cache_hits\tgenerators_removed"
                      "\tcascade_depth\tprobe_ms\n";
+      else if (mode == "width")
+        std::cout << "loop\tk\tcheckpoint_maxima\twidth\titerations\tfinal_maxima"
+                     "\tcontains_init\tmatches_full_width\tbranch_ms\n";
       else
         std::cout << "loop\tk\tcheckpoint_maxima\titerations\tfinal_maxima"
                      "\tfinal_contains_init\tmatches_solver_final\telapsed_ms\n";
@@ -371,6 +607,56 @@ int main (int argc, char** argv) {
         std::cout << point.loop << '\t' << point.k << '\t' << point.maxima.size () << '\t'
                   << iterations << '\t' << region.size () << '\t' << (has_init ? "yes" : "no")
                   << '\t' << agrees << '\t'
+                  << std::chrono::duration_cast<std::chrono::milliseconds> (clock_type::now ()
+                                                                           - started)
+                         .count ()
+                  << '\n';
+        continue;
+      }
+
+      if (mode == "width") {
+        const auto ordered = width_selection_order (point.maxima, init);
+        std::vector<width_result> results;
+        for (const size_t width : width_schedule (point.maxima.size (), max_width)) {
+          // A contracted branch cannot be widened soundly, so every width is
+          // seeded anew. The full branch is the ordinary continuation itself.
+          const std::vector<rank_vector> maxima =
+              width == point.maxima.size ()
+                  ? point.maxima
+                  : std::vector<rank_vector> (ordered.begin (), ordered.begin () + width);
+          const auto branch_started = clock_type::now ();
+          size_t iterations = 0;
+          auto region = continue_exact (maxima, table, K, bool_threshold, max_iterations,
+                                        iterations);
+          const bool has_init =
+              region.size () > 0 and region.contains (state (rank_vector (init)));
+          const auto branch_ms =
+              std::chrono::duration_cast<std::chrono::milliseconds> (clock_type::now ()
+                                                                     - branch_started)
+                  .count ();
+          results.push_back (
+              {width, iterations, std::move (region), has_init, branch_ms});
+        }
+
+        const SetOfStates& full = results.back ().region;
+        for (size_t i = 0; i < results.size (); ++i) {
+          const auto& r = results[i];
+          const std::string matches =
+              i + 1 == results.size () ? "-" : (same_region (r.region, full) ? "yes" : "no");
+          std::cout << point.loop << '\t' << point.k << '\t' << point.maxima.size () << '\t'
+                    << r.width << '\t' << r.iterations << '\t' << r.region.size () << '\t'
+                    << (r.contains_init ? "yes" : "no") << '\t' << matches << '\t'
+                    << r.branch_ms << '\n';
+        }
+        continue;
+      }
+
+      if (mode == "kernel") {
+        const kernel_result r = find_kernel (point, table, init, safe, budget, node_limit);
+        std::cout << point.loop << '\t' << point.k << '\t' << point.maxima.size () << '\t'
+                  << budget << '\t' << r.generators << '\t' << (r.verified ? "yes" : "no")
+                  << '\t' << r.nodes << '\t' << r.dead_ends << '\t'
+                  << r.envelope_rejections << '\t' << r.forward_applications << '\t'
                   << std::chrono::duration_cast<std::chrono::milliseconds> (clock_type::now ()
                                                                            - started)
                          .count ()

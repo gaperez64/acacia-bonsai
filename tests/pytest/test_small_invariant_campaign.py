@@ -94,12 +94,30 @@ def test_pairs_require_suite_equals_path():
         module.parse_pairs(["syntcomp24"], "--source-map")
 
 
-def test_columns_start_with_the_join_key_and_carry_the_probe_fields():
+def test_leading_columns_are_identical_across_probe_modes():
+    """The three modes emit different probe fields, but the census prefix must
+    not move: rows from any mode have to join gap-census.tsv on
+    (suite, instance), and a core is only interesting relative to how big the
+    region became without one."""
     module = load_module()
 
-    assert module.COLUMNS[:3] == ["suite", "instance", "worker"]
-    for column in ("checkpoint_maxima", "core_maxima", "core_contains_init", "verified"):
-        assert column in module.COLUMNS
-    # The solver's own outcome has to be on the row: a core is only interesting
-    # relative to how big the region became without one.
-    assert "solver_final_maxima" in module.COLUMNS
+    assert module.LEADING_COLUMNS[:3] == ["suite", "instance", "worker"]
+    assert "solver_final_maxima" in module.LEADING_COLUMNS
+    assert set(module.PROBE_COLUMNS_BY_MODE) == {"core", "kernel", "width"}
+    for mode, probe in module.PROBE_COLUMNS_BY_MODE.items():
+        assert "loop" in probe, mode
+        assert not set(probe) & set(module.LEADING_COLUMNS), (
+            f"{mode} repeats a leading column"
+        )
+
+
+def test_each_mode_carries_the_field_its_gate_is_decided_on():
+    module = load_module()
+    by_mode = module.PROBE_COLUMNS_BY_MODE
+
+    # Gate 1A is decided on the core size against the checkpoint size.
+    assert {"checkpoint_maxima", "core_maxima", "core_contains_init"} <= set(by_mode["core"])
+    # Gate 3A is decided on whether a bounded kernel verified.
+    assert {"kernel_maxima", "verified", "budget"} <= set(by_mode["kernel"])
+    # Gate 4 is decided on whether a narrow width kept the initial vector.
+    assert {"width", "contains_init", "matches_full_width"} <= set(by_mode["width"])

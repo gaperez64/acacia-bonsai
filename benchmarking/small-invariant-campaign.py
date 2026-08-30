@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-"""Census of small inductive subregions inside Acacia's exact approximations.
+"""Census of reduced searches inside Acacia's exact approximations.
 
 For each worker of each instance, dump the complete input/action table and a
-checkpoint at every crossing of a frontier size, then ask of each checkpoint
-whether some subset of its own maximal generators is already an inductive
-invariant containing the initial rank vector.
+checkpoint at every crossing of a frontier size, then probe each checkpoint in
+one of three modes.  Core measures the support-closed subset left by peeling
+the checkpoint maxima.  Kernel measures a bounded search grown from the
+initial vector inside the checkpoint envelope.  Width measures exact
+continuation from progressively wider prefixes of the checkpoint maxima.
 
-The question this answers is narrow and precise.  At the solver's fixed point
-every generator satisfies the criterion -- that is why the input picker returns
-nothing -- so peeling can only remove anything at an *intermediate* checkpoint.
-What matters is therefore whether a support-closed subset appears *before* the
-exact iteration converges, and how much earlier.
+Together these distinguish a peelable core, a small interior invariant, and a
+narrow exact starting frontier without mixing their different output schemas.
 
 Example:
 
@@ -38,14 +37,25 @@ sys.path.insert(0, str(HERE))
 from benchlib import read_part, run_systemd_scope  # noqa: E402
 from suite_paths import load_source_map, load_tlsf_source_map  # noqa: E402
 
-# Census column -> column of the tool's own output.
-PROBE_COLUMNS = [
-    "loop", "k", "after_bound_raise", "checkpoint_maxima", "core_maxima",
-    "core_contains_init", "verified", "forward_applications", "partial_order_checks",
-    "witness_cache_hits", "generators_removed", "cascade_depth", "probe_ms",
-]
-COLUMNS = ["suite", "instance", "worker", "states", "bool_threshold",
-           "inputs", "actions", "solver_final_maxima"] + PROBE_COLUMNS
+LEADING_COLUMNS = ["suite", "instance", "worker", "states", "bool_threshold",
+                   "inputs", "actions", "solver_final_maxima"]
+PROBE_COLUMNS_BY_MODE = {
+    "core": [
+        "loop", "k", "after_bound_raise", "checkpoint_maxima", "core_maxima",
+        "core_contains_init", "verified", "forward_applications",
+        "partial_order_checks", "witness_cache_hits", "generators_removed",
+        "cascade_depth", "probe_ms",
+    ],
+    "kernel": [
+        "loop", "k", "checkpoint_maxima", "budget", "kernel_maxima", "verified",
+        "search_nodes", "dead_ends", "envelope_rejections", "forward_applications",
+        "search_ms",
+    ],
+    "width": [
+        "loop", "k", "checkpoint_maxima", "width", "iterations", "final_maxima",
+        "contains_init", "matches_full_width", "branch_ms",
+    ],
+}
 
 
 def read_instance_list(path: pathlib.Path) -> list[str]:
@@ -130,6 +140,12 @@ def main() -> int:
                         help="research cap; the landing gates keep their own 17 s")
     parser.add_argument("--probe-timeout", type=float, default=300.0,
                         help="wall budget for the offline probe of one worker")
+    parser.add_argument("--probe-mode", choices=("core", "kernel", "width"),
+                        default="core", help="offline probe mode")
+    parser.add_argument("--budget", type=int, default=64,
+                        help="maximum generators in kernel mode")
+    parser.add_argument("--max-width", type=int, default=256,
+                        help="largest prefix before full width in width mode")
     parser.add_argument("--memory-max", default="8G")
     parser.add_argument("--memory-swap-max", default="0")
     parser.add_argument("--limit", type=int, default=0)
@@ -161,9 +177,14 @@ def main() -> int:
 
     out = pathlib.Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
+    probe_columns = PROBE_COLUMNS_BY_MODE[args.probe_mode]
+    columns = LEADING_COLUMNS + probe_columns
     written = 0
     with out.open("w", encoding="utf-8") as sink:
-        sink.write("\t".join(COLUMNS) + "\n")
+        sink.write("\t".join(columns) + "\n")
+        # Flush the header at once, so a campaign killed before its first row
+        # still leaves a readable file rather than an empty one.
+        sink.flush()
         for suite, list_path in sorted(suites.items()):
             names = read_instance_list(list_path) if list_path else cohort[suite]
             if args.limit:
@@ -213,17 +234,22 @@ def main() -> int:
                         meta = read_meta(directory)
                         n_inputs, n_actions = table_shape(directory)
                         final = solver_final(directory)
+                        probe_command = [str(probe), "--dir", str(directory),
+                                         "--mode", args.probe_mode, "--no-header"]
+                        if args.probe_mode == "kernel":
+                            probe_command.extend(["--budget", str(args.budget)])
+                        elif args.probe_mode == "width":
+                            probe_command.extend(["--max-width", str(args.max_width)])
                         try:
                             done = subprocess.run(
-                                [str(probe), "--dir", str(directory), "--mode", "core",
-                                 "--no-header"],
+                                probe_command,
                                 capture_output=True, text=True, timeout=args.probe_timeout)
                         except subprocess.TimeoutExpired:
                             sink.write("\t".join(
                                 [suite, name, meta.get("worker", "unknown"),
                                  meta.get("states", "0"), meta.get("bool_threshold", "0"),
                                  n_inputs, n_actions, final]
-                                + ["0"] * (len(PROBE_COLUMNS) - 1) + ["timeout"]) + "\n")
+                                + ["0"] * (len(probe_columns) - 1) + ["timeout"]) + "\n")
                             sink.flush()
                             continue
                         for line in done.stdout.splitlines():

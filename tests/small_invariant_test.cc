@@ -131,6 +131,19 @@ namespace {
     expect ("the active count follows deactivation", index.active_count () == 2);
   }
 
+  void check_rank_prefilter () {
+    const rank_vector wrong = vec ({3, -1});
+    const rank_vector right = vec ({2, 2});
+    generator_index index {{wrong, right}};
+    unsigned long long checks = 0;
+
+    // This pins the rank prefilter as a lower bound: it must skip an
+    // insufficient-rank candidate and continue to a higher-rank dominator.
+    const size_t found = index.find_dominator (vec ({2, 1}), checks);
+    expect ("the rank prefilter finds the higher-rank dominator",
+            found == 1 and checks == 1);
+  }
+
   /// Removing a generator can cost more than itself: anything whose only
   /// support was that generator must go too. This is the cascade the peeling
   /// has to follow, and the reason a single pass is not enough.
@@ -178,14 +191,50 @@ namespace {
             pruned.find_dominator (b, checks) == generator_index::npos);
   }
 
+  void check_forward_saturation () {
+    constexpr VECTOR_ELT_T K = 3;
+    action_vec avec (1);
+    avec[0].emplace_back (0, true);
+
+    // This pins the saturation boundary used by both searches: arithmetic
+    // cannot pass K, while K itself lies outside the safe candidate space.
+    const rank_vector image = apply_forward (vec ({3}), avec, K);
+    const rank_vector safe = safe_vector (1, K, 1);
+    expect ("a forward image that would exceed K saturates at K", image[0] == K);
+    expect ("a coordinate at K is outside the safe set", not leq (image, safe));
+  }
+
   void check_safe_vector () {
+    constexpr VECTOR_ELT_T K = 3;
     posets::vectors::bool_threshold = 2;
-    const rank_vector safe = safe_vector (4, 3, 2);
+    const rank_vector safe = safe_vector (4, K, 2);
+
+    // This pins the mixed counting/Boolean domain: Boolean presence may be
+    // introduced at zero, but any positive Boolean rank must remain unsafe.
     expect ("counting coordinates are capped at K-1", safe[0] == 2 and safe[1] == 2);
     expect ("Boolean coordinates are capped at 0", safe[2] == 0 and safe[3] == 0);
     expect ("a vector at the cap is safe", leq (vec ({2, 2, 0, 0}), safe));
     expect ("a vector above the Boolean cap is not", not leq (vec ({2, 2, 1, 0}), safe));
     expect ("a vector above the counting cap is not", not leq (vec ({3, 0, 0, 0}), safe));
+
+    action_vec introduce_boolean (4);
+    introduce_boolean[2].emplace_back (0, false);
+    const rank_vector image =
+        apply_forward (initial_vector (4, 0), introduce_boolean, K);
+    expect ("a present predecessor raises a Boolean coordinate from absent to zero",
+            image[2] == 0);
+  }
+
+  void check_absence_does_not_propagate () {
+    constexpr VECTOR_ELT_T K = 3;
+    action_vec absent_only (2);
+    absent_only[1].emplace_back (1, false);
+
+    // This pins forward presence semantics: an absent source cannot make its
+    // destination present merely because the transition exists.
+    const rank_vector image =
+        apply_forward (initial_vector (2, 0), absent_only, K);
+    expect ("a destination with only an absent predecessor stays absent", image[1] == -1);
   }
 
   void check_initial_vector () {
@@ -200,9 +249,12 @@ namespace {
 int main () {
   check_against_the_actioner ();
   check_domination_index ();
+  check_rank_prefilter ();
   check_support_cascade ();
   check_add_back_is_unsound ();
+  check_forward_saturation ();
   check_safe_vector ();
+  check_absence_does_not_propagate ();
   check_initial_vector ();
 
   if (failures != 0) {
