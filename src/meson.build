@@ -43,6 +43,14 @@ if get_option('build_research_tools')
       install: false,
       dependencies: [spot_dep, bddx_dep],
     )
+    # Searches a recorded region for a small inductive subregion.
+    acacia_small_invariant_exe = executable(
+      'acacia-small-invariant',
+      'research/small_invariant_replay.cc',
+      include_directories: inc,
+      install: false,
+      dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+    )
     # Recomputes the same recorded update symbolically over a unary threshold
     # encoding, to measure whether the representation survives the operation.
     acacia_bdd_cpre_replay_exe = executable(

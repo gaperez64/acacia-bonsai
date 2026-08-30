@@ -86,7 +86,10 @@ class k_bounded_safety_aut_detail {
       verb_do (1, vout << "Make actions..." << std::endl);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, k);
       verb_do (1, vout << "Fetching IO actions" << std::endl);
-      auto input_output_fwd_actions = actioner.actions ();  // list<pair<bdd, list<action_vec>>>
+      auto input_output_fwd_actions = actioner.actions ();
+#if ACACIA_ENABLE_DIAGNOSTICS
+      acacia::antichain_snapshot::record_all_input_actions (input_output_fwd_actions);
+#endif  // list<pair<bdd, list<action_vec>>>
       verb_do (1, io_stats (input_output_fwd_actions));
 
       // What is the initial state?
@@ -122,6 +125,9 @@ class k_bounded_safety_aut_detail {
         {
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
           acacia::diagnostics::set_final_reason ("fixedpoint");
+#if ACACIA_ENABLE_DIAGNOSTICS
+          acacia::antichain_snapshot::record_final (f, k, loopcount);
+#endif
           return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
               std::make_pair (k, std::move (f)));
         }
@@ -139,6 +145,9 @@ class k_bounded_safety_aut_detail {
                            << std::endl);
           k += kinc;
           actioner.setK (k);
+#if ACACIA_ENABLE_DIAGNOSTICS
+          acacia::antichain_snapshot::note_bound_raised ();
+#endif
           verb_do (1, {
             vout << "Adding kinc to every vector...";
             vout.flush ();

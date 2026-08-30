@@ -8,6 +8,7 @@
 /// difference, which is the only thing the comparison is for.
 
 #include "configuration.hh"
+#include "research/rank_action_replay.hh"
 
 #include <algorithm>
 #include <cstdlib>
@@ -22,11 +23,6 @@
 #include <posets/utils/vector_mm.hh>
 
 namespace acacia::research {
-
-  /// avec[i] is a list of (j, increment); `apply` below reads it exactly as
-  /// actioners::standard does, with the same names it uses.
-  using action = std::vector<std::pair<unsigned, bool>>;
-  using action_vec = std::vector<action>;
 
   struct event {
       int schema_version = 0;

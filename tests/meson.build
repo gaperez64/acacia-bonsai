@@ -276,6 +276,14 @@ test ('equivariant-pre',
       equivariant_pre_test,
       suite : ['unit', 'symmetry'])
 
+small_invariant_test = executable ('small-invariant-test',
+                                  'small_invariant_test.cc',
+                                  include_directories : inc,
+                                  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('small-invariant',
+      small_invariant_test,
+      suite : ['unit', 'small-invariant'])
+
 semantic_mona_test = executable ('semantic-mona-test',
                                  'semantic_mona_test.cc',
                                  include_directories : inc,

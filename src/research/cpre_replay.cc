@@ -15,6 +15,7 @@
 /// completely, so no automaton, BDD library or Spot dictionary is needed here.
 
 #include "research/cpre_event.hh"
+#include "research/rank_action_replay.hh"
 
 #include <posets/downsets.hh>
 #include <posets/vectors.hh>
@@ -30,23 +31,6 @@ namespace {
   using state = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
   using SetOfStates = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<state>;
 
-  /// The backward image, transcribed from actioners::standard::apply so the
-  /// replay cannot drift from the operation it is checking.
-  state apply_backward (const posets::utils::vector_mm<VECTOR_ELT_T>& m,
-                        const action_vec& avec, VECTOR_ELT_T K) {
-    posets::utils::vector_mm<VECTOR_ELT_T> out (m.size (), 0);
-    std::fill_n (out.begin (), posets::vectors::bool_threshold, (VECTOR_ELT_T) (K - 1));
-    std::fill_n (out.begin () + posets::vectors::bool_threshold,
-                 m.size () - posets::vectors::bool_threshold, (VECTOR_ELT_T) 0);
-
-    for (size_t p = 0; p < m.size (); ++p)
-      for (const auto& [q, p_final] : avec[p])
-        if (out[q] != -1)
-          out[q] = std::min (out[q], std::max ((VECTOR_ELT_T) -1,
-                                               (VECTOR_ELT_T) (m[p] - (VECTOR_ELT_T) (p_final ? 1 : 0))));
-    return state (out);
-  }
-
   SetOfStates replay (const event& ev) {
     std::vector<state> before;
     for (const auto& v : ev.before)
@@ -58,7 +42,8 @@ namespace {
     for (const auto& avec : ev.actions) {
       std::vector<state> images;
       for (const auto& v : ev.before)
-        images.push_back (apply_backward (v, avec, (VECTOR_ELT_T) ev.k));
+        images.push_back (state (apply_backward (v, avec, (VECTOR_ELT_T) ev.k,
+                                                 posets::vectors::bool_threshold)));
       SetOfStates f1io {std::move (images)};
       if (first) {
         f1i = std::move (f1io);
