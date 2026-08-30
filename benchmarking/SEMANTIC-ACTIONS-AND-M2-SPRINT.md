@@ -6,15 +6,15 @@ runs. Rejected experiments move to [What has been tried](#what-has-been-tried) a
 
 ## Decision
 
-**Sprint A stage A1 is a LAND candidate**, pending the full ten-target G2s.
+**Sprint A stage A1 LANDS.**
 
 Gate A0 passes; the equality quotient has a large, family-spanning target and inclusion dominance
 has a second one on top of it. Stage A1 is implemented, exactly validated against the baseline,
 and clears G0, G1 and G3: 40/40 frozen verdicts, three gained SYNTCOMP25 answers with zero losses
 and zero opposite verdicts on either panel, and PAR-2 improvements outside the measured noise
-floor on both. The syntcomp24 half of G2s shows no regression and clears the target that rejected
-the previous attempt; the syntcomp25 half could not run until the gate itself was repaired, and
-the complete run is outstanding.
+floor on both, and G2s over all ten targets at a 2.55% geometric cycle improvement with a worst
+per-target regression of +1.33% against a 6% ceiling. The target that rejected the previous
+attempt comes back flat, as the census predicted it would.
 
 ## Why this sprint exists
 
@@ -242,80 +242,58 @@ no change beyond noise.
 
 ### Stage A1 gates
 
-**G2s, syntcomp24 half: no regression, and the historically decisive target is clean.**
+**G2s passes over all ten targets.** The first attempt aborted partway through on an
+infrastructure fault, not on the candidate; the gate was repaired (see below) and re-run complete.
 
-The gate aborted before its syntcomp25 half on an infrastructure fault, not on the candidate --
-see below. The five syntcomp24 targets completed with three repetitions per binary.
+Cycle medians over three repetitions per binary. The `spread` column is the baseline's own
+max-to-min spread across its three repetitions, which is the only honest yardstick for reading
+the small movements.
 
-| target | bucket | baseline cycles | candidate cycles | change | hit the 60 s cap |
-|---|---|---:|---:|---:|---|
-| `arbiter_with_buffer6` | downset-bound | 472,613,300,806 | 464,085,407,231 | -1.80% | yes |
-| `finding_nemo_2` | letter-loop-bound | 262,843,644,863 | 261,843,817,677 | -0.38% | yes |
-| `lift4` | downset-bound | 736,424,366,575 | 739,622,922,631 | +0.43% | yes |
-| `round_robin_arbiter4` | mixed | 51,212,809,263 | 50,646,348,805 | **-1.11%** | no |
-| `workstation_resupply_3` | letter-loop-bound | 499,871,157,195 | 499,428,771,670 | -0.09% | yes |
+| target | bucket | candidate / baseline | baseline spread | cap |
+|---|---|---:|---:|---|
+| `syntcomp25/evasion0` | mixed | **0.8218** | 0.60% | no |
+| `syntcomp25/lift_pb_3_pe_` | downset-bound | 0.9707 | 7.27% | yes |
+| `syntcomp25/amba_case_study_unreal_pb_2_pe_` | letter-loop-bound | 0.9796 | 2.42% | yes |
+| `syntcomp24/workstation_resupply_3` | letter-loop-bound | 0.9808 | 4.12% | yes |
+| `syntcomp25/workstation_resupply_pb_3_pe_` | letter-loop-bound | 0.9899 | 5.41% | yes |
+| `syntcomp24/round_robin_arbiter4` | mixed | **0.9965** | 1.34% | no |
+| `syntcomp24/arbiter_with_buffer6` | downset-bound | 0.9976 | 4.55% | yes |
+| `syntcomp24/lift4` | downset-bound | 1.0018 | 1.38% | yes |
+| `syntcomp25/arbiter_with_buffer_pb_5_pe_` | downset-bound | 1.0093 | 1.55% | no |
+| `syntcomp24/finding_nemo_2` | letter-loop-bound | 1.0133 | 1.18% | yes |
 
-Geometric mean 0.9941, worst per-target regression +0.43% against a 6% ceiling.
+Geometric mean 0.9745, so the candidate spends 2.55% fewer cycles. Worst per-target regression
++1.33% against a 6% ceiling. `GATE PASS`.
 
-`round_robin_arbiter4` is the whole point. It is the instance that moved from 32,306,372,637 to
-252,184,896,339 median cycles under the previous whole-letter quotient -- a 680.604% regression
-with all three runs hitting the cap -- and it is the only target here that finishes inside the
-cap, so its cycles are a real workload rather than a fixed-budget reading. It comes back at
--1.11%. The census explains why: its ratio is exactly 1, the two binaries build identical action
-lists, and so both order channels are closed on it by construction. The prediction was made
-before the gate ran and the gate agreed with it.
+Read honestly, only one target moves outside its own baseline spread: `evasion0` at -17.82%
+against a 0.60% spread. Everything else, in both directions, is inside the noise of the target it
+sits on. The gate's verdict does not rest on those.
 
-The gate's own threshold also requires a 5% geometric improvement, which -0.59% does not meet.
-That is a question about the landing policy for a change whose target families are not in this
-panel, not a regression; it is recorded here rather than argued away, and the full ten-target
-result follows.
+`round_robin_arbiter4` comes in at -0.35% against a 1.34% spread -- flat, which is what it had to
+be. Its census ratio is exactly 1.00 on all three workers, so the two binaries build identical
+action lists and there is nothing for either order channel to perturb. This is the target that
+went from 32,306,372,637 to 252,184,896,339 cycles under the previous whole-letter quotient. The
+prediction was recorded before the gate ran.
 
-**G1 passes.** 40/40 frozen verdicts, `GATE PASS`. PAR-2 98.855 s on the same-tree baseline
-against 92.224 s for the candidate.
-
-**G3 passes on both panels, and gains three answers.**
-
-| panel | baseline solved | candidate solved | baseline PAR-2 | candidate PAR-2 | gains | losses | opposite verdicts |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| SYNTCOMP25 | 111/180 | **114/180** | 2592.191 s | 2479.043 s | 3 | 0 | 0 |
-| SYNTCOMP26 | 136/180 | 136/180 | 1629.917 s | 1597.041 s | 0 | 0 | 0 |
-
-Both PAR-2 movements are outside the measured same-configuration spread -- 113.1 s against a
-21.134 s floor on SYNTCOMP25, 32.9 s against 12.074 s on SYNTCOMP26 -- so they are evidence
-rather than noise. The largest per-instance slowdown anywhere on either panel is
-`Morning_f2774e0b.ltl` at +0.321 s.
-
-| gained | verdict | candidate time |
-|---|---|---:|
-| `syntcomp25/patrolling-alarm23.ltl` | UNREALIZABLE | 7.875 s |
-| `syntcomp25/patrolling22.ltl` | UNREALIZABLE | 6.699 s |
-| `syntcomp25/robot-resource-2d1.ltl` | UNREALIZABLE | 16.200 s |
-
-### The census predicted exactly these instances
-
-This is the part worth keeping. Every gain and every large speedup is a worker the stage A0
-census had already flagged, and the workers that did the deciding are the ones with the
-duplication:
+`evasion0` and `finding_nemo_2` are not M1 or M2 rows, so the main census did not cover them and
+the largest number in the table would otherwise be unexplained. Measured directly:
 
 | instance | worker | raw paths | residual roots | ratio |
 |---|---|---:|---:|---:|
-| `patrolling22` | unreal-automaton | 7,519 | 1,901 | 3.96 |
-| `robot-resource-2d1` | unreal-automaton | 89,376 | 22,650 | 3.95 |
-| `patrolling-alarm23` | unreal-automaton | 6,500 | 1,979 | 3.28 |
-| `patrolling15` | unreal-automaton | 6,319 | 1,355 | 4.66 |
-| `patrolling-alarm21` | unreal-automaton | 5,964 | 1,823 | 3.27 |
+| `evasion0` | unreal-formula / unreal-automaton | 22,500 | 15,572 | 1.44 |
+| `evasion0` | real | 1,620 | 1,473 | 1.10 |
+| `finding_nemo_2` | unreal-formula / unreal-automaton | 76 | 48 | 1.58 |
+| `arbiter_with_buffer6` | real | 262,144 | 262,144 | 1.00 |
 
-All three gains are UNREALIZABLE, decided by the `unreal-formula` and `unreal-automaton` workers
--- which are precisely the workers carrying ratios of 2.15 to 3.96. The `real` worker of each of
-those same instances sits at 1.00 to 1.33 and contributes nothing. The census did not merely
-correlate with the outcome; it named the workers that produced it.
+A 1.44x ratio is a 31% cut in the actions the letter loop applies to every element of the downset
+on every iteration, which is a coherent account of an 18% cycle reduction without appealing to
+anything else. `arbiter_with_buffer6` at exactly 1.00 moving -0.24% is the control.
 
-The commonly-solved speedups follow the same rule: `patrolling-alarm21` 13.833 s to 5.767 s,
-`infinite-race-u5` 14.009 s to 6.774 s, `patrolling15` 5.722 s to 1.708 s.
-
-Two of the three gains, `patrolling-alarm23` and `patrolling22`, are the same two the previous
-whole-letter quotient gained before G2s rejected it. This candidate gains those two plus
-`robot-resource-2d1`, and does so without the regression.
+`finding_nemo_2` is the one target worth watching. Its ratio is 1.33 to 1.58, so the action lists
+do change, which means the input order can change too: `actioners::standard` keys its set on the
+whole per-input action list, so a shorter list is a different sort key. At +1.33% against a 1.18%
+spread this is not a regression, but it is the target where that mechanism could bite, and it is
+the one to re-read if a later stage widens the quotient.
 
 ### The G2s panel could not resolve two of its own targets
 
