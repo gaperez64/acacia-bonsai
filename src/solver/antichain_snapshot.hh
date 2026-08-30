@@ -14,6 +14,7 @@
 # include <posets/vectors.hh>
 # include <spot/twa/twagraph.hh>
 # include <spot/twaalgos/hoa.hh>
+# include "solver/diagnostics.hh"
 # include <iterator>
 # include <string>
 # include <vector>
@@ -144,10 +145,13 @@ namespace acacia::antichain_snapshot {
     // init_state is all the initial rank vector needs: it is -1 everywhere
     // except 0 at the automaton's initial state.
     std::ofstream meta {snapshot.directory + "/meta.tsv"};
-    meta << "schema_version\tstates\tbool_threshold\tinit_state\n"
+    const auto* metrics = acacia::diagnostics::current ();
+    meta << "schema_version\tstates\tbool_threshold\tinit_state\tworker\tinstance\n"
          << SCHEMA_VERSION << '\t' << aut->num_states () << '\t'
          << posets::vectors::bool_threshold << '\t'
-         << aut->get_init_state_number () << '\n';
+         << aut->get_init_state_number () << '\t'
+         << (metrics != nullptr ? metrics->path : std::string {"unknown"}) << '\t'
+         << (metrics != nullptr ? metrics->instance : std::string {"-"}) << '\n';
   }
 
   /// Tell the snapshot the bound was raised.  A bump re-inflates every maximum,
