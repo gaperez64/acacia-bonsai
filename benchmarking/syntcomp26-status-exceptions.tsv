@@ -1,0 +1,2 @@
+instance	annotated_status	corrected_status	evidence
+lilydemo04_modified.tlsf	realizable	unrealizable	The TLSF file own comment states the modification was made "to make the spec unrealizable" (it removes the next operator from P3 precisely so the Mealy spec becomes unrealizable); ltlsynt 2.15.1.dev independently returns UNREALIZABLE; Acacia returns UNREALIZABLE. Two independent solvers and the file own prose agree against its //STATUS line.

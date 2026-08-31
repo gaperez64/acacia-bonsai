@@ -5,7 +5,9 @@ Short caps cheaply discharge easy instances so that later, more expensive caps
 are spent only on the remaining coverage gap.  Verdict conflicts are fatal as
 soon as they are durably recorded: silently aggregating a contradictory result
 would turn either a solver bug or a bad corpus expectation into misleading
-coverage data.
+coverage data.  Known bad annotations are handled by a per-instance,
+evidence-bearing exceptions table; exceptions correct specific expectations
+rather than providing a way to switch off conflict checking.
 """
 
 from __future__ import annotations
@@ -45,6 +47,7 @@ OUTPUT_COLUMNS = [
     "exit_code",
     "timed_out",
     "resource_reason",
+    "expectation_source",
     "stdout_bytes",
     "stderr_bytes",
     "run_index",
@@ -176,6 +179,19 @@ def resolve_targets(
 
 def expected_verdict(path: pathlib.Path) -> str | None:
     """Return the exact decisive expectation carried by a TLSF STATUS line."""
+    status = tlsf_status(path)
+    if status == "realizable":
+        return "REALIZABLE"
+    if status == "unrealizable":
+        return "UNREALIZABLE"
+    if status in {"unknown", "uknown", "unknon"}:
+        # The two misspellings are real corpus data, not defensive programming.
+        return None
+    return None
+
+
+def tlsf_status(path: pathlib.Path) -> str | None:
+    """Return the normalized text of the first TLSF STATUS annotation."""
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError as error:
@@ -184,16 +200,81 @@ def expected_verdict(path: pathlib.Path) -> str | None:
         match = STATUS_RE.match(line)
         if match is None:
             continue
-        status = match.group("status").lower()
-        if status == "realizable":
-            return "REALIZABLE"
-        if status == "unrealizable":
-            return "UNREALIZABLE"
-        if status in {"unknown", "uknown", "unknon"}:
-            # The two misspellings are real corpus data, not defensive programming.
-            return None
-        return None
+        return match.group("status").lower()
     return None
+
+
+def read_status_exceptions(
+    path: pathlib.Path, corpus: pathlib.Path
+) -> dict[str, str | None]:
+    """Load status corrections and verify them against the current corpus."""
+    try:
+        stream = path.open(encoding="utf-8", newline="")
+    except FileNotFoundError:
+        return {}
+    except OSError as error:
+        raise CoverageError(
+            f"cannot read status exceptions {path}: {error}"
+        ) from error
+
+    columns = ["instance", "annotated_status", "corrected_status", "evidence"]
+    with stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        if reader.fieldnames != columns:
+            raise CoverageError(
+                f"status exceptions {path} has an unexpected header; expected "
+                + "\t".join(columns)
+            )
+        exceptions: dict[str, str | None] = {}
+        for line_number, row in enumerate(reader, 2):
+            if None in row or any(value is None for value in row.values()):
+                raise CoverageError(
+                    f"status exceptions {path}:{line_number} is malformed"
+                )
+            instance = row["instance"].strip()
+            annotated = row["annotated_status"].strip().lower()
+            corrected = row["corrected_status"].strip().lower()
+            evidence = row["evidence"].strip()
+            if (
+                not instance
+                or pathlib.PurePath(instance).name != instance
+                or not instance.endswith(".tlsf")
+            ):
+                raise CoverageError(
+                    f"status exceptions {path}:{line_number} has an invalid flat "
+                    f"TLSF filename: {instance!r}"
+                )
+            if instance in exceptions:
+                raise CoverageError(
+                    f"status exceptions {path}:{line_number} repeats {instance}"
+                )
+            if not annotated:
+                raise CoverageError(
+                    f"status exceptions {path}:{line_number} has empty annotated_status"
+                )
+            if not evidence:
+                raise CoverageError(
+                    f"status exceptions {path}:{line_number} has empty evidence"
+                )
+            if corrected not in {"", "none", "realizable", "unrealizable"}:
+                raise CoverageError(
+                    f"status exceptions {path}:{line_number} has invalid "
+                    f"corrected_status {row['corrected_status']!r}"
+                )
+
+            tlsf_path = corpus / instance
+            actual = tlsf_status(tlsf_path)
+            if annotated != actual:
+                actual_display = actual if actual is not None else "<none>"
+                raise CoverageError(
+                    f"status exception for {instance} says annotated_status="
+                    f"{annotated!r}, but the TLSF //STATUS is {actual_display!r}; "
+                    "the corpus changed and this exception must be re-justified"
+                )
+            exceptions[instance] = (
+                corrected.upper() if corrected not in {"", "none"} else None
+            )
+    return exceptions
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -277,6 +358,11 @@ def load_output(path: pathlib.Path) -> list[dict[str, str]]:
                     f"resume output {path}:{line_number} has invalid result "
                     f"{row['result']!r}"
                 )
+            if row["expectation_source"] not in {"status", "exception", "none"}:
+                raise CoverageError(
+                    f"resume output {path}:{line_number} has invalid "
+                    f"expectation_source {row['expectation_source']!r}"
+                )
             rows.append(dict(row))
     return rows
 
@@ -352,6 +438,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--tlsf-map", required=True, metavar="PATH")
     parser.add_argument("--tlsf-corpus", required=True, metavar="DIR")
     parser.add_argument(
+        "--status-exceptions",
+        type=pathlib.Path,
+        default=pathlib.Path(__file__).with_name("syntcomp26-status-exceptions.tsv"),
+        metavar="PATH",
+        help="evidence-bearing TLSF status corrections (missing means none)",
+    )
+    parser.add_argument(
         "--caps", required=True, type=parse_caps, metavar="1,5,17,60"
     )
     parser.add_argument("--memory-max", required=True, metavar="8G")
@@ -381,11 +474,18 @@ def run(args: argparse.Namespace) -> int:
         read_instance_list(pathlib.Path(args.list)), args.start_after, args.limit
     )
     tlsf_map = read_tlsf_map(pathlib.Path(args.tlsf_map))
-    targets = resolve_targets(instances, tlsf_map, pathlib.Path(args.tlsf_corpus))
-    expectations = {
-        instance: expected_verdict(tlsf_path)
-        for instance, (_tlsf_file, tlsf_path) in targets.items()
-    }
+    corpus = pathlib.Path(args.tlsf_corpus)
+    targets = resolve_targets(instances, tlsf_map, corpus)
+    exceptions = read_status_exceptions(args.status_exceptions, corpus)
+    expectations: dict[str, tuple[str | None, str]] = {}
+    for instance, (tlsf_file, tlsf_path) in targets.items():
+        if tlsf_file in exceptions:
+            expectation = exceptions[tlsf_file]
+            source = "exception" if expectation is not None else "none"
+        else:
+            expectation = expected_verdict(tlsf_path)
+            source = "status" if expectation is not None else "none"
+        expectations[instance] = expectation, source
     try:
         flags = shlex.split(args.flags)
     except ValueError as error:
@@ -403,7 +503,8 @@ def run(args: argparse.Namespace) -> int:
     for row in rows:
         if row["solver_label"] != args.solver_label:
             continue
-        expectation = expectations.get(row["instance"])
+        expectation_entry = expectations.get(row["instance"])
+        expectation = expectation_entry[0] if expectation_entry is not None else None
         if (
             expectation is not None
             and row["result"] in DECISIVE_RESULTS
@@ -466,6 +567,7 @@ def run(args: argparse.Namespace) -> int:
                     "exit_code": str(solver_run.returncode),
                     "timed_out": str(solver_run.timed_out).lower(),
                     "resource_reason": resource_reason,
+                    "expectation_source": expectations[instance][1],
                     "stdout_bytes": str(solver_run.stdout_bytes),
                     "stderr_bytes": str(solver_run.stderr_bytes),
                     "run_index": str(run_index),
@@ -489,7 +591,7 @@ def run(args: argparse.Namespace) -> int:
                 )
                 run_index += 1
 
-                expectation = expectations[instance]
+                expectation = expectations[instance][0]
                 if (
                     expectation is not None
                     and result in DECISIVE_RESULTS
