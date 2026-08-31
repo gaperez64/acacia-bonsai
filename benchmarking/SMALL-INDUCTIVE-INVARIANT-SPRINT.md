@@ -471,7 +471,29 @@ subtracted.
 | G1 | **`GATE PASS`**, 40/40 frozen verdicts; PAR-2 101.867 s frozen, 92.224 s without the probe, **90.651 s with it** |
 | G2s | **`GATE FAIL`** on `round_robin_arbiter4`: 29.4% first run, **6.23%** tuned, against a 6.00% ceiling. Geomean 96.51%. Not fixable by budget; the probe stays opt-in |
 | G3 | **`GATE PASS`** both panels: syntcomp25 1 gain / 1 loss / 0 flips, syntcomp26 **+1 answer** / 0 losses / 0 flips |
-| G4 | **`Fail: 0`**, 569 correct against the baseline's 568, **0 wrong verdicts**; gains `simple_arbiter_8` (30 s timeout -> 0.48 s), loses nothing |
+| G4 | **`Fail: 0`**, **0 wrong verdicts**; gains `simple_arbiter_8` (30 s timeout -> 0.48 s). 569 correct pre-memoisation, 568 after, and the one-instance difference was measured to be machine noise, not a regression |
+
+### One G4 instance, chased down rather than assumed
+
+The memoised build scored 568 correct where the pre-memoisation probe build scored 569. The
+difference was `full_arbiter_unreal1_2_18`, which timed out at 30.06 s having previously been
+solved at 22.44 s. Memoisation is behaviour-preserving, so this should have been impossible, and
+"should have been impossible" is not evidence.
+
+Measured on a quiet machine at a 60 s cap:
+
+| build | median | mean | min-max | spread |
+|---|---:|---:|---:|---:|
+| probe off, 5 reps | 21.59 s | 21.56 s | 21.10-21.89 | 0.79 s |
+| probe on, 10 reps | **21.41 s** | 21.56 s | 21.05-22.56 | 1.51 s |
+
+The medians differ by -0.18 s, or -0.8%, with the probe build marginally faster. The slowest of
+fifteen runs was 22.56 s, leaving 7.44 s of headroom to the 30 s cap, so the 30.06 s reading was
+environmental.
+
+The probe is not even a plausible cause here: it fires three times on this instance and spends
+**112 forward applications** in total -- 72, then 4 to refute a root, then 36 to win on another
+worker. Memoisation only makes those 112 cheaper.
 
 ## Stage S3: checkpointed width schedule
 
