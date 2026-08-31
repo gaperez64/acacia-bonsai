@@ -1,0 +1,21 @@
+question: Acacia 1.x vs current (probe off / probe on) vs ltlsynt,
+          on the SYNTCOMP25 and SYNTCOMP26 panels
+acacia:   379ec1385da4a4e3d5104de013f334dbf0863942 (branch codex/small-inductive-invariants)
+posets:   139e14336b7a1f0bc064022e587ea4e1b9a81427
+v1:       _bm-logs.fmcad26-head-6dda2f3b-20260822/build/acacia-v1-best23 (5ffd8f99)
+ltlsynt:  ltlsynt (spot) 2.15.1.dev
+corpus:   panel lists, TLSF maps and both SyFCo caches reused verbatim from
+          _bm-logs.three-way-20260828 so the routes cannot drift
+routes:   current -T native TLSF frontend; v1 SyFCo pairs with SEMANTICS->TARGET
+          adaptation baked in (v1 has no --semantics); ltlsynt SyFCo unadapted
+          pairs plus --semantics=<declared model>
+arms:     probe off = build_sprint_semantic (0 local_certificate symbols)
+          probe on  = build_local (17 local_certificate symbols), verified with
+          nm because meson configure reports the option default, not the value
+          the binary was built with
+protocol: --systemd-scope --memory-max 8G --memory-swap-max 0 --timeout 17,
+          serialized, 120s cooldowns, arm order reversed on the second panel
+caveat:   2 of the 307 distinct panel TLSF declare Strict semantics, which
+          SyFCo's ltlxba printer cannot express, so v1 and ltlsynt solve the
+          non-strict reading of those two while current solves the strict one
+started:  2026-08-31T07:21:53+02:00
