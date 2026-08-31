@@ -19,6 +19,17 @@
 
 namespace acacia::diagnostics {
 
+  inline size_t env_size (const char* name, size_t fallback, bool allow_zero) {
+    const char* text = std::getenv (name);
+    if (text == nullptr or *text == '\0')
+      return fallback;
+    char* end = nullptr;
+    const unsigned long value = std::strtoul (text, &end, 10);
+    if (end == text or *end != '\0' or (value == 0 and not allow_zero))
+      return fallback;
+    return static_cast<size_t> (value);
+  }
+
 #if ACACIA_ENABLE_DIAGNOSTICS
 
   using clock = std::chrono::steady_clock;
@@ -57,6 +68,22 @@ namespace acacia::diagnostics {
     return value;
   }
 
+  // The semantic-action census extends the alphabet census with the numbers
+  // Sprint A needs: the per-input maxima, the inclusion-minimal residual-root
+  // count, and how many transition sets the expansion actually decoded.  The
+  // per-input maxima ride along on the walk the alphabet census already makes,
+  // so they are free; dominance and decode-side validation each cost real work
+  // and get their own switch.
+  inline bool semantic_dominance_census () {
+    static const bool value = env_flag_enabled ("ACACIA_DIAG_SEMANTIC_DOMINANCE");
+    return value;
+  }
+
+  inline bool semantic_decode_census () {
+    static const bool value = env_flag_enabled ("ACACIA_DIAG_SEMANTIC_DECODE");
+    return value;
+  }
+
   struct child_metrics {
       std::string instance = "-";
       std::string path = "unknown";
@@ -72,6 +99,7 @@ namespace acacia::diagnostics {
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
       std::string equivariant = "not-run";
+      std::string local_probe_status = "none";
       // sym_* covers every diagnostic recognition pass, including instances
       // the solver declines; eq_* is populated only when solving is attempted.
       std::string symmetry_families = "-";
@@ -116,6 +144,12 @@ namespace acacia::diagnostics {
       size_t bool_threshold = 0;
       size_t max_f = 0;
       size_t max_f_size = 0;
+      unsigned long long local_probe_runs = 0;
+      unsigned long long local_probe_forward_apps = 0;
+      unsigned long long local_probe_skipped_over_budget = 0;
+      unsigned long long local_probe_nodes = 0;
+      unsigned long long cpre_skipped = 0;
+      unsigned long long k_bumped_by_local_refutation = 0;
       unsigned long long actions_seen = 0;
       unsigned long long meets_computed = 0;
       unsigned long long meet_batches = 0;
@@ -124,6 +158,16 @@ namespace acacia::diagnostics {
       unsigned long long alphabet_output_paths = 0;
       unsigned long long alphabet_output_nodes = 0;
       unsigned long long alphabet_bdd_nodes = 0;
+      unsigned long long alphabet_max_output_paths = 0;
+      unsigned long long alphabet_max_output_nodes = 0;
+      unsigned long long alphabet_minimal_output_nodes = 0;
+      unsigned long long alphabet_dominance_tests = 0;
+      unsigned long long alphabet_dominance_declines = 0;
+      unsigned long long alphabet_census_ms = 0;
+      unsigned long long alphabet_dominance_ms = 0;
+      unsigned long long decoded_transition_sets = 0;
+      unsigned long long decoded_unique_transition_sets = 0;
+      unsigned long long decode_ms = 0;
       int loops = 0;
       int k_attempts = 0;
       int last_k = -1;
@@ -221,7 +265,14 @@ namespace acacia::diagnostics {
          << " simulation_states_removed=" << m.simulation_states_removed
          << " bool_threshold=" << m.bool_threshold << " max_f=" << m.max_f
          << " max_f_size=" << m.max_f_size << " loops=" << m.loops
-         << " k_attempts=" << m.k_attempts << " cpre_ms=" << m.cpre_ms
+         << " k_attempts=" << m.k_attempts << " local_probe_runs=" << m.local_probe_runs
+         << " local_probe_status=" << m.local_probe_status
+         << " local_probe_forward_apps=" << m.local_probe_forward_apps
+         << " local_probe_skipped_over_budget=" << m.local_probe_skipped_over_budget
+         << " local_probe_nodes=" << m.local_probe_nodes
+         << " cpre_skipped=" << m.cpre_skipped
+         << " k_bumped_by_local_refutation=" << m.k_bumped_by_local_refutation
+         << " cpre_ms=" << m.cpre_ms
          << " picker_ms=" << m.picker_ms << " apply_ms=" << m.apply_ms
          << " downset_ms=" << m.downset_ms << " actions_seen=" << m.actions_seen
          << " meets_computed=" << m.meets_computed << " meet_batches=" << m.meet_batches
@@ -229,7 +280,17 @@ namespace acacia::diagnostics {
          << " alphabet_input_nodes=" << m.alphabet_input_nodes
          << " alphabet_output_paths=" << m.alphabet_output_paths
          << " alphabet_output_nodes=" << m.alphabet_output_nodes
-         << " alphabet_bdd_nodes=" << m.alphabet_bdd_nodes << " equivariant=" << m.equivariant
+         << " alphabet_bdd_nodes=" << m.alphabet_bdd_nodes
+         << " alphabet_max_output_paths=" << m.alphabet_max_output_paths
+         << " alphabet_max_output_nodes=" << m.alphabet_max_output_nodes
+         << " alphabet_minimal_output_nodes=" << m.alphabet_minimal_output_nodes
+         << " alphabet_dominance_tests=" << m.alphabet_dominance_tests
+         << " alphabet_dominance_declines=" << m.alphabet_dominance_declines
+         << " alphabet_census_ms=" << m.alphabet_census_ms
+         << " alphabet_dominance_ms=" << m.alphabet_dominance_ms
+         << " decoded_transition_sets=" << m.decoded_transition_sets
+         << " decoded_unique_transition_sets=" << m.decoded_unique_transition_sets
+         << " decode_ms=" << m.decode_ms << " equivariant=" << m.equivariant
          << " eq_clients=" << m.equivariant_clients << " eq_blocks=" << m.equivariant_blocks
          << " eq_orbits=" << m.equivariant_orbits << " sym_families=" << m.symmetry_families
          << " sym_indices=" << m.symmetry_indices << " sym_matrix=" << m.symmetry_matrix
@@ -451,6 +512,67 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_semantic_action_census (unsigned long long max_output_paths,
+                                          unsigned long long max_output_nodes,
+                                          unsigned long long minimal_output_nodes,
+                                          unsigned long long dominance_tests,
+                                          unsigned long long dominance_declines,
+                                          unsigned long long census_ms,
+                                          unsigned long long dominance_ms) {
+    if (auto* m = current ()) {
+      m->alphabet_max_output_paths = max_output_paths;
+      m->alphabet_max_output_nodes = max_output_nodes;
+      m->alphabet_minimal_output_nodes = minimal_output_nodes;
+      m->alphabet_dominance_tests = dominance_tests;
+      m->alphabet_dominance_declines = dominance_declines;
+      m->alphabet_census_ms = census_ms;
+      m->alphabet_dominance_ms = dominance_ms;
+    }
+  }
+
+  inline void set_decode_census (unsigned long long transition_sets,
+                                 unsigned long long unique_transition_sets,
+                                 unsigned long long elapsed_ms) {
+    if (auto* m = current ()) {
+      m->decoded_transition_sets = transition_sets;
+      m->decoded_unique_transition_sets = unique_transition_sets;
+      m->decode_ms = elapsed_ms;
+    }
+  }
+
+  inline void set_local_probe (std::string status, unsigned long long forward_applications,
+                               unsigned long long nodes, bool skipped_cpre,
+                               bool bumped_k) {
+    if (auto* m = current ()) {
+      ++m->local_probe_runs;
+      m->local_probe_status = std::move (status);
+      m->local_probe_forward_apps += forward_applications;
+      m->local_probe_nodes += nodes;
+      if (skipped_cpre)
+        ++m->cpre_skipped;
+      if (bumped_k)
+        ++m->k_bumped_by_local_refutation;
+    }
+  }
+
+  inline void trace_local_probe (int k, unsigned long long loop, std::size_t region_size,
+                                 const char* status, unsigned long long forward_apps,
+                                 unsigned long long nodes) {
+    static const bool enabled = [] {
+      const char* env = std::getenv ("ACACIA_LOCAL_CERTIFICATE_TRACE");
+      return env != nullptr and *env != '\0';
+    } ();
+    if (enabled)
+      std::cerr << "ACACIA_PROBE k=" << k << " loop=" << loop << " size=" << region_size
+                << " status=" << status << " fwd=" << forward_apps << " nodes=" << nodes
+                << '\n';
+  }
+
+  inline void set_local_probe_skipped_over_budget () {
+    if (auto* m = current ())
+      ++m->local_probe_skipped_over_budget;
+  }
+
   inline void set_final_reason (std::string reason) {
     if (auto* m = current ())
       m->final_reason = std::move (reason);
@@ -535,6 +657,15 @@ namespace acacia::diagnostics {
   inline void snapshot (std::string_view) {}
   inline void set_alphabet_census (unsigned long long, unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long) {}
+  inline void set_semantic_action_census (unsigned long long, unsigned long long,
+                                          unsigned long long, unsigned long long,
+                                          unsigned long long, unsigned long long,
+                                          unsigned long long) {}
+  inline void set_decode_census (unsigned long long, unsigned long long, unsigned long long) {}
+  inline void set_local_probe (std::string, unsigned long long, unsigned long long, bool, bool) {}
+  inline void trace_local_probe (int, unsigned long long, std::size_t, const char*,
+                                 unsigned long long, unsigned long long) {}
+  inline void set_local_probe_skipped_over_budget () {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}

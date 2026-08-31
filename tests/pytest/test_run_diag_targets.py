@@ -83,30 +83,53 @@ def test_write_checkpoint_replaces_complete_csv(tmp_path):
     assert not (output.parent / f".{output.name}.tmp").exists()
 
 
+def _diag_env(module, inherited, **overrides):
+    settings = {
+        "progress_every": "64",
+        "memory_max": "8G",
+        "memory_swap_max": "0",
+        "preprocessing_census_only": False,
+        "alphabet_census_only": False,
+        "semantic_dominance": False,
+        "semantic_decode": False,
+    }
+    settings.update(overrides)
+    return module.diagnostic_environment(inherited, **settings)
+
+
 def test_preprocessing_census_is_explicitly_opt_in():
     module = load_run_diag_targets()
     inherited = {"ACACIA_DIAG_PREPROCESSING_CENSUS": "only", "KEEP": "yes"}
 
-    ordinary = module.diagnostic_environment(
-        inherited,
-        progress_every="64",
-        memory_max="8G",
-        memory_swap_max="0",
-        preprocessing_census_only=False,
-        alphabet_census_only=False,
-    )
-    census = module.diagnostic_environment(
-        inherited,
-        progress_every="64",
-        memory_max="8G",
-        memory_swap_max="0",
-        preprocessing_census_only=True,
-        alphabet_census_only=False,
-    )
+    ordinary = _diag_env(module, inherited)
+    census = _diag_env(module, inherited, preprocessing_census_only=True)
 
     assert "ACACIA_DIAG_PREPROCESSING_CENSUS" not in ordinary
     assert census["ACACIA_DIAG_PREPROCESSING_CENSUS"] == "only"
     assert ordinary["KEEP"] == census["KEEP"] == "yes"
+
+
+def test_semantic_censuses_are_explicitly_opt_in():
+    """Both semantic-action censuses cost real work, so an inherited value must
+    not silently turn them on for a run that did not ask."""
+    module = load_run_diag_targets()
+    inherited = {
+        "ACACIA_DIAG_SEMANTIC_DOMINANCE": "1",
+        "ACACIA_DIAG_SEMANTIC_DECODE": "1",
+        "KEEP": "yes",
+    }
+
+    ordinary = _diag_env(module, inherited)
+    dominance = _diag_env(module, inherited, semantic_dominance=True)
+    decode = _diag_env(module, inherited, semantic_decode=True)
+
+    assert "ACACIA_DIAG_SEMANTIC_DOMINANCE" not in ordinary
+    assert "ACACIA_DIAG_SEMANTIC_DECODE" not in ordinary
+    assert dominance["ACACIA_DIAG_SEMANTIC_DOMINANCE"] == "1"
+    assert "ACACIA_DIAG_SEMANTIC_DECODE" not in dominance
+    assert decode["ACACIA_DIAG_SEMANTIC_DECODE"] == "1"
+    assert "ACACIA_DIAG_SEMANTIC_DOMINANCE" not in decode
+    assert ordinary["KEEP"] == dominance["KEEP"] == decode["KEEP"] == "yes"
 
 
 def test_filter_stream_discards_raw_noise_without_losing_diagnostics():

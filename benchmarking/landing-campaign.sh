@@ -6,6 +6,7 @@ baseline_bin=
 candidate_bin=
 timeout=17
 output=
+tlsf_corpus=${ACACIA_TLSF_CORPUS:-}
 declare -a suites=()
 declare -a lists=()
 
@@ -14,7 +15,13 @@ usage () {
 usage: benchmarking/landing-campaign.sh \
   --baseline-bin PATH --candidate-bin PATH \
   --suite NAME --list PATH [--suite NAME --list PATH ...] \
-  --timeout SECONDS --output DIR
+  --timeout SECONDS --output DIR [--tlsf-corpus DIR]
+
+--tlsf-corpus names the directory written by benchmarking/syntcomp-corpus.py
+materialize.  A suite with a tlsf-sources.tsv is run through it: syntcomp25 and
+syntcomp26 are reconstructed from the TLSF submodule and 77 of 180 and 180 of
+180 of their panel rows respectively have no .ltl pair to fall back on.  It
+defaults to \$ACACIA_TLSF_CORPUS.
 EOF
 }
 
@@ -22,6 +29,7 @@ while (( $# )); do
   case "$1" in
     --baseline-bin) baseline_bin=${2:?}; shift 2 ;;
     --candidate-bin) candidate_bin=${2:?}; shift 2 ;;
+    --tlsf-corpus) tlsf_corpus=${2:?}; shift 2 ;;
     --suite) suites+=("${2:?}"); shift 2 ;;
     --list) lists+=("${2:?}"); shift 2 ;;
     --timeout) timeout=${2:?}; shift 2 ;;
@@ -59,6 +67,11 @@ if [[ ${ACACIA_OUTER_CGROUP:-0} != 1 ]]; then
     scope_command+=(--suite "${suites[$i]}" --list "${lists[$i]}")
   done
   scope_command+=(--timeout "$timeout" --output "$output")
+  # The re-exec rebuilds argv by hand, so every option has to be forwarded here
+  # too or it is silently dropped on the way into the scope.
+  if [[ -n $tlsf_corpus ]]; then
+    scope_command+=(--tlsf-corpus "$tlsf_corpus")
+  fi
   exec "${scope_command[@]}"
 fi
 
@@ -121,6 +134,7 @@ meta_tmp="$output/meta.txt.tmp"
   printf 'candidate_source_revision=%s\n' "$(git_value "$candidate_bin" HEAD)"
   printf 'candidate_posets_revision=%s\n' "$(git_value "$candidate_bin" HEAD:subprojects/posets)"
   printf 'candidate_tlsf_tools_revision=%s\n' "$(git_value "$candidate_bin" HEAD:subprojects/tlsf-tools)"
+  printf 'tlsf_corpus=%s\n' "${tlsf_corpus:-none}"
   printf '\n[baseline meson options]\n'
   build_options "$baseline_bin"
   printf '\n[candidate meson options]\n'
@@ -155,14 +169,31 @@ raise SystemExit(0 if good and len(rows) == expected else 1)
 PY
 }
 
+# A suite is run through the TLSF corpus when it has a tlsf-sources.tsv and a
+# corpus was given.  run-subset.py's TLSF route is all-or-nothing per
+# invocation, which is correct here: both reconstructed panels are covered
+# 180/180 by their TLSF maps, and mixing routes within one panel would compare
+# two different front ends.
+suite_tlsf_map () {
+  local list=$1
+  local map
+  map="$(dirname "$list")/tlsf-sources.tsv"
+  if [[ -n $tlsf_corpus && -f $map ]]; then
+    printf '%s' "$map"
+  fi
+}
+
 run_side () {
   local binary=$1 suite=$2 list=$3 csv=$4
   local tmp="$csv.tmp"
-  local source_map
+  local source_map tlsf_map
   source_map="$(dirname "$list")/sources.tsv"
+  tlsf_map=$(suite_tlsf_map "$list")
   rm -f "$tmp"
   local -a source_args
-  if [[ -f $source_map ]]; then
+  if [[ -n $tlsf_map ]]; then
+    source_args=(--tlsf-map "$tlsf_map" --tlsf-corpus "$tlsf_corpus")
+  elif [[ -f $source_map ]]; then
     source_args=(--source-map "$source_map")
   else
     source_args=(--instances-dir "$repo_root/tests/ltl/$suite")
@@ -190,10 +221,17 @@ for i in "${!suites[@]}"; do
 
   report_tmp="$report.tmp"
   source_map="$(dirname "$list")/sources.tsv"
+  tlsf_map=$(suite_tlsf_map "$list")
   if [[ -f $source_map ]]; then
     remeasure_source=$source_map
   else
     remeasure_source="$repo_root/tests/ltl/$suite"
+  fi
+  # The cap remeasurement has to reach the same instances the campaign ran, or
+  # a loss near the boundary cannot be adjudicated.
+  remeasure_tlsf_args=()
+  if [[ -n $tlsf_map ]]; then
+    remeasure_tlsf_args=(--tlsf-source-map "$suite=$tlsf_map" --tlsf-corpus "$tlsf_corpus")
   fi
   set +e
   python3 "$repo_root/benchmarking/landing-bar.py" \
@@ -202,6 +240,7 @@ for i in "${!suites[@]}"; do
     --baseline-bin "$baseline_bin" \
     --candidate-bin "$candidate_bin" \
     --instances-dir "$remeasure_source" \
+    "${remeasure_tlsf_args[@]}" \
     > "$report_tmp" 2>&1
   rc=$?
   set -e

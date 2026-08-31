@@ -3,8 +3,10 @@
 
 #include <bit>
 #include <bddx.h>
+#include <chrono>
 #include <list>
 #include <numeric>
+#include <unordered_set>
 #include <spot/twa/bdddict.hh>
 #include <type_traits>
 #include <vector>
@@ -15,7 +17,18 @@
 
 namespace ios_precomputers {
   namespace detail {
-    template <typename Aut, typename TransSet>
+    /// `quotient` keeps only the first output path that reaches each residual
+    /// BDD node at the state-variable frontier.  BuDDy nodes are canonical, so
+    /// two paths reaching the same node denote the same endpoint relation and
+    /// decode to identical transition sets; CPre unions over outputs and union
+    /// is idempotent, so dropping the repeats cannot change the fixed point.
+    ///
+    /// Order is load-bearing and must be first-occurrence.  `input_pickers`
+    /// scans an input's actions in order, breaks at the first action that keeps
+    /// the state in the region, and splices that action to the front, so a
+    /// sorted or hashed order is a different algorithm.  First-occurrence order
+    /// is a subsequence of the order the traversal already produces.
+    template <typename Aut, typename TransSet, bool quotient = false>
     class mona {
       public:
         mona (Aut aut, bdd input_support, bdd output_support)
@@ -95,12 +108,40 @@ namespace ios_precomputers {
             }
           };
 
+#if ACACIA_ENABLE_DIAGNOSTICS
+          // `decoded` is how many transition sets this expansion built;
+          // `unique_decoded` is how many distinct residual relations those
+          // decodes covered, per input class.  A quotient must decode exactly
+          // the second number, so the pair is what validates stage A1.
+          unsigned long long decoded = 0, unique_decoded = 0;
+          const bool count_residuals =
+              quotient or acacia::diagnostics::semantic_decode_census ();
+#endif
+
+          // Residual roots already decoded for the input class being expanded.
+          // Only the quotient consults it; the diagnostics build also fills it
+          // to count what a quotient would save.
+          std::unordered_set<int> residual_roots;
+
           auto recurse_outputs = [&] (this const auto& self, auto& tss, bdd bdd_opq) {
             if (bdd_opq == bddfalse)
               return;
-            // TODO There may be more than one way to reach this bdd_pq; cache.
-            if (bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var)
+            if (bdd_opq == bddtrue or bdd_var (bdd_opq) >= first_src_var) {
+              if constexpr (quotient) {
+                if (not residual_roots.emplace (bdd_opq.id ()).second)
+                  return;
+              }
+#if ACACIA_ENABLE_DIAGNOSTICS
+              ++decoded;
+              // Under the quotient the set is already updated above, and every
+              // decode is by construction a first occurrence.
+              if constexpr (quotient)
+                ++unique_decoded;
+              else if (count_residuals and residual_roots.emplace (bdd_opq.id ()).second)
+                ++unique_decoded;
+#endif
               add_src_dst (tss.emplace_back (), bdd_opq);
+            }
             else {
               self (tss, bdd_high (bdd_opq));
               self (tss, bdd_low (bdd_opq));
@@ -113,6 +154,16 @@ namespace ios_precomputers {
             if (bdd_iopq == bddtrue or bdd_var (bdd_iopq) >= first_output) {
               using vt = typename std::remove_cvref_t<decltype (i_to_tss)>::value_type;
               i_to_tss.emplace_back (vt (bdd_input, {}));
+              // Per input class: two inputs reaching the same residual root
+              // each decode it, because each input owns its own action list.
+              // Guarded so the shipping build, which neither quotients nor
+              // counts, does not touch the set at all.
+              if constexpr (quotient)
+                residual_roots.clear ();
+#if ACACIA_ENABLE_DIAGNOSTICS
+              else if (count_residuals)
+                residual_roots.clear ();
+#endif
               recurse_outputs (i_to_tss.back ().second, bdd_iopq);
             }
             else {
@@ -134,7 +185,17 @@ namespace ios_precomputers {
 #endif
 
           input_to_ios_t i_to_tss;
+#if ACACIA_ENABLE_DIAGNOSTICS
+          const auto decode_started = acacia::diagnostics::clock::now ();
+#endif
           recurse_inputs (i_to_tss, bdd_iopq, bddtrue);
+#if ACACIA_ENABLE_DIAGNOSTICS
+          acacia::diagnostics::set_decode_census (
+              decoded, unique_decoded,
+              (unsigned long long) std::chrono::duration_cast<std::chrono::milliseconds> (
+                  acacia::diagnostics::clock::now () - decode_started)
+                  .count ());
+#endif
           return i_to_tss;
         }
 
@@ -150,7 +211,7 @@ namespace ios_precomputers {
       // separate design from the transition payload used by other precomputers.
       template <typename Aut, typename TransSet = std::vector<std::pair<unsigned, unsigned>>>
       static auto make (Aut aut, bdd input_support, bdd output_support) {
-        return detail::mona<Aut, TransSet> (aut, input_support, output_support);
+        return detail::mona<Aut, TransSet, false> (aut, input_support, output_support);
       }
   };
 }

@@ -17,6 +17,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
 #include <vector>
@@ -175,7 +176,13 @@ namespace {
           name.ends_with (".tsv"))
         result.push_back (entry.path ());
     }
-    std::ranges::sort (result, {}, [] (const auto& path) { return path.filename ().string (); });
+    // Numeric order, not filename order: as strings `antichain-10.tsv` sorts
+    // before `antichain-2.tsv`, so any run of ten or more loops was replayed
+    // out of order and the per-snapshot rows did not line up with their loops.
+    std::ranges::sort (result, {}, [] (const auto& path) {
+      const std::string name = path.filename ().string ();
+      return std::strtoll (name.c_str () + std::string_view {"antichain-"}.size (), nullptr, 10);
+    });
     return result;
   }
 

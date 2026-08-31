@@ -92,6 +92,8 @@ def diagnostic_environment(
     memory_swap_max: str,
     preprocessing_census_only: bool,
     alphabet_census_only: bool,
+    semantic_dominance: bool,
+    semantic_decode: bool,
 ) -> dict[str, str]:
     """Build the child environment, keeping the expensive census opt-in."""
     env = base.copy()
@@ -113,6 +115,16 @@ def diagnostic_environment(
         env["ACACIA_DIAG_ALPHABET_CENSUS_ONLY"] = "1"
     else:
         env.pop("ACACIA_DIAG_ALPHABET_CENSUS_ONLY", None)
+    # Both semantic-action censuses cost real work on top of the alphabet walk,
+    # so they stay off unless asked for.
+    if semantic_dominance:
+        env["ACACIA_DIAG_SEMANTIC_DOMINANCE"] = "1"
+    else:
+        env.pop("ACACIA_DIAG_SEMANTIC_DOMINANCE", None)
+    if semantic_decode:
+        env["ACACIA_DIAG_SEMANTIC_DECODE"] = "1"
+    else:
+        env.pop("ACACIA_DIAG_SEMANTIC_DECODE", None)
     return env
 
 
@@ -139,6 +151,18 @@ def main() -> int:
         "--alphabet-census-only",
         action="store_true",
         help="emit MONA alphabet census before preprocessing and stop",
+    )
+    parser.add_argument(
+        "--semantic-dominance",
+        action="store_true",
+        help="also count inclusion-minimal residual relations (Sprint A stage A0); "
+        "budget with ACACIA_DIAG_SEMANTIC_DOMINANCE_MS / _TESTS",
+    )
+    parser.add_argument(
+        "--semantic-decode",
+        action="store_true",
+        help="also count the distinct residual relations the expansion decoded; "
+        "requires a run that reaches the precomputer, so not with --alphabet-census-only",
     )
     parser.add_argument(
         "--via-wrapper",
@@ -179,6 +203,8 @@ def main() -> int:
         memory_swap_max=args.memory_swap_max,
         preprocessing_census_only=args.preprocessing_census_only,
         alphabet_census_only=args.alphabet_census_only,
+        semantic_dominance=args.semantic_dominance,
+        semantic_decode=args.semantic_decode,
     )
     csv_path = pathlib.Path(args.csv)
     csv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -229,6 +255,13 @@ def main() -> int:
         "max_f_size",
         "loops",
         "k_attempts",
+        "local_probe_runs",
+        "local_probe_status",
+        "local_probe_forward_apps",
+        "local_probe_skipped_over_budget",
+        "local_probe_nodes",
+        "cpre_skipped",
+        "k_bumped_by_local_refutation",
         "cpre_ms",
         "picker_ms",
         "apply_ms",
@@ -241,6 +274,16 @@ def main() -> int:
         "alphabet_output_paths",
         "alphabet_output_nodes",
         "alphabet_bdd_nodes",
+        "alphabet_max_output_paths",
+        "alphabet_max_output_nodes",
+        "alphabet_minimal_output_nodes",
+        "alphabet_dominance_tests",
+        "alphabet_dominance_declines",
+        "alphabet_census_ms",
+        "alphabet_dominance_ms",
+        "decoded_transition_sets",
+        "decoded_unique_transition_sets",
+        "decode_ms",
         "equivariant",
         "eq_clients",
         "eq_blocks",

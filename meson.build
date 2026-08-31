@@ -155,6 +155,11 @@ if get_option ('acacia_enable_diagnostics')
 else
   build_conf.set ('ACACIA_ENABLE_DIAGNOSTICS', 0)
 endif
+if get_option ('acacia_local_certificate')
+  build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 1)
+else
+  build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 0)
+endif
 if get_option ('acacia_enable_equivariant_solver')
   build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 1)
 else
@@ -220,6 +225,7 @@ ios_precomputer_types = {
   'fake_vars' : 'ios_precomputers::fake_vars',
   'powset' : 'ios_precomputers::powset',
   'mona' : 'ios_precomputers::mona',
+  'semantic_mona' : 'ios_precomputers::semantic_mona',
 }
 ios_precomputer_gates = {
   'standard' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_STANDARD',
@@ -227,6 +233,7 @@ ios_precomputer_gates = {
   'fake_vars' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_FAKE_VARS',
   'powset' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_POWSET',
   'mona' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_MONA',
+  'semantic_mona' : 'ACACIA_ENABLE_IOS_PRECOMPUTER_SEMANTIC_MONA',
 }
 build_conf.set ('IOS_PRECOMPUTER', ios_precomputer_types[ios_precomputer])
 foreach choice, gate : ios_precomputer_gates

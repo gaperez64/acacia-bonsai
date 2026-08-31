@@ -82,6 +82,32 @@
       "inherits": "best_decomp_mona",
       "vector_downset": "rank_bucketed_vector_backed"
     },
+    "best_decomp_rank_bucketed_mona_diag": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "enable_diagnostics": true
+    },
+    "best_decomp_rank_bucketed_semantic_mona_local": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "local_certificate": true
+    },
+    "best_decomp_rank_bucketed_semantic_mona_local_diag": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_local",
+      "enable_diagnostics": true
+    },
+    "best_decomp_rank_bucketed_mona_diag_eq_relaxed": {
+      "inherits": "best_decomp_rank_bucketed_mona_diag",
+      "equivariant_min_clients": 2,
+      "equivariant_min_blocks": 2,
+      "equivariant_max_states": 32768
+    },
+    "best_decomp_rank_bucketed_semantic_mona": {
+      "inherits": "best_decomp_rank_bucketed_mona",
+      "ios_precomputer": "semantic_mona"
+    },
+    "best_decomp_rank_bucketed_semantic_mona_diag": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "enable_diagnostics": true
+    },
     "best_decomp_rank_bucketed_mona_race": {
       "inherits": "best_decomp_rank_bucketed_mona",
       "translation_pref": "small+any"

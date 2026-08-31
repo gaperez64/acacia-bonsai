@@ -72,6 +72,16 @@ test ('version-output',
       suite : 'version',
       depends : [ab_exe])
 
+if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
+  cpre_replay_smoke = find_program ('check-cpre-replay.sh')
+  test ('cpre-replay-smoke',
+        cpre_replay_smoke,
+        args : [ab_exe, acacia_cpre_replay_exe,
+                files ('ltl/realizable/06.ltl')],
+        suite : ['unit', 'research'],
+        depends : [ab_exe, acacia_cpre_replay_exe])
+endif
+
 if get_option ('build_research_tools')
   research_tools_smoke = find_program ('check-research-tools.sh')
   test ('research-tools-smoke',
@@ -265,6 +275,30 @@ equivariant_pre_test = executable ('equivariant-pre-test',
 test ('equivariant-pre',
       equivariant_pre_test,
       suite : ['unit', 'symmetry'])
+
+small_invariant_test = executable ('small-invariant-test',
+                                  'small_invariant_test.cc',
+                                  include_directories : inc,
+                                  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('small-invariant',
+      small_invariant_test,
+      suite : ['unit', 'small-invariant'])
+
+local_certificate_test = executable ('local-certificate-test',
+                                     'local_certificate_test.cc',
+                                     include_directories : inc,
+                                     dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('local-certificate',
+      local_certificate_test,
+      suite : ['unit', 'local-certificate'])
+
+semantic_mona_test = executable ('semantic-mona-test',
+                                 'semantic_mona_test.cc',
+                                 include_directories : inc,
+                                 dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('semantic-mona',
+      semantic_mona_test,
+      suite : ['unit', 'ios-precomputer'])
 
 component_concepts_test = executable ('component-concepts-test',
                                       'component_concepts_test.cc',

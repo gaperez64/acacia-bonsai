@@ -20,6 +20,8 @@ Options:
   --repetitions N         override 3 comparison / 5 calibration repetitions
   --min-improvement PCT   geometric-mean ratio improvement required (default: 5)
   --max-regression PCT    per-target cycle regression ceiling (default: 6)
+  --tlsf-corpus DIR       materialized TLSF corpus, for targets that have no
+                          .ltl source map entry (default: \$ACACIA_TLSF_CORPUS)
 EOF
   exit 2
 }
@@ -32,6 +34,7 @@ repetitions=""
 output=""
 min_improvement=${SOLVER_PROFILE_MIN_IMPROVEMENT_PERCENT:-5.0}
 max_regression=${SOLVER_PROFILE_MAX_REGRESSION_PERCENT:-6.0}
+tlsf_corpus=${ACACIA_TLSF_CORPUS:-}
 
 while (($#)); do
   case $1 in
@@ -67,6 +70,11 @@ while (($#)); do
     --max-regression)
       [[ $# -ge 2 && $2 =~ ^[0-9]+([.][0-9]+)?$ ]] || usage
       max_regression=$2
+      shift 2
+      ;;
+    --tlsf-corpus)
+      [[ $# -ge 2 ]] || usage
+      tlsf_corpus=$2
       shift 2
       ;;
     -h|--help) usage ;;
@@ -137,32 +145,59 @@ case_counter=0
 run_case() {
   local label=$1 binary=$2 suite=$3 instance=$4 bucket=$5 repetition=$6
   local source_map="$repo_root/tests/suites/benchmarks/$suite/sources.tsv"
-  if [[ ! -r $source_map ]]; then
+  local tlsf_map="$repo_root/tests/suites/benchmarks/$suite/tlsf-sources.tsv"
+  if [[ ! -r $source_map && ! -r $tlsf_map ]]; then
     echo "GATE FAIL: missing source map: $source_map"
     exit 1
   fi
-  local source
-  if ! source=$(awk -F '\t' -v instance="$instance" '
-      NR > 1 && $1 == instance { print $2; found=1; exit }
-      END { if (!found) exit 1 }
-    ' "$source_map"); then
-    echo "GATE FAIL: $source_map has no source for $instance"
-    exit 1
+
+  local source="" tlsf_source=""
+  if [[ -r $source_map ]]; then
+    source=$(awk -F '\t' -v instance="$instance" '
+      NR > 1 && $1 == instance { print $2; exit }
+    ' "$source_map")
   fi
-  local ltl="$repo_root/tests/ltl/$source"
-  local part="${ltl%.ltl}.part"
-  if [[ ! -r $ltl || ! -r $part ]]; then
-    echo "GATE FAIL: missing $ltl or $part"
+  # syntcomp25 and syntcomp26 are reconstructed from the TLSF submodule, so a
+  # frozen target can exist only in the TLSF map.  Falling back keeps the ten
+  # targets frozen; without it the gate aborts on the two that moved.
+  if [[ -z $source && -r $tlsf_map ]]; then
+    tlsf_source=$(awk -F '\t' -v instance="$instance" '
+      NR > 1 && $1 == instance { print $2; exit }
+    ' "$tlsf_map")
+  fi
+  if [[ -z $source && -z $tlsf_source ]]; then
+    echo "GATE FAIL: neither $source_map nor $tlsf_map has a source for $instance"
     exit 1
   fi
 
-  local ins outs
-  ins=$(part_value "$part" .inputs)
-  outs=$(part_value "$part" .outputs)
-  if ! awk '$1 == ".inputs" { found=1 } END { exit !found }' "$part" ||
-      ! awk '$1 == ".outputs" { found=1 } END { exit !found }' "$part"; then
-    echo "GATE FAIL: incomplete partition file: $part"
-    exit 1
+  local -a source_args=()
+  if [[ -n $source ]]; then
+    local ltl="$repo_root/tests/ltl/$source"
+    local part="${ltl%.ltl}.part"
+    if [[ ! -r $ltl || ! -r $part ]]; then
+      echo "GATE FAIL: missing $ltl or $part"
+      exit 1
+    fi
+    if ! awk '$1 == ".inputs" { found=1 } END { exit !found }' "$part" ||
+        ! awk '$1 == ".outputs" { found=1 } END { exit !found }' "$part"; then
+      echo "GATE FAIL: incomplete partition file: $part"
+      exit 1
+    fi
+    local ins outs
+    ins=$(part_value "$part" .inputs)
+    outs=$(part_value "$part" .outputs)
+    source_args=(-F "$ltl" -i "$ins" -o "$outs")
+  else
+    if [[ -z $tlsf_corpus ]]; then
+      echo "GATE FAIL: $instance is TLSF-only; pass --tlsf-corpus DIR"
+      exit 1
+    fi
+    local tlsf="$tlsf_corpus/$tlsf_source"
+    if [[ ! -r $tlsf ]]; then
+      echo "GATE FAIL: missing $tlsf"
+      exit 1
+    fi
+    source_args=(-T "$tlsf")
   fi
 
   case_counter=$((case_counter + 1))
@@ -176,7 +211,7 @@ run_case() {
       perf stat --no-big-num -x $'\t' -o "$perf_file" \
         -e cycles,instructions,LLC-load-misses,branch-misses -- \
       timeout --foreground --signal=TERM --kill-after=3s "${timeout_seconds}s" \
-        env "ACACIA_DIAG_INSTANCE=$instance" "$binary" -F "$ltl" -i "$ins" -o "$outs" \
+        env "ACACIA_DIAG_INSTANCE=$instance" "$binary" "${source_args[@]}" \
         >"$stdout_file" 2>&1; then
     exit_code=0
   else

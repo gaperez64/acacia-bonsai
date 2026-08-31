@@ -58,6 +58,10 @@
         "mona": {
           "type": "ios_precomputers::mona",
           "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_MONA"
+        },
+        "semantic_mona": {
+          "type": "ios_precomputers::semantic_mona",
+          "gate": "ACACIA_ENABLE_IOS_PRECOMPUTER_SEMANTIC_MONA"
         }
       },
       "macro": "IOS_PRECOMPUTER"
@@ -117,15 +121,29 @@
     "cpre_avoid_unions": false,
     "compile_all_components": false,
     "enable_diagnostics": false,
+    "local_certificate": false,
     "enable_equivariant_solver": true,
     "equivariant_max_states": 512,
     "equivariant_min_clients": 3,
     "equivariant_min_blocks": 2
   },
   "choices": {
-    "default_unreal_x": ["both", "automaton", "formula"],
-    "default_spot_fast": ["off", "det", "det_and_gfg"],
-    "translation_pref": ["small", "any", "small+any", "deterministic"],
+    "default_unreal_x": [
+      "both",
+      "automaton",
+      "formula"
+    ],
+    "default_spot_fast": [
+      "off",
+      "det",
+      "det_and_gfg"
+    ],
+    "translation_pref": [
+      "small",
+      "any",
+      "small+any",
+      "deterministic"
+    ],
     "vector_downset": [
       "vector_backed",
       "vector_or_kdtree_backed",
@@ -141,6 +159,11 @@
       "filtered_vector_backed",
       "vector_backed_bin"
     ],
-    "vector_impl": ["auto", "simd_vector_backed", "simd_vector_backed_sum", "vector_backed"]
+    "vector_impl": [
+      "auto",
+      "simd_vector_backed",
+      "simd_vector_backed_sum",
+      "vector_backed"
+    ]
   }
 }

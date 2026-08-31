@@ -9,11 +9,15 @@
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
 #include "solver/antichain_snapshot.hh"
+#include "solver/local_certificate.hh"
+
+#include <sstream>
 #include "solver/diagnostics.hh"
 #include "solver/symmetry_profile.hh"
 #include "utils/typeinfo.hh"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <fstream>
 #include <functional>
@@ -26,6 +30,92 @@
 
 #include <posets/utils/vector_mm.hh>
 #include <posets/vectors.hh>
+
+#if ACACIA_LOCAL_CERTIFICATE
+namespace acacia::solver_detail {
+
+  struct local_probe_frontier {
+      std::array<std::size_t, 6> size_marks {16, 64, 256, 1024, 4096, 16384};
+      std::array<bool, 6> mark_taken {};
+      bool first_loop_taken = false;
+
+      [[nodiscard]] bool observe (std::size_t size) {
+        bool wanted = false;
+        if (not first_loop_taken) {
+          first_loop_taken = true;
+          wanted = true;
+        }
+        for (std::size_t i = 0; i < size_marks.size (); ++i)
+          if (not mark_taken[i] and size >= size_marks[i]) {
+            mark_taken[i] = true;
+            wanted = true;
+          }
+        return wanted;
+      }
+
+      void restart () {
+        mark_taken.fill (false);
+        first_loop_taken = false;
+      }
+
+      void reset_marks () { mark_taken.fill (false); }
+  };
+
+  /// Both budgets are sized by measurement against the G2s panel.
+  ///
+  /// 32 generators: every certificate the campaign verified is smaller --
+  /// robot_grid2_2 needs 6, finding_nemo_1 8, finding_nemo_2 16, lift3 26 --
+  /// and a larger cap only makes a failing search more expensive, since each
+  /// node rescans every generator against every input and action.
+  ///
+  /// 400,000 cumulative forward applications per bound, which is four probes
+  /// at the 100,000 per-run cap.  Four is what the winners need, and it was
+  /// measured from per-probe traces rather than inferred: every win arrives on
+  /// the last probe its bound allows.  finding_nemo_2 wins on the third at
+  /// region size 389 having already spent 200,000; lift3 wins on the fourth at
+  /// size 3768 having spent 300,000.  A 300,000 ceiling was tried and loses
+  /// lift3 outright -- it times out with eight probes skipped.
+  ///
+  /// This is also why the ceiling cannot be tightened to fix G2s.
+  /// round_robin_arbiter4 probes four times at k=2, concludes nothing, and
+  /// costs 6.23% extra cycles against a 6% per-target ceiling.  It and lift3
+  /// take the same number of probes at the same per-run cap, so no cumulative
+  /// budget separates them: any cap that admits lift3's fourth probe admits
+  /// round_robin_arbiter4's fourth.  The probe is therefore opt-in, and
+  /// acacia_local_certificate stays default-off in meson.options.
+  ///
+  /// The schedule cannot be pruned instead.  Each size mark is the one that
+  /// pays for some winner: robot_grid2_2 wins on the first-loop probe at
+  /// region size 1, finding_nemo_1 at size 29, finding_nemo_2 at 389, lift3 at
+  /// 3768.  Dropping any tier drops an answer.
+  inline std::size_t configured_local_certificate_generator_budget () {
+    static const std::size_t value =
+        acacia::diagnostics::env_size ("ACACIA_LOCAL_CERTIFICATE_BUDGET", 32, true);
+    return value;
+  }
+
+  inline unsigned long long configured_local_certificate_node_budget () {
+    static const unsigned long long value =
+        acacia::diagnostics::env_size ("ACACIA_LOCAL_CERTIFICATE_NODES", 200000, true);
+    return value;
+  }
+
+  inline unsigned long long configured_local_certificate_forward_application_budget () {
+    static const unsigned long long value = acacia::diagnostics::env_size (
+        "ACACIA_LOCAL_CERTIFICATE_FORWARD_APPS",
+        default_local_certificate_forward_application_budget, true);
+    return value;
+  }
+
+  inline unsigned long long
+  configured_local_certificate_cumulative_forward_application_budget () {
+    static const unsigned long long value = acacia::diagnostics::env_size (
+        "ACACIA_LOCAL_CERTIFICATE_CUMULATIVE_FORWARD_APPS", 400000, true);
+    return value;
+  }
+
+}  // namespace acacia::solver_detail
+#endif
 
 /// \brief Wrapper class around a UcB to pass as the deterministic safety
 /// automaton S^K_N, for N a given UcB.
@@ -84,7 +174,10 @@ class k_bounded_safety_aut_detail {
       verb_do (1, vout << "Make actions..." << std::endl);
       auto actioner = actioner_maker.make (aut, inputs_to_ios, k);
       verb_do (1, vout << "Fetching IO actions" << std::endl);
-      auto input_output_fwd_actions = actioner.actions ();  // list<pair<bdd, list<action_vec>>>
+      auto input_output_fwd_actions = actioner.actions ();
+#if ACACIA_ENABLE_DIAGNOSTICS
+      acacia::antichain_snapshot::record_all_input_actions (input_output_fwd_actions);
+#endif  // list<pair<bdd, list<action_vec>>>
       verb_do (1, io_stats (input_output_fwd_actions));
 
       // What is the initial state?
@@ -100,6 +193,10 @@ class k_bounded_safety_aut_detail {
 
       auto input_picker = input_picker_maker.make (input_output_fwd_actions, actioner);
       int loopcount = 0;
+#if ACACIA_LOCAL_CERTIFICATE
+      local_probe_schedule.restart ();
+      local_probe_bound_forward_applications = 0;
+#endif
       acacia::diagnostics::snapshot ("after-action-construction");
 
       do {
@@ -109,6 +206,69 @@ class k_bounded_safety_aut_detail {
         acacia::antichain_snapshot::observe (f, k, loopcount);
 #endif
         verb_do (1, vout << "Loop# " << loopcount << ", f of size " << f.size () << std::endl);
+
+#if ACACIA_LOCAL_CERTIFICATE
+        if (local_probe_schedule.observe (f.size ())) {
+          // Per bound, not per run, and not for the whole solve: a per-run
+          // budget bounds one search but not how many times a worker re-runs a
+          // search that cannot succeed.  round_robin_arbiter4 probed six times
+          // at a single bound, spent the full per-run budget each time and
+          // concluded nothing.  lift3 also probes six times, but across bounds,
+          // and wins -- so the counter resets in raise_bound_or_give_up, where
+          // a new bound makes the old evidence irrelevant.  The ceiling itself
+          // is documented with the budget defaults above.
+          if (local_probe_bound_forward_applications >=
+              acacia::solver_detail::
+                  configured_local_certificate_cumulative_forward_application_budget ()) {
+            acacia::diagnostics::set_local_probe_skipped_over_budget ();
+            acacia::diagnostics::trace_local_probe (
+                (int) k, loopcount, f.size (), "skipped-over-budget", 0, 0);
+          }
+          else {
+            auto local = acacia::solver_detail::find_local_certificate (
+                f, init, input_output_fwd_actions, actioner, k,
+                acacia::solver_detail::configured_local_certificate_generator_budget (),
+                acacia::solver_detail::configured_local_certificate_node_budget (),
+                acacia::solver_detail::configured_local_certificate_forward_application_budget ());
+            local_probe_bound_forward_applications += local.forward_applications;
+            if (local.status ==
+                acacia::solver_detail::local_certificate_status::win_certificate) {
+              acacia::diagnostics::trace_local_probe (
+                  (int) k, loopcount, f.size (), "win", local.forward_applications, local.nodes);
+              acacia::diagnostics::set_local_probe (
+                  "win", local.forward_applications, local.nodes, true, false);
+              acacia::diagnostics::set_final_reason ("local-win-certificate");
+              return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
+                  std::make_pair (k, std::move (*local.win)));
+            }
+            if (local.status == acacia::solver_detail::local_certificate_status::root_refuted) {
+              acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (),
+                                                      "root-refuted", local.forward_applications,
+                                                      local.nodes);
+              const bool bound_raised = raise_bound_or_give_up (f, k, actioner);
+              acacia::diagnostics::set_local_probe (
+                  "root-refuted", local.forward_applications, local.nodes, true, bound_raised);
+              if (not bound_raised)
+                return std::nullopt;
+              continue;
+            }
+            if (local.status ==
+                acacia::solver_detail::local_certificate_status::budget_exhausted) {
+              acacia::diagnostics::trace_local_probe (
+                  (int) k, loopcount, f.size (), "budget-exhausted",
+                  local.forward_applications, local.nodes);
+              acacia::diagnostics::set_local_probe (
+                  "budget-exhausted", local.forward_applications, local.nodes, false, false);
+            }
+            else {
+              acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (), "unknown",
+                                                      local.forward_applications, local.nodes);
+              acacia::diagnostics::set_local_probe (
+                  "unknown", local.forward_applications, local.nodes, false, false);
+            }
+          }
+        }
+#endif
 
         auto input = [&] {
           acacia::diagnostics::scoped_fine_timer timer {
@@ -120,35 +280,19 @@ class k_bounded_safety_aut_detail {
         {
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
           acacia::diagnostics::set_final_reason ("fixedpoint");
+#if ACACIA_ENABLE_DIAGNOSTICS
+          acacia::antichain_snapshot::record_final (f, k, loopcount);
+#endif
           return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
               std::make_pair (k, std::move (f)));
         }
 
-        cpre_inplace (f, *input, actioner);
+        cpre_inplace (f, *input, actioner, k, loopcount);
         acacia::diagnostics::snapshot_loop_progress ("classic-after-cpre");
 
         if (not f.contains (state (init))) {
-          if (k >= kto) {
-            verb_do (2, vout << "Early exit because the initial state is out\n");
-            acacia::diagnostics::set_final_reason ("kmax-initial-out");
+          if (not raise_bound_or_give_up (f, k, actioner))
             return std::nullopt;
-          }
-          verb_do (1, vout << "Incrementing k from " << (int) k << " to " << (int) (k + kinc)
-                           << std::endl);
-          k += kinc;
-          actioner.setK (k);
-          verb_do (1, {
-            vout << "Adding kinc to every vector...";
-            vout.flush ();
-          });
-          f = f.apply ([&] (const state& s) {
-            auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
-            for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
-              vec[i] = s[i] + kinc;
-            // Other entries are set to 0 by initialization, since they are bool.
-            return state (vec);
-          });
-          verb_do (1, vout << "Done" << std::endl);
           continue;
         }
 
@@ -172,18 +316,69 @@ class k_bounded_safety_aut_detail {
     const IOsPrecomputationMaker& ios_precomputer_maker;
     const ActionerMaker& actioner_maker;
     const InputPickerMaker& input_picker_maker;
+#if ACACIA_LOCAL_CERTIFICATE
+    acacia::solver_detail::local_probe_frontier local_probe_schedule;
+    unsigned long long local_probe_bound_forward_applications = 0;
+#endif
+
+    // This is also sound when `f` is the pre-CPre region X.  The post-CPre
+    // region Y is a subset of X, and the lift is monotone, so lifting X gives a
+    // larger, still-sound warm start for the next bound.
+    template <typename Actioner>
+    bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {
+      if (k >= kto) {
+        verb_do (2, vout << "Early exit because the initial state is out\n");
+        acacia::diagnostics::set_final_reason ("kmax-initial-out");
+        return false;
+      }
+      verb_do (1, vout << "Incrementing k from " << (int) k << " to " << (int) (k + kinc)
+                       << std::endl);
+      k += kinc;
+      actioner.setK (k);
+#if ACACIA_LOCAL_CERTIFICATE
+      local_probe_schedule.reset_marks ();
+      local_probe_bound_forward_applications = 0;
+#endif
+#if ACACIA_ENABLE_DIAGNOSTICS
+      acacia::antichain_snapshot::note_bound_raised ();
+#endif
+      verb_do (1, {
+        vout << "Adding kinc to every vector...";
+        vout.flush ();
+      });
+      f = f.apply ([&] (const state& s) {
+        auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
+        for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
+          vec[i] = s[i] + kinc;
+        // Other entries are set to 0 by initialization, since they are bool.
+        return state (vec);
+      });
+      verb_do (1, vout << "Done" << std::endl);
+      return true;
+    }
 
     // This computes f = CPre(f), in the following way:
     // UPre(f) = f \cap f1i
     // f1i = \cup_{o \in O} f1io
     // f1io = PreHat (f, i, o)
     template <typename Action, typename Actioner>
-    void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner) {
+    void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner,
+                       [[maybe_unused]] int k = -1, [[maybe_unused]] int loop = -1) {
       acacia::diagnostics::scoped_fine_timer cpre_timer {
           acacia::diagnostics::fine_metric::cpre};
       verb_do (2, vout << "Computing cpre(f) with f = " << std::endl << f);
 
       const auto& [input, actions] = io_action.get ();
+#if ACACIA_ENABLE_DIAGNOSTICS
+      // The action vectors determine this update completely, so recording them
+      // with the region before and after makes it replayable offline without
+      // the automaton or any BDD.
+      const bool recording_cpre = [&] {
+        std::ostringstream cube;
+        cube << bdd_to_formula (input);
+        return acacia::antichain_snapshot::record_cpre_before (f, k, loop, cube.str (), actions);
+      } ();
+#endif
 #if CPRE_AVOID_UNIONS == 0
       posets::utils::vector_mm<VECTOR_ELT_T> v (aut->num_states (), -1);
       auto vv = typename SetOfStates::value_type (v);
@@ -247,6 +442,10 @@ class k_bounded_safety_aut_detail {
         acacia::diagnostics::scoped_downset_timer downset_timer;
         f.intersect_with (std::move (f1i));
       }
+#if ACACIA_ENABLE_DIAGNOSTICS
+      if (recording_cpre)
+        acacia::antichain_snapshot::record_cpre_after (f);
+#endif
       // Experimentally, this is not faster:
       //   f1i.intersect_with (std::move (f));
       //   f = std::move (f1i);
