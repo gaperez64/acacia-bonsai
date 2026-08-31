@@ -2,12 +2,14 @@
 """Run resumable staged-cap coverage over the SYNTCOMP 2026 TLSF corpus.
 
 Short caps cheaply discharge easy instances so that later, more expensive caps
-are spent only on the remaining coverage gap.  Verdict conflicts are fatal as
-soon as they are durably recorded: silently aggregating a contradictory result
-would turn either a solver bug or a bad corpus expectation into misleading
-coverage data.  Known bad annotations are handled by a per-instance,
-evidence-bearing exceptions table; exceptions correct specific expectations
-rather than providing a way to switch off conflict checking.
+are spent only on the remaining coverage gap.  With the default ``stop``
+conflict policy, a verdict conflict is fatal as soon as it is durably recorded.
+The ``collect`` policy instead records every conflict in a resumable sidecar,
+finishes the campaign, and exits nonzero; it defers the conflict check for later
+adjudication, never waives it, so collected results must not be used beforehand.
+Known bad annotations are handled by a per-instance, evidence-bearing exceptions
+table; exceptions correct specific expectations rather than providing a way to
+switch off conflict checking.
 """
 
 from __future__ import annotations
@@ -55,6 +57,16 @@ OUTPUT_COLUMNS = [
     "binary_sha256",
     "preset",
     "timestamp_utc",
+]
+CONFLICT_COLUMNS = [
+    "solver_label",
+    "instance",
+    "tlsf_file",
+    "cap_s",
+    "expected",
+    "expectation_source",
+    "actual",
+    "seconds",
 ]
 SUMMARY_COLUMNS = [
     "solver_label",
@@ -367,6 +379,85 @@ def load_output(path: pathlib.Path) -> list[dict[str, str]]:
     return rows
 
 
+def load_conflicts(path: pathlib.Path) -> list[dict[str, str]]:
+    try:
+        stream = path.open(encoding="utf-8", newline="")
+    except OSError as error:
+        raise CoverageError(f"cannot read resume conflicts {path}: {error}") from error
+    with stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        if reader.fieldnames != CONFLICT_COLUMNS:
+            raise CoverageError(
+                f"resume conflicts {path} has an unexpected header; expected "
+                + "\t".join(CONFLICT_COLUMNS)
+            )
+        rows: list[dict[str, str]] = []
+        for line_number, row in enumerate(reader, 2):
+            if None in row or any(value is None for value in row.values()):
+                raise CoverageError(
+                    f"resume conflicts {path}:{line_number} is malformed"
+                )
+            try:
+                int(row["cap_s"])
+            except ValueError:
+                raise CoverageError(
+                    f"resume conflicts {path}:{line_number} has invalid cap_s"
+                ) from None
+            if (
+                row["expected"] not in DECISIVE_RESULTS
+                or row["actual"] not in DECISIVE_RESULTS
+                or row["expected"] == row["actual"]
+            ):
+                raise CoverageError(
+                    f"resume conflicts {path}:{line_number} is not a verdict conflict"
+                )
+            if row["expectation_source"] not in {"status", "exception"}:
+                raise CoverageError(
+                    f"resume conflicts {path}:{line_number} has invalid "
+                    f"expectation_source {row['expectation_source']!r}"
+                )
+            rows.append(dict(row))
+    return rows
+
+
+def append_tsv_row(
+    path: pathlib.Path, columns: list[str], row: dict[str, str]
+) -> None:
+    """Append and durably record one row in an initialized TSV file."""
+    with path.open("a", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(
+            stream, fieldnames=columns, delimiter="\t", lineterminator="\n"
+        )
+        writer.writerow(row)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def conflict_row(
+    row: dict[str, str], expectations: dict[str, tuple[str | None, str]]
+) -> dict[str, str] | None:
+    expectation_entry = expectations.get(row["instance"])
+    if expectation_entry is None:
+        return None
+    expected, expectation_source = expectation_entry
+    if (
+        expected is None
+        or row["result"] not in DECISIVE_RESULTS
+        or row["result"] == expected
+    ):
+        return None
+    return {
+        "solver_label": row["solver_label"],
+        "instance": row["instance"],
+        "tlsf_file": row["tlsf_file"],
+        "cap_s": row["cap_s"],
+        "expected": expected,
+        "expectation_source": expectation_source,
+        "actual": row["result"],
+        "seconds": row["seconds"],
+    }
+
+
 def normalize_result(run: RunResult) -> tuple[str, str]:
     """Map benchlib classifications to the coverage file's exact vocabulary."""
     result = classify_run(run, tool="acacia")
@@ -451,6 +542,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--memory-swap-max", required=True, metavar="0")
     parser.add_argument("--output", required=True, metavar="TSV")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--conflict-policy",
+        choices=("stop", "collect"),
+        default="stop",
+        help="stop at the first verdict conflict (default), or collect all conflicts",
+    )
     parser.add_argument("--limit", type=nonnegative_int, metavar="N")
     parser.add_argument("--start-after", metavar="INSTANCE")
     parser.add_argument("--flags", default="", help="extra flags parsed with shlex.split")
@@ -500,23 +597,38 @@ def run(args: argparse.Namespace) -> int:
         rows = []
         atomic_write_tsv(output, OUTPUT_COLUMNS, rows)
 
+    conflicts_path = output.with_name(f"{output.stem}-conflicts.tsv")
+    conflict_keys: set[tuple[str, str, int]] = set()
+    collected_conflict_keys: set[tuple[str, str, int]] = set()
+    if args.conflict_policy == "collect":
+        if args.resume and conflicts_path.exists():
+            conflict_rows = load_conflicts(conflicts_path)
+        else:
+            conflict_rows = []
+            atomic_write_tsv(conflicts_path, CONFLICT_COLUMNS, conflict_rows)
+        conflict_keys = {
+            (row["solver_label"], row["instance"], int(row["cap_s"]))
+            for row in conflict_rows
+        }
+
     for row in rows:
         if row["solver_label"] != args.solver_label:
             continue
-        expectation_entry = expectations.get(row["instance"])
-        expectation = expectation_entry[0] if expectation_entry is not None else None
-        if (
-            expectation is not None
-            and row["result"] in DECISIVE_RESULTS
-            and row["result"] != expectation
-        ):
+        conflict = conflict_row(row, expectations)
+        if conflict is not None and args.conflict_policy == "stop":
             print(
                 "verdict conflict: "
-                f"instance={row['instance']} expected={expectation} "
+                f"instance={row['instance']} expected={conflict['expected']} "
                 f"actual={row['result']}",
                 file=sys.stderr,
             )
             return 1
+        if conflict is not None:
+            key = (row["solver_label"], row["instance"], int(row["cap_s"]))
+            collected_conflict_keys.add(key)
+            if key not in conflict_keys:
+                append_tsv_row(conflicts_path, CONFLICT_COLUMNS, conflict)
+                conflict_keys.add(key)
 
     completed_keys = {
         (row["solver_label"], row["instance"], int(row["cap_s"])) for row in rows
@@ -591,24 +703,36 @@ def run(args: argparse.Namespace) -> int:
                 )
                 run_index += 1
 
-                expectation = expectations[instance][0]
-                if (
-                    expectation is not None
-                    and result in DECISIVE_RESULTS
-                    and result != expectation
-                ):
+                conflict = conflict_row(row, expectations)
+                if conflict is not None and args.conflict_policy == "stop":
                     print(
                         "verdict conflict: "
-                        f"instance={instance} expected={expectation} actual={result}",
+                        f"instance={instance} expected={conflict['expected']} "
+                        f"actual={result}",
                         file=sys.stderr,
                     )
                     return 1
+                if conflict is not None:
+                    key = (args.solver_label, instance, cap)
+                    collected_conflict_keys.add(key)
+                    if key not in conflict_keys:
+                        append_tsv_row(conflicts_path, CONFLICT_COLUMNS, conflict)
+                        conflict_keys.add(key)
 
     summary_path = write_summary(
         output, args.solver_label, instances, rows, max(args.caps)
     )
     print(f"wrote {output}")
     print(f"wrote {summary_path}")
+    if args.conflict_policy == "collect":
+        conflict_count = len(collected_conflict_keys)
+        print(
+            f"CONFLICTS COLLECTED: {conflict_count} (see {conflicts_path}) "
+            "-- results are NOT usable until adjudicated",
+            file=sys.stderr,
+        )
+        if conflict_count > 0:
+            return 3
     return 0
 
 
