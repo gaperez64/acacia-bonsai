@@ -51,6 +51,15 @@ if get_option('build_research_tools')
       install: false,
       dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
     )
+    # Builds and solves the full reachable bounded safety game from the same
+    # recorded all-input action table.
+    acacia_forward_game_replay_exe = executable(
+      'acacia-forward-game-replay',
+      'research/forward_game_replay.cc',
+      include_directories: inc,
+      install: false,
+      dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+    )
     # Recomputes the same recorded update symbolically over a unary threshold
     # encoding, to measure whether the representation survives the operation.
     acacia_bdd_cpre_replay_exe = executable(
