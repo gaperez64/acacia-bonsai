@@ -5,9 +5,11 @@
 #include "actioners/standard.hh"
 #include "research/explicit_forward_game.hh"
 #include "solver/forward_reachable_safety.hh"
+#include "solver/minimal_losing_antichain.hh"
 #include "tiny_game_oracle.hh"
 #include "utils/verbose.hh"
 
+#include <algorithm>
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
@@ -108,14 +110,91 @@ namespace {
   f1_result solve_f1 (
       const tiny_game& game, size_t bool_threshold,
       const rank_vector& initial,
-      const acacia::solver_detail::forward_limits& limits = {}) {
+      const acacia::solver_detail::forward_limits& limits = {},
+      bool use_losing_antichain = false) {
     return with_actioner (game, bool_threshold, [&] (auto& actioner) {
       const state initial_state = as_solver_state (initial);
       const state safe_state = as_solver_state (
           safe_vector (game.states, game.K, bool_threshold));
       return acacia::solver_detail::solve_forward_reachable_safety<SetOfStates> (
-          initial_state, safe_state, game.inputs, actioner, limits);
+          initial_state, safe_state, game.inputs, actioner, limits,
+          use_losing_antichain);
     });
+  }
+
+  void check_antichain_unit_behaviour () {
+    using antichain = acacia::solver_detail::minimal_losing_antichain<state>;
+
+    antichain chain;
+    const state larger = as_solver_state (vec ({1, 1}));
+    const state still_larger = as_solver_state (vec ({2, 1}));
+    const state smaller = as_solver_state (vec ({0, 0}));
+    expect ("antichain: first generator is inserted", chain.insert (larger));
+    expect ("antichain: inserted generator subsumes itself",
+            chain.subsumes (larger));
+    expect ("antichain: inserted generator subsumes a larger rank",
+            chain.subsumes (still_larger));
+    expect ("antichain: one stored generator has exact size", chain.size () == 1);
+
+    expect ("antichain: smaller generator is inserted", chain.insert (smaller));
+    expect ("antichain: smaller generator evicts the larger one",
+            chain.size () == 1 and chain.removals == 1);
+    expect ("antichain: already subsumed insertion is rejected",
+            not chain.insert (still_larger) and chain.size () == 1);
+
+    antichain incomparable;
+    const state left = as_solver_state (vec ({0, 1}));
+    const state right = as_solver_state (vec ({1, 0}));
+    expect ("antichain: first incomparable generator is inserted",
+            incomparable.insert (left));
+    expect ("antichain: second incomparable generator is inserted",
+            incomparable.insert (right));
+    expect ("antichain: incomparable generators both remain",
+            incomparable.size () == 2);
+    expect ("antichain: insertion counter is exact",
+            incomparable.insertions == 2);
+  }
+
+  void check_antichain_rank_prefilter () {
+    using antichain = acacia::solver_detail::minimal_losing_antichain<state>;
+    constexpr unsigned dimensions = 5;
+    constexpr unsigned generators = 200;
+    constexpr unsigned queries = 2000;
+    std::mt19937 gen {20260901};
+    std::uniform_int_distribution<int> coordinate {-1, 4};
+
+    auto random_state = [&] {
+      rank_vector rank (dimensions, 0);
+      for (std::size_t i = 0; i < dimensions; ++i)
+        rank[i] = static_cast<VECTOR_ELT_T> (coordinate (gen));
+      return as_solver_state (rank);
+    };
+
+    antichain chain;
+    std::vector<state> direct_generators;
+    direct_generators.reserve (generators);
+    for (unsigned i = 0; i < generators; ++i) {
+      state candidate = random_state ();
+      const bool already_subsumed = std::ranges::any_of (
+          direct_generators, [&candidate] (const state& stored) {
+            return stored.partial_order (candidate).leq ();
+          });
+      expect ("antichain prefilter: random insertion agrees with direct scan",
+              chain.insert (candidate) == not already_subsumed);
+      direct_generators.push_back (candidate.copy ());
+    }
+
+    for (unsigned i = 0; i < queries; ++i) {
+      const state candidate = random_state ();
+      const bool expected = std::ranges::any_of (
+          direct_generators, [&candidate] (const state& stored) {
+            return stored.partial_order (candidate).leq ();
+          });
+      expect ("antichain prefilter: subsumption agrees with direct scan",
+              chain.subsumes (candidate) == expected);
+    }
+    expect ("antichain prefilter: random pairs exercise rank skips",
+            chain.prefilter_skips != 0);
   }
 
   template <typename StrategyRanks>
@@ -292,6 +371,27 @@ namespace {
     static_assert (random_games >= 5000);
     std::mt19937 gen {20260831};
     unsigned compared = 0;
+    struct counter_totals {
+        std::size_t final_sizes = 0;
+        std::size_t peak = 0;
+        std::size_t queries = 0;
+        std::size_t hits = 0;
+        std::size_t prefilter_skips = 0;
+        std::size_t insertions = 0;
+        std::size_t invalidation_scans = 0;
+        std::size_t nodes_invalidated = 0;
+
+        void add (const f1_result& result) {
+          final_sizes += result.losing_antichain_size;
+          peak = std::max (peak, result.losing_antichain_peak);
+          queries += result.subsumption_queries;
+          hits += result.subsumption_hits;
+          prefilter_skips += result.subsumption_prefilter_skips;
+          insertions += result.losing_insertions;
+          invalidation_scans += result.invalidation_scans;
+          nodes_invalidated += result.nodes_invalidated;
+        }
+    } antichain_totals;
 
     for (unsigned trial = 0; trial < random_games; ++trial) {
       const tiny_game game = random_game (gen);
@@ -302,7 +402,11 @@ namespace {
       const forward_result result = solve_explicit_forward_game (
           initial, game.inputs, game.K, bool_threshold);
       const f1_result lazy = solve_f1 (game, bool_threshold, initial);
+      const f1_result pruned = solve_f1 (game, bool_threshold, initial, {}, true);
       const std::string label = "random game " + std::to_string (trial);
+
+      expect (label + ": antichain-on status agrees with F1 baseline",
+              pruned.status == lazy.status);
 
       if (result.status != forward_status::resource_limit) {
         expect (label + ": F0 agrees with the complete-domain greatest fixpoint",
@@ -316,15 +420,45 @@ namespace {
                 (lazy.status
                  == acacia::solver_detail::forward_result_status::lose_k)
                     == (result.status == forward_status::lose_k));
+        expect (label + ": antichain-on/F0 winning statuses agree",
+                (pruned.status
+                 == acacia::solver_detail::forward_result_status::win_k)
+                    == (result.status == forward_status::win_k));
+        expect (label + ": antichain-on/F0 losing statuses agree",
+                (pruned.status
+                 == acacia::solver_detail::forward_result_status::lose_k)
+                    == (result.status == forward_status::lose_k));
         ++compared;
       }
       check_certificate (label, game, bool_threshold, initial, result);
       check_certificate (label, game, bool_threshold, initial, lazy);
+      check_certificate (label + ": antichain-on", game, bool_threshold,
+                         initial, pruned);
+      antichain_totals.add (pruned);
     }
 
     expect ("random campaign performed an F1/F0 comparison", compared != 0);
+    expect ("random campaign exercised antichain queries",
+            antichain_totals.queries != 0);
+    expect ("random campaign inserted losing generators",
+            antichain_totals.insertions != 0);
+    expect ("every new losing generator caused one invalidation scan",
+            antichain_totals.invalidation_scans == antichain_totals.insertions);
     std::cout << "forward-safety-game: performed " << compared
               << " F1/F0 comparisons\n";
+    std::cout << "forward-safety-game: antichain totals"
+              << " losing_antichain_size_sum=" << antichain_totals.final_sizes
+              << " losing_antichain_peak_max=" << antichain_totals.peak
+              << " subsumption_queries=" << antichain_totals.queries
+              << " subsumption_hits=" << antichain_totals.hits
+              << " subsumption_prefilter_skips="
+              << antichain_totals.prefilter_skips
+              << " losing_insertions=" << antichain_totals.insertions
+              << " losing_removals="
+              << (antichain_totals.insertions - antichain_totals.final_sizes)
+              << " invalidation_scans=" << antichain_totals.invalidation_scans
+              << " nodes_invalidated=" << antichain_totals.nodes_invalidated
+              << '\n';
   }
 
   void check_resource_limit_is_inconclusive () {
@@ -359,6 +493,15 @@ namespace {
     expect ("F1 resource limit: retains counts gathered before returning",
             lazy.env_nodes == 1 and lazy.ctrl_nodes == 1
                 and lazy.edges_selected == 0);
+    expect ("F1 resource limit: antichain remains disabled by default",
+            lazy.losing_antichain_size == 0
+                and lazy.losing_antichain_peak == 0
+                and lazy.subsumption_queries == 0
+                and lazy.subsumption_hits == 0
+                and lazy.subsumption_prefilter_skips == 0
+                and lazy.losing_insertions == 0
+                and lazy.invalidation_scans == 0
+                and lazy.nodes_invalidated == 0);
     expect ("F1 resource limit: carries no strategy ranks",
             lazy.strategy_ranks.empty ());
   }
@@ -366,6 +509,8 @@ namespace {
 }  // namespace
 
 int main () {
+  check_antichain_unit_behaviour ();
+  check_antichain_rank_prefilter ();
   check_hand_written_games ();
   check_random_agreement ();
   check_resource_limit_is_inconclusive ();

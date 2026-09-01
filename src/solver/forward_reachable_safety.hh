@@ -9,6 +9,7 @@
 
 #include "actioners/direction.hh"
 #include "solver/forward_game_nodes.hh"
+#include "solver/minimal_losing_antichain.hh"
 
 #include <algorithm>
 #include <cstddef>
@@ -42,6 +43,14 @@ namespace acacia::solver_detail {
       std::size_t intern_hits = 0;
       /// Successful controller-to-environment selections, including replacements.
       std::size_t edges_selected = 0;
+      std::size_t losing_antichain_size = 0;
+      std::size_t losing_antichain_peak = 0;
+      std::size_t subsumption_queries = 0;
+      std::size_t subsumption_hits = 0;
+      std::size_t subsumption_prefilter_skips = 0;
+      std::size_t losing_insertions = 0;
+      std::size_t invalidation_scans = 0;
+      std::size_t nodes_invalidated = 0;
       std::vector<State> strategy_ranks;
   };
 
@@ -82,12 +91,14 @@ namespace acacia::solver_detail {
       public:
         forward_search (const state& initial, const state& safe,
                         const InputOutputFwdActions& input_output_fwd_actions,
-                        Actioner& actioner, const forward_limits& limits)
+                        Actioner& actioner, const forward_limits& limits,
+                        bool use_losing_antichain)
           : initial {initial},
             safe {safe},
             input_output_fwd_actions {input_output_fwd_actions},
             actioner {actioner},
-            limits {limits} {}
+            limits {limits},
+            use_losing_antichain {use_losing_antichain} {}
 
         forward_solve_result<state> solve () {
           const std::size_t initial_id = intern_env (initial.copy ());
@@ -120,12 +131,14 @@ namespace acacia::solver_detail {
         const InputOutputFwdActions& input_output_fwd_actions;
         Actioner& actioner;
         const forward_limits& limits;
+        const bool use_losing_antichain;
 
         std::vector<forward_env_node<state>> env_nodes;
         std::vector<forward_ctrl_node<state>> ctrl_nodes;
         std::unordered_map<exact_key, std::size_t, exact_state_hash<state>> interned_envs;
         std::deque<queued_node> open_queue;
         std::deque<queued_node> losing_queue;
+        minimal_losing_antichain<state> losing_antichain;
 
         std::size_t represented_edges = 0;
         std::size_t env_expanded = 0;
@@ -133,6 +146,9 @@ namespace acacia::solver_detail {
         std::size_t choice_switches = 0;
         std::size_t intern_hits = 0;
         std::size_t edges_selected = 0;
+        std::size_t losing_antichain_peak = 0;
+        std::size_t invalidation_scans = 0;
+        std::size_t nodes_invalidated = 0;
         std::size_t next_proof_id = 1;
         bool limit_exceeded = false;
 
@@ -165,6 +181,27 @@ namespace acacia::solver_detail {
           env.status = node_status::losing;
           env.losing_proof_id = proof_id ();
           losing_queue.push_back ({false, env_id});
+
+          if (not use_losing_antichain or not is_safe (env.rank)
+              or not losing_antichain.insert (env.rank))
+            return;
+
+          losing_antichain_peak =
+              std::max (losing_antichain_peak, losing_antichain.size ());
+          ++invalidation_scans;
+
+          // This is a full scan of every environment rank interned so far.
+          // Marking a match queues the ordinary selected-controller
+          // propagation; a recursively attempted insertion is already
+          // subsumed by `env.rank` and therefore cannot start another scan.
+          for (std::size_t id = 0; id < env_nodes.size (); ++id) {
+            if (env_nodes[id].status == node_status::losing)
+              continue;
+            if (env.rank.partial_order (env_nodes[id].rank).leq ()) {
+              ++nodes_invalidated;
+              mark_environment_losing (id);
+            }
+          }
         }
 
         void mark_controller_losing (std::size_t ctrl_id) {
@@ -211,6 +248,13 @@ namespace acacia::solver_detail {
         void expand_environment (std::size_t env_id) {
           if (env_nodes[env_id].status != node_status::open)
             return;
+          if (use_losing_antichain
+              and losing_antichain.subsumes (env_nodes[env_id].rank)) {
+            // The stored generator is a complete losing proof for this rank:
+            // this is the "subsumed" environment-loss reason.
+            mark_environment_losing (env_id);
+            return;
+          }
 
           std::size_t input_index = 0;
           for ([[maybe_unused]] const auto& input_and_actions :
@@ -362,9 +406,22 @@ namespace acacia::solver_detail {
         forward_solve_result<state> make_result (
             forward_result_status status,
             std::optional<std::size_t> initial_id = std::nullopt) const {
-          forward_solve_result<state> result {
-              status, env_nodes.size (), ctrl_nodes.size (), env_expanded,
-              ctrl_expanded, choice_switches, intern_hits, edges_selected, {}};
+          forward_solve_result<state> result {status};
+          result.env_nodes = env_nodes.size ();
+          result.ctrl_nodes = ctrl_nodes.size ();
+          result.env_expanded = env_expanded;
+          result.ctrl_expanded = ctrl_expanded;
+          result.choice_switches = choice_switches;
+          result.intern_hits = intern_hits;
+          result.edges_selected = edges_selected;
+          result.losing_antichain_size = losing_antichain.size ();
+          result.losing_antichain_peak = losing_antichain_peak;
+          result.subsumption_queries = losing_antichain.queries;
+          result.subsumption_hits = losing_antichain.hits;
+          result.subsumption_prefilter_skips = losing_antichain.prefilter_skips;
+          result.losing_insertions = losing_antichain.insertions;
+          result.invalidation_scans = invalidation_scans;
+          result.nodes_invalidated = nodes_invalidated;
           if (status == forward_result_status::win_k and initial_id.has_value ())
             result.strategy_ranks = build_strategy (*initial_id);
           return result;
@@ -389,10 +446,11 @@ namespace acacia::solver_detail {
       const typename SetOfStates::value_type& initial,
       const typename SetOfStates::value_type& safe,
       const InputOutputFwdActions& input_output_fwd_actions, Actioner& actioner,
-      const forward_limits& limits = {}) {
+      const forward_limits& limits = {}, bool use_losing_antichain = false) {
     forward_reachable_detail::forward_search<SetOfStates, InputOutputFwdActions,
                                              Actioner>
-        search {initial, safe, input_output_fwd_actions, actioner, limits};
+        search {initial, safe, input_output_fwd_actions, actioner, limits,
+                use_losing_antichain};
     return search.solve ();
   }
 
@@ -403,9 +461,10 @@ namespace acacia::solver_detail {
       const typename SetOfStates::value_type& initial,
       const typename SetOfStates::value_type& safe,
       const InputOutputFwdActions& input_output_fwd_actions, Actioner& actioner,
-      const forward_limits& limits = {}) {
+      const forward_limits& limits = {}, bool use_losing_antichain = false) {
     return solve_forward_reachable_safety<SetOfStates> (
-        initial, safe, input_output_fwd_actions, actioner, limits);
+        initial, safe, input_output_fwd_actions, actioner, limits,
+        use_losing_antichain);
   }
 
 }  // namespace acacia::solver_detail
