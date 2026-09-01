@@ -726,11 +726,15 @@ def run(args: argparse.Namespace) -> int:
     print(f"wrote {summary_path}")
     if args.conflict_policy == "collect":
         conflict_count = len(collected_conflict_keys)
-        print(
-            f"CONFLICTS COLLECTED: {conflict_count} (see {conflicts_path}) "
-            "-- results are NOT usable until adjudicated",
-            file=sys.stderr,
-        )
+        # Only warn when there is something to adjudicate.  Printing the banner
+        # on a clean campaign teaches the reader to skip it, which is the one
+        # thing this message cannot afford.
+        if conflict_count:
+            print(
+                f"CONFLICTS COLLECTED: {conflict_count} (see {conflicts_path}) "
+                "-- results are NOT usable until adjudicated",
+                file=sys.stderr,
+            )
         if conflict_count > 0:
             return 3
     return 0
