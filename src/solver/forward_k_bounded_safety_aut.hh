@@ -85,8 +85,19 @@ namespace acacia::solver_detail {
           const state safe {safe_vector};
 
           // The local search object is intentionally reconstructed at every K.
+          // Both knobs are runtime-configurable so a sweep can measure what
+          // they are worth on real instances without a rebuild per arm.  The
+          // defaults are the shipped behaviour: antichain on, Pareto
+          // minimisation for action lists at or below the threshold.
+          static const bool use_antichain =
+              acacia::diagnostics::env_size ("ACACIA_FORWARD_LOSING_ANTICHAIN", 1, true) != 0;
+          static const std::size_t minimisation_threshold =
+              acacia::diagnostics::env_size (
+                  "ACACIA_FORWARD_MINIMISATION_THRESHOLD",
+                  default_controller_minimisation_threshold, true);
           auto result = solve_forward_reachable_safety<SetOfStates> (
-              initial, safe, input_output_fwd_actions, actioner, limits, true);
+              initial, safe, input_output_fwd_actions, actioner, limits,
+              use_antichain, minimisation_threshold);
           acacia::diagnostics::set_forward_attempt (
               static_cast<int> (k), result_name (result.status), result.env_nodes,
               result.ctrl_nodes, result.env_expanded, result.ctrl_expanded,
