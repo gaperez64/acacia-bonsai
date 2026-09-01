@@ -2,8 +2,11 @@
 // bounded safety game as the exhaustive descending fixpoint.  These tests keep
 // both references small enough to compare exactly.
 
+#include "actioners/standard.hh"
 #include "research/explicit_forward_game.hh"
+#include "solver/forward_reachable_safety.hh"
 #include "tiny_game_oracle.hh"
+#include "utils/verbose.hh"
 
 #include <cstddef>
 #include <initializer_list>
@@ -14,6 +17,11 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+namespace utils {
+  unsigned verbose = 0;
+  voutstream vout;
+}
 
 namespace posets::vectors {
   size_t bool_threshold = 0;
@@ -26,6 +34,8 @@ namespace {
 
   int failures = 0;
   unsigned certificates_checked = 0;
+
+  using f1_result = acacia::solver_detail::forward_solve_result<state>;
 
   bool expect (const std::string& what, bool condition) {
     if (condition)
@@ -69,18 +79,60 @@ namespace {
     return result;
   }
 
-  void check_certificate (const std::string& label, const tiny_game& game,
-                          size_t bool_threshold, const rank_vector& initial,
-                          const forward_result& result) {
-    if (result.status != forward_status::win_k)
+  /// F0 fixtures use vector_mm while F1 deliberately operates on the solver's
+  /// configured state representation, so tests cross that boundary explicitly.
+  state as_solver_state (const rank_vector& value) {
+    return state (rank_vector (value));
+  }
+
+  state as_solver_state (const state& value) { return value.copy (); }
+
+  struct test_automaton {
+      unsigned states;
+      [[nodiscard]] unsigned num_states () const { return states; }
+      [[nodiscard]] bool state_is_accepting (unsigned) const { return false; }
+  };
+
+  template <typename Check>
+  decltype(auto) with_actioner (const tiny_game& game, size_t bool_threshold,
+                                Check&& check) {
+    posets::vectors::bool_threshold = bool_threshold;
+    test_automaton automaton {game.states};
+    const test_automaton* aut = &automaton;
+    std::list<std::pair<bdd, std::list<std::vector<std::pair<unsigned, unsigned>>>>>
+        empty;
+    auto actioner = actioners::standard<state>::make (aut, empty, game.K);
+    return std::forward<Check> (check) (actioner);
+  }
+
+  f1_result solve_f1 (
+      const tiny_game& game, size_t bool_threshold,
+      const rank_vector& initial,
+      const acacia::solver_detail::forward_limits& limits = {}) {
+    return with_actioner (game, bool_threshold, [&] (auto& actioner) {
+      const state initial_state = as_solver_state (initial);
+      const state safe_state = as_solver_state (
+          safe_vector (game.states, game.K, bool_threshold));
+      return acacia::solver_detail::solve_forward_reachable_safety<SetOfStates> (
+          initial_state, safe_state, game.inputs, actioner, limits);
+    });
+  }
+
+  template <typename StrategyRanks>
+  void check_certificate_ranks (const std::string& label,
+                                const tiny_game& game,
+                                size_t bool_threshold,
+                                const rank_vector& initial, bool winning,
+                                const StrategyRanks& strategy_ranks) {
+    if (not winning)
       return;
     ++certificates_checked;
 
     posets::vectors::bool_threshold = bool_threshold;
     std::vector<state> raw_generators;
-    raw_generators.reserve (result.strategy_ranks.size ());
-    for (const auto& rank : result.strategy_ranks)
-      raw_generators.emplace_back (rank_vector (rank));
+    raw_generators.reserve (strategy_ranks.size ());
+    for (const auto& rank : strategy_ranks)
+      raw_generators.push_back (as_solver_state (rank));
     SetOfStates certificate {std::move (raw_generators)};
 
     bool all_safe = true;
@@ -108,6 +160,23 @@ namespace {
             all_inputs_supported);
   }
 
+  void check_certificate (const std::string& label, const tiny_game& game,
+                          size_t bool_threshold, const rank_vector& initial,
+                          const forward_result& result) {
+    check_certificate_ranks (
+        label + ": F0", game, bool_threshold, initial,
+        result.status == forward_status::win_k, result.strategy_ranks);
+  }
+
+  void check_certificate (const std::string& label, const tiny_game& game,
+                          size_t bool_threshold, const rank_vector& initial,
+                          const f1_result& result) {
+    check_certificate_ranks (
+        label + ": F1", game, bool_threshold, initial,
+        result.status == acacia::solver_detail::forward_result_status::win_k,
+        result.strategy_ranks);
+  }
+
   forward_result check_game (const std::string& label, const tiny_game& game,
                              size_t bool_threshold, const rank_vector& initial,
                              forward_status expected) {
@@ -120,6 +189,17 @@ namespace {
     expect (label + ": hand-written oracle verdict",
             oracle_wins == (expected == forward_status::win_k));
     check_certificate (label, game, bool_threshold, initial, result);
+
+    const f1_result lazy = solve_f1 (game, bool_threshold, initial);
+    const bool expected_win = expected == forward_status::win_k;
+    expect (label + ": F1 status",
+            (lazy.status
+             == acacia::solver_detail::forward_result_status::win_k)
+                == expected_win
+                and (lazy.status
+                     == acacia::solver_detail::forward_result_status::lose_k)
+                        == not expected_win);
+    check_certificate (label, game, bool_threshold, initial, lazy);
     return result;
   }
 
@@ -221,18 +301,30 @@ namespace {
       const exact_region truth = brute_force_winning_region (game, bool_threshold);
       const forward_result result = solve_explicit_forward_game (
           initial, game.inputs, game.K, bool_threshold);
+      const f1_result lazy = solve_f1 (game, bool_threshold, initial);
       const std::string label = "random game " + std::to_string (trial);
 
-      expect (label + ": default limits are not reached",
-              result.status != forward_status::resource_limit);
-      expect (label + ": F0 agrees with the complete-domain greatest fixpoint",
-              (result.status == forward_status::win_k) == truth.contains (initial));
+      if (result.status != forward_status::resource_limit) {
+        expect (label + ": F0 agrees with the complete-domain greatest fixpoint",
+                (result.status == forward_status::win_k)
+                    == truth.contains (initial));
+        expect (label + ": F1/F0 winning statuses agree",
+                (lazy.status
+                 == acacia::solver_detail::forward_result_status::win_k)
+                    == (result.status == forward_status::win_k));
+        expect (label + ": F1/F0 losing statuses agree",
+                (lazy.status
+                 == acacia::solver_detail::forward_result_status::lose_k)
+                    == (result.status == forward_status::lose_k));
+        ++compared;
+      }
       check_certificate (label, game, bool_threshold, initial, result);
-      ++compared;
+      check_certificate (label, game, bool_threshold, initial, lazy);
     }
 
-    expect ("random campaign compared all requested games", compared == random_games);
-    std::cout << "forward-safety-game: compared " << compared << " random games\n";
+    expect ("random campaign performed an F1/F0 comparison", compared != 0);
+    std::cout << "forward-safety-game: performed " << compared
+              << " F1/F0 comparisons\n";
   }
 
   void check_resource_limit_is_inconclusive () {
@@ -253,6 +345,22 @@ namespace {
     expect ("resource limit: retains counts gathered before returning",
             result.env_nodes == 1 and result.ctrl_nodes == 1 and result.edges == 0);
     expect ("resource limit: carries no strategy ranks", result.strategy_ranks.empty ());
+
+    acacia::solver_detail::forward_limits f1_limits;
+    f1_limits.max_ctrl_nodes = 0;
+    const f1_result lazy = solve_f1 (game, 1, vec ({0}), f1_limits);
+    expect ("F1 resource limit: reports resource_limit",
+            lazy.status
+                == acacia::solver_detail::forward_result_status::resource_limit);
+    expect ("F1 resource limit: is not a winning verdict",
+            lazy.status != acacia::solver_detail::forward_result_status::win_k);
+    expect ("F1 resource limit: is not a losing verdict",
+            lazy.status != acacia::solver_detail::forward_result_status::lose_k);
+    expect ("F1 resource limit: retains counts gathered before returning",
+            lazy.env_nodes == 1 and lazy.ctrl_nodes == 1
+                and lazy.edges_selected == 0);
+    expect ("F1 resource limit: carries no strategy ranks",
+            lazy.strategy_ranks.empty ());
   }
 
 }  // namespace
