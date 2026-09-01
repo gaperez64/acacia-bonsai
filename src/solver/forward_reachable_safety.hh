@@ -35,6 +35,13 @@ namespace acacia::solver_detail {
 
   enum class forward_result_status { win_k, lose_k, resource_limit };
 
+  enum class forward_resource_limit {
+    none,
+    env_nodes,
+    ctrl_nodes,
+    edges,
+  };
+
   /// Above this action count, use exact-equality deduplication rather than the
   /// quadratic Pareto pass.  This is solely a performance choice: both paths
   /// are exact, so changing the cutoff can never change a game verdict.
@@ -50,6 +57,7 @@ namespace acacia::solver_detail {
   template <typename State>
   struct forward_solve_result {
       forward_result_status status;
+      forward_resource_limit resource_limit = forward_resource_limit::none;
       std::size_t env_nodes = 0;
       std::size_t ctrl_nodes = 0;
       std::size_t env_expanded = 0;
@@ -262,6 +270,13 @@ namespace acacia::solver_detail {
         double minimisation_ms = 0.0;
         std::size_t next_proof_id = 1;
         bool limit_exceeded = false;
+        forward_resource_limit resource_limit = forward_resource_limit::none;
+
+        void exceed_limit (forward_resource_limit reason) {
+          limit_exceeded = true;
+          if (resource_limit == forward_resource_limit::none)
+            resource_limit = reason;
+        }
 
         [[nodiscard]] static exact_key key_for (const state& rank) {
           exact_key key;
@@ -343,14 +358,14 @@ namespace acacia::solver_detail {
             open_queue.push_back ({false, env_id});
 
           if (env_nodes.size () > limits.max_env_nodes)
-            limit_exceeded = true;
+            exceed_limit (forward_resource_limit::env_nodes);
           return env_id;
         }
 
         bool add_represented_edge () {
           ++represented_edges;
           if (represented_edges > limits.max_edges) {
-            limit_exceeded = true;
+            exceed_limit (forward_resource_limit::edges);
             return false;
           }
           return true;
@@ -374,7 +389,7 @@ namespace acacia::solver_detail {
             ctrl_nodes.push_back ({env_id, input_index, node_status::open, {},
                                    0, std::nullopt, 0});
             if (ctrl_nodes.size () > limits.max_ctrl_nodes) {
-              limit_exceeded = true;
+              exceed_limit (forward_resource_limit::ctrl_nodes);
               return;
             }
 
@@ -513,6 +528,7 @@ namespace acacia::solver_detail {
             forward_result_status status,
             std::optional<std::size_t> initial_id = std::nullopt) const {
           forward_solve_result<state> result {status};
+          result.resource_limit = resource_limit;
           result.env_nodes = env_nodes.size ();
           result.ctrl_nodes = ctrl_nodes.size ();
           result.env_expanded = env_expanded;

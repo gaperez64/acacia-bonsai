@@ -11,6 +11,9 @@
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
 # include "solver/equivariant_k_bounded_safety_aut.hh"
 #endif
+#if ACACIA_FORWARD_SAFETY_SOLVER
+# include "solver/forward_k_bounded_safety_aut.hh"
+#endif
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
 #include <spot/twaalgos/mealy_machine.hh>
@@ -172,6 +175,26 @@ namespace acacia::solver_detail {
     using IOsPrecomputationMaker = IOS_PRECOMPUTER;
     using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
     using InputPickerMaker = INPUT_PICKER;
+#if ACACIA_FORWARD_SAFETY_SOLVER
+    // post_real rebuilds actions and the input/output partition for synthesis.
+    // The forward certificate has not yet been re-verified against that
+    // reconstruction, so strategy production must keep using the backward
+    // solver even when the forward decision backend is compiled in.
+    if (not do_synthesis) {
+      auto forward =
+          forward_k_bounded_safety_aut_detail<SpecializedDownset,
+                                              IOsPrecomputationMaker,
+                                              ActionerMaker, InputPickerMaker> (
+              aut, kmin, kmax, kinc, all_inputs, all_outputs,
+              IOS_PRECOMPUTER (),
+              ACTIONER<typename SpecializedDownset::value_type> (),
+              INPUT_PICKER ());
+      auto win = forward.solve ();
+      if (not forward.should_fallback_to_backward ())
+        return post_real<SpecializedDownset> (
+            std::move (win), do_synthesis, aut, all_inputs, all_outputs);
+    }
+#endif
     auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
                                            ActionerMaker, InputPickerMaker> (
         aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),

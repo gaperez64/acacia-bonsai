@@ -622,6 +622,9 @@ namespace {
     expect ("F1 resource limit: reports resource_limit",
             lazy.status
                 == acacia::solver_detail::forward_result_status::resource_limit);
+    expect ("F1 resource limit: reports the controller-node cap",
+            lazy.resource_limit
+                == acacia::solver_detail::forward_resource_limit::ctrl_nodes);
     expect ("F1 resource limit: is not a winning verdict",
             lazy.status != acacia::solver_detail::forward_result_status::win_k);
     expect ("F1 resource limit: is not a losing verdict",
@@ -638,6 +641,24 @@ namespace {
                 and lazy.losing_insertions == 0
                 and lazy.invalidation_scans == 0
                 and lazy.nodes_invalidated == 0);
+
+    acacia::solver_detail::forward_limits env_limits;
+    env_limits.max_env_nodes = 0;
+    const f1_result env_limited = solve_f1 (game, 1, vec ({0}), env_limits);
+    expect ("F1 resource limit: reports the environment-node cap distinctly",
+            env_limited.status
+                    == acacia::solver_detail::forward_result_status::resource_limit
+                and env_limited.resource_limit
+                    == acacia::solver_detail::forward_resource_limit::env_nodes);
+
+    acacia::solver_detail::forward_limits edge_limits;
+    edge_limits.max_edges = 0;
+    const f1_result edge_limited = solve_f1 (game, 1, vec ({0}), edge_limits);
+    expect ("F1 resource limit: reports the edge cap distinctly",
+            edge_limited.status
+                    == acacia::solver_detail::forward_result_status::resource_limit
+                and edge_limited.resource_limit
+                    == acacia::solver_detail::forward_resource_limit::edges);
     expect ("F1 resource limit: carries no strategy ranks",
             lazy.strategy_ranks.empty ());
   }

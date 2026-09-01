@@ -160,6 +160,11 @@ if get_option ('acacia_local_certificate')
 else
   build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 0)
 endif
+if get_option ('acacia_forward_safety_solver')
+  build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER', 1)
+else
+  build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER', 0)
+endif
 if get_option ('acacia_enable_equivariant_solver')
   build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 1)
 else

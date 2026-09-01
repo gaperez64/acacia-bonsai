@@ -65,6 +65,8 @@ option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
 option('acacia_local_certificate', type: 'boolean', value: true,
        description: 'Enable the bounded local winning-certificate and root-refutation probe')
+option('acacia_forward_safety_solver', type: 'boolean', value: false,
+       description: 'Use the on-the-fly forward safety-game solver instead of the backward antichain fixed point')
 option('acacia_enable_equivariant_solver', type: 'boolean', value: true,
        description: 'Compile and enable the exact equivariant solver path')
 option('acacia_transition_acceptance', type: 'boolean', value: false,

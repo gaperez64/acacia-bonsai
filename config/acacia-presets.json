@@ -108,6 +108,16 @@
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "enable_diagnostics": true
     },
+    "best_decomp_rank_bucketed_semantic_mona_forward": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "forward_safety_solver": true,
+      "local_certificate": false,
+      "enable_equivariant_solver": false
+    },
+    "best_decomp_rank_bucketed_semantic_mona_forward_diag": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "enable_diagnostics": true
+    },
     "best_decomp_rank_bucketed_mona_race": {
       "inherits": "best_decomp_rank_bucketed_mona",
       "translation_pref": "small+any"

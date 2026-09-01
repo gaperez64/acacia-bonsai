@@ -100,6 +100,8 @@ namespace acacia::diagnostics {
       std::string preprocessor = "unknown";
       std::string equivariant = "not-run";
       std::string local_probe_status = "none";
+      std::string forward_result = "not-run";
+      std::string forward_final_reason = "not-run";
       // sym_* covers every diagnostic recognition pass, including instances
       // the solver declines; eq_* is populated only when solving is attempted.
       std::string symmetry_families = "-";
@@ -125,8 +127,11 @@ namespace acacia::diagnostics {
       double picker_ms = 0.0;
       double apply_ms = 0.0;
       double downset_ms = 0.0;
+      double forward_certificate_verify_ms = 0.0;
+      double forward_total_ms = 0.0;
 
       bool rsimp_changed = false;
+      bool forward_backend = false;
       size_t aut_states = 0;
       size_t aut_edges = 0;
       size_t preproc_states_before = 0;
@@ -148,6 +153,16 @@ namespace acacia::diagnostics {
       unsigned long long local_probe_forward_apps = 0;
       unsigned long long local_probe_skipped_over_budget = 0;
       unsigned long long local_probe_nodes = 0;
+      int forward_K = -1;
+      unsigned long long forward_env_nodes = 0;
+      unsigned long long forward_ctrl_nodes = 0;
+      unsigned long long forward_env_expanded = 0;
+      unsigned long long forward_ctrl_expanded = 0;
+      unsigned long long forward_losing_antichain_size = 0;
+      unsigned long long forward_raw_actions = 0;
+      unsigned long long forward_distinct_successors = 0;
+      unsigned long long forward_minimal_successors = 0;
+      unsigned long long forward_strategy_rank_nodes = 0;
       unsigned long long cpre_skipped = 0;
       unsigned long long k_bumped_by_local_refutation = 0;
       unsigned long long actions_seen = 0;
@@ -270,6 +285,20 @@ namespace acacia::diagnostics {
          << " local_probe_forward_apps=" << m.local_probe_forward_apps
          << " local_probe_skipped_over_budget=" << m.local_probe_skipped_over_budget
          << " local_probe_nodes=" << m.local_probe_nodes
+         << " forward_backend=" << (m.forward_backend ? 1 : 0)
+         << " forward_K=" << m.forward_K << " forward_result=" << m.forward_result
+         << " forward_env_nodes=" << m.forward_env_nodes
+         << " forward_ctrl_nodes=" << m.forward_ctrl_nodes
+         << " forward_env_expanded=" << m.forward_env_expanded
+         << " forward_ctrl_expanded=" << m.forward_ctrl_expanded
+         << " forward_losing_antichain_size=" << m.forward_losing_antichain_size
+         << " forward_raw_actions=" << m.forward_raw_actions
+         << " forward_distinct_successors=" << m.forward_distinct_successors
+         << " forward_minimal_successors=" << m.forward_minimal_successors
+         << " forward_strategy_rank_nodes=" << m.forward_strategy_rank_nodes
+         << " forward_certificate_verify_ms=" << m.forward_certificate_verify_ms
+         << " forward_total_ms=" << m.forward_total_ms
+         << " forward_final_reason=" << m.forward_final_reason
          << " cpre_skipped=" << m.cpre_skipped
          << " k_bumped_by_local_refutation=" << m.k_bumped_by_local_refutation
          << " cpre_ms=" << m.cpre_ms
@@ -573,6 +602,51 @@ namespace acacia::diagnostics {
       ++m->local_probe_skipped_over_budget;
   }
 
+  inline void set_forward_backend () {
+    if (auto* m = current ())
+      m->forward_backend = true;
+  }
+
+  inline void set_forward_attempt (int k, std::string result,
+                                   unsigned long long env_nodes,
+                                   unsigned long long ctrl_nodes,
+                                   unsigned long long env_expanded,
+                                   unsigned long long ctrl_expanded,
+                                   unsigned long long losing_antichain_size,
+                                   unsigned long long raw_actions,
+                                   unsigned long long distinct_successors,
+                                   unsigned long long minimal_successors,
+                                   unsigned long long strategy_rank_nodes) {
+    if (auto* m = current ()) {
+      m->forward_K = k;
+      m->forward_result = std::move (result);
+      m->forward_env_nodes = env_nodes;
+      m->forward_ctrl_nodes = ctrl_nodes;
+      m->forward_env_expanded = env_expanded;
+      m->forward_ctrl_expanded = ctrl_expanded;
+      m->forward_losing_antichain_size = losing_antichain_size;
+      m->forward_raw_actions = raw_actions;
+      m->forward_distinct_successors = distinct_successors;
+      m->forward_minimal_successors = minimal_successors;
+      m->forward_strategy_rank_nodes = strategy_rank_nodes;
+    }
+  }
+
+  inline void set_forward_certificate_verify_ms (double milliseconds) {
+    if (auto* m = current ())
+      m->forward_certificate_verify_ms = milliseconds;
+  }
+
+  inline void set_forward_total_ms (double milliseconds) {
+    if (auto* m = current ())
+      m->forward_total_ms = milliseconds;
+  }
+
+  inline void set_forward_final_reason (std::string reason) {
+    if (auto* m = current ())
+      m->forward_final_reason = std::move (reason);
+  }
+
   inline void set_final_reason (std::string reason) {
     if (auto* m = current ())
       m->final_reason = std::move (reason);
@@ -666,6 +740,15 @@ namespace acacia::diagnostics {
   inline void trace_local_probe (int, unsigned long long, std::size_t, const char*,
                                  unsigned long long, unsigned long long) {}
   inline void set_local_probe_skipped_over_budget () {}
+  inline void set_forward_backend () {}
+  inline void set_forward_attempt (int, std::string, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long) {}
+  inline void set_forward_certificate_verify_ms (double) {}
+  inline void set_forward_total_ms (double) {}
+  inline void set_forward_final_reason (std::string) {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}
