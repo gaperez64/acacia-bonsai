@@ -2,6 +2,7 @@
 
 #include "actioners/direction.hh"
 #include "configuration.hh"
+#include "solver/certificate_verifier.hh"
 
 #include <algorithm>
 #include <cstddef>
@@ -265,40 +266,6 @@ namespace acacia::solver_detail {
         }
     };
 
-    template <typename SetOfStates, typename InputOutputFwdActions, typename Actioner>
-    bool verify (const SetOfStates& envelope, const SetOfStates& candidate,
-                 const typename SetOfStates::value_type& initial,
-                 const InputOutputFwdActions& input_output_fwd_actions, Actioner& actioner,
-                 unsigned long long& forward_applications,
-                 unsigned long long forward_application_budget, bool& budget_exhausted) {
-      if (not candidate.contains (initial))
-        return false;
-
-      for (const auto& generator : candidate) {
-        if (not envelope.contains (generator))
-          return false;
-        for (const auto& input_and_actions : input_output_fwd_actions) {
-          bool discharged = false;
-          for (const auto& action : input_and_actions.second) {
-            if (forward_applications >= forward_application_budget) {
-              budget_exhausted = true;
-              return false;
-            }
-            ++forward_applications;
-            const auto image =
-                actioner.apply (generator, action, actioners::direction::forward);
-            if (candidate.contains (image)) {
-              discharged = true;
-              break;
-            }
-          }
-          if (not discharged)
-            return false;
-        }
-      }
-      return true;
-    }
-
   }  // namespace local_certificate_detail
 
   /// Return the first input class whose every action leaves `envelope` from
@@ -383,10 +350,10 @@ namespace acacia::solver_detail {
       reduced.push_back (generator.copy ());
     SetOfStates candidate {std::move (reduced)};
     bool verification_budget_exhausted = false;
-    if (not local_certificate_detail::verify (
+    if (not verify_winning_certificate (
             envelope, candidate, initial_state, input_output_fwd_actions, actioner,
-            result.forward_applications, forward_application_budget,
-            verification_budget_exhausted)) {
+            &result.forward_applications, forward_application_budget,
+            &verification_budget_exhausted)) {
       if (verification_budget_exhausted)
         result.status = local_certificate_status::budget_exhausted;
       return result;
