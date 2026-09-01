@@ -129,21 +129,38 @@ Every row carries its solved boundary neighbour in
 
 ## 6. What the mechanisms say
 
-The targets do **not** fail for one reason, which is the main scientific result of Track A:
+**Correction.** An earlier version of this section read `actions_seen` as the size of an
+instance's semantic action table and concluded that a forward reachable solver was an
+implausible answer for the "action explosion" families. That was wrong twice over.
 
-- **Action explosion.** `prioritized_arbiter_pb_7` has 47 automaton states and 30.1 million
-  semantic actions; `lift_gr1_pb_3` has 225 states and 115.3 million. The automaton is small;
-  the action table is not.
-- **Rank explosion.** `collector_v1_pb_11` has 15,371 numeric rank coordinates against only 90
-  actions — the opposite shape.
-- **Automaton size.** `robot_grid_pb_3_3` reaches 10,514 states with just 721 actions.
-- **None of the above.** `arbiter_on_inpchange_pb_5` is unsolved at 60 s with 53 states, 16
-  rank coordinates and 736 actions. It is small by every measure collected and still unsolved,
-  so whatever defeats it is not raw size. It is the single most interesting theory target here.
+`observe_action()` is called inside `cpre_inplace`'s loop over the action list, once per
+action **per CPre call**, so `actions_seen` is cumulative backward work across every
+fixed-point iteration — not a table size. A table of 115 million entries would be gigabytes;
+what the number actually says is that the backward fixed point ground through an enormous
+amount of work. That is a *symptom* of the backward search being large, which is evidence a
+reachable forward search might help, not evidence against it.
 
-A forward reachable solver is a plausible answer to the rank- and automaton-size shapes and an
-implausible answer to the action-table shape, since it must still enumerate every action of
-every input class at every expanded node. The frozen set contains both, deliberately.
+The measurement settled it: `lift_gr1_pb_3_pe_` (115,278,358 `actions_seen`) and
+`lift_gr1+_pb_3_pe_` (87,281,993) are both solved by the forward backend in 0.42 s and
+2.42 s, having been unsolved by B and S at 60 s.
+
+What the diagnostics do separate reliably:
+
+- **Automaton size.** `robot_grid_pb_3_3` reaches 10,514 states with 721 actions per pass.
+- **Rank dimension.** `collector_v1_pb_11` carries 15,371 numeric rank coordinates against 90
+  actions per pass — the opposite shape.
+- **Backward work.** `prioritized_arbiter_pb_7`, `lift_gr1_pb_3` and `lift_gr1+_pb_3` spend
+  30.1M, 115.3M and 87.3M cumulative action applications. This measures how far the backward
+  fixed point got, not how big the instance is.
+- **None of the above.** `arbiter_on_inpchange_pb_5` is unsolved at 60 s with 53 automaton
+  states, 16 rank coordinates and 736 actions per pass. It is small by every measure collected
+  and still unsolved, so whatever defeats it is not size. It remains the most interesting
+  theory target in the set.
+
+The honest summary is that the diagnostics distinguish *shapes* of backward difficulty well,
+and that predicting from them which shapes a forward solver can handle was premature. The
+frozen set contains all of them, which is what allowed the prediction to be tested and
+falsified rather than merely asserted.
 
 ## 7. The memory cohort, and why it needed a quota
 
