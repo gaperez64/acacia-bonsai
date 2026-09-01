@@ -36,6 +36,7 @@ DECISIVE_RESULTS = frozenset(("REALIZABLE", "UNREALIZABLE"))
 UNSOLVED_RESULTS = frozenset(("TIMEOUT", "MEMOUT", "CRASH", "ERROR", "UNKNOWN"))
 KNOWN_RESULTS = DECISIVE_RESULTS | UNSOLVED_RESULTS
 INFRASTRUCTURE_FAILURE_RESULTS = frozenset(("ERROR", "UNKNOWN"))
+MEMORY_LIMIT_RESULTS = frozenset(("MEMOUT", "CRASH"))
 PER_FAMILY_CAP = 3
 MIN_DISTINCT_FAMILIES = 10
 
@@ -46,10 +47,10 @@ MIN_DISTINCT_FAMILIES = 10
 FAILURE_KINDS = {
     "TIMEOUT": "time_limit",
     "MEMOUT": "memory_limit",
-    # The frozen coverage summary records CRASH but not the original signal.
-    # Keeping it separate preserves signal-9 OOM candidates without pretending
-    # that every possible crash is known to be memory-caused.
-    "CRASH": "crash",
+    # Both CRASH rows in the frozen 2026 summary are signal-9 OOM kills.  The
+    # summary no longer carries the original signal, so preserve that known
+    # classification here rather than treating them as infrastructure faults.
+    "CRASH": "memory_limit",
     "ERROR": "frontend_or_translation_error",
     "UNKNOWN": "no_usable_answer",
 }
@@ -104,6 +105,7 @@ OUTPUT_COLUMNS = (
     "expectation",
     "unsolved_result",
     "failure_kind",
+    "selection_reason",
     "neighbour_instance",
     "neighbour_params_json",
     "neighbour_seconds",
@@ -386,7 +388,7 @@ def can_add(
     return family_counts[candidate["family_key"]] < PER_FAMILY_CAP
 
 
-def select_candidates(
+def select_scored_candidates(
     candidates: list[dict[str, str]], target_count: int
 ) -> list[dict[str, str]]:
     """Apply diversity constraints using stable descending-score greediness."""
@@ -493,13 +495,131 @@ def select_candidates(
     return sorted(selected, key=candidate_sort_key)
 
 
+def memory_bounded(candidate: dict[str, str]) -> bool:
+    return candidate.get("failure_kind") == "memory_limit"
+
+
+def round_robin_memory_choices(
+    candidates: list[dict[str, str]], selected: list[dict[str, str]]
+) -> list[dict[str, str]]:
+    """Order remaining memory candidates by family-diversity rounds."""
+    selected_instances = {candidate["instance"] for candidate in selected}
+    selected_memory_counts = Counter(
+        candidate["family_key"] for candidate in selected if memory_bounded(candidate)
+    )
+    choices_by_family: dict[str, list[dict[str, str]]] = defaultdict(list)
+    for candidate in sorted(candidates, key=candidate_sort_key):
+        if (
+            memory_bounded(candidate)
+            and candidate["instance"] not in selected_instances
+        ):
+            choices_by_family[candidate["family_key"]].append(candidate)
+
+    ranked: list[tuple[int, int, dict[str, str]]] = []
+    for family_order, (family, family_choices) in enumerate(choices_by_family.items()):
+        for offset, candidate in enumerate(family_choices, 1):
+            ranked.append(
+                (selected_memory_counts[family] + offset, family_order, candidate)
+            )
+    ranked.sort(key=lambda item: (item[0], item[1]))
+    return [candidate for _, _, candidate in ranked]
+
+
+def apply_memory_quota(
+    candidates: list[dict[str, str]],
+    selected: list[dict[str, str]],
+    target_count: int,
+    memory_quota: int,
+) -> list[dict[str, str]]:
+    """Reserve panel slots for the best memory-bounded candidates."""
+    if memory_quota < 0:
+        raise ValueError("memory_quota must be nonnegative")
+    if memory_quota > target_count:
+        raise ValueError("memory_quota cannot exceed target_count")
+
+    # The score is built around exact parametric-family evidence: a minimal
+    # point, an ordered solved neighbour, and at least three observations in a
+    # family.  Every memory-bounded instance in the 2026 set is instead a direct
+    # TLSF file with no parameters, so it earns none of those weights and caps
+    # around 14 versus 40 for a parametric candidate.  A purely scored panel
+    # consequently contains no memory case, even though exhausting 8 GiB is the
+    # failure mode a forward reachable solver is most likely to change.  Such a
+    # panel cannot test the campaign's hypothesis, which is why this quota is
+    # applied after the ordinary scored, diversity-constrained selection.
+    rows = [dict(candidate, selection_reason="score") for candidate in selected]
+    selected_instances = {candidate["instance"] for candidate in rows}
+    shortfall = memory_quota - sum(memory_bounded(row) for row in rows)
+    if shortfall <= 0:
+        return sorted(rows, key=candidate_sort_key)
+
+    choices = round_robin_memory_choices(candidates, rows)
+    if len(choices) < shortfall:
+        raise ValueError(
+            f"memory quota {memory_quota} cannot be met: only "
+            f"{memory_quota - shortfall + len(choices)} memory-bounded "
+            "candidates are available"
+        )
+
+    family_counts = Counter(row["family_key"] for row in rows)
+    added = 0
+    for candidate in choices:
+        if added == shortfall:
+            break
+        family = candidate["family_key"]
+        if len(rows) < target_count:
+            if not can_add(candidate, family_counts):
+                continue
+            rows.append(dict(candidate, selection_reason="memory_quota"))
+        else:
+            victims = [
+                row
+                for row in rows
+                if row["selection_reason"] == "score"
+                and not memory_bounded(row)
+                and family_counts[row["family_key"]] > 1
+            ]
+            if family_counts[family] >= PER_FAMILY_CAP:
+                victims = [row for row in victims if row["family_key"] == family]
+            if not victims:
+                continue
+            victim = max(victims, key=candidate_sort_key)
+            rows.remove(victim)
+            selected_instances.remove(victim["instance"])
+            family_counts[victim["family_key"]] -= 1
+            rows.append(dict(candidate, selection_reason="memory_quota"))
+
+        selected_instances.add(candidate["instance"])
+        family_counts[family] += 1
+        added += 1
+
+    if added < shortfall:
+        raise ValueError(
+            f"memory quota {memory_quota} cannot be met without exceeding "
+            f"the {PER_FAMILY_CAP}-per-family cap or displacing a sole "
+            "family representative"
+        )
+
+    return sorted(rows, key=candidate_sort_key)
+
+
+def select_candidates(
+    candidates: list[dict[str, str]], target_count: int, memory_quota: int = 0
+) -> list[dict[str, str]]:
+    selected = select_scored_candidates(candidates, target_count)
+    return apply_memory_quota(
+        candidates, selected, target_count, memory_quota
+    )
+
+
 def build_candidates(
     summary_path: pathlib.Path,
     frontier_path: pathlib.Path,
     pairs_path: pathlib.Path,
     metadata_path: pathlib.Path,
 ) -> list[dict[str, str]]:
-    _, summaries, _ = load_tsv(summary_path, SUMMARY_REQUIRED, "instance")
+    summary_rows, summaries, _ = load_tsv(
+        summary_path, SUMMARY_REQUIRED, "instance"
+    )
     frontier_rows, frontiers, _ = load_tsv(
         frontier_path, FRONTIER_REQUIRED, "family_key"
     )
@@ -509,8 +629,16 @@ def build_candidates(
     )
     minimal_instances = parse_minimal_instances(frontier_path, frontier_rows)
 
+    candidate_instances = set(pairs)
+    candidate_instances.update(
+        summary["instance"]
+        for summary in summary_rows
+        if summary["origin_kind"] == "direct"
+        and summary["P_result"].upper() in MEMORY_LIMIT_RESULTS
+    )
+
     candidates: list[dict[str, str]] = []
-    for instance in sorted(pairs):
+    for instance in sorted(candidate_instances):
         summary = summaries.get(instance)
         if summary is None:
             raise ValueError(f"pair candidate {instance!r} is absent from {summary_path}")
@@ -532,13 +660,26 @@ def build_candidates(
         if metadata_row["tlsf_file"] != summary["tlsf_file"]:
             raise ValueError(f"tlsf_file mismatch for candidate {instance!r}")
 
-        pair = choose_pair(pairs[instance])
+        pair = (
+            choose_pair(pairs[instance])
+            if instance in pairs
+            else {
+                "family_key": summary["family_key"],
+                "solved_instance": "",
+                "solved_params_json": "",
+                "solved_seconds": "",
+                "unsolved_instance": instance,
+                "unsolved_params_json": summary["parameter_values_json"],
+                "unsolved_failure": result,
+                "pair_kind": "none",
+            }
+        )
         if pair["family_key"] != summary["family_key"]:
             raise ValueError(f"family_key mismatch for pair candidate {instance!r}")
-        # Stage A3 records pair_kind=none for a minimal hard point with no
-        # solved comparable point.  Useful frontier fact, but not an eligible
-        # A4 diagnostics pair: every emitted target must have a solved control.
-        if not complete_neighbour(pair):
+        # Ordinary frontier targets still require a solved control.  A memory
+        # target may be a non-orderable direct instance, in which case it is a
+        # useful diagnostics target on its own and deliberately has no pair.
+        if not complete_neighbour(pair) and result not in MEMORY_LIMIT_RESULTS:
             continue
         pair_failure = pair["unsolved_failure"].upper()
         if pair_failure and pair_failure != result:
@@ -586,7 +727,7 @@ def build_candidates(
                 "neighbour_params_json": pair["solved_params_json"],
                 "neighbour_seconds": pair["solved_seconds"],
                 "neighbour_result": neighbour_result,
-                "pair_kind": pair["pair_kind"],
+                "pair_kind": pair["pair_kind"] if neighbour else "none",
                 "score_breakdown": breakdown,
             }
         )
@@ -655,6 +796,12 @@ def parser() -> argparse.ArgumentParser:
         help="maximum number of targets to select (default: %(default)s)",
     )
     argument_parser.add_argument(
+        "--memory-quota",
+        type=nonnegative_target_count,
+        default=4,
+        help="minimum number of memory-bounded targets (default: %(default)s)",
+    )
+    argument_parser.add_argument(
         "--output",
         type=pathlib.Path,
         default=pathlib.Path("benchmarking/syntcomp26-frontier-preselection.tsv"),
@@ -669,20 +816,26 @@ def main(argv: list[str] | None = None) -> int:
         candidates = build_candidates(
             args.summary, args.frontiers, args.pairs, args.metadata
         )
-        selected = select_candidates(candidates, args.target_count)
+        selected = select_candidates(
+            candidates, args.target_count, args.memory_quota
+        )
         write_output(args.output, selected)
     except (OSError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 
     expectations = Counter(row["expectation"] for row in selected)
+    memory_quota_rows = sum(
+        row["selection_reason"] == "memory_quota" for row in selected
+    )
     print(
         f"selected {len(selected)} targets; "
         f"{len({row['family_key'] for row in selected})} distinct families; "
         "expectations: "
         f"realizable={expectations['realizable']}, "
         f"unrealizable={expectations['unrealizable']}, "
-        f"no-expectation={expectations['none']}"
+        f"no-expectation={expectations['none']}; "
+        f"memory-quota rows={memory_quota_rows}"
     )
     return 0
 

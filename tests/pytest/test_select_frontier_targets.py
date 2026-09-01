@@ -4,6 +4,7 @@ import csv
 import importlib.util
 import pathlib
 import sys
+from collections import Counter
 
 
 SCRIPT = (
@@ -97,12 +98,15 @@ def test_memout_is_not_penalised_but_error_is():
     assert memout_score == error_score + 10
 
 
-def candidate(instance, family, score, expectation="none"):
+def candidate(
+    instance, family, score, expectation="none", failure_kind="time_limit"
+):
     return {
         "instance": instance,
         "family_key": family,
         "score": str(score),
         "expectation": expectation,
+        "failure_kind": failure_kind,
     }
 
 
@@ -129,7 +133,7 @@ def write_tsv(path, fieldnames, rows):
         writer.writerows(rows)
 
 
-def miniature_inputs(tmp_path):
+def miniature_inputs(tmp_path, include_memory=False):
     summary_fields = list(summary_row())
     summaries = [
         summary_row(),
@@ -139,11 +143,30 @@ def miniature_inputs(tmp_path):
             "tlsf_bytes": "1024",
         },
     ]
+    if include_memory:
+        summaries.append(
+            {
+                **summary_row("memory.ltl", result="MEMOUT", family="family:m"),
+                "origin_kind": "direct",
+                "parameter_confidence": "none",
+                "parameter_values_json": "{}",
+                "parameter_dimension": "0",
+            }
+        )
     summary = tmp_path / "summary.tsv"
     write_tsv(summary, summary_fields, summaries)
 
     frontiers = tmp_path / "frontiers.tsv"
-    write_tsv(frontiers, list(frontier_row()), [frontier_row()])
+    frontier_rows = [frontier_row()]
+    if include_memory:
+        frontier_rows.append(
+            {
+                **frontier_row("family:m"),
+                "count": "1",
+                "first_unsolved_instance": "",
+            }
+        )
+    write_tsv(frontiers, list(frontier_row()), frontier_rows)
 
     no_neighbour = {
         **pair_row(),
@@ -160,6 +183,14 @@ def miniature_inputs(tmp_path):
         {"logical_instance": "hard.ltl", "tlsf_file": "hard.tlsf", "status": "realizable"},
         {"logical_instance": "easy.ltl", "tlsf_file": "easy.tlsf", "status": "realizable"},
     ]
+    if include_memory:
+        metadata_rows.append(
+            {
+                "logical_instance": "memory.ltl",
+                "tlsf_file": "memory.tlsf",
+                "status": "unrealizable",
+            }
+        )
     write_tsv(metadata, list(metadata_rows[0]), metadata_rows)
     return summary, frontiers, pairs, metadata
 
@@ -175,6 +206,112 @@ def test_known_pair_is_never_emitted_without_its_neighbour_fields(tmp_path):
     assert rows[0]["neighbour_params_json"] == '{"n":1}'
     assert rows[0]["neighbour_seconds"] == "5"
     assert rows[0]["neighbour_result"] == "REALIZABLE"
+
+
+def test_memory_candidate_without_ordered_neighbour_is_eligible(tmp_path):
+    module = load_module()
+    paths = miniature_inputs(tmp_path, include_memory=True)
+
+    rows = module.build_candidates(*paths)
+    memory = next(row for row in rows if row["instance"] == "memory.ltl")
+
+    assert memory["failure_kind"] == "memory_limit"
+    assert memory["neighbour_instance"] == ""
+    assert memory["neighbour_params_json"] == ""
+    assert memory["neighbour_seconds"] == ""
+    assert memory["neighbour_result"] == ""
+    assert memory["pair_kind"] == "none"
+
+
+def quota_candidates():
+    rows = [candidate("a-top.ltl", "a", 100), candidate("a-second.ltl", "a", 90)]
+    rows.extend(
+        candidate(f"{family}.ltl", family, 30 - index)
+        for index, family in enumerate("bcdefghij")
+    )
+    rows.append(candidate("memory.ltl", "memory", 1, failure_kind="memory_limit"))
+    return rows
+
+
+def quota_selection(module):
+    return module.select_candidates(
+        quota_candidates(), target_count=11, memory_quota=1
+    )
+
+
+def test_memory_quota_includes_candidate_below_the_scored_cut():
+    module = load_module()
+
+    selected = quota_selection(module)
+
+    assert "memory.ltl" in {row["instance"] for row in selected}
+
+
+def test_memory_quota_does_not_displace_a_sole_family_representative():
+    module = load_module()
+
+    selected = quota_selection(module)
+
+    assert "a-second.ltl" not in {row["instance"] for row in selected}
+    assert {row["family_key"] for row in selected} >= set("bcdefghij")
+
+
+def test_selection_reason_distinguishes_score_and_memory_quota_rows():
+    module = load_module()
+
+    selected = quota_selection(module)
+    reasons = {row["instance"]: row["selection_reason"] for row in selected}
+
+    assert reasons["memory.ltl"] == "memory_quota"
+    assert reasons["a-top.ltl"] == "score"
+
+
+def test_memory_quota_keeps_the_requested_target_count():
+    module = load_module()
+
+    selected = quota_selection(module)
+
+    assert len(selected) == 11
+
+
+def test_memory_quota_uses_distinct_families_first_and_keeps_family_cap():
+    module = load_module()
+    candidates = [
+        candidate("a-top.ltl", "a", 100),
+        candidate("a-second.ltl", "a", 99),
+        candidate("a-third.ltl", "a", 98),
+        candidate("b-top.ltl", "b", 97),
+        candidate("b-second.ltl", "b", 96),
+        candidate("b-third.ltl", "b", 95),
+    ]
+    candidates.extend(
+        candidate(f"{family}.ltl", family, score)
+        for family, score in zip("cdefghij", range(94, 86, -1))
+    )
+    candidates.extend(
+        [
+            candidate("memory-a-top.ltl", "a", 20, failure_kind="memory_limit"),
+            candidate("memory-a-second.ltl", "a", 19, failure_kind="memory_limit"),
+            candidate("memory-x.ltl", "memory:x", 18, failure_kind="memory_limit"),
+            candidate("memory-y.ltl", "memory:y", 17, failure_kind="memory_limit"),
+            candidate("memory-z.ltl", "memory:z", 16, failure_kind="memory_limit"),
+        ]
+    )
+
+    selected = module.select_candidates(candidates, target_count=14, memory_quota=4)
+    quota_rows = [
+        row for row in selected if row["selection_reason"] == "memory_quota"
+    ]
+    family_counts = Counter(row["family_key"] for row in selected)
+
+    assert [row["family_key"] for row in quota_rows] == [
+        "a",
+        "memory:x",
+        "memory:y",
+        "memory:z",
+    ]
+    assert len(selected) == 14
+    assert max(family_counts.values()) <= module.PER_FAMILY_CAP
 
 
 def test_output_order_is_deterministic(tmp_path):
