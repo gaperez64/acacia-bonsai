@@ -163,5 +163,50 @@ int main (int argc, char** argv) {
       "candidate below implication",
       "r0 -> (G !(g0 & g1) & G (r0 -> X (g0 & g1)))",
       {"r0", "r1"}, {"g0", "g1"}, false);
+
+  // Pin the soundness boundary of the fragment: each case is shaped so that a
+  // matcher one level too permissive answers UNREALIZABLE.
+  ok &= expect (
+      "response under G, trigger input-only",
+      "G(!g0|!g1) & G(r0 -> XX(g0&g1))",
+      {"r0", "r1"}, {"g0", "g1"}, true);
+  // With beta=false, G(alpha -> false) is G(!alpha), and a forceable alpha
+  // refutes it without requiring a separate invariant.
+  ok &= expect (
+      "beta is false outright, no invariant",
+      "G(r0 -> XX(g0 & !g0))",
+      {"r0", "r1"}, {"g0", "g1"}, true);
+  ok &= expect (
+      "response only under a disjunction",
+      "G(!g0|!g1) & (G(r0 -> XX(g0&g1)) | G(r1))",
+      {"r0", "r1"}, {"g0", "g1"}, false);
+  ok &= expect (
+      "response under an inner implication",
+      "G(!g0|!g1) & (r1 -> G(r0 -> XX(g0&g1)))",
+      {"r0", "r1"}, {"g0", "g1"}, false);
+  ok &= expect (
+      "invariant only under a disjunction",
+      "(G(!g0|!g1) | G(r1)) & G(r0 -> XX(g0&g1))",
+      {"r0", "r1"}, {"g0", "g1"}, false);
+  ok &= expect (
+      "response negated",
+      "G(!g0|!g1) & !G(r0 -> XX(g0&g1))",
+      {"r0", "r1"}, {"g0", "g1"}, false);
+  ok &= expect (
+      "invariant under F G not G",
+      "F G(!g0|!g1) & G(r0 -> XX(g0&g1))",
+      {"r0", "r1"}, {"g0", "g1"}, false);
+  ok &= expect (
+      "trigger needs an output",
+      "G(!g0|!g1) & G((r0&g0) -> XX(g0&g1))",
+      {"r0", "r1"}, {"g0", "g1"}, false);
+  ok &= expect (
+      "realizable lookalike",
+      "G(!g0|!g1) & G(r0 -> XX g0)",
+      {"r0", "r1"}, {"g0", "g1"}, false);
+  ok &= expect (
+      "response inside U",
+      "G(!g0|!g1) & (r1 U G(r0 -> XX(g0&g1)))",
+      {"r0", "r1"}, {"g0", "g1"}, false);
   return ok ? 0 : 1;
 }
