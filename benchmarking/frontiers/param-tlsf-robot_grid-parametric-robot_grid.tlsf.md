@@ -39,8 +39,33 @@
 
 ## Structural conjecture
 
-TODO — not auto-generated. A conjecture produced from the same table it is meant to explain would be a restatement, not a hypothesis.
+**The forward solver extends this family's frontier, and where it stops is informative.**
+
+Observed: `(2,2)` both solve; `(3,3)`, `(4,4)` and `(6,1)` are **forward-only**; `(5,5)` and
+`(6,6)` defeat both; `(7,7)` and `(8,8)` exhaust 8 GiB for both.
+
+At `(3,3)` the backward worker reaches **10,514 automaton states with only 82 numeric rank
+coordinates and 721 actions per pass**. That is the shape a reachable forward search should
+win on, and it does: a large permissive region encoded over few counting coordinates, where
+one strategy touches a small part of it.
+
+The conjecture is that the winning strategy on the grid is *local* — the controller only ever
+needs the part of the grid near the current position, so the reachable rank set stays small
+while the maximal winning region grows with the grid area. Forward stops at `(5,5)`/`(6,6)`
+not because the strategy became large but because the number of reachable positions finally
+overtook the node budget.
+
+The memory failures at `(7,7)` and `(8,8)` hit **both** solvers, which places them before the
+game: the automaton or action construction exhausts 8 GiB before either fixed point starts.
+Those are not a statement about backward versus forward at all.
 
 ## Next theorem
 
-TODO.
+1. Instrument `forward_env_nodes` at `(4,4)` and `(5,5)`: if the reachable node count grows
+   polynomially in the grid area while the backward peak grows exponentially, the locality
+   claim is established and the family has a strategy-size theorem.
+2. Determine whether `(7,7)`'s memory failure is translation, action materialisation, or the
+   first CPre. It is a different bug class from everything else in this dossier and is
+   currently attributed to nothing.
+3. `(6,1)` is forward-only while `(5,5)` is not, so the frontier is not a function of the area
+   alone. Whether the aspect ratio matters is testable on the existing points.

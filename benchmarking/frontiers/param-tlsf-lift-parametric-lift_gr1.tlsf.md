@@ -36,8 +36,29 @@
 
 ## Structural conjecture
 
-TODO — not auto-generated. A conjecture produced from the same table it is meant to explain would be a restatement, not a hypothesis.
+**Forward buys exactly one parameter step here, and the step it buys is the whole story.**
+
+`n=2` is solved by everything in 0.025 s. `n=3` is **forward-only** — 0.42 s, against a
+backward timeout at 60 s. From `n=7` upward nothing solves it. The 2026 set contains no
+`n=4,5,6`, so "one step" is one *observed* step, not necessarily one parameter.
+
+This family carried the sprint's most instructive mistake. Its `actions_seen` of **115,278,358**
+was read as an action-table size, and used to predict the forward solver could not possibly
+help. The counter is cumulative work per CPre call, so a huge value means the backward fixed
+point ground through an enormous number of maxima — evidence *for* trying a reachable search,
+not against it. The prediction was exactly inverted, and the measurement refuted it.
+
+The conjecture is that `lift_gr1` at `n=3` has a small controlled invariant that the backward
+computation only reaches after enumerating a very large permissive region, and that the
+insufficient-bound refutations at low `K` are also cheap forward — the same asymmetry the
+local-certificate sprint found, where a root refutation cost 35 forward applications while the
+backward frontier grew to 26,317 maxima.
 
 ## Next theorem
 
-TODO.
+1. Extract the forward winning certificate at `n=3` and measure its generator count against
+   the backward peak antichain. If it is small, this family has a succinct-strategy theorem.
+2. Establish why `n≥7` defeats forward as well. If the reachable set is still small there, the
+   obstruction is the bound schedule rather than the game.
+3. Obtain the missing `n=4,5,6` from the parametric template. A one-step frontier over a series
+   that skips from 3 to 7 is under-sampled, and the shape of the cliff is currently unknown.

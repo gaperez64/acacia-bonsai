@@ -39,8 +39,35 @@
 
 ## Structural conjecture
 
-TODO — not auto-generated. A conjecture produced from the same table it is meant to explain would be a restatement, not a hypothesis.
+**This is the family where the forward solver is strictly worse, and its shape says why.**
+
+Backward solves `n=3,5,7,9` (the last in 2.71 s) and stops at `n=11`. Forward solves only
+`n=3,5` and **times out on `n=7` and `n=9`, which backward answers in 0.09 s and 2.71 s**.
+
+The distinguishing measurement: at `n=11` the worker reports **15,372 automaton states and
+15,371 numeric rank coordinates** — the rank dimension is the automaton size minus one, so
+essentially every automaton state is a counting coordinate and the Boolean tail is empty.
+
+The forward solver interns environment nodes on the **complete coordinate vector**. With a rank
+dimension of that size, two distinct reachable configurations almost never share an exact
+vector, so interning collapses nothing and the reachable set grows with the exploration rather
+than being folded by it. The backward downset, by contrast, stores an antichain of maxima and
+shares structure across the whole region — exactly the representation that pays when the
+dimension is large and the values are small.
+
+The conjecture is therefore that **rank dimension, not automaton size or action count, predicts
+where forward loses**: the forward representation has no sharing, so it is beaten wherever the
+downset's sharing is doing the work.
 
 ## Next theorem
 
-TODO.
+1. Test the prediction on the other frozen targets: rank dimension should correlate with
+   forward failure better than automaton states or `actions_seen` do. `robot_grid` (rank 82,
+   forward wins) and this family (rank 15,371, forward loses) are the two extremes and agree
+   with it.
+2. If the prediction holds it gives a **routing rule** — send high-rank-dimension instances to
+   the backward solver — which is worth more than either solver alone and is the concrete form
+   the portfolio conclusion should take.
+3. Ask whether the 15,371-coordinate encoding is necessary, or an artefact of how the collector
+   specification is translated. A smaller encoding would change the family's difficulty for
+   both backends.
