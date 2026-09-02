@@ -21,6 +21,7 @@
 #include "solver/minimal_losing_antichain.hh"
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <deque>
@@ -34,6 +35,21 @@
 namespace acacia::solver_detail {
 
   enum class forward_result_status { win_k, lose_k, resource_limit };
+
+  enum class losing_reason {
+    env_unsafe,
+    env_subsumed,
+    env_losing_input,
+    ctrl_all_losing,
+  };
+
+  struct losing_proof {
+      std::size_t id;
+      losing_reason reason;
+      std::size_t node;
+      std::size_t witness = 0;
+      std::vector<std::size_t> dependencies;
+  };
 
   enum class forward_resource_limit {
     none,
@@ -81,6 +97,7 @@ namespace acacia::solver_detail {
       /// Retention ratios; an empty sample is reported as no reduction (1.0).
       double equality_reduction = 1.0;
       double dominance_reduction = 1.0;
+      std::vector<losing_proof> losing_proofs;
       std::vector<State> strategy_ranks;
   };
 
@@ -254,6 +271,8 @@ namespace acacia::solver_detail {
         std::deque<queued_node> open_queue;
         std::deque<queued_node> losing_queue;
         minimal_losing_antichain<state> losing_antichain;
+        std::vector<std::size_t> losing_antichain_generators;
+        std::vector<losing_proof> losing_proofs;
 
         std::size_t represented_edges = 0;
         std::size_t env_expanded = 0;
@@ -298,14 +317,34 @@ namespace acacia::solver_detail {
           return found->second;
         }
 
-        std::size_t proof_id () { return next_proof_id++; }
+        std::size_t append_losing_proof (
+            losing_reason reason, std::size_t node, std::size_t witness = 0,
+            std::vector<std::size_t> dependencies = {}) {
+          const std::size_t id = next_proof_id++;
+          for (const std::size_t dependency : dependencies)
+            assert (dependency != 0 and dependency < id);
+          losing_proofs.push_back (
+              {id, reason, node, witness, std::move (dependencies)});
+          return id;
+        }
 
-        void mark_environment_losing (std::size_t env_id) {
+        [[nodiscard]] std::optional<std::size_t> subsuming_generator (
+            const state& rank) const {
+          for (const std::size_t generator : losing_antichain_generators)
+            if (env_nodes[generator].rank.partial_order (rank).leq ())
+              return generator;
+          return std::nullopt;
+        }
+
+        void mark_environment_losing (
+            std::size_t env_id, losing_reason reason, std::size_t witness = 0,
+            std::vector<std::size_t> dependencies = {}) {
           auto& env = env_nodes[env_id];
           if (env.status == node_status::losing)
             return;
           env.status = node_status::losing;
-          env.losing_proof_id = proof_id ();
+          env.losing_proof_id = append_losing_proof (
+              reason, env_id, witness, std::move (dependencies));
           losing_queue.push_back ({false, env_id});
 
           if (not use_losing_antichain or not is_safe (env.rank)
@@ -314,6 +353,13 @@ namespace acacia::solver_detail {
 
           losing_antichain_peak =
               std::max (losing_antichain_peak, losing_antichain.size ());
+          std::erase_if (
+              losing_antichain_generators, [this, env_id] (std::size_t generator) {
+                return env_nodes[env_id].rank
+                    .partial_order (env_nodes[generator].rank)
+                    .leq ();
+              });
+          losing_antichain_generators.push_back (env_id);
           ++invalidation_scans;
 
           // This is a full scan of every environment rank interned so far.
@@ -325,18 +371,23 @@ namespace acacia::solver_detail {
               continue;
             if (env.rank.partial_order (env_nodes[id].rank).leq ()) {
               ++nodes_invalidated;
-              mark_environment_losing (id);
+              mark_environment_losing (
+                  id, losing_reason::env_subsumed, env_id,
+                  {env.losing_proof_id});
             }
           }
         }
 
-        void mark_controller_losing (std::size_t ctrl_id) {
+        void mark_controller_losing (
+            std::size_t ctrl_id, std::vector<std::size_t> dependencies) {
           auto& ctrl = ctrl_nodes[ctrl_id];
           if (ctrl.status == node_status::losing)
             return;
           ctrl.status = node_status::losing;
           ctrl.selected_env.reset ();
-          ctrl.losing_proof_id = proof_id ();
+          ctrl.losing_proof_id = append_losing_proof (
+              losing_reason::ctrl_all_losing, ctrl_id, 0,
+              std::move (dependencies));
           losing_queue.push_back ({true, ctrl_id});
         }
 
@@ -353,7 +404,7 @@ namespace acacia::solver_detail {
               {std::move (rank), node_status::open, {}, {}, 0});
           interned_envs.emplace (std::move (key), env_id);
           if (not is_safe (env_nodes[env_id].rank))
-            mark_environment_losing (env_id);
+            mark_environment_losing (env_id, losing_reason::env_unsafe);
           else
             open_queue.push_back ({false, env_id});
 
@@ -378,7 +429,12 @@ namespace acacia::solver_detail {
               and losing_antichain.subsumes (env_nodes[env_id].rank)) {
             // The stored generator is a complete losing proof for this rank:
             // this is the "subsumed" environment-loss reason.
-            mark_environment_losing (env_id);
+            const auto generator =
+                subsuming_generator (env_nodes[env_id].rank);
+            assert (generator.has_value ());
+            mark_environment_losing (
+                env_id, losing_reason::env_subsumed, *generator,
+                {env_nodes[*generator].losing_proof_id});
             return;
           }
 
@@ -466,7 +522,14 @@ namespace acacia::solver_detail {
             return true;
           }
 
-          mark_controller_losing (ctrl_id);
+          std::vector<std::size_t> dependencies;
+          for (const auto& choice : ctrl.choices) {
+            const auto env_id = find_env (choice.successor);
+            if (env_id.has_value ()
+                and env_nodes[*env_id].status == node_status::losing)
+              dependencies.push_back (env_nodes[*env_id].losing_proof_id);
+          }
+          mark_controller_losing (ctrl_id, std::move (dependencies));
           return true;
         }
 
@@ -477,7 +540,9 @@ namespace acacia::solver_detail {
             if (losing.controller) {
               const std::size_t parent = ctrl_nodes[losing.id].parent_env;
               if (env_nodes[parent].status != node_status::losing)
-                mark_environment_losing (parent);
+                mark_environment_losing (
+                    parent, losing_reason::env_losing_input, losing.id,
+                    {ctrl_nodes[losing.id].losing_proof_id});
               continue;
             }
 
@@ -548,6 +613,7 @@ namespace acacia::solver_detail {
           result.distinct_successors = distinct_successors;
           result.minimal_successors = minimal_successors;
           result.minimisation_ms = minimisation_ms;
+          result.losing_proofs = losing_proofs;
           if (raw_actions != 0)
             result.equality_reduction =
                 static_cast<double> (distinct_successors) / raw_actions;
