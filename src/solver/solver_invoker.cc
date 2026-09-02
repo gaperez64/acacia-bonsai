@@ -8,6 +8,7 @@
 #include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
 #include "solver/mealy_to_moore.hh"
+#include "solver/realizability_simplify.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/symmetry_blocks.hh"
@@ -625,20 +626,6 @@ namespace {
       }
   };
 
-  bool apply_realizability_simplifier (spot::formula& formula,
-                                       const std::vector<std::string>& input_aps) {
-    spot::formula before_simplification = formula;
-    {
-#if ACACIA_ENABLE_DIAGNOSTICS
-      auto* diag = acacia::diagnostics::current ();
-      acacia::diagnostics::scoped_timer timer (diag ? &diag->rsimp_ms : nullptr);
-#endif
-      spot::realizability_simplifier rsimp (formula, input_aps);
-      formula = rsimp.simplified_formula ();
-    }
-    return before_simplification != formula;
-  }
-
   std::optional<bool> try_degenerate_io (
       const std::vector<std::string>& input_aps, const std::vector<std::string>& output_aps,
       const spot::formula& spot_formula, std::optional<UNREAL_X_T> check_unreal,
@@ -752,7 +739,7 @@ namespace {
       bool any_component_simplified = false;
       for (auto& sub_formula : forms) {
         const bool component_simplified =
-            apply_realizability_simplifier (sub_formula, input_aps);
+            acacia::realizability::apply_simplifier (sub_formula, input_aps);
         any_component_simplified = any_component_simplified or component_simplified;
       }
 # if ACACIA_ENABLE_DIAGNOSTICS
@@ -862,7 +849,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // patch_mealy/patch_game on the emitted strategy, which is not wired up here.
   if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and not synth_fname.has_value ()) {
     [[maybe_unused]] const bool formula_simplified =
-        apply_realizability_simplifier (spot_formula, input_aps);
+        acacia::realizability::apply_simplifier (spot_formula, input_aps);
 #if ACACIA_ENABLE_DIAGNOSTICS
     if (auto* diag = acacia::diagnostics::current ())
       diag->rsimp_changed = formula_simplified;
