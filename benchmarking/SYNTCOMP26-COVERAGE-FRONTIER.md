@@ -152,10 +152,14 @@ What the diagnostics do separate reliably:
 - **Backward work.** `prioritized_arbiter_pb_7`, `lift_gr1_pb_3` and `lift_gr1+_pb_3` spend
   30.1M, 115.3M and 87.3M cumulative action applications. This measures how far the backward
   fixed point got, not how big the instance is.
-- **None of the above.** `arbiter_on_inpchange_pb_5` is unsolved at 60 s with 53 automaton
-  states, 16 rank coordinates and 736 actions per pass. It is small by every measure collected
-  and still unsolved, so whatever defeats it is not size. It remains the most interesting
-  theory target in the set.
+- **Measured on the wrong workers.** `arbiter_on_inpchange_pb_5` appears small by every
+  measure — 53 automaton states, 16 rank coordinates, 736 actions — and unsolved at 60 s. A
+  later trace shows why that reading is wrong: those columns describe classic workers that
+  finish in 47 ms reporting `unknown`, while the instance actually runs on the **equivariant
+  solver**, reaching `equivariant-after-closure` with 5 clients, 10 blocks and 6 orbits. The
+  equivariant fixed point emits no snapshots, so its cost is uninstrumented. Nothing here was
+  measured about the computation that actually runs. See
+  `frontiers/param-tlsf-arbiters_zoo-parametric-arbiter_on_inpchange.tlsf.md`.
 
 The honest summary is that the diagnostics distinguish *shapes* of backward difficulty well,
 and that predicting from them which shapes a forward solver can handle was premature. The

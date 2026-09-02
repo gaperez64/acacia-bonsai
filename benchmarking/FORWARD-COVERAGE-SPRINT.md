@@ -111,9 +111,11 @@ discipline, not correctness.
 
 ## Next theorem boundary
 
-- `arbiter_on_inpchange_pb_5` is unsolved at 60 s with 53 automaton states, 16 rank
-  coordinates and 736 actions per pass, and forward does not solve it either. Small by every
-  measure collected; the mechanism is unexplained.
+- `arbiter_on_inpchange_pb_5` runs on the **equivariant** solver, whose fixed point emits no
+  snapshots; the small mechanism numbers recorded for it come from classic workers that finish
+  in 47 ms without deciding. The forward preset disables the equivariant solver, so B and F
+  have never been compared like-for-like on it. Instrumenting the equivariant fixed point is
+  the prerequisite for any claim about this family.
 - The losing antichain is a flat vector with linear `subsumes`. On tiny games it already showed
   5,540 invalidation scans for 1,122 invalidated nodes. Indexing it — or contributing a genuine
   upward-closed structure to posets — is the obvious next step now that F2 is justified.
