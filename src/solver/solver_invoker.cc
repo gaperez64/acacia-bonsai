@@ -7,6 +7,7 @@
 #include "solver/create_automaton.hh"
 #include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
+#include "solver/forced_output_contradiction.hh"
 #include "solver/mealy_to_moore.hh"
 #include "solver/realizability_simplify.hh"
 #include "solver/solve_game.hh"
@@ -663,9 +664,66 @@ namespace {
 
   std::optional<bool> try_syntactic_bypass (
       [[maybe_unused]] const spot::formula& spot_formula,
+      [[maybe_unused]] const std::vector<std::string>& input_aps,
       [[maybe_unused]] const std::vector<std::string>& output_aps,
       [[maybe_unused]] std::optional<UNREAL_X_T> check_unreal,
       [[maybe_unused]] const std::optional<std::string>& synth_fname) {
+#if ACACIA_FORCED_OUTPUT_CONTRADICTION
+    if (not synth_fname.has_value ()) {
+      acacia::forced_output_contradiction::result contradiction;
+      {
+# if ACACIA_ENABLE_DIAGNOSTICS
+        auto* diag = acacia::diagnostics::current ();
+        acacia::diagnostics::scoped_timer timer (
+            diag ? &diag->forced_contradiction_ms : nullptr);
+# endif
+        contradiction = acacia::forced_output_contradiction::try_direct (
+            spot_formula, input_aps, output_aps);
+      }
+# if ACACIA_ENABLE_DIAGNOSTICS
+      if (auto* diag = acacia::diagnostics::current ()) {
+        diag->forced_contradiction = contradiction.unrealizable ? "match" : "decline";
+        diag->forced_contradiction_invariants = contradiction.invariants_seen;
+        diag->forced_contradiction_responses = contradiction.responses_seen;
+      }
+# endif
+      if (contradiction.unrealizable) {
+        assert (contradiction.proof.has_value ());
+        const auto& proof = *contradiction.proof;
+        const char* witness_kind = "";
+        switch (proof.kind) {
+          case acacia::forced_output_contradiction::response_kind::fixed_delay:
+            witness_kind = "fixed_delay";
+            break;
+          case acacia::forced_output_contradiction::response_kind::eventual:
+            witness_kind = "eventual";
+            break;
+          case acacia::forced_output_contradiction::response_kind::contradictory_invariants:
+            witness_kind = "contradictory_invariants";
+            break;
+        }
+# if ACACIA_ENABLE_DIAGNOSTICS
+        if (auto* diag = acacia::diagnostics::current ()) {
+          diag->forced_contradiction_kind = witness_kind;
+          diag->forced_contradiction_delay = proof.delay;
+        }
+# endif
+        const bool child_matches = acacia::syntactic_bypass::matches_worker (
+            acacia::syntactic_bypass::verdict::unrealizable,
+            check_unreal.has_value ());
+        verb_do (1, vout << "Forced-output contradiction found " << witness_kind
+                         << " witness\n");
+        return std::optional<bool> {acacia::diagnostics::finish (
+            child_matches,
+            child_matches ? "forced-contradiction"
+                          : "forced-contradiction-opposite-verdict")};
+      }
+    }
+#elif ACACIA_ENABLE_DIAGNOSTICS
+    if (auto* diag = acacia::diagnostics::current ())
+      diag->forced_contradiction = "off";
+#endif
+
 #if ACACIA_ENABLE_SYNTACTIC_BYPASS
     // Spot's direct-strategy check is defined in the original Mealy frame, so
     // it must run before the unreal children swap inputs and outputs.  It
@@ -864,7 +922,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     return *answer;
 
   if (auto answer =
-          try_syntactic_bypass (spot_formula, output_aps, check_unreal, synth_fname);
+          try_syntactic_bypass (spot_formula, input_aps, output_aps, check_unreal,
+                                synth_fname);
       answer.has_value ())
     return *answer;
 

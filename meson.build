@@ -124,6 +124,11 @@ if get_option ('acacia_enable_syntactic_bypass')
 else
   build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 0)
 endif
+if get_option ('acacia_forced_output_contradiction')
+  build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION', 1)
+else
+  build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION', 0)
+endif
 if get_option ('acacia_enable_tlsf_frontend')
   build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 1)
 else

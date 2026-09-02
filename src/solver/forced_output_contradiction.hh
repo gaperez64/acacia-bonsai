@@ -6,6 +6,7 @@
 #include <spot/tl/formula.hh>
 #include <spot/twa/bdddict.hh>
 
+#include <cstddef>
 #include <map>
 #include <optional>
 #include <string>
@@ -32,6 +33,8 @@ namespace acacia::forced_output_contradiction {
     bool unrealizable = false;
     std::optional<witness> proof;
     std::string decline_reason;
+    std::size_t invariants_seen = 0;
+    std::size_t responses_seen = 0;
   };
 
   namespace detail {
@@ -227,7 +230,7 @@ namespace acacia::forced_output_contradiction {
     spot::formula ignored_right;
     if (detail::split_implication (effective_mealy_formula, ignored_left,
                                    ignored_right))
-      return {false, std::nullopt, "top-level implication"};
+      return {false, std::nullopt, "top-level implication", 0, 0};
 
     const std::unordered_set<std::string> output_names (output_aps.begin (),
                                                          output_aps.end ());
@@ -249,7 +252,8 @@ namespace acacia::forced_output_contradiction {
     for (spot::formula invariant : invariants) {
       auto translated = translator.translate (invariant);
       if (not translated)
-        return {false, std::nullopt, "no forced output contradiction"};
+        return {false, std::nullopt, "no forced output contradiction",
+                invariants.size (), responses.size ()};
       chi_all = bdd_and (chi_all, *translated);
     }
 
@@ -261,7 +265,8 @@ namespace acacia::forced_output_contradiction {
       witness proof {spot::formula::G (invariant_body), spot::formula::tt (),
                      spot::formula::tt (),
                      response_kind::contradictory_invariants, 0};
-      return {true, std::move (proof), {}};
+      return {true, std::move (proof), {}, invariants.size (),
+              responses.size ()};
     }
 
     for (const detail::response& response : responses) {
@@ -273,8 +278,10 @@ namespace acacia::forced_output_contradiction {
 
       witness proof {spot::formula::G (invariant_body), response.trigger,
                      response.beta, response.kind, response.delay};
-      return {true, std::move (proof), {}};
+      return {true, std::move (proof), {}, invariants.size (),
+              responses.size ()};
     }
-    return {false, std::nullopt, "no forced output contradiction"};
+    return {false, std::nullopt, "no forced output contradiction",
+            invariants.size (), responses.size ()};
   }
 }  // namespace acacia::forced_output_contradiction

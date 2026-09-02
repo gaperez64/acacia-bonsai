@@ -95,6 +95,8 @@ namespace acacia::diagnostics {
       std::string tlsf_target = "-";
       std::string tlsf_effective_target = "-";
       std::string syntactic_bypass = "not-run";
+      std::string forced_contradiction = "not-run";
+      std::string forced_contradiction_kind = "";
       std::string fast_class = "not-run";
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
@@ -116,6 +118,7 @@ namespace acacia::diagnostics {
       long long total_ms = 0;
       long long rsimp_ms = 0;
       long long syntactic_bypass_ms = 0;
+      long long forced_contradiction_ms = 0;
       long long translation_ms = 0;
       long long fast_class_ms = 0;
       long long fast_solve_ms = 0;
@@ -132,8 +135,11 @@ namespace acacia::diagnostics {
 
       bool rsimp_changed = false;
       bool forward_backend = false;
+      unsigned forced_contradiction_delay = 0;
       size_t aut_states = 0;
       size_t aut_edges = 0;
+      std::size_t forced_contradiction_invariants = 0;
+      std::size_t forced_contradiction_responses = 0;
       size_t preproc_states_before = 0;
       size_t preproc_states_after = 0;
       size_t preproc_edges_before = 0;
@@ -261,6 +267,12 @@ namespace acacia::diagnostics {
          << " rsimp_changed=" << (m.rsimp_changed ? 1 : 0)
          << " syntactic_bypass=" << m.syntactic_bypass
          << " syntactic_bypass_ms=" << m.syntactic_bypass_ms
+         << " forced_contradiction=" << m.forced_contradiction
+         << " forced_contradiction_kind=" << m.forced_contradiction_kind
+         << " forced_contradiction_delay=" << m.forced_contradiction_delay
+         << " forced_contradiction_invariants=" << m.forced_contradiction_invariants
+         << " forced_contradiction_responses=" << m.forced_contradiction_responses
+         << " forced_contradiction_ms=" << m.forced_contradiction_ms
          << " translation_ms=" << m.translation_ms << " aut_states=" << m.aut_states
          << " aut_edges=" << m.aut_edges << " fast_class=" << m.fast_class
          << " fast_class_ms=" << m.fast_class_ms << " fast_solve_ms=" << m.fast_solve_ms
