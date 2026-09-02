@@ -177,6 +177,15 @@ test ('syntactic-bypass',
       syntactic_bypass_test,
       suite : ['unit', 'syntactic-bypass'])
 
+forced_output_contradiction_test = executable ('forced-output-contradiction-test',
+                                               'forced_output_contradiction_test.cc',
+                                               include_directories : inc,
+                                               dependencies : [spot_dep, bddx_dep])
+test ('forced-output-contradiction',
+      forced_output_contradiction_test,
+      args : [meson.current_source_dir () / 'fixtures/forced_contradiction'],
+      suite : ['unit', 'forced-output-contradiction'])
+
 degenerate_io_test = executable ('degenerate-io-test',
                                  'degenerate_io_test.cc',
                                  include_directories : inc,
