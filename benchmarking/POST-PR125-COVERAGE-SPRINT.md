@@ -349,6 +349,15 @@ vacuous-trigger reading, and the two `lilydemo` instances reduce to
 path the adversarial probe had already covered in the abstract. Both are annotated
 `unrealizable`.
 
+Over the full 1,586-file corpus rather than the graded selection, the same binary
+matches **130**, distributed as 55 `full_arbiter_unreal1`, 7 `full_arbiter_unreal2`,
+53 `simple_arbiter_unreal1`, 12 `simple_arbiter_unreal2`, and the three singletons.
+That closes the prediction loop exactly: the four arbiter families come to
+55 + 7 + 53 + 12 = **127**, the number derived from the TLSF sources before any code
+existed, and the three extra matches are precisely the ones the two additional
+theorem paths were added to catch. Of the 130, 106 are annotated `unrealizable`,
+24 `unknown`, and none `realizable`.
+
 ### Correctness of the 120
 
 | check | result |
@@ -374,7 +383,41 @@ themselves.
 
 The 22 are 19 `full_arbiter_unreal1` and 3 `full_arbiter_unreal2` — exactly the set
 identified before the code existed. They take the portfolio union from **1,090 to
-1,112 of 1,524**. The other 98 matches gain nothing but are answered before
+1,112 of 1,524**.
+
+| instance | witness | SYNTCOMP status |
+|---|---|---|
+| `full_arbiter_unreal1_pb_2_18_pe_` | `fixed_delay 18` | unrealizable |
+| `full_arbiter_unreal1_pb_2_20_pe_` | `fixed_delay 20` | unrealizable |
+| `full_arbiter_unreal1_pb_2_21_pe_` | `fixed_delay 21` | unrealizable |
+| `full_arbiter_unreal1_pb_2_22_pe_` | `fixed_delay 22` | unrealizable |
+| `full_arbiter_unreal1_pb_2_24_pe_` | `fixed_delay 24` | unrealizable |
+| `full_arbiter_unreal1_pb_2_26_pe_` | `fixed_delay 26` | unrealizable |
+| `full_arbiter_unreal1_pb_3_8_pe_` | `fixed_delay 8` | unrealizable |
+| `full_arbiter_unreal1_pb_3_9_pe_` | `fixed_delay 9` | unrealizable |
+| `full_arbiter_unreal1_pb_3_10_pe_` | `fixed_delay 10` | unrealizable |
+| `full_arbiter_unreal1_pb_3_11_pe_` | `fixed_delay 11` | **unknown** |
+| `full_arbiter_unreal1_pb_3_12_pe_` | `fixed_delay 12` | **unknown** |
+| `full_arbiter_unreal1_pb_3_13_pe_` | `fixed_delay 13` | **unknown** |
+| `full_arbiter_unreal1_pb_3_14_pe_` | `fixed_delay 14` | **unknown** |
+| `full_arbiter_unreal1_pb_3_15_pe_` | `fixed_delay 15` | **unknown** |
+| `full_arbiter_unreal1_pb_4_5_pe_` | `fixed_delay 5` | unrealizable |
+| `full_arbiter_unreal1_pb_4_6_pe_` | `fixed_delay 6` | **unknown** |
+| `full_arbiter_unreal1_pb_4_7_pe_` | `fixed_delay 7` | **unknown** |
+| `full_arbiter_unreal1_pb_4_8_pe_` | `fixed_delay 8` | **unknown** |
+| `full_arbiter_unreal1_pb_6_8_pe_` | `fixed_delay 8` | **unknown** |
+| `full_arbiter_unreal2_pb_5_pe_` | `eventual 0` | **unknown** |
+| `full_arbiter_unreal2_pb_6_pe_` | `eventual 0` | **unknown** |
+| `full_arbiter_unreal2_pb_7_pe_` | `eventual 0` | **unknown** |
+
+The reported delay equals the instance's own `u` generator parameter in every one of
+the nineteen fixed-delay rows, and the three `full_arbiter_unreal2` rows report
+`eventual`, which is the form that family is generated in. Nothing in the checker
+reads the filename, so this is an independent consistency check on the witness
+rather than a restatement of it.
+
+Twelve of the twenty-two are annotated `unknown`, meaning the sprint would settle
+instances the competition left open. The other 98 matches gain nothing but are answered before
 translation rather than by a game search, and they are what makes the correctness
 argument above possible.
 
