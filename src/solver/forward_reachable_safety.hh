@@ -98,6 +98,13 @@ namespace acacia::solver_detail {
       double equality_reduction = 1.0;
       double dominance_reduction = 1.0;
       std::vector<losing_proof> losing_proofs;
+      /// Rank vector of every environment node, indexed by node id, and the
+      /// (parent env, input index) of every controller node.  A replayer needs
+      /// these to recompute a losing proof from the game rather than trusting
+      /// the solver's own status flags.
+      std::vector<State> env_ranks;
+      std::vector<std::pair<std::size_t, std::size_t>> ctrl_parents;
+      std::size_t initial_env = 0;
       std::vector<State> strategy_ranks;
   };
 
@@ -614,6 +621,14 @@ namespace acacia::solver_detail {
           result.minimal_successors = minimal_successors;
           result.minimisation_ms = minimisation_ms;
           result.losing_proofs = losing_proofs;
+          result.env_ranks.reserve (env_nodes.size ());
+          for (const auto& node : env_nodes)
+            result.env_ranks.push_back (node.rank.copy ());
+          result.ctrl_parents.reserve (ctrl_nodes.size ());
+          for (const auto& node : ctrl_nodes)
+            result.ctrl_parents.emplace_back (node.parent_env, node.input_index);
+          if (initial_id.has_value ())
+            result.initial_env = *initial_id;
           if (raw_actions != 0)
             result.equality_reduction =
                 static_cast<double> (distinct_successors) / raw_actions;
