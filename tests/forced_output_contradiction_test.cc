@@ -138,6 +138,24 @@ int main (int argc, char** argv) {
       "eventual positive",
       "G !(g0 & g1) & G ((r0 & X r1) -> F (g0 & g1))",
       response_kind::eventual, 0);
+  ok &= expect_response (
+      "unconditional fixed-delay obligation",
+      "G((!g0 | !g1) & X(g0 & g1))",
+      response_kind::fixed_delay, 1);
+  ok &= expect_response (
+      "unconditional eventual obligation",
+      "G((!g0 | !g1) & F(g0 & g1))",
+      response_kind::eventual, 0);
+  ok &= expect_response (
+      "contradictory invariants alone", "G(g0 & !g0)",
+      response_kind::contradictory_invariants, 0);
+  ok &= expect_response (
+      "contradictory invariants with no response", "G(g0) & G(!g0)",
+      response_kind::contradictory_invariants, 0);
+  ok &= expect (
+      "satisfiable invariants without contradiction",
+      "G(!g0 | !g1) & G(X g0)",
+      {"r0", "r1"}, {"g0", "g1"}, false);
   ok &= expect ("trigger mentions output",
                 "G !(g0 & g1) & G ((g0 & X r1) -> X (g0 & g1))",
                 {"r0", "r1"}, {"g0", "g1"}, false);

@@ -33,8 +33,11 @@ int main (int argc, char** argv) {
       if (result.proof->kind
           == acacia::forced_output_contradiction::response_kind::fixed_delay)
         std::cout << "MATCH fixed_delay " << result.proof->delay << '\n';
-      else
+      else if (result.proof->kind
+               == acacia::forced_output_contradiction::response_kind::eventual)
         std::cout << "MATCH eventual 0\n";
+      else
+        std::cout << "MATCH contradictory_invariants 0\n";
     }
     else {
       std::string reason = result.decline_reason;

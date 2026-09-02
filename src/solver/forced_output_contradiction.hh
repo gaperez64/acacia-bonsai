@@ -18,7 +18,7 @@
 // the direct consequences G chi_i require chi_all at every position.  Thus an
 // unsatisfiable chi_all & beta proves unrealizability.
 namespace acacia::forced_output_contradiction {
-  enum class response_kind { fixed_delay, eventual };
+  enum class response_kind { fixed_delay, eventual, contradictory_invariants };
 
   struct witness {
     spot::formula invariant;
@@ -179,20 +179,29 @@ namespace acacia::forced_output_contradiction {
         const std::unordered_set<std::string>& output_aps) {
       spot::formula trigger;
       spot::formula consequent;
-      if (not split_implication (formula, trigger, consequent))
-        return std::nullopt;
-
-      auto trigger_satisfiable =
-          bounded_input_pattern::is_satisfiable (trigger, input_aps);
-      if (not trigger_satisfiable)
-        return std::nullopt;
+      bool trigger_satisfiable = true;
+      if (split_implication (formula, trigger, consequent)) {
+        auto satisfiable =
+            bounded_input_pattern::is_satisfiable (trigger, input_aps);
+        if (not satisfiable)
+          return std::nullopt;
+        trigger_satisfiable = *satisfiable;
+      }
+      else {
+        trigger = spot::formula::tt ();
+        consequent = formula;
+        // With a vacuously true trigger, G chi and G(X^d beta) force chi
+        // everywhere and beta from position d onward, while G chi and
+        // G(F beta) force beta at some position where chi also holds.  Thus
+        // an unsatisfiable chi & beta is a contradiction in either case.
+      }
 
       if (consequent.is (spot::op::F)) {
         spot::formula beta = consequent[0];
         if (not is_output_boolean (beta, output_aps))
           return std::nullopt;
         return response {trigger, beta, response_kind::eventual, 0,
-                         *trigger_satisfiable};
+                         trigger_satisfiable};
       }
 
       unsigned delay = 0;
@@ -203,7 +212,7 @@ namespace acacia::forced_output_contradiction {
       if (not is_output_boolean (consequent, output_aps))
         return std::nullopt;
       return response {trigger, consequent, response_kind::fixed_delay, delay,
-                       *trigger_satisfiable};
+                       trigger_satisfiable};
     }
   }  // namespace detail
 
@@ -228,7 +237,6 @@ namespace acacia::forced_output_contradiction {
          detail::collect_candidates (effective_mealy_formula)) {
       if (detail::is_output_boolean (candidate, output_names)) {
         invariants.push_back (candidate);
-        continue;
       }
       auto response = detail::classify_response (candidate, input_aps,
                                                   output_names);
@@ -246,6 +254,16 @@ namespace acacia::forced_output_contradiction {
     }
 
     spot::formula invariant_body = spot::formula::And (invariants);
+    if (chi_all == bddfalse) {
+      // This strictly larger theorem needs no response: G of a propositionally
+      // unsatisfiable conjunction is itself unsatisfiable, so no strategy can
+      // realize the specification.
+      witness proof {spot::formula::G (invariant_body), spot::formula::tt (),
+                     spot::formula::tt (),
+                     response_kind::contradictory_invariants, 0};
+      return {true, std::move (proof), {}};
+    }
+
     for (const detail::response& response : responses) {
       if (not response.trigger_satisfiable)
         continue;
