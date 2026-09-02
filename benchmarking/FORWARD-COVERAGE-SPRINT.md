@@ -92,7 +92,23 @@ backward solver, since `post_real` rebuilds actions with a different input parti
 | G1 frozen 40 | **FAIL** — 40 → 37 | 3 lost answers, **0 wrong** |
 | G3 syntcomp25 panel | **FAIL** — 113 → 105 | 12 lost (11 TIMEOUT, 1 UNKNOWN), **0 wrong** |
 | G4 correctness corpus | **FAIL** — 551 Ok, 5 Fail | 5 `UNKNOWN`, **0 wrong** |
+| G2s per-target cycles | **PASS** — geomean 10.9x, no target regresses | see caveat below |
 | G26-full | **+25 unique**, union 1,065 → 1,090 | **0 disagreements in 1,524** |
+
+### G2s passes, and should not be read as a win
+
+Every one of the ten targets improves, `lift_pb_3_pe_` by 2152x and `lift4` by 137x, for a
+geometric mean of 10.9x and `decision=adoption-candidate`. That is not evidence the forward
+solver is ten times faster.
+
+G2s measures **cycles on instances the candidate answers**, and this candidate's
+characteristic behaviour is to give up quickly with `UNKNOWN` rather than exhaust the cap.
+A cheap non-answer scores as a cheap run. The gates that count *answers* say the opposite:
+G1 loses 3 of 40, G3 loses 12 of 180, G4 returns 5 `UNKNOWN`. A solver that instantly
+returned `UNKNOWN` on everything would post a spectacular G2s and be worthless.
+
+The two gates measure different things, and only one of them is about whether the solver is
+useful.
 
 G4's five failures deserve a note. The forward solver returns `UNKNOWN` on hitting its resource
 cap, as designed — `RESOURCE_LIMIT` is never a verdict. The harness scores an honest "cannot
