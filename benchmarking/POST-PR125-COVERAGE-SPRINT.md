@@ -423,7 +423,100 @@ argument above possible.
 
 ### Gates
 
-*Pending — filled in as each gate completes.*
+Every gate is run twice, on two builds differing in exactly one preprocessor flag —
+`ACACIA_FORCED_OUTPUT_CONTRADICTION` 0 against 1, both from the
+`best_decomp_rank_bucketed_semantic_mona` preset with diagnostics off. Without the
+baseline side, a failing gate cannot be attributed to P1 rather than to something
+already failing at `521b9400`.
+
+| gate | candidate | baseline | attributable to P1 |
+|---|---|---|---|
+| G0 unit + posets | `Fail: 0`, 28/28 | same | — |
+| G1 frozen 40 | `GATE FAIL`, 35/40 | `GATE FAIL`, 35/40, **identical set** | **none** |
+| G4 correctness corpus | `Fail: 0`, 563 ok, 61 timeout | `Fail: 0`, 559 ok, 65 timeout | **+4, none lost** |
+| G2s per-target cycles | `GATE PASS`, geomean 0.994 | paired against candidate | **no measurable cost** |
+| G3 syntcomp25 + 26 panels | `GATE PASS` ×2, 80/180 and 118/180 | same counts | **none** |
+| G26 full 1,524 | *running* | | |
+
+#### G4 is where P1 earns its place
+
+| transition | count |
+|---|---:|
+| OK → OK | 510 |
+| **TIMEOUT → OK** | **4** |
+| TIMEOUT → TIMEOUT | 59 |
+| OK → TIMEOUT | **0** |
+| `FAIL`, either side | **0** |
+
+The four gained are `full_arbiter_unreal1_3_8`, `_3_10`, `_3_12` and
+`full_arbiter_unreal2_5` — the target family, and the same hard points the corpus
+scan identified. Strictly more answers, never a different one, which is the only
+shape a sound decision procedure may produce.
+
+#### G2s passes, and measures less than its headline claims
+
+```
+geometric mean ratio=0.99387  improvement=-0.61%
+decision=proxy-pass-to-G3: no target exceeds the regression ceiling
+          and best target improves 6.23%
+GATE PASS
+```
+
+Two facts make the summary line unusable as a performance claim. **P1 fires on none
+of the ten panel targets** — every one has zero matches in the corpus scan — so the
+checker runs, declines, and gets out of the way, and the expected effect is nil.
+And **all ten time out on both sides in all three repetitions**, so cycles here
+measure how fast a binary burns the clock before the cap, not how fast it solves.
+The `+6.23%` on `evasion0` that the script calls the best improvement is a ratio of
+`1.06639`: the candidate spent *more* cycles before timing out. On a both-sides
+timeout that is not a signal in either direction.
+
+What G2s does establish is narrower and still worth having: a pre-check that runs on
+every instance and decides 130 of 1,586 costs nothing measurable on the other 1,456.
+
+This is the trap `FORWARD-COVERAGE-SPRINT.md` documented when it recorded a 10.9x
+G2s geomean for the forward solver and then explained why that was not a win. Same
+gate, same failure mode, opposite direction.
+
+#### G3 passes with no change, for a checkable reason
+
+Both panels are unmoved: syntcomp25 stays at 80/180 and syntcomp26 at 118/180. The
+panels hold four `full_arbiter_unreal` instances between them — `pb_2_16`,
+`pb_2_14`, `pb_3_2` and `unreal2_pb_4` — and **none is among P1's twenty-two**.
+They are the easy members the baseline already solves. The stratified panels do not
+sample the hard tail, so no change is the correct outcome rather than a
+disappointment, and the coverage claim rests on G26 instead.
+
+#### G1 fails, and fails identically on both sides
+
+`regression-gate.sh` compares the build under test against a hardcoded reference,
+`build_best_decomp_mona` — the *shipping* preset — not against the build handed to
+it. So both runs were measured against the same third binary:
+
+| build | solved | timeout | PAR-2 |
+|---|---:|---:|---:|
+| reference, shipping `best_decomp_mona` | 40 | 0 | 101.867 s |
+| baseline, B preset, flag off | 35 | 5 | 217.762 s |
+| candidate, B preset, flag on | 35 | 5 | 195.269 s |
+
+The five lost instances are the same five in both, character for character:
+`Morning_f1477cc5`, `Morning_f2774e0b`, `load_balancer7`, `infinite-race-u4` and
+`load_balancer_pb_7_pe_`. They belong to the B preset relative to the shipping
+reference and are inherited from PR #125; P1 neither causes nor repairs any of them.
+
+The PAR-2 difference, 195 s against 218 s, is **not** claimed as an improvement. It
+is a 10 % swing on a forty-instance panel against a documented noise floor of about
+21 s on a much larger one.
+
+#### A near-miss worth recording
+
+The first G1 run was invoked as `regression-gate.sh ... | tail -30`, which reported
+`tail`'s exit status rather than the script's. The visible output ended in
+`Ok: 22 / Fail: 0` and looked clean; the script had in fact printed `GATE FAIL` on
+its first line and exited 1, because the build lacked `-Dacacia_tlsf_corpus_dir` and
+had silently run 25 of its 40 sentinels. `ACACIA_TLSF_CORPUS` in the environment
+serves the campaign scripts; the meson-driven gates need the path configured into
+the build. Gates are run unpiped, and their own verdict line is what gets recorded.
 
 | gate | result | nature of failure |
 |---|---|---|
