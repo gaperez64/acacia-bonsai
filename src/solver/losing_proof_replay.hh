@@ -18,6 +18,8 @@
 #include "solver/forward_reachable_safety.hh"
 
 #include <cstddef>
+#include <cstdlib>
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -41,16 +43,24 @@ namespace acacia::solver_detail {
       // Dependencies must already be established.  Combined with the ordering
       // assertion made when the log is appended, this is what keeps the proof
       // graph acyclic: nothing may rest on a fact proved later.
+      static const bool trace = std::getenv ("ACACIA_REPLAY_TRACE") != nullptr;
+      auto reject = [&] (const char* why) {
+        if (trace)
+          std::cerr << "replay reject: proof id=" << proof.id << " reason="
+                    << static_cast<int> (proof.reason) << " node=" << proof.node
+                    << " why=" << why << "\n";
+        return false;
+      };
       for (const std::size_t dependency : proof.dependencies)
         if (dependency == 0 or dependency >= proof.id)
-          return false;
+          return reject ("bad dependency order");
 
       switch (proof.reason) {
         case losing_reason::env_unsafe: {
           if (proof.node >= env_ranks.size ())
             return false;
           if (env_ranks[proof.node].partial_order (safe).leq ())
-            return false;  // claimed unsafe, but it is safe
+            return reject ("safe but claimed unsafe");
           env_proof[proof.node] = proof.id;
           break;
         }
@@ -63,7 +73,7 @@ namespace acacia::solver_detail {
           if (witness_proof == 0 or witness_proof >= proof.id)
             return false;
           if (not env_ranks[proof.witness].partial_order (env_ranks[proof.node]).leq ())
-            return false;  // claimed witness <= node, but it is not
+            return reject ("witness not <= node");
           env_proof[proof.node] = proof.id;
           break;
         }
@@ -75,7 +85,7 @@ namespace acacia::solver_detail {
           if (controller_proof == 0 or controller_proof >= proof.id)
             return false;
           if (ctrl_parents[proof.witness].first != proof.node)
-            return false;  // the cited controller belongs to a different node
+            return reject ("controller parent mismatch");
           env_proof[proof.node] = proof.id;
           break;
         }
@@ -98,6 +108,13 @@ namespace acacia::solver_detail {
             for (const auto& action : input_and_actions.second) {
               const auto image =
                   actioner.apply (env_ranks[parent], action, actioners::direction::forward);
+              // An unsafe successor is losing by definition, and the solver
+              // skips those without interning them, so they have no node id and
+              // no proof record.  Recompute the safety test here rather than
+              // demanding a proof that cannot exist -- still recomputing, never
+              // trusting the solver.
+              if (not image.partial_order (safe).leq ())
+                continue;
               bool covered = false;
               for (std::size_t id = 0; id < env_ranks.size (); ++id) {
                 const std::size_t established = env_proof[id];
@@ -109,12 +126,12 @@ namespace acacia::solver_detail {
                 }
               }
               if (not covered)
-                return false;
+                return reject ("successor not covered by an earlier losing proof");
             }
             break;
           }
           if (seen <= input_index)
-            return false;  // the cited input class does not exist
+            return reject ("input class missing");
           ctrl_proof[proof.node] = proof.id;
           break;
         }

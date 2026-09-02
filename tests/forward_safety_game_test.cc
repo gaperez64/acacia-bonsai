@@ -6,6 +6,7 @@
 #include "research/explicit_forward_game.hh"
 #include "solver/certificate_verifier.hh"
 #include "solver/forward_reachable_safety.hh"
+#include "solver/losing_proof_replay.hh"
 #include "solver/minimal_losing_antichain.hh"
 #include "tiny_game_oracle.hh"
 #include "utils/verbose.hh"
@@ -139,6 +140,24 @@ namespace {
               as_solver_state (parent), game.inputs.front ().second, actioner,
               controller_minimisation_threshold);
     });
+  }
+
+  bool replay_losing_proof (
+      const tiny_game& game, size_t bool_threshold, const f1_result& result,
+      const std::vector<acacia::solver_detail::losing_proof>& proofs) {
+    return with_actioner (game, bool_threshold, [&] (auto& actioner) {
+      const state safe_state = as_solver_state (
+          safe_vector (game.states, game.K, bool_threshold));
+      return acacia::solver_detail::replay_losing_proofs (
+          proofs, result.env_ranks, result.ctrl_parents, safe_state,
+          game.inputs, actioner, result.initial_env);
+    });
+  }
+
+  bool replay_losing_proof (const tiny_game& game, size_t bool_threshold,
+                            const f1_result& result) {
+    return replay_losing_proof (
+        game, bool_threshold, result, result.losing_proofs);
   }
 
   void check_antichain_unit_behaviour () {
@@ -442,6 +461,8 @@ namespace {
     static_assert (random_games >= 5000);
     std::mt19937 gen {20260831};
     unsigned compared = 0;
+    unsigned losing_proofs_replayed = 0;
+    bool corrupted_proof_rejected = false;
     struct counter_totals {
         std::size_t final_sizes = 0;
         std::size_t peak = 0;
@@ -545,6 +566,74 @@ namespace {
                          initial, dedup_only);
       check_certificate (label + ": antichain-on F3", game, bool_threshold,
                          initial, pruned);
+
+      const auto replay_if_losing = [&] (const std::string& variant,
+                                         const f1_result& candidate) {
+        if (candidate.status
+            != acacia::solver_detail::forward_result_status::lose_k)
+          return;
+
+        const bool replayed =
+            replay_losing_proof (game, bool_threshold, candidate);
+        expect (label + ": " + variant + " losing proof replays", replayed);
+        ++losing_proofs_replayed;
+
+        if (corrupted_proof_rejected or not replayed)
+          return;
+
+        // Corrupt the proof so that it becomes FALSE, not merely
+        // under-documented.  Dropping a dependency from a ctrl_all_losing
+        // record is undetectable by design: the replayer ignores the recorded
+        // dependency list for that rule and re-derives every successor from the
+        // game, so a proof missing a dependency is still a true proof.  What
+        // must be rejected is a claim that does not hold -- here, an env_unsafe
+        // record redirected onto a node that is actually safe.
+        auto corrupted = candidate.losing_proofs;
+        const state safe_state = as_solver_state (
+            safe_vector (game.states, game.K, bool_threshold));
+        bool corrupted_something = false;
+        // env_unsafe records are rare: the solver skips unsafe successors
+        // without interning them, so most games never produce one.  The
+        // reliably present false claim to plant is a subsumption whose witness
+        // does not actually sit below the node it is said to subsume.
+        for (auto& proof : corrupted) {
+          if (proof.reason != acacia::solver_detail::losing_reason::env_subsumed
+              or proof.node >= candidate.env_ranks.size ())
+            continue;
+          for (std::size_t id = 0; id < candidate.env_ranks.size (); ++id)
+            if (not candidate.env_ranks[id]
+                        .partial_order (candidate.env_ranks[proof.node])
+                        .leq ()) {
+              proof.witness = id;      // claim a non-dominating witness subsumes
+              corrupted_something = true;
+              break;
+            }
+          if (corrupted_something)
+            break;
+        }
+        for (auto& proof : corrupted) {
+          if (corrupted_something
+              or proof.reason != acacia::solver_detail::losing_reason::env_unsafe)
+            continue;
+          for (std::size_t id = 0; id < candidate.env_ranks.size (); ++id)
+            if (candidate.env_ranks[id].partial_order (safe_state).leq ()) {
+              proof.node = id;          // claim a safe node is unsafe
+              corrupted_something = true;
+              break;
+            }
+        }
+        if (not corrupted_something)
+          return;
+
+        corrupted_proof_rejected = not replay_losing_proof (
+            game, bool_threshold, candidate, corrupted);
+        expect (label + ": corrupted losing proof is rejected",
+                corrupted_proof_rejected);
+      };
+      replay_if_losing ("F3", f3);
+      replay_if_losing ("cutoff-zero F1", dedup_only);
+      replay_if_losing ("antichain-on F3", pruned);
+
       antichain_totals.add (pruned);
       f3_totals.add (f3);
       dedup_totals.add (dedup_only);
@@ -563,6 +652,11 @@ namespace {
             antichain_totals.insertions != 0);
     expect ("every new losing generator caused one invalidation scan",
             antichain_totals.invalidation_scans == antichain_totals.insertions);
+    expect ("random campaign rejected a corrupted losing proof",
+            corrupted_proof_rejected);
+    std::cout << "forward-safety-game: replayed " << losing_proofs_replayed
+              << " losing proofs\n";
+    std::cout << "forward-safety-game: corrupted losing proof rejected\n";
     std::cout << "forward-safety-game: all " << compared
               << " fixed-seed F3/F1/F0 statuses matched\n";
     std::cout << std::fixed << std::setprecision (6)
