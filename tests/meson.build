@@ -177,6 +177,14 @@ test ('syntactic-bypass',
       syntactic_bypass_test,
       suite : ['unit', 'syntactic-bypass'])
 
+k_schedule_test = executable ('k-schedule-test',
+                              'k_schedule_test.cc',
+                              include_directories : inc,
+                              dependencies : [spot_dep, bddx_dep])
+test ('k-schedule',
+      k_schedule_test,
+      suite : ['unit', 'k-schedule'])
+
 profile_dominance_test = executable (
   'profile-dominance-test',
   'profile_dominance_test.cc',
