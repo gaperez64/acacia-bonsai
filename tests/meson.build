@@ -177,6 +177,16 @@ test ('syntactic-bypass',
       syntactic_bypass_test,
       suite : ['unit', 'syntactic-bypass'])
 
+profile_dominance_test = executable (
+  'profile-dominance-test',
+  'profile_dominance_test.cc',
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep, posets_dep],
+)
+test ('profile-dominance',
+      profile_dominance_test,
+      suite : ['unit', 'profile-dominance'])
+
 forced_output_contradiction_test = executable ('forced-output-contradiction-test',
                                                'forced_output_contradiction_test.cc',
                                                include_directories : inc,
