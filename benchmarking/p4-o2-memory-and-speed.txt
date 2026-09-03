@@ -1,0 +1,18 @@
+instance                       build    verdict          secs  peakRSS_KB
+robot_grid_pb_3_3_pe_          o1_lazy  REALIZABLE       1.04       34584
+robot_grid_pb_3_3_pe_          o2       REALIZABLE       0.64       34548
+lift_gr1_pb_3_pe_              o1_lazy  REALIZABLE       4.06       33748
+lift_gr1_pb_3_pe_              o2       REALIZABLE       3.25       33052
+collector_v1_pb_7_pe_          o1_lazy                  25.00       88192
+collector_v1_pb_7_pe_          o2                       25.00       86504
+robot_grid_pb_6_6_pe_          o1_lazy                  25.02     2645604
+robot_grid_pb_6_6_pe_          o2                       25.02     2640724
+prioritized_arbiter_pb_6_pe_   o1_lazy                  25.00       47208
+prioritized_arbiter_pb_6_pe_   o2                       25.00       49856
+O2-RSS2-DONE
+
+robot_grid_pb_3_3_pe_      o1_lazy  min=0.70 med~0.73 max=0.78
+robot_grid_pb_3_3_pe_      o2       min=0.50 med~0.52 max=0.53
+lift_gr1_pb_3_pe_          o1_lazy  min=3.56 med~3.62 max=3.82
+lift_gr1_pb_3_pe_          o2       min=2.89 med~3.05 max=3.21
+O2-REP-DONE
