@@ -11,7 +11,7 @@ LTL-realizability selection that PR #125's portfolio cannot decide at 17 s.
 | P2 semantic dominance D1 | yes | 512 -> 18 actions, 0 instances | none | G2s +0.39% cycles | none | **KEEP RESEARCH TOOLING** |
 | P2 semantic dominance D2 | — | — | — | — | — | **not attempted (D1 did not pay)** |
 | P3 K schedule | yes | 34 -> 7 attempts, 0 instances | none | +3-4% slower | none | **STOP** |
-| P4 OTFUR lazy | | | | | | *not started* |
+| P4 OTFUR lazy | yes | 3 targets -27% to -56% | pending G26 | none | fewer successors | **LAND (O1)** |
 | P4 OTFUR memory | | | | | | *not started* |
 | P4 OTFUR covering | | | | | | *not started* |
 | P5 four-slot portfolio | | | | | | *not started* |
@@ -734,3 +734,65 @@ single attempt at K=95 costs more than several at K=5..20. That is why it comes 
 The schedules stay in the tree behind `acacia_k_schedule=linear`, since §5.11's
 fallback is to retain several as portfolio arms for P5 rather than averaging them
 into one heuristic — and the exhaustive algebra proof is worth keeping regardless.
+
+
+## P4 — improve OTFUR
+
+### O1, lazy controller expansion: **LAND**
+
+P2 and P3 each reduced exactly what they promised and moved nothing, because the
+reduced quantity was not binding. So O1's premise was measured before it was built,
+from counters the forward solver already keeps — actions applied per controller node
+expanded:
+
+| instance | actions/node | successors/node |
+|---|---:|---:|
+| `robot_grid_3x3` | 12.4 | 1.2 |
+| `robot_grid_6_6` | 15.3 | 4.7 |
+| `lift_gr1_3` | 17.5 | 3.3 |
+| `AllLights` | **807.6** | **151** |
+| `prioritized_arbiter6` | 129.9 | 78 |
+| `collector_v1_7` | 2.0 | 2.0 |
+
+Twelve to eight hundred actions applied per node, up to 151 successors materialised,
+one selected. `advance_controller` now stops at the first safe, untried,
+non-subsumed successor and computes no further action until that choice is proved
+losing.
+
+**Actions actually applied:** `robot_grid` 173,500 → 19,491 (−88.8%), `lift_gr1`
+480,482 → 90,137 (−81.2%), `AllLights` 233,397 → 76,074 (−67.4%).
+
+**And it converts to time**, which is what P2 and P3 failed to do:
+
+| instance | eager | lazy | change |
+|---|---:|---:|---:|
+| `robot_grid_3x3` | 1.85 s | 0.82 s | **−56%** |
+| `AllLights` | 7.31 s | 4.96 s | **−32%** |
+| `lift_gr1_3` | 5.53 s | 4.03 s | **−27%** |
+| `robot_grid_6_6`, `collector_v1` 7 and 11, `prioritized_arbiter6` | 25.0 s | 25.0 s | flat |
+
+Zero verdict changes. §6.8 requires one target improving ≥25%; three do.
+
+### Correctness
+
+The existing 5,000-game fixed-seed harness still matches on F3/F1/F0, and lazy and
+eager are now compared directly on **5,015 games** — same verdict, same losing
+antichain, same strategy ranks. The eager path stays behind
+`acacia_forward_eager_minimal_successors`, defaulting off, and F3 Pareto
+minimisation stays on that side: `minimal_successors` equals `distinct_successors`
+on `AllLights` (43,718), `collector_v1` (527,618) and `prioritized_arbiter6`
+(1,972,517), so it removes nothing there.
+
+### What O1 cannot do, and one prediction that was wrong
+
+O1 reduces actions per controller node, not the number of nodes. The four flat
+instances are resource-capped, and the profile predicted three of them correctly:
+`robot_grid_6_6` creates 439 controller nodes per environment node and hits the
+400,000 `max_ctrl_nodes` cap at K=2; `collector_v1` runs at 2.0 actions per node and
+is immune twice over.
+
+`prioritized_arbiter6` was predicted to improve and did not. It has 129.9
+actions/node and only 27,484 controller nodes, so it is not node-capped — but with
+3,281,024 raw actions it hits `max_edges = 2,000,000` instead. The prediction was
+right about the mechanism and wrong about which cap binds, which is worth recording
+because O2's byte accounting is aimed at exactly these caps.
