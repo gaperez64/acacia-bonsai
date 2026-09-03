@@ -10,7 +10,7 @@ LTL-realizability selection that PR #125's portfolio cannot decide at 17 s.
 | P1 forced contradiction | yes | +4 on G4, 22 target instances | **+22** (1,090 -> 1,112) | none | none | **LAND** |
 | P2 semantic dominance D1 | yes | 512 -> 18 actions, 0 instances | none | G2s +0.39% cycles | none | **KEEP RESEARCH TOOLING** |
 | P2 semantic dominance D2 | — | — | — | — | — | **not attempted (D1 did not pay)** |
-| P3 K schedule | | | | | | *not started* |
+| P3 K schedule | yes | 34 -> 7 attempts, 0 instances | none | +3-4% slower | none | **STOP** |
 | P4 OTFUR lazy | | | | | | *not started* |
 | P4 OTFUR memory | | | | | | *not started* |
 | P4 OTFUR covering | | | | | | *not started* |
@@ -681,3 +681,56 @@ baseline. D1 shows none.
 The helper, its exact differential test and the six diagnostics counters stay in the
 tree behind a default-off flag, because the action-profile census they produce is
 needed by P5's arm census regardless.
+
+
+## P3 — alternative K schedules
+
+### Decision
+
+**STOP.** The mechanism works exactly as designed, gains nothing, and costs time.
+
+### The premise, and why it survived P2
+
+`src/solver/k_schedule.hh` adds linear, geometric (`2k+1`), cheap-loss-adaptive and
+direct-max schedules. The precondition was an algebra question the handoff makes P3
+conditional on: is one direct lift by the total delta equal to the repeated lifts it
+replaces? **It is** — `lift(s,d)` adds `d` to numeric coordinates and resets boolean
+ones to zero, so the boolean half is idempotent and the numeric half accumulates.
+`tests/k_schedule_test.cc` checks that over **84,832 exhaustive cases**, covering the
+four the handoff names, plus the overflow guard against `VECTOR_ELT_T`.
+
+The cohort looked ideal: 181 instances with `k_attempts >= 10`, and the stuck ones
+show `k_attempts=34` with `max_f` of **1 or 2** — `arbiter_pb_6` burns 2,721 loops
+over a frontier of one element. Linear walks 2→99 by 3 in 34 attempts, geometric in
+7. A 4.9x reduction, and unlike P2 the reduction is *on the quantity being counted*.
+
+### The measurement
+
+`chomp_pb_3_2_pe_` confirms the wiring: `k_attempts` 34 → **7**, `k_last_next=99`.
+
+Over 22 instances spanning every cohort family, at a 17 s cap, four builds:
+
+| | forward | backward |
+|---|---|---|
+| decided by linear | 10 | 8 |
+| decided by geometric | 10 | 8 |
+| gained / lost | 0 / 0 | 0 / 0 |
+| verdict disagreements | 0 | 0 |
+| wall on instances both decide | **+3.0%** | **+4.4%** |
+
+### Why, which the diagnostics settle
+
+**All 181 high-K instances lose at every bound `K <= 99`.** They complete the whole
+sweep and fail; none is won at any K the schedule could reach sooner. So there is no
+winning bound for geometric to arrive at earlier — and equally none to overshoot.
+Reaching `kmax` in 7 attempts instead of 34 produces the same `UNKNOWN`, only sooner.
+
+And "fewer attempts" is not "less work": geometric tests 2, 5, 11, 23, 47, 95, and a
+single attempt at K=95 costs more than several at K=5..20. That is why it comes out
+**3-4% slower** despite doing a fifth as many attempts.
+
+§5.11 requires new 2026 coverage of at least 2. This is 0, with a time regression.
+
+The schedules stay in the tree behind `acacia_k_schedule=linear`, since §5.11's
+fallback is to retain several as portfolio arms for P5 rather than averaging them
+into one heuristic — and the exhaustive algebra proof is worth keeping regardless.
