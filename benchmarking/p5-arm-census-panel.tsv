@@ -1,0 +1,6 @@
+arms	decisive_union	sum_decisive_seconds	under_1s	arm_count
+B-real-any+F-real-small+F-unreal-automaton-small+F-unreal-formula-small	137	140.14	111	4
+B-real-small+F-real-any+F-unreal-automaton-small+F-unreal-formula-small	137	141.41	110	4
+B-real-any+F-real-any+F-unreal-automaton-small+F-unreal-formula-small	137	143.33	111	4
+B-real-any+B-unreal-automaton-small+F-real-small+F-unreal-formula-small	137	145.5	109	4
+F-real-small+F-unreal-automaton-small+F-unreal-formula-small+S-real-any	137	145.71	109	4

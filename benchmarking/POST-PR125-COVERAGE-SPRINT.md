@@ -14,7 +14,7 @@ LTL-realizability selection that PR #125's portfolio cannot decide at 17 s.
 | P4 OTFUR lazy | yes | 3 targets -27% to -56% | pending G26 | none | fewer successors | **LAND (O1)** |
 | P4 OTFUR memory | yes | 2 targets -16% to -29% | pending G26 | none | RSS criterion failed | **LAND (O2, on speed)** |
 | P4 OTFUR covering | yes | 1 of 2 targets, mixed | none | none | none | **AGGRESSIVE PRESET (off by default)** |
-| P5 four-slot portfolio | | | | | | *not started* |
+| P5 four-slot portfolio | yes | +14 on panel from backend alone | pending full-corpus race | none | none | **P5A done, see below** |
 | P6 wide6 portfolio | | | | | | *not started* |
 
 ## Frozen baseline
@@ -849,3 +849,96 @@ make by continuing past it.
 | O3 batched invalidation | **STOP**, reverted; counters kept |
 | O4 conditional covering | **AGGRESSIVE PRESET**, off by default |
 | O5 antichain indexing (as scoped) | **STOP**, discarded; real target identified but not built |
+
+
+## P5 — isolated arm census (P5A)
+
+Twelve arms of §7.3 run in isolation over the 180-instance deterministic
+stratified panel, one process per instance, staged caps 1/5/17 under an 8 GiB
+cgroup. **Zero verdict conflicts across all twelve arms.** Screened on the panel
+rather than the full selection first: measured throughput put the full
+1,524-instance census at ~5 h per arm, ~2.5 days for twelve, and the panel gives
+the marginal-contribution signal for about 1/30th of that.
+
+### Per-arm decisive answers, 180 panel instances
+
+| arm | decisive | R | U |
+|---|---:|---:|---:|
+| `B-real-small` | 45 | 45 | 0 |
+| `B-real-any` | 44 | 44 | 0 |
+| `B-unreal-formula-small` | 68 | 0 | 68 |
+| `B-unreal-automaton-small` | 66 | 0 | 66 |
+| `S-real-small` | 46 | 46 | 0 |
+| `S-real-any` | 45 | 45 | 0 |
+| `S-unreal-formula-small` | 67 | 0 | 67 |
+| `S-unreal-automaton-small` | 67 | 0 | 67 |
+| `F-real-small` | 46 | 46 | 0 |
+| `F-real-any` | 46 | 46 | 0 |
+| `F-unreal-formula-small` | **81** | 0 | 81 |
+| `F-unreal-automaton-small` | 79 | 0 | 79 |
+
+Every arm is polarity-pure, which confirms the CLI isolation does what §7.3 needs:
+one child, one polarity, no contamination. It also means no single arm is ever a
+portfolio, which is why the selector requires one of each.
+
+### Four arms reach the twelve-arm ceiling
+
+| subset size | best decisive union |
+|---|---:|
+| 2 arms | 127 |
+| 3 arms | 134 |
+| **4 arms** | **137** |
+| all 12 arms (oracle) | **137** |
+
+A four-slot portfolio captures *everything* twelve arms can. Best 4-arm set:
+`F-real-small + F-unreal-formula-small + S-real-small + S-unreal-automaton-small`.
+
+Redundancy is high: across all twelve arms only **2** answers are unique to a
+single arm, both in `F-unreal-formula-small`. Arm choice is therefore mostly about
+efficiency, not reachability — with that one exception.
+
+### The forward backend, not the arm shape, is where the coverage is
+
+Comparing like-for-like arm *shapes* as oracle unions on the same 180 instances:
+
+| configuration, default 3-child shape | union |
+|---|---:|
+| B — the shipping default | **120** |
+| S | 120 |
+| **F** | **134** |
+| best 4-arm, mixed S and F | 137 |
+
+| | |
+|---|---:|
+| union of all 8 B and S arms | 122 |
+| union of all 4 F arms | 134 |
+| **F adds over all B/S** | **15** |
+| B/S adds over all F | 3 |
+
+Switching the backend to forward, keeping the existing three-child shape and
+adding no process slots, captures **+14 of the +17** available. The remaining +3
+needs the mixed S/F set, which the current architecture cannot express in one
+process because the backend is a compile-time choice — that is exactly the runtime
+`game_backend` field of P5B, and it buys 3 panel instances.
+
+This inverts PR #125's picture, where B and F were near-equal at 1056 and 1053 of
+1524. The most likely cause is P4: O1 cut forward actions per controller node by
+67–89% and O2 added a further 16–29%, both landed since that measurement. P4's
+work appears to have shifted the portfolio balance toward forward.
+
+### Caveats, stated before any decision rests on this
+
+These are **isolated oracle unions on a 180-instance panel**, not race results on
+the full selection. §7.5 is explicit that the isolated union is an upper bound. One
+independent check exists: G3 measured the actual raced default portfolio at 118/180
+on this same panel against the 120 oracle computed here for that same arm set, so
+the race penalty looks small — but that is one data point, not a measured race of
+the proposed profile.
+
+### P6 is not justified by this data
+
+§8.1 gates P6 on P5 showing that forward real and forward unreal arms both carry
+marginal coverage **and** that a four-arm replacement or routing profile cannot
+retain enough of it. A four-arm profile retains **all** of it — 137, the full
+twelve-arm oracle ceiling. The condition fails, so the six-wide race is not
+justified and is not built.
