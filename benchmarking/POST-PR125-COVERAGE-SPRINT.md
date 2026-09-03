@@ -8,8 +8,8 @@ LTL-realizability selection that PR #125's portfolio cannot decide at 17 s.
 | package | correct? | target gains | full-2026 gains | regressions | memory effect | decision |
 |---|---:|---:|---:|---:|---:|---|
 | P1 forced contradiction | yes | +4 on G4, 22 target instances | **+22** (1,090 -> 1,112) | none | none | **LAND** |
-| P2 semantic dominance D1 | | | | | | *not started* |
-| P2 semantic dominance D2 | | | | | | *not started* |
+| P2 semantic dominance D1 | yes | 512 -> 18 actions, 0 instances | none | G2s +0.39% cycles | none | **KEEP RESEARCH TOOLING** |
+| P2 semantic dominance D2 | — | — | — | — | — | **not attempted (D1 did not pay)** |
 | P3 K schedule | | | | | | *not started* |
 | P4 OTFUR lazy | | | | | | *not started* |
 | P4 OTFUR memory | | | | | | *not started* |
@@ -591,3 +591,93 @@ the build. Gates are run unpiped, and their own verdict line is what gets record
 ### Decision
 
 *Pending.*
+
+
+## P2 — global semantic-action dominance
+
+### Decision
+
+**KEEP RESEARCH TOOLING.** The reduction is real, exactly as predicted, and buys
+nothing.
+
+### What was built
+
+`src/actioners/profile_dominance.hh` prunes actions that are redundant for the
+controller. The direction reads backwards and is worth stating: backward `apply`
+imposes `apply_out[q] = min (apply_out[q], max (-1, m[p] - increment))` per
+endpoint, so more endpoints and larger increments give tighter constraints, a
+pointwise smaller image and a smaller downset — and since `cpre_inplace` takes a
+**union** over an input's actions, the action with *more and stronger* endpoints is
+the one that contributes nothing.
+
+Pruning runs after `actioners::standard` extracts from its
+`std::set<input_and_actions, compare_actions>`, never before, so the input ordering
+PR #125 measured is preserved and the reduction is the only variable.
+
+### Correctness
+
+`tests/profile_dominance_test.cc` compares the controller predecessor before and
+after pruning at **every** rank vector of the entire domain, for 240 generated
+tables, using `research::apply_backward` — the documented transcription of the real
+`apply`. Measured separately over 2,000 tables of the same shape, pruning fires on
+**49%** of them and removes **29%** of all actions, so the differential check is
+exercising real reduction rather than passing vacuously. A flipped comparison would
+shrink the union on half the tables.
+
+### The reduction is exactly as predicted
+
+```
+prioritized_arbiter_pb_7_pe_
+  profile_actions_before = 512      profile_actions_after = 18
+  dominance_tests = 640             endpoint_visits = 5340
+  declined = 0                      ms = 0.09
+```
+
+512 equality-distinct profiles collapsing to the 18 inclusion-minimal ones, at
+0.09 ms with no budget exhaustion. The census was right.
+
+### And it buys nothing
+
+| instance | baseline | candidate |
+|---|---|---|
+| `prioritized_arbiter_pb_5_pe_` | REALIZABLE 0.22 s | REALIZABLE 0.16 s |
+| `prioritized_arbiter_pb_6_pe_` | REALIZABLE 21.33 s | REALIZABLE 20.98 s |
+| `prioritized_arbiter_pb_7_pe_` | UNKNOWN 60 s | UNKNOWN 60 s |
+| `prioritized_arbiter_pb_8_pe_` | UNKNOWN 60 s | UNKNOWN 60 s |
+| `round_robin_arbiter_pb_4_pe_` | UNKNOWN 60 s | UNKNOWN 60 s |
+| `workstation_resupply_pb_3_pe_` | UNKNOWN 60 s | UNKNOWN 60 s |
+
+No verdict changes, nothing newly solved, best movement 1.6% against §4.12's 25%
+criterion.
+
+| gate | candidate | baseline | verdict |
+|---|---|---|---|
+| G0 unit | `Fail: 0`, 28/28 | — | pass |
+| G1 frozen 40 | `GATE FAIL` 35/40, PAR-2 212.7 s | `GATE FAIL` 35/40, PAR-2 213.4 s | identical, not attributable |
+| G2s per-target | geomean **1.00394**, +0.39% cycles | paired | **GATE FAIL** |
+
+G2s is the decisive one: five of ten targets get *slower* — `arbiter_with_buffer6`
++5.45%, `round_robin_arbiter4` +2.53% — and the geometric mean is 0.39% **more**
+cycles. On that panel the prune mostly finds nothing to remove, so the run pays the
+construction cost without collecting the benefit.
+
+### Why it fails, which is the useful part
+
+The census counted *profiles*, and 512 → 18 confirms that count exactly. What it
+never established is that the action basis was the **bottleneck**. On the same
+instance, 5,370 worker diagnostics report 20 actions before and 20 after: the
+collapse touches one worker, and the search everywhere else is untouched. The
+instance still exhausts 60 s.
+
+So the cost lives somewhere the action count does not reach — most plausibly the
+antichain width in the fixed point rather than the per-CPre action loop. That is
+worth carrying into P4 and P5, both of which are partly premised on action-table
+size being what matters.
+
+**D2 is not attempted.** §4.9 permits pre-decode dominance only once D1 shows
+material solver gains, and it must then beat D1 rather than the equality-only
+baseline. D1 shows none.
+
+The helper, its exact differential test and the six diagnostics counters stay in the
+tree behind a default-off flag, because the action-profile census they produce is
+needed by P5's arm census regardless.
