@@ -12,8 +12,8 @@ LTL-realizability selection that PR #125's portfolio cannot decide at 17 s.
 | P2 semantic dominance D2 | — | — | — | — | — | **not attempted (D1 did not pay)** |
 | P3 K schedule | yes | 34 -> 7 attempts, 0 instances | none | +3-4% slower | none | **STOP** |
 | P4 OTFUR lazy | yes | 3 targets -27% to -56% | pending G26 | none | fewer successors | **LAND (O1)** |
-| P4 OTFUR memory | | | | | | *not started* |
-| P4 OTFUR covering | | | | | | *not started* |
+| P4 OTFUR memory | yes | 2 targets -16% to -29% | pending G26 | none | RSS criterion failed | **LAND (O2, on speed)** |
+| P4 OTFUR covering | yes | 1 of 2 targets, mixed | none | none | none | **AGGRESSIVE PRESET (off by default)** |
 | P5 four-slot portfolio | | | | | | *not started* |
 | P6 wide6 portfolio | | | | | | *not started* |
 
@@ -796,3 +796,56 @@ actions/node and only 27,484 controller nodes, so it is not node-capped — but 
 3,281,024 raw actions it hits `max_edges = 2,000,000` instead. The prediction was
 right about the mechanism and wrong about which cap binds, which is worth recording
 because O2's byte accounting is aimed at exactly these caps.
+
+
+## P4 — O3 batching reverted, O5 mis-scoped: what remains open
+
+O3's batching was reverted (see the O3 commit) after measurement showed maximum
+batch sizes of 2, 5, 2, 5 and 1 — the losing queue drains too often for insertions
+to accumulate. The counters it added were kept, and they measured something
+striking: **148,504,205 visited-node checks for 6,671 invalidations** on
+`prioritized_arbiter` (22,261x), and 628,895 for 676 on `lift_gr1` (930x).
+
+O5 was scoped against that finding, but against the wrong structure. The 22,261x
+ratio is the cost of scanning the **visited environment-node set** during
+invalidation — for each newly proved losing generator, checking every visited node
+to see if the generator now subsumes it. `minimal_losing_antichain`'s own generator
+list is a different, much smaller structure: it peaked at **177** entries on
+`lift_gr1` in the O3 diagnostics. A linear scan over 177 elements is already cheap,
+indexed or not, which is exactly what the measurement showed.
+
+### O5 as attempted: correct, no material benefit, discarded
+
+Sorting `minimal_losing_antichain`'s generators by rank and binary-searching the
+feasible prefix preserved every correctness counter exactly — `queries`, `hits`,
+`insertions`, `removals`, `invalidation_scans` and `nodes_invalidated` all
+unchanged across before/after — but `prefilter_skips` did not increase (2,455 both
+times). The reason: the existing per-element filter was already an O(1) integer
+comparison per skip, so sorting only changes how cheaply you skip infeasible
+elements, not how many expensive partial-order comparisons are avoided. Per the
+acceptance criterion set before the work started — stop rather than add buckets on
+top of a mechanism that is not working — the attempt stopped there and the diff was
+discarded rather than committed.
+
+### What is still open, and why it is not being pursued now
+
+The structure that would actually address the 22,261x finding is an index over the
+**visited environment-node set**, so that a newly proved losing generator can find
+which visited nodes it subsumes without scanning all of them — closer to §6.7's
+sketch of a `minimal_upset_antichain<State>` contributed to Posets, with
+`subsumes`/`insert`/`size` as its first interface. That is a materially larger
+change: it touches how environment nodes are stored and indexed, not a single
+generator list, and §6.7 itself frames it as optional and lower priority, gated on
+O3/O4 measurements rather than assumed. Those measurements now exist. Whether to
+build it is a scope decision the plan reserves for re-approval before P5, not one to
+make by continuing past it.
+
+### P4 overall
+
+| substage | decision |
+|---|---|
+| O1 lazy expansion | **LAND** |
+| O2 interner + byte accounting | **LAND**, on the speed criterion, not the memory one |
+| O3 batched invalidation | **STOP**, reverted; counters kept |
+| O4 conditional covering | **AGGRESSIVE PRESET**, off by default |
+| O5 antichain indexing (as scoped) | **STOP**, discarded; real target identified but not built |
