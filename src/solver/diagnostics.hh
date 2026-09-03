@@ -119,6 +119,7 @@ namespace acacia::diagnostics {
       long long rsimp_ms = 0;
       long long syntactic_bypass_ms = 0;
       long long forced_contradiction_ms = 0;
+      double profile_dominance_ms = 0.0;
       long long translation_ms = 0;
       long long fast_class_ms = 0;
       long long fast_solve_ms = 0;
@@ -140,6 +141,11 @@ namespace acacia::diagnostics {
       size_t aut_edges = 0;
       std::size_t forced_contradiction_invariants = 0;
       std::size_t forced_contradiction_responses = 0;
+      std::size_t profile_actions_before = 0;
+      std::size_t profile_actions_after = 0;
+      std::size_t profile_dominance_tests = 0;
+      std::size_t profile_dominance_endpoint_visits = 0;
+      std::size_t profile_dominance_declined = 0;
       size_t preproc_states_before = 0;
       size_t preproc_states_after = 0;
       size_t preproc_edges_before = 0;
@@ -273,6 +279,12 @@ namespace acacia::diagnostics {
          << " forced_contradiction_invariants=" << m.forced_contradiction_invariants
          << " forced_contradiction_responses=" << m.forced_contradiction_responses
          << " forced_contradiction_ms=" << m.forced_contradiction_ms
+         << " profile_actions_before=" << m.profile_actions_before
+         << " profile_actions_after=" << m.profile_actions_after
+         << " profile_dominance_tests=" << m.profile_dominance_tests
+         << " profile_dominance_endpoint_visits=" << m.profile_dominance_endpoint_visits
+         << " profile_dominance_declined=" << m.profile_dominance_declined
+         << " profile_dominance_ms=" << m.profile_dominance_ms
          << " translation_ms=" << m.translation_ms << " aut_states=" << m.aut_states
          << " aut_edges=" << m.aut_edges << " fast_class=" << m.fast_class
          << " fast_class_ms=" << m.fast_class_ms << " fast_solve_ms=" << m.fast_solve_ms

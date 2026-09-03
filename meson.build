@@ -129,6 +129,11 @@ if get_option ('acacia_forced_output_contradiction')
 else
   build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION', 0)
 endif
+if get_option ('acacia_profile_dominance')
+  build_conf.set ('ACACIA_PROFILE_DOMINANCE', 1)
+else
+  build_conf.set ('ACACIA_PROFILE_DOMINANCE', 0)
+endif
 if get_option ('acacia_enable_tlsf_frontend')
   build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 1)
 else

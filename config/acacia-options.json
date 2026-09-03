@@ -113,6 +113,7 @@
     "enable_realizability_simplifier": true,
     "enable_syntactic_bypass": true,
     "forced_output_contradiction": false,
+    "profile_dominance": false,
     "enable_tlsf_frontend": true,
     "simd_is_max": true,
     "decompose_spec": true,

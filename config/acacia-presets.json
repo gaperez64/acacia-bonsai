@@ -108,6 +108,10 @@
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "forced_output_contradiction": true
     },
+    "best_decomp_rank_bucketed_semantic_mona_dominance": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "profile_dominance": true
+    },
     "best_decomp_rank_bucketed_semantic_mona_diag": {
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "enable_diagnostics": true
