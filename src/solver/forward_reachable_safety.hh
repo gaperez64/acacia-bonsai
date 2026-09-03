@@ -11,6 +11,9 @@
 /// apply every action up front, exact-deduplicate its successors, and Pareto
 /// minimise small successor sets before selecting one.  Pareto minimisation is
 /// deliberately confined to that eager path.
+///
+/// ACACIA_FORWARD_CONDITIONAL_COVERING lets the lazy path conditionally use a
+/// non-losing downward cover in place of interning an optimistic successor.
 
 #include "actioners/direction.hh"
 #include "configuration.hh"
@@ -26,6 +29,9 @@
 #include <functional>
 #include <initializer_list>
 #include <limits>
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+#include <map>
+#endif
 #include <optional>
 #include <ranges>
 #include <unordered_map>
@@ -100,6 +106,9 @@ namespace acacia::solver_detail {
       std::size_t nodes_invalidated = 0;
       std::size_t raw_actions = 0;
       std::size_t forward_actions_skipped = 0;
+      std::size_t forward_covers_created = 0;
+      std::size_t forward_covers_resolved = 0;
+      std::size_t forward_cover_search_visits = 0;
       std::size_t distinct_successors = 0;
       std::size_t minimal_successors = 0;
       /// Logical retained bytes.  The categories count objects and payload
@@ -237,6 +246,10 @@ namespace acacia::solver_detail {
         using env_id_bucket = std::vector<std::size_t>;
         using env_hash_index =
             std::unordered_map<std::uint64_t, env_id_bucket>;
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+        using rank_sum_type = std::int64_t;
+        using env_rank_index = std::map<rank_sum_type, env_id_bucket>;
+#endif
 
         struct queued_node {
             bool controller;
@@ -299,6 +312,10 @@ namespace acacia::solver_detail {
         std::vector<std::vector<successor_choice_for<state>>>
             eager_controller_choices;
         env_hash_index interned_envs;
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+        /// Coordinate-sum buckets containing only currently non-losing ranks.
+        env_rank_index coverable_envs;
+#endif
         std::deque<queued_node> open_queue;
         std::deque<queued_node> losing_queue;
         minimal_losing_antichain<state> losing_antichain;
@@ -317,6 +334,11 @@ namespace acacia::solver_detail {
         std::size_t nodes_invalidated = 0;
         std::size_t raw_actions = 0;
         std::size_t forward_actions_skipped = 0;
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+        std::size_t forward_covers_created = 0;
+        std::size_t forward_covers_resolved = 0;
+        std::size_t forward_cover_search_visits = 0;
+#endif
         std::size_t distinct_successors = 0;
         std::size_t minimal_successors = 0;
         std::size_t rank_bytes = 0;
@@ -396,12 +418,44 @@ namespace acacia::solver_detail {
                          sizeof (coordinate_type<state>), true);
         }
 
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+        void release_rank (const state& rank) {
+          release_items (rank_bytes, rank.size (),
+                         sizeof (coordinate_type<state>));
+        }
+#endif
+
         void account_hash_index_entry (bool new_bucket) {
           if (new_bucket)
             account_bytes (hash_index_bytes,
                            sizeof (typename env_hash_index::value_type));
           account_bytes (hash_index_bytes, sizeof (std::size_t));
         }
+
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+        void account_cover_index_entry (bool new_bucket) {
+          if (new_bucket)
+            account_bytes (hash_index_bytes,
+                           sizeof (typename env_rank_index::value_type));
+          account_bytes (hash_index_bytes, sizeof (std::size_t));
+        }
+
+        void remove_cover_index_entry (std::size_t env_id) {
+          auto bucket = coverable_envs.find (
+              rank_sum_of (env_nodes[env_id].rank));
+          assert (bucket != coverable_envs.end ());
+          const auto entry = std::ranges::find (bucket->second, env_id);
+          assert (entry != bucket->second.end ());
+          bucket->second.erase (entry);
+          release_items (hash_index_bytes, 1, sizeof (std::size_t));
+          if (bucket->second.empty ()) {
+            release_items (
+                hash_index_bytes, 1,
+                sizeof (typename env_rank_index::value_type));
+            coverable_envs.erase (bucket);
+          }
+        }
+#endif
 
         [[nodiscard]] static std::size_t saturated_sum (
             std::initializer_list<std::size_t> terms) {
@@ -445,6 +499,15 @@ namespace acacia::solver_detail {
           return rank.partial_order (safe).leq ();
         }
 
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+        [[nodiscard]] static rank_sum_type rank_sum_of (const state& rank) {
+          rank_sum_type sum = 0;
+          for (std::size_t i = 0; i < rank.size (); ++i)
+            sum += static_cast<rank_sum_type> (rank[i]);
+          return sum;
+        }
+#endif
+
         [[nodiscard]] std::optional<std::size_t> find_env (
             const state& rank, std::uint64_t hash) const {
           const auto found = interned_envs.find (hash);
@@ -463,6 +526,37 @@ namespace acacia::solver_detail {
             const state& rank) const {
           return find_env (rank, coordinate_hash (rank));
         }
+
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+        /// Return the deterministic non-losing dominator of `successor`:
+        /// equality first, then minimum coordinate-sum slack, then oldest id.
+        /// The strict search starts above successor's rank-sum bucket because
+        /// pointwise domination at equal sum can only be exact equality.
+        [[nodiscard]] std::optional<std::size_t> find_cover (
+            const state& successor) {
+          const auto exact = find_env (successor);
+          if (exact.has_value ()
+              and env_nodes[*exact].status != node_status::losing) {
+            ++forward_cover_search_visits;
+            return exact;
+          }
+
+          for (auto bucket = coverable_envs.upper_bound (
+                   rank_sum_of (successor));
+               bucket != coverable_envs.end (); ++bucket) {
+            // Ids are appended in creation order, so the first match in the
+            // first matching rank bucket is the required oldest minimum-slack
+            // cover.
+            for (const std::size_t env_id : bucket->second) {
+              ++forward_cover_search_visits;
+              assert (env_nodes[env_id].status != node_status::losing);
+              if (successor.partial_order (env_nodes[env_id].rank).leq ())
+                return env_id;
+            }
+          }
+          return std::nullopt;
+        }
+#endif
 
         std::size_t append_losing_proof (
             losing_reason reason, std::size_t node, std::size_t witness = 0,
@@ -493,6 +587,10 @@ namespace acacia::solver_detail {
           auto& env = env_nodes[env_id];
           if (env.status == node_status::losing)
             return;
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+          if (is_safe (env.rank))
+            remove_cover_index_entry (env_id);
+#endif
           env.status = node_status::losing;
           env.losing_proof_id = append_losing_proof (
               reason, env_id, witness, std::move (dependencies));
@@ -542,6 +640,13 @@ namespace acacia::solver_detail {
           if (ctrl.status == node_status::losing)
             return;
           ctrl.status = node_status::losing;
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+          if (ctrl.covered_actual_successor.has_value ()) {
+            release_rank (*ctrl.covered_actual_successor);
+            ctrl.covered_actual_successor.reset ();
+          }
+          ctrl.cover_env.reset ();
+#endif
           ctrl.selected_env.reset ();
           ctrl.selected_action_index.reset ();
           ctrl.losing_proof_id = append_losing_proof (
@@ -559,8 +664,13 @@ namespace acacia::solver_detail {
           }
 
           const std::size_t env_id = env_nodes.size ();
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+          env_nodes.push_back (
+              {std::move (rank), node_status::open, {}, {}, {}, 0});
+#else
           env_nodes.push_back (
               {std::move (rank), node_status::open, {}, {}, 0});
+#endif
           account_bytes (
               environment_node_bytes, sizeof (forward_env_node<state>));
           account_rank (env_nodes[env_id].rank);
@@ -569,8 +679,16 @@ namespace acacia::solver_detail {
           account_hash_index_entry (new_bucket);
           if (not is_safe (env_nodes[env_id].rank))
             mark_environment_losing (env_id, losing_reason::env_unsafe);
-          else
+          else {
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+            auto [rank_bucket, new_rank_bucket] =
+                coverable_envs.try_emplace (
+                    rank_sum_of (env_nodes[env_id].rank));
+            rank_bucket->second.push_back (env_id);
+            account_cover_index_entry (new_rank_bucket);
+#endif
             open_queue.push_back ({false, env_id});
+          }
 
           if (env_nodes.size () > limits.max_env_nodes)
             exceed_limit (forward_resource_limit::env_nodes);
@@ -606,8 +724,14 @@ namespace acacia::solver_detail {
           for ([[maybe_unused]] const auto& input_and_actions :
                input_output_fwd_actions) {
             const std::size_t ctrl_id = ctrl_nodes.size ();
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+            ctrl_nodes.push_back ({env_id, input_index, node_status::open, 0,
+                                   std::nullopt, std::nullopt,
+                                   std::nullopt, std::nullopt, {}, 0});
+#else
             ctrl_nodes.push_back ({env_id, input_index, node_status::open, 0,
                                    std::nullopt, std::nullopt, {}, 0});
+#endif
             account_bytes (
                 controller_node_bytes, sizeof (forward_ctrl_node<state>));
             if constexpr (EagerMinimalSuccessors)
@@ -642,6 +766,10 @@ namespace acacia::solver_detail {
             return;
 
           ctrl.next_action_index = 0;
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+          ctrl.covered_actual_successor.reset ();
+          ctrl.cover_env.reset ();
+#endif
           ctrl.selected_env.reset ();
           ctrl.selected_action_index.reset ();
           ctrl.tried_env_ids.clear ();
@@ -755,6 +883,71 @@ namespace acacia::solver_detail {
           const std::size_t action_count =
               static_cast<std::size_t> (std::ranges::size (actions));
 
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+          if (ctrl.cover_env.has_value ()) {
+            assert (ctrl.selected_env == ctrl.cover_env);
+            assert (env_nodes[*ctrl.cover_env].status == node_status::losing);
+            assert (ctrl.covered_actual_successor.has_value ());
+            assert (ctrl.selected_action_index.has_value ());
+
+            state actual = std::move (*ctrl.covered_actual_successor);
+            const std::size_t action_index = *ctrl.selected_action_index;
+            release_rank (actual);
+            ctrl.covered_actual_successor.reset ();
+            ctrl.cover_env.reset ();
+            ctrl.selected_env.reset ();
+            ++forward_covers_resolved;
+
+            const auto known_actual = find_env (actual);
+            bool actual_is_losing =
+                known_actual.has_value ()
+                and env_nodes[*known_actual].status == node_status::losing;
+            if (not actual_is_losing and use_losing_antichain
+                and losing_antichain.subsumes (actual)) {
+              [[maybe_unused]] const auto generator =
+                  subsuming_generator (actual);
+              assert (generator.has_value ());
+              actual_is_losing = true;
+            }
+
+            if (not actual_is_losing) {
+              // A lost dominator proves nothing about the smaller actual
+              // image.  Keep the same controller action, intern its saved
+              // image, and let ordinary expansion decide it.  Only if that
+              // actual image and every later action fail may this controller
+              // be declared losing.
+              const std::size_t env_id = intern_env (std::move (actual));
+              ctrl.tried_env_ids.push_back (env_id);
+              account_bytes (
+                  reverse_dependency_bytes, sizeof (std::size_t));
+              if (limit_exceeded)
+                return false;
+              assert (env_nodes[env_id].status != node_status::losing);
+              ctrl.selected_env = env_id;
+              ctrl.selected_action_index = action_index;
+              env_nodes[env_id].selected_by.push_back (ctrl_id);
+              account_bytes (
+                  reverse_dependency_bytes, sizeof (std::size_t));
+              ++edges_selected;
+              return not limit_exceeded;
+            }
+
+            if (known_actual.has_value ()
+                and not std::ranges::contains (
+                    ctrl.tried_env_ids, *known_actual)) {
+              ctrl.tried_env_ids.push_back (*known_actual);
+              account_bytes (
+                  reverse_dependency_bytes, sizeof (std::size_t));
+            }
+            assert (forward_actions_skipped
+                    >= action_count - ctrl.next_action_index);
+            forward_actions_skipped -=
+                action_count - ctrl.next_action_index;
+            ctrl.selected_action_index.reset ();
+            ++choice_switches;
+          }
+#endif
+
           // The selected successor just acquired a losing proof.  Actions
           // after it are no longer skipped: the monotone cursor resumes at
           // exactly the next semantic action.
@@ -784,6 +977,19 @@ namespace acacia::solver_detail {
             }
 
             const auto known_env = find_env (successor);
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+            if (known_env.has_value ()
+                and env_nodes[*known_env].status == node_status::losing) {
+              if (not std::ranges::contains (
+                      ctrl.tried_env_ids, *known_env)) {
+                ctrl.tried_env_ids.push_back (*known_env);
+                account_bytes (
+                    reverse_dependency_bytes, sizeof (std::size_t));
+              }
+              ++choice_switches;
+              continue;
+            }
+#endif
             if (known_env.has_value ()
                 and std::ranges::contains (ctrl.tried_env_ids, *known_env)) {
               ++choice_switches;
@@ -799,14 +1005,34 @@ namespace acacia::solver_detail {
               continue;
             }
 
-            const std::size_t env_id = intern_env (std::move (successor));
-            ctrl.tried_env_ids.push_back (env_id);
-            account_bytes (
-                reverse_dependency_bytes, sizeof (std::size_t));
             ++distinct_successors;
             ++minimal_successors;
             if (not add_represented_edge ())
               return false;
+
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+            const auto cover = find_cover (successor);
+            if (cover.has_value ()) {
+              ctrl.covered_actual_successor.emplace (std::move (successor));
+              account_rank (*ctrl.covered_actual_successor);
+              ctrl.cover_env = *cover;
+              ctrl.selected_env = *cover;
+              ctrl.selected_action_index = action_index;
+              forward_actions_skipped +=
+                  action_count - ctrl.next_action_index;
+              env_nodes[*cover].covered_by.push_back (ctrl_id);
+              account_bytes (
+                  reverse_dependency_bytes, sizeof (std::size_t));
+              ++forward_covers_created;
+              ++edges_selected;
+              return not limit_exceeded;
+            }
+#endif
+
+            const std::size_t env_id = intern_env (std::move (successor));
+            ctrl.tried_env_ids.push_back (env_id);
+            account_bytes (
+                reverse_dependency_bytes, sizeof (std::size_t));
             if (limit_exceeded)
               return false;
 
@@ -856,6 +1082,12 @@ namespace acacia::solver_detail {
                 std::move (env_nodes[losing.id].selected_by);
             release_items (reverse_dependency_bytes, selected_by.size (),
                            sizeof (std::size_t));
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+            std::vector<std::size_t> covered_by =
+                std::move (env_nodes[losing.id].covered_by);
+            release_items (reverse_dependency_bytes, covered_by.size (),
+                           sizeof (std::size_t));
+#endif
             for (const std::size_t ctrl_id : selected_by) {
               auto& ctrl = ctrl_nodes[ctrl_id];
               if (ctrl.selected_env != losing.id
@@ -864,6 +1096,16 @@ namespace acacia::solver_detail {
               if (not advance_controller (ctrl_id))
                 return false;
             }
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+            for (const std::size_t ctrl_id : covered_by) {
+              auto& ctrl = ctrl_nodes[ctrl_id];
+              if (ctrl.cover_env != losing.id
+                  or env_nodes[ctrl.parent_env].status == node_status::losing)
+                continue;
+              if (not advance_controller (ctrl_id))
+                return false;
+            }
+#endif
           }
           return true;
         }
@@ -918,6 +1160,11 @@ namespace acacia::solver_detail {
           result.nodes_invalidated = nodes_invalidated;
           result.raw_actions = raw_actions;
           result.forward_actions_skipped = forward_actions_skipped;
+#if ACACIA_FORWARD_CONDITIONAL_COVERING
+          result.forward_covers_created = forward_covers_created;
+          result.forward_covers_resolved = forward_covers_resolved;
+          result.forward_cover_search_visits = forward_cover_search_visits;
+#endif
           result.distinct_successors = distinct_successors;
           result.minimal_successors = minimal_successors;
           result.rank_bytes = rank_bytes;

@@ -180,6 +180,9 @@ namespace acacia::diagnostics {
       unsigned long long forward_nodes_invalidated = 0;
       unsigned long long forward_raw_actions = 0;
       unsigned long long forward_actions_skipped = 0;
+      unsigned long long forward_covers_created = 0;
+      unsigned long long forward_covers_resolved = 0;
+      unsigned long long forward_cover_search_visits = 0;
       unsigned long long forward_distinct_successors = 0;
       unsigned long long forward_minimal_successors = 0;
       unsigned long long forward_strategy_rank_nodes = 0;
@@ -341,6 +344,9 @@ namespace acacia::diagnostics {
          << " forward_nodes_invalidated=" << m.forward_nodes_invalidated
          << " forward_raw_actions=" << m.forward_raw_actions
          << " forward_actions_skipped=" << m.forward_actions_skipped
+         << " forward_covers_created=" << m.forward_covers_created
+         << " forward_covers_resolved=" << m.forward_covers_resolved
+         << " forward_cover_search_visits=" << m.forward_cover_search_visits
          << " forward_distinct_successors=" << m.forward_distinct_successors
          << " forward_minimal_successors=" << m.forward_minimal_successors
          << " forward_strategy_rank_nodes=" << m.forward_strategy_rank_nodes
@@ -677,6 +683,9 @@ namespace acacia::diagnostics {
                                    unsigned long long nodes_invalidated,
                                    unsigned long long raw_actions,
                                    unsigned long long actions_skipped,
+                                   unsigned long long covers_created,
+                                   unsigned long long covers_resolved,
+                                   unsigned long long cover_search_visits,
                                    unsigned long long distinct_successors,
                                    unsigned long long minimal_successors,
                                    unsigned long long strategy_rank_nodes,
@@ -700,6 +709,9 @@ namespace acacia::diagnostics {
       m->forward_nodes_invalidated = nodes_invalidated;
       m->forward_raw_actions = raw_actions;
       m->forward_actions_skipped = actions_skipped;
+      m->forward_covers_created = covers_created;
+      m->forward_covers_resolved = covers_resolved;
+      m->forward_cover_search_visits = cover_search_visits;
       m->forward_distinct_successors = distinct_successors;
       m->forward_minimal_successors = minimal_successors;
       m->forward_strategy_rank_nodes = strategy_rank_nodes;
@@ -824,6 +836,8 @@ namespace acacia::diagnostics {
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,

@@ -168,6 +168,8 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         flags.append("-DACACIA_LOCAL_CERTIFICATE=1")
     if values["forward_safety_solver"]:
         flags.append("-DACACIA_FORWARD_SAFETY_SOLVER=1")
+    if values["forward_conditional_covering"]:
+        flags.append("-DACACIA_FORWARD_CONDITIONAL_COVERING=1")
     if values["enable_equivariant_solver"]:
         flags.append("-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1")
     if values["vector_impl"] != "auto":
@@ -206,6 +208,7 @@ MESON_OPTION_NAMES = {
     "enable_diagnostics": "acacia_enable_diagnostics",
     "local_certificate": "acacia_local_certificate",
     "forward_safety_solver": "acacia_forward_safety_solver",
+    "forward_conditional_covering": "acacia_forward_conditional_covering",
     "enable_equivariant_solver": "acacia_enable_equivariant_solver",
     "equivariant_max_states": "acacia_equivariant_max_states",
     "equivariant_min_clients": "acacia_equivariant_min_clients",

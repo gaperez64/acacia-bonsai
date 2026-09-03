@@ -39,6 +39,10 @@ namespace acacia::solver_detail {
             return false;
           }
           ++applications;
+          // Recompute the semantic image from the certificate generator and
+          // game action.  In particular, do not consume a solver-selected
+          // environment id, a cached image, or downward-cover metadata: a bad
+          // cover must be unable to certify its own false WIN.
           const auto image =
               actioner.apply (generator, action, actioners::direction::forward);
           if (candidate.contains (image)) {

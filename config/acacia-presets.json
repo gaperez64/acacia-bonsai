@@ -126,6 +126,10 @@
       "local_certificate": false,
       "enable_equivariant_solver": false
     },
+    "best_decomp_rank_bucketed_semantic_mona_forward_covering": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "forward_conditional_covering": true
+    },
     "best_decomp_rank_bucketed_semantic_mona_forward_geometric": {
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "k_schedule": "geometric"

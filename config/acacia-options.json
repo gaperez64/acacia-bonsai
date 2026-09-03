@@ -126,6 +126,7 @@
     "enable_diagnostics": false,
     "local_certificate": false,
     "forward_safety_solver": false,
+    "forward_conditional_covering": false,
     "enable_equivariant_solver": true,
     "equivariant_max_states": 512,
     "equivariant_min_clients": 3,

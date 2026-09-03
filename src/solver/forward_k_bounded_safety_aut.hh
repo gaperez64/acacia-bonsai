@@ -111,6 +111,8 @@ namespace acacia::solver_detail {
               result.losing_insertions, result.invalidation_scans,
               result.nodes_checked, result.nodes_invalidated,
               result.raw_actions, result.forward_actions_skipped,
+              result.forward_covers_created, result.forward_covers_resolved,
+              result.forward_cover_search_visits,
               result.distinct_successors, result.minimal_successors,
               result.strategy_ranks.size (), result.rank_bytes,
               result.node_bytes, result.index_bytes, result.total_bytes);
