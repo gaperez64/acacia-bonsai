@@ -6,6 +6,7 @@
 #include "solver/certificate_verifier.hh"
 #include "solver/diagnostics.hh"
 #include "solver/forward_reachable_safety.hh"
+#include "solver/k_schedule.hh"
 #include "utils/verbose.hh"
 
 #include <bddx.h>
@@ -95,6 +96,7 @@ namespace acacia::solver_detail {
               acacia::diagnostics::env_size (
                   "ACACIA_FORWARD_MINIMISATION_THRESHOLD",
                   default_controller_minimisation_threshold, true);
+          const auto attempt_started = clock::now ();
           auto result = solve_forward_reachable_safety<SetOfStates> (
               initial, safe, input_output_fwd_actions, actioner, limits,
               use_antichain, minimisation_threshold);
@@ -116,10 +118,27 @@ namespace acacia::solver_detail {
               finish ("forward-kmax-lose");
               return std::nullopt;
             }
+            const acacia::k_schedule::loss_evidence evidence {
+                std::chrono::duration_cast<std::chrono::milliseconds> (
+                    clock::now () - attempt_started)
+                    .count (),
+                result.losing_antichain_peak,
+                result.env_expanded + result.ctrl_expanded,
+                not result.losing_proofs.empty (),
+            };
+            const auto next_k = acacia::k_schedule::next (
+                ACACIA_K_SCHEDULE, static_cast<long long> (k),
+                static_cast<long long> (kfrom), static_cast<long long> (kto),
+                static_cast<long long> (kinc), evidence);
+            if (not next_k.has_value ()) {
+              finish ("forward-kmax-lose");
+              return std::nullopt;
+            }
             verb_do (1, vout << "Forward solver incrementing k from "
                              << static_cast<int> (k) << " to "
-                             << static_cast<int> (k + kinc) << std::endl);
-            k += kinc;
+                             << *next_k << std::endl);
+            k = static_cast<VECTOR_ELT_T> (*next_k);
+            acacia::diagnostics::set_k_last_next (static_cast<int> (*next_k));
             continue;
           }
 

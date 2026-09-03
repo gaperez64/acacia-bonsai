@@ -134,6 +134,8 @@ if get_option ('acacia_profile_dominance')
 else
   build_conf.set ('ACACIA_PROFILE_DOMINANCE', 0)
 endif
+build_conf.set ('ACACIA_K_SCHEDULE',
+                'acacia::k_schedule::kind::' + get_option ('acacia_k_schedule'))
 if get_option ('acacia_enable_tlsf_frontend')
   build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 1)
 else

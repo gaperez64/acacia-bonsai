@@ -114,6 +114,7 @@
     "enable_syntactic_bypass": true,
     "forced_output_contradiction": false,
     "profile_dominance": false,
+    "k_schedule": "linear",
     "enable_tlsf_frontend": true,
     "simd_is_max": true,
     "decompose_spec": true,
@@ -146,6 +147,12 @@
       "any",
       "small+any",
       "deterministic"
+    ],
+    "k_schedule": [
+      "linear",
+      "geometric",
+      "cheap_loss_adaptive",
+      "direct_max"
     ],
     "vector_downset": [
       "vector_backed",

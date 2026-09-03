@@ -9,6 +9,7 @@
 #include "utils/lambda_ptr.hh"
 #include "utils/ref_ptr_cmp.hh"
 #include "solver/antichain_snapshot.hh"
+#include "solver/k_schedule.hh"
 #include "solver/local_certificate.hh"
 
 #include <sstream>
@@ -18,9 +19,11 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <chrono>
 #include <fstream>
 #include <functional>
+#include <limits>
 #include <list>
 #include <map>
 #include <random>
@@ -197,9 +200,12 @@ class k_bounded_safety_aut_detail {
       local_probe_schedule.restart ();
       local_probe_bound_forward_applications = 0;
 #endif
+      reset_bound_evidence (f.size ());
       acacia::diagnostics::snapshot ("after-action-construction");
 
       do {
+        ++bound_loops;
+        bound_peak_frontier = std::max (bound_peak_frontier, f.size ());
         loopcount++;
         acacia::diagnostics::observe_loop (f.size (), k);
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -320,21 +326,58 @@ class k_bounded_safety_aut_detail {
     acacia::solver_detail::local_probe_frontier local_probe_schedule;
     unsigned long long local_probe_bound_forward_applications = 0;
 #endif
+    std::chrono::steady_clock::time_point bound_started {};
+    std::size_t bound_peak_frontier = 0;
+    std::size_t bound_loops = 0;
+
+    void reset_bound_evidence (std::size_t initial_frontier) {
+      bound_started = std::chrono::steady_clock::now ();
+      bound_peak_frontier = initial_frontier;
+      bound_loops = 0;
+    }
+
+    [[nodiscard]] acacia::k_schedule::loss_evidence bound_loss_evidence () const {
+      return {
+          std::chrono::duration_cast<std::chrono::milliseconds> (
+              std::chrono::steady_clock::now () - bound_started)
+              .count (),
+          bound_peak_frontier,
+          bound_loops,
+          true,
+      };
+    }
 
     // This is also sound when `f` is the pre-CPre region X.  The post-CPre
     // region Y is a subset of X, and the lift is monotone, so lifting X gives a
     // larger, still-sound warm start for the next bound.
     template <typename Actioner>
     bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {
-      if (k >= kto) {
+      const auto next_k = acacia::k_schedule::next (
+          ACACIA_K_SCHEDULE, static_cast<long long> (k),
+          static_cast<long long> (kfrom), static_cast<long long> (kto),
+          static_cast<long long> (kinc), bound_loss_evidence ());
+      if (not next_k.has_value ()) {
         verb_do (2, vout << "Early exit because the initial state is out\n");
         acacia::diagnostics::set_final_reason ("kmax-initial-out");
         return false;
       }
-      verb_do (1, vout << "Incrementing k from " << (int) k << " to " << (int) (k + kinc)
+
+      return raise_bound_to_or_give_up (f, k, actioner, *next_k);
+    }
+
+    template <typename Actioner>
+    bool raise_bound_to_or_give_up (SetOfStates& f, VECTOR_ELT_T& k,
+                                    Actioner& actioner, long long next_k) {
+      const long long current_k = static_cast<long long> (k);
+      const long long delta = next_k - current_k;
+      assert (delta > 0);
+      assert (next_k >= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::lowest ()));
+      assert (next_k <= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::max ()));
+      verb_do (1, vout << "Incrementing k from " << (int) k << " to " << next_k
                        << std::endl);
-      k += kinc;
+      k = static_cast<VECTOR_ELT_T> (next_k);
       actioner.setK (k);
+      acacia::diagnostics::set_k_last_next (static_cast<int> (next_k));
 #if ACACIA_LOCAL_CERTIFICATE
       local_probe_schedule.reset_marks ();
       local_probe_bound_forward_applications = 0;
@@ -343,17 +386,24 @@ class k_bounded_safety_aut_detail {
       acacia::antichain_snapshot::note_bound_raised ();
 #endif
       verb_do (1, {
-        vout << "Adding kinc to every vector...";
+        vout << "Adding bound delta to every vector...";
         vout.flush ();
       });
       f = f.apply ([&] (const state& s) {
         auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
-        for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)
-          vec[i] = s[i] + kinc;
+        for (size_t i = 0; i < posets::vectors::bool_threshold; ++i) {
+          const long long widened = static_cast<long long> (s[i]) + delta;
+          assert (widened
+                  >= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::lowest ()));
+          assert (widened
+                  <= static_cast<long long> (std::numeric_limits<VECTOR_ELT_T>::max ()));
+          vec[i] = static_cast<VECTOR_ELT_T> (widened);
+        }
         // Other entries are set to 0 by initialization, since they are bool.
         return state (vec);
       });
       verb_do (1, vout << "Done" << std::endl);
+      reset_bound_evidence (f.size ());
       return true;
     }
 

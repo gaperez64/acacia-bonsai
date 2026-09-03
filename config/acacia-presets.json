@@ -104,6 +104,10 @@
       "inherits": "best_decomp_rank_bucketed_mona",
       "ios_precomputer": "semantic_mona"
     },
+    "best_decomp_rank_bucketed_semantic_mona_geometric": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "k_schedule": "geometric"
+    },
     "best_decomp_rank_bucketed_semantic_mona_contradiction": {
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "forced_output_contradiction": true
@@ -121,6 +125,10 @@
       "forward_safety_solver": true,
       "local_certificate": false,
       "enable_equivariant_solver": false
+    },
+    "best_decomp_rank_bucketed_semantic_mona_forward_geometric": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "k_schedule": "geometric"
     },
     "best_decomp_rank_bucketed_semantic_mona_forward_diag": {
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",

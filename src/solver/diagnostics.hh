@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "solver/k_schedule.hh"
 #include "solver/symmetry.hh"
 #include <string_view>
 
@@ -90,6 +91,7 @@ namespace acacia::diagnostics {
       std::string result = "unknown";
       std::string final_reason = "unknown";
       std::string translation_pref = "unknown";
+      std::string k_schedule = acacia::k_schedule::name (ACACIA_K_SCHEDULE);
       std::string source_format = "ltl";
       std::string tlsf_semantics = "-";
       std::string tlsf_target = "-";
@@ -197,6 +199,7 @@ namespace acacia::diagnostics {
       unsigned long long decode_ms = 0;
       int loops = 0;
       int k_attempts = 0;
+      int k_last_next = 0;
       int last_k = -1;
       int tlsf_gr_level = -1;
       size_t equivariant_clients = 0;
@@ -204,14 +207,18 @@ namespace acacia::diagnostics {
       size_t equivariant_orbits = 0;
       clock::time_point started = clock::now ();
 
-      void observe_loop (size_t f_size, int k) {
-        ++loops;
-        max_f = std::max (max_f, f_size);
-        max_f_size = std::max (max_f_size, f_size);
+      void observe_k (int k) {
         if (last_k != k) {
           last_k = k;
           ++k_attempts;
         }
+      }
+
+      void observe_loop (size_t f_size, int k) {
+        ++loops;
+        max_f = std::max (max_f, f_size);
+        max_f_size = std::max (max_f_size, f_size);
+        observe_k (k);
       }
 
       void refresh_total () {
@@ -304,7 +311,8 @@ namespace acacia::diagnostics {
          << " simulation_states_removed=" << m.simulation_states_removed
          << " bool_threshold=" << m.bool_threshold << " max_f=" << m.max_f
          << " max_f_size=" << m.max_f_size << " loops=" << m.loops
-         << " k_attempts=" << m.k_attempts << " local_probe_runs=" << m.local_probe_runs
+         << " k_attempts=" << m.k_attempts << " k_schedule=" << m.k_schedule
+         << " k_last_next=" << m.k_last_next << " local_probe_runs=" << m.local_probe_runs
          << " local_probe_status=" << m.local_probe_status
          << " local_probe_forward_apps=" << m.local_probe_forward_apps
          << " local_probe_skipped_over_budget=" << m.local_probe_skipped_over_budget
@@ -546,6 +554,11 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_k_last_next (int next_k) {
+    if (auto* m = current ())
+      m->k_last_next = next_k;
+  }
+
   inline void snapshot (std::string_view checkpoint) {
     if (auto* m = current ()) {
       m->refresh_total ();
@@ -642,6 +655,7 @@ namespace acacia::diagnostics {
                                    unsigned long long minimal_successors,
                                    unsigned long long strategy_rank_nodes) {
     if (auto* m = current ()) {
+      m->observe_k (k);
       m->forward_K = k;
       m->forward_result = std::move (result);
       m->forward_env_nodes = env_nodes;
@@ -747,6 +761,7 @@ namespace acacia::diagnostics {
   };
 
   inline void observe_loop (size_t, int) {}
+  inline void set_k_last_next (int) {}
   inline void observe_action () {}
   inline void snapshot_action_progress () {}
   inline void observe_meets (size_t, size_t) {}

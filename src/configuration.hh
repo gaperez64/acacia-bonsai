@@ -117,6 +117,9 @@
 #ifndef ACACIA_PROFILE_DOMINANCE
 # define ACACIA_PROFILE_DOMINANCE 0
 #endif
+#ifndef ACACIA_K_SCHEDULE
+# define ACACIA_K_SCHEDULE acacia::k_schedule::kind::linear
+#endif
 #ifndef ACACIA_ENABLE_TLSF_FRONTEND
 # define ACACIA_ENABLE_TLSF_FRONTEND 0
 #endif
