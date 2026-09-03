@@ -7,7 +7,7 @@ LTL-realizability selection that PR #125's portfolio cannot decide at 17 s.
 
 | package | correct? | target gains | full-2026 gains | regressions | memory effect | decision |
 |---|---:|---:|---:|---:|---:|---|
-| P1 forced contradiction | | | | | | *in progress* |
+| P1 forced contradiction | yes | +4 on G4, 22 target instances | **+22** (1,090 -> 1,112) | none | none | **LAND** |
 | P2 semantic dominance D1 | | | | | | *not started* |
 | P2 semantic dominance D2 | | | | | | *not started* |
 | P3 K schedule | | | | | | *not started* |
@@ -436,7 +436,67 @@ already failing at `521b9400`.
 | G4 correctness corpus | `Fail: 0`, 563 ok, 61 timeout | `Fail: 0`, 559 ok, 65 timeout | **+4, none lost** |
 | G2s per-target cycles | `GATE PASS`, geomean 0.994 | paired against candidate | **no measurable cost** |
 | G3 syntcomp25 + 26 panels | `GATE PASS` ×2, 80/180 and 118/180 | same counts | **none** |
-| G26 full 1,524 | *running* | | |
+| G26 full 1,524 | 998 decided | 976 decided | **+22, none lost** |
+
+#### G26: the coverage claim, measured
+
+Both sides run with staged caps 1, 5, 17 under `MemoryMax=8G` / `MemorySwapMax=0`,
+sequentially, from the same two builds:
+
+| | decided of 1,524 |
+|---|---:|
+| baseline, flag off | 976 |
+| candidate, flag on | **998** |
+| delta | **+22** |
+
+The gained set is *exactly* the twenty-two named in the table above, before the
+matcher existed — nineteen `full_arbiter_unreal1` and three `full_arbiter_unreal2`,
+every one `UNREALIZABLE`. **Every one is decided at the 1-second cap**, against a
+baseline that cannot decide them at 17 s and, for most, not at 60 s either.
+
+Nothing was lost, and the two builds disagree on **no** instance they both decide.
+
+Those twenty-two are absent from the recorded B, S and F runs alike, so the
+portfolio union moves **1,090 → 1,112 of 1,524**.
+
+#### Two conflicts, neither P1's, both now settled by construction
+
+The candidate campaign recorded two verdict conflicts: `lilydemo15` and
+`lilydemo16` are annotated `unrealizable` and come back `REALIZABLE`.
+
+They are not P1's. The checker declines on both; the baseline binary returns
+`REALIZABLE` identically; and the checker cannot emit `REALIZABLE` at all, since it
+either reports `UNREALIZABLE` or declines.
+
+They are not Acacia's either. `ltlsynt` agrees, and it synthesises a controller for
+each — 6 and 23 states — whose language has **empty intersection** with an automaton
+for the negated specification. That is a witness rather than a second opinion: the
+strategy satisfies the specification on every run. Both formulas are arbiters with
+mutual exclusion and no spurious grants, two clients and three, realised by
+alternating grants.
+
+Both are now in `syntcomp26-status-exceptions.tsv` with that evidence, beside the
+pre-existing `lilydemo04_modified` correction. The re-run baseline campaign, which
+used the corrected table, records **zero** conflicts.
+
+### Decision
+
+**LAND.**
+
+Every criterion of §3.12 is met. Unit tests pass. Every matched instance is
+independently confirmed: 100 of the 120 matches carry a B, S or F verdict and all
+100 agree, none conflicts, and none is annotated `realizable`. There are zero
+verdict conflicts attributable to P1 over the 1,524. Twenty-two instances above the
+17-second cap drop below one second — `full_arbiter_unreal1_pb_3_15_pe_`, a 60-second
+timeout for both backward configurations, returns in 7.9 ms. And no gate regresses:
+G1 fails identically on both sides, G4 gains four and loses none, G2s finds no
+measurable cost, G3 is unchanged.
+
+Twelve of the twenty-two are annotated `unknown` in SYNTCOMP, so this package
+settles instances the competition left open.
+
+The flag stays **off by default**. Flipping it is a separate decision with its own
+gate run, and B, S and F remain untouched for the packages that follow.
 
 #### G4 is where P1 earns its place
 
