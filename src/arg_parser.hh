@@ -116,6 +116,10 @@ void show_help (const char* program_name) {
       << "                    by unrealizability checks; -s truncates -r to its head\n"
       << "                    migration: legacy bare -r and -U now fail; bare -u LIST\n"
       << "                    now selects unrealizability only\n"
+      << "  --unreal-translation-pref VAL\n"
+      << "                    set the unrealizability translator preference to\n"
+      << "                    [small|any] without also selecting a realizability\n"
+      << "                    check; mutually exclusive with -r\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -182,6 +186,24 @@ void process_arg_real (const std::string& arg, arg_parse_result& result) {
                  value.c_str ());
       });
   result.primary_translation_pref = result.real_strategies->front ();
+}
+
+void process_arg_unreal_translation_pref (const std::string& arg,
+                                            arg_parse_result& result) {
+  const auto first = std::find_if_not (
+      arg.begin (), arg.end (), [] (unsigned char c) { return std::isspace (c); });
+  const auto last = std::find_if_not (
+                        arg.rbegin (), arg.rend (),
+                        [] (unsigned char c) { return std::isspace (c); })
+                        .base ();
+  const std::string value = first < last ? std::string (first, last) : std::string {};
+  if (case_insensitive_equals (value, "small"))
+    result.primary_translation_pref = spot::postprocessor::Small;
+  else if (case_insensitive_equals (value, "any"))
+    result.primary_translation_pref = spot::postprocessor::Any;
+  else
+    error (EXIT_CODE_ERROR, "Error: unexpected unreal translation preference %s.\n",
+           value.c_str ());
 }
 
 void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
@@ -269,8 +291,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
   static constexpr int OPT_SPOT_FAST = 1000;
+  static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
+  bool unreal_translation_pref_specified = false;
   static option long_options[] = {
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
+      {"unreal-translation-pref", required_argument, nullptr,
+       OPT_UNREAL_TRANSLATION_PREF},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -294,7 +320,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
         retval.formula = optarg;
         retval.formula_specified = true;
         break;
-      case 'r': process_arg_real (optarg, retval); break;
+      case 'r':
+        if (unreal_translation_pref_specified)
+          error (EXIT_CODE_ERROR,
+                 "Error: -r and --unreal-translation-pref are mutually exclusive.\n");
+        process_arg_real (optarg, retval);
+        break;
       case 'F':
         if (retval.tlsf_specified)
           error (EXIT_CODE_ERROR, "Error: -f/-F and -T/--tlsf are mutually exclusive.\n");
@@ -360,6 +391,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'u': process_arg_unreal (optarg, retval); break;
       case 's': retval.synth_fname = optarg; break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
+      case OPT_UNREAL_TRANSLATION_PREF:
+        if (retval.real_strategies.has_value ())
+          error (EXIT_CODE_ERROR,
+                 "Error: -r and --unreal-translation-pref are mutually exclusive.\n");
+        process_arg_unreal_translation_pref (optarg, retval);
+        unreal_translation_pref_specified = true;
+        break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }
   }
@@ -376,6 +414,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
   if (not retval.outputs_specified)
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
 
+  // --unreal-translation-pref selects no arms by itself: it only overrides
+  // primary_translation_pref, and has an effect only when -u also runs an
+  // unreal child.  Given without -u it must not suppress the default
+  // portfolio below -- unreal_strategies is what decides whether an unreal
+  // child was actually requested, not whether this override was mentioned.
   if (not retval.real_strategies.has_value () and
       not retval.unreal_strategies.has_value ()) {
     retval.real_strategies = default_real_strategies ();
