@@ -903,6 +903,49 @@ namespace {
                     == acacia::solver_detail::forward_resource_limit::edges);
     expect ("F1 resource limit: carries no strategy ranks",
             lazy.strategy_ranks.empty ());
+
+    expect ("F1 byte accounting: node aggregate matches categories",
+            lazy.node_bytes
+                == lazy.environment_node_bytes + lazy.controller_node_bytes);
+    expect ("F1 byte accounting: index aggregate matches categories",
+            lazy.index_bytes
+                == lazy.reverse_dependency_bytes + lazy.proof_bytes
+                       + lazy.hash_index_bytes + lazy.losing_antichain_bytes);
+    expect ("F1 byte accounting: total matches every category",
+            lazy.total_bytes
+                == lazy.rank_bytes + lazy.environment_node_bytes
+                       + lazy.controller_node_bytes
+                       + lazy.reverse_dependency_bytes + lazy.proof_bytes
+                       + lazy.hash_index_bytes + lazy.losing_antichain_bytes);
+    expect ("F1 byte accounting: initial rank and hash index are counted",
+            lazy.rank_bytes != 0 and lazy.environment_node_bytes != 0
+                and lazy.hash_index_bytes != 0);
+
+    acacia::solver_detail::forward_limits rank_byte_limits;
+    rank_byte_limits.max_rank_bytes = 0;
+    const f1_result rank_byte_limited =
+        solve_f1 (game, 1, vec ({0}), rank_byte_limits);
+    expect ("F1 resource limit: reports the rank-byte cap distinctly",
+            rank_byte_limited.status
+                    == acacia::solver_detail::forward_result_status::resource_limit
+                and rank_byte_limited.resource_limit
+                    == acacia::solver_detail::forward_resource_limit::rank_bytes);
+
+    acacia::solver_detail::forward_limits total_byte_limits;
+    total_byte_limits.max_total_bytes = 0;
+    const f1_result total_byte_limited =
+        solve_f1 (game, 1, vec ({0}), total_byte_limits);
+    expect ("F1 resource limit: reports the total-byte cap distinctly",
+            total_byte_limited.status
+                    == acacia::solver_detail::forward_result_status::resource_limit
+                and total_byte_limited.resource_limit
+                    == acacia::solver_detail::forward_resource_limit::total_bytes);
+    expect ("F1 byte resource limit: remains inconclusive",
+            total_byte_limited.status
+                    != acacia::solver_detail::forward_result_status::win_k
+                and total_byte_limited.status
+                    != acacia::solver_detail::forward_result_status::lose_k
+                and total_byte_limited.strategy_ranks.empty ());
   }
 
 }  // namespace

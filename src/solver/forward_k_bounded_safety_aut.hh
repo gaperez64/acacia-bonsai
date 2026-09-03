@@ -102,12 +102,16 @@ namespace acacia::solver_detail {
               initial, safe, input_output_fwd_actions, actioner, limits,
               use_antichain, minimisation_threshold);
           acacia::diagnostics::set_forward_attempt (
-              static_cast<int> (k), result_name (result.status), result.env_nodes,
-              result.ctrl_nodes, result.env_expanded, result.ctrl_expanded,
-              result.losing_antichain_size, result.raw_actions,
-              result.forward_actions_skipped,
+              static_cast<int> (k), result_name (result.status),
+              result.status == forward_result_status::resource_limit
+                  ? resource_reason (result.resource_limit)
+                  : "none",
+              result.env_nodes, result.ctrl_nodes, result.env_expanded,
+              result.ctrl_expanded, result.losing_antichain_size,
+              result.raw_actions, result.forward_actions_skipped,
               result.distinct_successors, result.minimal_successors,
-              result.strategy_ranks.size ());
+              result.strategy_ranks.size (), result.rank_bytes,
+              result.node_bytes, result.index_bytes, result.total_bytes);
 
           if (result.status == forward_result_status::resource_limit) {
             const std::string reason = resource_reason (result.resource_limit);
@@ -204,6 +208,10 @@ namespace acacia::solver_detail {
             return "forward-resource-limit-ctrl-nodes";
           case forward_resource_limit::edges:
             return "forward-resource-limit-edges";
+          case forward_resource_limit::rank_bytes:
+            return "forward-resource-limit-rank-bytes";
+          case forward_resource_limit::total_bytes:
+            return "forward-resource-limit-total-bytes";
           case forward_resource_limit::none:
             return "forward-resource-limit-unspecified";
         }

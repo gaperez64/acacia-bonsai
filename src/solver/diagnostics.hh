@@ -105,6 +105,7 @@ namespace acacia::diagnostics {
       std::string equivariant = "not-run";
       std::string local_probe_status = "none";
       std::string forward_result = "not-run";
+      std::string forward_resource_reason = "none";
       std::string forward_final_reason = "not-run";
       // sym_* covers every diagnostic recognition pass, including instances
       // the solver declines; eq_* is populated only when solving is attempted.
@@ -178,6 +179,10 @@ namespace acacia::diagnostics {
       unsigned long long forward_distinct_successors = 0;
       unsigned long long forward_minimal_successors = 0;
       unsigned long long forward_strategy_rank_nodes = 0;
+      unsigned long long forward_rank_bytes = 0;
+      unsigned long long forward_node_bytes = 0;
+      unsigned long long forward_index_bytes = 0;
+      unsigned long long forward_total_bytes = 0;
       unsigned long long cpre_skipped = 0;
       unsigned long long k_bumped_by_local_refutation = 0;
       unsigned long long actions_seen = 0;
@@ -320,6 +325,7 @@ namespace acacia::diagnostics {
          << " local_probe_nodes=" << m.local_probe_nodes
          << " forward_backend=" << (m.forward_backend ? 1 : 0)
          << " forward_K=" << m.forward_K << " forward_result=" << m.forward_result
+         << " forward_resource_reason=" << m.forward_resource_reason
          << " forward_env_nodes=" << m.forward_env_nodes
          << " forward_ctrl_nodes=" << m.forward_ctrl_nodes
          << " forward_env_expanded=" << m.forward_env_expanded
@@ -330,6 +336,10 @@ namespace acacia::diagnostics {
          << " forward_distinct_successors=" << m.forward_distinct_successors
          << " forward_minimal_successors=" << m.forward_minimal_successors
          << " forward_strategy_rank_nodes=" << m.forward_strategy_rank_nodes
+         << " forward_rank_bytes=" << m.forward_rank_bytes
+         << " forward_node_bytes=" << m.forward_node_bytes
+         << " forward_index_bytes=" << m.forward_index_bytes
+         << " forward_total_bytes=" << m.forward_total_bytes
          << " forward_certificate_verify_ms=" << m.forward_certificate_verify_ms
          << " forward_total_ms=" << m.forward_total_ms
          << " forward_final_reason=" << m.forward_final_reason
@@ -647,6 +657,7 @@ namespace acacia::diagnostics {
   }
 
   inline void set_forward_attempt (int k, std::string result,
+                                   std::string resource_reason,
                                    unsigned long long env_nodes,
                                    unsigned long long ctrl_nodes,
                                    unsigned long long env_expanded,
@@ -656,11 +667,16 @@ namespace acacia::diagnostics {
                                    unsigned long long actions_skipped,
                                    unsigned long long distinct_successors,
                                    unsigned long long minimal_successors,
-                                   unsigned long long strategy_rank_nodes) {
+                                   unsigned long long strategy_rank_nodes,
+                                   unsigned long long rank_bytes,
+                                   unsigned long long node_bytes,
+                                   unsigned long long index_bytes,
+                                   unsigned long long total_bytes) {
     if (auto* m = current ()) {
       m->observe_k (k);
       m->forward_K = k;
       m->forward_result = std::move (result);
+      m->forward_resource_reason = std::move (resource_reason);
       m->forward_env_nodes = env_nodes;
       m->forward_ctrl_nodes = ctrl_nodes;
       m->forward_env_expanded = env_expanded;
@@ -671,6 +687,10 @@ namespace acacia::diagnostics {
       m->forward_distinct_successors = distinct_successors;
       m->forward_minimal_successors = minimal_successors;
       m->forward_strategy_rank_nodes = strategy_rank_nodes;
+      m->forward_rank_bytes = rank_bytes;
+      m->forward_node_bytes = node_bytes;
+      m->forward_index_bytes = index_bytes;
+      m->forward_total_bytes = total_bytes;
     }
   }
 
@@ -784,12 +804,14 @@ namespace acacia::diagnostics {
                                  unsigned long long, unsigned long long) {}
   inline void set_local_probe_skipped_over_budget () {}
   inline void set_forward_backend () {}
-  inline void set_forward_attempt (int, std::string, unsigned long long,
+  inline void set_forward_attempt (int, std::string, std::string,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
-                                   unsigned long long) {}
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long) {}
   inline void set_forward_certificate_verify_ms (double) {}
   inline void set_forward_total_ms (double) {}
   inline void set_forward_final_reason (std::string) {}

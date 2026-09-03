@@ -21,8 +21,11 @@
 #include <cassert>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <deque>
 #include <functional>
+#include <initializer_list>
+#include <limits>
 #include <optional>
 #include <ranges>
 #include <unordered_map>
@@ -53,6 +56,8 @@ namespace acacia::solver_detail {
     env_nodes,
     ctrl_nodes,
     edges,
+    rank_bytes,
+    total_bytes,
   };
 
   /// On the eager comparison path, use exact-equality deduplication rather than
@@ -66,6 +71,10 @@ namespace acacia::solver_detail {
       std::size_t max_ctrl_nodes = 400000;
       /// Environment-input edges plus stored distinct successor choices.
       std::size_t max_edges = 2000000;
+      /// Defaults are deliberately unbounded until byte caps are tuned from
+      /// measurements, so adding the accounting cannot change existing runs.
+      std::size_t max_rank_bytes = std::numeric_limits<std::size_t>::max ();
+      std::size_t max_total_bytes = std::numeric_limits<std::size_t>::max ();
   };
 
   template <typename State>
@@ -92,6 +101,20 @@ namespace acacia::solver_detail {
       std::size_t forward_actions_skipped = 0;
       std::size_t distinct_successors = 0;
       std::size_t minimal_successors = 0;
+      /// Logical retained bytes.  The categories count objects and payload
+      /// elements, rather than allocator capacity and implementation overhead.
+      std::size_t rank_bytes = 0;
+      std::size_t environment_node_bytes = 0;
+      std::size_t controller_node_bytes = 0;
+      std::size_t reverse_dependency_bytes = 0;
+      std::size_t proof_bytes = 0;
+      std::size_t hash_index_bytes = 0;
+      std::size_t losing_antichain_bytes = 0;
+      /// Aggregates used by diagnostics: node bytes are the two node records;
+      /// index bytes are node links, proofs, the hash index, and antichain.
+      std::size_t node_bytes = 0;
+      std::size_t index_bytes = 0;
+      std::size_t total_bytes = 0;
       double minimisation_ms = 0.0;
       /// Retention ratios; an empty sample is reported as no reduction (1.0).
       double equality_reduction = 1.0;
@@ -114,23 +137,16 @@ namespace acacia::solver_detail {
     using coordinate_type = typename State::value_type;
 
     template <typename State>
-    using exact_state_key = std::vector<coordinate_type<State>>;
-
-    /// Hash every coordinate.  Hash collisions are harmless because the
-    /// unordered map still compares the complete coordinate vectors.
-    template <typename State>
-    struct exact_state_hash {
-        std::size_t operator() (const exact_state_key<State>& key) const noexcept {
-          std::size_t result = key.size ();
-          for (const auto coordinate : key) {
-            const std::size_t value =
-                std::hash<coordinate_type<State>> {} (coordinate);
-            result ^= value + static_cast<std::size_t> (0x9e3779b9U)
-                      + (result << 6U) + (result >> 2U);
-          }
-          return result;
-        }
-    };
+    [[nodiscard]] std::uint64_t coordinate_hash (const State& rank) noexcept {
+      std::uint64_t result = static_cast<std::uint64_t> (rank.size ());
+      for (std::size_t i = 0; i < rank.size (); ++i) {
+        const auto value = static_cast<std::uint64_t> (
+            std::hash<coordinate_type<State>> {} (rank[i]));
+        result ^= value + UINT64_C (0x9e3779b97f4a7c15)
+                  + (result << 6U) + (result >> 2U);
+      }
+      return result;
+    }
 
     template <typename State>
     struct controller_choice_reduction {
@@ -217,7 +233,9 @@ namespace acacia::solver_detail {
               typename Actioner, bool EagerMinimalSuccessors>
     class forward_search {
         using state = typename SetOfStates::value_type;
-        using exact_key = exact_state_key<state>;
+        using env_id_bucket = std::vector<std::size_t>;
+        using env_hash_index =
+            std::unordered_map<std::uint64_t, env_id_bucket>;
 
         struct queued_node {
             bool controller;
@@ -246,6 +264,8 @@ namespace acacia::solver_detail {
 
           for (;;) {
             if (not drain_losing_queue ())
+              return make_result (forward_result_status::resource_limit);
+            if (limit_exceeded)
               return make_result (forward_result_status::resource_limit);
             if (env_nodes[initial_id].status == node_status::losing)
               return make_result (forward_result_status::lose_k);
@@ -277,7 +297,7 @@ namespace acacia::solver_detail {
         std::vector<forward_ctrl_node<state>> ctrl_nodes;
         std::vector<std::vector<successor_choice_for<state>>>
             eager_controller_choices;
-        std::unordered_map<exact_key, std::size_t, exact_state_hash<state>> interned_envs;
+        env_hash_index interned_envs;
         std::deque<queued_node> open_queue;
         std::deque<queued_node> losing_queue;
         minimal_losing_antichain<state> losing_antichain;
@@ -297,6 +317,14 @@ namespace acacia::solver_detail {
         std::size_t forward_actions_skipped = 0;
         std::size_t distinct_successors = 0;
         std::size_t minimal_successors = 0;
+        std::size_t rank_bytes = 0;
+        std::size_t environment_node_bytes = 0;
+        std::size_t controller_node_bytes = 0;
+        std::size_t reverse_dependency_bytes = 0;
+        std::size_t proof_bytes = 0;
+        std::size_t hash_index_bytes = 0;
+        std::size_t losing_antichain_bytes = 0;
+        std::size_t total_bytes = 0;
         double minimisation_ms = 0.0;
         std::size_t next_proof_id = 1;
         bool limit_exceeded = false;
@@ -308,12 +336,106 @@ namespace acacia::solver_detail {
             resource_limit = reason;
         }
 
-        [[nodiscard]] static exact_key key_for (const state& rank) {
-          exact_key key;
-          key.reserve (rank.size ());
-          for (std::size_t i = 0; i < rank.size (); ++i)
-            key.push_back (rank[i]);
-          return key;
+        void accounting_overflow (std::size_t& category, bool is_rank) {
+          category = std::numeric_limits<std::size_t>::max ();
+          total_bytes = std::numeric_limits<std::size_t>::max ();
+          exceed_limit (is_rank ? forward_resource_limit::rank_bytes
+                                : forward_resource_limit::total_bytes);
+        }
+
+        /// Account a logical retained payload exactly once.  This intentionally
+        /// does not guess allocator bucket/node headers or spare vector capacity:
+        /// the estimate is approximate, while the arithmetic that defines it is
+        /// exact and overflow checked.
+        void account_bytes (std::size_t& category, std::size_t bytes,
+                            bool is_rank = false) {
+          const auto maximum = std::numeric_limits<std::size_t>::max ();
+          if (bytes > maximum - category) {
+            accounting_overflow (category, is_rank);
+            return;
+          }
+          category += bytes;
+
+          if (bytes > maximum - total_bytes) {
+            total_bytes = maximum;
+            exceed_limit (forward_resource_limit::total_bytes);
+          }
+          else {
+            total_bytes += bytes;
+          }
+
+          if (is_rank and rank_bytes > limits.max_rank_bytes)
+            exceed_limit (forward_resource_limit::rank_bytes);
+          if (total_bytes > limits.max_total_bytes)
+            exceed_limit (forward_resource_limit::total_bytes);
+        }
+
+        void account_items (std::size_t& category, std::size_t count,
+                            std::size_t item_bytes, bool is_rank = false) {
+          const auto maximum = std::numeric_limits<std::size_t>::max ();
+          if (item_bytes != 0 and count > maximum / item_bytes) {
+            accounting_overflow (category, is_rank);
+            return;
+          }
+          account_bytes (category, count * item_bytes, is_rank);
+        }
+
+        void release_items (std::size_t& category, std::size_t count,
+                            std::size_t item_bytes) {
+          assert (item_bytes == 0 or count <= category / item_bytes);
+          const std::size_t bytes = count * item_bytes;
+          assert (bytes <= category and bytes <= total_bytes);
+          category -= bytes;
+          total_bytes -= bytes;
+        }
+
+        void account_rank (const state& rank) {
+          account_items (rank_bytes, rank.size (),
+                         sizeof (coordinate_type<state>), true);
+        }
+
+        void account_hash_index_entry (bool new_bucket) {
+          if (new_bucket)
+            account_bytes (hash_index_bytes,
+                           sizeof (typename env_hash_index::value_type));
+          account_bytes (hash_index_bytes, sizeof (std::size_t));
+        }
+
+        [[nodiscard]] static std::size_t saturated_sum (
+            std::initializer_list<std::size_t> terms) {
+          const auto maximum = std::numeric_limits<std::size_t>::max ();
+          std::size_t result = 0;
+          for (const std::size_t term : terms) {
+            if (term > maximum - result)
+              return maximum;
+            result += term;
+          }
+          return result;
+        }
+
+        void account_losing_antichain_change (std::size_t old_size,
+                                               const state& inserted) {
+          const std::size_t new_size = losing_antichain.size ();
+          assert (new_size != 0 and new_size - 1 <= old_size);
+          const std::size_t removed = old_size - (new_size - 1);
+          const auto maximum = std::numeric_limits<std::size_t>::max ();
+          if (inserted.size () > maximum / sizeof (coordinate_type<state>)) {
+            accounting_overflow (losing_antichain_bytes, false);
+            return;
+          }
+          const std::size_t coordinates =
+              inserted.size () * sizeof (coordinate_type<state>);
+          constexpr std::size_t record =
+              sizeof (state) + sizeof (std::int64_t) + sizeof (std::size_t);
+          if (coordinates > maximum - record) {
+            accounting_overflow (losing_antichain_bytes, false);
+            return;
+          }
+          const std::size_t generator_bytes = record + coordinates;
+          assert (generator_bytes == 0
+                  or removed <= losing_antichain_bytes / generator_bytes);
+          release_items (losing_antichain_bytes, removed, generator_bytes);
+          account_bytes (losing_antichain_bytes, generator_bytes);
         }
 
         /// Safety is the posets order, not a representation-specific scan.
@@ -321,11 +443,23 @@ namespace acacia::solver_detail {
           return rank.partial_order (safe).leq ();
         }
 
-        [[nodiscard]] std::optional<std::size_t> find_env (const state& rank) const {
-          const auto found = interned_envs.find (key_for (rank));
+        [[nodiscard]] std::optional<std::size_t> find_env (
+            const state& rank, std::uint64_t hash) const {
+          const auto found = interned_envs.find (hash);
           if (found == interned_envs.end ())
             return std::nullopt;
-          return found->second;
+          // The hash selects only a small candidate bucket.  Identity is
+          // decided by this exact coordinate comparison; it cannot be skipped,
+          // because a 64-bit hash collision must never merge unequal states.
+          for (const std::size_t env_id : found->second)
+            if (env_nodes[env_id].rank == rank)
+              return env_id;
+          return std::nullopt;
+        }
+
+        [[nodiscard]] std::optional<std::size_t> find_env (
+            const state& rank) const {
+          return find_env (rank, coordinate_hash (rank));
         }
 
         std::size_t append_losing_proof (
@@ -334,8 +468,12 @@ namespace acacia::solver_detail {
           const std::size_t id = next_proof_id++;
           for (const std::size_t dependency : dependencies)
             assert (dependency != 0 and dependency < id);
+          const std::size_t dependency_count = dependencies.size ();
           losing_proofs.push_back (
               {id, reason, node, witness, std::move (dependencies)});
+          account_bytes (proof_bytes, sizeof (losing_proof));
+          account_items (
+              proof_bytes, dependency_count, sizeof (std::size_t));
           return id;
         }
 
@@ -358,8 +496,11 @@ namespace acacia::solver_detail {
               reason, env_id, witness, std::move (dependencies));
           losing_queue.push_back ({false, env_id});
 
-          if (not use_losing_antichain or not is_safe (env.rank)
-              or not losing_antichain.insert (env.rank))
+          if (not use_losing_antichain or not is_safe (env.rank))
+            return;
+
+          const std::size_t old_antichain_size = losing_antichain.size ();
+          if (not losing_antichain.insert (env.rank))
             return;
 
           losing_antichain_peak =
@@ -371,6 +512,9 @@ namespace acacia::solver_detail {
                     .leq ();
               });
           losing_antichain_generators.push_back (env_id);
+          assert (losing_antichain_generators.size ()
+                  == losing_antichain.size ());
+          account_losing_antichain_change (old_antichain_size, env.rank);
           ++invalidation_scans;
 
           // This is a full scan of every environment rank interned so far.
@@ -404,17 +548,22 @@ namespace acacia::solver_detail {
         }
 
         std::size_t intern_env (state rank) {
-          exact_key key = key_for (rank);
-          const auto found = interned_envs.find (key);
-          if (found != interned_envs.end ()) {
+          const std::uint64_t hash = coordinate_hash (rank);
+          const auto found = find_env (rank, hash);
+          if (found.has_value ()) {
             ++intern_hits;
-            return found->second;
+            return *found;
           }
 
           const std::size_t env_id = env_nodes.size ();
           env_nodes.push_back (
               {std::move (rank), node_status::open, {}, {}, 0});
-          interned_envs.emplace (std::move (key), env_id);
+          account_bytes (
+              environment_node_bytes, sizeof (forward_env_node<state>));
+          account_rank (env_nodes[env_id].rank);
+          auto [bucket, new_bucket] = interned_envs.try_emplace (hash);
+          bucket->second.push_back (env_id);
+          account_hash_index_entry (new_bucket);
           if (not is_safe (env_nodes[env_id].rank))
             mark_environment_losing (env_id, losing_reason::env_unsafe);
           else
@@ -456,14 +605,23 @@ namespace acacia::solver_detail {
             const std::size_t ctrl_id = ctrl_nodes.size ();
             ctrl_nodes.push_back ({env_id, input_index, node_status::open, 0,
                                    std::nullopt, std::nullopt, {}, 0});
+            account_bytes (
+                controller_node_bytes, sizeof (forward_ctrl_node<state>));
             if constexpr (EagerMinimalSuccessors)
-              eager_controller_choices.emplace_back ();
+              {
+                eager_controller_choices.emplace_back ();
+                account_bytes (
+                    controller_node_bytes,
+                    sizeof (std::vector<successor_choice_for<state>>));
+              }
             if (ctrl_nodes.size () > limits.max_ctrl_nodes) {
               exceed_limit (forward_resource_limit::ctrl_nodes);
               return;
             }
 
             env_nodes[env_id].controller_ids.push_back (ctrl_id);
+            account_bytes (
+                reverse_dependency_bytes, sizeof (std::size_t));
             if (not add_represented_edge ())
               return;
             open_queue.push_back ({true, ctrl_id});
@@ -496,10 +654,16 @@ namespace acacia::solver_detail {
             minimal_successors += reduction.choices.size ();
             minimisation_ms += reduction.minimisation_ms;
             eager_controller_choices[ctrl_id] = std::move (reduction.choices);
-            for ([[maybe_unused]] const auto& choice :
-                 eager_controller_choices[ctrl_id])
+            for (const auto& choice : eager_controller_choices[ctrl_id]) {
+              account_bytes (
+                  controller_node_bytes,
+                  sizeof (successor_choice_for<state>));
+              account_rank (choice.successor);
               if (not add_represented_edge ())
                 return;
+              if (limit_exceeded)
+                return;
+            }
           }
 
           if (not advance_controller (ctrl_id))
@@ -559,9 +723,13 @@ namespace acacia::solver_detail {
             ctrl.selected_env = env_id;
             ctrl.selected_action_index = choice.representative_action_index;
             ctrl.tried_env_ids.push_back (env_id);
+            account_bytes (
+                reverse_dependency_bytes, sizeof (std::size_t));
             env_nodes[env_id].selected_by.push_back (ctrl_id);
+            account_bytes (
+                reverse_dependency_bytes, sizeof (std::size_t));
             ++edges_selected;
-            return true;
+            return not limit_exceeded;
           }
 
           std::vector<std::size_t> dependencies;
@@ -572,7 +740,7 @@ namespace acacia::solver_detail {
               dependencies.push_back (env_nodes[*env_id].losing_proof_id);
           }
           mark_controller_losing (ctrl_id, std::move (dependencies));
-          return true;
+          return not limit_exceeded;
         }
 
         bool advance_lazy_controller (std::size_t ctrl_id) {
@@ -630,6 +798,8 @@ namespace acacia::solver_detail {
 
             const std::size_t env_id = intern_env (std::move (successor));
             ctrl.tried_env_ids.push_back (env_id);
+            account_bytes (
+                reverse_dependency_bytes, sizeof (std::size_t));
             ++distinct_successors;
             ++minimal_successors;
             if (not add_represented_edge ())
@@ -646,8 +816,10 @@ namespace acacia::solver_detail {
             ctrl.selected_action_index = action_index;
             forward_actions_skipped += action_count - ctrl.next_action_index;
             env_nodes[env_id].selected_by.push_back (ctrl_id);
+            account_bytes (
+                reverse_dependency_bytes, sizeof (std::size_t));
             ++edges_selected;
-            return true;
+            return not limit_exceeded;
           }
 
           std::vector<std::size_t> dependencies;
@@ -657,7 +829,7 @@ namespace acacia::solver_detail {
                     dependencies, env_nodes[env_id].losing_proof_id))
               dependencies.push_back (env_nodes[env_id].losing_proof_id);
           mark_controller_losing (ctrl_id, std::move (dependencies));
-          return true;
+          return not limit_exceeded;
         }
 
         bool drain_losing_queue () {
@@ -670,6 +842,8 @@ namespace acacia::solver_detail {
                 mark_environment_losing (
                     parent, losing_reason::env_losing_input, losing.id,
                     {ctrl_nodes[losing.id].losing_proof_id});
+              if (limit_exceeded)
+                return false;
               continue;
             }
 
@@ -677,6 +851,8 @@ namespace acacia::solver_detail {
             // env_nodes, so detach this list before following its entries.
             std::vector<std::size_t> selected_by =
                 std::move (env_nodes[losing.id].selected_by);
+            release_items (reverse_dependency_bytes, selected_by.size (),
+                           sizeof (std::size_t));
             for (const std::size_t ctrl_id : selected_by) {
               auto& ctrl = ctrl_nodes[ctrl_id];
               if (ctrl.selected_env != losing.id
@@ -740,6 +916,24 @@ namespace acacia::solver_detail {
           result.forward_actions_skipped = forward_actions_skipped;
           result.distinct_successors = distinct_successors;
           result.minimal_successors = minimal_successors;
+          result.rank_bytes = rank_bytes;
+          result.environment_node_bytes = environment_node_bytes;
+          result.controller_node_bytes = controller_node_bytes;
+          result.reverse_dependency_bytes = reverse_dependency_bytes;
+          result.proof_bytes = proof_bytes;
+          result.hash_index_bytes = hash_index_bytes;
+          result.losing_antichain_bytes = losing_antichain_bytes;
+          result.node_bytes = saturated_sum (
+              {environment_node_bytes, controller_node_bytes});
+          result.index_bytes = saturated_sum (
+              {reverse_dependency_bytes, proof_bytes, hash_index_bytes,
+               losing_antichain_bytes});
+          result.total_bytes = total_bytes;
+          assert (total_bytes == std::numeric_limits<std::size_t>::max ()
+                  or saturated_sum (
+                         {result.rank_bytes, result.node_bytes,
+                          result.index_bytes})
+                         == total_bytes);
           result.minimisation_ms = minimisation_ms;
           result.losing_proofs = losing_proofs;
           result.env_ranks.reserve (env_nodes.size ());
