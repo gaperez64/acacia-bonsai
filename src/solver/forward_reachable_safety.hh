@@ -96,6 +96,7 @@ namespace acacia::solver_detail {
       std::size_t subsumption_prefilter_skips = 0;
       std::size_t losing_insertions = 0;
       std::size_t invalidation_scans = 0;
+      std::size_t nodes_checked = 0;
       std::size_t nodes_invalidated = 0;
       std::size_t raw_actions = 0;
       std::size_t forward_actions_skipped = 0;
@@ -312,6 +313,7 @@ namespace acacia::solver_detail {
         std::size_t edges_selected = 0;
         std::size_t losing_antichain_peak = 0;
         std::size_t invalidation_scans = 0;
+        std::size_t nodes_checked = 0;
         std::size_t nodes_invalidated = 0;
         std::size_t raw_actions = 0;
         std::size_t forward_actions_skipped = 0;
@@ -522,6 +524,7 @@ namespace acacia::solver_detail {
           // propagation; a recursively attempted insertion is already
           // subsumed by `env.rank` and therefore cannot start another scan.
           for (std::size_t id = 0; id < env_nodes.size (); ++id) {
+            ++nodes_checked;
             if (env_nodes[id].status == node_status::losing)
               continue;
             if (env.rank.partial_order (env_nodes[id].rank).leq ()) {
@@ -911,6 +914,7 @@ namespace acacia::solver_detail {
           result.subsumption_prefilter_skips = losing_antichain.prefilter_skips;
           result.losing_insertions = losing_antichain.insertions;
           result.invalidation_scans = invalidation_scans;
+          result.nodes_checked = nodes_checked;
           result.nodes_invalidated = nodes_invalidated;
           result.raw_actions = raw_actions;
           result.forward_actions_skipped = forward_actions_skipped;

@@ -174,6 +174,10 @@ namespace acacia::diagnostics {
       unsigned long long forward_env_expanded = 0;
       unsigned long long forward_ctrl_expanded = 0;
       unsigned long long forward_losing_antichain_size = 0;
+      unsigned long long forward_losing_insertions = 0;
+      unsigned long long forward_invalidation_scans = 0;
+      unsigned long long forward_nodes_checked = 0;
+      unsigned long long forward_nodes_invalidated = 0;
       unsigned long long forward_raw_actions = 0;
       unsigned long long forward_actions_skipped = 0;
       unsigned long long forward_distinct_successors = 0;
@@ -331,6 +335,10 @@ namespace acacia::diagnostics {
          << " forward_env_expanded=" << m.forward_env_expanded
          << " forward_ctrl_expanded=" << m.forward_ctrl_expanded
          << " forward_losing_antichain_size=" << m.forward_losing_antichain_size
+         << " forward_losing_insertions=" << m.forward_losing_insertions
+         << " forward_invalidation_scans=" << m.forward_invalidation_scans
+         << " forward_nodes_checked=" << m.forward_nodes_checked
+         << " forward_nodes_invalidated=" << m.forward_nodes_invalidated
          << " forward_raw_actions=" << m.forward_raw_actions
          << " forward_actions_skipped=" << m.forward_actions_skipped
          << " forward_distinct_successors=" << m.forward_distinct_successors
@@ -663,6 +671,10 @@ namespace acacia::diagnostics {
                                    unsigned long long env_expanded,
                                    unsigned long long ctrl_expanded,
                                    unsigned long long losing_antichain_size,
+                                   unsigned long long losing_insertions,
+                                   unsigned long long invalidation_scans,
+                                   unsigned long long nodes_checked,
+                                   unsigned long long nodes_invalidated,
                                    unsigned long long raw_actions,
                                    unsigned long long actions_skipped,
                                    unsigned long long distinct_successors,
@@ -682,6 +694,10 @@ namespace acacia::diagnostics {
       m->forward_env_expanded = env_expanded;
       m->forward_ctrl_expanded = ctrl_expanded;
       m->forward_losing_antichain_size = losing_antichain_size;
+      m->forward_losing_insertions = losing_insertions;
+      m->forward_invalidation_scans = invalidation_scans;
+      m->forward_nodes_checked = nodes_checked;
+      m->forward_nodes_invalidated = nodes_invalidated;
       m->forward_raw_actions = raw_actions;
       m->forward_actions_skipped = actions_skipped;
       m->forward_distinct_successors = distinct_successors;
@@ -805,6 +821,8 @@ namespace acacia::diagnostics {
   inline void set_local_probe_skipped_over_budget () {}
   inline void set_forward_backend () {}
   inline void set_forward_attempt (int, std::string, std::string,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,

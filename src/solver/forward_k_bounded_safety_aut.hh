@@ -108,6 +108,8 @@ namespace acacia::solver_detail {
                   : "none",
               result.env_nodes, result.ctrl_nodes, result.env_expanded,
               result.ctrl_expanded, result.losing_antichain_size,
+              result.losing_insertions, result.invalidation_scans,
+              result.nodes_checked, result.nodes_invalidated,
               result.raw_actions, result.forward_actions_skipped,
               result.distinct_successors, result.minimal_successors,
               result.strategy_ranks.size (), result.rank_bytes,
