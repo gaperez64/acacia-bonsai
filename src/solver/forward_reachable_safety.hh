@@ -3,20 +3,17 @@
 /// A lazy reachable-state solver for one bounded forward safety game.
 ///
 /// Environment states and controller choices are discovered only when the
-/// current optimistic strategy reaches them.  A controller keeps the first
-/// successor not yet proved losing and advances monotonically through its
-/// remaining choices when that successor loses.
+/// current optimistic strategy reaches them.  A controller applies actions
+/// one at a time, keeps the first successor not yet proved losing, and does not
+/// apply another action until that selected successor loses.
 ///
-/// For a fixed rank r and input class i, suppose two actions have successors
-/// s1 = tau_{i,a1}(r) and s2 = tau_{i,a2}(r), with s1 <= s2.  Then a2 is
-/// unnecessary: every downward-closed winning region containing s2 also
-/// contains s1, so keeping s2 can never help the controller.  A controller
-/// node therefore needs only the Pareto-MINIMAL distinct successor vectors.
-/// This reduction is state-dependent and additional to the global
-/// semantic_mona action quotient, which cannot see it because it does not know
-/// r.
+/// ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS retains the former comparison path:
+/// apply every action up front, exact-deduplicate its successors, and Pareto
+/// minimise small successor sets before selecting one.  Pareto minimisation is
+/// deliberately confined to that eager path.
 
 #include "actioners/direction.hh"
+#include "configuration.hh"
 #include "solver/forward_game_nodes.hh"
 #include "solver/minimal_losing_antichain.hh"
 
@@ -58,9 +55,10 @@ namespace acacia::solver_detail {
     edges,
   };
 
-  /// Above this action count, use exact-equality deduplication rather than the
-  /// quadratic Pareto pass.  This is solely a performance choice: both paths
-  /// are exact, so changing the cutoff can never change a game verdict.
+  /// On the eager comparison path, use exact-equality deduplication rather than
+  /// the quadratic Pareto pass above this action count.  This is solely a
+  /// performance choice: both eager reductions are exact, so changing the
+  /// cutoff can never change a game verdict.  The lazy path ignores it.
   inline constexpr std::size_t default_controller_minimisation_threshold = 64;
 
   struct forward_limits {
@@ -91,6 +89,7 @@ namespace acacia::solver_detail {
       std::size_t invalidation_scans = 0;
       std::size_t nodes_invalidated = 0;
       std::size_t raw_actions = 0;
+      std::size_t forward_actions_skipped = 0;
       std::size_t distinct_successors = 0;
       std::size_t minimal_successors = 0;
       double minimisation_ms = 0.0;
@@ -104,6 +103,7 @@ namespace acacia::solver_detail {
       /// the solver's own status flags.
       std::vector<State> env_ranks;
       std::vector<std::pair<std::size_t, std::size_t>> ctrl_parents;
+      std::vector<State> losing_antichain_ranks;
       std::size_t initial_env = 0;
       std::vector<State> strategy_ranks;
   };
@@ -213,7 +213,8 @@ namespace acacia::solver_detail {
       return result;
     }
 
-    template <typename SetOfStates, typename InputOutputFwdActions, typename Actioner>
+    template <typename SetOfStates, typename InputOutputFwdActions,
+              typename Actioner, bool EagerMinimalSuccessors>
     class forward_search {
         using state = typename SetOfStates::value_type;
         using exact_key = exact_state_key<state>;
@@ -274,6 +275,8 @@ namespace acacia::solver_detail {
 
         std::vector<forward_env_node<state>> env_nodes;
         std::vector<forward_ctrl_node<state>> ctrl_nodes;
+        std::vector<std::vector<successor_choice_for<state>>>
+            eager_controller_choices;
         std::unordered_map<exact_key, std::size_t, exact_state_hash<state>> interned_envs;
         std::deque<queued_node> open_queue;
         std::deque<queued_node> losing_queue;
@@ -291,6 +294,7 @@ namespace acacia::solver_detail {
         std::size_t invalidation_scans = 0;
         std::size_t nodes_invalidated = 0;
         std::size_t raw_actions = 0;
+        std::size_t forward_actions_skipped = 0;
         std::size_t distinct_successors = 0;
         std::size_t minimal_successors = 0;
         double minimisation_ms = 0.0;
@@ -392,6 +396,7 @@ namespace acacia::solver_detail {
             return;
           ctrl.status = node_status::losing;
           ctrl.selected_env.reset ();
+          ctrl.selected_action_index.reset ();
           ctrl.losing_proof_id = append_losing_proof (
               losing_reason::ctrl_all_losing, ctrl_id, 0,
               std::move (dependencies));
@@ -449,8 +454,10 @@ namespace acacia::solver_detail {
           for ([[maybe_unused]] const auto& input_and_actions :
                input_output_fwd_actions) {
             const std::size_t ctrl_id = ctrl_nodes.size ();
-            ctrl_nodes.push_back ({env_id, input_index, node_status::open, {},
-                                   0, std::nullopt, 0});
+            ctrl_nodes.push_back ({env_id, input_index, node_status::open, 0,
+                                   std::nullopt, std::nullopt, {}, 0});
+            if constexpr (EagerMinimalSuccessors)
+              eager_controller_choices.emplace_back ();
             if (ctrl_nodes.size () > limits.max_ctrl_nodes) {
               exceed_limit (forward_resource_limit::ctrl_nodes);
               return;
@@ -473,22 +480,28 @@ namespace acacia::solver_detail {
               or env_nodes[ctrl.parent_env].status == node_status::losing)
             return;
 
-          auto input = std::ranges::begin (input_output_fwd_actions);
-          std::ranges::advance (input, ctrl.input_index);
-          auto reduction = reduce_controller_successors<state> (
-              env_nodes[ctrl.parent_env].rank, (*input).second, actioner,
-              controller_minimisation_threshold);
-          raw_actions += reduction.raw_actions;
-          distinct_successors += reduction.distinct_successors;
-          minimal_successors += reduction.choices.size ();
-          minimisation_ms += reduction.minimisation_ms;
-          ctrl.choices = std::move (reduction.choices);
-          for ([[maybe_unused]] const auto& choice : ctrl.choices)
-            if (not add_represented_edge ())
-              return;
-
-          ctrl.current_choice = 0;
+          ctrl.next_action_index = 0;
           ctrl.selected_env.reset ();
+          ctrl.selected_action_index.reset ();
+          ctrl.tried_env_ids.clear ();
+
+          if constexpr (EagerMinimalSuccessors) {
+            auto input = std::ranges::begin (input_output_fwd_actions);
+            std::ranges::advance (input, ctrl.input_index);
+            auto reduction = reduce_controller_successors<state> (
+                env_nodes[ctrl.parent_env].rank, (*input).second, actioner,
+                controller_minimisation_threshold);
+            raw_actions += reduction.raw_actions;
+            distinct_successors += reduction.distinct_successors;
+            minimal_successors += reduction.choices.size ();
+            minimisation_ms += reduction.minimisation_ms;
+            eager_controller_choices[ctrl_id] = std::move (reduction.choices);
+            for ([[maybe_unused]] const auto& choice :
+                 eager_controller_choices[ctrl_id])
+              if (not add_represented_edge ())
+                return;
+          }
+
           if (not advance_controller (ctrl_id))
             return;
           if (ctrl.status != node_status::losing) {
@@ -498,24 +511,44 @@ namespace acacia::solver_detail {
         }
 
         bool advance_controller (std::size_t ctrl_id) {
+          if constexpr (EagerMinimalSuccessors)
+            return advance_eager_controller (ctrl_id);
+          else
+            return advance_lazy_controller (ctrl_id);
+        }
+
+        bool advance_eager_controller (std::size_t ctrl_id) {
           auto& ctrl = ctrl_nodes[ctrl_id];
+          const auto& choices = eager_controller_choices[ctrl_id];
 
           // A selected choice that just lost is now behind the monotone scan.
           // Its selected_by entry is intentionally left stale in the old
           // environment node and is checked again when that node is processed.
           if (ctrl.selected_env.has_value ()) {
             ctrl.selected_env.reset ();
-            ++ctrl.current_choice;
+            ctrl.selected_action_index.reset ();
+            ++ctrl.next_action_index;
             ++choice_switches;
           }
 
-          while (ctrl.current_choice < ctrl.choices.size ()) {
-            const state& successor = ctrl.choices[ctrl.current_choice].successor;
+          while (ctrl.next_action_index < choices.size ()) {
+            const auto& choice = choices[ctrl.next_action_index];
+            const state& successor = choice.successor;
             const auto known_env = find_env (successor);
             if (not is_safe (successor)
                 or (known_env.has_value ()
                     and env_nodes[*known_env].status == node_status::losing)) {
-              ++ctrl.current_choice;
+              ++ctrl.next_action_index;
+              ++choice_switches;
+              continue;
+            }
+
+            if (use_losing_antichain
+                and losing_antichain.subsumes (successor)) {
+              [[maybe_unused]] const auto generator =
+                  subsuming_generator (successor);
+              assert (generator.has_value ());
+              ++ctrl.next_action_index;
               ++choice_switches;
               continue;
             }
@@ -524,18 +557,105 @@ namespace acacia::solver_detail {
             if (limit_exceeded)
               return false;
             ctrl.selected_env = env_id;
+            ctrl.selected_action_index = choice.representative_action_index;
+            ctrl.tried_env_ids.push_back (env_id);
             env_nodes[env_id].selected_by.push_back (ctrl_id);
             ++edges_selected;
             return true;
           }
 
           std::vector<std::size_t> dependencies;
-          for (const auto& choice : ctrl.choices) {
+          for (const auto& choice : choices) {
             const auto env_id = find_env (choice.successor);
             if (env_id.has_value ()
                 and env_nodes[*env_id].status == node_status::losing)
               dependencies.push_back (env_nodes[*env_id].losing_proof_id);
           }
+          mark_controller_losing (ctrl_id, std::move (dependencies));
+          return true;
+        }
+
+        bool advance_lazy_controller (std::size_t ctrl_id) {
+          auto& ctrl = ctrl_nodes[ctrl_id];
+
+          auto input = std::ranges::begin (input_output_fwd_actions);
+          std::ranges::advance (input, ctrl.input_index);
+          const auto& actions = (*input).second;
+          const std::size_t action_count =
+              static_cast<std::size_t> (std::ranges::size (actions));
+
+          // The selected successor just acquired a losing proof.  Actions
+          // after it are no longer skipped: the monotone cursor resumes at
+          // exactly the next semantic action.
+          if (ctrl.selected_env.has_value ()) {
+            assert (env_nodes[*ctrl.selected_env].status == node_status::losing);
+            assert (forward_actions_skipped
+                    >= action_count - ctrl.next_action_index);
+            forward_actions_skipped -= action_count - ctrl.next_action_index;
+            ctrl.selected_env.reset ();
+            ctrl.selected_action_index.reset ();
+            ++choice_switches;
+          }
+
+          auto action = std::ranges::begin (actions);
+          std::ranges::advance (action, ctrl.next_action_index);
+          while (ctrl.next_action_index < action_count) {
+            const std::size_t action_index = ctrl.next_action_index++;
+            state successor = actioner.apply (
+                env_nodes[ctrl.parent_env].rank, *action,
+                actioners::direction::forward);
+            ++action;
+            ++raw_actions;
+
+            if (not is_safe (successor)) {
+              ++choice_switches;
+              continue;
+            }
+
+            const auto known_env = find_env (successor);
+            if (known_env.has_value ()
+                and std::ranges::contains (ctrl.tried_env_ids, *known_env)) {
+              ++choice_switches;
+              continue;
+            }
+
+            if (use_losing_antichain
+                and losing_antichain.subsumes (successor)) {
+              [[maybe_unused]] const auto generator =
+                  subsuming_generator (successor);
+              assert (generator.has_value ());
+              ++choice_switches;
+              continue;
+            }
+
+            const std::size_t env_id = intern_env (std::move (successor));
+            ctrl.tried_env_ids.push_back (env_id);
+            ++distinct_successors;
+            ++minimal_successors;
+            if (not add_represented_edge ())
+              return false;
+            if (limit_exceeded)
+              return false;
+
+            if (env_nodes[env_id].status == node_status::losing) {
+              ++choice_switches;
+              continue;
+            }
+
+            ctrl.selected_env = env_id;
+            ctrl.selected_action_index = action_index;
+            forward_actions_skipped += action_count - ctrl.next_action_index;
+            env_nodes[env_id].selected_by.push_back (ctrl_id);
+            ++edges_selected;
+            return true;
+          }
+
+          std::vector<std::size_t> dependencies;
+          for (const std::size_t env_id : ctrl.tried_env_ids)
+            if (env_nodes[env_id].status == node_status::losing
+                and not std::ranges::contains (
+                    dependencies, env_nodes[env_id].losing_proof_id))
+              dependencies.push_back (env_nodes[env_id].losing_proof_id);
           mark_controller_losing (ctrl_id, std::move (dependencies));
           return true;
         }
@@ -617,6 +737,7 @@ namespace acacia::solver_detail {
           result.invalidation_scans = invalidation_scans;
           result.nodes_invalidated = nodes_invalidated;
           result.raw_actions = raw_actions;
+          result.forward_actions_skipped = forward_actions_skipped;
           result.distinct_successors = distinct_successors;
           result.minimal_successors = minimal_successors;
           result.minimisation_ms = minimisation_ms;
@@ -627,6 +748,11 @@ namespace acacia::solver_detail {
           result.ctrl_parents.reserve (ctrl_nodes.size ());
           for (const auto& node : ctrl_nodes)
             result.ctrl_parents.emplace_back (node.parent_env, node.input_index);
+          result.losing_antichain_ranks.reserve (
+              losing_antichain_generators.size ());
+          for (const std::size_t generator : losing_antichain_generators)
+            result.losing_antichain_ranks.push_back (
+                env_nodes[generator].rank.copy ());
           if (initial_id.has_value ())
             result.initial_env = *initial_id;
           if (raw_actions != 0)
@@ -646,16 +772,19 @@ namespace acacia::solver_detail {
 
   /// Solve the reachable game while materializing only the current choices.
   ///
-  /// Lazy choice is complete because every controller scans its finite,
-  /// reduced action list monotonically: a choice is discarded only because an
-  /// equal or smaller successor represents it, or after it is unsafe or its
-  /// exact successor has a losing proof.  If the queues empty, every reachable
-  /// environment has every input expanded and every such controller still
-  /// selects a safe, non-losing successor.
+  /// Lazy choice is complete because every controller scans its finite action
+  /// list monotonically: a choice is discarded only after it is unsafe, its
+  /// exact successor has already been tried, or its successor has a losing
+  /// proof.  If the queues empty, every reachable environment has every input
+  /// expanded and every such controller still selects a safe, non-losing
+  /// successor.
   ///
   /// A resource limit only interrupts that proof process.  It is deliberately
   /// returned as `resource_limit`, never converted into either game verdict.
-  template <typename SetOfStates, typename InputOutputFwdActions, typename Actioner>
+  template <typename SetOfStates,
+            bool EagerMinimalSuccessors =
+                (ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS != 0),
+            typename InputOutputFwdActions, typename Actioner>
   forward_solve_result<typename SetOfStates::value_type>
   solve_forward_reachable_safety (
       const typename SetOfStates::value_type& initial,
@@ -664,15 +793,18 @@ namespace acacia::solver_detail {
       const forward_limits& limits = {}, bool use_losing_antichain = false,
       std::size_t controller_minimisation_threshold =
           default_controller_minimisation_threshold) {
-    forward_reachable_detail::forward_search<SetOfStates, InputOutputFwdActions,
-                                             Actioner>
+    forward_reachable_detail::forward_search<
+        SetOfStates, InputOutputFwdActions, Actioner, EagerMinimalSuccessors>
         search {initial, safe, input_output_fwd_actions, actioner, limits,
                 use_losing_antichain, controller_minimisation_threshold};
     return search.solve ();
   }
 
   /// Spelling parallel to the F0 oracle for callers that name the game.
-  template <typename SetOfStates, typename InputOutputFwdActions, typename Actioner>
+  template <typename SetOfStates,
+            bool EagerMinimalSuccessors =
+                (ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS != 0),
+            typename InputOutputFwdActions, typename Actioner>
   forward_solve_result<typename SetOfStates::value_type>
   solve_forward_reachable_safety_game (
       const typename SetOfStates::value_type& initial,
@@ -681,7 +813,7 @@ namespace acacia::solver_detail {
       const forward_limits& limits = {}, bool use_losing_antichain = false,
       std::size_t controller_minimisation_threshold =
           default_controller_minimisation_threshold) {
-    return solve_forward_reachable_safety<SetOfStates> (
+    return solve_forward_reachable_safety<SetOfStates, EagerMinimalSuccessors> (
         initial, safe, input_output_fwd_actions, actioner, limits,
         use_losing_antichain, controller_minimisation_threshold);
   }

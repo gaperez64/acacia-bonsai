@@ -17,6 +17,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <list>
+#include <optional>
 #include <random>
 #include <string>
 #include <tuple>
@@ -39,11 +40,16 @@ namespace {
 
   int failures = 0;
   unsigned certificates_checked = 0;
+  unsigned lazy_eager_games_compared = 0;
 
   using f1_result = acacia::solver_detail::forward_solve_result<state>;
   using choice_reduction =
       acacia::solver_detail::forward_reachable_detail::
           controller_choice_reduction<state>;
+
+  void check_certificate (const std::string& label, const tiny_game& game,
+                          size_t bool_threshold, const rank_vector& initial,
+                          const f1_result& result);
 
   bool expect (const std::string& what, bool condition) {
     if (condition)
@@ -113,7 +119,8 @@ namespace {
     return std::forward<Check> (check) (actioner);
   }
 
-  f1_result solve_f1 (
+  template <bool EagerMinimalSuccessors>
+  f1_result solve_f1_mode (
       const tiny_game& game, size_t bool_threshold,
       const rank_vector& initial,
       const acacia::solver_detail::forward_limits& limits = {},
@@ -124,10 +131,35 @@ namespace {
       const state initial_state = as_solver_state (initial);
       const state safe_state = as_solver_state (
           safe_vector (game.states, game.K, bool_threshold));
-      return acacia::solver_detail::solve_forward_reachable_safety<SetOfStates> (
+      return acacia::solver_detail::solve_forward_reachable_safety<
+          SetOfStates, EagerMinimalSuccessors> (
           initial_state, safe_state, game.inputs, actioner, limits,
           use_losing_antichain, controller_minimisation_threshold);
     });
+  }
+
+  f1_result solve_f1 (
+      const tiny_game& game, size_t bool_threshold,
+      const rank_vector& initial,
+      const acacia::solver_detail::forward_limits& limits = {},
+      bool use_losing_antichain = false,
+      std::size_t controller_minimisation_threshold =
+          acacia::solver_detail::default_controller_minimisation_threshold) {
+    return solve_f1_mode<false> (
+        game, bool_threshold, initial, limits, use_losing_antichain,
+        controller_minimisation_threshold);
+  }
+
+  f1_result solve_f1_eager (
+      const tiny_game& game, size_t bool_threshold,
+      const rank_vector& initial,
+      const acacia::solver_detail::forward_limits& limits = {},
+      bool use_losing_antichain = false,
+      std::size_t controller_minimisation_threshold =
+          acacia::solver_detail::default_controller_minimisation_threshold) {
+    return solve_f1_mode<true> (
+        game, bool_threshold, initial, limits, use_losing_antichain,
+        controller_minimisation_threshold);
   }
 
   choice_reduction reduce_first_input (
@@ -158,6 +190,94 @@ namespace {
                             const f1_result& result) {
     return replay_losing_proof (
         game, bool_threshold, result, result.losing_proofs);
+  }
+
+  std::vector<rank_vector> normalised_ranks (const std::vector<state>& ranks) {
+    std::vector<rank_vector> result;
+    result.reserve (ranks.size ());
+    for (const auto& rank : ranks)
+      result.push_back (as_rank (rank));
+    std::ranges::sort (result);
+    result.erase (std::ranges::unique (result).begin (), result.end ());
+    return result;
+  }
+
+  void print_rank (std::ostream& out, const rank_vector& rank) {
+    out << '[';
+    for (std::size_t i = 0; i < rank.size (); ++i) {
+      if (i != 0)
+        out << ',';
+      out << static_cast<int> (rank[i]);
+    }
+    out << ']';
+  }
+
+  void print_game (const std::string& label, const tiny_game& game,
+                   std::size_t bool_threshold, const rank_vector& initial) {
+    std::cerr << "lazy/eager disagreement in " << label << ": states="
+              << game.states << " K=" << static_cast<int> (game.K)
+              << " bool_threshold=" << bool_threshold << " initial=";
+    print_rank (std::cerr, initial);
+    std::cerr << '\n';
+    std::size_t input_index = 0;
+    for (const auto& input_and_actions : game.inputs) {
+      std::size_t action_index = 0;
+      for (const auto& action : input_and_actions.second) {
+        std::cerr << "  input " << input_index << " action " << action_index
+                  << ':';
+        for (std::size_t destination = 0; destination < action.size ();
+             ++destination)
+          for (const auto& [source, increment] : action[destination])
+            std::cerr << " (dst=" << destination << ",src=" << source
+                      << ",inc=" << (increment ? 1 : 0) << ')';
+        std::cerr << '\n';
+        ++action_index;
+      }
+      ++input_index;
+    }
+  }
+
+  void compare_lazy_and_eager (const std::string& label, const tiny_game& game,
+                               std::size_t bool_threshold,
+                               const rank_vector& initial,
+                               const f1_result* known_eager = nullptr) {
+    const f1_result lazy = solve_f1 (game, bool_threshold, initial, {}, true);
+    std::optional<f1_result> computed_eager;
+    if (known_eager == nullptr)
+      computed_eager.emplace (
+          solve_f1_eager (game, bool_threshold, initial, {}, true, 0));
+    const f1_result& eager =
+        known_eager == nullptr ? *computed_eager : *known_eager;
+    const bool same_status = lazy.status == eager.status;
+    const bool same_losing_antichain =
+        normalised_ranks (lazy.losing_antichain_ranks)
+        == normalised_ranks (eager.losing_antichain_ranks);
+    const bool same_strategy =
+        lazy.status != acacia::solver_detail::forward_result_status::win_k
+        or normalised_ranks (lazy.strategy_ranks)
+               == normalised_ranks (eager.strategy_ranks);
+    if (not (same_status and same_losing_antichain and same_strategy)) {
+      print_game (label, game, bool_threshold, initial);
+      std::cerr << "  status_equal=" << same_status
+                << " losing_antichain_equal=" << same_losing_antichain
+                << " strategy_ranks_equal=" << same_strategy << '\n';
+    }
+    expect (label + ": lazy/eager verdicts agree", same_status);
+    expect (label + ": lazy/eager losing antichains agree",
+            same_losing_antichain);
+    expect (label + ": lazy/eager winning strategy ranks agree",
+            same_strategy);
+    check_certificate (
+        label + ": lazy comparison", game, bool_threshold, initial, lazy);
+    check_certificate (
+        label + ": eager comparison", game, bool_threshold, initial, eager);
+    if (lazy.status == acacia::solver_detail::forward_result_status::lose_k)
+      expect (label + ": lazy comparison losing proof replays",
+              replay_losing_proof (game, bool_threshold, lazy));
+    if (eager.status == acacia::solver_detail::forward_result_status::lose_k)
+      expect (label + ": eager comparison losing proof replays",
+              replay_losing_proof (game, bool_threshold, eager));
+    ++lazy_eager_games_compared;
   }
 
   void check_antichain_unit_behaviour () {
@@ -302,6 +422,7 @@ namespace {
                      == acacia::solver_detail::forward_result_status::lose_k)
                         == not expected_win);
     check_certificate (label, game, bool_threshold, initial, lazy);
+    compare_lazy_and_eager (label, game, bool_threshold, initial);
     return result;
   }
 
@@ -327,13 +448,16 @@ namespace {
             minimal.choices.size () == 1
                 and minimal.choices.front ().representative_action_index == 1);
 
-    const f1_result integrated = solve_f1 (comparable, 2, vec ({0, 0}));
+    const f1_result integrated =
+        solve_f1_eager (comparable, 2, vec ({0, 0}));
     expect ("F3 comparable: controller expansion exports exact metrics",
             integrated.raw_actions == 3
                 and integrated.distinct_successors == 2
                 and integrated.minimal_successors == 1
                 and integrated.equality_reduction == 2.0 / 3.0
                 and integrated.dominance_reduction == 1.0 / 2.0);
+    compare_lazy_and_eager (
+        "F3 comparable", comparable, 2, vec ({0, 0}));
 
     const choice_reduction dedup_only =
         reduce_first_input (comparable, 2, vec ({0, 0}), 0);
@@ -358,6 +482,8 @@ namespace {
                 and as_rank (both.choices[1].successor) == vec ({-1, 0})
                 and both.choices[0].representative_action_index == 0
                 and both.choices[1].representative_action_index == 1);
+    compare_lazy_and_eager (
+        "F3 incomparable", incomparable, 2, vec ({0, 0}));
 
     const action_vec self = make_action (1, {{0, 0, false}});
     const tiny_game duplicate = make_game (
@@ -370,6 +496,8 @@ namespace {
     expect ("F3 exact duplicate: first action index is retained",
             exact.choices.size () == 1
                 and exact.choices.front ().representative_action_index == 0);
+    compare_lazy_and_eager (
+        "F3 exact duplicate", duplicate, 1, vec ({0}));
   }
 
   void check_hand_written_games () {
@@ -440,6 +568,18 @@ namespace {
     expect ("9 duplicate action successors: one exact successor edge",
             duplicate_result.env_nodes == 1 and duplicate_result.ctrl_nodes == 1
                 and duplicate_result.edges == 2);
+    const f1_result lazy_duplicate =
+        solve_f1 (duplicate_successors, 1, vec ({0}), {}, true);
+    expect ("9 duplicate action successors: lazy expansion applies one action",
+            lazy_duplicate.raw_actions == 1
+                and lazy_duplicate.forward_actions_skipped == 2
+                and lazy_duplicate.distinct_successors == 1
+                and lazy_duplicate.minimal_successors == 1);
+    const f1_result eager_duplicate =
+        solve_f1_eager (duplicate_successors, 1, vec ({0}), {}, true);
+    expect ("9 duplicate action successors: eager comparison applies all actions",
+            eager_duplicate.raw_actions == 3
+                and eager_duplicate.forward_actions_skipped == 0);
 
     const action_vec unsafe_boolean =
         make_action (3, {{1, 0, true}, {1, 1, true}});
@@ -519,10 +659,13 @@ namespace {
       const exact_region truth = brute_force_winning_region (game, bool_threshold);
       const forward_result result = solve_explicit_forward_game (
           initial, game.inputs, game.K, bool_threshold);
-      const f1_result f3 = solve_f1 (game, bool_threshold, initial);
+      const f1_result f3 = solve_f1_eager (game, bool_threshold, initial);
       const f1_result dedup_only =
-          solve_f1 (game, bool_threshold, initial, {}, false, 0);
-      const f1_result pruned = solve_f1 (game, bool_threshold, initial, {}, true);
+          solve_f1_eager (game, bool_threshold, initial, {}, false, 0);
+      const f1_result pruned =
+          solve_f1_eager (game, bool_threshold, initial, {}, true);
+      const f1_result eager_exact =
+          solve_f1_eager (game, bool_threshold, initial, {}, true, 0);
       const std::string label = "random game " + std::to_string (trial);
 
       expect (label + ": F3 status agrees with cutoff-zero F1",
@@ -634,6 +777,9 @@ namespace {
       replay_if_losing ("cutoff-zero F1", dedup_only);
       replay_if_losing ("antichain-on F3", pruned);
 
+      compare_lazy_and_eager (
+          label, game, bool_threshold, initial, &eager_exact);
+
       antichain_totals.add (pruned);
       f3_totals.add (f3);
       dedup_totals.add (dedup_only);
@@ -695,6 +841,8 @@ namespace {
     const action_vec self = make_action (1, {{0, 0, false}});
     const tiny_game game =
         make_game (1, static_cast<VECTOR_ELT_T> (1), {{self}});
+    compare_lazy_and_eager (
+        "resource-limit fixture", game, 1, vec ({0}));
     forward_limits limits;
     limits.max_ctrl_nodes = 0;
     const forward_result result = solve_explicit_forward_game (
@@ -773,6 +921,9 @@ int main () {
   }
   std::cout << "forward-safety-game: verified " << certificates_checked
             << " winning certificates\n";
+  std::cout << "forward-safety-game: compared "
+            << lazy_eager_games_compared
+            << " games across lazy and eager controller expansion\n";
   std::cout << "forward-safety-game: all checks passed\n";
   return 0;
 }

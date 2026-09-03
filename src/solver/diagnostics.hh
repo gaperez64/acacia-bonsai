@@ -174,6 +174,7 @@ namespace acacia::diagnostics {
       unsigned long long forward_ctrl_expanded = 0;
       unsigned long long forward_losing_antichain_size = 0;
       unsigned long long forward_raw_actions = 0;
+      unsigned long long forward_actions_skipped = 0;
       unsigned long long forward_distinct_successors = 0;
       unsigned long long forward_minimal_successors = 0;
       unsigned long long forward_strategy_rank_nodes = 0;
@@ -325,6 +326,7 @@ namespace acacia::diagnostics {
          << " forward_ctrl_expanded=" << m.forward_ctrl_expanded
          << " forward_losing_antichain_size=" << m.forward_losing_antichain_size
          << " forward_raw_actions=" << m.forward_raw_actions
+         << " forward_actions_skipped=" << m.forward_actions_skipped
          << " forward_distinct_successors=" << m.forward_distinct_successors
          << " forward_minimal_successors=" << m.forward_minimal_successors
          << " forward_strategy_rank_nodes=" << m.forward_strategy_rank_nodes
@@ -651,6 +653,7 @@ namespace acacia::diagnostics {
                                    unsigned long long ctrl_expanded,
                                    unsigned long long losing_antichain_size,
                                    unsigned long long raw_actions,
+                                   unsigned long long actions_skipped,
                                    unsigned long long distinct_successors,
                                    unsigned long long minimal_successors,
                                    unsigned long long strategy_rank_nodes) {
@@ -664,6 +667,7 @@ namespace acacia::diagnostics {
       m->forward_ctrl_expanded = ctrl_expanded;
       m->forward_losing_antichain_size = losing_antichain_size;
       m->forward_raw_actions = raw_actions;
+      m->forward_actions_skipped = actions_skipped;
       m->forward_distinct_successors = distinct_successors;
       m->forward_minimal_successors = minimal_successors;
       m->forward_strategy_rank_nodes = strategy_rank_nodes;
@@ -784,7 +788,8 @@ namespace acacia::diagnostics {
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
                                    unsigned long long, unsigned long long,
-                                   unsigned long long, unsigned long long) {}
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long) {}
   inline void set_forward_certificate_verify_ms (double) {}
   inline void set_forward_total_ms (double) {}
   inline void set_forward_final_reason (std::string) {}

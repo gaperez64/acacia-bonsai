@@ -29,9 +29,10 @@ namespace acacia::solver_detail {
       std::size_t parent_env;
       std::size_t input_index;
       node_status status = node_status::open;
-      std::vector<successor_choice_for<State>> choices;
-      std::size_t current_choice = 0;
+      std::size_t next_action_index = 0;
       std::optional<std::size_t> selected_env;
+      std::optional<std::size_t> selected_action_index;
+      std::vector<std::size_t> tried_env_ids;
       std::size_t losing_proof_id = 0;
   };
 

@@ -88,8 +88,9 @@ namespace acacia::solver_detail {
           // The local search object is intentionally reconstructed at every K.
           // Both knobs are runtime-configurable so a sweep can measure what
           // they are worth on real instances without a rebuild per arm.  The
-          // defaults are the shipped behaviour: antichain on, Pareto
-          // minimisation for action lists at or below the threshold.
+          // The shipped lazy path uses the antichain but never consults the
+          // minimisation threshold.  The threshold remains runtime-tunable for
+          // ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS comparison builds.
           static const bool use_antichain =
               acacia::diagnostics::env_size ("ACACIA_FORWARD_LOSING_ANTICHAIN", 1, true) != 0;
           static const std::size_t minimisation_threshold =
@@ -104,6 +105,7 @@ namespace acacia::solver_detail {
               static_cast<int> (k), result_name (result.status), result.env_nodes,
               result.ctrl_nodes, result.env_expanded, result.ctrl_expanded,
               result.losing_antichain_size, result.raw_actions,
+              result.forward_actions_skipped,
               result.distinct_successors, result.minimal_successors,
               result.strategy_ranks.size ());
 

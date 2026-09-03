@@ -60,6 +60,8 @@ option('acacia_forced_output_contradiction', type: 'boolean', value: false,
        description: 'Enable the forced-output contradiction checker in the decision-only syntactic bypass')
 option('acacia_profile_dominance', type: 'boolean', value: false,
        description: 'Prune globally dominated semantic actions after decoding, per input')
+option('acacia_forward_eager_minimal_successors', type: 'boolean', value: false,
+       description: 'Eagerly apply and Pareto-minimise every forward controller action (comparison mode)')
 option('acacia_k_schedule', type: 'combo',
        choices: ['linear', 'geometric', 'cheap_loss_adaptive', 'direct_max'],
        value: 'linear',

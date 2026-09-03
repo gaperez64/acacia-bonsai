@@ -134,6 +134,11 @@ if get_option ('acacia_profile_dominance')
 else
   build_conf.set ('ACACIA_PROFILE_DOMINANCE', 0)
 endif
+if get_option ('acacia_forward_eager_minimal_successors')
+  build_conf.set ('ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS', 1)
+else
+  build_conf.set ('ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS', 0)
+endif
 build_conf.set ('ACACIA_K_SCHEDULE',
                 'acacia::k_schedule::kind::' + get_option ('acacia_k_schedule'))
 if get_option ('acacia_enable_tlsf_frontend')
