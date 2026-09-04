@@ -1315,3 +1315,85 @@ against the shipping default's 976 — **+76** — with zero verdict conflicts, 
 total time, within the existing four-slot budget. §8.1's gate for P6 still fails,
 and now for a stronger reason: four arms reach the ceiling that six were speculated
 to be needed for.
+
+---
+
+## Stage 3a — the sum prefilter that already existed: **STOP**
+
+`generic_partial_order`'s constructor
+(`subprojects/posets/include/posets/vectors/generic_partial_order.hh:11-22`) opens
+with a sum comparison and returns the moment it can prove incomparability — but
+only for vector types carrying a `.sum` member, the `_sum` family. `VECTOR_IMPL`
+resolves to `simd_vector_backed`, which has none, and `acacia_vector_impl` has
+offered `simd_vector_backed_sum` as a supported choice all along
+(`meson.options:115-117`). Every campaign in this sprint and before it ran with
+`auto`, so the filter had never been switched on.
+
+It is sound unconditionally — `lhs <= rhs` componentwise implies
+`sum(lhs) <= sum(rhs)` for any values, `-1` sentinels included — and a rejection
+costs two integer comparisons instead of a block scan. For a scan running 148 M
+comparisons to find 6,671 invalidations, that is the right shape of idea, and it
+was one flag away.
+
+### The metric had to be corrected first
+
+`forward_nodes_checked` cannot measure this, and using it would have produced a
+confident null result for the wrong reason. It is incremented at the top of the
+scan loop, before the comparison:
+
+```cpp
+for (std::size_t id = 0; id < env_nodes.size (); ++id) {
+  ++nodes_checked;                              // counts iterations
+  if (env_nodes[id].status == losing) continue;
+  if (env.rank.partial_order (...).leq ())      // where the prefilter acts
+```
+
+The prefilter makes each comparison cheaper without removing an iteration, so the
+counter is byte-identical in both builds — confirmed on four instances
+(65/65, 290/290, 1911/1911, 271794/271794). The measurement is wall clock.
+
+### The measurement
+
+Two builds differing in exactly one option (verified), non-diagnostics, five runs
+each on eight instances the forward backend spends 1–15 s on, builds alternated so
+machine drift hits both:
+
+| instance | nosum min/mean/max | sum min/mean/max | Δ |
+|---|---|---|---:|
+| LightsTotal_9cbf2546 | 1.34 / 1.40 / 1.46 | 1.28 / 1.37 / 1.47 | −1.8% |
+| full_arbiter_unreal1_pb_2_15_pe_ | 1.99 / 2.11 / 2.19 | 1.94 / 2.06 / 2.23 | −2.1% |
+| full_arbiter_unreal1_pb_3_7_pe_ | 9.71 / 10.53 / 11.25 | 9.43 / 10.26 / 11.24 | −2.6% |
+| infinite-race-unequal-23 | 4.01 / 4.24 / 4.36 | 4.30 / 4.35 / 4.40 | **+2.6%** |
+| load_balancer_unreal1_pb_5_5_pe_ | 14.88 / 15.58 / 16.23 | 14.62 / 15.34 / 15.71 | −1.5% |
+| patrolling-alarm16 | 2.92 / 3.08 / 3.29 | 2.97 / 3.01 / 3.03 | −2.1% |
+| patrolling21 | 6.96 / 7.26 / 7.64 | 7.38 / 7.58 / 7.68 | **+4.3%** |
+| robot-cat-real-1d-real | 5.27 / 5.61 / 5.76 | 5.11 / 5.48 / 5.81 | −2.4% |
+| **total** | **49.81 s** | **49.46 s** | **−0.7%** |
+
+**Not one instance has non-overlapping min/max ranges**, and the sign goes both ways
+(−2.6% to +4.3%). Every verdict is identical. This is noise, not an effect.
+
+### The single-shot result that would have been wrong
+
+A first pair of runs on `prioritized_arbiter_pb_5_pe_` showed 6.26 s against 5.25 s
+— **−16%**, and it was tempting. It is the same trap O2 set earlier in this sprint,
+where a −38% single-run figure turned out to be 27% run-to-run variance. Five runs
+per configuration and a non-overlapping-range requirement are not ceremony.
+
+### Why it does not pay, which matters for what comes next
+
+The filter has a cost as well as a benefit: `.sum` is computed on construction and
+recomputed by every operation that rewrites a vector
+(`generic.hh:111-113, 243-307`). The benefit is skipping a block loop that, for
+these automata, is already only one or two SIMD operations wide. Paying a scalar
+sum on every vector written to save one or two SIMD comparisons on some fraction of
+reads is close to a wash, and it measures as one.
+
+**Decision: STOP.** No flag change, and `simd_vector_backed_sum` stays unused for
+the forward backend.
+
+This does not condemn Stage 3b, but it sharpens its precondition. The reason this
+failed is that the *per-comparison* cost was already small. A structure that
+eliminates candidates wholesale could still pay — but only if the scan is a large
+enough share of forward's runtime to be worth attacking, and that share has not been
+measured. Measuring it is the next step, before any structure is built.
