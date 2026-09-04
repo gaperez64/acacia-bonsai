@@ -1397,3 +1397,69 @@ failed is that the *per-comparison* cost was already small. A structure that
 eliminates candidates wholesale could still pay — but only if the scan is a large
 enough share of forward's runtime to be worth attacking, and that share has not been
 measured. Measuring it is the next step, before any structure is built.
+
+## Stage 3b — the premise, measured: **STOP, and a correction to record**
+
+Stage 3a failed because the *per-comparison* cost was already small. Stage 3b's
+different bet is that a structure eliminating candidates wholesale would pay. Before
+building one, the precondition was measured: **what share of forward's runtime is
+the invalidation scan?** The plan asserted it was the target, on the strength of
+148,504,205 node checks against 6,671 invalidations — a 22,261:1 ratio.
+
+### The profile
+
+`perf` with DWARF call graphs, on `prioritized_arbiter_pb_5_pe_`, which is
+solver-dominated (99.6% of samples in acacia's own code; a first attempt used
+`full_arbiter_unreal1_pb_3_7_pe_`, which turned out to be 59.5% BuDDy and 34.6%
+Spot — translation, not solving, and useless for this question).
+
+`generic_partial_order` is 25.61% of runtime. Attributed to its callers:
+
+| call path | share |
+|---|---:|
+| `advance_lazy_controller → subsumes` (losing antichain) | **9.42%** |
+| `advance_lazy_controller → subsuming_generator` (same antichain) | **3.54%** |
+| `drain_losing_queue → mark_environment_losing` (**the invalidation scan**) | **4.43%** |
+| other paths under `solve` | ~4.7% |
+| directly under `solve_with_downset` | 3.37% |
+
+On a second instance, `robot-cat-real-1d-real`, the scan does not even reach 2%,
+while the largest single costs are `VEC::at()` at 10.30% and `coordinate_hash` at
+8.05% — element access and interning, not comparison at all.
+
+### Two conclusions, one of them a correction to this report
+
+**The invalidation scan is not the bottleneck.** Eliminating it *entirely* buys
+4.43% on the instance built to showcase it, and under 2% on the other. That does not
+justify a bespoke live-ID dominance reporter.
+
+**The losing antichain is ~3x more expensive than the scan, which reverses what this
+report said earlier.** P4's O5 targeted `minimal_losing_antichain`, and the O5 entry
+records that as mis-scoped, on the grounds that the structure holds only 177 entries
+while the scan does 148 M checks. That reasoning was wrong, and in exactly the way
+Stage 3a's metric was wrong: it compared *structure size* against a counter that
+turns out to measure **loop iterations rather than comparisons**. The scan's loop
+short-circuits on `if (env_nodes[id].status == losing) continue;` before it reaches
+`partial_order`, so most of those 148 M iterations never compare anything. The
+antichain is small but consulted once per generated successor, which is a far larger
+number of actual comparisons. O5's target was the right one; the correction was the
+error.
+
+### Why Stage 3 stops here anyway
+
+Even with the target corrected, the ceiling is not attractive. The antichain paths
+total 12.96% on the best case for them and about 3% on the second instance, and that
+is the *perfect elimination* bound. The rest of the profile is diffuse: within
+`advance_lazy_controller`, comparison, element access, hashing, vector construction
+and actioner `apply` each account for between 3% and 10%, with no single dominant
+mechanism.
+
+A diffuse profile with a 13% ceiling is not where this sprint's remaining effort
+belongs, set against Stage 2's measured +76 instances. Six of eleven mechanisms in
+this sprint delivered exactly the reduction they promised and bought nothing;
+Stage 3a made seven. Declining to build the eighth on a premise now measured false
+is the same discipline, applied one step earlier — before the code rather than after.
+
+**Decision: STOP.** The profile is recorded so the next attempt starts from
+measurement rather than from the 22,261:1 ratio, which does not mean what it appears
+to mean.
