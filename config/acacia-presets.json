@@ -177,6 +177,10 @@
     "best_decomp_filtered_vector_mona_noequivariant": {
       "inherits": "best_decomp_filtered_vector_mona",
       "enable_equivariant_solver": false
+    },
+    "best_decomp_rank_bucketed_semantic_mona_forward_contradiction": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "forced_output_contradiction": true
     }
   },
   "tool_baselines": {

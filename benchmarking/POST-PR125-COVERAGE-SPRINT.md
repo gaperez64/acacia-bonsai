@@ -935,7 +935,48 @@ on this same panel against the 120 oracle computed here for that same arm set, s
 the race penalty looks small — but that is one data point, not a measured race of
 the proposed profile.
 
-### P6 is not justified by this data
+### Forward is an unrealizability engine, not a general-purpose backend
+
+Splitting the census by polarity is what makes the result actionable:
+
+| polarity | B | S | **F** | F adds over all B/S | B/S adds over F |
+|---|---:|---:|---:|---:|---:|
+| real | 45 | 46 | 46 | 3 | **3** |
+| unreal | 75 | 74 | **88** | **12** | **0** |
+
+On the real side forward has no edge — it trades three for three. On the unreal
+side it **subsumes every answer all four B and S unreal arms produce** and adds
+twelve more, with none going the other way.
+
+So the best three-arm set is `S-real-small + F-unreal-formula + F-unreal-automaton`
+at **134/180**, against **120** for the shipping default, in the *same three-slot
+budget*. That configuration cannot be built today: `ACACIA_FORWARD_SAFETY_SOLVER`
+is a compile-time define, so one binary means one backend for every child. The best
+single-binary approximation is forced to spend its real worker on a backend that
+brings nothing there.
+
+### Remaining work, reordered by what the census showed
+
+1. **Finish the full-corpus race.** Reading criterion: absence of large regressions
+   matters more than the size of the margin, because forward runs on naive data
+   structures and the headroom there exceeds the current margin either way.
+2. **Split the backend choice by polarity** (supersedes P5B). Runtime, per-arm
+   backend so one process can run backward-with-local-certificates for its real
+   worker and forward for both unreal workers, reproducing the 134/180 set.
+3. **Data structures for the forward solver.**
+   `grep -c 'posets::' src/solver/forward_reachable_safety.hh` returns **0** —
+   forward is entirely hand-rolled flat vectors while backward picks
+   `rank_bucketed_vector_backed` from sixteen tuned posets implementations. The
+   target is the invalidation scan over the visited environment-node set that O3
+   measured at 148,504,205 checks for 6,671 invalidations (22,261x), **not** the
+   177-entry generator list O5 mistakenly indexed.
+4. **Arm-choice flexibility** — backend, polarity, translation preference and
+   unreal transform independently selectable per worker.
+5. **Three-way comparison, then four new top configurations.** Deferred to last so
+   it measures finished work: v1 `5ffd8f99`, ltlsynt 2.15.1.dev, best from main
+   head, and sprint-best, on the August panels and SyFCo caches reused verbatim.
+
+### P6 as originally specified is not justified by this data
 
 §8.1 gates P6 on P5 showing that forward real and forward unreal arms both carry
 marginal coverage **and** that a four-arm replacement or routing profile cannot
