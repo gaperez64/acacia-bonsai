@@ -14,7 +14,7 @@ LTL-realizability selection that PR #125's portfolio cannot decide at 17 s.
 | P4 OTFUR lazy | yes | 3 targets -27% to -56% | pending G26 | none | fewer successors | **LAND (O1)** |
 | P4 OTFUR memory | yes | 2 targets -16% to -29% | pending G26 | none | RSS criterion failed | **LAND (O2, on speed)** |
 | P4 OTFUR covering | yes | 1 of 2 targets, mixed | none | none | none | **AGGRESSIVE PRESET (off by default)** |
-| P5 four-slot portfolio | yes | +14 on panel from backend alone | pending full-corpus race | none | none | **P5A done, see below** |
+| P5 four-slot portfolio | yes | +62 full corpus, -28.6% time | **976 -> 1038** | 18 realizable | none | **forward for unreal, split for real** |
 | P6 wide6 portfolio | | | | | | *not started* |
 
 ## Frozen baseline
@@ -983,3 +983,78 @@ marginal coverage **and** that a four-arm replacement or routing profile cannot
 retain enough of it. A four-arm profile retains **all** of it — 137, the full
 twelve-arm oracle ceiling. The condition fails, so the six-wide race is not
 justified and is not built.
+
+
+## P5 — full-corpus backend race (result)
+
+Both binaries run their own default portfolio over all 1,524 instances, staged caps
+1/5/17, 8 GiB cgroup, sequential, same tree.
+
+| | decisive | conflicts |
+|---|---:|---:|
+| B (backward, shipping default) | **976** | 0 |
+| F (forward) | **1038** | 0 |
+| net | **+62** | |
+
+**Zero verdict disagreements.** The fresh B run returned exactly 976, matching the
+figure recorded during the P1 gate campaign on an earlier tree — confirming rather
+than assuming that P2–P4 left the backward path untouched, since none of them
+changes backward-solver code.
+
+### The panel understated the effect by 4x
+
+The 180-instance screen extrapolated to about +14. The full selection gives **+62**.
+Screening was still the right call — it cost 2.5 h instead of 2.5 days and correctly
+identified the direction and the polarity split — but its *magnitude* was not
+predictive, which is worth remembering before quoting a panel number as a forecast.
+
+### Time, not just coverage
+
+On the 958 instances both decide:
+
+| | F | B | |
+|---|---:|---:|---|
+| total | **348.6 s** | 488.1 s | **-28.6%** |
+| median | 0.024 s | 0.036 s | -33% |
+| faster on | **679** | 279 | 71% |
+| sub-1 s | 894 | 873 | +21 |
+
+Forward is not buying coverage with time; it is cheaper on identical work.
+
+Where the budget goes, on F: cap 1 gives 909 answers for 66.6 s (88% of answers, 8%
+of time); cap 17 gives 56 answers for 525.0 s (5% of answers, 68% of time). The
+staged design is doing real work, and the expensive tail is what made the full
+12-arm census a 2.5-day proposition.
+
+### The regression set decides the portfolio shape
+
+| | F-only | B-only |
+|---|---:|---:|
+| UNREALIZABLE | **59** | **0** |
+| REALIZABLE | 21 | 18 |
+| total | **80** | **18** |
+
+**No unrealizable answer exists that backward gets and forward does not**, across
+all 1,524. The panel's subsumption claim holds at scale — forward's unreal
+dominance is real, not a 180-instance artifact.
+
+The **real** side is genuinely complementary: F gets 21 B misses, B gets 18 F
+misses, neither subsumes. Seven of the 18 are `collector_v2`, and `collector` is the
+handoff's own named forward negative control (§6.2); P4's profiling measured
+`collector_v1` at 2.0 actions per controller node and node-capped, so forward
+failing there is expected behaviour rather than a surprise.
+
+So the portfolio composition is settled by data rather than by the panel's guess:
+
+```
+panel suggested (3):  S-real + F-unreal-formula + F-unreal-automaton
+                      ...misses the 18 backward-only realizable instances
+
+corpus says    (4):  B-real + F-real + F-unreal-formula + F-unreal-automaton
+                      ...both real backends, forward-only unreal
+```
+
+Four arms, so the existing four-slot budget suffices and §8.1's gate for P6 still
+fails. What the 18 change is *which* four — and they raise the value of the
+split-backend work, since that portfolio cannot be expressed by any single binary
+today.
