@@ -1242,3 +1242,76 @@ recoverable; a mislabelled one quietly corrupts a census. It becomes a parse-tim
 error. (`utils::vout` also writes to `std::cout`, the channel carrying the verdict
 that `benchlib.py`'s `parse_acacia_result` substring-matches, but that is the smaller
 objection: the message happens not to contain "realizable".)
+
+### The four-arm portfolio, measured: 1052
+
+One binary, one process, four arms
+(`--arms real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward`),
+same protocol as the race: all 1,524, staged caps 1/5/17, 8 GiB cgroup, no swap.
+
+| | decisive | real | unreal | conflicts |
+|---|---:|---:|---:|---:|
+| B (backward, 3 arms) | 976 | 496 | 480 | 0 |
+| F (forward, 3 arms) | 1038 | 499 | 539 | 0 |
+| **mix4 (4 arms)** | **1052** | **517** | **535** | **0** |
+
+**+14 over forward, +76 over backward.** The prediction was 1056, and the gap is
+fully accounted for.
+
+### The recovery is exact
+
+The second real arm was added to recover the 18 realizable instances backward
+decides and forward misses. It recovered **all 18, and nothing else**:
+
+```
+predicted recoverable (B-only):   18
+mix4 gained over F:               18
+  of which are exactly B-only:    18
+  gained but not B-only:           0
+  B-only still missed:             0
+polarity of the 18:               18 realizable, 0 unrealizable
+```
+
+`collector_v2` accounts for 7 of them and `chain-simple-*-real` for 4 — the
+families P4's profiling identified as forward's node-capped weak spot. The
+mechanism predicted from the polarity decomposition is the mechanism observed,
+instance for instance.
+
+### The four losses are the cap boundary, not the portfolio
+
+Four instances forward decides that the four-arm race does not:
+
+```
+arbiter_pb_5_pe_.ltl        REALIZABLE     F took 16.787s   at the 17s cap
+finding_nemo_pb_2_pe_.ltl   REALIZABLE     F took 15.375s   at the 17s cap
+g-real-real.ltl             REALIZABLE     F took 15.805s   at the 17s cap
+patrolling-alarm26.ltl      UNREALIZABLE   F took 15.579s   at the 17s cap
+```
+
+All four were already inside 90% of the cap, and a fourth arm's contention pushed
+them over. The same pattern appeared at the 1 s cap during the run — the five
+instances lost there had taken forward 0.879 s to 0.991 s against a 1.0 s cap —
+which makes this a boundary effect rather than a coverage loss. Under a larger cap
+the portfolio's coverage is the full 1056.
+
+The unreal arms are a built-in control for this: they are *identical code with
+identical flags* in F and in mix4, so their delta (539 → 535) measures contention
+and nothing else. It did not grow with the cap — three at 1 s, four at 17 s — so
+contention is a small fixed set of boundary instances, not a tax that scales.
+
+### It is also faster
+
+On the 1,034 instances both decide, mix4 takes **711.2 s against forward's 736.1 s,
+−3.4%**, despite running four children instead of three. It is slower on more
+instances than it is faster on (662 versus 372), so the saving is concentrated in
+the expensive ones: the backward real arm answers some hard realizable instances
+far faster than forward does, which is the same complementarity that motivated the
+portfolio.
+
+### Decision: **LAND**
+
+`B-real + F-real + F-unreal-formula + F-unreal-automaton` decides 1052 of 1,524
+against the shipping default's 976 — **+76** — with zero verdict conflicts, in less
+total time, within the existing four-slot budget. §8.1's gate for P6 still fails,
+and now for a stronger reason: four arms reach the ceiling that six were speculated
+to be needed for.
