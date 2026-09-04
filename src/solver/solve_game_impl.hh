@@ -8,6 +8,7 @@
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
+#include "solver/game_backend.hh"
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
 # include "solver/equivariant_k_bounded_safety_aut.hh"
 #endif
@@ -159,10 +160,14 @@ namespace acacia::solver_detail {
   std::optional<spot::twa_graph_ptr> solve_with_downset (
       spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
-      [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints) {
+      [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints,
+      acacia::game_backend backend) {
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
-    if (not do_synthesis) {
+    // Deliberately bind the equivariant pre-pass to backward: the measured
+    // forward configuration excluded it, so this preserves both measured
+    // configurations when both solvers are compiled in.
+    if (backend == acacia::game_backend::backward and not do_synthesis) {
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
           aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
           ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints);
@@ -180,7 +185,7 @@ namespace acacia::solver_detail {
     // The forward certificate has not yet been re-verified against that
     // reconstruction, so strategy production must keep using the backward
     // solver even when the forward decision backend is compiled in.
-    if (not do_synthesis) {
+    if (backend == acacia::game_backend::forward and not do_synthesis) {
       auto forward =
           forward_k_bounded_safety_aut_detail<SpecializedDownset,
                                               IOsPrecomputationMaker,
@@ -194,6 +199,10 @@ namespace acacia::solver_detail {
         return post_real<SpecializedDownset> (
             std::move (win), do_synthesis, aut, all_inputs, all_outputs);
     }
+#else
+    if (backend == acacia::game_backend::forward)
+      verb_do (0, vout << "Warning: forward game backend requested but not compiled in; "
+                       << "falling back to backward\n");
 #endif
     auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
                                            ActionerMaker, InputPickerMaker> (

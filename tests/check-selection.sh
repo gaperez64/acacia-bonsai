@@ -5,6 +5,7 @@ set -uo pipefail
 solver=$1
 default_children=$2
 assert_child_metadata=$3
+default_backend=$4
 formula='G(i -> o)'
 failures=0
 
@@ -55,13 +56,16 @@ run_error() {
 run_case default 0 "$default_children" ''
 run_case race_both 0 4 '' -r small,any -u both
 run_case race_real_only 0 2 '' -r small,any
-run_case any_real_only 0 1 '[real=any]' -r any
-run_case automaton_unreal_only 2 1 '[unreal=automaton,pref=small]' -u automaton
-run_case formula_unreal_only 2 1 '[unreal=formula,pref=small]' -u formula
+run_case any_real_only 0 1 "[real=any,backend=$default_backend]" -r any
+run_case automaton_unreal_only 2 1 \
+  "[unreal=automaton,pref=small,backend=$default_backend]" -u automaton
+run_case formula_unreal_only 2 1 \
+  "[unreal=formula,pref=small,backend=$default_backend]" -u formula
 
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
-run_case synthesis_truncates_race 0 1 '[real=small]' -r small,any -s "$tmpdir/out.aag"
+run_case synthesis_truncates_race 0 1 '[real=small,backend=backward]' \
+  -r small,any -s "$tmpdir/out.aag"
 if [[ ! -s $tmpdir/out.aag ]]; then
   printf 'synthesis_truncates_race: no AIGER output was written\n' >&2
   failures=$((failures + 1))

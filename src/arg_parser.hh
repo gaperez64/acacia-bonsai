@@ -2,6 +2,7 @@
 
 #include "configuration.hh"
 #include "error_msg.hh"
+#include "solver/game_backend.hh"
 #include "solver/solver_invoker.hh"
 #if ACACIA_ENABLE_TLSF_FRONTEND
 # include "tlsf_frontend.hh"
@@ -38,6 +39,13 @@ struct arg_parse_result {
     std::optional<std::vector<TRANSLATION_PREF_T>> real_strategies = std::nullopt;
     std::optional<std::vector<UNREAL_X_T>> unreal_strategies = std::nullopt;
     TRANSLATION_PREF_T primary_translation_pref = ACACIA_TRANSLATION_PREF;
+#if ACACIA_FORWARD_SAFETY_SOLVER
+    acacia::game_backend real_backend = acacia::game_backend::forward;
+    acacia::game_backend unreal_backend = acacia::game_backend::forward;
+#else
+    acacia::game_backend real_backend = acacia::game_backend::backward;
+    acacia::game_backend unreal_backend = acacia::game_backend::backward;
+#endif
     unsigned verbose_level = 0;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
@@ -120,6 +128,8 @@ void show_help (const char* program_name) {
       << "                    set the unrealizability translator preference to\n"
       << "                    [small|any] without also selecting a realizability\n"
       << "                    check; mutually exclusive with -r\n"
+      << "  --real-backend VAL       use the [backward|forward] game backend for real arms\n"
+      << "  --unreal-backend VAL     use the [backward|forward] game backend for unreal arms\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -249,6 +259,16 @@ void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
     error (EXIT_CODE_ERROR, "Error: unexpected Spot fast-path option %s\n", arg.c_str ());
 }
 
+void process_arg_game_backend (const std::string& arg, acacia::game_backend& backend,
+                               const char* option) {
+  if (auto parsed = acacia::parse_game_backend (arg); parsed.has_value ())
+    backend = *parsed;
+  else
+    error (EXIT_CODE_ERROR,
+           "Error: unexpected value %s for --%s; expected backward or forward.\n",
+           arg.c_str (), option);
+}
+
 void process_formula_file (const std::string& arg, arg_parse_result& result) {
   std::ifstream file (arg.c_str ());
   if (not file)
@@ -292,11 +312,15 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_kmin = std::nullopt;
   static constexpr int OPT_SPOT_FAST = 1000;
   static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
+  static constexpr int OPT_REAL_BACKEND = 1002;
+  static constexpr int OPT_UNREAL_BACKEND = 1003;
   bool unreal_translation_pref_specified = false;
   static option long_options[] = {
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"unreal-translation-pref", required_argument, nullptr,
        OPT_UNREAL_TRANSLATION_PREF},
+      {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
+      {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -391,6 +415,12 @@ arg_parse_result arg_parser (int argc, char** argv) {
       case 'u': process_arg_unreal (optarg, retval); break;
       case 's': retval.synth_fname = optarg; break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
+      case OPT_REAL_BACKEND:
+        process_arg_game_backend (optarg, retval.real_backend, "real-backend");
+        break;
+      case OPT_UNREAL_BACKEND:
+        process_arg_game_backend (optarg, retval.unreal_backend, "unreal-backend");
+        break;
       case OPT_UNREAL_TRANSLATION_PREF:
         if (retval.real_strategies.has_value ())
           error (EXIT_CODE_ERROR,

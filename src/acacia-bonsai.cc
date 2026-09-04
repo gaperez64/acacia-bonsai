@@ -65,7 +65,8 @@ int main (int argc, char** argv) {
 
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x,
-                                 TRANSLATION_PREF_T translation_pref) {
+                                 TRANSLATION_PREF_T translation_pref,
+                                 acacia::game_backend backend) {
       if (fork () == 0) {
         // we check one thing at a time here
         assert (not unreal_x.has_value () or *unreal_x != UNREAL_X_BOTH);
@@ -75,10 +76,13 @@ int main (int argc, char** argv) {
                  ? std::string {"real="} + translation_pref_name (translation_pref)
                  : std::string {"unreal="} + unreal_strategy_name (*unreal_x) +
                        ",pref=" + translation_pref_name (translation_pref)) +
+            ",backend=" + acacia::game_backend_name (backend) +
             "] ");
+        verb_do (1, vout << "Starting solver child\n" << std::flush);
         const bool res = run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k,
                                   arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
                                   unreal_x, translation_pref, arg_values.spot_fast,
+                                  backend,
                                   unreal_x.has_value () ? std::nullopt : arg_values.synth_fname,
                                   arg_values.metadata);
         verb_do (1, vout << "returning " << res << "\n");
@@ -100,14 +104,21 @@ int main (int argc, char** argv) {
         (arg_values.unreal_strategies.has_value () ? arg_values.unreal_strategies->size () : 0);
     verb_do (1, vout << "Starting " << child_count << " solver children\n" << std::flush);
 
+    acacia::game_backend real_backend = arg_values.real_backend;
+    if (arg_values.synth_fname.has_value () and arg_values.real_strategies.has_value () and
+        real_backend != acacia::game_backend::backward) {
+      verb_do (1, vout << "Forcing the real backend to backward for synthesis\n" << std::flush);
+      real_backend = acacia::game_backend::backward;
+    }
+
     if (arg_values.real_strategies.has_value ())
       for (TRANSLATION_PREF_T preference : *arg_values.real_strategies)
-        start_proc (std::nullopt, preference);
+        start_proc (std::nullopt, preference, real_backend);
 
     if (arg_values.unreal_strategies.has_value ())
       for (UNREAL_X_T strategy : *arg_values.unreal_strategies)
         start_proc (std::make_optional<UNREAL_X_T> (strategy),
-                    arg_values.primary_translation_pref);
+                    arg_values.primary_translation_pref, arg_values.unreal_backend);
 
     int status;
     bool child_reported_error = false;

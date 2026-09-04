@@ -113,6 +113,13 @@ test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
 
+game_backend_test = executable ('game-backend-test',
+                                'game_backend_test.cc',
+                                include_directories : inc)
+test ('game-backend',
+      game_backend_test,
+      suite : ['unit', 'game-backend'])
+
 transition_payload_test = executable (
   'transition-payload-test',
   'transition_payload_test.cc',
@@ -225,6 +232,13 @@ test ('degenerate-io-cli',
       suite : ['unit', 'degenerate-io'],
       depends : [ab_exe])
 
+game_backend_cli = find_program ('check-game-backend-cli.sh')
+test ('game-backend-cli',
+      game_backend_cli,
+      args : [ab_exe],
+      suite : ['unit', 'game-backend'],
+      depends : [ab_exe])
+
 mealy_to_moore_test = executable ('mealy-to-moore-test',
                                   '../src/solver/mealy_to_moore.cc',
                                   'mealy_to_moore_test.cc',
@@ -244,11 +258,16 @@ if get_option ('acacia_default_unreal_x') == 'both'
   default_unreal_children = 2
 endif
 default_check_children = default_real_children + default_unreal_children
+default_game_backend = 'backward'
+if get_option ('acacia_forward_safety_solver')
+  default_game_backend = 'forward'
+endif
 test ('check-selection',
       bash,
       args : [files ('check-selection.sh'), ab_exe,
               default_check_children.to_string (),
-              (compiler_profile == 'debug').to_string ()],
+              (compiler_profile == 'debug').to_string (),
+              default_game_backend],
       suite : ['unit', 'check-selection'],
       depends : [ab_exe])
 

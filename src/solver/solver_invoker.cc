@@ -274,6 +274,7 @@ namespace {
       const std::optional<UNREAL_X_T> check_unreal;
       const TRANSLATION_PREF_T translation_pref;
       const SPOT_FAST_T spot_fast;
+      const acacia::game_backend backend;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
       const bool synthesize_moore;
@@ -291,7 +292,8 @@ namespace {
                    const std::vector<std::string>& output_aps, VECTOR_ELT_T opt_k,
                    VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
                    std::optional<UNREAL_X_T> check_unreal, TRANSLATION_PREF_T translation_pref,
-                   SPOT_FAST_T spot_fast, const std::optional<std::string>& synth_fname,
+                   SPOT_FAST_T spot_fast, acacia::game_backend backend,
+                   const std::optional<std::string>& synth_fname,
                    bool synthesize_moore,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints)
         : dict {dict},
@@ -303,6 +305,7 @@ namespace {
           check_unreal {check_unreal},
           translation_pref {translation_pref},
           spot_fast {spot_fast},
+          backend {backend},
           synth_fname {synth_fname},
           synthesize_moore {synthesize_moore},
           indexed_family_hints {indexed_family_hints} {
@@ -614,7 +617,7 @@ namespace {
                                     bdd_exist (aut->ap_vars (), all_outputs),
                                     // same for the outputs
                                     bdd_exist (aut->ap_vars (), all_inputs),
-                                    synth_fname.has_value (), indexed_family_hints);
+                                    synth_fname.has_value (), indexed_family_hints, backend);
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
@@ -868,6 +871,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
+              acacia::game_backend backend,
               const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata) {
   const bool synthesize_moore =
@@ -945,7 +949,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      translation_pref, spot_fast, synth_fname, synthesize_moore,
+                      translation_pref, spot_fast, backend, synth_fname, synthesize_moore,
                       indexed_family_hints);
 
   if (auto answer = try_unreal_safety_core_witnesses (spot_formula, check_unreal, runner);
