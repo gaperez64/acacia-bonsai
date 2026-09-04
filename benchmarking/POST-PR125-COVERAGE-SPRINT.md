@@ -1157,3 +1157,88 @@ Note that the top subset is exactly the shape the full-corpus race independently
 arrived at: **backward for real, forward for unreal, plus a forward real arm.** Two
 different measurements, one at 180 instances and one at 1,524, agreeing on the
 portfolio.
+
+---
+
+## Stage 2 — runtime game backend
+
+### Why per-polarity flags are not enough, established before spending a campaign
+
+The full-corpus race decomposes by polarity for free, and nobody needed to run
+anything to see it: a portfolio's REALIZABLE can only have come from a real arm, and
+its UNREALIZABLE only from an unreal one. So the race summaries already contain the
+per-polarity arm results.
+
+```
+B = 976 decisive = 496 real + 480 unreal
+F = 1038 decisive = 499 real + 539 unreal
+
+3-arm mixed  (B-real + F-unreal x2)          = 1035     <- three WORSE than F
+4-arm target (B-real + F-real + F-unreal x2) = 1056     <- exactly the B u F ceiling
+```
+
+The shipping default portfolio is **three** arms — `ACACIA_TRANSLATION_PREFS` gives
+one real preference and `DEFAULT_UNREAL_X` gives both unreal transforms — and the
+best three-arm portfolio a per-polarity flag can build *loses three instances against
+plain forward*. It trades forward's 21 real-only answers for backward's 18. Running
+that campaign would have cost hours to measure a number already derivable, and the
+number is negative.
+
+The 4-arm target needs **two real arms with different backends**, which no
+per-polarity flag can express. Worse, one census subset that reaches the 137/180
+ceiling is `B-real-any + F-real-any` — same translation preference, different backend
+— which `-r` cannot express either, since `append_strategy`
+(`src/arg_parser.hh:177-183`) rejects duplicates within a `-r` list.
+
+So Stage 2 splits: the backend plumbing, which is landed and verified, and an
+explicit per-arm portfolio specification, which is what makes it measurable.
+
+### Behaviour preservation, checked rather than argued
+
+The claim that existing builds are unaffected is worth more than a code-reading. Both
+reference configurations were rebuilt from the Stage 2 source with **byte-identical
+meson options** (verified: zero option differences against the recorded builds) and
+run through the frozen 40-instance gate:
+
+| configuration | recorded reference | rebuilt from Stage 2 source |
+|---|---|---|
+| B | 35 solved, 5 lost, PAR-2 217.557s | 35 solved, **the same 5**, PAR-2 218.111s |
+| F | 37 solved, 3 lost, PAR-2 162.794s | 37 solved, **the same 3**, PAR-2 164.980s |
+
+Identical instance sets, PAR-2 within 0.3% and 1.4%. The gate reports `GATE FAIL` for
+both — before and after the change — because its baseline is `build_best_decomp_mona`,
+a third configuration; those losses are the known backward-baseline mismatch.
+
+A first attempt to gate this used the build codex had made, which carried only three
+`-D` flags and therefore differed from F in **six** options — `ios_precomputer`
+standard rather than `semantic_mona`, `vector_downset` plain rather than
+`rank_bucketed`, and four more. It lost two instances more than F, and the difference
+had nothing to do with the change under test. A build with forward switched on is not
+the forward configuration.
+
+### The equivariant pre-pass is now bound to the backward backend
+
+Deliberate, and the reason the enum exists. A binary built with both options on ran
+the equivariant solver before it ever reached the forward branch, so
+`-Dacacia_forward_safety_solver=true` did not name the backend that ran. The forward
+reference sidestepped this by compiling the equivariant solver out — which is why the
+recorded forward numbers are numbers *without* the pre-pass. Binding it to backward
+reproduces both measured configurations exactly instead of inventing a third
+combination for which no measurement exists.
+
+### One defect found in review, carried to the follow-up
+
+Requesting a forward arm on a binary built without the forward solver warned and fell
+back to backward. Codex's own proof of the fallback shows the problem:
+
+```
+[real=small,backend=forward] Warning: forward game backend requested but not compiled in; falling back to backward
+REALIZABLE
+```
+
+A run labelled `backend=forward` that ran backward — a **mislabelled** data point, in
+the one piece of work whose entire purpose is per-arm attribution. A failed run is
+recoverable; a mislabelled one quietly corrupts a census. It becomes a parse-time
+error. (`utils::vout` also writes to `std::cout`, the channel carrying the verdict
+that `benchlib.py`'s `parse_acacia_result` substring-matches, but that is the smaller
+objection: the message happens not to contain "realizable".)
