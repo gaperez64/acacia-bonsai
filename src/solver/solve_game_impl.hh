@@ -21,6 +21,7 @@
 
 #include <bddx.h>
 #include <cassert>
+#include <cstdlib>
 #include <fstream>
 #include <optional>
 #include <spot/twa/acc.hh>
@@ -200,9 +201,10 @@ namespace acacia::solver_detail {
             std::move (win), do_synthesis, aut, all_inputs, all_outputs);
     }
 #else
+    // CLI requests are rejected while parsing.  Abort if an internal caller
+    // bypasses that guard so a forward-labelled run can never use backward.
     if (backend == acacia::game_backend::forward)
-      verb_do (0, vout << "Warning: forward game backend requested but not compiled in; "
-                       << "falling back to backward\n");
+      std::abort ();
 #endif
     auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
                                            ActionerMaker, InputPickerMaker> (

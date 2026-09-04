@@ -115,7 +115,8 @@ test ('translator-options',
 
 game_backend_test = executable ('game-backend-test',
                                 'game_backend_test.cc',
-                                include_directories : inc)
+                                include_directories : inc,
+                                dependencies : [spot_dep])
 test ('game-backend',
       game_backend_test,
       suite : ['unit', 'game-backend'])
@@ -235,7 +236,7 @@ test ('degenerate-io-cli',
 game_backend_cli = find_program ('check-game-backend-cli.sh')
 test ('game-backend-cli',
       game_backend_cli,
-      args : [ab_exe],
+      args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string ()],
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 

@@ -99,26 +99,20 @@ int main (int argc, char** argv) {
     setpgid (0, 0);
     assert (getpgid (0) == getpid ());
 
-    [[maybe_unused]] const size_t child_count =
-        (arg_values.real_strategies.has_value () ? arg_values.real_strategies->size () : 0) +
-        (arg_values.unreal_strategies.has_value () ? arg_values.unreal_strategies->size () : 0);
+    assert (arg_values.arms.has_value ());
+    [[maybe_unused]] const size_t child_count = arg_values.arms->size ();
     verb_do (1, vout << "Starting " << child_count << " solver children\n" << std::flush);
 
-    acacia::game_backend real_backend = arg_values.real_backend;
-    if (arg_values.synth_fname.has_value () and arg_values.real_strategies.has_value () and
-        real_backend != acacia::game_backend::backward) {
-      verb_do (1, vout << "Forcing the real backend to backward for synthesis\n" << std::flush);
-      real_backend = acacia::game_backend::backward;
+    for (const auto& arm : *arg_values.arms) {
+      acacia::game_backend backend = arm.backend;
+      if (arg_values.synth_fname.has_value () and not arm.unreal and
+          backend != acacia::game_backend::backward) {
+        verb_do (1, vout << "Forcing the real backend to backward for synthesis\n" << std::flush);
+        backend = acacia::game_backend::backward;
+      }
+      start_proc (arm.unreal ? std::make_optional<UNREAL_X_T> (arm.unreal_x) : std::nullopt,
+                  arm.translation_pref, backend);
     }
-
-    if (arg_values.real_strategies.has_value ())
-      for (TRANSLATION_PREF_T preference : *arg_values.real_strategies)
-        start_proc (std::nullopt, preference, real_backend);
-
-    if (arg_values.unreal_strategies.has_value ())
-      for (UNREAL_X_T strategy : *arg_values.unreal_strategies)
-        start_proc (std::make_optional<UNREAL_X_T> (strategy),
-                    arg_values.primary_translation_pref, arg_values.unreal_backend);
 
     int status;
     bool child_reported_error = false;
