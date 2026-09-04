@@ -75,7 +75,12 @@ option('acacia_no_simd', type: 'boolean', value: false)
 option('acacia_compile_all_components', type: 'boolean', value: false)
 option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
-option('acacia_local_certificate', type: 'boolean', value: true,
+# false, to agree with config/acacia-options.json and src/configuration.hh.  The
+# three frontends must state the same default: scripts/acacia-config.py passes
+# every option explicitly, so a disagreement here silently gave a plain
+# `meson setup build` local certificates while the documented default was off --
+# and that is the single option separating the S reference configuration from B.
+option('acacia_local_certificate', type: 'boolean', value: false,
        description: 'Enable the bounded local winning-certificate and root-refutation probe')
 option('acacia_forward_safety_solver', type: 'boolean', value: false,
        description: 'Use the on-the-fly forward safety-game solver instead of the backward antichain fixed point')

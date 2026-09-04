@@ -72,6 +72,12 @@ test ('version-output',
       suite : 'version',
       depends : [ab_exe])
 
+# Pure source inspection: no binary, so it runs even when nothing is built yet.
+test ('config-frontends-agree',
+      py,
+      args : [files ('check-config-frontends.py'), meson.project_source_root ()],
+      suite : ['unit', 'config-frontends'])
+
 if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
   cpre_replay_smoke = find_program ('check-cpre-replay.sh')
   test ('cpre-replay-smoke',
