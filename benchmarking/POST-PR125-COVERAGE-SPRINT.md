@@ -1058,3 +1058,102 @@ Four arms, so the existing four-slot budget suffices and §8.1's gate for P6 sti
 fails. What the 18 change is *which* four — and they raise the value of the
 split-backend work, since that portfolio cannot be expressed by any single binary
 today.
+
+---
+
+## Stage 1b — three defects found by review, none of which had a test
+
+Two read-only codex reviews ran while the full-corpus race was executing. Neither
+built anything, so the race is uncontaminated. They confirmed P1's soundness ("I
+found no false-UNREAL path", checked against the top-level implication guard,
+`G(A & B)` distribution, the empty-invariant and vacuous-trigger cases) and found
+three defects, all now fixed.
+
+### The B/S/F builds are what they claim to be — verified, not assumed
+
+Before trusting any of the recorded numbers, the three reference binaries were read
+back out of their own generated headers:
+
+| build | `LOCAL_CERTIFICATE` | `FORWARD_SAFETY_SOLVER` | `ENABLE_EQUIVARIANT_SOLVER` |
+|---|---:|---:|---:|
+| `build_p5_B` | 0 | 0 | 1 |
+| `build_p5_S` | **1** | 0 | 1 |
+| `build_p5_F` | 0 | **1** | **0** |
+
+This matters for one reason worth stating plainly: **F raced with the equivariant
+solver switched off, B raced with it on.** F still won by 62. The forward margin is
+therefore *understated* by whatever the equivariant pre-pass contributes to B, not
+inflated by it.
+
+### 1. The two configuration frontends disagreed on a solver-behaviour option
+
+`meson.options` defaulted `acacia_local_certificate` to **true**;
+`config/acacia-options.json` and `src/configuration.hh` both said **false**. That
+option is the one thing separating the S reference configuration from B, so a plain
+`meson setup build` produced S while calling itself B.
+
+The reason it survived: `scripts/acacia-config.py` passes every option explicitly,
+so the divergence is invisible from exactly the path used for measurement. The
+recorded campaigns are unaffected — verified by re-generating `build_p5_B`'s
+`acacia_build_config.hh` after the fix and confirming it is byte-identical.
+
+An audit of all 27 shared scalar options found exactly one other divergence, and
+that one is deliberate: `acacia_enable_tlsf_frontend` is false in meson (the default
+build stays free of the flex/bison dependency; `.github/workflows/main.yml` covers
+the frontend in a dedicated job) and true in the JSON (every `acacia-config.py`
+binary drives the harness through `-T`). It differs in what the binary *can do*, and
+a binary without it rejects `-T` outright rather than answering differently.
+
+`tests/check-config-frontends.py` now enforces agreement on every shared scalar
+option and admits a divergence only with a written reason. Reintroducing the
+`local_certificate` default fails it.
+
+### 2. The arm selector could have ranked a soundness bug as coverage
+
+`select-portfolio-arms.py` kept the faster of two answers **without comparing
+verdicts**. An arm returning REALIZABLE where another returned UNREALIZABLE would
+have grown the union by an instance the subset decides *inconsistently*. On a
+two-arm census built to disagree, the old code reported "2 decided" and exited 0; it
+now names the instance and exits 1. The scan runs once over the whole census before
+ranking, so it reports every conflict rather than aborting on whichever subset
+happens to contain the offending pair first.
+
+Re-running the real twelve-arm census after the fix is unchanged — 137 is still the
+four-arm ceiling — so nothing previously reported rested on a masked conflict.
+
+### 3. "Forward backend" did not name the backend that runs
+
+`-Dacacia_forward_safety_solver=true` is not an exclusive selection:
+`solve_with_downset` tries the equivariant solver first
+(`src/solver/solve_game_impl.hh:164-178`) and the two meson options are independent.
+The F preset sidesteps this by disabling the equivariant solver at compile time —
+which is why the measured forward numbers are clean — but the option name still
+promises something it does not deliver.
+
+This one is not a patch, it is a design constraint on Stage 2: a runtime backend
+enum has to name the backend that will actually run, so the equivariant pre-pass has
+to become explicitly conditional rather than implicitly first. Carried there.
+
+### What the local certificates turned out to be worth
+
+Incidental, but it settles Stage 2's scope. Of the twelve subsets that reach the
+137/180 ceiling, the four fastest all avoid the S arms entirely:
+
+```
+137   140.14s   B-real-any + F-real-small + F-unreal-automaton-small + F-unreal-formula-small
+137   141.41s   B-real-small + F-real-any + F-unreal-automaton-small + F-unreal-formula-small
+137   143.33s   B-real-any + F-real-any + F-unreal-automaton-small + F-unreal-formula-small
+137   145.50s   B-real-any + B-unreal-automaton-small + F-real-small + F-unreal-formula-small
+137   145.71s   F-real-small + F-unreal-automaton-small + F-unreal-formula-small + S-real-any   <- first with S
+```
+
+Local certificates reach the same ceiling and cost more time to get there. So the
+runtime backend enum needs **two** values, not three: `backward` and `forward`. The
+four `ACACIA_LOCAL_CERTIFICATE` sites in `k_bounded_safety_aut.hh` stay compile-time
+and stay out of Stage 2 — which also keeps the change well clear of the backward
+solver's hot path.
+
+Note that the top subset is exactly the shape the full-corpus race independently
+arrived at: **backward for real, forward for unreal, plus a forward real arm.** Two
+different measurements, one at 180 instances and one at 1,524, agreeing on the
+portfolio.
