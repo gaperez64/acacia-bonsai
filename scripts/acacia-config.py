@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Acacia compile-time configuration registry helper."""
+"""Acacia compile-time configuration registry helper.
+
+Meson is the only supported build-header generator. preprocessor_flags is not
+a complete header: it omits POSETS_CONFIGURED and the POSETS_ENABLE_* gates.
+The retired emit-config-header could not build; it also lacked ACACIA_LTL_FRONTEND,
+ACACIA_TRANSITION_ACCEPTANCE and ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS before
+those options entered the registry.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +14,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import re
 import sys
 from typing import Any
 
@@ -14,29 +22,10 @@ from typing import Any
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OPTIONS_PATH = ROOT / "config" / "acacia-options.json"
 PRESETS_PATH = ROOT / "config" / "acacia-presets.json"
+PRESET_METADATA_KEYS = {"description", "role"}
+PRESET_ROLES = {"shipping", "reference", "sweep", "diagnostic", "legacy"}
 
-UNREAL_X = {
-    "both": "UNREAL_X_BOTH",
-    "automaton": "UNREAL_X_AUTOMATON",
-    "formula": "UNREAL_X_FORMULA",
-}
-SPOT_FAST = {
-    "off": "SPOT_FAST_OFF",
-    "det": "SPOT_FAST_DET",
-    "det_and_gfg": "SPOT_FAST_DET_AND_GFG",
-}
-TRANSLATION_PREF = {
-    "small": "spot::postprocessor::Small",
-    "any": "spot::postprocessor::Any",
-    "small+any": "spot::postprocessor::Small",
-    "deterministic": "spot::postprocessor::Deterministic",
-}
-TRANSLATION_PREFS = {
-    "small": "spot::postprocessor::Small",
-    "any": "spot::postprocessor::Any",
-    "small+any": "spot::postprocessor::Small, spot::postprocessor::Any",
-    "deterministic": "spot::postprocessor::Deterministic",
-}
+
 def load_json(path: pathlib.Path) -> dict[str, Any]:
     return json.loads(path.read_text())
 
@@ -46,17 +35,26 @@ def load_registry() -> tuple[dict[str, Any], dict[str, Any]]:
 
 
 def defaults(options: dict[str, Any]) -> dict[str, Any]:
-    values = dict(options["scalar_defaults"])
+    values = {name: option["default"] for name, option in options["options"].items()}
     for name, family in options["families"].items():
         values[name] = family["default"]
     return values
 
 
+def resolve_preset_name(presets: dict[str, Any], name: str) -> str:
+    if name in presets["presets"]:
+        return name
+    target = presets.get("aliases", {}).get(name)
+    if target is None:
+        raise SystemExit(f"unknown Acacia preset: {name}")
+    if not isinstance(target, str) or target not in presets["presets"]:
+        raise SystemExit(f"{name}: alias target is not an existing preset: {target}")
+    print(f"note: Acacia preset alias {name} resolves to {target}", file=sys.stderr)
+    return target
+
+
 def preset_data(presets: dict[str, Any], name: str) -> dict[str, Any]:
-    try:
-        return presets["presets"][name]
-    except KeyError as exc:
-        raise SystemExit(f"unknown Acacia preset: {name}") from exc
+    return presets["presets"][resolve_preset_name(presets, name)]
 
 
 def tool_data(presets: dict[str, Any], name: str) -> dict[str, Any]:
@@ -68,6 +66,7 @@ def tool_data(presets: dict[str, Any], name: str) -> dict[str, Any]:
 
 def normalize_preset(options: dict[str, Any], presets: dict[str, Any], name: str,
                      stack: tuple[str, ...] = ()) -> dict[str, Any]:
+    name = resolve_preset_name(presets, name)
     if name in stack:
         raise SystemExit("preset inheritance cycle: " + " -> ".join(stack + (name,)))
 
@@ -78,16 +77,17 @@ def normalize_preset(options: dict[str, Any], presets: dict[str, Any], name: str
         values.update(normalize_preset(options, presets, parent, stack + (name,)))
 
     for key, value in data.items():
-        if key != "inherits":
+        if key != "inherits" and key not in PRESET_METADATA_KEYS:
             values[key] = value
 
     values["_preset"] = name
+    values["preset"] = name
     return values
 
 
 def validate_preset(options: dict[str, Any], presets: dict[str, Any], name: str) -> None:
     values = normalize_preset(options, presets, name)
-    valid_keys = set(options["scalar_defaults"]) | set(options["families"]) | {"_preset"}
+    valid_keys = set(options["options"]) | set(options["families"]) | {"_preset"}
     for key in values:
         if key not in valid_keys:
             raise SystemExit(f"{name}: unknown option {key}")
@@ -97,13 +97,74 @@ def validate_preset(options: dict[str, Any], presets: dict[str, Any], name: str)
         if value not in family["choices"]:
             raise SystemExit(f"{name}: invalid {family_name}={value}")
 
-    for option_name, choices in options["choices"].items():
+    for option_name, option in options["options"].items():
         value = values[option_name]
-        if value not in choices:
+        if option["type"] == "combo" and value not in option["choices"]:
             raise SystemExit(f"{name}: invalid {option_name}={value}")
 
     if values["actioner"] == "no_ios_precomputation" and values["ios_precomputer"] != "delegate":
         raise SystemExit(f"{name}: no_ios_precomputation requires delegate ios_precomputer")
+
+
+def validate_preset_metadata(presets: dict[str, Any], name: str) -> None:
+    data = presets["presets"][name]
+    description = data.get("description")
+    if (not isinstance(description, str) or not description.strip()
+            or description.splitlines() != [description]):
+        raise SystemExit(f"{name}: description must be a non-empty single line")
+    role = data.get("role")
+    if not isinstance(role, str) or role not in PRESET_ROLES:
+        raise SystemExit(f"{name}: role must be one of {', '.join(sorted(PRESET_ROLES))}")
+
+
+def validate_naming(presets: dict[str, Any]) -> None:
+    naming = presets.get("naming", {})
+    if not isinstance(naming, dict):
+        raise SystemExit("naming must be an object")
+    max_length = naming.get("max_length")
+    if type(max_length) is not int or max_length < 1:
+        raise SystemExit("naming.max_length must be a positive integer")
+    for key in ("forbidden_tokens", "grandfathered"):
+        entries = naming.get(key)
+        if not isinstance(entries, list) or not all(
+            isinstance(entry, str) and entry for entry in entries
+        ):
+            raise SystemExit(f"naming.{key} must be a list of non-empty strings")
+
+    grandfathered = set(naming["grandfathered"])
+    forbidden = {token.lower() for token in naming["forbidden_tokens"]}
+    for name in presets["presets"]:
+        if name in grandfathered:
+            continue
+        # Tokens are case-insensitive words separated by punctuation (including
+        # underscores and hyphens); an unrelated word such as 'bestow' is fine.
+        tokens = set(re.findall(r"[a-z0-9]+", name.lower()))
+        reasons = []
+        if len(name) > max_length:
+            reasons.append(f"length {len(name)} exceeds max_length {max_length}")
+        if tokens & forbidden:
+            reasons.append("forbidden token(s): " + ", ".join(sorted(tokens & forbidden)))
+        if reasons:
+            raise SystemExit(
+                f"{name}: invalid new preset name ({'; '.join(reasons)}). "
+                "Keep identifiers short; describe mechanisms and purpose in metadata. "
+                "A superlative in an identifier is a claim no test can keep honest; "
+                "groups (such as docker_default) are where 'what we currently ship' "
+                "belongs, because a group can be repointed."
+            )
+
+
+def validate_aliases(presets: dict[str, Any]) -> None:
+    aliases = presets.get("aliases", {})
+    if not isinstance(aliases, dict):
+        raise SystemExit("aliases must be an object")
+    for alias, target in aliases.items():
+        if not isinstance(alias, str) or not alias:
+            raise SystemExit("alias names must be non-empty strings")
+        if alias in presets["presets"]:
+            raise SystemExit(f"{alias}: alias collides with a real preset name")
+        if not isinstance(target, str) or target not in presets["presets"]:
+            raise SystemExit(f"{alias}: alias target is not an existing preset: {target}")
 
 
 def validate_tool(presets: dict[str, Any], name: str) -> None:
@@ -122,8 +183,14 @@ def validate_tool(presets: dict[str, Any], name: str) -> None:
             raise SystemExit(f"{name}: tool-baseline env values must be strings")
 
 
+def fingerprint_values(values: dict[str, Any]) -> dict[str, Any]:
+    # acacia_preset records build provenance. Preserve historical hash and show
+    # output (including _preset): self-benchmark.sh uses show for staleness.
+    return {key: value for key, value in values.items() if key != "preset"}
+
+
 def normalized_json(values: dict[str, Any]) -> str:
-    return json.dumps(values, sort_keys=True, separators=(",", ":"))
+    return json.dumps(fingerprint_values(values), sort_keys=True, separators=(",", ":"))
 
 
 def stable_hash(values: dict[str, Any]) -> str:
@@ -134,48 +201,50 @@ def bool_literal(value: bool) -> str:
     return "true" if value else "false"
 
 
-def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[str]:
-    flags: list[str] = [
-        f"-DDEFAULT_K={values['default_k']}",
-        f"-DDEFAULT_KMIN={values['default_kmin']}",
-        f"-DDEFAULT_KINC={values['default_kinc']}",
-        f"-DDEFAULT_UNREAL_X={UNREAL_X[values['default_unreal_x']]}",
-        f"-DDEFAULT_SPOT_FAST={SPOT_FAST[values['default_spot_fast']]}",
-        f"-DACACIA_TRANSLATION_PREF={TRANSLATION_PREF[values['translation_pref']]}",
-        f"-DACACIA_TRANSLATION_PREFS={TRANSLATION_PREFS[values['translation_pref']]}",
-        f"-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER={int(values['enable_realizability_simplifier'])}",
-        f"-DACACIA_ENABLE_SYNTACTIC_BYPASS={int(values['enable_syntactic_bypass'])}",
-        f"-DACACIA_FORCED_OUTPUT_CONTRADICTION={int(values['forced_output_contradiction'])}",
-        f"-DACACIA_PROFILE_DOMINANCE={int(values['profile_dominance'])}",
-        f"-DACACIA_K_SCHEDULE=acacia::k_schedule::kind::{values['k_schedule']}",
-        f"-DACACIA_ENABLE_TLSF_FRONTEND={int(values['enable_tlsf_frontend'])}",
-        f"-DACACIA_EQUIVARIANT_MAX_STATES={values['equivariant_max_states']}",
-        f"-DACACIA_EQUIVARIANT_MIN_CLIENTS={values['equivariant_min_clients']}",
-        f"-DACACIA_EQUIVARIANT_MIN_BLOCKS={values['equivariant_min_blocks']}",
-        f"-DSIMD_IS_MAX={bool_literal(values['simd_is_max'])}",
-        f"-DDECOMPOSE_SPEC={int(values['decompose_spec'])}",
-        f"-DCPRE_AVOID_UNIONS={int(values['cpre_avoid_unions'])}",
-        f"-DVECTOR_AND_BITSET_DOWNSET_IMPL={values['vector_downset']}",
-    ]
+def macro_flag(macro: dict[str, Any], value: Any) -> str | None:
+    """Apply a registry macro's explicit emission condition and value encoding."""
+    emit = macro["emit"]
+    if emit in {"true", "nonempty"}:
+        if not value:
+            return None
+    elif emit == "not_equal":
+        if value == macro["skip_value"]:
+            return None
+    elif emit != "always":
+        raise ValueError(f"unknown macro emission condition: {emit}")
 
-    if values["no_simd"]:
-        flags.append("-DNO_SIMD")
-    if values["compile_all_components"]:
-        flags.append("-DACACIA_COMPILE_ALL_COMPONENTS=1")
-    if values["enable_diagnostics"]:
-        flags.append("-DACACIA_ENABLE_DIAGNOSTICS=1")
-    if values["default_arms"]:
-        flags.append(f"-DACACIA_DEFAULT_ARMS=\\\"{values['default_arms']}\\\"")
-    if values["local_certificate"]:
-        flags.append("-DACACIA_LOCAL_CERTIFICATE=1")
-    if values["forward_safety_solver"]:
-        flags.append("-DACACIA_FORWARD_SAFETY_SOLVER=1")
-    if values["forward_conditional_covering"]:
-        flags.append("-DACACIA_FORWARD_CONDITIONAL_COVERING=1")
-    if values["enable_equivariant_solver"]:
-        flags.append("-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1")
-    if values["vector_impl"] != "auto":
-        flags.append(f"-DVECTOR_IMPL={values['vector_impl']}")
+    flag = f"-D{macro['name']}"
+    encoding = macro["encoding"]
+    if encoding == "bare":
+        return flag
+    if encoding == "bool_int":
+        value = int(value)
+    elif encoding == "bool_literal":
+        value = bool_literal(value)
+    elif encoding == "map":
+        value = macro["map"][value]
+    elif encoding == "prefix":
+        value = macro["prefix"] + value
+    elif encoding == "constant":
+        value = macro["value"]
+    elif encoding == "c_string":
+        # Preserve the historical shell-escaped quotes without altering the value.
+        value = f'\\"{value}\\"'
+    elif encoding != "value":
+        raise ValueError(f"unknown macro encoding: {encoding}")
+    return f"{flag}={value}"
+
+
+def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[str]:
+    # Registry order is emission order.  Which -D comes first is not semantic --
+    # no macro is defined twice -- so the registry does not carry a second,
+    # hand-maintained ordering for a new option to have to slot into.
+    flags: list[str] = []
+    for name, option in options["options"].items():
+        for macro in option["macros"]:
+            flag = macro_flag(macro, values[name])
+            if flag is not None:
+                flags.append(flag)
 
     for family_name, family in options["families"].items():
         selected = values[family_name]
@@ -187,46 +256,13 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
     return flags
 
 
-MESON_OPTION_NAMES = {
-    "default_k": "acacia_default_k",
-    "default_kmin": "acacia_default_kmin",
-    "default_kinc": "acacia_default_kinc",
-    "default_unreal_x": "acacia_default_unreal_x",
-    "default_spot_fast": "acacia_default_spot_fast",
-    "translation_pref": "acacia_translation_pref",
-    "enable_realizability_simplifier": "acacia_enable_realizability_simplifier",
-    "enable_syntactic_bypass": "acacia_enable_syntactic_bypass",
-    "forced_output_contradiction": "acacia_forced_output_contradiction",
-    "profile_dominance": "acacia_profile_dominance",
-    "k_schedule": "acacia_k_schedule",
-    "enable_tlsf_frontend": "acacia_enable_tlsf_frontend",
-    "simd_is_max": "acacia_simd_is_max",
-    "decompose_spec": "acacia_decompose_spec",
-    "vector_downset": "acacia_vector_downset",
-    "vector_impl": "acacia_vector_impl",
-    "no_simd": "acacia_no_simd",
-    "cpre_avoid_unions": "acacia_cpre_avoid_unions",
-    "compile_all_components": "acacia_compile_all_components",
-    "enable_diagnostics": "acacia_enable_diagnostics",
-    "default_arms": "acacia_default_arms",
-    "local_certificate": "acacia_local_certificate",
-    "forward_safety_solver": "acacia_forward_safety_solver",
-    "forward_conditional_covering": "acacia_forward_conditional_covering",
-    "enable_equivariant_solver": "acacia_enable_equivariant_solver",
-    "equivariant_max_states": "acacia_equivariant_max_states",
-    "equivariant_min_clients": "acacia_equivariant_min_clients",
-    "equivariant_min_blocks": "acacia_equivariant_min_blocks",
-    "aut_preprocessor": "acacia_aut_preprocessor",
-    "boolean_states": "acacia_boolean_states",
-    "ios_precomputer": "acacia_ios_precomputer",
-    "actioner": "acacia_actioner",
-    "input_picker": "acacia_input_picker",
-}
-
-
-def meson_args(values: dict[str, Any]) -> list[str]:
+def meson_args(options: dict[str, Any], values: dict[str, Any]) -> list[str]:
+    # Every Meson option name comes from the registry, families included; none
+    # is derived from the option key by convention.
+    names = {name: option["meson"] for name, option in options["options"].items()}
+    names.update((name, family["meson"]) for name, family in options["families"].items())
     args: list[str] = []
-    for key, meson_name in MESON_OPTION_NAMES.items():
+    for key, meson_name in names.items():
         value = values[key]
         if isinstance(value, bool):
             value = bool_literal(value)
@@ -234,34 +270,46 @@ def meson_args(values: dict[str, Any]) -> list[str]:
     return args
 
 
-def emit_config_header(options: dict[str, Any], values: dict[str, Any], path: pathlib.Path) -> None:
-    lines = ["#pragma once", ""]
-    for flag in preprocessor_flags(options, values):
-        if not flag.startswith("-D"):
-            continue
-        define = flag[2:]
-        if "=" in define:
-            key, value = define.split("=", 1)
-            lines.append(f"#ifndef {key}")
-            lines.append(f"# define {key} {value}")
-            lines.append("#endif")
-        else:
-            lines.append(f"#ifndef {define}")
-            lines.append(f"# define {define} 1")
-            lines.append("#endif")
-        lines.append("")
-    path.write_text("\n".join(lines))
+def validate_constants(options: dict[str, Any]) -> None:
+    """Check documentation entries without treating constants as options."""
+    constants = options.get("constants")
+    if not isinstance(constants, dict):
+        raise SystemExit("constants must be an object")
+    for name, constant in constants.items():
+        if not isinstance(name, str) or not name or not isinstance(constant, dict):
+            raise SystemExit("constants must contain named objects")
+        if type(constant.get("value")) not in {str, int}:
+            raise SystemExit(f"{name}: constant value must be a string or integer")
+        description = constant.get("description")
+        if not isinstance(description, str) or not description:
+            raise SystemExit(f"{name}: constant description must be a non-empty string")
+        sources = constant.get("sources")
+        if not isinstance(sources, list) or not sources or not all(
+            isinstance(source, str) and source for source in sources
+        ):
+            raise SystemExit(f"{name}: constant sources must be non-empty strings")
 
 
 def command_validate(options: dict[str, Any], presets: dict[str, Any]) -> None:
+    validate_constants(options)
+    validate_naming(presets)
+    validate_aliases(presets)
     for name in presets["presets"]:
+        validate_preset_metadata(presets, name)
         validate_preset(options, presets, name)
     for name in presets.get("tool_baselines", {}):
         validate_tool(presets, name)
     for group_name, group in presets.get("groups", {}).items():
         for name in group:
-            if name not in presets["presets"]:
+            if name not in presets["presets"] and name not in presets.get("aliases", {}):
                 raise SystemExit(f"{group_name}: unknown preset {name}")
+    shipping = {
+        resolve_preset_name(presets, name)
+        for name in presets.get("groups", {}).get("docker_default", [])
+    }
+    for name, data in presets["presets"].items():
+        if (data["role"] == "shipping") != (name in shipping):
+            raise SystemExit(f"{name}: role shipping must match docker_default membership")
 
 
 def tool_env_lines(data: dict[str, Any]) -> list[str]:
@@ -272,12 +320,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("validate")
-    sub.add_parser("list-presets")
+    list_p = sub.add_parser("list-presets")
+    list_p.add_argument("--long", action="store_true", help="include role and description")
     sub.add_parser("list-tools")
     group_p = sub.add_parser("list-group")
     group_p.add_argument("group")
     show_p = sub.add_parser("show")
     show_p.add_argument("preset")
+    show_p.add_argument("--describe", action="store_true",
+                        help="wrap options with sibling role and description metadata")
     show_tool_p = sub.add_parser("show-tool")
     show_tool_p.add_argument("tool")
     tool_desc_p = sub.add_parser("tool-description")
@@ -290,9 +341,6 @@ def main() -> int:
     hash_p.add_argument("preset")
     meson_p = sub.add_parser("meson-args")
     meson_p.add_argument("preset")
-    emit_p = sub.add_parser("emit-config-header")
-    emit_p.add_argument("preset")
-    emit_p.add_argument("path", type=pathlib.Path)
     args = parser.parse_args()
 
     options, presets = load_registry()
@@ -301,8 +349,19 @@ def main() -> int:
         command_validate(options, presets)
         return 0
     if args.cmd == "list-presets":
-        for name in sorted(presets["presets"]):
-            print(name)
+        names = sorted(presets["presets"])
+        if args.long:
+            for name in names:
+                validate_preset_metadata(presets, name)
+            name_width = max(map(len, names), default=0)
+            role_width = max((len(presets["presets"][name]["role"]) for name in names),
+                             default=0)
+            for name in names:
+                data = presets["presets"][name]
+                print(f"{name:<{name_width}}  {data['role']:<{role_width}}  {data['description']}")
+        else:
+            for name in names:
+                print(name)
         return 0
     if args.cmd == "list-tools":
         for name in sorted(presets.get("tool_baselines", {})):
@@ -332,16 +391,21 @@ def main() -> int:
                 print(line)
         return 0
 
-    validate_preset(options, presets, args.preset)
-    values = normalize_preset(options, presets, args.preset)
+    name = resolve_preset_name(presets, args.preset)
+    validate_preset(options, presets, name)
+    values = normalize_preset(options, presets, name)
     if args.cmd == "show":
+        values = fingerprint_values(values)
+        if args.describe:
+            validate_preset_metadata(presets, name)
+            data = preset_data(presets, name)
+            values = {"description": data["description"], "role": data["role"],
+                      "options": values}
         print(json.dumps(values, sort_keys=True, indent=2))
     elif args.cmd == "hash":
         print(stable_hash(values))
     elif args.cmd == "meson-args":
-        print(" ".join(meson_args(values)))
-    elif args.cmd == "emit-config-header":
-        emit_config_header(options, values, args.path)
+        print(" ".join(meson_args(options, values)))
     else:
         parser.error(f"unknown command {args.cmd}")
     return 0

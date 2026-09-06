@@ -21,11 +21,10 @@ from dataclasses import dataclass
 # Shared with the coverage-frontier tooling so the two cannot drift apart.
 from family_names import family_of
 
-from benchlib import load_meson_jsonl
+from benchlib import load_meson_jsonl, verdict_from_output
 from suite_paths import load_source_map
 
 
-VERDICT_RE = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
 STRATA = ("easy", "border", "gap", "open")
 
 
@@ -48,15 +47,7 @@ class Candidate:
 
 
 def standalone_verdict(stdout: str | None) -> str | None:
-    if not stdout:
-        return None
-    matches = VERDICT_RE.findall(stdout)
-    if not matches:
-        return None
-    verdicts = set(matches)
-    if len(verdicts) != 1:
-        raise ValueError(f"conflicting printed verdicts: {sorted(verdicts)}")
-    return matches[-1]
+    return verdict_from_output(stdout, on_conflict="raise")
 
 
 def instance_from_name(row: dict) -> str | None:

@@ -123,7 +123,9 @@ Inspect and validate the registry with:
 ```
 python3 scripts/acacia-config.py validate
 python3 scripts/acacia-config.py list-presets
+python3 scripts/acacia-config.py list-presets --long
 python3 scripts/acacia-config.py show best_decomp_mona
+python3 scripts/acacia-config.py show best_decomp_mona --describe
 python3 scripts/acacia-config.py meson-args best_decomp_mona
 ```
 
@@ -133,19 +135,40 @@ translator preference is registry-backed as
 `small+any` are available for ablation and racing presets such as
 `best_decomp_mona_any` and `best_decomp_mona_race`.
 
-The shipping configuration is `best_decomp_rank_bucketed_mona`; the Docker
-image and the TLSF examples above build it, and the correctness and performance
-gates are frozen against it. `best_decomp_mona` is the same configuration over
-the plain vector-backed downset, kept as the reference point for downset
-comparisons.
+The configurations we ship are whichever ones the `docker_default` group names:
 
-The shipping preset enables the exact equivariant solver. It automatically
+```
+python3 scripts/acacia-config.py list-group docker_default
+```
+
+That group is the pointer, and it is repointed when the measurements say so --
+the Docker image, the TLSF examples above and CI all read it rather than naming
+a preset. A preset name is a historical label, not a claim about which
+configuration is currently best. The `best` in existing names was accurate when
+those presets were chosen and silently stopped being so; that is why the group
+is the pointer and the name is not. `scripts/acacia-config.py list-presets --long`
+lists each preset's role and purpose. `scripts/acacia-config.py show <preset>`
+reports its complete resolved options; add `--describe` to include role and
+description as siblings of the options object. Plain `show` remains the build
+staleness fingerprint, and plain `list-presets` prints only names for scripts.
+`best_decomp_mona` is the plain vector-backed downset configuration, kept as
+the reference point for downset comparisons.
+
+All four shipped configurations enable the exact equivariant solver. It automatically
 declines to the classic solver when no verified profitable symmetry is
 available, or when fewer than `acacia_equivariant_min_blocks` client-state
 blocks are found (default 2). Use `best_decomp_rank_bucketed_mona_noequivariant`
 for the explicit classic-only escape hatch and performance ablation. New
 presets should inherit from the nearest existing configuration and override
-only the values being tested.
+only the values being tested. Each preset declares a one-line `description` and
+a `role`: `shipping` exactly for `docker_default` members, `reference` for
+measurement controls, `sweep` for comparison arms, `diagnostic` for instrumented
+builds, or `legacy` for historical configurations. Metadata does not affect
+resolved options or configuration hashes. New names are limited to 40 characters
+and cannot contain the token `best`; all existing names are grandfathered and
+remain unchanged. The registry's currently empty `aliases` map can map an old
+name directly to a current preset after a future rename; lookup reports the
+alias on stderr and resolves to the current preset's options and hash.
 
 # Documentation
 

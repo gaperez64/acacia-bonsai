@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "version.hh"
 #include "solver/k_schedule.hh"
 #include "solver/symmetry.hh"
 #include <string_view>
@@ -284,6 +285,9 @@ namespace acacia::diagnostics {
     flush_active_cpre ();
     std::ostringstream line;
     line << "ACACIA_DIAG"
+         // The diag consumers parse key=value, so a new field is additive.
+         // A campaign can now record the configuration rather than a flag list.
+         << " preset=" << (*acacia_preset () ? acacia_preset () : "-")
          << " pid=" << getpid () << " diag_kind=" << kind << " checkpoint=" << checkpoint
          << " instance=" << m.instance << " path=" << m.path
          << " translation_pref=" << m.translation_pref << " source_format=" << m.source_format

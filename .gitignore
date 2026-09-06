@@ -172,6 +172,7 @@ latex/**/*
 
 .idea/**/*
 tlsf-corpus/
+/.acacia-tlsf-corpus-path
 
 # Raw staged-coverage runs; summarized TSVs are committed separately.
 _coverage26/

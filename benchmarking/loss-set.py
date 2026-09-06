@@ -27,7 +27,11 @@ Example:
 import argparse
 import json
 import os
+import pathlib
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from benchlib import verdict_from_output
 
 
 def instance_from_name(name):
@@ -47,14 +51,9 @@ def path_from_command(cmd):
 
 
 def realizability_from_stdout(stdout):
-    if not stdout:
-        return None
-    # UNREALIZABLE contains REALIZABLE as a substring: test it first.
-    if "UNREALIZABLE" in stdout:
-        return "unreal"
-    if "REALIZABLE" in stdout:
-        return "real"
-    return None
+    return {"REALIZABLE": "real", "UNREALIZABLE": "unreal"}.get(
+        verdict_from_output(stdout)
+    )
 
 
 def part_counts(inst_path):

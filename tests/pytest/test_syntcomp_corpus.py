@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import json
 import pathlib
+import sys
+
+import pytest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -67,7 +71,7 @@ def test_materialize_fails_when_source_no_longer_matches_manifest_hash(tmp_path)
     source.write_bytes(b"INFO { TITLE: \"silently-corrupted\" }\n")
     out = tmp_path / "out"
     try:
-        module.materialize(out, submodule=submodule, manifest=manifest)
+        module.materialize(out, submodule=submodule, manifest=manifest, no_record=True)
     except module.CorpusError as error:
         assert "hash mismatch: example.tlsf" in str(error)
         assert hashlib.sha256(good).hexdigest() in str(error)
@@ -101,5 +105,78 @@ def test_flattened_alias_keeps_the_expanded_file_origin(tmp_path):
     ]
 
     out = tmp_path / "out"
-    assert module.materialize(out, submodule, manifest) == 1
+    assert module.materialize(out, submodule, manifest, no_record=True) == 1
     assert (out / alias.name).read_bytes() == expanded.read_bytes()
+
+
+@pytest.fixture
+def materialization(tmp_path, monkeypatch):
+    module = load_module()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.setattr(module, "ROOT", repo)
+    submodule = tmp_path / "syntcomp-benchmarks"
+    source = submodule / "tlsf" / "example.tlsf"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b'INFO { TITLE: "example" }\n')
+    manifest = tmp_path / "tlsf-manifest.tsv"
+    manifest.write_text(
+        module.MANIFEST_HEADER + "\n"
+        + "example.tlsf\tdirect:tlsf/example.tlsf\t"
+        + hashlib.sha256(source.read_bytes()).hexdigest() + "\n"
+    )
+    return module, submodule, source, manifest
+
+
+def test_materialize_records_verified_corpus(materialization, tmp_path, monkeypatch):
+    module, submodule, source, manifest = materialization
+    monkeypatch.chdir(tmp_path)
+    out = pathlib.Path("relative corpus")
+
+    assert module.materialize(out, submodule, manifest) == 1
+
+    assert (out / source.name).read_bytes() == source.read_bytes()
+    marker = json.loads((out / ".acacia-tlsf-corpus").read_text())
+    assert marker["entries"] == 1
+    assert marker["manifest_sha256"] == hashlib.sha256(manifest.read_bytes()).hexdigest()
+    assert (module.ROOT / ".acacia-tlsf-corpus-path").read_text() == str(out.resolve()) + "\n"
+
+
+@pytest.mark.parametrize("existing_pointer", [False, True])
+def test_materialize_no_record_flag_preserves_pointer(
+    materialization, tmp_path, monkeypatch, existing_pointer
+):
+    module, submodule, source, manifest = materialization
+    out = tmp_path / "out"
+    pointer = module.ROOT / ".acacia-tlsf-corpus-path"
+    if existing_pointer:
+        pointer.write_text("/previous/corpus\n")
+    materialize = module.materialize
+    monkeypatch.setattr(
+        module, "materialize",
+        lambda out, **kwargs: materialize(out, submodule, manifest, **kwargs),
+    )
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), "materialize", "--out", str(out), "--no-record"])
+
+    assert module.main() == 0
+
+    assert (out / source.name).read_bytes() == source.read_bytes()
+    assert json.loads((out / ".acacia-tlsf-corpus").read_text())["entries"] == 1
+    if existing_pointer:
+        assert pointer.read_text() == "/previous/corpus\n"
+    else:
+        assert not pointer.exists()
+
+
+def test_failed_materialize_does_not_record_corpus(materialization, tmp_path):
+    module, submodule, source, manifest = materialization
+    source.write_bytes(b"corrupted\n")
+    out = tmp_path / "out"
+    pointer = module.ROOT / ".acacia-tlsf-corpus-path"
+    pointer.write_text("/previous/corpus\n")
+
+    with pytest.raises(module.CorpusError, match="hash mismatch: example.tlsf"):
+        module.materialize(out, submodule, manifest)
+
+    assert not (out / ".acacia-tlsf-corpus").exists()
+    assert pointer.read_text() == "/previous/corpus\n"

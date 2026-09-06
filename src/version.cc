@@ -10,4 +10,6 @@ const char* acacia_version () {
 
 void print_version (std::ostream& output) {
   output << "Version: " << acacia_version () << '\n';
+  const char* preset = acacia_preset ();
+  output << "Configuration: " << (*preset ? preset : "(unnamed configuration)") << '\n';
 }

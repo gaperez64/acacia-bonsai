@@ -24,6 +24,7 @@ writing rather than discovered in a benchmark.
 
 from __future__ import annotations
 
+import ast
 import json
 import pathlib
 import re
@@ -45,47 +46,82 @@ INTENTIONAL_DIVERGENCE = {
         "surfaces immediately instead of changing an answer.",
 }
 
+# Build products, benchmark inputs and compiler flags are outside the solver
+# registry. Keep this list explicit so a new solver option cannot escape checks.
+NON_SOLVER_OPTIONS = {
+    "build_tests",
+    "build_python",
+    "build_research_tools",
+    "acacia_tlsf_corpus_dir",
+    "acacia_compiler_profile",
+}
 
-def meson_defaults(path: pathlib.Path) -> dict[str, object]:
-    """Parse `option(...)` defaults out of meson.options."""
+
+def meson_options(path: pathlib.Path) -> dict[str, dict[str, object]]:
+    """Read the literal option declarations used in meson.options."""
     text = path.read_text()
-    out: dict[str, object] = {}
-    for match in re.finditer(r"option\s*\(\s*'([^']+)'\s*,(.*?)\n(?=option|\Z)",
-                             text, re.S):
+    out: dict[str, dict[str, object]] = {}
+    for match in re.finditer(
+        r"^\s*option\s*\(\s*'([^']+)'\s*,(.*?)(?=^\s*option\s*\(|\Z)",
+        text, re.S | re.M,
+    ):
         name, body = match.group(1), match.group(2)
-        typ = re.search(r"type:\s*'([^']+)'", body)
-        val = re.search(r"value:\s*(\[[^\]]*\]|'[^']*'|[^,\n\)]+)", body)
+        typ = re.search(r"type\s*:\s*'([^']+)'", body)
+        val = re.search(r"value\s*:\s*(\[[^\]]*\]|'[^']*'|[^,\n\)]+)", body)
         if not typ or not val:
-            continue
+            raise ValueError(f"{name}: cannot parse option type and default")
         raw = val.group(1).strip()
         if typ.group(1) == "boolean":
-            out[name] = raw == "true"
+            if raw not in {"true", "false"}:
+                raise ValueError(f"{name}: invalid boolean default {raw}")
+            default = raw == "true"
         elif typ.group(1) == "integer":
-            out[name] = int(raw)
+            default = int(raw)
         else:
-            out[name] = raw.strip("'")
+            default = ast.literal_eval(raw)
+        option = {"type": typ.group(1), "default": default}
+        choices = re.search(r"choices\s*:\s*(\[[^\]]*\])", body)
+        if choices:
+            option["choices"] = ast.literal_eval(choices.group(1))
+        for bound in ("min", "max"):
+            value = re.search(rf"\b{bound}\s*:\s*(-?\d+)", body)
+            if value:
+                option[bound] = int(value.group(1))
+        out[name] = option
     return out
 
 
-def json_key_to_meson_name(script: pathlib.Path) -> dict[str, str]:
-    """Reuse acacia-config.py's own mapping rather than duplicating it."""
-    text = script.read_text()
-    start = text.index("MESON_OPTION_NAMES")
-    block = text[start:text.index("}", start)]
-    return dict(re.findall(r'"([^"]+)":\s*"([^"]+)"', block))
+def meson_defaults(path: pathlib.Path) -> dict[str, object]:
+    return {name: option["default"] for name, option in meson_options(path).items()}
+
+
+def json_key_to_meson_name(registry: pathlib.Path) -> dict[str, str]:
+    """Read the Meson names from the shared configuration registry."""
+    options = json.loads(registry.read_text())
+    mapping = {name: option["meson"] for name, option in options["options"].items()}
+    mapping.update(
+        (name, family["meson"]) for name, family in options["families"].items()
+    )
+    return mapping
 
 
 def main() -> int:
     root = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".")
     meson = meson_defaults(root / "meson.options")
-    scalars = json.loads((root / "config" / "acacia-options.json").read_text())["scalar_defaults"]
-    mapping = json_key_to_meson_name(root / "scripts" / "acacia-config.py")
+    registry = root / "config" / "acacia-options.json"
+    options = json.loads(registry.read_text())["options"]
+    scalars = {name: option["default"] for name, option in options.items()}
+    mapping = json_key_to_meson_name(registry)
 
     checked = 0
     failures: list[str] = []
+    for name in sorted(set(meson) - set(mapping.values()) - NON_SOLVER_OPTIONS):
+        failures.append(f"{name}: solver option has no registry entry")
+    for name in sorted(set(mapping.values()) - set(meson)):
+        failures.append(f"{name}: registry entry has no Meson option")
     for json_key, meson_name in sorted(mapping.items()):
         if json_key not in scalars or meson_name not in meson:
-            # Component families live under "families", not "scalar_defaults";
+            # Component families live under "families", not "options";
             # they carry their own defaults and are compared by the family test.
             continue
         checked += 1

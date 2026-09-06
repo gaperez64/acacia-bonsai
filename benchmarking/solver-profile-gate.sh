@@ -21,7 +21,8 @@ Options:
   --min-improvement PCT   geometric-mean ratio improvement required (default: 5)
   --max-regression PCT    per-target cycle regression ceiling (default: 6)
   --tlsf-corpus DIR       materialized TLSF corpus, for targets that have no
-                          .ltl source map entry (default: \$ACACIA_TLSF_CORPUS)
+                          .ltl source map entry (default: \$ACACIA_TLSF_CORPUS,
+                          candidate build option, then recorded corpus)
 EOF
   exit 2
 }
@@ -34,7 +35,7 @@ repetitions=""
 output=""
 min_improvement=${SOLVER_PROFILE_MIN_IMPROVEMENT_PERCENT:-5.0}
 max_regression=${SOLVER_PROFILE_MAX_REGRESSION_PERCENT:-6.0}
-tlsf_corpus=${ACACIA_TLSF_CORPUS:-}
+tlsf_corpus=""
 
 while (($#)); do
   case $1 in
@@ -96,6 +97,23 @@ else
   repetitions=${repetitions:-3}
 fi
 
+# Calibration has no candidate, so use the baseline build's option there.
+tlsf_corpus_arg=$tlsf_corpus
+tlsf_corpus=$(python3 -c '
+import pathlib
+import sys
+sys.path.insert(0, sys.argv[1])
+from benchlib import tlsf_corpus_dir
+print(tlsf_corpus_dir(explicit=sys.argv[2], build_dir=pathlib.Path(sys.argv[3]).parent.parent) or "")
+' "$repo_root/benchmarking" "$tlsf_corpus" "${candidate_bin:-$baseline_bin}")
+tlsf_diagnosis=$(python3 -c '
+import pathlib
+import sys
+sys.path.insert(0, sys.argv[1])
+from benchlib import tlsf_corpus_diagnosis
+print(tlsf_corpus_diagnosis(explicit=sys.argv[2], build_dir=pathlib.Path(sys.argv[3]).parent.parent))
+' "$repo_root/benchmarking" "$tlsf_corpus_arg" "${candidate_bin:-$baseline_bin}")
+
 [[ -x $baseline_bin ]] || { echo "GATE FAIL: baseline is not executable: $baseline_bin"; exit 1; }
 if ((calibrate == 0)); then
   [[ -x $candidate_bin ]] || {
@@ -108,6 +126,29 @@ command -v perf >/dev/null || { echo "GATE FAIL: perf is not installed"; exit 1;
 command -v systemd-run >/dev/null || { echo "GATE FAIL: systemd-run is not installed"; exit 1; }
 command -v timeout >/dev/null || { echo "GATE FAIL: timeout is not installed"; exit 1; }
 
+scope_guard_outer=0
+scope_snapshot=$(mktemp /tmp/acacia-scope-snapshot.XXXXXX)
+on_exit() {
+  local rc=$?
+  if (( scope_guard_outer == 1 )); then
+    python3 "$repo_root/benchmarking/sweep-acacia-scopes.py" \
+      --stop --snapshot "$scope_snapshot" || true
+  fi
+  rm -f "$scope_snapshot"
+  return "$rc"
+}
+trap on_exit EXIT
+
+if [[ -z ${ACACIA_CAMPAIGN_SCOPE_GUARD:-} ]]; then
+  if ! python3 "$repo_root/benchmarking/sweep-acacia-scopes.py" \
+       --check --snapshot "$scope_snapshot"; then
+    [[ ${ACACIA_ALLOW_STRAY_SCOPES:-0} == 1 ]] || exit 1
+    echo "solver-profile-gate: continuing with ACACIA_ALLOW_STRAY_SCOPES=1; measurements may be under contention" >&2
+  fi
+  export ACACIA_CAMPAIGN_SCOPE_GUARD="solver-profile-gate:$$"
+  scope_guard_outer=1
+fi
+
 timestamp=$(date -u +%Y%m%dT%H%M%SZ)
 output=${output:-/tmp/acacia-solver-profile.$timestamp}
 mkdir -p "$output"
@@ -116,6 +157,16 @@ samples="$output/samples.tsv"
 summary="$output/summary.tsv"
 calibration_summary="$output/calibration.tsv"
 printf 'label\tsuite\tinstance\tfixpoint_bucket\trepetition\tcycles\tinstructions\tllc_load_misses\tbranch_misses\texit\ttimed_out\tperf_file\n' >"$samples"
+
+tlsf_failure() {
+  python3 -c '
+import sys
+sys.path.insert(0, sys.argv[1])
+from benchlib import tlsf_failure
+print(tlsf_failure((sys.argv[2], sys.argv[3]), sys.argv[4]))
+' "$repo_root/benchmarking" "$1" "$2" "$3"
+  exit 1
+}
 
 part_value() {
   local part=$1 section=$2
@@ -189,13 +240,11 @@ run_case() {
     source_args=(-F "$ltl" -i "$ins" -o "$outs")
   else
     if [[ -z $tlsf_corpus ]]; then
-      echo "GATE FAIL: $instance is TLSF-only; pass --tlsf-corpus DIR"
-      exit 1
+      tlsf_failure "$suite" "$instance" "$tlsf_diagnosis"
     fi
     local tlsf="$tlsf_corpus/$tlsf_source"
     if [[ ! -r $tlsf ]]; then
-      echo "GATE FAIL: missing $tlsf"
-      exit 1
+      tlsf_failure "$suite" "$instance" "$tlsf is absent or unreadable"
     fi
     source_args=(-T "$tlsf")
   fi

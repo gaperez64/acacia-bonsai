@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from benchlib import classify_acacia_run, read_part, run_process_group, run_systemd_scope
+from benchlib import campaign_scope_guard, classify_acacia_run, read_part, run_process_group, run_systemd_scope
 from suite_paths import load_source_map, load_tlsf_source_map
 
 
@@ -27,6 +27,12 @@ class Result:
     verdict: str | None
     kind: str
     seconds: float
+
+
+@dataclass(frozen=True)
+class Failure:
+    kind: str
+    message: str
 
 
 def _first(row: dict[str, str], names: tuple[str, ...]) -> str:
@@ -230,6 +236,7 @@ def print_rerun(
         print(f"REMEASURE {label} STDERR END")
 
 
+@campaign_scope_guard("landing-bar")
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("baseline", type=pathlib.Path)
@@ -311,13 +318,13 @@ def main(argv: list[str] | None = None) -> int:
     print_summary("baseline", baseline, args.timeout)
     print_summary("candidate", candidate, args.timeout)
 
-    failures: list[str] = []
+    failures: list[Failure] = []
     baseline_keys = set(baseline)
     candidate_keys = set(candidate)
     for key in sorted(baseline_keys - candidate_keys):
-        failures.append(f"missing candidate row: {key}")
+        failures.append(Failure("verdict", f"missing candidate row: {key}"))
     for key in sorted(candidate_keys - baseline_keys):
-        failures.append(f"unexpected candidate row: {key}")
+        failures.append(Failure("verdict", f"unexpected candidate row: {key}"))
 
     for key in sorted(baseline_keys & candidate_keys):
         before = baseline[key]
@@ -331,13 +338,19 @@ def main(argv: list[str] | None = None) -> int:
             )
             if not eligible:
                 failures.append(
-                    f"lost {key}: {before.verdict} -> {after.kind.upper()}"
+                    Failure(
+                        "coverage",
+                        f"lost {key}: {before.verdict} -> {after.kind.upper()}",
+                    )
                 )
                 continue
             if args.baseline_bin is None or args.candidate_bin is None:
                 failures.append(
-                    f"lost {key}: cap remeasurement required but --baseline-bin and "
-                    "--candidate-bin were not both provided"
+                    Failure(
+                        "coverage",
+                        f"lost {key}: cap remeasurement required but --baseline-bin and "
+                        "--candidate-bin were not both provided",
+                    )
                 )
                 continue
             extended_timeout = 3.0 * args.timeout
@@ -374,29 +387,44 @@ def main(argv: list[str] | None = None) -> int:
                     **tlsf_args,
                 )
             except (OSError, ValueError) as exc:
-                failures.append(f"lost {key}: remeasurement failed: {exc}")
+                failures.append(
+                    Failure("coverage", f"lost {key}: remeasurement failed: {exc}")
+                )
                 continue
             print_rerun("baseline", *baseline_rerun)
             print_rerun("candidate", *candidate_rerun)
             candidate_result = candidate_rerun[0]
             if candidate_result.kind != "solved":
                 failures.append(
-                    f"lost {key} after {extended_timeout:g}s remeasurement: "
-                    f"{before.verdict} -> {candidate_result.kind.upper()}"
+                    Failure(
+                        "coverage",
+                        f"lost {key} after {extended_timeout:g}s remeasurement: "
+                        f"{before.verdict} -> {candidate_result.kind.upper()}",
+                    )
                 )
             elif candidate_result.verdict != before.verdict:
                 failures.append(
-                    f"verdict changed {key} after remeasurement: "
-                    f"{before.verdict} -> {candidate_result.verdict}"
+                    Failure(
+                        "verdict",
+                        f"verdict changed {key} after remeasurement: "
+                        f"{before.verdict} -> {candidate_result.verdict}",
+                    )
                 )
         elif before.verdict != after.verdict:
             failures.append(
-                f"verdict changed {key}: {before.verdict} -> {after.verdict}"
+                Failure(
+                    "verdict",
+                    f"verdict changed {key}: {before.verdict} -> {after.verdict}",
+                )
             )
 
+    for kind, label in (("verdict", "verdict changes"), ("coverage", "coverage losses")):
+        group = [failure for failure in failures if failure.kind == kind]
+        print(f"{label}: {len(group)}")
+        for failure in group:
+            print(f"- {failure.message}")
+
     if failures:
-        for failure in failures:
-            print(f"- {failure}")
         print(f"GATE FAIL: {len(failures)} instance comparison failure(s)")
         return 1
 

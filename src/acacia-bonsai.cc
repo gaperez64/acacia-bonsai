@@ -27,10 +27,16 @@ utils::voutstream utils::vout;
 size_t posets::vectors::bool_threshold = 0;
 
 namespace {
+  volatile pid_t* g_child_pids = nullptr;
+  volatile sig_atomic_t g_child_count = 0;
+  pid_t g_main_pid = 0;
+
   void terminate ([[maybe_unused]] int signum) {
-    if (getpgid (0) == getpid ()) {  // Main process
+    if (getpid () == g_main_pid) {  // Main process
       signal (SIGTERM, SIG_IGN);
-      kill (0, SIGTERM);
+      for (sig_atomic_t i = 0; i < g_child_count; ++i)
+        if (g_child_pids[i] > 0)
+          kill (g_child_pids[i], SIGTERM);
       while (wait (nullptr) != -1)
         /* no body */;
     }
@@ -53,6 +59,17 @@ int main (int argc, char** argv) {
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;
 
+  assert (arg_values.arms.has_value ());
+  g_child_pids = new pid_t[arg_values.arms->size ()];
+  g_main_pid = getpid ();
+
+  sigset_t block_set;
+  sigemptyset (&block_set);
+  sigaddset (&block_set, SIGTERM);
+  sigaddset (&block_set, SIGINT);
+  sigaddset (&block_set, SIGQUIT);
+  sigaddset (&block_set, SIGABRT);
+
   // set up signal handlers to avoid crashing and reporting a wrong response
   // on Ctrl-C, for instance
   struct sigaction action;
@@ -67,7 +84,12 @@ int main (int argc, char** argv) {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x,
                                  TRANSLATION_PREF_T translation_pref,
                                  acacia::game_backend backend) {
-      if (fork () == 0) {
+      // Publish the child pid before a termination handler can run.
+      sigset_t old_mask;
+      sigprocmask (SIG_BLOCK, &block_set, &old_mask);
+      const pid_t pid = fork ();
+      if (pid == 0) {
+        sigprocmask (SIG_SETMASK, &old_mask, nullptr);
         // we check one thing at a time here
         assert (not unreal_x.has_value () or *unreal_x != UNREAL_X_BOTH);
         utils::vout.set_prefix (
@@ -92,6 +114,14 @@ int main (int argc, char** argv) {
         else
           exit (res ? EXIT_CODE_REAL : EXIT_CODE_UNKNOWN);
       }
+      else {
+        if (pid > 0) {
+          g_child_pids[g_child_count] = pid;
+          g_child_count = g_child_count + 1;
+        }
+        // Restore the parent's mask even if fork failed.
+        sigprocmask (SIG_SETMASK, &old_mask, nullptr);
+      }
     };
 
     // We fork process for each (UN)REAL check now and then wait for them to
@@ -99,7 +129,6 @@ int main (int argc, char** argv) {
     setpgid (0, 0);
     assert (getpgid (0) == getpid ());
 
-    assert (arg_values.arms.has_value ());
     [[maybe_unused]] const size_t child_count = arg_values.arms->size ();
     verb_do (1, vout << "Starting " << child_count << " solver children\n" << std::flush);
 
@@ -116,7 +145,16 @@ int main (int argc, char** argv) {
 
     int status;
     bool child_reported_error = false;
-    while (wait (&status) != -1) {  // as long as we have children to wait for
+    while (true) {  // as long as we have children to wait for
+      const pid_t reaped = wait (&status);
+      if (reaped == -1)
+        break;
+      for (sig_atomic_t i = 0; i < g_child_count; ++i)
+        if (g_child_pids[i] == reaped) {
+          g_child_pids[i] = 0;
+          break;
+        }
+
       // A child killed by a signal (SIGSEGV, SIGABRT, ...) has WIFEXITED
       // false; WEXITSTATUS would then return 0, which equals EXIT_CODE_REAL
       // and would be silently misreported as "REALIZABLE". Skip such children
@@ -130,12 +168,13 @@ int main (int argc, char** argv) {
         continue;
       }
       if (ret == EXIT_CODE_REAL or ret == EXIT_CODE_UNREAL) {
-        // One child has a definitive answer! Kill everyone else
-        terminate (0);
+        // Publish the definitive answer before terminating the other children.
         if (ret == EXIT_CODE_REAL)
           std::cout << "REALIZABLE\n";
         else
           std::cout << "UNREALIZABLE\n";
+        std::cout << std::flush;
+        terminate (0);
         return ret;
       }
     }

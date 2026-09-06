@@ -136,6 +136,21 @@ and `-Dacacia_tlsf_corpus_dir` makes that directory available to Meson. Each
 suite's `tlsf-sources.tsv` maps its logical `.ltl` instance names to the TLSF
 sources passed to the configured backend.
 
+Materialize once: any one of `--tlsf-corpus DIR` (G2s/G3),
+`ACACIA_TLSF_CORPUS=DIR`, or the build's `-Dacacia_tlsf_corpus_dir=DIR` is
+enough for the gates, in that precedence order. Without an override, they use
+the repository's `.acacia-tlsf-corpus-path` pointer written by materialize,
+provided the directory still exists and contains its `.acacia-tlsf-corpus`
+marker. The marker records the entry count and manifest SHA-256;
+`materialize --no-record` skips updating the pointer. A setting that names a
+directory which is not there is skipped rather than used, so a stale
+`acacia_tlsf_corpus_dir` left in an old build cannot mask a live
+`ACACIA_TLSF_CORPUS`; when nothing resolves, the gate says which mechanisms it
+consulted and why each one failed. Meson still needs the
+build option at configure time to enumerate these suites; the gates reuse it
+without a second setting. G2s/G3 look in the candidate binary's build directory
+(`BUILD/src/acacia-bonsai`); G2s calibration uses the baseline build.
+
 For example:
 ```
 python3 benchmarking/syntcomp-corpus.py materialize \
@@ -321,18 +336,25 @@ Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMAL
 
 - **G0, correctness:** `meson test -C build --suite=unit` and
   `meson test -C subprojects/posets/build`; both must report `Fail: 0`.
-- **G1, frozen verdicts:** `benchmarking/regression-gate.sh build`; all 40
-  sentinels must pass and the script must print `GATE PASS`.
+- **G1, frozen verdicts and coverage:**
+  `benchmarking/regression-gate.sh --baseline-bin PREVIOUS-BIN build`;
+  `--baseline-bin` or `REGRESSION_BASELINE_BIN` is required, with no default.
+  Use the same configuration built from the previous revision. All 40 sentinels
+  must pass and the script must print `GATE PASS`; verdict changes and coverage
+  losses are reported separately, and either kind fails the gate.
 - **G2, Posets proxy (advisory):** `benchmarking/posets-microbench.sh`.
-- **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh build`. The SYNTCOMP25
+- **G2s, solver-profile proxy:** `benchmarking/solver-profile-gate.sh BASELINE-BIN CANDIDATE-BIN`. The SYNTCOMP25
   `mixed` target is `evasion0.ltl`; `g-unreal-116.ltl` was retired (census: M1 letter-loop).
 - **G3, landing bar:** run `benchmarking/landing-campaign.sh` with paired
   binaries, suite lists, a 17-second timeout, and an output directory. It
   invokes `benchmarking/landing-bar.py`; every suite must print `GATE PASS`.
   The syntcomp25 and syntcomp26 panels are reconstructed from the TLSF
   submodule and have no `.ltl` pair for 77 of 180 and 180 of 180 of their rows,
-  so both G2s and G3 need `--tlsf-corpus DIR` (or `ACACIA_TLSF_CORPUS`) naming
-  a materialized corpus; without it neither gate can resolve those panels.
+  so both G2s and G3 need a materialized corpus. Materialize once: any one of
+  `--tlsf-corpus DIR`, `ACACIA_TLSF_CORPUS=DIR`, or the candidate build's
+  `-Dacacia_tlsf_corpus_dir=DIR` suffices, in that precedence order; otherwise
+  the gates use the recorded corpus path. G1 uses the same lookup without a
+  `--tlsf-corpus` flag.
 - **G4, corpus correctness:**
   `meson test -C build --num-processes 1 --suite=ab/realizable --suite=ab/unrealizable`;
   timeouts are allowed, but `Fail: 0` and no false-positive/negative marker are
@@ -345,6 +367,23 @@ pinned twin `best_decomp_rank_bucketed_mona_eq_min_blocks_2`, which resolves to 
 set now that `acacia_equivariant_min_blocks` defaults to 2, and re-validated on the final tree; the
 producing binary's SHA-256 is
 `6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9`.
+G1 builds its baseline CSV from the frozen verdicts and `baseline_seconds` in
+`tests/suites/benchmarks/regress-expected.tsv`, not from the supplied baseline binary.
+That binary is used only for near-cap remeasurement, which reruns both binaries at
+three times the timeout. It must be supplied through `--baseline-bin` or
+`REGRESSION_BASELINE_BIN` and must use the candidate's configuration built from the
+previous revision. The former `build_best_decomp_mona` default differed from the
+frozen configuration above and silently answered a different question during
+remeasurement.
+
+Verdict changes (`REALIZABLE` ↔ `UNREALIZABLE`) and row-set mismatches are
+configuration-independent regressions attributable to the change under test.
+Coverage losses (a solved instance becoming `TIMEOUT` or otherwise unsolved) depend
+on the configuration: losses against a different configuration from the frozen one
+are expected and are not evidence about the change under test. Establish coverage
+regressions with a comparison to the same configuration from the previous revision,
+such as G3's paired binary campaign. G1 still fails on either kind of failure.
+
 `syntcomp24/Morning_f2774e0b.ltl` is frozen at 14.542 s, above the 13.6 s threshold that admits a
 51 s cap remeasurement. Full gate results are in [LTLSYNT-GAP.md](LTLSYNT-GAP.md).
 
