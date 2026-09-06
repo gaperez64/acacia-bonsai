@@ -139,6 +139,17 @@ spot_lazy_buchi_view_test = executable (
 test ('spot-lazy-buchi-view', spot_lazy_buchi_view_test,
       suite : ['unit', 'spot-lazy'])
 
+if get_option('build_research_tools')
+  spot_provider_replay_test = executable(
+    'spot-provider-replay-test',
+    'spot_provider_replay_test.cc',
+    include_directories: inc,
+    dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+  )
+  test('spot-provider-replay', spot_provider_replay_test,
+       suite: ['unit', 'spot-provider-replay'])
+endif
+
 sparse_forward_rank_test = executable (
   'sparse-forward-rank-test',
   'sparse_forward_rank_test.cc',
