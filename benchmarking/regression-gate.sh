@@ -74,7 +74,6 @@ from collections import defaultdict
 import csv
 import json
 import pathlib
-import re
 import sys
 
 
@@ -84,15 +83,16 @@ meson_status = int(sys.argv[3])
 baseline_csv = pathlib.Path(sys.argv[4])
 candidate_csv = pathlib.Path(sys.argv[5])
 repo_root = pathlib.Path(sys.argv[6])
+sys.path.insert(0, str(repo_root / "benchmarking"))
+from benchlib import verdict_from_output
+
 build_dir = pathlib.Path(sys.argv[7])
 tlsf_corpus_out = pathlib.Path(sys.argv[8])
-verdict_re = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
 materialize_command = "python3 benchmarking/syntcomp-corpus.py materialize --out DIR"
 
 
 def verdict(stdout):
-    matches = verdict_re.findall(stdout or "")
-    return matches[-1] if matches and len(set(matches)) == 1 else None
+    return verdict_from_output(stdout, on_conflict="last")
 
 
 def tlsf_failure(key, detail):

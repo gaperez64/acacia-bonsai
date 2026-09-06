@@ -23,6 +23,8 @@ import sys
 import time
 from dataclasses import dataclass
 
+from benchlib import verdict_from_output
+
 
 DECISIVE_VERDICTS = frozenset(("REALIZABLE", "UNREALIZABLE"))
 CONFLICT_COLUMNS = [
@@ -54,7 +56,6 @@ EXCEPTION_COLUMNS = [
 STATUS_RE = re.compile(
     r"^\s*//\s*STATUS\s*:\s*(?P<status>[A-Za-z]+)\s*$", re.IGNORECASE
 )
-VERDICT_RE = re.compile(r"\b(?:UNREALIZABLE|REALIZABLE)\b", re.IGNORECASE)
 SCRIPT_DIR = pathlib.Path(__file__).parent
 
 
@@ -215,11 +216,7 @@ def validate_conflicts(
 
 
 def parse_verdict(stdout: str, stderr: str) -> str | None:
-    output = f"{stdout}\n{stderr}"
-    verdicts = {match.group(0).upper() for match in VERDICT_RE.finditer(output)}
-    if len(verdicts) == 1:
-        return verdicts.pop()
-    return None
+    return verdict_from_output(f"{stdout}\n{stderr}", on_conflict="last")
 
 
 def run_ltlsynt(executable: str, tlsf_path: pathlib.Path, timeout: float) -> SolverResult:

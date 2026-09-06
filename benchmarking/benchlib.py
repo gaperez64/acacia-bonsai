@@ -7,6 +7,7 @@ import csv
 import json
 import os
 import pathlib
+import re
 import signal
 import subprocess
 import threading
@@ -14,6 +15,9 @@ import time
 import uuid
 from dataclasses import dataclass
 from typing import Callable
+
+
+VERDICT_RE = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -361,13 +365,29 @@ def run_systemd_scope(
             signal.signal(handled_signal, previous)
 
 
+def verdict_from_output(text: str | None, *, on_conflict: str = "last") -> str | None:
+    """Parse line-anchored verdicts so a diagnostic containing the word cannot flip one.
+
+    Accept bare verdicts and utils::vout-prefixed lines. Conflicting verdicts
+    return None by default, or raise ValueError when on_conflict is "raise".
+    """
+    if not text:
+        return None
+    matches = VERDICT_RE.findall(text)
+    verdicts = set(matches)
+    if len(verdicts) > 1:
+        if on_conflict == "raise":
+            raise ValueError(f"conflicting printed verdicts: {sorted(verdicts)}")
+        return None
+    return matches[-1] if matches else None
+
+
 def parse_acacia_result(stdout_stderr: str) -> str:
-    text = stdout_stderr.upper()
-    if "REALIZABLE" in text and "UNREALIZABLE" not in text:
-        return "REALIZABLE"
-    if "UNREALIZABLE" in text:
-        return "UNREALIZABLE"
-    if "TIMEOUT" in text:
+    verdict = verdict_from_output(stdout_stderr)
+    if verdict is not None:
+        return verdict
+    if re.search(r"^\s*TIMEOUT\s*$", stdout_stderr, re.MULTILINE | re.IGNORECASE):
+        # Preserve classify_run mapping this to ERROR: TOOL_EXIT_CODES has no TIMEOUT key.
         return "TIMEOUT"
     return "UNKNOWN"
 
@@ -392,7 +412,10 @@ def classify_run(run: RunResult, tool: str = "acacia") -> str:
         return "TIMEOUT"
     if run.resource_limited:
         return "RESOURCE_LIMIT"
-    result = parse_acacia_result(run.stdout + run.stderr)
+    # Join rather than concatenate: a stdout without its trailing newline would
+    # otherwise fuse its last line onto the first line of stderr, and the verdict
+    # parse is line-anchored.
+    result = parse_acacia_result("\n".join((run.stdout, run.stderr)))
     if run.returncode == expected_exit.get(result):
         return result
     return "ERROR"
@@ -448,14 +471,7 @@ def instance_from_meson_name(name: str) -> str:
 
 
 def realizability_from_output(text: str | None) -> str | None:
-    if not text:
-        return None
-    upper = text.upper()
-    if "UNREALIZABLE" in upper:
-        return "UNREALIZABLE"
-    if "REALIZABLE" in upper:
-        return "REALIZABLE"
-    return None
+    return verdict_from_output(text)
 
 
 def write_csv(path: str | pathlib.Path, rows: list[dict], fieldnames: list[str]) -> None:
