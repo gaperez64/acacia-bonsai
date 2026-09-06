@@ -25,7 +25,7 @@ import shlex
 import subprocess
 import sys
 
-from benchlib import RunResult, classify_run, run_systemd_scope
+from benchlib import RunResult, campaign_scope_guard, classify_run, run_systemd_scope
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -666,7 +666,7 @@ def run(args: argparse.Namespace) -> int:
                     timeout=cap,
                     memory_max=args.memory_max,
                     memory_swap_max=args.memory_swap_max,
-                    unit_prefix="syntcomp26-coverage",
+                    unit_prefix="acacia-syntcomp26-coverage",
                 )
                 result, resource_reason = normalize_result(solver_run)
                 row = {
@@ -740,6 +740,7 @@ def run(args: argparse.Namespace) -> int:
     return 0
 
 
+@campaign_scope_guard("run-syntcomp26-coverage")
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()

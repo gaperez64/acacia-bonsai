@@ -4,6 +4,8 @@ import pathlib
 import sys
 from unittest import mock
 
+import pytest
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "benchmarking" / "landing-bar.py"
@@ -39,7 +41,41 @@ def test_gate_passes_without_lost_answers(tmp_path, capsys):
     write_rows(candidate, [row("a.ltl", "REALIZABLE", 0.5), row("b.ltl", "UNREALIZABLE")])
 
     assert landing_bar.main([str(baseline), str(candidate)]) == 0
-    assert capsys.readouterr().out.rstrip().endswith("GATE PASS")
+    assert capsys.readouterr().out.rstrip().endswith(
+        "verdict changes: 0\ncoverage losses: 0\nGATE PASS"
+    )
+
+
+@pytest.mark.parametrize(
+    "before, after, message, counts",
+    [
+        ("REALIZABLE", "UNREALIZABLE", "verdict changed", (1, 0)),
+        ("UNREALIZABLE", "REALIZABLE", "verdict changed", (1, 0)),
+        ("REALIZABLE", "TIMEOUT", "lost", (0, 1)),
+        ("UNREALIZABLE", "UNKNOWN", "lost", (0, 1)),
+        ("REALIZABLE", "ERROR", "lost", (0, 1)),
+    ],
+)
+def test_gate_classifies_failure_kinds(
+    tmp_path, capsys, before, after, message, counts
+):
+    baseline = tmp_path / "baseline.csv"
+    candidate = tmp_path / "candidate.csv"
+    write_rows(baseline, [row("a.ltl", before)])
+    write_rows(candidate, [row("a.ltl", after)])
+
+    assert landing_bar.main([str(baseline), str(candidate)]) == 1
+    output = capsys.readouterr().out
+    verdicts, coverage = counts
+    failure = f"- {message} panel/a.ltl: {before} -> {after}"
+    groups = [f"verdict changes: {verdicts}"]
+    if verdicts:
+        groups.append(failure)
+    groups.append(f"coverage losses: {coverage}")
+    if coverage:
+        groups.append(failure)
+    groups.append("GATE FAIL: 1 instance comparison failure(s)")
+    assert output.rstrip().endswith("\n".join(groups))
 
 
 def test_gate_rejects_lost_and_flipped_answers(tmp_path, capsys):
@@ -50,9 +86,13 @@ def test_gate_rejects_lost_and_flipped_answers(tmp_path, capsys):
 
     assert landing_bar.main([str(baseline), str(candidate)]) == 1
     output = capsys.readouterr().out
-    assert "lost panel/a.ltl" in output
-    assert "verdict changed panel/b.ltl" in output
-    assert output.rstrip().endswith("GATE FAIL: 2 instance comparison failure(s)")
+    assert output.rstrip().endswith(
+        "verdict changes: 1\n"
+        "- verdict changed panel/b.ltl: UNREALIZABLE -> REALIZABLE\n"
+        "coverage losses: 1\n"
+        "- lost panel/a.ltl: REALIZABLE -> TIMEOUT\n"
+        "GATE FAIL: 2 instance comparison failure(s)"
+    )
 
 
 def test_gate_rejects_incomplete_campaigns(tmp_path, capsys):
@@ -63,8 +103,34 @@ def test_gate_rejects_incomplete_campaigns(tmp_path, capsys):
 
     assert landing_bar.main([str(baseline), str(candidate)]) == 1
     output = capsys.readouterr().out
-    assert "missing candidate row: panel/a.ltl" in output
-    assert "unexpected candidate row: panel/b.ltl" in output
+    assert output.rstrip().endswith(
+        "verdict changes: 2\n"
+        "- missing candidate row: panel/a.ltl\n"
+        "- unexpected candidate row: panel/b.ltl\n"
+        "coverage losses: 0\n"
+        "GATE FAIL: 2 instance comparison failure(s)"
+    )
+
+
+@pytest.mark.parametrize("extra_side", ["baseline", "candidate"])
+def test_gate_classifies_one_sided_row_as_verdict(tmp_path, capsys, extra_side):
+    baseline = tmp_path / "baseline.csv"
+    candidate = tmp_path / "candidate.csv"
+    for side, path in (("baseline", baseline), ("candidate", candidate)):
+        rows = [row("shared.ltl", "REALIZABLE")]
+        if side == extra_side:
+            rows.append(row("extra.ltl", "TIMEOUT", 17))
+        write_rows(path, rows)
+
+    assert landing_bar.main([str(baseline), str(candidate)]) == 1
+    output = capsys.readouterr().out
+    message = "missing" if extra_side == "baseline" else "unexpected"
+    assert output.rstrip().endswith(
+        "verdict changes: 1\n"
+        f"- {message} candidate row: panel/extra.ltl\n"
+        "coverage losses: 0\n"
+        "GATE FAIL: 1 instance comparison failure(s)"
+    )
 
 
 def test_near_cap_timeout_is_rescued_by_extended_remeasurement(
@@ -105,11 +171,31 @@ def test_near_cap_timeout_is_rescued_by_extended_remeasurement(
     ]
     output = capsys.readouterr().out
     assert "REMEASURE panel/fragile.ltl" in output
-    assert output.rstrip().endswith("GATE PASS")
+    assert output.rstrip().endswith(
+        "verdict changes: 0\ncoverage losses: 0\nGATE PASS"
+    )
 
 
-def test_near_cap_timeout_still_fails_when_extended_run_does_not_answer(
-    tmp_path, capsys, monkeypatch
+@pytest.mark.parametrize(
+    "candidate_result, expected_summary",
+    [
+        (
+            landing_bar.Result(None, "timeout", 51.0),
+            "verdict changes: 0\n"
+            "coverage losses: 1\n"
+            "- lost panel/fragile.ltl after 51s remeasurement: REALIZABLE -> TIMEOUT\n",
+        ),
+        (
+            landing_bar.Result("UNREALIZABLE", "solved", 20.0),
+            "verdict changes: 1\n"
+            "- verdict changed panel/fragile.ltl after remeasurement: "
+            "REALIZABLE -> UNREALIZABLE\n"
+            "coverage losses: 0\n",
+        ),
+    ],
+)
+def test_near_cap_timeout_classifies_extended_run_failure(
+    tmp_path, capsys, monkeypatch, candidate_result, expected_summary
 ):
     baseline = tmp_path / "baseline.csv"
     candidate = tmp_path / "candidate.csv"
@@ -119,7 +205,7 @@ def test_near_cap_timeout_still_fails_when_extended_run_does_not_answer(
     answers = iter(
         [
             landing_bar.Result("REALIZABLE", "solved", 16.1),
-            landing_bar.Result(None, "timeout", 51.0),
+            candidate_result,
         ]
     )
 
@@ -138,8 +224,9 @@ def test_near_cap_timeout_still_fails_when_extended_run_does_not_answer(
         ]
     ) == 1
     output = capsys.readouterr().out
-    assert "lost panel/fragile.ltl after 51s remeasurement" in output
-    assert output.rstrip().endswith("GATE FAIL: 1 instance comparison failure(s)")
+    assert output.rstrip().endswith(
+        expected_summary + "GATE FAIL: 1 instance comparison failure(s)"
+    )
 
 
 def test_multi_suite_source_maps_resolve_empty_partition_side(

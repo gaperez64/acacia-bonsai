@@ -12,6 +12,8 @@ option('acacia_compiler_profile', type: 'combo',
        choices: ['debug', 'release', 'lowmem'],
        value: 'debug',
        description: 'Extra compiler flags for Acacia local benchmarking profiles')
+option('acacia_preset', type: 'string', value: '',
+       description: 'Named build configuration; empty for a hand-assembled configuration')
 
 option('acacia_aut_preprocessor', type: 'combo',
        choices: ['surely_losing', 'no_preprocessing', 'standard', 'elevator'],
@@ -97,6 +99,20 @@ option('acacia_transition_acceptance', type: 'boolean', value: false,
        description: 'Carry transition acceptance into rank actions')
 option('acacia_equivariant_max_states', type: 'integer', value: 512, min: 1,
        description: 'Maximum automaton states admitted to unhinted equivariant recognition')
+option('acacia_symmetry_profile', type: 'boolean', value: false,
+       description: 'Collect and report phase timings and call counts for symmetry and equivariant solving')
+option('acacia_equivariant_max_output_letters', type: 'integer', value: 4096, min: 1,
+       description: 'Maximum output valuations enumerated for equivariant orbit sweeping; exceeding the cap declines the equivariant solver')
+option('acacia_equivariant_max_orbits', type: 'integer', value: 4096, min: 1,
+       description: 'Maximum input orbits, including shared-input assignments, admitted to equivariant solving')
+option('acacia_equivariant_max_sweep_clients', type: 'integer', value: 4, min: 0,
+       description: 'Maximum client count for direct orbit sweeping: small orbits can cost less than generator-fixpoint closure; larger groups use the representative/picker loop for greater payoff (0 disables sweeping)')
+option('acacia_equivariant_exhaustive_detect', type: 'boolean', value: false,
+       description: 'Use exhaustive symmetry detection to select the largest full symmetric subgroup instead of fast star-generator recognition')
+option('acacia_equivariant_validate_fast_recognition', type: 'boolean', value: false,
+       description: 'Cross-check fast symmetry recognition against exhaustive detection, reporting mismatches and asserting agreement')
+option('acacia_symmetry_verbose_diagnostics', type: 'boolean', value: false,
+       description: 'Run an additional symmetry-detection pass on the final game automaton for verbose and phase diagnostics')
 option('acacia_equivariant_min_clients', type: 'integer', value: 3, min: 2,
        description: 'Minimum indexed client count admitted to equivariant recognition')
 option('acacia_equivariant_min_blocks', type: 'integer', value: 2, min: 0,

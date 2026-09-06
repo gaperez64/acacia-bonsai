@@ -16,7 +16,13 @@ def main() -> None:
         stderr=subprocess.PIPE,
         text=True,
     )
-    pattern = r"Version: (\d[\w.+-]*|[0-9a-f]{7,40})(-dirty)?\n"
+    # -V reports the version and, since acacia_preset exists, which named
+    # configuration this binary is.  A hand-assembled build has no name and
+    # says so; that is the honest answer, not a missing field.
+    pattern = (
+        r"Version: (\d[\w.+-]*|[0-9a-f]{7,40})(-dirty)?\n"
+        r"Configuration: (\(unnamed configuration\)|[\w.+-]+)\n"
+    )
     if completed.returncode != 2 or re.fullmatch(pattern, completed.stdout) is None:
         raise AssertionError(
             "unexpected -V result "

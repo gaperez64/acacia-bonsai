@@ -99,8 +99,14 @@ cleanup() {
 }
 trap cleanup EXIT
 
+cgroup_run_seq=0
+
 cgroup_run() {
+  # A fresh unit per invocation: a scope left behind in failed state would
+  # make the next systemd-run refuse the name.
+  cgroup_run_seq=$((cgroup_run_seq + 1))
   systemd-run --user --scope --quiet \
+    --unit=acacia-posets-microbench-$$-$cgroup_run_seq \
     --property=MemoryMax=8G --property=MemorySwapMax=0 "$@"
 }
 

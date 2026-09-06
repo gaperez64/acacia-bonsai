@@ -21,7 +21,11 @@ swig_gen = custom_target(
   install_dir: [false, py.get_install_dir()]
 )
 
-project_headers = include_directories('..')  # everything in /src/
+# /src plus the project root, whose build-tree half holds the generated
+# acacia_build_config.hh.  Without it the extension module compiles against
+# whatever src/configuration.hh happens to say rather than against the
+# options this build was configured with.  See issue #130.
+project_headers = include_directories('..', '../..')
 
 # Build the extension module
 module = py.extension_module('_acacia_boomslang',

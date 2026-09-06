@@ -16,6 +16,7 @@ import argparse
 import csv
 import hashlib
 import io
+import json
 import pathlib
 import re
 import subprocess
@@ -331,9 +332,13 @@ def materialize(
     out: pathlib.Path,
     submodule: pathlib.Path = SUBMODULE,
     manifest: pathlib.Path = MANIFEST,
+    *,
+    no_record: bool = False,
 ) -> int:
     entries = load_manifest(manifest)
+    manifest_digest = sha256(manifest.read_bytes())
     _, origins = source_catalog(submodule)
+    out = out.expanduser().resolve()
     out.mkdir(parents=True, exist_ok=True)
 
     produced: set[str] = set()
@@ -370,6 +375,13 @@ def materialize(
             )
     if failures:
         raise CorpusError("materialization verification failed:\n  " + "\n  ".join(failures))
+
+    (out / ".acacia-tlsf-corpus").write_text(
+        json.dumps({"entries": len(entries), "manifest_sha256": manifest_digest}) + "\n",
+        encoding="utf-8",
+    )
+    if not no_record:
+        (ROOT / ".acacia-tlsf-corpus-path").write_text(str(out) + "\n", encoding="utf-8")
 
     print(f"materialized and verified {len(entries)} files in {out}")
     return len(entries)
@@ -450,6 +462,9 @@ def main() -> int:
         help="reconstruct and verify the flat corpus",
     )
     materialize_parser.add_argument("--out", required=True, type=pathlib.Path)
+    materialize_parser.add_argument(
+        "--no-record", action="store_true", help="do not record the corpus path in the repository"
+    )
     manifest_parser = subparsers.add_parser(
         "write-manifest",
         help="account for a release corpus and write its SHA-256 manifest",
@@ -460,7 +475,7 @@ def main() -> int:
     if args.command == "init":
         init_submodule()
     elif args.command == "materialize":
-        materialize(args.out)
+        materialize(args.out, no_record=args.no_record)
     elif args.command == "write-manifest":
         write_manifest(args.reference)
     else:

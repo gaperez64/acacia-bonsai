@@ -11,7 +11,7 @@ import re
 import shlex
 import sys
 
-from benchlib import read_part, run_process_group, run_systemd_scope
+from benchlib import campaign_scope_guard, read_part, run_process_group, run_systemd_scope
 from suite_paths import load_source_map, read_tlsf_source_entries
 
 
@@ -162,6 +162,7 @@ def build_native_tlsf_command(
     return [str(binary), *extra_flags, "-T", str(tlsf_path)]
 
 
+@campaign_scope_guard("run_diag_targets")
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", default="build_best_decomp_mona_diag")

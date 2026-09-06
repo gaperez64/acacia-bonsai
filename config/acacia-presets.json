@@ -1,10 +1,70 @@
 {
+  "naming": {
+    "_comment": "40 characters accommodates 25 of the 43 existing labels while staying well below the 61-character maximum; new labels can be shorter because mechanisms and purpose belong in metadata. Grandfathered names preserve existing build directories and historical logs; do not add new names to this list.",
+    "max_length": 40,
+    "forbidden_tokens": [
+      "best"
+    ],
+    "grandfathered": [
+      "base",
+      "base_iosprecom_mona",
+      "best",
+      "best_mona",
+      "best_decomp_mona",
+      "best_decomp_mona_noequivariant",
+      "best_decomp_mona_any",
+      "best_decomp_mona_race",
+      "best_decomp_kdtree_mona",
+      "best_decomp_bboxtree_mona",
+      "best_decomp_bboxtree_mona_noequivariant",
+      "best_decomp_comptrie_mona",
+      "best_decomp_sharingtrie_mona",
+      "best_decomp_simpsharingtree_mona",
+      "best_decomp_sharingtree_mona",
+      "best_decomp_mona_diag",
+      "best_decomp_skiplist_mona",
+      "best_decomp_cst_mona",
+      "best_decomp_rank_bucketed_mona",
+      "best_decomp_rank_bucketed_mona_diag",
+      "best_decomp_rank_bucketed_semantic_mona_local",
+      "best_decomp_rank_bucketed_semantic_mona_local_diag",
+      "best_decomp_rank_bucketed_mona_diag_eq_relaxed",
+      "best_decomp_rank_bucketed_semantic_mona",
+      "best_decomp_rank_bucketed_semantic_mona_geometric",
+      "best_decomp_rank_bucketed_semantic_mona_contradiction",
+      "best_decomp_rank_bucketed_semantic_mona_dominance",
+      "best_decomp_rank_bucketed_semantic_mona_diag",
+      "best_decomp_rank_bucketed_semantic_mona_forward",
+      "best_decomp_rank_bucketed_semantic_mona_forward_covering",
+      "best_decomp_rank_bucketed_semantic_mona_forward_geometric",
+      "best_decomp_rank_bucketed_semantic_mona_forward_diag",
+      "best_decomp_rank_bucketed_mona_race",
+      "best_decomp_rank_bucketed_mona_noequivariant",
+      "best_decomp_rank_bucketed_mona_eq_baseline",
+      "best_decomp_rank_bucketed_mona_eq_min_clients_2",
+      "best_decomp_rank_bucketed_mona_eq_max_states_2048",
+      "best_decomp_rank_bucketed_mona_eq_min_blocks_2",
+      "best_decomp_filtered_vector_mona",
+      "best_decomp_filtered_vector_mona_noequivariant",
+      "best_decomp_rank_bucketed_semantic_mona_forward_contradiction",
+      "best_four_arm_contradiction",
+      "best_four_arm_bboxtree"
+    ]
+  },
+  "aliases": {},
   "presets": {
-    "base": {},
+    "base": {
+      "description": "Use all registry defaults as the untuned configuration reference for build and solver checks.",
+      "role": "reference"
+    },
     "base_iosprecom_mona": {
+      "description": "Replace only input/output precomputation with MONA BDD traversal to isolate its effect in local tuning.",
+      "role": "sweep",
       "ios_precomputer": "mona"
     },
     "best": {
+      "description": "Retain the undecomposed powerset-precomputation experiment with standard automaton preprocessing, critical input selection and SIMD maximum comparisons disabled for historical logs.",
+      "role": "legacy",
       "aut_preprocessor": "standard",
       "ios_precomputer": "powset",
       "input_picker": "critical",
@@ -12,6 +72,8 @@
       "decompose_spec": false
     },
     "best_mona": {
+      "description": "Use MONA precomputation, standard automaton preprocessing, critical input selection and no SIMD maximum comparisons without decomposition to measure the effect of decomposing specifications.",
+      "role": "sweep",
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
       "input_picker": "critical",
@@ -19,6 +81,8 @@
       "decompose_spec": false
     },
     "best_decomp_mona": {
+      "description": "Use plain vector-backed downsets with decomposition, MONA precomputation, standard automaton preprocessing, critical input selection and no SIMD maximum comparisons as the downset comparison reference.",
+      "role": "reference",
       "aut_preprocessor": "standard",
       "ios_precomputer": "mona",
       "input_picker": "critical",
@@ -27,168 +91,244 @@
       "enable_equivariant_solver": true
     },
     "best_decomp_mona_noequivariant": {
+      "description": "Disable the exact equivariant solver as the classic-only control for measuring symmetry solving with plain vector-backed downsets.",
+      "role": "reference",
       "inherits": "best_decomp_mona",
       "enable_equivariant_solver": false
     },
     "best_decomp_mona_any": {
+      "description": "Use Spot translation preference any instead of small to provide a shipped alternative translation with plain vector-backed downsets.",
+      "role": "shipping",
       "inherits": "best_decomp_mona",
       "translation_pref": "any"
     },
     "best_decomp_mona_race": {
+      "description": "Race Spot small and any translations to compare translation diversity against the plain-vector small-only reference.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "translation_pref": "small+any"
     },
     "best_decomp_kdtree_mona": {
+      "description": "Replace plain vector-backed downsets with a k-d tree to compare spatial indexing in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "kdtree_backed"
     },
     "best_decomp_bboxtree_mona": {
+      "description": "Replace plain vector-backed downsets with a bounding-box tree to compare dominance-query pruning in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "bboxtree_backed"
     },
     "best_decomp_bboxtree_mona_noequivariant": {
+      "description": "Disable the exact equivariant solver as the classic-only control for measuring symmetry solving with bounding-box-tree downsets.",
+      "role": "reference",
       "inherits": "best_decomp_bboxtree_mona",
       "enable_equivariant_solver": false
     },
     "best_decomp_comptrie_mona": {
+      "description": "Replace plain vector-backed downsets with a compressed trie to compare compressed storage in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "comptrie_backed"
     },
     "best_decomp_sharingtrie_mona": {
+      "description": "Replace plain vector-backed downsets with a sharing trie to compare shared storage in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "sharingtrie_backed"
     },
     "best_decomp_simpsharingtree_mona": {
+      "description": "Replace plain vector-backed downsets with the simple sharing-tree implementation to compare tree storage in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "simple_sharingtree_backed"
     },
     "best_decomp_sharingtree_mona": {
+      "description": "Replace plain vector-backed downsets with the sharing-tree implementation to compare shared tree storage in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "sharingtree_backed"
     },
     "best_decomp_mona_diag": {
+      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile the plain-vector downset reference.",
+      "role": "diagnostic",
       "inherits": "best_decomp_mona",
       "enable_diagnostics": true
     },
     "best_decomp_skiplist_mona": {
+      "description": "Replace plain vector-backed downsets with a skip list to compare ordered indexing in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "skiplist_backed"
     },
     "best_decomp_cst_mona": {
+      "description": "Replace plain vector-backed downsets with a covering sharing tree to compare covering-based storage in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "cst_backed"
     },
     "best_decomp_rank_bucketed_mona": {
+      "description": "Replace plain vector-backed downsets with rank-bucketed vectors to compare rank-based dominance filtering in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "rank_bucketed_vector_backed"
     },
     "best_decomp_rank_bucketed_mona_diag": {
+      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile rank-bucketed downsets and MONA action construction.",
+      "role": "diagnostic",
       "inherits": "best_decomp_rank_bucketed_mona",
       "enable_diagnostics": true
     },
     "best_decomp_rank_bucketed_semantic_mona_local": {
+      "description": "Enable the bounded local winning-certificate and root-refutation probe as the S reference for comparison with the backward B configuration.",
+      "role": "reference",
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "local_certificate": true
     },
     "best_decomp_rank_bucketed_semantic_mona_local_diag": {
+      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to inspect the local-certificate reference.",
+      "role": "diagnostic",
       "inherits": "best_decomp_rank_bucketed_semantic_mona_local",
       "enable_diagnostics": true
     },
     "best_decomp_rank_bucketed_mona_diag_eq_relaxed": {
+      "description": "Lower equivariant recognition to two clients and raise its state cap to 32768, retaining the two-block gate, to diagnose symmetry excluded by admission thresholds.",
+      "role": "diagnostic",
       "inherits": "best_decomp_rank_bucketed_mona_diag",
       "equivariant_min_clients": 2,
       "equivariant_min_blocks": 2,
       "equivariant_max_states": 32768
     },
     "best_decomp_rank_bucketed_semantic_mona": {
+      "description": "Deduplicate equivalent MONA output actions before decoding to reduce action construction in the shipped backward solver with rank-bucketed downsets (B reference).",
+      "role": "shipping",
       "inherits": "best_decomp_rank_bucketed_mona",
       "ios_precomputer": "semantic_mona"
     },
     "best_decomp_rank_bucketed_semantic_mona_geometric": {
+      "description": "Retain geometric K-bound raising in the backward solver to resolve historical comparisons with the linear schedule.",
+      "role": "legacy",
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "k_schedule": "geometric"
     },
     "best_decomp_rank_bucketed_semantic_mona_contradiction": {
+      "description": "Retain the forced-output contradiction check in the backward decision-only syntactic bypass for historical ablation logs.",
+      "role": "legacy",
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "forced_output_contradiction": true
     },
     "best_decomp_rank_bucketed_semantic_mona_dominance": {
+      "description": "Retain per-input pruning of globally dominated decoded semantic actions for historical action-reduction experiments.",
+      "role": "legacy",
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "profile_dominance": true
     },
     "best_decomp_rank_bucketed_semantic_mona_diag": {
+      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile semantic action deduplication in the backward B reference.",
+      "role": "diagnostic",
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "enable_diagnostics": true
     },
     "best_decomp_rank_bucketed_semantic_mona_forward": {
+      "description": "Use on-the-fly forward safety solving and disable the exact equivariant path, with the local probe still off, as the F reference for backward-versus-forward comparisons.",
+      "role": "reference",
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
       "forward_safety_solver": true,
       "local_certificate": false,
       "enable_equivariant_solver": false
     },
     "best_decomp_rank_bucketed_semantic_mona_forward_covering": {
+      "description": "Retain conditional downward covering of optimistic forward successors for historical covering-ablation logs.",
+      "role": "legacy",
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "forward_conditional_covering": true
     },
     "best_decomp_rank_bucketed_semantic_mona_forward_geometric": {
+      "description": "Retain geometric K-bound raising in the forward solver to resolve historical comparisons with the linear schedule.",
+      "role": "legacy",
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "k_schedule": "geometric"
     },
     "best_decomp_rank_bucketed_semantic_mona_forward_diag": {
+      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile the forward F reference.",
+      "role": "diagnostic",
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "enable_diagnostics": true
     },
     "best_decomp_rank_bucketed_mona_race": {
+      "description": "Race Spot small and any translations to compare translation diversity against the rank-bucketed small-only configuration.",
+      "role": "sweep",
       "inherits": "best_decomp_rank_bucketed_mona",
       "translation_pref": "small+any"
     },
     "best_decomp_rank_bucketed_mona_noequivariant": {
+      "description": "Disable the exact equivariant solver as the classic-only control for measuring symmetry solving with rank-bucketed downsets.",
+      "role": "reference",
       "inherits": "best_decomp_rank_bucketed_mona",
       "enable_equivariant_solver": false
     },
     "best_decomp_rank_bucketed_mona_eq_baseline": {
+      "description": "Raise the equivariant block gate from two to four, keeping three clients and a 512-state cap, as the control for the client, block and state threshold sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_rank_bucketed_mona",
       "equivariant_max_states": 512,
       "equivariant_min_clients": 3,
       "equivariant_min_blocks": 4
     },
     "best_decomp_rank_bucketed_mona_eq_min_clients_2": {
+      "description": "Admit two-client symmetries with a four-block gate and 512-state cap to isolate the client threshold against the equivariant sweep control.",
+      "role": "sweep",
       "inherits": "best_decomp_rank_bucketed_mona",
       "equivariant_max_states": 512,
       "equivariant_min_clients": 2,
       "equivariant_min_blocks": 4
     },
     "best_decomp_rank_bucketed_mona_eq_max_states_2048": {
+      "description": "Raise the equivariant state cap to 2048 with three clients and four blocks to isolate the state threshold against the equivariant sweep control.",
+      "role": "sweep",
       "inherits": "best_decomp_rank_bucketed_mona",
       "equivariant_max_states": 2048,
       "equivariant_min_clients": 3,
       "equivariant_min_blocks": 4
     },
     "best_decomp_rank_bucketed_mona_eq_min_blocks_2": {
+      "description": "Use the parent's unchanged two-block gate, three clients and 512-state cap as the lower-block arm against the four-block equivariant sweep control.",
+      "role": "sweep",
       "inherits": "best_decomp_rank_bucketed_mona",
       "equivariant_max_states": 512,
       "equivariant_min_clients": 3,
       "equivariant_min_blocks": 2
     },
     "best_decomp_filtered_vector_mona": {
+      "description": "Replace plain vector-backed downsets with coordinate-filtered vectors to compare dominance-candidate filtering in the downset sweep.",
+      "role": "sweep",
       "inherits": "best_decomp_mona",
       "vector_downset": "filtered_vector_backed"
     },
     "best_decomp_filtered_vector_mona_noequivariant": {
+      "description": "Disable the exact equivariant solver as the classic-only control for measuring symmetry solving with filtered-vector downsets.",
+      "role": "reference",
       "inherits": "best_decomp_filtered_vector_mona",
       "enable_equivariant_solver": false
     },
     "best_decomp_rank_bucketed_semantic_mona_forward_contradiction": {
+      "description": "Retain the forced-output contradiction check in the forward decision-only syntactic bypass for historical ablation logs.",
+      "role": "legacy",
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "forced_output_contradiction": true
     },
     "best_four_arm_contradiction": {
+      "description": "Ship backward and forward realizability arms plus formula and automaton forward unrealizability arms, re-enabling exact equivariant solving and adding forced-output contradiction checks to the F reference.",
+      "role": "shipping",
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "enable_equivariant_solver": true,
       "forced_output_contradiction": true,
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
     },
     "best_four_arm_bboxtree": {
+      "description": "Add semantic action deduplication and forward solving to bounding-box-tree downsets, shipping backward and forward realizability arms plus formula and automaton forward unrealizability arms.",
+      "role": "shipping",
       "inherits": "best_decomp_bboxtree_mona",
       "ios_precomputer": "semantic_mona",
       "forward_safety_solver": true,

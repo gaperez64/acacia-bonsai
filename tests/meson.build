@@ -240,6 +240,13 @@ test ('game-backend-cli',
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 
+pipe_verdict = find_program ('check-pipe-verdict.sh')
+test ('pipe-verdict',
+      pipe_verdict,
+      args : [ab_exe],
+      suite : ['unit', 'cli'],
+      depends : [ab_exe])
+
 mealy_to_moore_test = executable ('mealy-to-moore-test',
                                   '../src/solver/mealy_to_moore.cc',
                                   'mealy_to_moore_test.cc',

@@ -23,7 +23,7 @@ run() {
 }
 
 output=$(run 0 -f 'G(o)' -i i -o o -r small)
-[[ $output == *REALIZABLE* ]]
+grep -qx REALIZABLE <<<"$output"
 
 output=$(run 3 -f 'G(o)' -i i -o o --real-backend bogus)
 [[ $output == *backward* && $output == *forward* ]]
@@ -79,7 +79,7 @@ if [[ $forward_enabled == true ]]; then
 
     output=$(run 0 "${common[@]}" \
         --arms real:any:backward,real:any:forward)
-    [[ $output == *REALIZABLE* ]]
+    grep -qx REALIZABLE <<<"$output"
 
     synthesis_output=$(mktemp)
     trap 'rm -f -- "$synthesis_output"' EXIT

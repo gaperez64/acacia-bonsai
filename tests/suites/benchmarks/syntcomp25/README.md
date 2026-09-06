@@ -11,6 +11,18 @@ against the directory produced by `python3 benchmarking/syntcomp-corpus.py
 materialize --out DIR`; the build receives that directory as
 `-Dacacia_tlsf_corpus_dir=DIR` and passes each source to the wrapper with `-T`.
 
+Materialize once: any one of `--tlsf-corpus DIR` (G2s/G3),
+`ACACIA_TLSF_CORPUS=DIR`, or the build's `-Dacacia_tlsf_corpus_dir=DIR` is
+enough for the benchmark gates, in that precedence order. With none set, they
+use the repository's `.acacia-tlsf-corpus-path` pointer, provided its directory
+still exists and carries the `.acacia-tlsf-corpus` marker. Materialize writes
+both records after verification; the marker contains the entry count and
+manifest SHA-256. `materialize --no-record` skips updating the pointer.
+Meson still requires the build option at configure time to enumerate suite
+entries; the gates reuse it without needing a second setting. G2s/G3 use the
+candidate binary's build (`BUILD/src/acacia-bonsai`); G2s calibration uses the
+baseline build.
+
 `panel.list` is a deterministic 180-instance subset of the 1,579-instance
 selection. Its reference data is the full, paired, serialized campaign retained under
 `_bm-logs.gap-plan-20260804/syntcomp25-reference`, run from repository commit
