@@ -129,6 +129,15 @@ spot_rows_test = executable (
 )
 test ('spot-rows', spot_rows_test, suite : ['unit', 'spot-rows'])
 
+spot_letter_oracle_test = executable (
+  'spot-letter-oracle-test',
+  'spot_letter_oracle_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-letter-oracle', spot_letter_oracle_test,
+      suite : ['unit', 'spot-letter-oracle'])
+
 transition_payload_test = executable (
   'transition-payload-test',
   'transition_payload_test.cc',
