@@ -72,6 +72,12 @@ test ('version-output',
       suite : 'version',
       depends : [ab_exe])
 
+# Pure source inspection: no binary, so it runs even when nothing is built yet.
+test ('config-frontends-agree',
+      py,
+      args : [files ('check-config-frontends.py'), meson.project_source_root ()],
+      suite : ['unit', 'config-frontends'])
+
 if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
   cpre_replay_smoke = find_program ('check-cpre-replay.sh')
   test ('cpre-replay-smoke',
@@ -106,6 +112,14 @@ translator_options_test = executable ('translator-options-test',
 test ('translator-options',
       translator_options_test,
       suite : ['unit', 'translator-options'])
+
+game_backend_test = executable ('game-backend-test',
+                                'game_backend_test.cc',
+                                include_directories : inc,
+                                dependencies : [spot_dep])
+test ('game-backend',
+      game_backend_test,
+      suite : ['unit', 'game-backend'])
 
 transition_payload_test = executable (
   'transition-payload-test',
@@ -177,6 +191,33 @@ test ('syntactic-bypass',
       syntactic_bypass_test,
       suite : ['unit', 'syntactic-bypass'])
 
+k_schedule_test = executable ('k-schedule-test',
+                              'k_schedule_test.cc',
+                              include_directories : inc,
+                              dependencies : [spot_dep, bddx_dep])
+test ('k-schedule',
+      k_schedule_test,
+      suite : ['unit', 'k-schedule'])
+
+profile_dominance_test = executable (
+  'profile-dominance-test',
+  'profile_dominance_test.cc',
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep, posets_dep],
+)
+test ('profile-dominance',
+      profile_dominance_test,
+      suite : ['unit', 'profile-dominance'])
+
+forced_output_contradiction_test = executable ('forced-output-contradiction-test',
+                                               'forced_output_contradiction_test.cc',
+                                               include_directories : inc,
+                                               dependencies : [spot_dep, bddx_dep])
+test ('forced-output-contradiction',
+      forced_output_contradiction_test,
+      args : [meson.current_source_dir () / 'fixtures/forced_contradiction'],
+      suite : ['unit', 'forced-output-contradiction'])
+
 degenerate_io_test = executable ('degenerate-io-test',
                                  'degenerate_io_test.cc',
                                  include_directories : inc,
@@ -190,6 +231,13 @@ test ('degenerate-io-cli',
       degenerate_io_cli,
       args : [ab_exe],
       suite : ['unit', 'degenerate-io'],
+      depends : [ab_exe])
+
+game_backend_cli = find_program ('check-game-backend-cli.sh')
+test ('game-backend-cli',
+      game_backend_cli,
+      args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string ()],
+      suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 
 mealy_to_moore_test = executable ('mealy-to-moore-test',
@@ -211,11 +259,25 @@ if get_option ('acacia_default_unreal_x') == 'both'
   default_unreal_children = 2
 endif
 default_check_children = default_real_children + default_unreal_children
+default_game_backend = 'backward'
+if get_option ('acacia_forward_safety_solver')
+  default_game_backend = 'forward'
+endif
+# A build that ships its own portfolio forks that instead of the historical
+# default, so the expected child count is the number of arms it declares.
+# default_game_backend is deliberately NOT touched: it is only asserted for
+# cases that pass -r or -u explicitly, and those bypass the shipped portfolio
+# and still take the compile-time backend.
+default_arms_opt = get_option ('acacia_default_arms').strip ()
+if default_arms_opt != ''
+  default_check_children = default_arms_opt.split (',').length ()
+endif
 test ('check-selection',
       bash,
       args : [files ('check-selection.sh'), ab_exe,
               default_check_children.to_string (),
-              (compiler_profile == 'debug').to_string ()],
+              (compiler_profile == 'debug').to_string (),
+              default_game_backend],
       suite : ['unit', 'check-selection'],
       depends : [ab_exe])
 
@@ -291,6 +353,14 @@ local_certificate_test = executable ('local-certificate-test',
 test ('local-certificate',
       local_certificate_test,
       suite : ['unit', 'local-certificate'])
+
+forward_safety_game_test = executable ('forward-safety-game-test',
+                                       'forward_safety_game_test.cc',
+                                       include_directories : inc,
+                                       dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep])
+test ('forward-safety-game',
+      forward_safety_game_test,
+      suite : ['unit', 'forward-safety-game'])
 
 semantic_mona_test = executable ('semantic-mona-test',
                                  'semantic_mona_test.cc',

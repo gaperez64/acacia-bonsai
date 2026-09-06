@@ -104,8 +104,38 @@
       "inherits": "best_decomp_rank_bucketed_mona",
       "ios_precomputer": "semantic_mona"
     },
+    "best_decomp_rank_bucketed_semantic_mona_geometric": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "k_schedule": "geometric"
+    },
+    "best_decomp_rank_bucketed_semantic_mona_contradiction": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "forced_output_contradiction": true
+    },
+    "best_decomp_rank_bucketed_semantic_mona_dominance": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "profile_dominance": true
+    },
     "best_decomp_rank_bucketed_semantic_mona_diag": {
       "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "enable_diagnostics": true
+    },
+    "best_decomp_rank_bucketed_semantic_mona_forward": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "forward_safety_solver": true,
+      "local_certificate": false,
+      "enable_equivariant_solver": false
+    },
+    "best_decomp_rank_bucketed_semantic_mona_forward_covering": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "forward_conditional_covering": true
+    },
+    "best_decomp_rank_bucketed_semantic_mona_forward_geometric": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "k_schedule": "geometric"
+    },
+    "best_decomp_rank_bucketed_semantic_mona_forward_diag": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "enable_diagnostics": true
     },
     "best_decomp_rank_bucketed_mona_race": {
@@ -147,6 +177,22 @@
     "best_decomp_filtered_vector_mona_noequivariant": {
       "inherits": "best_decomp_filtered_vector_mona",
       "enable_equivariant_solver": false
+    },
+    "best_decomp_rank_bucketed_semantic_mona_forward_contradiction": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "forced_output_contradiction": true
+    },
+    "best_four_arm_contradiction": {
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "enable_equivariant_solver": true,
+      "forced_output_contradiction": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "best_four_arm_bboxtree": {
+      "inherits": "best_decomp_bboxtree_mona",
+      "ios_precomputer": "semantic_mona",
+      "forward_safety_solver": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
     }
   },
   "tool_baselines": {
@@ -186,10 +232,10 @@
   },
   "groups": {
     "docker_default": [
-      "best_decomp_rank_bucketed_mona",
-      "best_decomp_mona",
-      "best_decomp_mona_any",
-      "best_decomp_bboxtree_mona"
+      "best_four_arm_contradiction",
+      "best_decomp_rank_bucketed_semantic_mona",
+      "best_four_arm_bboxtree",
+      "best_decomp_mona_any"
     ],
     "local_tuning_default": [
       "best_decomp_mona",

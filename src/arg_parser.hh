@@ -2,6 +2,8 @@
 
 #include "configuration.hh"
 #include "error_msg.hh"
+#include "portfolio_arm.hh"
+#include "solver/game_backend.hh"
 #include "solver/solver_invoker.hh"
 #if ACACIA_ENABLE_TLSF_FRONTEND
 # include "tlsf_frontend.hh"
@@ -37,7 +39,15 @@ struct arg_parse_result {
     VECTOR_ELT_T opt_kinc = DEFAULT_KINC;
     std::optional<std::vector<TRANSLATION_PREF_T>> real_strategies = std::nullopt;
     std::optional<std::vector<UNREAL_X_T>> unreal_strategies = std::nullopt;
+    std::optional<std::vector<portfolio_arm>> arms = std::nullopt;
     TRANSLATION_PREF_T primary_translation_pref = ACACIA_TRANSLATION_PREF;
+#if ACACIA_FORWARD_SAFETY_SOLVER
+    acacia::game_backend real_backend = acacia::game_backend::forward;
+    acacia::game_backend unreal_backend = acacia::game_backend::forward;
+#else
+    acacia::game_backend real_backend = acacia::game_backend::backward;
+    acacia::game_backend unreal_backend = acacia::game_backend::backward;
+#endif
     unsigned verbose_level = 0;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
@@ -116,6 +126,19 @@ void show_help (const char* program_name) {
       << "                    by unrealizability checks; -s truncates -r to its head\n"
       << "                    migration: legacy bare -r and -U now fail; bare -u LIST\n"
       << "                    now selects unrealizability only\n"
+      << "  --unreal-translation-pref VAL\n"
+      << "                    set the unrealizability translator preference to\n"
+      << "                    [small|any] without also selecting a realizability\n"
+      << "                    check; mutually exclusive with -r\n"
+      << "  --real-backend VAL       use the [backward|forward] game backend for real arms\n"
+      << "  --unreal-backend VAL     use the [backward|forward] game backend for unreal arms\n"
+      << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
+      << "                    polarity:transform:backend, where polarity is real or\n"
+      << "                    unreal; real transforms are small or any; unreal\n"
+      << "                    transforms are formula or automaton; backends are\n"
+      << "                    backward or forward; unreal arms use the build's\n"
+      << "                    primary translation preference; mutually exclusive\n"
+      << "                    with -r, -u, and the per-polarity options above\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -184,6 +207,24 @@ void process_arg_real (const std::string& arg, arg_parse_result& result) {
   result.primary_translation_pref = result.real_strategies->front ();
 }
 
+void process_arg_unreal_translation_pref (const std::string& arg,
+                                            arg_parse_result& result) {
+  const auto first = std::find_if_not (
+      arg.begin (), arg.end (), [] (unsigned char c) { return std::isspace (c); });
+  const auto last = std::find_if_not (
+                        arg.rbegin (), arg.rend (),
+                        [] (unsigned char c) { return std::isspace (c); })
+                        .base ();
+  const std::string value = first < last ? std::string (first, last) : std::string {};
+  if (case_insensitive_equals (value, "small"))
+    result.primary_translation_pref = spot::postprocessor::Small;
+  else if (case_insensitive_equals (value, "any"))
+    result.primary_translation_pref = spot::postprocessor::Any;
+  else
+    error (EXIT_CODE_ERROR, "Error: unexpected unreal translation preference %s.\n",
+           value.c_str ());
+}
+
 void process_arg_unreal (const std::string& arg, arg_parse_result& result) {
   result.unreal_strategies = process_strategy_list<UNREAL_X_T> (
       arg, "u", [] (const std::string& value, auto& strategies) {
@@ -225,6 +266,80 @@ void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
     result.spot_fast = SPOT_FAST_DET_AND_GFG;
   else
     error (EXIT_CODE_ERROR, "Error: unexpected Spot fast-path option %s\n", arg.c_str ());
+}
+
+void process_arg_game_backend (const std::string& arg, acacia::game_backend& backend,
+                               const char* option) {
+  if (auto parsed = acacia::parse_game_backend (arg); parsed.has_value ()) {
+    backend = *parsed;
+#if !ACACIA_FORWARD_SAFETY_SOLVER
+    if (backend == acacia::game_backend::forward)
+      error (EXIT_CODE_ERROR,
+             "Error: --%s requests the forward backend, but this binary was built "
+             "without the forward safety solver (ACACIA_FORWARD_SAFETY_SOLVER); configure with "
+             "-Dacacia_forward_safety_solver=true.\n",
+             option);
+#endif
+  }
+  else
+    error (EXIT_CODE_ERROR,
+           "Error: unexpected value %s for --%s; expected backward or forward.\n",
+           arg.c_str (), option);
+}
+
+void process_arg_arms (const std::string& arg, arg_parse_result& result) {
+  auto parsed = parse_portfolio_arms (arg);
+  switch (parsed.error) {
+    case portfolio_arm_parse_error::none: break;
+    case portfolio_arm_parse_error::empty_list:
+      error (EXIT_CODE_ERROR, "Error: --arms requires at least one arm.\n");
+      break;
+    case portfolio_arm_parse_error::empty_spec:
+      error (EXIT_CODE_ERROR, "Error: empty arm in --arms list.\n");
+      break;
+    case portfolio_arm_parse_error::malformed_spec:
+      error (EXIT_CODE_ERROR,
+             "Error: invalid field count in --arms spec %s; expected "
+             "polarity:transform:backend (real|unreal, small|any or "
+             "formula|automaton, backward|forward).\n",
+             parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::polarity:
+      error (EXIT_CODE_ERROR,
+             "Error: invalid polarity %s in --arms spec %s; expected real or unreal.\n",
+             parsed.value.c_str (), parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::real_transform:
+      error (EXIT_CODE_ERROR,
+             "Error: invalid transform %s in --arms spec %s; real arms accept small or any.\n",
+             parsed.value.c_str (), parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::unreal_transform:
+      error (EXIT_CODE_ERROR,
+             "Error: invalid transform %s in --arms spec %s; unreal arms accept formula or "
+             "automaton.\n",
+             parsed.value.c_str (), parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::backend:
+      error (EXIT_CODE_ERROR,
+             "Error: invalid backend %s in --arms spec %s; expected backward or forward.\n",
+             parsed.value.c_str (), parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::duplicate:
+      error (EXIT_CODE_ERROR, "Error: duplicate arm %s in --arms list.\n",
+             parsed.spec.c_str ());
+      break;
+  }
+
+#if !ACACIA_FORWARD_SAFETY_SOLVER
+  for (const auto& arm : parsed.arms)
+    if (arm.backend == acacia::game_backend::forward)
+      error (EXIT_CODE_ERROR,
+             "Error: --arms requests the forward backend, but this binary was built "
+             "without the forward safety solver (ACACIA_FORWARD_SAFETY_SOLVER); "
+             "configure with -Dacacia_forward_safety_solver=true.\n");
+#endif
+  result.arms = std::move (parsed.arms);
 }
 
 void process_formula_file (const std::string& arg, arg_parse_result& result) {
@@ -269,8 +384,20 @@ arg_parse_result arg_parser (int argc, char** argv) {
   std::optional<int> sgn_k = std::nullopt;
   std::optional<int> sgn_kmin = std::nullopt;
   static constexpr int OPT_SPOT_FAST = 1000;
+  static constexpr int OPT_UNREAL_TRANSLATION_PREF = 1001;
+  static constexpr int OPT_REAL_BACKEND = 1002;
+  static constexpr int OPT_UNREAL_BACKEND = 1003;
+  static constexpr int OPT_ARMS = 1004;
+  bool unreal_translation_pref_specified = false;
+  bool real_backend_specified = false;
+  bool unreal_backend_specified = false;
   static option long_options[] = {
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
+      {"unreal-translation-pref", required_argument, nullptr,
+       OPT_UNREAL_TRANSLATION_PREF},
+      {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
+      {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
+      {"arms", required_argument, nullptr, OPT_ARMS},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -294,7 +421,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
         retval.formula = optarg;
         retval.formula_specified = true;
         break;
-      case 'r': process_arg_real (optarg, retval); break;
+      case 'r':
+        if (retval.arms.has_value ())
+          error (EXIT_CODE_ERROR, "Error: -r and --arms are mutually exclusive.\n");
+        if (unreal_translation_pref_specified)
+          error (EXIT_CODE_ERROR,
+                 "Error: -r and --unreal-translation-pref are mutually exclusive.\n");
+        process_arg_real (optarg, retval);
+        break;
       case 'F':
         if (retval.tlsf_specified)
           error (EXIT_CODE_ERROR, "Error: -f/-F and -T/--tlsf are mutually exclusive.\n");
@@ -357,9 +491,53 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       }
       case 'v': retval.verbose_level++; break;
-      case 'u': process_arg_unreal (optarg, retval); break;
+      case 'u':
+        if (retval.arms.has_value ())
+          error (EXIT_CODE_ERROR, "Error: -u and --arms are mutually exclusive.\n");
+        process_arg_unreal (optarg, retval);
+        break;
       case 's': retval.synth_fname = optarg; break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
+      case OPT_REAL_BACKEND:
+        if (retval.arms.has_value ())
+          error (EXIT_CODE_ERROR,
+                 "Error: --real-backend and --arms are mutually exclusive.\n");
+        process_arg_game_backend (optarg, retval.real_backend, "real-backend");
+        real_backend_specified = true;
+        break;
+      case OPT_UNREAL_BACKEND:
+        if (retval.arms.has_value ())
+          error (EXIT_CODE_ERROR,
+                 "Error: --unreal-backend and --arms are mutually exclusive.\n");
+        process_arg_game_backend (optarg, retval.unreal_backend, "unreal-backend");
+        unreal_backend_specified = true;
+        break;
+      case OPT_UNREAL_TRANSLATION_PREF:
+        if (retval.arms.has_value ())
+          error (EXIT_CODE_ERROR,
+                 "Error: --unreal-translation-pref and --arms are mutually exclusive.\n");
+        if (retval.real_strategies.has_value ())
+          error (EXIT_CODE_ERROR,
+                 "Error: -r and --unreal-translation-pref are mutually exclusive.\n");
+        process_arg_unreal_translation_pref (optarg, retval);
+        unreal_translation_pref_specified = true;
+        break;
+      case OPT_ARMS:
+        if (retval.real_strategies.has_value ())
+          error (EXIT_CODE_ERROR, "Error: --arms and -r are mutually exclusive.\n");
+        if (retval.unreal_strategies.has_value ())
+          error (EXIT_CODE_ERROR, "Error: --arms and -u are mutually exclusive.\n");
+        if (unreal_translation_pref_specified)
+          error (EXIT_CODE_ERROR,
+                 "Error: --arms and --unreal-translation-pref are mutually exclusive.\n");
+        if (real_backend_specified)
+          error (EXIT_CODE_ERROR,
+                 "Error: --arms and --real-backend are mutually exclusive.\n");
+        if (unreal_backend_specified)
+          error (EXIT_CODE_ERROR,
+                 "Error: --arms and --unreal-backend are mutually exclusive.\n");
+        process_arg_arms (optarg, retval);
+        break;
       default: show_help (argv[0]); exit (EXIT_CODE_ERROR);
     }
   }
@@ -376,16 +554,65 @@ arg_parse_result arg_parser (int argc, char** argv) {
   if (not retval.outputs_specified)
     error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
 
-  if (not retval.real_strategies.has_value () and
+  // --unreal-translation-pref selects no arms by itself: it only overrides
+  // primary_translation_pref, and has an effect only when -u also runs an
+  // unreal child.  Given without -u it must not suppress the default
+  // portfolio below -- unreal_strategies is what decides whether an unreal
+  // child was actually requested, not whether this override was mentioned.
+  if (not retval.arms.has_value () and not retval.real_strategies.has_value () and
       not retval.unreal_strategies.has_value ()) {
-    retval.real_strategies = default_real_strategies ();
-    retval.unreal_strategies = default_unreal_strategies ();
-    retval.primary_translation_pref = retval.real_strategies->front ();
+    // A build may ship a portfolio of its own, because the best measured
+    // configuration is an arm mix rather than a compile-time backend choice and
+    // a shipped configuration has to be able to express one.  An empty string --
+    // the default -- keeps the historical portfolio, so builds that say nothing
+    // behave exactly as before.  A malformed value is a build error surfaced at
+    // the first run rather than a silently different portfolio.
+    if (std::string_view {ACACIA_DEFAULT_ARMS}.empty ()) {
+      retval.real_strategies = default_real_strategies ();
+      retval.unreal_strategies = default_unreal_strategies ();
+      retval.primary_translation_pref = retval.real_strategies->front ();
+    }
+    else {
+      auto parsed = parse_portfolio_arms (ACACIA_DEFAULT_ARMS);
+      if (parsed.error != portfolio_arm_parse_error::none)
+        error (EXIT_CODE_ERROR,
+               "Error: this build's acacia_default_arms is not valid --arms "
+               "syntax (%s).\n", ACACIA_DEFAULT_ARMS);
+      retval.arms = std::move (parsed.arms);
+    }
   }
 
-  if (retval.synth_fname.has_value () and retval.real_strategies.has_value () and
-      retval.real_strategies->size () > 1)
-    retval.real_strategies->resize (1);
+  if (retval.synth_fname.has_value ()) {
+    if (retval.arms.has_value ()) {
+      bool kept_real_arm = false;
+      std::erase_if (*retval.arms, [&kept_real_arm] (const portfolio_arm& arm) {
+        if (arm.unreal)
+          return false;
+        if (not kept_real_arm) {
+          kept_real_arm = true;
+          return false;
+        }
+        return true;
+      });
+    }
+    else if (retval.real_strategies.has_value () and retval.real_strategies->size () > 1) {
+      retval.real_strategies->resize (1);
+    }
+  }
+
+  // Keep the historical real-first, unreal-second launch order while giving
+  // the executable one representation for both legacy selection and --arms.
+  if (not retval.arms.has_value ()) {
+    retval.arms.emplace ();
+    if (retval.real_strategies.has_value ())
+      for (TRANSLATION_PREF_T preference : *retval.real_strategies)
+        retval.arms->push_back ({false, preference, UNREAL_X_FORMULA,
+                                 retval.real_backend});
+    if (retval.unreal_strategies.has_value ())
+      for (UNREAL_X_T strategy : *retval.unreal_strategies)
+        retval.arms->push_back ({true, retval.primary_translation_pref, strategy,
+                                 retval.unreal_backend});
+  }
 
   if (sgn_kmin.has_value ()) {
     if (*sgn_kmin > 0) {

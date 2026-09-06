@@ -1,7 +1,9 @@
 #include "tlsf_frontend.hh"
+#include "solver/realizability_simplify.hh"
 
 #include <iostream>
 #include <span>
+#include <spot/tl/parse.hh>
 #include <string>
 
 namespace {
@@ -18,13 +20,25 @@ namespace {
 }  // namespace
 
 int main (int argc, char** argv) {
-  if (argc != 2) {
-    std::cerr << "usage: tlsf-frontend-inspect FILE.tlsf\n";
+  const bool apply_rsimp = argc == 3 and std::string (argv[1]) == "--rsimp";
+  if (argc != 2 and not apply_rsimp) {
+    std::cerr << "usage: tlsf-frontend-inspect [--rsimp] FILE.tlsf\n";
     return 2;
   }
   try {
-    const auto parsed = acacia::tlsf_frontend::load (argv[1]);
-    std::cout << parsed.formula;
+    const auto parsed = acacia::tlsf_frontend::load (argv[apply_rsimp ? 2 : 1]);
+    if (apply_rsimp) {
+      auto formula = spot::parse_infix_psl (
+          parsed.formula, spot::default_environment::instance (), false, false);
+      if ((not formula.f) or (not formula.errors.empty ())) {
+        formula.format_errors (std::cerr);
+        return 1;
+      }
+      acacia::realizability::apply_simplifier (formula.f, parsed.inputs);
+      std::cout << formula.f;
+    }
+    else
+      std::cout << parsed.formula;
     std::cout.put ('\0');
     print_list (parsed.inputs);
     print_list (parsed.outputs);

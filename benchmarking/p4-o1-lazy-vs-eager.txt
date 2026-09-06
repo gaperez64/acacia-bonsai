@@ -1,0 +1,18 @@
+lazy built
+eager built
+instance                       build   verdict        seconds
+robot_grid_pb_3_3_pe_          eager   REALIZABLE     1.85
+robot_grid_pb_3_3_pe_          lazy    REALIZABLE     0.82
+lift_gr1_pb_3_pe_              eager   REALIZABLE     5.53
+lift_gr1_pb_3_pe_              lazy    REALIZABLE     4.03
+AllLights_06e9cad4             eager   UNREALIZABLE   7.31
+AllLights_06e9cad4             lazy    UNREALIZABLE   4.96
+prioritized_arbiter_pb_6_pe_   eager   UNKNOWN        25.01
+prioritized_arbiter_pb_6_pe_   lazy    UNKNOWN        25.01
+robot_grid_pb_6_6_pe_          eager   UNKNOWN        25.03
+robot_grid_pb_6_6_pe_          lazy    UNKNOWN        25.03
+collector_v1_pb_7_pe_          eager   UNKNOWN        25.01
+collector_v1_pb_7_pe_          lazy    UNKNOWN        25.00
+collector_v1_pb_11_pe_         eager   UNKNOWN        25.01
+collector_v1_pb_11_pe_         lazy    UNKNOWN        25.01
+O1-COMPARE-DONE

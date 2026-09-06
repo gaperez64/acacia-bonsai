@@ -1,0 +1,1525 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_60	failure_kind_at_60
+mix4_contra	01.ltl	1	REALIZABLE	0.02984209801070392	false	
+mix4_contra	02.ltl	1	REALIZABLE	0.06449490902014077	false	
+mix4_contra	03.ltl	5	REALIZABLE	3.7667997390963137	false	
+mix4_contra	05.ltl				true	TIMEOUT
+mix4_contra	06.ltl				true	TIMEOUT
+mix4_contra	07.ltl				true	TIMEOUT
+mix4_contra	08.ltl				true	TIMEOUT
+mix4_contra	09.ltl	17	REALIZABLE	10.035028383834288	false	REALIZABLE
+mix4_contra	10.ltl	5	REALIZABLE	4.19661488593556	false	
+mix4_contra	11.ltl	5	REALIZABLE	4.270161806838587	false	
+mix4_contra	12.ltl	17	REALIZABLE	6.23358119209297	false	REALIZABLE
+mix4_contra	13.ltl	17	REALIZABLE	6.314886657055467	false	REALIZABLE
+mix4_contra	ActionConverter.ltl	1	REALIZABLE	0.02555170189589262	false	
+mix4_contra	AlarmMin_efe2feaf.ltl	1	REALIZABLE	0.027474630856886506	false	
+mix4_contra	Alarm_06e9cad4.ltl	17	REALIZABLE	16.28348673810251	false	REALIZABLE
+mix4_contra	Alarm_2d1010f8.ltl	1	REALIZABLE	0.017143400851637125	false	
+mix4_contra	Alarm_68c86764.ltl	17	REALIZABLE	16.33334808680229	false	REALIZABLE
+mix4_contra	Alarm_70523fbe.ltl	17	REALIZABLE	8.38935729698278	false	REALIZABLE
+mix4_contra	Alarm_88c5c1c3.ltl	1	REALIZABLE	0.026367512997239828	false	
+mix4_contra	Alarm_9cac58d3.ltl	1	REALIZABLE	0.029937479877844453	false	
+mix4_contra	Alarm_a5f99bc6.ltl				true	TIMEOUT
+mix4_contra	Alarm_f2774e0b.ltl	17	REALIZABLE	8.009901012061164	false	REALIZABLE
+mix4_contra	AllHeating_d6376bf9.ltl	1	REALIZABLE	0.018856680020689964	false	
+mix4_contra	AllLights_06e9cad4.ltl	17	UNREALIZABLE	4.3600229390431195	false	UNREALIZABLE
+mix4_contra	AllLights_2c5b09da.ltl	5	UNREALIZABLE	1.805914759868756	false	
+mix4_contra	AllLights_63831f8c.ltl	5	UNREALIZABLE	4.9259380048606545	false	
+mix4_contra	AllLights_aeb1d897.ltl	17	UNREALIZABLE	6.839939209166914	false	UNREALIZABLE
+mix4_contra	AllLights_b209ff21.ltl	17	UNREALIZABLE	7.9277495089918375	false	UNREALIZABLE
+mix4_contra	AllLights_d6c5ac79.ltl	5	UNREALIZABLE	4.958788641029969	false	
+mix4_contra	AllShades_66f450a4.ltl	5	UNREALIZABLE	4.48264119005762	false	
+mix4_contra	Assumptions_a50cadd7.ltl	1	UNREALIZABLE	0.01731815282255411	false	
+mix4_contra	Automata.ltl	1	REALIZABLE	0.06085386103950441	false	
+mix4_contra	Automata16S.ltl				true	TIMEOUT
+mix4_contra	Automata32S.ltl				true	TIMEOUT
+mix4_contra	Button.ltl	1	REALIZABLE	0.015655588125810027	false	
+mix4_contra	CheckAlarmBroken1_1a2942e3.ltl	1	REALIZABLE	0.02320375991985202	false	
+mix4_contra	CheckAlarm_6bea956e.ltl	1	UNREALIZABLE	0.029754383955150843	false	
+mix4_contra	CheckCoffeMachineBroken1_a5f99bc6.ltl	1	REALIZABLE	0.04023921815678477	false	
+mix4_contra	CheckCoffeMachine_3461125b.ltl	1	UNREALIZABLE	0.032367260893806815	false	
+mix4_contra	CheckCoffeMachine_f3987563.ltl	1	UNREALIZABLE	0.034985181875526905	false	
+mix4_contra	CheckDoor_c2b9e44d.ltl	1	UNREALIZABLE	0.03179209399968386	false	
+mix4_contra	CheckHeating_2418b67e.ltl	1	UNREALIZABLE	0.03323287516832352	false	
+mix4_contra	CheckHeating_3461125b.ltl	1	UNREALIZABLE	0.031801915960386395	false	
+mix4_contra	CheckLight_007df645.ltl	1	UNREALIZABLE	0.03694861102849245	false	
+mix4_contra	CheckLight_aeb1d897.ltl	1	UNREALIZABLE	0.03642506687901914	false	
+mix4_contra	CheckRoom_06e9cad4.ltl	1	UNREALIZABLE	0.03504396718926728	false	
+mix4_contra	CheckRoom_2c5b09da.ltl	1	UNREALIZABLE	0.03431970695964992	false	
+mix4_contra	CheckRoom_3916ec59.ltl	1	UNREALIZABLE	0.03247091895900667	false	
+mix4_contra	CheckRoom_70523fbe.ltl	1	UNREALIZABLE	0.037052633007988334	false	
+mix4_contra	CheckShades_1a2942e3.ltl	1	UNREALIZABLE	0.03700544987805188	false	
+mix4_contra	CheckShades_3461125b.ltl	1	UNREALIZABLE	0.03519738605245948	false	
+mix4_contra	CheckShades_4d4ca5c4.ltl	1	UNREALIZABLE	0.03849830501712859	false	
+mix4_contra	CheckShades_aeb1d897.ltl	1	UNREALIZABLE	0.04524034005589783	false	
+mix4_contra	CheckTime_3916ec59.ltl	1	UNREALIZABLE	0.03634575312025845	false	
+mix4_contra	CheckTime_4b5e6eaa.ltl	1	UNREALIZABLE	0.034169947961345315	false	
+mix4_contra	CheckTime_54e1f7d2.ltl	1	UNREALIZABLE	0.033583462005481124	false	
+mix4_contra	CheckTimer_54e1f7d2.ltl	1	UNREALIZABLE	0.03658271301537752	false	
+mix4_contra	CheckTimer_fa8592c8.ltl	1	UNREALIZABLE	0.03360556112602353	false	
+mix4_contra	CheckWarnlightBroken1_70523fbe.ltl	1	REALIZABLE	0.030016255099326372	false	
+mix4_contra	CheckWarnlight_1cf58fc1.ltl	1	UNREALIZABLE	0.025751031935214996	false	
+mix4_contra	CheckWarnlight_4b5a2bad.ltl	1	UNREALIZABLE	0.03960848902352154	false	
+mix4_contra	CheckWarnlight_54e1f7d2.ltl	1	UNREALIZABLE	0.03523623198270798	false	
+mix4_contra	CheckWarnlight_6bea956e.ltl	1	UNREALIZABLE	0.04045984381809831	false	
+mix4_contra	CheckWindows_54e1f7d2.ltl	1	UNREALIZABLE	0.030446636024862528	false	
+mix4_contra	Cockpitboard.ltl	1	REALIZABLE	0.03099215403199196	false	
+mix4_contra	Cockpitboard_efe2feaf.ltl	1	REALIZABLE	0.03028337308205664	false	
+mix4_contra	CoffeMachine_974f4a68.ltl	1	REALIZABLE	0.0453543069306761	false	
+mix4_contra	CoffeMachine_a50cadd7.ltl	1	UNREALIZABLE	0.02449727593921125	false	
+mix4_contra	CoffeeMin_88f351a6.ltl	1	REALIZABLE	0.035253557143732905	false	
+mix4_contra	Coffee_06e9cad4.ltl	1	REALIZABLE	0.05773062305524945	false	
+mix4_contra	Coffee_235467da.ltl	1	REALIZABLE	0.03629982587881386	false	
+mix4_contra	Coffee_2c5b09da.ltl	1	REALIZABLE	0.02855082997120917	false	
+mix4_contra	Coffee_6479ef9a.ltl	1	REALIZABLE	0.053576177917420864	false	
+mix4_contra	Coffee_d6376bf9.ltl	1	REALIZABLE	0.02868701401166618	false	
+mix4_contra	Coffee_efe2feaf.ltl	1	REALIZABLE	0.035331142134964466	false	
+mix4_contra	Coffee_f1477cc5.ltl	1	UNREALIZABLE	0.03355134394951165	false	
+mix4_contra	Core_4b5a2bad.ltl	1	UNREALIZABLE	0.040682652965188026	false	
+mix4_contra	Core_66f450a4.ltl	1	UNREALIZABLE	0.024282596074044704	false	
+mix4_contra	Core_fa4d4ce3.ltl	1	UNREALIZABLE	0.053596046986058354	false	
+mix4_contra	Core_solved_974f4a68.ltl	1	REALIZABLE	0.056886111153289676	false	
+mix4_contra	Demo1_06e9cad4.ltl				true	TIMEOUT
+mix4_contra	Demo1_2c5b09da.ltl				true	TIMEOUT
+mix4_contra	Demo1_63831f8c.ltl				true	TIMEOUT
+mix4_contra	Demo1_c2b9e44d.ltl				true	TIMEOUT
+mix4_contra	Demo1_d65ed84e.ltl				true	TIMEOUT
+mix4_contra	DeviceBehaviorChec_fa8592c8.ltl	1	UNREALIZABLE	0.02134035504423082	false	
+mix4_contra	Door_2d1010f8.ltl	1	REALIZABLE	0.021372091956436634	false	
+mix4_contra	EnemeyModule.ltl	1	REALIZABLE	0.02341462392359972	false	
+mix4_contra	EscalatorBidirectional.ltl	1	REALIZABLE	0.037045768927782774	false	
+mix4_contra	EscalatorBidirectionalInit.ltl	1	REALIZABLE	0.044638215098530054	false	
+mix4_contra	EscalatorCounting.ltl	1	REALIZABLE	0.03326610615476966	false	
+mix4_contra	EscalatorCountingInit.ltl	1	REALIZABLE	0.03883724194020033	false	
+mix4_contra	EscalatorNonCounting.ltl	1	REALIZABLE	0.03532725619152188	false	
+mix4_contra	EscalatorNonReactive.ltl	1	REALIZABLE	0.031137109035626054	false	
+mix4_contra	EscalatorSmart.ltl	1	REALIZABLE	0.06087648496031761	false	
+mix4_contra	Example1_d6376bf9.ltl	1	REALIZABLE	0.030429475009441376	false	
+mix4_contra	F-G-contradiction-10.ltl	1	UNREALIZABLE	0.0920257568359375	false	
+mix4_contra	F-G-contradiction-11.ltl	1	UNREALIZABLE	0.18676066608168185	false	
+mix4_contra	F-G-contradiction-110.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-111.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-112.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-113.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-114.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-12.ltl	1	UNREALIZABLE	0.368463093880564	false	
+mix4_contra	F-G-contradiction-13.ltl	5	UNREALIZABLE	1.1144642978906631	false	
+mix4_contra	F-G-contradiction-14.ltl	5	UNREALIZABLE	2.800704097840935	false	
+mix4_contra	F-G-contradiction-15.ltl	5	UNREALIZABLE	3.231750494800508	false	
+mix4_contra	F-G-contradiction-16.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-17.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-18.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-19.ltl				true	TIMEOUT
+mix4_contra	F-G-contradiction-2-unreal.ltl	1	UNREALIZABLE	0.041707847034558654	false	
+mix4_contra	FelixSpecFixed2.2.core_fa8592c8.ltl	1	UNREALIZABLE	0.0332415068987757	false	
+mix4_contra	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT
+mix4_contra	FelixSpecFixed3.core_b209ff21.ltl	1	UNREALIZABLE	0.07995242113247514	false	
+mix4_contra	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT
+mix4_contra	FelixSpecFixed4GuaranteesOnly_88f351a6.ltl	1	UNREALIZABLE	0.026260199025273323	false	
+mix4_contra	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT
+mix4_contra	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT
+mix4_contra	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT
+mix4_contra	Full_f1477cc5.ltl				true	TIMEOUT
+mix4_contra	GF-G-contradiction0.ltl	1	UNREALIZABLE	0.06562170409597456	false	
+mix4_contra	GF-G-contradiction1.ltl	1	UNREALIZABLE	0.42633075290359557	false	
+mix4_contra	GF-G-contradiction2.ltl	5	UNREALIZABLE	2.27409729314968	false	
+mix4_contra	GF-G-contradiction3.ltl				true	TIMEOUT
+mix4_contra	GF-G-contradiction4.ltl				true	TIMEOUT
+mix4_contra	GF-G-contradiction5.ltl				true	TIMEOUT
+mix4_contra	GF-G-contradiction6.ltl				true	TIMEOUT
+mix4_contra	GF-G-contradiction7.ltl				true	TIMEOUT
+mix4_contra	Gamelogic.ltl	1	REALIZABLE	0.01823355397209525	false	
+mix4_contra	GamemodeChooser.ltl	1	REALIZABLE	0.024923629127442837	false	
+mix4_contra	Gamemodule.ltl	1	REALIZABLE	0.027709931135177612	false	
+mix4_contra	HeatingMin_d6c5ac79.ltl	1	REALIZABLE	0.0334417219273746	false	
+mix4_contra	Heating_235467da.ltl	1	REALIZABLE	0.03555292007513344	false	
+mix4_contra	Heating_974f4a68.ltl	1	REALIZABLE	0.041636178037151694	false	
+mix4_contra	Heating_b02056d6.ltl	1	REALIZABLE	0.032794930040836334	false	
+mix4_contra	Heating_b209ff21.ltl	1	REALIZABLE	0.03539114794693887	false	
+mix4_contra	Increment.ltl	1	REALIZABLE	0.033478141063824296	false	
+mix4_contra	IntendDemo_42dc4fff.ltl	1	UNREALIZABLE	0.06406620796769857	false	
+mix4_contra	KitchenTimerV0.ltl	1	REALIZABLE	0.018052926985546947	false	
+mix4_contra	KitchenTimerV1.ltl	1	REALIZABLE	0.03561267303302884	false	
+mix4_contra	KitchenTimerV10.ltl	1	REALIZABLE	0.0978137762285769	false	
+mix4_contra	KitchenTimerV2.ltl	1	REALIZABLE	0.019502728013321757	false	
+mix4_contra	KitchenTimerV3.ltl	1	REALIZABLE	0.030786528950557113	false	
+mix4_contra	KitchenTimerV4.ltl	1	REALIZABLE	0.03647007001563907	false	
+mix4_contra	KitchenTimerV5.ltl	1	REALIZABLE	0.17119375918991864	false	
+mix4_contra	KitchenTimerV6.ltl	1	REALIZABLE	0.2477368980180472	false	
+mix4_contra	KitchenTimerV7.ltl	1	REALIZABLE	0.2233324449043721	false	
+mix4_contra	KitchenTimerV8.ltl	1	REALIZABLE	0.24827343900687993	false	
+mix4_contra	KitchenTimerV9.ltl	1	REALIZABLE	0.5417136610485613	false	
+mix4_contra	LampController_974f4a68.ltl	1	REALIZABLE	0.030954851070418954	false	
+mix4_contra	LedMatrix.ltl				true	TIMEOUT
+mix4_contra	Light_a50cadd7.ltl	1	UNREALIZABLE	0.01683727093040943	false	
+mix4_contra	Light_aeb1d897.ltl	1	UNREALIZABLE	0.02958665695041418	false	
+mix4_contra	Light_d65ed84e.ltl	1	REALIZABLE	0.02885239804163575	false	
+mix4_contra	Lights2Min_9cbf2546.ltl	1	REALIZABLE	0.018842201214283705	false	
+mix4_contra	Lights2_06e9cad4.ltl	1	REALIZABLE	0.23185201408341527	false	
+mix4_contra	Lights2_0f5381e9.ltl	1	REALIZABLE	0.23847978399135172	false	
+mix4_contra	Lights2_2c5b09da.ltl	1	REALIZABLE	0.04460006603039801	false	
+mix4_contra	Lights2_9cac58d3.ltl	1	REALIZABLE	0.4688589118886739	false	
+mix4_contra	Lights2_b02056d6.ltl	1	REALIZABLE	0.47499248082749546	false	
+mix4_contra	Lights2_f1477cc5.ltl	1	UNREALIZABLE	0.0516566529404372	false	
+mix4_contra	Lights2_f3987563.ltl	1	REALIZABLE	0.22118662297725677	false	
+mix4_contra	Lights3Min_6479ef9a.ltl	1	REALIZABLE	0.02154925581999123	false	
+mix4_contra	Lights3_06e9cad4.ltl	1	REALIZABLE	0.06365889287553728	false	
+mix4_contra	Lights3_235467da.ltl	1	REALIZABLE	0.05888275406323373	false	
+mix4_contra	Lights3_2c5b09da.ltl	1	REALIZABLE	0.030642450088635087	false	
+mix4_contra	Lights3_3916ec59.ltl	1	REALIZABLE	0.05105801299214363	false	
+mix4_contra	Lights3_6bea956e.ltl	1	REALIZABLE	0.05870735412463546	false	
+mix4_contra	Lights3_f1477cc5.ltl	1	REALIZABLE	0.07036262401379645	false	
+mix4_contra	LightsMin_6bea956e.ltl	1	REALIZABLE	0.022094534942880273	false	
+mix4_contra	LightsTotal_06e9cad4.ltl	5	REALIZABLE	1.347702267114073	false	
+mix4_contra	LightsTotal_2c5b09da.ltl	1	UNREALIZABLE	0.0782571379095316	false	
+mix4_contra	LightsTotal_9cbf2546.ltl	5	REALIZABLE	1.3473856109194458	false	
+mix4_contra	LightsTotal_d65ed84e.ltl	5	REALIZABLE	1.0288525249343365	false	
+mix4_contra	Lights_06e9cad4.ltl	1	REALIZABLE	0.045512195909395814	false	
+mix4_contra	Lights_2c5b09da.ltl	1	REALIZABLE	0.023564402014017105	false	
+mix4_contra	Lights_3461125b.ltl	1	REALIZABLE	0.05437842011451721	false	
+mix4_contra	Lights_9cac58d3.ltl	1	REALIZABLE	0.04377113911323249	false	
+mix4_contra	Lights_b0840146.ltl	1	REALIZABLE	0.05333800404332578	false	
+mix4_contra	Lights_f3987563.ltl	1	REALIZABLE	0.04132679780013859	false	
+mix4_contra	ModdifiedLedMatrix4X.ltl	1	UNREALIZABLE	0.5148995439521968	false	
+mix4_contra	ModdifiedLedMatrix5X.ltl	1	REALIZABLE	0.1441024369560182	false	
+mix4_contra	Morning2Min_6cbc6174.ltl	1	REALIZABLE	0.01636774092912674	false	
+mix4_contra	Morning2_06e9cad4.ltl				true	TIMEOUT
+mix4_contra	Morning2_1cf58fc1.ltl	5	UNREALIZABLE	4.850124798947945	false	
+mix4_contra	Morning2_2c5b09da.ltl				true	TIMEOUT
+mix4_contra	Morning2_407db2cc.ltl				true	TIMEOUT
+mix4_contra	Morning2_4d4ca5c4.ltl	1	REALIZABLE	0.018876787973567843	false	
+mix4_contra	Morning2_63831f8c.ltl				true	TIMEOUT
+mix4_contra	Morning2_68c86764.ltl				true	TIMEOUT
+mix4_contra	Morning2_9cac58d3.ltl	1	REALIZABLE	0.01717715081758797	false	
+mix4_contra	Morning2_d65ed84e.ltl				true	TIMEOUT
+mix4_contra	Morning2s_06cf2373.ltl				true	TIMEOUT
+mix4_contra	Morning2s_06e9cad4.ltl				true	TIMEOUT
+mix4_contra	Morning2s_2c5b09da.ltl				true	TIMEOUT
+mix4_contra	Morning2s_42dc4fff.ltl				true	TIMEOUT
+mix4_contra	Morning2s_9cbf2546.ltl				true	TIMEOUT
+mix4_contra	Morning2s_d6c5ac79.ltl				true	TIMEOUT
+mix4_contra	MorningMin_d6c5ac79.ltl	1	REALIZABLE	0.036627605091780424	false	
+mix4_contra	Morning_14a3b3a2.ltl				true	TIMEOUT
+mix4_contra	Morning_4b5e6eaa.ltl				true	TIMEOUT
+mix4_contra	Morning_88c5c1c3.ltl				true	TIMEOUT
+mix4_contra	Morning_9cac58d3.ltl				true	TIMEOUT
+mix4_contra	Morning_c92eb242.ltl				true	TIMEOUT
+mix4_contra	Morning_f1477cc5.ltl	17	UNREALIZABLE	11.026902535930276	false	UNREALIZABLE
+mix4_contra	Morning_f2774e0b.ltl				true	TIMEOUT
+mix4_contra	MusicAppFeedback.ltl	1	REALIZABLE	0.01705891196615994	false	
+mix4_contra	MusicAppMotivating.ltl	1	REALIZABLE	0.025998225901275873	false	
+mix4_contra	MusicAppSimple.ltl	1	REALIZABLE	0.024926551850512624	false	
+mix4_contra	OneCounter.ltl	5	REALIZABLE	2.7988799361046404	false	
+mix4_contra	OneCounterGui.ltl	1	UNREALIZABLE	0.03479523002170026	false	
+mix4_contra	OneCounterGuiA1.ltl	1	UNREALIZABLE	0.04057947196997702	false	
+mix4_contra	OneCounterGuiA2.ltl	1	UNREALIZABLE	0.036888357950374484	false	
+mix4_contra	OneCounterGuiA3.ltl	1	UNREALIZABLE	0.05866921995766461	false	
+mix4_contra	OneCounterGuiA4.ltl	1	UNREALIZABLE	0.06914871302433312	false	
+mix4_contra	OneCounterGuiA5.ltl	1	UNREALIZABLE	0.10922653111629188	false	
+mix4_contra	OneCounterGuiA6.ltl	1	UNREALIZABLE	0.34259320399723947	false	
+mix4_contra	OneCounterGuiA7.ltl	1	UNREALIZABLE	0.8818638359662145	false	
+mix4_contra	OneCounterGuiA8.ltl	5	UNREALIZABLE	3.1558615260291845	false	
+mix4_contra	OneCounterInRange.ltl	1	UNREALIZABLE	0.021146328188478947	false	
+mix4_contra	OneCounterInRangeA1.ltl	1	UNREALIZABLE	0.03292004810646176	false	
+mix4_contra	OneCounterInRangeA2.ltl	1	UNREALIZABLE	0.029905420960858464	false	
+mix4_contra	OneCounterInRangeA3.ltl	1	REALIZABLE	0.03364935307763517	false	
+mix4_contra	PlugController_fa4d4ce3.ltl	1	REALIZABLE	0.0334960431791842	false	
+mix4_contra	Radarboard.ltl	1	REALIZABLE	0.031308498000726104	false	
+mix4_contra	RegManager.ltl	1	REALIZABLE	0.030794909922406077	false	
+mix4_contra	Room_a50cadd7.ltl	1	UNREALIZABLE	0.033274983055889606	false	
+mix4_contra	RotationCalculator.ltl	1	REALIZABLE	0.03682460100390017	false	
+mix4_contra	SPI.ltl	1	REALIZABLE	0.30757467402145267	false	
+mix4_contra	SPIPureNext.ltl				true	TIMEOUT
+mix4_contra	SPIReadClk.ltl	1	REALIZABLE	0.013454209081828594	false	
+mix4_contra	SPIReadManag.ltl	1	REALIZABLE	0.029465823899954557	false	
+mix4_contra	SPIReadSdi.ltl	1	REALIZABLE	0.019930123817175627	false	
+mix4_contra	SPIWriteClk.ltl	1	REALIZABLE	0.02273770305328071	false	
+mix4_contra	SPIWriteManag.ltl	1	REALIZABLE	0.04664850700646639	false	
+mix4_contra	SPIWriteSdi.ltl	1	REALIZABLE	0.01857429393567145	false	
+mix4_contra	Scoreboard.ltl	1	REALIZABLE	0.019300770945847034	false	
+mix4_contra	Sensor.ltl	1	REALIZABLE	0.2592581119388342	false	
+mix4_contra	SensorInit.ltl	1	REALIZABLE	0.14529648097231984	false	
+mix4_contra	SensorPart.ltl	1	REALIZABLE	0.049792708130553365	false	
+mix4_contra	SensorRegister.ltl	1	REALIZABLE	0.01496190414763987	false	
+mix4_contra	SensorSelector.ltl	1	REALIZABLE	0.03336096811108291	false	
+mix4_contra	SensorSubmodulChooser.ltl	1	REALIZABLE	0.05601429892703891	false	
+mix4_contra	Shades2Min_63831f8c.ltl	1	REALIZABLE	0.030194185907021165	false	
+mix4_contra	Shades2_235467da.ltl	1	REALIZABLE	0.036115997936576605	false	
+mix4_contra	Shades2_42dc4fff.ltl	1	REALIZABLE	0.03353148093447089	false	
+mix4_contra	Shades2_70523fbe.ltl	1	REALIZABLE	0.037628153106197715	false	
+mix4_contra	Shades2_a5f99bc6.ltl	1	REALIZABLE	0.03539495402947068	false	
+mix4_contra	ShadesMin_aeb1d897.ltl	1	REALIZABLE	0.03109959396533668	false	
+mix4_contra	Shades_6479ef9a.ltl	1	REALIZABLE	0.0346824680455029	false	
+mix4_contra	Shades_974f4a68.ltl	1	REALIZABLE	0.04887231392785907	false	
+mix4_contra	Shades_9cac58d3.ltl	1	REALIZABLE	0.030865382170304656	false	
+mix4_contra	Shades_a02758ea.ltl	1	REALIZABLE	0.0341376019641757	false	
+mix4_contra	SingleContoller_d65ed84e.ltl	1	UNREALIZABLE	0.05780046503059566	false	
+mix4_contra	SliderDefault.ltl	1	REALIZABLE	0.025760947028174996	false	
+mix4_contra	SliderDelayed.ltl	1	REALIZABLE	0.06527435500174761	false	
+mix4_contra	SliderScored.ltl	1	REALIZABLE	0.02557003009133041	false	
+mix4_contra	System_b0840146.ltl	1	UNREALIZABLE	0.035796844866126776	false	
+mix4_contra	Time_a50cadd7.ltl	1	UNREALIZABLE	0.030930319102481008	false	
+mix4_contra	Timer_a50cadd7.ltl	1	REALIZABLE	0.02881582290865481	false	
+mix4_contra	TorcsAccelerating.ltl	1	REALIZABLE	0.039035061839967966	false	
+mix4_contra	TorcsGearing.ltl	1	REALIZABLE	0.03396482695825398	false	
+mix4_contra	TorcsSimple.ltl	1	REALIZABLE	0.04274038295261562	false	
+mix4_contra	TorcsSteeringImproved.ltl	1	REALIZABLE	0.04347133217379451	false	
+mix4_contra	TorcsSteeringSimple.ltl	1	REALIZABLE	0.04024725710041821	false	
+mix4_contra	TorcsSteeringSmart.ltl	1	REALIZABLE	0.04518119990825653	false	
+mix4_contra	TwoCounters.ltl	1	UNREALIZABLE	0.04169897106476128	false	
+mix4_contra	TwoCounters2.ltl	1	UNREALIZABLE	0.05019498593173921	false	
+mix4_contra	TwoCounters3.ltl	5	REALIZABLE	1.2276808209717274	false	
+mix4_contra	TwoCounters4.ltl	1	REALIZABLE	0.03657945804297924	false	
+mix4_contra	TwoCounters5.ltl	1	UNREALIZABLE	0.12487105606123805	false	
+mix4_contra	TwoCountersDisButA0.ltl	1	UNREALIZABLE	0.030537253944203258	false	
+mix4_contra	TwoCountersDisButA1.ltl	1	UNREALIZABLE	0.04544736002571881	false	
+mix4_contra	TwoCountersDisButA2.ltl	1	UNREALIZABLE	0.07270309701561928	false	
+mix4_contra	TwoCountersDisButA3.ltl	1	UNREALIZABLE	0.12803418701514602	false	
+mix4_contra	TwoCountersDisButA4.ltl	1	UNREALIZABLE	0.12709831190295517	false	
+mix4_contra	TwoCountersDisButA5.ltl	1	UNREALIZABLE	0.17162243300117552	false	
+mix4_contra	TwoCountersDisButA6.ltl	1	UNREALIZABLE	0.15449920715764165	false	
+mix4_contra	TwoCountersDisButA7.ltl	1	UNREALIZABLE	0.1823570979759097	false	
+mix4_contra	TwoCountersDisButA8.ltl	1	UNREALIZABLE	0.2114100579638034	false	
+mix4_contra	TwoCountersDisButA9.ltl	1	UNREALIZABLE	0.2627170570194721	false	
+mix4_contra	TwoCountersDisButAC.ltl	1	UNREALIZABLE	0.24285767716355622	false	
+mix4_contra	TwoCountersGui.ltl	1	UNREALIZABLE	0.06215722695924342	false	
+mix4_contra	TwoCountersInRange.ltl	1	UNREALIZABLE	0.028040779987350106	false	
+mix4_contra	TwoCountersInRangeA1.ltl	1	UNREALIZABLE	0.04126398707740009	false	
+mix4_contra	TwoCountersInRangeA2.ltl	1	UNREALIZABLE	0.04205769207328558	false	
+mix4_contra	TwoCountersInRangeA3.ltl	1	UNREALIZABLE	0.033023283118382096	false	
+mix4_contra	TwoCountersInRangeA4.ltl	1	UNREALIZABLE	0.036002054112032056	false	
+mix4_contra	TwoCountersInRangeA5.ltl	1	UNREALIZABLE	0.03690140414983034	false	
+mix4_contra	TwoCountersInRangeM0.ltl	1	UNREALIZABLE	0.046355368103832006	false	
+mix4_contra	TwoCountersInRangeM1.ltl	1	UNREALIZABLE	0.04103602492250502	false	
+mix4_contra	TwoCountersInRangeM2.ltl	1	UNREALIZABLE	0.04672164306975901	false	
+mix4_contra	TwoCountersInRangeM3.ltl	1	UNREALIZABLE	0.04887559497728944	false	
+mix4_contra	TwoCountersInRangeM4.ltl	1	UNREALIZABLE	0.0379856419749558	false	
+mix4_contra	TwoCountersRefined.ltl	1	UNREALIZABLE	0.02879127603955567	false	
+mix4_contra	TwoCountersRefinedRefined.ltl	1	REALIZABLE	0.03696478810161352	false	
+mix4_contra	UnderapproxDemo2.ltl	1	UNREALIZABLE	0.017529004020616412	false	
+mix4_contra	UnderapproxStrengthenedDemo.ltl	1	REALIZABLE	0.019907945999875665	false	
+mix4_contra	Warnlight_2d1010f8.ltl	1	REALIZABLE	0.015901205828413367	false	
+mix4_contra	Warnlight_a50cadd7.ltl	1	UNREALIZABLE	0.01486495602875948	false	
+mix4_contra	Window2Min_88c5c1c3.ltl	1	REALIZABLE	0.021374760195612907	false	
+mix4_contra	Window2_54e1f7d2.ltl	1	REALIZABLE	0.02452880796045065	false	
+mix4_contra	Window2_6479ef9a.ltl	1	REALIZABLE	0.021257278975099325	false	
+mix4_contra	Window2_9cac58d3.ltl	1	REALIZABLE	0.02053761505521834	false	
+mix4_contra	Window2_aeb1d897.ltl	1	REALIZABLE	0.034871654817834496	false	
+mix4_contra	Window2_f1477cc5.ltl	1	UNREALIZABLE	0.01759109692648053	false	
+mix4_contra	WindowMin_a5f99bc6.ltl	1	REALIZABLE	0.017652928130701184	false	
+mix4_contra	Window_235467da.ltl	1	REALIZABLE	0.016938932007178664	false	
+mix4_contra	Window_42dc4fff.ltl	1	REALIZABLE	0.018604949116706848	false	
+mix4_contra	Window_54e1f7d2.ltl	1	REALIZABLE	0.017394110094755888	false	
+mix4_contra	Zoo0.ltl	1	REALIZABLE	0.01808138401247561	false	
+mix4_contra	Zoo10.ltl	1	REALIZABLE	0.01804161793552339	false	
+mix4_contra	Zoo5.ltl	1	REALIZABLE	0.01971943094395101	false	
+mix4_contra	abcg_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.02403410291299224	false	
+mix4_contra	abcg_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.8990639799740165	false	
+mix4_contra	abcg_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+mix4_contra	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_case_study_pb_2_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.030008012894541025	false	
+mix4_contra	amba_decomposed_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.05228576110675931	false	
+mix4_contra	amba_decomposed_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.996940447948873	false	
+mix4_contra	amba_decomposed_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_decode.ltl	1	REALIZABLE	0.014341176953166723	false	
+mix4_contra	amba_decomposed_encode_pb_10_pe_.ltl	1	REALIZABLE	0.04157278989441693	false	
+mix4_contra	amba_decomposed_encode_pb_11_pe_.ltl	1	REALIZABLE	0.042863206937909126	false	
+mix4_contra	amba_decomposed_encode_pb_12_pe_.ltl	1	REALIZABLE	0.053507310105487704	false	
+mix4_contra	amba_decomposed_encode_pb_13_pe_.ltl	1	REALIZABLE	0.06538975611329079	false	
+mix4_contra	amba_decomposed_encode_pb_14_pe_.ltl	1	REALIZABLE	0.12768002785742283	false	
+mix4_contra	amba_decomposed_encode_pb_15_pe_.ltl	1	REALIZABLE	0.305741025833413	false	
+mix4_contra	amba_decomposed_encode_pb_16_pe_.ltl	1	REALIZABLE	0.7962606120854616	false	
+mix4_contra	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_encode_pb_2_pe_.ltl	1	REALIZABLE	0.027406868990510702	false	
+mix4_contra	amba_decomposed_encode_pb_3_pe_.ltl	1	REALIZABLE	0.03763557085767388	false	
+mix4_contra	amba_decomposed_encode_pb_4_pe_.ltl	1	REALIZABLE	0.03174352506175637	false	
+mix4_contra	amba_decomposed_encode_pb_5_pe_.ltl	1	REALIZABLE	0.03438734216615558	false	
+mix4_contra	amba_decomposed_encode_pb_6_pe_.ltl	1	REALIZABLE	0.04074655892327428	false	
+mix4_contra	amba_decomposed_encode_pb_7_pe_.ltl	1	REALIZABLE	0.038766622077673674	false	
+mix4_contra	amba_decomposed_encode_pb_8_pe_.ltl	1	REALIZABLE	0.03454404906369746	false	
+mix4_contra	amba_decomposed_encode_pb_9_pe_.ltl	1	REALIZABLE	0.036973448004573584	false	
+mix4_contra	amba_decomposed_lock_pb_10_pe_.ltl	1	REALIZABLE	0.36389605002477765	false	
+mix4_contra	amba_decomposed_lock_pb_11_pe_.ltl	5	REALIZABLE	1.4503321109805256	false	
+mix4_contra	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	5.820241393987089	false	REALIZABLE
+mix4_contra	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_lock_pb_2_pe_.ltl	1	REALIZABLE	0.02015073806978762	false	
+mix4_contra	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_decomposed_lock_pb_3_pe_.ltl	1	REALIZABLE	0.01780717307701707	false	
+mix4_contra	amba_decomposed_lock_pb_4_pe_.ltl	1	REALIZABLE	0.03304803790524602	false	
+mix4_contra	amba_decomposed_lock_pb_5_pe_.ltl	1	REALIZABLE	0.03180802194401622	false	
+mix4_contra	amba_decomposed_lock_pb_6_pe_.ltl	1	REALIZABLE	0.04197321808896959	false	
+mix4_contra	amba_decomposed_lock_pb_7_pe_.ltl	1	REALIZABLE	0.04711927520111203	false	
+mix4_contra	amba_decomposed_lock_pb_8_pe_.ltl	1	REALIZABLE	0.047129092970862985	false	
+mix4_contra	amba_decomposed_lock_pb_9_pe_.ltl	1	REALIZABLE	0.12981989909894764	false	
+mix4_contra	amba_decomposed_shift.ltl	1	REALIZABLE	0.01942410902120173	false	
+mix4_contra	amba_decomposed_tburst4.ltl	1	REALIZABLE	0.03434175695292652	false	
+mix4_contra	amba_decomposed_tincr.ltl	1	REALIZABLE	0.03670169482938945	false	
+mix4_contra	amba_decomposed_tsingle.ltl	1	REALIZABLE	0.03323668893426657	false	
+mix4_contra	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_gr_pb_2_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_gr_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	amba_gr_pb_4_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter-paper-unreal-unreal.ltl	1	UNREALIZABLE	0.08316066488623619	false	
+mix4_contra	arbiter-with-failure-real.ltl	1	REALIZABLE	0.02967670699581504	false	
+mix4_contra	arbiter_on_inpchange_pb_1_pe_.ltl	1	REALIZABLE	0.016259124036878347	false	
+mix4_contra	arbiter_on_inpchange_pb_2_pe_.ltl	1	REALIZABLE	0.02877948898822069	false	
+mix4_contra	arbiter_on_inpchange_pb_3_pe_.ltl	1	REALIZABLE	0.22079960582777858	false	
+mix4_contra	arbiter_on_inpchange_pb_4_pe_.ltl	17	REALIZABLE	16.45663093891926	false	REALIZABLE
+mix4_contra	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.019545453134924173	false	
+mix4_contra	arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.028666710946708918	false	
+mix4_contra	arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.0522660028655082	false	
+mix4_contra	arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.3954356478061527	false	
+mix4_contra	arbiter_pb_5_pe_.ltl	17	REALIZABLE	15.870736296055838	false	REALIZABLE
+mix4_contra	arbiter_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_buffer_pb_1_pe_.ltl	1	REALIZABLE	0.015545031987130642	false	
+mix4_contra	arbiter_with_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.03350279503501952	false	
+mix4_contra	arbiter_with_buffer_pb_3_pe_.ltl	1	REALIZABLE	0.0513718300499022	false	
+mix4_contra	arbiter_with_buffer_pb_4_pe_.ltl	1	REALIZABLE	0.37068363395519555	false	
+mix4_contra	arbiter_with_buffer_pb_5_pe_.ltl	17	REALIZABLE	11.765043281950057	false	REALIZABLE
+mix4_contra	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_cancel_pb_1_pe_.ltl	1	REALIZABLE	0.015236672013998032	false	
+mix4_contra	arbiter_with_cancel_pb_2_pe_.ltl	1	REALIZABLE	0.023247024044394493	false	
+mix4_contra	arbiter_with_cancel_pb_3_pe_.ltl	1	REALIZABLE	0.07977846590802073	false	
+mix4_contra	arbiter_with_cancel_pb_4_pe_.ltl	5	REALIZABLE	1.9800234329886734	false	
+mix4_contra	arbiter_with_cancel_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	batch-arbiter-real.ltl	1	REALIZABLE	0.038451331201940775	false	
+mix4_contra	box-limited-real.ltl	1	REALIZABLE	0.03555718087591231	false	
+mix4_contra	box-real.ltl	1	REALIZABLE	0.08650894509628415	false	
+mix4_contra	box0.ltl	1	UNREALIZABLE	0.04055924713611603	false	
+mix4_contra	box1.ltl	1	UNREALIZABLE	0.0458819589111954	false	
+mix4_contra	buffer-storage-real.ltl	1	REALIZABLE	0.5940513019450009	false	
+mix4_contra	chain-4-real.ltl				true	TIMEOUT
+mix4_contra	chain-5-real.ltl				true	TIMEOUT
+mix4_contra	chain-60.ltl				true	TIMEOUT
+mix4_contra	chain-70.ltl				true	TIMEOUT
+mix4_contra	chain-simple-10-real.ltl	1	REALIZABLE	0.7201616589445621	false	
+mix4_contra	chain-simple-20-real.ltl	5	REALIZABLE	3.5136912509333342	false	
+mix4_contra	chain-simple-30-real.ltl	17	REALIZABLE	9.900566146010533	false	REALIZABLE
+mix4_contra	chain-simple-40-real.ltl				true	TIMEOUT
+mix4_contra	chain-simple-5-real.ltl	1	REALIZABLE	0.1906525189988315	false	
+mix4_contra	chain-simple-50-real.ltl				true	TIMEOUT
+mix4_contra	chain-simple-60-real.ltl				true	TIMEOUT
+mix4_contra	chain-simple-70-real.ltl				true	TIMEOUT
+mix4_contra	chain-simple-param-70-real.ltl	5	REALIZABLE	1.3741424200125039	false	
+mix4_contra	chomp_pb_2_2_pe_.ltl	1	REALIZABLE	0.08046456007286906	false	
+mix4_contra	chomp_pb_2_3_pe_.ltl	5	REALIZABLE	3.2352800481021404	false	
+mix4_contra	chomp_pb_2_4_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_2_5_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_2_6_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_3_2_pe_.ltl	5	REALIZABLE	3.2118125108536333	false	
+mix4_contra	chomp_pb_3_3_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_3_4_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_3_5_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_3_6_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_4_2_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_4_3_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_4_4_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_4_5_pe_.ltl				true	TIMEOUT
+mix4_contra	chomp_pb_4_6_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v1_pb_11_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v1_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v1_pb_13_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v1_pb_14_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v1_pb_15_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v1_pb_3_pe_.ltl	1	REALIZABLE	0.020861970027908683	false	
+mix4_contra	collector_v1_pb_5_pe_.ltl	1	REALIZABLE	0.37076317821629345	false	
+mix4_contra	collector_v1_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v1_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_11_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_13_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_15_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_27_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_3_pe_.ltl	1	REALIZABLE	0.0476416100282222	false	
+mix4_contra	collector_v2_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v2_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v3_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v3_pb_11_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v3_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v3_pb_13_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v3_pb_15_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v3_pb_3_pe_.ltl	1	REALIZABLE	0.025252458872273564	false	
+mix4_contra	collector_v3_pb_5_pe_.ltl	1	REALIZABLE	0.18587915902025998	false	
+mix4_contra	collector_v3_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	collector_v3_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	diagonal-real.ltl	1	REALIZABLE	0.05219649104401469	false	
+mix4_contra	door_locking_problem_d6c5ac79.ltl	1	REALIZABLE	0.035087164025753736	false	
+mix4_contra	elevator-paper-real.ltl	1	REALIZABLE	0.19244860694743693	false	
+mix4_contra	evasion-real.ltl				true	TIMEOUT
+mix4_contra	evasion0.ltl				true	TIMEOUT
+mix4_contra	example10_pb_1_pe_.ltl	1	REALIZABLE	0.01664520800113678	false	
+mix4_contra	example10_pb_2_pe_.ltl	1	REALIZABLE	0.014804796082898974	false	
+mix4_contra	example10a_pb_1_pe_.ltl	1	REALIZABLE	0.015661870129406452	false	
+mix4_contra	example10a_pb_2_pe_.ltl	1	REALIZABLE	0.01494847796857357	false	
+mix4_contra	example7_pb_1_pe_.ltl	1	REALIZABLE	0.02967702690511942	false	
+mix4_contra	example7_pb_2_pe_.ltl	1	REALIZABLE	0.029284666059538722	false	
+mix4_contra	example7a_pb_1_pe_.ltl	1	REALIZABLE	0.037019058829173446	false	
+mix4_contra	example7a_pb_2_pe_.ltl	1	REALIZABLE	0.031504285056144	false	
+mix4_contra	example8_pb_1_pe_.ltl	1	REALIZABLE	0.030048407847061753	false	
+mix4_contra	example8_pb_2_pe_.ltl	1	REALIZABLE	0.0342513220384717	false	
+mix4_contra	example9_pb_1_pe_.ltl	1	REALIZABLE	0.03541963011957705	false	
+mix4_contra	example9_pb_2_pe_.ltl	1	REALIZABLE	0.03688925597816706	false	
+mix4_contra	f-real-real.ltl				true	TIMEOUT
+mix4_contra	f-unreal-unreal.ltl	1	UNREALIZABLE	0.024570207111537457	false	
+mix4_contra	finding_nemo_pb_1_pe_.ltl	1	REALIZABLE	0.21172431600280106	false	
+mix4_contra	finding_nemo_pb_2_pe_.ltl	17	REALIZABLE	15.622282498050481	false	REALIZABLE
+mix4_contra	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT
+mix4_contra	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	follow0.ltl				true	TIMEOUT
+mix4_contra	follow1.ltl				true	TIMEOUT
+mix4_contra	follow2.ltl				true	TIMEOUT
+mix4_contra	follow3.ltl				true	TIMEOUT
+mix4_contra	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	full_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.029352782992646098	false	
+mix4_contra	full_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.02927555190399289	false	
+mix4_contra	full_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.023491221014410257	false	
+mix4_contra	full_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.035854086047038436	false	
+mix4_contra	full_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.03092331881634891	false	
+mix4_contra	full_arbiter_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.03199950885027647	false	
+mix4_contra	full_arbiter_unreal1_pb_2_16_pe_.ltl	1	UNREALIZABLE	0.03154494520276785	false	
+mix4_contra	full_arbiter_unreal1_pb_2_18_pe_.ltl	1	UNREALIZABLE	0.03446487616747618	false	
+mix4_contra	full_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.03519996488466859	false	
+mix4_contra	full_arbiter_unreal1_pb_2_20_pe_.ltl	1	UNREALIZABLE	0.03340246505104005	false	
+mix4_contra	full_arbiter_unreal1_pb_2_21_pe_.ltl	1	UNREALIZABLE	0.03704410698264837	false	
+mix4_contra	full_arbiter_unreal1_pb_2_22_pe_.ltl	1	UNREALIZABLE	0.03852719604037702	false	
+mix4_contra	full_arbiter_unreal1_pb_2_24_pe_.ltl	1	UNREALIZABLE	0.03563925297930837	false	
+mix4_contra	full_arbiter_unreal1_pb_2_26_pe_.ltl	1	UNREALIZABLE	0.030420497059822083	false	
+mix4_contra	full_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.03310502599924803	false	
+mix4_contra	full_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.0155833400785923	false	
+mix4_contra	full_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.016583367018029094	false	
+mix4_contra	full_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.016543802805244923	false	
+mix4_contra	full_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.019867686089128256	false	
+mix4_contra	full_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.009016914991661906	false	
+mix4_contra	full_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.008989244932308793	false	
+mix4_contra	full_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.008623114787042141	false	
+mix4_contra	full_arbiter_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.014588551130145788	false	
+mix4_contra	full_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.015059401048347354	false	
+mix4_contra	full_arbiter_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.017105669947341084	false	
+mix4_contra	full_arbiter_unreal1_pb_3_13_pe_.ltl	1	UNREALIZABLE	0.01975954114459455	false	
+mix4_contra	full_arbiter_unreal1_pb_3_14_pe_.ltl	1	UNREALIZABLE	0.014353117905557156	false	
+mix4_contra	full_arbiter_unreal1_pb_3_15_pe_.ltl	1	UNREALIZABLE	0.026221532141789794	false	
+mix4_contra	full_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.03331678593531251	false	
+mix4_contra	full_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.033134208992123604	false	
+mix4_contra	full_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.03621238004416227	false	
+mix4_contra	full_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.017318703001365066	false	
+mix4_contra	full_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.018394993850961328	false	
+mix4_contra	full_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.013324161991477013	false	
+mix4_contra	full_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.016962419962510467	false	
+mix4_contra	full_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.01962291495874524	false	
+mix4_contra	full_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.016159579856321216	false	
+mix4_contra	full_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.014641104033216834	false	
+mix4_contra	full_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.016615046886727214	false	
+mix4_contra	full_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.020626479061320424	false	
+mix4_contra	full_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.01438532187603414	false	
+mix4_contra	full_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.02886820607818663	false	
+mix4_contra	full_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.01575918705202639	false	
+mix4_contra	full_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.016913850093260407	false	
+mix4_contra	full_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.016563723096624017	false	
+mix4_contra	full_arbiter_unreal1_pb_6_8_pe_.ltl	1	UNREALIZABLE	0.02087414893321693	false	
+mix4_contra	full_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.01587597606703639	false	
+mix4_contra	full_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.008769340813159943	false	
+mix4_contra	full_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.0178029490634799	false	
+mix4_contra	full_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.016808261862024665	false	
+mix4_contra	full_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.01802399498410523	false	
+mix4_contra	full_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.015369516098871827	false	
+mix4_contra	g-real-real.ltl	17	REALIZABLE	15.116922924062237	false	REALIZABLE
+mix4_contra	g-real0.ltl	5	UNREALIZABLE	1.1055286601185799	false	
+mix4_contra	g-unreal-1-unreal.ltl				true	TIMEOUT
+mix4_contra	g-unreal-10.ltl	1	UNREALIZABLE	0.02485666493885219	false	
+mix4_contra	g-unreal-11.ltl	1	UNREALIZABLE	0.025696174008771777	false	
+mix4_contra	g-unreal-110.ltl				true	TIMEOUT
+mix4_contra	g-unreal-111.ltl				true	TIMEOUT
+mix4_contra	g-unreal-112.ltl				true	TIMEOUT
+mix4_contra	g-unreal-113.ltl				true	TIMEOUT
+mix4_contra	g-unreal-114.ltl				true	TIMEOUT
+mix4_contra	g-unreal-115.ltl				true	TIMEOUT
+mix4_contra	g-unreal-116.ltl				true	TIMEOUT
+mix4_contra	g-unreal-117.ltl				true	TIMEOUT
+mix4_contra	g-unreal-118.ltl				true	TIMEOUT
+mix4_contra	g-unreal-119.ltl				true	TIMEOUT
+mix4_contra	g-unreal-12.ltl	1	UNREALIZABLE	0.06221102806739509	false	
+mix4_contra	g-unreal-120.ltl				true	TIMEOUT
+mix4_contra	g-unreal-13.ltl	1	UNREALIZABLE	0.17742571816779673	false	
+mix4_contra	g-unreal-14.ltl	1	UNREALIZABLE	0.5473011489957571	false	
+mix4_contra	g-unreal-15.ltl	5	UNREALIZABLE	1.212530351942405	false	
+mix4_contra	g-unreal-16.ltl	5	UNREALIZABLE	3.090401359833777	false	
+mix4_contra	g-unreal-17.ltl	5	UNREALIZABLE	3.8740934780798852	false	
+mix4_contra	g-unreal-18.ltl	17	UNREALIZABLE	12.960011546965688	false	UNREALIZABLE
+mix4_contra	g-unreal-19.ltl				true	TIMEOUT
+mix4_contra	g-unreal-20.ltl				true	TIMEOUT
+mix4_contra	g-unreal-21.ltl				true	TIMEOUT
+mix4_contra	g-unreal-30.ltl	1	UNREALIZABLE	0.055231862934306264	false	
+mix4_contra	g-unreal-31.ltl	1	UNREALIZABLE	0.2987897889688611	false	
+mix4_contra	g-unreal-310.ltl				true	TIMEOUT
+mix4_contra	g-unreal-311.ltl				true	TIMEOUT
+mix4_contra	g-unreal-312.ltl				true	TIMEOUT
+mix4_contra	g-unreal-313.ltl				true	TIMEOUT
+mix4_contra	g-unreal-314.ltl				true	TIMEOUT
+mix4_contra	g-unreal-32.ltl	5	UNREALIZABLE	1.5256877071224153	false	
+mix4_contra	g-unreal-33.ltl				true	TIMEOUT
+mix4_contra	g-unreal-34.ltl				true	TIMEOUT
+mix4_contra	g-unreal-35.ltl				true	TIMEOUT
+mix4_contra	g-unreal-36.ltl				true	TIMEOUT
+mix4_contra	g-unreal-37.ltl				true	TIMEOUT
+mix4_contra	g-unreal-38.ltl				true	TIMEOUT
+mix4_contra	g-unreal-39.ltl				true	TIMEOUT
+mix4_contra	generalized_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.03233022289350629	false	
+mix4_contra	generalized_buffer_pb_3_pe_.ltl	1	REALIZABLE	0.05751217505894601	false	
+mix4_contra	generalized_buffer_pb_4_pe_.ltl	1	REALIZABLE	0.9603036812040955	false	
+mix4_contra	generalized_buffer_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	gf-real-real.ltl	1	REALIZABLE	0.028571601025760174	false	
+mix4_contra	gf-unreal0.ltl	1	UNREALIZABLE	0.014714623102918267	false	
+mix4_contra	gf-unreal1.ltl	1	UNREALIZABLE	0.015680312179028988	false	
+mix4_contra	gf-unreal10.ltl	1	UNREALIZABLE	0.02291362383402884	false	
+mix4_contra	gf-unreal11.ltl	1	UNREALIZABLE	0.03778840089216828	false	
+mix4_contra	gf-unreal12.ltl	1	UNREALIZABLE	0.039597088005393744	false	
+mix4_contra	gf-unreal13.ltl	1	UNREALIZABLE	0.041941026924178004	false	
+mix4_contra	gf-unreal14.ltl	1	UNREALIZABLE	0.042650494957342744	false	
+mix4_contra	gf-unreal15.ltl	1	UNREALIZABLE	0.03922076500020921	false	
+mix4_contra	gf-unreal16.ltl	1	UNREALIZABLE	0.03598781698383391	false	
+mix4_contra	gf-unreal17.ltl	1	UNREALIZABLE	0.04700690507888794	false	
+mix4_contra	gf-unreal18.ltl	1	UNREALIZABLE	0.04672673111781478	false	
+mix4_contra	gf-unreal19.ltl	1	UNREALIZABLE	0.03704729210585356	false	
+mix4_contra	gf-unreal2.ltl	1	UNREALIZABLE	0.033332335064187646	false	
+mix4_contra	gf-unreal20.ltl	1	UNREALIZABLE	0.04507441911846399	false	
+mix4_contra	gf-unreal21.ltl	1	UNREALIZABLE	0.043833996169269085	false	
+mix4_contra	gf-unreal22.ltl	1	UNREALIZABLE	0.047414325876161456	false	
+mix4_contra	gf-unreal23.ltl	1	UNREALIZABLE	0.052062293980270624	false	
+mix4_contra	gf-unreal24.ltl	1	UNREALIZABLE	0.039155911887064576	false	
+mix4_contra	gf-unreal25.ltl	1	UNREALIZABLE	0.02908530319109559	false	
+mix4_contra	gf-unreal26.ltl	1	UNREALIZABLE	0.047377428971230984	false	
+mix4_contra	gf-unreal27.ltl	1	UNREALIZABLE	0.04099718597717583	false	
+mix4_contra	gf-unreal28.ltl	1	UNREALIZABLE	0.05168311111629009	false	
+mix4_contra	gf-unreal29.ltl	1	UNREALIZABLE	0.04292902001179755	false	
+mix4_contra	gf-unreal3.ltl	1	UNREALIZABLE	0.03331257402896881	false	
+mix4_contra	gf-unreal30.ltl	1	UNREALIZABLE	0.050723663065582514	false	
+mix4_contra	gf-unreal31.ltl	1	UNREALIZABLE	0.050975296879187226	false	
+mix4_contra	gf-unreal32.ltl	1	UNREALIZABLE	0.03765155700966716	false	
+mix4_contra	gf-unreal33.ltl	1	UNREALIZABLE	0.05218268488533795	false	
+mix4_contra	gf-unreal34.ltl	1	UNREALIZABLE	0.04183235019445419	false	
+mix4_contra	gf-unreal35.ltl	1	UNREALIZABLE	0.04569171695038676	false	
+mix4_contra	gf-unreal36.ltl	1	UNREALIZABLE	0.03464085306040943	false	
+mix4_contra	gf-unreal37.ltl	1	UNREALIZABLE	0.0488237701356411	false	
+mix4_contra	gf-unreal38.ltl	1	UNREALIZABLE	0.029437545919790864	false	
+mix4_contra	gf-unreal39.ltl	1	UNREALIZABLE	0.04458374599926174	false	
+mix4_contra	gf-unreal4.ltl	1	UNREALIZABLE	0.03212331002578139	false	
+mix4_contra	gf-unreal40.ltl	1	UNREALIZABLE	0.05360218393616378	false	
+mix4_contra	gf-unreal41.ltl	1	UNREALIZABLE	0.04084213403984904	false	
+mix4_contra	gf-unreal42.ltl	1	UNREALIZABLE	0.04503233404830098	false	
+mix4_contra	gf-unreal43.ltl	1	UNREALIZABLE	0.03198593994602561	false	
+mix4_contra	gf-unreal44.ltl	1	UNREALIZABLE	0.033881265902891755	false	
+mix4_contra	gf-unreal45.ltl	1	UNREALIZABLE	0.03753233212046325	false	
+mix4_contra	gf-unreal46.ltl	1	UNREALIZABLE	0.036601497093215585	false	
+mix4_contra	gf-unreal47.ltl	1	UNREALIZABLE	0.04465138912200928	false	
+mix4_contra	gf-unreal5.ltl	1	UNREALIZABLE	0.02523410809226334	false	
+mix4_contra	gf-unreal6.ltl	1	UNREALIZABLE	0.0379599800799042	false	
+mix4_contra	gf-unreal7.ltl	1	UNREALIZABLE	0.028784964000806212	false	
+mix4_contra	gf-unreal8.ltl	1	UNREALIZABLE	0.043251336086541414	false	
+mix4_contra	gf-unreal9.ltl	1	UNREALIZABLE	0.03849370894022286	false	
+mix4_contra	heim-buechi-real.ltl	17	REALIZABLE	5.877802493982017	false	REALIZABLE
+mix4_contra	heim-double-x-real.ltl				true	TIMEOUT
+mix4_contra	heim-double-x0.ltl	1	UNREALIZABLE	0.1551598149817437	false	
+mix4_contra	heim-double-x1.ltl	1	UNREALIZABLE	0.6058415370061994	false	
+mix4_contra	heim-double-x10.ltl				true	TIMEOUT
+mix4_contra	heim-double-x11.ltl				true	TIMEOUT
+mix4_contra	heim-double-x12.ltl				true	TIMEOUT
+mix4_contra	heim-double-x13.ltl				true	TIMEOUT
+mix4_contra	heim-double-x2.ltl	1	UNREALIZABLE	0.7509707510471344	false	
+mix4_contra	heim-double-x3.ltl	5	UNREALIZABLE	1.3499411439988762	false	
+mix4_contra	heim-double-x4.ltl	5	UNREALIZABLE	3.6873139361850917	false	
+mix4_contra	heim-double-x5.ltl	5	UNREALIZABLE	4.370463197818026	false	
+mix4_contra	heim-double-x6.ltl	5	UNREALIZABLE	3.718299448955804	false	
+mix4_contra	heim-double-x7.ltl	17	UNREALIZABLE	6.117208668030798	false	UNREALIZABLE
+mix4_contra	heim-double-x8.ltl	17	UNREALIZABLE	11.70743425609544	false	UNREALIZABLE
+mix4_contra	heim-double-x9.ltl				true	TIMEOUT
+mix4_contra	heim-fig7-unreal.ltl	1	UNREALIZABLE	0.033846599981188774	false	
+mix4_contra	helipad-contradict0.ltl				true	TIMEOUT
+mix4_contra	helipad-contradict1.ltl				true	TIMEOUT
+mix4_contra	helipad-real.ltl				true	TIMEOUT
+mix4_contra	infinite-race-real.ltl	1	REALIZABLE	0.03249282296746969	false	
+mix4_contra	infinite-race-u0.ltl	1	UNREALIZABLE	0.029824196826666594	false	
+mix4_contra	infinite-race-u1.ltl	1	UNREALIZABLE	0.042087170062586665	false	
+mix4_contra	infinite-race-u10.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u11.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u12.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u13.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u14.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u15.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u16.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u17.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u18.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u19.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u2.ltl	5	UNREALIZABLE	0.9865340378601104	false	
+mix4_contra	infinite-race-u20.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u21.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u22.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u23.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u24.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u25.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u3.ltl	5	UNREALIZABLE	2.69993719807826	false	
+mix4_contra	infinite-race-u4.ltl	5	UNREALIZABLE	3.3085306130815297	false	
+mix4_contra	infinite-race-u5.ltl	17	UNREALIZABLE	11.978916769847274	false	UNREALIZABLE
+mix4_contra	infinite-race-u6.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u7.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u8.ltl				true	TIMEOUT
+mix4_contra	infinite-race-u9.ltl				true	TIMEOUT
+mix4_contra	infinite-race-unequal-1-real.ltl	1	REALIZABLE	0.2854941107798368	false	
+mix4_contra	infinite-race-unequal-10.ltl	1	UNREALIZABLE	0.025720397010445595	false	
+mix4_contra	infinite-race-unequal-20.ltl	1	UNREALIZABLE	0.020784989930689335	false	
+mix4_contra	infinite-race-unequal-21.ltl	1	UNREALIZABLE	0.645038743969053	false	
+mix4_contra	infinite-race-unequal-22.ltl	1	UNREALIZABLE	0.8478999000508338	false	
+mix4_contra	infinite-race-unequal-23.ltl	5	UNREALIZABLE	4.4451276960317045	false	
+mix4_contra	infinite-race-unequal-24.ltl				true	TIMEOUT
+mix4_contra	infinite-race-unequal-25.ltl				true	TIMEOUT
+mix4_contra	infinite-race-unequal-26.ltl				true	TIMEOUT
+mix4_contra	items_processing-real.ltl				true	TIMEOUT
+mix4_contra	jarvis_gideon_a02758ea.ltl	1	UNREALIZABLE	0.018481113016605377	false	
+mix4_contra	jarvis_philippe_484face8.ltl	1	UNREALIZABLE	0.038548648124560714	false	
+mix4_contra	lazy_shades_problem_d6376bf9.ltl	1	REALIZABLE	0.0860035209916532	false	
+mix4_contra	lift_gr1+_pb_2_pe_.ltl	1	REALIZABLE	0.09509020019322634	false	
+mix4_contra	lift_gr1+_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_gr1_pb_2_pe_.ltl	1	REALIZABLE	0.038613785058259964	false	
+mix4_contra	lift_gr1_pb_3_pe_.ltl	5	REALIZABLE	3.3159462749026716	false	
+mix4_contra	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_pb_2_pe_.ltl	1	REALIZABLE	0.03201614087447524	false	
+mix4_contra	lift_pb_3_pe_.ltl	1	REALIZABLE	0.08291739108972251	false	
+mix4_contra	lift_pb_4_pe_.ltl	5	REALIZABLE	2.0188393089920282	false	
+mix4_contra	lift_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_unary_enc_pb_2_pe_.ltl	1	REALIZABLE	0.026982137002050877	false	
+mix4_contra	lift_unary_enc_pb_3_pe_.ltl	1	REALIZABLE	0.24382696184329689	false	
+mix4_contra	lift_unary_enc_pb_4_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	lift_wrong_physics_unreal_pb_10_pe_.ltl	5	UNREALIZABLE	1.660538402153179	false	
+mix4_contra	lift_wrong_physics_unreal_pb_2_pe_.ltl	1	REALIZABLE	0.02499274001456797	false	
+mix4_contra	lift_wrong_physics_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.027837370056658983	false	
+mix4_contra	lift_wrong_physics_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.037391402991488576	false	
+mix4_contra	lift_wrong_physics_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.04277310590259731	false	
+mix4_contra	lift_wrong_physics_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.06703979894518852	false	
+mix4_contra	lift_wrong_physics_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.08986102510243654	false	
+mix4_contra	lift_wrong_physics_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.1800007459241897	false	
+mix4_contra	lift_wrong_physics_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.6434408740606159	false	
+mix4_contra	lilydemo01.ltl	1	UNREALIZABLE	0.02186481817625463	false	
+mix4_contra	lilydemo02.ltl	1	UNREALIZABLE	0.017608184833079576	false	
+mix4_contra	lilydemo03.ltl	1	REALIZABLE	0.010052965022623539	false	
+mix4_contra	lilydemo04.ltl	1	REALIZABLE	0.009976316941902041	false	
+mix4_contra	lilydemo04_modified.ltl	1	UNREALIZABLE	0.010086272144690156	false	
+mix4_contra	lilydemo05.ltl	1	REALIZABLE	0.009876017924398184	false	
+mix4_contra	lilydemo06.ltl	1	REALIZABLE	0.024603266967460513	false	
+mix4_contra	lilydemo07.ltl	1	REALIZABLE	0.03212074190378189	false	
+mix4_contra	lilydemo08.ltl	1	REALIZABLE	0.037110640900209546	false	
+mix4_contra	lilydemo09.ltl	1	REALIZABLE	0.02185995294712484	false	
+mix4_contra	lilydemo10.ltl	1	REALIZABLE	0.03514681197702885	false	
+mix4_contra	lilydemo11.ltl	1	UNREALIZABLE	0.035621197894215584	false	
+mix4_contra	lilydemo12.ltl	1	REALIZABLE	0.037158920895308256	false	
+mix4_contra	lilydemo13.ltl	1	REALIZABLE	0.03738990495912731	false	
+mix4_contra	lilydemo14.ltl	1	REALIZABLE	0.03408470400609076	false	
+mix4_contra	lilydemo15.ltl	1	REALIZABLE	0.03574235108681023	false	
+mix4_contra	lilydemo16.ltl	1	REALIZABLE	0.046726419823244214	false	
+mix4_contra	lilydemo17.ltl	1	REALIZABLE	0.036284947069361806	false	
+mix4_contra	lilydemo18.ltl	1	REALIZABLE	0.03381356317549944	false	
+mix4_contra	lilydemo19.ltl	1	REALIZABLE	0.030648044077679515	false	
+mix4_contra	lilydemo20.ltl	1	REALIZABLE	0.042937301099300385	false	
+mix4_contra	lilydemo21.ltl	1	REALIZABLE	0.06375954300165176	false	
+mix4_contra	lilydemo22.ltl	1	REALIZABLE	0.017257860163226724	false	
+mix4_contra	lilydemo23.ltl	1	REALIZABLE	0.025986800203099847	false	
+mix4_contra	load_balancer_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_pb_11_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_pb_2_pe_.ltl	1	REALIZABLE	0.018529172986745834	false	
+mix4_contra	load_balancer_pb_3_pe_.ltl	1	REALIZABLE	0.04957577399909496	false	
+mix4_contra	load_balancer_pb_4_pe_.ltl	1	REALIZABLE	0.3295876430347562	false	
+mix4_contra	load_balancer_pb_5_pe_.ltl	17	REALIZABLE	7.2230859270785	false	REALIZABLE
+mix4_contra	load_balancer_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.03825012315064669	false	
+mix4_contra	load_balancer_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.049003097927197814	false	
+mix4_contra	load_balancer_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.08156194002367556	false	
+mix4_contra	load_balancer_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.1694241368677467	false	
+mix4_contra	load_balancer_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.34495880897156894	false	
+mix4_contra	load_balancer_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.7325888911727816	false	
+mix4_contra	load_balancer_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	1.6341013519559056	false	
+mix4_contra	load_balancer_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.028256391873583198	false	
+mix4_contra	load_balancer_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.02061900799162686	false	
+mix4_contra	load_balancer_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.035008094971999526	false	
+mix4_contra	load_balancer_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.043725051917135715	false	
+mix4_contra	load_balancer_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.03973136399872601	false	
+mix4_contra	load_balancer_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.034969080006703734	false	
+mix4_contra	load_balancer_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03158281580545008	false	
+mix4_contra	load_balancer_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.043026025174185634	false	
+mix4_contra	load_balancer_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.03981592017225921	false	
+mix4_contra	load_balancer_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.1617944419849664	false	
+mix4_contra	load_balancer_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.29307938599959016	false	
+mix4_contra	load_balancer_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.5908827921375632	false	
+mix4_contra	load_balancer_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.023864001967012882	false	
+mix4_contra	load_balancer_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.02645776211284101	false	
+mix4_contra	load_balancer_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.0284679951146245	false	
+mix4_contra	load_balancer_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.03306178003549576	false	
+mix4_contra	load_balancer_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.03856736212037504	false	
+mix4_contra	load_balancer_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.04123857314698398	false	
+mix4_contra	load_balancer_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.04139078711159527	false	
+mix4_contra	load_balancer_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.05246748402714729	false	
+mix4_contra	load_balancer_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.08301699487492442	false	
+mix4_contra	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03159331902861595	false	
+mix4_contra	load_balancer_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.031120414147153497	false	
+mix4_contra	load_balancer_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.0402220890391618	false	
+mix4_contra	load_balancer_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.0580945978872478	false	
+mix4_contra	load_balancer_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.18491926603019238	false	
+mix4_contra	load_balancer_unreal1_pb_4_6_pe_.ltl	5	UNREALIZABLE	1.1589168938808143	false	
+mix4_contra	load_balancer_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	8.124076016014442	false	UNREALIZABLE
+mix4_contra	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.07574214297346771	false	
+mix4_contra	load_balancer_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.10902672098018229	false	
+mix4_contra	load_balancer_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.6682692079339176	false	
+mix4_contra	load_balancer_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	13.761662109056488	false	UNREALIZABLE
+mix4_contra	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.25704794307239354	false	
+mix4_contra	load_balancer_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.3028867079410702	false	
+mix4_contra	load_balancer_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.6980025540105999	false	
+mix4_contra	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal2_pb_2_pe_.ltl	1	REALIZABLE	0.02781509212218225	false	
+mix4_contra	load_balancer_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.028594816103577614	false	
+mix4_contra	load_balancer_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.14411976491101086	false	
+mix4_contra	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	12.259347767103463	false	UNREALIZABLE
+mix4_contra	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba01.ltl	1	REALIZABLE	0.028078364906832576	false	
+mix4_contra	ltl2dba02.ltl	1	REALIZABLE	0.018637585919350386	false	
+mix4_contra	ltl2dba03.ltl	1	REALIZABLE	0.03879412007518113	false	
+mix4_contra	ltl2dba04.ltl	1	REALIZABLE	0.041511393850669265	false	
+mix4_contra	ltl2dba05.ltl	1	REALIZABLE	0.03846477600745857	false	
+mix4_contra	ltl2dba06.ltl	1	REALIZABLE	0.04173089889809489	false	
+mix4_contra	ltl2dba07.ltl	1	REALIZABLE	0.03469381597824395	false	
+mix4_contra	ltl2dba08.ltl	1	REALIZABLE	0.03598559903912246	false	
+mix4_contra	ltl2dba09.ltl	1	REALIZABLE	0.03399634803645313	false	
+mix4_contra	ltl2dba10.ltl	1	REALIZABLE	0.026012611109763384	false	
+mix4_contra	ltl2dba11.ltl	1	REALIZABLE	0.015520755900070071	false	
+mix4_contra	ltl2dba12.ltl	1	REALIZABLE	0.015291858930140734	false	
+mix4_contra	ltl2dba13.ltl	1	REALIZABLE	0.008665532805025578	false	
+mix4_contra	ltl2dba14.ltl	1	REALIZABLE	0.02733170287683606	false	
+mix4_contra	ltl2dba15.ltl	1	REALIZABLE	0.03782377811148763	false	
+mix4_contra	ltl2dba16.ltl	1	REALIZABLE	0.041995018953457475	false	
+mix4_contra	ltl2dba17.ltl	1	REALIZABLE	0.03604044602252543	false	
+mix4_contra	ltl2dba18.ltl	1	REALIZABLE	0.034112602937966585	false	
+mix4_contra	ltl2dba19.ltl	1	REALIZABLE	0.031001718947663903	false	
+mix4_contra	ltl2dba20.ltl	1	REALIZABLE	0.03303850395604968	false	
+mix4_contra	ltl2dba21.ltl	1	REALIZABLE	0.03350721695460379	false	
+mix4_contra	ltl2dba22.ltl	1	REALIZABLE	0.03172372002154589	false	
+mix4_contra	ltl2dba23.ltl	1	REALIZABLE	0.035848502069711685	false	
+mix4_contra	ltl2dba25.ltl	1	REALIZABLE	0.03383027412928641	false	
+mix4_contra	ltl2dba26.ltl	1	REALIZABLE	0.03351245494559407	false	
+mix4_contra	ltl2dba27.ltl	1	UNREALIZABLE	0.037563745863735676	false	
+mix4_contra	ltl2dba_C2_pb_100_pe_.ltl	1	REALIZABLE	0.04344908404164016	false	
+mix4_contra	ltl2dba_C2_pb_10_pe_.ltl	1	REALIZABLE	0.02961638104170561	false	
+mix4_contra	ltl2dba_C2_pb_12_pe_.ltl	1	REALIZABLE	0.03102537407539785	false	
+mix4_contra	ltl2dba_C2_pb_14_pe_.ltl	1	REALIZABLE	0.031458416022360325	false	
+mix4_contra	ltl2dba_C2_pb_16_pe_.ltl	1	REALIZABLE	0.03792833094485104	false	
+mix4_contra	ltl2dba_C2_pb_1_pe_.ltl	1	REALIZABLE	0.03806944587267935	false	
+mix4_contra	ltl2dba_C2_pb_25_pe_.ltl	1	REALIZABLE	0.03341181809082627	false	
+mix4_contra	ltl2dba_C2_pb_2_pe_.ltl	1	REALIZABLE	0.03503396804444492	false	
+mix4_contra	ltl2dba_C2_pb_3_pe_.ltl	1	REALIZABLE	0.03451235592365265	false	
+mix4_contra	ltl2dba_C2_pb_4_pe_.ltl	1	REALIZABLE	0.035275825997814536	false	
+mix4_contra	ltl2dba_C2_pb_50_pe_.ltl	1	REALIZABLE	0.03839473403058946	false	
+mix4_contra	ltl2dba_C2_pb_5_pe_.ltl	1	REALIZABLE	0.03293080092407763	false	
+mix4_contra	ltl2dba_C2_pb_60_pe_.ltl	1	REALIZABLE	0.03603504900820553	false	
+mix4_contra	ltl2dba_C2_pb_6_pe_.ltl	1	REALIZABLE	0.03277397993952036	false	
+mix4_contra	ltl2dba_C2_pb_70_pe_.ltl	1	REALIZABLE	0.04062994499690831	false	
+mix4_contra	ltl2dba_C2_pb_7_pe_.ltl	1	REALIZABLE	0.030597764998674393	false	
+mix4_contra	ltl2dba_C2_pb_80_pe_.ltl	1	REALIZABLE	0.03683026600629091	false	
+mix4_contra	ltl2dba_C2_pb_8_pe_.ltl	1	REALIZABLE	0.03419173811562359	false	
+mix4_contra	ltl2dba_C2_pb_9_pe_.ltl	1	REALIZABLE	0.033022721065208316	false	
+mix4_contra	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_C2_unreal_pb_10_pe_.ltl	1	UNREALIZABLE	0.13404511008411646	false	
+mix4_contra	ltl2dba_C2_unreal_pb_11_pe_.ltl	1	UNREALIZABLE	0.2676970409229398	false	
+mix4_contra	ltl2dba_C2_unreal_pb_12_pe_.ltl	1	UNREALIZABLE	0.6169268891680986	false	
+mix4_contra	ltl2dba_C2_unreal_pb_13_pe_.ltl	5	UNREALIZABLE	1.2800278041977435	false	
+mix4_contra	ltl2dba_C2_unreal_pb_14_pe_.ltl	5	UNREALIZABLE	3.2727302610874176	false	
+mix4_contra	ltl2dba_C2_unreal_pb_15_pe_.ltl	17	UNREALIZABLE	8.059645120054483	false	UNREALIZABLE
+mix4_contra	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_C2_unreal_pb_2_pe_.ltl	1	UNREALIZABLE	0.01756919384934008	false	
+mix4_contra	ltl2dba_C2_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.023145667975768447	false	
+mix4_contra	ltl2dba_C2_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.039923852076753974	false	
+mix4_contra	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_C2_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.019145448924973607	false	
+mix4_contra	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_C2_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.02206655591726303	false	
+mix4_contra	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_C2_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.04534084815531969	false	
+mix4_contra	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_C2_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.04179482418112457	false	
+mix4_contra	ltl2dba_C2_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.07024589786306024	false	
+mix4_contra	ltl2dba_E_pb_10_pe_.ltl	1	REALIZABLE	0.02157447300851345	false	
+mix4_contra	ltl2dba_E_pb_12_pe_.ltl	1	REALIZABLE	0.023373096948489547	false	
+mix4_contra	ltl2dba_E_pb_14_pe_.ltl	1	REALIZABLE	0.025303478119894862	false	
+mix4_contra	ltl2dba_E_pb_15_pe_.ltl	1	REALIZABLE	0.03280632197856903	false	
+mix4_contra	ltl2dba_E_pb_16_pe_.ltl	1	REALIZABLE	0.03383838292211294	false	
+mix4_contra	ltl2dba_E_pb_1_pe_.ltl	1	REALIZABLE	0.039289965061470866	false	
+mix4_contra	ltl2dba_E_pb_2_pe_.ltl	1	REALIZABLE	0.030281306011602283	false	
+mix4_contra	ltl2dba_E_pb_3_pe_.ltl	1	REALIZABLE	0.03144392208196223	false	
+mix4_contra	ltl2dba_E_pb_4_pe_.ltl	1	REALIZABLE	0.03344321809709072	false	
+mix4_contra	ltl2dba_E_pb_5_pe_.ltl	1	REALIZABLE	0.030737174907699227	false	
+mix4_contra	ltl2dba_E_pb_6_pe_.ltl	1	REALIZABLE	0.029792415909469128	false	
+mix4_contra	ltl2dba_E_pb_7_pe_.ltl	1	REALIZABLE	0.03609677613712847	false	
+mix4_contra	ltl2dba_E_pb_8_pe_.ltl	1	REALIZABLE	0.026870428817346692	false	
+mix4_contra	ltl2dba_E_pb_9_pe_.ltl	1	REALIZABLE	0.032094771042466164	false	
+mix4_contra	ltl2dba_Q_pb_100_pe_.ltl	1	REALIZABLE	0.03327687201090157	false	
+mix4_contra	ltl2dba_Q_pb_10_pe_.ltl	1	REALIZABLE	0.030507218092679977	false	
+mix4_contra	ltl2dba_Q_pb_12_pe_.ltl	1	REALIZABLE	0.02795723406597972	false	
+mix4_contra	ltl2dba_Q_pb_15_pe_.ltl	1	REALIZABLE	0.03339032898657024	false	
+mix4_contra	ltl2dba_Q_pb_18_pe_.ltl	1	REALIZABLE	0.03328798292204738	false	
+mix4_contra	ltl2dba_Q_pb_1_pe_.ltl	1	REALIZABLE	0.034315774915739894	false	
+mix4_contra	ltl2dba_Q_pb_25_pe_.ltl	1	REALIZABLE	0.037821491016075015	false	
+mix4_contra	ltl2dba_Q_pb_2_pe_.ltl	1	REALIZABLE	0.0339319808408618	false	
+mix4_contra	ltl2dba_Q_pb_3_pe_.ltl	1	REALIZABLE	0.031811231980100274	false	
+mix4_contra	ltl2dba_Q_pb_4_pe_.ltl	1	REALIZABLE	0.027440343983471394	false	
+mix4_contra	ltl2dba_Q_pb_50_pe_.ltl	1	REALIZABLE	0.034532665042206645	false	
+mix4_contra	ltl2dba_Q_pb_5_pe_.ltl	1	REALIZABLE	0.03286962700076401	false	
+mix4_contra	ltl2dba_Q_pb_6_pe_.ltl	1	REALIZABLE	0.030929794069379568	false	
+mix4_contra	ltl2dba_Q_pb_7_pe_.ltl	1	REALIZABLE	0.03601882793009281	false	
+mix4_contra	ltl2dba_Q_pb_8_pe_.ltl	1	REALIZABLE	0.032678690971806645	false	
+mix4_contra	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_R_pb_1_pe_.ltl	1	REALIZABLE	0.014451749855652452	false	
+mix4_contra	ltl2dba_R_pb_2_pe_.ltl	1	UNREALIZABLE	0.01517859403975308	false	
+mix4_contra	ltl2dba_R_pb_3_pe_.ltl	1	UNREALIZABLE	0.023370284121483564	false	
+mix4_contra	ltl2dba_R_pb_4_pe_.ltl	1	UNREALIZABLE	0.02769854594953358	false	
+mix4_contra	ltl2dba_R_pb_5_pe_.ltl	1	UNREALIZABLE	0.09456377499736845	false	
+mix4_contra	ltl2dba_R_pb_6_pe_.ltl	1	UNREALIZABLE	0.6333335470408201	false	
+mix4_contra	ltl2dba_R_pb_7_pe_.ltl	17	UNREALIZABLE	7.197751331841573	false	UNREALIZABLE
+mix4_contra	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_U1_pb_100_pe_.ltl	1	REALIZABLE	0.016097558895125985	false	
+mix4_contra	ltl2dba_U1_pb_10_pe_.ltl	1	REALIZABLE	0.016048738965764642	false	
+mix4_contra	ltl2dba_U1_pb_12_pe_.ltl	1	REALIZABLE	0.017551513155922294	false	
+mix4_contra	ltl2dba_U1_pb_15_pe_.ltl	1	REALIZABLE	0.008542229887098074	false	
+mix4_contra	ltl2dba_U1_pb_18_pe_.ltl	1	REALIZABLE	0.00872294814325869	false	
+mix4_contra	ltl2dba_U1_pb_1_pe_.ltl	1	REALIZABLE	0.018533774884417653	false	
+mix4_contra	ltl2dba_U1_pb_25_pe_.ltl	1	REALIZABLE	0.016511872876435518	false	
+mix4_contra	ltl2dba_U1_pb_2_pe_.ltl	1	REALIZABLE	0.014572572894394398	false	
+mix4_contra	ltl2dba_U1_pb_3_pe_.ltl	1	REALIZABLE	0.013541753869503736	false	
+mix4_contra	ltl2dba_U1_pb_4_pe_.ltl	1	REALIZABLE	0.02075853291898966	false	
+mix4_contra	ltl2dba_U1_pb_50_pe_.ltl	1	REALIZABLE	0.008918075822293758	false	
+mix4_contra	ltl2dba_U1_pb_5_pe_.ltl	1	REALIZABLE	0.020639094058424234	false	
+mix4_contra	ltl2dba_U1_pb_6_pe_.ltl	1	REALIZABLE	0.008901430992409587	false	
+mix4_contra	ltl2dba_U1_pb_7_pe_.ltl	1	REALIZABLE	0.015130699146538973	false	
+mix4_contra	ltl2dba_U1_pb_8_pe_.ltl	1	REALIZABLE	0.0345623348839581	false	
+mix4_contra	ltl2dba_U1_pb_9_pe_.ltl	1	REALIZABLE	0.030209957156330347	false	
+mix4_contra	ltl2dba_alpha_pb_100_pe_.ltl	1	REALIZABLE	0.03367227897979319	false	
+mix4_contra	ltl2dba_alpha_pb_10_pe_.ltl	1	REALIZABLE	0.03718216111883521	false	
+mix4_contra	ltl2dba_alpha_pb_12_pe_.ltl	1	REALIZABLE	0.016332325991243124	false	
+mix4_contra	ltl2dba_alpha_pb_14_pe_.ltl	1	REALIZABLE	0.026337245013564825	false	
+mix4_contra	ltl2dba_alpha_pb_16_pe_.ltl	1	REALIZABLE	0.029589095152914524	false	
+mix4_contra	ltl2dba_alpha_pb_17_pe_.ltl	1	REALIZABLE	0.034022051841020584	false	
+mix4_contra	ltl2dba_alpha_pb_18_pe_.ltl	1	REALIZABLE	0.02873927215114236	false	
+mix4_contra	ltl2dba_alpha_pb_1_pe_.ltl	1	REALIZABLE	0.033825359074398875	false	
+mix4_contra	ltl2dba_alpha_pb_20_pe_.ltl	1	REALIZABLE	0.03586753783747554	false	
+mix4_contra	ltl2dba_alpha_pb_25_pe_.ltl	1	REALIZABLE	0.02764181513339281	false	
+mix4_contra	ltl2dba_alpha_pb_2_pe_.ltl	1	REALIZABLE	0.01437054481357336	false	
+mix4_contra	ltl2dba_alpha_pb_3_pe_.ltl	1	REALIZABLE	0.014882876072078943	false	
+mix4_contra	ltl2dba_alpha_pb_4_pe_.ltl	1	REALIZABLE	0.008506763959303498	false	
+mix4_contra	ltl2dba_alpha_pb_50_pe_.ltl	1	REALIZABLE	0.008822476956993341	false	
+mix4_contra	ltl2dba_alpha_pb_5_pe_.ltl	1	REALIZABLE	0.008642615983262658	false	
+mix4_contra	ltl2dba_alpha_pb_6_pe_.ltl	1	REALIZABLE	0.008915856014937162	false	
+mix4_contra	ltl2dba_alpha_pb_7_pe_.ltl	1	REALIZABLE	0.008567386073991656	false	
+mix4_contra	ltl2dba_alpha_pb_8_pe_.ltl	1	REALIZABLE	0.0228208489716053	false	
+mix4_contra	ltl2dba_beta_pb_100_pe_.ltl	1	REALIZABLE	0.040604923851788044	false	
+mix4_contra	ltl2dba_beta_pb_10_pe_.ltl	1	REALIZABLE	0.035851528169587255	false	
+mix4_contra	ltl2dba_beta_pb_15_pe_.ltl	1	REALIZABLE	0.03641289100050926	false	
+mix4_contra	ltl2dba_beta_pb_18_pe_.ltl	1	REALIZABLE	0.0316107259131968	false	
+mix4_contra	ltl2dba_beta_pb_1_pe_.ltl	1	REALIZABLE	0.03424675390124321	false	
+mix4_contra	ltl2dba_beta_pb_20_pe_.ltl	1	REALIZABLE	0.03702451311983168	false	
+mix4_contra	ltl2dba_beta_pb_25_pe_.ltl	1	REALIZABLE	0.035807527136057615	false	
+mix4_contra	ltl2dba_beta_pb_2_pe_.ltl	1	REALIZABLE	0.036669027991592884	false	
+mix4_contra	ltl2dba_beta_pb_30_pe_.ltl	1	REALIZABLE	0.03274227399379015	false	
+mix4_contra	ltl2dba_beta_pb_3_pe_.ltl	1	REALIZABLE	0.03450792795047164	false	
+mix4_contra	ltl2dba_beta_pb_4_pe_.ltl	1	REALIZABLE	0.03376322099938989	false	
+mix4_contra	ltl2dba_beta_pb_5_pe_.ltl	1	REALIZABLE	0.0391742130741477	false	
+mix4_contra	ltl2dba_beta_pb_6_pe_.ltl	1	REALIZABLE	0.03649245202541351	false	
+mix4_contra	ltl2dba_beta_pb_7_pe_.ltl	1	REALIZABLE	0.03399968286976218	false	
+mix4_contra	ltl2dba_beta_pb_8_pe_.ltl	1	REALIZABLE	0.03625548491254449	false	
+mix4_contra	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_theta_pb_10_pe_.ltl	1	UNREALIZABLE	0.6198105730582029	false	
+mix4_contra	ltl2dba_theta_pb_12_pe_.ltl	5	UNREALIZABLE	3.095256962813437	false	
+mix4_contra	ltl2dba_theta_pb_14_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_theta_pb_1_pe_.ltl	1	UNREALIZABLE	0.01631883205845952	false	
+mix4_contra	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_theta_pb_2_pe_.ltl	1	UNREALIZABLE	0.01947524002753198	false	
+mix4_contra	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_theta_pb_3_pe_.ltl	1	UNREALIZABLE	0.018430999014526606	false	
+mix4_contra	ltl2dba_theta_pb_4_pe_.ltl	1	UNREALIZABLE	0.030003529973328114	false	
+mix4_contra	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT
+mix4_contra	ltl2dba_theta_pb_5_pe_.ltl	1	UNREALIZABLE	0.02841993304900825	false	
+mix4_contra	ltl2dba_theta_pb_6_pe_.ltl	1	UNREALIZABLE	0.04254939896054566	false	
+mix4_contra	ltl2dba_theta_pb_7_pe_.ltl	1	UNREALIZABLE	0.06451690406538546	false	
+mix4_contra	ltl2dba_theta_pb_8_pe_.ltl	1	UNREALIZABLE	0.1473578209988773	false	
+mix4_contra	ltl2dpa01.ltl	1	REALIZABLE	0.021944749169051647	false	
+mix4_contra	ltl2dpa02.ltl	1	REALIZABLE	0.025432165013626218	false	
+mix4_contra	ltl2dpa03.ltl	1	REALIZABLE	0.25212749908678234	false	
+mix4_contra	ltl2dpa04.ltl	1	REALIZABLE	0.019573719007894397	false	
+mix4_contra	ltl2dpa05.ltl	1	REALIZABLE	0.0322132189758122	false	
+mix4_contra	ltl2dpa06.ltl	1	REALIZABLE	0.03299178997986019	false	
+mix4_contra	ltl2dpa07.ltl	1	REALIZABLE	0.030099206138402224	false	
+mix4_contra	ltl2dpa08.ltl	1	REALIZABLE	0.03414981393143535	false	
+mix4_contra	ltl2dpa09.ltl	1	REALIZABLE	0.03352016396820545	false	
+mix4_contra	ltl2dpa10.ltl	1	REALIZABLE	0.04421366285532713	false	
+mix4_contra	ltl2dpa11.ltl	1	REALIZABLE	0.03220467013306916	false	
+mix4_contra	ltl2dpa12.ltl	1	REALIZABLE	0.03320931503549218	false	
+mix4_contra	ltl2dpa13.ltl	1	REALIZABLE	0.04574241489171982	false	
+mix4_contra	ltl2dpa14.ltl	1	REALIZABLE	0.01807229989208281	false	
+mix4_contra	ltl2dpa15.ltl	1	REALIZABLE	0.020845234161242843	false	
+mix4_contra	ltl2dpa16.ltl	1	REALIZABLE	0.030977007001638412	false	
+mix4_contra	ltl2dpa17.ltl	1	REALIZABLE	0.03864855389110744	false	
+mix4_contra	ltl2dpa18.ltl	1	REALIZABLE	0.04562681796960533	false	
+mix4_contra	ltl2dpa19.ltl	1	REALIZABLE	0.08265198417939246	false	
+mix4_contra	ltl2dpa20.ltl	1	REALIZABLE	0.02400902402587235	false	
+mix4_contra	ltl2dpa22.ltl				true	TIMEOUT
+mix4_contra	ltl2dpa23.ltl	1	REALIZABLE	0.021702629048377275	false	
+mix4_contra	ltl2dpa24.ltl	1	REALIZABLE	0.030205133836716413	false	
+mix4_contra	mux_pb_100_pe_.ltl	1	REALIZABLE	0.04668986494652927	false	
+mix4_contra	mux_pb_10_pe_.ltl	1	REALIZABLE	0.02903632796369493	false	
+mix4_contra	mux_pb_125_pe_.ltl	1	REALIZABLE	0.052472316194325686	false	
+mix4_contra	mux_pb_12_pe_.ltl	1	REALIZABLE	0.024584596045315266	false	
+mix4_contra	mux_pb_132_pe_.ltl	1	REALIZABLE	0.041101471055299044	false	
+mix4_contra	mux_pb_150_pe_.ltl	1	REALIZABLE	0.03458455391228199	false	
+mix4_contra	mux_pb_16_pe_.ltl	1	REALIZABLE	0.016240797005593777	false	
+mix4_contra	mux_pb_175_pe_.ltl	1	REALIZABLE	0.03468348691239953	false	
+mix4_contra	mux_pb_200_pe_.ltl	1	REALIZABLE	0.0378741230815649	false	
+mix4_contra	mux_pb_32_pe_.ltl	1	REALIZABLE	0.017805447801947594	false	
+mix4_contra	mux_pb_64_pe_.ltl	1	REALIZABLE	0.022545112995430827	false	
+mix4_contra	mux_pb_8_pe_.ltl	1	REALIZABLE	0.015648321947082877	false	
+mix4_contra	narylatch_pb_10_pe_.ltl	1	REALIZABLE	0.019514109008014202	false	
+mix4_contra	narylatch_pb_11_pe_.ltl	1	REALIZABLE	0.0344360729213804	false	
+mix4_contra	narylatch_pb_12_pe_.ltl	1	REALIZABLE	0.04163034213706851	false	
+mix4_contra	narylatch_pb_16_pe_.ltl	1	REALIZABLE	0.03832975192926824	false	
+mix4_contra	narylatch_pb_32_pe_.ltl	1	REALIZABLE	0.03765855194069445	false	
+mix4_contra	narylatch_pb_64_pe_.ltl	1	REALIZABLE	0.0402738091070205	false	
+mix4_contra	narylatch_pb_8_pe_.ltl	1	REALIZABLE	0.0284723830409348	false	
+mix4_contra	ordered-visits-choice-real.ltl				true	UNKNOWN
+mix4_contra	ordered-visits-real.ltl	1	REALIZABLE	0.029262091033160686	false	
+mix4_contra	package-delivery-real.ltl				true	TIMEOUT
+mix4_contra	patrolling-alarm0.ltl	1	UNREALIZABLE	0.032741410890594125	false	
+mix4_contra	patrolling-alarm1.ltl	1	UNREALIZABLE	0.05877163098193705	false	
+mix4_contra	patrolling-alarm10.ltl	1	UNREALIZABLE	0.8530292480718344	false	
+mix4_contra	patrolling-alarm11.ltl	5	UNREALIZABLE	1.0807467480190098	false	
+mix4_contra	patrolling-alarm12.ltl	5	UNREALIZABLE	1.5199083141051233	false	
+mix4_contra	patrolling-alarm13.ltl	5	UNREALIZABLE	1.7263425029814243	false	
+mix4_contra	patrolling-alarm14.ltl	5	UNREALIZABLE	2.0949195090215653	false	
+mix4_contra	patrolling-alarm15.ltl	5	UNREALIZABLE	3.1803015139885247	false	
+mix4_contra	patrolling-alarm16.ltl	5	UNREALIZABLE	3.226213024929166	false	
+mix4_contra	patrolling-alarm17.ltl	5	UNREALIZABLE	3.7608552668243647	false	
+mix4_contra	patrolling-alarm18.ltl	5	UNREALIZABLE	4.701554452069104	false	
+mix4_contra	patrolling-alarm19.ltl	5	UNREALIZABLE	4.780596994096413	false	
+mix4_contra	patrolling-alarm2.ltl	1	UNREALIZABLE	0.06461411388590932	false	
+mix4_contra	patrolling-alarm20.ltl	17	UNREALIZABLE	6.044121808139607	false	UNREALIZABLE
+mix4_contra	patrolling-alarm21.ltl	17	UNREALIZABLE	7.431625470984727	false	UNREALIZABLE
+mix4_contra	patrolling-alarm22.ltl	17	UNREALIZABLE	8.508013923186809	false	UNREALIZABLE
+mix4_contra	patrolling-alarm23.ltl	17	UNREALIZABLE	9.581432475009933	false	UNREALIZABLE
+mix4_contra	patrolling-alarm24.ltl	17	UNREALIZABLE	11.516016541980207	false	UNREALIZABLE
+mix4_contra	patrolling-alarm25.ltl	17	UNREALIZABLE	12.340493794064969	false	UNREALIZABLE
+mix4_contra	patrolling-alarm26.ltl	17	UNREALIZABLE	14.556549460161477	false	UNREALIZABLE
+mix4_contra	patrolling-alarm3.ltl	1	UNREALIZABLE	0.08939326601102948	false	
+mix4_contra	patrolling-alarm4.ltl	1	UNREALIZABLE	0.11119193094782531	false	
+mix4_contra	patrolling-alarm5.ltl	1	UNREALIZABLE	0.16570115904323757	false	
+mix4_contra	patrolling-alarm6.ltl	1	UNREALIZABLE	0.25123395794071257	false	
+mix4_contra	patrolling-alarm7.ltl	1	UNREALIZABLE	0.3370586489327252	false	
+mix4_contra	patrolling-alarm8.ltl	1	UNREALIZABLE	0.5156628121621907	false	
+mix4_contra	patrolling-alarm9.ltl	1	UNREALIZABLE	0.6792879560962319	false	
+mix4_contra	patrolling0.ltl	1	UNREALIZABLE	0.03325451002456248	false	
+mix4_contra	patrolling1.ltl	1	UNREALIZABLE	0.04560497193597257	false	
+mix4_contra	patrolling10.ltl	1	UNREALIZABLE	0.6897247640881687	false	
+mix4_contra	patrolling11.ltl	5	UNREALIZABLE	0.91618223907426	false	
+mix4_contra	patrolling12.ltl	5	UNREALIZABLE	1.2955458310898393	false	
+mix4_contra	patrolling13.ltl	5	UNREALIZABLE	1.5706239328719676	false	
+mix4_contra	patrolling14.ltl	5	UNREALIZABLE	1.9753819038160145	false	
+mix4_contra	patrolling15.ltl	5	UNREALIZABLE	2.785794122843072	false	
+mix4_contra	patrolling16.ltl	5	UNREALIZABLE	3.0999091281555593	false	
+mix4_contra	patrolling17.ltl	5	UNREALIZABLE	3.952781122876331	false	
+mix4_contra	patrolling18.ltl	5	UNREALIZABLE	4.983162910910323	false	
+mix4_contra	patrolling19.ltl	17	UNREALIZABLE	4.598961231065914	false	UNREALIZABLE
+mix4_contra	patrolling2.ltl	1	UNREALIZABLE	0.06456891796551645	false	
+mix4_contra	patrolling20.ltl	17	UNREALIZABLE	5.8385773750487715	false	UNREALIZABLE
+mix4_contra	patrolling21.ltl	17	UNREALIZABLE	7.896602789172903	false	UNREALIZABLE
+mix4_contra	patrolling22.ltl	17	UNREALIZABLE	8.5102144300472	false	UNREALIZABLE
+mix4_contra	patrolling23.ltl	17	UNREALIZABLE	9.518462863983586	false	UNREALIZABLE
+mix4_contra	patrolling24.ltl	17	UNREALIZABLE	10.81201956490986	false	UNREALIZABLE
+mix4_contra	patrolling25.ltl	17	UNREALIZABLE	11.596501934109256	false	UNREALIZABLE
+mix4_contra	patrolling3.ltl	1	UNREALIZABLE	0.10234514996409416	false	
+mix4_contra	patrolling4.ltl	1	UNREALIZABLE	0.11593901203013957	false	
+mix4_contra	patrolling5.ltl	1	UNREALIZABLE	0.17405271995812654	false	
+mix4_contra	patrolling6.ltl	1	UNREALIZABLE	0.2630775480065495	false	
+mix4_contra	patrolling7.ltl	1	UNREALIZABLE	0.35466758301481605	false	
+mix4_contra	patrolling8.ltl	1	UNREALIZABLE	0.42959968792274594	false	
+mix4_contra	patrolling9.ltl	1	UNREALIZABLE	0.5935571840964258	false	
+mix4_contra	precise-reachability-real.ltl	1	REALIZABLE	0.1335721448995173	false	
+mix4_contra	precise-reachability0.ltl	1	UNREALIZABLE	0.029683982022106647	false	
+mix4_contra	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.023637683130800724	false	
+mix4_contra	prioritized_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.032324281986802816	false	
+mix4_contra	prioritized_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.04353127581998706	false	
+mix4_contra	prioritized_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.4929495931137353	false	
+mix4_contra	prioritized_arbiter_pb_5_pe_.ltl	17	REALIZABLE	6.764729615068063	false	REALIZABLE
+mix4_contra	prioritized_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.024643148062750697	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.02240435592830181	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.022777350852265954	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.0291325559373945	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.021925582084804773	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.02535146614536643	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_16_pe_.ltl	1	UNREALIZABLE	0.026054604910314083	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.013728140154853463	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.01699051703326404	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.022766783833503723	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.015721573028713465	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.00938601908273995	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.010009932098910213	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.009674618020653725	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.01031154696829617	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.010161194019019604	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.02000567805953324	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.01437639002688229	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.020777326077222824	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_13_pe_.ltl	1	UNREALIZABLE	0.017583941109478474	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_14_pe_.ltl	1	UNREALIZABLE	0.014960379805415869	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_15_pe_.ltl	1	UNREALIZABLE	0.019779276102781296	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_16_pe_.ltl	1	UNREALIZABLE	0.015556962927803397	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.029102934058755636	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.014813828049227595	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.01690175011754036	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.019656753866001964	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.015851943055167794	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.025613073958083987	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.03611164796166122	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.031718641985207796	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.03904725192114711	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.04257138795219362	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	1	UNREALIZABLE	0.031695043202489614	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.034024039981886744	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_13_pe_.ltl	1	UNREALIZABLE	0.04279874195344746	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_14_pe_.ltl	1	UNREALIZABLE	0.036598119884729385	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_15_pe_.ltl	1	UNREALIZABLE	0.04080416704528034	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_16_pe_.ltl	1	UNREALIZABLE	0.037053853971883655	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03556860005483031	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.039444807916879654	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.035163826774805784	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.03320368495769799	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.035324624041095376	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.03632821701467037	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.0395960898604244	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.0350739739369601	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.04562756302766502	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_5_16_pe_.ltl	1	UNREALIZABLE	0.03282402805052698	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.03542112885043025	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_5_32_pe_.ltl	1	UNREALIZABLE	0.04821610194630921	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.03701402200385928	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_6_16_pe_.ltl	1	UNREALIZABLE	0.04207274387590587	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.037709999131038785	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_6_32_pe_.ltl	1	UNREALIZABLE	0.036007917020469904	false	
+mix4_contra	prioritized_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.03841117094270885	false	
+mix4_contra	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.0288336300291121	false	
+mix4_contra	prioritized_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.024614367866888642	false	
+mix4_contra	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.017151178093627095	false	
+mix4_contra	prioritized_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.03375591500662267	false	
+mix4_contra	prioritized_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.038591360906139016	false	
+mix4_contra	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT
+mix4_contra	prioritized_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.019923290004953742	false	
+mix4_contra	prioritized_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.025991628877818584	false	
+mix4_contra	prioritized_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.03897281107492745	false	
+mix4_contra	reversible-lane-r-real.ltl				true	TIMEOUT
+mix4_contra	reversible-lane-u-unreal.ltl				true	TIMEOUT
+mix4_contra	reversible-lane-u0.ltl	17	UNREALIZABLE	9.175688442075625	false	UNREALIZABLE
+mix4_contra	reversible-lane-u1.ltl				true	TIMEOUT
+mix4_contra	robot-cat-real-1d-real.ltl	17	REALIZABLE	5.6028708189260215	false	REALIZABLE
+mix4_contra	robot-cat-real-2d-real.ltl				true	TIMEOUT
+mix4_contra	robot-cat-unreal-1d-unreal.ltl	1	UNREALIZABLE	0.4050362780690193	false	
+mix4_contra	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT
+mix4_contra	robot-grid-commute-1d-real.ltl	5	REALIZABLE	3.0502971240784973	false	
+mix4_contra	robot-grid-commute-2d-real.ltl				true	TIMEOUT
+mix4_contra	robot-grid-reach-1d-real.ltl	1	REALIZABLE	0.03367683500982821	false	
+mix4_contra	robot-grid-reach-2d-real.ltl	17	REALIZABLE	10.97285646898672	false	REALIZABLE
+mix4_contra	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	1	REALIZABLE	0.04653885099105537	false	
+mix4_contra	robot-grid-reach-repeated-with-obstacles-2d-real.ltl				true	TIMEOUT
+mix4_contra	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT
+mix4_contra	robot-resource-1d-unreal.ltl	17	UNREALIZABLE	9.830304834060371	false	UNREALIZABLE
+mix4_contra	robot-resource-1d0.ltl	1	UNREALIZABLE	0.18471472710371017	false	
+mix4_contra	robot-resource-1d1.ltl	1	UNREALIZABLE	0.8850705530494452	false	
+mix4_contra	robot-resource-2d0.ltl	17	UNREALIZABLE	7.03417076007463	false	UNREALIZABLE
+mix4_contra	robot-resource-2d1.ltl	17	UNREALIZABLE	16.715413813013583	false	UNREALIZABLE
+mix4_contra	robot-resource-2d10.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d11.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d12.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d13.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d14.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d15.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d16.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d17.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d18.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d19.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d2.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d20.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d21.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d22.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d23.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d3.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d4.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d5.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d6.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d7.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d8.ltl				true	TIMEOUT
+mix4_contra	robot-resource-2d9.ltl				true	TIMEOUT
+mix4_contra	robot-tasks-real.ltl	1	REALIZABLE	0.0570999039337039	false	
+mix4_contra	robot-to-target-charging-real.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal0.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal1.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal2.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal3.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal4.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal5.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal6.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal7.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging-unreal8.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging0.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging1.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging10.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging11.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging12.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging13.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging14.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging15.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging16.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging17.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging18.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging19.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging2.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging20.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging21.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging22.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging23.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging24.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging25.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging3.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging4.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging5.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging6.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging7.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging8.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-charging9.ltl				true	TIMEOUT
+mix4_contra	robot-to-target-unreal0.ltl	17	REALIZABLE	7.440212422050536	false	REALIZABLE
+mix4_contra	robot-to-target0.ltl				true	TIMEOUT
+mix4_contra	robot_analyze_samples_v1-real.ltl				true	TIMEOUT
+mix4_contra	robot_collect_samples_v1-real.ltl				true	TIMEOUT
+mix4_contra	robot_collect_samples_v2-real.ltl				true	TIMEOUT
+mix4_contra	robot_collect_samples_v3-real.ltl				true	TIMEOUT
+mix4_contra	robot_collect_samples_v4-real.ltl				true	TIMEOUT
+mix4_contra	robot_deliver_products_1-real.ltl				true	TIMEOUT
+mix4_contra	robot_deliver_products_20.ltl				true	TIMEOUT
+mix4_contra	robot_deliver_products_30.ltl				true	TIMEOUT
+mix4_contra	robot_deliver_products_40.ltl				true	TIMEOUT
+mix4_contra	robot_deliver_products_50.ltl				true	TIMEOUT
+mix4_contra	robot_grid_pb_2_2_pe_.ltl	1	REALIZABLE	0.04082660097628832	false	
+mix4_contra	robot_grid_pb_3_3_pe_.ltl	1	REALIZABLE	0.6238715120125562	false	
+mix4_contra	robot_grid_pb_4_4_pe_.ltl	17	REALIZABLE	9.056370683945715	false	REALIZABLE
+mix4_contra	robot_grid_pb_5_1_pe_.ltl	1	REALIZABLE	0.07155109918676317	false	
+mix4_contra	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT
+mix4_contra	robot_grid_pb_6_1_pe_.ltl	1	REALIZABLE	0.17455682903528214	false	
+mix4_contra	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT
+mix4_contra	robot_grid_pb_7_7_pe_.ltl				true	TIMEOUT
+mix4_contra	robot_grid_pb_8_8_pe_.ltl				true	TIMEOUT
+mix4_contra	robot_repair0.ltl				true	TIMEOUT
+mix4_contra	robot_repair1.ltl				true	TIMEOUT
+mix4_contra	robot_repair2.ltl				true	TIMEOUT
+mix4_contra	robot_repair3.ltl				true	TIMEOUT
+mix4_contra	robot_repair4.ltl				true	TIMEOUT
+mix4_contra	robot_repair5.ltl				true	TIMEOUT
+mix4_contra	robot_running-real.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.02720216102898121	false	
+mix4_contra	round_robin_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.04890996706672013	false	
+mix4_contra	round_robin_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.6496464789379388	false	
+mix4_contra	round_robin_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.052455647150054574	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.08739736210554838	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.13663235516287386	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.2691188738681376	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.5992346429266036	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	1.240024026017636	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	2.572018831036985	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.020779161946848035	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.024641515919938684	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03203263692557812	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.03783108899369836	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.0382973849773407	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.035891548031941056	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.031914565013721585	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.036235369043424726	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.04057270986959338	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.02957144007086754	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.028188830940052867	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.03768194420263171	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.054090766003355384	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.17404739698395133	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.9947892241179943	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	6.558327867882326	false	UNREALIZABLE
+mix4_contra	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.12480443390086293	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.14766233204863966	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.21500086993910372	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	1.5824286171700805	false	
+mix4_contra	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.018871986074373126	false	
+mix4_contra	round_robin_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.03066001203842461	false	
+mix4_contra	round_robin_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.5324302541557699	false	
+mix4_contra	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+mix4_contra	rw_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.0226144150365144	false	
+mix4_contra	rw_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.04888354009017348	false	
+mix4_contra	rw_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+mix4_contra	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	scheduler-real.ltl				true	TIMEOUT
+mix4_contra	shift_pb_100_pe_.ltl	1	REALIZABLE	0.018939647125080228	false	
+mix4_contra	shift_pb_10_pe_.ltl	1	REALIZABLE	0.02827155403792858	false	
+mix4_contra	shift_pb_125_pe_.ltl	1	REALIZABLE	0.04831428290344775	false	
+mix4_contra	shift_pb_12_pe_.ltl	1	REALIZABLE	0.031012424966320395	false	
+mix4_contra	shift_pb_132_pe_.ltl	1	REALIZABLE	0.0413360889069736	false	
+mix4_contra	shift_pb_16_pe_.ltl	1	REALIZABLE	0.03857766301371157	false	
+mix4_contra	shift_pb_250_pe_.ltl	1	REALIZABLE	0.046624808106571436	false	
+mix4_contra	shift_pb_32_pe_.ltl	1	REALIZABLE	0.038499708054587245	false	
+mix4_contra	shift_pb_500_pe_.ltl	1	REALIZABLE	0.050645460141822696	false	
+mix4_contra	shift_pb_64_pe_.ltl	1	REALIZABLE	0.026964139891788363	false	
+mix4_contra	shift_pb_8_pe_.ltl	1	REALIZABLE	0.02798737888224423	false	
+mix4_contra	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_unreal1_pb_16_1_pe_.ltl	1	UNREALIZABLE	0.02684447984211147	false	
+mix4_contra	simple_arbiter_unreal1_pb_16_2_pe_.ltl	1	UNREALIZABLE	0.03101974888704717	false	
+mix4_contra	simple_arbiter_unreal1_pb_16_3_pe_.ltl	1	UNREALIZABLE	0.033608971862122416	false	
+mix4_contra	simple_arbiter_unreal1_pb_16_4_pe_.ltl	1	UNREALIZABLE	0.03669455088675022	false	
+mix4_contra	simple_arbiter_unreal1_pb_16_5_pe_.ltl	1	UNREALIZABLE	0.032370457891374826	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.031722393119707704	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.030173744075000286	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.03732971893623471	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.04067942686378956	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.036107749911025167	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.02929073991253972	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.03511396306566894	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.03536183503456414	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03858903213404119	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.03240788611583412	false	
+mix4_contra	simple_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.0350483579095453	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.03555348818190396	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.032189558958634734	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.034731359919533134	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.029451192123815417	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.029196123126894236	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.028953652130439878	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.033343225019052625	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.031089296098798513	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.03805768000893295	false	
+mix4_contra	simple_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.038060646038502455	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.036591436015442014	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.03509380808100104	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03894011303782463	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.038771911058574915	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.031229998217895627	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.034444544930011034	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.036569542018696666	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.028563312022015452	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.03714127489365637	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.029445806983858347	false	
+mix4_contra	simple_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.02882948680780828	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_10_pe_.ltl	1	UNREALIZABLE	0.03375800303183496	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_1_pe_.ltl	1	UNREALIZABLE	0.030462488066405058	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.03308028704486787	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.0403533480130136	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.03374241106212139	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_5_pe_.ltl	1	UNREALIZABLE	0.03162649506703019	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_6_pe_.ltl	1	UNREALIZABLE	0.03230833099223673	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_7_pe_.ltl	1	UNREALIZABLE	0.03455885499715805	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_8_pe_.ltl	1	UNREALIZABLE	0.035934423096477985	false	
+mix4_contra	simple_arbiter_unreal1_pb_5_9_pe_.ltl	1	UNREALIZABLE	0.032655326183885336	false	
+mix4_contra	simple_arbiter_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.03630607691593468	false	
+mix4_contra	simple_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.040728223975747824	false	
+mix4_contra	simple_arbiter_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.03739640605635941	false	
+mix4_contra	simple_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.030305034015327692	false	
+mix4_contra	simple_arbiter_unreal1_pb_6_5_pe_.ltl	1	UNREALIZABLE	0.03721996583044529	false	
+mix4_contra	simple_arbiter_unreal1_pb_8_8_pe_.ltl	1	UNREALIZABLE	0.036669792141765356	false	
+mix4_contra	simple_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.0381260490976274	false	
+mix4_contra	simple_arbiter_unreal2_pb_25_pe_.ltl	1	UNREALIZABLE	0.04119880008511245	false	
+mix4_contra	simple_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.031213303096592426	false	
+mix4_contra	simple_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.03378422278910875	false	
+mix4_contra	simple_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.034494305960834026	false	
+mix4_contra	simple_arbiter_unreal2_pb_50_pe_.ltl	1	UNREALIZABLE	0.05333658284507692	false	
+mix4_contra	simple_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.03342931601218879	false	
+mix4_contra	simple_arbiter_unreal2_pb_60_pe_.ltl	1	UNREALIZABLE	0.05691770603880286	false	
+mix4_contra	simple_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.0326186059974134	false	
+mix4_contra	simple_arbiter_unreal2_pb_75_pe_.ltl	1	UNREALIZABLE	0.05666851485148072	false	
+mix4_contra	simple_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.02267644484527409	false	
+mix4_contra	simple_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.030000549042597413	false	
+mix4_contra	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_with_hints_pb_2_pe_.ltl	1	REALIZABLE	0.0245424029417336	false	
+mix4_contra	simple_arbiter_with_hints_pb_4_pe_.ltl	1	REALIZABLE	0.09790664678439498	false	
+mix4_contra	simple_arbiter_with_hints_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	simple_arbiter_with_hints_pb_8_pe_.ltl				true	UNKNOWN
+mix4_contra	solitary-real.ltl	1	REALIZABLE	0.03064822591841221	false	
+mix4_contra	solitary0.ltl	1	UNREALIZABLE	0.03137731784954667	false	
+mix4_contra	sort4-real.ltl				true	TIMEOUT
+mix4_contra	sort40.ltl	5	UNREALIZABLE	2.480408236151561	false	
+mix4_contra	sort41.ltl	17	UNREALIZABLE	7.607722581829876	false	UNREALIZABLE
+mix4_contra	sort42.ltl				true	TIMEOUT
+mix4_contra	sort50.ltl				true	TIMEOUT
+mix4_contra	sort51.ltl				true	TIMEOUT
+mix4_contra	sort52.ltl				true	TIMEOUT
+mix4_contra	sort53.ltl				true	TIMEOUT
+mix4_contra	square5x5-real.ltl				true	TIMEOUT
+mix4_contra	square5x50.ltl				true	TIMEOUT
+mix4_contra	square5x51.ltl				true	TIMEOUT
+mix4_contra	square5x52.ltl				true	TIMEOUT
+mix4_contra	square5x53.ltl				true	TIMEOUT
+mix4_contra	square5x54.ltl				true	TIMEOUT
+mix4_contra	storage-GF-64-real.ltl	1	REALIZABLE	0.029025546042248607	false	
+mix4_contra	tasks-real.ltl	1	REALIZABLE	0.06869636988267303	false	
+mix4_contra	tasks-unreal0.ltl				true	TIMEOUT
+mix4_contra	tasks-unreal1.ltl				true	TIMEOUT
+mix4_contra	tasks-unreal2.ltl				true	TIMEOUT
+mix4_contra	taxi-service-real.ltl				true	TIMEOUT
+mix4_contra	taxi-service-u-unreal.ltl	5	UNREALIZABLE	1.244049937929958	false	
+mix4_contra	test2_f2774e0b.ltl	1	REALIZABLE	0.02424013800919056	false	
+mix4_contra	test3_efe2feaf.ltl	1	REALIZABLE	0.03004394401796162	false	
+mix4_contra	test4_4b82b1f4.ltl	1	UNREALIZABLE	0.032773785991594195	false	
+mix4_contra	test5_6cbc6174.ltl	1	REALIZABLE	0.04762412188574672	false	
+mix4_contra	test6_0f5381e9.ltl	1	REALIZABLE	0.04617198393680155	false	
+mix4_contra	test7_2c5b09da.ltl	1	REALIZABLE	0.040165788028389215	false	
+mix4_contra	test8_88f351a6.ltl	1	UNREALIZABLE	0.034456717083230615	false	
+mix4_contra	test9_dd3a27e1.ltl	1	UNREALIZABLE	0.041681438218802214	false	
+mix4_contra	test_f3987563.ltl	1	REALIZABLE	0.03967986488714814	false	
+mix4_contra	thermostat-F-real.ltl				true	TIMEOUT
+mix4_contra	thermostat-GF-real.ltl				true	TIMEOUT
+mix4_contra	thermostat-GF-unreal0.ltl				true	TIMEOUT
+mix4_contra	thermostat-GF-unreal1.ltl				true	TIMEOUT
+mix4_contra	thermostat-GF-unreal2.ltl				true	TIMEOUT
+mix4_contra	tmp_13cfc6f2.ltl	1	REALIZABLE	0.9997391900978982	false	
+mix4_contra	unordered-visits-charging0.ltl				true	TIMEOUT
+mix4_contra	unordered-visits-real.ltl	17	REALIZABLE	14.235827831085771	false	REALIZABLE
+mix4_contra	workstation_resupply_pb_1_pe_.ltl	1	REALIZABLE	0.06225687894038856	false	
+mix4_contra	workstation_resupply_pb_2_pe_.ltl	5	REALIZABLE	3.2781788650900126	false	
+mix4_contra	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT
+mix4_contra	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT
+mix4_contra	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT
+mix4_contra	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT
+mix4_contra	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT

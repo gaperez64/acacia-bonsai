@@ -56,6 +56,18 @@ option('acacia_enable_realizability_simplifier', type: 'boolean', value: true,
        description: 'Enable Spot realizability-preserving formula simplification before solving and after decomposition')
 option('acacia_enable_syntactic_bypass', type: 'boolean', value: true,
        description: 'Enable Spot direct-strategy checks before automaton construction')
+option('acacia_forced_output_contradiction', type: 'boolean', value: false,
+       description: 'Enable the forced-output contradiction checker in the decision-only syntactic bypass')
+option('acacia_profile_dominance', type: 'boolean', value: false,
+       description: 'Prune globally dominated semantic actions after decoding, per input')
+option('acacia_forward_eager_minimal_successors', type: 'boolean', value: false,
+       description: 'Eagerly apply and Pareto-minimise every forward controller action (comparison mode)')
+option('acacia_forward_conditional_covering', type: 'boolean', value: false,
+       description: 'Enable conditional downward covering of optimistic successors')
+option('acacia_k_schedule', type: 'combo',
+       choices: ['linear', 'geometric', 'cheap_loss_adaptive', 'direct_max'],
+       value: 'linear',
+       description: 'Bound-raising schedule for the K loop')
 option('acacia_simd_is_max', type: 'boolean', value: true)
 option('acacia_decompose_spec', type: 'boolean', value: true)
 option('acacia_cpre_avoid_unions', type: 'boolean', value: false)
@@ -63,8 +75,22 @@ option('acacia_no_simd', type: 'boolean', value: false)
 option('acacia_compile_all_components', type: 'boolean', value: false)
 option('acacia_enable_diagnostics', type: 'boolean', value: false,
        description: 'Compile compact Acacia phase diagnostics, gated at runtime by ACACIA_DIAG')
-option('acacia_local_certificate', type: 'boolean', value: true,
+# false, to agree with config/acacia-options.json and src/configuration.hh.  The
+# three frontends must state the same default: scripts/acacia-config.py passes
+# every option explicitly, so a disagreement here silently gave a plain
+# `meson setup build` local certificates while the documented default was off --
+# and that is the single option separating the S reference configuration from B.
+option('acacia_local_certificate', type: 'boolean', value: false,
        description: 'Enable the bounded local winning-certificate and root-refutation probe')
+# A portfolio the build ships by default, in --arms syntax
+# (polarity:transform:backend, comma separated).  Empty keeps the historical
+# default portfolio, so every existing build is unaffected.  This exists because
+# the best measured configuration is an arm mix rather than a compile-time
+# backend choice, and a shipped configuration has to be able to say so.
+option('acacia_default_arms', type: 'string', value: '',
+       description: 'Default portfolio in --arms syntax; empty uses the historical default')
+option('acacia_forward_safety_solver', type: 'boolean', value: false,
+       description: 'Use the on-the-fly forward safety-game solver instead of the backward antichain fixed point')
 option('acacia_enable_equivariant_solver', type: 'boolean', value: true,
        description: 'Compile and enable the exact equivariant solver path')
 option('acacia_transition_acceptance', type: 'boolean', value: false,

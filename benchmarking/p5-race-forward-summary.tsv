@@ -1,0 +1,1525 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_60	failure_kind_at_60
+race-F	01.ltl	1	REALIZABLE	0.02638855599798262	false	
+race-F	02.ltl	1	REALIZABLE	0.05221664404962212	false	
+race-F	03.ltl	5	REALIZABLE	3.9645725800655782	false	
+race-F	05.ltl				true	TIMEOUT
+race-F	06.ltl				true	TIMEOUT
+race-F	07.ltl				true	TIMEOUT
+race-F	08.ltl				true	TIMEOUT
+race-F	09.ltl	17	REALIZABLE	10.767371528083459	false	REALIZABLE
+race-F	10.ltl	5	REALIZABLE	4.5835360049968585	false	
+race-F	11.ltl	5	REALIZABLE	4.502768615959212	false	
+race-F	12.ltl	17	REALIZABLE	6.589447441976517	false	REALIZABLE
+race-F	13.ltl	17	REALIZABLE	6.512628269032575	false	REALIZABLE
+race-F	ActionConverter.ltl	1	REALIZABLE	0.019111971952952445	false	
+race-F	AlarmMin_efe2feaf.ltl	1	REALIZABLE	0.016981057007797062	false	
+race-F	Alarm_06e9cad4.ltl	17	REALIZABLE	16.78829501301516	false	REALIZABLE
+race-F	Alarm_2d1010f8.ltl	1	REALIZABLE	0.0263867590110749	false	
+race-F	Alarm_68c86764.ltl				true	TIMEOUT
+race-F	Alarm_70523fbe.ltl	17	REALIZABLE	9.013555043959059	false	REALIZABLE
+race-F	Alarm_88c5c1c3.ltl	1	REALIZABLE	0.022090061916969717	false	
+race-F	Alarm_9cac58d3.ltl	1	REALIZABLE	0.015553275938145816	false	
+race-F	Alarm_a5f99bc6.ltl				true	TIMEOUT
+race-F	Alarm_f2774e0b.ltl	17	REALIZABLE	9.378250133013353	false	REALIZABLE
+race-F	AllHeating_d6376bf9.ltl	1	REALIZABLE	0.025723458034917712	false	
+race-F	AllLights_06e9cad4.ltl	5	UNREALIZABLE	4.55329280695878	false	
+race-F	AllLights_2c5b09da.ltl	5	UNREALIZABLE	2.0349868789780885	false	
+race-F	AllLights_63831f8c.ltl	5	UNREALIZABLE	4.56488864403218	false	
+race-F	AllLights_aeb1d897.ltl	17	UNREALIZABLE	7.3849373899865896	false	UNREALIZABLE
+race-F	AllLights_b209ff21.ltl	17	UNREALIZABLE	7.280433565960266	false	UNREALIZABLE
+race-F	AllLights_d6c5ac79.ltl	17	UNREALIZABLE	5.576336464961059	false	UNREALIZABLE
+race-F	AllShades_66f450a4.ltl	17	UNREALIZABLE	4.899786852067336	false	UNREALIZABLE
+race-F	Assumptions_a50cadd7.ltl	1	UNREALIZABLE	0.01978732005227357	false	
+race-F	Automata.ltl	1	REALIZABLE	0.04981634800788015	false	
+race-F	Automata16S.ltl				true	TIMEOUT
+race-F	Automata32S.ltl				true	TIMEOUT
+race-F	Button.ltl	1	REALIZABLE	0.02008653001394123	false	
+race-F	CheckAlarmBroken1_1a2942e3.ltl	1	REALIZABLE	0.01641455595381558	false	
+race-F	CheckAlarm_6bea956e.ltl	1	UNREALIZABLE	0.024312682915478945	false	
+race-F	CheckCoffeMachineBroken1_a5f99bc6.ltl	1	REALIZABLE	0.019954952993430197	false	
+race-F	CheckCoffeMachine_3461125b.ltl	1	UNREALIZABLE	0.020384783972986042	false	
+race-F	CheckCoffeMachine_f3987563.ltl	1	UNREALIZABLE	0.02156907902099192	false	
+race-F	CheckDoor_c2b9e44d.ltl	1	UNREALIZABLE	0.016445846064016223	false	
+race-F	CheckHeating_2418b67e.ltl	1	UNREALIZABLE	0.021468082908540964	false	
+race-F	CheckHeating_3461125b.ltl	1	UNREALIZABLE	0.021033111959695816	false	
+race-F	CheckLight_007df645.ltl	1	UNREALIZABLE	0.016962700057774782	false	
+race-F	CheckLight_aeb1d897.ltl	1	UNREALIZABLE	0.021510879043489695	false	
+race-F	CheckRoom_06e9cad4.ltl	1	UNREALIZABLE	0.015599533915519714	false	
+race-F	CheckRoom_2c5b09da.ltl	1	UNREALIZABLE	0.021699061035178602	false	
+race-F	CheckRoom_3916ec59.ltl	1	UNREALIZABLE	0.02573842997662723	false	
+race-F	CheckRoom_70523fbe.ltl	1	UNREALIZABLE	0.01749649702105671	false	
+race-F	CheckShades_1a2942e3.ltl	1	UNREALIZABLE	0.02229059301316738	false	
+race-F	CheckShades_3461125b.ltl	1	UNREALIZABLE	0.017421590979211032	false	
+race-F	CheckShades_4d4ca5c4.ltl	1	UNREALIZABLE	0.015462360926903784	false	
+race-F	CheckShades_aeb1d897.ltl	1	UNREALIZABLE	0.024653985048644245	false	
+race-F	CheckTime_3916ec59.ltl	1	UNREALIZABLE	0.01963280502241105	false	
+race-F	CheckTime_4b5e6eaa.ltl	1	UNREALIZABLE	0.01831115293316543	false	
+race-F	CheckTime_54e1f7d2.ltl	1	UNREALIZABLE	0.019121718942187726	false	
+race-F	CheckTimer_54e1f7d2.ltl	1	UNREALIZABLE	0.026474140002392232	false	
+race-F	CheckTimer_fa8592c8.ltl	1	UNREALIZABLE	0.018750151968561113	false	
+race-F	CheckWarnlightBroken1_70523fbe.ltl	1	REALIZABLE	0.01800702605396509	false	
+race-F	CheckWarnlight_1cf58fc1.ltl	1	UNREALIZABLE	0.019873157027177513	false	
+race-F	CheckWarnlight_4b5a2bad.ltl	1	UNREALIZABLE	0.02421852690167725	false	
+race-F	CheckWarnlight_54e1f7d2.ltl	1	UNREALIZABLE	0.022800966049544513	false	
+race-F	CheckWarnlight_6bea956e.ltl	1	UNREALIZABLE	0.021185642923228443	false	
+race-F	CheckWindows_54e1f7d2.ltl	1	UNREALIZABLE	0.018406947958283126	false	
+race-F	Cockpitboard.ltl	1	REALIZABLE	0.023281605914235115	false	
+race-F	Cockpitboard_efe2feaf.ltl	1	REALIZABLE	0.01888911402784288	false	
+race-F	CoffeMachine_974f4a68.ltl	1	REALIZABLE	0.027549216989427805	false	
+race-F	CoffeMachine_a50cadd7.ltl	1	UNREALIZABLE	0.02772265300154686	false	
+race-F	CoffeeMin_88f351a6.ltl	1	REALIZABLE	0.02674725907854736	false	
+race-F	Coffee_06e9cad4.ltl	1	REALIZABLE	0.033700226922519505	false	
+race-F	Coffee_235467da.ltl	1	REALIZABLE	0.0333326660329476	false	
+race-F	Coffee_2c5b09da.ltl	1	REALIZABLE	0.025248188991099596	false	
+race-F	Coffee_6479ef9a.ltl	1	REALIZABLE	0.03937577805481851	false	
+race-F	Coffee_d6376bf9.ltl	1	REALIZABLE	0.03586173499934375	false	
+race-F	Coffee_efe2feaf.ltl	1	REALIZABLE	0.02658407506532967	false	
+race-F	Coffee_f1477cc5.ltl	1	UNREALIZABLE	0.026680037030018866	false	
+race-F	Core_4b5a2bad.ltl	1	UNREALIZABLE	0.034317131037823856	false	
+race-F	Core_66f450a4.ltl	1	UNREALIZABLE	0.01652173197362572	false	
+race-F	Core_fa4d4ce3.ltl	1	UNREALIZABLE	0.035012837033718824	false	
+race-F	Core_solved_974f4a68.ltl	1	REALIZABLE	0.03799672902096063	false	
+race-F	Demo1_06e9cad4.ltl				true	TIMEOUT
+race-F	Demo1_2c5b09da.ltl				true	TIMEOUT
+race-F	Demo1_63831f8c.ltl				true	TIMEOUT
+race-F	Demo1_c2b9e44d.ltl				true	TIMEOUT
+race-F	Demo1_d65ed84e.ltl				true	TIMEOUT
+race-F	DeviceBehaviorChec_fa8592c8.ltl	1	UNREALIZABLE	0.024859407916665077	false	
+race-F	Door_2d1010f8.ltl	1	REALIZABLE	0.019245696952566504	false	
+race-F	EnemeyModule.ltl	1	REALIZABLE	0.022036039968952537	false	
+race-F	EscalatorBidirectional.ltl	1	REALIZABLE	0.022120654000900686	false	
+race-F	EscalatorBidirectionalInit.ltl	1	REALIZABLE	0.028083606041036546	false	
+race-F	EscalatorCounting.ltl	1	REALIZABLE	0.018558496027253568	false	
+race-F	EscalatorCountingInit.ltl	1	REALIZABLE	0.02537064696662128	false	
+race-F	EscalatorNonCounting.ltl	1	REALIZABLE	0.02196899603586644	false	
+race-F	EscalatorNonReactive.ltl	1	REALIZABLE	0.01783459703437984	false	
+race-F	EscalatorSmart.ltl	1	REALIZABLE	0.031044203089550138	false	
+race-F	Example1_d6376bf9.ltl	1	REALIZABLE	0.018231188994832337	false	
+race-F	F-G-contradiction-10.ltl	1	UNREALIZABLE	0.07108994608279318	false	
+race-F	F-G-contradiction-11.ltl	1	UNREALIZABLE	0.18857682100497186	false	
+race-F	F-G-contradiction-110.ltl				true	TIMEOUT
+race-F	F-G-contradiction-111.ltl				true	TIMEOUT
+race-F	F-G-contradiction-112.ltl				true	TIMEOUT
+race-F	F-G-contradiction-113.ltl				true	TIMEOUT
+race-F	F-G-contradiction-114.ltl				true	TIMEOUT
+race-F	F-G-contradiction-12.ltl	1	UNREALIZABLE	0.3984862050274387	false	
+race-F	F-G-contradiction-13.ltl	5	UNREALIZABLE	1.2298372890800238	false	
+race-F	F-G-contradiction-14.ltl	5	UNREALIZABLE	2.7926751299528405	false	
+race-F	F-G-contradiction-15.ltl	5	UNREALIZABLE	3.1974720149300992	false	
+race-F	F-G-contradiction-16.ltl				true	TIMEOUT
+race-F	F-G-contradiction-17.ltl				true	TIMEOUT
+race-F	F-G-contradiction-18.ltl				true	TIMEOUT
+race-F	F-G-contradiction-19.ltl				true	TIMEOUT
+race-F	F-G-contradiction-2-unreal.ltl	1	UNREALIZABLE	0.042648387025110424	false	
+race-F	FelixSpecFixed2.2.core_fa8592c8.ltl	1	UNREALIZABLE	0.022263222956098616	false	
+race-F	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT
+race-F	FelixSpecFixed3.core_b209ff21.ltl	1	UNREALIZABLE	0.07621497998479754	false	
+race-F	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT
+race-F	FelixSpecFixed4GuaranteesOnly_88f351a6.ltl	1	UNREALIZABLE	0.02411845198366791	false	
+race-F	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT
+race-F	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT
+race-F	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT
+race-F	Full_f1477cc5.ltl				true	TIMEOUT
+race-F	GF-G-contradiction0.ltl	1	UNREALIZABLE	0.06149173900485039	false	
+race-F	GF-G-contradiction1.ltl	1	UNREALIZABLE	0.40032108302693814	false	
+race-F	GF-G-contradiction2.ltl	5	UNREALIZABLE	2.4564053650246933	false	
+race-F	GF-G-contradiction3.ltl				true	TIMEOUT
+race-F	GF-G-contradiction4.ltl				true	TIMEOUT
+race-F	GF-G-contradiction5.ltl				true	TIMEOUT
+race-F	GF-G-contradiction6.ltl				true	TIMEOUT
+race-F	GF-G-contradiction7.ltl				true	TIMEOUT
+race-F	Gamelogic.ltl	1	REALIZABLE	0.025953513104468584	false	
+race-F	GamemodeChooser.ltl	1	REALIZABLE	0.021386174019426107	false	
+race-F	Gamemodule.ltl	1	REALIZABLE	0.022700416040606797	false	
+race-F	HeatingMin_d6c5ac79.ltl	1	REALIZABLE	0.022108000004664063	false	
+race-F	Heating_235467da.ltl	1	REALIZABLE	0.027584649971686304	false	
+race-F	Heating_974f4a68.ltl	1	REALIZABLE	0.02323741198051721	false	
+race-F	Heating_b02056d6.ltl	1	REALIZABLE	0.018852966954000294	false	
+race-F	Heating_b209ff21.ltl	1	REALIZABLE	0.02012459491379559	false	
+race-F	Increment.ltl	1	REALIZABLE	0.023252829909324646	false	
+race-F	IntendDemo_42dc4fff.ltl	1	UNREALIZABLE	0.0513468359131366	false	
+race-F	KitchenTimerV0.ltl	1	REALIZABLE	0.019607294001616538	false	
+race-F	KitchenTimerV1.ltl	1	REALIZABLE	0.02628901496063918	false	
+race-F	KitchenTimerV10.ltl	1	REALIZABLE	0.08024065394420177	false	
+race-F	KitchenTimerV2.ltl	1	REALIZABLE	0.020804365980438888	false	
+race-F	KitchenTimerV3.ltl	1	REALIZABLE	0.03338299796450883	false	
+race-F	KitchenTimerV4.ltl	1	REALIZABLE	0.03062924393452704	false	
+race-F	KitchenTimerV5.ltl	1	REALIZABLE	0.16444189404137433	false	
+race-F	KitchenTimerV6.ltl	1	REALIZABLE	0.22779121191706508	false	
+race-F	KitchenTimerV7.ltl	1	REALIZABLE	0.23403909907210618	false	
+race-F	KitchenTimerV8.ltl	1	REALIZABLE	0.2447211620165035	false	
+race-F	KitchenTimerV9.ltl	1	REALIZABLE	0.5880283110309392	false	
+race-F	LampController_974f4a68.ltl	1	REALIZABLE	0.02520672499667853	false	
+race-F	LedMatrix.ltl				true	TIMEOUT
+race-F	Light_a50cadd7.ltl	1	UNREALIZABLE	0.021806968958117068	false	
+race-F	Light_aeb1d897.ltl	1	UNREALIZABLE	0.039924931013956666	false	
+race-F	Light_d65ed84e.ltl	1	REALIZABLE	0.02637495007365942	false	
+race-F	Lights2Min_9cbf2546.ltl	1	REALIZABLE	0.02301574603188783	false	
+race-F	Lights2_06e9cad4.ltl	1	REALIZABLE	0.2568134299945086	false	
+race-F	Lights2_0f5381e9.ltl	1	REALIZABLE	0.24279323604423553	false	
+race-F	Lights2_2c5b09da.ltl	1	REALIZABLE	0.043665047036483884	false	
+race-F	Lights2_9cac58d3.ltl	1	REALIZABLE	0.5390922200167552	false	
+race-F	Lights2_b02056d6.ltl	1	REALIZABLE	0.5243259490234777	false	
+race-F	Lights2_f1477cc5.ltl	1	UNREALIZABLE	0.057916452060453594	false	
+race-F	Lights2_f3987563.ltl	1	REALIZABLE	0.2538004529196769	false	
+race-F	Lights3Min_6479ef9a.ltl	1	REALIZABLE	0.0234345649369061	false	
+race-F	Lights3_06e9cad4.ltl	1	REALIZABLE	0.05487905803602189	false	
+race-F	Lights3_235467da.ltl	1	REALIZABLE	0.057775978930294514	false	
+race-F	Lights3_2c5b09da.ltl	1	REALIZABLE	0.02449616394005716	false	
+race-F	Lights3_3916ec59.ltl	1	REALIZABLE	0.04619975702371448	false	
+race-F	Lights3_6bea956e.ltl	1	REALIZABLE	0.06332029297482222	false	
+race-F	Lights3_f1477cc5.ltl	1	REALIZABLE	0.0584668229566887	false	
+race-F	LightsMin_6bea956e.ltl	1	REALIZABLE	0.023296703933738172	false	
+race-F	LightsTotal_06e9cad4.ltl	5	REALIZABLE	1.4242833710741252	false	
+race-F	LightsTotal_2c5b09da.ltl	1	UNREALIZABLE	0.08837378397583961	false	
+race-F	LightsTotal_9cbf2546.ltl	5	REALIZABLE	1.4397025849903002	false	
+race-F	LightsTotal_d65ed84e.ltl	5	REALIZABLE	1.1139816569630057	false	
+race-F	Lights_06e9cad4.ltl	1	REALIZABLE	0.0515362840378657	false	
+race-F	Lights_2c5b09da.ltl	1	REALIZABLE	0.026245118002407253	false	
+race-F	Lights_3461125b.ltl	1	REALIZABLE	0.044462057994678617	false	
+race-F	Lights_9cac58d3.ltl	1	REALIZABLE	0.05473943706601858	false	
+race-F	Lights_b0840146.ltl	1	REALIZABLE	0.04147677298169583	false	
+race-F	Lights_f3987563.ltl	1	REALIZABLE	0.042590106022544205	false	
+race-F	ModdifiedLedMatrix4X.ltl	1	UNREALIZABLE	0.5237239829730242	false	
+race-F	ModdifiedLedMatrix5X.ltl	1	REALIZABLE	0.13272766000591218	false	
+race-F	Morning2Min_6cbc6174.ltl	1	REALIZABLE	0.021407961030490696	false	
+race-F	Morning2_06e9cad4.ltl				true	TIMEOUT
+race-F	Morning2_1cf58fc1.ltl	5	UNREALIZABLE	4.880382878007367	false	
+race-F	Morning2_2c5b09da.ltl				true	TIMEOUT
+race-F	Morning2_407db2cc.ltl				true	TIMEOUT
+race-F	Morning2_4d4ca5c4.ltl	1	REALIZABLE	0.02384715003427118	false	
+race-F	Morning2_63831f8c.ltl				true	TIMEOUT
+race-F	Morning2_68c86764.ltl				true	TIMEOUT
+race-F	Morning2_9cac58d3.ltl	1	REALIZABLE	0.01879390305839479	false	
+race-F	Morning2_d65ed84e.ltl				true	TIMEOUT
+race-F	Morning2s_06cf2373.ltl				true	TIMEOUT
+race-F	Morning2s_06e9cad4.ltl				true	TIMEOUT
+race-F	Morning2s_2c5b09da.ltl				true	TIMEOUT
+race-F	Morning2s_42dc4fff.ltl				true	TIMEOUT
+race-F	Morning2s_9cbf2546.ltl				true	TIMEOUT
+race-F	Morning2s_d6c5ac79.ltl				true	TIMEOUT
+race-F	MorningMin_d6c5ac79.ltl	1	REALIZABLE	0.042302964022383094	false	
+race-F	Morning_14a3b3a2.ltl				true	TIMEOUT
+race-F	Morning_4b5e6eaa.ltl				true	TIMEOUT
+race-F	Morning_88c5c1c3.ltl				true	TIMEOUT
+race-F	Morning_9cac58d3.ltl				true	TIMEOUT
+race-F	Morning_c92eb242.ltl				true	TIMEOUT
+race-F	Morning_f1477cc5.ltl	17	UNREALIZABLE	11.471143365954049	false	UNREALIZABLE
+race-F	Morning_f2774e0b.ltl				true	TIMEOUT
+race-F	MusicAppFeedback.ltl	1	REALIZABLE	0.02221603994257748	false	
+race-F	MusicAppMotivating.ltl	1	REALIZABLE	0.022913949913345277	false	
+race-F	MusicAppSimple.ltl	1	REALIZABLE	0.023459697025828063	false	
+race-F	OneCounter.ltl	5	REALIZABLE	2.9129645130597055	false	
+race-F	OneCounterGui.ltl	1	UNREALIZABLE	0.02740635897498578	false	
+race-F	OneCounterGuiA1.ltl	1	UNREALIZABLE	0.023995455005206168	false	
+race-F	OneCounterGuiA2.ltl	1	UNREALIZABLE	0.03971247700974345	false	
+race-F	OneCounterGuiA3.ltl	1	UNREALIZABLE	0.060489332070574164	false	
+race-F	OneCounterGuiA4.ltl	1	UNREALIZABLE	0.06404398300219327	false	
+race-F	OneCounterGuiA5.ltl	1	UNREALIZABLE	0.10351879394147545	false	
+race-F	OneCounterGuiA6.ltl	1	UNREALIZABLE	0.3313469869317487	false	
+race-F	OneCounterGuiA7.ltl	1	UNREALIZABLE	0.8941025419626385	false	
+race-F	OneCounterGuiA8.ltl	5	UNREALIZABLE	3.2529217220144346	false	
+race-F	OneCounterInRange.ltl	1	UNREALIZABLE	0.018825922976247966	false	
+race-F	OneCounterInRangeA1.ltl	1	UNREALIZABLE	0.021770189981907606	false	
+race-F	OneCounterInRangeA2.ltl	1	UNREALIZABLE	0.019719677977263927	false	
+race-F	OneCounterInRangeA3.ltl	1	REALIZABLE	0.02106861292850226	false	
+race-F	PlugController_fa4d4ce3.ltl	1	REALIZABLE	0.023168799001723528	false	
+race-F	Radarboard.ltl	1	REALIZABLE	0.015116140944883227	false	
+race-F	RegManager.ltl	1	REALIZABLE	0.022326380014419556	false	
+race-F	Room_a50cadd7.ltl	1	UNREALIZABLE	0.01962949289008975	false	
+race-F	RotationCalculator.ltl	1	REALIZABLE	0.019672287977300584	false	
+race-F	SPI.ltl	1	REALIZABLE	0.31399256200529635	false	
+race-F	SPIPureNext.ltl				true	TIMEOUT
+race-F	SPIReadClk.ltl	1	REALIZABLE	0.02066107594873756	false	
+race-F	SPIReadManag.ltl	1	REALIZABLE	0.04424138891045004	false	
+race-F	SPIReadSdi.ltl	1	REALIZABLE	0.020957489032298326	false	
+race-F	SPIWriteClk.ltl	1	REALIZABLE	0.01763014297466725	false	
+race-F	SPIWriteManag.ltl	1	REALIZABLE	0.026092626969330013	false	
+race-F	SPIWriteSdi.ltl	1	REALIZABLE	0.020529199042357504	false	
+race-F	Scoreboard.ltl	1	REALIZABLE	0.021060621947981417	false	
+race-F	Sensor.ltl	1	REALIZABLE	0.29304866294842213	false	
+race-F	SensorInit.ltl	1	REALIZABLE	0.1337688899366185	false	
+race-F	SensorPart.ltl	1	REALIZABLE	0.04850042692851275	false	
+race-F	SensorRegister.ltl	1	REALIZABLE	0.020214617950841784	false	
+race-F	SensorSelector.ltl	1	REALIZABLE	0.02227418392430991	false	
+race-F	SensorSubmodulChooser.ltl	1	REALIZABLE	0.04466749506536871	false	
+race-F	Shades2Min_63831f8c.ltl	1	REALIZABLE	0.02240960206836462	false	
+race-F	Shades2_235467da.ltl	1	REALIZABLE	0.024178093997761607	false	
+race-F	Shades2_42dc4fff.ltl	1	REALIZABLE	0.025055320002138615	false	
+race-F	Shades2_70523fbe.ltl	1	REALIZABLE	0.022758337086997926	false	
+race-F	Shades2_a5f99bc6.ltl	1	REALIZABLE	0.01643985800910741	false	
+race-F	ShadesMin_aeb1d897.ltl	1	REALIZABLE	0.020242727012373507	false	
+race-F	Shades_6479ef9a.ltl	1	REALIZABLE	0.01993249508086592	false	
+race-F	Shades_974f4a68.ltl	1	REALIZABLE	0.03609915799461305	false	
+race-F	Shades_9cac58d3.ltl	1	REALIZABLE	0.017092637019231915	false	
+race-F	Shades_a02758ea.ltl	1	REALIZABLE	0.021301531931385398	false	
+race-F	SingleContoller_d65ed84e.ltl	1	UNREALIZABLE	0.044838096015155315	false	
+race-F	SliderDefault.ltl	1	REALIZABLE	0.0260043729795143	false	
+race-F	SliderDelayed.ltl	1	REALIZABLE	0.05086525494698435	false	
+race-F	SliderScored.ltl	1	REALIZABLE	0.02627540100365877	false	
+race-F	System_b0840146.ltl	1	UNREALIZABLE	0.025283175986260176	false	
+race-F	Time_a50cadd7.ltl	1	UNREALIZABLE	0.022949995007365942	false	
+race-F	Timer_a50cadd7.ltl	1	REALIZABLE	0.019780999049544334	false	
+race-F	TorcsAccelerating.ltl	1	REALIZABLE	0.021196085959672928	false	
+race-F	TorcsGearing.ltl	1	REALIZABLE	0.020223370054736733	false	
+race-F	TorcsSimple.ltl	1	REALIZABLE	0.025557899032719433	false	
+race-F	TorcsSteeringImproved.ltl	1	REALIZABLE	0.019611935946159065	false	
+race-F	TorcsSteeringSimple.ltl	1	REALIZABLE	0.021711372071877122	false	
+race-F	TorcsSteeringSmart.ltl	1	REALIZABLE	0.01766868296544999	false	
+race-F	TwoCounters.ltl	1	UNREALIZABLE	0.02679711300879717	false	
+race-F	TwoCounters2.ltl	1	UNREALIZABLE	0.041378677007742226	false	
+race-F	TwoCounters3.ltl	5	REALIZABLE	1.4103411679388955	false	
+race-F	TwoCounters4.ltl	1	REALIZABLE	0.02437897294294089	false	
+race-F	TwoCounters5.ltl	1	UNREALIZABLE	0.13331045396625996	false	
+race-F	TwoCountersDisButA0.ltl	1	UNREALIZABLE	0.03210162406321615	false	
+race-F	TwoCountersDisButA1.ltl	1	UNREALIZABLE	0.04107666003983468	false	
+race-F	TwoCountersDisButA2.ltl	1	UNREALIZABLE	0.08110852097161114	false	
+race-F	TwoCountersDisButA3.ltl	1	UNREALIZABLE	0.13226966897491366	false	
+race-F	TwoCountersDisButA4.ltl	1	UNREALIZABLE	0.13620076200459152	false	
+race-F	TwoCountersDisButA5.ltl	1	UNREALIZABLE	0.15703221398871392	false	
+race-F	TwoCountersDisButA6.ltl	1	UNREALIZABLE	0.1552826149854809	false	
+race-F	TwoCountersDisButA7.ltl	1	UNREALIZABLE	0.1989225159632042	false	
+race-F	TwoCountersDisButA8.ltl	1	UNREALIZABLE	0.20494845893699676	false	
+race-F	TwoCountersDisButA9.ltl	1	UNREALIZABLE	0.27145453297998756	false	
+race-F	TwoCountersDisButAC.ltl	1	UNREALIZABLE	0.26746230700518936	false	
+race-F	TwoCountersGui.ltl	1	UNREALIZABLE	0.07148722605779767	false	
+race-F	TwoCountersInRange.ltl	1	UNREALIZABLE	0.029702013009227812	false	
+race-F	TwoCountersInRangeA1.ltl	1	UNREALIZABLE	0.026827018009498715	false	
+race-F	TwoCountersInRangeA2.ltl	1	UNREALIZABLE	0.027846273966133595	false	
+race-F	TwoCountersInRangeA3.ltl	1	UNREALIZABLE	0.03812651103362441	false	
+race-F	TwoCountersInRangeA4.ltl	1	UNREALIZABLE	0.031703274929896	false	
+race-F	TwoCountersInRangeA5.ltl	1	UNREALIZABLE	0.03611747990362346	false	
+race-F	TwoCountersInRangeM0.ltl	1	UNREALIZABLE	0.0445821329485625	false	
+race-F	TwoCountersInRangeM1.ltl	1	UNREALIZABLE	0.05040311405900866	false	
+race-F	TwoCountersInRangeM2.ltl	1	UNREALIZABLE	0.03828748397063464	false	
+race-F	TwoCountersInRangeM3.ltl	1	UNREALIZABLE	0.04222640907391906	false	
+race-F	TwoCountersInRangeM4.ltl	1	UNREALIZABLE	0.03811369102913886	false	
+race-F	TwoCountersRefined.ltl	1	UNREALIZABLE	0.03354135504923761	false	
+race-F	TwoCountersRefinedRefined.ltl	1	REALIZABLE	0.028569560032337904	false	
+race-F	UnderapproxDemo2.ltl	1	UNREALIZABLE	0.02493198902811855	false	
+race-F	UnderapproxStrengthenedDemo.ltl	1	REALIZABLE	0.0210360320052132	false	
+race-F	Warnlight_2d1010f8.ltl	1	REALIZABLE	0.025457734940573573	false	
+race-F	Warnlight_a50cadd7.ltl	1	UNREALIZABLE	0.01997958798892796	false	
+race-F	Window2Min_88c5c1c3.ltl	1	REALIZABLE	0.023365499917417765	false	
+race-F	Window2_54e1f7d2.ltl	1	REALIZABLE	0.027054594014771283	false	
+race-F	Window2_6479ef9a.ltl	1	REALIZABLE	0.023567357915453613	false	
+race-F	Window2_9cac58d3.ltl	1	REALIZABLE	0.021949226036667824	false	
+race-F	Window2_aeb1d897.ltl	1	REALIZABLE	0.04157571995165199	false	
+race-F	Window2_f1477cc5.ltl	1	UNREALIZABLE	0.028151068021543324	false	
+race-F	WindowMin_a5f99bc6.ltl	1	REALIZABLE	0.023671588976867497	false	
+race-F	Window_235467da.ltl	1	REALIZABLE	0.026264069019816816	false	
+race-F	Window_42dc4fff.ltl	1	REALIZABLE	0.024461771943606436	false	
+race-F	Window_54e1f7d2.ltl	1	REALIZABLE	0.023624538094736636	false	
+race-F	Zoo0.ltl	1	REALIZABLE	0.019181772018782794	false	
+race-F	Zoo10.ltl	1	REALIZABLE	0.027803297038190067	false	
+race-F	Zoo5.ltl	1	REALIZABLE	0.025069586001336575	false	
+race-F	abcg_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.026945652905851603	false	
+race-F	abcg_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.9741014189785346	false	
+race-F	abcg_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+race-F	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+race-F	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+race-F	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+race-F	amba_case_study_pb_2_pe_.ltl				true	TIMEOUT
+race-F	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT
+race-F	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT
+race-F	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT
+race-F	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT
+race-F	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT
+race-F	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.02208237408194691	false	
+race-F	amba_decomposed_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.052861975971609354	false	
+race-F	amba_decomposed_arbiter_pb_4_pe_.ltl	5	REALIZABLE	1.096941118943505	false	
+race-F	amba_decomposed_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_decode.ltl	1	REALIZABLE	0.018229749985039234	false	
+race-F	amba_decomposed_encode_pb_10_pe_.ltl	1	REALIZABLE	0.03481032804120332	false	
+race-F	amba_decomposed_encode_pb_11_pe_.ltl	1	REALIZABLE	0.046882102033123374	false	
+race-F	amba_decomposed_encode_pb_12_pe_.ltl	1	REALIZABLE	0.05746482906397432	false	
+race-F	amba_decomposed_encode_pb_13_pe_.ltl	1	REALIZABLE	0.07055423292331398	false	
+race-F	amba_decomposed_encode_pb_14_pe_.ltl	1	REALIZABLE	0.13796060997992754	false	
+race-F	amba_decomposed_encode_pb_15_pe_.ltl	1	REALIZABLE	0.30607950093690306	false	
+race-F	amba_decomposed_encode_pb_16_pe_.ltl	1	REALIZABLE	0.8792241929331794	false	
+race-F	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_encode_pb_2_pe_.ltl	1	REALIZABLE	0.025200820993632078	false	
+race-F	amba_decomposed_encode_pb_3_pe_.ltl	1	REALIZABLE	0.018527086009271443	false	
+race-F	amba_decomposed_encode_pb_4_pe_.ltl	1	REALIZABLE	0.02179865597281605	false	
+race-F	amba_decomposed_encode_pb_5_pe_.ltl	1	REALIZABLE	0.02398993296083063	false	
+race-F	amba_decomposed_encode_pb_6_pe_.ltl	1	REALIZABLE	0.03194049897138029	false	
+race-F	amba_decomposed_encode_pb_7_pe_.ltl	1	REALIZABLE	0.02554365003015846	false	
+race-F	amba_decomposed_encode_pb_8_pe_.ltl	1	REALIZABLE	0.02655192802194506	false	
+race-F	amba_decomposed_encode_pb_9_pe_.ltl	1	REALIZABLE	0.03300415899138898	false	
+race-F	amba_decomposed_lock_pb_10_pe_.ltl	1	REALIZABLE	0.4499010150320828	false	
+race-F	amba_decomposed_lock_pb_11_pe_.ltl	5	REALIZABLE	1.590492696966976	false	
+race-F	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	6.273198312963359	false	REALIZABLE
+race-F	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_lock_pb_2_pe_.ltl	1	REALIZABLE	0.019517456996254623	false	
+race-F	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT
+race-F	amba_decomposed_lock_pb_3_pe_.ltl	1	REALIZABLE	0.017398183001205325	false	
+race-F	amba_decomposed_lock_pb_4_pe_.ltl	1	REALIZABLE	0.02420397405512631	false	
+race-F	amba_decomposed_lock_pb_5_pe_.ltl	1	REALIZABLE	0.02438693807926029	false	
+race-F	amba_decomposed_lock_pb_6_pe_.ltl	1	REALIZABLE	0.025381785933859646	false	
+race-F	amba_decomposed_lock_pb_7_pe_.ltl	1	REALIZABLE	0.031943680020049214	false	
+race-F	amba_decomposed_lock_pb_8_pe_.ltl	1	REALIZABLE	0.04065697698388249	false	
+race-F	amba_decomposed_lock_pb_9_pe_.ltl	1	REALIZABLE	0.1535594139713794	false	
+race-F	amba_decomposed_shift.ltl	1	REALIZABLE	0.025125317042693496	false	
+race-F	amba_decomposed_tburst4.ltl	1	REALIZABLE	0.024445062968879938	false	
+race-F	amba_decomposed_tincr.ltl	1	REALIZABLE	0.022827573004178703	false	
+race-F	amba_decomposed_tsingle.ltl	1	REALIZABLE	0.02109149203170091	false	
+race-F	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT
+race-F	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT
+race-F	amba_gr_pb_2_pe_.ltl				true	TIMEOUT
+race-F	amba_gr_pb_3_pe_.ltl				true	TIMEOUT
+race-F	amba_gr_pb_4_pe_.ltl				true	TIMEOUT
+race-F	arbiter-paper-unreal-unreal.ltl	1	UNREALIZABLE	0.08915270701982081	false	
+race-F	arbiter-with-failure-real.ltl	1	REALIZABLE	0.03775756596587598	false	
+race-F	arbiter_on_inpchange_pb_1_pe_.ltl	1	REALIZABLE	0.024205147987231612	false	
+race-F	arbiter_on_inpchange_pb_2_pe_.ltl	1	REALIZABLE	0.02605328499339521	false	
+race-F	arbiter_on_inpchange_pb_3_pe_.ltl	1	REALIZABLE	0.22702668304555118	false	
+race-F	arbiter_on_inpchange_pb_4_pe_.ltl				true	TIMEOUT
+race-F	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT
+race-F	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT
+race-F	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT
+race-F	arbiter_pb_10_pe_.ltl				true	TIMEOUT
+race-F	arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.02317726903129369	false	
+race-F	arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.01233304594643414	false	
+race-F	arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.037083907052874565	false	
+race-F	arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.4175738620106131	false	
+race-F	arbiter_pb_5_pe_.ltl	17	REALIZABLE	16.786568365991116	false	REALIZABLE
+race-F	arbiter_pb_6_pe_.ltl				true	TIMEOUT
+race-F	arbiter_pb_7_pe_.ltl				true	TIMEOUT
+race-F	arbiter_pb_8_pe_.ltl				true	TIMEOUT
+race-F	arbiter_pb_9_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_buffer_pb_1_pe_.ltl	1	REALIZABLE	0.014860276016406715	false	
+race-F	arbiter_with_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.02230998396407813	false	
+race-F	arbiter_with_buffer_pb_3_pe_.ltl	1	REALIZABLE	0.040930786984972656	false	
+race-F	arbiter_with_buffer_pb_4_pe_.ltl	1	REALIZABLE	0.38594126200769097	false	
+race-F	arbiter_with_buffer_pb_5_pe_.ltl	17	REALIZABLE	13.20049953693524	false	REALIZABLE
+race-F	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_cancel_pb_1_pe_.ltl	1	REALIZABLE	0.023194345994852483	false	
+race-F	arbiter_with_cancel_pb_2_pe_.ltl	1	REALIZABLE	0.02234142308589071	false	
+race-F	arbiter_with_cancel_pb_3_pe_.ltl	1	REALIZABLE	0.08754269196651876	false	
+race-F	arbiter_with_cancel_pb_4_pe_.ltl	5	REALIZABLE	1.953411387046799	false	
+race-F	arbiter_with_cancel_pb_5_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT
+race-F	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT
+race-F	batch-arbiter-real.ltl	1	REALIZABLE	0.04752649297006428	false	
+race-F	box-limited-real.ltl	1	REALIZABLE	0.031590951955877244	false	
+race-F	box-real.ltl	1	REALIZABLE	0.09640616690739989	false	
+race-F	box0.ltl	1	UNREALIZABLE	0.042687147040851414	false	
+race-F	box1.ltl	1	UNREALIZABLE	0.05595980607904494	false	
+race-F	buffer-storage-real.ltl	1	REALIZABLE	0.6370624480769038	false	
+race-F	chain-4-real.ltl				true	TIMEOUT
+race-F	chain-5-real.ltl				true	TIMEOUT
+race-F	chain-60.ltl				true	TIMEOUT
+race-F	chain-70.ltl				true	TIMEOUT
+race-F	chain-simple-10-real.ltl	1	REALIZABLE	0.6624156809411943	false	
+race-F	chain-simple-20-real.ltl	5	REALIZABLE	3.646763864089735	false	
+race-F	chain-simple-30-real.ltl	17	REALIZABLE	11.133752142079175	false	REALIZABLE
+race-F	chain-simple-40-real.ltl				true	TIMEOUT
+race-F	chain-simple-5-real.ltl	1	REALIZABLE	0.20313611207529902	false	
+race-F	chain-simple-50-real.ltl				true	TIMEOUT
+race-F	chain-simple-60-real.ltl				true	TIMEOUT
+race-F	chain-simple-70-real.ltl				true	TIMEOUT
+race-F	chain-simple-param-70-real.ltl	5	REALIZABLE	1.2552231359295547	false	
+race-F	chomp_pb_2_2_pe_.ltl	1	REALIZABLE	0.0812082210322842	false	
+race-F	chomp_pb_2_3_pe_.ltl	5	REALIZABLE	3.7878964310511947	false	
+race-F	chomp_pb_2_4_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_2_5_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_2_6_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_3_2_pe_.ltl	5	REALIZABLE	3.4249258040217683	false	
+race-F	chomp_pb_3_3_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_3_4_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_3_5_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_3_6_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_4_2_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_4_3_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_4_4_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_4_5_pe_.ltl				true	TIMEOUT
+race-F	chomp_pb_4_6_pe_.ltl				true	TIMEOUT
+race-F	collector_v1_pb_11_pe_.ltl				true	TIMEOUT
+race-F	collector_v1_pb_12_pe_.ltl				true	TIMEOUT
+race-F	collector_v1_pb_13_pe_.ltl				true	TIMEOUT
+race-F	collector_v1_pb_14_pe_.ltl				true	TIMEOUT
+race-F	collector_v1_pb_15_pe_.ltl				true	TIMEOUT
+race-F	collector_v1_pb_3_pe_.ltl	1	REALIZABLE	0.027494759997352958	false	
+race-F	collector_v1_pb_5_pe_.ltl	1	REALIZABLE	0.35302323393989354	false	
+race-F	collector_v1_pb_7_pe_.ltl				true	TIMEOUT
+race-F	collector_v1_pb_9_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_10_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_11_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_12_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_13_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_15_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_27_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_3_pe_.ltl	1	REALIZABLE	0.04484987596515566	false	
+race-F	collector_v2_pb_5_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_7_pe_.ltl				true	TIMEOUT
+race-F	collector_v2_pb_9_pe_.ltl				true	TIMEOUT
+race-F	collector_v3_pb_10_pe_.ltl				true	TIMEOUT
+race-F	collector_v3_pb_11_pe_.ltl				true	TIMEOUT
+race-F	collector_v3_pb_12_pe_.ltl				true	TIMEOUT
+race-F	collector_v3_pb_13_pe_.ltl				true	TIMEOUT
+race-F	collector_v3_pb_15_pe_.ltl				true	TIMEOUT
+race-F	collector_v3_pb_3_pe_.ltl	1	REALIZABLE	0.02541886898688972	false	
+race-F	collector_v3_pb_5_pe_.ltl	1	REALIZABLE	0.17123874998651445	false	
+race-F	collector_v3_pb_7_pe_.ltl				true	TIMEOUT
+race-F	collector_v3_pb_9_pe_.ltl				true	TIMEOUT
+race-F	diagonal-real.ltl	1	REALIZABLE	0.056281215976923704	false	
+race-F	door_locking_problem_d6c5ac79.ltl	1	REALIZABLE	0.024615937960334122	false	
+race-F	elevator-paper-real.ltl	1	REALIZABLE	0.18687550607137382	false	
+race-F	evasion-real.ltl				true	TIMEOUT
+race-F	evasion0.ltl				true	TIMEOUT
+race-F	example10_pb_1_pe_.ltl	1	REALIZABLE	0.01982500497251749	false	
+race-F	example10_pb_2_pe_.ltl	1	REALIZABLE	0.02886694297194481	false	
+race-F	example10a_pb_1_pe_.ltl	1	REALIZABLE	0.02507340896409005	false	
+race-F	example10a_pb_2_pe_.ltl	1	REALIZABLE	0.024875509086996317	false	
+race-F	example7_pb_1_pe_.ltl	1	REALIZABLE	0.020576277980580926	false	
+race-F	example7_pb_2_pe_.ltl	1	REALIZABLE	0.025401970953680575	false	
+race-F	example7a_pb_1_pe_.ltl	1	REALIZABLE	0.01621326000895351	false	
+race-F	example7a_pb_2_pe_.ltl	1	REALIZABLE	0.02198559103999287	false	
+race-F	example8_pb_1_pe_.ltl	1	REALIZABLE	0.019200454000383615	false	
+race-F	example8_pb_2_pe_.ltl	1	REALIZABLE	0.024996276013553143	false	
+race-F	example9_pb_1_pe_.ltl	1	REALIZABLE	0.025360519997775555	false	
+race-F	example9_pb_2_pe_.ltl	1	REALIZABLE	0.020781493047252297	false	
+race-F	f-real-real.ltl				true	TIMEOUT
+race-F	f-unreal-unreal.ltl	1	UNREALIZABLE	0.026776576996780932	false	
+race-F	finding_nemo_pb_1_pe_.ltl	1	REALIZABLE	0.20733450597617775	false	
+race-F	finding_nemo_pb_2_pe_.ltl	17	REALIZABLE	15.37514486501459	false	REALIZABLE
+race-F	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT
+race-F	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT
+race-F	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT
+race-F	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT
+race-F	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT
+race-F	follow0.ltl				true	TIMEOUT
+race-F	follow1.ltl				true	TIMEOUT
+race-F	follow2.ltl				true	TIMEOUT
+race-F	follow3.ltl				true	TIMEOUT
+race-F	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.06680021504871547	false	
+race-F	full_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.12274341401644051	false	
+race-F	full_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.23606519505847245	false	
+race-F	full_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.4978424449218437	false	
+race-F	full_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.9521302949870005	false	
+race-F	full_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	2.278569118003361	false	
+race-F	full_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	4.787425524904393	false	
+race-F	full_arbiter_unreal1_pb_2_18_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.020825315034016967	false	
+race-F	full_arbiter_unreal1_pb_2_20_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_2_21_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_2_22_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_2_24_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_2_26_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.028423617943190038	false	
+race-F	full_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.01754566701129079	false	
+race-F	full_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.019989995053038	false	
+race-F	full_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.019323521060869098	false	
+race-F	full_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.021400788915343583	false	
+race-F	full_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.0169923979556188	false	
+race-F	full_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.029351262957789004	false	
+race-F	full_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.04215989704243839	false	
+race-F	full_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.02094835601747036	false	
+race-F	full_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.025768411927856505	false	
+race-F	full_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.031209805980324745	false	
+race-F	full_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.05873213103041053	false	
+race-F	full_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.2523960249964148	false	
+race-F	full_arbiter_unreal1_pb_3_6_pe_.ltl	5	UNREALIZABLE	1.6433610310778022	false	
+race-F	full_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	10.291691403021105	false	UNREALIZABLE
+race-F	full_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.04217992606572807	false	
+race-F	full_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.06290811707731336	false	
+race-F	full_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.19919952796772122	false	
+race-F	full_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	2.8105284250341356	false	
+race-F	full_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal1_pb_6_8_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.023589303949847817	false	
+race-F	full_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.0559446009574458	false	
+race-F	full_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	5.370111833908595	false	UNREALIZABLE
+race-F	full_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+race-F	full_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+race-F	g-real-real.ltl	17	REALIZABLE	15.80488351394888	false	REALIZABLE
+race-F	g-real0.ltl	5	UNREALIZABLE	1.1962935490300879	false	
+race-F	g-unreal-1-unreal.ltl				true	TIMEOUT
+race-F	g-unreal-10.ltl	1	UNREALIZABLE	0.023390998016111553	false	
+race-F	g-unreal-11.ltl	1	UNREALIZABLE	0.026216467958875	false	
+race-F	g-unreal-110.ltl				true	TIMEOUT
+race-F	g-unreal-111.ltl				true	TIMEOUT
+race-F	g-unreal-112.ltl				true	TIMEOUT
+race-F	g-unreal-113.ltl				true	TIMEOUT
+race-F	g-unreal-114.ltl				true	TIMEOUT
+race-F	g-unreal-115.ltl				true	TIMEOUT
+race-F	g-unreal-116.ltl				true	TIMEOUT
+race-F	g-unreal-117.ltl				true	TIMEOUT
+race-F	g-unreal-118.ltl				true	TIMEOUT
+race-F	g-unreal-119.ltl				true	TIMEOUT
+race-F	g-unreal-12.ltl	1	UNREALIZABLE	0.0612000550609082	false	
+race-F	g-unreal-120.ltl				true	TIMEOUT
+race-F	g-unreal-13.ltl	1	UNREALIZABLE	0.19752764597069472	false	
+race-F	g-unreal-14.ltl	1	UNREALIZABLE	0.5196625330718234	false	
+race-F	g-unreal-15.ltl	5	UNREALIZABLE	1.3806434740545228	false	
+race-F	g-unreal-16.ltl	5	UNREALIZABLE	3.1840336519526318	false	
+race-F	g-unreal-17.ltl	5	UNREALIZABLE	4.250103435013443	false	
+race-F	g-unreal-18.ltl	17	UNREALIZABLE	14.3054082110757	false	UNREALIZABLE
+race-F	g-unreal-19.ltl				true	TIMEOUT
+race-F	g-unreal-20.ltl				true	TIMEOUT
+race-F	g-unreal-21.ltl				true	TIMEOUT
+race-F	g-unreal-30.ltl	1	UNREALIZABLE	0.0681368539808318	false	
+race-F	g-unreal-31.ltl	1	UNREALIZABLE	0.322109077940695	false	
+race-F	g-unreal-310.ltl				true	TIMEOUT
+race-F	g-unreal-311.ltl				true	TIMEOUT
+race-F	g-unreal-312.ltl				true	TIMEOUT
+race-F	g-unreal-313.ltl				true	TIMEOUT
+race-F	g-unreal-314.ltl				true	TIMEOUT
+race-F	g-unreal-32.ltl	5	UNREALIZABLE	1.728928974014707	false	
+race-F	g-unreal-33.ltl				true	TIMEOUT
+race-F	g-unreal-34.ltl				true	TIMEOUT
+race-F	g-unreal-35.ltl				true	TIMEOUT
+race-F	g-unreal-36.ltl				true	TIMEOUT
+race-F	g-unreal-37.ltl				true	TIMEOUT
+race-F	g-unreal-38.ltl				true	TIMEOUT
+race-F	g-unreal-39.ltl				true	TIMEOUT
+race-F	generalized_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.027286049094982445	false	
+race-F	generalized_buffer_pb_3_pe_.ltl	1	REALIZABLE	0.06254619592800736	false	
+race-F	generalized_buffer_pb_4_pe_.ltl	1	REALIZABLE	0.9253778939601034	false	
+race-F	generalized_buffer_pb_5_pe_.ltl				true	TIMEOUT
+race-F	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT
+race-F	gf-real-real.ltl	1	REALIZABLE	0.03393673698883504	false	
+race-F	gf-unreal0.ltl	1	UNREALIZABLE	0.022452706936746836	false	
+race-F	gf-unreal1.ltl	1	UNREALIZABLE	0.02069866599049419	false	
+race-F	gf-unreal10.ltl	1	UNREALIZABLE	0.023502223077230155	false	
+race-F	gf-unreal11.ltl	1	UNREALIZABLE	0.024414506973698735	false	
+race-F	gf-unreal12.ltl	1	UNREALIZABLE	0.01826271298341453	false	
+race-F	gf-unreal13.ltl	1	UNREALIZABLE	0.02094620605930686	false	
+race-F	gf-unreal14.ltl	1	UNREALIZABLE	0.021380886086262763	false	
+race-F	gf-unreal15.ltl	1	UNREALIZABLE	0.018445658031851053	false	
+race-F	gf-unreal16.ltl	1	UNREALIZABLE	0.02090618503279984	false	
+race-F	gf-unreal17.ltl	1	UNREALIZABLE	0.021012344979681075	false	
+race-F	gf-unreal18.ltl	1	UNREALIZABLE	0.021784837008453906	false	
+race-F	gf-unreal19.ltl	1	UNREALIZABLE	0.026024273014627397	false	
+race-F	gf-unreal2.ltl	1	UNREALIZABLE	0.01580315490718931	false	
+race-F	gf-unreal20.ltl	1	UNREALIZABLE	0.02646646904759109	false	
+race-F	gf-unreal21.ltl	1	UNREALIZABLE	0.025370115065015852	false	
+race-F	gf-unreal22.ltl	1	UNREALIZABLE	0.023980856058187783	false	
+race-F	gf-unreal23.ltl	1	UNREALIZABLE	0.024618403986096382	false	
+race-F	gf-unreal24.ltl	1	UNREALIZABLE	0.025428788969293237	false	
+race-F	gf-unreal25.ltl	1	UNREALIZABLE	0.023891496937721968	false	
+race-F	gf-unreal26.ltl	1	UNREALIZABLE	0.025372775038704276	false	
+race-F	gf-unreal27.ltl	1	UNREALIZABLE	0.028719510068185627	false	
+race-F	gf-unreal28.ltl	1	UNREALIZABLE	0.024201174033805728	false	
+race-F	gf-unreal29.ltl	1	UNREALIZABLE	0.027162914047949016	false	
+race-F	gf-unreal3.ltl	1	UNREALIZABLE	0.021688145003281534	false	
+race-F	gf-unreal30.ltl	1	UNREALIZABLE	0.027969839051365852	false	
+race-F	gf-unreal31.ltl	1	UNREALIZABLE	0.02505443594418466	false	
+race-F	gf-unreal32.ltl	1	UNREALIZABLE	0.026867980021052063	false	
+race-F	gf-unreal33.ltl	1	UNREALIZABLE	0.03399546502623707	false	
+race-F	gf-unreal34.ltl	1	UNREALIZABLE	0.03274219005834311	false	
+race-F	gf-unreal35.ltl	1	UNREALIZABLE	0.028237250982783735	false	
+race-F	gf-unreal36.ltl	1	UNREALIZABLE	0.029273595078848302	false	
+race-F	gf-unreal37.ltl	1	UNREALIZABLE	0.03220749902538955	false	
+race-F	gf-unreal38.ltl	1	UNREALIZABLE	0.03009910194668919	false	
+race-F	gf-unreal39.ltl	1	UNREALIZABLE	0.041042000986635685	false	
+race-F	gf-unreal4.ltl	1	UNREALIZABLE	0.02075483393855393	false	
+race-F	gf-unreal40.ltl	1	UNREALIZABLE	0.02911559899803251	false	
+race-F	gf-unreal41.ltl	1	UNREALIZABLE	0.03503022505901754	false	
+race-F	gf-unreal42.ltl	1	UNREALIZABLE	0.0397268149536103	false	
+race-F	gf-unreal43.ltl	1	UNREALIZABLE	0.033873965963721275	false	
+race-F	gf-unreal44.ltl	1	UNREALIZABLE	0.03399578097742051	false	
+race-F	gf-unreal45.ltl	1	UNREALIZABLE	0.03686782403383404	false	
+race-F	gf-unreal46.ltl	1	UNREALIZABLE	0.03526647400576621	false	
+race-F	gf-unreal47.ltl	1	UNREALIZABLE	0.0331503750057891	false	
+race-F	gf-unreal5.ltl	1	UNREALIZABLE	0.021640539984218776	false	
+race-F	gf-unreal6.ltl	1	UNREALIZABLE	0.026441880967468023	false	
+race-F	gf-unreal7.ltl	1	UNREALIZABLE	0.027070699026808143	false	
+race-F	gf-unreal8.ltl	1	UNREALIZABLE	0.017583142966032028	false	
+race-F	gf-unreal9.ltl	1	UNREALIZABLE	0.03150343999732286	false	
+race-F	heim-buechi-real.ltl	17	REALIZABLE	5.534266690025106	false	REALIZABLE
+race-F	heim-double-x-real.ltl				true	TIMEOUT
+race-F	heim-double-x0.ltl	1	UNREALIZABLE	0.16802272899076343	false	
+race-F	heim-double-x1.ltl	1	UNREALIZABLE	0.6151286070235074	false	
+race-F	heim-double-x10.ltl				true	TIMEOUT
+race-F	heim-double-x11.ltl				true	TIMEOUT
+race-F	heim-double-x12.ltl				true	TIMEOUT
+race-F	heim-double-x13.ltl				true	TIMEOUT
+race-F	heim-double-x2.ltl	1	UNREALIZABLE	0.8291713841026649	false	
+race-F	heim-double-x3.ltl	5	UNREALIZABLE	1.264924149028957	false	
+race-F	heim-double-x4.ltl	5	UNREALIZABLE	3.7838088140124455	false	
+race-F	heim-double-x5.ltl	5	UNREALIZABLE	4.775348330033012	false	
+race-F	heim-double-x6.ltl	5	UNREALIZABLE	4.048582365969196	false	
+race-F	heim-double-x7.ltl	17	UNREALIZABLE	6.441791867022403	false	UNREALIZABLE
+race-F	heim-double-x8.ltl	17	UNREALIZABLE	12.602329205023125	false	UNREALIZABLE
+race-F	heim-double-x9.ltl				true	TIMEOUT
+race-F	heim-fig7-unreal.ltl	1	UNREALIZABLE	0.03004087193403393	false	
+race-F	helipad-contradict0.ltl				true	TIMEOUT
+race-F	helipad-contradict1.ltl				true	TIMEOUT
+race-F	helipad-real.ltl				true	TIMEOUT
+race-F	infinite-race-real.ltl	1	REALIZABLE	0.03228952002245933	false	
+race-F	infinite-race-u0.ltl	1	UNREALIZABLE	0.023282165988348424	false	
+race-F	infinite-race-u1.ltl	1	UNREALIZABLE	0.0385208351071924	false	
+race-F	infinite-race-u10.ltl				true	TIMEOUT
+race-F	infinite-race-u11.ltl				true	TIMEOUT
+race-F	infinite-race-u12.ltl				true	TIMEOUT
+race-F	infinite-race-u13.ltl				true	TIMEOUT
+race-F	infinite-race-u14.ltl				true	TIMEOUT
+race-F	infinite-race-u15.ltl				true	TIMEOUT
+race-F	infinite-race-u16.ltl				true	TIMEOUT
+race-F	infinite-race-u17.ltl				true	TIMEOUT
+race-F	infinite-race-u18.ltl				true	TIMEOUT
+race-F	infinite-race-u19.ltl				true	TIMEOUT
+race-F	infinite-race-u2.ltl	5	UNREALIZABLE	1.1959474760806188	false	
+race-F	infinite-race-u20.ltl				true	TIMEOUT
+race-F	infinite-race-u21.ltl				true	TIMEOUT
+race-F	infinite-race-u22.ltl				true	TIMEOUT
+race-F	infinite-race-u23.ltl				true	TIMEOUT
+race-F	infinite-race-u24.ltl				true	TIMEOUT
+race-F	infinite-race-u25.ltl				true	TIMEOUT
+race-F	infinite-race-u3.ltl	5	UNREALIZABLE	2.6269420329481363	false	
+race-F	infinite-race-u4.ltl	5	UNREALIZABLE	3.5404096679994836	false	
+race-F	infinite-race-u5.ltl	17	UNREALIZABLE	13.209286700002849	false	UNREALIZABLE
+race-F	infinite-race-u6.ltl				true	TIMEOUT
+race-F	infinite-race-u7.ltl				true	TIMEOUT
+race-F	infinite-race-u8.ltl				true	TIMEOUT
+race-F	infinite-race-u9.ltl				true	TIMEOUT
+race-F	infinite-race-unequal-1-real.ltl	1	REALIZABLE	0.30982248298823833	false	
+race-F	infinite-race-unequal-10.ltl	1	UNREALIZABLE	0.023296169936656952	false	
+race-F	infinite-race-unequal-20.ltl	1	UNREALIZABLE	0.026290636975318193	false	
+race-F	infinite-race-unequal-21.ltl	1	UNREALIZABLE	0.7453808219870552	false	
+race-F	infinite-race-unequal-22.ltl	1	UNREALIZABLE	0.9914259590441361	false	
+race-F	infinite-race-unequal-23.ltl	5	UNREALIZABLE	4.379752837005071	false	
+race-F	infinite-race-unequal-24.ltl				true	TIMEOUT
+race-F	infinite-race-unequal-25.ltl				true	TIMEOUT
+race-F	infinite-race-unequal-26.ltl				true	TIMEOUT
+race-F	items_processing-real.ltl				true	TIMEOUT
+race-F	jarvis_gideon_a02758ea.ltl	1	UNREALIZABLE	0.021861089044250548	false	
+race-F	jarvis_philippe_484face8.ltl	1	UNREALIZABLE	0.031287857913412154	false	
+race-F	lazy_shades_problem_d6376bf9.ltl	1	REALIZABLE	0.07024650205858052	false	
+race-F	lift_gr1+_pb_2_pe_.ltl	1	REALIZABLE	0.10237486404366791	false	
+race-F	lift_gr1+_pb_3_pe_.ltl				true	TIMEOUT
+race-F	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT
+race-F	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT
+race-F	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT
+race-F	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT
+race-F	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT
+race-F	lift_gr1_pb_2_pe_.ltl	1	REALIZABLE	0.04565863101743162	false	
+race-F	lift_gr1_pb_3_pe_.ltl	5	REALIZABLE	3.2056751379277557	false	
+race-F	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT
+race-F	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT
+race-F	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT
+race-F	lift_pb_10_pe_.ltl				true	TIMEOUT
+race-F	lift_pb_2_pe_.ltl	1	REALIZABLE	0.027775684953667223	false	
+race-F	lift_pb_3_pe_.ltl	1	REALIZABLE	0.07793880603276193	false	
+race-F	lift_pb_4_pe_.ltl	5	REALIZABLE	2.2423093740362674	false	
+race-F	lift_pb_5_pe_.ltl				true	TIMEOUT
+race-F	lift_pb_6_pe_.ltl				true	TIMEOUT
+race-F	lift_pb_7_pe_.ltl				true	TIMEOUT
+race-F	lift_pb_8_pe_.ltl				true	TIMEOUT
+race-F	lift_pb_9_pe_.ltl				true	TIMEOUT
+race-F	lift_unary_enc_pb_2_pe_.ltl	1	REALIZABLE	0.026390334009192884	false	
+race-F	lift_unary_enc_pb_3_pe_.ltl	1	REALIZABLE	0.23084743099752814	false	
+race-F	lift_unary_enc_pb_4_pe_.ltl				true	TIMEOUT
+race-F	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT
+race-F	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT
+race-F	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT
+race-F	lift_wrong_physics_unreal_pb_10_pe_.ltl	5	UNREALIZABLE	1.5250040589598939	false	
+race-F	lift_wrong_physics_unreal_pb_2_pe_.ltl	1	REALIZABLE	0.029897792963311076	false	
+race-F	lift_wrong_physics_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.024030392989516258	false	
+race-F	lift_wrong_physics_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.034226552001200616	false	
+race-F	lift_wrong_physics_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.03855262906290591	false	
+race-F	lift_wrong_physics_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.05287215602584183	false	
+race-F	lift_wrong_physics_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.09677825204562396	false	
+race-F	lift_wrong_physics_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.19370250403881073	false	
+race-F	lift_wrong_physics_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.6826427549822256	false	
+race-F	lilydemo01.ltl	1	UNREALIZABLE	0.019484143005684018	false	
+race-F	lilydemo02.ltl	1	UNREALIZABLE	0.017849941970780492	false	
+race-F	lilydemo03.ltl	1	REALIZABLE	0.016690235934220254	false	
+race-F	lilydemo04.ltl	1	REALIZABLE	0.02435940399300307	false	
+race-F	lilydemo04_modified.ltl	1	UNREALIZABLE	0.025102666928432882	false	
+race-F	lilydemo05.ltl	1	REALIZABLE	0.019054194097407162	false	
+race-F	lilydemo06.ltl	1	REALIZABLE	0.019113330054096878	false	
+race-F	lilydemo07.ltl	1	REALIZABLE	0.016521741985343397	false	
+race-F	lilydemo08.ltl	1	REALIZABLE	0.01915512897539884	false	
+race-F	lilydemo09.ltl	1	REALIZABLE	0.015544434078037739	false	
+race-F	lilydemo10.ltl	1	REALIZABLE	0.018083833041600883	false	
+race-F	lilydemo11.ltl	1	UNREALIZABLE	0.018512631999328732	false	
+race-F	lilydemo12.ltl	1	REALIZABLE	0.022230776958167553	false	
+race-F	lilydemo13.ltl	1	REALIZABLE	0.020306956954300404	false	
+race-F	lilydemo14.ltl	1	REALIZABLE	0.01738788897637278	false	
+race-F	lilydemo15.ltl	1	REALIZABLE	0.017152713960967958	false	
+race-F	lilydemo16.ltl	1	REALIZABLE	0.02101445000153035	false	
+race-F	lilydemo17.ltl	1	REALIZABLE	0.026146679068915546	false	
+race-F	lilydemo18.ltl	1	REALIZABLE	0.01998712297063321	false	
+race-F	lilydemo19.ltl	1	REALIZABLE	0.0192423639819026	false	
+race-F	lilydemo20.ltl	1	REALIZABLE	0.017216373002156615	false	
+race-F	lilydemo21.ltl	1	REALIZABLE	0.0566610679961741	false	
+race-F	lilydemo22.ltl	1	REALIZABLE	0.019850005977787077	false	
+race-F	lilydemo23.ltl	1	REALIZABLE	0.016351864906027913	false	
+race-F	load_balancer_pb_10_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_pb_11_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_pb_2_pe_.ltl	1	REALIZABLE	0.02397349802777171	false	
+race-F	load_balancer_pb_3_pe_.ltl	1	REALIZABLE	0.043706440017558634	false	
+race-F	load_balancer_pb_4_pe_.ltl	1	REALIZABLE	0.39649028901476413	false	
+race-F	load_balancer_pb_5_pe_.ltl	17	REALIZABLE	7.609002705896273	false	REALIZABLE
+race-F	load_balancer_pb_6_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_pb_7_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_pb_8_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_pb_9_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.04244655591901392	false	
+race-F	load_balancer_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.05500813294202089	false	
+race-F	load_balancer_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.09650045109447092	false	
+race-F	load_balancer_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.17215558409225196	false	
+race-F	load_balancer_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.3755224980413914	false	
+race-F	load_balancer_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.7844190410105512	false	
+race-F	load_balancer_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	1.7640227960655466	false	
+race-F	load_balancer_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.02645466197282076	false	
+race-F	load_balancer_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.02856612007599324	false	
+race-F	load_balancer_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.02172944601625204	false	
+race-F	load_balancer_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.025151879992336035	false	
+race-F	load_balancer_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.02086231193970889	false	
+race-F	load_balancer_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.024402435054071248	false	
+race-F	load_balancer_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.025330558069981635	false	
+race-F	load_balancer_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.023302866029553115	false	
+race-F	load_balancer_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.025415009004063904	false	
+race-F	load_balancer_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.1476738079218194	false	
+race-F	load_balancer_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.3216707829851657	false	
+race-F	load_balancer_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.5963477829936892	false	
+race-F	load_balancer_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.022993187070824206	false	
+race-F	load_balancer_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.026530037983320653	false	
+race-F	load_balancer_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.026603925973176956	false	
+race-F	load_balancer_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.025877647916786373	false	
+race-F	load_balancer_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.029684031032957137	false	
+race-F	load_balancer_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.030832633026875556	false	
+race-F	load_balancer_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.0336483980063349	false	
+race-F	load_balancer_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.052640947978943586	false	
+race-F	load_balancer_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.08526090695522726	false	
+race-F	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.032520110020413995	false	
+race-F	load_balancer_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.038274826016277075	false	
+race-F	load_balancer_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.03662172006443143	false	
+race-F	load_balancer_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.06349283398594707	false	
+race-F	load_balancer_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.1862707280088216	false	
+race-F	load_balancer_unreal1_pb_4_6_pe_.ltl	5	UNREALIZABLE	1.203097891062498	false	
+race-F	load_balancer_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	8.196900001028553	false	UNREALIZABLE
+race-F	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.08182123303413391	false	
+race-F	load_balancer_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.11615731194615364	false	
+race-F	load_balancer_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.6948708581039682	false	
+race-F	load_balancer_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	14.57634849997703	false	UNREALIZABLE
+race-F	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.24926397297531366	false	
+race-F	load_balancer_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.2961224860046059	false	
+race-F	load_balancer_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.6894287579925731	false	
+race-F	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal2_pb_2_pe_.ltl	1	REALIZABLE	0.028051083907485008	false	
+race-F	load_balancer_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.033967175986617804	false	
+race-F	load_balancer_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.151670586084947	false	
+race-F	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	11.89086699008476	false	UNREALIZABLE
+race-F	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+race-F	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba01.ltl	1	REALIZABLE	0.015300230006687343	false	
+race-F	ltl2dba02.ltl	1	REALIZABLE	0.021020108950324357	false	
+race-F	ltl2dba03.ltl	1	REALIZABLE	0.024335000081919134	false	
+race-F	ltl2dba04.ltl	1	REALIZABLE	0.015978888026438653	false	
+race-F	ltl2dba05.ltl	1	REALIZABLE	0.02036638103891164	false	
+race-F	ltl2dba06.ltl	1	REALIZABLE	0.020120773930102587	false	
+race-F	ltl2dba07.ltl	1	REALIZABLE	0.020171181997284293	false	
+race-F	ltl2dba08.ltl	1	REALIZABLE	0.016089432989247143	false	
+race-F	ltl2dba09.ltl	1	REALIZABLE	0.010013449005782604	false	
+race-F	ltl2dba10.ltl	1	REALIZABLE	0.021984494058415294	false	
+race-F	ltl2dba11.ltl	1	REALIZABLE	0.020417650928720832	false	
+race-F	ltl2dba12.ltl	1	REALIZABLE	0.01995783403981477	false	
+race-F	ltl2dba13.ltl	1	REALIZABLE	0.016098424908705056	false	
+race-F	ltl2dba14.ltl	1	REALIZABLE	0.015995468944311142	false	
+race-F	ltl2dba15.ltl	1	REALIZABLE	0.018210535985417664	false	
+race-F	ltl2dba16.ltl	1	REALIZABLE	0.024381470982916653	false	
+race-F	ltl2dba17.ltl	1	REALIZABLE	0.017869834089651704	false	
+race-F	ltl2dba18.ltl	1	REALIZABLE	0.019286378985270858	false	
+race-F	ltl2dba19.ltl	1	REALIZABLE	0.021745553007349372	false	
+race-F	ltl2dba20.ltl	1	REALIZABLE	0.024496742989867926	false	
+race-F	ltl2dba21.ltl	1	REALIZABLE	0.019252227968536317	false	
+race-F	ltl2dba22.ltl	1	REALIZABLE	0.020489201066084206	false	
+race-F	ltl2dba23.ltl	1	REALIZABLE	0.019268716918304563	false	
+race-F	ltl2dba25.ltl	1	REALIZABLE	0.01601880695670843	false	
+race-F	ltl2dba26.ltl	1	REALIZABLE	0.018703339039348066	false	
+race-F	ltl2dba27.ltl	1	UNREALIZABLE	0.018053959007374942	false	
+race-F	ltl2dba_C2_pb_100_pe_.ltl	1	REALIZABLE	0.024549545953050256	false	
+race-F	ltl2dba_C2_pb_10_pe_.ltl	1	REALIZABLE	0.009963275981135666	false	
+race-F	ltl2dba_C2_pb_12_pe_.ltl	1	REALIZABLE	0.01787112792953849	false	
+race-F	ltl2dba_C2_pb_14_pe_.ltl	1	REALIZABLE	0.019986022962257266	false	
+race-F	ltl2dba_C2_pb_16_pe_.ltl	1	REALIZABLE	0.016750801005400717	false	
+race-F	ltl2dba_C2_pb_1_pe_.ltl	1	REALIZABLE	0.02471241308376193	false	
+race-F	ltl2dba_C2_pb_25_pe_.ltl	1	REALIZABLE	0.016409366042353213	false	
+race-F	ltl2dba_C2_pb_2_pe_.ltl	1	REALIZABLE	0.021731980028562248	false	
+race-F	ltl2dba_C2_pb_3_pe_.ltl	1	REALIZABLE	0.020881820004433393	false	
+race-F	ltl2dba_C2_pb_4_pe_.ltl	1	REALIZABLE	0.018602491938509047	false	
+race-F	ltl2dba_C2_pb_50_pe_.ltl	1	REALIZABLE	0.017888693022541702	false	
+race-F	ltl2dba_C2_pb_5_pe_.ltl	1	REALIZABLE	0.01932860305532813	false	
+race-F	ltl2dba_C2_pb_60_pe_.ltl	1	REALIZABLE	0.01674649806227535	false	
+race-F	ltl2dba_C2_pb_6_pe_.ltl	1	REALIZABLE	0.017199564957991242	false	
+race-F	ltl2dba_C2_pb_70_pe_.ltl	1	REALIZABLE	0.021130286972038448	false	
+race-F	ltl2dba_C2_pb_7_pe_.ltl	1	REALIZABLE	0.020452443975955248	false	
+race-F	ltl2dba_C2_pb_80_pe_.ltl	1	REALIZABLE	0.02184412907809019	false	
+race-F	ltl2dba_C2_pb_8_pe_.ltl	1	REALIZABLE	0.019353794981725514	false	
+race-F	ltl2dba_C2_pb_9_pe_.ltl	1	REALIZABLE	0.02100725204218179	false	
+race-F	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_C2_unreal_pb_10_pe_.ltl	1	UNREALIZABLE	0.14497627806849778	false	
+race-F	ltl2dba_C2_unreal_pb_11_pe_.ltl	1	UNREALIZABLE	0.2772931050276384	false	
+race-F	ltl2dba_C2_unreal_pb_12_pe_.ltl	1	UNREALIZABLE	0.5709773120470345	false	
+race-F	ltl2dba_C2_unreal_pb_13_pe_.ltl	5	UNREALIZABLE	1.3689491429831833	false	
+race-F	ltl2dba_C2_unreal_pb_14_pe_.ltl	5	UNREALIZABLE	3.518391489982605	false	
+race-F	ltl2dba_C2_unreal_pb_15_pe_.ltl	17	UNREALIZABLE	8.360328375012614	false	UNREALIZABLE
+race-F	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_C2_unreal_pb_2_pe_.ltl	1	UNREALIZABLE	0.02568202407564968	false	
+race-F	ltl2dba_C2_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.022475800942629576	false	
+race-F	ltl2dba_C2_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.018149192910641432	false	
+race-F	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_C2_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.024355512927286327	false	
+race-F	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_C2_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.03048670699354261	false	
+race-F	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_C2_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.03500943095423281	false	
+race-F	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_C2_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.045069203013554215	false	
+race-F	ltl2dba_C2_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.07209776900708675	false	
+race-F	ltl2dba_E_pb_10_pe_.ltl	1	REALIZABLE	0.019957795040681958	false	
+race-F	ltl2dba_E_pb_12_pe_.ltl	1	REALIZABLE	0.020294212037697434	false	
+race-F	ltl2dba_E_pb_14_pe_.ltl	1	REALIZABLE	0.02205235604196787	false	
+race-F	ltl2dba_E_pb_15_pe_.ltl	1	REALIZABLE	0.015913628973066807	false	
+race-F	ltl2dba_E_pb_16_pe_.ltl	1	REALIZABLE	0.020223916973918676	false	
+race-F	ltl2dba_E_pb_1_pe_.ltl	1	REALIZABLE	0.009653029032051563	false	
+race-F	ltl2dba_E_pb_2_pe_.ltl	1	REALIZABLE	0.015181024093180895	false	
+race-F	ltl2dba_E_pb_3_pe_.ltl	1	REALIZABLE	0.022285194951109588	false	
+race-F	ltl2dba_E_pb_4_pe_.ltl	1	REALIZABLE	0.025205249898135662	false	
+race-F	ltl2dba_E_pb_5_pe_.ltl	1	REALIZABLE	0.018706826958805323	false	
+race-F	ltl2dba_E_pb_6_pe_.ltl	1	REALIZABLE	0.016512244008481503	false	
+race-F	ltl2dba_E_pb_7_pe_.ltl	1	REALIZABLE	0.016039001988247037	false	
+race-F	ltl2dba_E_pb_8_pe_.ltl	1	REALIZABLE	0.02052653895225376	false	
+race-F	ltl2dba_E_pb_9_pe_.ltl	1	REALIZABLE	0.02196938102133572	false	
+race-F	ltl2dba_Q_pb_100_pe_.ltl	1	REALIZABLE	0.02216314699035138	false	
+race-F	ltl2dba_Q_pb_10_pe_.ltl	1	REALIZABLE	0.01951231202110648	false	
+race-F	ltl2dba_Q_pb_12_pe_.ltl	1	REALIZABLE	0.017775997053831816	false	
+race-F	ltl2dba_Q_pb_15_pe_.ltl	1	REALIZABLE	0.02027192199602723	false	
+race-F	ltl2dba_Q_pb_18_pe_.ltl	1	REALIZABLE	0.0197269800119102	false	
+race-F	ltl2dba_Q_pb_1_pe_.ltl	1	REALIZABLE	0.024158094078302383	false	
+race-F	ltl2dba_Q_pb_25_pe_.ltl	1	REALIZABLE	0.01708351692650467	false	
+race-F	ltl2dba_Q_pb_2_pe_.ltl	1	REALIZABLE	0.022119582979939878	false	
+race-F	ltl2dba_Q_pb_3_pe_.ltl	1	REALIZABLE	0.016184382024221122	false	
+race-F	ltl2dba_Q_pb_4_pe_.ltl	1	REALIZABLE	0.016007425962015986	false	
+race-F	ltl2dba_Q_pb_50_pe_.ltl	1	REALIZABLE	0.018311974010430276	false	
+race-F	ltl2dba_Q_pb_5_pe_.ltl	1	REALIZABLE	0.01661399402655661	false	
+race-F	ltl2dba_Q_pb_6_pe_.ltl	1	REALIZABLE	0.01666306797415018	false	
+race-F	ltl2dba_Q_pb_7_pe_.ltl	1	REALIZABLE	0.0174232890130952	false	
+race-F	ltl2dba_Q_pb_8_pe_.ltl	1	REALIZABLE	0.015673876041546464	false	
+race-F	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_R_pb_1_pe_.ltl	1	REALIZABLE	0.014113501994870603	false	
+race-F	ltl2dba_R_pb_2_pe_.ltl	1	UNREALIZABLE	0.016115940059535205	false	
+race-F	ltl2dba_R_pb_3_pe_.ltl	1	UNREALIZABLE	0.02533619396854192	false	
+race-F	ltl2dba_R_pb_4_pe_.ltl	1	UNREALIZABLE	0.03037593502085656	false	
+race-F	ltl2dba_R_pb_5_pe_.ltl	1	UNREALIZABLE	0.09849543299060315	false	
+race-F	ltl2dba_R_pb_6_pe_.ltl	1	UNREALIZABLE	0.6909262380795553	false	
+race-F	ltl2dba_R_pb_7_pe_.ltl	17	UNREALIZABLE	6.8592387539101765	false	UNREALIZABLE
+race-F	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_U1_pb_100_pe_.ltl	1	REALIZABLE	0.016610990976914763	false	
+race-F	ltl2dba_U1_pb_10_pe_.ltl	1	REALIZABLE	0.018615963985212147	false	
+race-F	ltl2dba_U1_pb_12_pe_.ltl	1	REALIZABLE	0.0154002639465034	false	
+race-F	ltl2dba_U1_pb_15_pe_.ltl	1	REALIZABLE	0.022014399990439415	false	
+race-F	ltl2dba_U1_pb_18_pe_.ltl	1	REALIZABLE	0.015893751988187432	false	
+race-F	ltl2dba_U1_pb_1_pe_.ltl	1	REALIZABLE	0.024175134021788836	false	
+race-F	ltl2dba_U1_pb_25_pe_.ltl	1	REALIZABLE	0.022341068019159138	false	
+race-F	ltl2dba_U1_pb_2_pe_.ltl	1	REALIZABLE	0.015424360986799002	false	
+race-F	ltl2dba_U1_pb_3_pe_.ltl	1	REALIZABLE	0.01730564597528428	false	
+race-F	ltl2dba_U1_pb_4_pe_.ltl	1	REALIZABLE	0.014669605996459723	false	
+race-F	ltl2dba_U1_pb_50_pe_.ltl	1	REALIZABLE	0.010006531956605613	false	
+race-F	ltl2dba_U1_pb_5_pe_.ltl	1	REALIZABLE	0.009383250027894974	false	
+race-F	ltl2dba_U1_pb_6_pe_.ltl	1	REALIZABLE	0.016209960915148258	false	
+race-F	ltl2dba_U1_pb_7_pe_.ltl	1	REALIZABLE	0.01746423600707203	false	
+race-F	ltl2dba_U1_pb_8_pe_.ltl	1	REALIZABLE	0.016614594031125307	false	
+race-F	ltl2dba_U1_pb_9_pe_.ltl	1	REALIZABLE	0.02270043606404215	false	
+race-F	ltl2dba_alpha_pb_100_pe_.ltl	1	REALIZABLE	0.019319029059261084	false	
+race-F	ltl2dba_alpha_pb_10_pe_.ltl	1	REALIZABLE	0.022582683945074677	false	
+race-F	ltl2dba_alpha_pb_12_pe_.ltl	1	REALIZABLE	0.023079885984770954	false	
+race-F	ltl2dba_alpha_pb_14_pe_.ltl	1	REALIZABLE	0.020668684970587492	false	
+race-F	ltl2dba_alpha_pb_16_pe_.ltl	1	REALIZABLE	0.02567859599366784	false	
+race-F	ltl2dba_alpha_pb_17_pe_.ltl	1	REALIZABLE	0.018649004050530493	false	
+race-F	ltl2dba_alpha_pb_18_pe_.ltl	1	REALIZABLE	0.01919548597652465	false	
+race-F	ltl2dba_alpha_pb_1_pe_.ltl	1	REALIZABLE	0.024025010061450303	false	
+race-F	ltl2dba_alpha_pb_20_pe_.ltl	1	REALIZABLE	0.02170980896335095	false	
+race-F	ltl2dba_alpha_pb_25_pe_.ltl	1	REALIZABLE	0.01901950698811561	false	
+race-F	ltl2dba_alpha_pb_2_pe_.ltl	1	REALIZABLE	0.019548620912246406	false	
+race-F	ltl2dba_alpha_pb_3_pe_.ltl	1	REALIZABLE	0.020474598975852132	false	
+race-F	ltl2dba_alpha_pb_4_pe_.ltl	1	REALIZABLE	0.022304920945316553	false	
+race-F	ltl2dba_alpha_pb_50_pe_.ltl	1	REALIZABLE	0.0216950629837811	false	
+race-F	ltl2dba_alpha_pb_5_pe_.ltl	1	REALIZABLE	0.019606161979027092	false	
+race-F	ltl2dba_alpha_pb_6_pe_.ltl	1	REALIZABLE	0.016694930964149535	false	
+race-F	ltl2dba_alpha_pb_7_pe_.ltl	1	REALIZABLE	0.020864545018412173	false	
+race-F	ltl2dba_alpha_pb_8_pe_.ltl	1	REALIZABLE	0.019953690003603697	false	
+race-F	ltl2dba_beta_pb_100_pe_.ltl	1	REALIZABLE	0.021750018000602722	false	
+race-F	ltl2dba_beta_pb_10_pe_.ltl	1	REALIZABLE	0.020413720048964024	false	
+race-F	ltl2dba_beta_pb_15_pe_.ltl	1	REALIZABLE	0.01940031594131142	false	
+race-F	ltl2dba_beta_pb_18_pe_.ltl	1	REALIZABLE	0.02007172303274274	false	
+race-F	ltl2dba_beta_pb_1_pe_.ltl	1	REALIZABLE	0.016235993010923266	false	
+race-F	ltl2dba_beta_pb_20_pe_.ltl	1	REALIZABLE	0.018781446968205273	false	
+race-F	ltl2dba_beta_pb_25_pe_.ltl	1	REALIZABLE	0.023512018960900605	false	
+race-F	ltl2dba_beta_pb_2_pe_.ltl	1	REALIZABLE	0.02288092498201877	false	
+race-F	ltl2dba_beta_pb_30_pe_.ltl	1	REALIZABLE	0.015079529955983162	false	
+race-F	ltl2dba_beta_pb_3_pe_.ltl	1	REALIZABLE	0.022034541005268693	false	
+race-F	ltl2dba_beta_pb_4_pe_.ltl	1	REALIZABLE	0.023960646940395236	false	
+race-F	ltl2dba_beta_pb_5_pe_.ltl	1	REALIZABLE	0.024136723950505257	false	
+race-F	ltl2dba_beta_pb_6_pe_.ltl	1	REALIZABLE	0.017976642935536802	false	
+race-F	ltl2dba_beta_pb_7_pe_.ltl	1	REALIZABLE	0.01746793498750776	false	
+race-F	ltl2dba_beta_pb_8_pe_.ltl	1	REALIZABLE	0.021577751031145453	false	
+race-F	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_theta_pb_10_pe_.ltl	1	UNREALIZABLE	0.6942197610624135	false	
+race-F	ltl2dba_theta_pb_12_pe_.ltl	5	UNREALIZABLE	3.4483318930724636	false	
+race-F	ltl2dba_theta_pb_14_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_theta_pb_1_pe_.ltl	1	UNREALIZABLE	0.023683871957473457	false	
+race-F	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_theta_pb_2_pe_.ltl	1	UNREALIZABLE	0.02715182490646839	false	
+race-F	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_theta_pb_3_pe_.ltl	1	UNREALIZABLE	0.02132630895357579	false	
+race-F	ltl2dba_theta_pb_4_pe_.ltl	1	UNREALIZABLE	0.023645395995117724	false	
+race-F	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT
+race-F	ltl2dba_theta_pb_5_pe_.ltl	1	UNREALIZABLE	0.03220299107488245	false	
+race-F	ltl2dba_theta_pb_6_pe_.ltl	1	UNREALIZABLE	0.04707905009854585	false	
+race-F	ltl2dba_theta_pb_7_pe_.ltl	1	UNREALIZABLE	0.07718157395720482	false	
+race-F	ltl2dba_theta_pb_8_pe_.ltl	1	UNREALIZABLE	0.14452819898724556	false	
+race-F	ltl2dpa01.ltl	1	REALIZABLE	0.01926752703730017	false	
+race-F	ltl2dpa02.ltl	1	REALIZABLE	0.014708889066241682	false	
+race-F	ltl2dpa03.ltl	1	REALIZABLE	0.25012826500460505	false	
+race-F	ltl2dpa04.ltl	1	REALIZABLE	0.017713095992803574	false	
+race-F	ltl2dpa05.ltl	1	REALIZABLE	0.01604428794234991	false	
+race-F	ltl2dpa06.ltl	1	REALIZABLE	0.017258448991924524	false	
+race-F	ltl2dpa07.ltl	1	REALIZABLE	0.015990615007467568	false	
+race-F	ltl2dpa08.ltl	1	REALIZABLE	0.020741441985592246	false	
+race-F	ltl2dpa09.ltl	1	REALIZABLE	0.017348113004118204	false	
+race-F	ltl2dpa10.ltl	1	REALIZABLE	0.028388976934365928	false	
+race-F	ltl2dpa11.ltl	1	REALIZABLE	0.010712660965509713	false	
+race-F	ltl2dpa12.ltl	1	REALIZABLE	0.023078997037373483	false	
+race-F	ltl2dpa13.ltl	1	REALIZABLE	0.036551696015521884	false	
+race-F	ltl2dpa14.ltl	1	REALIZABLE	0.025756194023415446	false	
+race-F	ltl2dpa15.ltl	1	REALIZABLE	0.021980792982503772	false	
+race-F	ltl2dpa16.ltl	1	REALIZABLE	0.0194299720460549	false	
+race-F	ltl2dpa17.ltl	1	REALIZABLE	0.016983256093226373	false	
+race-F	ltl2dpa18.ltl	1	REALIZABLE	0.020374173065647483	false	
+race-F	ltl2dpa19.ltl	1	REALIZABLE	0.058191059972159564	false	
+race-F	ltl2dpa20.ltl	1	REALIZABLE	0.01934320805594325	false	
+race-F	ltl2dpa22.ltl				true	TIMEOUT
+race-F	ltl2dpa23.ltl	1	REALIZABLE	0.02231631299946457	false	
+race-F	ltl2dpa24.ltl	1	REALIZABLE	0.01626521605066955	false	
+race-F	mux_pb_100_pe_.ltl	1	REALIZABLE	0.027396323974244297	false	
+race-F	mux_pb_10_pe_.ltl	1	REALIZABLE	0.016219745040871203	false	
+race-F	mux_pb_125_pe_.ltl	1	REALIZABLE	0.025389856076799333	false	
+race-F	mux_pb_12_pe_.ltl	1	REALIZABLE	0.01676744595170021	false	
+race-F	mux_pb_132_pe_.ltl	1	REALIZABLE	0.023707400890998542	false	
+race-F	mux_pb_150_pe_.ltl	1	REALIZABLE	0.02417973300907761	false	
+race-F	mux_pb_16_pe_.ltl	1	REALIZABLE	0.01578814594540745	false	
+race-F	mux_pb_175_pe_.ltl	1	REALIZABLE	0.030663014971651137	false	
+race-F	mux_pb_200_pe_.ltl	1	REALIZABLE	0.030283074942417443	false	
+race-F	mux_pb_32_pe_.ltl	1	REALIZABLE	0.017088758992031217	false	
+race-F	mux_pb_64_pe_.ltl	1	REALIZABLE	0.025717345997691154	false	
+race-F	mux_pb_8_pe_.ltl	1	REALIZABLE	0.02046788204461336	false	
+race-F	narylatch_pb_10_pe_.ltl	1	REALIZABLE	0.024941750103607774	false	
+race-F	narylatch_pb_11_pe_.ltl	1	REALIZABLE	0.025075222947634757	false	
+race-F	narylatch_pb_12_pe_.ltl	1	REALIZABLE	0.019912294927053154	false	
+race-F	narylatch_pb_16_pe_.ltl	1	REALIZABLE	0.027085006004199386	false	
+race-F	narylatch_pb_32_pe_.ltl	1	REALIZABLE	0.02662496396806091	false	
+race-F	narylatch_pb_64_pe_.ltl	1	REALIZABLE	0.043664861004799604	false	
+race-F	narylatch_pb_8_pe_.ltl	1	REALIZABLE	0.022476937039755285	false	
+race-F	ordered-visits-choice-real.ltl				true	UNKNOWN
+race-F	ordered-visits-real.ltl	1	REALIZABLE	0.0305540639674291	false	
+race-F	package-delivery-real.ltl				true	TIMEOUT
+race-F	patrolling-alarm0.ltl	1	UNREALIZABLE	0.032223046058788896	false	
+race-F	patrolling-alarm1.ltl	1	UNREALIZABLE	0.04581285500898957	false	
+race-F	patrolling-alarm10.ltl	1	UNREALIZABLE	0.9235775669803843	false	
+race-F	patrolling-alarm11.ltl	5	UNREALIZABLE	1.0679244649363682	false	
+race-F	patrolling-alarm12.ltl	5	UNREALIZABLE	1.4733225300442427	false	
+race-F	patrolling-alarm13.ltl	5	UNREALIZABLE	1.6562289559515193	false	
+race-F	patrolling-alarm14.ltl	5	UNREALIZABLE	2.2322407969040796	false	
+race-F	patrolling-alarm15.ltl	5	UNREALIZABLE	3.0855741830309853	false	
+race-F	patrolling-alarm16.ltl	5	UNREALIZABLE	3.3334281789138913	false	
+race-F	patrolling-alarm17.ltl	5	UNREALIZABLE	4.075276591000147	false	
+race-F	patrolling-alarm18.ltl	17	UNREALIZABLE	5.312523455009796	false	UNREALIZABLE
+race-F	patrolling-alarm19.ltl	17	UNREALIZABLE	5.157616815995425	false	UNREALIZABLE
+race-F	patrolling-alarm2.ltl	1	UNREALIZABLE	0.06338597903959453	false	
+race-F	patrolling-alarm20.ltl	17	UNREALIZABLE	6.574482979020104	false	UNREALIZABLE
+race-F	patrolling-alarm21.ltl	17	UNREALIZABLE	7.951714970986359	false	UNREALIZABLE
+race-F	patrolling-alarm22.ltl	17	UNREALIZABLE	8.563595080049708	false	UNREALIZABLE
+race-F	patrolling-alarm23.ltl	17	UNREALIZABLE	10.261067324900068	false	UNREALIZABLE
+race-F	patrolling-alarm24.ltl	17	UNREALIZABLE	11.592492382973433	false	UNREALIZABLE
+race-F	patrolling-alarm25.ltl	17	UNREALIZABLE	13.765658129006624	false	UNREALIZABLE
+race-F	patrolling-alarm26.ltl	17	UNREALIZABLE	15.578977038967423	false	UNREALIZABLE
+race-F	patrolling-alarm3.ltl	1	UNREALIZABLE	0.09615881007630378	false	
+race-F	patrolling-alarm4.ltl	1	UNREALIZABLE	0.11772856500465423	false	
+race-F	patrolling-alarm5.ltl	1	UNREALIZABLE	0.18464534706436098	false	
+race-F	patrolling-alarm6.ltl	1	UNREALIZABLE	0.2951245179865509	false	
+race-F	patrolling-alarm7.ltl	1	UNREALIZABLE	0.3997859039809555	false	
+race-F	patrolling-alarm8.ltl	1	UNREALIZABLE	0.5977954979753122	false	
+race-F	patrolling-alarm9.ltl	1	UNREALIZABLE	0.8467268339591101	false	
+race-F	patrolling0.ltl	1	UNREALIZABLE	0.029722379986196756	false	
+race-F	patrolling1.ltl	1	UNREALIZABLE	0.04514306294731796	false	
+race-F	patrolling10.ltl	1	UNREALIZABLE	0.7895061720628291	false	
+race-F	patrolling11.ltl	1	UNREALIZABLE	0.9696833699708804	false	
+race-F	patrolling12.ltl	5	UNREALIZABLE	1.2790827819844708	false	
+race-F	patrolling13.ltl	5	UNREALIZABLE	1.5514664170332253	false	
+race-F	patrolling14.ltl	5	UNREALIZABLE	1.988407794968225	false	
+race-F	patrolling15.ltl	5	UNREALIZABLE	2.908659565029666	false	
+race-F	patrolling16.ltl	5	UNREALIZABLE	3.1574382049730048	false	
+race-F	patrolling17.ltl	5	UNREALIZABLE	4.087166209938005	false	
+race-F	patrolling18.ltl	17	UNREALIZABLE	4.703522481955588	false	UNREALIZABLE
+race-F	patrolling19.ltl	17	UNREALIZABLE	5.154486238025129	false	UNREALIZABLE
+race-F	patrolling2.ltl	1	UNREALIZABLE	0.06633925996720791	false	
+race-F	patrolling20.ltl	17	UNREALIZABLE	5.9417649019742385	false	UNREALIZABLE
+race-F	patrolling21.ltl	17	UNREALIZABLE	7.554334240965545	false	UNREALIZABLE
+race-F	patrolling22.ltl	17	UNREALIZABLE	7.944623077986762	false	UNREALIZABLE
+race-F	patrolling23.ltl	17	UNREALIZABLE	9.564162765978836	false	UNREALIZABLE
+race-F	patrolling24.ltl	17	UNREALIZABLE	12.180120584089309	false	UNREALIZABLE
+race-F	patrolling25.ltl	17	UNREALIZABLE	12.622301019961014	false	UNREALIZABLE
+race-F	patrolling3.ltl	1	UNREALIZABLE	0.0963085989933461	false	
+race-F	patrolling4.ltl	1	UNREALIZABLE	0.11687733698636293	false	
+race-F	patrolling5.ltl	1	UNREALIZABLE	0.19885710102971643	false	
+race-F	patrolling6.ltl	1	UNREALIZABLE	0.27560129400808364	false	
+race-F	patrolling7.ltl	1	UNREALIZABLE	0.352788896067068	false	
+race-F	patrolling8.ltl	1	UNREALIZABLE	0.46699932299088687	false	
+race-F	patrolling9.ltl	1	UNREALIZABLE	0.6266773359384388	false	
+race-F	precise-reachability-real.ltl	1	REALIZABLE	0.14241698698606342	false	
+race-F	precise-reachability0.ltl	1	UNREALIZABLE	0.024095453089103103	false	
+race-F	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.0182068309513852	false	
+race-F	prioritized_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.018127972958609462	false	
+race-F	prioritized_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.025050485972315073	false	
+race-F	prioritized_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.4516643909737468	false	
+race-F	prioritized_arbiter_pb_5_pe_.ltl	17	REALIZABLE	7.520484030013904	false	REALIZABLE
+race-F	prioritized_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.02148281701374799	false	
+race-F	prioritized_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.015938183991238475	false	
+race-F	prioritized_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.020473291049711406	false	
+race-F	prioritized_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.01979752699844539	false	
+race-F	prioritized_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.020818826975300908	false	
+race-F	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.017084683990105987	false	
+race-F	prioritized_arbiter_unreal1_pb_2_16_pe_.ltl	1	UNREALIZABLE	0.0200746440095827	false	
+race-F	prioritized_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.015893569914624095	false	
+race-F	prioritized_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.023878674022853374	false	
+race-F	prioritized_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.018133130972273648	false	
+race-F	prioritized_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.01636946899816394	false	
+race-F	prioritized_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.015902122016996145	false	
+race-F	prioritized_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.02455406601075083	false	
+race-F	prioritized_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.019713942892849445	false	
+race-F	prioritized_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.02712121105287224	false	
+race-F	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.020745471003465354	false	
+race-F	prioritized_arbiter_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.016542247030884027	false	
+race-F	prioritized_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.017313880962319672	false	
+race-F	prioritized_arbiter_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.020293041015975177	false	
+race-F	prioritized_arbiter_unreal1_pb_3_13_pe_.ltl	1	UNREALIZABLE	0.018435794045217335	false	
+race-F	prioritized_arbiter_unreal1_pb_3_14_pe_.ltl	1	UNREALIZABLE	0.02380176295991987	false	
+race-F	prioritized_arbiter_unreal1_pb_3_15_pe_.ltl	1	UNREALIZABLE	0.02265527204144746	false	
+race-F	prioritized_arbiter_unreal1_pb_3_16_pe_.ltl	1	UNREALIZABLE	0.020597158931195736	false	
+race-F	prioritized_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.017784380936063826	false	
+race-F	prioritized_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.017033501993864775	false	
+race-F	prioritized_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.017067576060071588	false	
+race-F	prioritized_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.016138739068992436	false	
+race-F	prioritized_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.017564154928550124	false	
+race-F	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.020626240991987288	false	
+race-F	prioritized_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.023002413916401565	false	
+race-F	prioritized_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.01586095499806106	false	
+race-F	prioritized_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.016398630919866264	false	
+race-F	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.020137200015597045	false	
+race-F	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	1	UNREALIZABLE	0.0200840289471671	false	
+race-F	prioritized_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.017213430954143405	false	
+race-F	prioritized_arbiter_unreal1_pb_4_13_pe_.ltl	1	UNREALIZABLE	0.021290614968165755	false	
+race-F	prioritized_arbiter_unreal1_pb_4_14_pe_.ltl	1	UNREALIZABLE	0.017217100015841424	false	
+race-F	prioritized_arbiter_unreal1_pb_4_15_pe_.ltl	1	UNREALIZABLE	0.016437680926173925	false	
+race-F	prioritized_arbiter_unreal1_pb_4_16_pe_.ltl	1	UNREALIZABLE	0.018387055955827236	false	
+race-F	prioritized_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.019474876928143203	false	
+race-F	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.025998555007390678	false	
+race-F	prioritized_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.020308855921030045	false	
+race-F	prioritized_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.021004147012718022	false	
+race-F	prioritized_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.017027838970534503	false	
+race-F	prioritized_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.02400126401335001	false	
+race-F	prioritized_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.02152240602299571	false	
+race-F	prioritized_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.026326406048610806	false	
+race-F	prioritized_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.020089119905605912	false	
+race-F	prioritized_arbiter_unreal1_pb_5_16_pe_.ltl	1	UNREALIZABLE	0.017608786933124065	false	
+race-F	prioritized_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.01901396899484098	false	
+race-F	prioritized_arbiter_unreal1_pb_5_32_pe_.ltl	1	UNREALIZABLE	0.023218477959744632	false	
+race-F	prioritized_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.016829394968226552	false	
+race-F	prioritized_arbiter_unreal1_pb_6_16_pe_.ltl	1	UNREALIZABLE	0.023205935023725033	false	
+race-F	prioritized_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.018536299001425505	false	
+race-F	prioritized_arbiter_unreal1_pb_6_32_pe_.ltl	1	UNREALIZABLE	0.02483056392520666	false	
+race-F	prioritized_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.017128429957665503	false	
+race-F	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.022610401967540383	false	
+race-F	prioritized_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.01721680595073849	false	
+race-F	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.0224098990438506	false	
+race-F	prioritized_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.016437098034657538	false	
+race-F	prioritized_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.01633858901914209	false	
+race-F	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT
+race-F	prioritized_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.020170237054117024	false	
+race-F	prioritized_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.0229587210342288	false	
+race-F	prioritized_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.018222791026346385	false	
+race-F	reversible-lane-r-real.ltl				true	TIMEOUT
+race-F	reversible-lane-u-unreal.ltl				true	TIMEOUT
+race-F	reversible-lane-u0.ltl	17	UNREALIZABLE	10.043094314052723	false	UNREALIZABLE
+race-F	reversible-lane-u1.ltl				true	TIMEOUT
+race-F	robot-cat-real-1d-real.ltl	17	REALIZABLE	5.563655414967798	false	REALIZABLE
+race-F	robot-cat-real-2d-real.ltl				true	TIMEOUT
+race-F	robot-cat-unreal-1d-unreal.ltl	1	UNREALIZABLE	0.4311384130269289	false	
+race-F	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT
+race-F	robot-grid-commute-1d-real.ltl	5	REALIZABLE	3.3353500140365213	false	
+race-F	robot-grid-commute-2d-real.ltl				true	TIMEOUT
+race-F	robot-grid-reach-1d-real.ltl	1	REALIZABLE	0.02887345990166068	false	
+race-F	robot-grid-reach-2d-real.ltl	17	REALIZABLE	10.758782147080638	false	REALIZABLE
+race-F	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	1	REALIZABLE	0.05320285400375724	false	
+race-F	robot-grid-reach-repeated-with-obstacles-2d-real.ltl				true	TIMEOUT
+race-F	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT
+race-F	robot-resource-1d-unreal.ltl	17	UNREALIZABLE	9.482443553977646	false	UNREALIZABLE
+race-F	robot-resource-1d0.ltl	1	UNREALIZABLE	0.20187118300236762	false	
+race-F	robot-resource-1d1.ltl	1	UNREALIZABLE	0.8778196839848533	false	
+race-F	robot-resource-2d0.ltl	17	UNREALIZABLE	7.090405172901228	false	UNREALIZABLE
+race-F	robot-resource-2d1.ltl				true	TIMEOUT
+race-F	robot-resource-2d10.ltl				true	TIMEOUT
+race-F	robot-resource-2d11.ltl				true	TIMEOUT
+race-F	robot-resource-2d12.ltl				true	TIMEOUT
+race-F	robot-resource-2d13.ltl				true	TIMEOUT
+race-F	robot-resource-2d14.ltl				true	TIMEOUT
+race-F	robot-resource-2d15.ltl				true	TIMEOUT
+race-F	robot-resource-2d16.ltl				true	TIMEOUT
+race-F	robot-resource-2d17.ltl				true	TIMEOUT
+race-F	robot-resource-2d18.ltl				true	TIMEOUT
+race-F	robot-resource-2d19.ltl				true	TIMEOUT
+race-F	robot-resource-2d2.ltl				true	TIMEOUT
+race-F	robot-resource-2d20.ltl				true	TIMEOUT
+race-F	robot-resource-2d21.ltl				true	TIMEOUT
+race-F	robot-resource-2d22.ltl				true	TIMEOUT
+race-F	robot-resource-2d23.ltl				true	TIMEOUT
+race-F	robot-resource-2d3.ltl				true	TIMEOUT
+race-F	robot-resource-2d4.ltl				true	TIMEOUT
+race-F	robot-resource-2d5.ltl				true	TIMEOUT
+race-F	robot-resource-2d6.ltl				true	TIMEOUT
+race-F	robot-resource-2d7.ltl				true	TIMEOUT
+race-F	robot-resource-2d8.ltl				true	TIMEOUT
+race-F	robot-resource-2d9.ltl				true	TIMEOUT
+race-F	robot-tasks-real.ltl	1	REALIZABLE	0.051829708041623235	false	
+race-F	robot-to-target-charging-real.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal0.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal1.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal2.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal3.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal4.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal5.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal6.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal7.ltl				true	TIMEOUT
+race-F	robot-to-target-charging-unreal8.ltl				true	TIMEOUT
+race-F	robot-to-target-charging0.ltl				true	TIMEOUT
+race-F	robot-to-target-charging1.ltl				true	TIMEOUT
+race-F	robot-to-target-charging10.ltl				true	TIMEOUT
+race-F	robot-to-target-charging11.ltl				true	TIMEOUT
+race-F	robot-to-target-charging12.ltl				true	TIMEOUT
+race-F	robot-to-target-charging13.ltl				true	TIMEOUT
+race-F	robot-to-target-charging14.ltl				true	TIMEOUT
+race-F	robot-to-target-charging15.ltl				true	TIMEOUT
+race-F	robot-to-target-charging16.ltl				true	TIMEOUT
+race-F	robot-to-target-charging17.ltl				true	TIMEOUT
+race-F	robot-to-target-charging18.ltl				true	TIMEOUT
+race-F	robot-to-target-charging19.ltl				true	TIMEOUT
+race-F	robot-to-target-charging2.ltl				true	TIMEOUT
+race-F	robot-to-target-charging20.ltl				true	TIMEOUT
+race-F	robot-to-target-charging21.ltl				true	TIMEOUT
+race-F	robot-to-target-charging22.ltl				true	TIMEOUT
+race-F	robot-to-target-charging23.ltl				true	TIMEOUT
+race-F	robot-to-target-charging24.ltl				true	TIMEOUT
+race-F	robot-to-target-charging25.ltl				true	TIMEOUT
+race-F	robot-to-target-charging3.ltl				true	TIMEOUT
+race-F	robot-to-target-charging4.ltl				true	TIMEOUT
+race-F	robot-to-target-charging5.ltl				true	TIMEOUT
+race-F	robot-to-target-charging6.ltl				true	TIMEOUT
+race-F	robot-to-target-charging7.ltl				true	TIMEOUT
+race-F	robot-to-target-charging8.ltl				true	TIMEOUT
+race-F	robot-to-target-charging9.ltl				true	TIMEOUT
+race-F	robot-to-target-unreal0.ltl	17	REALIZABLE	7.55369344598148	false	REALIZABLE
+race-F	robot-to-target0.ltl				true	TIMEOUT
+race-F	robot_analyze_samples_v1-real.ltl				true	TIMEOUT
+race-F	robot_collect_samples_v1-real.ltl				true	TIMEOUT
+race-F	robot_collect_samples_v2-real.ltl				true	TIMEOUT
+race-F	robot_collect_samples_v3-real.ltl				true	TIMEOUT
+race-F	robot_collect_samples_v4-real.ltl				true	TIMEOUT
+race-F	robot_deliver_products_1-real.ltl				true	TIMEOUT
+race-F	robot_deliver_products_20.ltl				true	TIMEOUT
+race-F	robot_deliver_products_30.ltl				true	TIMEOUT
+race-F	robot_deliver_products_40.ltl				true	TIMEOUT
+race-F	robot_deliver_products_50.ltl				true	TIMEOUT
+race-F	robot_grid_pb_2_2_pe_.ltl	1	REALIZABLE	0.03692359302658588	false	
+race-F	robot_grid_pb_3_3_pe_.ltl	1	REALIZABLE	0.5698208339745179	false	
+race-F	robot_grid_pb_4_4_pe_.ltl	17	REALIZABLE	9.650465523940511	false	REALIZABLE
+race-F	robot_grid_pb_5_1_pe_.ltl	1	REALIZABLE	0.07294127799104899	false	
+race-F	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT
+race-F	robot_grid_pb_6_1_pe_.ltl	1	REALIZABLE	0.175393859972246	false	
+race-F	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT
+race-F	robot_grid_pb_7_7_pe_.ltl				true	TIMEOUT
+race-F	robot_grid_pb_8_8_pe_.ltl				true	TIMEOUT
+race-F	robot_repair0.ltl				true	TIMEOUT
+race-F	robot_repair1.ltl				true	TIMEOUT
+race-F	robot_repair2.ltl				true	TIMEOUT
+race-F	robot_repair3.ltl				true	TIMEOUT
+race-F	robot_repair4.ltl				true	TIMEOUT
+race-F	robot_repair5.ltl				true	TIMEOUT
+race-F	robot_running-real.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.019970280001871288	false	
+race-F	round_robin_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.03509326302446425	false	
+race-F	round_robin_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.6931612649932504	false	
+race-F	round_robin_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.0493868290213868	false	
+race-F	round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.08102856401819736	false	
+race-F	round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.1455670710420236	false	
+race-F	round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.28496689593885094	false	
+race-F	round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.6560143470996991	false	
+race-F	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	1.186558470944874	false	
+race-F	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	2.756085539003834	false	
+race-F	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.026449823984876275	false	
+race-F	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.020549961016513407	false	
+race-F	round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.019883072935044765	false	
+race-F	round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.020315630943514407	false	
+race-F	round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.02258870506193489	false	
+race-F	round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.02710701199248433	false	
+race-F	round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03012797108385712	false	
+race-F	round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.026652420056052506	false	
+race-F	round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.030530850985087454	false	
+race-F	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.02517357503529638	false	
+race-F	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.03337359195575118	false	
+race-F	round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.03203105495776981	false	
+race-F	round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.05174827796872705	false	
+race-F	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.17902719997800887	false	
+race-F	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	5	UNREALIZABLE	1.026564165018499	false	
+race-F	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	7.473557300050743	false	UNREALIZABLE
+race-F	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.12779885192867368	false	
+race-F	round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.1344191359821707	false	
+race-F	round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.2258193150628358	false	
+race-F	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	1.6925091081066057	false	
+race-F	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.028644075035117567	false	
+race-F	round_robin_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.033734016004018486	false	
+race-F	round_robin_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.5667729059932753	false	
+race-F	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+race-F	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+race-F	rw_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.02017965295817703	false	
+race-F	rw_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.0405980619834736	false	
+race-F	rw_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+race-F	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+race-F	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+race-F	scheduler-real.ltl				true	TIMEOUT
+race-F	shift_pb_100_pe_.ltl	1	REALIZABLE	0.019351145019754767	false	
+race-F	shift_pb_10_pe_.ltl	1	REALIZABLE	0.014518443960696459	false	
+race-F	shift_pb_125_pe_.ltl	1	REALIZABLE	0.018970420002005994	false	
+race-F	shift_pb_12_pe_.ltl	1	REALIZABLE	0.024300205055624247	false	
+race-F	shift_pb_132_pe_.ltl	1	REALIZABLE	0.0271129539469257	false	
+race-F	shift_pb_16_pe_.ltl	1	REALIZABLE	0.020026637008413672	false	
+race-F	shift_pb_250_pe_.ltl	1	REALIZABLE	0.022388158948160708	false	
+race-F	shift_pb_32_pe_.ltl	1	REALIZABLE	0.018363807001151145	false	
+race-F	shift_pb_500_pe_.ltl	1	REALIZABLE	0.03413516201544553	false	
+race-F	shift_pb_64_pe_.ltl	1	REALIZABLE	0.01553284004330635	false	
+race-F	shift_pb_8_pe_.ltl	1	REALIZABLE	0.023095488897524774	false	
+race-F	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_unreal1_pb_16_1_pe_.ltl	1	UNREALIZABLE	0.02476333803497255	false	
+race-F	simple_arbiter_unreal1_pb_16_2_pe_.ltl	1	UNREALIZABLE	0.021356882993131876	false	
+race-F	simple_arbiter_unreal1_pb_16_3_pe_.ltl	1	UNREALIZABLE	0.025962296989746392	false	
+race-F	simple_arbiter_unreal1_pb_16_4_pe_.ltl	1	UNREALIZABLE	0.02072473894804716	false	
+race-F	simple_arbiter_unreal1_pb_16_5_pe_.ltl	1	UNREALIZABLE	0.02323515003081411	false	
+race-F	simple_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.017324729007668793	false	
+race-F	simple_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.023890141979791224	false	
+race-F	simple_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.015613203984685242	false	
+race-F	simple_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.020417924039065838	false	
+race-F	simple_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.016318985959514976	false	
+race-F	simple_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.016224669059738517	false	
+race-F	simple_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.016528489999473095	false	
+race-F	simple_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.023459317977540195	false	
+race-F	simple_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.024073665961623192	false	
+race-F	simple_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.01592984003946185	false	
+race-F	simple_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.02105686708819121	false	
+race-F	simple_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.02363217994570732	false	
+race-F	simple_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.018313547945581377	false	
+race-F	simple_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.01676011993549764	false	
+race-F	simple_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.016800228040665388	false	
+race-F	simple_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.02046925702597946	false	
+race-F	simple_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.02409088402055204	false	
+race-F	simple_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.021761132986284792	false	
+race-F	simple_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.024036490940488875	false	
+race-F	simple_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.020003281999379396	false	
+race-F	simple_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.024166613933630288	false	
+race-F	simple_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.020527372951619327	false	
+race-F	simple_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.01910121098626405	false	
+race-F	simple_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.023535448010079563	false	
+race-F	simple_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.018809471977874637	false	
+race-F	simple_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.019903423031792045	false	
+race-F	simple_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.018964047078043222	false	
+race-F	simple_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.016175150987692177	false	
+race-F	simple_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.02407717308960855	false	
+race-F	simple_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.023642205051146448	false	
+race-F	simple_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.024238148937001824	false	
+race-F	simple_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.0160567780258134	false	
+race-F	simple_arbiter_unreal1_pb_5_10_pe_.ltl	1	UNREALIZABLE	0.01691604300867766	false	
+race-F	simple_arbiter_unreal1_pb_5_1_pe_.ltl	1	UNREALIZABLE	0.020926335942931473	false	
+race-F	simple_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.020076393033377826	false	
+race-F	simple_arbiter_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.01735522097442299	false	
+race-F	simple_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.021808410994708538	false	
+race-F	simple_arbiter_unreal1_pb_5_5_pe_.ltl	1	UNREALIZABLE	0.023384822998195887	false	
+race-F	simple_arbiter_unreal1_pb_5_6_pe_.ltl	1	UNREALIZABLE	0.02438635693397373	false	
+race-F	simple_arbiter_unreal1_pb_5_7_pe_.ltl	1	UNREALIZABLE	0.020428546937182546	false	
+race-F	simple_arbiter_unreal1_pb_5_8_pe_.ltl	1	UNREALIZABLE	0.020899377996101975	false	
+race-F	simple_arbiter_unreal1_pb_5_9_pe_.ltl	1	UNREALIZABLE	0.0193091609980911	false	
+race-F	simple_arbiter_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.023516499088145792	false	
+race-F	simple_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.019856421975418925	false	
+race-F	simple_arbiter_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.025358428014442325	false	
+race-F	simple_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.0198855169583112	false	
+race-F	simple_arbiter_unreal1_pb_6_5_pe_.ltl	1	UNREALIZABLE	0.023930637049488723	false	
+race-F	simple_arbiter_unreal1_pb_8_8_pe_.ltl	1	UNREALIZABLE	0.020565284066833556	false	
+race-F	simple_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.020631368970498443	false	
+race-F	simple_arbiter_unreal2_pb_25_pe_.ltl	1	UNREALIZABLE	0.027928784023970366	false	
+race-F	simple_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.018801106954924762	false	
+race-F	simple_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.016831969958730042	false	
+race-F	simple_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.020152230048552155	false	
+race-F	simple_arbiter_unreal2_pb_50_pe_.ltl	1	UNREALIZABLE	0.031972539029084146	false	
+race-F	simple_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.020736158010549843	false	
+race-F	simple_arbiter_unreal2_pb_60_pe_.ltl	1	UNREALIZABLE	0.04093810904305428	false	
+race-F	simple_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.024104738957248628	false	
+race-F	simple_arbiter_unreal2_pb_75_pe_.ltl	1	UNREALIZABLE	0.04652785195503384	false	
+race-F	simple_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.020462197018787265	false	
+race-F	simple_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.01822258101310581	false	
+race-F	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_with_hints_pb_2_pe_.ltl	1	REALIZABLE	0.022633933927863836	false	
+race-F	simple_arbiter_with_hints_pb_4_pe_.ltl	1	REALIZABLE	0.09090959606692195	false	
+race-F	simple_arbiter_with_hints_pb_6_pe_.ltl				true	TIMEOUT
+race-F	simple_arbiter_with_hints_pb_8_pe_.ltl				true	UNKNOWN
+race-F	solitary-real.ltl	1	REALIZABLE	0.026825482957065105	false	
+race-F	solitary0.ltl	1	UNREALIZABLE	0.020912009989842772	false	
+race-F	sort4-real.ltl				true	TIMEOUT
+race-F	sort40.ltl	5	UNREALIZABLE	2.6658083309885114	false	
+race-F	sort41.ltl	17	UNREALIZABLE	8.948109470074996	false	UNREALIZABLE
+race-F	sort42.ltl				true	TIMEOUT
+race-F	sort50.ltl				true	TIMEOUT
+race-F	sort51.ltl				true	TIMEOUT
+race-F	sort52.ltl				true	TIMEOUT
+race-F	sort53.ltl				true	TIMEOUT
+race-F	square5x5-real.ltl				true	TIMEOUT
+race-F	square5x50.ltl				true	TIMEOUT
+race-F	square5x51.ltl				true	TIMEOUT
+race-F	square5x52.ltl				true	TIMEOUT
+race-F	square5x53.ltl				true	TIMEOUT
+race-F	square5x54.ltl				true	TIMEOUT
+race-F	storage-GF-64-real.ltl	1	REALIZABLE	0.028102778014726937	false	
+race-F	tasks-real.ltl	1	REALIZABLE	0.06072120403405279	false	
+race-F	tasks-unreal0.ltl				true	TIMEOUT
+race-F	tasks-unreal1.ltl				true	TIMEOUT
+race-F	tasks-unreal2.ltl				true	TIMEOUT
+race-F	taxi-service-real.ltl				true	TIMEOUT
+race-F	taxi-service-u-unreal.ltl	5	UNREALIZABLE	1.289916151901707	false	
+race-F	test2_f2774e0b.ltl	1	REALIZABLE	0.022605624981224537	false	
+race-F	test3_efe2feaf.ltl	1	REALIZABLE	0.015206099022179842	false	
+race-F	test4_4b82b1f4.ltl	1	UNREALIZABLE	0.020450307987630367	false	
+race-F	test5_6cbc6174.ltl	1	REALIZABLE	0.017285442096181214	false	
+race-F	test6_0f5381e9.ltl	1	REALIZABLE	0.022146585979498923	false	
+race-F	test7_2c5b09da.ltl	1	REALIZABLE	0.028949100989848375	false	
+race-F	test8_88f351a6.ltl	1	UNREALIZABLE	0.020711267017759383	false	
+race-F	test9_dd3a27e1.ltl	1	UNREALIZABLE	0.0177090170327574	false	
+race-F	test_f3987563.ltl	1	REALIZABLE	0.017744753044098616	false	
+race-F	thermostat-F-real.ltl				true	TIMEOUT
+race-F	thermostat-GF-real.ltl				true	TIMEOUT
+race-F	thermostat-GF-unreal0.ltl				true	TIMEOUT
+race-F	thermostat-GF-unreal1.ltl				true	TIMEOUT
+race-F	thermostat-GF-unreal2.ltl				true	TIMEOUT
+race-F	tmp_13cfc6f2.ltl	5	REALIZABLE	1.0824773770291358	false	
+race-F	unordered-visits-charging0.ltl				true	TIMEOUT
+race-F	unordered-visits-real.ltl	17	REALIZABLE	14.275614809943363	false	REALIZABLE
+race-F	workstation_resupply_pb_1_pe_.ltl	1	REALIZABLE	0.06068536196835339	false	
+race-F	workstation_resupply_pb_2_pe_.ltl	5	REALIZABLE	3.5572610259987414	false	
+race-F	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT
+race-F	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT
+race-F	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT
+race-F	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT
+race-F	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT

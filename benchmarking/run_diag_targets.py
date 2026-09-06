@@ -12,7 +12,7 @@ import shlex
 import sys
 
 from benchlib import read_part, run_process_group, run_systemd_scope
-from suite_paths import load_source_map
+from suite_paths import load_source_map, read_tlsf_source_entries
 
 
 DIAG_RE = re.compile(r"\bACACIA_DIAG\b(?P<body>.*)$")
@@ -128,6 +128,40 @@ def diagnostic_environment(
     return env
 
 
+def read_tlsf_map(
+    path: pathlib.Path, tlsf_corpus: pathlib.Path
+) -> dict[str, pathlib.Path]:
+    """Resolve a headered logical-instance map against a TLSF corpus."""
+    return {
+        instance: pathlib.Path(tlsf_corpus) / source
+        for instance, source in read_tlsf_source_entries(path).items()
+    }
+
+
+def resolve_tlsf_target(
+    instance: str, tlsf_map: dict[str, pathlib.Path]
+) -> pathlib.Path:
+    """Return one mapped native TLSF input, with fatal-quality errors."""
+    try:
+        tlsf_path = tlsf_map[instance]
+    except KeyError as error:
+        raise ValueError(
+            f"logical instance is absent from TLSF map: {instance}"
+        ) from error
+    if not tlsf_path.is_file():
+        raise FileNotFoundError(
+            f"mapped TLSF file for {instance} does not exist: {tlsf_path}"
+        )
+    return tlsf_path
+
+
+def build_native_tlsf_command(
+    binary: pathlib.Path, extra_flags: list[str], tlsf_path: pathlib.Path
+) -> list[str]:
+    """Build Acacia's native TLSF command without a conversion step."""
+    return [str(binary), *extra_flags, "-T", str(tlsf_path)]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", default="build_best_decomp_mona_diag")
@@ -136,6 +170,16 @@ def main() -> int:
         "--source-map",
         default="tests/suites/benchmarks/syntcomp24/sources.tsv",
         help="suite sources.tsv used when --suite-dir is omitted",
+    )
+    parser.add_argument(
+        "--tlsf-map",
+        metavar="PATH",
+        help="headered TSV with columns instance,tlsf",
+    )
+    parser.add_argument(
+        "--tlsf-corpus",
+        metavar="DIR",
+        help="directory holding the flat .tlsf files named by --tlsf-map",
     )
     parser.add_argument("--timeout", type=float, default=25.0)
     parser.add_argument("--memory-max", default="8G")
@@ -184,6 +228,12 @@ def main() -> int:
     args = parser.parse_args()
     extra_flags = shlex.split(args.flags)
 
+    if (args.tlsf_map is None) != (args.tlsf_corpus is None):
+        parser.error("--tlsf-map and --tlsf-corpus must be supplied together")
+    native_tlsf = args.tlsf_map is not None
+    if native_tlsf and args.via_wrapper:
+        parser.error("--via-wrapper cannot be used with native TLSF inputs")
+
     build = pathlib.Path(args.build)
     wrapper = build / "tests" / "check-real-correct.sh"
     binary = build / "src" / "acacia-bonsai"
@@ -195,7 +245,19 @@ def main() -> int:
         sys.exit(f"missing diagnostics binary: {binary}")
 
     suite_dir = pathlib.Path(args.suite_dir) if args.suite_dir else None
-    suite_sources = None if suite_dir else load_source_map(pathlib.Path(args.source_map))
+    suite_sources = (
+        None
+        if suite_dir or native_tlsf
+        else load_source_map(pathlib.Path(args.source_map))
+    )
+    tlsf_sources = None
+    if native_tlsf:
+        try:
+            tlsf_sources = read_tlsf_map(
+                pathlib.Path(args.tlsf_map), pathlib.Path(args.tlsf_corpus)
+            )
+        except (OSError, ValueError) as error:
+            sys.exit(str(error))
     env = diagnostic_environment(
         os.environ,
         progress_every=args.progress_every,
@@ -304,16 +366,27 @@ def main() -> int:
 
     for target in args.targets:
         target_name = pathlib.Path(target).name
-        target_path = pathlib.Path(target)
-        if not target_path.exists():
-            target_path = suite_dir / target if suite_dir else suite_sources.get(target)
-        if target_path is None or not target_path.exists():
-            print(f"skip missing target: {target}", file=sys.stderr)
-            continue
+        if native_tlsf:
+            assert tlsf_sources is not None
+            try:
+                target_path = resolve_tlsf_target(target, tlsf_sources)
+            except (FileNotFoundError, ValueError) as error:
+                sys.exit(str(error))
+        else:
+            target_path = pathlib.Path(target)
+            if not target_path.exists():
+                target_path = (
+                    suite_dir / target if suite_dir else suite_sources.get(target)
+                )
+            if target_path is None or not target_path.exists():
+                print(f"skip missing target: {target}", file=sys.stderr)
+                continue
 
         run_env = env.copy()
         run_env["ACACIA_DIAG_INSTANCE"] = target_name
-        if args.via_wrapper:
+        if native_tlsf:
+            cmd = build_native_tlsf_command(binary, extra_flags, target_path)
+        elif args.via_wrapper:
             cmd = [
                 "/bin/zsh",
                 "-f",

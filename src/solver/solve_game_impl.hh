@@ -8,8 +8,12 @@
 #include "posets/vectors.hh"
 #include "posets/vectors/traits.hh"
 #include "solver/configured_components.hh"
+#include "solver/game_backend.hh"
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
 # include "solver/equivariant_k_bounded_safety_aut.hh"
+#endif
+#if ACACIA_FORWARD_SAFETY_SOLVER
+# include "solver/forward_k_bounded_safety_aut.hh"
 #endif
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
@@ -17,6 +21,7 @@
 
 #include <bddx.h>
 #include <cassert>
+#include <cstdlib>
 #include <fstream>
 #include <optional>
 #include <spot/twa/acc.hh>
@@ -156,10 +161,14 @@ namespace acacia::solver_detail {
   std::optional<spot::twa_graph_ptr> solve_with_downset (
       spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
-      [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints) {
+      [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints,
+      acacia::game_backend backend) {
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
-    if (not do_synthesis) {
+    // Deliberately bind the equivariant pre-pass to backward: the measured
+    // forward configuration excluded it, so this preserves both measured
+    // configurations when both solvers are compiled in.
+    if (backend == acacia::game_backend::backward and not do_synthesis) {
       auto eq = acacia::solver_detail::equivariant::try_solve<SpecializedDownset> (
           aut, kmax, kmin, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),
           ACTIONER<typename SpecializedDownset::value_type> (), INPUT_PICKER (), hints);
@@ -172,6 +181,31 @@ namespace acacia::solver_detail {
     using IOsPrecomputationMaker = IOS_PRECOMPUTER;
     using ActionerMaker = ACTIONER<typename SpecializedDownset::value_type>;
     using InputPickerMaker = INPUT_PICKER;
+#if ACACIA_FORWARD_SAFETY_SOLVER
+    // post_real rebuilds actions and the input/output partition for synthesis.
+    // The forward certificate has not yet been re-verified against that
+    // reconstruction, so strategy production must keep using the backward
+    // solver even when the forward decision backend is compiled in.
+    if (backend == acacia::game_backend::forward and not do_synthesis) {
+      auto forward =
+          forward_k_bounded_safety_aut_detail<SpecializedDownset,
+                                              IOsPrecomputationMaker,
+                                              ActionerMaker, InputPickerMaker> (
+              aut, kmin, kmax, kinc, all_inputs, all_outputs,
+              IOS_PRECOMPUTER (),
+              ACTIONER<typename SpecializedDownset::value_type> (),
+              INPUT_PICKER ());
+      auto win = forward.solve ();
+      if (not forward.should_fallback_to_backward ())
+        return post_real<SpecializedDownset> (
+            std::move (win), do_synthesis, aut, all_inputs, all_outputs);
+    }
+#else
+    // CLI requests are rejected while parsing.  Abort if an internal caller
+    // bypasses that guard so a forward-labelled run can never use backward.
+    if (backend == acacia::game_backend::forward)
+      std::abort ();
+#endif
     auto skn = k_bounded_safety_aut_detail<SpecializedDownset, IOsPrecomputationMaker,
                                            ActionerMaker, InputPickerMaker> (
         aut, kmin, kmax, kinc, all_inputs, all_outputs, IOS_PRECOMPUTER (),

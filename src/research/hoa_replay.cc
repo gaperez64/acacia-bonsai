@@ -210,7 +210,12 @@ namespace {
 #endif
     acacia::diagnostics::snapshot ("before-solve");
     return solve_game (aut, arguments.kmax, arguments.kmin, arguments.kinc, all_inputs,
-                       all_outputs, false, {})
+                       all_outputs, false, {},
+#if ACACIA_FORWARD_SAFETY_SOLVER
+                       acacia::game_backend::forward)
+#else
+                       acacia::game_backend::backward)
+#endif
         .has_value ();
   }
 

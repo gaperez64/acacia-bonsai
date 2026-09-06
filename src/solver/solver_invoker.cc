@@ -7,7 +7,9 @@
 #include "solver/create_automaton.hh"
 #include "solver/degenerate_io.hh"
 #include "solver/diagnostics.hh"
+#include "solver/forced_output_contradiction.hh"
 #include "solver/mealy_to_moore.hh"
+#include "solver/realizability_simplify.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
 #include "solver/symmetry_blocks.hh"
@@ -272,6 +274,7 @@ namespace {
       const std::optional<UNREAL_X_T> check_unreal;
       const TRANSLATION_PREF_T translation_pref;
       const SPOT_FAST_T spot_fast;
+      const acacia::game_backend backend;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
       const bool synthesize_moore;
@@ -289,7 +292,8 @@ namespace {
                    const std::vector<std::string>& output_aps, VECTOR_ELT_T opt_k,
                    VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
                    std::optional<UNREAL_X_T> check_unreal, TRANSLATION_PREF_T translation_pref,
-                   SPOT_FAST_T spot_fast, const std::optional<std::string>& synth_fname,
+                   SPOT_FAST_T spot_fast, acacia::game_backend backend,
+                   const std::optional<std::string>& synth_fname,
                    bool synthesize_moore,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints)
         : dict {dict},
@@ -301,6 +305,7 @@ namespace {
           check_unreal {check_unreal},
           translation_pref {translation_pref},
           spot_fast {spot_fast},
+          backend {backend},
           synth_fname {synth_fname},
           synthesize_moore {synthesize_moore},
           indexed_family_hints {indexed_family_hints} {
@@ -612,7 +617,7 @@ namespace {
                                     bdd_exist (aut->ap_vars (), all_outputs),
                                     // same for the outputs
                                     bdd_exist (aut->ap_vars (), all_inputs),
-                                    synth_fname.has_value (), indexed_family_hints);
+                                    synth_fname.has_value (), indexed_family_hints, backend);
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
@@ -624,20 +629,6 @@ namespace {
         }
       }
   };
-
-  bool apply_realizability_simplifier (spot::formula& formula,
-                                       const std::vector<std::string>& input_aps) {
-    spot::formula before_simplification = formula;
-    {
-#if ACACIA_ENABLE_DIAGNOSTICS
-      auto* diag = acacia::diagnostics::current ();
-      acacia::diagnostics::scoped_timer timer (diag ? &diag->rsimp_ms : nullptr);
-#endif
-      spot::realizability_simplifier rsimp (formula, input_aps);
-      formula = rsimp.simplified_formula ();
-    }
-    return before_simplification != formula;
-  }
 
   std::optional<bool> try_degenerate_io (
       const std::vector<std::string>& input_aps, const std::vector<std::string>& output_aps,
@@ -676,9 +667,66 @@ namespace {
 
   std::optional<bool> try_syntactic_bypass (
       [[maybe_unused]] const spot::formula& spot_formula,
+      [[maybe_unused]] const std::vector<std::string>& input_aps,
       [[maybe_unused]] const std::vector<std::string>& output_aps,
       [[maybe_unused]] std::optional<UNREAL_X_T> check_unreal,
       [[maybe_unused]] const std::optional<std::string>& synth_fname) {
+#if ACACIA_FORCED_OUTPUT_CONTRADICTION
+    if (not synth_fname.has_value ()) {
+      acacia::forced_output_contradiction::result contradiction;
+      {
+# if ACACIA_ENABLE_DIAGNOSTICS
+        auto* diag = acacia::diagnostics::current ();
+        acacia::diagnostics::scoped_timer timer (
+            diag ? &diag->forced_contradiction_ms : nullptr);
+# endif
+        contradiction = acacia::forced_output_contradiction::try_direct (
+            spot_formula, input_aps, output_aps);
+      }
+# if ACACIA_ENABLE_DIAGNOSTICS
+      if (auto* diag = acacia::diagnostics::current ()) {
+        diag->forced_contradiction = contradiction.unrealizable ? "match" : "decline";
+        diag->forced_contradiction_invariants = contradiction.invariants_seen;
+        diag->forced_contradiction_responses = contradiction.responses_seen;
+      }
+# endif
+      if (contradiction.unrealizable) {
+        assert (contradiction.proof.has_value ());
+        const auto& proof = *contradiction.proof;
+        const char* witness_kind = "";
+        switch (proof.kind) {
+          case acacia::forced_output_contradiction::response_kind::fixed_delay:
+            witness_kind = "fixed_delay";
+            break;
+          case acacia::forced_output_contradiction::response_kind::eventual:
+            witness_kind = "eventual";
+            break;
+          case acacia::forced_output_contradiction::response_kind::contradictory_invariants:
+            witness_kind = "contradictory_invariants";
+            break;
+        }
+# if ACACIA_ENABLE_DIAGNOSTICS
+        if (auto* diag = acacia::diagnostics::current ()) {
+          diag->forced_contradiction_kind = witness_kind;
+          diag->forced_contradiction_delay = proof.delay;
+        }
+# endif
+        const bool child_matches = acacia::syntactic_bypass::matches_worker (
+            acacia::syntactic_bypass::verdict::unrealizable,
+            check_unreal.has_value ());
+        verb_do (1, vout << "Forced-output contradiction found " << witness_kind
+                         << " witness\n");
+        return std::optional<bool> {acacia::diagnostics::finish (
+            child_matches,
+            child_matches ? "forced-contradiction"
+                          : "forced-contradiction-opposite-verdict")};
+      }
+    }
+#elif ACACIA_ENABLE_DIAGNOSTICS
+    if (auto* diag = acacia::diagnostics::current ())
+      diag->forced_contradiction = "off";
+#endif
+
 #if ACACIA_ENABLE_SYNTACTIC_BYPASS
     // Spot's direct-strategy check is defined in the original Mealy frame, so
     // it must run before the unreal children swap inputs and outputs.  It
@@ -752,7 +800,7 @@ namespace {
       bool any_component_simplified = false;
       for (auto& sub_formula : forms) {
         const bool component_simplified =
-            apply_realizability_simplifier (sub_formula, input_aps);
+            acacia::realizability::apply_simplifier (sub_formula, input_aps);
         any_component_simplified = any_component_simplified or component_simplified;
       }
 # if ACACIA_ENABLE_DIAGNOSTICS
@@ -823,6 +871,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
+              acacia::game_backend backend,
               const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata) {
   const bool synthesize_moore =
@@ -862,7 +911,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // patch_mealy/patch_game on the emitted strategy, which is not wired up here.
   if (ACACIA_ENABLE_REALIZABILITY_SIMPLIFIER and not synth_fname.has_value ()) {
     [[maybe_unused]] const bool formula_simplified =
-        apply_realizability_simplifier (spot_formula, input_aps);
+        acacia::realizability::apply_simplifier (spot_formula, input_aps);
 #if ACACIA_ENABLE_DIAGNOSTICS
     if (auto* diag = acacia::diagnostics::current ())
       diag->rsimp_changed = formula_simplified;
@@ -877,7 +926,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     return *answer;
 
   if (auto answer =
-          try_syntactic_bypass (spot_formula, output_aps, check_unreal, synth_fname);
+          try_syntactic_bypass (spot_formula, input_aps, output_aps, check_unreal,
+                                synth_fname);
       answer.has_value ())
     return *answer;
 
@@ -899,7 +949,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      translation_pref, spot_fast, synth_fname, synthesize_moore,
+                      translation_pref, spot_fast, backend, synth_fname, synthesize_moore,
                       indexed_family_hints);
 
   if (auto answer = try_unreal_safety_core_witnesses (spot_formula, check_unreal, runner);

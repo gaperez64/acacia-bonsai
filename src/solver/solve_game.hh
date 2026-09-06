@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "solver/game_backend.hh"
 #include "solver/symmetry_certificate.hh"
 
 #include <bddx.h>
@@ -12,4 +13,5 @@ std::optional<spot::twa_graph_ptr> solve_game (spot::twa_graph_ptr aut, const VE
                                                const VECTOR_ELT_T& kmin, const VECTOR_ELT_T& kinc,
                                                const bdd& all_inputs, const bdd& all_outputs,
                                                bool do_synthesis,
-                                               const std::vector<symmetry::indexed_family_hint>& hints);
+                                               const std::vector<symmetry::indexed_family_hint>& hints,
+                                               acacia::game_backend backend);

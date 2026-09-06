@@ -35,6 +35,20 @@ if get_option('build_research_tools')
     install: false,
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
   )
+  if get_option ('acacia_enable_tlsf_frontend')
+    acacia_forced_contradiction_scan_exe = executable(
+      'acacia-forced-contradiction-scan',
+      [
+        'research/forced_contradiction_scan.cc',
+        'tlsf_frontend.cc',
+        'version.cc',
+      ],
+      version_h,
+      include_directories: inc,
+      install: false,
+      dependencies: [spot_dep, bddx_dep] + tlsf_deps,
+    )
+  endif
   if get_option ('acacia_enable_diagnostics')
     acacia_antichain_replay_exe = executable(
       'acacia-antichain-replay',
@@ -47,6 +61,15 @@ if get_option('build_research_tools')
     acacia_small_invariant_exe = executable(
       'acacia-small-invariant',
       'research/small_invariant_replay.cc',
+      include_directories: inc,
+      install: false,
+      dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+    )
+    # Builds and solves the full reachable bounded safety game from the same
+    # recorded all-input action table.
+    acacia_forward_game_replay_exe = executable(
+      'acacia-forward-game-replay',
+      'research/forward_game_replay.cc',
       include_directories: inc,
       install: false,
       dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],

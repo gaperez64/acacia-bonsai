@@ -18,6 +18,9 @@ import random
 import re
 from dataclasses import dataclass
 
+# Shared with the coverage-frontier tooling so the two cannot drift apart.
+from family_names import family_of
+
 from benchlib import load_meson_jsonl
 from suite_paths import load_source_map
 
@@ -111,42 +114,6 @@ def load_tool(
             raise ValueError(f"duplicate, inconsistent result for {instance} in {path}")
         results[instance] = result
     return results
-
-
-def family_of(instance: str) -> str:
-    """Collapse common parameterized benchmark names into stable families."""
-    stem = pathlib.Path(instance).stem
-    stem = re.sub(r"_[0-9a-f]{8}$", "", stem, flags=re.IGNORECASE)
-
-    patterns = (
-        (r"^(prioritized_arbiter_unreal)", 1),
-        (r"^(round_robin_arbiter_unreal)", 1),
-        (r"^(full_arbiter_unreal)", 1),
-        (r"^(ltl2dba_[A-Za-z]+)", 1),
-        (r"^(ltl2dpa)", 1),
-        (r"^(robot_grid)", 1),
-        (r"^(collector)_v", 1),
-    )
-    for pattern, group in patterns:
-        match = re.match(pattern, stem)
-        if match:
-            return match.group(group)
-
-    # Strip a trailing sequence of numeric parameters without a nested
-    # repetition regex.  The previous expression could backtrack
-    # exponentially on long digit runs that did not match at the end.
-    suffix_start = len(stem)
-    if suffix_start and stem[-1].isdigit():
-        while suffix_start:
-            while suffix_start and stem[suffix_start - 1].isdigit():
-                suffix_start -= 1
-            if suffix_start == 0 or stem[suffix_start - 1] not in "_-":
-                break
-            suffix_start -= 1
-            if suffix_start == 0 or not stem[suffix_start - 1].isdigit():
-                break
-    family = stem[:suffix_start].rstrip("_-")
-    return family or "numeric"
 
 
 def assign_candidate(

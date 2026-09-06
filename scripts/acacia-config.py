@@ -145,6 +145,9 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         f"-DACACIA_TRANSLATION_PREFS={TRANSLATION_PREFS[values['translation_pref']]}",
         f"-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER={int(values['enable_realizability_simplifier'])}",
         f"-DACACIA_ENABLE_SYNTACTIC_BYPASS={int(values['enable_syntactic_bypass'])}",
+        f"-DACACIA_FORCED_OUTPUT_CONTRADICTION={int(values['forced_output_contradiction'])}",
+        f"-DACACIA_PROFILE_DOMINANCE={int(values['profile_dominance'])}",
+        f"-DACACIA_K_SCHEDULE=acacia::k_schedule::kind::{values['k_schedule']}",
         f"-DACACIA_ENABLE_TLSF_FRONTEND={int(values['enable_tlsf_frontend'])}",
         f"-DACACIA_EQUIVARIANT_MAX_STATES={values['equivariant_max_states']}",
         f"-DACACIA_EQUIVARIANT_MIN_CLIENTS={values['equivariant_min_clients']}",
@@ -161,8 +164,14 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         flags.append("-DACACIA_COMPILE_ALL_COMPONENTS=1")
     if values["enable_diagnostics"]:
         flags.append("-DACACIA_ENABLE_DIAGNOSTICS=1")
+    if values["default_arms"]:
+        flags.append(f"-DACACIA_DEFAULT_ARMS=\\\"{values['default_arms']}\\\"")
     if values["local_certificate"]:
         flags.append("-DACACIA_LOCAL_CERTIFICATE=1")
+    if values["forward_safety_solver"]:
+        flags.append("-DACACIA_FORWARD_SAFETY_SOLVER=1")
+    if values["forward_conditional_covering"]:
+        flags.append("-DACACIA_FORWARD_CONDITIONAL_COVERING=1")
     if values["enable_equivariant_solver"]:
         flags.append("-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1")
     if values["vector_impl"] != "auto":
@@ -187,6 +196,9 @@ MESON_OPTION_NAMES = {
     "translation_pref": "acacia_translation_pref",
     "enable_realizability_simplifier": "acacia_enable_realizability_simplifier",
     "enable_syntactic_bypass": "acacia_enable_syntactic_bypass",
+    "forced_output_contradiction": "acacia_forced_output_contradiction",
+    "profile_dominance": "acacia_profile_dominance",
+    "k_schedule": "acacia_k_schedule",
     "enable_tlsf_frontend": "acacia_enable_tlsf_frontend",
     "simd_is_max": "acacia_simd_is_max",
     "decompose_spec": "acacia_decompose_spec",
@@ -196,7 +208,10 @@ MESON_OPTION_NAMES = {
     "cpre_avoid_unions": "acacia_cpre_avoid_unions",
     "compile_all_components": "acacia_compile_all_components",
     "enable_diagnostics": "acacia_enable_diagnostics",
+    "default_arms": "acacia_default_arms",
     "local_certificate": "acacia_local_certificate",
+    "forward_safety_solver": "acacia_forward_safety_solver",
+    "forward_conditional_covering": "acacia_forward_conditional_covering",
     "enable_equivariant_solver": "acacia_enable_equivariant_solver",
     "equivariant_max_states": "acacia_equivariant_max_states",
     "equivariant_min_clients": "acacia_equivariant_min_clients",

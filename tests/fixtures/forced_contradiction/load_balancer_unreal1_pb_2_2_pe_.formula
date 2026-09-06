@@ -1,0 +1,3 @@
+(GFidle & G((idle & X(!grant_0 & !grant_1)) -> Xidle) & G(X!grant_0 | X((!idle & !request_0) U (idle & !request_0)))) -> (G((request_0 -> grant_1) & X(!grant_0 | !grant_1) & (Xgrant_0 -> request_0) & (Xgrant_1 -> request_1) & (!idle -> X(!grant_0 & !grant_1)) & ((request_0 & Xrequest_1) -> XX(grant_0 & grant_1))) & !FG(request_0 & X!grant_0) & !FG(request_1 & X!grant_1))
+idle,request_0,request_1
+grant_0,grant_1

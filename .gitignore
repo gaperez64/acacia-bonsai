@@ -172,3 +172,7 @@ latex/**/*
 
 .idea/**/*
 tlsf-corpus/
+
+# Raw staged-coverage runs; summarized TSVs are committed separately.
+_coverage26/
+benchmarking/_coverage26/

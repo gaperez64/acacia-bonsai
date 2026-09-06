@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "solver/game_backend.hh"
 #include "solver/spot_fast_mode.hh"
 #include "solver/symmetry_certificate.hh"
 
@@ -40,5 +41,6 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               VECTOR_ELT_T opt_k, VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
               std::string formula, std::optional<UNREAL_X_T> check_unreal,
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
+              acacia::game_backend backend,
               const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata = {});

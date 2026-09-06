@@ -67,6 +67,7 @@ else
 endif
 
 build_conf = configuration_data ()
+build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
 build_conf.set ('DEFAULT_K', get_option ('acacia_default_k'))
 build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
@@ -124,6 +125,28 @@ if get_option ('acacia_enable_syntactic_bypass')
 else
   build_conf.set ('ACACIA_ENABLE_SYNTACTIC_BYPASS', 0)
 endif
+if get_option ('acacia_forced_output_contradiction')
+  build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION', 1)
+else
+  build_conf.set ('ACACIA_FORCED_OUTPUT_CONTRADICTION', 0)
+endif
+if get_option ('acacia_profile_dominance')
+  build_conf.set ('ACACIA_PROFILE_DOMINANCE', 1)
+else
+  build_conf.set ('ACACIA_PROFILE_DOMINANCE', 0)
+endif
+if get_option ('acacia_forward_eager_minimal_successors')
+  build_conf.set ('ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS', 1)
+else
+  build_conf.set ('ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS', 0)
+endif
+if get_option ('acacia_forward_conditional_covering')
+  build_conf.set ('ACACIA_FORWARD_CONDITIONAL_COVERING', 1)
+else
+  build_conf.set ('ACACIA_FORWARD_CONDITIONAL_COVERING', 0)
+endif
+build_conf.set ('ACACIA_K_SCHEDULE',
+                'acacia::k_schedule::kind::' + get_option ('acacia_k_schedule'))
 if get_option ('acacia_enable_tlsf_frontend')
   build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 1)
 else
@@ -159,6 +182,11 @@ if get_option ('acacia_local_certificate')
   build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 1)
 else
   build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 0)
+endif
+if get_option ('acacia_forward_safety_solver')
+  build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER', 1)
+else
+  build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER', 0)
 endif
 if get_option ('acacia_enable_equivariant_solver')
   build_conf.set ('ACACIA_ENABLE_EQUIVARIANT_SOLVER', 1)

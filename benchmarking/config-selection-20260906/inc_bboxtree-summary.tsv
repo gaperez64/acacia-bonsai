@@ -1,0 +1,1525 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_60	failure_kind_at_60
+inc_bboxtree	01.ltl	1	REALIZABLE	0.3237209729850292	false	
+inc_bboxtree	02.ltl	1	REALIZABLE	0.054155088029801846	false	
+inc_bboxtree	03.ltl	5	REALIZABLE	4.197445866884664	false	
+inc_bboxtree	05.ltl				true	TIMEOUT
+inc_bboxtree	06.ltl				true	TIMEOUT
+inc_bboxtree	07.ltl				true	TIMEOUT
+inc_bboxtree	08.ltl				true	TIMEOUT
+inc_bboxtree	09.ltl	17	REALIZABLE	10.988219385966659	false	REALIZABLE
+inc_bboxtree	10.ltl	5	REALIZABLE	4.475340222939849	false	
+inc_bboxtree	11.ltl	5	REALIZABLE	4.656296681147069	false	
+inc_bboxtree	12.ltl	17	REALIZABLE	6.650485953083262	false	REALIZABLE
+inc_bboxtree	13.ltl	17	REALIZABLE	6.924798587802798	false	REALIZABLE
+inc_bboxtree	ActionConverter.ltl	1	REALIZABLE	0.015540001913905144	false	
+inc_bboxtree	AlarmMin_efe2feaf.ltl	1	REALIZABLE	0.024734095903113484	false	
+inc_bboxtree	Alarm_06e9cad4.ltl	5	REALIZABLE	4.376284754136577	false	
+inc_bboxtree	Alarm_2d1010f8.ltl	1	REALIZABLE	0.02060273289680481	false	
+inc_bboxtree	Alarm_68c86764.ltl	5	REALIZABLE	4.118528922088444	false	
+inc_bboxtree	Alarm_70523fbe.ltl	5	REALIZABLE	3.0556657849811018	false	
+inc_bboxtree	Alarm_88c5c1c3.ltl	1	REALIZABLE	0.03189250291325152	false	
+inc_bboxtree	Alarm_9cac58d3.ltl	1	REALIZABLE	0.031324534909799695	false	
+inc_bboxtree	Alarm_a5f99bc6.ltl				true	TIMEOUT
+inc_bboxtree	Alarm_f2774e0b.ltl	5	REALIZABLE	3.0633359767962247	false	
+inc_bboxtree	AllHeating_d6376bf9.ltl	1	REALIZABLE	0.021010892931371927	false	
+inc_bboxtree	AllLights_06e9cad4.ltl				true	TIMEOUT
+inc_bboxtree	AllLights_2c5b09da.ltl				true	TIMEOUT
+inc_bboxtree	AllLights_63831f8c.ltl				true	TIMEOUT
+inc_bboxtree	AllLights_aeb1d897.ltl				true	TIMEOUT
+inc_bboxtree	AllLights_b209ff21.ltl				true	TIMEOUT
+inc_bboxtree	AllLights_d6c5ac79.ltl				true	TIMEOUT
+inc_bboxtree	AllShades_66f450a4.ltl				true	TIMEOUT
+inc_bboxtree	Assumptions_a50cadd7.ltl	1	UNREALIZABLE	0.016867334954440594	false	
+inc_bboxtree	Automata.ltl	1	REALIZABLE	0.044762731064110994	false	
+inc_bboxtree	Automata16S.ltl				true	TIMEOUT
+inc_bboxtree	Automata32S.ltl				true	TIMEOUT
+inc_bboxtree	Button.ltl	1	REALIZABLE	0.01804540795274079	false	
+inc_bboxtree	CheckAlarmBroken1_1a2942e3.ltl	1	REALIZABLE	0.024558579782024026	false	
+inc_bboxtree	CheckAlarm_6bea956e.ltl	1	UNREALIZABLE	0.03432915988378227	false	
+inc_bboxtree	CheckCoffeMachineBroken1_a5f99bc6.ltl	1	REALIZABLE	0.03171541914343834	false	
+inc_bboxtree	CheckCoffeMachine_3461125b.ltl	1	UNREALIZABLE	0.030125953955575824	false	
+inc_bboxtree	CheckCoffeMachine_f3987563.ltl	1	UNREALIZABLE	0.03607304394245148	false	
+inc_bboxtree	CheckDoor_c2b9e44d.ltl	1	UNREALIZABLE	0.029323321068659425	false	
+inc_bboxtree	CheckHeating_2418b67e.ltl	1	UNREALIZABLE	0.03729254985228181	false	
+inc_bboxtree	CheckHeating_3461125b.ltl	1	UNREALIZABLE	0.03364916215650737	false	
+inc_bboxtree	CheckLight_007df645.ltl	1	UNREALIZABLE	0.03736276482231915	false	
+inc_bboxtree	CheckLight_aeb1d897.ltl	1	UNREALIZABLE	0.032168962992727757	false	
+inc_bboxtree	CheckRoom_06e9cad4.ltl	1	UNREALIZABLE	0.03945522219873965	false	
+inc_bboxtree	CheckRoom_2c5b09da.ltl	1	UNREALIZABLE	0.03513355413451791	false	
+inc_bboxtree	CheckRoom_3916ec59.ltl	1	UNREALIZABLE	0.03198814205825329	false	
+inc_bboxtree	CheckRoom_70523fbe.ltl	1	UNREALIZABLE	0.03322860808111727	false	
+inc_bboxtree	CheckShades_1a2942e3.ltl	1	UNREALIZABLE	0.04188153496943414	false	
+inc_bboxtree	CheckShades_3461125b.ltl	1	UNREALIZABLE	0.04271513409912586	false	
+inc_bboxtree	CheckShades_4d4ca5c4.ltl	1	UNREALIZABLE	0.030984277138486505	false	
+inc_bboxtree	CheckShades_aeb1d897.ltl	1	UNREALIZABLE	0.024535091128200293	false	
+inc_bboxtree	CheckTime_3916ec59.ltl	1	UNREALIZABLE	0.029194083996117115	false	
+inc_bboxtree	CheckTime_4b5e6eaa.ltl	1	UNREALIZABLE	0.03027875698171556	false	
+inc_bboxtree	CheckTime_54e1f7d2.ltl	1	UNREALIZABLE	0.03254377795383334	false	
+inc_bboxtree	CheckTimer_54e1f7d2.ltl	1	UNREALIZABLE	0.03383339615538716	false	
+inc_bboxtree	CheckTimer_fa8592c8.ltl	1	UNREALIZABLE	0.03347815899178386	false	
+inc_bboxtree	CheckWarnlightBroken1_70523fbe.ltl	1	REALIZABLE	0.032630377914756536	false	
+inc_bboxtree	CheckWarnlight_1cf58fc1.ltl	1	UNREALIZABLE	0.03571527008898556	false	
+inc_bboxtree	CheckWarnlight_4b5a2bad.ltl	1	UNREALIZABLE	0.03224251605570316	false	
+inc_bboxtree	CheckWarnlight_54e1f7d2.ltl	1	UNREALIZABLE	0.0450179111212492	false	
+inc_bboxtree	CheckWarnlight_6bea956e.ltl	1	UNREALIZABLE	0.03532500588335097	false	
+inc_bboxtree	CheckWindows_54e1f7d2.ltl	1	UNREALIZABLE	0.03255996387451887	false	
+inc_bboxtree	Cockpitboard.ltl	1	REALIZABLE	0.03961302503012121	false	
+inc_bboxtree	Cockpitboard_efe2feaf.ltl	1	REALIZABLE	0.03558435314334929	false	
+inc_bboxtree	CoffeMachine_974f4a68.ltl	1	REALIZABLE	0.04103237600065768	false	
+inc_bboxtree	CoffeMachine_a50cadd7.ltl	1	UNREALIZABLE	0.02635794412344694	false	
+inc_bboxtree	CoffeeMin_88f351a6.ltl	1	REALIZABLE	0.041079611983150244	false	
+inc_bboxtree	Coffee_06e9cad4.ltl	1	REALIZABLE	0.053403561003506184	false	
+inc_bboxtree	Coffee_235467da.ltl	1	REALIZABLE	0.035741705913096666	false	
+inc_bboxtree	Coffee_2c5b09da.ltl	1	REALIZABLE	0.03640753589570522	false	
+inc_bboxtree	Coffee_6479ef9a.ltl	1	REALIZABLE	0.0531452470459044	false	
+inc_bboxtree	Coffee_d6376bf9.ltl	1	REALIZABLE	0.034764845157042146	false	
+inc_bboxtree	Coffee_efe2feaf.ltl	1	REALIZABLE	0.034025626024231315	false	
+inc_bboxtree	Coffee_f1477cc5.ltl	1	UNREALIZABLE	0.03398491092957556	false	
+inc_bboxtree	Core_4b5a2bad.ltl	1	UNREALIZABLE	0.07991278101690114	false	
+inc_bboxtree	Core_66f450a4.ltl	1	UNREALIZABLE	0.016500022960826755	false	
+inc_bboxtree	Core_fa4d4ce3.ltl	1	UNREALIZABLE	0.03605338791385293	false	
+inc_bboxtree	Core_solved_974f4a68.ltl	1	REALIZABLE	0.08591249701566994	false	
+inc_bboxtree	Demo1_06e9cad4.ltl				true	TIMEOUT
+inc_bboxtree	Demo1_2c5b09da.ltl				true	TIMEOUT
+inc_bboxtree	Demo1_63831f8c.ltl				true	TIMEOUT
+inc_bboxtree	Demo1_c2b9e44d.ltl				true	TIMEOUT
+inc_bboxtree	Demo1_d65ed84e.ltl				true	TIMEOUT
+inc_bboxtree	DeviceBehaviorChec_fa8592c8.ltl	1	UNREALIZABLE	0.020368027966469526	false	
+inc_bboxtree	Door_2d1010f8.ltl	1	REALIZABLE	0.03653247305192053	false	
+inc_bboxtree	EnemeyModule.ltl	1	REALIZABLE	0.030087566003203392	false	
+inc_bboxtree	EscalatorBidirectional.ltl	1	REALIZABLE	0.036575997015461326	false	
+inc_bboxtree	EscalatorBidirectionalInit.ltl	1	REALIZABLE	0.03701719781383872	false	
+inc_bboxtree	EscalatorCounting.ltl	1	REALIZABLE	0.03883705986663699	false	
+inc_bboxtree	EscalatorCountingInit.ltl	1	REALIZABLE	0.0415968329180032	false	
+inc_bboxtree	EscalatorNonCounting.ltl	1	REALIZABLE	0.029971481999382377	false	
+inc_bboxtree	EscalatorNonReactive.ltl	1	REALIZABLE	0.02740464499220252	false	
+inc_bboxtree	EscalatorSmart.ltl	1	REALIZABLE	0.05317569710314274	false	
+inc_bboxtree	Example1_d6376bf9.ltl	1	REALIZABLE	0.02037207316607237	false	
+inc_bboxtree	F-G-contradiction-10.ltl	1	UNREALIZABLE	0.5627424239646643	false	
+inc_bboxtree	F-G-contradiction-11.ltl	5	UNREALIZABLE	4.494220799999312	false	
+inc_bboxtree	F-G-contradiction-110.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-111.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-112.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-113.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-114.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-12.ltl	17	UNREALIZABLE	14.115418839035556	false	UNREALIZABLE
+inc_bboxtree	F-G-contradiction-13.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-14.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-15.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-16.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-17.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-18.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-19.ltl				true	TIMEOUT
+inc_bboxtree	F-G-contradiction-2-unreal.ltl	1	UNREALIZABLE	0.20507474686019123	false	
+inc_bboxtree	FelixSpecFixed2.2.core_fa8592c8.ltl	1	UNREALIZABLE	0.027603432070463896	false	
+inc_bboxtree	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT
+inc_bboxtree	FelixSpecFixed3.core_b209ff21.ltl	1	UNREALIZABLE	0.25623107282444835	false	
+inc_bboxtree	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT
+inc_bboxtree	FelixSpecFixed4GuaranteesOnly_88f351a6.ltl	1	UNREALIZABLE	0.028387752827256918	false	
+inc_bboxtree	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT
+inc_bboxtree	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT
+inc_bboxtree	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT
+inc_bboxtree	Full_f1477cc5.ltl				true	TIMEOUT
+inc_bboxtree	GF-G-contradiction0.ltl	1	UNREALIZABLE	0.20801760000176728	false	
+inc_bboxtree	GF-G-contradiction1.ltl	17	UNREALIZABLE	8.070863632950932	false	UNREALIZABLE
+inc_bboxtree	GF-G-contradiction2.ltl				true	TIMEOUT
+inc_bboxtree	GF-G-contradiction3.ltl				true	TIMEOUT
+inc_bboxtree	GF-G-contradiction4.ltl				true	TIMEOUT
+inc_bboxtree	GF-G-contradiction5.ltl				true	TIMEOUT
+inc_bboxtree	GF-G-contradiction6.ltl				true	TIMEOUT
+inc_bboxtree	GF-G-contradiction7.ltl				true	TIMEOUT
+inc_bboxtree	Gamelogic.ltl	1	REALIZABLE	0.020178081933408976	false	
+inc_bboxtree	GamemodeChooser.ltl	1	REALIZABLE	0.020674529019743204	false	
+inc_bboxtree	Gamemodule.ltl	1	REALIZABLE	0.01957079512067139	false	
+inc_bboxtree	HeatingMin_d6c5ac79.ltl	1	REALIZABLE	0.030651634093374014	false	
+inc_bboxtree	Heating_235467da.ltl	1	REALIZABLE	0.03533642087131739	false	
+inc_bboxtree	Heating_974f4a68.ltl	1	REALIZABLE	0.04254498099908233	false	
+inc_bboxtree	Heating_b02056d6.ltl	1	REALIZABLE	0.03745751385577023	false	
+inc_bboxtree	Heating_b209ff21.ltl	1	REALIZABLE	0.035574298119172454	false	
+inc_bboxtree	Increment.ltl	1	REALIZABLE	0.028392157051712275	false	
+inc_bboxtree	IntendDemo_42dc4fff.ltl	1	UNREALIZABLE	0.07154174102470279	false	
+inc_bboxtree	KitchenTimerV0.ltl	1	REALIZABLE	0.014683633111417294	false	
+inc_bboxtree	KitchenTimerV1.ltl	1	REALIZABLE	0.03324253694154322	false	
+inc_bboxtree	KitchenTimerV10.ltl	1	REALIZABLE	0.09726500394754112	false	
+inc_bboxtree	KitchenTimerV2.ltl	1	REALIZABLE	0.018878292059525847	false	
+inc_bboxtree	KitchenTimerV3.ltl	1	REALIZABLE	0.049923027865588665	false	
+inc_bboxtree	KitchenTimerV4.ltl	1	REALIZABLE	0.04569833097048104	false	
+inc_bboxtree	KitchenTimerV5.ltl	1	REALIZABLE	0.20025796606205404	false	
+inc_bboxtree	KitchenTimerV6.ltl	1	REALIZABLE	0.8117947850842029	false	
+inc_bboxtree	KitchenTimerV7.ltl	1	REALIZABLE	0.8358632561285049	false	
+inc_bboxtree	KitchenTimerV8.ltl	1	REALIZABLE	0.805219838861376	false	
+inc_bboxtree	KitchenTimerV9.ltl				true	TIMEOUT
+inc_bboxtree	LampController_974f4a68.ltl	1	REALIZABLE	0.02513645705766976	false	
+inc_bboxtree	LedMatrix.ltl				true	TIMEOUT
+inc_bboxtree	Light_a50cadd7.ltl	1	UNREALIZABLE	0.01916489005088806	false	
+inc_bboxtree	Light_aeb1d897.ltl	1	UNREALIZABLE	0.04547891300171614	false	
+inc_bboxtree	Light_d65ed84e.ltl	1	REALIZABLE	0.020451537100598216	false	
+inc_bboxtree	Lights2Min_9cbf2546.ltl	1	REALIZABLE	0.020084813004359603	false	
+inc_bboxtree	Lights2_06e9cad4.ltl	1	REALIZABLE	0.4376471471041441	false	
+inc_bboxtree	Lights2_0f5381e9.ltl	1	REALIZABLE	0.3958721689414233	false	
+inc_bboxtree	Lights2_2c5b09da.ltl	1	REALIZABLE	0.07286600605584681	false	
+inc_bboxtree	Lights2_9cac58d3.ltl	1	REALIZABLE	0.49447388108819723	false	
+inc_bboxtree	Lights2_b02056d6.ltl	1	REALIZABLE	0.5137715470045805	false	
+inc_bboxtree	Lights2_f1477cc5.ltl	1	UNREALIZABLE	0.052685846108943224	false	
+inc_bboxtree	Lights2_f3987563.ltl	1	REALIZABLE	0.3971864029299468	false	
+inc_bboxtree	Lights3Min_6479ef9a.ltl	1	REALIZABLE	0.0184323291759938	false	
+inc_bboxtree	Lights3_06e9cad4.ltl	1	REALIZABLE	0.03586369892582297	false	
+inc_bboxtree	Lights3_235467da.ltl	1	REALIZABLE	0.034611333860084414	false	
+inc_bboxtree	Lights3_2c5b09da.ltl	1	REALIZABLE	0.021337245125323534	false	
+inc_bboxtree	Lights3_3916ec59.ltl	1	REALIZABLE	0.043922132113948464	false	
+inc_bboxtree	Lights3_6bea956e.ltl	1	REALIZABLE	0.039023226127028465	false	
+inc_bboxtree	Lights3_f1477cc5.ltl	1	REALIZABLE	0.044085998088121414	false	
+inc_bboxtree	LightsMin_6bea956e.ltl	1	REALIZABLE	0.024047397077083588	false	
+inc_bboxtree	LightsTotal_06e9cad4.ltl	5	REALIZABLE	1.0926580631639808	false	
+inc_bboxtree	LightsTotal_2c5b09da.ltl	1	UNREALIZABLE	0.21718869009055197	false	
+inc_bboxtree	LightsTotal_9cbf2546.ltl	5	REALIZABLE	1.1068902341648936	false	
+inc_bboxtree	LightsTotal_d65ed84e.ltl	5	REALIZABLE	1.0298401708714664	false	
+inc_bboxtree	Lights_06e9cad4.ltl	1	REALIZABLE	0.03927260986529291	false	
+inc_bboxtree	Lights_2c5b09da.ltl	1	REALIZABLE	0.0320482081733644	false	
+inc_bboxtree	Lights_3461125b.ltl	1	REALIZABLE	0.05344469798728824	false	
+inc_bboxtree	Lights_9cac58d3.ltl	1	REALIZABLE	0.043011508882045746	false	
+inc_bboxtree	Lights_b0840146.ltl	1	REALIZABLE	0.04439700301736593	false	
+inc_bboxtree	Lights_f3987563.ltl	1	REALIZABLE	0.050334209809079766	false	
+inc_bboxtree	ModdifiedLedMatrix4X.ltl	1	UNREALIZABLE	0.5241929909680039	false	
+inc_bboxtree	ModdifiedLedMatrix5X.ltl	5	REALIZABLE	3.150931039825082	false	
+inc_bboxtree	Morning2Min_6cbc6174.ltl	1	REALIZABLE	0.01902906084433198	false	
+inc_bboxtree	Morning2_06e9cad4.ltl				true	TIMEOUT
+inc_bboxtree	Morning2_1cf58fc1.ltl				true	TIMEOUT
+inc_bboxtree	Morning2_2c5b09da.ltl				true	TIMEOUT
+inc_bboxtree	Morning2_407db2cc.ltl				true	TIMEOUT
+inc_bboxtree	Morning2_4d4ca5c4.ltl	1	REALIZABLE	0.023816996021196246	false	
+inc_bboxtree	Morning2_63831f8c.ltl				true	TIMEOUT
+inc_bboxtree	Morning2_68c86764.ltl				true	TIMEOUT
+inc_bboxtree	Morning2_9cac58d3.ltl	1	REALIZABLE	0.017469540936872363	false	
+inc_bboxtree	Morning2_d65ed84e.ltl				true	TIMEOUT
+inc_bboxtree	Morning2s_06cf2373.ltl				true	TIMEOUT
+inc_bboxtree	Morning2s_06e9cad4.ltl				true	TIMEOUT
+inc_bboxtree	Morning2s_2c5b09da.ltl				true	TIMEOUT
+inc_bboxtree	Morning2s_42dc4fff.ltl				true	TIMEOUT
+inc_bboxtree	Morning2s_9cbf2546.ltl				true	TIMEOUT
+inc_bboxtree	Morning2s_d6c5ac79.ltl				true	TIMEOUT
+inc_bboxtree	MorningMin_d6c5ac79.ltl	1	REALIZABLE	0.1622957370709628	false	
+inc_bboxtree	Morning_14a3b3a2.ltl				true	TIMEOUT
+inc_bboxtree	Morning_4b5e6eaa.ltl				true	TIMEOUT
+inc_bboxtree	Morning_88c5c1c3.ltl				true	TIMEOUT
+inc_bboxtree	Morning_9cac58d3.ltl				true	TIMEOUT
+inc_bboxtree	Morning_c92eb242.ltl				true	TIMEOUT
+inc_bboxtree	Morning_f1477cc5.ltl				true	TIMEOUT
+inc_bboxtree	Morning_f2774e0b.ltl				true	TIMEOUT
+inc_bboxtree	MusicAppFeedback.ltl	1	REALIZABLE	0.02512514404952526	false	
+inc_bboxtree	MusicAppMotivating.ltl	1	REALIZABLE	0.025069853058084846	false	
+inc_bboxtree	MusicAppSimple.ltl	1	REALIZABLE	0.026044552214443684	false	
+inc_bboxtree	OneCounter.ltl	5	REALIZABLE	2.792426290921867	false	
+inc_bboxtree	OneCounterGui.ltl	1	UNREALIZABLE	0.01773014897480607	false	
+inc_bboxtree	OneCounterGuiA1.ltl	1	UNREALIZABLE	0.04631566209718585	false	
+inc_bboxtree	OneCounterGuiA2.ltl	1	UNREALIZABLE	0.04209201782941818	false	
+inc_bboxtree	OneCounterGuiA3.ltl	1	UNREALIZABLE	0.0593497920781374	false	
+inc_bboxtree	OneCounterGuiA4.ltl	1	UNREALIZABLE	0.06560190697200596	false	
+inc_bboxtree	OneCounterGuiA5.ltl	1	UNREALIZABLE	0.3681087188888341	false	
+inc_bboxtree	OneCounterGuiA6.ltl	1	UNREALIZABLE	0.7454690809827298	false	
+inc_bboxtree	OneCounterGuiA7.ltl	5	UNREALIZABLE	1.8718046620488167	false	
+inc_bboxtree	OneCounterGuiA8.ltl	17	UNREALIZABLE	5.199064313899726	false	UNREALIZABLE
+inc_bboxtree	OneCounterInRange.ltl	1	UNREALIZABLE	0.022521279053762555	false	
+inc_bboxtree	OneCounterInRangeA1.ltl	1	UNREALIZABLE	0.02089221403002739	false	
+inc_bboxtree	OneCounterInRangeA2.ltl	1	UNREALIZABLE	0.03319091512821615	false	
+inc_bboxtree	OneCounterInRangeA3.ltl	1	REALIZABLE	0.03074999083764851	false	
+inc_bboxtree	PlugController_fa4d4ce3.ltl	1	REALIZABLE	0.04254721314646304	false	
+inc_bboxtree	Radarboard.ltl	1	REALIZABLE	0.028959297109395266	false	
+inc_bboxtree	RegManager.ltl	1	REALIZABLE	0.029257451882585883	false	
+inc_bboxtree	Room_a50cadd7.ltl	1	UNREALIZABLE	0.03324840101413429	false	
+inc_bboxtree	RotationCalculator.ltl	1	REALIZABLE	0.03774359403178096	false	
+inc_bboxtree	SPI.ltl	1	REALIZABLE	0.679241721983999	false	
+inc_bboxtree	SPIPureNext.ltl				true	TIMEOUT
+inc_bboxtree	SPIReadClk.ltl	1	REALIZABLE	0.01421602489426732	false	
+inc_bboxtree	SPIReadManag.ltl	1	REALIZABLE	0.8235599480103701	false	
+inc_bboxtree	SPIReadSdi.ltl	1	REALIZABLE	0.017181315924972296	false	
+inc_bboxtree	SPIWriteClk.ltl	1	REALIZABLE	0.021247741067782044	false	
+inc_bboxtree	SPIWriteManag.ltl	1	REALIZABLE	0.19425111706368625	false	
+inc_bboxtree	SPIWriteSdi.ltl	1	REALIZABLE	0.01919907913543284	false	
+inc_bboxtree	Scoreboard.ltl	1	REALIZABLE	0.0299696559086442	false	
+inc_bboxtree	Sensor.ltl	1	REALIZABLE	0.3247930749785155	false	
+inc_bboxtree	SensorInit.ltl	1	REALIZABLE	0.13357953797094524	false	
+inc_bboxtree	SensorPart.ltl	1	REALIZABLE	0.04550239606760442	false	
+inc_bboxtree	SensorRegister.ltl	1	REALIZABLE	0.017677177907899022	false	
+inc_bboxtree	SensorSelector.ltl	1	REALIZABLE	0.03790268301963806	false	
+inc_bboxtree	SensorSubmodulChooser.ltl	1	REALIZABLE	0.0753603798802942	false	
+inc_bboxtree	Shades2Min_63831f8c.ltl	1	REALIZABLE	0.018011165084317327	false	
+inc_bboxtree	Shades2_235467da.ltl	1	REALIZABLE	0.022907434962689877	false	
+inc_bboxtree	Shades2_42dc4fff.ltl	1	REALIZABLE	0.02060409402474761	false	
+inc_bboxtree	Shades2_70523fbe.ltl	1	REALIZABLE	0.030233293073251843	false	
+inc_bboxtree	Shades2_a5f99bc6.ltl	1	REALIZABLE	0.038527793949469924	false	
+inc_bboxtree	ShadesMin_aeb1d897.ltl	1	REALIZABLE	0.03078241110779345	false	
+inc_bboxtree	Shades_6479ef9a.ltl	1	REALIZABLE	0.04100561491213739	false	
+inc_bboxtree	Shades_974f4a68.ltl	1	REALIZABLE	0.044695270946249366	false	
+inc_bboxtree	Shades_9cac58d3.ltl	1	REALIZABLE	0.03569222707301378	false	
+inc_bboxtree	Shades_a02758ea.ltl	1	REALIZABLE	0.038617199985310435	false	
+inc_bboxtree	SingleContoller_d65ed84e.ltl	1	UNREALIZABLE	0.07295547216199338	false	
+inc_bboxtree	SliderDefault.ltl	1	REALIZABLE	0.022710420191287994	false	
+inc_bboxtree	SliderDelayed.ltl	1	REALIZABLE	0.1428025991190225	false	
+inc_bboxtree	SliderScored.ltl	1	REALIZABLE	0.04901852598413825	false	
+inc_bboxtree	System_b0840146.ltl	1	UNREALIZABLE	0.024463078938424587	false	
+inc_bboxtree	Time_a50cadd7.ltl	1	UNREALIZABLE	0.028331748209893703	false	
+inc_bboxtree	Timer_a50cadd7.ltl	1	REALIZABLE	0.03133020200766623	false	
+inc_bboxtree	TorcsAccelerating.ltl	1	REALIZABLE	0.037366852862760425	false	
+inc_bboxtree	TorcsGearing.ltl	1	REALIZABLE	0.03688509180210531	false	
+inc_bboxtree	TorcsSimple.ltl	1	REALIZABLE	0.045833752024918795	false	
+inc_bboxtree	TorcsSteeringImproved.ltl	1	REALIZABLE	0.04864831012673676	false	
+inc_bboxtree	TorcsSteeringSimple.ltl	1	REALIZABLE	0.0321600039023906	false	
+inc_bboxtree	TorcsSteeringSmart.ltl	1	REALIZABLE	0.04396582394838333	false	
+inc_bboxtree	TwoCounters.ltl	1	UNREALIZABLE	0.03092892188578844	false	
+inc_bboxtree	TwoCounters2.ltl	1	UNREALIZABLE	0.06197520694695413	false	
+inc_bboxtree	TwoCounters3.ltl	5	REALIZABLE	1.2512252440210432	false	
+inc_bboxtree	TwoCounters4.ltl	1	REALIZABLE	0.04362094006501138	false	
+inc_bboxtree	TwoCounters5.ltl	1	UNREALIZABLE	0.13627743278630078	false	
+inc_bboxtree	TwoCountersDisButA0.ltl	1	UNREALIZABLE	0.041675110114738345	false	
+inc_bboxtree	TwoCountersDisButA1.ltl	1	UNREALIZABLE	0.07437854097224772	false	
+inc_bboxtree	TwoCountersDisButA2.ltl	1	UNREALIZABLE	0.08244630601257086	false	
+inc_bboxtree	TwoCountersDisButA3.ltl	1	UNREALIZABLE	0.18209918006323278	false	
+inc_bboxtree	TwoCountersDisButA4.ltl	1	UNREALIZABLE	0.18327014590613544	false	
+inc_bboxtree	TwoCountersDisButA5.ltl	1	UNREALIZABLE	0.3186360050458461	false	
+inc_bboxtree	TwoCountersDisButA6.ltl	1	UNREALIZABLE	0.30212413403205574	false	
+inc_bboxtree	TwoCountersDisButA7.ltl	1	UNREALIZABLE	0.5977261578664184	false	
+inc_bboxtree	TwoCountersDisButA8.ltl	1	UNREALIZABLE	0.6206900561228395	false	
+inc_bboxtree	TwoCountersDisButA9.ltl	5	UNREALIZABLE	1.349361440865323	false	
+inc_bboxtree	TwoCountersDisButAC.ltl	5	UNREALIZABLE	1.311314505059272	false	
+inc_bboxtree	TwoCountersGui.ltl	1	UNREALIZABLE	0.11170857702381909	false	
+inc_bboxtree	TwoCountersInRange.ltl	1	UNREALIZABLE	0.055012738797813654	false	
+inc_bboxtree	TwoCountersInRangeA1.ltl	1	UNREALIZABLE	0.11891899886541069	false	
+inc_bboxtree	TwoCountersInRangeA2.ltl	1	UNREALIZABLE	0.13279517297632992	false	
+inc_bboxtree	TwoCountersInRangeA3.ltl	1	UNREALIZABLE	0.159692786866799	false	
+inc_bboxtree	TwoCountersInRangeA4.ltl	1	UNREALIZABLE	0.1706701680086553	false	
+inc_bboxtree	TwoCountersInRangeA5.ltl	1	UNREALIZABLE	0.1924232009332627	false	
+inc_bboxtree	TwoCountersInRangeM0.ltl	1	UNREALIZABLE	0.23059635609388351	false	
+inc_bboxtree	TwoCountersInRangeM1.ltl	1	UNREALIZABLE	0.24885301920585334	false	
+inc_bboxtree	TwoCountersInRangeM2.ltl	1	UNREALIZABLE	0.2350145250093192	false	
+inc_bboxtree	TwoCountersInRangeM3.ltl	1	UNREALIZABLE	0.24149655597284436	false	
+inc_bboxtree	TwoCountersInRangeM4.ltl	1	UNREALIZABLE	0.20358142303302884	false	
+inc_bboxtree	TwoCountersRefined.ltl	1	UNREALIZABLE	0.046354518039152026	false	
+inc_bboxtree	TwoCountersRefinedRefined.ltl	1	REALIZABLE	0.02730620396323502	false	
+inc_bboxtree	UnderapproxDemo2.ltl	1	UNREALIZABLE	0.019083805149421096	false	
+inc_bboxtree	UnderapproxStrengthenedDemo.ltl	1	REALIZABLE	0.029957900987938046	false	
+inc_bboxtree	Warnlight_2d1010f8.ltl	1	REALIZABLE	0.04165034904144704	false	
+inc_bboxtree	Warnlight_a50cadd7.ltl	1	UNREALIZABLE	0.037134156096726656	false	
+inc_bboxtree	Window2Min_88c5c1c3.ltl	1	REALIZABLE	0.032402368960902095	false	
+inc_bboxtree	Window2_54e1f7d2.ltl	1	REALIZABLE	0.04057177482172847	false	
+inc_bboxtree	Window2_6479ef9a.ltl	1	REALIZABLE	0.04799012700095773	false	
+inc_bboxtree	Window2_9cac58d3.ltl	1	REALIZABLE	0.02505795401521027	false	
+inc_bboxtree	Window2_aeb1d897.ltl	1	REALIZABLE	0.057592834113165736	false	
+inc_bboxtree	Window2_f1477cc5.ltl	1	UNREALIZABLE	0.021075153024867177	false	
+inc_bboxtree	WindowMin_a5f99bc6.ltl	1	REALIZABLE	0.025087084155529737	false	
+inc_bboxtree	Window_235467da.ltl	1	REALIZABLE	0.028049458982422948	false	
+inc_bboxtree	Window_42dc4fff.ltl	1	REALIZABLE	0.037846605060622096	false	
+inc_bboxtree	Window_54e1f7d2.ltl	1	REALIZABLE	0.02984101790934801	false	
+inc_bboxtree	Zoo0.ltl	1	REALIZABLE	0.025125680956989527	false	
+inc_bboxtree	Zoo10.ltl	1	REALIZABLE	0.033612169791013	false	
+inc_bboxtree	Zoo5.ltl	1	REALIZABLE	0.03608034108765423	false	
+inc_bboxtree	abcg_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.04185540578328073	false	
+inc_bboxtree	abcg_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.854963342892006	false	
+inc_bboxtree	abcg_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_case_study_pb_2_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.02546801487915218	false	
+inc_bboxtree	amba_decomposed_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.049951368011534214	false	
+inc_bboxtree	amba_decomposed_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.11315493378788233	false	
+inc_bboxtree	amba_decomposed_arbiter_pb_5_pe_.ltl	5	REALIZABLE	1.5932235780637711	false	
+inc_bboxtree	amba_decomposed_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_decode.ltl	1	REALIZABLE	0.018501807935535908	false	
+inc_bboxtree	amba_decomposed_encode_pb_10_pe_.ltl	1	REALIZABLE	0.044425094965845346	false	
+inc_bboxtree	amba_decomposed_encode_pb_11_pe_.ltl	1	REALIZABLE	0.03646514704450965	false	
+inc_bboxtree	amba_decomposed_encode_pb_12_pe_.ltl	1	REALIZABLE	0.04939195513725281	false	
+inc_bboxtree	amba_decomposed_encode_pb_13_pe_.ltl	1	REALIZABLE	0.06527383299544454	false	
+inc_bboxtree	amba_decomposed_encode_pb_14_pe_.ltl	1	REALIZABLE	0.12881349702365696	false	
+inc_bboxtree	amba_decomposed_encode_pb_15_pe_.ltl	1	REALIZABLE	0.27728697401471436	false	
+inc_bboxtree	amba_decomposed_encode_pb_16_pe_.ltl	1	REALIZABLE	0.8089427701197565	false	
+inc_bboxtree	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_encode_pb_2_pe_.ltl	1	REALIZABLE	0.01591280591674149	false	
+inc_bboxtree	amba_decomposed_encode_pb_3_pe_.ltl	1	REALIZABLE	0.034233553102239966	false	
+inc_bboxtree	amba_decomposed_encode_pb_4_pe_.ltl	1	REALIZABLE	0.024931137915700674	false	
+inc_bboxtree	amba_decomposed_encode_pb_5_pe_.ltl	1	REALIZABLE	0.019876890815794468	false	
+inc_bboxtree	amba_decomposed_encode_pb_6_pe_.ltl	1	REALIZABLE	0.025160293793305755	false	
+inc_bboxtree	amba_decomposed_encode_pb_7_pe_.ltl	1	REALIZABLE	0.03825363493524492	false	
+inc_bboxtree	amba_decomposed_encode_pb_8_pe_.ltl	1	REALIZABLE	0.02936115488409996	false	
+inc_bboxtree	amba_decomposed_encode_pb_9_pe_.ltl	1	REALIZABLE	0.042951713083311915	false	
+inc_bboxtree	amba_decomposed_lock_pb_10_pe_.ltl	1	REALIZABLE	0.4606582981068641	false	
+inc_bboxtree	amba_decomposed_lock_pb_11_pe_.ltl	5	REALIZABLE	1.605840760981664	false	
+inc_bboxtree	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	6.273053743876517	false	REALIZABLE
+inc_bboxtree	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_lock_pb_2_pe_.ltl	1	REALIZABLE	0.03069854690693319	false	
+inc_bboxtree	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_decomposed_lock_pb_3_pe_.ltl	1	REALIZABLE	0.020398854045197368	false	
+inc_bboxtree	amba_decomposed_lock_pb_4_pe_.ltl	1	REALIZABLE	0.025398217141628265	false	
+inc_bboxtree	amba_decomposed_lock_pb_5_pe_.ltl	1	REALIZABLE	0.03952114610001445	false	
+inc_bboxtree	amba_decomposed_lock_pb_6_pe_.ltl	1	REALIZABLE	0.03567539504729211	false	
+inc_bboxtree	amba_decomposed_lock_pb_7_pe_.ltl	1	REALIZABLE	0.03493754402734339	false	
+inc_bboxtree	amba_decomposed_lock_pb_8_pe_.ltl	1	REALIZABLE	0.04962610895745456	false	
+inc_bboxtree	amba_decomposed_lock_pb_9_pe_.ltl	1	REALIZABLE	0.1133859888650477	false	
+inc_bboxtree	amba_decomposed_shift.ltl	1	REALIZABLE	0.023310116957873106	false	
+inc_bboxtree	amba_decomposed_tburst4.ltl	1	REALIZABLE	0.019302730914205313	false	
+inc_bboxtree	amba_decomposed_tincr.ltl	1	REALIZABLE	0.026631157845258713	false	
+inc_bboxtree	amba_decomposed_tsingle.ltl	1	REALIZABLE	0.015834526158869267	false	
+inc_bboxtree	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_gr_pb_2_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_gr_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	amba_gr_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter-paper-unreal-unreal.ltl	1	UNREALIZABLE	0.40109433606266975	false	
+inc_bboxtree	arbiter-with-failure-real.ltl	1	REALIZABLE	0.03047707793302834	false	
+inc_bboxtree	arbiter_on_inpchange_pb_1_pe_.ltl	1	REALIZABLE	0.023476931033656	false	
+inc_bboxtree	arbiter_on_inpchange_pb_2_pe_.ltl	1	REALIZABLE	0.021442079916596413	false	
+inc_bboxtree	arbiter_on_inpchange_pb_3_pe_.ltl	1	REALIZABLE	0.452861119993031	false	
+inc_bboxtree	arbiter_on_inpchange_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.01797207910567522	false	
+inc_bboxtree	arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.01472325692884624	false	
+inc_bboxtree	arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.046712642069905996	false	
+inc_bboxtree	arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.44545779400505126	false	
+inc_bboxtree	arbiter_pb_5_pe_.ltl	17	REALIZABLE	11.217039363924414	false	REALIZABLE
+inc_bboxtree	arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_buffer_pb_1_pe_.ltl	1	REALIZABLE	0.01792364497669041	false	
+inc_bboxtree	arbiter_with_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.028298188000917435	false	
+inc_bboxtree	arbiter_with_buffer_pb_3_pe_.ltl	1	REALIZABLE	0.07820341503247619	false	
+inc_bboxtree	arbiter_with_buffer_pb_4_pe_.ltl	5	REALIZABLE	2.1099826998542994	false	
+inc_bboxtree	arbiter_with_buffer_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_cancel_pb_1_pe_.ltl	1	REALIZABLE	0.022148286923766136	false	
+inc_bboxtree	arbiter_with_cancel_pb_2_pe_.ltl	1	REALIZABLE	0.028676383895799518	false	
+inc_bboxtree	arbiter_with_cancel_pb_3_pe_.ltl	1	REALIZABLE	0.07160670007579029	false	
+inc_bboxtree	arbiter_with_cancel_pb_4_pe_.ltl	5	REALIZABLE	1.1359721419867128	false	
+inc_bboxtree	arbiter_with_cancel_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	batch-arbiter-real.ltl	1	REALIZABLE	0.035251444205641747	false	
+inc_bboxtree	box-limited-real.ltl	1	REALIZABLE	0.27013693493790925	false	
+inc_bboxtree	box-real.ltl				true	TIMEOUT
+inc_bboxtree	box0.ltl	1	UNREALIZABLE	0.054871471133083105	false	
+inc_bboxtree	box1.ltl	1	UNREALIZABLE	0.07494685100391507	false	
+inc_bboxtree	buffer-storage-real.ltl	1	REALIZABLE	0.5571016459725797	false	
+inc_bboxtree	chain-4-real.ltl				true	TIMEOUT
+inc_bboxtree	chain-5-real.ltl				true	TIMEOUT
+inc_bboxtree	chain-60.ltl				true	TIMEOUT
+inc_bboxtree	chain-70.ltl				true	TIMEOUT
+inc_bboxtree	chain-simple-10-real.ltl	1	REALIZABLE	0.14749448490329087	false	
+inc_bboxtree	chain-simple-20-real.ltl	1	REALIZABLE	0.3162255338393152	false	
+inc_bboxtree	chain-simple-30-real.ltl	1	REALIZABLE	0.5806850078515708	false	
+inc_bboxtree	chain-simple-40-real.ltl	1	REALIZABLE	0.8779865419492126	false	
+inc_bboxtree	chain-simple-5-real.ltl	1	REALIZABLE	0.08127458998933434	false	
+inc_bboxtree	chain-simple-50-real.ltl	5	REALIZABLE	1.128793170908466	false	
+inc_bboxtree	chain-simple-60-real.ltl	5	REALIZABLE	1.516502883983776	false	
+inc_bboxtree	chain-simple-70-real.ltl	5	REALIZABLE	1.9012705080676824	false	
+inc_bboxtree	chain-simple-param-70-real.ltl	5	REALIZABLE	1.1980176290962845	false	
+inc_bboxtree	chomp_pb_2_2_pe_.ltl	1	REALIZABLE	0.08111116313375533	false	
+inc_bboxtree	chomp_pb_2_3_pe_.ltl	5	REALIZABLE	3.2417649358976632	false	
+inc_bboxtree	chomp_pb_2_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_2_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_2_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_3_2_pe_.ltl	5	REALIZABLE	3.190398315200582	false	
+inc_bboxtree	chomp_pb_3_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_3_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_3_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_3_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_4_2_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_4_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_4_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	chomp_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v1_pb_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v1_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v1_pb_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v1_pb_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v1_pb_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v1_pb_3_pe_.ltl	1	REALIZABLE	0.01808954798616469	false	
+inc_bboxtree	collector_v1_pb_5_pe_.ltl	1	REALIZABLE	0.04600996105000377	false	
+inc_bboxtree	collector_v1_pb_7_pe_.ltl	1	REALIZABLE	0.3406589259393513	false	
+inc_bboxtree	collector_v1_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v2_pb_10_pe_.ltl	1	REALIZABLE	0.34541975799947977	false	
+inc_bboxtree	collector_v2_pb_11_pe_.ltl	1	REALIZABLE	0.808206076035276	false	
+inc_bboxtree	collector_v2_pb_12_pe_.ltl	5	REALIZABLE	2.0416912510991096	false	
+inc_bboxtree	collector_v2_pb_13_pe_.ltl	5	REALIZABLE	4.533379147993401	false	
+inc_bboxtree	collector_v2_pb_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v2_pb_27_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v2_pb_3_pe_.ltl	1	REALIZABLE	0.020589754916727543	false	
+inc_bboxtree	collector_v2_pb_5_pe_.ltl	1	REALIZABLE	0.024164452916011214	false	
+inc_bboxtree	collector_v2_pb_7_pe_.ltl	1	REALIZABLE	0.04282501502893865	false	
+inc_bboxtree	collector_v2_pb_9_pe_.ltl	1	REALIZABLE	0.16480797086842358	false	
+inc_bboxtree	collector_v3_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v3_pb_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v3_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v3_pb_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v3_pb_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	collector_v3_pb_3_pe_.ltl	1	REALIZABLE	0.023413224844262004	false	
+inc_bboxtree	collector_v3_pb_5_pe_.ltl	1	REALIZABLE	0.1209725090302527	false	
+inc_bboxtree	collector_v3_pb_7_pe_.ltl	17	REALIZABLE	10.567105501890182	false	REALIZABLE
+inc_bboxtree	collector_v3_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	diagonal-real.ltl	1	REALIZABLE	0.05850252998061478	false	
+inc_bboxtree	door_locking_problem_d6c5ac79.ltl	1	REALIZABLE	0.01954063610173762	false	
+inc_bboxtree	elevator-paper-real.ltl				true	TIMEOUT
+inc_bboxtree	evasion-real.ltl				true	TIMEOUT
+inc_bboxtree	evasion0.ltl				true	TIMEOUT
+inc_bboxtree	example10_pb_1_pe_.ltl	1	REALIZABLE	0.02044045296497643	false	
+inc_bboxtree	example10_pb_2_pe_.ltl	1	REALIZABLE	0.019329830072820187	false	
+inc_bboxtree	example10a_pb_1_pe_.ltl	1	REALIZABLE	0.01586316991597414	false	
+inc_bboxtree	example10a_pb_2_pe_.ltl	1	REALIZABLE	0.02143912110477686	false	
+inc_bboxtree	example7_pb_1_pe_.ltl	1	REALIZABLE	0.02998139406554401	false	
+inc_bboxtree	example7_pb_2_pe_.ltl	1	REALIZABLE	0.02801271015778184	false	
+inc_bboxtree	example7a_pb_1_pe_.ltl	1	REALIZABLE	0.024622227996587753	false	
+inc_bboxtree	example7a_pb_2_pe_.ltl	1	REALIZABLE	0.02728130598552525	false	
+inc_bboxtree	example8_pb_1_pe_.ltl	1	REALIZABLE	0.038205487886443734	false	
+inc_bboxtree	example8_pb_2_pe_.ltl	1	REALIZABLE	0.015564196975901723	false	
+inc_bboxtree	example9_pb_1_pe_.ltl	1	REALIZABLE	0.029235973954200745	false	
+inc_bboxtree	example9_pb_2_pe_.ltl	1	REALIZABLE	0.032339445082470775	false	
+inc_bboxtree	f-real-real.ltl				true	TIMEOUT
+inc_bboxtree	f-unreal-unreal.ltl	1	UNREALIZABLE	0.02467798488214612	false	
+inc_bboxtree	finding_nemo_pb_1_pe_.ltl				true	TIMEOUT
+inc_bboxtree	finding_nemo_pb_2_pe_.ltl				true	TIMEOUT
+inc_bboxtree	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	follow0.ltl				true	TIMEOUT
+inc_bboxtree	follow1.ltl				true	TIMEOUT
+inc_bboxtree	follow2.ltl				true	TIMEOUT
+inc_bboxtree	follow3.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.055483574979007244	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.10053571895696223	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.19530156604014337	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.4346951120533049	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.8976471908390522	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	1.9711878821253777	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	4.623770453967154	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_18_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.017995235044509172	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_20_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_2_21_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_2_22_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_2_24_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_2_26_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.01784943090751767	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.018214962910860777	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.019450344145298004	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.016481880098581314	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.021332002012059093	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.020770537899807096	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.030122922966256738	false	
+inc_bboxtree	full_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.039468138944357634	false	
+inc_bboxtree	full_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.0211046130862087	false	
+inc_bboxtree	full_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.026139705907553434	false	
+inc_bboxtree	full_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.0419806158170104	false	
+inc_bboxtree	full_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.056781798135489225	false	
+inc_bboxtree	full_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.22821557405404747	false	
+inc_bboxtree	full_arbiter_unreal1_pb_3_6_pe_.ltl	5	UNREALIZABLE	1.4532858410384506	false	
+inc_bboxtree	full_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	10.044653770048171	false	UNREALIZABLE
+inc_bboxtree	full_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03769681113772094	false	
+inc_bboxtree	full_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.05709997285157442	false	
+inc_bboxtree	full_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.19929175195284188	false	
+inc_bboxtree	full_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	2.893395606894046	false	
+inc_bboxtree	full_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal1_pb_6_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.023926302092149854	false	
+inc_bboxtree	full_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.06037028809078038	false	
+inc_bboxtree	full_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	4.844329168088734	false	UNREALIZABLE
+inc_bboxtree	full_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	full_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	g-real-real.ltl				true	TIMEOUT
+inc_bboxtree	g-real0.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-1-unreal.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-10.ltl	1	UNREALIZABLE	0.022010315908119082	false	
+inc_bboxtree	g-unreal-11.ltl	1	UNREALIZABLE	0.04722428903914988	false	
+inc_bboxtree	g-unreal-110.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-111.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-112.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-113.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-114.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-115.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-116.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-117.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-118.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-119.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-12.ltl	1	UNREALIZABLE	0.2528363890014589	false	
+inc_bboxtree	g-unreal-120.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-13.ltl	1	UNREALIZABLE	0.6036109759006649	false	
+inc_bboxtree	g-unreal-14.ltl	5	UNREALIZABLE	2.284199008019641	false	
+inc_bboxtree	g-unreal-15.ltl	5	UNREALIZABLE	3.906275741988793	false	
+inc_bboxtree	g-unreal-16.ltl	17	UNREALIZABLE	6.532172342995182	false	UNREALIZABLE
+inc_bboxtree	g-unreal-17.ltl	17	UNREALIZABLE	8.353412498952821	false	UNREALIZABLE
+inc_bboxtree	g-unreal-18.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-19.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-20.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-21.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-30.ltl	1	UNREALIZABLE	0.19422455201856792	false	
+inc_bboxtree	g-unreal-31.ltl	5	UNREALIZABLE	4.447667977074161	false	
+inc_bboxtree	g-unreal-310.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-311.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-312.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-313.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-314.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-32.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-33.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-34.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-35.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-36.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-37.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-38.ltl				true	TIMEOUT
+inc_bboxtree	g-unreal-39.ltl				true	TIMEOUT
+inc_bboxtree	generalized_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.028486115857958794	false	
+inc_bboxtree	generalized_buffer_pb_3_pe_.ltl	5	REALIZABLE	2.270631531951949	false	
+inc_bboxtree	generalized_buffer_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	generalized_buffer_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	gf-real-real.ltl	1	REALIZABLE	0.025187880964949727	false	
+inc_bboxtree	gf-unreal0.ltl	1	UNREALIZABLE	0.015236872946843505	false	
+inc_bboxtree	gf-unreal1.ltl	1	UNREALIZABLE	0.009916884824633598	false	
+inc_bboxtree	gf-unreal10.ltl	1	UNREALIZABLE	0.0206928588449955	false	
+inc_bboxtree	gf-unreal11.ltl	1	UNREALIZABLE	0.018734475830569863	false	
+inc_bboxtree	gf-unreal12.ltl	1	UNREALIZABLE	0.025606314884498715	false	
+inc_bboxtree	gf-unreal13.ltl	1	UNREALIZABLE	0.021779053146019578	false	
+inc_bboxtree	gf-unreal14.ltl	1	UNREALIZABLE	0.017322015017271042	false	
+inc_bboxtree	gf-unreal15.ltl	1	UNREALIZABLE	0.021253922022879124	false	
+inc_bboxtree	gf-unreal16.ltl	1	UNREALIZABLE	0.018910220824182034	false	
+inc_bboxtree	gf-unreal17.ltl	1	UNREALIZABLE	0.025537271983921528	false	
+inc_bboxtree	gf-unreal18.ltl	1	UNREALIZABLE	0.020237592048943043	false	
+inc_bboxtree	gf-unreal19.ltl	1	UNREALIZABLE	0.019206043798476458	false	
+inc_bboxtree	gf-unreal2.ltl	1	UNREALIZABLE	0.02873476897366345	false	
+inc_bboxtree	gf-unreal20.ltl	1	UNREALIZABLE	0.03506337502039969	false	
+inc_bboxtree	gf-unreal21.ltl	1	UNREALIZABLE	0.040133822010830045	false	
+inc_bboxtree	gf-unreal22.ltl	1	UNREALIZABLE	0.02976329205557704	false	
+inc_bboxtree	gf-unreal23.ltl	1	UNREALIZABLE	0.028800983913242817	false	
+inc_bboxtree	gf-unreal24.ltl	1	UNREALIZABLE	0.031719546066597104	false	
+inc_bboxtree	gf-unreal25.ltl	1	UNREALIZABLE	0.040593457873910666	false	
+inc_bboxtree	gf-unreal26.ltl	1	UNREALIZABLE	0.040787620935589075	false	
+inc_bboxtree	gf-unreal27.ltl	1	UNREALIZABLE	0.03724272805266082	false	
+inc_bboxtree	gf-unreal28.ltl	1	UNREALIZABLE	0.04400432016700506	false	
+inc_bboxtree	gf-unreal29.ltl	1	UNREALIZABLE	0.04369024699553847	false	
+inc_bboxtree	gf-unreal3.ltl	1	UNREALIZABLE	0.033294853987172246	false	
+inc_bboxtree	gf-unreal30.ltl	1	UNREALIZABLE	0.04549209889955819	false	
+inc_bboxtree	gf-unreal31.ltl	1	UNREALIZABLE	0.03143534902483225	false	
+inc_bboxtree	gf-unreal32.ltl	1	UNREALIZABLE	0.03643406601622701	false	
+inc_bboxtree	gf-unreal33.ltl	1	UNREALIZABLE	0.04298631101846695	false	
+inc_bboxtree	gf-unreal34.ltl	1	UNREALIZABLE	0.04693636391311884	false	
+inc_bboxtree	gf-unreal35.ltl	1	UNREALIZABLE	0.02935385494492948	false	
+inc_bboxtree	gf-unreal36.ltl	1	UNREALIZABLE	0.040184441953897476	false	
+inc_bboxtree	gf-unreal37.ltl	1	UNREALIZABLE	0.04601735505275428	false	
+inc_bboxtree	gf-unreal38.ltl	1	UNREALIZABLE	0.029677975922822952	false	
+inc_bboxtree	gf-unreal39.ltl	1	UNREALIZABLE	0.04098812700249255	false	
+inc_bboxtree	gf-unreal4.ltl	1	UNREALIZABLE	0.022686211159452796	false	
+inc_bboxtree	gf-unreal40.ltl	1	UNREALIZABLE	0.039021819131448865	false	
+inc_bboxtree	gf-unreal41.ltl	1	UNREALIZABLE	0.04896787297911942	false	
+inc_bboxtree	gf-unreal42.ltl	1	UNREALIZABLE	0.04056889493949711	false	
+inc_bboxtree	gf-unreal43.ltl	1	UNREALIZABLE	0.03657136601395905	false	
+inc_bboxtree	gf-unreal44.ltl	1	UNREALIZABLE	0.05109068704769015	false	
+inc_bboxtree	gf-unreal45.ltl	1	UNREALIZABLE	0.039820895064622164	false	
+inc_bboxtree	gf-unreal46.ltl	1	UNREALIZABLE	0.042494080029428005	false	
+inc_bboxtree	gf-unreal47.ltl	1	UNREALIZABLE	0.03385876212269068	false	
+inc_bboxtree	gf-unreal5.ltl	1	UNREALIZABLE	0.03357685194350779	false	
+inc_bboxtree	gf-unreal6.ltl	1	UNREALIZABLE	0.039920449955388904	false	
+inc_bboxtree	gf-unreal7.ltl	1	UNREALIZABLE	0.03715935698710382	false	
+inc_bboxtree	gf-unreal8.ltl	1	UNREALIZABLE	0.035496378084644675	false	
+inc_bboxtree	gf-unreal9.ltl	1	UNREALIZABLE	0.03491742187179625	false	
+inc_bboxtree	heim-buechi-real.ltl	5	REALIZABLE	2.060158750973642	false	
+inc_bboxtree	heim-double-x-real.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x0.ltl	5	UNREALIZABLE	2.742085908073932	false	
+inc_bboxtree	heim-double-x1.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x10.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x11.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x12.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x13.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x2.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x3.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x4.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x5.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x6.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x7.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x8.ltl				true	TIMEOUT
+inc_bboxtree	heim-double-x9.ltl				true	TIMEOUT
+inc_bboxtree	heim-fig7-unreal.ltl	1	UNREALIZABLE	0.09998084581457078	false	
+inc_bboxtree	helipad-contradict0.ltl				true	TIMEOUT
+inc_bboxtree	helipad-contradict1.ltl				true	TIMEOUT
+inc_bboxtree	helipad-real.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-real.ltl	1	REALIZABLE	0.024875750998035073	false	
+inc_bboxtree	infinite-race-u0.ltl	1	UNREALIZABLE	0.02529375907033682	false	
+inc_bboxtree	infinite-race-u1.ltl	1	UNREALIZABLE	0.09565639193169773	false	
+inc_bboxtree	infinite-race-u10.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u11.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u12.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u13.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u14.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u15.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u16.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u17.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u18.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u19.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u2.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u20.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u21.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u22.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u23.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u24.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u25.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u3.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u4.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u5.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u6.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u7.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u8.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-u9.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-unequal-1-real.ltl	1	REALIZABLE	0.3794052288867533	false	
+inc_bboxtree	infinite-race-unequal-10.ltl	1	UNREALIZABLE	0.036168715916574	false	
+inc_bboxtree	infinite-race-unequal-20.ltl	1	UNREALIZABLE	0.052115760976448655	false	
+inc_bboxtree	infinite-race-unequal-21.ltl	5	UNREALIZABLE	3.002094808034599	false	
+inc_bboxtree	infinite-race-unequal-22.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-unequal-23.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-unequal-24.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-unequal-25.ltl				true	TIMEOUT
+inc_bboxtree	infinite-race-unequal-26.ltl				true	TIMEOUT
+inc_bboxtree	items_processing-real.ltl				true	TIMEOUT
+inc_bboxtree	jarvis_gideon_a02758ea.ltl	1	UNREALIZABLE	0.01995748491026461	false	
+inc_bboxtree	jarvis_philippe_484face8.ltl	1	UNREALIZABLE	0.021677032113075256	false	
+inc_bboxtree	lazy_shades_problem_d6376bf9.ltl	1	REALIZABLE	0.029774963855743408	false	
+inc_bboxtree	lift_gr1+_pb_2_pe_.ltl	1	REALIZABLE	0.33058798406273127	false	
+inc_bboxtree	lift_gr1+_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1_pb_2_pe_.ltl	1	REALIZABLE	0.09943603281863034	false	
+inc_bboxtree	lift_gr1_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_pb_2_pe_.ltl	1	REALIZABLE	0.027666385984048247	false	
+inc_bboxtree	lift_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_unary_enc_pb_2_pe_.ltl	1	REALIZABLE	0.033319453010335565	false	
+inc_bboxtree	lift_unary_enc_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_unary_enc_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	lift_wrong_physics_unreal_pb_10_pe_.ltl	5	UNREALIZABLE	1.5000280309468508	false	
+inc_bboxtree	lift_wrong_physics_unreal_pb_2_pe_.ltl	1	REALIZABLE	0.022181157022714615	false	
+inc_bboxtree	lift_wrong_physics_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.029416696168482304	false	
+inc_bboxtree	lift_wrong_physics_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.03541279281489551	false	
+inc_bboxtree	lift_wrong_physics_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.052933963015675545	false	
+inc_bboxtree	lift_wrong_physics_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.05135485203936696	false	
+inc_bboxtree	lift_wrong_physics_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.09071611287072301	false	
+inc_bboxtree	lift_wrong_physics_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.176364733139053	false	
+inc_bboxtree	lift_wrong_physics_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.6100047379732132	false	
+inc_bboxtree	lilydemo01.ltl	1	UNREALIZABLE	0.01371676498092711	false	
+inc_bboxtree	lilydemo02.ltl	1	UNREALIZABLE	0.016825516941025853	false	
+inc_bboxtree	lilydemo03.ltl	1	REALIZABLE	0.017594537930563092	false	
+inc_bboxtree	lilydemo04.ltl	1	REALIZABLE	0.009901697048917413	false	
+inc_bboxtree	lilydemo04_modified.ltl	1	UNREALIZABLE	0.023444647202268243	false	
+inc_bboxtree	lilydemo05.ltl	1	REALIZABLE	0.014815740985795856	false	
+inc_bboxtree	lilydemo06.ltl	1	REALIZABLE	0.017160944174975157	false	
+inc_bboxtree	lilydemo07.ltl	1	REALIZABLE	0.0177860448602587	false	
+inc_bboxtree	lilydemo08.ltl	1	REALIZABLE	0.016348462086170912	false	
+inc_bboxtree	lilydemo09.ltl	1	REALIZABLE	0.00890268199145794	false	
+inc_bboxtree	lilydemo10.ltl	1	REALIZABLE	0.016578048933297396	false	
+inc_bboxtree	lilydemo11.ltl	1	UNREALIZABLE	0.015885001979768276	false	
+inc_bboxtree	lilydemo12.ltl	1	REALIZABLE	0.012774784117937088	false	
+inc_bboxtree	lilydemo13.ltl	1	REALIZABLE	0.00880616600625217	false	
+inc_bboxtree	lilydemo14.ltl	1	REALIZABLE	0.014818699099123478	false	
+inc_bboxtree	lilydemo15.ltl	1	REALIZABLE	0.014978950144723058	false	
+inc_bboxtree	lilydemo16.ltl	1	REALIZABLE	0.01782480301335454	false	
+inc_bboxtree	lilydemo17.ltl	1	REALIZABLE	0.019391662906855345	false	
+inc_bboxtree	lilydemo18.ltl	1	REALIZABLE	0.017949872883036733	false	
+inc_bboxtree	lilydemo19.ltl	1	REALIZABLE	0.021586735965684056	false	
+inc_bboxtree	lilydemo20.ltl	1	REALIZABLE	0.016753198113292456	false	
+inc_bboxtree	lilydemo21.ltl	1	REALIZABLE	0.028639561031013727	false	
+inc_bboxtree	lilydemo22.ltl	1	REALIZABLE	0.015542039880529046	false	
+inc_bboxtree	lilydemo23.ltl	1	REALIZABLE	0.0173178780823946	false	
+inc_bboxtree	load_balancer_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_pb_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_pb_2_pe_.ltl	1	REALIZABLE	0.029038480017334223	false	
+inc_bboxtree	load_balancer_pb_3_pe_.ltl	1	REALIZABLE	0.04139654780738056	false	
+inc_bboxtree	load_balancer_pb_4_pe_.ltl	1	REALIZABLE	0.08835477288812399	false	
+inc_bboxtree	load_balancer_pb_5_pe_.ltl	1	REALIZABLE	0.6495319970417768	false	
+inc_bboxtree	load_balancer_pb_6_pe_.ltl	5	REALIZABLE	2.822248993907124	false	
+inc_bboxtree	load_balancer_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.05130276293493807	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.05530595500022173	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.0961992188822478	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.17815314512699842	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.36298551713116467	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.701489927014336	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	1.5255970321595669	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.02238082606345415	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.029138547135517	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03758413903415203	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.031952810008078814	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.03777232998982072	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.03775813593529165	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.04303133790381253	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.031510637840256095	false	
+inc_bboxtree	load_balancer_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.026887029875069857	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.14642597385682166	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.28328805696219206	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.5899967728182673	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.025080505991354585	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.031111902091652155	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.028978265123441815	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.02502137585543096	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.04501929506659508	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.03241867898032069	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.04025546298362315	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.053828005911782384	false	
+inc_bboxtree	load_balancer_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.08413571701385081	false	
+inc_bboxtree	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03276894614100456	false	
+inc_bboxtree	load_balancer_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.039858318865299225	false	
+inc_bboxtree	load_balancer_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.04016394400969148	false	
+inc_bboxtree	load_balancer_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.06155288498848677	false	
+inc_bboxtree	load_balancer_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.17875840095803142	false	
+inc_bboxtree	load_balancer_unreal1_pb_4_6_pe_.ltl	5	UNREALIZABLE	1.1653254439588636	false	
+inc_bboxtree	load_balancer_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	7.805212719133124	false	UNREALIZABLE
+inc_bboxtree	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.11432934505864978	false	
+inc_bboxtree	load_balancer_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.1451340790372342	false	
+inc_bboxtree	load_balancer_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.8020361789967865	false	
+inc_bboxtree	load_balancer_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	14.7335807508789	false	UNREALIZABLE
+inc_bboxtree	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.375535398023203	false	
+inc_bboxtree	load_balancer_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.4523885869421065	false	
+inc_bboxtree	load_balancer_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.7628447180613875	false	
+inc_bboxtree	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal2_pb_2_pe_.ltl	1	REALIZABLE	0.021722158882766962	false	
+inc_bboxtree	load_balancer_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.0339134659152478	false	
+inc_bboxtree	load_balancer_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.16439429391175508	false	
+inc_bboxtree	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	11.214294641045853	false	UNREALIZABLE
+inc_bboxtree	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba01.ltl	1	REALIZABLE	0.01797810196876526	false	
+inc_bboxtree	ltl2dba02.ltl	1	REALIZABLE	0.026040660915896297	false	
+inc_bboxtree	ltl2dba03.ltl	1	REALIZABLE	0.03348007705062628	false	
+inc_bboxtree	ltl2dba04.ltl	1	REALIZABLE	0.031714339973405004	false	
+inc_bboxtree	ltl2dba05.ltl	1	REALIZABLE	0.02989233285188675	false	
+inc_bboxtree	ltl2dba06.ltl	1	REALIZABLE	0.03189028496854007	false	
+inc_bboxtree	ltl2dba07.ltl	1	REALIZABLE	0.039905198849737644	false	
+inc_bboxtree	ltl2dba08.ltl	1	REALIZABLE	0.029775826958939433	false	
+inc_bboxtree	ltl2dba09.ltl	1	REALIZABLE	0.03324682591482997	false	
+inc_bboxtree	ltl2dba10.ltl	1	REALIZABLE	0.04087324207648635	false	
+inc_bboxtree	ltl2dba11.ltl	1	REALIZABLE	0.03527006786316633	false	
+inc_bboxtree	ltl2dba12.ltl	1	REALIZABLE	0.03593072993680835	false	
+inc_bboxtree	ltl2dba13.ltl	1	REALIZABLE	0.031118812039494514	false	
+inc_bboxtree	ltl2dba14.ltl	1	REALIZABLE	0.03320689499378204	false	
+inc_bboxtree	ltl2dba15.ltl	1	REALIZABLE	0.033247872022911906	false	
+inc_bboxtree	ltl2dba16.ltl	1	REALIZABLE	0.037263567093759775	false	
+inc_bboxtree	ltl2dba17.ltl	1	REALIZABLE	0.029899419052526355	false	
+inc_bboxtree	ltl2dba18.ltl	1	REALIZABLE	0.030593992909416556	false	
+inc_bboxtree	ltl2dba19.ltl	1	REALIZABLE	0.03373148711398244	false	
+inc_bboxtree	ltl2dba20.ltl	1	REALIZABLE	0.0390804810449481	false	
+inc_bboxtree	ltl2dba21.ltl	1	REALIZABLE	0.03657129989005625	false	
+inc_bboxtree	ltl2dba22.ltl	1	REALIZABLE	0.03454431798309088	false	
+inc_bboxtree	ltl2dba23.ltl	1	REALIZABLE	0.03578034997917712	false	
+inc_bboxtree	ltl2dba25.ltl	1	REALIZABLE	0.03354121092706919	false	
+inc_bboxtree	ltl2dba26.ltl	1	REALIZABLE	0.033056689193472266	false	
+inc_bboxtree	ltl2dba27.ltl	1	UNREALIZABLE	0.03491875296458602	false	
+inc_bboxtree	ltl2dba_C2_pb_100_pe_.ltl	1	REALIZABLE	0.030367601895704865	false	
+inc_bboxtree	ltl2dba_C2_pb_10_pe_.ltl	1	REALIZABLE	0.032399730989709496	false	
+inc_bboxtree	ltl2dba_C2_pb_12_pe_.ltl	1	REALIZABLE	0.0360086471773684	false	
+inc_bboxtree	ltl2dba_C2_pb_14_pe_.ltl	1	REALIZABLE	0.03860035398975015	false	
+inc_bboxtree	ltl2dba_C2_pb_16_pe_.ltl	1	REALIZABLE	0.032841527834534645	false	
+inc_bboxtree	ltl2dba_C2_pb_1_pe_.ltl	1	REALIZABLE	0.03322395286522806	false	
+inc_bboxtree	ltl2dba_C2_pb_25_pe_.ltl	1	REALIZABLE	0.03761167102493346	false	
+inc_bboxtree	ltl2dba_C2_pb_2_pe_.ltl	1	REALIZABLE	0.02830484788864851	false	
+inc_bboxtree	ltl2dba_C2_pb_3_pe_.ltl	1	REALIZABLE	0.03238390199840069	false	
+inc_bboxtree	ltl2dba_C2_pb_4_pe_.ltl	1	REALIZABLE	0.03437153692357242	false	
+inc_bboxtree	ltl2dba_C2_pb_50_pe_.ltl	1	REALIZABLE	0.03763388120569289	false	
+inc_bboxtree	ltl2dba_C2_pb_5_pe_.ltl	1	REALIZABLE	0.03155320091173053	false	
+inc_bboxtree	ltl2dba_C2_pb_60_pe_.ltl	1	REALIZABLE	0.03703460213728249	false	
+inc_bboxtree	ltl2dba_C2_pb_6_pe_.ltl	1	REALIZABLE	0.039085566997528076	false	
+inc_bboxtree	ltl2dba_C2_pb_70_pe_.ltl	1	REALIZABLE	0.034258484141901135	false	
+inc_bboxtree	ltl2dba_C2_pb_7_pe_.ltl	1	REALIZABLE	0.035661900881677866	false	
+inc_bboxtree	ltl2dba_C2_pb_80_pe_.ltl	1	REALIZABLE	0.03620118089020252	false	
+inc_bboxtree	ltl2dba_C2_pb_8_pe_.ltl	1	REALIZABLE	0.03471341682597995	false	
+inc_bboxtree	ltl2dba_C2_pb_9_pe_.ltl	1	REALIZABLE	0.03379660099744797	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_C2_unreal_pb_10_pe_.ltl	1	UNREALIZABLE	0.13674578187055886	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_11_pe_.ltl	1	UNREALIZABLE	0.2513807499781251	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_12_pe_.ltl	1	UNREALIZABLE	0.6155741531401873	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_13_pe_.ltl	5	UNREALIZABLE	1.3085831739008427	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_14_pe_.ltl	5	UNREALIZABLE	3.4560794169083238	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_15_pe_.ltl	17	UNREALIZABLE	8.038136824965477	false	UNREALIZABLE
+inc_bboxtree	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_C2_unreal_pb_2_pe_.ltl	1	UNREALIZABLE	0.01878995494917035	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.029965173918753862	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.03900377918034792	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_C2_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.03004105295985937	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_C2_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.02465099422261119	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_C2_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.033153911121189594	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_C2_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.05370977381244302	false	
+inc_bboxtree	ltl2dba_C2_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.06958967703394592	false	
+inc_bboxtree	ltl2dba_E_pb_10_pe_.ltl	1	REALIZABLE	0.01709709409624338	false	
+inc_bboxtree	ltl2dba_E_pb_12_pe_.ltl	1	REALIZABLE	0.02812074194662273	false	
+inc_bboxtree	ltl2dba_E_pb_14_pe_.ltl	1	REALIZABLE	0.031129389069974422	false	
+inc_bboxtree	ltl2dba_E_pb_15_pe_.ltl	1	REALIZABLE	0.032516303937882185	false	
+inc_bboxtree	ltl2dba_E_pb_16_pe_.ltl	1	REALIZABLE	0.017805788898840547	false	
+inc_bboxtree	ltl2dba_E_pb_1_pe_.ltl	1	REALIZABLE	0.018180563114583492	false	
+inc_bboxtree	ltl2dba_E_pb_2_pe_.ltl	1	REALIZABLE	0.016103751957416534	false	
+inc_bboxtree	ltl2dba_E_pb_3_pe_.ltl	1	REALIZABLE	0.014651814009994268	false	
+inc_bboxtree	ltl2dba_E_pb_4_pe_.ltl	1	REALIZABLE	0.014774559997022152	false	
+inc_bboxtree	ltl2dba_E_pb_5_pe_.ltl	1	REALIZABLE	0.0130885299295187	false	
+inc_bboxtree	ltl2dba_E_pb_6_pe_.ltl	1	REALIZABLE	0.014463284984230995	false	
+inc_bboxtree	ltl2dba_E_pb_7_pe_.ltl	1	REALIZABLE	0.013219424057751894	false	
+inc_bboxtree	ltl2dba_E_pb_8_pe_.ltl	1	REALIZABLE	0.015084100887179375	false	
+inc_bboxtree	ltl2dba_E_pb_9_pe_.ltl	1	REALIZABLE	0.014343193965032697	false	
+inc_bboxtree	ltl2dba_Q_pb_100_pe_.ltl	1	REALIZABLE	0.01666127098724246	false	
+inc_bboxtree	ltl2dba_Q_pb_10_pe_.ltl	1	REALIZABLE	0.02744857012294233	false	
+inc_bboxtree	ltl2dba_Q_pb_12_pe_.ltl	1	REALIZABLE	0.030883210012689233	false	
+inc_bboxtree	ltl2dba_Q_pb_15_pe_.ltl	1	REALIZABLE	0.034979857970029116	false	
+inc_bboxtree	ltl2dba_Q_pb_18_pe_.ltl	1	REALIZABLE	0.03674125322140753	false	
+inc_bboxtree	ltl2dba_Q_pb_1_pe_.ltl	1	REALIZABLE	0.03509936714544892	false	
+inc_bboxtree	ltl2dba_Q_pb_25_pe_.ltl	1	REALIZABLE	0.0377826439216733	false	
+inc_bboxtree	ltl2dba_Q_pb_2_pe_.ltl	1	REALIZABLE	0.03303036303259432	false	
+inc_bboxtree	ltl2dba_Q_pb_3_pe_.ltl	1	REALIZABLE	0.03599594603292644	false	
+inc_bboxtree	ltl2dba_Q_pb_4_pe_.ltl	1	REALIZABLE	0.03281849599443376	false	
+inc_bboxtree	ltl2dba_Q_pb_50_pe_.ltl	1	REALIZABLE	0.03603460406884551	false	
+inc_bboxtree	ltl2dba_Q_pb_5_pe_.ltl	1	REALIZABLE	0.03785576089285314	false	
+inc_bboxtree	ltl2dba_Q_pb_6_pe_.ltl	1	REALIZABLE	0.033389736199751496	false	
+inc_bboxtree	ltl2dba_Q_pb_7_pe_.ltl	1	REALIZABLE	0.04004649096168578	false	
+inc_bboxtree	ltl2dba_Q_pb_8_pe_.ltl	1	REALIZABLE	0.0330917329993099	false	
+inc_bboxtree	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_R_pb_1_pe_.ltl	1	REALIZABLE	0.01853853208012879	false	
+inc_bboxtree	ltl2dba_R_pb_2_pe_.ltl	1	UNREALIZABLE	0.020536252995952964	false	
+inc_bboxtree	ltl2dba_R_pb_3_pe_.ltl	1	UNREALIZABLE	0.022539723897352815	false	
+inc_bboxtree	ltl2dba_R_pb_4_pe_.ltl	1	UNREALIZABLE	0.024953400949016213	false	
+inc_bboxtree	ltl2dba_R_pb_5_pe_.ltl	1	UNREALIZABLE	0.12895949697121978	false	
+inc_bboxtree	ltl2dba_R_pb_6_pe_.ltl	1	UNREALIZABLE	0.8843506041448563	false	
+inc_bboxtree	ltl2dba_R_pb_7_pe_.ltl	17	UNREALIZABLE	11.328974132891744	false	UNREALIZABLE
+inc_bboxtree	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_U1_pb_100_pe_.ltl	1	REALIZABLE	0.016750880982726812	false	
+inc_bboxtree	ltl2dba_U1_pb_10_pe_.ltl	1	REALIZABLE	0.03202654095366597	false	
+inc_bboxtree	ltl2dba_U1_pb_12_pe_.ltl	1	REALIZABLE	0.03183439210988581	false	
+inc_bboxtree	ltl2dba_U1_pb_15_pe_.ltl	1	REALIZABLE	0.03518031700514257	false	
+inc_bboxtree	ltl2dba_U1_pb_18_pe_.ltl	1	REALIZABLE	0.04072268004529178	false	
+inc_bboxtree	ltl2dba_U1_pb_1_pe_.ltl	1	REALIZABLE	0.03168363100849092	false	
+inc_bboxtree	ltl2dba_U1_pb_25_pe_.ltl	1	REALIZABLE	0.03607470099814236	false	
+inc_bboxtree	ltl2dba_U1_pb_2_pe_.ltl	1	REALIZABLE	0.030629496090114117	false	
+inc_bboxtree	ltl2dba_U1_pb_3_pe_.ltl	1	REALIZABLE	0.030743241077288985	false	
+inc_bboxtree	ltl2dba_U1_pb_4_pe_.ltl	1	REALIZABLE	0.03263692697510123	false	
+inc_bboxtree	ltl2dba_U1_pb_50_pe_.ltl	1	REALIZABLE	0.03445780696347356	false	
+inc_bboxtree	ltl2dba_U1_pb_5_pe_.ltl	1	REALIZABLE	0.03351729782298207	false	
+inc_bboxtree	ltl2dba_U1_pb_6_pe_.ltl	1	REALIZABLE	0.030775440158322453	false	
+inc_bboxtree	ltl2dba_U1_pb_7_pe_.ltl	1	REALIZABLE	0.0372180559206754	false	
+inc_bboxtree	ltl2dba_U1_pb_8_pe_.ltl	1	REALIZABLE	0.033374679973348975	false	
+inc_bboxtree	ltl2dba_U1_pb_9_pe_.ltl	1	REALIZABLE	0.03557468205690384	false	
+inc_bboxtree	ltl2dba_alpha_pb_100_pe_.ltl	1	REALIZABLE	0.03400764684192836	false	
+inc_bboxtree	ltl2dba_alpha_pb_10_pe_.ltl	1	REALIZABLE	0.03315605199895799	false	
+inc_bboxtree	ltl2dba_alpha_pb_12_pe_.ltl	1	REALIZABLE	0.028694908833131194	false	
+inc_bboxtree	ltl2dba_alpha_pb_14_pe_.ltl	1	REALIZABLE	0.038306523812934756	false	
+inc_bboxtree	ltl2dba_alpha_pb_16_pe_.ltl	1	REALIZABLE	0.03435626905411482	false	
+inc_bboxtree	ltl2dba_alpha_pb_17_pe_.ltl	1	REALIZABLE	0.0357775439042598	false	
+inc_bboxtree	ltl2dba_alpha_pb_18_pe_.ltl	1	REALIZABLE	0.0320082560647279	false	
+inc_bboxtree	ltl2dba_alpha_pb_1_pe_.ltl	1	REALIZABLE	0.03661275003105402	false	
+inc_bboxtree	ltl2dba_alpha_pb_20_pe_.ltl	1	REALIZABLE	0.03107374277897179	false	
+inc_bboxtree	ltl2dba_alpha_pb_25_pe_.ltl	1	REALIZABLE	0.03467573900707066	false	
+inc_bboxtree	ltl2dba_alpha_pb_2_pe_.ltl	1	REALIZABLE	0.03331612702459097	false	
+inc_bboxtree	ltl2dba_alpha_pb_3_pe_.ltl	1	REALIZABLE	0.03221175307407975	false	
+inc_bboxtree	ltl2dba_alpha_pb_4_pe_.ltl	1	REALIZABLE	0.035340651869773865	false	
+inc_bboxtree	ltl2dba_alpha_pb_50_pe_.ltl	1	REALIZABLE	0.03307374194264412	false	
+inc_bboxtree	ltl2dba_alpha_pb_5_pe_.ltl	1	REALIZABLE	0.0329938440117985	false	
+inc_bboxtree	ltl2dba_alpha_pb_6_pe_.ltl	1	REALIZABLE	0.0377136031165719	false	
+inc_bboxtree	ltl2dba_alpha_pb_7_pe_.ltl	1	REALIZABLE	0.040325050009414554	false	
+inc_bboxtree	ltl2dba_alpha_pb_8_pe_.ltl	1	REALIZABLE	0.039514293894171715	false	
+inc_bboxtree	ltl2dba_beta_pb_100_pe_.ltl	1	REALIZABLE	0.03513994091190398	false	
+inc_bboxtree	ltl2dba_beta_pb_10_pe_.ltl	1	REALIZABLE	0.03727295692078769	false	
+inc_bboxtree	ltl2dba_beta_pb_15_pe_.ltl	1	REALIZABLE	0.04125393810681999	false	
+inc_bboxtree	ltl2dba_beta_pb_18_pe_.ltl	1	REALIZABLE	0.037563085090368986	false	
+inc_bboxtree	ltl2dba_beta_pb_1_pe_.ltl	1	REALIZABLE	0.035766336834058166	false	
+inc_bboxtree	ltl2dba_beta_pb_20_pe_.ltl	1	REALIZABLE	0.03020345908589661	false	
+inc_bboxtree	ltl2dba_beta_pb_25_pe_.ltl	1	REALIZABLE	0.028261150000616908	false	
+inc_bboxtree	ltl2dba_beta_pb_2_pe_.ltl	1	REALIZABLE	0.034822104033082724	false	
+inc_bboxtree	ltl2dba_beta_pb_30_pe_.ltl	1	REALIZABLE	0.03410294698551297	false	
+inc_bboxtree	ltl2dba_beta_pb_3_pe_.ltl	1	REALIZABLE	0.030939438845962286	false	
+inc_bboxtree	ltl2dba_beta_pb_4_pe_.ltl	1	REALIZABLE	0.03283110912889242	false	
+inc_bboxtree	ltl2dba_beta_pb_5_pe_.ltl	1	REALIZABLE	0.030866172863170505	false	
+inc_bboxtree	ltl2dba_beta_pb_6_pe_.ltl	1	REALIZABLE	0.031468569999560714	false	
+inc_bboxtree	ltl2dba_beta_pb_7_pe_.ltl	1	REALIZABLE	0.03424083394929767	false	
+inc_bboxtree	ltl2dba_beta_pb_8_pe_.ltl	1	REALIZABLE	0.03518239292316139	false	
+inc_bboxtree	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_theta_pb_10_pe_.ltl	5	UNREALIZABLE	2.3567691720090806	false	
+inc_bboxtree	ltl2dba_theta_pb_12_pe_.ltl	17	UNREALIZABLE	12.172046364983544	false	UNREALIZABLE
+inc_bboxtree	ltl2dba_theta_pb_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_theta_pb_1_pe_.ltl	1	UNREALIZABLE	0.02448510890826583	false	
+inc_bboxtree	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_theta_pb_2_pe_.ltl	1	UNREALIZABLE	0.01911923405714333	false	
+inc_bboxtree	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_theta_pb_3_pe_.ltl	1	UNREALIZABLE	0.02236921596340835	false	
+inc_bboxtree	ltl2dba_theta_pb_4_pe_.ltl	1	UNREALIZABLE	0.035665374947711825	false	
+inc_bboxtree	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dba_theta_pb_5_pe_.ltl	1	UNREALIZABLE	0.05477915285155177	false	
+inc_bboxtree	ltl2dba_theta_pb_6_pe_.ltl	1	UNREALIZABLE	0.07563257100991905	false	
+inc_bboxtree	ltl2dba_theta_pb_7_pe_.ltl	1	UNREALIZABLE	0.16500266292132437	false	
+inc_bboxtree	ltl2dba_theta_pb_8_pe_.ltl	1	UNREALIZABLE	0.35656097484752536	false	
+inc_bboxtree	ltl2dpa01.ltl	1	REALIZABLE	0.02452465007081628	false	
+inc_bboxtree	ltl2dpa02.ltl	1	REALIZABLE	0.019226374803110957	false	
+inc_bboxtree	ltl2dpa03.ltl	1	REALIZABLE	0.031005571130663157	false	
+inc_bboxtree	ltl2dpa04.ltl	1	REALIZABLE	0.02485497179441154	false	
+inc_bboxtree	ltl2dpa05.ltl	1	REALIZABLE	0.024234203854575753	false	
+inc_bboxtree	ltl2dpa06.ltl	1	REALIZABLE	0.01624450017698109	false	
+inc_bboxtree	ltl2dpa07.ltl	1	REALIZABLE	0.017719423165544868	false	
+inc_bboxtree	ltl2dpa08.ltl	1	REALIZABLE	0.02155147516168654	false	
+inc_bboxtree	ltl2dpa09.ltl	1	REALIZABLE	0.017392921959981322	false	
+inc_bboxtree	ltl2dpa10.ltl	1	REALIZABLE	0.02604574803262949	false	
+inc_bboxtree	ltl2dpa11.ltl	1	REALIZABLE	0.02884820499457419	false	
+inc_bboxtree	ltl2dpa12.ltl	1	REALIZABLE	0.035258178832009435	false	
+inc_bboxtree	ltl2dpa13.ltl	17	REALIZABLE	14.294584101997316	false	REALIZABLE
+inc_bboxtree	ltl2dpa14.ltl	1	REALIZABLE	0.020902530988678336	false	
+inc_bboxtree	ltl2dpa15.ltl	1	REALIZABLE	0.026086325058713555	false	
+inc_bboxtree	ltl2dpa16.ltl	1	REALIZABLE	0.02853334415704012	false	
+inc_bboxtree	ltl2dpa17.ltl	1	REALIZABLE	0.02837979607284069	false	
+inc_bboxtree	ltl2dpa18.ltl	1	REALIZABLE	0.04173057712614536	false	
+inc_bboxtree	ltl2dpa19.ltl				true	TIMEOUT
+inc_bboxtree	ltl2dpa20.ltl	1	REALIZABLE	0.025813828222453594	false	
+inc_bboxtree	ltl2dpa22.ltl	1	REALIZABLE	0.1459539970383048	false	
+inc_bboxtree	ltl2dpa23.ltl	1	REALIZABLE	0.022449505981057882	false	
+inc_bboxtree	ltl2dpa24.ltl	1	REALIZABLE	0.027540942188352346	false	
+inc_bboxtree	mux_pb_100_pe_.ltl	1	REALIZABLE	0.04163991380482912	false	
+inc_bboxtree	mux_pb_10_pe_.ltl	1	REALIZABLE	0.03202248993329704	false	
+inc_bboxtree	mux_pb_125_pe_.ltl	1	REALIZABLE	0.043414069805294275	false	
+inc_bboxtree	mux_pb_12_pe_.ltl	1	REALIZABLE	0.03345467196777463	false	
+inc_bboxtree	mux_pb_132_pe_.ltl	1	REALIZABLE	0.044030355056747794	false	
+inc_bboxtree	mux_pb_150_pe_.ltl	1	REALIZABLE	0.04112949990667403	false	
+inc_bboxtree	mux_pb_16_pe_.ltl	1	REALIZABLE	0.03450535796582699	false	
+inc_bboxtree	mux_pb_175_pe_.ltl	1	REALIZABLE	0.04498270200565457	false	
+inc_bboxtree	mux_pb_200_pe_.ltl	1	REALIZABLE	0.045355747919529676	false	
+inc_bboxtree	mux_pb_32_pe_.ltl	1	REALIZABLE	0.03378941514529288	false	
+inc_bboxtree	mux_pb_64_pe_.ltl	1	REALIZABLE	0.04084685584530234	false	
+inc_bboxtree	mux_pb_8_pe_.ltl	1	REALIZABLE	0.03525566100142896	false	
+inc_bboxtree	narylatch_pb_10_pe_.ltl	1	REALIZABLE	0.04099032003432512	false	
+inc_bboxtree	narylatch_pb_11_pe_.ltl	1	REALIZABLE	0.04527178406715393	false	
+inc_bboxtree	narylatch_pb_12_pe_.ltl	1	REALIZABLE	0.040438005002215505	false	
+inc_bboxtree	narylatch_pb_16_pe_.ltl	1	REALIZABLE	0.04228984494693577	false	
+inc_bboxtree	narylatch_pb_32_pe_.ltl	1	REALIZABLE	0.03603842202574015	false	
+inc_bboxtree	narylatch_pb_64_pe_.ltl	1	REALIZABLE	0.032241843873634934	false	
+inc_bboxtree	narylatch_pb_8_pe_.ltl	1	REALIZABLE	0.020888708997517824	false	
+inc_bboxtree	ordered-visits-choice-real.ltl				true	TIMEOUT
+inc_bboxtree	ordered-visits-real.ltl	1	REALIZABLE	0.026001400081440806	false	
+inc_bboxtree	package-delivery-real.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm0.ltl	1	UNREALIZABLE	0.03973049996420741	false	
+inc_bboxtree	patrolling-alarm1.ltl	1	UNREALIZABLE	0.08123647002503276	false	
+inc_bboxtree	patrolling-alarm10.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm11.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm12.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm13.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm14.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm15.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm16.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm17.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm18.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm19.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm2.ltl	1	UNREALIZABLE	0.19820198393426836	false	
+inc_bboxtree	patrolling-alarm20.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm21.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm22.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm23.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm24.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm25.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm26.ltl				true	TIMEOUT
+inc_bboxtree	patrolling-alarm3.ltl	1	UNREALIZABLE	0.665544014191255	false	
+inc_bboxtree	patrolling-alarm4.ltl	5	UNREALIZABLE	1.0188026770483702	false	
+inc_bboxtree	patrolling-alarm5.ltl	5	UNREALIZABLE	2.2098382129333913	false	
+inc_bboxtree	patrolling-alarm6.ltl	5	UNREALIZABLE	4.070819774875417	false	
+inc_bboxtree	patrolling-alarm7.ltl	17	UNREALIZABLE	6.301722333068028	false	UNREALIZABLE
+inc_bboxtree	patrolling-alarm8.ltl	17	UNREALIZABLE	10.908762135077268	false	UNREALIZABLE
+inc_bboxtree	patrolling-alarm9.ltl	17	UNREALIZABLE	16.056796098826453	false	UNREALIZABLE
+inc_bboxtree	patrolling0.ltl	1	UNREALIZABLE	0.043824785854667425	false	
+inc_bboxtree	patrolling1.ltl	1	UNREALIZABLE	0.08337756292894483	false	
+inc_bboxtree	patrolling10.ltl				true	TIMEOUT
+inc_bboxtree	patrolling11.ltl				true	TIMEOUT
+inc_bboxtree	patrolling12.ltl				true	TIMEOUT
+inc_bboxtree	patrolling13.ltl				true	TIMEOUT
+inc_bboxtree	patrolling14.ltl				true	TIMEOUT
+inc_bboxtree	patrolling15.ltl				true	TIMEOUT
+inc_bboxtree	patrolling16.ltl				true	TIMEOUT
+inc_bboxtree	patrolling17.ltl				true	TIMEOUT
+inc_bboxtree	patrolling18.ltl				true	TIMEOUT
+inc_bboxtree	patrolling19.ltl				true	TIMEOUT
+inc_bboxtree	patrolling2.ltl	1	UNREALIZABLE	0.2257827208377421	false	
+inc_bboxtree	patrolling20.ltl				true	TIMEOUT
+inc_bboxtree	patrolling21.ltl				true	TIMEOUT
+inc_bboxtree	patrolling22.ltl				true	TIMEOUT
+inc_bboxtree	patrolling23.ltl				true	TIMEOUT
+inc_bboxtree	patrolling24.ltl				true	TIMEOUT
+inc_bboxtree	patrolling25.ltl				true	TIMEOUT
+inc_bboxtree	patrolling3.ltl	1	UNREALIZABLE	0.821025449084118	false	
+inc_bboxtree	patrolling4.ltl	5	UNREALIZABLE	1.0746254918631166	false	
+inc_bboxtree	patrolling5.ltl	5	UNREALIZABLE	2.5307496360037476	false	
+inc_bboxtree	patrolling6.ltl	5	UNREALIZABLE	4.113571303896606	false	
+inc_bboxtree	patrolling7.ltl	17	UNREALIZABLE	8.471478463849053	false	UNREALIZABLE
+inc_bboxtree	patrolling8.ltl	17	UNREALIZABLE	13.206211938988417	false	UNREALIZABLE
+inc_bboxtree	patrolling9.ltl				true	TIMEOUT
+inc_bboxtree	precise-reachability-real.ltl	1	REALIZABLE	0.6189027531072497	false	
+inc_bboxtree	precise-reachability0.ltl	1	UNREALIZABLE	0.03199343988671899	false	
+inc_bboxtree	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.020202439976856112	false	
+inc_bboxtree	prioritized_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.034033380914479494	false	
+inc_bboxtree	prioritized_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.0277042540255934	false	
+inc_bboxtree	prioritized_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.055843380047008395	false	
+inc_bboxtree	prioritized_arbiter_pb_5_pe_.ltl	1	REALIZABLE	0.3052172458264977	false	
+inc_bboxtree	prioritized_arbiter_pb_6_pe_.ltl	17	REALIZABLE	6.517173188040033	false	REALIZABLE
+inc_bboxtree	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.02088610897772014	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.026130066020414233	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.028315352043136954	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.037891604006290436	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.043201189022511244	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.036207592114806175	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_16_pe_.ltl	1	UNREALIZABLE	0.03340249601751566	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.03952170303091407	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.033130452036857605	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03641120903193951	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.031546638114377856	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.03642738703638315	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.039784186985343695	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03146145096980035	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.03605290618725121	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.03151588188484311	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.03461817605420947	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.043145205127075315	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.03877166798338294	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_13_pe_.ltl	1	UNREALIZABLE	0.03689535800367594	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_14_pe_.ltl	1	UNREALIZABLE	0.033610221929848194	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_15_pe_.ltl	1	UNREALIZABLE	0.02917985594831407	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_16_pe_.ltl	1	UNREALIZABLE	0.03318052599206567	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.03525581303983927	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.03434919589199126	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.04057251405902207	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.03565881680697203	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.03735604300163686	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.015577260870486498	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.01814408111386001	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.01738036796450615	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.018940367037430406	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.018506638938561082	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	1	UNREALIZABLE	0.022459746105596423	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.02022524387575686	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_13_pe_.ltl	1	UNREALIZABLE	0.015236900886520743	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_14_pe_.ltl	1	UNREALIZABLE	0.022560964105650783	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_15_pe_.ltl	1	UNREALIZABLE	0.02278685406781733	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_16_pe_.ltl	1	UNREALIZABLE	0.01902304100804031	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.0174509659409523	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.01749206311069429	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.01961141685023904	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.017968724947422743	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.017297236947342753	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.016259406926110387	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.01741162594407797	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.01879821694456041	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.017419307958334684	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_5_16_pe_.ltl	1	UNREALIZABLE	0.022531192982569337	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.019012961070984602	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_5_32_pe_.ltl	1	UNREALIZABLE	0.029597080079838634	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.022979144006967545	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_6_16_pe_.ltl	1	UNREALIZABLE	0.020043009193614125	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.019865337992087007	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_6_32_pe_.ltl	1	UNREALIZABLE	0.022498119855299592	false	
+inc_bboxtree	prioritized_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.019035892095416784	false	
+inc_bboxtree	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.022209004033356905	false	
+inc_bboxtree	prioritized_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.02398441592231393	false	
+inc_bboxtree	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.021302134031429887	false	
+inc_bboxtree	prioritized_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.03145978786051273	false	
+inc_bboxtree	prioritized_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.03171354904770851	false	
+inc_bboxtree	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT
+inc_bboxtree	prioritized_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.01776760397478938	false	
+inc_bboxtree	prioritized_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.0357953910715878	false	
+inc_bboxtree	prioritized_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.03506232821382582	false	
+inc_bboxtree	reversible-lane-r-real.ltl				true	TIMEOUT
+inc_bboxtree	reversible-lane-u-unreal.ltl				true	TIMEOUT
+inc_bboxtree	reversible-lane-u0.ltl				true	TIMEOUT
+inc_bboxtree	reversible-lane-u1.ltl				true	TIMEOUT
+inc_bboxtree	robot-cat-real-1d-real.ltl				true	TIMEOUT
+inc_bboxtree	robot-cat-real-2d-real.ltl				true	TIMEOUT
+inc_bboxtree	robot-cat-unreal-1d-unreal.ltl				true	TIMEOUT
+inc_bboxtree	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT
+inc_bboxtree	robot-grid-commute-1d-real.ltl	5	REALIZABLE	2.5464513930492103	false	
+inc_bboxtree	robot-grid-commute-2d-real.ltl				true	TIMEOUT
+inc_bboxtree	robot-grid-reach-1d-real.ltl	1	REALIZABLE	0.02577430894598365	false	
+inc_bboxtree	robot-grid-reach-2d-real.ltl	5	REALIZABLE	3.1836336720734835	false	
+inc_bboxtree	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	1	REALIZABLE	0.0394434779882431	false	
+inc_bboxtree	robot-grid-reach-repeated-with-obstacles-2d-real.ltl				true	TIMEOUT
+inc_bboxtree	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-1d-unreal.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-1d0.ltl	5	UNREALIZABLE	1.6660888758488	false	
+inc_bboxtree	robot-resource-1d1.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d0.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d1.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d10.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d11.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d12.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d13.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d14.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d15.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d16.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d17.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d18.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d19.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d2.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d20.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d21.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d22.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d23.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d3.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d4.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d5.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d6.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d7.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d8.ltl				true	TIMEOUT
+inc_bboxtree	robot-resource-2d9.ltl				true	TIMEOUT
+inc_bboxtree	robot-tasks-real.ltl	1	REALIZABLE	0.056614242028445005	false	
+inc_bboxtree	robot-to-target-charging-real.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal0.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal1.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal2.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal3.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal4.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal5.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal6.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal7.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging-unreal8.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging0.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging1.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging10.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging11.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging12.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging13.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging14.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging15.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging16.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging17.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging18.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging19.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging2.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging20.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging21.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging22.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging23.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging24.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging25.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging3.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging4.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging5.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging6.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging7.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging8.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-charging9.ltl				true	TIMEOUT
+inc_bboxtree	robot-to-target-unreal0.ltl	17	REALIZABLE	7.868813237175345	false	REALIZABLE
+inc_bboxtree	robot-to-target0.ltl				true	TIMEOUT
+inc_bboxtree	robot_analyze_samples_v1-real.ltl				true	TIMEOUT
+inc_bboxtree	robot_collect_samples_v1-real.ltl				true	TIMEOUT
+inc_bboxtree	robot_collect_samples_v2-real.ltl				true	TIMEOUT
+inc_bboxtree	robot_collect_samples_v3-real.ltl				true	TIMEOUT
+inc_bboxtree	robot_collect_samples_v4-real.ltl				true	TIMEOUT
+inc_bboxtree	robot_deliver_products_1-real.ltl				true	TIMEOUT
+inc_bboxtree	robot_deliver_products_20.ltl				true	TIMEOUT
+inc_bboxtree	robot_deliver_products_30.ltl				true	TIMEOUT
+inc_bboxtree	robot_deliver_products_40.ltl				true	TIMEOUT
+inc_bboxtree	robot_deliver_products_50.ltl				true	TIMEOUT
+inc_bboxtree	robot_grid_pb_2_2_pe_.ltl	5	REALIZABLE	3.4331844348926097	false	
+inc_bboxtree	robot_grid_pb_3_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	robot_grid_pb_4_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	robot_grid_pb_5_1_pe_.ltl				true	TIMEOUT
+inc_bboxtree	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	robot_grid_pb_6_1_pe_.ltl				true	TIMEOUT
+inc_bboxtree	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	robot_grid_pb_7_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	robot_grid_pb_8_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	robot_repair0.ltl				true	TIMEOUT
+inc_bboxtree	robot_repair1.ltl				true	TIMEOUT
+inc_bboxtree	robot_repair2.ltl				true	TIMEOUT
+inc_bboxtree	robot_repair3.ltl				true	TIMEOUT
+inc_bboxtree	robot_repair4.ltl				true	TIMEOUT
+inc_bboxtree	robot_repair5.ltl				true	TIMEOUT
+inc_bboxtree	robot_running-real.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.022053794004023075	false	
+inc_bboxtree	round_robin_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.3935088647995144	false	
+inc_bboxtree	round_robin_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.049589172936975956	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.08167522004805505	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.14305787906050682	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.2650898811407387	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.5913625920657068	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	1.1484226509928703	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	2.5193563448265195	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.01933693210594356	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.03593813790939748	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03795030806213617	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.03514191508293152	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.036945701809599996	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.041261669946834445	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03506232192739844	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.03687466983683407	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.04266501613892615	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.02558180596679449	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.02531998511403799	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.03493620501831174	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.05882653803564608	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.17166942707262933	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.9722734938841313	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	6.624493618961424	false	UNREALIZABLE
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.07762935385107994	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.10879493411630392	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.2623167270794511	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	1.681100487941876	false	
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.029807284008711576	false	
+inc_bboxtree	round_robin_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.04101649415679276	false	
+inc_bboxtree	round_robin_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.5453953838441521	false	
+inc_bboxtree	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_bboxtree	rw_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.022436831146478653	false	
+inc_bboxtree	rw_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.055585692869499326	false	
+inc_bboxtree	rw_arbiter_pb_3_pe_.ltl	17	REALIZABLE	16.942967039067298	false	REALIZABLE
+inc_bboxtree	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	scheduler-real.ltl				true	TIMEOUT
+inc_bboxtree	shift_pb_100_pe_.ltl	1	REALIZABLE	0.01859932392835617	false	
+inc_bboxtree	shift_pb_10_pe_.ltl	1	REALIZABLE	0.008756715105846524	false	
+inc_bboxtree	shift_pb_125_pe_.ltl	1	REALIZABLE	0.01118748215958476	false	
+inc_bboxtree	shift_pb_12_pe_.ltl	1	REALIZABLE	0.00848153093829751	false	
+inc_bboxtree	shift_pb_132_pe_.ltl	1	REALIZABLE	0.017618573969230056	false	
+inc_bboxtree	shift_pb_16_pe_.ltl	1	REALIZABLE	0.03379649599082768	false	
+inc_bboxtree	shift_pb_250_pe_.ltl	1	REALIZABLE	0.04727606615051627	false	
+inc_bboxtree	shift_pb_32_pe_.ltl	1	REALIZABLE	0.0387039699126035	false	
+inc_bboxtree	shift_pb_500_pe_.ltl	1	REALIZABLE	0.05353539506904781	false	
+inc_bboxtree	shift_pb_64_pe_.ltl	1	REALIZABLE	0.03556813416071236	false	
+inc_bboxtree	shift_pb_8_pe_.ltl	1	REALIZABLE	0.03081513079814613	false	
+inc_bboxtree	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_unreal1_pb_16_1_pe_.ltl	1	UNREALIZABLE	0.025428762193769217	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_16_2_pe_.ltl	1	UNREALIZABLE	0.032202166970819235	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_16_3_pe_.ltl	1	UNREALIZABLE	0.03595102787949145	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_16_4_pe_.ltl	1	UNREALIZABLE	0.0328070221003145	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_16_5_pe_.ltl	1	UNREALIZABLE	0.03399805980734527	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.03479818790219724	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.01998031698167324	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.01780024287290871	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.028065440012142062	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.017552681965753436	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.03125000488944352	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.03445007698610425	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.035220463993027806	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.038192551117390394	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.03532346594147384	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.030433219857513905	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.041627645958215	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.03265094687230885	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.04377345787361264	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.03887286805547774	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.03667073999531567	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.04069694387726486	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.035539699951186776	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.03927747090347111	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.04296790901571512	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.04290939192287624	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.03599475300870836	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.032309717033058405	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.0361533141694963	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.03916207095608115	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.04105187300592661	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.03694764501415193	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.04053799691610038	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.03612633002921939	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.03651670692488551	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.038847386138513684	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.04071646207012236	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_10_pe_.ltl	1	UNREALIZABLE	0.037652742117643356	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_1_pe_.ltl	1	UNREALIZABLE	0.033534341026097536	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.03352543595246971	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.03904269402846694	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.03453410300426185	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_5_pe_.ltl	1	UNREALIZABLE	0.03423508093692362	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_6_pe_.ltl	1	UNREALIZABLE	0.03468502196483314	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_7_pe_.ltl	1	UNREALIZABLE	0.03437806782312691	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_8_pe_.ltl	1	UNREALIZABLE	0.029521753080189228	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_5_9_pe_.ltl	1	UNREALIZABLE	0.03413936193101108	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.03223894699476659	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.03720565885305405	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.03797280602157116	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.03760683909058571	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_6_5_pe_.ltl	1	UNREALIZABLE	0.03996066004037857	false	
+inc_bboxtree	simple_arbiter_unreal1_pb_8_8_pe_.ltl	1	UNREALIZABLE	0.04775473102927208	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.03894571796990931	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_25_pe_.ltl	1	UNREALIZABLE	0.035193333867937326	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.03344106813892722	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.0377971469424665	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.037600453943014145	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_50_pe_.ltl	1	UNREALIZABLE	0.046687335008755326	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.028829653980210423	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_60_pe_.ltl	1	UNREALIZABLE	0.056581157026812434	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.040536310989409685	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_75_pe_.ltl	1	UNREALIZABLE	0.06040310603566468	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.024025793885812163	false	
+inc_bboxtree	simple_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.021479842951521277	false	
+inc_bboxtree	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_with_hints_pb_2_pe_.ltl	1	REALIZABLE	0.017174218082800508	false	
+inc_bboxtree	simple_arbiter_with_hints_pb_4_pe_.ltl	1	REALIZABLE	0.046177810057997704	false	
+inc_bboxtree	simple_arbiter_with_hints_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT
+inc_bboxtree	solitary-real.ltl	1	REALIZABLE	0.021454136818647385	false	
+inc_bboxtree	solitary0.ltl	1	UNREALIZABLE	0.03141920501366258	false	
+inc_bboxtree	sort4-real.ltl				true	TIMEOUT
+inc_bboxtree	sort40.ltl				true	TIMEOUT
+inc_bboxtree	sort41.ltl				true	TIMEOUT
+inc_bboxtree	sort42.ltl				true	TIMEOUT
+inc_bboxtree	sort50.ltl				true	TIMEOUT
+inc_bboxtree	sort51.ltl				true	TIMEOUT
+inc_bboxtree	sort52.ltl				true	TIMEOUT
+inc_bboxtree	sort53.ltl				true	TIMEOUT
+inc_bboxtree	square5x5-real.ltl				true	TIMEOUT
+inc_bboxtree	square5x50.ltl				true	TIMEOUT
+inc_bboxtree	square5x51.ltl				true	TIMEOUT
+inc_bboxtree	square5x52.ltl				true	TIMEOUT
+inc_bboxtree	square5x53.ltl				true	TIMEOUT
+inc_bboxtree	square5x54.ltl				true	TIMEOUT
+inc_bboxtree	storage-GF-64-real.ltl	1	REALIZABLE	0.026906508952379227	false	
+inc_bboxtree	tasks-real.ltl	1	REALIZABLE	0.07316899113357067	false	
+inc_bboxtree	tasks-unreal0.ltl				true	TIMEOUT
+inc_bboxtree	tasks-unreal1.ltl				true	TIMEOUT
+inc_bboxtree	tasks-unreal2.ltl				true	TIMEOUT
+inc_bboxtree	taxi-service-real.ltl				true	TIMEOUT
+inc_bboxtree	taxi-service-u-unreal.ltl	17	UNREALIZABLE	9.990450776880607	false	UNREALIZABLE
+inc_bboxtree	test2_f2774e0b.ltl	1	REALIZABLE	0.022100686095654964	false	
+inc_bboxtree	test3_efe2feaf.ltl	1	REALIZABLE	0.036301889922469854	false	
+inc_bboxtree	test4_4b82b1f4.ltl	1	UNREALIZABLE	0.038089311914518476	false	
+inc_bboxtree	test5_6cbc6174.ltl	1	REALIZABLE	0.03921546810306609	false	
+inc_bboxtree	test6_0f5381e9.ltl	1	REALIZABLE	0.03934835805557668	false	
+inc_bboxtree	test7_2c5b09da.ltl	1	REALIZABLE	0.03562737093307078	false	
+inc_bboxtree	test8_88f351a6.ltl	1	UNREALIZABLE	0.023210667073726654	false	
+inc_bboxtree	test9_dd3a27e1.ltl	1	UNREALIZABLE	0.03664202895015478	false	
+inc_bboxtree	test_f3987563.ltl	1	REALIZABLE	0.03169560292735696	false	
+inc_bboxtree	thermostat-F-real.ltl				true	TIMEOUT
+inc_bboxtree	thermostat-GF-real.ltl				true	TIMEOUT
+inc_bboxtree	thermostat-GF-unreal0.ltl				true	TIMEOUT
+inc_bboxtree	thermostat-GF-unreal1.ltl				true	TIMEOUT
+inc_bboxtree	thermostat-GF-unreal2.ltl				true	TIMEOUT
+inc_bboxtree	tmp_13cfc6f2.ltl				true	TIMEOUT
+inc_bboxtree	unordered-visits-charging0.ltl				true	TIMEOUT
+inc_bboxtree	unordered-visits-real.ltl				true	TIMEOUT
+inc_bboxtree	workstation_resupply_pb_1_pe_.ltl	1	REALIZABLE	0.11079054395668209	false	
+inc_bboxtree	workstation_resupply_pb_2_pe_.ltl				true	TIMEOUT
+inc_bboxtree	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT
+inc_bboxtree	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT
+inc_bboxtree	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT
+inc_bboxtree	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT
+inc_bboxtree	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT

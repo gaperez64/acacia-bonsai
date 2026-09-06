@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "solver/k_schedule.hh"
 #include "solver/symmetry.hh"
 #include <string_view>
 
@@ -90,16 +91,22 @@ namespace acacia::diagnostics {
       std::string result = "unknown";
       std::string final_reason = "unknown";
       std::string translation_pref = "unknown";
+      std::string k_schedule = acacia::k_schedule::name (ACACIA_K_SCHEDULE);
       std::string source_format = "ltl";
       std::string tlsf_semantics = "-";
       std::string tlsf_target = "-";
       std::string tlsf_effective_target = "-";
       std::string syntactic_bypass = "not-run";
+      std::string forced_contradiction = "not-run";
+      std::string forced_contradiction_kind = "";
       std::string fast_class = "not-run";
       std::string fast_verdict = "fallback";
       std::string preprocessor = "unknown";
       std::string equivariant = "not-run";
       std::string local_probe_status = "none";
+      std::string forward_result = "not-run";
+      std::string forward_resource_reason = "none";
+      std::string forward_final_reason = "not-run";
       // sym_* covers every diagnostic recognition pass, including instances
       // the solver declines; eq_* is populated only when solving is attempted.
       std::string symmetry_families = "-";
@@ -114,6 +121,8 @@ namespace acacia::diagnostics {
       long long total_ms = 0;
       long long rsimp_ms = 0;
       long long syntactic_bypass_ms = 0;
+      long long forced_contradiction_ms = 0;
+      double profile_dominance_ms = 0.0;
       long long translation_ms = 0;
       long long fast_class_ms = 0;
       long long fast_solve_ms = 0;
@@ -125,10 +134,21 @@ namespace acacia::diagnostics {
       double picker_ms = 0.0;
       double apply_ms = 0.0;
       double downset_ms = 0.0;
+      double forward_certificate_verify_ms = 0.0;
+      double forward_total_ms = 0.0;
 
       bool rsimp_changed = false;
+      bool forward_backend = false;
+      unsigned forced_contradiction_delay = 0;
       size_t aut_states = 0;
       size_t aut_edges = 0;
+      std::size_t forced_contradiction_invariants = 0;
+      std::size_t forced_contradiction_responses = 0;
+      std::size_t profile_actions_before = 0;
+      std::size_t profile_actions_after = 0;
+      std::size_t profile_dominance_tests = 0;
+      std::size_t profile_dominance_endpoint_visits = 0;
+      std::size_t profile_dominance_declined = 0;
       size_t preproc_states_before = 0;
       size_t preproc_states_after = 0;
       size_t preproc_edges_before = 0;
@@ -148,6 +168,28 @@ namespace acacia::diagnostics {
       unsigned long long local_probe_forward_apps = 0;
       unsigned long long local_probe_skipped_over_budget = 0;
       unsigned long long local_probe_nodes = 0;
+      int forward_K = -1;
+      unsigned long long forward_env_nodes = 0;
+      unsigned long long forward_ctrl_nodes = 0;
+      unsigned long long forward_env_expanded = 0;
+      unsigned long long forward_ctrl_expanded = 0;
+      unsigned long long forward_losing_antichain_size = 0;
+      unsigned long long forward_losing_insertions = 0;
+      unsigned long long forward_invalidation_scans = 0;
+      unsigned long long forward_nodes_checked = 0;
+      unsigned long long forward_nodes_invalidated = 0;
+      unsigned long long forward_raw_actions = 0;
+      unsigned long long forward_actions_skipped = 0;
+      unsigned long long forward_covers_created = 0;
+      unsigned long long forward_covers_resolved = 0;
+      unsigned long long forward_cover_search_visits = 0;
+      unsigned long long forward_distinct_successors = 0;
+      unsigned long long forward_minimal_successors = 0;
+      unsigned long long forward_strategy_rank_nodes = 0;
+      unsigned long long forward_rank_bytes = 0;
+      unsigned long long forward_node_bytes = 0;
+      unsigned long long forward_index_bytes = 0;
+      unsigned long long forward_total_bytes = 0;
       unsigned long long cpre_skipped = 0;
       unsigned long long k_bumped_by_local_refutation = 0;
       unsigned long long actions_seen = 0;
@@ -170,6 +212,7 @@ namespace acacia::diagnostics {
       unsigned long long decode_ms = 0;
       int loops = 0;
       int k_attempts = 0;
+      int k_last_next = 0;
       int last_k = -1;
       int tlsf_gr_level = -1;
       size_t equivariant_clients = 0;
@@ -177,14 +220,18 @@ namespace acacia::diagnostics {
       size_t equivariant_orbits = 0;
       clock::time_point started = clock::now ();
 
-      void observe_loop (size_t f_size, int k) {
-        ++loops;
-        max_f = std::max (max_f, f_size);
-        max_f_size = std::max (max_f_size, f_size);
+      void observe_k (int k) {
         if (last_k != k) {
           last_k = k;
           ++k_attempts;
         }
+      }
+
+      void observe_loop (size_t f_size, int k) {
+        ++loops;
+        max_f = std::max (max_f, f_size);
+        max_f_size = std::max (max_f_size, f_size);
+        observe_k (k);
       }
 
       void refresh_total () {
@@ -246,6 +293,18 @@ namespace acacia::diagnostics {
          << " rsimp_changed=" << (m.rsimp_changed ? 1 : 0)
          << " syntactic_bypass=" << m.syntactic_bypass
          << " syntactic_bypass_ms=" << m.syntactic_bypass_ms
+         << " forced_contradiction=" << m.forced_contradiction
+         << " forced_contradiction_kind=" << m.forced_contradiction_kind
+         << " forced_contradiction_delay=" << m.forced_contradiction_delay
+         << " forced_contradiction_invariants=" << m.forced_contradiction_invariants
+         << " forced_contradiction_responses=" << m.forced_contradiction_responses
+         << " forced_contradiction_ms=" << m.forced_contradiction_ms
+         << " profile_actions_before=" << m.profile_actions_before
+         << " profile_actions_after=" << m.profile_actions_after
+         << " profile_dominance_tests=" << m.profile_dominance_tests
+         << " profile_dominance_endpoint_visits=" << m.profile_dominance_endpoint_visits
+         << " profile_dominance_declined=" << m.profile_dominance_declined
+         << " profile_dominance_ms=" << m.profile_dominance_ms
          << " translation_ms=" << m.translation_ms << " aut_states=" << m.aut_states
          << " aut_edges=" << m.aut_edges << " fast_class=" << m.fast_class
          << " fast_class_ms=" << m.fast_class_ms << " fast_solve_ms=" << m.fast_solve_ms
@@ -265,11 +324,39 @@ namespace acacia::diagnostics {
          << " simulation_states_removed=" << m.simulation_states_removed
          << " bool_threshold=" << m.bool_threshold << " max_f=" << m.max_f
          << " max_f_size=" << m.max_f_size << " loops=" << m.loops
-         << " k_attempts=" << m.k_attempts << " local_probe_runs=" << m.local_probe_runs
+         << " k_attempts=" << m.k_attempts << " k_schedule=" << m.k_schedule
+         << " k_last_next=" << m.k_last_next << " local_probe_runs=" << m.local_probe_runs
          << " local_probe_status=" << m.local_probe_status
          << " local_probe_forward_apps=" << m.local_probe_forward_apps
          << " local_probe_skipped_over_budget=" << m.local_probe_skipped_over_budget
          << " local_probe_nodes=" << m.local_probe_nodes
+         << " forward_backend=" << (m.forward_backend ? 1 : 0)
+         << " forward_K=" << m.forward_K << " forward_result=" << m.forward_result
+         << " forward_resource_reason=" << m.forward_resource_reason
+         << " forward_env_nodes=" << m.forward_env_nodes
+         << " forward_ctrl_nodes=" << m.forward_ctrl_nodes
+         << " forward_env_expanded=" << m.forward_env_expanded
+         << " forward_ctrl_expanded=" << m.forward_ctrl_expanded
+         << " forward_losing_antichain_size=" << m.forward_losing_antichain_size
+         << " forward_losing_insertions=" << m.forward_losing_insertions
+         << " forward_invalidation_scans=" << m.forward_invalidation_scans
+         << " forward_nodes_checked=" << m.forward_nodes_checked
+         << " forward_nodes_invalidated=" << m.forward_nodes_invalidated
+         << " forward_raw_actions=" << m.forward_raw_actions
+         << " forward_actions_skipped=" << m.forward_actions_skipped
+         << " forward_covers_created=" << m.forward_covers_created
+         << " forward_covers_resolved=" << m.forward_covers_resolved
+         << " forward_cover_search_visits=" << m.forward_cover_search_visits
+         << " forward_distinct_successors=" << m.forward_distinct_successors
+         << " forward_minimal_successors=" << m.forward_minimal_successors
+         << " forward_strategy_rank_nodes=" << m.forward_strategy_rank_nodes
+         << " forward_rank_bytes=" << m.forward_rank_bytes
+         << " forward_node_bytes=" << m.forward_node_bytes
+         << " forward_index_bytes=" << m.forward_index_bytes
+         << " forward_total_bytes=" << m.forward_total_bytes
+         << " forward_certificate_verify_ms=" << m.forward_certificate_verify_ms
+         << " forward_total_ms=" << m.forward_total_ms
+         << " forward_final_reason=" << m.forward_final_reason
          << " cpre_skipped=" << m.cpre_skipped
          << " k_bumped_by_local_refutation=" << m.k_bumped_by_local_refutation
          << " cpre_ms=" << m.cpre_ms
@@ -493,6 +580,11 @@ namespace acacia::diagnostics {
     }
   }
 
+  inline void set_k_last_next (int next_k) {
+    if (auto* m = current ())
+      m->k_last_next = next_k;
+  }
+
   inline void snapshot (std::string_view checkpoint) {
     if (auto* m = current ()) {
       m->refresh_total ();
@@ -573,6 +665,78 @@ namespace acacia::diagnostics {
       ++m->local_probe_skipped_over_budget;
   }
 
+  inline void set_forward_backend () {
+    if (auto* m = current ())
+      m->forward_backend = true;
+  }
+
+  inline void set_forward_attempt (int k, std::string result,
+                                   std::string resource_reason,
+                                   unsigned long long env_nodes,
+                                   unsigned long long ctrl_nodes,
+                                   unsigned long long env_expanded,
+                                   unsigned long long ctrl_expanded,
+                                   unsigned long long losing_antichain_size,
+                                   unsigned long long losing_insertions,
+                                   unsigned long long invalidation_scans,
+                                   unsigned long long nodes_checked,
+                                   unsigned long long nodes_invalidated,
+                                   unsigned long long raw_actions,
+                                   unsigned long long actions_skipped,
+                                   unsigned long long covers_created,
+                                   unsigned long long covers_resolved,
+                                   unsigned long long cover_search_visits,
+                                   unsigned long long distinct_successors,
+                                   unsigned long long minimal_successors,
+                                   unsigned long long strategy_rank_nodes,
+                                   unsigned long long rank_bytes,
+                                   unsigned long long node_bytes,
+                                   unsigned long long index_bytes,
+                                   unsigned long long total_bytes) {
+    if (auto* m = current ()) {
+      m->observe_k (k);
+      m->forward_K = k;
+      m->forward_result = std::move (result);
+      m->forward_resource_reason = std::move (resource_reason);
+      m->forward_env_nodes = env_nodes;
+      m->forward_ctrl_nodes = ctrl_nodes;
+      m->forward_env_expanded = env_expanded;
+      m->forward_ctrl_expanded = ctrl_expanded;
+      m->forward_losing_antichain_size = losing_antichain_size;
+      m->forward_losing_insertions = losing_insertions;
+      m->forward_invalidation_scans = invalidation_scans;
+      m->forward_nodes_checked = nodes_checked;
+      m->forward_nodes_invalidated = nodes_invalidated;
+      m->forward_raw_actions = raw_actions;
+      m->forward_actions_skipped = actions_skipped;
+      m->forward_covers_created = covers_created;
+      m->forward_covers_resolved = covers_resolved;
+      m->forward_cover_search_visits = cover_search_visits;
+      m->forward_distinct_successors = distinct_successors;
+      m->forward_minimal_successors = minimal_successors;
+      m->forward_strategy_rank_nodes = strategy_rank_nodes;
+      m->forward_rank_bytes = rank_bytes;
+      m->forward_node_bytes = node_bytes;
+      m->forward_index_bytes = index_bytes;
+      m->forward_total_bytes = total_bytes;
+    }
+  }
+
+  inline void set_forward_certificate_verify_ms (double milliseconds) {
+    if (auto* m = current ())
+      m->forward_certificate_verify_ms = milliseconds;
+  }
+
+  inline void set_forward_total_ms (double milliseconds) {
+    if (auto* m = current ())
+      m->forward_total_ms = milliseconds;
+  }
+
+  inline void set_forward_final_reason (std::string reason) {
+    if (auto* m = current ())
+      m->forward_final_reason = std::move (reason);
+  }
+
   inline void set_final_reason (std::string reason) {
     if (auto* m = current ())
       m->final_reason = std::move (reason);
@@ -649,6 +813,7 @@ namespace acacia::diagnostics {
   };
 
   inline void observe_loop (size_t, int) {}
+  inline void set_k_last_next (int) {}
   inline void observe_action () {}
   inline void snapshot_action_progress () {}
   inline void observe_meets (size_t, size_t) {}
@@ -666,6 +831,22 @@ namespace acacia::diagnostics {
   inline void trace_local_probe (int, unsigned long long, std::size_t, const char*,
                                  unsigned long long, unsigned long long) {}
   inline void set_local_probe_skipped_over_budget () {}
+  inline void set_forward_backend () {}
+  inline void set_forward_attempt (int, std::string, std::string,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long,
+                                   unsigned long long, unsigned long long) {}
+  inline void set_forward_certificate_verify_ms (double) {}
+  inline void set_forward_total_ms (double) {}
+  inline void set_forward_final_reason (std::string) {}
   inline void set_final_reason (std::string) {}
   inline bool finish (bool solved, std::string) { return solved; }
   inline void set_equivariant_decline (std::string) {}

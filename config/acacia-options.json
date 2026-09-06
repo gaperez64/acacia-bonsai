@@ -112,6 +112,9 @@
     "translation_pref": "small",
     "enable_realizability_simplifier": true,
     "enable_syntactic_bypass": true,
+    "forced_output_contradiction": false,
+    "profile_dominance": false,
+    "k_schedule": "linear",
     "enable_tlsf_frontend": true,
     "simd_is_max": true,
     "decompose_spec": true,
@@ -122,10 +125,13 @@
     "compile_all_components": false,
     "enable_diagnostics": false,
     "local_certificate": false,
+    "forward_safety_solver": false,
+    "forward_conditional_covering": false,
     "enable_equivariant_solver": true,
     "equivariant_max_states": 512,
     "equivariant_min_clients": 3,
-    "equivariant_min_blocks": 2
+    "equivariant_min_blocks": 2,
+    "default_arms": ""
   },
   "choices": {
     "default_unreal_x": [
@@ -143,6 +149,12 @@
       "any",
       "small+any",
       "deterministic"
+    ],
+    "k_schedule": [
+      "linear",
+      "geometric",
+      "cheap_loss_adaptive",
+      "direct_max"
     ],
     "vector_downset": [
       "vector_backed",
