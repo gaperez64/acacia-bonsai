@@ -62,9 +62,23 @@ if [[ ! -f "$expected" ]]; then
   exit 1
 fi
 
+# Resolve the corpus before Meson runs, not after.  Meson bakes
+# acacia_tlsf_corpus_dir into each test's argv at configure time, so a build
+# whose corpus has since moved cannot resolve its own -T inputs; exporting the
+# resolved directory lets check-real-correct.sh find the same file under a live
+# one.  See issue #134.
+tlsf_corpus_dir=$(python3 -c '
+import pathlib
+import sys
+sys.path.insert(0, sys.argv[1])
+from benchlib import tlsf_corpus_dir
+print(tlsf_corpus_dir(build_dir=pathlib.Path(sys.argv[2])) or "")
+' "$repo_root/benchmarking" "$build_dir")
+
 rm -f "$testlog"
 set +e
 env \
+  ACACIA_TLSF_CORPUS="$tlsf_corpus_dir" \
   MESON_TESTTHREADS=1 \
   BENCHMARK_TEST_JOBS=1 \
   BENCHMARK_CGROUP="$benchmark_cgroup" \
@@ -90,11 +104,10 @@ fi
 set +e
 python3 - "$expected" "$testlog" "$meson_status" \
   "$scratch/baseline.csv" "$scratch/candidate.csv" "$repo_root" \
-  "$build_dir" "$scratch/tlsf-corpus-dir" <<'PY'
+  "$build_dir" "$scratch/tlsf-corpus-dir" "$tlsf_corpus_dir" <<'PY'
 from collections import defaultdict
 import csv
 import json
-import os
 import pathlib
 import sys
 
@@ -117,7 +130,9 @@ def verdict(stdout):
     return verdict_from_output(stdout, on_conflict="last")
 
 
-tlsf_corpus = benchlib.tlsf_corpus_dir(env=os.environ, build_dir=build_dir)
+# Resolved in the shell above, so the suites and this parse agree on one
+# directory rather than each answering the question separately.
+tlsf_corpus = pathlib.Path(sys.argv[9]).resolve() if sys.argv[9] else None
 
 
 def load_map(path, value_field):
@@ -238,9 +253,12 @@ if tlsf_corpus is not None:
     tlsf_corpus_out.write_text(str(tlsf_corpus), encoding="utf-8")
 
 source_to_expected = defaultdict(list)
+tlsf_name_to_expected = defaultdict(list)
 for key, sources in test_sources.items():
     for source in sources:
         source_to_expected[source].append(key)
+        if source.suffix == ".tlsf":
+            tlsf_name_to_expected[source.name].append(key)
 
 observed = {}
 problems = []
@@ -268,6 +286,12 @@ with testlog_path.open() as handle:
             continue
         instance_path = pathlib.Path(command[input_index + 1]).resolve()
         candidates = source_to_expected.get(instance_path, [])
+        if not candidates and input_flag == "-T":
+            # Meson recorded the configure-time corpus directory, which need
+            # not be the one the run actually used -- check-real-correct.sh
+            # relocates a missing -T file under a live ACACIA_TLSF_CORPUS.  The
+            # corpus is flat, so the file name identifies the entry.
+            candidates = tlsf_name_to_expected.get(instance_path.name, [])
         if not candidates:
             problems.append(
                 f"testlog line {line_no}: unexpected input {instance_path}"

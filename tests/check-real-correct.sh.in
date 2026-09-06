@@ -274,6 +274,16 @@ if [[ -n $ltl && -n $tlsf ]]; then
     exit 8
 fi
 if [[ -n $tlsf ]]; then
+    # Meson bakes the corpus directory in at configure time, so a build whose
+    # corpus has since moved could not be gated at all without reconfiguring
+    # and recompiling.  The corpus is flat, so an exported ACACIA_TLSF_CORPUS
+    # names the same file under a live directory.  See issue #134.
+    if ! [[ -e $tlsf ]] && [[ -n ${ACACIA_TLSF_CORPUS:-} ]]; then
+        relocated=$ACACIA_TLSF_CORPUS/${tlsf:t}
+        if [[ -e $relocated ]]; then
+            tlsf=$relocated
+        fi
+    fi
     if ! [[ -e $tlsf ]]; then
         echo "error: $tlsf should exist."
         exit 8
