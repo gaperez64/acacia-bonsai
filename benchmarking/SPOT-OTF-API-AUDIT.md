@@ -55,6 +55,11 @@ These enum values exist nowhere upstream. Acacia includes that header in four
 places but never references `solver_type` or either value; **the patch is inert
 here**.
 
+Confirmed by the repository owner after this audit was drafted: GOODSET and
+GOODSETMIN are their own work, and nothing else was changed in this Spot
+installation. The base identification is therefore authoritative rather than
+inferred -- upstream `2ae6210237` plus exactly this one patched header.
+
 The 14 installed headers under `spot/ta/*`, `spot/taalgos/*`, and
 `spot/twaalgos/copy.hh` are debris from earlier installations. They were not
 audited and are not available-API evidence. The supplied deletion dates are
