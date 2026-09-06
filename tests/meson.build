@@ -129,6 +129,25 @@ spot_rows_test = executable (
 )
 test ('spot-rows', spot_rows_test, suite : ['unit', 'spot-rows'])
 
+# P5 headers and regressions compile in the default build; no backend gate.
+spot_lazy_buchi_view_test = executable (
+  'spot-lazy-buchi-view-test',
+  'spot_lazy_buchi_view_test.cc',
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep],
+)
+test ('spot-lazy-buchi-view', spot_lazy_buchi_view_test,
+      suite : ['unit', 'spot-lazy'])
+
+sparse_forward_rank_test = executable (
+  'sparse-forward-rank-test',
+  'sparse_forward_rank_test.cc',
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep],
+)
+test ('sparse-forward-rank', sparse_forward_rank_test,
+      suite : ['unit', 'sparse-rank'])
+
 spot_letter_oracle_test = executable (
   'spot-letter-oracle-test',
   'spot_letter_oracle_test.cc',
