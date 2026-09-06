@@ -67,25 +67,29 @@ def meson_defaults(path: pathlib.Path) -> dict[str, object]:
     return out
 
 
-def json_key_to_meson_name(script: pathlib.Path) -> dict[str, str]:
-    """Reuse acacia-config.py's own mapping rather than duplicating it."""
-    text = script.read_text()
-    start = text.index("MESON_OPTION_NAMES")
-    block = text[start:text.index("}", start)]
-    return dict(re.findall(r'"([^"]+)":\s*"([^"]+)"', block))
+def json_key_to_meson_name(registry: pathlib.Path) -> dict[str, str]:
+    """Read the Meson names from the shared configuration registry."""
+    options = json.loads(registry.read_text())
+    mapping = {name: option["meson"] for name, option in options["options"].items()}
+    mapping.update(
+        (name, family["meson"]) for name, family in options["families"].items()
+    )
+    return mapping
 
 
 def main() -> int:
     root = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".")
     meson = meson_defaults(root / "meson.options")
-    scalars = json.loads((root / "config" / "acacia-options.json").read_text())["scalar_defaults"]
-    mapping = json_key_to_meson_name(root / "scripts" / "acacia-config.py")
+    registry = root / "config" / "acacia-options.json"
+    options = json.loads(registry.read_text())["options"]
+    scalars = {name: option["default"] for name, option in options.items()}
+    mapping = json_key_to_meson_name(registry)
 
     checked = 0
     failures: list[str] = []
     for json_key, meson_name in sorted(mapping.items()):
         if json_key not in scalars or meson_name not in meson:
-            # Component families live under "families", not "scalar_defaults";
+            # Component families live under "families", not "options";
             # they carry their own defaults and are compared by the family test.
             continue
         checked += 1
