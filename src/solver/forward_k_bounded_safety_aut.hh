@@ -120,7 +120,7 @@ namespace acacia::solver_detail {
               initial, safe, input_output_fwd_actions, actioner, limits,
               use_antichain, minimisation_threshold);
           acacia::diagnostics::set_forward_attempt (
-              static_cast<int> (k), result_name (result.status),
+              static_cast<int> (k), forward_result_name (result.status),
               result.status == forward_result_status::resource_limit
                   ? resource_reason (result.resource_limit)
                   : "none",
@@ -213,15 +213,6 @@ namespace acacia::solver_detail {
           forward_k_bounded_safety_aut_detail&&) = delete;
 
     private:
-      static const char* result_name (forward_result_status status) {
-        switch (status) {
-          case forward_result_status::win_k: return "WIN_K";
-          case forward_result_status::lose_k: return "LOSE_K";
-          case forward_result_status::resource_limit: return "RESOURCE_LIMIT";
-        }
-        return "UNKNOWN";
-      }
-
       static const char* resource_reason (forward_resource_limit reason) {
         switch (reason) {
           case forward_resource_limit::env_nodes:

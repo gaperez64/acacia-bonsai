@@ -13,6 +13,7 @@ int main () {
   constexpr std::array names {
       std::pair {game_backend::backward, std::string_view {"backward"}},
       std::pair {game_backend::forward, std::string_view {"forward"}},
+      std::pair {game_backend::spot_guarded, std::string_view {"spot-guarded"}},
   };
   for (const auto& [backend, name] : names) {
     const auto parsed = acacia::parse_game_backend (name);
@@ -32,12 +33,14 @@ int main () {
 
   const auto parsed = parse_portfolio_arms (
       "real:any:backward,real:small:forward,unreal:formula:forward,"
-      "unreal:automaton:forward");
+      "unreal:automaton:forward,real:any:spot-guarded,unreal:formula:spot-guarded");
   const std::vector<portfolio_arm> expected {
       {false, spot::postprocessor::Any, UNREAL_X_FORMULA, game_backend::backward},
       {false, spot::postprocessor::Small, UNREAL_X_FORMULA, game_backend::forward},
       {true, ACACIA_TRANSLATION_PREF, UNREAL_X_FORMULA, game_backend::forward},
       {true, ACACIA_TRANSLATION_PREF, UNREAL_X_AUTOMATON, game_backend::forward},
+      {false, spot::postprocessor::Any, UNREAL_X_FORMULA, game_backend::spot_guarded},
+      {true, ACACIA_TRANSLATION_PREF, UNREAL_X_FORMULA, game_backend::spot_guarded},
   };
   if (parsed.error != portfolio_arm_parse_error::none or parsed.arms != expected) {
     std::cerr << "valid portfolio did not parse in order\n";

@@ -91,6 +91,8 @@ option('acacia_local_certificate', type: 'boolean', value: false,
 # backend choice, and a shipped configuration has to be able to say so.
 option('acacia_default_arms', type: 'string', value: '',
        description: 'Default portfolio in --arms syntax; empty uses the historical default')
+option('acacia_spot_guarded_backend', type: 'boolean', value: false,
+       description: 'Compile the explicitly selected Spot guarded-input safety-game backend')
 option('acacia_forward_safety_solver', type: 'boolean', value: false,
        description: 'Use the on-the-fly forward safety-game solver instead of the backward antichain fixed point')
 option('acacia_enable_equivariant_solver', type: 'boolean', value: true,

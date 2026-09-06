@@ -3,6 +3,7 @@ set -euo pipefail
 
 binary=$1
 forward_enabled=$2
+guarded_enabled=$3
 
 run() {
     local wanted_status=$1
@@ -59,7 +60,7 @@ check_conflict --arms unreal:formula:backward --unreal-translation-pref small
 check_conflict --unreal-translation-pref small --arms unreal:formula:backward
 
 output=$(run 3 "${common[@]}" --arms real:small:sideways)
-[[ $output == *'invalid backend sideways'* && $output == *'backward or forward'* ]]
+[[ $output == *'invalid backend sideways'* && $output == *'backward, forward or spot-guarded'* ]]
 
 output=$(run 3 "${common[@]}" --arms sideways:small:forward)
 [[ $output == *'invalid polarity sideways'* && $output == *'real or unreal'* ]]
@@ -101,4 +102,23 @@ else
     output=$(run 3 --arms real:small:forward)
     [[ $output == *'built without the forward safety solver'* ]]
     [[ $output == *'acacia_forward_safety_solver=true'* ]]
+fi
+
+if [[ $guarded_enabled == true ]]; then
+    output=$(run 0 -f 'G(i <-> X(o))' -i i -o o --spot-fast off -v \
+        --arms real:small:spot-guarded)
+    [[ $output == *'[real=small,backend=spot-guarded] '* ]]
+    [[ $output == *'spot-guarded K='* ]]
+    grep -qx REALIZABLE <<<"$output"
+    output=$(run 1 -f 'G(i)' -i i -o o -v --arms unreal:formula:spot-guarded)
+    [[ $output == *'backend=spot-guarded'* ]]
+    grep -qx UNREALIZABLE <<<"$output"
+else
+    for selection in '--real-backend spot-guarded' '--unreal-backend spot-guarded' \
+                     '--arms real:small:spot-guarded' '--arms unreal:formula:spot-guarded'; do
+        read -r option value <<<"$selection"
+        output=$(run 3 "$option" "$value")
+        [[ $output == *'built without the Spot guarded backend'* ]]
+        [[ $output == *'acacia_spot_guarded_backend=true'* ]]
+    done
 fi

@@ -212,6 +212,8 @@ if get_option ('acacia_local_certificate')
 else
   build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 0)
 endif
+build_conf.set ('ACACIA_SPOT_GUARDED_BACKEND',
+                get_option ('acacia_spot_guarded_backend') ? 1 : 0)
 if get_option ('acacia_forward_safety_solver')
   build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER', 1)
 else

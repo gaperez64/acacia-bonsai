@@ -1,4 +1,5 @@
 #include "solver/spot_letter_oracle.hh"
+#include "tiny_spot_game.hh"
 #include "research/explicit_forward_game.hh"
 #include "utils/verbose.hh"
 
@@ -56,44 +57,9 @@ namespace {
     visit (0);
     return result;
   }
-  std::vector<bdd> letters (const WorkerAlphabet& alphabet, Variables which) {
-    const bdd vars = which == Variables::all ? alphabet.ap_vars
-                     : which == Variables::inputs ? alphabet.inputs : alphabet.outputs;
-    std::vector<bdd> result {bddtrue};  // zero APs still have ONE total valuation
-    for (const int var : alphabet.order) {
-      if (bdd_exist (vars, bdd_ithvar (var)) == vars) continue;
-      std::vector<bdd> next;
-      for (const auto& prefix : result) {
-        next.push_back (prefix & bdd_nithvar (var));
-        next.push_back (prefix & bdd_ithvar (var));
-      }
-      result = std::move (next);
-    }
-    return result;
-  }
-  spot::twa_graph_ptr graph (unsigned n, bool frozen) {
-    auto result = spot::make_twa_graph (spot::make_bdd_dict ());
-    result->set_buchi ();
-    result->prop_state_acc (frozen);
-    result->new_states (n);
-    result->set_init_state (0);
-    return result;
-  }
-  WorkerAlphabet alphabet (const spot::twa_graph_ptr& graph, bool input, bool output) {
-    WorkerAlphabet result {bddtrue, bddtrue, bddtrue, {}};
-    if (input) {
-      const int var = graph->register_ap ("u");
-      result.inputs = bdd_ithvar (var);
-      result.order.push_back (var);
-    }
-    if (output) {
-      const int var = graph->register_ap ("c");
-      result.outputs = bdd_ithvar (var);
-      result.order.push_back (var);
-    }
-    result.ap_vars = graph->ap_vars ();
-    return result;
-  }
+  using acacia::testing::spot_games::letters;
+  using acacia::testing::spot_games::graph;
+  using acacia::testing::spot_games::alphabet;
   bool finish_rows (SpotRows& rows) {
     for (StateId p = 0; p < rows.state_count (); ++p)
       if (rows.row (p).status != Status::complete) return false;
@@ -447,23 +413,11 @@ namespace {
     std::mt19937 rng {seed};
     for (unsigned game = 0; game < 5000; ++game) {
       const bool frozen = game % 2 == 0;
-      const unsigned n = 1 + rng () % 3;
-      const std::int32_t K = 1 + rng () % 2;
-      const std::size_t bool_threshold = frozen ? rng () % (n + 1) : n;
-      auto g = graph (n, frozen);
-      const auto ap = alphabet (g, game % 4 < 2, game % 3 != 0);
-      const auto valuations = letters (ap, Variables::all);
-      for (unsigned p = 0; p < n; ++p) {
-        const bool source_accepting = rng () % 2;
-        const unsigned count = rng () % (2 * n + 1);
-        for (unsigned i = 0; i < count; ++i) {
-          bdd guard = bddfalse;
-          for (const auto& letter : valuations) if (rng () % 2) guard |= letter;
-          const bool accepting = frozen ? source_accepting : rng () % 2;
-          g->new_edge (p, rng () % n, guard,
-                       accepting ? spot::acc_cond::mark_t {0} : spot::acc_cond::mark_t {});
-        }
-      }
+      const auto fixture = acacia::testing::spot_games::random_game (rng, game, frozen);
+      const auto& g = fixture.graph;
+      const auto& ap = fixture.alphabet;
+      const auto K = fixture.K;
+      const auto bool_threshold = fixture.bool_threshold;
       auto rows = frozen ? std::make_shared<SpotRows> (FrozenAcacia {g, bool_threshold})
                          : std::make_shared<SpotRows> (GenericTransitionBuchi {g});
       if (not finish_rows (*rows)) { ++game_unknowns; continue; }

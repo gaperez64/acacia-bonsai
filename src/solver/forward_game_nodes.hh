@@ -3,10 +3,40 @@
 #include "configuration.hh"
 
 #include <cstddef>
+#include <deque>
 #include <optional>
 #include <vector>
 
 namespace acacia::solver_detail {
+
+  enum class forward_result_status { win_k, lose_k, resource_limit, unknown };
+
+  inline const char* forward_result_name (forward_result_status status) {
+    switch (status) {
+      case forward_result_status::win_k: return "WIN_K";
+      case forward_result_status::lose_k: return "LOSE_K";
+      case forward_result_status::resource_limit: return "RESOURCE_LIMIT";
+      case forward_result_status::unknown: return "UNKNOWN";
+    }
+    return "UNKNOWN";
+  }
+
+  enum class losing_reason {
+    env_unsafe,
+    env_subsumed,
+    env_losing_input,
+    ctrl_all_losing,
+  };
+
+  struct losing_proof {
+      std::size_t id;
+      losing_reason reason;
+      std::size_t node;
+      std::size_t witness = 0;
+      std::vector<std::size_t> dependencies;
+  };
+
+  template <typename Event> using forward_work_queue = std::deque<Event>;
 
   enum class node_status { open, expanded, losing };
 

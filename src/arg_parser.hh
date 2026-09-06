@@ -41,6 +41,7 @@ struct arg_parse_result {
     std::optional<std::vector<UNREAL_X_T>> unreal_strategies = std::nullopt;
     std::optional<std::vector<portfolio_arm>> arms = std::nullopt;
     TRANSLATION_PREF_T primary_translation_pref = ACACIA_TRANSLATION_PREF;
+    // Compiling spot-guarded never changes the default; select it explicitly.
 #if ACACIA_FORWARD_SAFETY_SOLVER
     acacia::game_backend real_backend = acacia::game_backend::forward;
     acacia::game_backend unreal_backend = acacia::game_backend::forward;
@@ -130,13 +131,13 @@ void show_help (const char* program_name) {
       << "                    set the unrealizability translator preference to\n"
       << "                    [small|any] without also selecting a realizability\n"
       << "                    check; mutually exclusive with -r\n"
-      << "  --real-backend VAL       use the [backward|forward] game backend for real arms\n"
-      << "  --unreal-backend VAL     use the [backward|forward] game backend for unreal arms\n"
+      << "  --real-backend VAL       use the [backward|forward|spot-guarded] game backend for real arms\n"
+      << "  --unreal-backend VAL     use the [backward|forward|spot-guarded] game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
       << "                    polarity:transform:backend, where polarity is real or\n"
       << "                    unreal; real transforms are small or any; unreal\n"
       << "                    transforms are formula or automaton; backends are\n"
-      << "                    backward or forward; unreal arms use the build's\n"
+      << "                    backward, forward or spot-guarded; unreal arms use the build's\n"
       << "                    primary translation preference; mutually exclusive\n"
       << "                    with -r, -u, and the per-polarity options above\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
@@ -280,10 +281,17 @@ void process_arg_game_backend (const std::string& arg, acacia::game_backend& bac
              "-Dacacia_forward_safety_solver=true.\n",
              option);
 #endif
+#if !ACACIA_SPOT_GUARDED_BACKEND
+    if (backend == acacia::game_backend::spot_guarded)
+      error (EXIT_CODE_ERROR,
+             "Error: --%s requests spot-guarded, but this binary was built without the "
+             "Spot guarded backend (ACACIA_SPOT_GUARDED_BACKEND); configure with "
+             "-Dacacia_spot_guarded_backend=true.\n", option);
+#endif
   }
   else
     error (EXIT_CODE_ERROR,
-           "Error: unexpected value %s for --%s; expected backward or forward.\n",
+           "Error: unexpected value %s for --%s; expected backward, forward or spot-guarded.\n",
            arg.c_str (), option);
 }
 
@@ -301,7 +309,7 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       error (EXIT_CODE_ERROR,
              "Error: invalid field count in --arms spec %s; expected "
              "polarity:transform:backend (real|unreal, small|any or "
-             "formula|automaton, backward|forward).\n",
+             "formula|automaton, backward|forward|spot-guarded).\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::polarity:
@@ -322,7 +330,7 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       break;
     case portfolio_arm_parse_error::backend:
       error (EXIT_CODE_ERROR,
-             "Error: invalid backend %s in --arms spec %s; expected backward or forward.\n",
+             "Error: invalid backend %s in --arms spec %s; expected backward, forward or spot-guarded.\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::duplicate:
@@ -338,6 +346,14 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
              "Error: --arms requests the forward backend, but this binary was built "
              "without the forward safety solver (ACACIA_FORWARD_SAFETY_SOLVER); "
              "configure with -Dacacia_forward_safety_solver=true.\n");
+#endif
+#if !ACACIA_SPOT_GUARDED_BACKEND
+  for (const auto& arm : parsed.arms)
+    if (arm.backend == acacia::game_backend::spot_guarded)
+      error (EXIT_CODE_ERROR,
+             "Error: --arms requests spot-guarded, but this binary was built without the "
+             "Spot guarded backend (ACACIA_SPOT_GUARDED_BACKEND); configure with "
+             "-Dacacia_spot_guarded_backend=true.\n");
 #endif
   result.arms = std::move (parsed.arms);
 }

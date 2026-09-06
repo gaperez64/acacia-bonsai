@@ -12,6 +12,9 @@
 #include "solver/realizability_simplify.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
+#if ACACIA_SPOT_GUARDED_BACKEND
+# include "solver/spot_letter_oracle.hh"
+#endif
 #include "solver/symmetry_blocks.hh"
 #include "solver/symmetry.hh"
 #include "solver/syntactic_bypass.hh"
@@ -900,7 +903,7 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
       hint.is_input = not hint.is_input;
   acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
   acacia::diagnostics::set_support_backend (
-      backend == acacia::game_backend::forward ? "forward" : "backward");
+      acacia::game_backend_name (backend));
 #if ACACIA_ENABLE_DIAGNOSTICS
   if (auto* diag = acacia::diagnostics::current ()) {
     diag->translation_pref = translation_pref_name (translation_pref);
@@ -965,6 +968,13 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // We keep a bdd_dict at this level so that we can do synthesis later if
   // needed. We want BDDs for APs to be consistent through subformula/automata.
   spot::bdd_dict_ptr dict = spot::make_bdd_dict ();
+
+#if ACACIA_SPOT_GUARDED_BACKEND
+  // bdd_init installs its own hook. Install ours after manager initialization
+  // and before guarded-worker setup; the parent treats exit 2 as inconclusive.
+  std::optional<acacia::spot_letters::BuddyErrors> guarded_bdd_errors;
+  if (backend == acacia::game_backend::spot_guarded) guarded_bdd_errors.emplace ();
+#endif
 
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.

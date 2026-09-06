@@ -15,6 +15,10 @@
 #if ACACIA_FORWARD_SAFETY_SOLVER
 # include "solver/forward_k_bounded_safety_aut.hh"
 #endif
+#if ACACIA_SPOT_GUARDED_BACKEND
+# include "solver/spot_guarded_forward_safety.hh"
+# include "solver/k_schedule.hh"
+#endif
 #include "solver/k_bounded_safety_aut.hh"
 #include "utils/verbose.hh"
 #include <spot/twaalgos/mealy_machine.hh>
@@ -176,6 +180,52 @@ namespace acacia::solver_detail {
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut, all_inputs,
                                               all_outputs);
     }
+#endif
+
+#if ACACIA_SPOT_GUARDED_BACKEND
+    if (backend == acacia::game_backend::spot_guarded) {
+      // The CLI forces the real backend to backward for synthesis. Internal
+      // callers must do the same: this backend is decision-only in P4.
+      if (do_synthesis) std::abort ();
+      acacia::diagnostics::set_support_backend ("spot-guarded");
+      acacia::diagnostics::set_support_graph (aut);
+      spot_letters::WorkerAlphabet alphabet {aut->ap_vars (), all_inputs, all_outputs, {}};
+      for (const auto& ap : aut->ap ())
+        alphabet.order.push_back (aut->get_dict ()->var_map.at (ap));
+      const spot_rows::FrozenAcacia view {aut, posets::vectors::bool_threshold};
+      // This branch precedes ALL semantic-action-table construction. Each K
+      // owns fresh search, row and oracle instances, including its verification.
+      for (long long k = kmin;;) {
+        acacia::diagnostics::set_support_k (static_cast<int> (k));
+        const auto result = spot_guarded::solve (view, alphabet, static_cast<std::int32_t> (k));
+        verb_do (1, vout << "spot-guarded K=" << k
+                         << " prep_ms=" << result.prep_ms << " solve_ms=" << result.solve_ms
+                         << " verify_ms=" << result.verify_ms
+                         << " ranks=" << result.nodes.size () << " choices=" << result.choices_created
+                         << " status=" << forward_result_name (result.status) << std::endl);
+        if (result.status == forward_result_status::win_k) {
+          acacia::diagnostics::set_final_reason ("spot-guarded-verified-win");
+          return aut;
+        }
+        if (result.status != forward_result_status::lose_k) {
+          acacia::diagnostics::set_final_reason (
+              std::string {"spot-guarded-unknown-"} + spot_letters::unknown_name (result.failure));
+          return std::nullopt;
+        }
+        const auto next = acacia::k_schedule::next (
+            ACACIA_K_SCHEDULE, k, kmin, kmax, kinc,
+            {static_cast<long long> (result.solve_ms), result.proofs.size (), result.expansions, true});
+        if (not next) {
+          acacia::diagnostics::set_final_reason ("spot-guarded-kmax-lose");
+          return std::nullopt;
+        }
+        k = *next;
+      }
+    }
+#else
+    // A guarded-labelled run must never silently execute the backward solver.
+    // The CLI rejects this at parse time; guard internal callers as well.
+    if (backend == acacia::game_backend::spot_guarded) std::abort ();
 #endif
 
     using IOsPrecomputationMaker = IOS_PRECOMPUTER;

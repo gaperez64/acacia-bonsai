@@ -8,12 +8,13 @@ namespace acacia {
 
   // The value names the fixed-point backend that will run, not a preference
   // that another backend may pre-empt.
-  enum class game_backend : unsigned char { backward, forward };
+  enum class game_backend : unsigned char { backward, forward, spot_guarded };
 
   inline const char* game_backend_name (game_backend backend) {
     switch (backend) {
       case game_backend::backward: return "backward";
       case game_backend::forward: return "forward";
+      case game_backend::spot_guarded: return "spot-guarded";
     }
     return "unknown";
   }
@@ -23,6 +24,8 @@ namespace acacia {
       return game_backend::backward;
     if (name == "forward")
       return game_backend::forward;
+    if (name == "spot-guarded")
+      return game_backend::spot_guarded;
     return std::nullopt;
   }
 

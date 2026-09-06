@@ -138,6 +138,18 @@ spot_letter_oracle_test = executable (
 test ('spot-letter-oracle', spot_letter_oracle_test,
       suite : ['unit', 'spot-letter-oracle'])
 
+# Not gated on acacia_spot_guarded_backend: the engine header compiles without
+# it, only the backend dispatch is gated.  CI builds the docker_default presets,
+# none of which set the option, so gating the test here would mean it never ran.
+spot_guarded_forward_safety_test = executable (
+  'spot-guarded-forward-safety-test',
+  'spot_guarded_forward_safety_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-guarded-forward-safety', spot_guarded_forward_safety_test,
+      suite : ['unit', 'spot-guarded'])
+
 transition_payload_test = executable (
   'transition-payload-test',
   'transition_payload_test.cc',
@@ -262,7 +274,8 @@ test ('degenerate-io-cli',
 game_backend_cli = find_program ('check-game-backend-cli.sh')
 test ('game-backend-cli',
       game_backend_cli,
-      args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string ()],
+      args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string (),
+              get_option ('acacia_spot_guarded_backend').to_string ()],
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 
@@ -292,6 +305,7 @@ if get_option ('acacia_default_unreal_x') == 'both'
   default_unreal_children = 2
 endif
 default_check_children = default_real_children + default_unreal_children
+# Compiling spot-guarded leaves this default unchanged, as in arg_parser.hh.
 default_game_backend = 'backward'
 if get_option ('acacia_forward_safety_solver')
   default_game_backend = 'forward'
