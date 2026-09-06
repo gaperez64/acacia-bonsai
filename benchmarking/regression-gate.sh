@@ -426,8 +426,20 @@ set -e
 coverage_losses=$(sed -n 's/^coverage losses: \([0-9][0-9]*\)$/\1/p' \
   "$scratch/landing-bar.out" | tail -1)
 if [[ ${coverage_losses:-0} -gt 0 ]]; then
+  # Name what this build actually is, so the reader does not have to
+  # reconstruct it from a flag list.  A build that predates acacia_preset, or
+  # one assembled by hand, says so -- which is itself the answer to "is this
+  # the configuration the expectations were frozen on?".
+  candidate_preset=$(python3 -c '
+import pathlib
+import sys
+sys.path.insert(0, sys.argv[1])
+from benchlib import build_preset
+print(build_preset(pathlib.Path(sys.argv[2])) or "(unnamed configuration)")
+' "$repo_root/benchmarking" "$build_dir")
   echo
-  echo "regress-expected.tsv's times were frozen on $FROZEN_BASELINE_CONFIG."
+  echo "regress-expected.tsv's times were frozen on $FROZEN_BASELINE_CONFIG;"
+  echo "this build is $candidate_preset."
   echo "Coverage losses against a different configuration are expected, and are not evidence about the change under test;"
   echo "establish those against the same configuration built from the previous revision. Verdict changes are"
   echo "configuration-independent and are evidence. Either kind still fails the gate."
