@@ -1,4 +1,6 @@
+import copy
 import importlib.util
+import json
 import pathlib
 import re
 import sys
@@ -45,6 +47,236 @@ def test_committed_registry_is_valid():
     options, presets = module.load_registry()
 
     module.command_validate(options, presets)
+
+
+def test_every_preset_has_its_own_description_and_role():
+    module = load_module()
+    options, presets = module.load_registry()
+    for name, data in presets["presets"].items():
+        assert isinstance(data["description"], str) and data["description"].strip(), name
+        assert data["description"].splitlines() == [data["description"]], name
+        assert data["role"] in {"shipping", "reference", "sweep", "diagnostic", "legacy"}, name
+        if module.normalize_preset(options, presets, name)["enable_diagnostics"]:
+            assert data["role"] == "diagnostic", name
+
+    assert presets["presets"]["best_decomp_mona"]["role"] == "reference"
+    for group in ("posets_downset_sweep", "local_tuning_default"):
+        for name in presets["groups"][group]:
+            # The plain-vector reference and shipped translation arm also
+            # participate in these comparisons; their primary roles take precedence.
+            if name != "best_decomp_mona" and name not in presets["groups"]["docker_default"]:
+                assert presets["presets"][name]["role"] == "sweep", name
+
+
+@pytest.mark.parametrize("key,value", [
+    ("description", None), ("description", ""), ("description", "  "),
+    ("description", "two\nlines"), ("description", "trailing newline\n"),
+    ("description", 42), ("role", None), ("role", "fastest"), ("role", []),
+])
+def test_validate_requires_valid_metadata_on_each_preset(key, value):
+    module = load_module()
+    options, presets = module.load_registry()
+    name = "best_decomp_rank_bucketed_mona"
+    if value is None:
+        del presets["presets"][name][key]
+    else:
+        presets["presets"][name][key] = value
+    with pytest.raises(SystemExit, match=f"{name}: {key} must be"):
+        module.command_validate(options, presets)
+
+
+def test_metadata_never_changes_resolved_options_or_hashes():
+    module = load_module()
+    options, presets = module.load_registry()
+    without_metadata = copy.deepcopy(presets)
+    for data in without_metadata["presets"].values():
+        del data["description"]
+        del data["role"]
+
+    for name in presets["presets"]:
+        expected = module.normalize_preset(options, without_metadata, name)
+        values = module.normalize_preset(options, presets, name)
+        assert {"description", "role", "inherits"}.isdisjoint(values), name
+        assert values == expected, name
+        assert module.stable_hash(values) == module.stable_hash(expected), name
+        module.validate_preset(options, presets, name)
+
+
+def test_shipping_roles_match_docker_default_exactly():
+    module = load_module()
+    _, presets = module.load_registry()
+    shipping = {name for name, data in presets["presets"].items() if data["role"] == "shipping"}
+    assert shipping == set(presets["groups"]["docker_default"])
+
+
+@pytest.mark.parametrize("promote", [False, True])
+def test_validate_rejects_shipping_role_drift(promote):
+    module = load_module()
+    options, presets = module.load_registry()
+    name = "base" if promote else presets["groups"]["docker_default"][0]
+    presets["presets"][name]["role"] = "shipping" if promote else "reference"
+    with pytest.raises(SystemExit, match="role shipping must match docker_default membership"):
+        module.command_validate(options, presets)
+
+
+def test_naming_lint_accepts_all_grandfathered_names():
+    module = load_module()
+    _, presets = module.load_registry()
+    grandfathered = presets["naming"]["grandfathered"]
+    assert len(grandfathered) == len(set(grandfathered)) == 43
+    assert set(grandfathered) <= set(presets["presets"]) | set(presets["aliases"])
+    # Make the limits deliberately impossible for these names: the exemption
+    # must cover both length and tokens, including the bare name 'best'.
+    presets["presets"] = dict.fromkeys(grandfathered)
+    presets["naming"]["max_length"] = 1
+    presets["naming"]["forbidden_tokens"] += ["base"]
+    module.validate_naming(presets)
+
+
+@pytest.mark.parametrize("name,reason", [
+    ("best_new", "forbidden token"), ("new_best", "forbidden token"),
+    ("new-best-arm", "forbidden token"), ("BEST_new", "forbidden token"),
+    (None, "exceeds max_length"),
+])
+def test_naming_lint_rejects_new_claims_and_long_names(name, reason):
+    module = load_module()
+    options, presets = module.load_registry()
+    if name is None:
+        name = "x" * (presets["naming"]["max_length"] + 1)
+    presets["presets"][name] = {
+        "inherits": "base", "description": "Compare a new configuration.", "role": "sweep",
+    }
+    with pytest.raises(SystemExit, match=reason) as exc:
+        module.command_validate(options, presets)
+    message = str(exc.value)
+    assert "a claim no test can keep honest" in message
+    assert "groups" in message and "docker_default" in message and "repointed" in message
+
+
+def test_naming_lint_accepts_short_new_names_and_complete_tokens():
+    module = load_module()
+    options, presets = module.load_registry()
+    for name in ("forward_probe", "bestow", "x" * presets["naming"]["max_length"]):
+        presets["presets"][name] = {
+            "inherits": "base", "description": "Compare a new configuration.", "role": "sweep",
+        }
+    module.command_validate(options, presets)
+
+
+def test_alias_lookup_uses_the_target_identity_and_hash(capsys):
+    module = load_module()
+    options, presets = module.load_registry()
+    name = "best_decomp_rank_bucketed_mona"
+    presets["aliases"]["old_label"] = name
+    module.command_validate(options, presets)
+    assert module.preset_data(presets, "old_label") == presets["presets"][name]
+    values = module.normalize_preset(options, presets, "old_label")
+    expected = module.normalize_preset(options, presets, name)
+    assert values == expected
+    assert values["_preset"] == name
+    assert module.stable_hash(values) == module.stable_hash(expected)
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert f"alias old_label resolves to {name}" in captured.err
+
+
+@pytest.mark.parametrize("aliases,reason", [
+    ({"base": "best_decomp_mona"}, "alias collides with a real preset name"),
+    ({"old_label": "missing"}, "alias target is not an existing preset"),
+    ({"old_label": "other_alias", "other_alias": "base"}, "alias target is not an existing preset"),
+    ({"old_label": []}, "alias target is not an existing preset"),
+    ({"": "base"}, "alias names must be non-empty strings"),
+    ([], "aliases must be an object"),
+])
+def test_validate_rejects_invalid_alias_tables(aliases, reason):
+    module = load_module()
+    options, presets = module.load_registry()
+    presets["aliases"] = aliases
+    with pytest.raises(SystemExit, match=reason):
+        module.command_validate(options, presets)
+
+
+def test_aliases_work_in_inheritance_and_groups_and_detect_cycles():
+    module = load_module()
+    options, presets = module.load_registry()
+    presets["aliases"]["old_base"] = "base"
+    presets["presets"]["child"] = {
+        "inherits": "old_base", "description": "Compare with registry defaults.", "role": "sweep",
+    }
+    presets["groups"]["alias_group"] = ["old_base", "child"]
+    module.command_validate(options, presets)
+    assert module.normalize_preset(options, presets, "child") == {
+        **module.normalize_preset(options, presets, "base"), "_preset": "child",
+    }
+    presets["presets"]["base"]["inherits"] = "child"
+    with pytest.raises(SystemExit, match="preset inheritance cycle: child -> base -> child"):
+        module.normalize_preset(options, presets, "child")
+
+
+@pytest.mark.parametrize("arguments", [
+    ["show", "old_label"], ["show", "old_label", "--describe"],
+    ["hash", "old_label"], ["meson-args", "old_label"],
+])
+def test_cli_alias_outputs_match_target_and_note_stays_on_stderr(arguments, monkeypatch, capsys):
+    module = load_module()
+    options, presets = module.load_registry()
+    name = "best_decomp_rank_bucketed_mona"
+    presets["aliases"]["old_label"] = name
+    monkeypatch.setattr(module, "load_registry", lambda: (options, presets))
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), *arguments])
+    assert module.main() == 0
+    actual = capsys.readouterr()
+    target_arguments = [name if arg == "old_label" else arg for arg in arguments]
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), *target_arguments])
+    assert module.main() == 0
+    expected = capsys.readouterr()
+    assert actual.out == expected.out
+    assert actual.err == f"note: Acacia preset alias old_label resolves to {name}\n"
+    assert expected.err == ""
+
+
+def test_list_presets_plain_and_long_output(monkeypatch, capsys):
+    module = load_module()
+    _, presets = module.load_registry()
+    names = sorted(presets["presets"])
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), "list-presets"])
+    assert module.main() == 0
+    plain = capsys.readouterr()
+    assert plain.out == "".join(name + "\n" for name in names)
+    assert plain.err == ""
+
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), "list-presets", "--long"])
+    assert module.main() == 0
+    detailed = capsys.readouterr()
+    rows = detailed.out.splitlines()
+    assert len(rows) == len(names)
+    role_columns, description_columns = set(), set()
+    for name, row in zip(names, rows):
+        data = presets["presets"][name]
+        assert row.split(maxsplit=2) == [name, data["role"], data["description"]]
+        role_columns.add(row.index(data["role"], len(name)))
+        description_columns.add(row.index(data["description"]))
+    assert len(role_columns) == len(description_columns) == 1
+    assert detailed.err == ""
+
+
+def test_show_describe_keeps_metadata_outside_the_fingerprint(monkeypatch, capsys):
+    module = load_module()
+    options, presets = module.load_registry()
+    for name, data in presets["presets"].items():
+        monkeypatch.setattr(sys, "argv", [str(SCRIPT), "show", name])
+        assert module.main() == 0
+        plain = capsys.readouterr()
+        values = module.normalize_preset(options, presets, name)
+        assert plain.out == json.dumps(values, sort_keys=True, indent=2) + "\n"
+        assert plain.err == ""
+        monkeypatch.setattr(sys, "argv", [str(SCRIPT), "show", name, "--describe"])
+        assert module.main() == 0
+        detailed = capsys.readouterr()
+        assert json.loads(detailed.out) == {
+            "description": data["description"], "role": data["role"], "options": values,
+        }
+        assert detailed.err == ""
 
 
 def test_every_solver_meson_option_has_a_registry_entry():

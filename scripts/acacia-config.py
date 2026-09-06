@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import re
 import sys
 from typing import Any
 
@@ -14,6 +15,8 @@ from typing import Any
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OPTIONS_PATH = ROOT / "config" / "acacia-options.json"
 PRESETS_PATH = ROOT / "config" / "acacia-presets.json"
+PRESET_METADATA_KEYS = {"description", "role"}
+PRESET_ROLES = {"shipping", "reference", "sweep", "diagnostic", "legacy"}
 
 
 def load_json(path: pathlib.Path) -> dict[str, Any]:
@@ -31,11 +34,20 @@ def defaults(options: dict[str, Any]) -> dict[str, Any]:
     return values
 
 
+def resolve_preset_name(presets: dict[str, Any], name: str) -> str:
+    if name in presets["presets"]:
+        return name
+    target = presets.get("aliases", {}).get(name)
+    if target is None:
+        raise SystemExit(f"unknown Acacia preset: {name}")
+    if not isinstance(target, str) or target not in presets["presets"]:
+        raise SystemExit(f"{name}: alias target is not an existing preset: {target}")
+    print(f"note: Acacia preset alias {name} resolves to {target}", file=sys.stderr)
+    return target
+
+
 def preset_data(presets: dict[str, Any], name: str) -> dict[str, Any]:
-    try:
-        return presets["presets"][name]
-    except KeyError as exc:
-        raise SystemExit(f"unknown Acacia preset: {name}") from exc
+    return presets["presets"][resolve_preset_name(presets, name)]
 
 
 def tool_data(presets: dict[str, Any], name: str) -> dict[str, Any]:
@@ -47,6 +59,7 @@ def tool_data(presets: dict[str, Any], name: str) -> dict[str, Any]:
 
 def normalize_preset(options: dict[str, Any], presets: dict[str, Any], name: str,
                      stack: tuple[str, ...] = ()) -> dict[str, Any]:
+    name = resolve_preset_name(presets, name)
     if name in stack:
         raise SystemExit("preset inheritance cycle: " + " -> ".join(stack + (name,)))
 
@@ -57,7 +70,7 @@ def normalize_preset(options: dict[str, Any], presets: dict[str, Any], name: str
         values.update(normalize_preset(options, presets, parent, stack + (name,)))
 
     for key, value in data.items():
-        if key != "inherits":
+        if key != "inherits" and key not in PRESET_METADATA_KEYS:
             values[key] = value
 
     values["_preset"] = name
@@ -83,6 +96,67 @@ def validate_preset(options: dict[str, Any], presets: dict[str, Any], name: str)
 
     if values["actioner"] == "no_ios_precomputation" and values["ios_precomputer"] != "delegate":
         raise SystemExit(f"{name}: no_ios_precomputation requires delegate ios_precomputer")
+
+
+def validate_preset_metadata(presets: dict[str, Any], name: str) -> None:
+    data = presets["presets"][name]
+    description = data.get("description")
+    if (not isinstance(description, str) or not description.strip()
+            or description.splitlines() != [description]):
+        raise SystemExit(f"{name}: description must be a non-empty single line")
+    role = data.get("role")
+    if not isinstance(role, str) or role not in PRESET_ROLES:
+        raise SystemExit(f"{name}: role must be one of {', '.join(sorted(PRESET_ROLES))}")
+
+
+def validate_naming(presets: dict[str, Any]) -> None:
+    naming = presets.get("naming", {})
+    if not isinstance(naming, dict):
+        raise SystemExit("naming must be an object")
+    max_length = naming.get("max_length")
+    if type(max_length) is not int or max_length < 1:
+        raise SystemExit("naming.max_length must be a positive integer")
+    for key in ("forbidden_tokens", "grandfathered"):
+        entries = naming.get(key)
+        if not isinstance(entries, list) or not all(
+            isinstance(entry, str) and entry for entry in entries
+        ):
+            raise SystemExit(f"naming.{key} must be a list of non-empty strings")
+
+    grandfathered = set(naming["grandfathered"])
+    forbidden = {token.lower() for token in naming["forbidden_tokens"]}
+    for name in presets["presets"]:
+        if name in grandfathered:
+            continue
+        # Tokens are case-insensitive words separated by punctuation (including
+        # underscores and hyphens); an unrelated word such as 'bestow' is fine.
+        tokens = set(re.findall(r"[a-z0-9]+", name.lower()))
+        reasons = []
+        if len(name) > max_length:
+            reasons.append(f"length {len(name)} exceeds max_length {max_length}")
+        if tokens & forbidden:
+            reasons.append("forbidden token(s): " + ", ".join(sorted(tokens & forbidden)))
+        if reasons:
+            raise SystemExit(
+                f"{name}: invalid new preset name ({'; '.join(reasons)}). "
+                "Keep identifiers short; describe mechanisms and purpose in metadata. "
+                "A superlative in an identifier is a claim no test can keep honest; "
+                "groups (such as docker_default) are where 'what we currently ship' "
+                "belongs, because a group can be repointed."
+            )
+
+
+def validate_aliases(presets: dict[str, Any]) -> None:
+    aliases = presets.get("aliases", {})
+    if not isinstance(aliases, dict):
+        raise SystemExit("aliases must be an object")
+    for alias, target in aliases.items():
+        if not isinstance(alias, str) or not alias:
+            raise SystemExit("alias names must be non-empty strings")
+        if alias in presets["presets"]:
+            raise SystemExit(f"{alias}: alias collides with a real preset name")
+        if not isinstance(target, str) or target not in presets["presets"]:
+            raise SystemExit(f"{alias}: alias target is not an existing preset: {target}")
 
 
 def validate_tool(presets: dict[str, Any], name: str) -> None:
@@ -223,14 +297,24 @@ def validate_constants(options: dict[str, Any]) -> None:
 
 def command_validate(options: dict[str, Any], presets: dict[str, Any]) -> None:
     validate_constants(options)
+    validate_naming(presets)
+    validate_aliases(presets)
     for name in presets["presets"]:
+        validate_preset_metadata(presets, name)
         validate_preset(options, presets, name)
     for name in presets.get("tool_baselines", {}):
         validate_tool(presets, name)
     for group_name, group in presets.get("groups", {}).items():
         for name in group:
-            if name not in presets["presets"]:
+            if name not in presets["presets"] and name not in presets.get("aliases", {}):
                 raise SystemExit(f"{group_name}: unknown preset {name}")
+    shipping = {
+        resolve_preset_name(presets, name)
+        for name in presets.get("groups", {}).get("docker_default", [])
+    }
+    for name, data in presets["presets"].items():
+        if (data["role"] == "shipping") != (name in shipping):
+            raise SystemExit(f"{name}: role shipping must match docker_default membership")
 
 
 def tool_env_lines(data: dict[str, Any]) -> list[str]:
@@ -241,12 +325,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("validate")
-    sub.add_parser("list-presets")
+    list_p = sub.add_parser("list-presets")
+    list_p.add_argument("--long", action="store_true", help="include role and description")
     sub.add_parser("list-tools")
     group_p = sub.add_parser("list-group")
     group_p.add_argument("group")
     show_p = sub.add_parser("show")
     show_p.add_argument("preset")
+    show_p.add_argument("--describe", action="store_true",
+                        help="wrap options with sibling role and description metadata")
     show_tool_p = sub.add_parser("show-tool")
     show_tool_p.add_argument("tool")
     tool_desc_p = sub.add_parser("tool-description")
@@ -270,8 +357,19 @@ def main() -> int:
         command_validate(options, presets)
         return 0
     if args.cmd == "list-presets":
-        for name in sorted(presets["presets"]):
-            print(name)
+        names = sorted(presets["presets"])
+        if args.long:
+            for name in names:
+                validate_preset_metadata(presets, name)
+            name_width = max(map(len, names), default=0)
+            role_width = max((len(presets["presets"][name]["role"]) for name in names),
+                             default=0)
+            for name in names:
+                data = presets["presets"][name]
+                print(f"{name:<{name_width}}  {data['role']:<{role_width}}  {data['description']}")
+        else:
+            for name in names:
+                print(name)
         return 0
     if args.cmd == "list-tools":
         for name in sorted(presets.get("tool_baselines", {})):
@@ -301,9 +399,15 @@ def main() -> int:
                 print(line)
         return 0
 
-    validate_preset(options, presets, args.preset)
-    values = normalize_preset(options, presets, args.preset)
+    name = resolve_preset_name(presets, args.preset)
+    validate_preset(options, presets, name)
+    values = normalize_preset(options, presets, name)
     if args.cmd == "show":
+        if args.describe:
+            validate_preset_metadata(presets, name)
+            data = preset_data(presets, name)
+            values = {"description": data["description"], "role": data["role"],
+                      "options": values}
         print(json.dumps(values, sort_keys=True, indent=2))
     elif args.cmd == "hash":
         print(stable_hash(values))
