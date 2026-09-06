@@ -3,22 +3,45 @@ set -euo pipefail
 
 usage() {
   echo "usage: $0 [--baseline-bin BIN] BUILD-DIR" >&2
+  echo "--baseline-bin or REGRESSION_BASELINE_BIN must name the same configuration built from the previous revision" >&2
   exit 2
 }
 
 baseline_bin="${REGRESSION_BASELINE_BIN:-}"
 if [[ ${1:-} == --baseline-bin ]]; then
   [[ $# -ge 3 ]] || usage
-  baseline_bin=$(realpath "$2")
+  baseline_bin="$2"
   shift 2
 fi
 [[ $# -eq 1 ]] || usage
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 build_dir=$(realpath "$1")
-baseline_bin=${baseline_bin:-$repo_root/build_best_decomp_mona/src/acacia-bonsai}
+# See "Frozen G1 baselines" in benchmarking/README.md's Gates section.
+readonly FROZEN_BASELINE_CONFIG=best_decomp_rank_bucketed_mona_eq_min_blocks_2
 expected="$repo_root/tests/suites/benchmarks/regress-expected.tsv"
 testlog="$build_dir/meson-logs/testlog.json"
+
+if [[ -z "$baseline_bin" ]]; then
+  echo "GATE FAIL: baseline binary required; name it with --baseline-bin BIN or REGRESSION_BASELINE_BIN."
+  echo "Use the SAME configuration built from the previous revision."
+  echo "The old default silently answered a different question."
+  exit 1
+fi
+if [[ ! -f "$baseline_bin" || ! -x "$baseline_bin" ]]; then
+  echo "GATE FAIL: baseline binary $baseline_bin is missing or not executable"
+  exit 1
+fi
+baseline_bin=$(realpath "$baseline_bin")
+if [[ ! -x "$build_dir/src/acacia-bonsai" ]]; then
+  echo "GATE FAIL: $build_dir/src/acacia-bonsai is not executable"
+  exit 1
+fi
+if [[ ! -f "$expected" ]]; then
+  echo "GATE FAIL: missing $expected"
+  exit 1
+fi
+
 scratch=$(mktemp -d /tmp/acacia-regression-gate.XXXXXX)
 scope_guard_outer=0
 scope_snapshot="$scratch/scope-snapshot"
@@ -51,15 +74,6 @@ if [[ $outer_cgroup == 1 || $outer_cgroup == true || $outer_cgroup == yes || $ou
 else
   benchmark_cgroup=strict
   test_cgroup=1
-fi
-
-if [[ ! -x "$build_dir/src/acacia-bonsai" ]]; then
-  echo "GATE FAIL: $build_dir/src/acacia-bonsai is not executable"
-  exit 1
-fi
-if [[ ! -f "$expected" ]]; then
-  echo "GATE FAIL: missing $expected"
-  exit 1
 fi
 
 # Resolve the corpus before Meson runs, not after.  Meson bakes
@@ -393,6 +407,7 @@ if [[ -s "$scratch/tlsf-corpus-dir" ]]; then
   )
 fi
 
+set +e
 python3 "$repo_root/benchmarking/landing-bar.py" \
   "$scratch/baseline.csv" "$scratch/candidate.csv" \
   --timeout 17 \
@@ -402,4 +417,19 @@ python3 "$repo_root/benchmarking/landing-bar.py" \
   --source-map "syntcomp25=$repo_root/tests/suites/benchmarks/syntcomp25/sources.tsv" \
   "${landing_tlsf_args[@]}" \
   --memory-max 8G \
-  --memory-swap-max 0
+  --memory-swap-max 0 2>&1 | tee "$scratch/landing-bar.out"
+landing_status=${PIPESTATUS[0]}
+set -e
+
+# Only worth saying when there is something to attribute.  On a clean run this
+# would be three lines of caveat about failures that did not happen.
+coverage_losses=$(sed -n 's/^coverage losses: \([0-9][0-9]*\)$/\1/p' \
+  "$scratch/landing-bar.out" | tail -1)
+if [[ ${coverage_losses:-0} -gt 0 ]]; then
+  echo
+  echo "regress-expected.tsv's times were frozen on $FROZEN_BASELINE_CONFIG."
+  echo "Coverage losses against a different configuration are expected, and are not evidence about the change under test;"
+  echo "establish those against the same configuration built from the previous revision. Verdict changes are"
+  echo "configuration-independent and are evidence. Either kind still fails the gate."
+fi
+exit "$landing_status"
