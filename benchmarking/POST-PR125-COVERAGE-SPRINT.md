@@ -1463,3 +1463,94 @@ is the same discipline, applied one step earlier — before the code rather than
 **Decision: STOP.** The profile is recorded so the next attempt starts from
 measurement rather than from the 22,261:1 ratio, which does not mean what it appears
 to mean.
+
+---
+
+## Stage 5b — choosing the four shipped configurations
+
+`docker_default` is the set of configurations precompiled into the image;
+`scripts/acacia-bonsai.sh <config>` lets a user pick one. They are alternatives, not
+a race. The four it named were all backward, all pre-sprint, and none had a
+full-corpus SYNTCOMP26 number — so nothing yet justified replacing them.
+
+Six configurations were measured over all 1,524, staged caps, plus two already
+measured this sprint. **Zero verdict conflicts across all eight.**
+
+| configuration | decisive / 1524 |
+|---|---:|
+| `mix4_contra` — four-arm portfolio + P1's contradiction checker | **1063** |
+| four-arm portfolio | 1052 |
+| `mix4_bboxtree` — four-arm portfolio on the bboxtree downset | 1041 |
+| `best_decomp_rank_bucketed_semantic_mona` (the B reference) | 976 |
+| `best_decomp_rank_bucketed_mona` — **incumbent** | 966 |
+| `best_decomp_mona` — **incumbent** | 965 |
+| `best_decomp_bboxtree_mona` — **incumbent** | 964 |
+| `best_decomp_mona_any` — **incumbent** | 961 |
+
+### P1's checker only pays in company
+
+`ACACIA_FORCED_OUTPUT_CONTRADICTION` shipped **defaulted off**: its own landing gate,
+run against the backward configuration in isolation, did not justify flipping it. On
+top of the four-arm portfolio it is worth **+11** (1063 against 1052). A mechanism
+can be unjustifiable alone and earn its place in combination, and a package-at-a-time
+gate cannot see that — this is the one case in the sprint where the per-package
+discipline would have thrown away a real gain had the closing campaign not re-tested
+it.
+
+The downset structure is worth a comparable amount, not less: the same portfolio on
+bboxtree scores 1041 against rank_bucketed's 1052, so **−11**. What dominates both is
+the portfolio itself, at +86 over the best incumbent.
+
+### The incumbents are near-duplicates, confirmed at scale
+
+Their four-way union is **974** against a best single of **966** — four shipped
+configurations buying **eight** instances. The August panel put that figure at one;
+the full corpus makes it eight, which is larger but still tiny against the 97 that
+changing the portfolio buys.
+
+### What four to ship, and the honest shape of the answer
+
+Greedy marginal analysis over all eight, starting from the best single:
+
+```
+mix4_contra alone                          1063
+  + a backward configuration                +18
+  + a third                                  +2
+  + a fourth                                 +1
+                                           ————
+best achievable four-configuration union   1084
+```
+
+**Eighteen of the twenty-one instances that three extra configurations buy come from
+the second one.** The third and fourth buy three between them. Anyone weighing build
+time and image size against coverage should know that shipping two would capture
+1081 of the 1084.
+
+Pure union maximisation picks
+`inc_bboxtree + inc_mona_any + mix4_bboxtree + mix4_contra` (1084). That is rejected:
+`acacia-bonsai.sh` runs **one** configuration the user selects, so the individual
+strength of each slot matters, and that set fills two slots with the weakest
+configurations measured (961 and 964) purely because they happen to add one more at
+the margin than the strongest backward configuration does.
+
+The set shipped instead trades one instance of union for a far better second choice:
+
+| slot | configuration | individual | why |
+|---|---|---:|---|
+| 1 | `best_four_arm_contradiction` | **1063** | best measured; the default |
+| 2 | `best_decomp_rank_bucketed_semantic_mona` | 976 | strongest backward configuration, +17 marginal against `inc_mona_any`'s +18 |
+| 3 | `best_four_arm_bboxtree` | 1041 | the portfolio on a different downset — a different failure mode, not a weaker version of slot 1 |
+| 4 | `best_decomp_mona_any` | 961 | the incumbent that contributes most at the margin, and the only pre-sprint shape retained |
+
+Union 1083 against the theoretical 1084. The one instance is spent on making slot 2
+worth choosing: a user who picks the backward alternative gets the configuration that
+answers 976 rather than 961.
+
+### The arm set had to become shippable
+
+The winning configuration is an **arm mix**, not a compile-time backend choice, and
+until now a portfolio could only be stated as a `--arms` command line — so it could
+not *be* a preset. `acacia_default_arms` closes that: a build declares its portfolio,
+`--arms` still overrides it, and an empty value keeps the historical portfolio, so
+every existing build is unaffected. Verified: the shipping build forks its four arms
+with no flags, `build_s2ref_B` still forks three, and the unit suite is clean on both.

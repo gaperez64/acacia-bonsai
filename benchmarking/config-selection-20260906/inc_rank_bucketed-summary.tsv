@@ -1,0 +1,1525 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_60	failure_kind_at_60
+inc_rank_bucketed	01.ltl	1	REALIZABLE	0.19860495091415942	false	
+inc_rank_bucketed	02.ltl	1	REALIZABLE	0.05233380082063377	false	
+inc_rank_bucketed	03.ltl	5	REALIZABLE	3.918398201931268	false	
+inc_rank_bucketed	05.ltl				true	TIMEOUT
+inc_rank_bucketed	06.ltl				true	TIMEOUT
+inc_rank_bucketed	07.ltl				true	TIMEOUT
+inc_rank_bucketed	08.ltl				true	TIMEOUT
+inc_rank_bucketed	09.ltl	17	REALIZABLE	11.147773497970775	false	REALIZABLE
+inc_rank_bucketed	10.ltl	5	REALIZABLE	4.380522259976715	false	
+inc_rank_bucketed	11.ltl	5	REALIZABLE	4.537306350888684	false	
+inc_rank_bucketed	12.ltl	17	REALIZABLE	6.965868334053084	false	REALIZABLE
+inc_rank_bucketed	13.ltl	17	REALIZABLE	6.91875755507499	false	REALIZABLE
+inc_rank_bucketed	ActionConverter.ltl	1	REALIZABLE	0.01621741894632578	false	
+inc_rank_bucketed	AlarmMin_efe2feaf.ltl	1	REALIZABLE	0.015531448880210519	false	
+inc_rank_bucketed	Alarm_06e9cad4.ltl	5	REALIZABLE	3.799821875989437	false	
+inc_rank_bucketed	Alarm_2d1010f8.ltl	1	REALIZABLE	0.015803894959390163	false	
+inc_rank_bucketed	Alarm_68c86764.ltl	5	REALIZABLE	4.137070663971826	false	
+inc_rank_bucketed	Alarm_70523fbe.ltl	5	REALIZABLE	2.255579191027209	false	
+inc_rank_bucketed	Alarm_88c5c1c3.ltl	1	REALIZABLE	0.016357959946617484	false	
+inc_rank_bucketed	Alarm_9cac58d3.ltl	1	REALIZABLE	0.02362991194240749	false	
+inc_rank_bucketed	Alarm_a5f99bc6.ltl				true	TIMEOUT
+inc_rank_bucketed	Alarm_f2774e0b.ltl	5	REALIZABLE	2.276866161962971	false	
+inc_rank_bucketed	AllHeating_d6376bf9.ltl	1	REALIZABLE	0.02002656413242221	false	
+inc_rank_bucketed	AllLights_06e9cad4.ltl				true	TIMEOUT
+inc_rank_bucketed	AllLights_2c5b09da.ltl				true	TIMEOUT
+inc_rank_bucketed	AllLights_63831f8c.ltl				true	TIMEOUT
+inc_rank_bucketed	AllLights_aeb1d897.ltl				true	TIMEOUT
+inc_rank_bucketed	AllLights_b209ff21.ltl				true	TIMEOUT
+inc_rank_bucketed	AllLights_d6c5ac79.ltl				true	TIMEOUT
+inc_rank_bucketed	AllShades_66f450a4.ltl				true	TIMEOUT
+inc_rank_bucketed	Assumptions_a50cadd7.ltl	1	UNREALIZABLE	0.016826519975438714	false	
+inc_rank_bucketed	Automata.ltl	1	REALIZABLE	0.045248274924233556	false	
+inc_rank_bucketed	Automata16S.ltl				true	TIMEOUT
+inc_rank_bucketed	Automata32S.ltl				true	TIMEOUT
+inc_rank_bucketed	Button.ltl	1	REALIZABLE	0.01579963695257902	false	
+inc_rank_bucketed	CheckAlarmBroken1_1a2942e3.ltl	1	REALIZABLE	0.022422495065256953	false	
+inc_rank_bucketed	CheckAlarm_6bea956e.ltl	1	UNREALIZABLE	0.027485305909067392	false	
+inc_rank_bucketed	CheckCoffeMachineBroken1_a5f99bc6.ltl	1	REALIZABLE	0.03632565401494503	false	
+inc_rank_bucketed	CheckCoffeMachine_3461125b.ltl	1	UNREALIZABLE	0.03537269402295351	false	
+inc_rank_bucketed	CheckCoffeMachine_f3987563.ltl	1	UNREALIZABLE	0.035107169998809695	false	
+inc_rank_bucketed	CheckDoor_c2b9e44d.ltl	1	UNREALIZABLE	0.030595120042562485	false	
+inc_rank_bucketed	CheckHeating_2418b67e.ltl	1	UNREALIZABLE	0.04181713401339948	false	
+inc_rank_bucketed	CheckHeating_3461125b.ltl	1	UNREALIZABLE	0.037012123968452215	false	
+inc_rank_bucketed	CheckLight_007df645.ltl	1	UNREALIZABLE	0.03746030502952635	false	
+inc_rank_bucketed	CheckLight_aeb1d897.ltl	1	UNREALIZABLE	0.03476100601255894	false	
+inc_rank_bucketed	CheckRoom_06e9cad4.ltl	1	UNREALIZABLE	0.03329512500204146	false	
+inc_rank_bucketed	CheckRoom_2c5b09da.ltl	1	UNREALIZABLE	0.034400528063997626	false	
+inc_rank_bucketed	CheckRoom_3916ec59.ltl	1	UNREALIZABLE	0.031487007858231664	false	
+inc_rank_bucketed	CheckRoom_70523fbe.ltl	1	UNREALIZABLE	0.032663376070559025	false	
+inc_rank_bucketed	CheckShades_1a2942e3.ltl	1	UNREALIZABLE	0.050318088149651885	false	
+inc_rank_bucketed	CheckShades_3461125b.ltl	1	UNREALIZABLE	0.03561931103467941	false	
+inc_rank_bucketed	CheckShades_4d4ca5c4.ltl	1	UNREALIZABLE	0.03547717211768031	false	
+inc_rank_bucketed	CheckShades_aeb1d897.ltl	1	UNREALIZABLE	0.036770095117390156	false	
+inc_rank_bucketed	CheckTime_3916ec59.ltl	1	UNREALIZABLE	0.034658658085390925	false	
+inc_rank_bucketed	CheckTime_4b5e6eaa.ltl	1	UNREALIZABLE	0.035413400968536735	false	
+inc_rank_bucketed	CheckTime_54e1f7d2.ltl	1	UNREALIZABLE	0.03938592900522053	false	
+inc_rank_bucketed	CheckTimer_54e1f7d2.ltl	1	UNREALIZABLE	0.03833974711596966	false	
+inc_rank_bucketed	CheckTimer_fa8592c8.ltl	1	UNREALIZABLE	0.034179754089564085	false	
+inc_rank_bucketed	CheckWarnlightBroken1_70523fbe.ltl	1	REALIZABLE	0.0352387479506433	false	
+inc_rank_bucketed	CheckWarnlight_1cf58fc1.ltl	1	UNREALIZABLE	0.035793101880699396	false	
+inc_rank_bucketed	CheckWarnlight_4b5a2bad.ltl	1	UNREALIZABLE	0.03331437986344099	false	
+inc_rank_bucketed	CheckWarnlight_54e1f7d2.ltl	1	UNREALIZABLE	0.03080076794140041	false	
+inc_rank_bucketed	CheckWarnlight_6bea956e.ltl	1	UNREALIZABLE	0.028831714997068048	false	
+inc_rank_bucketed	CheckWindows_54e1f7d2.ltl	1	UNREALIZABLE	0.03393169608898461	false	
+inc_rank_bucketed	Cockpitboard.ltl	1	REALIZABLE	0.03604500088840723	false	
+inc_rank_bucketed	Cockpitboard_efe2feaf.ltl	1	REALIZABLE	0.03423881297931075	false	
+inc_rank_bucketed	CoffeMachine_974f4a68.ltl	1	REALIZABLE	0.03851037006825209	false	
+inc_rank_bucketed	CoffeMachine_a50cadd7.ltl	1	UNREALIZABLE	0.031890633050352335	false	
+inc_rank_bucketed	CoffeeMin_88f351a6.ltl	1	REALIZABLE	0.038099079160019755	false	
+inc_rank_bucketed	Coffee_06e9cad4.ltl	1	REALIZABLE	0.05696783191524446	false	
+inc_rank_bucketed	Coffee_235467da.ltl	1	REALIZABLE	0.029125850182026625	false	
+inc_rank_bucketed	Coffee_2c5b09da.ltl	1	REALIZABLE	0.03846117202192545	false	
+inc_rank_bucketed	Coffee_6479ef9a.ltl	1	REALIZABLE	0.041307511972263455	false	
+inc_rank_bucketed	Coffee_d6376bf9.ltl	1	REALIZABLE	0.032504180911928415	false	
+inc_rank_bucketed	Coffee_efe2feaf.ltl	1	REALIZABLE	0.038676733151078224	false	
+inc_rank_bucketed	Coffee_f1477cc5.ltl	1	UNREALIZABLE	0.04674573498778045	false	
+inc_rank_bucketed	Core_4b5a2bad.ltl	1	UNREALIZABLE	0.06978290202096105	false	
+inc_rank_bucketed	Core_66f450a4.ltl	1	UNREALIZABLE	0.017566255060955882	false	
+inc_rank_bucketed	Core_fa4d4ce3.ltl	1	UNREALIZABLE	0.03664541803300381	false	
+inc_rank_bucketed	Core_solved_974f4a68.ltl	1	REALIZABLE	0.08730583684518933	false	
+inc_rank_bucketed	Demo1_06e9cad4.ltl				true	TIMEOUT
+inc_rank_bucketed	Demo1_2c5b09da.ltl				true	TIMEOUT
+inc_rank_bucketed	Demo1_63831f8c.ltl				true	TIMEOUT
+inc_rank_bucketed	Demo1_c2b9e44d.ltl				true	TIMEOUT
+inc_rank_bucketed	Demo1_d65ed84e.ltl				true	TIMEOUT
+inc_rank_bucketed	DeviceBehaviorChec_fa8592c8.ltl	1	UNREALIZABLE	0.020423864014446735	false	
+inc_rank_bucketed	Door_2d1010f8.ltl	1	REALIZABLE	0.027294141007587314	false	
+inc_rank_bucketed	EnemeyModule.ltl	1	REALIZABLE	0.01306938799098134	false	
+inc_rank_bucketed	EscalatorBidirectional.ltl	1	REALIZABLE	0.020026541082188487	false	
+inc_rank_bucketed	EscalatorBidirectionalInit.ltl	1	REALIZABLE	0.01739619206637144	false	
+inc_rank_bucketed	EscalatorCounting.ltl	1	REALIZABLE	0.015209363074973226	false	
+inc_rank_bucketed	EscalatorCountingInit.ltl	1	REALIZABLE	0.020846380153670907	false	
+inc_rank_bucketed	EscalatorNonCounting.ltl	1	REALIZABLE	0.014861205127090216	false	
+inc_rank_bucketed	EscalatorNonReactive.ltl	1	REALIZABLE	0.016755906865000725	false	
+inc_rank_bucketed	EscalatorSmart.ltl	1	REALIZABLE	0.0316026050131768	false	
+inc_rank_bucketed	Example1_d6376bf9.ltl	1	REALIZABLE	0.01724297017790377	false	
+inc_rank_bucketed	F-G-contradiction-10.ltl	1	UNREALIZABLE	0.48704317887313664	false	
+inc_rank_bucketed	F-G-contradiction-11.ltl	5	UNREALIZABLE	2.2956350420136005	false	
+inc_rank_bucketed	F-G-contradiction-110.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-111.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-112.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-113.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-114.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-12.ltl	17	UNREALIZABLE	6.918909135041758	false	UNREALIZABLE
+inc_rank_bucketed	F-G-contradiction-13.ltl	17	UNREALIZABLE	12.275615504011512	false	UNREALIZABLE
+inc_rank_bucketed	F-G-contradiction-14.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-15.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-16.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-17.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-18.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-19.ltl				true	TIMEOUT
+inc_rank_bucketed	F-G-contradiction-2-unreal.ltl	1	UNREALIZABLE	0.1944712100084871	false	
+inc_rank_bucketed	FelixSpecFixed2.2.core_fa8592c8.ltl	1	UNREALIZABLE	0.018397390143945813	false	
+inc_rank_bucketed	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT
+inc_rank_bucketed	FelixSpecFixed3.core_b209ff21.ltl	1	UNREALIZABLE	0.2593852288555354	false	
+inc_rank_bucketed	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT
+inc_rank_bucketed	FelixSpecFixed4GuaranteesOnly_88f351a6.ltl	1	UNREALIZABLE	0.021600395906716585	false	
+inc_rank_bucketed	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT
+inc_rank_bucketed	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT
+inc_rank_bucketed	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT
+inc_rank_bucketed	Full_f1477cc5.ltl				true	TIMEOUT
+inc_rank_bucketed	GF-G-contradiction0.ltl	1	UNREALIZABLE	0.2797508928924799	false	
+inc_rank_bucketed	GF-G-contradiction1.ltl	5	UNREALIZABLE	4.331747288117185	false	
+inc_rank_bucketed	GF-G-contradiction2.ltl				true	TIMEOUT
+inc_rank_bucketed	GF-G-contradiction3.ltl				true	TIMEOUT
+inc_rank_bucketed	GF-G-contradiction4.ltl				true	TIMEOUT
+inc_rank_bucketed	GF-G-contradiction5.ltl				true	TIMEOUT
+inc_rank_bucketed	GF-G-contradiction6.ltl				true	TIMEOUT
+inc_rank_bucketed	GF-G-contradiction7.ltl				true	TIMEOUT
+inc_rank_bucketed	Gamelogic.ltl	1	REALIZABLE	0.03639602498151362	false	
+inc_rank_bucketed	GamemodeChooser.ltl	1	REALIZABLE	0.024942080955952406	false	
+inc_rank_bucketed	Gamemodule.ltl	1	REALIZABLE	0.03037170390598476	false	
+inc_rank_bucketed	HeatingMin_d6c5ac79.ltl	1	REALIZABLE	0.036231455858796835	false	
+inc_rank_bucketed	Heating_235467da.ltl	1	REALIZABLE	0.035534226102754474	false	
+inc_rank_bucketed	Heating_974f4a68.ltl	1	REALIZABLE	0.03698825999163091	false	
+inc_rank_bucketed	Heating_b02056d6.ltl	1	REALIZABLE	0.03913712711073458	false	
+inc_rank_bucketed	Heating_b209ff21.ltl	1	REALIZABLE	0.03963108500465751	false	
+inc_rank_bucketed	Increment.ltl	1	REALIZABLE	0.013553620083257556	false	
+inc_rank_bucketed	IntendDemo_42dc4fff.ltl	1	UNREALIZABLE	0.044767586048692465	false	
+inc_rank_bucketed	KitchenTimerV0.ltl	1	REALIZABLE	0.020604240940883756	false	
+inc_rank_bucketed	KitchenTimerV1.ltl	1	REALIZABLE	0.04262341605499387	false	
+inc_rank_bucketed	KitchenTimerV10.ltl	1	REALIZABLE	0.09796086279675364	false	
+inc_rank_bucketed	KitchenTimerV2.ltl	1	REALIZABLE	0.020093085942789912	false	
+inc_rank_bucketed	KitchenTimerV3.ltl	1	REALIZABLE	0.03726836107671261	false	
+inc_rank_bucketed	KitchenTimerV4.ltl	1	REALIZABLE	0.03678251802921295	false	
+inc_rank_bucketed	KitchenTimerV5.ltl	1	REALIZABLE	0.18359491298906505	false	
+inc_rank_bucketed	KitchenTimerV6.ltl	5	REALIZABLE	1.1400244608521461	false	
+inc_rank_bucketed	KitchenTimerV7.ltl	5	REALIZABLE	1.1182639610487968	false	
+inc_rank_bucketed	KitchenTimerV8.ltl	5	REALIZABLE	1.1120389921125025	false	
+inc_rank_bucketed	KitchenTimerV9.ltl				true	TIMEOUT
+inc_rank_bucketed	LampController_974f4a68.ltl	1	REALIZABLE	0.02581614605151117	false	
+inc_rank_bucketed	LedMatrix.ltl				true	TIMEOUT
+inc_rank_bucketed	Light_a50cadd7.ltl	1	UNREALIZABLE	0.019407954066991806	false	
+inc_rank_bucketed	Light_aeb1d897.ltl	1	UNREALIZABLE	0.05863780085928738	false	
+inc_rank_bucketed	Light_d65ed84e.ltl	1	REALIZABLE	0.02198972413316369	false	
+inc_rank_bucketed	Lights2Min_9cbf2546.ltl	1	REALIZABLE	0.03035628912039101	false	
+inc_rank_bucketed	Lights2_06e9cad4.ltl	1	REALIZABLE	0.43302722508087754	false	
+inc_rank_bucketed	Lights2_0f5381e9.ltl	1	REALIZABLE	0.4251021780073643	false	
+inc_rank_bucketed	Lights2_2c5b09da.ltl	1	REALIZABLE	0.0826038708910346	false	
+inc_rank_bucketed	Lights2_9cac58d3.ltl	1	REALIZABLE	0.5397588389459997	false	
+inc_rank_bucketed	Lights2_b02056d6.ltl	1	REALIZABLE	0.5340773540083319	false	
+inc_rank_bucketed	Lights2_f1477cc5.ltl	1	UNREALIZABLE	0.058787766844034195	false	
+inc_rank_bucketed	Lights2_f3987563.ltl	1	REALIZABLE	0.42201479990035295	false	
+inc_rank_bucketed	Lights3Min_6479ef9a.ltl	1	REALIZABLE	0.019481556955724955	false	
+inc_rank_bucketed	Lights3_06e9cad4.ltl	1	REALIZABLE	0.04325539106503129	false	
+inc_rank_bucketed	Lights3_235467da.ltl	1	REALIZABLE	0.04186356579884887	false	
+inc_rank_bucketed	Lights3_2c5b09da.ltl	1	REALIZABLE	0.022179587045684457	false	
+inc_rank_bucketed	Lights3_3916ec59.ltl	1	REALIZABLE	0.046135260025039315	false	
+inc_rank_bucketed	Lights3_6bea956e.ltl	1	REALIZABLE	0.03697151015512645	false	
+inc_rank_bucketed	Lights3_f1477cc5.ltl	1	REALIZABLE	0.04405708587728441	false	
+inc_rank_bucketed	LightsMin_6bea956e.ltl	1	REALIZABLE	0.021792192943394184	false	
+inc_rank_bucketed	LightsTotal_06e9cad4.ltl	5	REALIZABLE	1.1383689299691468	false	
+inc_rank_bucketed	LightsTotal_2c5b09da.ltl	1	UNREALIZABLE	0.1936926399357617	false	
+inc_rank_bucketed	LightsTotal_9cbf2546.ltl	5	REALIZABLE	1.0381149740424007	false	
+inc_rank_bucketed	LightsTotal_d65ed84e.ltl	5	REALIZABLE	1.049682857003063	false	
+inc_rank_bucketed	Lights_06e9cad4.ltl	1	REALIZABLE	0.040573869133368134	false	
+inc_rank_bucketed	Lights_2c5b09da.ltl	1	REALIZABLE	0.019181995885446668	false	
+inc_rank_bucketed	Lights_3461125b.ltl	1	REALIZABLE	0.04851236613467336	false	
+inc_rank_bucketed	Lights_9cac58d3.ltl	1	REALIZABLE	0.04282653681002557	false	
+inc_rank_bucketed	Lights_b0840146.ltl	1	REALIZABLE	0.03813538211397827	false	
+inc_rank_bucketed	Lights_f3987563.ltl	1	REALIZABLE	0.05206044390797615	false	
+inc_rank_bucketed	ModdifiedLedMatrix4X.ltl	1	UNREALIZABLE	0.5733921329956502	false	
+inc_rank_bucketed	ModdifiedLedMatrix5X.ltl	5	REALIZABLE	3.9566530850715935	false	
+inc_rank_bucketed	Morning2Min_6cbc6174.ltl	1	REALIZABLE	0.01664400612935424	false	
+inc_rank_bucketed	Morning2_06e9cad4.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2_1cf58fc1.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2_2c5b09da.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2_407db2cc.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2_4d4ca5c4.ltl	1	REALIZABLE	0.02196581708267331	false	
+inc_rank_bucketed	Morning2_63831f8c.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2_68c86764.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2_9cac58d3.ltl	1	REALIZABLE	0.019667783984914422	false	
+inc_rank_bucketed	Morning2_d65ed84e.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2s_06cf2373.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2s_06e9cad4.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2s_2c5b09da.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2s_42dc4fff.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2s_9cbf2546.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning2s_d6c5ac79.ltl				true	TIMEOUT
+inc_rank_bucketed	MorningMin_d6c5ac79.ltl	1	REALIZABLE	0.16071005002595484	false	
+inc_rank_bucketed	Morning_14a3b3a2.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning_4b5e6eaa.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning_88c5c1c3.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning_9cac58d3.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning_c92eb242.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning_f1477cc5.ltl				true	TIMEOUT
+inc_rank_bucketed	Morning_f2774e0b.ltl				true	TIMEOUT
+inc_rank_bucketed	MusicAppFeedback.ltl	1	REALIZABLE	0.01670208596624434	false	
+inc_rank_bucketed	MusicAppMotivating.ltl	1	REALIZABLE	0.021633113035932183	false	
+inc_rank_bucketed	MusicAppSimple.ltl	1	REALIZABLE	0.032725904835388064	false	
+inc_rank_bucketed	OneCounter.ltl	5	REALIZABLE	2.6875736149959266	false	
+inc_rank_bucketed	OneCounterGui.ltl	1	UNREALIZABLE	0.02885782695375383	false	
+inc_rank_bucketed	OneCounterGuiA1.ltl	1	UNREALIZABLE	0.04781291401013732	false	
+inc_rank_bucketed	OneCounterGuiA2.ltl	1	UNREALIZABLE	0.04124694783240557	false	
+inc_rank_bucketed	OneCounterGuiA3.ltl	1	UNREALIZABLE	0.056621951051056385	false	
+inc_rank_bucketed	OneCounterGuiA4.ltl	1	UNREALIZABLE	0.06036923499777913	false	
+inc_rank_bucketed	OneCounterGuiA5.ltl	1	UNREALIZABLE	0.20844996208325028	false	
+inc_rank_bucketed	OneCounterGuiA6.ltl	1	UNREALIZABLE	0.6221502940170467	false	
+inc_rank_bucketed	OneCounterGuiA7.ltl	5	UNREALIZABLE	1.4664538451470435	false	
+inc_rank_bucketed	OneCounterGuiA8.ltl	17	UNREALIZABLE	5.498669584048912	false	UNREALIZABLE
+inc_rank_bucketed	OneCounterInRange.ltl	1	UNREALIZABLE	0.027060662861913443	false	
+inc_rank_bucketed	OneCounterInRangeA1.ltl	1	UNREALIZABLE	0.03153391182422638	false	
+inc_rank_bucketed	OneCounterInRangeA2.ltl	1	UNREALIZABLE	0.03854756080545485	false	
+inc_rank_bucketed	OneCounterInRangeA3.ltl	1	REALIZABLE	0.045232313917949796	false	
+inc_rank_bucketed	PlugController_fa4d4ce3.ltl	1	REALIZABLE	0.042438003001734614	false	
+inc_rank_bucketed	Radarboard.ltl	1	REALIZABLE	0.029253229964524508	false	
+inc_rank_bucketed	RegManager.ltl	1	REALIZABLE	0.03081901092082262	false	
+inc_rank_bucketed	Room_a50cadd7.ltl	1	UNREALIZABLE	0.03194620506837964	false	
+inc_rank_bucketed	RotationCalculator.ltl	1	REALIZABLE	0.034458765061572194	false	
+inc_rank_bucketed	SPI.ltl	1	REALIZABLE	0.6878896639682353	false	
+inc_rank_bucketed	SPIPureNext.ltl				true	TIMEOUT
+inc_rank_bucketed	SPIReadClk.ltl	1	REALIZABLE	0.02325453795492649	false	
+inc_rank_bucketed	SPIReadManag.ltl	1	REALIZABLE	0.7381148210261017	false	
+inc_rank_bucketed	SPIReadSdi.ltl	1	REALIZABLE	0.01877975999377668	false	
+inc_rank_bucketed	SPIWriteClk.ltl	1	REALIZABLE	0.015686212107539177	false	
+inc_rank_bucketed	SPIWriteManag.ltl	1	REALIZABLE	0.18398776999674737	false	
+inc_rank_bucketed	SPIWriteSdi.ltl	1	REALIZABLE	0.018106379080563784	false	
+inc_rank_bucketed	Scoreboard.ltl	1	REALIZABLE	0.022687047952786088	false	
+inc_rank_bucketed	Sensor.ltl	1	REALIZABLE	0.30551896104589105	false	
+inc_rank_bucketed	SensorInit.ltl	1	REALIZABLE	0.1480672680772841	false	
+inc_rank_bucketed	SensorPart.ltl	1	REALIZABLE	0.0374256509821862	false	
+inc_rank_bucketed	SensorRegister.ltl	1	REALIZABLE	0.018293457804247737	false	
+inc_rank_bucketed	SensorSelector.ltl	1	REALIZABLE	0.03304839599877596	false	
+inc_rank_bucketed	SensorSubmodulChooser.ltl	1	REALIZABLE	0.07946026395075023	false	
+inc_rank_bucketed	Shades2Min_63831f8c.ltl	1	REALIZABLE	0.016097370069473982	false	
+inc_rank_bucketed	Shades2_235467da.ltl	1	REALIZABLE	0.032496483996510506	false	
+inc_rank_bucketed	Shades2_42dc4fff.ltl	1	REALIZABLE	0.04401815216988325	false	
+inc_rank_bucketed	Shades2_70523fbe.ltl	1	REALIZABLE	0.039687639800831676	false	
+inc_rank_bucketed	Shades2_a5f99bc6.ltl	1	REALIZABLE	0.0444384238217026	false	
+inc_rank_bucketed	ShadesMin_aeb1d897.ltl	1	REALIZABLE	0.03487566811963916	false	
+inc_rank_bucketed	Shades_6479ef9a.ltl	1	REALIZABLE	0.041021479992195964	false	
+inc_rank_bucketed	Shades_974f4a68.ltl	1	REALIZABLE	0.05150927696377039	false	
+inc_rank_bucketed	Shades_9cac58d3.ltl	1	REALIZABLE	0.019492740975692868	false	
+inc_rank_bucketed	Shades_a02758ea.ltl	1	REALIZABLE	0.032545014983043075	false	
+inc_rank_bucketed	SingleContoller_d65ed84e.ltl	1	UNREALIZABLE	0.06653191917575896	false	
+inc_rank_bucketed	SliderDefault.ltl	1	REALIZABLE	0.018959019100293517	false	
+inc_rank_bucketed	SliderDelayed.ltl	1	REALIZABLE	0.14962450903840363	false	
+inc_rank_bucketed	SliderScored.ltl	1	REALIZABLE	0.04878877801820636	false	
+inc_rank_bucketed	System_b0840146.ltl	1	UNREALIZABLE	0.0186326140537858	false	
+inc_rank_bucketed	Time_a50cadd7.ltl	1	UNREALIZABLE	0.028164925053715706	false	
+inc_rank_bucketed	Timer_a50cadd7.ltl	1	REALIZABLE	0.03388815396465361	false	
+inc_rank_bucketed	TorcsAccelerating.ltl	1	REALIZABLE	0.03450947301462293	false	
+inc_rank_bucketed	TorcsGearing.ltl	1	REALIZABLE	0.039449098985642195	false	
+inc_rank_bucketed	TorcsSimple.ltl	1	REALIZABLE	0.038122636964544654	false	
+inc_rank_bucketed	TorcsSteeringImproved.ltl	1	REALIZABLE	0.036369724897667766	false	
+inc_rank_bucketed	TorcsSteeringSimple.ltl	1	REALIZABLE	0.03007028205320239	false	
+inc_rank_bucketed	TorcsSteeringSmart.ltl	1	REALIZABLE	0.03659393801353872	false	
+inc_rank_bucketed	TwoCounters.ltl	1	UNREALIZABLE	0.043292368995025754	false	
+inc_rank_bucketed	TwoCounters2.ltl	1	UNREALIZABLE	0.07102307118475437	false	
+inc_rank_bucketed	TwoCounters3.ltl	5	REALIZABLE	1.1318869469687343	false	
+inc_rank_bucketed	TwoCounters4.ltl	1	REALIZABLE	0.03795313602313399	false	
+inc_rank_bucketed	TwoCounters5.ltl	1	UNREALIZABLE	0.1341147250495851	false	
+inc_rank_bucketed	TwoCountersDisButA0.ltl	1	UNREALIZABLE	0.04407065804116428	false	
+inc_rank_bucketed	TwoCountersDisButA1.ltl	1	UNREALIZABLE	0.054822240956127644	false	
+inc_rank_bucketed	TwoCountersDisButA2.ltl	1	UNREALIZABLE	0.08113008178770542	false	
+inc_rank_bucketed	TwoCountersDisButA3.ltl	1	UNREALIZABLE	0.17864636308513582	false	
+inc_rank_bucketed	TwoCountersDisButA4.ltl	1	UNREALIZABLE	0.1756180478259921	false	
+inc_rank_bucketed	TwoCountersDisButA5.ltl	1	UNREALIZABLE	0.29562422703020275	false	
+inc_rank_bucketed	TwoCountersDisButA6.ltl	1	UNREALIZABLE	0.2919895688537508	false	
+inc_rank_bucketed	TwoCountersDisButA7.ltl	1	UNREALIZABLE	0.6276629480998963	false	
+inc_rank_bucketed	TwoCountersDisButA8.ltl	1	UNREALIZABLE	0.6370032660197467	false	
+inc_rank_bucketed	TwoCountersDisButA9.ltl	5	UNREALIZABLE	1.311859703855589	false	
+inc_rank_bucketed	TwoCountersDisButAC.ltl	5	UNREALIZABLE	1.339145085774362	false	
+inc_rank_bucketed	TwoCountersGui.ltl	1	UNREALIZABLE	0.12464106595143676	false	
+inc_rank_bucketed	TwoCountersInRange.ltl	1	UNREALIZABLE	0.05045529711060226	false	
+inc_rank_bucketed	TwoCountersInRangeA1.ltl	1	UNREALIZABLE	0.10841057682409883	false	
+inc_rank_bucketed	TwoCountersInRangeA2.ltl	1	UNREALIZABLE	0.14505704795010388	false	
+inc_rank_bucketed	TwoCountersInRangeA3.ltl	1	UNREALIZABLE	0.15219542803242803	false	
+inc_rank_bucketed	TwoCountersInRangeA4.ltl	1	UNREALIZABLE	0.1544236089102924	false	
+inc_rank_bucketed	TwoCountersInRangeA5.ltl	1	UNREALIZABLE	0.18605806911364198	false	
+inc_rank_bucketed	TwoCountersInRangeM0.ltl	1	UNREALIZABLE	0.24606951093301177	false	
+inc_rank_bucketed	TwoCountersInRangeM1.ltl	1	UNREALIZABLE	0.24746738094836473	false	
+inc_rank_bucketed	TwoCountersInRangeM2.ltl	1	UNREALIZABLE	0.2207184301223606	false	
+inc_rank_bucketed	TwoCountersInRangeM3.ltl	1	UNREALIZABLE	0.24093197705224156	false	
+inc_rank_bucketed	TwoCountersInRangeM4.ltl	1	UNREALIZABLE	0.17738080699928105	false	
+inc_rank_bucketed	TwoCountersRefined.ltl	1	UNREALIZABLE	0.04208545689471066	false	
+inc_rank_bucketed	TwoCountersRefinedRefined.ltl	1	REALIZABLE	0.037864635000005364	false	
+inc_rank_bucketed	UnderapproxDemo2.ltl	1	UNREALIZABLE	0.03165622102096677	false	
+inc_rank_bucketed	UnderapproxStrengthenedDemo.ltl	1	REALIZABLE	0.030609342036768794	false	
+inc_rank_bucketed	Warnlight_2d1010f8.ltl	1	REALIZABLE	0.04313026601448655	false	
+inc_rank_bucketed	Warnlight_a50cadd7.ltl	1	UNREALIZABLE	0.03621729509904981	false	
+inc_rank_bucketed	Window2Min_88c5c1c3.ltl	1	REALIZABLE	0.040741232223808765	false	
+inc_rank_bucketed	Window2_54e1f7d2.ltl	1	REALIZABLE	0.05210854997858405	false	
+inc_rank_bucketed	Window2_6479ef9a.ltl	1	REALIZABLE	0.03310856502503157	false	
+inc_rank_bucketed	Window2_9cac58d3.ltl	1	REALIZABLE	0.02487370907329023	false	
+inc_rank_bucketed	Window2_aeb1d897.ltl	1	REALIZABLE	0.05483035906217992	false	
+inc_rank_bucketed	Window2_f1477cc5.ltl	1	UNREALIZABLE	0.016145337838679552	false	
+inc_rank_bucketed	WindowMin_a5f99bc6.ltl	1	REALIZABLE	0.01771778194233775	false	
+inc_rank_bucketed	Window_235467da.ltl	1	REALIZABLE	0.03954578400589526	false	
+inc_rank_bucketed	Window_42dc4fff.ltl	1	REALIZABLE	0.03325866488739848	false	
+inc_rank_bucketed	Window_54e1f7d2.ltl	1	REALIZABLE	0.039245876017957926	false	
+inc_rank_bucketed	Zoo0.ltl	1	REALIZABLE	0.030753170140087605	false	
+inc_rank_bucketed	Zoo10.ltl	1	REALIZABLE	0.040331396041437984	false	
+inc_rank_bucketed	Zoo5.ltl	1	REALIZABLE	0.039872832130640745	false	
+inc_rank_bucketed	abcg_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.03242976707406342	false	
+inc_rank_bucketed	abcg_arbiter_pb_2_pe_.ltl	5	REALIZABLE	1.601190421031788	false	
+inc_rank_bucketed	abcg_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_case_study_pb_2_pe_.ltl	17	REALIZABLE	12.900748271960765	false	REALIZABLE
+inc_rank_bucketed	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.021092037903144956	false	
+inc_rank_bucketed	amba_decomposed_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.05590492091141641	false	
+inc_rank_bucketed	amba_decomposed_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.11133330594748259	false	
+inc_rank_bucketed	amba_decomposed_arbiter_pb_5_pe_.ltl	5	REALIZABLE	1.504197817062959	false	
+inc_rank_bucketed	amba_decomposed_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_decode.ltl	1	REALIZABLE	0.03147619403898716	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_10_pe_.ltl	1	REALIZABLE	0.046176068019121885	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_11_pe_.ltl	1	REALIZABLE	0.03989360807463527	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_12_pe_.ltl	1	REALIZABLE	0.04812288796529174	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_13_pe_.ltl	1	REALIZABLE	0.06426934082992375	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_14_pe_.ltl	1	REALIZABLE	0.12878942000679672	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_15_pe_.ltl	1	REALIZABLE	0.273333485936746	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_16_pe_.ltl	1	REALIZABLE	0.776840111007914	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_encode_pb_2_pe_.ltl	1	REALIZABLE	0.01990506495349109	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_3_pe_.ltl	1	REALIZABLE	0.023996470030397177	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_4_pe_.ltl	1	REALIZABLE	0.03811358497478068	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_5_pe_.ltl	1	REALIZABLE	0.04237079410813749	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_6_pe_.ltl	1	REALIZABLE	0.04065400315448642	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_7_pe_.ltl	1	REALIZABLE	0.03399011609144509	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_8_pe_.ltl	1	REALIZABLE	0.03140027984045446	false	
+inc_rank_bucketed	amba_decomposed_encode_pb_9_pe_.ltl	1	REALIZABLE	0.04204746289178729	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_10_pe_.ltl	1	REALIZABLE	0.43609537510201335	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_11_pe_.ltl	5	REALIZABLE	1.4653033290524036	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	6.7277955550234765	false	REALIZABLE
+inc_rank_bucketed	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_lock_pb_2_pe_.ltl	1	REALIZABLE	0.019155105110257864	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_decomposed_lock_pb_3_pe_.ltl	1	REALIZABLE	0.02570016891695559	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_4_pe_.ltl	1	REALIZABLE	0.03967324085533619	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_5_pe_.ltl	1	REALIZABLE	0.04030965408310294	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_6_pe_.ltl	1	REALIZABLE	0.03523800382390618	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_7_pe_.ltl	1	REALIZABLE	0.044157314812764525	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_8_pe_.ltl	1	REALIZABLE	0.04134902311488986	false	
+inc_rank_bucketed	amba_decomposed_lock_pb_9_pe_.ltl	1	REALIZABLE	0.1266714900266379	false	
+inc_rank_bucketed	amba_decomposed_shift.ltl	1	REALIZABLE	0.019420233089476824	false	
+inc_rank_bucketed	amba_decomposed_tburst4.ltl	1	REALIZABLE	0.034889459144324064	false	
+inc_rank_bucketed	amba_decomposed_tincr.ltl	1	REALIZABLE	0.03909488208591938	false	
+inc_rank_bucketed	amba_decomposed_tsingle.ltl	1	REALIZABLE	0.03198582795448601	false	
+inc_rank_bucketed	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_gr_pb_2_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_gr_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	amba_gr_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter-paper-unreal-unreal.ltl	1	UNREALIZABLE	0.44883852591738105	false	
+inc_rank_bucketed	arbiter-with-failure-real.ltl	1	REALIZABLE	0.034266827162355185	false	
+inc_rank_bucketed	arbiter_on_inpchange_pb_1_pe_.ltl	1	REALIZABLE	0.02295569283887744	false	
+inc_rank_bucketed	arbiter_on_inpchange_pb_2_pe_.ltl	1	REALIZABLE	0.03370813000947237	false	
+inc_rank_bucketed	arbiter_on_inpchange_pb_3_pe_.ltl	1	REALIZABLE	0.40385053493082523	false	
+inc_rank_bucketed	arbiter_on_inpchange_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.015319674042984843	false	
+inc_rank_bucketed	arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.01504201302304864	false	
+inc_rank_bucketed	arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.03249740693718195	false	
+inc_rank_bucketed	arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.39646548102609813	false	
+inc_rank_bucketed	arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_buffer_pb_1_pe_.ltl	1	REALIZABLE	0.014885914977639914	false	
+inc_rank_bucketed	arbiter_with_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.023971013957634568	false	
+inc_rank_bucketed	arbiter_with_buffer_pb_3_pe_.ltl	1	REALIZABLE	0.048250115010887384	false	
+inc_rank_bucketed	arbiter_with_buffer_pb_4_pe_.ltl	5	REALIZABLE	1.3937575870659202	false	
+inc_rank_bucketed	arbiter_with_buffer_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_cancel_pb_1_pe_.ltl	1	REALIZABLE	0.01668728399090469	false	
+inc_rank_bucketed	arbiter_with_cancel_pb_2_pe_.ltl	1	REALIZABLE	0.026907020015642047	false	
+inc_rank_bucketed	arbiter_with_cancel_pb_3_pe_.ltl	1	REALIZABLE	0.059531918028369546	false	
+inc_rank_bucketed	arbiter_with_cancel_pb_4_pe_.ltl	1	REALIZABLE	0.9003913579508662	false	
+inc_rank_bucketed	arbiter_with_cancel_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	batch-arbiter-real.ltl	1	REALIZABLE	0.03572863503359258	false	
+inc_rank_bucketed	box-limited-real.ltl	1	REALIZABLE	0.3295193931553513	false	
+inc_rank_bucketed	box-real.ltl				true	TIMEOUT
+inc_rank_bucketed	box0.ltl	1	UNREALIZABLE	0.08300792309455574	false	
+inc_rank_bucketed	box1.ltl	1	UNREALIZABLE	0.07751122303307056	false	
+inc_rank_bucketed	buffer-storage-real.ltl	1	REALIZABLE	0.5779176300857216	false	
+inc_rank_bucketed	chain-4-real.ltl				true	TIMEOUT
+inc_rank_bucketed	chain-5-real.ltl				true	TIMEOUT
+inc_rank_bucketed	chain-60.ltl				true	TIMEOUT
+inc_rank_bucketed	chain-70.ltl				true	TIMEOUT
+inc_rank_bucketed	chain-simple-10-real.ltl	1	REALIZABLE	0.16516442690044641	false	
+inc_rank_bucketed	chain-simple-20-real.ltl	1	REALIZABLE	0.3565179561264813	false	
+inc_rank_bucketed	chain-simple-30-real.ltl	1	REALIZABLE	0.6164138319436461	false	
+inc_rank_bucketed	chain-simple-40-real.ltl	1	REALIZABLE	0.941083526937291	false	
+inc_rank_bucketed	chain-simple-5-real.ltl	1	REALIZABLE	0.08722491818480194	false	
+inc_rank_bucketed	chain-simple-50-real.ltl	5	REALIZABLE	1.2443277388811111	false	
+inc_rank_bucketed	chain-simple-60-real.ltl	5	REALIZABLE	1.5420326490420848	false	
+inc_rank_bucketed	chain-simple-70-real.ltl	5	REALIZABLE	2.0794116167817265	false	
+inc_rank_bucketed	chain-simple-param-70-real.ltl	5	REALIZABLE	1.35435059806332	false	
+inc_rank_bucketed	chomp_pb_2_2_pe_.ltl	1	REALIZABLE	0.07831803313456476	false	
+inc_rank_bucketed	chomp_pb_2_3_pe_.ltl	5	REALIZABLE	3.334523068042472	false	
+inc_rank_bucketed	chomp_pb_2_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_2_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_2_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_3_2_pe_.ltl	5	REALIZABLE	3.0983718170318753	false	
+inc_rank_bucketed	chomp_pb_3_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_3_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_3_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_3_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_4_2_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_4_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_4_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	chomp_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v1_pb_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v1_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v1_pb_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v1_pb_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v1_pb_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v1_pb_3_pe_.ltl	1	REALIZABLE	0.026604234939441085	false	
+inc_rank_bucketed	collector_v1_pb_5_pe_.ltl	1	REALIZABLE	0.04221313283778727	false	
+inc_rank_bucketed	collector_v1_pb_7_pe_.ltl	1	REALIZABLE	0.7012515980750322	false	
+inc_rank_bucketed	collector_v1_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v2_pb_10_pe_.ltl	1	REALIZABLE	0.30562743404880166	false	
+inc_rank_bucketed	collector_v2_pb_11_pe_.ltl	1	REALIZABLE	0.5927456810604781	false	
+inc_rank_bucketed	collector_v2_pb_12_pe_.ltl	5	REALIZABLE	1.4843215229921043	false	
+inc_rank_bucketed	collector_v2_pb_13_pe_.ltl	5	REALIZABLE	3.4247088029515	false	
+inc_rank_bucketed	collector_v2_pb_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v2_pb_27_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v2_pb_3_pe_.ltl	1	REALIZABLE	0.01783647295087576	false	
+inc_rank_bucketed	collector_v2_pb_5_pe_.ltl	1	REALIZABLE	0.02933360985480249	false	
+inc_rank_bucketed	collector_v2_pb_7_pe_.ltl	1	REALIZABLE	0.04699493199586868	false	
+inc_rank_bucketed	collector_v2_pb_9_pe_.ltl	1	REALIZABLE	0.1315543670207262	false	
+inc_rank_bucketed	collector_v3_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v3_pb_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v3_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v3_pb_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v3_pb_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	collector_v3_pb_3_pe_.ltl	1	REALIZABLE	0.019102771999314427	false	
+inc_rank_bucketed	collector_v3_pb_5_pe_.ltl	1	REALIZABLE	0.12385381595231593	false	
+inc_rank_bucketed	collector_v3_pb_7_pe_.ltl	17	REALIZABLE	9.880763611989096	false	REALIZABLE
+inc_rank_bucketed	collector_v3_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	diagonal-real.ltl	1	REALIZABLE	0.08823090698570013	false	
+inc_rank_bucketed	door_locking_problem_d6c5ac79.ltl	1	REALIZABLE	0.02282604482024908	false	
+inc_rank_bucketed	elevator-paper-real.ltl				true	TIMEOUT
+inc_rank_bucketed	evasion-real.ltl				true	TIMEOUT
+inc_rank_bucketed	evasion0.ltl				true	TIMEOUT
+inc_rank_bucketed	example10_pb_1_pe_.ltl	1	REALIZABLE	0.02928348700515926	false	
+inc_rank_bucketed	example10_pb_2_pe_.ltl	1	REALIZABLE	0.020232116105034947	false	
+inc_rank_bucketed	example10a_pb_1_pe_.ltl	1	REALIZABLE	0.020336743909865618	false	
+inc_rank_bucketed	example10a_pb_2_pe_.ltl	1	REALIZABLE	0.02639647899195552	false	
+inc_rank_bucketed	example7_pb_1_pe_.ltl	1	REALIZABLE	0.02835644595324993	false	
+inc_rank_bucketed	example7_pb_2_pe_.ltl	1	REALIZABLE	0.032220687018707395	false	
+inc_rank_bucketed	example7a_pb_1_pe_.ltl	1	REALIZABLE	0.03711160086095333	false	
+inc_rank_bucketed	example7a_pb_2_pe_.ltl	1	REALIZABLE	0.03402204695157707	false	
+inc_rank_bucketed	example8_pb_1_pe_.ltl	1	REALIZABLE	0.01898369798436761	false	
+inc_rank_bucketed	example8_pb_2_pe_.ltl	1	REALIZABLE	0.02460012910887599	false	
+inc_rank_bucketed	example9_pb_1_pe_.ltl	1	REALIZABLE	0.03524188790470362	false	
+inc_rank_bucketed	example9_pb_2_pe_.ltl	1	REALIZABLE	0.035825453931465745	false	
+inc_rank_bucketed	f-real-real.ltl				true	TIMEOUT
+inc_rank_bucketed	f-unreal-unreal.ltl	1	UNREALIZABLE	0.01745395688340068	false	
+inc_rank_bucketed	finding_nemo_pb_1_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	finding_nemo_pb_2_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	follow0.ltl				true	TIMEOUT
+inc_rank_bucketed	follow1.ltl				true	TIMEOUT
+inc_rank_bucketed	follow2.ltl				true	TIMEOUT
+inc_rank_bucketed	follow3.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.06364720198325813	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.11150513403117657	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.2195136488880962	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.40014329901896417	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.9771604749839753	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	2.0382541369181126	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	4.212239393033087	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_18_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.020014509093016386	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_20_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_21_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_22_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_24_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_26_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.019003150053322315	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03350257105194032	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.03824047092348337	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.03472598292864859	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.037958092987537384	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03965128702111542	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.03128548595122993	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.046196138951927423	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.020492222858592868	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.026416110806167126	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.037873154040426016	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.061244395095855	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.2247368828393519	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_6_pe_.ltl	5	UNREALIZABLE	1.4263499178923666	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	9.288412018911913	false	UNREALIZABLE
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03683506604284048	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.06413461081683636	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.19660423998720944	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	2.6399165818002075	false	
+inc_rank_bucketed	full_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal1_pb_6_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.021572110941633582	false	
+inc_rank_bucketed	full_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.06742881401441991	false	
+inc_rank_bucketed	full_arbiter_unreal2_pb_4_pe_.ltl	5	UNREALIZABLE	4.866091100033373	false	
+inc_rank_bucketed	full_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	full_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	g-real-real.ltl				true	TIMEOUT
+inc_rank_bucketed	g-real0.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-1-unreal.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-10.ltl	1	UNREALIZABLE	0.024518038844689727	false	
+inc_rank_bucketed	g-unreal-11.ltl	1	UNREALIZABLE	0.05942882690578699	false	
+inc_rank_bucketed	g-unreal-110.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-111.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-112.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-113.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-114.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-115.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-116.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-117.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-118.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-119.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-12.ltl	1	UNREALIZABLE	0.2722246029879898	false	
+inc_rank_bucketed	g-unreal-120.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-13.ltl	1	UNREALIZABLE	0.6256620669737458	false	
+inc_rank_bucketed	g-unreal-14.ltl	5	UNREALIZABLE	2.1171434270218015	false	
+inc_rank_bucketed	g-unreal-15.ltl	5	UNREALIZABLE	3.8797728260979056	false	
+inc_rank_bucketed	g-unreal-16.ltl	17	UNREALIZABLE	7.17911111889407	false	UNREALIZABLE
+inc_rank_bucketed	g-unreal-17.ltl	17	UNREALIZABLE	8.272855314891785	false	UNREALIZABLE
+inc_rank_bucketed	g-unreal-18.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-19.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-20.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-21.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-30.ltl	1	UNREALIZABLE	0.19732661289162934	false	
+inc_rank_bucketed	g-unreal-31.ltl	5	UNREALIZABLE	3.233503001043573	false	
+inc_rank_bucketed	g-unreal-310.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-311.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-312.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-313.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-314.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-32.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-33.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-34.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-35.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-36.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-37.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-38.ltl				true	TIMEOUT
+inc_rank_bucketed	g-unreal-39.ltl				true	TIMEOUT
+inc_rank_bucketed	generalized_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.0344213570933789	false	
+inc_rank_bucketed	generalized_buffer_pb_3_pe_.ltl	5	REALIZABLE	1.7871821189764887	false	
+inc_rank_bucketed	generalized_buffer_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	generalized_buffer_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	gf-real-real.ltl	1	REALIZABLE	0.03378792689181864	false	
+inc_rank_bucketed	gf-unreal0.ltl	1	UNREALIZABLE	0.022412429098039865	false	
+inc_rank_bucketed	gf-unreal1.ltl	1	UNREALIZABLE	0.027648286195471883	false	
+inc_rank_bucketed	gf-unreal10.ltl	1	UNREALIZABLE	0.03327741287648678	false	
+inc_rank_bucketed	gf-unreal11.ltl	1	UNREALIZABLE	0.03645798400975764	false	
+inc_rank_bucketed	gf-unreal12.ltl	1	UNREALIZABLE	0.037475513061508536	false	
+inc_rank_bucketed	gf-unreal13.ltl	1	UNREALIZABLE	0.03882677899673581	false	
+inc_rank_bucketed	gf-unreal14.ltl	1	UNREALIZABLE	0.04043117607943714	false	
+inc_rank_bucketed	gf-unreal15.ltl	1	UNREALIZABLE	0.04043844388797879	false	
+inc_rank_bucketed	gf-unreal16.ltl	1	UNREALIZABLE	0.04408689704723656	false	
+inc_rank_bucketed	gf-unreal17.ltl	1	UNREALIZABLE	0.04283533897250891	false	
+inc_rank_bucketed	gf-unreal18.ltl	1	UNREALIZABLE	0.04257704992778599	false	
+inc_rank_bucketed	gf-unreal19.ltl	1	UNREALIZABLE	0.045799582032486796	false	
+inc_rank_bucketed	gf-unreal2.ltl	1	UNREALIZABLE	0.032599497120827436	false	
+inc_rank_bucketed	gf-unreal20.ltl	1	UNREALIZABLE	0.04599450109526515	false	
+inc_rank_bucketed	gf-unreal21.ltl	1	UNREALIZABLE	0.04150744108483195	false	
+inc_rank_bucketed	gf-unreal22.ltl	1	UNREALIZABLE	0.029358027037233114	false	
+inc_rank_bucketed	gf-unreal23.ltl	1	UNREALIZABLE	0.05357522889971733	false	
+inc_rank_bucketed	gf-unreal24.ltl	1	UNREALIZABLE	0.0406633869279176	false	
+inc_rank_bucketed	gf-unreal25.ltl	1	UNREALIZABLE	0.03004747093655169	false	
+inc_rank_bucketed	gf-unreal26.ltl	1	UNREALIZABLE	0.03964950982481241	false	
+inc_rank_bucketed	gf-unreal27.ltl	1	UNREALIZABLE	0.0490803390275687	false	
+inc_rank_bucketed	gf-unreal28.ltl	1	UNREALIZABLE	0.04213587078265846	false	
+inc_rank_bucketed	gf-unreal29.ltl	1	UNREALIZABLE	0.03839272493496537	false	
+inc_rank_bucketed	gf-unreal3.ltl	1	UNREALIZABLE	0.020158586092293262	false	
+inc_rank_bucketed	gf-unreal30.ltl	1	UNREALIZABLE	0.05503092403523624	false	
+inc_rank_bucketed	gf-unreal31.ltl	1	UNREALIZABLE	0.03627304290421307	false	
+inc_rank_bucketed	gf-unreal32.ltl	1	UNREALIZABLE	0.047216612147167325	false	
+inc_rank_bucketed	gf-unreal33.ltl	1	UNREALIZABLE	0.04800223303027451	false	
+inc_rank_bucketed	gf-unreal34.ltl	1	UNREALIZABLE	0.04178941482678056	false	
+inc_rank_bucketed	gf-unreal35.ltl	1	UNREALIZABLE	0.033983715111389756	false	
+inc_rank_bucketed	gf-unreal36.ltl	1	UNREALIZABLE	0.0489398380741477	false	
+inc_rank_bucketed	gf-unreal37.ltl	1	UNREALIZABLE	0.047401717165485024	false	
+inc_rank_bucketed	gf-unreal38.ltl	1	UNREALIZABLE	0.04491289984434843	false	
+inc_rank_bucketed	gf-unreal39.ltl	1	UNREALIZABLE	0.029307689983397722	false	
+inc_rank_bucketed	gf-unreal4.ltl	1	UNREALIZABLE	0.023088166024535894	false	
+inc_rank_bucketed	gf-unreal40.ltl	1	UNREALIZABLE	0.05293880798853934	false	
+inc_rank_bucketed	gf-unreal41.ltl	1	UNREALIZABLE	0.05515850195661187	false	
+inc_rank_bucketed	gf-unreal42.ltl	1	UNREALIZABLE	0.040549011901021004	false	
+inc_rank_bucketed	gf-unreal43.ltl	1	UNREALIZABLE	0.04468643805012107	false	
+inc_rank_bucketed	gf-unreal44.ltl	1	UNREALIZABLE	0.03067680704407394	false	
+inc_rank_bucketed	gf-unreal45.ltl	1	UNREALIZABLE	0.044269001111388206	false	
+inc_rank_bucketed	gf-unreal46.ltl	1	UNREALIZABLE	0.03718846198171377	false	
+inc_rank_bucketed	gf-unreal47.ltl	1	UNREALIZABLE	0.03863089997321367	false	
+inc_rank_bucketed	gf-unreal5.ltl	1	UNREALIZABLE	0.02301561296917498	false	
+inc_rank_bucketed	gf-unreal6.ltl	1	UNREALIZABLE	0.025534417014569044	false	
+inc_rank_bucketed	gf-unreal7.ltl	1	UNREALIZABLE	0.03182741696946323	false	
+inc_rank_bucketed	gf-unreal8.ltl	1	UNREALIZABLE	0.04147963784635067	false	
+inc_rank_bucketed	gf-unreal9.ltl	1	UNREALIZABLE	0.03930570394732058	false	
+inc_rank_bucketed	heim-buechi-real.ltl	5	REALIZABLE	2.307075179181993	false	
+inc_rank_bucketed	heim-double-x-real.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x0.ltl	5	UNREALIZABLE	4.1460869091097265	false	
+inc_rank_bucketed	heim-double-x1.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x10.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x11.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x12.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x13.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x2.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x3.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x4.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x5.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x6.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x7.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x8.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-double-x9.ltl				true	TIMEOUT
+inc_rank_bucketed	heim-fig7-unreal.ltl	1	UNREALIZABLE	0.11501534190028906	false	
+inc_rank_bucketed	helipad-contradict0.ltl				true	TIMEOUT
+inc_rank_bucketed	helipad-contradict1.ltl				true	TIMEOUT
+inc_rank_bucketed	helipad-real.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-real.ltl	1	REALIZABLE	0.021284505957737565	false	
+inc_rank_bucketed	infinite-race-u0.ltl	1	UNREALIZABLE	0.025754543021321297	false	
+inc_rank_bucketed	infinite-race-u1.ltl	1	UNREALIZABLE	0.10428779502399266	false	
+inc_rank_bucketed	infinite-race-u10.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u11.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u12.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u13.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u14.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u15.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u16.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u17.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u18.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u19.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u2.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u20.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u21.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u22.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u23.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u24.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u25.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u3.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u4.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u5.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u6.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u7.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u8.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-u9.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-unequal-1-real.ltl	1	REALIZABLE	0.1665751279797405	false	
+inc_rank_bucketed	infinite-race-unequal-10.ltl	1	UNREALIZABLE	0.02935629989951849	false	
+inc_rank_bucketed	infinite-race-unequal-20.ltl	1	UNREALIZABLE	0.04172645206563175	false	
+inc_rank_bucketed	infinite-race-unequal-21.ltl	5	UNREALIZABLE	4.1432568221352994	false	
+inc_rank_bucketed	infinite-race-unequal-22.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-unequal-23.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-unequal-24.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-unequal-25.ltl				true	TIMEOUT
+inc_rank_bucketed	infinite-race-unequal-26.ltl				true	TIMEOUT
+inc_rank_bucketed	items_processing-real.ltl				true	TIMEOUT
+inc_rank_bucketed	jarvis_gideon_a02758ea.ltl	1	UNREALIZABLE	0.023966703098267317	false	
+inc_rank_bucketed	jarvis_philippe_484face8.ltl	1	UNREALIZABLE	0.04110867599956691	false	
+inc_rank_bucketed	lazy_shades_problem_d6376bf9.ltl	1	REALIZABLE	0.03022483899258077	false	
+inc_rank_bucketed	lift_gr1+_pb_2_pe_.ltl	1	REALIZABLE	0.39372709207236767	false	
+inc_rank_bucketed	lift_gr1+_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1_pb_2_pe_.ltl	1	REALIZABLE	0.1469581879209727	false	
+inc_rank_bucketed	lift_gr1_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_pb_2_pe_.ltl	1	REALIZABLE	0.024304404854774475	false	
+inc_rank_bucketed	lift_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_unary_enc_pb_2_pe_.ltl	1	REALIZABLE	0.05172430304810405	false	
+inc_rank_bucketed	lift_unary_enc_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_unary_enc_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_10_pe_.ltl	5	UNREALIZABLE	1.564108364051208	false	
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_2_pe_.ltl	1	REALIZABLE	0.027135244105011225	false	
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.040850609075278044	false	
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.035146525828167796	false	
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.050055034924298525	false	
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.05172344786114991	false	
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.08752336190082133	false	
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.175778245087713	false	
+inc_rank_bucketed	lift_wrong_physics_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.6582527428399771	false	
+inc_rank_bucketed	lilydemo01.ltl	1	UNREALIZABLE	0.022643405944108963	false	
+inc_rank_bucketed	lilydemo02.ltl	1	UNREALIZABLE	0.02620154293254018	false	
+inc_rank_bucketed	lilydemo03.ltl	1	REALIZABLE	0.028913765912875533	false	
+inc_rank_bucketed	lilydemo04.ltl	1	REALIZABLE	0.032113525085151196	false	
+inc_rank_bucketed	lilydemo04_modified.ltl	1	UNREALIZABLE	0.03794176783412695	false	
+inc_rank_bucketed	lilydemo05.ltl	1	REALIZABLE	0.03734058793634176	false	
+inc_rank_bucketed	lilydemo06.ltl	1	REALIZABLE	0.029150999849662185	false	
+inc_rank_bucketed	lilydemo07.ltl	1	REALIZABLE	0.03288759500719607	false	
+inc_rank_bucketed	lilydemo08.ltl	1	REALIZABLE	0.027960208943113685	false	
+inc_rank_bucketed	lilydemo09.ltl	1	REALIZABLE	0.0331640241201967	false	
+inc_rank_bucketed	lilydemo10.ltl	1	REALIZABLE	0.041511693969368935	false	
+inc_rank_bucketed	lilydemo11.ltl	1	UNREALIZABLE	0.038237720960751176	false	
+inc_rank_bucketed	lilydemo12.ltl	1	REALIZABLE	0.029770090011879802	false	
+inc_rank_bucketed	lilydemo13.ltl	1	REALIZABLE	0.034975424874573946	false	
+inc_rank_bucketed	lilydemo14.ltl	1	REALIZABLE	0.03193570696748793	false	
+inc_rank_bucketed	lilydemo15.ltl	1	REALIZABLE	0.0365780231077224	false	
+inc_rank_bucketed	lilydemo16.ltl	1	REALIZABLE	0.03869887185283005	false	
+inc_rank_bucketed	lilydemo17.ltl	1	REALIZABLE	0.03142454498447478	false	
+inc_rank_bucketed	lilydemo18.ltl	1	REALIZABLE	0.031041074078530073	false	
+inc_rank_bucketed	lilydemo19.ltl	1	REALIZABLE	0.041030780877918005	false	
+inc_rank_bucketed	lilydemo20.ltl	1	REALIZABLE	0.032163844211027026	false	
+inc_rank_bucketed	lilydemo21.ltl	1	REALIZABLE	0.04513279884122312	false	
+inc_rank_bucketed	lilydemo22.ltl	1	REALIZABLE	0.02166281407698989	false	
+inc_rank_bucketed	lilydemo23.ltl	1	REALIZABLE	0.03377547301352024	false	
+inc_rank_bucketed	load_balancer_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_pb_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_pb_2_pe_.ltl	1	REALIZABLE	0.023850152967497706	false	
+inc_rank_bucketed	load_balancer_pb_3_pe_.ltl	1	REALIZABLE	0.02250492200255394	false	
+inc_rank_bucketed	load_balancer_pb_4_pe_.ltl	1	REALIZABLE	0.08979244600050151	false	
+inc_rank_bucketed	load_balancer_pb_5_pe_.ltl	1	REALIZABLE	0.9550279709510505	false	
+inc_rank_bucketed	load_balancer_pb_6_pe_.ltl	5	REALIZABLE	2.466291264165193	false	
+inc_rank_bucketed	load_balancer_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.03702822397463024	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.0664349440485239	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.09501480683684349	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.15890074498020113	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.3192148241214454	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.7821480350103229	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	1.5514421991538256	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.023495218949392438	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.027559699025005102	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.032491718884557486	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.03713469882495701	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.03362989309243858	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.03369163000024855	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03454521298408508	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.02684671594761312	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.034502912778407335	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.15650807390920818	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.3057445748709142	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.6356421099044383	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.025775319896638393	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.025930160889402032	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.02568573202006519	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.03437113598920405	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.026527739129960537	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.03829381987452507	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.03783212695270777	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.052722278982400894	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.08337011490948498	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.04239464714191854	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.03755239397287369	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.03957730904221535	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.06789775309152901	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.2089974768459797	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_4_6_pe_.ltl	5	UNREALIZABLE	1.155927682062611	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	7.408918922999874	false	UNREALIZABLE
+inc_rank_bucketed	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.11666258703917265	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.13690379401668906	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.7020803110208362	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	13.770209000911564	false	UNREALIZABLE
+inc_rank_bucketed	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.3403065879829228	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.4465429720003158	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.7969319310504943	false	
+inc_rank_bucketed	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal2_pb_2_pe_.ltl	1	REALIZABLE	0.02327532903291285	false	
+inc_rank_bucketed	load_balancer_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.04134436300955713	false	
+inc_rank_bucketed	load_balancer_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.1538066070061177	false	
+inc_rank_bucketed	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	11.63753844005987	false	UNREALIZABLE
+inc_rank_bucketed	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba01.ltl	1	REALIZABLE	0.026688304031267762	false	
+inc_rank_bucketed	ltl2dba02.ltl	1	REALIZABLE	0.02540377387776971	false	
+inc_rank_bucketed	ltl2dba03.ltl	1	REALIZABLE	0.025689183967188	false	
+inc_rank_bucketed	ltl2dba04.ltl	1	REALIZABLE	0.03282504389062524	false	
+inc_rank_bucketed	ltl2dba05.ltl	1	REALIZABLE	0.031033969949930906	false	
+inc_rank_bucketed	ltl2dba06.ltl	1	REALIZABLE	0.03396114381030202	false	
+inc_rank_bucketed	ltl2dba07.ltl	1	REALIZABLE	0.03191290516406298	false	
+inc_rank_bucketed	ltl2dba08.ltl	1	REALIZABLE	0.03945835609920323	false	
+inc_rank_bucketed	ltl2dba09.ltl	1	REALIZABLE	0.03389983717352152	false	
+inc_rank_bucketed	ltl2dba10.ltl	1	REALIZABLE	0.036331270821392536	false	
+inc_rank_bucketed	ltl2dba11.ltl	1	REALIZABLE	0.03521469491533935	false	
+inc_rank_bucketed	ltl2dba12.ltl	1	REALIZABLE	0.03724762611091137	false	
+inc_rank_bucketed	ltl2dba13.ltl	1	REALIZABLE	0.029407045105472207	false	
+inc_rank_bucketed	ltl2dba14.ltl	1	REALIZABLE	0.026280940044671297	false	
+inc_rank_bucketed	ltl2dba15.ltl	1	REALIZABLE	0.029091025004163384	false	
+inc_rank_bucketed	ltl2dba16.ltl	1	REALIZABLE	0.029933969024568796	false	
+inc_rank_bucketed	ltl2dba17.ltl	1	REALIZABLE	0.030621015932410955	false	
+inc_rank_bucketed	ltl2dba18.ltl	1	REALIZABLE	0.03153347712941468	false	
+inc_rank_bucketed	ltl2dba19.ltl	1	REALIZABLE	0.031207364983856678	false	
+inc_rank_bucketed	ltl2dba20.ltl	1	REALIZABLE	0.03180087893269956	false	
+inc_rank_bucketed	ltl2dba21.ltl	1	REALIZABLE	0.03434868808835745	false	
+inc_rank_bucketed	ltl2dba22.ltl	1	REALIZABLE	0.02999817905947566	false	
+inc_rank_bucketed	ltl2dba23.ltl	1	REALIZABLE	0.03641077294014394	false	
+inc_rank_bucketed	ltl2dba25.ltl	1	REALIZABLE	0.030452251201495528	false	
+inc_rank_bucketed	ltl2dba26.ltl	1	REALIZABLE	0.03568102209828794	false	
+inc_rank_bucketed	ltl2dba27.ltl	1	UNREALIZABLE	0.040190560976043344	false	
+inc_rank_bucketed	ltl2dba_C2_pb_100_pe_.ltl	1	REALIZABLE	0.03360915300436318	false	
+inc_rank_bucketed	ltl2dba_C2_pb_10_pe_.ltl	1	REALIZABLE	0.0284681289922446	false	
+inc_rank_bucketed	ltl2dba_C2_pb_12_pe_.ltl	1	REALIZABLE	0.03330424404703081	false	
+inc_rank_bucketed	ltl2dba_C2_pb_14_pe_.ltl	1	REALIZABLE	0.02870665700174868	false	
+inc_rank_bucketed	ltl2dba_C2_pb_16_pe_.ltl	1	REALIZABLE	0.030480168061330914	false	
+inc_rank_bucketed	ltl2dba_C2_pb_1_pe_.ltl	1	REALIZABLE	0.02276264294050634	false	
+inc_rank_bucketed	ltl2dba_C2_pb_25_pe_.ltl	1	REALIZABLE	0.022371967090293765	false	
+inc_rank_bucketed	ltl2dba_C2_pb_2_pe_.ltl	1	REALIZABLE	0.030212786979973316	false	
+inc_rank_bucketed	ltl2dba_C2_pb_3_pe_.ltl	1	REALIZABLE	0.03282024385407567	false	
+inc_rank_bucketed	ltl2dba_C2_pb_4_pe_.ltl	1	REALIZABLE	0.028536495054140687	false	
+inc_rank_bucketed	ltl2dba_C2_pb_50_pe_.ltl	1	REALIZABLE	0.034306600922718644	false	
+inc_rank_bucketed	ltl2dba_C2_pb_5_pe_.ltl	1	REALIZABLE	0.03307689493522048	false	
+inc_rank_bucketed	ltl2dba_C2_pb_60_pe_.ltl	1	REALIZABLE	0.03232509805820882	false	
+inc_rank_bucketed	ltl2dba_C2_pb_6_pe_.ltl	1	REALIZABLE	0.03004312701523304	false	
+inc_rank_bucketed	ltl2dba_C2_pb_70_pe_.ltl	1	REALIZABLE	0.03780180518515408	false	
+inc_rank_bucketed	ltl2dba_C2_pb_7_pe_.ltl	1	REALIZABLE	0.03354237088933587	false	
+inc_rank_bucketed	ltl2dba_C2_pb_80_pe_.ltl	1	REALIZABLE	0.035749934846535325	false	
+inc_rank_bucketed	ltl2dba_C2_pb_8_pe_.ltl	1	REALIZABLE	0.03437162796035409	false	
+inc_rank_bucketed	ltl2dba_C2_pb_9_pe_.ltl	1	REALIZABLE	0.030655385926365852	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_10_pe_.ltl	1	UNREALIZABLE	0.1470344930421561	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_11_pe_.ltl	1	UNREALIZABLE	0.28540582209825516	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_12_pe_.ltl	1	UNREALIZABLE	0.612875745864585	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_13_pe_.ltl	5	UNREALIZABLE	1.438262342941016	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_14_pe_.ltl	5	UNREALIZABLE	3.8267890280112624	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_15_pe_.ltl	17	UNREALIZABLE	8.20060830609873	false	UNREALIZABLE
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_2_pe_.ltl	1	UNREALIZABLE	0.02162048197351396	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.0273750729393214	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.031754147028550506	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.02351176692172885	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.0260628629475832	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.02634792309254408	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.043316518887877464	false	
+inc_rank_bucketed	ltl2dba_C2_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.06646625208668411	false	
+inc_rank_bucketed	ltl2dba_E_pb_10_pe_.ltl	1	REALIZABLE	0.018511268077418208	false	
+inc_rank_bucketed	ltl2dba_E_pb_12_pe_.ltl	1	REALIZABLE	0.025790221989154816	false	
+inc_rank_bucketed	ltl2dba_E_pb_14_pe_.ltl	1	REALIZABLE	0.03127912199124694	false	
+inc_rank_bucketed	ltl2dba_E_pb_15_pe_.ltl	1	REALIZABLE	0.03235876886174083	false	
+inc_rank_bucketed	ltl2dba_E_pb_16_pe_.ltl	1	REALIZABLE	0.02772003598511219	false	
+inc_rank_bucketed	ltl2dba_E_pb_1_pe_.ltl	1	REALIZABLE	0.030026253079995513	false	
+inc_rank_bucketed	ltl2dba_E_pb_2_pe_.ltl	1	REALIZABLE	0.03036397695541382	false	
+inc_rank_bucketed	ltl2dba_E_pb_3_pe_.ltl	1	REALIZABLE	0.03178870282135904	false	
+inc_rank_bucketed	ltl2dba_E_pb_4_pe_.ltl	1	REALIZABLE	0.032624598825350404	false	
+inc_rank_bucketed	ltl2dba_E_pb_5_pe_.ltl	1	REALIZABLE	0.03164808009751141	false	
+inc_rank_bucketed	ltl2dba_E_pb_6_pe_.ltl	1	REALIZABLE	0.035155878169462085	false	
+inc_rank_bucketed	ltl2dba_E_pb_7_pe_.ltl	1	REALIZABLE	0.032293230993673205	false	
+inc_rank_bucketed	ltl2dba_E_pb_8_pe_.ltl	1	REALIZABLE	0.035725068068131804	false	
+inc_rank_bucketed	ltl2dba_E_pb_9_pe_.ltl	1	REALIZABLE	0.030166098847985268	false	
+inc_rank_bucketed	ltl2dba_Q_pb_100_pe_.ltl	1	REALIZABLE	0.030909524066373706	false	
+inc_rank_bucketed	ltl2dba_Q_pb_10_pe_.ltl	1	REALIZABLE	0.030043750070035458	false	
+inc_rank_bucketed	ltl2dba_Q_pb_12_pe_.ltl	1	REALIZABLE	0.032280723098665476	false	
+inc_rank_bucketed	ltl2dba_Q_pb_15_pe_.ltl	1	REALIZABLE	0.03886140394024551	false	
+inc_rank_bucketed	ltl2dba_Q_pb_18_pe_.ltl	1	REALIZABLE	0.026749617885798216	false	
+inc_rank_bucketed	ltl2dba_Q_pb_1_pe_.ltl	1	REALIZABLE	0.03234605700708926	false	
+inc_rank_bucketed	ltl2dba_Q_pb_25_pe_.ltl	1	REALIZABLE	0.03673760686069727	false	
+inc_rank_bucketed	ltl2dba_Q_pb_2_pe_.ltl	1	REALIZABLE	0.030396552989259362	false	
+inc_rank_bucketed	ltl2dba_Q_pb_3_pe_.ltl	1	REALIZABLE	0.029965878929942846	false	
+inc_rank_bucketed	ltl2dba_Q_pb_4_pe_.ltl	1	REALIZABLE	0.03125093597918749	false	
+inc_rank_bucketed	ltl2dba_Q_pb_50_pe_.ltl	1	REALIZABLE	0.03165995795279741	false	
+inc_rank_bucketed	ltl2dba_Q_pb_5_pe_.ltl	1	REALIZABLE	0.034570741932839155	false	
+inc_rank_bucketed	ltl2dba_Q_pb_6_pe_.ltl	1	REALIZABLE	0.033049464924260974	false	
+inc_rank_bucketed	ltl2dba_Q_pb_7_pe_.ltl	1	REALIZABLE	0.030885447980836034	false	
+inc_rank_bucketed	ltl2dba_Q_pb_8_pe_.ltl	1	REALIZABLE	0.03570910287089646	false	
+inc_rank_bucketed	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_R_pb_1_pe_.ltl	1	REALIZABLE	0.017494369996711612	false	
+inc_rank_bucketed	ltl2dba_R_pb_2_pe_.ltl	1	UNREALIZABLE	0.010172577109187841	false	
+inc_rank_bucketed	ltl2dba_R_pb_3_pe_.ltl	1	UNREALIZABLE	0.013476486084982753	false	
+inc_rank_bucketed	ltl2dba_R_pb_4_pe_.ltl	1	UNREALIZABLE	0.02525912900455296	false	
+inc_rank_bucketed	ltl2dba_R_pb_5_pe_.ltl	1	UNREALIZABLE	0.12931100209243596	false	
+inc_rank_bucketed	ltl2dba_R_pb_6_pe_.ltl	1	UNREALIZABLE	0.8736266419291496	false	
+inc_rank_bucketed	ltl2dba_R_pb_7_pe_.ltl	17	UNREALIZABLE	11.374012327985838	false	UNREALIZABLE
+inc_rank_bucketed	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_U1_pb_100_pe_.ltl	1	REALIZABLE	0.013774803839623928	false	
+inc_rank_bucketed	ltl2dba_U1_pb_10_pe_.ltl	1	REALIZABLE	0.01368961506523192	false	
+inc_rank_bucketed	ltl2dba_U1_pb_12_pe_.ltl	1	REALIZABLE	0.029658497078344226	false	
+inc_rank_bucketed	ltl2dba_U1_pb_15_pe_.ltl	1	REALIZABLE	0.03796201618388295	false	
+inc_rank_bucketed	ltl2dba_U1_pb_18_pe_.ltl	1	REALIZABLE	0.03319430188275874	false	
+inc_rank_bucketed	ltl2dba_U1_pb_1_pe_.ltl	1	REALIZABLE	0.032834234880283475	false	
+inc_rank_bucketed	ltl2dba_U1_pb_25_pe_.ltl	1	REALIZABLE	0.032622041180729866	false	
+inc_rank_bucketed	ltl2dba_U1_pb_2_pe_.ltl	1	REALIZABLE	0.04088778281584382	false	
+inc_rank_bucketed	ltl2dba_U1_pb_3_pe_.ltl	1	REALIZABLE	0.02680609282106161	false	
+inc_rank_bucketed	ltl2dba_U1_pb_4_pe_.ltl	1	REALIZABLE	0.026312354020774364	false	
+inc_rank_bucketed	ltl2dba_U1_pb_50_pe_.ltl	1	REALIZABLE	0.03468957613222301	false	
+inc_rank_bucketed	ltl2dba_U1_pb_5_pe_.ltl	1	REALIZABLE	0.03311898000538349	false	
+inc_rank_bucketed	ltl2dba_U1_pb_6_pe_.ltl	1	REALIZABLE	0.033774470910429955	false	
+inc_rank_bucketed	ltl2dba_U1_pb_7_pe_.ltl	1	REALIZABLE	0.031805688980966806	false	
+inc_rank_bucketed	ltl2dba_U1_pb_8_pe_.ltl	1	REALIZABLE	0.03189170197583735	false	
+inc_rank_bucketed	ltl2dba_U1_pb_9_pe_.ltl	1	REALIZABLE	0.022372232051566243	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_100_pe_.ltl	1	REALIZABLE	0.0183786959387362	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_10_pe_.ltl	1	REALIZABLE	0.02686325809918344	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_12_pe_.ltl	1	REALIZABLE	0.03041317011229694	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_14_pe_.ltl	1	REALIZABLE	0.028881537960842252	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_16_pe_.ltl	1	REALIZABLE	0.035353266866877675	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_17_pe_.ltl	1	REALIZABLE	0.033599238842725754	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_18_pe_.ltl	1	REALIZABLE	0.03221411118283868	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_1_pe_.ltl	1	REALIZABLE	0.030022063059732318	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_20_pe_.ltl	1	REALIZABLE	0.03928818600252271	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_25_pe_.ltl	1	REALIZABLE	0.030350981978699565	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_2_pe_.ltl	1	REALIZABLE	0.026344920974224806	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_3_pe_.ltl	1	REALIZABLE	0.038834585109725595	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_4_pe_.ltl	1	REALIZABLE	0.036596289137378335	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_50_pe_.ltl	1	REALIZABLE	0.035533683840185404	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_5_pe_.ltl	1	REALIZABLE	0.031596506014466286	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_6_pe_.ltl	1	REALIZABLE	0.030144068878144026	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_7_pe_.ltl	1	REALIZABLE	0.041792988078668714	false	
+inc_rank_bucketed	ltl2dba_alpha_pb_8_pe_.ltl	1	REALIZABLE	0.03659357479773462	false	
+inc_rank_bucketed	ltl2dba_beta_pb_100_pe_.ltl	1	REALIZABLE	0.02976013091392815	false	
+inc_rank_bucketed	ltl2dba_beta_pb_10_pe_.ltl	1	REALIZABLE	0.02810031292028725	false	
+inc_rank_bucketed	ltl2dba_beta_pb_15_pe_.ltl	1	REALIZABLE	0.03053293190896511	false	
+inc_rank_bucketed	ltl2dba_beta_pb_18_pe_.ltl	1	REALIZABLE	0.03197230398654938	false	
+inc_rank_bucketed	ltl2dba_beta_pb_1_pe_.ltl	1	REALIZABLE	0.028485432034358382	false	
+inc_rank_bucketed	ltl2dba_beta_pb_20_pe_.ltl	1	REALIZABLE	0.02972499909810722	false	
+inc_rank_bucketed	ltl2dba_beta_pb_25_pe_.ltl	1	REALIZABLE	0.03144932701252401	false	
+inc_rank_bucketed	ltl2dba_beta_pb_2_pe_.ltl	1	REALIZABLE	0.030420427909120917	false	
+inc_rank_bucketed	ltl2dba_beta_pb_30_pe_.ltl	1	REALIZABLE	0.038313984870910645	false	
+inc_rank_bucketed	ltl2dba_beta_pb_3_pe_.ltl	1	REALIZABLE	0.03371487185359001	false	
+inc_rank_bucketed	ltl2dba_beta_pb_4_pe_.ltl	1	REALIZABLE	0.03427320811897516	false	
+inc_rank_bucketed	ltl2dba_beta_pb_5_pe_.ltl	1	REALIZABLE	0.032482502050697803	false	
+inc_rank_bucketed	ltl2dba_beta_pb_6_pe_.ltl	1	REALIZABLE	0.022692086175084114	false	
+inc_rank_bucketed	ltl2dba_beta_pb_7_pe_.ltl	1	REALIZABLE	0.03137872810475528	false	
+inc_rank_bucketed	ltl2dba_beta_pb_8_pe_.ltl	1	REALIZABLE	0.03319538198411465	false	
+inc_rank_bucketed	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_theta_pb_10_pe_.ltl	5	UNREALIZABLE	2.335319987963885	false	
+inc_rank_bucketed	ltl2dba_theta_pb_12_pe_.ltl	17	UNREALIZABLE	12.483639496844262	false	UNREALIZABLE
+inc_rank_bucketed	ltl2dba_theta_pb_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_theta_pb_1_pe_.ltl	1	UNREALIZABLE	0.01663042581640184	false	
+inc_rank_bucketed	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_theta_pb_2_pe_.ltl	1	UNREALIZABLE	0.021145652048289776	false	
+inc_rank_bucketed	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_theta_pb_3_pe_.ltl	1	UNREALIZABLE	0.02452327706851065	false	
+inc_rank_bucketed	ltl2dba_theta_pb_4_pe_.ltl	1	UNREALIZABLE	0.0365657911170274	false	
+inc_rank_bucketed	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	ltl2dba_theta_pb_5_pe_.ltl	1	UNREALIZABLE	0.05032242997549474	false	
+inc_rank_bucketed	ltl2dba_theta_pb_6_pe_.ltl	1	UNREALIZABLE	0.08325715805403888	false	
+inc_rank_bucketed	ltl2dba_theta_pb_7_pe_.ltl	1	UNREALIZABLE	0.15767248789779842	false	
+inc_rank_bucketed	ltl2dba_theta_pb_8_pe_.ltl	1	UNREALIZABLE	0.35373185109347105	false	
+inc_rank_bucketed	ltl2dpa01.ltl	1	REALIZABLE	0.02431254694238305	false	
+inc_rank_bucketed	ltl2dpa02.ltl	1	REALIZABLE	0.03625297104008496	false	
+inc_rank_bucketed	ltl2dpa03.ltl	1	REALIZABLE	0.0556389600969851	false	
+inc_rank_bucketed	ltl2dpa04.ltl	1	REALIZABLE	0.021434128982946277	false	
+inc_rank_bucketed	ltl2dpa05.ltl	1	REALIZABLE	0.03032745490781963	false	
+inc_rank_bucketed	ltl2dpa06.ltl	1	REALIZABLE	0.028776441933587193	false	
+inc_rank_bucketed	ltl2dpa07.ltl	1	REALIZABLE	0.03217416303232312	false	
+inc_rank_bucketed	ltl2dpa08.ltl	1	REALIZABLE	0.02426856616511941	false	
+inc_rank_bucketed	ltl2dpa09.ltl	1	REALIZABLE	0.03278440912254155	false	
+inc_rank_bucketed	ltl2dpa10.ltl	1	REALIZABLE	0.040808991994708776	false	
+inc_rank_bucketed	ltl2dpa11.ltl	1	REALIZABLE	0.03885237197391689	false	
+inc_rank_bucketed	ltl2dpa12.ltl	1	REALIZABLE	0.04026345000602305	false	
+inc_rank_bucketed	ltl2dpa13.ltl	17	REALIZABLE	4.736960727022961	false	REALIZABLE
+inc_rank_bucketed	ltl2dpa14.ltl	1	REALIZABLE	0.02635196503251791	false	
+inc_rank_bucketed	ltl2dpa15.ltl	1	REALIZABLE	0.029947059927508235	false	
+inc_rank_bucketed	ltl2dpa16.ltl	1	REALIZABLE	0.034386591985821724	false	
+inc_rank_bucketed	ltl2dpa17.ltl	1	REALIZABLE	0.029972003074362874	false	
+inc_rank_bucketed	ltl2dpa18.ltl	1	REALIZABLE	0.0402778519783169	false	
+inc_rank_bucketed	ltl2dpa19.ltl	17	REALIZABLE	15.435541703132913	false	REALIZABLE
+inc_rank_bucketed	ltl2dpa20.ltl	1	REALIZABLE	0.021878809900954366	false	
+inc_rank_bucketed	ltl2dpa22.ltl	1	REALIZABLE	0.137269948143512	false	
+inc_rank_bucketed	ltl2dpa23.ltl	1	REALIZABLE	0.02752361004240811	false	
+inc_rank_bucketed	ltl2dpa24.ltl	1	REALIZABLE	0.030334078008309007	false	
+inc_rank_bucketed	mux_pb_100_pe_.ltl	1	REALIZABLE	0.04302144097164273	false	
+inc_rank_bucketed	mux_pb_10_pe_.ltl	1	REALIZABLE	0.037158523919060826	false	
+inc_rank_bucketed	mux_pb_125_pe_.ltl	1	REALIZABLE	0.042166406055912375	false	
+inc_rank_bucketed	mux_pb_12_pe_.ltl	1	REALIZABLE	0.038699095137417316	false	
+inc_rank_bucketed	mux_pb_132_pe_.ltl	1	REALIZABLE	0.046690962044522166	false	
+inc_rank_bucketed	mux_pb_150_pe_.ltl	1	REALIZABLE	0.04129779594950378	false	
+inc_rank_bucketed	mux_pb_16_pe_.ltl	1	REALIZABLE	0.0311702738981694	false	
+inc_rank_bucketed	mux_pb_175_pe_.ltl	1	REALIZABLE	0.04125984199345112	false	
+inc_rank_bucketed	mux_pb_200_pe_.ltl	1	REALIZABLE	0.04136690404266119	false	
+inc_rank_bucketed	mux_pb_32_pe_.ltl	1	REALIZABLE	0.030938289128243923	false	
+inc_rank_bucketed	mux_pb_64_pe_.ltl	1	REALIZABLE	0.048335551051422954	false	
+inc_rank_bucketed	mux_pb_8_pe_.ltl	1	REALIZABLE	0.030858441023156047	false	
+inc_rank_bucketed	narylatch_pb_10_pe_.ltl	1	REALIZABLE	0.03864086885005236	false	
+inc_rank_bucketed	narylatch_pb_11_pe_.ltl	1	REALIZABLE	0.040636485209688544	false	
+inc_rank_bucketed	narylatch_pb_12_pe_.ltl	1	REALIZABLE	0.036834678845480084	false	
+inc_rank_bucketed	narylatch_pb_16_pe_.ltl	1	REALIZABLE	0.04242156399413943	false	
+inc_rank_bucketed	narylatch_pb_32_pe_.ltl	1	REALIZABLE	0.03242321196012199	false	
+inc_rank_bucketed	narylatch_pb_64_pe_.ltl	1	REALIZABLE	0.04556182282976806	false	
+inc_rank_bucketed	narylatch_pb_8_pe_.ltl	1	REALIZABLE	0.02806099597364664	false	
+inc_rank_bucketed	ordered-visits-choice-real.ltl				true	TIMEOUT
+inc_rank_bucketed	ordered-visits-real.ltl	1	REALIZABLE	0.031665924936532974	false	
+inc_rank_bucketed	package-delivery-real.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm0.ltl	1	UNREALIZABLE	0.052561003947630525	false	
+inc_rank_bucketed	patrolling-alarm1.ltl	1	UNREALIZABLE	0.0908429529517889	false	
+inc_rank_bucketed	patrolling-alarm10.ltl	17	UNREALIZABLE	12.26662604114972	false	UNREALIZABLE
+inc_rank_bucketed	patrolling-alarm11.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm12.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm13.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm14.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm15.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm16.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm17.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm18.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm19.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm2.ltl	1	UNREALIZABLE	0.15082683600485325	false	
+inc_rank_bucketed	patrolling-alarm20.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm21.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm22.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm23.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm24.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm25.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm26.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling-alarm3.ltl	1	UNREALIZABLE	0.5790773490443826	false	
+inc_rank_bucketed	patrolling-alarm4.ltl	1	UNREALIZABLE	0.6931572780013084	false	
+inc_rank_bucketed	patrolling-alarm5.ltl	5	UNREALIZABLE	1.456188557902351	false	
+inc_rank_bucketed	patrolling-alarm6.ltl	5	UNREALIZABLE	2.6210504290647805	false	
+inc_rank_bucketed	patrolling-alarm7.ltl	5	UNREALIZABLE	4.41110723791644	false	
+inc_rank_bucketed	patrolling-alarm8.ltl	17	UNREALIZABLE	7.128423908026889	false	UNREALIZABLE
+inc_rank_bucketed	patrolling-alarm9.ltl	17	UNREALIZABLE	10.570423785131425	false	UNREALIZABLE
+inc_rank_bucketed	patrolling0.ltl	1	UNREALIZABLE	0.04352157097309828	false	
+inc_rank_bucketed	patrolling1.ltl	1	UNREALIZABLE	0.086640072055161	false	
+inc_rank_bucketed	patrolling10.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling11.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling12.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling13.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling14.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling15.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling16.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling17.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling18.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling19.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling2.ltl	1	UNREALIZABLE	0.18192248418927193	false	
+inc_rank_bucketed	patrolling20.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling21.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling22.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling23.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling24.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling25.ltl				true	TIMEOUT
+inc_rank_bucketed	patrolling3.ltl	1	UNREALIZABLE	0.587970478925854	false	
+inc_rank_bucketed	patrolling4.ltl	1	UNREALIZABLE	0.9415711760520935	false	
+inc_rank_bucketed	patrolling5.ltl	5	UNREALIZABLE	2.058583372971043	false	
+inc_rank_bucketed	patrolling6.ltl	5	UNREALIZABLE	3.2099596501793712	false	
+inc_rank_bucketed	patrolling7.ltl	17	UNREALIZABLE	5.858168544946238	false	UNREALIZABLE
+inc_rank_bucketed	patrolling8.ltl	17	UNREALIZABLE	8.896665336098522	false	UNREALIZABLE
+inc_rank_bucketed	patrolling9.ltl	17	UNREALIZABLE	14.609055791050196	false	UNREALIZABLE
+inc_rank_bucketed	precise-reachability-real.ltl	1	REALIZABLE	0.5183250999543816	false	
+inc_rank_bucketed	precise-reachability0.ltl	1	UNREALIZABLE	0.028519782004877925	false	
+inc_rank_bucketed	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.021156248170882463	false	
+inc_rank_bucketed	prioritized_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.031089507043361664	false	
+inc_rank_bucketed	prioritized_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.032514798222109675	false	
+inc_rank_bucketed	prioritized_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.052328846883028746	false	
+inc_rank_bucketed	prioritized_arbiter_pb_5_pe_.ltl	1	REALIZABLE	0.24770742002874613	false	
+inc_rank_bucketed	prioritized_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.01723227114416659	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.021062321960926056	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.029195321025326848	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.029170598834753036	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.04097156994976103	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.037713350960984826	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_16_pe_.ltl	1	UNREALIZABLE	0.031071537174284458	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.0390467441175133	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.03479522210545838	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03202788811177015	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.029135458171367645	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.04055857099592686	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.03430576389655471	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03682715189643204	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.03351674205623567	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.03808569209650159	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.03900491213425994	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.03401007899083197	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.029969586990773678	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_13_pe_.ltl	1	UNREALIZABLE	0.037188027985394	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_14_pe_.ltl	1	UNREALIZABLE	0.037587524158880115	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_15_pe_.ltl	1	UNREALIZABLE	0.03597673401236534	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_16_pe_.ltl	1	UNREALIZABLE	0.03626294317655265	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.03943919693119824	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.035118536092340946	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.032815930200740695	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.03758737980388105	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.03684977092780173	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.03281444706954062	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.028660210082307458	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.03577924286946654	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.04176981607452035	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.040694558061659336	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	1	UNREALIZABLE	0.038749136961996555	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.036654567113146186	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_13_pe_.ltl	1	UNREALIZABLE	0.03781503299251199	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_14_pe_.ltl	1	UNREALIZABLE	0.037147752940654755	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_15_pe_.ltl	1	UNREALIZABLE	0.03271111799404025	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_16_pe_.ltl	1	UNREALIZABLE	0.03499986813403666	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.036047560162842274	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.03778619086369872	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.037986289942637086	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.03796635405160487	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.033157856902107596	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.03743674699217081	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.03637732588686049	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.03365203784778714	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.03563133510760963	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_5_16_pe_.ltl	1	UNREALIZABLE	0.03657853999175131	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.037907796213403344	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_5_32_pe_.ltl	1	UNREALIZABLE	0.03912678197957575	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.035353220999240875	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_6_16_pe_.ltl	1	UNREALIZABLE	0.031592010986059904	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.018003847217187285	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_6_32_pe_.ltl	1	UNREALIZABLE	0.04091663099825382	false	
+inc_rank_bucketed	prioritized_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.030122258001938462	false	
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.027866309974342585	false	
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.03327164612710476	false	
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.022277379874140024	false	
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.029724630061537027	false	
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.032172987004742026	false	
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.025430185021832585	false	
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.030197035055607557	false	
+inc_rank_bucketed	prioritized_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.03158641210757196	false	
+inc_rank_bucketed	reversible-lane-r-real.ltl				true	TIMEOUT
+inc_rank_bucketed	reversible-lane-u-unreal.ltl				true	TIMEOUT
+inc_rank_bucketed	reversible-lane-u0.ltl				true	TIMEOUT
+inc_rank_bucketed	reversible-lane-u1.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-cat-real-1d-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-cat-real-2d-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-cat-unreal-1d-unreal.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-grid-commute-1d-real.ltl	5	REALIZABLE	3.319802734069526	false	
+inc_rank_bucketed	robot-grid-commute-2d-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-grid-reach-1d-real.ltl	1	REALIZABLE	0.02878991002216935	false	
+inc_rank_bucketed	robot-grid-reach-2d-real.ltl	5	REALIZABLE	3.393235807074234	false	
+inc_rank_bucketed	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	1	REALIZABLE	0.04021953814662993	false	
+inc_rank_bucketed	robot-grid-reach-repeated-with-obstacles-2d-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-1d-unreal.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-1d0.ltl	5	UNREALIZABLE	2.0551503780297935	false	
+inc_rank_bucketed	robot-resource-1d1.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d0.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d1.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d10.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d11.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d12.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d13.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d14.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d15.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d16.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d17.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d18.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d19.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d2.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d20.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d21.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d22.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d23.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d3.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d4.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d5.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d6.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d7.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d8.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-resource-2d9.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-tasks-real.ltl	1	REALIZABLE	0.051682442193850875	false	
+inc_rank_bucketed	robot-to-target-charging-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal0.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal1.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal2.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal3.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal4.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal5.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal6.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal7.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging-unreal8.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging0.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging1.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging10.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging11.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging12.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging13.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging14.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging15.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging16.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging17.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging18.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging19.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging2.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging20.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging21.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging22.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging23.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging24.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging25.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging3.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging4.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging5.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging6.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging7.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging8.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-charging9.ltl				true	TIMEOUT
+inc_rank_bucketed	robot-to-target-unreal0.ltl	17	REALIZABLE	7.732275936985388	false	REALIZABLE
+inc_rank_bucketed	robot-to-target0.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_analyze_samples_v1-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_collect_samples_v1-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_collect_samples_v2-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_collect_samples_v3-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_collect_samples_v4-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_deliver_products_1-real.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_deliver_products_20.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_deliver_products_30.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_deliver_products_40.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_deliver_products_50.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_grid_pb_2_2_pe_.ltl	17	REALIZABLE	10.956361803924665	false	REALIZABLE
+inc_rank_bucketed	robot_grid_pb_3_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_grid_pb_4_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_grid_pb_5_1_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_grid_pb_6_1_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_grid_pb_7_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_grid_pb_8_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_repair0.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_repair1.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_repair2.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_repair3.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_repair4.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_repair5.ltl				true	TIMEOUT
+inc_rank_bucketed	robot_running-real.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.03121718904003501	false	
+inc_rank_bucketed	round_robin_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.057303457986563444	false	
+inc_rank_bucketed	round_robin_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.04847392183728516	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.07790611404925585	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.1444440591149032	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.2590067589189857	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.603002053918317	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	1.2390492560807616	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	2.6255720511544496	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.01977026113308966	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.035861924989148974	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03646472399123013	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.037134535145014524	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.04099995316937566	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.04813029104843736	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.04000819497741759	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.042759892996400595	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.03614254202693701	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.025567424949258566	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.027609871933236718	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.04266469506546855	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.055790967075154185	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.16495993500575423	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.9239624061156064	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	7.270961325848475	false	UNREALIZABLE
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.07571839611046016	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.11241100402548909	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.2559671790804714	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	1.6245673310477287	false	
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.018795076059177518	false	
+inc_rank_bucketed	round_robin_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.03023153101094067	false	
+inc_rank_bucketed	round_robin_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.47937505203299224	false	
+inc_rank_bucketed	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	rw_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.02390154404565692	false	
+inc_rank_bucketed	rw_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.04992523114196956	false	
+inc_rank_bucketed	rw_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	scheduler-real.ltl				true	TIMEOUT
+inc_rank_bucketed	shift_pb_100_pe_.ltl	1	REALIZABLE	0.0236312139313668	false	
+inc_rank_bucketed	shift_pb_10_pe_.ltl	1	REALIZABLE	0.029193019960075617	false	
+inc_rank_bucketed	shift_pb_125_pe_.ltl	1	REALIZABLE	0.04333071690052748	false	
+inc_rank_bucketed	shift_pb_12_pe_.ltl	1	REALIZABLE	0.029975707875564694	false	
+inc_rank_bucketed	shift_pb_132_pe_.ltl	1	REALIZABLE	0.04464871692471206	false	
+inc_rank_bucketed	shift_pb_16_pe_.ltl	1	REALIZABLE	0.03515848401002586	false	
+inc_rank_bucketed	shift_pb_250_pe_.ltl	1	REALIZABLE	0.04491683701053262	false	
+inc_rank_bucketed	shift_pb_32_pe_.ltl	1	REALIZABLE	0.02937091002240777	false	
+inc_rank_bucketed	shift_pb_500_pe_.ltl	1	REALIZABLE	0.05432827793993056	false	
+inc_rank_bucketed	shift_pb_64_pe_.ltl	1	REALIZABLE	0.030128201004117727	false	
+inc_rank_bucketed	shift_pb_8_pe_.ltl	1	REALIZABLE	0.030797544866800308	false	
+inc_rank_bucketed	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_unreal1_pb_16_1_pe_.ltl	1	UNREALIZABLE	0.016754495911300182	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_16_2_pe_.ltl	1	UNREALIZABLE	0.022623303113505244	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_16_3_pe_.ltl	1	UNREALIZABLE	0.023459904128685594	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_16_4_pe_.ltl	1	UNREALIZABLE	0.01777032483369112	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_16_5_pe_.ltl	1	UNREALIZABLE	0.019353396026417613	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.020857317140325904	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.015651565976440907	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.01932475296780467	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.01696572103537619	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.009639044990763068	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.009779533138498664	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.00964569696225226	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.010325581068173051	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.009478013031184673	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.009594675153493881	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.009761977940797806	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.010168815962970257	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.00949213095009327	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.014019757974892855	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.021545768016949296	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.02561795199289918	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.01779075199738145	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.016321750124916434	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.034240074921399355	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.043185207061469555	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.03780841804109514	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.03253905498422682	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.035177128156647086	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03528075595386326	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.03457557410001755	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.027475940063595772	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.030492710880935192	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.029876111075282097	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.03491126303561032	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.03567210678011179	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.03323095291852951	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.03125377697870135	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_10_pe_.ltl	1	UNREALIZABLE	0.038313336903229356	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_1_pe_.ltl	1	UNREALIZABLE	0.038378819124773145	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.046450408874079585	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.03638148680329323	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.03705299599096179	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_5_pe_.ltl	1	UNREALIZABLE	0.04268209217116237	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_6_pe_.ltl	1	UNREALIZABLE	0.03721381910145283	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_7_pe_.ltl	1	UNREALIZABLE	0.03410206502303481	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_8_pe_.ltl	1	UNREALIZABLE	0.04037010599859059	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_5_9_pe_.ltl	1	UNREALIZABLE	0.038416031980887055	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.03564519388601184	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.03785652481019497	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.02931517781689763	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.03716143895871937	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_6_5_pe_.ltl	1	UNREALIZABLE	0.034266910050064325	false	
+inc_rank_bucketed	simple_arbiter_unreal1_pb_8_8_pe_.ltl	1	UNREALIZABLE	0.04068226204253733	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.04338230914436281	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_25_pe_.ltl	1	UNREALIZABLE	0.04344276711344719	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.03531422093510628	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.034072177950292826	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.03608670202083886	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_50_pe_.ltl	1	UNREALIZABLE	0.048332473961636424	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.0352551129180938	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_60_pe_.ltl	1	UNREALIZABLE	0.053570404183119535	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.037951745092868805	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_75_pe_.ltl	1	UNREALIZABLE	0.060414893086999655	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.024472185876220465	false	
+inc_rank_bucketed	simple_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.031307876808568835	false	
+inc_rank_bucketed	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_with_hints_pb_2_pe_.ltl	1	REALIZABLE	0.01726047322154045	false	
+inc_rank_bucketed	simple_arbiter_with_hints_pb_4_pe_.ltl	1	REALIZABLE	0.058330626925453544	false	
+inc_rank_bucketed	simple_arbiter_with_hints_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	solitary-real.ltl	1	REALIZABLE	0.02259435784071684	false	
+inc_rank_bucketed	solitary0.ltl	1	UNREALIZABLE	0.03225547098554671	false	
+inc_rank_bucketed	sort4-real.ltl				true	TIMEOUT
+inc_rank_bucketed	sort40.ltl				true	TIMEOUT
+inc_rank_bucketed	sort41.ltl				true	TIMEOUT
+inc_rank_bucketed	sort42.ltl				true	TIMEOUT
+inc_rank_bucketed	sort50.ltl				true	TIMEOUT
+inc_rank_bucketed	sort51.ltl				true	TIMEOUT
+inc_rank_bucketed	sort52.ltl				true	TIMEOUT
+inc_rank_bucketed	sort53.ltl				true	TIMEOUT
+inc_rank_bucketed	square5x5-real.ltl				true	TIMEOUT
+inc_rank_bucketed	square5x50.ltl				true	TIMEOUT
+inc_rank_bucketed	square5x51.ltl				true	TIMEOUT
+inc_rank_bucketed	square5x52.ltl				true	TIMEOUT
+inc_rank_bucketed	square5x53.ltl				true	TIMEOUT
+inc_rank_bucketed	square5x54.ltl				true	TIMEOUT
+inc_rank_bucketed	storage-GF-64-real.ltl	1	REALIZABLE	0.027306255884468555	false	
+inc_rank_bucketed	tasks-real.ltl	1	REALIZABLE	0.05979931214824319	false	
+inc_rank_bucketed	tasks-unreal0.ltl				true	TIMEOUT
+inc_rank_bucketed	tasks-unreal1.ltl				true	TIMEOUT
+inc_rank_bucketed	tasks-unreal2.ltl				true	TIMEOUT
+inc_rank_bucketed	taxi-service-real.ltl				true	TIMEOUT
+inc_rank_bucketed	taxi-service-u-unreal.ltl				true	TIMEOUT
+inc_rank_bucketed	test2_f2774e0b.ltl	1	REALIZABLE	0.03085474786348641	false	
+inc_rank_bucketed	test3_efe2feaf.ltl	1	REALIZABLE	0.03397446102462709	false	
+inc_rank_bucketed	test4_4b82b1f4.ltl	1	UNREALIZABLE	0.03672329196706414	false	
+inc_rank_bucketed	test5_6cbc6174.ltl	1	REALIZABLE	0.04099360201507807	false	
+inc_rank_bucketed	test6_0f5381e9.ltl	1	REALIZABLE	0.041467519011348486	false	
+inc_rank_bucketed	test7_2c5b09da.ltl	1	REALIZABLE	0.03349288715980947	false	
+inc_rank_bucketed	test8_88f351a6.ltl	1	UNREALIZABLE	0.0411947718821466	false	
+inc_rank_bucketed	test9_dd3a27e1.ltl	1	UNREALIZABLE	0.043097501154989004	false	
+inc_rank_bucketed	test_f3987563.ltl	1	REALIZABLE	0.033504639053717256	false	
+inc_rank_bucketed	thermostat-F-real.ltl				true	TIMEOUT
+inc_rank_bucketed	thermostat-GF-real.ltl				true	TIMEOUT
+inc_rank_bucketed	thermostat-GF-unreal0.ltl				true	TIMEOUT
+inc_rank_bucketed	thermostat-GF-unreal1.ltl				true	TIMEOUT
+inc_rank_bucketed	thermostat-GF-unreal2.ltl				true	TIMEOUT
+inc_rank_bucketed	tmp_13cfc6f2.ltl				true	TIMEOUT
+inc_rank_bucketed	unordered-visits-charging0.ltl				true	TIMEOUT
+inc_rank_bucketed	unordered-visits-real.ltl				true	TIMEOUT
+inc_rank_bucketed	workstation_resupply_pb_1_pe_.ltl	1	REALIZABLE	0.11755911097861826	false	
+inc_rank_bucketed	workstation_resupply_pb_2_pe_.ltl	17	REALIZABLE	9.48783467290923	false	REALIZABLE
+inc_rank_bucketed	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT
+inc_rank_bucketed	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT

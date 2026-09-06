@@ -130,7 +130,8 @@
     "enable_equivariant_solver": true,
     "equivariant_max_states": 512,
     "equivariant_min_clients": 3,
-    "equivariant_min_blocks": 2
+    "equivariant_min_blocks": 2,
+    "default_arms": ""
   },
   "choices": {
     "default_unreal_x": [

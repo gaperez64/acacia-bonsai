@@ -82,6 +82,13 @@ option('acacia_enable_diagnostics', type: 'boolean', value: false,
 # and that is the single option separating the S reference configuration from B.
 option('acacia_local_certificate', type: 'boolean', value: false,
        description: 'Enable the bounded local winning-certificate and root-refutation probe')
+# A portfolio the build ships by default, in --arms syntax
+# (polarity:transform:backend, comma separated).  Empty keeps the historical
+# default portfolio, so every existing build is unaffected.  This exists because
+# the best measured configuration is an arm mix rather than a compile-time
+# backend choice, and a shipped configuration has to be able to say so.
+option('acacia_default_arms', type: 'string', value: '',
+       description: 'Default portfolio in --arms syntax; empty uses the historical default')
 option('acacia_forward_safety_solver', type: 'boolean', value: false,
        description: 'Use the on-the-fly forward safety-game solver instead of the backward antichain fixed point')
 option('acacia_enable_equivariant_solver', type: 'boolean', value: true,

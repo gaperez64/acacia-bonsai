@@ -561,9 +561,25 @@ arg_parse_result arg_parser (int argc, char** argv) {
   // child was actually requested, not whether this override was mentioned.
   if (not retval.arms.has_value () and not retval.real_strategies.has_value () and
       not retval.unreal_strategies.has_value ()) {
-    retval.real_strategies = default_real_strategies ();
-    retval.unreal_strategies = default_unreal_strategies ();
-    retval.primary_translation_pref = retval.real_strategies->front ();
+    // A build may ship a portfolio of its own, because the best measured
+    // configuration is an arm mix rather than a compile-time backend choice and
+    // a shipped configuration has to be able to express one.  An empty string --
+    // the default -- keeps the historical portfolio, so builds that say nothing
+    // behave exactly as before.  A malformed value is a build error surfaced at
+    // the first run rather than a silently different portfolio.
+    if (std::string_view {ACACIA_DEFAULT_ARMS}.empty ()) {
+      retval.real_strategies = default_real_strategies ();
+      retval.unreal_strategies = default_unreal_strategies ();
+      retval.primary_translation_pref = retval.real_strategies->front ();
+    }
+    else {
+      auto parsed = parse_portfolio_arms (ACACIA_DEFAULT_ARMS);
+      if (parsed.error != portfolio_arm_parse_error::none)
+        error (EXIT_CODE_ERROR,
+               "Error: this build's acacia_default_arms is not valid --arms "
+               "syntax (%s).\n", ACACIA_DEFAULT_ARMS);
+      retval.arms = std::move (parsed.arms);
+    }
   }
 
   if (retval.synth_fname.has_value ()) {

@@ -1,0 +1,1525 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_60	failure_kind_at_60
+inc_mona	01.ltl	1	REALIZABLE	0.6242502129171044	false	
+inc_mona	02.ltl	1	REALIZABLE	0.05918195401318371	false	
+inc_mona	03.ltl	5	REALIZABLE	3.956441540038213	false	
+inc_mona	05.ltl				true	TIMEOUT
+inc_mona	06.ltl				true	TIMEOUT
+inc_mona	07.ltl				true	TIMEOUT
+inc_mona	08.ltl				true	TIMEOUT
+inc_mona	09.ltl	17	REALIZABLE	10.927828145911917	false	REALIZABLE
+inc_mona	10.ltl	5	REALIZABLE	4.398937099147588	false	
+inc_mona	11.ltl	5	REALIZABLE	4.488663435913622	false	
+inc_mona	12.ltl	17	REALIZABLE	6.657825364964083	false	REALIZABLE
+inc_mona	13.ltl	17	REALIZABLE	7.265271513024345	false	REALIZABLE
+inc_mona	ActionConverter.ltl	1	REALIZABLE	0.017459323862567544	false	
+inc_mona	AlarmMin_efe2feaf.ltl	1	REALIZABLE	0.023480230942368507	false	
+inc_mona	Alarm_06e9cad4.ltl	5	REALIZABLE	4.953478070907295	false	
+inc_mona	Alarm_2d1010f8.ltl	1	REALIZABLE	0.01852898602373898	false	
+inc_mona	Alarm_68c86764.ltl	5	REALIZABLE	4.740386546123773	false	
+inc_mona	Alarm_70523fbe.ltl	5	REALIZABLE	2.272238339064643	false	
+inc_mona	Alarm_88c5c1c3.ltl	1	REALIZABLE	0.02728791208937764	false	
+inc_mona	Alarm_9cac58d3.ltl	1	REALIZABLE	0.03586333408020437	false	
+inc_mona	Alarm_a5f99bc6.ltl				true	TIMEOUT
+inc_mona	Alarm_f2774e0b.ltl	5	REALIZABLE	2.206889007007703	false	
+inc_mona	AllHeating_d6376bf9.ltl	1	REALIZABLE	0.026282686972990632	false	
+inc_mona	AllLights_06e9cad4.ltl				true	TIMEOUT
+inc_mona	AllLights_2c5b09da.ltl				true	TIMEOUT
+inc_mona	AllLights_63831f8c.ltl				true	TIMEOUT
+inc_mona	AllLights_aeb1d897.ltl				true	TIMEOUT
+inc_mona	AllLights_b209ff21.ltl				true	TIMEOUT
+inc_mona	AllLights_d6c5ac79.ltl				true	TIMEOUT
+inc_mona	AllShades_66f450a4.ltl				true	TIMEOUT
+inc_mona	Assumptions_a50cadd7.ltl	1	UNREALIZABLE	0.023297145031392574	false	
+inc_mona	Automata.ltl	1	REALIZABLE	0.06568962405435741	false	
+inc_mona	Automata16S.ltl				true	TIMEOUT
+inc_mona	Automata32S.ltl				true	TIMEOUT
+inc_mona	Button.ltl	1	REALIZABLE	0.01781634008511901	false	
+inc_mona	CheckAlarmBroken1_1a2942e3.ltl	1	REALIZABLE	0.031734860967844725	false	
+inc_mona	CheckAlarm_6bea956e.ltl	1	UNREALIZABLE	0.029887906974181533	false	
+inc_mona	CheckCoffeMachineBroken1_a5f99bc6.ltl	1	REALIZABLE	0.03317361418157816	false	
+inc_mona	CheckCoffeMachine_3461125b.ltl	1	UNREALIZABLE	0.041161173954606056	false	
+inc_mona	CheckCoffeMachine_f3987563.ltl	1	UNREALIZABLE	0.036561093060299754	false	
+inc_mona	CheckDoor_c2b9e44d.ltl	1	UNREALIZABLE	0.03535100305452943	false	
+inc_mona	CheckHeating_2418b67e.ltl	1	UNREALIZABLE	0.034996549831703305	false	
+inc_mona	CheckHeating_3461125b.ltl	1	UNREALIZABLE	0.04150331090204418	false	
+inc_mona	CheckLight_007df645.ltl	1	UNREALIZABLE	0.03594127902761102	false	
+inc_mona	CheckLight_aeb1d897.ltl	1	UNREALIZABLE	0.04122590087354183	false	
+inc_mona	CheckRoom_06e9cad4.ltl	1	UNREALIZABLE	0.014175008982419968	false	
+inc_mona	CheckRoom_2c5b09da.ltl	1	UNREALIZABLE	0.02866173698566854	false	
+inc_mona	CheckRoom_3916ec59.ltl	1	UNREALIZABLE	0.029130666982382536	false	
+inc_mona	CheckRoom_70523fbe.ltl	1	UNREALIZABLE	0.03139183693565428	false	
+inc_mona	CheckShades_1a2942e3.ltl	1	UNREALIZABLE	0.030929179163649678	false	
+inc_mona	CheckShades_3461125b.ltl	1	UNREALIZABLE	0.038588086841627955	false	
+inc_mona	CheckShades_4d4ca5c4.ltl	1	UNREALIZABLE	0.03755123191513121	false	
+inc_mona	CheckShades_aeb1d897.ltl	1	UNREALIZABLE	0.03719714214093983	false	
+inc_mona	CheckTime_3916ec59.ltl	1	UNREALIZABLE	0.03172037214972079	false	
+inc_mona	CheckTime_4b5e6eaa.ltl	1	UNREALIZABLE	0.033936766907572746	false	
+inc_mona	CheckTime_54e1f7d2.ltl	1	UNREALIZABLE	0.03838349296711385	false	
+inc_mona	CheckTimer_54e1f7d2.ltl	1	UNREALIZABLE	0.03189885197207332	false	
+inc_mona	CheckTimer_fa8592c8.ltl	1	UNREALIZABLE	0.03821158898063004	false	
+inc_mona	CheckWarnlightBroken1_70523fbe.ltl	1	REALIZABLE	0.03582981205545366	false	
+inc_mona	CheckWarnlight_1cf58fc1.ltl	1	UNREALIZABLE	0.029228537110611796	false	
+inc_mona	CheckWarnlight_4b5a2bad.ltl	1	UNREALIZABLE	0.03475235402584076	false	
+inc_mona	CheckWarnlight_54e1f7d2.ltl	1	UNREALIZABLE	0.03483654302544892	false	
+inc_mona	CheckWarnlight_6bea956e.ltl	1	UNREALIZABLE	0.036208637058734894	false	
+inc_mona	CheckWindows_54e1f7d2.ltl	1	UNREALIZABLE	0.03618650510907173	false	
+inc_mona	Cockpitboard.ltl	1	REALIZABLE	0.03410606901161373	false	
+inc_mona	Cockpitboard_efe2feaf.ltl	1	REALIZABLE	0.018885547062382102	false	
+inc_mona	CoffeMachine_974f4a68.ltl	1	REALIZABLE	0.021490321028977633	false	
+inc_mona	CoffeMachine_a50cadd7.ltl	1	UNREALIZABLE	0.02630168618634343	false	
+inc_mona	CoffeeMin_88f351a6.ltl	1	REALIZABLE	0.03274689894169569	false	
+inc_mona	Coffee_06e9cad4.ltl	1	REALIZABLE	0.05288695404306054	false	
+inc_mona	Coffee_235467da.ltl	1	REALIZABLE	0.028931295033544302	false	
+inc_mona	Coffee_2c5b09da.ltl	1	REALIZABLE	0.02502171602100134	false	
+inc_mona	Coffee_6479ef9a.ltl	1	REALIZABLE	0.04932345193810761	false	
+inc_mona	Coffee_d6376bf9.ltl	1	REALIZABLE	0.03347679995931685	false	
+inc_mona	Coffee_efe2feaf.ltl	1	REALIZABLE	0.04005052801221609	false	
+inc_mona	Coffee_f1477cc5.ltl	1	UNREALIZABLE	0.034785893047228456	false	
+inc_mona	Core_4b5a2bad.ltl	1	UNREALIZABLE	0.06891987007111311	false	
+inc_mona	Core_66f450a4.ltl	1	UNREALIZABLE	0.015733034117147326	false	
+inc_mona	Core_fa4d4ce3.ltl	1	UNREALIZABLE	0.042673525866121054	false	
+inc_mona	Core_solved_974f4a68.ltl	1	REALIZABLE	0.09758136817254126	false	
+inc_mona	Demo1_06e9cad4.ltl				true	TIMEOUT
+inc_mona	Demo1_2c5b09da.ltl				true	TIMEOUT
+inc_mona	Demo1_63831f8c.ltl				true	TIMEOUT
+inc_mona	Demo1_c2b9e44d.ltl				true	TIMEOUT
+inc_mona	Demo1_d65ed84e.ltl				true	TIMEOUT
+inc_mona	DeviceBehaviorChec_fa8592c8.ltl	1	UNREALIZABLE	0.026023294078186154	false	
+inc_mona	Door_2d1010f8.ltl	1	REALIZABLE	0.03549612290225923	false	
+inc_mona	EnemeyModule.ltl	1	REALIZABLE	0.038566246861591935	false	
+inc_mona	EscalatorBidirectional.ltl	1	REALIZABLE	0.04273760202340782	false	
+inc_mona	EscalatorBidirectionalInit.ltl	1	REALIZABLE	0.048448165878653526	false	
+inc_mona	EscalatorCounting.ltl	1	REALIZABLE	0.03199920686893165	false	
+inc_mona	EscalatorCountingInit.ltl	1	REALIZABLE	0.03377190697938204	false	
+inc_mona	EscalatorNonCounting.ltl	1	REALIZABLE	0.033667150884866714	false	
+inc_mona	EscalatorNonReactive.ltl	1	REALIZABLE	0.030899662990123034	false	
+inc_mona	EscalatorSmart.ltl	1	REALIZABLE	0.048924487084150314	false	
+inc_mona	Example1_d6376bf9.ltl	1	REALIZABLE	0.024587542051449418	false	
+inc_mona	F-G-contradiction-10.ltl	1	UNREALIZABLE	0.7558389310725033	false	
+inc_mona	F-G-contradiction-11.ltl	5	UNREALIZABLE	3.38669875706546	false	
+inc_mona	F-G-contradiction-110.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-111.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-112.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-113.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-114.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-12.ltl	17	UNREALIZABLE	10.327205504989251	false	UNREALIZABLE
+inc_mona	F-G-contradiction-13.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-14.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-15.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-16.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-17.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-18.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-19.ltl				true	TIMEOUT
+inc_mona	F-G-contradiction-2-unreal.ltl	1	UNREALIZABLE	0.1763995811343193	false	
+inc_mona	FelixSpecFixed2.2.core_fa8592c8.ltl	1	UNREALIZABLE	0.02256059111095965	false	
+inc_mona	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT
+inc_mona	FelixSpecFixed3.core_b209ff21.ltl	1	UNREALIZABLE	0.2549548018723726	false	
+inc_mona	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT
+inc_mona	FelixSpecFixed4GuaranteesOnly_88f351a6.ltl	1	UNREALIZABLE	0.025690963957458735	false	
+inc_mona	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT
+inc_mona	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT
+inc_mona	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT
+inc_mona	Full_f1477cc5.ltl				true	TIMEOUT
+inc_mona	GF-G-contradiction0.ltl	1	UNREALIZABLE	0.24510762584395707	false	
+inc_mona	GF-G-contradiction1.ltl	17	UNREALIZABLE	5.0557243740186095	false	UNREALIZABLE
+inc_mona	GF-G-contradiction2.ltl				true	TIMEOUT
+inc_mona	GF-G-contradiction3.ltl				true	TIMEOUT
+inc_mona	GF-G-contradiction4.ltl				true	TIMEOUT
+inc_mona	GF-G-contradiction5.ltl				true	TIMEOUT
+inc_mona	GF-G-contradiction6.ltl				true	TIMEOUT
+inc_mona	GF-G-contradiction7.ltl				true	TIMEOUT
+inc_mona	Gamelogic.ltl	1	REALIZABLE	0.020672159967944026	false	
+inc_mona	GamemodeChooser.ltl	1	REALIZABLE	0.02715386706404388	false	
+inc_mona	Gamemodule.ltl	1	REALIZABLE	0.021514652064070106	false	
+inc_mona	HeatingMin_d6c5ac79.ltl	1	REALIZABLE	0.009803688852116466	false	
+inc_mona	Heating_235467da.ltl	1	REALIZABLE	0.016718218103051186	false	
+inc_mona	Heating_974f4a68.ltl	1	REALIZABLE	0.025269074132665992	false	
+inc_mona	Heating_b02056d6.ltl	1	REALIZABLE	0.020306400023400784	false	
+inc_mona	Heating_b209ff21.ltl	1	REALIZABLE	0.018333165906369686	false	
+inc_mona	Increment.ltl	1	REALIZABLE	0.013069880194962025	false	
+inc_mona	IntendDemo_42dc4fff.ltl	1	UNREALIZABLE	0.04824025393463671	false	
+inc_mona	KitchenTimerV0.ltl	1	REALIZABLE	0.019647235050797462	false	
+inc_mona	KitchenTimerV1.ltl	1	REALIZABLE	0.021023330045863986	false	
+inc_mona	KitchenTimerV10.ltl	1	REALIZABLE	0.08380920789204538	false	
+inc_mona	KitchenTimerV2.ltl	1	REALIZABLE	0.021859108936041594	false	
+inc_mona	KitchenTimerV3.ltl	1	REALIZABLE	0.03608942893333733	false	
+inc_mona	KitchenTimerV4.ltl	1	REALIZABLE	0.03778289398178458	false	
+inc_mona	KitchenTimerV5.ltl	1	REALIZABLE	0.17421410186216235	false	
+inc_mona	KitchenTimerV6.ltl	5	REALIZABLE	1.1868456779047847	false	
+inc_mona	KitchenTimerV7.ltl	5	REALIZABLE	1.1160693769343197	false	
+inc_mona	KitchenTimerV8.ltl	5	REALIZABLE	1.0874989139847457	false	
+inc_mona	KitchenTimerV9.ltl				true	TIMEOUT
+inc_mona	LampController_974f4a68.ltl	1	REALIZABLE	0.02327417815104127	false	
+inc_mona	LedMatrix.ltl				true	TIMEOUT
+inc_mona	Light_a50cadd7.ltl	1	UNREALIZABLE	0.021886269096285105	false	
+inc_mona	Light_aeb1d897.ltl	1	UNREALIZABLE	0.06004180898889899	false	
+inc_mona	Light_d65ed84e.ltl	1	REALIZABLE	0.02215050091035664	false	
+inc_mona	Lights2Min_9cbf2546.ltl	1	REALIZABLE	0.03869884111918509	false	
+inc_mona	Lights2_06e9cad4.ltl	1	REALIZABLE	0.4675419330596924	false	
+inc_mona	Lights2_0f5381e9.ltl	1	REALIZABLE	0.4526420538313687	false	
+inc_mona	Lights2_2c5b09da.ltl	1	REALIZABLE	0.07687891693785787	false	
+inc_mona	Lights2_9cac58d3.ltl	1	REALIZABLE	0.47166488808579743	false	
+inc_mona	Lights2_b02056d6.ltl	1	REALIZABLE	0.5154169511515647	false	
+inc_mona	Lights2_f1477cc5.ltl	1	UNREALIZABLE	0.05796856083907187	false	
+inc_mona	Lights2_f3987563.ltl	1	REALIZABLE	0.3975146079901606	false	
+inc_mona	Lights3Min_6479ef9a.ltl	1	REALIZABLE	0.021256943931803107	false	
+inc_mona	Lights3_06e9cad4.ltl	1	REALIZABLE	0.04312733211554587	false	
+inc_mona	Lights3_235467da.ltl	1	REALIZABLE	0.04496796312741935	false	
+inc_mona	Lights3_2c5b09da.ltl	1	REALIZABLE	0.020621753064915538	false	
+inc_mona	Lights3_3916ec59.ltl	1	REALIZABLE	0.046478816075250506	false	
+inc_mona	Lights3_6bea956e.ltl	1	REALIZABLE	0.03898744587786496	false	
+inc_mona	Lights3_f1477cc5.ltl	1	REALIZABLE	0.04488506796769798	false	
+inc_mona	LightsMin_6bea956e.ltl	1	REALIZABLE	0.022189704002812505	false	
+inc_mona	LightsTotal_06e9cad4.ltl	5	REALIZABLE	1.008695196127519	false	
+inc_mona	LightsTotal_2c5b09da.ltl	1	UNREALIZABLE	0.21687050396576524	false	
+inc_mona	LightsTotal_9cbf2546.ltl	5	REALIZABLE	1.0307356051634997	false	
+inc_mona	LightsTotal_d65ed84e.ltl	5	REALIZABLE	1.2494058799929917	false	
+inc_mona	Lights_06e9cad4.ltl	1	REALIZABLE	0.038870747899636626	false	
+inc_mona	Lights_2c5b09da.ltl	1	REALIZABLE	0.02420523390173912	false	
+inc_mona	Lights_3461125b.ltl	1	REALIZABLE	0.040193028980866075	false	
+inc_mona	Lights_9cac58d3.ltl	1	REALIZABLE	0.041825913824141026	false	
+inc_mona	Lights_b0840146.ltl	1	REALIZABLE	0.04271561000496149	false	
+inc_mona	Lights_f3987563.ltl	1	REALIZABLE	0.04956903820857406	false	
+inc_mona	ModdifiedLedMatrix4X.ltl	1	UNREALIZABLE	0.4914691629819572	false	
+inc_mona	ModdifiedLedMatrix5X.ltl	5	REALIZABLE	2.834339644992724	false	
+inc_mona	Morning2Min_6cbc6174.ltl	1	REALIZABLE	0.025684683118015528	false	
+inc_mona	Morning2_06e9cad4.ltl				true	TIMEOUT
+inc_mona	Morning2_1cf58fc1.ltl				true	TIMEOUT
+inc_mona	Morning2_2c5b09da.ltl				true	TIMEOUT
+inc_mona	Morning2_407db2cc.ltl				true	TIMEOUT
+inc_mona	Morning2_4d4ca5c4.ltl	1	REALIZABLE	0.023131845984607935	false	
+inc_mona	Morning2_63831f8c.ltl				true	TIMEOUT
+inc_mona	Morning2_68c86764.ltl				true	TIMEOUT
+inc_mona	Morning2_9cac58d3.ltl	1	REALIZABLE	0.023797502042725682	false	
+inc_mona	Morning2_d65ed84e.ltl				true	TIMEOUT
+inc_mona	Morning2s_06cf2373.ltl				true	TIMEOUT
+inc_mona	Morning2s_06e9cad4.ltl				true	TIMEOUT
+inc_mona	Morning2s_2c5b09da.ltl				true	TIMEOUT
+inc_mona	Morning2s_42dc4fff.ltl				true	TIMEOUT
+inc_mona	Morning2s_9cbf2546.ltl				true	TIMEOUT
+inc_mona	Morning2s_d6c5ac79.ltl				true	TIMEOUT
+inc_mona	MorningMin_d6c5ac79.ltl	1	REALIZABLE	0.1555824230890721	false	
+inc_mona	Morning_14a3b3a2.ltl				true	TIMEOUT
+inc_mona	Morning_4b5e6eaa.ltl				true	TIMEOUT
+inc_mona	Morning_88c5c1c3.ltl				true	TIMEOUT
+inc_mona	Morning_9cac58d3.ltl				true	TIMEOUT
+inc_mona	Morning_c92eb242.ltl				true	TIMEOUT
+inc_mona	Morning_f1477cc5.ltl				true	TIMEOUT
+inc_mona	Morning_f2774e0b.ltl				true	TIMEOUT
+inc_mona	MusicAppFeedback.ltl	1	REALIZABLE	0.018598674098029733	false	
+inc_mona	MusicAppMotivating.ltl	1	REALIZABLE	0.028703923104330897	false	
+inc_mona	MusicAppSimple.ltl	1	REALIZABLE	0.0369219109416008	false	
+inc_mona	OneCounter.ltl	5	REALIZABLE	2.601433467818424	false	
+inc_mona	OneCounterGui.ltl	1	UNREALIZABLE	0.028614527080208063	false	
+inc_mona	OneCounterGuiA1.ltl	1	UNREALIZABLE	0.04375877603888512	false	
+inc_mona	OneCounterGuiA2.ltl	1	UNREALIZABLE	0.04153087409213185	false	
+inc_mona	OneCounterGuiA3.ltl	1	UNREALIZABLE	0.0601886638905853	false	
+inc_mona	OneCounterGuiA4.ltl	1	UNREALIZABLE	0.07018260192126036	false	
+inc_mona	OneCounterGuiA5.ltl	1	UNREALIZABLE	0.1890609678812325	false	
+inc_mona	OneCounterGuiA6.ltl	1	UNREALIZABLE	0.5388851868920028	false	
+inc_mona	OneCounterGuiA7.ltl	5	UNREALIZABLE	1.4096464158501476	false	
+inc_mona	OneCounterGuiA8.ltl	17	UNREALIZABLE	5.1162978508509696	false	UNREALIZABLE
+inc_mona	OneCounterInRange.ltl	1	UNREALIZABLE	0.02820451185107231	false	
+inc_mona	OneCounterInRangeA1.ltl	1	UNREALIZABLE	0.03577750502154231	false	
+inc_mona	OneCounterInRangeA2.ltl	1	UNREALIZABLE	0.03315198584459722	false	
+inc_mona	OneCounterInRangeA3.ltl	1	REALIZABLE	0.03270644601434469	false	
+inc_mona	PlugController_fa4d4ce3.ltl	1	REALIZABLE	0.03681325213983655	false	
+inc_mona	Radarboard.ltl	1	REALIZABLE	0.023269888013601303	false	
+inc_mona	RegManager.ltl	1	REALIZABLE	0.03225771221332252	false	
+inc_mona	Room_a50cadd7.ltl	1	UNREALIZABLE	0.032787356059998274	false	
+inc_mona	RotationCalculator.ltl	1	REALIZABLE	0.038583556888625026	false	
+inc_mona	SPI.ltl	1	REALIZABLE	0.6588010869454592	false	
+inc_mona	SPIPureNext.ltl				true	TIMEOUT
+inc_mona	SPIReadClk.ltl	1	REALIZABLE	0.01592306513339281	false	
+inc_mona	SPIReadManag.ltl	1	REALIZABLE	0.8401513500139117	false	
+inc_mona	SPIReadSdi.ltl	1	REALIZABLE	0.015792529797181487	false	
+inc_mona	SPIWriteClk.ltl	1	REALIZABLE	0.03200742998160422	false	
+inc_mona	SPIWriteManag.ltl	1	REALIZABLE	0.19714172114618123	false	
+inc_mona	SPIWriteSdi.ltl	1	REALIZABLE	0.02875142893753946	false	
+inc_mona	Scoreboard.ltl	1	REALIZABLE	0.036160246934741735	false	
+inc_mona	Sensor.ltl	1	REALIZABLE	0.2888152680825442	false	
+inc_mona	SensorInit.ltl	1	REALIZABLE	0.13007113290950656	false	
+inc_mona	SensorPart.ltl	1	REALIZABLE	0.04359244112856686	false	
+inc_mona	SensorRegister.ltl	1	REALIZABLE	0.02157996199093759	false	
+inc_mona	SensorSelector.ltl	1	REALIZABLE	0.04596532601863146	false	
+inc_mona	SensorSubmodulChooser.ltl	1	REALIZABLE	0.07693664403632283	false	
+inc_mona	Shades2Min_63831f8c.ltl	1	REALIZABLE	0.01567513681948185	false	
+inc_mona	Shades2_235467da.ltl	1	REALIZABLE	0.023414114955812693	false	
+inc_mona	Shades2_42dc4fff.ltl	1	REALIZABLE	0.044333494966849685	false	
+inc_mona	Shades2_70523fbe.ltl	1	REALIZABLE	0.03614101395942271	false	
+inc_mona	Shades2_a5f99bc6.ltl	1	REALIZABLE	0.037761460058391094	false	
+inc_mona	ShadesMin_aeb1d897.ltl	1	REALIZABLE	0.033698147861287	false	
+inc_mona	Shades_6479ef9a.ltl	1	REALIZABLE	0.04092337703332305	false	
+inc_mona	Shades_974f4a68.ltl	1	REALIZABLE	0.04539165296591818	false	
+inc_mona	Shades_9cac58d3.ltl	1	REALIZABLE	0.023310115793719888	false	
+inc_mona	Shades_a02758ea.ltl	1	REALIZABLE	0.029144509928300977	false	
+inc_mona	SingleContoller_d65ed84e.ltl	1	UNREALIZABLE	0.06333369086496532	false	
+inc_mona	SliderDefault.ltl	1	REALIZABLE	0.023034213110804558	false	
+inc_mona	SliderDelayed.ltl	1	REALIZABLE	0.14279064699076116	false	
+inc_mona	SliderScored.ltl	1	REALIZABLE	0.054013634100556374	false	
+inc_mona	System_b0840146.ltl	1	UNREALIZABLE	0.019899626960977912	false	
+inc_mona	Time_a50cadd7.ltl	1	UNREALIZABLE	0.029294940875843167	false	
+inc_mona	Timer_a50cadd7.ltl	1	REALIZABLE	0.030703403986990452	false	
+inc_mona	TorcsAccelerating.ltl	1	REALIZABLE	0.033392286160960793	false	
+inc_mona	TorcsGearing.ltl	1	REALIZABLE	0.03861706284806132	false	
+inc_mona	TorcsSimple.ltl	1	REALIZABLE	0.028449149103835225	false	
+inc_mona	TorcsSteeringImproved.ltl	1	REALIZABLE	0.04305140511132777	false	
+inc_mona	TorcsSteeringSimple.ltl	1	REALIZABLE	0.028828591108322144	false	
+inc_mona	TorcsSteeringSmart.ltl	1	REALIZABLE	0.03819342190399766	false	
+inc_mona	TwoCounters.ltl	1	UNREALIZABLE	0.0413361310493201	false	
+inc_mona	TwoCounters2.ltl	1	UNREALIZABLE	0.08084534504450858	false	
+inc_mona	TwoCounters3.ltl	5	REALIZABLE	1.259349707979709	false	
+inc_mona	TwoCounters4.ltl	1	REALIZABLE	0.03493236703798175	false	
+inc_mona	TwoCounters5.ltl	1	UNREALIZABLE	0.14265567087568343	false	
+inc_mona	TwoCountersDisButA0.ltl	1	UNREALIZABLE	0.04068863298743963	false	
+inc_mona	TwoCountersDisButA1.ltl	1	UNREALIZABLE	0.05864081718027592	false	
+inc_mona	TwoCountersDisButA2.ltl	1	UNREALIZABLE	0.09377668588422239	false	
+inc_mona	TwoCountersDisButA3.ltl	1	UNREALIZABLE	0.18538194592110813	false	
+inc_mona	TwoCountersDisButA4.ltl	1	UNREALIZABLE	0.17161983693949878	false	
+inc_mona	TwoCountersDisButA5.ltl	1	UNREALIZABLE	0.3097947440110147	false	
+inc_mona	TwoCountersDisButA6.ltl	1	UNREALIZABLE	0.307694697054103	false	
+inc_mona	TwoCountersDisButA7.ltl	1	UNREALIZABLE	0.5971504810731858	false	
+inc_mona	TwoCountersDisButA8.ltl	1	UNREALIZABLE	0.6544254820328206	false	
+inc_mona	TwoCountersDisButA9.ltl	5	UNREALIZABLE	1.3658979670144618	false	
+inc_mona	TwoCountersDisButAC.ltl	5	UNREALIZABLE	1.3320989499334246	false	
+inc_mona	TwoCountersGui.ltl	1	UNREALIZABLE	0.12539615598507226	false	
+inc_mona	TwoCountersInRange.ltl	1	UNREALIZABLE	0.045793474884703755	false	
+inc_mona	TwoCountersInRangeA1.ltl	1	UNREALIZABLE	0.11483954102732241	false	
+inc_mona	TwoCountersInRangeA2.ltl	1	UNREALIZABLE	0.13695077504962683	false	
+inc_mona	TwoCountersInRangeA3.ltl	1	UNREALIZABLE	0.14666889607906342	false	
+inc_mona	TwoCountersInRangeA4.ltl	1	UNREALIZABLE	0.14546371600590646	false	
+inc_mona	TwoCountersInRangeA5.ltl	1	UNREALIZABLE	0.17681285296566784	false	
+inc_mona	TwoCountersInRangeM0.ltl	1	UNREALIZABLE	0.22941737691871822	false	
+inc_mona	TwoCountersInRangeM1.ltl	1	UNREALIZABLE	0.2430379600264132	false	
+inc_mona	TwoCountersInRangeM2.ltl	1	UNREALIZABLE	0.20478261797688901	false	
+inc_mona	TwoCountersInRangeM3.ltl	1	UNREALIZABLE	0.21374378097243607	false	
+inc_mona	TwoCountersInRangeM4.ltl	1	UNREALIZABLE	0.16850513010285795	false	
+inc_mona	TwoCountersRefined.ltl	1	UNREALIZABLE	0.04078590520657599	false	
+inc_mona	TwoCountersRefinedRefined.ltl	1	REALIZABLE	0.028926592087373137	false	
+inc_mona	UnderapproxDemo2.ltl	1	UNREALIZABLE	0.021738229785114527	false	
+inc_mona	UnderapproxStrengthenedDemo.ltl	1	REALIZABLE	0.031194698996841908	false	
+inc_mona	Warnlight_2d1010f8.ltl	1	REALIZABLE	0.04279034188948572	false	
+inc_mona	Warnlight_a50cadd7.ltl	1	UNREALIZABLE	0.025054686004295945	false	
+inc_mona	Window2Min_88c5c1c3.ltl	1	REALIZABLE	0.016184488078579307	false	
+inc_mona	Window2_54e1f7d2.ltl	1	REALIZABLE	0.021775433095172048	false	
+inc_mona	Window2_6479ef9a.ltl	1	REALIZABLE	0.022152053890749812	false	
+inc_mona	Window2_9cac58d3.ltl	1	REALIZABLE	0.02157020685262978	false	
+inc_mona	Window2_aeb1d897.ltl	1	REALIZABLE	0.03370065591298044	false	
+inc_mona	Window2_f1477cc5.ltl	1	UNREALIZABLE	0.023475290974602103	false	
+inc_mona	WindowMin_a5f99bc6.ltl	1	REALIZABLE	0.034652370028197765	false	
+inc_mona	Window_235467da.ltl	1	REALIZABLE	0.03535280399955809	false	
+inc_mona	Window_42dc4fff.ltl	1	REALIZABLE	0.030356312170624733	false	
+inc_mona	Window_54e1f7d2.ltl	1	REALIZABLE	0.03190886019729078	false	
+inc_mona	Zoo0.ltl	1	REALIZABLE	0.024798644008114934	false	
+inc_mona	Zoo10.ltl	1	REALIZABLE	0.0418438371270895	false	
+inc_mona	Zoo5.ltl	1	REALIZABLE	0.03863310604356229	false	
+inc_mona	abcg_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.043271627044305205	false	
+inc_mona	abcg_arbiter_pb_2_pe_.ltl	5	REALIZABLE	1.6593743560370058	false	
+inc_mona	abcg_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	amba_case_study_pb_2_pe_.ltl				true	TIMEOUT
+inc_mona	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT
+inc_mona	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.027678109938278794	false	
+inc_mona	amba_decomposed_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.05771529604680836	false	
+inc_mona	amba_decomposed_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.08802352007478476	false	
+inc_mona	amba_decomposed_arbiter_pb_5_pe_.ltl	5	REALIZABLE	1.5090797990560532	false	
+inc_mona	amba_decomposed_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_decode.ltl	1	REALIZABLE	0.016570991836488247	false	
+inc_mona	amba_decomposed_encode_pb_10_pe_.ltl	1	REALIZABLE	0.04266991792246699	false	
+inc_mona	amba_decomposed_encode_pb_11_pe_.ltl	1	REALIZABLE	0.053064990090206265	false	
+inc_mona	amba_decomposed_encode_pb_12_pe_.ltl	1	REALIZABLE	0.056954434141516685	false	
+inc_mona	amba_decomposed_encode_pb_13_pe_.ltl	1	REALIZABLE	0.07515533408150077	false	
+inc_mona	amba_decomposed_encode_pb_14_pe_.ltl	1	REALIZABLE	0.1214321251027286	false	
+inc_mona	amba_decomposed_encode_pb_15_pe_.ltl	1	REALIZABLE	0.2799131760839373	false	
+inc_mona	amba_decomposed_encode_pb_16_pe_.ltl	1	REALIZABLE	0.7754127159714699	false	
+inc_mona	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_encode_pb_2_pe_.ltl	1	REALIZABLE	0.022819409146904945	false	
+inc_mona	amba_decomposed_encode_pb_3_pe_.ltl	1	REALIZABLE	0.02309277607128024	false	
+inc_mona	amba_decomposed_encode_pb_4_pe_.ltl	1	REALIZABLE	0.03682203311473131	false	
+inc_mona	amba_decomposed_encode_pb_5_pe_.ltl	1	REALIZABLE	0.031988075003027916	false	
+inc_mona	amba_decomposed_encode_pb_6_pe_.ltl	1	REALIZABLE	0.04070659982971847	false	
+inc_mona	amba_decomposed_encode_pb_7_pe_.ltl	1	REALIZABLE	0.05282749910838902	false	
+inc_mona	amba_decomposed_encode_pb_8_pe_.ltl	1	REALIZABLE	0.033648086013272405	false	
+inc_mona	amba_decomposed_encode_pb_9_pe_.ltl	1	REALIZABLE	0.04540660697966814	false	
+inc_mona	amba_decomposed_lock_pb_10_pe_.ltl	1	REALIZABLE	0.4014031710103154	false	
+inc_mona	amba_decomposed_lock_pb_11_pe_.ltl	5	REALIZABLE	1.4561842558905482	false	
+inc_mona	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	6.447908409172669	false	REALIZABLE
+inc_mona	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_lock_pb_2_pe_.ltl	1	REALIZABLE	0.020178103120997548	false	
+inc_mona	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT
+inc_mona	amba_decomposed_lock_pb_3_pe_.ltl	1	REALIZABLE	0.020862715085968375	false	
+inc_mona	amba_decomposed_lock_pb_4_pe_.ltl	1	REALIZABLE	0.01933230017311871	false	
+inc_mona	amba_decomposed_lock_pb_5_pe_.ltl	1	REALIZABLE	0.03053298406302929	false	
+inc_mona	amba_decomposed_lock_pb_6_pe_.ltl	1	REALIZABLE	0.04395995708182454	false	
+inc_mona	amba_decomposed_lock_pb_7_pe_.ltl	1	REALIZABLE	0.03941296390257776	false	
+inc_mona	amba_decomposed_lock_pb_8_pe_.ltl	1	REALIZABLE	0.038896056823432446	false	
+inc_mona	amba_decomposed_lock_pb_9_pe_.ltl	1	REALIZABLE	0.13724585296586156	false	
+inc_mona	amba_decomposed_shift.ltl	1	REALIZABLE	0.017584501998499036	false	
+inc_mona	amba_decomposed_tburst4.ltl	1	REALIZABLE	0.03692676103673875	false	
+inc_mona	amba_decomposed_tincr.ltl	1	REALIZABLE	0.017754285130649805	false	
+inc_mona	amba_decomposed_tsingle.ltl	1	REALIZABLE	0.03488983795978129	false	
+inc_mona	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT
+inc_mona	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	amba_gr_pb_2_pe_.ltl				true	TIMEOUT
+inc_mona	amba_gr_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	amba_gr_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter-paper-unreal-unreal.ltl	1	UNREALIZABLE	0.4881612870376557	false	
+inc_mona	arbiter-with-failure-real.ltl	1	REALIZABLE	0.029816807946190238	false	
+inc_mona	arbiter_on_inpchange_pb_1_pe_.ltl	1	REALIZABLE	0.015307405032217503	false	
+inc_mona	arbiter_on_inpchange_pb_2_pe_.ltl	1	REALIZABLE	0.025036151986569166	false	
+inc_mona	arbiter_on_inpchange_pb_3_pe_.ltl	1	REALIZABLE	0.7242372629698366	false	
+inc_mona	arbiter_on_inpchange_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.01992953196167946	false	
+inc_mona	arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.016937567153945565	false	
+inc_mona	arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.02414699108339846	false	
+inc_mona	arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.7910820548422635	false	
+inc_mona	arbiter_pb_5_pe_.ltl	17	REALIZABLE	14.270600184099749	false	REALIZABLE
+inc_mona	arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_buffer_pb_1_pe_.ltl	1	REALIZABLE	0.017150635831058025	false	
+inc_mona	arbiter_with_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.03232752392068505	false	
+inc_mona	arbiter_with_buffer_pb_3_pe_.ltl	1	REALIZABLE	0.050906441174447536	false	
+inc_mona	arbiter_with_buffer_pb_4_pe_.ltl	5	REALIZABLE	1.58733578491956	false	
+inc_mona	arbiter_with_buffer_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_cancel_pb_1_pe_.ltl	1	REALIZABLE	0.022692234022542834	false	
+inc_mona	arbiter_with_cancel_pb_2_pe_.ltl	1	REALIZABLE	0.017733005108311772	false	
+inc_mona	arbiter_with_cancel_pb_3_pe_.ltl	1	REALIZABLE	0.05716246902011335	false	
+inc_mona	arbiter_with_cancel_pb_4_pe_.ltl	5	REALIZABLE	1.374742239015177	false	
+inc_mona	arbiter_with_cancel_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	batch-arbiter-real.ltl	1	REALIZABLE	0.03966496489010751	false	
+inc_mona	box-limited-real.ltl	1	REALIZABLE	0.3780987858772278	false	
+inc_mona	box-real.ltl				true	TIMEOUT
+inc_mona	box0.ltl	1	UNREALIZABLE	0.07441199920140207	false	
+inc_mona	box1.ltl	1	UNREALIZABLE	0.06739129708148539	false	
+inc_mona	buffer-storage-real.ltl	1	REALIZABLE	0.585108231054619	false	
+inc_mona	chain-4-real.ltl				true	TIMEOUT
+inc_mona	chain-5-real.ltl				true	TIMEOUT
+inc_mona	chain-60.ltl				true	TIMEOUT
+inc_mona	chain-70.ltl				true	TIMEOUT
+inc_mona	chain-simple-10-real.ltl	1	REALIZABLE	0.1599995819851756	false	
+inc_mona	chain-simple-20-real.ltl	1	REALIZABLE	0.33425501990132034	false	
+inc_mona	chain-simple-30-real.ltl	1	REALIZABLE	0.5530668359715492	false	
+inc_mona	chain-simple-40-real.ltl	1	REALIZABLE	0.9007237418554723	false	
+inc_mona	chain-simple-5-real.ltl	1	REALIZABLE	0.09320378699339926	false	
+inc_mona	chain-simple-50-real.ltl	5	REALIZABLE	1.1182605689391494	false	
+inc_mona	chain-simple-60-real.ltl	5	REALIZABLE	1.4908776711672544	false	
+inc_mona	chain-simple-70-real.ltl	5	REALIZABLE	1.9176232230383903	false	
+inc_mona	chain-simple-param-70-real.ltl	5	REALIZABLE	1.2810270900372416	false	
+inc_mona	chomp_pb_2_2_pe_.ltl	1	REALIZABLE	0.0721390270628035	false	
+inc_mona	chomp_pb_2_3_pe_.ltl	5	REALIZABLE	3.3835328998975456	false	
+inc_mona	chomp_pb_2_4_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_2_5_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_2_6_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_3_2_pe_.ltl	5	REALIZABLE	3.2504313099198043	false	
+inc_mona	chomp_pb_3_3_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_3_4_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_3_5_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_3_6_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_4_2_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_4_3_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_4_4_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_mona	chomp_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v1_pb_11_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v1_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v1_pb_13_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v1_pb_14_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v1_pb_15_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v1_pb_3_pe_.ltl	1	REALIZABLE	0.015389892971143126	false	
+inc_mona	collector_v1_pb_5_pe_.ltl	1	REALIZABLE	0.02681792201474309	false	
+inc_mona	collector_v1_pb_7_pe_.ltl	1	REALIZABLE	0.3406090880744159	false	
+inc_mona	collector_v1_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v2_pb_10_pe_.ltl	1	REALIZABLE	0.4924928380642086	false	
+inc_mona	collector_v2_pb_11_pe_.ltl	5	REALIZABLE	1.1284721840638667	false	
+inc_mona	collector_v2_pb_12_pe_.ltl	5	REALIZABLE	2.7115345490165055	false	
+inc_mona	collector_v2_pb_13_pe_.ltl	17	REALIZABLE	6.666524423984811	false	REALIZABLE
+inc_mona	collector_v2_pb_15_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v2_pb_27_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v2_pb_3_pe_.ltl	1	REALIZABLE	0.020803352119401097	false	
+inc_mona	collector_v2_pb_5_pe_.ltl	1	REALIZABLE	0.028645736863836646	false	
+inc_mona	collector_v2_pb_7_pe_.ltl	1	REALIZABLE	0.06192786595784128	false	
+inc_mona	collector_v2_pb_9_pe_.ltl	1	REALIZABLE	0.21064702002331614	false	
+inc_mona	collector_v3_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v3_pb_11_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v3_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v3_pb_13_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v3_pb_15_pe_.ltl				true	TIMEOUT
+inc_mona	collector_v3_pb_3_pe_.ltl	1	REALIZABLE	0.02213415177538991	false	
+inc_mona	collector_v3_pb_5_pe_.ltl	1	REALIZABLE	0.11321749608032405	false	
+inc_mona	collector_v3_pb_7_pe_.ltl	17	REALIZABLE	10.224983951076865	false	REALIZABLE
+inc_mona	collector_v3_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	diagonal-real.ltl	1	REALIZABLE	0.17865506908856332	false	
+inc_mona	door_locking_problem_d6c5ac79.ltl	1	REALIZABLE	0.024600574048236012	false	
+inc_mona	elevator-paper-real.ltl				true	TIMEOUT
+inc_mona	evasion-real.ltl				true	TIMEOUT
+inc_mona	evasion0.ltl				true	TIMEOUT
+inc_mona	example10_pb_1_pe_.ltl	1	REALIZABLE	0.015922684920951724	false	
+inc_mona	example10_pb_2_pe_.ltl	1	REALIZABLE	0.021405703853815794	false	
+inc_mona	example10a_pb_1_pe_.ltl	1	REALIZABLE	0.018038305919617414	false	
+inc_mona	example10a_pb_2_pe_.ltl	1	REALIZABLE	0.019018385093659163	false	
+inc_mona	example7_pb_1_pe_.ltl	1	REALIZABLE	0.014546484919264913	false	
+inc_mona	example7_pb_2_pe_.ltl	1	REALIZABLE	0.009768818970769644	false	
+inc_mona	example7a_pb_1_pe_.ltl	1	REALIZABLE	0.017440696014091372	false	
+inc_mona	example7a_pb_2_pe_.ltl	1	REALIZABLE	0.01512649399228394	false	
+inc_mona	example8_pb_1_pe_.ltl	1	REALIZABLE	0.02049090201035142	false	
+inc_mona	example8_pb_2_pe_.ltl	1	REALIZABLE	0.01538899913430214	false	
+inc_mona	example9_pb_1_pe_.ltl	1	REALIZABLE	0.017391390865668654	false	
+inc_mona	example9_pb_2_pe_.ltl	1	REALIZABLE	0.019158569863066077	false	
+inc_mona	f-real-real.ltl				true	TIMEOUT
+inc_mona	f-unreal-unreal.ltl	1	UNREALIZABLE	0.028383010998368263	false	
+inc_mona	finding_nemo_pb_1_pe_.ltl				true	TIMEOUT
+inc_mona	finding_nemo_pb_2_pe_.ltl				true	TIMEOUT
+inc_mona	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	follow0.ltl				true	TIMEOUT
+inc_mona	follow1.ltl				true	TIMEOUT
+inc_mona	follow2.ltl				true	TIMEOUT
+inc_mona	follow3.ltl				true	TIMEOUT
+inc_mona	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.061928903916850686	false	
+inc_mona	full_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.1124197191093117	false	
+inc_mona	full_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.20369948004372418	false	
+inc_mona	full_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.47923062392510474	false	
+inc_mona	full_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.8561370598617941	false	
+inc_mona	full_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	1.980363244889304	false	
+inc_mona	full_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	4.278258199105039	false	
+inc_mona	full_arbiter_unreal1_pb_2_18_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.02229992812499404	false	
+inc_mona	full_arbiter_unreal1_pb_2_20_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_2_21_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_2_22_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_2_24_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_2_26_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.021310840966179967	false	
+inc_mona	full_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03416235512122512	false	
+inc_mona	full_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.03605531598441303	false	
+inc_mona	full_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.037205412052571774	false	
+inc_mona	full_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.04014038993045688	false	
+inc_mona	full_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.05012691207230091	false	
+inc_mona	full_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.045619686832651496	false	
+inc_mona	full_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.04052308201789856	false	
+inc_mona	full_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.021318183979019523	false	
+inc_mona	full_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.027640243992209435	false	
+inc_mona	full_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.02883605705574155	false	
+inc_mona	full_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.05885005509480834	false	
+inc_mona	full_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.21959225507453084	false	
+inc_mona	full_arbiter_unreal1_pb_3_6_pe_.ltl	5	UNREALIZABLE	1.4475702759809792	false	
+inc_mona	full_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	9.481004097033292	false	UNREALIZABLE
+inc_mona	full_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.035510401939973235	false	
+inc_mona	full_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.056253859074786305	false	
+inc_mona	full_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.19496245286427438	false	
+inc_mona	full_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	2.9282984680030495	false	
+inc_mona	full_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal1_pb_6_8_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.019262476824223995	false	
+inc_mona	full_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.05433657602407038	false	
+inc_mona	full_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	4.68761538201943	false	UNREALIZABLE
+inc_mona	full_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	full_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	g-real-real.ltl				true	TIMEOUT
+inc_mona	g-real0.ltl				true	TIMEOUT
+inc_mona	g-unreal-1-unreal.ltl				true	TIMEOUT
+inc_mona	g-unreal-10.ltl	1	UNREALIZABLE	0.025589036056771874	false	
+inc_mona	g-unreal-11.ltl	1	UNREALIZABLE	0.0573197219055146	false	
+inc_mona	g-unreal-110.ltl				true	TIMEOUT
+inc_mona	g-unreal-111.ltl				true	TIMEOUT
+inc_mona	g-unreal-112.ltl				true	TIMEOUT
+inc_mona	g-unreal-113.ltl				true	TIMEOUT
+inc_mona	g-unreal-114.ltl				true	TIMEOUT
+inc_mona	g-unreal-115.ltl				true	TIMEOUT
+inc_mona	g-unreal-116.ltl				true	TIMEOUT
+inc_mona	g-unreal-117.ltl				true	TIMEOUT
+inc_mona	g-unreal-118.ltl				true	TIMEOUT
+inc_mona	g-unreal-119.ltl				true	TIMEOUT
+inc_mona	g-unreal-12.ltl	1	UNREALIZABLE	0.22185387392528355	false	
+inc_mona	g-unreal-120.ltl				true	TIMEOUT
+inc_mona	g-unreal-13.ltl	1	UNREALIZABLE	0.5194271109066904	false	
+inc_mona	g-unreal-14.ltl	5	UNREALIZABLE	1.962102402932942	false	
+inc_mona	g-unreal-15.ltl	5	UNREALIZABLE	3.4798568000551313	false	
+inc_mona	g-unreal-16.ltl	17	UNREALIZABLE	6.127260613953695	false	UNREALIZABLE
+inc_mona	g-unreal-17.ltl	17	UNREALIZABLE	7.654834346147254	false	UNREALIZABLE
+inc_mona	g-unreal-18.ltl				true	TIMEOUT
+inc_mona	g-unreal-19.ltl				true	TIMEOUT
+inc_mona	g-unreal-20.ltl				true	TIMEOUT
+inc_mona	g-unreal-21.ltl				true	TIMEOUT
+inc_mona	g-unreal-30.ltl	1	UNREALIZABLE	0.18253981904126704	false	
+inc_mona	g-unreal-31.ltl	5	UNREALIZABLE	3.3381262731272727	false	
+inc_mona	g-unreal-310.ltl				true	TIMEOUT
+inc_mona	g-unreal-311.ltl				true	TIMEOUT
+inc_mona	g-unreal-312.ltl				true	TIMEOUT
+inc_mona	g-unreal-313.ltl				true	TIMEOUT
+inc_mona	g-unreal-314.ltl				true	TIMEOUT
+inc_mona	g-unreal-32.ltl				true	TIMEOUT
+inc_mona	g-unreal-33.ltl				true	TIMEOUT
+inc_mona	g-unreal-34.ltl				true	TIMEOUT
+inc_mona	g-unreal-35.ltl				true	TIMEOUT
+inc_mona	g-unreal-36.ltl				true	TIMEOUT
+inc_mona	g-unreal-37.ltl				true	TIMEOUT
+inc_mona	g-unreal-38.ltl				true	TIMEOUT
+inc_mona	g-unreal-39.ltl				true	TIMEOUT
+inc_mona	generalized_buffer_pb_2_pe_.ltl	1	REALIZABLE	0.024905809899792075	false	
+inc_mona	generalized_buffer_pb_3_pe_.ltl	5	REALIZABLE	1.9454229951370507	false	
+inc_mona	generalized_buffer_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	generalized_buffer_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	gf-real-real.ltl	1	REALIZABLE	0.031244738958775997	false	
+inc_mona	gf-unreal0.ltl	1	UNREALIZABLE	0.02386905183084309	false	
+inc_mona	gf-unreal1.ltl	1	UNREALIZABLE	0.028898363932967186	false	
+inc_mona	gf-unreal10.ltl	1	UNREALIZABLE	0.03789820382371545	false	
+inc_mona	gf-unreal11.ltl	1	UNREALIZABLE	0.04400888388045132	false	
+inc_mona	gf-unreal12.ltl	1	UNREALIZABLE	0.045438273111358285	false	
+inc_mona	gf-unreal13.ltl	1	UNREALIZABLE	0.038712122943252325	false	
+inc_mona	gf-unreal14.ltl	1	UNREALIZABLE	0.03734640101902187	false	
+inc_mona	gf-unreal15.ltl	1	UNREALIZABLE	0.040794560918584466	false	
+inc_mona	gf-unreal16.ltl	1	UNREALIZABLE	0.02446574904024601	false	
+inc_mona	gf-unreal17.ltl	1	UNREALIZABLE	0.028008005116134882	false	
+inc_mona	gf-unreal18.ltl	1	UNREALIZABLE	0.031735423021018505	false	
+inc_mona	gf-unreal19.ltl	1	UNREALIZABLE	0.04493308695964515	false	
+inc_mona	gf-unreal2.ltl	1	UNREALIZABLE	0.03154440689831972	false	
+inc_mona	gf-unreal20.ltl	1	UNREALIZABLE	0.04550241190008819	false	
+inc_mona	gf-unreal21.ltl	1	UNREALIZABLE	0.040994937997311354	false	
+inc_mona	gf-unreal22.ltl	1	UNREALIZABLE	0.046497900038957596	false	
+inc_mona	gf-unreal23.ltl	1	UNREALIZABLE	0.042852191952988505	false	
+inc_mona	gf-unreal24.ltl	1	UNREALIZABLE	0.03470127284526825	false	
+inc_mona	gf-unreal25.ltl	1	UNREALIZABLE	0.03587651299312711	false	
+inc_mona	gf-unreal26.ltl	1	UNREALIZABLE	0.033760882914066315	false	
+inc_mona	gf-unreal27.ltl	1	UNREALIZABLE	0.04115471802651882	false	
+inc_mona	gf-unreal28.ltl	1	UNREALIZABLE	0.03097450197674334	false	
+inc_mona	gf-unreal29.ltl	1	UNREALIZABLE	0.05008850898593664	false	
+inc_mona	gf-unreal3.ltl	1	UNREALIZABLE	0.028215694008395076	false	
+inc_mona	gf-unreal30.ltl	1	UNREALIZABLE	0.04917551903054118	false	
+inc_mona	gf-unreal31.ltl	1	UNREALIZABLE	0.0494971820153296	false	
+inc_mona	gf-unreal32.ltl	1	UNREALIZABLE	0.044406594010069966	false	
+inc_mona	gf-unreal33.ltl	1	UNREALIZABLE	0.03609671210870147	false	
+inc_mona	gf-unreal34.ltl	1	UNREALIZABLE	0.04850335395894945	false	
+inc_mona	gf-unreal35.ltl	1	UNREALIZABLE	0.050637872191146016	false	
+inc_mona	gf-unreal36.ltl	1	UNREALIZABLE	0.04125784011557698	false	
+inc_mona	gf-unreal37.ltl	1	UNREALIZABLE	0.03638168517500162	false	
+inc_mona	gf-unreal38.ltl	1	UNREALIZABLE	0.03434265684336424	false	
+inc_mona	gf-unreal39.ltl	1	UNREALIZABLE	0.03811654890887439	false	
+inc_mona	gf-unreal4.ltl	1	UNREALIZABLE	0.02835512883029878	false	
+inc_mona	gf-unreal40.ltl	1	UNREALIZABLE	0.046164253959432244	false	
+inc_mona	gf-unreal41.ltl	1	UNREALIZABLE	0.040446358965709805	false	
+inc_mona	gf-unreal42.ltl	1	UNREALIZABLE	0.03698634193278849	false	
+inc_mona	gf-unreal43.ltl	1	UNREALIZABLE	0.0354196410626173	false	
+inc_mona	gf-unreal44.ltl	1	UNREALIZABLE	0.03562892880290747	false	
+inc_mona	gf-unreal45.ltl	1	UNREALIZABLE	0.03319073305465281	false	
+inc_mona	gf-unreal46.ltl	1	UNREALIZABLE	0.043016865849494934	false	
+inc_mona	gf-unreal47.ltl	1	UNREALIZABLE	0.04474916704930365	false	
+inc_mona	gf-unreal5.ltl	1	UNREALIZABLE	0.025553248124197125	false	
+inc_mona	gf-unreal6.ltl	1	UNREALIZABLE	0.025874475948512554	false	
+inc_mona	gf-unreal7.ltl	1	UNREALIZABLE	0.030580712016671896	false	
+inc_mona	gf-unreal8.ltl	1	UNREALIZABLE	0.0350712900981307	false	
+inc_mona	gf-unreal9.ltl	1	UNREALIZABLE	0.03894839296117425	false	
+inc_mona	heim-buechi-real.ltl	5	REALIZABLE	2.105714416131377	false	
+inc_mona	heim-double-x-real.ltl				true	TIMEOUT
+inc_mona	heim-double-x0.ltl	5	UNREALIZABLE	3.779415342025459	false	
+inc_mona	heim-double-x1.ltl				true	TIMEOUT
+inc_mona	heim-double-x10.ltl				true	TIMEOUT
+inc_mona	heim-double-x11.ltl				true	TIMEOUT
+inc_mona	heim-double-x12.ltl				true	TIMEOUT
+inc_mona	heim-double-x13.ltl				true	TIMEOUT
+inc_mona	heim-double-x2.ltl				true	TIMEOUT
+inc_mona	heim-double-x3.ltl				true	TIMEOUT
+inc_mona	heim-double-x4.ltl				true	TIMEOUT
+inc_mona	heim-double-x5.ltl				true	TIMEOUT
+inc_mona	heim-double-x6.ltl				true	TIMEOUT
+inc_mona	heim-double-x7.ltl				true	TIMEOUT
+inc_mona	heim-double-x8.ltl				true	TIMEOUT
+inc_mona	heim-double-x9.ltl				true	TIMEOUT
+inc_mona	heim-fig7-unreal.ltl	1	UNREALIZABLE	0.07946539088152349	false	
+inc_mona	helipad-contradict0.ltl				true	TIMEOUT
+inc_mona	helipad-contradict1.ltl				true	TIMEOUT
+inc_mona	helipad-real.ltl				true	TIMEOUT
+inc_mona	infinite-race-real.ltl	1	REALIZABLE	0.022988204145804048	false	
+inc_mona	infinite-race-u0.ltl	1	UNREALIZABLE	0.03843397391028702	false	
+inc_mona	infinite-race-u1.ltl	1	UNREALIZABLE	0.08067714096978307	false	
+inc_mona	infinite-race-u10.ltl				true	TIMEOUT
+inc_mona	infinite-race-u11.ltl				true	TIMEOUT
+inc_mona	infinite-race-u12.ltl				true	TIMEOUT
+inc_mona	infinite-race-u13.ltl				true	TIMEOUT
+inc_mona	infinite-race-u14.ltl				true	TIMEOUT
+inc_mona	infinite-race-u15.ltl				true	TIMEOUT
+inc_mona	infinite-race-u16.ltl				true	TIMEOUT
+inc_mona	infinite-race-u17.ltl				true	TIMEOUT
+inc_mona	infinite-race-u18.ltl				true	TIMEOUT
+inc_mona	infinite-race-u19.ltl				true	TIMEOUT
+inc_mona	infinite-race-u2.ltl				true	TIMEOUT
+inc_mona	infinite-race-u20.ltl				true	TIMEOUT
+inc_mona	infinite-race-u21.ltl				true	TIMEOUT
+inc_mona	infinite-race-u22.ltl				true	TIMEOUT
+inc_mona	infinite-race-u23.ltl				true	TIMEOUT
+inc_mona	infinite-race-u24.ltl				true	TIMEOUT
+inc_mona	infinite-race-u25.ltl				true	TIMEOUT
+inc_mona	infinite-race-u3.ltl				true	TIMEOUT
+inc_mona	infinite-race-u4.ltl				true	TIMEOUT
+inc_mona	infinite-race-u5.ltl				true	TIMEOUT
+inc_mona	infinite-race-u6.ltl				true	TIMEOUT
+inc_mona	infinite-race-u7.ltl				true	TIMEOUT
+inc_mona	infinite-race-u8.ltl				true	TIMEOUT
+inc_mona	infinite-race-u9.ltl				true	TIMEOUT
+inc_mona	infinite-race-unequal-1-real.ltl	1	REALIZABLE	0.2781646701041609	false	
+inc_mona	infinite-race-unequal-10.ltl	1	UNREALIZABLE	0.02836813312023878	false	
+inc_mona	infinite-race-unequal-20.ltl	1	UNREALIZABLE	0.035112741868942976	false	
+inc_mona	infinite-race-unequal-21.ltl	5	UNREALIZABLE	3.289806109853089	false	
+inc_mona	infinite-race-unequal-22.ltl				true	TIMEOUT
+inc_mona	infinite-race-unequal-23.ltl				true	TIMEOUT
+inc_mona	infinite-race-unequal-24.ltl				true	TIMEOUT
+inc_mona	infinite-race-unequal-25.ltl				true	TIMEOUT
+inc_mona	infinite-race-unequal-26.ltl				true	TIMEOUT
+inc_mona	items_processing-real.ltl				true	TIMEOUT
+inc_mona	jarvis_gideon_a02758ea.ltl	1	UNREALIZABLE	0.020108732860535383	false	
+inc_mona	jarvis_philippe_484face8.ltl	1	UNREALIZABLE	0.02321206103079021	false	
+inc_mona	lazy_shades_problem_d6376bf9.ltl	1	REALIZABLE	0.027090350165963173	false	
+inc_mona	lift_gr1+_pb_2_pe_.ltl	1	REALIZABLE	0.5006130011752248	false	
+inc_mona	lift_gr1+_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1_pb_2_pe_.ltl	1	REALIZABLE	0.15642104693688452	false	
+inc_mona	lift_gr1_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	lift_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	lift_pb_2_pe_.ltl	1	REALIZABLE	0.021467829821631312	false	
+inc_mona	lift_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	lift_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	lift_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	lift_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	lift_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	lift_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	lift_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	lift_unary_enc_pb_2_pe_.ltl	1	REALIZABLE	0.03696900908835232	false	
+inc_mona	lift_unary_enc_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	lift_unary_enc_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	lift_wrong_physics_unreal_pb_10_pe_.ltl	5	UNREALIZABLE	1.4970428380183876	false	
+inc_mona	lift_wrong_physics_unreal_pb_2_pe_.ltl	1	REALIZABLE	0.031013976084068418	false	
+inc_mona	lift_wrong_physics_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.022827137960121036	false	
+inc_mona	lift_wrong_physics_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.02298464090563357	false	
+inc_mona	lift_wrong_physics_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.04243624210357666	false	
+inc_mona	lift_wrong_physics_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.055273527977988124	false	
+inc_mona	lift_wrong_physics_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.08941928599961102	false	
+inc_mona	lift_wrong_physics_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.17757015186361969	false	
+inc_mona	lift_wrong_physics_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.6462885690853	false	
+inc_mona	lilydemo01.ltl	1	UNREALIZABLE	0.01488572801463306	false	
+inc_mona	lilydemo02.ltl	1	UNREALIZABLE	0.026736104860901833	false	
+inc_mona	lilydemo03.ltl	1	REALIZABLE	0.039546897169202566	false	
+inc_mona	lilydemo04.ltl	1	REALIZABLE	0.040315604070201516	false	
+inc_mona	lilydemo04_modified.ltl	1	UNREALIZABLE	0.03664021706208587	false	
+inc_mona	lilydemo05.ltl	1	REALIZABLE	0.03930923785082996	false	
+inc_mona	lilydemo06.ltl	1	REALIZABLE	0.033711808966472745	false	
+inc_mona	lilydemo07.ltl	1	REALIZABLE	0.03527113306336105	false	
+inc_mona	lilydemo08.ltl	1	REALIZABLE	0.035717820981517434	false	
+inc_mona	lilydemo09.ltl	1	REALIZABLE	0.030756604159250855	false	
+inc_mona	lilydemo10.ltl	1	REALIZABLE	0.03185090399347246	false	
+inc_mona	lilydemo11.ltl	1	UNREALIZABLE	0.038452015025541186	false	
+inc_mona	lilydemo12.ltl	1	REALIZABLE	0.031203813152387738	false	
+inc_mona	lilydemo13.ltl	1	REALIZABLE	0.03357117995619774	false	
+inc_mona	lilydemo14.ltl	1	REALIZABLE	0.031393900979310274	false	
+inc_mona	lilydemo15.ltl	1	REALIZABLE	0.03499249601736665	false	
+inc_mona	lilydemo16.ltl	1	REALIZABLE	0.0434774300083518	false	
+inc_mona	lilydemo17.ltl	1	REALIZABLE	0.03245758288539946	false	
+inc_mona	lilydemo18.ltl	1	REALIZABLE	0.040270589059218764	false	
+inc_mona	lilydemo19.ltl	1	REALIZABLE	0.035726675065234303	false	
+inc_mona	lilydemo20.ltl	1	REALIZABLE	0.03764864080585539	false	
+inc_mona	lilydemo21.ltl	1	REALIZABLE	0.03836945304647088	false	
+inc_mona	lilydemo22.ltl	1	REALIZABLE	0.02264925790950656	false	
+inc_mona	lilydemo23.ltl	1	REALIZABLE	0.03812817088328302	false	
+inc_mona	load_balancer_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_pb_11_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_pb_2_pe_.ltl	1	REALIZABLE	0.019709659973159432	false	
+inc_mona	load_balancer_pb_3_pe_.ltl	1	REALIZABLE	0.04157041595317423	false	
+inc_mona	load_balancer_pb_4_pe_.ltl	1	REALIZABLE	0.07086854497902095	false	
+inc_mona	load_balancer_pb_5_pe_.ltl	1	REALIZABLE	0.5114045580849051	false	
+inc_mona	load_balancer_pb_6_pe_.ltl	5	REALIZABLE	4.476456806063652	false	
+inc_mona	load_balancer_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.038817168911919	false	
+inc_mona	load_balancer_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.052948541007936	false	
+inc_mona	load_balancer_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.10524083883501589	false	
+inc_mona	load_balancer_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.16494124312885106	false	
+inc_mona	load_balancer_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.34251515194773674	false	
+inc_mona	load_balancer_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.746646192856133	false	
+inc_mona	load_balancer_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	1.4965639028232545	false	
+inc_mona	load_balancer_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.02246341621503234	false	
+inc_mona	load_balancer_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.02908584801480174	false	
+inc_mona	load_balancer_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.023462240118533373	false	
+inc_mona	load_balancer_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.03820697800256312	false	
+inc_mona	load_balancer_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.045698066940531135	false	
+inc_mona	load_balancer_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.04674301599152386	false	
+inc_mona	load_balancer_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.042185145895928144	false	
+inc_mona	load_balancer_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.0351299331523478	false	
+inc_mona	load_balancer_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.03765408182516694	false	
+inc_mona	load_balancer_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.14449779503047466	false	
+inc_mona	load_balancer_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.3158834620844573	false	
+inc_mona	load_balancer_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.7082266649231315	false	
+inc_mona	load_balancer_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.025968811940401793	false	
+inc_mona	load_balancer_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.02579911518841982	false	
+inc_mona	load_balancer_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.021191562060266733	false	
+inc_mona	load_balancer_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.02733263303525746	false	
+inc_mona	load_balancer_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.03690058598294854	false	
+inc_mona	load_balancer_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.03569418587721884	false	
+inc_mona	load_balancer_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.04369774484075606	false	
+inc_mona	load_balancer_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.05097089405171573	false	
+inc_mona	load_balancer_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.07989002717658877	false	
+inc_mona	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03460755595006049	false	
+inc_mona	load_balancer_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.04534909897483885	false	
+inc_mona	load_balancer_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.04235489293932915	false	
+inc_mona	load_balancer_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.058012763038277626	false	
+inc_mona	load_balancer_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.17399502801708877	false	
+inc_mona	load_balancer_unreal1_pb_4_6_pe_.ltl	5	UNREALIZABLE	1.020424410002306	false	
+inc_mona	load_balancer_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	7.464954365976155	false	UNREALIZABLE
+inc_mona	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.10307642910629511	false	
+inc_mona	load_balancer_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.15555813815444708	false	
+inc_mona	load_balancer_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.6848594190087169	false	
+inc_mona	load_balancer_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	13.672511801123619	false	UNREALIZABLE
+inc_mona	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.34276657085865736	false	
+inc_mona	load_balancer_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.430555434897542	false	
+inc_mona	load_balancer_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.7607059811707586	false	
+inc_mona	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal2_pb_2_pe_.ltl	1	REALIZABLE	0.028173636877909303	false	
+inc_mona	load_balancer_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.04451501416042447	false	
+inc_mona	load_balancer_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.14802828105166554	false	
+inc_mona	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	12.463955023093149	false	UNREALIZABLE
+inc_mona	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba01.ltl	1	REALIZABLE	0.019792136969044805	false	
+inc_mona	ltl2dba02.ltl	1	REALIZABLE	0.02592675411142409	false	
+inc_mona	ltl2dba03.ltl	1	REALIZABLE	0.030674868961796165	false	
+inc_mona	ltl2dba04.ltl	1	REALIZABLE	0.02587217395193875	false	
+inc_mona	ltl2dba05.ltl	1	REALIZABLE	0.03227028204128146	false	
+inc_mona	ltl2dba06.ltl	1	REALIZABLE	0.03433171799406409	false	
+inc_mona	ltl2dba07.ltl	1	REALIZABLE	0.03352904808707535	false	
+inc_mona	ltl2dba08.ltl	1	REALIZABLE	0.04007778503000736	false	
+inc_mona	ltl2dba09.ltl	1	REALIZABLE	0.03509588818997145	false	
+inc_mona	ltl2dba10.ltl	1	REALIZABLE	0.027867416851222515	false	
+inc_mona	ltl2dba11.ltl	1	REALIZABLE	0.0298033959697932	false	
+inc_mona	ltl2dba12.ltl	1	REALIZABLE	0.037482435116544366	false	
+inc_mona	ltl2dba13.ltl	1	REALIZABLE	0.032623118022456765	false	
+inc_mona	ltl2dba14.ltl	1	REALIZABLE	0.03199697099626064	false	
+inc_mona	ltl2dba15.ltl	1	REALIZABLE	0.0287864760030061	false	
+inc_mona	ltl2dba16.ltl	1	REALIZABLE	0.03143355390056968	false	
+inc_mona	ltl2dba17.ltl	1	REALIZABLE	0.02940105809830129	false	
+inc_mona	ltl2dba18.ltl	1	REALIZABLE	0.03171298000961542	false	
+inc_mona	ltl2dba19.ltl	1	REALIZABLE	0.03029684303328395	false	
+inc_mona	ltl2dba20.ltl	1	REALIZABLE	0.031092697056010365	false	
+inc_mona	ltl2dba21.ltl	1	REALIZABLE	0.035435931058600545	false	
+inc_mona	ltl2dba22.ltl	1	REALIZABLE	0.03473208495415747	false	
+inc_mona	ltl2dba23.ltl	1	REALIZABLE	0.030316769843921065	false	
+inc_mona	ltl2dba25.ltl	1	REALIZABLE	0.03771101706661284	false	
+inc_mona	ltl2dba26.ltl	1	REALIZABLE	0.03402124810963869	false	
+inc_mona	ltl2dba27.ltl	1	UNREALIZABLE	0.03535861195996404	false	
+inc_mona	ltl2dba_C2_pb_100_pe_.ltl	1	REALIZABLE	0.022370812017470598	false	
+inc_mona	ltl2dba_C2_pb_10_pe_.ltl	1	REALIZABLE	0.018484689062461257	false	
+inc_mona	ltl2dba_C2_pb_12_pe_.ltl	1	REALIZABLE	0.02688858797773719	false	
+inc_mona	ltl2dba_C2_pb_14_pe_.ltl	1	REALIZABLE	0.03777027386240661	false	
+inc_mona	ltl2dba_C2_pb_16_pe_.ltl	1	REALIZABLE	0.03942879009991884	false	
+inc_mona	ltl2dba_C2_pb_1_pe_.ltl	1	REALIZABLE	0.030972101958468556	false	
+inc_mona	ltl2dba_C2_pb_25_pe_.ltl	1	REALIZABLE	0.03867345303297043	false	
+inc_mona	ltl2dba_C2_pb_2_pe_.ltl	1	REALIZABLE	0.0337235052138567	false	
+inc_mona	ltl2dba_C2_pb_3_pe_.ltl	1	REALIZABLE	0.035728923976421356	false	
+inc_mona	ltl2dba_C2_pb_4_pe_.ltl	1	REALIZABLE	0.03621463803574443	false	
+inc_mona	ltl2dba_C2_pb_50_pe_.ltl	1	REALIZABLE	0.026554066920652986	false	
+inc_mona	ltl2dba_C2_pb_5_pe_.ltl	1	REALIZABLE	0.030827088048681617	false	
+inc_mona	ltl2dba_C2_pb_60_pe_.ltl	1	REALIZABLE	0.03335546492598951	false	
+inc_mona	ltl2dba_C2_pb_6_pe_.ltl	1	REALIZABLE	0.03421256085857749	false	
+inc_mona	ltl2dba_C2_pb_70_pe_.ltl	1	REALIZABLE	0.03409263491630554	false	
+inc_mona	ltl2dba_C2_pb_7_pe_.ltl	1	REALIZABLE	0.028385157929733396	false	
+inc_mona	ltl2dba_C2_pb_80_pe_.ltl	1	REALIZABLE	0.03655348997563124	false	
+inc_mona	ltl2dba_C2_pb_8_pe_.ltl	1	REALIZABLE	0.034643645863980055	false	
+inc_mona	ltl2dba_C2_pb_9_pe_.ltl	1	REALIZABLE	0.03277093800716102	false	
+inc_mona	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_C2_unreal_pb_10_pe_.ltl	1	UNREALIZABLE	0.1358851888217032	false	
+inc_mona	ltl2dba_C2_unreal_pb_11_pe_.ltl	1	UNREALIZABLE	0.2788948721718043	false	
+inc_mona	ltl2dba_C2_unreal_pb_12_pe_.ltl	1	UNREALIZABLE	0.6052877269685268	false	
+inc_mona	ltl2dba_C2_unreal_pb_13_pe_.ltl	5	UNREALIZABLE	1.4031050270423293	false	
+inc_mona	ltl2dba_C2_unreal_pb_14_pe_.ltl	5	UNREALIZABLE	3.62383826286532	false	
+inc_mona	ltl2dba_C2_unreal_pb_15_pe_.ltl	17	UNREALIZABLE	7.91331678791903	false	UNREALIZABLE
+inc_mona	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_C2_unreal_pb_2_pe_.ltl	1	UNREALIZABLE	0.019482019124552608	false	
+inc_mona	ltl2dba_C2_unreal_pb_3_pe_.ltl	1	UNREALIZABLE	0.02265190496109426	false	
+inc_mona	ltl2dba_C2_unreal_pb_4_pe_.ltl	1	UNREALIZABLE	0.03295254218392074	false	
+inc_mona	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_C2_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.021350079914554954	false	
+inc_mona	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_C2_unreal_pb_6_pe_.ltl	1	UNREALIZABLE	0.03314699209295213	false	
+inc_mona	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_C2_unreal_pb_7_pe_.ltl	1	UNREALIZABLE	0.027718466008082032	false	
+inc_mona	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_C2_unreal_pb_8_pe_.ltl	1	UNREALIZABLE	0.042944113025441766	false	
+inc_mona	ltl2dba_C2_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.0756817520596087	false	
+inc_mona	ltl2dba_E_pb_10_pe_.ltl	1	REALIZABLE	0.019356914795935154	false	
+inc_mona	ltl2dba_E_pb_12_pe_.ltl	1	REALIZABLE	0.02843378111720085	false	
+inc_mona	ltl2dba_E_pb_14_pe_.ltl	1	REALIZABLE	0.030664859106764197	false	
+inc_mona	ltl2dba_E_pb_15_pe_.ltl	1	REALIZABLE	0.032999927178025246	false	
+inc_mona	ltl2dba_E_pb_16_pe_.ltl	1	REALIZABLE	0.03321540099568665	false	
+inc_mona	ltl2dba_E_pb_1_pe_.ltl	1	REALIZABLE	0.03826954821124673	false	
+inc_mona	ltl2dba_E_pb_2_pe_.ltl	1	REALIZABLE	0.03131746896542609	false	
+inc_mona	ltl2dba_E_pb_3_pe_.ltl	1	REALIZABLE	0.03531451500020921	false	
+inc_mona	ltl2dba_E_pb_4_pe_.ltl	1	REALIZABLE	0.031339995097368956	false	
+inc_mona	ltl2dba_E_pb_5_pe_.ltl	1	REALIZABLE	0.02989675011485815	false	
+inc_mona	ltl2dba_E_pb_6_pe_.ltl	1	REALIZABLE	0.029800228076055646	false	
+inc_mona	ltl2dba_E_pb_7_pe_.ltl	1	REALIZABLE	0.037794969975948334	false	
+inc_mona	ltl2dba_E_pb_8_pe_.ltl	1	REALIZABLE	0.03401206689886749	false	
+inc_mona	ltl2dba_E_pb_9_pe_.ltl	1	REALIZABLE	0.0323418527841568	false	
+inc_mona	ltl2dba_Q_pb_100_pe_.ltl	1	REALIZABLE	0.03524429304525256	false	
+inc_mona	ltl2dba_Q_pb_10_pe_.ltl	1	REALIZABLE	0.03167324489913881	false	
+inc_mona	ltl2dba_Q_pb_12_pe_.ltl	1	REALIZABLE	0.031129224924370646	false	
+inc_mona	ltl2dba_Q_pb_15_pe_.ltl	1	REALIZABLE	0.038410305976867676	false	
+inc_mona	ltl2dba_Q_pb_18_pe_.ltl	1	REALIZABLE	0.040108520071953535	false	
+inc_mona	ltl2dba_Q_pb_1_pe_.ltl	1	REALIZABLE	0.038709974149242043	false	
+inc_mona	ltl2dba_Q_pb_25_pe_.ltl	1	REALIZABLE	0.037107712822034955	false	
+inc_mona	ltl2dba_Q_pb_2_pe_.ltl	1	REALIZABLE	0.03140754904597998	false	
+inc_mona	ltl2dba_Q_pb_3_pe_.ltl	1	REALIZABLE	0.030803448986262083	false	
+inc_mona	ltl2dba_Q_pb_4_pe_.ltl	1	REALIZABLE	0.0325409360229969	false	
+inc_mona	ltl2dba_Q_pb_50_pe_.ltl	1	REALIZABLE	0.03478821204043925	false	
+inc_mona	ltl2dba_Q_pb_5_pe_.ltl	1	REALIZABLE	0.0338842140045017	false	
+inc_mona	ltl2dba_Q_pb_6_pe_.ltl	1	REALIZABLE	0.03750360896810889	false	
+inc_mona	ltl2dba_Q_pb_7_pe_.ltl	1	REALIZABLE	0.031414332799613476	false	
+inc_mona	ltl2dba_Q_pb_8_pe_.ltl	1	REALIZABLE	0.02983627002686262	false	
+inc_mona	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_R_pb_1_pe_.ltl	1	REALIZABLE	0.019976132083684206	false	
+inc_mona	ltl2dba_R_pb_2_pe_.ltl	1	UNREALIZABLE	0.030949127161875367	false	
+inc_mona	ltl2dba_R_pb_3_pe_.ltl	1	UNREALIZABLE	0.03687303699553013	false	
+inc_mona	ltl2dba_R_pb_4_pe_.ltl	1	UNREALIZABLE	0.03470245795324445	false	
+inc_mona	ltl2dba_R_pb_5_pe_.ltl	1	UNREALIZABLE	0.11733444686979055	false	
+inc_mona	ltl2dba_R_pb_6_pe_.ltl	1	UNREALIZABLE	0.8253004921134561	false	
+inc_mona	ltl2dba_R_pb_7_pe_.ltl	17	UNREALIZABLE	11.858921074075624	false	UNREALIZABLE
+inc_mona	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_U1_pb_100_pe_.ltl	1	REALIZABLE	0.016178761143237352	false	
+inc_mona	ltl2dba_U1_pb_10_pe_.ltl	1	REALIZABLE	0.013932844856753945	false	
+inc_mona	ltl2dba_U1_pb_12_pe_.ltl	1	REALIZABLE	0.020499120000749826	false	
+inc_mona	ltl2dba_U1_pb_15_pe_.ltl	1	REALIZABLE	0.014881805051118135	false	
+inc_mona	ltl2dba_U1_pb_18_pe_.ltl	1	REALIZABLE	0.016613607993349433	false	
+inc_mona	ltl2dba_U1_pb_1_pe_.ltl	1	REALIZABLE	0.02007681503891945	false	
+inc_mona	ltl2dba_U1_pb_25_pe_.ltl	1	REALIZABLE	0.017011908115819097	false	
+inc_mona	ltl2dba_U1_pb_2_pe_.ltl	1	REALIZABLE	0.008430521935224533	false	
+inc_mona	ltl2dba_U1_pb_3_pe_.ltl	1	REALIZABLE	0.008200336946174502	false	
+inc_mona	ltl2dba_U1_pb_4_pe_.ltl	1	REALIZABLE	0.008066132897511125	false	
+inc_mona	ltl2dba_U1_pb_50_pe_.ltl	1	REALIZABLE	0.008526423014700413	false	
+inc_mona	ltl2dba_U1_pb_5_pe_.ltl	1	REALIZABLE	0.01592663978226483	false	
+inc_mona	ltl2dba_U1_pb_6_pe_.ltl	1	REALIZABLE	0.01486745709553361	false	
+inc_mona	ltl2dba_U1_pb_7_pe_.ltl	1	REALIZABLE	0.008287499891594052	false	
+inc_mona	ltl2dba_U1_pb_8_pe_.ltl	1	REALIZABLE	0.02019434212706983	false	
+inc_mona	ltl2dba_U1_pb_9_pe_.ltl	1	REALIZABLE	0.008620470063760877	false	
+inc_mona	ltl2dba_alpha_pb_100_pe_.ltl	1	REALIZABLE	0.016487237066030502	false	
+inc_mona	ltl2dba_alpha_pb_10_pe_.ltl	1	REALIZABLE	0.015671387081965804	false	
+inc_mona	ltl2dba_alpha_pb_12_pe_.ltl	1	REALIZABLE	0.013366645900532603	false	
+inc_mona	ltl2dba_alpha_pb_14_pe_.ltl	1	REALIZABLE	0.018848235020413995	false	
+inc_mona	ltl2dba_alpha_pb_16_pe_.ltl	1	REALIZABLE	0.015896954108029604	false	
+inc_mona	ltl2dba_alpha_pb_17_pe_.ltl	1	REALIZABLE	0.01563171693123877	false	
+inc_mona	ltl2dba_alpha_pb_18_pe_.ltl	1	REALIZABLE	0.017624058993533254	false	
+inc_mona	ltl2dba_alpha_pb_1_pe_.ltl	1	REALIZABLE	0.013453003950417042	false	
+inc_mona	ltl2dba_alpha_pb_20_pe_.ltl	1	REALIZABLE	0.016319156158715487	false	
+inc_mona	ltl2dba_alpha_pb_25_pe_.ltl	1	REALIZABLE	0.020172020886093378	false	
+inc_mona	ltl2dba_alpha_pb_2_pe_.ltl	1	REALIZABLE	0.017404126934707165	false	
+inc_mona	ltl2dba_alpha_pb_3_pe_.ltl	1	REALIZABLE	0.014432692201808095	false	
+inc_mona	ltl2dba_alpha_pb_4_pe_.ltl	1	REALIZABLE	0.008106975117698312	false	
+inc_mona	ltl2dba_alpha_pb_50_pe_.ltl	1	REALIZABLE	0.008577801054343581	false	
+inc_mona	ltl2dba_alpha_pb_5_pe_.ltl	1	REALIZABLE	0.009192358935251832	false	
+inc_mona	ltl2dba_alpha_pb_6_pe_.ltl	1	REALIZABLE	0.01853965292684734	false	
+inc_mona	ltl2dba_alpha_pb_7_pe_.ltl	1	REALIZABLE	0.014448150061070919	false	
+inc_mona	ltl2dba_alpha_pb_8_pe_.ltl	1	REALIZABLE	0.019316100981086493	false	
+inc_mona	ltl2dba_beta_pb_100_pe_.ltl	1	REALIZABLE	0.015433283988386393	false	
+inc_mona	ltl2dba_beta_pb_10_pe_.ltl	1	REALIZABLE	0.016254371032118797	false	
+inc_mona	ltl2dba_beta_pb_15_pe_.ltl	1	REALIZABLE	0.019800051813945174	false	
+inc_mona	ltl2dba_beta_pb_18_pe_.ltl	1	REALIZABLE	0.014517557108774781	false	
+inc_mona	ltl2dba_beta_pb_1_pe_.ltl	1	REALIZABLE	0.01754380506463349	false	
+inc_mona	ltl2dba_beta_pb_20_pe_.ltl	1	REALIZABLE	0.00898479693569243	false	
+inc_mona	ltl2dba_beta_pb_25_pe_.ltl	1	REALIZABLE	0.018724109046161175	false	
+inc_mona	ltl2dba_beta_pb_2_pe_.ltl	1	REALIZABLE	0.016315881861373782	false	
+inc_mona	ltl2dba_beta_pb_30_pe_.ltl	1	REALIZABLE	0.01567034120671451	false	
+inc_mona	ltl2dba_beta_pb_3_pe_.ltl	1	REALIZABLE	0.008442644029855728	false	
+inc_mona	ltl2dba_beta_pb_4_pe_.ltl	1	REALIZABLE	0.01774007990024984	false	
+inc_mona	ltl2dba_beta_pb_5_pe_.ltl	1	REALIZABLE	0.013371839886531234	false	
+inc_mona	ltl2dba_beta_pb_6_pe_.ltl	1	REALIZABLE	0.016914065927267075	false	
+inc_mona	ltl2dba_beta_pb_7_pe_.ltl	1	REALIZABLE	0.016900148009881377	false	
+inc_mona	ltl2dba_beta_pb_8_pe_.ltl	1	REALIZABLE	0.016077012987807393	false	
+inc_mona	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_theta_pb_10_pe_.ltl	5	UNREALIZABLE	1.8311200300231576	false	
+inc_mona	ltl2dba_theta_pb_12_pe_.ltl	17	UNREALIZABLE	10.85994852008298	false	UNREALIZABLE
+inc_mona	ltl2dba_theta_pb_14_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_theta_pb_1_pe_.ltl	1	UNREALIZABLE	0.018318230053409934	false	
+inc_mona	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_theta_pb_2_pe_.ltl	1	UNREALIZABLE	0.020885818172246218	false	
+inc_mona	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_theta_pb_3_pe_.ltl	1	UNREALIZABLE	0.019717830000445247	false	
+inc_mona	ltl2dba_theta_pb_4_pe_.ltl	1	UNREALIZABLE	0.023348743794485927	false	
+inc_mona	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT
+inc_mona	ltl2dba_theta_pb_5_pe_.ltl	1	UNREALIZABLE	0.03518167091533542	false	
+inc_mona	ltl2dba_theta_pb_6_pe_.ltl	1	UNREALIZABLE	0.06468028109520674	false	
+inc_mona	ltl2dba_theta_pb_7_pe_.ltl	1	UNREALIZABLE	0.1418732269667089	false	
+inc_mona	ltl2dba_theta_pb_8_pe_.ltl	1	UNREALIZABLE	0.31271221907809377	false	
+inc_mona	ltl2dpa01.ltl	1	REALIZABLE	0.02586035104468465	false	
+inc_mona	ltl2dpa02.ltl	1	REALIZABLE	0.029557700036093593	false	
+inc_mona	ltl2dpa03.ltl	1	REALIZABLE	0.04594541387632489	false	
+inc_mona	ltl2dpa04.ltl	1	REALIZABLE	0.03225497016683221	false	
+inc_mona	ltl2dpa05.ltl	1	REALIZABLE	0.03482515108771622	false	
+inc_mona	ltl2dpa06.ltl	1	REALIZABLE	0.03348000207915902	false	
+inc_mona	ltl2dpa07.ltl	1	REALIZABLE	0.03394491504877806	false	
+inc_mona	ltl2dpa08.ltl	1	REALIZABLE	0.033205145969986916	false	
+inc_mona	ltl2dpa09.ltl	1	REALIZABLE	0.03827257500961423	false	
+inc_mona	ltl2dpa10.ltl	1	REALIZABLE	0.04276461503468454	false	
+inc_mona	ltl2dpa11.ltl	1	REALIZABLE	0.026402052026242018	false	
+inc_mona	ltl2dpa12.ltl	1	REALIZABLE	0.04174955701455474	false	
+inc_mona	ltl2dpa13.ltl	17	REALIZABLE	13.093634722055867	false	REALIZABLE
+inc_mona	ltl2dpa14.ltl	1	REALIZABLE	0.022271763067692518	false	
+inc_mona	ltl2dpa15.ltl	1	REALIZABLE	0.01765866600908339	false	
+inc_mona	ltl2dpa16.ltl	1	REALIZABLE	0.02527517289854586	false	
+inc_mona	ltl2dpa17.ltl	1	REALIZABLE	0.024940213887020946	false	
+inc_mona	ltl2dpa18.ltl	1	REALIZABLE	0.03717331914231181	false	
+inc_mona	ltl2dpa19.ltl				true	TIMEOUT
+inc_mona	ltl2dpa20.ltl	1	REALIZABLE	0.019074453972280025	false	
+inc_mona	ltl2dpa22.ltl	1	REALIZABLE	0.1372539980802685	false	
+inc_mona	ltl2dpa23.ltl	1	REALIZABLE	0.016843851888552308	false	
+inc_mona	ltl2dpa24.ltl	1	REALIZABLE	0.01495442702434957	false	
+inc_mona	mux_pb_100_pe_.ltl	1	REALIZABLE	0.021372269839048386	false	
+inc_mona	mux_pb_10_pe_.ltl	1	REALIZABLE	0.0164808239787817	false	
+inc_mona	mux_pb_125_pe_.ltl	1	REALIZABLE	0.020772045012563467	false	
+inc_mona	mux_pb_12_pe_.ltl	1	REALIZABLE	0.016755178105086088	false	
+inc_mona	mux_pb_132_pe_.ltl	1	REALIZABLE	0.018538550939410925	false	
+inc_mona	mux_pb_150_pe_.ltl	1	REALIZABLE	0.039683014154434204	false	
+inc_mona	mux_pb_16_pe_.ltl	1	REALIZABLE	0.029114773962646723	false	
+inc_mona	mux_pb_175_pe_.ltl	1	REALIZABLE	0.04361517308279872	false	
+inc_mona	mux_pb_200_pe_.ltl	1	REALIZABLE	0.04604657692834735	false	
+inc_mona	mux_pb_32_pe_.ltl	1	REALIZABLE	0.028366468846797943	false	
+inc_mona	mux_pb_64_pe_.ltl	1	REALIZABLE	0.047961906995624304	false	
+inc_mona	mux_pb_8_pe_.ltl	1	REALIZABLE	0.03812163905240595	false	
+inc_mona	narylatch_pb_10_pe_.ltl	1	REALIZABLE	0.048981446074321866	false	
+inc_mona	narylatch_pb_11_pe_.ltl	1	REALIZABLE	0.046918787993490696	false	
+inc_mona	narylatch_pb_12_pe_.ltl	1	REALIZABLE	0.040452525950968266	false	
+inc_mona	narylatch_pb_16_pe_.ltl	1	REALIZABLE	0.04038059595040977	false	
+inc_mona	narylatch_pb_32_pe_.ltl	1	REALIZABLE	0.04235652298666537	false	
+inc_mona	narylatch_pb_64_pe_.ltl	1	REALIZABLE	0.041098039131611586	false	
+inc_mona	narylatch_pb_8_pe_.ltl	1	REALIZABLE	0.02709533483721316	false	
+inc_mona	ordered-visits-choice-real.ltl				true	TIMEOUT
+inc_mona	ordered-visits-real.ltl	1	REALIZABLE	0.028241843916475773	false	
+inc_mona	package-delivery-real.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm0.ltl	1	UNREALIZABLE	0.04589818790555	false	
+inc_mona	patrolling-alarm1.ltl	1	UNREALIZABLE	0.07689458318054676	false	
+inc_mona	patrolling-alarm10.ltl	17	UNREALIZABLE	10.540223610121757	false	UNREALIZABLE
+inc_mona	patrolling-alarm11.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm12.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm13.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm14.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm15.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm16.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm17.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm18.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm19.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm2.ltl	1	UNREALIZABLE	0.14923519711010158	false	
+inc_mona	patrolling-alarm20.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm21.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm22.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm23.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm24.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm25.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm26.ltl				true	TIMEOUT
+inc_mona	patrolling-alarm3.ltl	1	UNREALIZABLE	0.46744077908806503	false	
+inc_mona	patrolling-alarm4.ltl	1	UNREALIZABLE	0.7187887069303542	false	
+inc_mona	patrolling-alarm5.ltl	5	UNREALIZABLE	1.3280403688549995	false	
+inc_mona	patrolling-alarm6.ltl	5	UNREALIZABLE	2.246259317966178	false	
+inc_mona	patrolling-alarm7.ltl	5	UNREALIZABLE	3.713528719963506	false	
+inc_mona	patrolling-alarm8.ltl	17	UNREALIZABLE	6.141664505936205	false	UNREALIZABLE
+inc_mona	patrolling-alarm9.ltl	17	UNREALIZABLE	9.928408263949677	false	UNREALIZABLE
+inc_mona	patrolling0.ltl	1	UNREALIZABLE	0.04522762284614146	false	
+inc_mona	patrolling1.ltl	1	UNREALIZABLE	0.07579664001241326	false	
+inc_mona	patrolling10.ltl	17	UNREALIZABLE	14.408950079930946	false	UNREALIZABLE
+inc_mona	patrolling11.ltl				true	TIMEOUT
+inc_mona	patrolling12.ltl				true	TIMEOUT
+inc_mona	patrolling13.ltl				true	TIMEOUT
+inc_mona	patrolling14.ltl				true	TIMEOUT
+inc_mona	patrolling15.ltl				true	TIMEOUT
+inc_mona	patrolling16.ltl				true	TIMEOUT
+inc_mona	patrolling17.ltl				true	TIMEOUT
+inc_mona	patrolling18.ltl				true	TIMEOUT
+inc_mona	patrolling19.ltl				true	TIMEOUT
+inc_mona	patrolling2.ltl	1	UNREALIZABLE	0.15178763796575367	false	
+inc_mona	patrolling20.ltl				true	TIMEOUT
+inc_mona	patrolling21.ltl				true	TIMEOUT
+inc_mona	patrolling22.ltl				true	TIMEOUT
+inc_mona	patrolling23.ltl				true	TIMEOUT
+inc_mona	patrolling24.ltl				true	TIMEOUT
+inc_mona	patrolling25.ltl				true	TIMEOUT
+inc_mona	patrolling3.ltl	1	UNREALIZABLE	0.5775656960904598	false	
+inc_mona	patrolling4.ltl	1	UNREALIZABLE	0.9280532400589436	false	
+inc_mona	patrolling5.ltl	5	UNREALIZABLE	1.7386392019689083	false	
+inc_mona	patrolling6.ltl	5	UNREALIZABLE	2.9223788038361818	false	
+inc_mona	patrolling7.ltl	17	UNREALIZABLE	5.8383770398795605	false	UNREALIZABLE
+inc_mona	patrolling8.ltl	17	UNREALIZABLE	8.12786574009806	false	UNREALIZABLE
+inc_mona	patrolling9.ltl	17	UNREALIZABLE	11.718176054069772	false	UNREALIZABLE
+inc_mona	precise-reachability-real.ltl	1	REALIZABLE	0.6052954350598156	false	
+inc_mona	precise-reachability0.ltl	1	UNREALIZABLE	0.025925084948539734	false	
+inc_mona	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.016104900976642966	false	
+inc_mona	prioritized_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.015952710062265396	false	
+inc_mona	prioritized_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.02622753311879933	false	
+inc_mona	prioritized_arbiter_pb_4_pe_.ltl	1	REALIZABLE	0.028473719023168087	false	
+inc_mona	prioritized_arbiter_pb_5_pe_.ltl	1	REALIZABLE	0.3088007860351354	false	
+inc_mona	prioritized_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.0216076981741935	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.020299378084018826	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.024674122920259833	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.010322568006813526	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.018496599048376083	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.018848587991669774	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_16_pe_.ltl	1	UNREALIZABLE	0.018030575942248106	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.017028809990733862	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.018718868028372526	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.013704323908314109	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.015855521894991398	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.01735554588958621	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.01400146703235805	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.02182072214782238	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.016862103017047048	false	
+inc_mona	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.015657597919926047	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.01727027096785605	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.014953677076846361	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.017926834989339113	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_13_pe_.ltl	1	UNREALIZABLE	0.01883428986184299	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_14_pe_.ltl	1	UNREALIZABLE	0.01781746605411172	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_15_pe_.ltl	1	UNREALIZABLE	0.018948395969346166	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_16_pe_.ltl	1	UNREALIZABLE	0.018165012821555138	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.01654563983902335	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.01494832499884069	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.015609319088980556	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.017468030098825693	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.02580727799795568	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.019629515940323472	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.010137761943042278	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.017667210893705487	false	
+inc_mona	prioritized_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.017166541190817952	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.017051199916750193	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	1	UNREALIZABLE	0.026499476050958037	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.0232715280726552	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_13_pe_.ltl	1	UNREALIZABLE	0.03409837721846998	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_14_pe_.ltl	1	UNREALIZABLE	0.03676111507229507	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_15_pe_.ltl	1	UNREALIZABLE	0.03851938107982278	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_16_pe_.ltl	1	UNREALIZABLE	0.033153180964291096	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.03415630687959492	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.03413490182720125	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.03815658111125231	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.038186568999662995	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.03951376909390092	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.03905817796476185	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.03858657903037965	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.03360533504746854	false	
+inc_mona	prioritized_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.04283277899958193	false	
+inc_mona	prioritized_arbiter_unreal1_pb_5_16_pe_.ltl	1	UNREALIZABLE	0.04228011309169233	false	
+inc_mona	prioritized_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.03410347108729184	false	
+inc_mona	prioritized_arbiter_unreal1_pb_5_32_pe_.ltl	1	UNREALIZABLE	0.04081964795477688	false	
+inc_mona	prioritized_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.030925889033824205	false	
+inc_mona	prioritized_arbiter_unreal1_pb_6_16_pe_.ltl	1	UNREALIZABLE	0.03837590594775975	false	
+inc_mona	prioritized_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.03208163403905928	false	
+inc_mona	prioritized_arbiter_unreal1_pb_6_32_pe_.ltl	1	UNREALIZABLE	0.04545214492827654	false	
+inc_mona	prioritized_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.0298470719717443	false	
+inc_mona	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.023760034004226327	false	
+inc_mona	prioritized_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.030088559025898576	false	
+inc_mona	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.02671523205935955	false	
+inc_mona	prioritized_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.0288577270694077	false	
+inc_mona	prioritized_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.037010248051956296	false	
+inc_mona	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT
+inc_mona	prioritized_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.026122492039576173	false	
+inc_mona	prioritized_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.028621647972613573	false	
+inc_mona	prioritized_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.03725772094912827	false	
+inc_mona	reversible-lane-r-real.ltl				true	TIMEOUT
+inc_mona	reversible-lane-u-unreal.ltl				true	TIMEOUT
+inc_mona	reversible-lane-u0.ltl				true	TIMEOUT
+inc_mona	reversible-lane-u1.ltl				true	TIMEOUT
+inc_mona	robot-cat-real-1d-real.ltl				true	TIMEOUT
+inc_mona	robot-cat-real-2d-real.ltl				true	TIMEOUT
+inc_mona	robot-cat-unreal-1d-unreal.ltl				true	TIMEOUT
+inc_mona	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT
+inc_mona	robot-grid-commute-1d-real.ltl	5	REALIZABLE	2.800500596873462	false	
+inc_mona	robot-grid-commute-2d-real.ltl				true	TIMEOUT
+inc_mona	robot-grid-reach-1d-real.ltl	1	REALIZABLE	0.02580334316007793	false	
+inc_mona	robot-grid-reach-2d-real.ltl	5	REALIZABLE	3.5844764939974993	false	
+inc_mona	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	1	REALIZABLE	0.03805140918120742	false	
+inc_mona	robot-grid-reach-repeated-with-obstacles-2d-real.ltl				true	TIMEOUT
+inc_mona	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT
+inc_mona	robot-resource-1d-unreal.ltl				true	TIMEOUT
+inc_mona	robot-resource-1d0.ltl	5	UNREALIZABLE	1.7739148549735546	false	
+inc_mona	robot-resource-1d1.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d0.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d1.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d10.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d11.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d12.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d13.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d14.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d15.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d16.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d17.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d18.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d19.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d2.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d20.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d21.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d22.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d23.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d3.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d4.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d5.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d6.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d7.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d8.ltl				true	TIMEOUT
+inc_mona	robot-resource-2d9.ltl				true	TIMEOUT
+inc_mona	robot-tasks-real.ltl	1	REALIZABLE	0.07304407306946814	false	
+inc_mona	robot-to-target-charging-real.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal0.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal1.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal2.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal3.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal4.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal5.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal6.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal7.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging-unreal8.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging0.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging1.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging10.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging11.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging12.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging13.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging14.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging15.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging16.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging17.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging18.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging19.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging2.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging20.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging21.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging22.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging23.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging24.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging25.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging3.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging4.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging5.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging6.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging7.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging8.ltl				true	TIMEOUT
+inc_mona	robot-to-target-charging9.ltl				true	TIMEOUT
+inc_mona	robot-to-target-unreal0.ltl	17	REALIZABLE	7.230909329140559	false	REALIZABLE
+inc_mona	robot-to-target0.ltl				true	TIMEOUT
+inc_mona	robot_analyze_samples_v1-real.ltl				true	TIMEOUT
+inc_mona	robot_collect_samples_v1-real.ltl				true	TIMEOUT
+inc_mona	robot_collect_samples_v2-real.ltl				true	TIMEOUT
+inc_mona	robot_collect_samples_v3-real.ltl				true	TIMEOUT
+inc_mona	robot_collect_samples_v4-real.ltl				true	TIMEOUT
+inc_mona	robot_deliver_products_1-real.ltl				true	TIMEOUT
+inc_mona	robot_deliver_products_20.ltl				true	TIMEOUT
+inc_mona	robot_deliver_products_30.ltl				true	TIMEOUT
+inc_mona	robot_deliver_products_40.ltl				true	TIMEOUT
+inc_mona	robot_deliver_products_50.ltl				true	TIMEOUT
+inc_mona	robot_grid_pb_2_2_pe_.ltl	17	REALIZABLE	7.081915736896917	false	REALIZABLE
+inc_mona	robot_grid_pb_3_3_pe_.ltl				true	TIMEOUT
+inc_mona	robot_grid_pb_4_4_pe_.ltl				true	TIMEOUT
+inc_mona	robot_grid_pb_5_1_pe_.ltl				true	TIMEOUT
+inc_mona	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT
+inc_mona	robot_grid_pb_6_1_pe_.ltl				true	TIMEOUT
+inc_mona	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT
+inc_mona	robot_grid_pb_7_7_pe_.ltl				true	TIMEOUT
+inc_mona	robot_grid_pb_8_8_pe_.ltl				true	TIMEOUT
+inc_mona	robot_repair0.ltl				true	TIMEOUT
+inc_mona	robot_repair1.ltl				true	TIMEOUT
+inc_mona	robot_repair2.ltl				true	TIMEOUT
+inc_mona	robot_repair3.ltl				true	TIMEOUT
+inc_mona	robot_repair4.ltl				true	TIMEOUT
+inc_mona	robot_repair5.ltl				true	TIMEOUT
+inc_mona	robot_running-real.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.022756757913157344	false	
+inc_mona	round_robin_arbiter_pb_3_pe_.ltl	1	REALIZABLE	0.05837201396934688	false	
+inc_mona	round_robin_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.04197472892701626	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	1	UNREALIZABLE	0.07580220908857882	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.14658223208971322	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	1	UNREALIZABLE	0.29522707406431437	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.5682889421004802	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	5	UNREALIZABLE	1.1452724928967655	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	2.6212830380536616	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.024693993851542473	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.03721061209216714	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.03562284610234201	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.03914061584509909	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.04232422495260835	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.045624210964888334	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.03497254406102002	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.04126464296132326	false	
+inc_mona	round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.03742117388173938	false	
+inc_mona	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.02471527806483209	false	
+inc_mona	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.03162857796996832	false	
+inc_mona	round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.036961599020287395	false	
+inc_mona	round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.05654287897050381	false	
+inc_mona	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.18032096303068101	false	
+inc_mona	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	5	UNREALIZABLE	0.9451912771910429	false	
+inc_mona	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	7.519584788940847	false	UNREALIZABLE
+inc_mona	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.07616249308921397	false	
+inc_mona	round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.10435641487129033	false	
+inc_mona	round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.26136223692446947	false	
+inc_mona	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	5	UNREALIZABLE	1.7384597801137716	false	
+inc_mona	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.020754777127876878	false	
+inc_mona	round_robin_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.03277364303357899	false	
+inc_mona	round_robin_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.5100284470245242	false	
+inc_mona	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT
+inc_mona	rw_arbiter_pb_1_pe_.ltl	1	REALIZABLE	0.01949627697467804	false	
+inc_mona	rw_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.05376640008762479	false	
+inc_mona	rw_arbiter_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	scheduler-real.ltl				true	TIMEOUT
+inc_mona	shift_pb_100_pe_.ltl	1	REALIZABLE	0.027976721059530973	false	
+inc_mona	shift_pb_10_pe_.ltl	1	REALIZABLE	0.028200907865539193	false	
+inc_mona	shift_pb_125_pe_.ltl	1	REALIZABLE	0.036981640849262476	false	
+inc_mona	shift_pb_12_pe_.ltl	1	REALIZABLE	0.028209374053403735	false	
+inc_mona	shift_pb_132_pe_.ltl	1	REALIZABLE	0.04573145182803273	false	
+inc_mona	shift_pb_16_pe_.ltl	1	REALIZABLE	0.03382971789687872	false	
+inc_mona	shift_pb_250_pe_.ltl	1	REALIZABLE	0.04885931988246739	false	
+inc_mona	shift_pb_32_pe_.ltl	1	REALIZABLE	0.037712488090619445	false	
+inc_mona	shift_pb_500_pe_.ltl	1	REALIZABLE	0.0516954951453954	false	
+inc_mona	shift_pb_64_pe_.ltl	1	REALIZABLE	0.026905467035248876	false	
+inc_mona	shift_pb_8_pe_.ltl	1	REALIZABLE	0.033206545980647206	false	
+inc_mona	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_unreal1_pb_16_1_pe_.ltl	1	UNREALIZABLE	0.023729337844997644	false	
+inc_mona	simple_arbiter_unreal1_pb_16_2_pe_.ltl	1	UNREALIZABLE	0.017851012060418725	false	
+inc_mona	simple_arbiter_unreal1_pb_16_3_pe_.ltl	1	UNREALIZABLE	0.02010322012938559	false	
+inc_mona	simple_arbiter_unreal1_pb_16_4_pe_.ltl	1	UNREALIZABLE	0.017056838143616915	false	
+inc_mona	simple_arbiter_unreal1_pb_16_5_pe_.ltl	1	UNREALIZABLE	0.016943872906267643	false	
+inc_mona	simple_arbiter_unreal1_pb_2_10_pe_.ltl	1	UNREALIZABLE	0.015469986014068127	false	
+inc_mona	simple_arbiter_unreal1_pb_2_12_pe_.ltl	1	UNREALIZABLE	0.018325091106817126	false	
+inc_mona	simple_arbiter_unreal1_pb_2_1_pe_.ltl	1	UNREALIZABLE	0.0219362648203969	false	
+inc_mona	simple_arbiter_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.014856733148917556	false	
+inc_mona	simple_arbiter_unreal1_pb_2_3_pe_.ltl	1	UNREALIZABLE	0.017028302885591984	false	
+inc_mona	simple_arbiter_unreal1_pb_2_4_pe_.ltl	1	UNREALIZABLE	0.01761539001017809	false	
+inc_mona	simple_arbiter_unreal1_pb_2_5_pe_.ltl	1	UNREALIZABLE	0.017440747935324907	false	
+inc_mona	simple_arbiter_unreal1_pb_2_6_pe_.ltl	1	UNREALIZABLE	0.009815230965614319	false	
+inc_mona	simple_arbiter_unreal1_pb_2_7_pe_.ltl	1	UNREALIZABLE	0.02046373812481761	false	
+inc_mona	simple_arbiter_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.016164188040420413	false	
+inc_mona	simple_arbiter_unreal1_pb_2_9_pe_.ltl	1	UNREALIZABLE	0.010204273974522948	false	
+inc_mona	simple_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.010739512974396348	false	
+inc_mona	simple_arbiter_unreal1_pb_3_1_pe_.ltl	1	UNREALIZABLE	0.009695708053186536	false	
+inc_mona	simple_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.010054061887785792	false	
+inc_mona	simple_arbiter_unreal1_pb_3_3_pe_.ltl	1	UNREALIZABLE	0.01698981993831694	false	
+inc_mona	simple_arbiter_unreal1_pb_3_4_pe_.ltl	1	UNREALIZABLE	0.023021420929580927	false	
+inc_mona	simple_arbiter_unreal1_pb_3_5_pe_.ltl	1	UNREALIZABLE	0.017103353049606085	false	
+inc_mona	simple_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.021686787949874997	false	
+inc_mona	simple_arbiter_unreal1_pb_3_7_pe_.ltl	1	UNREALIZABLE	0.01672847894951701	false	
+inc_mona	simple_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.015646377112716436	false	
+inc_mona	simple_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.01456523616798222	false	
+inc_mona	simple_arbiter_unreal1_pb_4_10_pe_.ltl	1	UNREALIZABLE	0.014656638959422708	false	
+inc_mona	simple_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.020628042053431273	false	
+inc_mona	simple_arbiter_unreal1_pb_4_1_pe_.ltl	1	UNREALIZABLE	0.016053011873736978	false	
+inc_mona	simple_arbiter_unreal1_pb_4_2_pe_.ltl	1	UNREALIZABLE	0.017595420125871897	false	
+inc_mona	simple_arbiter_unreal1_pb_4_3_pe_.ltl	1	UNREALIZABLE	0.014567595906555653	false	
+inc_mona	simple_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.014412891818210483	false	
+inc_mona	simple_arbiter_unreal1_pb_4_5_pe_.ltl	1	UNREALIZABLE	0.018792964052408934	false	
+inc_mona	simple_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.014379795175045729	false	
+inc_mona	simple_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.015348584856837988	false	
+inc_mona	simple_arbiter_unreal1_pb_4_8_pe_.ltl	1	UNREALIZABLE	0.016819848911836743	false	
+inc_mona	simple_arbiter_unreal1_pb_4_9_pe_.ltl	1	UNREALIZABLE	0.015275049023330212	false	
+inc_mona	simple_arbiter_unreal1_pb_5_10_pe_.ltl	1	UNREALIZABLE	0.010685928165912628	false	
+inc_mona	simple_arbiter_unreal1_pb_5_1_pe_.ltl	1	UNREALIZABLE	0.017077882774174213	false	
+inc_mona	simple_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.020258264150470495	false	
+inc_mona	simple_arbiter_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.015899938065558672	false	
+inc_mona	simple_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.0168462370056659	false	
+inc_mona	simple_arbiter_unreal1_pb_5_5_pe_.ltl	1	UNREALIZABLE	0.028136614011600614	false	
+inc_mona	simple_arbiter_unreal1_pb_5_6_pe_.ltl	1	UNREALIZABLE	0.030472109094262123	false	
+inc_mona	simple_arbiter_unreal1_pb_5_7_pe_.ltl	1	UNREALIZABLE	0.03535558795556426	false	
+inc_mona	simple_arbiter_unreal1_pb_5_8_pe_.ltl	1	UNREALIZABLE	0.03435000614263117	false	
+inc_mona	simple_arbiter_unreal1_pb_5_9_pe_.ltl	1	UNREALIZABLE	0.03451973106712103	false	
+inc_mona	simple_arbiter_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.039975968888029456	false	
+inc_mona	simple_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.029214167036116123	false	
+inc_mona	simple_arbiter_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.03405362810008228	false	
+inc_mona	simple_arbiter_unreal1_pb_6_4_pe_.ltl	1	UNREALIZABLE	0.03567796596325934	false	
+inc_mona	simple_arbiter_unreal1_pb_6_5_pe_.ltl	1	UNREALIZABLE	0.03291605901904404	false	
+inc_mona	simple_arbiter_unreal1_pb_8_8_pe_.ltl	1	UNREALIZABLE	0.03406002395786345	false	
+inc_mona	simple_arbiter_unreal2_pb_10_pe_.ltl	1	UNREALIZABLE	0.041886386927217245	false	
+inc_mona	simple_arbiter_unreal2_pb_25_pe_.ltl	1	UNREALIZABLE	0.04484137799590826	false	
+inc_mona	simple_arbiter_unreal2_pb_2_pe_.ltl	1	UNREALIZABLE	0.03639886900782585	false	
+inc_mona	simple_arbiter_unreal2_pb_3_pe_.ltl	1	UNREALIZABLE	0.035966166062280536	false	
+inc_mona	simple_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.038353923009708524	false	
+inc_mona	simple_arbiter_unreal2_pb_50_pe_.ltl	1	UNREALIZABLE	0.04530344414524734	false	
+inc_mona	simple_arbiter_unreal2_pb_5_pe_.ltl	1	UNREALIZABLE	0.03796918294392526	false	
+inc_mona	simple_arbiter_unreal2_pb_60_pe_.ltl	1	UNREALIZABLE	0.04714185209013522	false	
+inc_mona	simple_arbiter_unreal2_pb_6_pe_.ltl	1	UNREALIZABLE	0.03382335207425058	false	
+inc_mona	simple_arbiter_unreal2_pb_75_pe_.ltl	1	UNREALIZABLE	0.06149935116991401	false	
+inc_mona	simple_arbiter_unreal2_pb_7_pe_.ltl	1	UNREALIZABLE	0.028920585988089442	false	
+inc_mona	simple_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.03921326994895935	false	
+inc_mona	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_with_hints_pb_2_pe_.ltl	1	REALIZABLE	0.019647110952064395	false	
+inc_mona	simple_arbiter_with_hints_pb_4_pe_.ltl	1	REALIZABLE	0.0677318989764899	false	
+inc_mona	simple_arbiter_with_hints_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT
+inc_mona	solitary-real.ltl	1	REALIZABLE	0.030500182881951332	false	
+inc_mona	solitary0.ltl	1	UNREALIZABLE	0.02612390904687345	false	
+inc_mona	sort4-real.ltl				true	TIMEOUT
+inc_mona	sort40.ltl				true	TIMEOUT
+inc_mona	sort41.ltl				true	TIMEOUT
+inc_mona	sort42.ltl				true	TIMEOUT
+inc_mona	sort50.ltl				true	TIMEOUT
+inc_mona	sort51.ltl				true	TIMEOUT
+inc_mona	sort52.ltl				true	TIMEOUT
+inc_mona	sort53.ltl				true	TIMEOUT
+inc_mona	square5x5-real.ltl				true	TIMEOUT
+inc_mona	square5x50.ltl				true	TIMEOUT
+inc_mona	square5x51.ltl				true	TIMEOUT
+inc_mona	square5x52.ltl				true	TIMEOUT
+inc_mona	square5x53.ltl				true	TIMEOUT
+inc_mona	square5x54.ltl				true	TIMEOUT
+inc_mona	storage-GF-64-real.ltl	1	REALIZABLE	0.028422287199646235	false	
+inc_mona	tasks-real.ltl	1	REALIZABLE	0.06694714911282063	false	
+inc_mona	tasks-unreal0.ltl				true	TIMEOUT
+inc_mona	tasks-unreal1.ltl				true	TIMEOUT
+inc_mona	tasks-unreal2.ltl				true	TIMEOUT
+inc_mona	taxi-service-real.ltl				true	TIMEOUT
+inc_mona	taxi-service-u-unreal.ltl				true	TIMEOUT
+inc_mona	test2_f2774e0b.ltl	1	REALIZABLE	0.02630996983498335	false	
+inc_mona	test3_efe2feaf.ltl	1	REALIZABLE	0.019912279909476638	false	
+inc_mona	test4_4b82b1f4.ltl	1	UNREALIZABLE	0.018154560821130872	false	
+inc_mona	test5_6cbc6174.ltl	1	REALIZABLE	0.019883908098563552	false	
+inc_mona	test6_0f5381e9.ltl	1	REALIZABLE	0.03250662889331579	false	
+inc_mona	test7_2c5b09da.ltl	1	REALIZABLE	0.04079337790608406	false	
+inc_mona	test8_88f351a6.ltl	1	UNREALIZABLE	0.037077938206493855	false	
+inc_mona	test9_dd3a27e1.ltl	1	UNREALIZABLE	0.04351107496768236	false	
+inc_mona	test_f3987563.ltl	1	REALIZABLE	0.03507835301570594	false	
+inc_mona	thermostat-F-real.ltl				true	TIMEOUT
+inc_mona	thermostat-GF-real.ltl				true	TIMEOUT
+inc_mona	thermostat-GF-unreal0.ltl				true	TIMEOUT
+inc_mona	thermostat-GF-unreal1.ltl				true	TIMEOUT
+inc_mona	thermostat-GF-unreal2.ltl				true	TIMEOUT
+inc_mona	tmp_13cfc6f2.ltl				true	TIMEOUT
+inc_mona	unordered-visits-charging0.ltl				true	TIMEOUT
+inc_mona	unordered-visits-real.ltl				true	TIMEOUT
+inc_mona	workstation_resupply_pb_1_pe_.ltl	1	REALIZABLE	0.08301760605536401	false	
+inc_mona	workstation_resupply_pb_2_pe_.ltl	17	REALIZABLE	16.668304437072948	false	REALIZABLE
+inc_mona	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT
+inc_mona	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT
+inc_mona	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT
+inc_mona	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT
+inc_mona	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT

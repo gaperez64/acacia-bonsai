@@ -164,6 +164,8 @@ def preprocessor_flags(options: dict[str, Any], values: dict[str, Any]) -> list[
         flags.append("-DACACIA_COMPILE_ALL_COMPONENTS=1")
     if values["enable_diagnostics"]:
         flags.append("-DACACIA_ENABLE_DIAGNOSTICS=1")
+    if values["default_arms"]:
+        flags.append(f"-DACACIA_DEFAULT_ARMS=\\\"{values['default_arms']}\\\"")
     if values["local_certificate"]:
         flags.append("-DACACIA_LOCAL_CERTIFICATE=1")
     if values["forward_safety_solver"]:
@@ -206,6 +208,7 @@ MESON_OPTION_NAMES = {
     "cpre_avoid_unions": "acacia_cpre_avoid_unions",
     "compile_all_components": "acacia_compile_all_components",
     "enable_diagnostics": "acacia_enable_diagnostics",
+    "default_arms": "acacia_default_arms",
     "local_certificate": "acacia_local_certificate",
     "forward_safety_solver": "acacia_forward_safety_solver",
     "forward_conditional_covering": "acacia_forward_conditional_covering",

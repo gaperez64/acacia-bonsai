@@ -263,6 +263,15 @@ default_game_backend = 'backward'
 if get_option ('acacia_forward_safety_solver')
   default_game_backend = 'forward'
 endif
+# A build that ships its own portfolio forks that instead of the historical
+# default, so the expected child count is the number of arms it declares.
+# default_game_backend is deliberately NOT touched: it is only asserted for
+# cases that pass -r or -u explicitly, and those bypass the shipped portfolio
+# and still take the compile-time backend.
+default_arms_opt = get_option ('acacia_default_arms').strip ()
+if default_arms_opt != ''
+  default_check_children = default_arms_opt.split (',').length ()
+endif
 test ('check-selection',
       bash,
       args : [files ('check-selection.sh'), ab_exe,
