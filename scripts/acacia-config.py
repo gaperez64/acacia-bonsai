@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Acacia compile-time configuration registry helper."""
+"""Acacia compile-time configuration registry helper.
+
+Meson is the only supported build-header generator. preprocessor_flags is not
+a complete header: it omits POSETS_CONFIGURED and the POSETS_ENABLE_* gates.
+The retired emit-config-header could not build; it also lacked ACACIA_LTL_FRONTEND,
+ACACIA_TRANSITION_ACCEPTANCE and ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS before
+those options entered the registry.
+"""
 
 from __future__ import annotations
 
@@ -74,6 +81,7 @@ def normalize_preset(options: dict[str, Any], presets: dict[str, Any], name: str
             values[key] = value
 
     values["_preset"] = name
+    values["preset"] = name
     return values
 
 
@@ -175,8 +183,14 @@ def validate_tool(presets: dict[str, Any], name: str) -> None:
             raise SystemExit(f"{name}: tool-baseline env values must be strings")
 
 
+def fingerprint_values(values: dict[str, Any]) -> dict[str, Any]:
+    # acacia_preset records build provenance. Preserve historical hash and show
+    # output (including _preset): self-benchmark.sh uses show for staleness.
+    return {key: value for key, value in values.items() if key != "preset"}
+
+
 def normalized_json(values: dict[str, Any]) -> str:
-    return json.dumps(values, sort_keys=True, separators=(",", ":"))
+    return json.dumps(fingerprint_values(values), sort_keys=True, separators=(",", ":"))
 
 
 def stable_hash(values: dict[str, Any]) -> str:
@@ -256,25 +270,6 @@ def meson_args(options: dict[str, Any], values: dict[str, Any]) -> list[str]:
     return args
 
 
-def emit_config_header(options: dict[str, Any], values: dict[str, Any], path: pathlib.Path) -> None:
-    lines = ["#pragma once", ""]
-    for flag in preprocessor_flags(options, values):
-        if not flag.startswith("-D"):
-            continue
-        define = flag[2:]
-        if "=" in define:
-            key, value = define.split("=", 1)
-            lines.append(f"#ifndef {key}")
-            lines.append(f"# define {key} {value}")
-            lines.append("#endif")
-        else:
-            lines.append(f"#ifndef {define}")
-            lines.append(f"# define {define} 1")
-            lines.append("#endif")
-        lines.append("")
-    path.write_text("\n".join(lines))
-
-
 def validate_constants(options: dict[str, Any]) -> None:
     """Check documentation entries without treating constants as options."""
     constants = options.get("constants")
@@ -346,9 +341,6 @@ def main() -> int:
     hash_p.add_argument("preset")
     meson_p = sub.add_parser("meson-args")
     meson_p.add_argument("preset")
-    emit_p = sub.add_parser("emit-config-header")
-    emit_p.add_argument("preset")
-    emit_p.add_argument("path", type=pathlib.Path)
     args = parser.parse_args()
 
     options, presets = load_registry()
@@ -403,6 +395,7 @@ def main() -> int:
     validate_preset(options, presets, name)
     values = normalize_preset(options, presets, name)
     if args.cmd == "show":
+        values = fingerprint_values(values)
         if args.describe:
             validate_preset_metadata(presets, name)
             data = preset_data(presets, name)
@@ -413,8 +406,6 @@ def main() -> int:
         print(stable_hash(values))
     elif args.cmd == "meson-args":
         print(" ".join(meson_args(options, values)))
-    elif args.cmd == "emit-config-header":
-        emit_config_header(options, values, args.path)
     else:
         parser.error(f"unknown command {args.cmd}")
     return 0

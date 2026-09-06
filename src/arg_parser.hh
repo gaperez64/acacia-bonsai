@@ -104,7 +104,7 @@ void show_help (const char* program_name) {
       << "Allowed options:\n"
       << "  -h                print this help message\n"
       << "  -s FILE           synthesize controller and store in FILE\n"
-      << "  -V                print program version\n"
+      << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
       << "  -F VAL            process formula in file VAL\n"
 #if ACACIA_ENABLE_TLSF_FRONTEND
@@ -392,6 +392,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
   static option long_options[] = {
+      {"version", no_argument, nullptr, 'V'},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"unreal-translation-pref", required_argument, nullptr,
        OPT_UNREAL_TRANSLATION_PREF},

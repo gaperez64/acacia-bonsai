@@ -12,6 +12,8 @@ option('acacia_compiler_profile', type: 'combo',
        choices: ['debug', 'release', 'lowmem'],
        value: 'debug',
        description: 'Extra compiler flags for Acacia local benchmarking profiles')
+option('acacia_preset', type: 'string', value: '',
+       description: 'Named build configuration; empty for a hand-assembled configuration')
 
 option('acacia_aut_preprocessor', type: 'combo',
        choices: ['surely_losing', 'no_preprocessing', 'standard', 'elevator'],

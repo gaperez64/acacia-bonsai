@@ -1,5 +1,14 @@
 #pragma once
 
+#ifndef ACACIA_PRESET
+#mesondefine ACACIA_PRESET
+#endif
+
+// See constants.VECTOR_ELT_T in config/acacia-options.json for the overflow warning.
+#ifndef VECTOR_ELT_T
+# define VECTOR_ELT_T signed char
+#endif
+
 #ifndef DEFAULT_K
 # define DEFAULT_K @DEFAULT_K@
 #endif
@@ -291,4 +300,6 @@
 # define VECTOR_AND_BITSET_DOWNSET_IMPL @VECTOR_AND_BITSET_DOWNSET_IMPL@
 #endif
 
-@VECTOR_IMPL_DEFINE@
+#ifndef VECTOR_IMPL
+# define VECTOR_IMPL @VECTOR_IMPL@
+#endif

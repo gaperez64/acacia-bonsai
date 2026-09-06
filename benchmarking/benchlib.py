@@ -42,6 +42,12 @@ def build_option(build_dir, name):
     )
 
 
+def build_preset(build_dir) -> str | None:
+    """Return the recorded configuration name, or None for an unnamed build."""
+    value = build_option(build_dir, "acacia_preset")
+    return value if isinstance(value, str) and value else None
+
+
 def _corpus_path(value) -> pathlib.Path | None:
     if isinstance(value, (str, pathlib.Path)) and str(value).strip():
         return pathlib.Path(value).expanduser().resolve()

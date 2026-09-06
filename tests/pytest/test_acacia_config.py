@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import importlib.util
 import json
 import pathlib
@@ -206,7 +207,7 @@ def test_aliases_work_in_inheritance_and_groups_and_detect_cycles():
     presets["groups"]["alias_group"] = ["old_base", "child"]
     module.command_validate(options, presets)
     assert module.normalize_preset(options, presets, "child") == {
-        **module.normalize_preset(options, presets, "base"), "_preset": "child",
+        **module.normalize_preset(options, presets, "base"), "_preset": "child", "preset": "child",
     }
     presets["presets"]["base"]["inherits"] = "child"
     with pytest.raises(SystemExit, match="preset inheritance cycle: child -> base -> child"):
@@ -267,7 +268,8 @@ def test_show_describe_keeps_metadata_outside_the_fingerprint(monkeypatch, capsy
         monkeypatch.setattr(sys, "argv", [str(SCRIPT), "show", name])
         assert module.main() == 0
         plain = capsys.readouterr()
-        values = module.normalize_preset(options, presets, name)
+        values = {key: value for key, value in
+                  module.normalize_preset(options, presets, name).items() if key != "preset"}
         assert plain.out == json.dumps(values, sort_keys=True, indent=2) + "\n"
         assert plain.err == ""
         monkeypatch.setattr(sys, "argv", [str(SCRIPT), "show", name, "--describe"])
@@ -277,6 +279,47 @@ def test_show_describe_keeps_metadata_outside_the_fingerprint(monkeypatch, capsy
             "description": data["description"], "role": data["role"], "options": values,
         }
         assert detailed.err == ""
+
+
+def test_preset_provenance_is_excluded_from_hash_and_show(monkeypatch, capsys):
+    module = load_module()
+    options, presets = module.load_registry()
+    for name in presets["presets"]:
+        values = module.normalize_preset(options, presets, name)
+        # Compute the historical fingerprint independently of the helper under test.
+        historical = {key: value for key, value in values.items() if key != "preset"}
+        expected_hash = hashlib.sha256(
+            json.dumps(historical, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()[:12]
+        for recorded in ("", name, "another_configuration"):
+            assert module.stable_hash({**values, "preset": recorded}) == expected_hash
+        for command, expected in (
+            ("hash", expected_hash + "\n"),
+            ("show", json.dumps(historical, sort_keys=True, indent=2) + "\n"),
+        ):
+            monkeypatch.setattr(sys, "argv", [str(SCRIPT), command, name])
+            assert module.main() == 0
+            assert capsys.readouterr().out == expected
+
+
+def test_named_presets_emit_provenance_and_plain_defaults_omit_it(monkeypatch, capsys):
+    module = load_module()
+    options, presets = module.load_registry()
+    defaults = module.defaults(options)
+    assert defaults["preset"] == ""
+    assert "-Dacacia_preset=" in module.meson_args(options, defaults)
+    assert not any(flag.startswith("-DACACIA_PRESET")
+                   for flag in module.preprocessor_flags(options, defaults))
+    for name in presets["presets"]:
+        values = module.normalize_preset(options, presets, name)
+        assert values["preset"] == name
+        assert f'-DACACIA_PRESET=\\"{name}\\"' in module.preprocessor_flags(options, values)
+        monkeypatch.setattr(sys, "argv", [str(SCRIPT), "meson-args", name])
+        assert module.main() == 0
+        args = capsys.readouterr().out.split()
+        assert [arg for arg in args if arg.startswith("-Dacacia_preset=")] == [
+            f"-Dacacia_preset={name}",
+        ]
 
 
 def test_every_solver_meson_option_has_a_registry_entry():
@@ -319,7 +362,7 @@ def test_registry_meson_types_choices_and_bounds_agree():
 
 @pytest.mark.parametrize("name,macro,default,selected,encoded", NEW_OPTION_CASES)
 def test_new_options_preserve_defaults_and_flow_through_frontends(
-    tmp_path, name, macro, default, selected, encoded,
+    name, macro, default, selected, encoded,
 ):
     module = load_module()
     options, _ = module.load_registry()
@@ -344,20 +387,8 @@ def test_new_options_preserve_defaults_and_flow_through_frontends(
     assert f"-D{option['meson']}={meson_value}" in module.meson_args(options, values)
     assert f"-D{macro}={encoded}" in module.preprocessor_flags(options, values)
 
-    header = tmp_path / "acacia_build_config.hh"
-    module.emit_config_header(options, values, header)
-    assert f"#ifndef {macro}\n# define {macro} {encoded}\n#endif" in header.read_text()
     template = (ROOT / "src/config/acacia_build_config.hh.in").read_text()
     assert f"#ifndef {macro}\n# define {macro} @{macro}@\n#endif" in template
-
-
-def test_new_equivariant_options_match_existing_header_fallbacks():
-    module = load_module()
-    options, _ = module.load_registry()
-    configuration = (ROOT / "src/configuration.hh").read_text()
-    for name, macro, _, _, _ in NEW_OPTION_CASES[:7]:
-        default = int(options["options"][name]["default"])
-        assert f"#ifndef {macro}\n# define {macro} {default}\n#endif" in configuration
 
 
 def test_transition_core_preset_selects_type_and_exactly_one_family_gate():
@@ -376,7 +407,7 @@ def test_transition_core_preset_selects_type_and_exactly_one_family_gate():
     assert "-DACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE=0" in default_flags
 
 
-def test_constants_are_documentation_only(tmp_path):
+def test_constants_are_documentation_only():
     module = load_module()
     options, presets = module.load_registry()
     module.command_validate(options, presets)
@@ -389,17 +420,12 @@ def test_constants_are_documentation_only(tmp_path):
     assert set(constants).isdisjoint(values)
     flags = module.preprocessor_flags(options, values)
     args = module.meson_args(options, values)
-    header = tmp_path / "acacia_build_config.hh"
-    module.emit_config_header(options, values, header)
-    original_header = header.read_text()
     for constant in constants.values():
         assert all((ROOT / source).is_file() for source in constant["sources"])
         constant["value"] = "documentation changes do not affect builds"
     assert module.defaults(options) == values
     assert module.preprocessor_flags(options, values) == flags
     assert module.meson_args(options, values) == args
-    module.emit_config_header(options, values, header)
-    assert header.read_text() == original_header
 
 
 @pytest.mark.parametrize("constants,reason", [

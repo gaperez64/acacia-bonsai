@@ -704,39 +704,50 @@
           "skip_value": "auto"
         }
       ]
+    },
+    "preset": {
+      "meson": "acacia_preset",
+      "type": "string",
+      "default": "",
+      "description": "Named build configuration; excluded from hash and show fingerprints; empty for a hand-assembled configuration",
+      "macros": [
+        {
+          "name": "ACACIA_PRESET",
+          "emit": "nonempty",
+          "encoding": "c_string"
+        }
+      ]
     }
   },
   "constants": {
     "VECTOR_ELT_T": {
       "value": "signed char",
-      "description": "Counter element type. Overflow WARNING: Check VECTOR_ELT_T below before changing DEFAULT_K. The acacia_default_k maximum of 127 in meson.options repeats the same signed-char representation constraint.",
+      "description": "Counter element type. Overflow WARNING: Check VECTOR_ELT_T before changing DEFAULT_K. The acacia_default_k maximum of 127 in meson.options repeats the same signed-char representation constraint.",
       "sources": [
-        "src/configuration.hh",
+        "src/config/acacia_build_config.hh.in",
         "meson.options"
       ]
     },
     "ACACIA_LTL_FRONTEND_BASELINE": {
       "value": 0,
-      "description": "Baseline enum value of ACACIA_LTL_FRONTEND, not an option. Together with ACACIA_LTL_FRONTEND_MP_NBA it defines the two admissible values. The template defines it unconditionally; src/configuration.hh guards it with #ifndef.",
+      "description": "Baseline enum value of ACACIA_LTL_FRONTEND, not an option. Together with ACACIA_LTL_FRONTEND_MP_NBA it defines the two admissible values. The generated header defines it unconditionally.",
       "sources": [
-        "src/config/acacia_build_config.hh.in",
-        "src/configuration.hh"
+        "src/config/acacia_build_config.hh.in"
       ]
     },
     "ACACIA_LTL_FRONTEND_MP_NBA": {
       "value": 1,
-      "description": "MP-NBA enum value of ACACIA_LTL_FRONTEND, not an option. Together with ACACIA_LTL_FRONTEND_BASELINE it defines the two admissible values. The template defines it unconditionally; src/configuration.hh guards it with #ifndef.",
+      "description": "MP-NBA enum value of ACACIA_LTL_FRONTEND, not an option. Together with ACACIA_LTL_FRONTEND_BASELINE it defines the two admissible values. The generated header defines it unconditionally.",
       "sources": [
-        "src/config/acacia_build_config.hh.in",
-        "src/configuration.hh"
+        "src/config/acacia_build_config.hh.in"
       ]
     },
     "VECTOR_IMPL_AUTO": {
       "value": "NO_SIMD ? vector_backed : simd_vector_backed",
-      "description": "Resolution of VECTOR_IMPL when vector_impl is auto. src/configuration.hh selects the fallback by whether NO_SIMD is defined; meson.build repeats the resolution using acacia_no_simd when selecting posets_vector_impl component gates.",
+      "description": "Resolution of VECTOR_IMPL when vector_impl is auto. meson.build resolves acacia_no_simd once for both the generated header and the posets_vector_impl component gates.",
       "sources": [
-        "src/configuration.hh",
-        "meson.build"
+        "meson.build",
+        "src/config/acacia_build_config.hh.in"
       ]
     }
   }
