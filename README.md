@@ -133,13 +133,21 @@ translator preference is registry-backed as
 `small+any` are available for ablation and racing presets such as
 `best_decomp_mona_any` and `best_decomp_mona_race`.
 
-The shipping configuration is `best_decomp_rank_bucketed_mona`; the Docker
-image and the TLSF examples above build it, and the correctness and performance
-gates are frozen against it. `best_decomp_mona` is the same configuration over
-the plain vector-backed downset, kept as the reference point for downset
+The configurations we ship are whichever ones the `docker_default` group names:
+
+```
+python3 scripts/acacia-config.py list-group docker_default
+```
+
+That group is the pointer, and it is repointed when the measurements say so --
+the Docker image, the TLSF examples above and CI all read it rather than naming
+a preset. A preset name is a historical label, not a claim about which
+configuration is currently best; `scripts/acacia-config.py show <preset>` is the
+complete answer to what one means. `best_decomp_mona` is the plain
+vector-backed downset configuration, kept as the reference point for downset
 comparisons.
 
-The shipping preset enables the exact equivariant solver. It automatically
+All four shipped configurations enable the exact equivariant solver. It automatically
 declines to the classic solver when no verified profitable symmetry is
 available, or when fewer than `acacia_equivariant_min_blocks` client-state
 blocks are found (default 2). Use `best_decomp_rank_bucketed_mona_noequivariant`
