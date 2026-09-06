@@ -121,6 +121,14 @@ test ('game-backend',
       game_backend_test,
       suite : ['unit', 'game-backend'])
 
+spot_rows_test = executable (
+  'spot-rows-test',
+  'spot_rows_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-rows', spot_rows_test, suite : ['unit', 'spot-rows'])
+
 transition_payload_test = executable (
   'transition-payload-test',
   'transition_payload_test.cc',

@@ -22,6 +22,13 @@ ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
                      dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
 
 if get_option('build_research_tools')
+  acacia_spot_rows_replay_exe = executable(
+    'acacia-spot-rows-replay',
+    'research/spot_rows_replay.cc',
+    include_directories: inc,
+    install: false,
+    dependencies: [spot_dep, bddx_dep],
+  )
   acacia_spot_otf_probe_exe = executable(
     'acacia-spot-otf-probe',
     'research/spot_otf_probe.cc',
