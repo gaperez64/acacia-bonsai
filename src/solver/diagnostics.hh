@@ -9,10 +9,13 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
+#include <cstdint>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <vector>
 #include <unistd.h>
 
 #ifndef ACACIA_ENABLE_DIAGNOSTICS
@@ -86,7 +89,79 @@ namespace acacia::diagnostics {
     return value;
   }
 
+  inline bool support_demand_enabled () {
+    static const bool value = env_flag_enabled ("ACACIA_DIAG_SUPPORT_DEMAND");
+    return value;
+  }
+
+  struct support_demand_metrics {
+      bool graph_ready = false;
+      size_t states = 0, edges = 0;
+      size_t search_rows = 0, verification_rows = 0, union_rows = 0;
+      size_t verification_only_rows = 0, union_edges = 0;
+      int k = -1;
+      size_t k_union_rows = 0, k_union_edges = 0;
+      unsigned long long search_applications = 0, verification_applications = 0;
+      size_t support_max = 0;
+      // Exact histogram over 0..|Q|: O(|Q|) memory, independent of the number
+      // of applications and K bumps. No reservoir error in median or p95.
+      // Owning all accumulators here makes scoped_attempt's value snapshot
+      // restore row unions, histograms and action IDs together.
+      std::vector<unsigned long long> support_histogram;
+      std::vector<size_t> out_degree;
+      // Bits 1/2 are search/verification across K; bit 4 is this K's union.
+      std::vector<unsigned char> rows;
+      // IDs are flat ordinals in the existing input/action traversal order.
+      // Addresses are lookup keys only; they never determine IDs or ordering.
+      std::unordered_map<const void*, size_t> action_ids;
+      std::vector<unsigned char> actions_used;
+
+      size_t order_statistic (unsigned long long target) const {
+        if (target == 0)
+          return 0;
+        unsigned long long cumulative = 0;
+        for (size_t size = 0; size < support_histogram.size (); ++size) {
+          cumulative += support_histogram[size];
+          if (cumulative >= target)
+            return size;
+        }
+        return support_max;
+      }
+
+      size_t percentile (unsigned percent) const {
+        const auto samples = search_applications + verification_applications;
+        // Nearest-rank p95, avoiding overflow in samples * percent.
+        return order_statistic ((samples / 100) * percent
+                                + ((samples % 100) * percent + 99) / 100);
+      }
+
+      double median () const {
+        const auto samples = search_applications + verification_applications;
+        if (samples == 0)
+          return 0;
+        return (double (order_statistic (samples / 2 + samples % 2))
+                + double (order_statistic (samples / 2 + 1))) / 2.0;
+      }
+
+      std::string used_ids () const {
+        std::string ids;
+        for (size_t id = 0; id < actions_used.size (); ++id)
+          if (actions_used[id]) {
+            if (not ids.empty ())
+              ids += ',';
+            ids += std::to_string (id);
+          }
+        return ids.empty () ? "-" : ids;
+      }
+  };
+
   struct child_metrics {
+      support_demand_metrics support_demand {};
+      long long support_action_construction_ms = 0;
+      double support_verification_ms = 0.0;
+      std::string support_formula_fnv1a64 = "-";
+      std::string support_phase = "not-started";
+      std::string support_backend = "unknown";
       std::string instance = "-";
       std::string path = "unknown";
       std::string result = "unknown";
@@ -389,7 +464,42 @@ namespace acacia::diagnostics {
          << " sym_orbit_sizes=" << m.symmetry_orbit_sizes << " sym_blocks=" << m.symmetry_blocks
          << " sym_shared=" << m.symmetry_shared << " solve_ms=" << m.solve_ms
          << " total_ms=" << m.total_ms << " result=" << m.result
-         << " final_reason=" << m.final_reason << '\n';
+         << " final_reason=" << m.final_reason
+         << " support_demand_enabled=" << support_demand_enabled ()
+         << " support_graph_ready=" << m.support_demand.graph_ready
+         << " support_graph_states=" << m.support_demand.states
+         << " support_graph_edges=" << m.support_demand.edges
+         << " support_search_rows=" << m.support_demand.search_rows
+         << " support_verification_rows=" << m.support_demand.verification_rows
+         << " support_verification_only_rows=" << m.support_demand.verification_only_rows
+         << " support_union_rows=" << m.support_demand.union_rows
+         << " support_union_edges=" << m.support_demand.union_edges
+         << " support_k=" << m.support_demand.k
+         << " support_k_union_rows=" << m.support_demand.k_union_rows
+         << " support_k_union_edges=" << m.support_demand.k_union_edges
+         << " support_search_applications=" << m.support_demand.search_applications
+         << " support_verification_applications=" << m.support_demand.verification_applications
+         << " support_median=" << m.support_demand.median ()
+         << " support_p95=" << m.support_demand.percentile (95)
+         << " support_max=" << m.support_demand.support_max
+         << " support_action_profiles_used="
+         << std::count (m.support_demand.actions_used.begin (),
+                        m.support_demand.actions_used.end (), 1)
+         << " support_action_profile_ids=" << m.support_demand.used_ids ()
+         << " support_action_construction_ms=" << m.support_action_construction_ms
+         << " support_verification_ms=" << m.support_verification_ms
+         << " support_formula_fnv1a64=" << m.support_formula_fnv1a64
+         << " support_phase=" << m.support_phase
+         << " support_backend=" << m.support_backend
+         // Unknown/zero denominators are absent values, never fabricated ratios.
+         << " support_rho_q="
+         << (m.support_demand.graph_ready and m.support_demand.states != 0
+                 ? std::to_string (double (m.support_demand.union_rows) / m.support_demand.states)
+                 : "-")
+         << " support_rho_e="
+         << (m.support_demand.graph_ready and m.support_demand.edges != 0
+                 ? std::to_string (double (m.support_demand.union_edges) / m.support_demand.edges)
+                 : "-") << '\n';
     const std::string text = line.str ();
     [[maybe_unused]] const auto written = ::write (STDERR_FILENO, text.data (), text.size ());
   }
@@ -469,7 +579,7 @@ namespace acacia::diagnostics {
       clock::time_point started;
   };
 
-  enum class fine_metric { cpre, picker, apply };
+  enum class fine_metric { cpre, picker, apply, support_verification };
 
   class scoped_fine_timer {
     public:
@@ -497,6 +607,7 @@ namespace acacia::diagnostics {
           case fine_metric::cpre: break;
           case fine_metric::picker: metrics->picker_ms += elapsed; break;
           case fine_metric::apply: metrics->apply_ms += elapsed; break;
+          case fine_metric::support_verification: metrics->support_verification_ms += elapsed; break;
         }
       }
 
@@ -593,6 +704,152 @@ namespace acacia::diagnostics {
     if (auto* m = current ()) {
       m->refresh_total ();
       print (*m, "progress", checkpoint);
+    }
+  }
+
+  template <typename Aut>
+  inline void set_support_graph (const Aut& aut) {
+    if (not support_demand_enabled ())
+      return;
+    if (auto* m = current ()) {
+      auto& d = m->support_demand;
+      // Called on the frozen, post-preprocessing graph, before action creation.
+      // A forward-to-backward fallback on that same graph retains its union.
+      if (d.graph_ready)
+        return;
+      d.states = aut->num_states ();
+      d.out_degree.assign (d.states, 0);
+      for (size_t q = 0; q < d.states; ++q)
+        for ([[maybe_unused]] const auto& edge : aut->out (q))
+          ++d.out_degree[q];
+      for (const auto degree : d.out_degree)
+        d.edges += degree;
+      d.rows.assign (d.states, 0);
+      d.support_histogram.assign (d.states + 1, 0);
+      d.graph_ready = true;
+      m->support_phase = "action-construction";
+    }
+  }
+
+  inline void set_support_formula (std::string_view formula) {
+    if (not support_demand_enabled ())
+      return;
+    if (auto* m = current ()) {
+      // Stable digest of Spot's serialized, transformed worker formula.
+      std::uint64_t hash = UINT64_C (14695981039346656037);
+      for (const unsigned char byte : formula) {
+        hash ^= byte;
+        hash *= UINT64_C (1099511628211);
+      }
+      std::ostringstream digest;
+      digest << std::hex << hash;
+      m->support_formula_fnv1a64 = digest.str ();
+      m->support_phase = "translation";
+    }
+  }
+
+  inline void set_support_phase (std::string_view phase) {
+    if (not support_demand_enabled ())
+      return;
+    if (auto* m = current ())
+      m->support_phase = phase;
+  }
+
+  inline void set_support_backend (std::string_view backend) {
+    if (not support_demand_enabled ())
+      return;
+    if (auto* m = current ())
+      m->support_backend = backend;
+  }
+
+  inline void set_support_k (int k) {
+    if (not support_demand_enabled ())
+      return;
+    if (auto* m = current ()) {
+      auto& d = m->support_demand;
+      if (d.k == k)
+        return;
+      if (d.k != -1)
+        snapshot ("support-demand-k");
+      d.k = k;
+      d.k_union_rows = d.k_union_edges = 0;
+      for (auto& row : d.rows)
+        row &= 3;
+    }
+  }
+
+  template <typename Actions>
+  inline void set_support_actions (const Actions& actions) {
+    if (not support_demand_enabled ())
+      return;
+    if (auto* m = current ()) {
+      auto& d = m->support_demand;
+      d.action_ids.clear ();
+      size_t id = 0;
+      for (const auto& input : actions)
+        for (const auto& action : input.second)
+          d.action_ids.emplace (&action, id++);
+      d.actions_used.resize (id, 0);
+      m->support_phase = "search";
+    }
+  }
+
+  template <typename Rank, typename Action>
+  inline void observe_support_demand (const Rank& rank, const Action& action,
+                                      bool verification = false) {
+    if (not support_demand_enabled ())
+      return;
+    if (auto* m = current ()) {
+      auto& d = m->support_demand;
+      if (not d.graph_ready)
+        return;
+      size_t support = 0;
+      for (size_t q = 0; q < rank.size (); ++q) {
+        // avec is indexed by destination; rank[q] is the SOURCE value.
+        // Dense scans of semantically absent (-1) coordinates request no row.
+        if (rank[q] == -1)
+          continue;
+        ++support;
+        auto& row = d.rows[q];
+        if ((row & 3) == 0) {
+          ++d.union_rows;
+          d.union_edges += d.out_degree[q];
+        }
+        if ((row & 4) == 0) {
+          ++d.k_union_rows;
+          d.k_union_edges += d.out_degree[q];
+        }
+        if (verification) {
+          if ((row & 2) == 0) {
+            ++d.verification_rows;
+            if ((row & 1) == 0)
+              ++d.verification_only_rows;
+          }
+          row |= 2;
+        } else {
+          if ((row & 1) == 0) {
+            ++d.search_rows;
+            if ((row & 2) != 0)
+              --d.verification_only_rows;
+          }
+          row |= 1;
+        }
+        row |= 4;
+      }
+      ++d.support_histogram[support];
+      d.support_max = std::max (d.support_max, support);
+      if (verification)
+        ++d.verification_applications;
+      else
+        ++d.search_applications;
+      if (const auto found = d.action_ids.find (&action); found != d.action_ids.end ())
+        d.actions_used[found->second] = 1;
+      // Forward search has no fixed-point loop checkpoints. Retain bounded
+      // progress at powers of two so a killed search still reports observed
+      // demand, with the campaign explicitly marking it as incomplete.
+      const auto applications = d.search_applications + d.verification_applications;
+      if (applications <= 4 or (applications & (applications - 1)) == 0)
+        snapshot ("support-demand-progress");
     }
   }
 
@@ -800,12 +1057,23 @@ namespace acacia::diagnostics {
   };
 
   inline bool alphabet_census_only () { return false; }
+  inline bool support_demand_enabled () { return false; }
+  template <typename Aut>
+  inline void set_support_graph (const Aut&) {}
+  inline void set_support_k (int) {}
+  inline void set_support_formula (std::string_view) {}
+  inline void set_support_phase (std::string_view) {}
+  inline void set_support_backend (std::string_view) {}
+  template <typename Actions>
+  inline void set_support_actions (const Actions&) {}
+  template <typename Rank, typename Action>
+  inline void observe_support_demand (const Rank&, const Action&, bool = false) {}
 
   struct scoped_timer {
       explicit scoped_timer (long long*) {}
   };
 
-  enum class fine_metric { cpre, picker, apply };
+  enum class fine_metric { cpre, picker, apply, support_verification };
   struct scoped_fine_timer {
       explicit scoped_fine_timer (fine_metric) {}
   };

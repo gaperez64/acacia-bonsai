@@ -17,6 +17,7 @@
 
 #include "actioners/direction.hh"
 #include "configuration.hh"
+#include "solver/diagnostics.hh"
 #include "solver/forward_game_nodes.hh"
 #include "solver/minimal_losing_antichain.hh"
 
@@ -190,6 +191,7 @@ namespace acacia::solver_detail {
 
       std::size_t action_index = 0;
       for (const auto& action : actions) {
+        acacia::diagnostics::observe_support_demand (parent_rank, action);
         State successor = actioner.apply (
             parent_rank, action, actioners::direction::forward);
         ++result.raw_actions;
@@ -965,6 +967,8 @@ namespace acacia::solver_detail {
           std::ranges::advance (action, ctrl.next_action_index);
           while (ctrl.next_action_index < action_count) {
             const std::size_t action_index = ctrl.next_action_index++;
+            acacia::diagnostics::observe_support_demand (
+                env_nodes[ctrl.parent_env].rank, *action);
             state successor = actioner.apply (
                 env_nodes[ctrl.parent_env].rank, *action,
                 actioners::direction::forward);

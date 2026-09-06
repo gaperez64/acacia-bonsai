@@ -1,6 +1,7 @@
 #pragma once
 
 #include "actioners/direction.hh"
+#include "solver/diagnostics.hh"
 #include "utils/verbose.hh"
 
 #include <optional>
@@ -43,6 +44,7 @@ namespace input_pickers {
               is_witness = true;
               auto it_act = actions.begin ();
               for (; it_act != actions.end (); ++it_act) {
+                acacia::diagnostics::observe_support_demand (f, *it_act);
                 auto fwdf = actioner.apply (f, *it_act, actioners::direction::forward);
                 verb_do (3, vout << "apply(" << f << ", <" << input << ", ?>) = " << fwdf << ": ");
                 if (F.contains (fwdf)) {

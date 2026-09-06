@@ -571,7 +571,24 @@ namespace acacia::solver_detail::equivariant {
     acacia::diagnostics::set_equivariant_attempt (L.num_clients, L.num_blocks, orbits->size ());
     std::vector<std::pair<bdd, std::vector<transset>>> empty_itoios;
     VECTOR_ELT_T k = kmin;
+    acacia::diagnostics::set_support_backend ("backward-equivariant-sweep");
+    acacia::diagnostics::set_support_graph (aut);
+    acacia::diagnostics::set_support_k (static_cast<int> (k));
+#if ACACIA_ENABLE_DIAGNOSTICS
+    std::optional<acacia::diagnostics::scoped_timer> construction_timer;
+    if (acacia::diagnostics::support_demand_enabled ()) {
+      if (auto* diag = acacia::diagnostics::current ())
+        construction_timer.emplace (&diag->support_action_construction_ms);
+      acacia::diagnostics::snapshot ("support-before-action-construction");
+    }
+#endif
     auto actioner = actioner_maker.make (aut, empty_itoios, k);
+#if ACACIA_ENABLE_DIAGNOSTICS
+    construction_timer.reset ();
+#endif
+    // This branch only computes preimages; its zero forward-support sample
+    // must not be interpreted as the row footprint of the backward operation.
+    acacia::diagnostics::set_support_phase ("preimage-search");
 
     posets::utils::vector_mm<VECTOR_ELT_T> init (num_states, -1);
     init[aut->get_init_state_number ()] = 0;
@@ -614,6 +631,7 @@ namespace acacia::solver_detail::equivariant {
           }
           k += kinc;
           actioner.setK (k);
+          acacia::diagnostics::set_support_k (static_cast<int> (k));
           f = f.apply ([&] (const state& maximal) {
             posets::utils::vector_mm<VECTOR_ELT_T> bumped (maximal.size (), 0);
             for (size_t q = 0; q < posets::vectors::bool_threshold; ++q)
@@ -739,6 +757,17 @@ namespace acacia::solver_detail::equivariant {
                                                   representatives->size ());
 
     VECTOR_ELT_T k = kmin;
+    acacia::diagnostics::set_support_backend ("backward-equivariant");
+    acacia::diagnostics::set_support_graph (aut);
+    acacia::diagnostics::set_support_k (static_cast<int> (k));
+#if ACACIA_ENABLE_DIAGNOSTICS
+    std::optional<acacia::diagnostics::scoped_timer> construction_timer;
+    if (acacia::diagnostics::support_demand_enabled ()) {
+      if (auto* diag = acacia::diagnostics::current ())
+        construction_timer.emplace (&diag->support_action_construction_ms);
+      acacia::diagnostics::snapshot ("support-before-action-construction");
+    }
+#endif
     auto inputs_to_ios = (ios_precomputer_maker.make (aut, all_inputs, all_outputs)) ();
     {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_representative_filter);
@@ -748,6 +777,10 @@ namespace acacia::solver_detail::equivariant {
       return decline ("no precomputed representative inputs");
     auto actioner = actioner_maker.make (aut, inputs_to_ios, k);
     auto fwd_actions = actioner.actions ();
+    acacia::diagnostics::set_support_actions (fwd_actions);
+#if ACACIA_ENABLE_DIAGNOSTICS
+    construction_timer.reset ();
+#endif
     if (fwd_actions.empty ())
       return decline ("no representative actions");
     auto input_picker = input_picker_maker.make (fwd_actions, actioner);
@@ -806,6 +839,7 @@ namespace acacia::solver_detail::equivariant {
                          << (int) (k + kinc) << "\n");
         k += kinc;
         actioner.setK (k);
+        acacia::diagnostics::set_support_k (static_cast<int> (k));
         f = f.apply ([&] (const state& s) {
           auto vec = posets::utils::vector_mm<VECTOR_ELT_T> (s.size (), 0);
           for (size_t i = 0; i < posets::vectors::bool_threshold; ++i)

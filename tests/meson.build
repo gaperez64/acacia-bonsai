@@ -183,6 +183,15 @@ test ('diagnostics-attempt',
       diagnostics_attempt_test,
       suite : ['unit', 'diagnostics'])
 
+support_demand_test = executable (
+  'support-demand-test',
+  'support_demand_test.cc',
+  include_directories : inc,
+  cpp_args : ['-DACACIA_ENABLE_DIAGNOSTICS=1'],
+  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep],
+)
+test ('support-demand', support_demand_test, suite : ['unit', 'diagnostics'])
+
 syntactic_bypass_test = executable ('syntactic-bypass-test',
                                     'syntactic_bypass_test.cc',
                                     include_directories : inc,

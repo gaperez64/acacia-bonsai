@@ -206,6 +206,12 @@ namespace {
 
     spot::translator trans (dict, &extra_options);
     acacia::translation::validate_options (extra_options);
+    if (acacia::diagnostics::support_demand_enabled ()) {
+      std::ostringstream formula_text;
+      formula_text << spot_formula;
+      acacia::diagnostics::set_support_formula (formula_text.str ());
+      acacia::diagnostics::snapshot ("support-before-translation");
+    }
     spot::twa_graph_ptr aut;
     {
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -215,6 +221,7 @@ namespace {
       aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
     }
     observe_translated_automaton (aut);
+    acacia::diagnostics::set_support_phase ("preprocessing");
     acacia::diagnostics::snapshot ("no-input-after-translation");
 
     spot::twa_word_ptr word = nullptr;
@@ -417,6 +424,12 @@ namespace {
           spot_formula = spot::formula::Not (spot_formula);
 
         // Create the automaton for the formula we have prepared.
+        if (acacia::diagnostics::support_demand_enabled ()) {
+          std::ostringstream formula_text;
+          formula_text << spot_formula;
+          acacia::diagnostics::set_support_formula (formula_text.str ());
+          acacia::diagnostics::snapshot ("support-before-translation");
+        }
         spot::translator trans (dict, &extra_options);
         acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
@@ -428,6 +441,7 @@ namespace {
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
         }
         observe_translated_automaton (aut);
+        acacia::diagnostics::set_support_phase ("preprocessing");
         acacia::diagnostics::snapshot ("after-translation");
 
         // If unreal but we haven't pushed inputs yet using X on formula.
@@ -566,11 +580,15 @@ namespace {
         // automaton empty after purging. Map this to inconclusive on
         // both paths rather than crashing downstream.
         if (aut->num_states () == 0) {
+          acacia::diagnostics::set_support_graph (aut);
           verb_do (1, vout << "Automaton is empty after preprocessing; inconclusive\n");
           return acacia::diagnostics::finish (false, "empty-after-preprocessing");
         }
 
         posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
+        // Boolean-state discovery can renumber the graph. Out-degrees must
+        // use the same final source coordinates as the ranks and actions.
+        acacia::diagnostics::set_support_graph (aut);
 #if ACACIA_ENABLE_DIAGNOSTICS
         if (auto* diag = acacia::diagnostics::current ())
           diag->bool_threshold = posets::vectors::bool_threshold;
@@ -881,6 +899,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
     for (auto& hint : indexed_family_hints)
       hint.is_input = not hint.is_input;
   acacia::diagnostics::scoped_child diag_scope (child_path (check_unreal));
+  acacia::diagnostics::set_support_backend (
+      backend == acacia::game_backend::forward ? "forward" : "backward");
 #if ACACIA_ENABLE_DIAGNOSTICS
   if (auto* diag = acacia::diagnostics::current ()) {
     diag->translation_pref = translation_pref_name (translation_pref);

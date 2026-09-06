@@ -327,3 +327,25 @@ def test_output_order_is_deterministic(tmp_path):
 
     assert [row["instance"] for row in first] == ["a.ltl", "b.ltl", "z.ltl"]
     assert first == second
+
+
+def test_exclude_families_flag_filters_before_scoring(tmp_path, monkeypatch):
+    module = load_module()
+    paths = miniature_inputs(tmp_path, include_memory=True)
+    output = tmp_path / "held-out.tsv"
+    scored = []
+    original_score = module.score_candidate
+    def record_score(summary, *args):
+        scored.append(summary["family_key"])
+        return original_score(summary, *args)
+    monkeypatch.setattr(module, "score_candidate", record_score)
+    assert module.main([
+        "--summary", str(paths[0]), "--frontiers", str(paths[1]),
+        "--pairs", str(paths[2]), "--metadata", str(paths[3]),
+        "--target-count", "1", "--memory-quota", "0", "--output", str(output),
+        "--exclude-families", "family:a, absent", "--exclude-families", "also-absent",
+    ]) == 0
+    with output.open() as source:
+        rows = list(csv.DictReader(source, delimiter="\t"))
+    assert [row["family_key"] for row in rows] == ["family:m"]
+    assert scored == ["family:m"]

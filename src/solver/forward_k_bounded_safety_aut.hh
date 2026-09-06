@@ -53,6 +53,17 @@ namespace acacia::solver_detail {
       std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> solve () {
         const auto total_started = clock::now ();
         acacia::diagnostics::set_forward_backend ();
+        acacia::diagnostics::set_support_backend ("forward");
+        acacia::diagnostics::set_support_graph (aut);
+        acacia::diagnostics::set_support_k (static_cast<int> (kfrom));
+#if ACACIA_ENABLE_DIAGNOSTICS
+        std::optional<acacia::diagnostics::scoped_timer> construction_timer;
+        if (acacia::diagnostics::support_demand_enabled ()) {
+          if (auto* diag = acacia::diagnostics::current ())
+            construction_timer.emplace (&diag->support_action_construction_ms);
+          acacia::diagnostics::snapshot ("support-before-action-construction");
+        }
+#endif
 
         auto finish = [&] (std::string reason, bool set_global_reason = true) {
           acacia::diagnostics::set_forward_final_reason (reason);
@@ -68,6 +79,12 @@ namespace acacia::solver_detail {
             (ios_precomputer_maker.make (aut, input_support, output_support)) ();
         auto actioner = actioner_maker.make (aut, inputs_to_ios, kfrom);
         auto& input_output_fwd_actions = actioner.actions ();
+        acacia::diagnostics::set_support_actions (input_output_fwd_actions);
+#if ACACIA_ENABLE_DIAGNOSTICS
+        construction_timer.reset ();
+        if (acacia::diagnostics::support_demand_enabled ())
+          acacia::diagnostics::snapshot ("after-action-construction");
+#endif
 
         posets::utils::vector_mm<VECTOR_ELT_T> initial_vector (
             aut->num_states (), -1);
@@ -77,6 +94,7 @@ namespace acacia::solver_detail {
         VECTOR_ELT_T k = kfrom;
         for (;;) {
           actioner.setK (k);
+          acacia::diagnostics::set_support_k (static_cast<int> (k));
 
           auto safe_vector = posets::utils::vector_mm<VECTOR_ELT_T> (
               aut->num_states (), static_cast<VECTOR_ELT_T> (k - 1));

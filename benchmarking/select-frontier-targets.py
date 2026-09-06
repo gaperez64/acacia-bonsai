@@ -4,6 +4,9 @@
 This is an offline Stage A4 selector.  It consumes only the committed coverage,
 frontier, pair, and family metadata artifacts (plus TLSF ``//STATUS`` comments
 when the materialized corpus is present).  It never runs or consults a solver.
+
+Use --exclude-families NAME[,NAME...] (repeatable) to exclude discovery families
+before scoring a held-out panel. Names match exact family_key or family_display.
 """
 
 from __future__ import annotations
@@ -616,6 +619,7 @@ def build_candidates(
     frontier_path: pathlib.Path,
     pairs_path: pathlib.Path,
     metadata_path: pathlib.Path,
+    exclude_families: frozenset[str] = frozenset(),
 ) -> list[dict[str, str]]:
     summary_rows, summaries, _ = load_tsv(
         summary_path, SUMMARY_REQUIRED, "instance"
@@ -642,6 +646,8 @@ def build_candidates(
         summary = summaries.get(instance)
         if summary is None:
             raise ValueError(f"pair candidate {instance!r} is absent from {summary_path}")
+        if {summary["family_key"], summary["family_display"]} & exclude_families:
+            continue
         result = summary["P_result"].upper()
         if result in DECISIVE_RESULTS:
             # The candidate set is frozen before later annotations, but tolerate
@@ -802,6 +808,14 @@ def parser() -> argparse.ArgumentParser:
         help="minimum number of memory-bounded targets (default: %(default)s)",
     )
     argument_parser.add_argument(
+        "--exclude-families",
+        action="append",
+        default=[],
+        metavar="NAME[,NAME...]",
+        help="repeatable comma-separated exact family_key or family_display names; "
+        "drop before scoring (for a held-out cohort)",
+    )
+    argument_parser.add_argument(
         "--output",
         type=pathlib.Path,
         default=pathlib.Path("benchmarking/syntcomp26-frontier-preselection.tsv"),
@@ -814,7 +828,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
         candidates = build_candidates(
-            args.summary, args.frontiers, args.pairs, args.metadata
+            args.summary, args.frontiers, args.pairs, args.metadata,
+            frozenset(name.strip() for group in args.exclude_families
+                      for name in group.split(",") if name.strip()),
         )
         selected = select_candidates(
             candidates, args.target_count, args.memory_quota
