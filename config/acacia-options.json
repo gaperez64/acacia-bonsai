@@ -34,6 +34,10 @@
         "no_boolean_states": {
           "type": "boolean_states::no_boolean_states",
           "gate": "ACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES"
+        },
+        "transition_core": {
+          "type": "boolean_states::transition_core",
+          "gate": "ACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE"
         }
       },
       "macro": "BOOLEAN_STATES"
@@ -236,6 +240,27 @@
         }
       ]
     },
+    "ltl_frontend": {
+      "meson": "acacia_ltl_frontend",
+      "type": "combo",
+      "default": "baseline",
+      "choices": [
+        "baseline",
+        "mp_nba"
+      ],
+      "description": "Compile-time LTL frontend selection",
+      "macros": [
+        {
+          "name": "ACACIA_LTL_FRONTEND",
+          "emit": "always",
+          "encoding": "map",
+          "map": {
+            "baseline": "ACACIA_LTL_FRONTEND_BASELINE",
+            "mp_nba": "ACACIA_LTL_FRONTEND_MP_NBA"
+          }
+        }
+      ]
+    },
     "enable_realizability_simplifier": {
       "meson": "acacia_enable_realizability_simplifier",
       "type": "boolean",
@@ -288,6 +313,19 @@
         }
       ]
     },
+    "forward_eager_minimal_successors": {
+      "meson": "acacia_forward_eager_minimal_successors",
+      "type": "boolean",
+      "default": false,
+      "description": "Eagerly apply and Pareto-minimise every forward controller action (comparison mode)",
+      "macros": [
+        {
+          "name": "ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS",
+          "emit": "always",
+          "encoding": "bool_int"
+        }
+      ]
+    },
     "k_schedule": {
       "meson": "acacia_k_schedule",
       "type": "combo",
@@ -332,6 +370,100 @@
           "name": "ACACIA_EQUIVARIANT_MAX_STATES",
           "emit": "always",
           "encoding": "value"
+        }
+      ]
+    },
+    "symmetry_profile": {
+      "meson": "acacia_symmetry_profile",
+      "type": "boolean",
+      "default": false,
+      "description": "Collect and report phase timings and call counts for symmetry and equivariant solving",
+      "macros": [
+        {
+          "name": "ACACIA_SYMMETRY_PROFILE",
+          "emit": "always",
+          "encoding": "bool_int"
+        }
+      ]
+    },
+    "equivariant_max_output_letters": {
+      "meson": "acacia_equivariant_max_output_letters",
+      "type": "integer",
+      "default": 4096,
+      "min": 1,
+      "description": "Maximum output valuations enumerated for equivariant orbit sweeping; exceeding the cap declines the equivariant solver",
+      "macros": [
+        {
+          "name": "ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS",
+          "emit": "always",
+          "encoding": "value"
+        }
+      ]
+    },
+    "equivariant_max_orbits": {
+      "meson": "acacia_equivariant_max_orbits",
+      "type": "integer",
+      "default": 4096,
+      "min": 1,
+      "description": "Maximum input orbits, including shared-input assignments, admitted to equivariant solving",
+      "macros": [
+        {
+          "name": "ACACIA_EQUIVARIANT_MAX_ORBITS",
+          "emit": "always",
+          "encoding": "value"
+        }
+      ]
+    },
+    "equivariant_max_sweep_clients": {
+      "meson": "acacia_equivariant_max_sweep_clients",
+      "type": "integer",
+      "default": 4,
+      "min": 0,
+      "description": "Maximum client count for direct orbit sweeping: small orbits can cost less than generator-fixpoint closure; larger groups use the representative/picker loop for greater payoff (0 disables sweeping)",
+      "macros": [
+        {
+          "name": "ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS",
+          "emit": "always",
+          "encoding": "value"
+        }
+      ]
+    },
+    "equivariant_exhaustive_detect": {
+      "meson": "acacia_equivariant_exhaustive_detect",
+      "type": "boolean",
+      "default": false,
+      "description": "Use exhaustive symmetry detection to select the largest full symmetric subgroup instead of fast star-generator recognition",
+      "macros": [
+        {
+          "name": "ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT",
+          "emit": "always",
+          "encoding": "bool_int"
+        }
+      ]
+    },
+    "equivariant_validate_fast_recognition": {
+      "meson": "acacia_equivariant_validate_fast_recognition",
+      "type": "boolean",
+      "default": false,
+      "description": "Cross-check fast symmetry recognition against exhaustive detection, reporting mismatches and asserting agreement",
+      "macros": [
+        {
+          "name": "ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION",
+          "emit": "always",
+          "encoding": "bool_int"
+        }
+      ]
+    },
+    "symmetry_verbose_diagnostics": {
+      "meson": "acacia_symmetry_verbose_diagnostics",
+      "type": "boolean",
+      "default": false,
+      "description": "Run an additional symmetry-detection pass on the final game automaton for verbose and phase diagnostics",
+      "macros": [
+        {
+          "name": "ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS",
+          "emit": "always",
+          "encoding": "bool_int"
         }
       ]
     },
@@ -540,6 +672,19 @@
         }
       ]
     },
+    "transition_acceptance": {
+      "meson": "acacia_transition_acceptance",
+      "type": "boolean",
+      "default": false,
+      "description": "Carry transition acceptance into rank actions",
+      "macros": [
+        {
+          "name": "ACACIA_TRANSITION_ACCEPTANCE",
+          "emit": "always",
+          "encoding": "bool_int"
+        }
+      ]
+    },
     "vector_impl": {
       "meson": "acacia_vector_impl",
       "type": "combo",
@@ -558,6 +703,40 @@
           "encoding": "value",
           "skip_value": "auto"
         }
+      ]
+    }
+  },
+  "constants": {
+    "VECTOR_ELT_T": {
+      "value": "signed char",
+      "description": "Counter element type. Overflow WARNING: Check VECTOR_ELT_T below before changing DEFAULT_K. The acacia_default_k maximum of 127 in meson.options repeats the same signed-char representation constraint.",
+      "sources": [
+        "src/configuration.hh",
+        "meson.options"
+      ]
+    },
+    "ACACIA_LTL_FRONTEND_BASELINE": {
+      "value": 0,
+      "description": "Baseline enum value of ACACIA_LTL_FRONTEND, not an option. Together with ACACIA_LTL_FRONTEND_MP_NBA it defines the two admissible values. The template defines it unconditionally; src/configuration.hh guards it with #ifndef.",
+      "sources": [
+        "src/config/acacia_build_config.hh.in",
+        "src/configuration.hh"
+      ]
+    },
+    "ACACIA_LTL_FRONTEND_MP_NBA": {
+      "value": 1,
+      "description": "MP-NBA enum value of ACACIA_LTL_FRONTEND, not an option. Together with ACACIA_LTL_FRONTEND_BASELINE it defines the two admissible values. The template defines it unconditionally; src/configuration.hh guards it with #ifndef.",
+      "sources": [
+        "src/config/acacia_build_config.hh.in",
+        "src/configuration.hh"
+      ]
+    },
+    "VECTOR_IMPL_AUTO": {
+      "value": "NO_SIMD ? vector_backed : simd_vector_backed",
+      "description": "Resolution of VECTOR_IMPL when vector_impl is auto. src/configuration.hh selects the fallback by whether NO_SIMD is defined; meson.build repeats the resolution using acacia_no_simd when selecting posets_vector_impl component gates.",
+      "sources": [
+        "src/configuration.hh",
+        "meson.build"
       ]
     }
   }

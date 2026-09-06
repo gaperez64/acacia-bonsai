@@ -73,6 +73,32 @@ build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
 build_conf.set ('ACACIA_EQUIVARIANT_MAX_STATES',
                 get_option ('acacia_equivariant_max_states'))
+if get_option ('acacia_symmetry_profile')
+  build_conf.set ('ACACIA_SYMMETRY_PROFILE', 1)
+else
+  build_conf.set ('ACACIA_SYMMETRY_PROFILE', 0)
+endif
+build_conf.set ('ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS',
+                get_option ('acacia_equivariant_max_output_letters'))
+build_conf.set ('ACACIA_EQUIVARIANT_MAX_ORBITS',
+                get_option ('acacia_equivariant_max_orbits'))
+build_conf.set ('ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS',
+                get_option ('acacia_equivariant_max_sweep_clients'))
+if get_option ('acacia_equivariant_exhaustive_detect')
+  build_conf.set ('ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT', 1)
+else
+  build_conf.set ('ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT', 0)
+endif
+if get_option ('acacia_equivariant_validate_fast_recognition')
+  build_conf.set ('ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION', 1)
+else
+  build_conf.set ('ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION', 0)
+endif
+if get_option ('acacia_symmetry_verbose_diagnostics')
+  build_conf.set ('ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS', 1)
+else
+  build_conf.set ('ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS', 0)
+endif
 build_conf.set ('ACACIA_EQUIVARIANT_MIN_CLIENTS',
                 get_option ('acacia_equivariant_min_clients'))
 build_conf.set ('ACACIA_EQUIVARIANT_MIN_BLOCKS',

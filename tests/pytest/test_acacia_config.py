@@ -1,5 +1,6 @@
 import importlib.util
 import pathlib
+import re
 import sys
 
 import pytest
@@ -8,11 +9,29 @@ import pytest
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "acacia-config.py"
 
+NEW_OPTION_CASES = [
+    ("symmetry_profile", "ACACIA_SYMMETRY_PROFILE", False, True, "1"),
+    ("equivariant_max_output_letters", "ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS",
+     4096, 8192, "8192"),
+    ("equivariant_max_orbits", "ACACIA_EQUIVARIANT_MAX_ORBITS", 4096, 8192, "8192"),
+    ("equivariant_max_sweep_clients", "ACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS", 4, 0, "0"),
+    ("equivariant_exhaustive_detect", "ACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT",
+     False, True, "1"),
+    ("equivariant_validate_fast_recognition", "ACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION",
+     False, True, "1"),
+    ("symmetry_verbose_diagnostics", "ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS",
+     False, True, "1"),
+    ("ltl_frontend", "ACACIA_LTL_FRONTEND", "baseline", "mp_nba", "ACACIA_LTL_FRONTEND_MP_NBA"),
+    ("forward_eager_minimal_successors", "ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS",
+     False, True, "1"),
+    ("transition_acceptance", "ACACIA_TRANSITION_ACCEPTANCE", False, True, "1"),
+]
 
-def load_module():
-    sys.path.insert(0, str(SCRIPT.parent))
+
+def load_module(script=SCRIPT):
+    sys.path.insert(0, str(script.parent))
     try:
-        spec = importlib.util.spec_from_file_location("acacia_config", SCRIPT)
+        spec = importlib.util.spec_from_file_location("acacia_config", script)
         module = importlib.util.module_from_spec(spec)
         assert spec.loader is not None
         spec.loader.exec_module(module)
@@ -25,10 +44,146 @@ def test_committed_registry_is_valid():
     module = load_module()
     options, presets = module.load_registry()
 
-    for name in presets["presets"]:
-        module.validate_preset(options, presets, name)
-    for name in presets["tool_baselines"]:
-        module.validate_tool(presets, name)
+    module.command_validate(options, presets)
+
+
+def test_every_solver_meson_option_has_a_registry_entry():
+    module = load_module()
+    options, _ = module.load_registry()
+    frontends = load_module(ROOT / "tests" / "check-config-frontends.py")
+    # Collect names independently of the default parser: an unparsed declaration
+    # must not silently disappear from the coverage check.
+    declared = set(re.findall(
+        r"^\s*option\s*\(\s*'([^']+)'", (ROOT / "meson.options").read_text(), re.M
+    ))
+    registered = {
+        entry["meson"]
+        for section in ("options", "families")
+        for entry in options[section].values()
+    }
+    assert frontends.NON_SOLVER_OPTIONS <= declared
+    assert registered.isdisjoint(frontends.NON_SOLVER_OPTIONS)
+    assert declared - frontends.NON_SOLVER_OPTIONS == registered
+    assert set(frontends.meson_options(ROOT / "meson.options")) == declared
+
+
+def test_registry_meson_types_choices_and_bounds_agree():
+    module = load_module()
+    options, _ = module.load_registry()
+    frontends = load_module(ROOT / "tests" / "check-config-frontends.py")
+    meson = frontends.meson_options(ROOT / "meson.options")
+    for option in options["options"].values():
+        declared = meson[option["meson"]]
+        for key in ("type", "choices", "min", "max"):
+            assert option.get(key) == declared.get(key), (option["meson"], key)
+        if option["meson"] not in frontends.INTENTIONAL_DIVERGENCE:
+            assert option["default"] == declared["default"], option["meson"]
+    for family in options["families"].values():
+        declared = meson[family["meson"]]
+        assert declared["type"] == "combo"
+        assert family["default"] == declared["default"], family["meson"]
+        assert set(family["choices"]) == set(declared["choices"]), family["meson"]
+
+
+@pytest.mark.parametrize("name,macro,default,selected,encoded", NEW_OPTION_CASES)
+def test_new_options_preserve_defaults_and_flow_through_frontends(
+    tmp_path, name, macro, default, selected, encoded,
+):
+    module = load_module()
+    options, _ = module.load_registry()
+    option = options["options"][name]
+    assert option["default"] == default
+    expected_default = (
+        "ACACIA_LTL_FRONTEND_BASELINE" if name == "ltl_frontend" else str(int(default))
+    )
+    assert f"-D{macro}={expected_default}" in module.preprocessor_flags(
+        options, module.defaults(options)
+    )
+    if isinstance(default, bool):
+        assert option["type"] == "boolean"
+        assert option["macros"] == [
+            {"name": macro, "emit": "always", "encoding": "bool_int"}
+        ]
+
+    presets = {"presets": {"custom": {name: selected}}}
+    module.validate_preset(options, presets, "custom")
+    values = module.normalize_preset(options, presets, "custom")
+    meson_value = str(selected).lower() if isinstance(selected, bool) else str(selected)
+    assert f"-D{option['meson']}={meson_value}" in module.meson_args(options, values)
+    assert f"-D{macro}={encoded}" in module.preprocessor_flags(options, values)
+
+    header = tmp_path / "acacia_build_config.hh"
+    module.emit_config_header(options, values, header)
+    assert f"#ifndef {macro}\n# define {macro} {encoded}\n#endif" in header.read_text()
+    template = (ROOT / "src/config/acacia_build_config.hh.in").read_text()
+    assert f"#ifndef {macro}\n# define {macro} @{macro}@\n#endif" in template
+
+
+def test_new_equivariant_options_match_existing_header_fallbacks():
+    module = load_module()
+    options, _ = module.load_registry()
+    configuration = (ROOT / "src/configuration.hh").read_text()
+    for name, macro, _, _, _ in NEW_OPTION_CASES[:7]:
+        default = int(options["options"][name]["default"])
+        assert f"#ifndef {macro}\n# define {macro} {default}\n#endif" in configuration
+
+
+def test_transition_core_preset_selects_type_and_exactly_one_family_gate():
+    module = load_module()
+    options, _ = module.load_registry()
+    presets = {"presets": {"custom": {"boolean_states": "transition_core"}}}
+    module.validate_preset(options, presets, "custom")
+    values = module.normalize_preset(options, presets, "custom")
+    flags = module.preprocessor_flags(options, values)
+    assert "-Dacacia_boolean_states=transition_core" in module.meson_args(options, values)
+    assert "-DBOOLEAN_STATES=boolean_states::transition_core" in flags
+    assert "-DACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE=1" in flags
+    assert "-DACACIA_ENABLE_BOOLEAN_STATES_FORWARD_SATURATION=0" in flags
+    assert "-DACACIA_ENABLE_BOOLEAN_STATES_NO_BOOLEAN_STATES=0" in flags
+    default_flags = module.preprocessor_flags(options, module.defaults(options))
+    assert "-DACACIA_ENABLE_BOOLEAN_STATES_TRANSITION_CORE=0" in default_flags
+
+
+def test_constants_are_documentation_only(tmp_path):
+    module = load_module()
+    options, presets = module.load_registry()
+    module.command_validate(options, presets)
+    constants = options["constants"]
+    assert set(constants) == {
+        "VECTOR_ELT_T", "ACACIA_LTL_FRONTEND_BASELINE",
+        "ACACIA_LTL_FRONTEND_MP_NBA", "VECTOR_IMPL_AUTO",
+    }
+    values = module.defaults(options)
+    assert set(constants).isdisjoint(values)
+    flags = module.preprocessor_flags(options, values)
+    args = module.meson_args(options, values)
+    header = tmp_path / "acacia_build_config.hh"
+    module.emit_config_header(options, values, header)
+    original_header = header.read_text()
+    for constant in constants.values():
+        assert all((ROOT / source).is_file() for source in constant["sources"])
+        constant["value"] = "documentation changes do not affect builds"
+    assert module.defaults(options) == values
+    assert module.preprocessor_flags(options, values) == flags
+    assert module.meson_args(options, values) == args
+    module.emit_config_header(options, values, header)
+    assert header.read_text() == original_header
+
+
+@pytest.mark.parametrize("constants,reason", [
+    ([], "constants must be an object"),
+    ({"bad": 0}, "constants must contain named objects"),
+    ({"bad": {"value": []}}, "constant value"),
+    ({"bad": {"value": 0, "description": ""}}, "constant description"),
+    ({"bad": {"value": 0, "description": "constant", "sources": "src/configuration.hh"}},
+     "constant sources"),
+])
+def test_validate_checks_constant_documentation(constants, reason):
+    module = load_module()
+    options, presets = module.load_registry()
+    options["constants"] = constants
+    with pytest.raises(SystemExit, match=reason):
+        module.command_validate(options, presets)
 
 
 def test_registry_options_are_self_describing():
@@ -179,13 +334,22 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DDEFAULT_SPOT_FAST=SPOT_FAST_DET_AND_GFG",
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Small",
         "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Small, spot::postprocessor::Any",
+        "-DACACIA_LTL_FRONTEND=ACACIA_LTL_FRONTEND_BASELINE",
         "-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER=0",
         "-DACACIA_ENABLE_SYNTACTIC_BYPASS=1",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",
         "-DACACIA_PROFILE_DOMINANCE=0",
+        "-DACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS=0",
         "-DACACIA_K_SCHEDULE=acacia::k_schedule::kind::geometric",
         "-DACACIA_ENABLE_TLSF_FRONTEND=1",
         "-DACACIA_EQUIVARIANT_MAX_STATES=512",
+        "-DACACIA_SYMMETRY_PROFILE=0",
+        "-DACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS=4096",
+        "-DACACIA_EQUIVARIANT_MAX_ORBITS=4096",
+        "-DACACIA_EQUIVARIANT_MAX_SWEEP_CLIENTS=4",
+        "-DACACIA_EQUIVARIANT_EXHAUSTIVE_DETECT=0",
+        "-DACACIA_EQUIVARIANT_VALIDATE_FAST_RECOGNITION=0",
+        "-DACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS=0",
         "-DACACIA_EQUIVARIANT_MIN_CLIENTS=3",
         "-DACACIA_EQUIVARIANT_MIN_BLOCKS=2",
         "-DSIMD_IS_MAX=false",
@@ -200,6 +364,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DACACIA_FORWARD_SAFETY_SOLVER=1",
         "-DACACIA_FORWARD_CONDITIONAL_COVERING=1",
         "-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1",
+        "-DACACIA_TRANSITION_ACCEPTANCE=0",
         "-DVECTOR_IMPL=vector_backed",
     ]
     flags = module.preprocessor_flags(options, values)

@@ -201,7 +201,28 @@ def emit_config_header(options: dict[str, Any], values: dict[str, Any], path: pa
     path.write_text("\n".join(lines))
 
 
+def validate_constants(options: dict[str, Any]) -> None:
+    """Check documentation entries without treating constants as options."""
+    constants = options.get("constants")
+    if not isinstance(constants, dict):
+        raise SystemExit("constants must be an object")
+    for name, constant in constants.items():
+        if not isinstance(name, str) or not name or not isinstance(constant, dict):
+            raise SystemExit("constants must contain named objects")
+        if type(constant.get("value")) not in {str, int}:
+            raise SystemExit(f"{name}: constant value must be a string or integer")
+        description = constant.get("description")
+        if not isinstance(description, str) or not description:
+            raise SystemExit(f"{name}: constant description must be a non-empty string")
+        sources = constant.get("sources")
+        if not isinstance(sources, list) or not sources or not all(
+            isinstance(source, str) and source for source in sources
+        ):
+            raise SystemExit(f"{name}: constant sources must be non-empty strings")
+
+
 def command_validate(options: dict[str, Any], presets: dict[str, Any]) -> None:
+    validate_constants(options)
     for name in presets["presets"]:
         validate_preset(options, presets, name)
     for name in presets.get("tool_baselines", {}):
