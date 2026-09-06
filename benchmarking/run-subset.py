@@ -30,6 +30,7 @@ import sys
 import tempfile
 
 from benchlib import (
+    campaign_scope_guard,
     classify_run,
     read_part,
     run_process_group,
@@ -349,4 +350,5 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGTERM, exit_on_signal)
     signal.signal(signal.SIGHUP, exit_on_signal)
-    main()
+    with campaign_scope_guard("run-subset"):
+        main()

@@ -20,7 +20,28 @@ baseline_bin=${baseline_bin:-$repo_root/build_best_decomp_mona/src/acacia-bonsai
 expected="$repo_root/tests/suites/benchmarks/regress-expected.tsv"
 testlog="$build_dir/meson-logs/testlog.json"
 scratch=$(mktemp -d /tmp/acacia-regression-gate.XXXXXX)
-trap 'rm -rf "$scratch"' EXIT
+scope_guard_outer=0
+scope_snapshot="$scratch/scope-snapshot"
+on_exit() {
+  local rc=$?
+  if (( scope_guard_outer == 1 )); then
+    python3 "$repo_root/benchmarking/sweep-acacia-scopes.py" \
+      --stop --snapshot "$scope_snapshot" || true
+  fi
+  rm -rf "$scratch"
+  return "$rc"
+}
+trap on_exit EXIT
+
+if [[ -z ${ACACIA_CAMPAIGN_SCOPE_GUARD:-} ]]; then
+  if ! python3 "$repo_root/benchmarking/sweep-acacia-scopes.py" \
+       --check --snapshot "$scope_snapshot"; then
+    [[ ${ACACIA_ALLOW_STRAY_SCOPES:-0} == 1 ]] || exit 1
+    echo "regression-gate: continuing with ACACIA_ALLOW_STRAY_SCOPES=1; measurements may be under contention" >&2
+  fi
+  export ACACIA_CAMPAIGN_SCOPE_GUARD="regression-gate:$$"
+  scope_guard_outer=1
+fi
 
 outer_cgroup=${REGRESSION_OUTER_CGROUP:-0}
 if [[ $outer_cgroup == 1 || $outer_cgroup == true || $outer_cgroup == yes || $outer_cgroup == on ]]; then

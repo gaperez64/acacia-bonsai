@@ -50,7 +50,7 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from benchlib import read_part, run_systemd_scope  # noqa: E402
+from benchlib import campaign_scope_guard, read_part, run_systemd_scope  # noqa: E402
 from suite_paths import load_source_map, load_tlsf_source_map  # noqa: E402
 
 
@@ -155,6 +155,7 @@ def census_rows(diag_rows: list[dict[str, str]], decode: bool) -> list[dict[str,
     return rows
 
 
+@campaign_scope_guard("semantic-action-census")
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)

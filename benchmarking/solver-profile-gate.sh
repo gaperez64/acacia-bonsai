@@ -126,6 +126,29 @@ command -v perf >/dev/null || { echo "GATE FAIL: perf is not installed"; exit 1;
 command -v systemd-run >/dev/null || { echo "GATE FAIL: systemd-run is not installed"; exit 1; }
 command -v timeout >/dev/null || { echo "GATE FAIL: timeout is not installed"; exit 1; }
 
+scope_guard_outer=0
+scope_snapshot=$(mktemp /tmp/acacia-scope-snapshot.XXXXXX)
+on_exit() {
+  local rc=$?
+  if (( scope_guard_outer == 1 )); then
+    python3 "$repo_root/benchmarking/sweep-acacia-scopes.py" \
+      --stop --snapshot "$scope_snapshot" || true
+  fi
+  rm -f "$scope_snapshot"
+  return "$rc"
+}
+trap on_exit EXIT
+
+if [[ -z ${ACACIA_CAMPAIGN_SCOPE_GUARD:-} ]]; then
+  if ! python3 "$repo_root/benchmarking/sweep-acacia-scopes.py" \
+       --check --snapshot "$scope_snapshot"; then
+    [[ ${ACACIA_ALLOW_STRAY_SCOPES:-0} == 1 ]] || exit 1
+    echo "solver-profile-gate: continuing with ACACIA_ALLOW_STRAY_SCOPES=1; measurements may be under contention" >&2
+  fi
+  export ACACIA_CAMPAIGN_SCOPE_GUARD="solver-profile-gate:$$"
+  scope_guard_outer=1
+fi
+
 timestamp=$(date -u +%Y%m%dT%H%M%SZ)
 output=${output:-/tmp/acacia-solver-profile.$timestamp}
 mkdir -p "$output"

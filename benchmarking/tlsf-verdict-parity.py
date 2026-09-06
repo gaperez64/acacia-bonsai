@@ -7,7 +7,7 @@ import argparse
 import csv
 import pathlib
 
-from benchlib import classify_acacia_run, read_part, run_systemd_scope
+from benchlib import campaign_scope_guard, classify_acacia_run, read_part, run_systemd_scope
 
 
 SOLVED = {"REALIZABLE", "UNREALIZABLE"}
@@ -46,6 +46,7 @@ def write_rows(path: pathlib.Path, rows: list[dict[str, object]]) -> None:
     temporary.replace(path)
 
 
+@campaign_scope_guard("tlsf-verdict-parity")
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bin", required=True, type=pathlib.Path)

@@ -19,7 +19,7 @@ def write_csv(path, result):
         )
 
 
-def run_campaign(tmp_path, baseline_result, candidate_result):
+def run_campaign(tmp_path, baseline_result, candidate_result, *, outer_cgroup=True):
     manifest = tmp_path / "panel.list"
     manifest.write_text("one.ltl\n")
     output = tmp_path / "output"
@@ -31,7 +31,10 @@ def run_campaign(tmp_path, baseline_result, candidate_result):
     fake_binary.write_text("#!/bin/sh\nexit 99\n")
     fake_binary.chmod(0o755)
     env = os.environ.copy()
-    env["ACACIA_OUTER_CGROUP"] = "1"
+    if outer_cgroup:
+        env["ACACIA_OUTER_CGROUP"] = "1"
+    else:
+        env.pop("ACACIA_OUTER_CGROUP", None)
     result = subprocess.run(
         [
             SCRIPT,
@@ -86,6 +89,56 @@ def test_tlsf_corpus_survives_the_scope_re_exec(tmp_path):
     assert "--tlsf-corpus" in forwarded, (
         "--tlsf-corpus is not added to the re-exec argv"
     )
+
+
+def test_parent_sweeps_once_after_scoped_re_exec(tmp_path, monkeypatch):
+    """Simulate a scope surviving the re-exec without contacting systemd."""
+    monkeypatch.delenv("ACACIA_CAMPAIGN_SCOPE_GUARD")
+    monkeypatch.delenv("ACACIA_ALLOW_STRAY_SCOPES", raising=False)
+    monkeypatch.setenv("SCOPE_TEST_DIR", str(tmp_path))
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ['PATH']}")
+    fake_systemd_run = bin_dir / "systemd-run"
+    fake_systemd_run.write_text('''#!/usr/bin/env bash
+set -eu
+printf '%s\\n' "$@" > "$SCOPE_TEST_DIR/scope-argv"
+touch "$SCOPE_TEST_DIR/running"
+while [[ $1 != env ]]; do shift; done
+"$@"
+''')
+    fake_systemd_run.chmod(0o755)
+    fake_systemctl = bin_dir / "systemctl"
+    fake_systemctl.write_text('''#!/usr/bin/env bash
+set -eu
+printf '%s\\n' "$2" >> "$SCOPE_TEST_DIR/systemctl-calls"
+case $2 in
+  list-units)
+    if [[ -f $SCOPE_TEST_DIR/running ]]; then
+      echo 'acacia-landing-campaign-123.scope loaded active running Campaign'
+    fi
+    ;;
+  stop)
+    rm "$SCOPE_TEST_DIR/running"
+    ;;
+  show)
+    printf 'LoadState=not-found\\nActiveState=inactive\\nSubState=dead\\n'
+    ;;
+  *) exit 99 ;;
+esac
+''')
+    fake_systemctl.chmod(0o755)
+
+    result, output = run_campaign(tmp_path, "REALIZABLE", "REALIZABLE", outer_cgroup=False)
+
+    assert result.returncode == 0, result.stderr
+    assert (output / "status.txt").read_text() == "COMPLETE PASS\n"
+    assert (tmp_path / "systemctl-calls").read_text().splitlines() == [
+        "list-units", "list-units", "stop", "show",
+    ]
+    assert not (tmp_path / "running").exists()
+    assert "surviving running scope acacia-landing-campaign-123.scope" in result.stderr
+    assert "--unit=acacia-landing-campaign-" in (tmp_path / "scope-argv").read_text()
 
 
 def test_a_suite_with_a_tlsf_map_takes_the_tlsf_route(tmp_path):

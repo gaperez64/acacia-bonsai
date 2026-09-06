@@ -34,7 +34,7 @@ import tempfile
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from benchlib import read_part, run_systemd_scope  # noqa: E402
+from benchlib import campaign_scope_guard, read_part, run_systemd_scope  # noqa: E402
 from suite_paths import load_source_map, load_tlsf_source_map  # noqa: E402
 
 LEADING_COLUMNS = ["suite", "instance", "worker", "states", "bool_threshold",
@@ -124,6 +124,7 @@ def solver_final(directory: pathlib.Path) -> str:
     return "none"
 
 
+@campaign_scope_guard("small-invariant-campaign")
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter

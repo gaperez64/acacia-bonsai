@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from benchlib import classify_acacia_run, read_part, run_process_group, run_systemd_scope
+from benchlib import campaign_scope_guard, classify_acacia_run, read_part, run_process_group, run_systemd_scope
 from suite_paths import load_source_map, load_tlsf_source_map
 
 
@@ -230,6 +230,7 @@ def print_rerun(
         print(f"REMEASURE {label} STDERR END")
 
 
+@campaign_scope_guard("landing-bar")
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("baseline", type=pathlib.Path)

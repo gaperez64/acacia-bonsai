@@ -29,6 +29,8 @@ import pathlib
 import subprocess
 import sys
 
+from benchlib import campaign_scope_guard
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "benchmarking" / "run-syntcomp26-coverage.py"
 
@@ -49,6 +51,7 @@ ARMS: dict[str, tuple[str, str]] = {
 }
 
 
+@campaign_scope_guard("run-portfolio-arms")
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--build-dir", required=True, type=pathlib.Path,
