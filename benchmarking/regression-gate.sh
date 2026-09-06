@@ -73,6 +73,7 @@ python3 - "$expected" "$testlog" "$meson_status" \
 from collections import defaultdict
 import csv
 import json
+import os
 import pathlib
 import sys
 
@@ -84,56 +85,18 @@ baseline_csv = pathlib.Path(sys.argv[4])
 candidate_csv = pathlib.Path(sys.argv[5])
 repo_root = pathlib.Path(sys.argv[6])
 sys.path.insert(0, str(repo_root / "benchmarking"))
+import benchlib
 from benchlib import verdict_from_output
 
 build_dir = pathlib.Path(sys.argv[7])
 tlsf_corpus_out = pathlib.Path(sys.argv[8])
-materialize_command = "python3 benchmarking/syntcomp-corpus.py materialize --out DIR"
 
 
 def verdict(stdout):
     return verdict_from_output(stdout, on_conflict="last")
 
 
-def tlsf_failure(key, detail):
-    suite, instance = key
-    raise SystemExit(
-        f"GATE FAIL: {suite}/{instance} needs its TLSF source, but {detail}; "
-        f"run `{materialize_command}` and configure the build with "
-        "-Dacacia_tlsf_corpus_dir=DIR"
-    )
-
-
-tlsf_corpus = None
-
-
-def configured_tlsf_corpus(key):
-    global tlsf_corpus
-    if tlsf_corpus is not None:
-        return tlsf_corpus
-    options_path = build_dir / "meson-info" / "intro-buildoptions.json"
-    try:
-        options = json.loads(options_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        tlsf_failure(key, f"cannot read {options_path}: {exc}")
-    if not isinstance(options, list):
-        tlsf_failure(key, f"{options_path} does not contain a Meson option list")
-    raw_corpus = next(
-        (
-            option.get("value")
-            for option in options
-            if isinstance(option, dict)
-            and option.get("name") == "acacia_tlsf_corpus_dir"
-        ),
-        None,
-    )
-    if not isinstance(raw_corpus, str) or not raw_corpus.strip():
-        tlsf_failure(
-            key,
-            f"acacia_tlsf_corpus_dir is unset in {options_path}",
-        )
-    tlsf_corpus = pathlib.Path(raw_corpus).expanduser().resolve()
-    return tlsf_corpus
+tlsf_corpus = benchlib.tlsf_corpus_dir(env=os.environ, build_dir=build_dir)
 
 
 def load_map(path, value_field):
@@ -213,10 +176,14 @@ with expected_path.open(newline="") as handle:
                 )
             raw_tlsf_source = source_maps[tlsf_source_map_path].get(key[1])
             if raw_tlsf_source is not None:
-                corpus_dir = configured_tlsf_corpus(key)
-                tlsf_source = (corpus_dir / raw_tlsf_source).resolve()
+                if tlsf_corpus is None:
+                    raise SystemExit(benchlib.tlsf_failure(
+                        key,
+                        benchlib.tlsf_corpus_diagnosis(build_dir=build_dir),
+                    ))
+                tlsf_source = (tlsf_corpus / raw_tlsf_source).resolve()
                 if not tlsf_source.is_file():
-                    tlsf_failure(key, f"{tlsf_source} is absent")
+                    raise SystemExit(benchlib.tlsf_failure(key, f"{tlsf_source} is absent"))
 
         # regress-expected.tsv froze baseline_seconds on the vendored LTL basis,
         # so landing-bar remeasures there even though Meson now uses -T.  The

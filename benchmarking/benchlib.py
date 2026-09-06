@@ -18,6 +18,107 @@ from typing import Callable
 
 
 VERDICT_RE = re.compile(r"(?:^|\]\s)(UNREALIZABLE|REALIZABLE)\s*$", re.MULTILINE)
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+
+def build_option(build_dir, name):
+    """Read a Meson option, returning None for missing or unreadable metadata."""
+    try:
+        options_path = pathlib.Path(build_dir) / "meson-info" / "intro-buildoptions.json"
+        options = json.loads(options_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return None
+    if not isinstance(options, list):
+        return None
+    return next(
+        (
+            option.get("value")
+            for option in options
+            if isinstance(option, dict) and option.get("name") == name
+        ),
+        None,
+    )
+
+
+def _corpus_path(value) -> pathlib.Path | None:
+    if isinstance(value, (str, pathlib.Path)) and str(value).strip():
+        return pathlib.Path(value).expanduser().resolve()
+    return None
+
+
+def _recorded_corpus() -> str | None:
+    try:
+        return (ROOT / ".acacia-tlsf-corpus-path").read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+
+
+CORPUS_MARKER = ".acacia-tlsf-corpus"
+
+
+def tlsf_corpus_candidates(explicit=None, build_dir=None, env=None) -> list[tuple[str, object, bool]]:
+    """The (mechanism, raw value, needs_marker) triples consulted, in order.
+
+    Only the recorded pointer needs the marker: the other three were named by
+    the operator for this run, and second-guessing them would be unhelpful,
+    while the pointer is a leftover record that must be shown to still describe
+    a corpus materialize actually produced.
+    """
+    if env is None:
+        env = os.environ
+    return [
+        ("--tlsf-corpus", explicit, False),
+        ("ACACIA_TLSF_CORPUS", env.get("ACACIA_TLSF_CORPUS"), False),
+        ("acacia_tlsf_corpus_dir", build_option(build_dir, "acacia_tlsf_corpus_dir"), False),
+        (f"{CORPUS_MARKER}-path", _recorded_corpus(), True),
+    ]
+
+
+def _corpus_rejection(corpus: pathlib.Path | None, needs_marker: bool) -> str | None:
+    """Why this candidate cannot be used, or None when it can."""
+    if corpus is None:
+        return "is unset"
+    if not corpus.is_dir():
+        return f"names {corpus}, which is not a directory"
+    if needs_marker and not (corpus / CORPUS_MARKER).is_file():
+        return f"names {corpus}, which carries no {CORPUS_MARKER} marker"
+    return None
+
+
+def tlsf_corpus_dir(explicit=None, build_dir=None, env=None) -> pathlib.Path | None:
+    """Resolve flag, environment, Meson option, then the recorded corpus.
+
+    A mechanism naming a directory that is not there is skipped rather than
+    returned, so a stale setting cannot mask a live one, and cannot turn into a
+    per-instance "TLSF source is absent" mystery further down.
+    """
+    for _, value, needs_marker in tlsf_corpus_candidates(explicit, build_dir, env):
+        corpus = _corpus_path(value)
+        if _corpus_rejection(corpus, needs_marker) is None:
+            return corpus
+    return None
+
+
+def tlsf_corpus_diagnosis(explicit=None, build_dir=None, env=None) -> str:
+    """Say what was consulted and why none of it produced a corpus directory."""
+    tried = []
+    for mechanism, value, needs_marker in tlsf_corpus_candidates(explicit, build_dir, env):
+        rejection = _corpus_rejection(_corpus_path(value), needs_marker)
+        if rejection is None:
+            return ""  # something resolved; there is nothing to explain
+        tried.append(f"{mechanism} {rejection}")
+    return "; ".join(tried)
+
+
+def tlsf_failure(key, detail) -> str:
+    """Explain a missing TLSF source and the shared ways to locate its corpus."""
+    suite, instance = key
+    return (
+        f"GATE FAIL: {suite}/{instance} needs its TLSF source, but {detail}; "
+        "run `python3 benchmarking/syntcomp-corpus.py materialize --out DIR` "
+        "and export ACACIA_TLSF_CORPUS=DIR or configure the build with "
+        "-Dacacia_tlsf_corpus_dir=DIR"
+    )
 
 
 @dataclass(frozen=True)

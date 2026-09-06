@@ -24,6 +24,18 @@ flat TLSF filenames. Meson resolves them against the directory produced by
 receives that directory as `-Dacacia_tlsf_corpus_dir=DIR` and passes each source
 to the wrapper with `-T`.
 
+Materialize once: any one of `--tlsf-corpus DIR` (G2s/G3),
+`ACACIA_TLSF_CORPUS=DIR`, or the build's `-Dacacia_tlsf_corpus_dir=DIR` is
+enough for the benchmark gates, in that precedence order. With none set, they
+use the repository's `.acacia-tlsf-corpus-path` pointer, provided its directory
+still exists and carries the `.acacia-tlsf-corpus` marker. Materialize writes
+both records after verification; the marker contains the entry count and
+manifest SHA-256. `materialize --no-record` skips updating the pointer.
+Meson still requires the build option at configure time to enumerate suite
+entries; the gates reuse it without needing a second setting. G2s/G3 use the
+candidate binary's build (`BUILD/src/acacia-bonsai`); G2s calibration uses the
+baseline build.
+
 The flat 1,586-file corpus is reconstructed from the
 `tests/syntcomp-benchmarks` submodule of
 [SYNTCOMP/benchmarks](https://github.com/SYNTCOMP/benchmarks), pinned at tag

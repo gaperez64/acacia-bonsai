@@ -6,7 +6,7 @@ baseline_bin=
 candidate_bin=
 timeout=17
 output=
-tlsf_corpus=${ACACIA_TLSF_CORPUS:-}
+tlsf_corpus=
 declare -a suites=()
 declare -a lists=()
 
@@ -21,7 +21,8 @@ usage: benchmarking/landing-campaign.sh \
 materialize.  A suite with a tlsf-sources.tsv is run through it: syntcomp25 and
 syntcomp26 are reconstructed from the TLSF submodule and 77 of 180 and 180 of
 180 of their panel rows respectively have no .ltl pair to fall back on.  It
-defaults to \$ACACIA_TLSF_CORPUS.
+defaults to $ACACIA_TLSF_CORPUS, the candidate build's acacia_tlsf_corpus_dir
+option, then the recorded corpus.
 EOF
 }
 
@@ -52,6 +53,14 @@ fi
 
 baseline_bin=$(realpath "$baseline_bin")
 candidate_bin=$(realpath "$candidate_bin")
+# Resolve before re-exec so the scope receives the chosen absolute path.
+tlsf_corpus=$(python3 -c '
+import pathlib
+import sys
+sys.path.insert(0, sys.argv[1])
+from benchlib import tlsf_corpus_dir
+print(tlsf_corpus_dir(explicit=sys.argv[2], build_dir=pathlib.Path(sys.argv[3]).parent.parent) or "")
+' "$repo_root/benchmarking" "$tlsf_corpus" "$candidate_bin")
 output=$(realpath -m "$output")
 mkdir -p "$output"
 
