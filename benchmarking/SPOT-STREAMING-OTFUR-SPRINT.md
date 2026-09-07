@@ -6,13 +6,12 @@ portfolio selection, native worker accounting, and same-provider replay are
 complete. Production gates and the full closing comparison remain in progress.
 No default has been promoted.
 
-Latest selection (21:26 UTC): a sparse formula-unreal worker combined with
-bounded TAA real/backward fallback answers 27/51 with lazy TAA and 28/51 with
-the matched eager provider, versus mainline's 21/51. Both also answer the two
-separate AMBA panel probes, and neither loses a mainline answer. Their closing
-gate candidates are `otf_mix_formula_lazy` and `otf_mix_formula_eager`, alongside
-the two sparse-only configurations. These remain selection results, pending
-the new configurations' production gates and the full 1,524-case comparison.
+Latest gates (22:39 UTC): both sparse-only configurations pass the frozen and
+2025/2026 panel gates. Both bounded TAA mixtures pass the frozen 40-case gate
+but fail both panels on fast backward-real cases. They remain research controls,
+not shipping-default candidates. Their earlier 27/51 (lazy) and 28/51 (eager)
+selection scores, versus main's 21/51, did not transfer without losses.
+Labelled correctness and the full 1,524-case comparison remain outstanding.
 
 ## Scope and baseline
 
@@ -690,3 +689,55 @@ panel gains (notably C2 versus GF-G6). All previous recipes and measurements
 are preserved. Selection does not promote a shipping default. New actual-default
 binaries must pass the remaining gates before the full comparison; the other
 three shipping configurations are included again in that final measurement.
+
+### Final mixed-configuration gates
+
+The actual-default mixture binaries are frozen at `5d16f889`. Both pass all
+43 unit/version checks and all 40 frozen regression cases, with zero verdict
+changes or coverage losses. New native-TLSF panel runs use the same preserved
+main references as the sparse configurations; per-file and binary hashes are
+recorded in `g3-final/provenance.json` under the run directory. Reused sparse
+results point to their original files rather than replacing their provenance.
+
+| Native panel | TAA mixture | Main answers | Candidate answers | Primary gains / losses | Candidate PAR-2 (s) | Gate |
+|---|---|---:|---:|---:|---:|---|
+| SYNTCOMP25 | lazy | 121 | 124 | 7 / 4 | 2070.522 | FAIL, 3 hard losses |
+| SYNTCOMP25 | eager | 121 | 124 | 7 / 4 | 2074.825 | FAIL, 3 hard losses |
+| SYNTCOMP26 | lazy | 139 | 139 | 2 / 2 | 1462.894 | FAIL, 2 hard losses |
+| SYNTCOMP26 | eager | 139 | 140 | 3 / 2 | 1446.352 | FAIL, 2 hard losses |
+
+Both providers lose the same fast real cases: AMBA decomposed arbiter6,
+chain-simple-70-real, and collector v2 13 in 2025; AMBA decomposed arbiter5
+and collector v2 12 in 2026. Main answers these in 0.131–1.995 seconds.
+The fourth 2025 primary loss is workstation3, which the longer native
+diagnostics answer with both mixtures. It remains a timeout in the primary
+17-second score. Eager's extra 2026 answer is that same variable workstation
+case at 16.892 seconds, not a new construction-specific gain.
+
+There are zero opposite verdicts. On 2025 both mixtures retain the sparse
+formula worker's five gains and add AMBA lock13/16, but sacrifice three fast
+backward-real answers. On 2026 both add AMBA lock13 and robot charging6 while
+losing arbiter5 and collector v2 12. The rank-node cap does not ensure that
+TAA returns control to the backward solver before the wall-clock deadline.
+These losses block promotion of either TAA mixture, regardless of the net
+answer count or PAR-2 improvement. The remaining correctness and full-corpus
+runs distinguish sparse default candidates from TAA research controls; the
+panel coverage requirement is not waived for a default recommendation.
+
+Eighteen separate native diagnostic runs attribute the three 2025 hard real
+losses. Isolated mainline backward-real answers arbiter6, chain-simple-70-real,
+and collector v2 13 in 0.949, 0.850, and 1.309 seconds respectively. Isolated
+forward-real returns UNKNOWN on each. Both TAA providers time out at 17 seconds
+on all three cases in both candidate-only and fallback modes; no backward
+fallback is logged. The compact results are in
+[`spot-otf-fallback-gate-losses.tsv`](spot-otf-fallback-gate-losses.tsv), with
+raw commands, captures, and source hashes under `bounded-fallback-gate-losses`.
+
+For chain-simple-70-real the last persisted milestone is TAA factory entry.
+For arbiter6 and collector13, construction finishes and the last milestones
+are lazy search or eager enumeration. These are censored phase records, not
+final row counts or proof that a timed-out worker requested zero rows. They
+show why limiting reached rank nodes cannot guarantee time for the old solver:
+construction, enumeration, and individual row/query operations are not bounded
+by that count. The sprint retains the specified four-worker limit and does not
+start a new timeout/fallback architecture to rescue these configurations.

@@ -143,6 +143,9 @@ sparse guarded formula-unreal solving alongside forward automaton-unreal,
 forward real, and bounded TAA real with backward fallback. Their 1,000-node
 TAA cap leaves frozen guarded search's 200,000-node budget unchanged. These
 four-worker mixtures are experimental configurations under evaluation.
+The node cap is not a deadline: TAA construction or a row/query operation can
+exhaust the external timeout before backward fallback starts. The mixed TAA
+presets currently fail the panel coverage gate on some fast backward-real cases.
 
 Acacia-Bonsai's optimized variants are compile-time configurations.  The
 configuration registry lives in `config/acacia-options.json` and

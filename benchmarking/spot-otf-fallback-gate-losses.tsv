@@ -1,0 +1,19 @@
+instance	label	result	seconds	fallback_logged	capture_count	last_recorded_stages	recorded_factory_ms	rank_node_cap	capture_note
+amba_decomposed_arbiter_pb_6_pe_.ltl	main-backward	REALIZABLE	0.9490338350005914	False	0				No Spot capture for this old-main arm
+amba_decomposed_arbiter_pb_6_pe_.ltl	main-forward	UNKNOWN	2.5053060420032125	False	0				No Spot capture for this old-main arm
+amba_decomposed_arbiter_pb_6_pe_.ltl	taa-lazy-only	TIMEOUT	17.036567194008967	False	1	search	9.153775	1000	Last persisted milestone only; timeout counters are not final
+amba_decomposed_arbiter_pb_6_pe_.ltl	taa-lazy-fallback	TIMEOUT	17.036613539006794	False	1	search	9.058559	1000	Last persisted milestone only; timeout counters are not final
+amba_decomposed_arbiter_pb_6_pe_.ltl	taa-eager-only	TIMEOUT	17.028962263982976	False	1	enumeration	9.764506	1000	Last persisted milestone only; timeout counters are not final
+amba_decomposed_arbiter_pb_6_pe_.ltl	taa-eager-fallback	TIMEOUT	17.01765482200426	False	1	enumeration	17.103206	1000	Last persisted milestone only; timeout counters are not final
+chain-simple-70-real.ltl	main-backward	REALIZABLE	0.84974790099659	False	0				No Spot capture for this old-main arm
+chain-simple-70-real.ltl	main-forward	UNKNOWN	9.24780027801171	False	0				No Spot capture for this old-main arm
+chain-simple-70-real.ltl	taa-lazy-only	TIMEOUT	17.286523941991618	False	1	factory		1000	Last persisted milestone only; timeout counters are not final
+chain-simple-70-real.ltl	taa-lazy-fallback	TIMEOUT	17.28632291298709	False	1	factory		1000	Last persisted milestone only; timeout counters are not final
+chain-simple-70-real.ltl	taa-eager-only	TIMEOUT	17.286764945019968	False	1	factory		1000	Last persisted milestone only; timeout counters are not final
+chain-simple-70-real.ltl	taa-eager-fallback	TIMEOUT	17.28834236197872	False	1	factory		1000	Last persisted milestone only; timeout counters are not final
+collector_v2_pb_13_pe_.ltl	main-backward	REALIZABLE	1.309051117976196	False	0				No Spot capture for this old-main arm
+collector_v2_pb_13_pe_.ltl	main-forward	UNKNOWN	1.4050588780082762	False	0				No Spot capture for this old-main arm
+collector_v2_pb_13_pe_.ltl	taa-lazy-only	TIMEOUT	17.086609157006023	False	1	search	834.157944	1000	Last persisted milestone only; timeout counters are not final
+collector_v2_pb_13_pe_.ltl	taa-lazy-fallback	TIMEOUT	17.086403751018224	False	1	search	840.068189	1000	Last persisted milestone only; timeout counters are not final
+collector_v2_pb_13_pe_.ltl	taa-eager-only	TIMEOUT	17.086572231986793	False	1	enumeration	839.862914	1000	Last persisted milestone only; timeout counters are not final
+collector_v2_pb_13_pe_.ltl	taa-eager-fallback	TIMEOUT	17.0873212509905	False	1	enumeration	846.254733	1000	Last persisted milestone only; timeout counters are not final
