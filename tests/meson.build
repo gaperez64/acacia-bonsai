@@ -324,7 +324,9 @@ game_backend_integration = executable (
 test ('game-backend-integration', game_backend_cli,
       args : [game_backend_integration,
               get_option ('acacia_forward_safety_solver').to_string (), 'true', 'true',
-              (compiler_profile == 'debug').to_string ()],
+              (compiler_profile == 'debug').to_string (),
+              get_option ('acacia_default_candidate_mode'),
+              get_option ('acacia_spot_taa_max_rank_nodes').to_string ()],
       suite : ['unit', 'game-backend'], depends : [game_backend_integration])
 if get_option ('acacia_enable_tlsf_frontend')
   test ('spot-worker-boundary', py,
@@ -336,7 +338,9 @@ test ('game-backend-cli',
       args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string (),
               get_option ('acacia_spot_guarded_backend').to_string (),
               get_option ('acacia_spot_lazy_provider').to_string (),
-              (compiler_profile == 'debug').to_string ()],
+              (compiler_profile == 'debug').to_string (),
+              get_option ('acacia_default_candidate_mode'),
+              get_option ('acacia_spot_taa_max_rank_nodes').to_string ()],
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 

@@ -52,7 +52,7 @@ struct arg_parse_result {
     unsigned verbose_level = 0;
     acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
-    acacia::candidate_mode candidate = acacia::candidate_mode::only;
+    acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;
@@ -137,7 +137,8 @@ void show_help (const char* program_name) {
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for real arms\n"
       << "  --real-provider VAL      use [frozen-graph|spot-lazy|spot-eager] automaton provider (default frozen-graph)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal requires frozen-graph\n"
-      << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default only)\n"
+      << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
+      << acacia::candidate_mode_name (ACACIA_DEFAULT_CANDIDATE_MODE) << ")\n"
       << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
       << "                    polarity:transform:backend[:provider], where polarity is real or\n"

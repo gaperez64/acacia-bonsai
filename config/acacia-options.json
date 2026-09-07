@@ -616,6 +616,38 @@
         }
       ]
     },
+    "default_candidate_mode": {
+      "meson": "acacia_default_candidate_mode",
+      "type": "combo",
+      "default": "only",
+      "choices": ["only", "fallback"],
+      "description": "Default response to a Spot candidate resource limit; the CLI can override it",
+      "macros": [
+        {
+          "name": "ACACIA_DEFAULT_CANDIDATE_MODE",
+          "emit": "always",
+          "encoding": "map",
+          "map": {
+            "only": "acacia::candidate_mode::only",
+            "fallback": "acacia::candidate_mode::fallback"
+          }
+        }
+      ]
+    },
+    "spot_taa_max_rank_nodes": {
+      "meson": "acacia_spot_taa_max_rank_nodes",
+      "type": "integer",
+      "default": 200000,
+      "min": 0,
+      "description": "Default per-attempt rank-node cap for both TAA providers; frozen guarded solving keeps its own limit",
+      "macros": [
+        {
+          "name": "ACACIA_SPOT_TAA_MAX_RANK_NODES",
+          "emit": "always",
+          "encoding": "value"
+        }
+      ]
+    },
     "local_certificate": {
       "meson": "acacia_local_certificate",
       "type": "boolean",

@@ -7,6 +7,10 @@ guarded_enabled=$3
 lazy_enabled=$4
 # Release/lowmem compiler profiles intentionally compile out verbose output.
 verbose_enabled=${5:-true}
+# Older frozen builds have five-argument test manifests. New builds also supply
+# their configured defaults, so the same harness can check those end to end.
+candidate_default=${6:-only}
+taa_cap_default=${7:-}
 
 run() {
     local wanted_status=$1
@@ -240,4 +244,51 @@ if [[ $lazy_enabled == true && $guarded_enabled == true ]]; then
             --arms "real:small:backward,real:small:spot-guarded:$provider")
         grep -qx REALIZABLE <<<"$output"
     done
+    if [[ -n $taa_cap_default ]]; then
+        output=$(run 2 -h)
+        [[ $output == *"--candidate-mode VAL     [only|fallback] on candidate resource limits (default $candidate_default)"* ]]
+        for provider in spot-eager spot-lazy; do
+            bounded=(-f 'G(i <-> X(o))' -i i -o o --spot-fast off \
+                     --arms "real:small:spot-guarded:$provider")
+            status=2
+            [[ $candidate_default == fallback ]] && status=0
+            output=$(ACACIA_SPOT_TAA_MAX_RANK_NODES=0 run "$status" "${bounded[@]}")
+            if [[ $candidate_default == fallback ]]; then
+                [[ $output == *'fallback provider=frozen-graph backend=backward'* ]]
+            else
+                grep -qx UNKNOWN <<<"$output"
+            fi
+
+            # The explicit mode overrides the compiled default. A TAA-specific
+            # cap takes precedence over the common research override.
+            output=$(ACACIA_SPOT_TAA_MAX_RANK_NODES=0 run 2 "${bounded[@]}" --candidate-mode only)
+            grep -qx UNKNOWN <<<"$output"
+            output=$(ACACIA_SPOT_MAX_RANK_NODES=0 ACACIA_SPOT_TAA_MAX_RANK_NODES=128 \
+                run 0 "${bounded[@]}" --candidate-mode only)
+            grep -qx REALIZABLE <<<"$output"
+            output=$(ACACIA_SPOT_MAX_RANK_NODES=128 ACACIA_SPOT_TAA_MAX_RANK_NODES=0 \
+                run 2 "${bounded[@]}" --candidate-mode only)
+            grep -qx UNKNOWN <<<"$output"
+
+            # Check the configured cap at the actual worker boundary, with no
+            # budget environment override and without depending on verbosity.
+            (
+                capture_dir=$(mktemp -d)
+                trap 'rm -rf -- "$capture_dir"' EXIT
+                unset ACACIA_SPOT_MAX_RANK_NODES ACACIA_SPOT_TAA_MAX_RANK_NODES
+                output=$(ACACIA_SPOT_CAPTURE_DIR="$capture_dir" run 0 "${bounded[@]}")
+                python3 - "$capture_dir" "$taa_cap_default" <<'PY'
+import json, pathlib, sys
+records = [json.loads(p.read_text()) for p in pathlib.Path(sys.argv[1]).glob('*.json')]
+caps = [int(r['max_rank_nodes']) for r in records if 'max_rank_nodes' in r]
+assert caps and all(cap == int(sys.argv[2]) for cap in caps), caps
+PY
+            )
+        done
+        # A TAA override must not relax the frozen guarded worker's own cap.
+        output=$(ACACIA_SPOT_MAX_RANK_NODES=0 ACACIA_SPOT_TAA_MAX_RANK_NODES=128 \
+            run 2 -f 'G(i <-> X(o))' -i i -o o --spot-fast off \
+            --arms real:small:spot-guarded-sparse --candidate-mode only)
+        grep -qx UNKNOWN <<<"$output"
+    fi
 fi

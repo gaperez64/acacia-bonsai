@@ -16,7 +16,7 @@ namespace acacia::spot_lazy_worker {
   // controller synthesis. The caller supplies the existing transformed job.
   inline Outcome solve (spot::formula worker_formula, const spot::bdd_dict_ptr& dict,
                          bdd all_inputs, bdd all_outputs, int kmin, int kmax, int kinc,
-                         spot_guarded::Limits limits = spot_candidate_limits (), bool eager = false) {
+                         spot_guarded::Limits limits = spot_taa_candidate_limits (), bool eager = false) {
     namespace game = spot_lazy_game;
     const auto started = game::Clock::now ();
     game::Reporter report;

@@ -470,7 +470,7 @@ namespace {
           // create_automaton(). The lazy branch performs no further adaptation.
           const auto result = acacia::spot_lazy_worker::solve (
               spot_formula, dict, all_inputs, all_outputs, opt_kmin, opt_k, opt_kinc,
-              acacia::spot_candidate_limits (), provider == acacia::automaton_provider::spot_eager);
+              acacia::spot_taa_candidate_limits (), provider == acacia::automaton_provider::spot_eager);
           if (result == acacia::spot_lazy_worker::Outcome::win)
             return acacia::diagnostics::finish (true, provider == acacia::automaton_provider::spot_eager
                 ? "spot-eager-verified-win" : "spot-lazy-verified-win");

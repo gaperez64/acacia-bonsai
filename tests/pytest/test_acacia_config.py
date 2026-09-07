@@ -13,6 +13,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "acacia-config.py"
 
 NEW_OPTION_CASES = [
+    ("spot_taa_max_rank_nodes", "ACACIA_SPOT_TAA_MAX_RANK_NODES", 200000, 1000, "1000"),
     ("symmetry_profile", "ACACIA_SYMMETRY_PROFILE", False, True, "1"),
     ("equivariant_max_output_letters", "ACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS",
      4096, 8192, "8192"),
@@ -48,6 +49,29 @@ def test_committed_registry_is_valid():
     options, presets = module.load_registry()
 
     module.command_validate(options, presets)
+
+
+def test_candidate_mode_default_and_bounded_taa_presets():
+    module = load_module()
+    options, presets = module.load_registry()
+    defaults = module.defaults(options)
+    assert defaults['default_candidate_mode'] == 'only'
+    assert defaults['spot_taa_max_rank_nodes'] == 200000
+    assert '-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::only' in module.preprocessor_flags(options, defaults)
+    template = (ROOT / 'src/config/acacia_build_config.hh.in').read_text()
+    assert '# define ACACIA_DEFAULT_CANDIDATE_MODE @ACACIA_DEFAULT_CANDIDATE_MODE@' in template
+    for provider in ['lazy', 'eager']:
+        name = 'otf_taa_fallback_' + provider
+        values = module.normalize_preset(options, presets, name)
+        assert values['default_candidate_mode'] == 'fallback'
+        assert values['spot_taa_max_rank_nodes'] == 1000
+        assert '-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::fallback' in module.preprocessor_flags(options, values)
+        assert '-Dacacia_spot_taa_max_rank_nodes=1000' in module.meson_args(options, values)
+        arms = values['default_arms'].split(',')
+        assert len(arms) == 4
+        assert {'real:small:forward', 'unreal:formula:forward', 'unreal:automaton:forward'} <= set(arms)
+        assert 'real:small:spot-guarded:spot-' + provider in arms
+        assert name not in presets['groups']['docker_default']
 
 
 def test_every_preset_has_its_own_description_and_role():
@@ -622,6 +646,8 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DACACIA_COMPILE_ALL_COMPONENTS=1",
         "-DACACIA_ENABLE_DIAGNOSTICS=1",
         r'-DACACIA_DEFAULT_ARMS=\"real:identity:backward,unreal:identity:forward\"',
+        "-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::only",
+        "-DACACIA_SPOT_TAA_MAX_RANK_NODES=200000",
         "-DACACIA_LOCAL_CERTIFICATE=1",
         "-DACACIA_FORWARD_SAFETY_SOLVER=1",
         "-DACACIA_FORWARD_CONDITIONAL_COVERING=1",

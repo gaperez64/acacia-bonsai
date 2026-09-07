@@ -130,6 +130,15 @@ existing frozen/backward implementation. For diagnostic runs,
 `ACACIA_SPOT_CAPTURE_DIR` enables JSON records of the actual transformed
 worker formulas, AP partitions, phases, and measured counters.
 
+`-Dacacia_default_candidate_mode=only|fallback` sets the build's default;
+`--candidate-mode` still overrides it. Both TAA providers use
+`-Dacacia_spot_taa_max_rank_nodes=200000` by default, independently of frozen
+guarded search. The common `ACACIA_SPOT_MAX_RANK_NODES` environment override
+applies to both; `ACACIA_SPOT_TAA_MAX_RANK_NODES` takes precedence for TAA only.
+The experimental `otf_taa_fallback_lazy` and `otf_taa_fallback_eager` presets
+use a 1,000-node TAA cap and backward fallback, alongside forward real and
+both original forward unreal workers. They remain outside the shipping group.
+
 Acacia-Bonsai's optimized variants are compile-time configurations.  The
 configuration registry lives in `config/acacia-options.json` and
 `config/acacia-presets.json`; `scripts/acacia-config.py` validates presets and

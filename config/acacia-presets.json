@@ -385,6 +385,20 @@
       "inherits": "otf_taa_real_lazy",
       "default_arms": "real:small:backward,real:small:forward,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
     },
+    "otf_taa_fallback_lazy": {
+      "description": "Try bounded lazy TAA realizability with backward fallback, retaining forward real and both original forward unreal workers.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_candidate_mode": "fallback",
+      "spot_taa_max_rank_nodes": 1000,
+      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
+    },
+    "otf_taa_fallback_eager": {
+      "description": "Same-construction eager control for bounded TAA realizability with backward fallback and both original unreal workers.",
+      "role": "sweep",
+      "inherits": "otf_taa_fallback_lazy",
+      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
+    },
     "otf_semantic": {
       "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona components and unchanged default arm selection.",
       "role": "sweep",
