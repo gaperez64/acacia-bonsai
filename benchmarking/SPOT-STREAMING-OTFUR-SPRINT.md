@@ -42,7 +42,7 @@ was a debug build without native TLSF and is historical evidence only.
 - [x] Finish provider selection, native worker capture, and sparse frozen control.
 - [x] Validate real/formula-unreal eager/lazy transformations and all certificate paths.
 - [ ] Run unit/config/version, native TLSF, labelled, frozen, and sanitizer checks.
-- [ ] Finish C0/C1 demand, C3/C3s, and real-worker/formula-unreal C4/C5 experiments.
+- [x] Finish C0/C1 demand, C3/C3s, and real-worker/formula-unreal C4/C5 experiments.
 - [x] Compare isolated candidate arms on discovery and family-held-out cohorts.
 - [ ] Select and validate candidate portfolios within four children.
 - [ ] Run the final full-corpus comparison against all current shipping configurations.
@@ -435,10 +435,11 @@ matched failure sets are in `_bm-logs.spot-otf-20260907/g1-selected`. The
 matched helper uses the existing native-TLSF route for the 2025 portion and
 the same vendored LTL inputs as Meson for the 2024 portion.
 
-The G3 panel campaign is running. Each of the three candidates is compared
-against the same fresh, byte-identical main reference on each 180-case panel.
-The shared-reference file and binary hashes are recorded explicitly; old
-panel timings are not substituted. G4's registered labelled set contains
+The initial G3 campaign used three candidates and a fresh main reference on
+each 180-case panel; the incomplete campaign and revised measurement protocol
+are described below. Shared-reference file and binary hashes are recorded
+explicitly; old panel timings do not substitute for fresh references.
+G4's registered labelled set contains
 624 cases (461 realizable and 163 unrealizable), at the existing 30-second
 correctness timeout. No shipping default is promoted by these partial results.
 
@@ -527,6 +528,121 @@ remaining unreal worker with guarded solving. Their fresh gates must establish
 whether the retained old worker preserves the wider mainline coverage. The
 initial both-guarded and guarded-plus-TAA recipes remain recorded with their
 failures; they are not silently relabelled as these revised configurations.
-All presets remain outside the shipping group. Solver C++ code is unchanged
-from `e7061657`; the next freeze contains configuration, runner, and reporting
-changes. The existing diagnostic and earlier performance binaries are retained.
+All presets remain outside the shipping group. The revised freeze is
+`4bf4cf98b4cb2f445a21c282de173534140f1936`; its solver C++ code is unchanged
+from `e7061657`. All four revised binaries pass 43 unit/version tests each,
+and the focused configuration/runner suite passes 115 tests. The existing
+diagnostic and earlier performance binaries are retained.
+
+Both revised sparse mixtures pass G1, 40/40 with zero verdict conflicts.
+Their summed PAR-2 scores are 38.422 and 39.220 seconds for guarded automaton
+and guarded formula respectively. Both revised TAA mixtures answer 38/40 at
+17 seconds and fail the gate on `syntcomp25/infinite-race-u4.ltl`: fresh main
+answers UNREALIZABLE in about 0.6 seconds, while both candidates remain
+inconclusive at 51 seconds. Their other primary miss, `Morning_f2774e0b`,
+answers at about 22.3 seconds in the longer diagnostic. These longer answers
+do not upgrade primary coverage. Fresh main answers 39/40 on the matched
+40-case set, missing Morning. Thus keeping the old automaton-unreal arm
+protects the prior load-balancer loss but exposes a case needing the old
+formula-unreal arm. Raw results are in `g1-revised` under the run directory.
+
+The revised G3 run uses fresh per-instance scopes for both 180-case main
+references and all four candidate portfolios. The two sparse mixtures have
+completed their primary measurements, as have the matched TAA comparisons.
+The panels overlap, so their totals must not be added as distinct coverage.
+
+| Native TLSF panel | Mixture | Main answers | Candidate answers | Gains / losses | Main PAR-2 (s) | Candidate PAR-2 (s) |
+|---|---|---:|---:|---:|---:|---:|
+| SYNTCOMP25 | sparse automaton | 121 | 125 | 5 / 1 | 2186.818 | 2032.211 |
+| SYNTCOMP25 | sparse formula | 121 | 125 | 5 / 1 | 2186.818 | 2028.646 |
+| SYNTCOMP26 | sparse automaton | 139 | 141 | 2 / 0 | 1476.290 | 1422.227 |
+| SYNTCOMP26 | sparse formula | 139 | 140 | 1 / 0 | 1476.290 | 1432.412 |
+| SYNTCOMP25 | TAA real lazy | 121 | 111 | 3 / 13 | 2186.818 | 2498.758 |
+| SYNTCOMP26 | TAA real lazy | 139 | 132 | 1 / 8 | 1476.290 | 1697.392 |
+| SYNTCOMP25 | TAA real eager | 121 | 111 | 3 / 13 | 2186.818 | 2497.725 |
+| SYNTCOMP26 | TAA real eager | 139 | 132 | 1 / 8 | 1476.290 | 1697.077 |
+
+There are zero opposite verdicts. On the 2025 panel, both gain Morning, GF-G4,
+theta14, and robot-resource17; guarded automaton additionally gains C2-unreal16,
+while guarded formula gains GF-G6. Both lose the near-cap workstation3 answer
+in this pass. On the 2026 panel, both gain robot-to-target-charging6; guarded
+automaton also answers workstation3 when the fresh main reference times out.
+The latter is a variable near-cap observation, not a new mechanism-specific
+coverage claim. Both preserve g-unreal113, which the both-guarded recipe lost.
+
+The revised TAA lazy recipe fails both panels. On the 2025 panel it gains
+AMBA lock13 (0.465 s), AMBA lock16 (9.005 s), and theta14 (16.733 s), but
+loses 13 answers. Twelve losses remain hard gate failures; the thirteenth is
+the near-cap workstation case. On the 2026 panel it gains AMBA lock13
+(0.503 s) and loses eight unreal answers. Several losses are cases main
+answers in well under a second. These are portfolio regressions with no
+opposite verdicts, not evidence for default promotion. Four and three raw
+UNKNOWN outcomes respectively remain inconclusive and receive the full PAR-2
+penalty. Eager TAA answers exactly the same cases on both panels. Its PAR-2
+differs from lazy by 1.033 seconds on the 2025 panel and 0.315 seconds on the
+2026 panel, providing no useful evidence for selecting lazy over eager.
+
+The wrapper's original longer diagnostic preferred an old LTL source when one
+existed, even for a primary native TLSF panel. This affected the 2025 workstation
+adjudications. Commit `29d55497` adds an explicit native TLSF route; 48 focused
+tests pass, including both-source lookup, rejection of an absent native source,
+and the complete campaign's diagnostic command. The default LTL-first lookup
+remains available for G1. All eight comparisons have been adjudicated again
+through native TLSF, with unchanged primary CSV hashes and preserved original
+reports. Both sparse mixtures pass both panels; both TAA mixtures fail both.
+The native workstation diagnostics complete for guarded automaton in 15.277 s,
+guarded formula in 15.656 s, lazy TAA in 16.763 s, and eager TAA in 17.484 s.
+These separate longer-cap observations do not upgrade primary coverage.
+Checker revision/hash, commands, source-map hashes, and primary CSV hashes are
+recorded in `g3-instance-scopes/native-adjudication-protocol.json` under the
+run directory. Solver code and the four frozen candidate binaries are unchanged.
+
+A bounded follow-up is frozen to run afterward:
+replace B-real by the existing TAA-to-backward fallback, retain F-real and
+both old unreal workers, and cap TAA search at 1,000 rank nodes. The cap is
+chosen from the two captured positive proofs (195 and 15 nodes), before
+timing this mixture. Six targeted cases include both B-only losses, both
+TAA gains, `01`, and `infinite-race-u4`. A matched eager control distinguishes
+construction choice from laziness. This is a focused experiment with explicit
+flags and environment, not a baked default or a passed admission gate.
+
+The six-case trial is complete: main answers four, and both bounded fallback
+recipes answer all six with zero losses or conflicting verdicts. The two gains
+are the AMBA real cases. Both recipes also retain the backward-only cancel5
+and collector9 answers while preserving the original formula-unreal worker's
+infinite-race-u4 answer.
+
+| Native TLSF case | Main result / seconds | Lazy TAA fallback | Eager TAA fallback |
+|---|---|---|---|
+| arbiter with cancel5 | R / 1.106 | R / 1.416 | R / 1.502 |
+| collector v1 9 | R / 2.561 | R / 5.847 | R / 6.084 |
+| AMBA encode20 | timeout | R / 8.596 | R / 8.612 |
+| AMBA lock14 | timeout | R / 1.343 | R / 1.258 |
+| 01 | R / 0.034 | R / 0.023 | R / 0.022 |
+| infinite-race-u4 | U / 0.590 | U / 0.567 | U / 0.546 |
+
+Collector's extra time is a real cost of this recipe. The fresh comparison on
+the 51 exposed selection cases is complete: both fallback recipes answer 23,
+versus main's 21, preserving every main answer. Both also answer the two
+separate AMBA lock13/lock16 probes that main misses. Their 51-case PAR-2 scores
+are 1,001.271 seconds (lazy) and 1,004.480 (eager), versus 1,055.615 for main.
+Eight separate diagnostic invocations confirm that the isolated budgeted TAA
+attempts return UNKNOWN on cancel5 and collector9, while explicit backward
+fallback returns REALIZABLE and logs the fallback for both providers.
+Both provider variants keep the same 1,000-node cap chosen before the six-case trial. The
+protocol, explicit arm list, budget environment, hashes, and primary results
+are preserved in `budgeted-taa-slot` and `budgeted-taa-cohort` under the run
+directory. These measurements support investigating the fallback composition;
+they do not establish a lazy-generation advantage.
+
+Commit `b2d09a42` exposes the candidate-mode default and a TAA-specific node
+cap through the existing configuration registry, with unchanged global defaults
+of candidate-only and 200,000 nodes. The two new fallback presets select
+fallback and 1,000 TAA nodes; they remain experimental. Keeping the TAA cap
+separate matters for a combined portfolio: the captured sparse GF-G6 proof
+uses 2,283 nodes at K=8 before its smaller winning proof at K=11, and g39 uses
+2,616 nodes at K=11 before winning at K=14. A global 1,000-node cap would
+abort those useful frozen-search attempts. The configuration suite passes 73
+tests; compiled CLI checks cover defaults, overrides, and provider separation.
+New builds and combined-portfolio selection follow before the remaining gates
+and full closing comparison.
