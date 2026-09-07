@@ -199,7 +199,9 @@ def demand_row(diag: dict[str, str], result: str) -> dict[str, str]:
     else:
         for column in DEMAND_COLUMNS:
             row[column] = ""
-        if diag.get("support_phase") == "translation" or diag.get("checkpoint") == "support-before-translation":
+        if not completed and result in {"REALIZABLE", "UNREALIZABLE"} and diag:
+            row["status"] = "cancelled-worker"
+        elif diag.get("support_phase") == "translation" or diag.get("checkpoint") == "support-before-translation":
             row["status"] = "translation-failure-" + result.lower()
         elif int(diag.get("aut_states", "0")) > 0:
             row["status"] = "no-demand-fast-path" if completed and diag.get("result") == "solved" else "preprocessing-" + result.lower()

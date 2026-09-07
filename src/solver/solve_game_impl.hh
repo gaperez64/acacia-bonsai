@@ -215,23 +215,33 @@ namespace acacia::solver_detail {
             spot_lazy_game::Reporter report;
             if (spot_records::active)
               report.sink = [] (const auto& key, const auto& value) { spot_records::put (key, value); };
+            const auto prepared = std::chrono::steady_clock::now ();
             spot_lazy_game::RowStore store {view, spot_candidate_limits ().rows, report};
             spot_lazy_game::Search search {store, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()};
-            return summarize (search.solve ());
+            const auto prep_ms = std::chrono::duration<double, std::milli> (
+                std::chrono::steady_clock::now () - prepared).count ();
+            auto result = summarize (search.solve ());
+            result.prep_ms = prep_ms;
+            return result;
           }
           return summarize (spot_guarded::solve (view, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()));
         };
-        acacia::spot_records::put ("provider", "frozen-graph");
-        acacia::spot_records::put ("backend", acacia::game_backend_name (backend));
-        acacia::spot_records::put ("k", std::to_string (k));
-        acacia::spot_records::phase ("search");
+        if (spot_records::active) {
+          spot_records::put ("provider", "frozen-graph");
+          spot_records::put ("backend", acacia::game_backend_name (backend));
+          spot_records::put ("k", std::to_string (k));
+          spot_records::phase ("search");
+        }
         const auto result = run ();
-        acacia::spot_records::put ("status", forward_result_name (result.status));
-        acacia::spot_records::put ("search_ms", std::to_string (result.solve_ms));
-        acacia::spot_records::put ("verification_ms", std::to_string (result.verify_ms));
-        acacia::spot_records::put ("guarded_choices", std::to_string (result.choices));
-        acacia::spot_records::put ("game_states", std::to_string (result.nodes));
-        acacia::spot_records::phase ("verified-attempt");
+        if (spot_records::active) {
+          spot_records::put ("status", forward_result_name (result.status));
+          spot_records::put ("prep_ms", std::to_string (result.prep_ms));
+          spot_records::put ("search_ms", std::to_string (result.solve_ms));
+          spot_records::put ("verification_ms", std::to_string (result.verify_ms));
+          spot_records::put ("guarded_choices", std::to_string (result.choices));
+          spot_records::put ("game_states", std::to_string (result.nodes));
+          spot_records::phase ("verified-attempt");
+        }
         verb_do (1, vout << "spot-guarded K=" << k
                          << " prep_ms=" << result.prep_ms << " solve_ms=" << result.solve_ms
                          << " verify_ms=" << result.verify_ms

@@ -107,8 +107,9 @@ def run_result(*, returncode=0, timed_out=False, resource_limited=False):
     )
 
 
-def test_resource_limit_normalizes_to_memout():
-    assert coverage.normalize_result(run_result(resource_limited=True)) == (
+@pytest.mark.parametrize("returncode", [0, 1, -9, -15])
+def test_resource_limit_normalizes_to_memout(returncode):
+    assert coverage.normalize_result(run_result(resource_limited=True, returncode=returncode)) == (
         "MEMOUT",
         "memory",
     )
@@ -144,7 +145,8 @@ def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path):
     def scoped(cmd, **kwargs):
         calls.append((cmd, kwargs))
         return coverage.RunResult("REALIZABLE\n", "ACACIA_RUSAGE 1.23 0.07 2048\n",
-                                  0, 1.5, False, memory_peak_bytes=4096)
+                                  0, 1.5, False, memory_peak_bytes=4096,
+                                  scope_unit="acacia-test.scope")
     monkeypatch.setattr(coverage, "run_systemd_scope", scoped)
     campaign.worker_records_dir = tmp_path / "records"
     assert coverage.run(campaign) == 0
@@ -159,10 +161,38 @@ def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path):
     assert row["cpu_seconds"] == "1.300000"
     assert row["max_process_rss_bytes"] == str(2048 * 1024)
     assert row["scope_memory_peak_bytes"] == "4096"
+    assert row["scope_unit"] == "acacia-test.scope"
     assert row["worker_records_dir"] == str(campaign.worker_records_dir)
     campaign.resume = True
     assert coverage.run(campaign) == 0
     assert len(calls) == 1
+
+
+def test_legacy_resume_preserves_measurements_and_does_not_rerun(monkeypatch, campaign):
+    calls = []
+    def scoped(*args, **kwargs):
+        calls.append(1)
+        return coverage.RunResult("REALIZABLE\n", "", 0, 0.1, False, memory_peak_bytes=0)
+    monkeypatch.setattr(coverage, "run_systemd_scope", scoped)
+    assert coverage.run(campaign) == 0
+    with open(campaign.output) as stream:
+        rows = list(csv.DictReader(stream, delimiter="\t"))
+    assert rows[0]["scope_memory_peak_bytes"] == "0"
+    fields = [field for field in coverage.OUTPUT_COLUMNS if field != "scope_unit"]
+    with open(campaign.output, "w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields, delimiter="\t")
+        writer.writeheader()
+        writer.writerows({key: value for key, value in row.items() if key != "scope_unit"} for row in rows)
+    campaign.resume = True
+    assert coverage.run(campaign) == 0
+    assert calls == [1]
+    with open(campaign.output) as stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        assert reader.fieldnames == coverage.OUTPUT_COLUMNS
+        result, = reader
+    assert result["scope_unit"] == ""
+    assert result["scope_memory_peak_bytes"] == "0"
+    assert result["result"] == "REALIZABLE" and result["seconds"] == "0.1"
 
 
 @pytest.mark.parametrize("field,value", [

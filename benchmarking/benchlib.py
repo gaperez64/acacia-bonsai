@@ -140,6 +140,7 @@ class RunResult:
     stderr_bytes: int = 0
     resource_limited: bool = False
     memory_peak_bytes: int | None = None
+    scope_unit: str = ""
 
 
 def _terminate_process_group(proc: subprocess.Popen, grace: float = 2.0) -> None:
@@ -643,7 +644,7 @@ def run_systemd_scope(
                 if "=" in line
             )
             peak = properties.get("MemoryPeak", "")
-            if peak.isdigit():
+            if peak.isdigit() and int(peak) < (1 << 64) - 1:
                 memory_peak_bytes = int(peak)
             resource_limited = (
                 not timed_out
@@ -663,6 +664,7 @@ def run_systemd_scope(
             stderr_bytes,
             resource_limited,
             memory_peak_bytes,
+            f"{unit}.scope",
         )
         return result
     finally:

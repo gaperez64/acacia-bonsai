@@ -65,6 +65,7 @@ OUTPUT_COLUMNS = [
     "memory_swap_max",
     "collect_rusage",
     "worker_records_dir",
+    "scope_unit",
 ]
 CONFLICT_COLUMNS = [
     "solver_label",
@@ -358,7 +359,8 @@ def load_output(path: pathlib.Path) -> list[dict[str, str]]:
         raise CoverageError(f"cannot read resume output {path}: {error}") from error
     with stream:
         reader = csv.DictReader(stream, delimiter="\t")
-        if reader.fieldnames != OUTPUT_COLUMNS:
+        legacy_columns = [column for column in OUTPUT_COLUMNS if column != "scope_unit"]
+        if reader.fieldnames not in (OUTPUT_COLUMNS, legacy_columns):
             raise CoverageError(
                 f"resume output {path} has an unexpected header; expected "
                 + "\t".join(OUTPUT_COLUMNS)
@@ -383,6 +385,7 @@ def load_output(path: pathlib.Path) -> list[dict[str, str]]:
                     f"resume output {path}:{line_number} has invalid "
                     f"expectation_source {row['expectation_source']!r}"
                 )
+            row.setdefault("scope_unit", "")
             rows.append(dict(row))
     return rows
 
@@ -471,10 +474,10 @@ def normalize_result(run: RunResult) -> tuple[str, str]:
     result = classify_run(run, tool="acacia")
     if result == "TIMEOUT":
         return "TIMEOUT", "timeout"
-    if run.returncode < 0:
-        return "CRASH", f"signal:{-run.returncode}"
     if result == "RESOURCE_LIMIT":
         return "MEMOUT", "memory"
+    if run.returncode < 0:
+        return "CRASH", f"signal:{-run.returncode}"
     return result, ""
 
 
@@ -620,6 +623,9 @@ def run(args: argparse.Namespace) -> int:
                 row.get(key) != value for key, value in run_metadata.items()
             ):
                 raise CoverageError("resume configuration or binary differs from recorded campaign")
+        # Upgrade the older header only after validating the recorded treatment.
+        # Empty scope IDs preserve the distinction from a measured identifier.
+        atomic_write_tsv(output, OUTPUT_COLUMNS, rows)
     else:
         rows = []
         atomic_write_tsv(output, OUTPUT_COLUMNS, rows)
@@ -729,7 +735,9 @@ def run(args: argparse.Namespace) -> int:
                     "flags": args.flags,
                     "cpu_seconds": format(float(usage[1]) + float(usage[2]), ".6f") if usage else "",
                     "max_process_rss_bytes": str(int(usage[3]) * 1024) if usage else "",
-                    "scope_memory_peak_bytes": str(solver_run.memory_peak_bytes or ""),
+                    "scope_memory_peak_bytes": (str(solver_run.memory_peak_bytes)
+                                                if solver_run.memory_peak_bytes is not None else ""),
+                    "scope_unit": solver_run.scope_unit,
                     **run_metadata,
                 }
                 writer.writerow(row)

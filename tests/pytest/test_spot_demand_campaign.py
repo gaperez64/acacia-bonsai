@@ -91,6 +91,14 @@ def test_preprocessing_timeout_and_search_timeout_are_separable():
     assert row["rho_q"] == "0.4"
 
 
+@pytest.mark.parametrize("phase", ["translation", "preprocessing", "search"])
+def test_portfolio_cancellation_does_not_imply_translation_failure(phase):
+    diag = worker(diag_kind="progress", result="unknown", support_phase=phase,
+                  support_graph_ready="1" if phase == "search" else "0")
+    row = load_module().demand_row(diag, "REALIZABLE")
+    assert row["status"] == "cancelled-worker"
+
+
 def test_zero_edges_and_absent_support_samples_are_not_ratios_or_percentiles():
     row = load_module().demand_row(worker(
         support_graph_edges="0", support_union_edges="0", support_union_rows="0",
