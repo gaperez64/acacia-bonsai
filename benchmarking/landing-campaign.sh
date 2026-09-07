@@ -303,7 +303,7 @@ for i in "${!suites[@]}"; do
   # a loss near the boundary cannot be adjudicated.
   remeasure_tlsf_args=()
   if [[ -n $tlsf_map ]]; then
-    remeasure_tlsf_args=(--tlsf-source-map "$suite=$tlsf_map" --tlsf-corpus "$tlsf_corpus")
+    remeasure_tlsf_args=(--tlsf-source-map "$suite=$tlsf_map" --tlsf-corpus "$tlsf_corpus" --tlsf-only)
   fi
   set +e
   python3 "$repo_root/benchmarking/landing-bar.py" \

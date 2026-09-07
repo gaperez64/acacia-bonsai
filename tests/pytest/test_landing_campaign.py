@@ -8,14 +8,14 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "benchmarking" / "landing-campaign.sh"
 
 
-def write_csv(path, result):
+def write_csv(path, result, *, seconds=1):
     with path.open("w", newline="") as handle:
         writer = csv.DictWriter(
             handle, fieldnames=["instance", "result", "seconds", "exit"]
         )
         writer.writeheader()
         writer.writerow(
-            {"instance": "one.ltl", "result": result, "seconds": 1, "exit": 0}
+            {"instance": "one.ltl", "result": result, "seconds": seconds, "exit": 0}
         )
 
 
@@ -82,6 +82,47 @@ def test_gate_failure_reaches_status(tmp_path):
     assert (output / "status.txt").read_text() == "COMPLETE FAIL exit=1\n"
     assert (output / "summary.txt").read_text().startswith("GATE FAIL\n")
     assert "GATE FAIL" in (output / "landing-demo.txt").read_text()
+
+
+def test_native_panel_remeasurement_keeps_tlsf_when_ltl_also_exists(tmp_path):
+    suite = tmp_path / "tests" / "suites" / "benchmarks" / "demo"
+    suite.mkdir(parents=True)
+    manifest = suite / "panel.list"
+    manifest.write_text("one.ltl\n")
+    (suite / "sources.tsv").write_text("instance\tsource\none.ltl\tcontent.ltl\n")
+    (suite / "tlsf-sources.tsv").write_text("instance\ttlsf\none.ltl\tone.tlsf\n")
+    ltl_root = tmp_path / "tests" / "ltl"
+    ltl_root.mkdir()
+    (ltl_root / "content.ltl").write_text("G request\n")
+    (ltl_root / "content.part").write_text(".inputs request\n.outputs grant\n")
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    (corpus / "one.tlsf").write_text("INFO {}\nMAIN {}\n")
+    output = tmp_path / "output"
+    output.mkdir()
+    write_csv(output / "baseline-demo.csv", "REALIZABLE", seconds=16)
+    write_csv(output / "candidate-demo.csv", "TIMEOUT", seconds=17)
+    solver = tmp_path / "record-argv"
+    solver.write_text(
+        '#!/bin/sh\nprintf "%s\\n" "$@" >> "$ARGS_LOG"\n'
+        'echo REALIZABLE\n'
+    )
+    solver.chmod(0o755)
+    argv_log = tmp_path / "argv.txt"
+    env = dict(os.environ, ACACIA_OUTER_CGROUP="1", ARGS_LOG=str(argv_log))
+
+    result = subprocess.run(
+        [SCRIPT, "--baseline-bin", solver, "--candidate-bin", solver,
+         "--suite", "demo", "--list", manifest, "--timeout", "17",
+         "--tlsf-corpus", corpus, "--output", output],
+        cwd=ROOT, env=env, capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert argv_log.read_text().splitlines() == [
+        "-T", str(corpus / "one.tlsf"), "-T", str(corpus / "one.tlsf"),
+    ]
+    assert "GATE PASS" in (output / "landing-demo.txt").read_text()
 
 
 def test_tlsf_corpus_survives_the_scope_re_exec(tmp_path):
