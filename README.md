@@ -138,6 +138,11 @@ applies to both; `ACACIA_SPOT_TAA_MAX_RANK_NODES` takes precedence for TAA only.
 The experimental `otf_taa_fallback_lazy` and `otf_taa_fallback_eager` presets
 use a 1,000-node TAA cap and backward fallback, alongside forward real and
 both original forward unreal workers. They remain outside the shipping group.
+The `otf_mix_formula_lazy` and `otf_mix_formula_eager` presets instead use
+sparse guarded formula-unreal solving alongside forward automaton-unreal,
+forward real, and bounded TAA real with backward fallback. Their 1,000-node
+TAA cap leaves frozen guarded search's 200,000-node budget unchanged. These
+four-worker mixtures are experimental configurations under evaluation.
 
 Acacia-Bonsai's optimized variants are compile-time configurations.  The
 configuration registry lives in `config/acacia-options.json` and

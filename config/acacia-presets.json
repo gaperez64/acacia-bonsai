@@ -399,6 +399,18 @@
       "inherits": "otf_taa_fallback_lazy",
       "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
     },
+    "otf_mix_formula_lazy": {
+      "description": "Combine sparse guarded formula-unreal solving with bounded lazy TAA realizability and backward fallback, retaining forward real and automaton-unreal workers.",
+      "role": "sweep",
+      "inherits": "otf_taa_fallback_lazy",
+      "default_arms": "real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
+    },
+    "otf_mix_formula_eager": {
+      "description": "Same-construction eager control for the sparse formula-unreal and bounded TAA realizability mixture with backward fallback.",
+      "role": "sweep",
+      "inherits": "otf_mix_formula_lazy",
+      "default_arms": "real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
+    },
     "otf_semantic": {
       "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona components and unchanged default arm selection.",
       "role": "sweep",

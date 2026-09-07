@@ -6,6 +6,14 @@ portfolio selection, native worker accounting, and same-provider replay are
 complete. Production gates and the full closing comparison remain in progress.
 No default has been promoted.
 
+Latest selection (21:26 UTC): a sparse formula-unreal worker combined with
+bounded TAA real/backward fallback answers 27/51 with lazy TAA and 28/51 with
+the matched eager provider, versus mainline's 21/51. Both also answer the two
+separate AMBA panel probes, and neither loses a mainline answer. Their closing
+gate candidates are `otf_mix_formula_lazy` and `otf_mix_formula_eager`, alongside
+the two sparse-only configurations. These remain selection results, pending
+the new configurations' production gates and the full 1,524-case comparison.
+
 ## Scope and baseline
 
 The September 7 completion request extends `otf.md`'s default-off scope: test
@@ -644,5 +652,41 @@ uses 2,283 nodes at K=8 before its smaller winning proof at K=11, and g39 uses
 2,616 nodes at K=11 before winning at K=14. A global 1,000-node cap would
 abort those useful frozen-search attempts. The configuration suite passes 73
 tests; compiled CLI checks cover defaults, overrides, and provider separation.
-New builds and combined-portfolio selection follow before the remaining gates
-and full closing comparison.
+Both fallback builds and a gates-disabled compatibility build pass all 43
+compiled unit/version checks each. Their source is frozen at `efef6080`.
+
+### Combined bounded portfolio selection
+
+Four additional actual races combine F-real and bounded TAA-real/backward
+fallback with one sparse guarded unreal worker and the other original forward
+unreal worker. The 1,000-node TAA budget and fallback mode are compiled
+defaults; only `--arms` changes between treatments. No budget environment
+override is used. The frozen search therefore retains 200,000 nodes.
+The same 51 exposed selection cases and two separate AMBA panel probes are
+used. The fresh 53-row main reference from `budgeted-taa-cohort` is reused
+with exact file, binary, and protocol hashes. Its compiled-out Spot paths are
+unaffected by that earlier study's global Spot budget environment.
+
+| Sparse unreal transform | TAA provider | Answers / 51 | Gains / losses vs main | PAR-2 on 51 (s) | AMBA probes / 2 |
+|---|---|---:|---:|---:|---:|
+| automaton | lazy | 26 | 5 / 0 | 918.954 | 2 |
+| automaton | eager | 26 | 5 / 0 | 920.666 | 2 |
+| formula | lazy | 27 | 6 / 0 | 904.730 | 2 |
+| formula | eager | 28 | 7 / 0 | 890.165 | 2 |
+
+There are zero opposite verdicts. Both formula mixtures retain every answer
+from both automaton mixtures. The formula mixtures additionally solve GF-G6
+(16.243 s lazy, 16.747 s eager); eager also solves GF-G7 at 16.388 s while
+lazy times out. Those runs are close to the cap and do not establish a stable
+eager advantage. The four additional real answers across selection and probes
+are encode20 and lock13/14/16. The mixed collector9 runs take about 5.58 seconds,
+so the cost of delayed backward fallback remains visible.
+
+The two formula mixtures advance as matched controls under named presets
+`otf_mix_formula_lazy` and `otf_mix_formula_eager`. The automaton mixtures
+add no unique answer on these selection inputs. The two existing sparse-only
+presets also advance: they avoid TAA's cost and retain their complementary
+panel gains (notably C2 versus GF-G6). All previous recipes and measurements
+are preserved. Selection does not promote a shipping default. New actual-default
+binaries must pass the remaining gates before the full comparison; the other
+three shipping configurations are included again in that final measurement.
