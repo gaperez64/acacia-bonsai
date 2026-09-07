@@ -630,6 +630,20 @@
         }
       ]
     },
+    "spot_lazy_provider": {
+      "meson": "acacia_spot_lazy_provider",
+      "type": "boolean",
+      "default": false,
+      "description": "Compile the explicitly selected Spot TAA provider for real and formula-unreal workers",
+      "macros": [
+        {
+          "name": "ACACIA_SPOT_LAZY_PROVIDER",
+          "emit": "true",
+          "encoding": "constant",
+          "value": 1
+        }
+      ]
+    },
     "spot_guarded_backend": {
       "meson": "acacia_spot_guarded_backend",
       "type": "boolean",

@@ -15,8 +15,13 @@ struct portfolio_arm {
     TRANSLATION_PREF_T translation_pref;
     UNREAL_X_T unreal_x;  // meaningful only for unrealizability arms
     acacia::game_backend backend;
+    acacia::automaton_provider provider = acacia::automaton_provider::frozen_graph;
+    bool provider_explicit = false;
 
-    bool operator== (const portfolio_arm&) const = default;
+    bool operator== (const portfolio_arm& rhs) const {
+      return unreal == rhs.unreal && translation_pref == rhs.translation_pref &&
+             unreal_x == rhs.unreal_x && backend == rhs.backend && provider == rhs.provider;
+    }
 };
 
 enum class portfolio_arm_parse_error {
@@ -28,6 +33,7 @@ enum class portfolio_arm_parse_error {
   real_transform,
   unreal_transform,
   backend,
+  provider,
   duplicate,
 };
 
@@ -68,8 +74,10 @@ inline portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
     const size_t first_colon = spec.find (':');
     const size_t second_colon =
         first_colon == std::string::npos ? first_colon : spec.find (':', first_colon + 1);
+    const size_t third_colon =
+        second_colon == std::string::npos ? second_colon : spec.find (':', second_colon + 1);
     if (first_colon == std::string::npos or second_colon == std::string::npos or
-        spec.find (':', second_colon + 1) != std::string::npos) {
+        (third_colon != std::string::npos && spec.find (':', third_colon + 1) != std::string::npos)) {
       result.error = portfolio_arm_parse_error::malformed_spec;
       result.spec = spec;
       return result;
@@ -78,7 +86,8 @@ inline portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
     const std::string polarity = spec.substr (0, first_colon);
     const std::string transform =
         spec.substr (first_colon + 1, second_colon - first_colon - 1);
-    const std::string backend_name = spec.substr (second_colon + 1);
+    const std::string backend_name = spec.substr (second_colon + 1, third_colon == std::string::npos
+        ? std::string::npos : third_colon - second_colon - 1);
     portfolio_arm arm {
         .unreal = false,
         .translation_pref = ACACIA_TRANSLATION_PREF,
@@ -126,6 +135,18 @@ inline portfolio_arm_parse_result parse_portfolio_arms (std::string_view arg) {
       return result;
     }
     arm.backend = *backend;
+    if (third_colon != std::string::npos) {
+      const auto name = spec.substr (third_colon + 1);
+      const auto provider = acacia::parse_automaton_provider (name);
+      if (!provider) {
+        result.error = portfolio_arm_parse_error::provider;
+        result.spec = spec;
+        result.value = name;
+        return result;
+      }
+      arm.provider = *provider;
+      arm.provider_explicit = true;
+    }
 
     if (std::ranges::find (result.arms, arm) != result.arms.end ()) {
       result.error = portfolio_arm_parse_error::duplicate;

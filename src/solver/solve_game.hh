@@ -14,4 +14,5 @@ std::optional<spot::twa_graph_ptr> solve_game (spot::twa_graph_ptr aut, const VE
                                                const bdd& all_inputs, const bdd& all_outputs,
                                                bool do_synthesis,
                                                const std::vector<symmetry::indexed_family_hint>& hints,
-                                               acacia::game_backend backend);
+                                               acacia::game_backend backend,
+      acacia::candidate_mode candidate = acacia::candidate_mode::only);

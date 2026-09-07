@@ -116,7 +116,7 @@ test ('translator-options',
 game_backend_test = executable ('game-backend-test',
                                 'game_backend_test.cc',
                                 include_directories : inc,
-                                dependencies : [spot_dep])
+                                dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
 test ('game-backend',
       game_backend_test,
       suite : ['unit', 'game-backend'])
@@ -139,16 +139,15 @@ spot_lazy_buchi_view_test = executable (
 test ('spot-lazy-buchi-view', spot_lazy_buchi_view_test,
       suite : ['unit', 'spot-lazy'])
 
-if get_option('build_research_tools')
-  spot_provider_replay_test = executable(
-    'spot-provider-replay-test',
-    'spot_provider_replay_test.cc',
-    include_directories: inc,
-    dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
-  )
-  test('spot-provider-replay', spot_provider_replay_test,
-       suite: ['unit', 'spot-provider-replay'])
-endif
+# The shared P6 engine compiles without either production dispatch gate.
+spot_provider_replay_test = executable(
+  'spot-provider-replay-test',
+  'spot_provider_replay_test.cc',
+  include_directories: inc,
+  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test('spot-provider-replay', spot_provider_replay_test,
+     suite: ['unit', 'spot-provider-replay'])
 
 sparse_forward_rank_test = executable (
   'sparse-forward-rank-test',
@@ -302,10 +301,40 @@ test ('degenerate-io-cli',
       depends : [ab_exe])
 
 game_backend_cli = find_program ('check-game-backend-cli.sh')
+# Exercise the real worker boundary even in docker_default CI. This test-only
+# binary uses the same sources; no installed binary, preset or arm is changed.
+game_backend_integration_sources = [
+  '../src/acacia-bonsai.cc',
+  '../src/version.cc',
+  '../src/solver/mealy_to_moore.cc',
+  '../src/solver/solver_invoker.cc',
+  '../src/solver/solve_game.cc',
+  '../src/solver/solve_game_vector.cc',
+]
+if get_option ('acacia_enable_tlsf_frontend')
+  game_backend_integration_sources += '../src/tlsf_frontend.cc'
+endif
+game_backend_integration = executable (
+  'game-backend-integration', game_backend_integration_sources, version_h,
+  include_directories : inc,
+  cpp_args : ['-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'],
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
+  install : false,
+)
+test ('game-backend-integration', game_backend_cli,
+      args : [game_backend_integration,
+              get_option ('acacia_forward_safety_solver').to_string (), 'true', 'true'],
+      suite : ['unit', 'game-backend'], depends : [game_backend_integration])
+if get_option ('acacia_enable_tlsf_frontend')
+  test ('spot-worker-boundary', py,
+        args : [files ('check-spot-worker.py'), game_backend_integration],
+        suite : ['unit', 'tlsf', 'game-backend'], depends : [game_backend_integration])
+endif
 test ('game-backend-cli',
       game_backend_cli,
       args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string (),
-              get_option ('acacia_spot_guarded_backend').to_string ()],
+              get_option ('acacia_spot_guarded_backend').to_string (),
+              get_option ('acacia_spot_lazy_provider').to_string ()],
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 

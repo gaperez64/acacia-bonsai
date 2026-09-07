@@ -333,6 +333,51 @@
       "ios_precomputer": "semantic_mona",
       "forward_safety_solver": true,
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "otf_contradiction": {
+      "description": "Compare Spot guarded and TAA arms using the best_four_arm_contradiction components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_four_arm_contradiction",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "otf_semantic": {
+      "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:small:backward,unreal:formula:backward,unreal:automaton:backward"
+    },
+    "otf_bbox": {
+      "description": "Compare Spot guarded and TAA arms using the best_four_arm_bboxtree components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_four_arm_bboxtree",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "otf_any": {
+      "description": "Compare Spot guarded and TAA arms using the best_decomp_mona_any components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_decomp_mona_any",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:any:backward,unreal:formula:backward,unreal:automaton:backward"
+    },
+    "otf_forward": {
+      "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona_forward components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward"
     }
   },
   "tool_baselines": {

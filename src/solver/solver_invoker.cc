@@ -1,3 +1,4 @@
+#include "solver/spot_worker_record.hh"
 #include "solver/solver_invoker.hh"
 
 #include "aut_preprocessors/cap_census.hh"
@@ -14,6 +15,9 @@
 #include "solver/spot_nba_fastpath.hh"
 #if ACACIA_SPOT_GUARDED_BACKEND
 # include "solver/spot_letter_oracle.hh"
+#endif
+#if ACACIA_SPOT_LAZY_PROVIDER
+# include "solver/spot_lazy_worker.hh"
 #endif
 #include "solver/symmetry_blocks.hh"
 #include "solver/symmetry.hh"
@@ -285,6 +289,8 @@ namespace {
       const TRANSLATION_PREF_T translation_pref;
       const SPOT_FAST_T spot_fast;
       const acacia::game_backend backend;
+      const acacia::automaton_provider provider;
+      const acacia::candidate_mode candidate;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
       const bool synthesize_moore;
@@ -303,6 +309,7 @@ namespace {
                    VECTOR_ELT_T opt_kmin, VECTOR_ELT_T opt_kinc,
                    std::optional<UNREAL_X_T> check_unreal, TRANSLATION_PREF_T translation_pref,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
+                   acacia::automaton_provider provider, acacia::candidate_mode candidate,
                    const std::optional<std::string>& synth_fname,
                    bool synthesize_moore,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints)
@@ -316,6 +323,8 @@ namespace {
           translation_pref {translation_pref},
           spot_fast {spot_fast},
           backend {backend},
+          provider {provider},
+          candidate {candidate},
           synth_fname {synth_fname},
           synthesize_moore {synthesize_moore},
           indexed_family_hints {indexed_family_hints} {
@@ -426,13 +435,63 @@ namespace {
         if (not check_unreal.has_value ())
           spot_formula = spot::formula::Not (spot_formula);
 
+        acacia::spot_records::Record capture;
+        if (capture) {
+          std::ostringstream text;
+          text << spot_formula;
+          capture.put ("worker_formula", text.str ());
+          capture.list ("inputs", input_aps);
+          capture.list ("outputs", output_aps);
+          capture.put ("polarity", check_unreal ? "unreal" : "real");
+          capture.put ("transform", check_unreal ? (*check_unreal == UNREAL_X_FORMULA ? "formula" : "automaton") : "real");
+          capture.put ("translation_pref", translation_pref_name (translation_pref));
+          capture.put ("requested_provider", acacia::automaton_provider_name (provider));
+          capture.put ("requested_backend", acacia::game_backend_name (backend));
+          capture.put ("candidate_mode", acacia::candidate_mode_name (candidate));
+          capture.put ("kmin", std::to_string (opt_kmin));
+          capture.put ("kmax", std::to_string (opt_k));
+          capture.put ("kinc", std::to_string (opt_kinc));
+          acacia::spot_records::phase ("before-translation");
+        }
         // Create the automaton for the formula we have prepared.
+        if (acacia::is_guarded_backend (backend))
+          verb_do (1, vout << "Captured worker_formula=" << spot_formula << std::endl);
         if (acacia::diagnostics::support_demand_enabled ()) {
           std::ostringstream formula_text;
           formula_text << spot_formula;
           acacia::diagnostics::set_support_formula (formula_text.str ());
           acacia::diagnostics::snapshot ("support-before-translation");
         }
+        auto effective_backend = backend;
+#if ACACIA_SPOT_LAZY_PROVIDER
+        if (provider != acacia::automaton_provider::frozen_graph) {
+          assert ((!check_unreal || *check_unreal == UNREAL_X_FORMULA) && !synth_fname);
+          // This is the EXACT spot::formula the eager worker passes below to
+          // create_automaton(). The lazy branch performs no further adaptation.
+          const auto result = acacia::spot_lazy_worker::solve (
+              spot_formula, dict, all_inputs, all_outputs, opt_kmin, opt_k, opt_kinc,
+              acacia::spot_candidate_limits (), provider == acacia::automaton_provider::spot_eager);
+          if (result == acacia::spot_lazy_worker::Outcome::win)
+            return acacia::diagnostics::finish (true, provider == acacia::automaton_provider::spot_eager
+                ? "spot-eager-verified-win" : "spot-lazy-verified-win");
+          if (result != acacia::spot_lazy_worker::Outcome::unknown or
+              candidate == acacia::candidate_mode::only)
+            return acacia::diagnostics::finish (false, provider == acacia::automaton_provider::spot_eager
+                ? "spot-eager-inconclusive" : "spot-lazy-inconclusive");
+          // Release all candidate objects before rebuilding the existing graph
+          // and preprocessing. No materialization of the lazy provider occurs.
+          std::cerr << acacia::automaton_provider_name (provider) << " UNKNOWN: fallback provider=frozen-graph backend=backward; "
+                       "rebuilding translation and preprocessing from captured worker formula; "
+                       "lazy_materialization=none\n";
+          effective_backend = acacia::game_backend::backward;
+          acacia::spot_records::put ("fallback", "frozen-graph:backward");
+          acacia::spot_records::phase ("fallback-translation");
+          acacia::diagnostics::set_support_backend ("backward");
+        }
+#endif
+        const auto fallback_started = provider != acacia::automaton_provider::frozen_graph
+                                          ? std::chrono::steady_clock::now ()
+                                          : std::chrono::steady_clock::time_point {};
         spot::translator trans (dict, &extra_options);
         acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
@@ -443,6 +502,11 @@ namespace {
 #endif
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
         }
+        if (provider != acacia::automaton_provider::frozen_graph)
+          std::cerr << acacia::automaton_provider_name (provider) << " fallback translation_ms="
+                    << std::chrono::duration<double, std::milli> (
+                           std::chrono::steady_clock::now () - fallback_started).count () << '\n';
+        acacia::spot_records::phase ("preprocessing");
         observe_translated_automaton (aut);
         acacia::diagnostics::set_support_phase ("preprocessing");
         acacia::diagnostics::snapshot ("after-translation");
@@ -625,6 +689,10 @@ namespace {
         }
 #endif
 
+        if (provider != acacia::automaton_provider::frozen_graph)
+          std::cerr << acacia::automaton_provider_name (provider) << " fallback rebuild_ms="
+                    << std::chrono::duration<double, std::milli> (
+                           std::chrono::steady_clock::now () - fallback_started).count () << '\n';
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
         std::optional<spot::twa_graph_ptr> maybe_strat;
         {
@@ -638,7 +706,7 @@ namespace {
                                     bdd_exist (aut->ap_vars (), all_outputs),
                                     // same for the outputs
                                     bdd_exist (aut->ap_vars (), all_inputs),
-                                    synth_fname.has_value (), indexed_family_hints, backend);
+                                    synth_fname.has_value (), indexed_family_hints, effective_backend, candidate);
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
@@ -894,7 +962,19 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
               acacia::game_backend backend,
               const std::optional<std::string>& synth_fname,
-              const specification_metadata& metadata) {
+              const specification_metadata& metadata,
+              acacia::automaton_provider provider, acacia::candidate_mode candidate) {
+  // Protect internal callers as well as the CLI synthesis route.
+  if (synth_fname.has_value ()) {
+    backend = acacia::synthesis_backend (backend, true);
+    provider = acacia::synthesis_provider (provider, true);
+  }
+  if (provider != acacia::automaton_provider::frozen_graph and
+      ((check_unreal && *check_unreal != UNREAL_X_FORMULA) or backend != acacia::game_backend::spot_guarded))
+    std::abort ();
+#if !ACACIA_SPOT_LAZY_PROVIDER
+  if (provider != acacia::automaton_provider::frozen_graph) std::abort ();
+#endif
   const bool synthesize_moore =
       metadata.source_format == "tlsf" and metadata.tlsf_target == "Moore";
   auto indexed_family_hints = metadata.tlsf_indexed_families;
@@ -906,6 +986,9 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
       acacia::game_backend_name (backend));
 #if ACACIA_ENABLE_DIAGNOSTICS
   if (auto* diag = acacia::diagnostics::current ()) {
+    diag->automaton_provider = acacia::automaton_provider_name (provider);
+    diag->game_backend = acacia::game_backend_name (backend);
+    diag->candidate_mode = acacia::candidate_mode_name (candidate);
     diag->translation_pref = translation_pref_name (translation_pref);
     diag->source_format = metadata.source_format;
     diag->tlsf_semantics = metadata.tlsf_semantics;
@@ -973,13 +1056,13 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // bdd_init installs its own hook. Install ours after manager initialization
   // and before guarded-worker setup; the parent treats exit 2 as inconclusive.
   std::optional<acacia::spot_letters::BuddyErrors> guarded_bdd_errors;
-  if (backend == acacia::game_backend::spot_guarded) guarded_bdd_errors.emplace ();
+  if (acacia::is_guarded_backend (backend)) guarded_bdd_errors.emplace ();
 #endif
 
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      translation_pref, spot_fast, backend, synth_fname, synthesize_moore,
+                      translation_pref, spot_fast, backend, provider, candidate, synth_fname, synthesize_moore,
                       indexed_family_hints);
 
   if (auto answer = try_unreal_safety_core_witnesses (spot_formula, check_unreal, runner);

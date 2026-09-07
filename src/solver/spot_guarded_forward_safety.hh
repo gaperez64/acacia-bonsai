@@ -6,6 +6,7 @@
 #include "solver/forward_game_nodes.hh"
 #include "solver/minimal_losing_antichain.hh"
 #include "solver/spot_letter_oracle.hh"
+#include "solver/spot_worker_record.hh"
 
 #include <chrono>
 
@@ -259,6 +260,13 @@ namespace acacia::spot_guarded {
           }
         });
         result_.solve_ms = detail::elapsed (started);
+        if (spot_records::active) {
+          const auto& m = oracle_.metrics ();
+          spot_records::put ("search_bdd_operations", std::to_string (m.bdd_operations));
+          spot_records::put ("search_peak_live_nodes", std::to_string (m.peak_live_nodes));
+          spot_records::put ("search_peak_result_nodes", std::to_string (m.peak_result_nodes));
+          spot_records::put ("search_rows_generated", std::to_string (rows_->complete_rows ()));
+        }
         result_.pending_loss = not losses_.empty ();
         result_.pending_expansion = not open_.empty ();
         if (not search.value) {

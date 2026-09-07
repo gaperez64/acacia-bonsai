@@ -43,4 +43,6 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               TRANSLATION_PREF_T translation_pref, SPOT_FAST_T spot_fast,
               acacia::game_backend backend,
               const std::optional<std::string>& synth_fname,
-              const specification_metadata& metadata = {});
+              const specification_metadata& metadata = {},
+              acacia::automaton_provider provider = acacia::automaton_provider::frozen_graph,
+              acacia::candidate_mode candidate = acacia::candidate_mode::only);

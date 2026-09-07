@@ -1,3 +1,4 @@
+#include "solver/spot_worker_record.hh"
 #pragma once
 
 #include "actioners/no_ios_precomputation.hh"
@@ -17,6 +18,8 @@
 #endif
 #if ACACIA_SPOT_GUARDED_BACKEND
 # include "solver/spot_guarded_forward_safety.hh"
+# include "solver/spot_candidate_limits.hh"
+# include "solver/spot_lazy_game.hh"
 # include "solver/k_schedule.hh"
 #endif
 #include "solver/k_bounded_safety_aut.hh"
@@ -166,7 +169,9 @@ namespace acacia::solver_detail {
       spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
       [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints,
-      acacia::game_backend backend) {
+      acacia::game_backend backend,
+      [[maybe_unused]] acacia::candidate_mode candidate) {
+    backend = acacia::synthesis_backend (backend, do_synthesis);
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
     // Deliberately bind the equivariant pre-pass to backward: the measured
@@ -183,11 +188,9 @@ namespace acacia::solver_detail {
 #endif
 
 #if ACACIA_SPOT_GUARDED_BACKEND
-    if (backend == acacia::game_backend::spot_guarded) {
-      // The CLI forces the real backend to backward for synthesis. Internal
-      // callers must do the same: this backend is decision-only in P4.
-      if (do_synthesis) std::abort ();
-      acacia::diagnostics::set_support_backend ("spot-guarded");
+    if (acacia::is_guarded_backend (backend)) {
+      // Synthesis has already selected backward, including internal callers.
+      acacia::diagnostics::set_support_backend (acacia::game_backend_name (backend));
       acacia::diagnostics::set_support_graph (aut);
       spot_letters::WorkerAlphabet alphabet {aut->ap_vars (), all_inputs, all_outputs, {}};
       for (const auto& ap : aut->ap ())
@@ -197,11 +200,42 @@ namespace acacia::solver_detail {
       // owns fresh search, row and oracle instances, including its verification.
       for (long long k = kmin;;) {
         acacia::diagnostics::set_support_k (static_cast<int> (k));
-        const auto result = spot_guarded::solve (view, alphabet, static_cast<std::int32_t> (k));
+        struct Attempt {
+          forward_result_status status;
+          spot_letters::Unknown failure;
+          double prep_ms, solve_ms, verify_ms;
+          size_t nodes, choices, proofs, expansions;
+        };
+        const auto run = [&] () -> Attempt {
+          const auto summarize = [] (const auto& r) -> Attempt {
+            return {r.status, r.failure, r.prep_ms, r.solve_ms, r.verify_ms,
+                    r.nodes.size (), r.choices_created, r.proofs.size (), r.expansions};
+          };
+          if (backend == acacia::game_backend::spot_guarded_sparse) {
+            spot_lazy_game::Reporter report;
+            if (spot_records::active)
+              report.sink = [] (const auto& key, const auto& value) { spot_records::put (key, value); };
+            spot_lazy_game::RowStore store {view, spot_candidate_limits ().rows, report};
+            spot_lazy_game::Search search {store, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()};
+            return summarize (search.solve ());
+          }
+          return summarize (spot_guarded::solve (view, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()));
+        };
+        acacia::spot_records::put ("provider", "frozen-graph");
+        acacia::spot_records::put ("backend", acacia::game_backend_name (backend));
+        acacia::spot_records::put ("k", std::to_string (k));
+        acacia::spot_records::phase ("search");
+        const auto result = run ();
+        acacia::spot_records::put ("status", forward_result_name (result.status));
+        acacia::spot_records::put ("search_ms", std::to_string (result.solve_ms));
+        acacia::spot_records::put ("verification_ms", std::to_string (result.verify_ms));
+        acacia::spot_records::put ("guarded_choices", std::to_string (result.choices));
+        acacia::spot_records::put ("game_states", std::to_string (result.nodes));
+        acacia::spot_records::phase ("verified-attempt");
         verb_do (1, vout << "spot-guarded K=" << k
                          << " prep_ms=" << result.prep_ms << " solve_ms=" << result.solve_ms
                          << " verify_ms=" << result.verify_ms
-                         << " ranks=" << result.nodes.size () << " choices=" << result.choices_created
+                         << " ranks=" << result.nodes << " choices=" << result.choices
                          << " status=" << forward_result_name (result.status) << std::endl);
         if (result.status == forward_result_status::win_k) {
           acacia::diagnostics::set_final_reason ("spot-guarded-verified-win");
@@ -210,11 +244,15 @@ namespace acacia::solver_detail {
         if (result.status != forward_result_status::lose_k) {
           acacia::diagnostics::set_final_reason (
               std::string {"spot-guarded-unknown-"} + spot_letters::unknown_name (result.failure));
-          return std::nullopt;
+          if (candidate == acacia::candidate_mode::only) return std::nullopt;
+          std::cerr << "spot-guarded UNKNOWN: fallback provider=frozen-graph backend=backward; "
+                       "rebuilding game actions on the existing preprocessed frozen graph\n";
+          acacia::diagnostics::set_support_backend ("backward");
+          break;
         }
         const auto next = acacia::k_schedule::next (
             ACACIA_K_SCHEDULE, k, kmin, kmax, kinc,
-            {static_cast<long long> (result.solve_ms), result.proofs.size (), result.expansions, true});
+            {static_cast<long long> (result.solve_ms), result.proofs, result.expansions, true});
         if (not next) {
           acacia::diagnostics::set_final_reason ("spot-guarded-kmax-lose");
           return std::nullopt;
@@ -225,7 +263,7 @@ namespace acacia::solver_detail {
 #else
     // A guarded-labelled run must never silently execute the backward solver.
     // The CLI rejects this at parse time; guard internal callers as well.
-    if (backend == acacia::game_backend::spot_guarded) std::abort ();
+    if (acacia::is_guarded_backend (backend)) std::abort ();
 #endif
 
     using IOsPrecomputationMaker = IOS_PRECOMPUTER;

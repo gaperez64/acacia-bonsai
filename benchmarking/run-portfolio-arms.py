@@ -25,6 +25,7 @@ measurement protocol: no concurrent CPU work while a timing campaign is running.
 from __future__ import annotations
 
 import argparse
+import json
 import pathlib
 import subprocess
 import sys
@@ -54,8 +55,13 @@ ARMS: dict[str, tuple[str, str]] = {
 @campaign_scope_guard("run-portfolio-arms")
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--build-dir", required=True, type=pathlib.Path,
+    parser.add_argument("--build-dir", type=pathlib.Path,
                         help="directory holding build_<tag>/src/acacia-bonsai for tag in B,S,F")
+    parser.add_argument("--manifest", type=pathlib.Path,
+                        help="JSON object mapping labels to binary/flags/preset/acacia_sha records")
+    parser.add_argument("--caps", default="1,5,17", help="use 17 alone for closing comparisons")
+    parser.add_argument("--collect-rusage", action="store_true")
+    parser.add_argument("--worker-records-dir", type=pathlib.Path)
     parser.add_argument("--list", required=True, type=pathlib.Path)
     parser.add_argument("--tlsf-map", required=True, type=pathlib.Path)
     parser.add_argument("--tlsf-corpus", required=True, type=pathlib.Path)
@@ -64,24 +70,39 @@ def main() -> int:
     parser.add_argument("--memory-swap-max", default="0")
     parser.add_argument("--output-dir", required=True, type=pathlib.Path)
     parser.add_argument("--limit", type=int, help="cap instances per arm, for a validation subset")
-    parser.add_argument("--arms", nargs="+", choices=sorted(ARMS), help="run only these arms")
+    parser.add_argument("--arms", nargs="+", help="run only these manifest/legacy arms")
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    selected = args.arms or sorted(ARMS)
+    if args.manifest:
+        manifest = json.loads(args.manifest.read_text())
+        if not isinstance(manifest, dict) or any(
+            not isinstance(v, dict) or not {"binary", "flags", "preset", "acacia_sha"} <= v.keys()
+            for v in manifest.values()
+        ):
+            parser.error("manifest records require binary, flags, preset, acacia_sha")
+    else:
+        if args.build_dir is None:
+            parser.error("--build-dir or --manifest is required")
+        manifest = {name: dict(binary=str(args.build_dir / f"build_p5_{tag}" / "src" / "acacia-bonsai"),
+                               flags=flags, preset=name, acacia_sha=None)
+                    for name, (tag, flags) in ARMS.items()}
+    selected = args.arms or sorted(manifest)
+    if any(name not in manifest for name in selected):
+        parser.error("unknown arm selected")
 
     for name in selected:
-        tag, flags = ARMS[name]
-        binary = args.build_dir / f"build_p5_{tag}" / "src" / "acacia-bonsai"
+        record = manifest[name]
+        flags = record["flags"]
+        binary = pathlib.Path(record["binary"])
         if not binary.exists():
             print(f"FATAL: missing binary for arm {name}: {binary}", file=sys.stderr)
             return 1
         output = args.output_dir / f"{name}.tsv"
         marker = args.output_dir / f"{name}.done"
-        if marker.exists() and args.resume:
-            print(f"skip {name}: already completed")
-            continue
+        # Always let the coverage runner validate the binary/options on resume.
+        # A .done marker alone cannot establish that the current build matches.
 
         cmd = [
             sys.executable, str(RUNNER),
@@ -90,14 +111,20 @@ def main() -> int:
             "--list", str(args.list),
             "--tlsf-map", str(args.tlsf_map),
             "--tlsf-corpus", str(args.tlsf_corpus),
-            "--caps", "1,5,17",
+            "--caps", args.caps,
             "--memory-max", args.memory_max,
             "--memory-swap-max", args.memory_swap_max,
             "--conflict-policy", "collect",
             "--flags", flags,
-            "--preset", name,
+            "--preset", record["preset"],
             "--output", str(output),
         ]
+        if record["acacia_sha"] is not None:
+            cmd += ["--acacia-sha", record["acacia_sha"]]
+        if args.collect_rusage:
+            cmd += ["--collect-rusage"]
+        if args.worker_records_dir:
+            cmd += ["--worker-records-dir", str(args.worker_records_dir)]
         if args.status_exceptions:
             cmd += ["--status-exceptions", str(args.status_exceptions)]
         if args.limit:
@@ -105,12 +132,11 @@ def main() -> int:
         if args.resume and output.exists():
             cmd += ["--resume"]
 
-        print(f"=== arm {name} ({tag}, flags={flags!r}) ===", flush=True)
+        print(f"=== arm {name} ({record['preset']}, flags={flags!r}) ===", flush=True)
         result = subprocess.run(cmd)
-        if result.returncode not in (0, 1):
-            # 1 = conflicts collected, which is expected under --conflict-policy
-            # collect; anything else is a real failure and stops the census here
-            # rather than silently continuing past a broken arm.
+        if result.returncode != 0:
+            # The coverage runner uses 3 for collected conflicts. Stop for
+            # adjudication before admitting or timing further candidates.
             print(f"FATAL: arm {name} exited {result.returncode}", file=sys.stderr)
             return result.returncode
         marker.write_text("done\n")

@@ -14,6 +14,7 @@ namespace acacia::solver_detail {
   std::optional<spot::twa_graph_ptr> solve_game_vector (
       spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
-      const std::vector<symmetry::indexed_family_hint>& hints, acacia::game_backend backend);
+      const std::vector<symmetry::indexed_family_hint>& hints, acacia::game_backend backend,
+      acacia::candidate_mode candidate = acacia::candidate_mode::only);
 
 }  // namespace acacia::solver_detail

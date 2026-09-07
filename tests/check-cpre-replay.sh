@@ -20,7 +20,7 @@ ACACIA_ANTICHAIN_SNAPSHOT_DIR="$temporary" \
 ACACIA_ANTICHAIN_SNAPSHOT_CPRE=1 \
 ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MAX=4 \
 ACACIA_DIAG_PROGRESS_EVERY=0 \
-  "$solver" --spot-fast off -r small -F "$ltl" -i "$ins" -o "$outs" >/dev/null 2>&1 || true
+  "$solver" --spot-fast off --real-backend backward -r small -F "$ltl" -i "$ins" -o "$outs" >/dev/null 2>&1 || true
 
 # At least one automaton directory must carry at least one recorded update, or
 # the test would pass by measuring nothing.

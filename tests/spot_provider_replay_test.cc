@@ -22,7 +22,8 @@ std::vector<bdd> valuations (const letters::WorkerAlphabet& a, bdd vars) {
   return out;
 }
 int main () {
-  const Reporter report {open ("/dev/null", O_WRONLY)};
+  const int report_fd = open ("/dev/null", O_WRONLY);
+  const auto report = pipe_reporter (report_fd);
   unsigned checks = 0, corruptions = 0, arithmetic = 0;
   for (const char* f :
        {"true", "false", "F a", "G a", "GF a", "GF a & GF b", "G(a -> F b)", "(a U b) | G c"}) {
@@ -122,5 +123,5 @@ int main () {
         store.verifier_sources != std::set<StateId> {0, 1} || store.verify_generated != 1)
       return 7;
   }
-  close (report.fd);
+  close (report_fd);
 }

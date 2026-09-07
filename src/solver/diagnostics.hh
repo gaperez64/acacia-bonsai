@@ -162,6 +162,9 @@ namespace acacia::diagnostics {
       std::string support_formula_fnv1a64 = "-";
       std::string support_phase = "not-started";
       std::string support_backend = "unknown";
+      std::string automaton_provider = "frozen-graph";
+      std::string game_backend = "unknown";
+      std::string candidate_mode = "only";
       std::string instance = "-";
       std::string path = "unknown";
       std::string result = "unknown";
@@ -491,6 +494,9 @@ namespace acacia::diagnostics {
          << " support_formula_fnv1a64=" << m.support_formula_fnv1a64
          << " support_phase=" << m.support_phase
          << " support_backend=" << m.support_backend
+         << " automaton_provider=" << m.automaton_provider
+         << " game_backend=" << m.game_backend
+         << " candidate_mode=" << m.candidate_mode
          // Unknown/zero denominators are absent values, never fabricated ratios.
          << " support_rho_q="
          << (m.support_demand.graph_ready and m.support_demand.states != 0

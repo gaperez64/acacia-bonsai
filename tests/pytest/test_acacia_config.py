@@ -547,6 +547,7 @@ def test_meson_args_emit_every_option_with_lowercase_booleans():
         (name, family["meson"]) for name, family in options["families"].items()
     )
 
+    assert "-Dacacia_spot_lazy_provider=false" in args
     assert len(args) == len(mapping)
     assert [arg.split("=", 1)[0] for arg in args] == [
         f"-D{meson_name}" for meson_name in mapping.values()
@@ -560,6 +561,9 @@ def test_meson_args_emit_every_option_with_lowercase_booleans():
             assert f"-D{meson_name}={expected}" in args
     assert not any("=True" in arg or "=False" in arg for arg in args)
     assert "-Dacacia_enable_tlsf_frontend=true" in args
+
+    values["spot_lazy_provider"] = True
+    assert "-Dacacia_spot_lazy_provider=true" in module.meson_args(options, values)
 
 
 def test_preprocessor_flags_preserve_encodings_and_emission_order():

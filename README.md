@@ -114,6 +114,22 @@ in [benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
 
 # Compile-time configurations
 
+The experimental Spot paths require `-Dacacia_spot_guarded_backend=true`;
+the TAA providers also require `-Dacacia_spot_lazy_provider=true`.
+`--arms real:small:spot-guarded:spot-lazy,unreal:formula:spot-guarded:spot-lazy`
+selects a lazy worker for each polarity. `spot-eager` is the fully enumerated
+control of the same TAA/cursor construction. With the default `frozen-graph`
+provider, `spot-guarded` uses dense ranks and `spot-guarded-sparse` preserves
+the same mixed numeric/Boolean domain in sparse storage. Automaton-unreal
+requires `frozen-graph`.
+
+These paths verify decisions before returning them. Candidate limits produce
+an inconclusive result; `--candidate-mode fallback` explicitly rebuilds the
+existing frozen/backward path after a candidate failure. Synthesis uses the
+existing frozen/backward implementation. For diagnostic runs,
+`ACACIA_SPOT_CAPTURE_DIR` enables JSON records of the actual transformed
+worker formulas, AP partitions, phases, and measured counters.
+
 Acacia-Bonsai's optimized variants are compile-time configurations.  The
 configuration registry lives in `config/acacia-options.json` and
 `config/acacia-presets.json`; `scripts/acacia-config.py` validates presets and

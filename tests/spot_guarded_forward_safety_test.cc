@@ -1,4 +1,5 @@
 #include "solver/spot_guarded_forward_safety.hh"
+#include "solver/spot_lazy_game.hh"
 #include "solver/forward_reachable_safety.hh"
 #include "solver/k_bounded_safety_aut.hh"
 #include "actioners/standard.hh"
@@ -88,6 +89,17 @@ namespace {
       const auto K = static_cast<VECTOR_ELT_T> (fixture.K);
       const FrozenAcacia view {g, fixture.bool_threshold};
       const auto actual = guarded::solve (view, ap, K);
+      acacia::spot_lazy_game::RowStore sparse_store {view, {}};
+      acacia::spot_lazy_game::Search sparse_search {sparse_store, ap, K};
+      const auto sparse = sparse_search.solve ();
+      expect ("C3/C3s fixed-K agreement on identical frozen mixed domain", sparse.status == actual.status);
+      if (sparse.status == Status::win_k) {
+        auto corrupt = sparse;
+        corrupt.nodes.at (corrupt.initial).choices.clear ();
+        expect ("sparse verifier rejects uncovered inputs",
+                !acacia::spot_lazy_game::verify_winning_certificate (sparse_store, ap, K, corrupt).value);
+      }
+
       if (actual.status != Status::win_k && actual.status != Status::lose_k) {
         ++unknowns;
         expect ("random completed " + std::to_string (game), false);
@@ -277,6 +289,10 @@ namespace {
       const auto limited = guarded::solve (losing_view, lf.alphabet, 1, limit);
       expect ("budget is RESOURCE_LIMIT, never LOSE", limited.status == Status::resource_limit);
       expect ("budget is never a proof reason", limited.proofs.empty ());
+      acacia::spot_lazy_game::RowStore sparse_store {losing_view, limit.rows};
+      acacia::spot_lazy_game::Search sparse_search {sparse_store, lf.alphabet, 1, limit};
+      const auto sparse = sparse_search.solve ();
+      expect ("sparse budget is RESOURCE_LIMIT, never a verdict", sparse.status == Status::resource_limit);
     }
     for (unsigned failure = 0; failure < 3; ++failure) {
       guarded::Limits limit;
@@ -288,6 +304,14 @@ namespace {
       expect ("failed verification publishes no generators", limited.generators.empty ());
       const auto limited_loss = guarded::solve (losing_view, lf.alphabet, 1, limit);
       expect ("failed proof replay is UNKNOWN, never LOSE", limited_loss.status == Status::unknown);
+      acacia::spot_lazy_game::RowStore sparse_store {view, limit.rows};
+      acacia::spot_lazy_game::Search sparse_search {sparse_store, fx.alphabet, 1, limit};
+      const auto sparse = sparse_search.solve ();
+      expect ("sparse verifier failure is UNKNOWN", sparse.status == Status::unknown);
+      expect ("sparse failed verification publishes no generators", sparse.generators.empty ());
+      acacia::spot_lazy_game::RowStore sparse_loss_store {losing_view, limit.rows};
+      acacia::spot_lazy_game::Search sparse_loss_search {sparse_loss_store, lf.alphabet, 1, limit};
+      expect ("sparse failed proof replay is UNKNOWN", sparse_loss_search.solve ().status == Status::unknown);
     }
   }
 }

@@ -83,7 +83,8 @@ int main (int argc, char** argv) {
   try {
     const auto start_proc = [&] (std::optional<UNREAL_X_T> unreal_x,
                                  TRANSLATION_PREF_T translation_pref,
-                                 acacia::game_backend backend) {
+                                 acacia::game_backend backend,
+                                 acacia::automaton_provider provider) {
       // Publish the child pid before a termination handler can run.
       sigset_t old_mask;
       sigprocmask (SIG_BLOCK, &block_set, &old_mask);
@@ -100,13 +101,16 @@ int main (int argc, char** argv) {
                        ",pref=" + translation_pref_name (translation_pref)) +
             ",backend=" + acacia::game_backend_name (backend) +
             "] ");
-        verb_do (1, vout << "Starting solver child\n" << std::flush);
+        verb_do (1, vout << "Starting solver child provider="
+                          << acacia::automaton_provider_name (provider)
+                          << " candidate_mode=" << acacia::candidate_mode_name (arg_values.candidate)
+                          << "\n" << std::flush);
         const bool res = run_ltl (arg_values.inputs, arg_values.outputs, arg_values.opt_k,
                                   arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
                                   unreal_x, translation_pref, arg_values.spot_fast,
                                   backend,
                                   unreal_x.has_value () ? std::nullopt : arg_values.synth_fname,
-                                  arg_values.metadata);
+                                  arg_values.metadata, provider, arg_values.candidate);
         verb_do (1, vout << "returning " << res << "\n");
 
         if (unreal_x.has_value ())
@@ -134,13 +138,15 @@ int main (int argc, char** argv) {
 
     for (const auto& arm : *arg_values.arms) {
       acacia::game_backend backend = arm.backend;
+      auto provider = arm.provider;
       if (arg_values.synth_fname.has_value () and not arm.unreal and
           backend != acacia::game_backend::backward) {
         verb_do (1, vout << "Forcing the real backend to backward for synthesis\n" << std::flush);
-        backend = acacia::game_backend::backward;
+        backend = acacia::synthesis_backend (backend, true);
+        provider = acacia::synthesis_provider (provider, true);
       }
       start_proc (arm.unreal ? std::make_optional<UNREAL_X_T> (arm.unreal_x) : std::nullopt,
-                  arm.translation_pref, backend);
+                  arm.translation_pref, backend, provider);
     }
 
     int status;

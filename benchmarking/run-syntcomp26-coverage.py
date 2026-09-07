@@ -57,6 +57,14 @@ OUTPUT_COLUMNS = [
     "binary_sha256",
     "preset",
     "timestamp_utc",
+    "flags",
+    "cpu_seconds",
+    "max_process_rss_bytes",
+    "scope_memory_peak_bytes",
+    "memory_max",
+    "memory_swap_max",
+    "collect_rusage",
+    "worker_records_dir",
 ]
 CONFLICT_COLUMNS = [
     "solver_label",
@@ -557,6 +565,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="revision recorded in output (default: git rev-parse HEAD)",
     )
     parser.add_argument("--preset", default="", metavar="S")
+    parser.add_argument("--collect-rusage", action="store_true",
+                        help="wrap the solver with GNU time inside the existing scope")
+    parser.add_argument("--worker-records-dir", type=pathlib.Path,
+                        help="diagnostic run: capture transformed workers below this directory")
     return parser
 
 
@@ -590,9 +602,24 @@ def run(args: argparse.Namespace) -> int:
 
     binary_sha256 = sha256_file(binary)
     acacia_sha = args.acacia_sha if args.acacia_sha is not None else git_head()
+    records_root = getattr(args, "worker_records_dir", None)
+    if records_root is not None:
+        records_root = records_root.resolve()
+    run_metadata = {
+        "acacia_sha": acacia_sha, "binary_sha256": binary_sha256,
+        "preset": args.preset, "flags": args.flags,
+        "memory_max": args.memory_max, "memory_swap_max": args.memory_swap_max,
+        "collect_rusage": str(getattr(args, "collect_rusage", False)).lower(),
+        "worker_records_dir": str(records_root) if records_root else "",
+    }
     output = pathlib.Path(args.output)
     if args.resume and output.exists():
         rows = load_output(output)
+        for row in rows:
+            if row["solver_label"] == args.solver_label and any(
+                row.get(key) != value for key, value in run_metadata.items()
+            ):
+                raise CoverageError("resume configuration or binary differs from recorded campaign")
     else:
         rows = []
         atomic_write_tsv(output, OUTPUT_COLUMNS, rows)
@@ -661,14 +688,26 @@ def run(args: argparse.Namespace) -> int:
                     continue
                 tlsf_file, tlsf_path = targets[instance]
                 cmd = [str(binary), *flags, "-T", str(tlsf_path)]
+                if getattr(args, "collect_rusage", False):
+                    cmd = ["/usr/bin/time", "-q", "-f", "ACACIA_RUSAGE %U %S %M", *cmd]
+                run_env = None
+                if records_root is not None:
+                    safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", args.solver_label)
+                    directory = records_root / safe_label / str(cap) / pathlib.Path(instance).name
+                    directory.mkdir(parents=True, exist_ok=True)
+                    run_env = dict(os.environ, ACACIA_SPOT_CAPTURE_DIR=str(directory),
+                                   ACACIA_DIAG_INSTANCE=instance)
                 solver_run = run_systemd_scope(
                     cmd,
                     timeout=cap,
                     memory_max=args.memory_max,
                     memory_swap_max=args.memory_swap_max,
                     unit_prefix="acacia-syntcomp26-coverage",
+                    env=run_env,
                 )
                 result, resource_reason = normalize_result(solver_run)
+                usage = re.search(r"^ACACIA_RUSAGE ([0-9.]+) ([0-9.]+) ([0-9]+)$",
+                                  solver_run.stderr, re.M)
                 row = {
                     "solver_label": args.solver_label,
                     "instance": instance,
@@ -687,6 +726,11 @@ def run(args: argparse.Namespace) -> int:
                     "binary_sha256": binary_sha256,
                     "preset": args.preset,
                     "timestamp_utc": timestamp_utc(),
+                    "flags": args.flags,
+                    "cpu_seconds": format(float(usage[1]) + float(usage[2]), ".6f") if usage else "",
+                    "max_process_rss_bytes": str(int(usage[3]) * 1024) if usage else "",
+                    "scope_memory_peak_bytes": str(solver_run.memory_peak_bytes or ""),
+                    **run_metadata,
                 }
                 writer.writerow(row)
                 stream.flush()

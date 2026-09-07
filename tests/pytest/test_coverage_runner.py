@@ -6,6 +6,7 @@ solver or requiring any build products.
 from __future__ import annotations
 
 import argparse
+import csv
 import importlib.util
 import pathlib
 import sys
@@ -118,3 +119,76 @@ def test_negative_return_code_normalizes_to_signal_crash():
         "CRASH",
         "signal:9",
     )
+
+
+@pytest.fixture
+def campaign(tmp_path):
+    binary = tmp_path / "solver"
+    binary.write_text("#!/bin/sh\necho REALIZABLE\n")
+    binary.chmod(0o755)
+    (tmp_path / "case.tlsf").write_text("//STATUS: realizable\n")
+    (tmp_path / "list").write_text("case.ltl\n")
+    (tmp_path / "map").write_text("instance\ttlsf\ncase.ltl\tcase.tlsf\n")
+    return coverage.build_parser().parse_args([
+        "--bin", str(binary), "--solver-label", "candidate",
+        "--list", str(tmp_path / "list"), "--tlsf-map", str(tmp_path / "map"),
+        "--tlsf-corpus", str(tmp_path), "--status-exceptions", str(tmp_path / "absent"),
+        "--caps", "17", "--memory-max", "8G", "--memory-swap-max", "0",
+        "--output", str(tmp_path / "out.tsv"), "--acacia-sha", "frozen-sha",
+        "--preset", "test-preset", "--collect-rusage",
+    ])
+
+
+def test_scoped_rusage_and_worker_capture(monkeypatch, campaign, tmp_path):
+    calls = []
+    def scoped(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return coverage.RunResult("REALIZABLE\n", "ACACIA_RUSAGE 1.23 0.07 2048\n",
+                                  0, 1.5, False, memory_peak_bytes=4096)
+    monkeypatch.setattr(coverage, "run_systemd_scope", scoped)
+    campaign.worker_records_dir = tmp_path / "records"
+    assert coverage.run(campaign) == 0
+    cmd, options = calls[0]
+    assert cmd[:4] == ["/usr/bin/time", "-q", "-f", "ACACIA_RUSAGE %U %S %M"]
+    assert options["timeout"] == 17 and options["memory_max"] == "8G"
+    assert options["env"]["ACACIA_DIAG_INSTANCE"] == "case.ltl"
+    assert pathlib.Path(options["env"]["ACACIA_SPOT_CAPTURE_DIR"]).is_dir()
+    with open(campaign.output) as source:
+        row, = csv.DictReader(source, delimiter="\t")
+    assert row["result"] == "REALIZABLE"
+    assert row["cpu_seconds"] == "1.300000"
+    assert row["max_process_rss_bytes"] == str(2048 * 1024)
+    assert row["scope_memory_peak_bytes"] == "4096"
+    assert row["worker_records_dir"] == str(campaign.worker_records_dir)
+    campaign.resume = True
+    assert coverage.run(campaign) == 0
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("field,value", [
+    ("flags", "-r small"), ("acacia_sha", "other-sha"),
+    ("preset", "other-preset"), ("memory_max", "4G"),
+    ("memory_swap_max", "1G"), ("collect_rusage", False),
+])
+def test_resume_rejects_changed_treatment(monkeypatch, campaign, field, value):
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **kw:
+                        coverage.RunResult("REALIZABLE\n", "", 0, 0.1, False))
+    assert coverage.run(campaign) == 0
+    campaign.resume = True
+    setattr(campaign, field, value)
+    with pytest.raises(coverage.CoverageError, match="differs"):
+        coverage.run(campaign)
+
+
+def test_resume_rejects_rebuilt_binary_and_censored_usage_stays_absent(monkeypatch, campaign):
+    monkeypatch.setattr(coverage, "run_systemd_scope", lambda *a, **kw:
+                        coverage.RunResult("", "", -15, 17.1, True))
+    assert coverage.run(campaign) == 0
+    with open(campaign.output) as source:
+        row, = csv.DictReader(source, delimiter="\t")
+    assert row["result"] == "TIMEOUT"
+    assert row["cpu_seconds"] == row["max_process_rss_bytes"] == row["scope_memory_peak_bytes"] == ""
+    pathlib.Path(campaign.bin).write_text("#!/bin/sh\necho UNKNOWN\n")
+    campaign.resume = True
+    with pytest.raises(coverage.CoverageError, match="differs"):
+        coverage.run(campaign)
