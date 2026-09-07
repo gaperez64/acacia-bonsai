@@ -1,6 +1,7 @@
 """Pure-helper and mocked streaming tests; never launch a systemd campaign."""
 
 import csv
+import hashlib
 import importlib.util
 import pathlib
 import sys
@@ -16,6 +17,23 @@ def load_module():
     assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
+
+
+def test_frozen_binary_provenance_does_not_follow_current_checkout(tmp_path, monkeypatch):
+    module = load_module()
+    binary = tmp_path / "acacia-bonsai"
+    binary.write_bytes(b"frozen solver")
+    frozen_revision = "1" * 40
+
+    def unexpected_git(*args, **kwargs):
+        pytest.fail("an explicit binary revision must not be replaced by the checkout revision")
+
+    monkeypatch.setattr(module.subprocess, "run", unexpected_git)
+    assert module.provenance(binary, "frozen-preset", frozen_revision) == {
+        "acacia_sha": frozen_revision,
+        "binary_sha256": hashlib.sha256(b"frozen solver").hexdigest(),
+        "preset": "frozen-preset",
+    }
 
 
 def worker(**overrides):

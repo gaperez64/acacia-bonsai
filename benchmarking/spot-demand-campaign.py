@@ -218,10 +218,12 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
-def provenance(binary: pathlib.Path, preset: str) -> dict[str, str]:
-    revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=HERE.parent,
-                              capture_output=True, text=True, check=False)
-    return {"acacia_sha": revision.stdout.strip() if revision.returncode == 0 else "",
+def provenance(binary: pathlib.Path, preset: str, acacia_sha: str | None = None) -> dict[str, str]:
+    if acacia_sha is None:
+        revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=HERE.parent,
+                                  capture_output=True, text=True, check=False)
+        acacia_sha = revision.stdout.strip() if revision.returncode == 0 else ""
+    return {"acacia_sha": acacia_sha,
             "binary_sha256": sha256_file(binary), "preset": preset}
 
 
@@ -239,6 +241,7 @@ def main() -> int:
     parser.add_argument("--include-neighbours", action="store_true")
     parser.add_argument("--cohort", default="discovery")
     parser.add_argument("--preset", default="")
+    parser.add_argument("--acacia-sha", help="source revision of a frozen binary; defaults to current HEAD")
     parser.add_argument("--flags", default="", help="exact extra solver options (shell syntax)")
     parser.add_argument("--out", required=True, type=pathlib.Path)
     parser.add_argument("--timeout", type=float, default=25.0)
@@ -277,7 +280,7 @@ def main() -> int:
         alphabet_census_only=False, semantic_dominance=False, semantic_decode=True,
         support_demand=True,
     )
-    provenance_fields = provenance(binary, args.preset)
+    provenance_fields = provenance(binary, args.preset, args.acacia_sha)
     flags = shlex.split(args.flags)
     written = 0
     args.out.parent.mkdir(parents=True, exist_ok=True)
