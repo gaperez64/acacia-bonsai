@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <unistd.h>
@@ -27,6 +28,7 @@ namespace acacia::spot_records {
   class Record {
       Record* previous_ = active;
       std::filesystem::path path_;
+      bool history_ = false;
       std::map<std::string, std::string> values_;
     public:
       Record () {
@@ -34,6 +36,8 @@ namespace acacia::spot_records {
           static unsigned long sequence = 0;
           path_ = std::filesystem::path (directory) /
                   (std::to_string (getpid ()) + "-" + std::to_string (++sequence) + ".json");
+          const char* history = std::getenv ("ACACIA_SPOT_CAPTURE_HISTORY");
+          history_ = history && std::string (history) == "1";
           put ("worker_pid", std::to_string (getpid ()));
           if (const char* instance = std::getenv ("ACACIA_DIAG_INSTANCE")) put ("instance", instance);
           active = this;
@@ -54,18 +58,32 @@ namespace acacia::spot_records {
         try {
           std::filesystem::create_directories (path_.parent_path ());
           const auto temporary = path_.string () + ".tmp";
-          std::ofstream out (temporary);
-          out << "{";
+          std::ostringstream snapshot;
+          snapshot << "{";
           bool first = true;
           for (const auto& [key, value] : values_) {
-            if (!first) out << ',';
+            if (!first) snapshot << ',';
             first = false;
-            out << '\n' << quote (key) << ':' << value;
+            snapshot << quote (key) << ':' << value;
           }
-          out << "\n}\n";
+          snapshot << "}\n";
+          const auto encoded = snapshot.str ();
+          std::ofstream out (temporary);
+          out << encoded;
           out.close ();
           if (!out) throw std::runtime_error ("cannot write capture");
           std::filesystem::rename (temporary, path_);
+          // Optional milestone history retains completed K attempts. A killed
+          // writer may leave a partial final line; consumers keep the complete
+          // prefix and count only verified-attempt records, deduplicated by K.
+          if (history_) {
+            auto history_path = path_;
+            history_path.replace_extension (".history.jsonl");
+            std::ofstream history (history_path, std::ios::app);
+            history << encoded;
+            history.close ();
+            if (!history) throw std::runtime_error ("cannot write capture history");
+          }
         } catch (const std::exception& e) {
           std::cerr << "spot capture failed: " << e.what () << '\n';
         }

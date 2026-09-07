@@ -321,3 +321,20 @@ The isolated `prioritized_arbiter_unreal2_pb_30_pe_` error was reproduced with
 the frozen mainline formula-unreal worker: both fail with Spot's 64-acceptance-set
 limit. This is an inherited capacity limit. The library limit and binary build
 remain fixed for the comparison.
+
+### Native capture accounting
+
+The native diagnostic run contains 66 isolated worker invocations, separate
+from primary timings. Several successful guarded jobs pass through multiple K
+bounds. The latest capture records the last completed attempt, and metrics from
+that attempt can remain present while the next search is incomplete. It must
+not be interpreted as whole-job preparation, search, or verification time.
+
+`ACACIA_SPOT_CAPTURE_HISTORY=1`, together with `ACACIA_SPOT_CAPTURE_DIR`, now
+retains milestone snapshots in an additional `.history.jsonl` file. Consumers
+keep the complete JSON-line prefix if a worker is killed, and deduplicate
+`verified-attempt` snapshots by worker record and K. They sum completed-attempt
+phase times and take peak maxima across attempts; incomplete jobs provide only
+lower bounds. The atomic latest `.json` record remains available. History is
+opt-in and used only in explanatory reruns. Closing performance binaries will
+be frozen and rebuilt after this accounting change.
