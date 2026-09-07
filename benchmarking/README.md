@@ -348,6 +348,10 @@ Upstream-facing Spot reproducers are prepared in [SPOT-ANOMALIES.md](SPOT-ANOMAL
 - **G3, landing bar:** run `benchmarking/landing-campaign.sh` with paired
   binaries, suite lists, a 17-second timeout, and an output directory. It
   invokes `benchmarking/landing-bar.py`; every suite must print `GATE PASS`.
+  Use `--scope-mode instance` to keep the runner outside each solver's 8 GiB
+  scope, so a solver OOM is recorded without terminating the panel. The default
+  `campaign` mode retains the shared scope. Changing modes requires a fresh
+  output directory and matched remeasurement of both binaries.
   The syntcomp25 and syntcomp26 panels are reconstructed from the TLSF
   submodule and have no `.ltl` pair for 77 of 180 and 180 of 180 of their rows,
   so both G2s and G3 need a materialized corpus. Materialize once: any one of

@@ -2,8 +2,9 @@
 
 Status: implementation and core correctness checks are complete. Isolated
 discovery measurements, shipping-portfolio references, isolated held-out checks,
-and portfolio selection are complete. Worker accounting, production gates, and
-the full closing comparison remain in progress. No default has been promoted.
+portfolio selection, native worker accounting, and same-provider replay are
+complete. Production gates and the full closing comparison remain in progress.
+No default has been promoted.
 
 ## Scope and baseline
 
@@ -89,8 +90,8 @@ captured transformed formula; it does not materialize the failed provider.
 For frozen guarded failures, fallback reuses the already preprocessed graph.
 Neither mode treats Kmax exhaustion as a resource failure. All new compile
 gates default off, and enabling compilation alone leaves default arm selection
-unchanged. The five `otf_*` presets are research configurations pending the
-selection experiments below.
+unchanged. The `otf_*` presets remain outside the shipping group pending the
+production gates and full comparison below.
 
 `ACACIA_SPOT_CAPTURE_DIR` enables atomic records at actual worker boundaries,
 including the exact transformed formula and partition. Records flush at phase
@@ -108,7 +109,7 @@ verifier failures. The dense and sparse engines agree on 5,000 generated mixed
 rank games; corrupt certificates are rejected. Native Mealy, Moore, and strict
 TLSF fixtures compare independently launched eager/lazy workers after the real
 and formula-unreal transformations. The Python suite without optional extension
-modules passed 526 tests, with one skip; additional campaign tests validate
+modules passed 553 tests, with one skip; additional campaign tests validate
 resource accounting and reject resumes with changed binaries or treatments.
 
 `spot-otf-cohorts/manifest.json` freezes discovery and held-out inputs before
@@ -248,8 +249,11 @@ The extra C0 demand reference now matches P1's outer wrapper without GNU time.
 Both answer the same 15 of 36 with zero conflicts. First-pass answer-conditioned
 time is 30.599 s for C0 and 34.826 s with instrumentation; PAR-2 is 744.599 versus
 748.826 s, and the median paired time ratio is 1.213. Instrumentation is not
-free. Its overhead needs paired repetitions, and all primary performance races
-continue to use binaries with diagnostics disabled and no worker capture.
+free. Three alternating paired repetitions on those same 15 completed cases
+confirmed unchanged answers. Answer-conditioned C0/C1 totals were
+30.341/34.577 s, 31.289/34.906 s, and 31.598/35.094 s; median paired time
+ratios were 1.193, 1.187, and 1.132. All primary performance races use
+binaries with diagnostics disabled and no worker capture.
 
 ## Actual portfolio discovery results
 
@@ -338,3 +342,191 @@ phase times and take peak maxima across attempts; incomplete jobs provide only
 lower bounds. The atomic latest `.json` record remains available. History is
 opt-in and used only in explanatory reruns. Closing performance binaries will
 be frozen and rebuilt after this accounting change.
+
+The original 66-invocation capture campaign finished at source `e5e4757c`.
+Twenty-nine successful worker jobs were then recaptured with history at
+`e7061657`. The three selected default builds were rebuilt at that revision;
+each passed all 43 unit/version checks. The previous binaries and manifests
+are preserved in `_bm-logs.spot-otf-20260907/e5e4757-frozen-builds`.
+
+[Native worker accounting](spot-otf-worker-accounting.tsv) joins each history
+to its P1 record using the exact instance and worker PID. These are diagnostic
+measurements, including instrumentation, and are not primary speed claims.
+For frozen providers, row caches are rebuilt per K; the table does not present
+a sum of generated rows as a union of distinct rows. For TAA, the provider cache
+and its cumulative counters survive K changes.
+
+| Sparse formula-unreal job | Completed K | Translation ms | Search ms, summed | Verification ms, summed |
+|---|---|---:|---:|---:|
+| robot-resource-2d16 | 2,5 | 4,326 | 5.2 | 11.2 |
+| robot-to-target-charging3 | 2,5,8 | 3,393 | 87.8 | 12.2 |
+| GF-G-contradiction6 | 2,5,8,11 | 3,807 | 5,110.7 | 3,409.2 |
+| GF-G-contradiction7 | 2,5,8,11 | 3,891 | 5,346.8 | 3,543.7 |
+| g-unreal-39 | 2,5,8,11,14 | 1,932 | 4,429.3 | 2,799.6 |
+
+The robot gains remain dominated by translation. The harder contradiction
+and g-unreal jobs spend substantial time in both search and independent
+verification; reporting only their final K would hide most of that work.
+
+### Same-provider replay and the lazy-generation hypothesis
+
+Eight fresh, independent P6 invocations replay four actual captured worker
+formulas: two AMBA wins, the easy `01` regression, and formula-unreal
+`full_arbiter_unreal1_pb_2_8_pe_`. The replay consumes the already transformed
+bad-language formula, without another negation. The captured transformed AP
+partition is reordered into the replay tool's lexical AP order. Both providers
+use the same K range and schedule. These runs use a 17-second replay cap,
+8 GiB cgroup limit, zero swap, and an additional 8 GiB address-space limit;
+they are explanatory checks, not substitutes for native whole-pipeline timing.
+
+[Replay accounting](spot-otf-streaming-accounting.tsv) preserves completed
+attempt totals, censored outcomes, provider rows, retained rank payloads, and
+process memory. All four completed eager/lazy K comparisons agree and have
+verified certificates: both AMBA jobs lose K=2 and win K=5. The other two jobs
+are inconclusive, with no invented utilization denominator for the incomplete
+full-arbiter enumeration.
+
+| Real job | C4 total wrapper rows | C5 rows after K=2 | C5 rows at verified K=5 | Final utilization |
+|---|---:|---:|---:|---:|
+| AMBA encode20 | 78 | 53 | 78 | 100% |
+| AMBA lock14 | 62 | 61 | 62 | 100% |
+
+The native history puts AMBA encode20's eager enumeration at 7,580.6 ms,
+with 213.5 ms search and 46.9 ms verification over both K attempts. Lazy
+mode charges generation inside search: 8,014.5 ms search and 48.4 ms
+verification. Those single diagnostic runs do not establish a speed winner.
+They do establish that both positive examples eventually request every row.
+The gains therefore support testing the TAA construction and guarded search
+in a real arm; a lazy-generation preference still needs independent evidence.
+
+The native negative captures locate both providers' `lift4` and
+`GF-G-contradiction6` formula-unreal failures in the provider factory. The
+full-arbiter eager run reaches enumeration, while lazy reaches its first
+search without completing it. These phase milestones are censored observations.
+The earlier scope journal identifies memory-limit failures separately from
+timeouts; an absent counter is not zero work.
+
+### Candidate-only and fallback attribution
+
+Eighteen separate capped invocations compare natural and deliberately limited
+candidates. Candidate-only and fallback both solve the two AMBA real positives
+and the two selected sparse formula-unreal positives; both time out on TAA
+real `01`. A forced zero-row budget returns UNKNOWN in candidate-only mode
+for sparse frozen, TAA lazy, and TAA eager workers; each fallback recovers the
+existing backward REALIZABLE answer. With fixed K=2, sparse frozen `01`
+returns UNKNOWN in both modes and does not invoke fallback. There are no
+opposite verdicts. Raw commands, stdout/stderr, captures, and binary provenance
+are in `_bm-logs.spot-otf-20260907/fallback-attribution`.
+
+## Production gates in progress
+
+All three selected `e7061657` builds pass the 43 unit/version checks. The
+existing frozen G1 gate passes for `otf_sparse` (40/40), and fails for both
+TAA configurations (39/40), with zero opposite verdicts. Both lose
+`syntcomp24/load_balancer_unreal25.ltl` at 17 seconds.
+
+A fresh matched mainline run on the same 40 logical inputs solves 39/40:
+`load_balancer_unreal25` finishes UNREALIZABLE in 12.204 seconds, while
+`Morning_f2774e0b` times out. All three new configurations solve the latter.
+Thus the TAA portfolio's load-balancer loss is a real tradeoff against current
+main, despite equal 39/40 totals. It is not explained by the different old
+preset that supplied the frozen expectations. The raw gate reports and exact
+matched failure sets are in `_bm-logs.spot-otf-20260907/g1-selected`. The
+matched helper uses the existing native-TLSF route for the 2025 portion and
+the same vendored LTL inputs as Meson for the 2024 portion.
+
+The G3 panel campaign is running. Each of the three candidates is compared
+against the same fresh, byte-identical main reference on each 180-case panel.
+The shared-reference file and binary hashes are recorded explicitly; old
+panel timings are not substituted. G4's registered labelled set contains
+624 cases (461 realizable and 163 unrealizable), at the existing 30-second
+correctness timeout. No shipping default is promoted by these partial results.
+
+The first G3 comparison is complete: on the SYNTCOMP25 panel, `otf_sparse`
+solves 127/180 versus fresh mainline's 121/180, with six gains, zero losses,
+and zero opposite verdicts. PAR-2 improves from 2,186.608 to 1,989.080 seconds;
+the existing gate passes. All six gains are UNREALIZABLE: `Morning_f2774e0b`,
+`GF-G-contradiction4`, `GF-G-contradiction6`, `ltl2dba_C2_unreal_pb_16_pe_`,
+`ltl2dba_theta_pb_14_pe_`, and `robot-resource-2d17`. The GF-G6 and C2 jobs
+finish near the cap (16.621 and 15.945 seconds), so their stability still
+requires repetitions. Other panel comparisons remain in progress.
+
+The SYNTCOMP26 primary panel gives a counterexample to promoting both guarded
+unreal arms: `otf_sparse` solves 139/180 versus main's 140/180. It gains
+`robot-to-target-charging6` (7.170 s), but loses `g-unreal-113` (main 7.525 s)
+and `workstation_resupply_pb_3_pe_` (main 16.539 s). PAR-2 is 1,458.276
+versus 1,457.338 seconds, within the documented noise floor. The first loss
+is well away from the cap; the second requires the gate's longer diagnostic
+and paired repetitions. Primary 17-second coverage remains 139 versus 140
+regardless of a longer diagnostic answer. These findings motivate a targeted
+mixed portfolio retaining one old unreal worker before final selection.
+
+### Panel runner failure and matched remeasurement
+
+The original shared-scope lazy TAA SYNTCOMP25 campaign stopped before writing
+a complete candidate CSV. Unit `acacia-landing-campaign-378438.scope` hit its
+8 GiB limit; the journal records `oom-kill` and termination of the scope that
+contained the panel driver. Its 133 logged results are a censored prefix, not
+a valid 180-case score. The raw log and the exact journal are preserved.
+
+The existing landing wrapper now supports `--scope-mode instance`, using
+`run-subset.py`'s existing per-solver scope support. Each invocation remains
+limited to 17 seconds, 8 GiB, and zero swap. The driver survives a solver OOM
+and records its resource-limit outcome. Changing modes rejects reuse of old
+CSVs; both binaries' panel measurements will be refreshed under this mode.
+The previous shared-scope results above remain separate preliminary evidence.
+Forty-four relevant Python tests pass, including resource-limit continuation,
+unique scopes and bounds per invocation, and rejection of mismatched or
+missing scope provenance on resume.
+
+### Which old unreal arm must survive?
+
+Eight isolated 17-second runs attribute the two hard losses using the exact
+native SYNTCOMP26 input and the original G1 LTL input respectively:
+
+| Job | Old formula | Old automaton | Sparse guarded formula | Sparse guarded automaton |
+|---|---:|---:|---:|---:|
+| g-unreal-113 (native) | U, 6.598 s | U, 6.589 s | timeout | timeout |
+| load_balancer_unreal25 (G1 LTL) | timeout | U, 9.849 s | timeout | U, 10.141 s |
+
+Either old unreal worker can preserve g-unreal-113. The load-balancer case
+needs the automaton transform in this experiment. The resulting focused
+selection compares both mixed portfolios on 13 observed gains, losses, and
+held-out targets. Both retain backward and forward real workers and exactly
+four children; each retains one existing forward unreal worker and uses one
+sparse guarded unreal worker. The original larger panels now inform this
+selection and are not described as untouched validation of the new mixture.
+
+The two mixed variants each answer 10/13 in the focused pass. The
+automaton-guarded mixture adds C2-unreal16, while the formula-guarded mixture
+preserves the near-cap workstation real answer. Three alternating repetitions
+confirm C2 for automaton-guarded (3/3, 15.634–16.715 s) and not formula-guarded
+(0/3). Workstation succeeds 2/3 with automaton-guarded and 3/3 with
+formula-guarded. Both mixtures therefore remain under consideration.
+
+The existing real workers were also isolated using **main's exact contradiction
+configuration**, avoiding a comparison to the earlier pure-F preset with
+different options. On the 17 main-answered real cases from the two selection
+cohorts, backward answers 10 and forward 15; their union is 17.
+`arbiter_with_cancel_pb_5_pe_` and `collector_v1_pb_9_pe_` require backward
+in these capped runs. Seven other cases require forward. Both real workers
+are retained. Each existing unreal worker answers all four main-answered
+unreal cases in those cohorts; this is a local observation, not a full-corpus
+redundancy claim. The G1 load-balancer observation favors retaining the
+existing automaton-unreal worker in the TAA-containing mixture.
+
+Four revised actual-default presets are frozen for the fresh gates:
+
+- `otf_sparse_automaton`: B-real, F-real, F-formula-unreal, sparse guarded automaton-unreal.
+- `otf_sparse_formula`: B-real, F-real, sparse guarded formula-unreal, F-automaton-unreal.
+- `otf_taa_real_lazy`: B-real, F-real, F-automaton-unreal, lazy TAA real.
+- `otf_taa_real_eager`: the otherwise identical eager TAA control.
+
+The TAA mixtures now test the TAA addition separately from replacing the
+remaining unreal worker with guarded solving. Their fresh gates must establish
+whether the retained old worker preserves the wider mainline coverage. The
+initial both-guarded and guarded-plus-TAA recipes remain recorded with their
+failures; they are not silently relabelled as these revised configurations.
+All presets remain outside the shipping group. Solver C++ code is unchanged
+from `e7061657`; the next freeze contains configuration, runner, and reporting
+changes. The existing diagnostic and earlier performance binaries are retained.

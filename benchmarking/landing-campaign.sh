@@ -7,6 +7,7 @@ candidate_bin=
 timeout=17
 output=
 tlsf_corpus=
+scope_mode=campaign
 declare -a suites=()
 declare -a lists=()
 
@@ -16,6 +17,7 @@ usage: benchmarking/landing-campaign.sh \
   --baseline-bin PATH --candidate-bin PATH \
   --suite NAME --list PATH [--suite NAME --list PATH ...] \
   --timeout SECONDS --output DIR [--tlsf-corpus DIR]
+  [--scope-mode campaign|instance]
 
 --tlsf-corpus names the directory written by benchmarking/syntcomp-corpus.py
 materialize.  A suite with a tlsf-sources.tsv is run through it: syntcomp25 and
@@ -23,6 +25,11 @@ syntcomp26 are reconstructed from the TLSF submodule and 77 of 180 and 180 of
 180 of their panel rows respectively have no .ltl pair to fall back on.  It
 defaults to $ACACIA_TLSF_CORPUS, the candidate build's acacia_tlsf_corpus_dir
 option, then the recorded corpus.
+
+--scope-mode instance keeps the driver outside each solver's 8 GiB scope, so
+a solver OOM cannot terminate the remaining panel. The default campaign mode
+retains the original shared scope. Use a fresh output directory when changing
+scope modes; comparisons must use the same mode for both binaries.
 EOF
 }
 
@@ -31,6 +38,7 @@ while (( $# )); do
     --baseline-bin) baseline_bin=${2:?}; shift 2 ;;
     --candidate-bin) candidate_bin=${2:?}; shift 2 ;;
     --tlsf-corpus) tlsf_corpus=${2:?}; shift 2 ;;
+    --scope-mode) scope_mode=${2:?}; shift 2 ;;
     --suite) suites+=("${2:?}"); shift 2 ;;
     --list) lists+=("${2:?}"); shift 2 ;;
     --timeout) timeout=${2:?}; shift 2 ;;
@@ -45,6 +53,16 @@ if [[ -z $baseline_bin || -z $candidate_bin || -z $output || ${#suites[@]} -eq 0
   usage >&2
   exit 2
 fi
+case "$scope_mode" in
+  campaign) ;;
+  instance)
+    if [[ ${ACACIA_OUTER_CGROUP:-0} == 1 ]]; then
+      echo '--scope-mode instance must run outside an existing campaign scope' >&2
+      exit 2
+    fi
+    ;;
+  *) echo '--scope-mode must be campaign or instance' >&2; exit 2 ;;
+esac
 if [[ ! $timeout =~ ^[0-9]+([.][0-9]+)?$ ]] ||
    ! awk -v value="$timeout" 'BEGIN { exit !(value > 0) }'; then
   printf '%s\n' '--timeout must be positive' >&2
@@ -63,6 +81,17 @@ print(tlsf_corpus_dir(explicit=sys.argv[2], build_dir=pathlib.Path(sys.argv[3]).
 ' "$repo_root/benchmarking" "$tlsf_corpus" "$candidate_bin")
 output=$(realpath -m "$output")
 mkdir -p "$output"
+if [[ -f $output/meta.txt ]]; then
+  previous_scope_mode=$(sed -n 's/^scope_mode=//p' "$output/meta.txt")
+  previous_scope_mode=${previous_scope_mode:-campaign}
+  if [[ $previous_scope_mode != "$scope_mode" ]]; then
+    echo 'cannot resume with a different scope mode; use a fresh output directory' >&2
+    exit 2
+  fi
+elif [[ $scope_mode == instance ]] && compgen -G "$output/*.csv" >/dev/null; then
+  echo 'cannot resume CSVs without scope provenance in instance mode; use a fresh output directory' >&2
+  exit 2
+fi
 
 gate_complete=0
 campaign_started=0
@@ -113,11 +142,12 @@ fi
 
 # Put the complete campaign in one bounded scope.  Child tools see the marker
 # and create process groups only, avoiding nested per-instance systemd scopes.
-if [[ ${ACACIA_OUTER_CGROUP:-0} != 1 ]]; then
+if [[ $scope_mode == campaign && ${ACACIA_OUTER_CGROUP:-0} != 1 ]]; then
   scope_command=(
     systemd-run --user --scope --unit=acacia-landing-campaign-$$ -p MemoryMax=8G -p MemorySwapMax=0
     env ACACIA_OUTER_CGROUP=1 "$0"
     --baseline-bin "$baseline_bin" --candidate-bin "$candidate_bin"
+    --scope-mode "$scope_mode"
   )
   for i in "${!suites[@]}"; do
     scope_command+=(--suite "${suites[$i]}" --list "${lists[$i]}")
@@ -171,6 +201,7 @@ meta_tmp="$output/meta.txt.tmp"
   printf 'candidate_posets_revision=%s\n' "$(git_value "$candidate_bin" HEAD:subprojects/posets)"
   printf 'candidate_tlsf_tools_revision=%s\n' "$(git_value "$candidate_bin" HEAD:subprojects/tlsf-tools)"
   printf 'tlsf_corpus=%s\n' "${tlsf_corpus:-none}"
+  printf 'scope_mode=%s\n' "$scope_mode"
   printf '\n[baseline meson options]\n'
   build_options "$baseline_bin"
   printf '\n[candidate meson options]\n'
@@ -226,7 +257,11 @@ run_side () {
   source_map="$(dirname "$list")/sources.tsv"
   tlsf_map=$(suite_tlsf_map "$list")
   rm -f "$tmp"
-  local -a source_args
+  local -a source_args scope_args
+  scope_args=()
+  if [[ $scope_mode == instance ]]; then
+    scope_args=(--systemd-scope --memory-max 8G --memory-swap-max 0)
+  fi
   if [[ -n $tlsf_map ]]; then
     source_args=(--tlsf-map "$tlsf_map" --tlsf-corpus "$tlsf_corpus")
   elif [[ -f $source_map ]]; then
@@ -236,6 +271,7 @@ run_side () {
   fi
   python3 "$repo_root/benchmarking/run-subset.py" \
     --bin "$binary" "${source_args[@]}" \
+    "${scope_args[@]}" \
     --list "$list" --timeout "$timeout" --csv "$tmp"
   mv "$tmp" "$csv"
 }

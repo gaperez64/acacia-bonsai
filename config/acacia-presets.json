@@ -349,6 +349,18 @@
       "inherits": "otf_contradiction",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:spot-guarded-sparse"
     },
+    "otf_sparse_automaton": {
+      "description": "Retain backward and forward realizability and forward formula-unreal solving, adding a sparse guarded automaton-unreal worker.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:spot-guarded-sparse"
+    },
+    "otf_sparse_formula": {
+      "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a sparse guarded formula-unreal worker.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
+    },
     "otf_taa_lazy": {
       "description": "Candidate four-worker portfolio retaining backward and forward realizability, with sparse guarded formula-unreal and lazy TAA realizability workers.",
       "role": "sweep",
@@ -360,6 +372,18 @@
       "role": "sweep",
       "inherits": "otf_taa_lazy",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,real:small:spot-guarded:spot-eager"
+    },
+    "otf_taa_real_lazy": {
+      "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a lazy TAA realizability worker.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_arms": "real:small:backward,real:small:forward,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
+    },
+    "otf_taa_real_eager": {
+      "description": "Same-construction eager control for the TAA-real portfolio that retains the existing forward automaton-unreal worker.",
+      "role": "sweep",
+      "inherits": "otf_taa_real_lazy",
+      "default_arms": "real:small:backward,real:small:forward,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
     },
     "otf_semantic": {
       "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona components and unchanged default arm selection.",
