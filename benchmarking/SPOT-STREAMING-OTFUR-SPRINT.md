@@ -11,7 +11,9 @@ Latest gates (22:39 UTC): both sparse-only configurations pass the frozen and
 but fail both panels on fast backward-real cases. They remain research controls,
 not shipping-default candidates. Their earlier 27/51 (lazy) and 28/51 (eager)
 selection scores, versus main's 21/51, did not transfer without losses.
-Labelled correctness and the full 1,524-case comparison remain outstanding.
+Labelled correctness and targeted regression repetitions are complete. The
+full 1,524-case comparison is now running with four frozen mainline builds,
+two sparse default candidates, and two explicitly ineligible TAA research controls.
 
 ## Scope and baseline
 
@@ -48,10 +50,10 @@ was a debug build without native TLSF and is historical evidence only.
 - [x] Restore P7 and freeze/rebuild current mainline shipping baselines.
 - [x] Finish provider selection, native worker capture, and sparse frozen control.
 - [x] Validate real/formula-unreal eager/lazy transformations and all certificate paths.
-- [ ] Run unit/config/version, native TLSF, labelled, frozen, and sanitizer checks.
+- [x] Run unit/config/version, native TLSF, labelled, frozen, and sanitizer checks.
 - [x] Finish C0/C1 demand, C3/C3s, and real-worker/formula-unreal C4/C5 experiments.
 - [x] Compare isolated candidate arms on discovery and family-held-out cohorts.
-- [ ] Select and validate candidate portfolios within four children.
+- [x] Select candidate portfolios within four children and record gate eligibility.
 - [ ] Run the final full-corpus comparison against all current shipping configurations.
 - [ ] Publish per-instance results, losses, conflicts, PAR-2, CPU/memory, and decisions.
 
@@ -741,3 +743,42 @@ show why limiting reached rank nodes cannot guarantee time for the old solver:
 construction, enumeration, and individual row/query operations are not bounded
 by that count. The sprint retains the specified four-worker limit and does not
 start a new timeout/fallback architecture to rescue these configurations.
+
+### Labelled gates and the closing comparison
+
+All four selected configurations completed the existing 624-case labelled
+suite at its 30-second limit, sequentially with 8 GiB and zero swap. The
+repository permits timeouts here, but requires zero failures.
+
+| Configuration | OK | Timeout | UNKNOWN failures | G4 |
+|---|---:|---:|---:|---|
+| sparse automaton | 575 | 49 | 0 | PASS |
+| sparse formula | 575 | 49 | 0 | PASS |
+| formula + lazy TAA fallback | 574 | 47 | 3 | FAIL |
+| formula + eager TAA fallback | 573 | 48 | 3 | FAIL |
+
+The three UNKNOWN failures are identical for both TAA mixtures:
+`ltl2dba_R_10`, `ltl2dba_R_12`, and `round_robin_arbiter_unreal2_5`.
+Matched main invocations, using the exact generated harness inputs and flags,
+time out at 30 seconds on all three. There is no false-positive or false-negative
+marker. The failed TAA gates remain recorded rather than being relabelled as
+passes because main also returns no answer. Raw results and matched commands
+are in `g4-selected` under the run directory.
+
+Three alternating rounds on the original LTL regression inputs are also
+complete: all four new configurations answer all three cases in every round.
+Main answers load-balancer25 and infinite-race-u4 in all three rounds, but
+times out on Morning in all three. The sparse automaton mixture answers
+Morning in 4.181–4.362 seconds and sparse formula in 3.394–3.505 seconds.
+No old main answer is lost. These 45 invocations preserve the original G1
+input route and remain separate from the native full-corpus experiment.
+
+`closing-admission.json` freezes inclusion and eligibility. The two sparse
+configurations have passed the required candidate gates. The TAA mixtures
+enter the full measurement as research controls, with both their panel and
+labelled failures recorded and default promotion excluded. All four mainline
+shipping binaries are included with unchanged options. Every configuration
+uses its compiled defaults, no arm or budget override, a single 17-second cap,
+8 GiB, zero swap, and resource accounting on the same 1,524 native TLSF inputs.
+Each completed configuration's journal accounting is saved before the next
+campaign, with source, raw-result, journal, and binary hashes.
