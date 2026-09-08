@@ -1,0 +1,210 @@
+{
+  "checked_at_utc": "2026-09-08T04:41:11.649641+00:00",
+  "decision": "Retain archived results as historical evidence; use fresh matched release baselines for the current OTF comparison.",
+  "archived": {
+    "contradiction": {
+      "path": "_bm-logs.three-way-full-20260905/mix4_contra-summary.tsv",
+      "sha256": "5bb5ab87529b0307e2625ed290fbd25259145075a9e06fdd11165cf35c8dc142",
+      "rows": 1524,
+      "answer_counts": {
+        "REALIZABLE": 501,
+        "INCONCLUSIVE": 461,
+        "UNREALIZABLE": 562
+      },
+      "smallest_cap_counts": {
+        "1": 939,
+        "5": 69,
+        "INCONCLUSIVE": 461,
+        "17": 55
+      }
+    },
+    "bboxtree": {
+      "path": "_bm-logs.three-way-full-20260905/mix4_bboxtree-summary.tsv",
+      "sha256": "47c0fd17a6db548ce67dc4595d821adb6ef735d2de00a316c2d026b598d4ede3",
+      "rows": 1524,
+      "answer_counts": {
+        "REALIZABLE": 502,
+        "INCONCLUSIVE": 483,
+        "UNREALIZABLE": 539
+      },
+      "smallest_cap_counts": {
+        "1": 912,
+        "5": 73,
+        "INCONCLUSIVE": 483,
+        "17": 56
+      }
+    },
+    "semantic": {
+      "path": "_bm-logs.three-way-full-20260905/inc_semantic_B-summary.tsv",
+      "sha256": "5c63671543ba07d6fc7541b922e09bc63820e45208f56482c179fc56e652551c",
+      "rows": 1524,
+      "answer_counts": {
+        "REALIZABLE": 496,
+        "INCONCLUSIVE": 548,
+        "UNREALIZABLE": 480
+      },
+      "smallest_cap_counts": {
+        "1": 880,
+        "5": 60,
+        "INCONCLUSIVE": 548,
+        "17": 36
+      }
+    },
+    "mona_any": {
+      "path": "_bm-logs.three-way-full-20260905/inc_mona_any-summary.tsv",
+      "sha256": "ded2c89662ba7a294a6c2bee77418943f293ec285c92150df04a1b2e358b11e1",
+      "rows": 1524,
+      "answer_counts": {
+        "REALIZABLE": 494,
+        "INCONCLUSIVE": 563,
+        "UNREALIZABLE": 467
+      },
+      "smallest_cap_counts": {
+        "1": 867,
+        "5": 61,
+        "INCONCLUSIVE": 563,
+        "17": 33
+      }
+    }
+  },
+  "preserved_build_evidence": {
+    "build_p5_B": {
+      "build_options_path": "build_p5_B/meson-info/intro-buildoptions.json",
+      "build_options_sha256": "5f990ee06822e0a71b77dd6064d879142c18413bc834e92012666c52b74552a1",
+      "compile_commands_sha256": "430d12f01d8fc55a69522e4ad3e3d8a7a45b46f49e59e65954d2954f71b2397d",
+      "build_options": {
+        "buildtype": "debug",
+        "optimization": "0",
+        "b_lto": false,
+        "b_ndebug": "if-release"
+      },
+      "solver_invoker_flags": [
+        "-O0",
+        "-g"
+      ]
+    },
+    "build_cs_mix_contra": {
+      "build_options_path": "build_cs_mix_contra/meson-info/intro-buildoptions.json",
+      "build_options_sha256": "c02571e62bf903a37841b375455049d574f8ed3edf59da02ce6770499444fe00",
+      "compile_commands_sha256": "e9b0de90e6533670c27af7d1e34e85cd7d64acb089473d6879b6a97b6ed47cda",
+      "build_options": {
+        "buildtype": "debug",
+        "optimization": "0",
+        "b_lto": false,
+        "b_ndebug": "if-release"
+      },
+      "solver_invoker_flags": [
+        "-O0",
+        "-g"
+      ]
+    },
+    "build_cs_mix_bbox": {
+      "build_options_path": "build_cs_mix_bbox/meson-info/intro-buildoptions.json",
+      "build_options_sha256": "a163dab90faae066ef91600f3cddda7b065771484c9ff21439af09c69d7410ed",
+      "compile_commands_sha256": "ee1d17bb4d868bce9b101ca1cf8e6293ed179a82a3dd3c9eccf2e35b414454db",
+      "build_options": {
+        "buildtype": "debug",
+        "optimization": "0",
+        "b_lto": false,
+        "b_ndebug": "if-release"
+      },
+      "solver_invoker_flags": [
+        "-O0",
+        "-g"
+      ]
+    },
+    "build_cs_inc_any": {
+      "build_options_path": "build_cs_inc_any/meson-info/intro-buildoptions.json",
+      "build_options_sha256": "975bbfa651dafdf0350733471844e954047e8ee53a86382c9a8139e09f9b7d58",
+      "compile_commands_sha256": "b4673a0135b0e8f6fee821cfa58261f1c9ff083dcf3b12dc54b80648a72e7751",
+      "build_options": {
+        "buildtype": "debug",
+        "optimization": "0",
+        "b_lto": false,
+        "b_ndebug": "if-release"
+      },
+      "solver_invoker_flags": [
+        "-O0",
+        "-g"
+      ]
+    }
+  },
+  "fresh_contradiction": {
+    "path": "_bm-logs.spot-otf-20260907/full-closing/main-best_four_arm_contradiction.tsv",
+    "sha256": "d8d02d2558f68c9b209a000b4ac8411a8331645993024a95f52375115dd09699",
+    "source_sha": "1c028f13490862bfdbed5256d0e2404ee4d74355",
+    "answer_counts": {
+      "REALIZABLE": 533,
+      "TIMEOUT": 398,
+      "UNREALIZABLE": 590,
+      "UNKNOWN": 1,
+      "MEMOUT": 2
+    },
+    "gains_over_archived": [
+      "05.ltl",
+      "06.ltl",
+      "amba_case_study_pb_2_pe_.ltl",
+      "amba_decomposed_arbiter_pb_5_pe_.ltl",
+      "amba_decomposed_arbiter_pb_6_pe_.ltl",
+      "arbiter_with_cancel_pb_5_pe_.ltl",
+      "chain-simple-40-real.ltl",
+      "chain-simple-50-real.ltl",
+      "chain-simple-60-real.ltl",
+      "chain-simple-70-real.ltl",
+      "collector_v1_pb_7_pe_.ltl",
+      "collector_v1_pb_9_pe_.ltl",
+      "collector_v2_pb_10_pe_.ltl",
+      "collector_v2_pb_11_pe_.ltl",
+      "collector_v2_pb_12_pe_.ltl",
+      "collector_v2_pb_13_pe_.ltl",
+      "collector_v2_pb_15_pe_.ltl",
+      "collector_v2_pb_5_pe_.ltl",
+      "collector_v2_pb_7_pe_.ltl",
+      "collector_v2_pb_9_pe_.ltl",
+      "collector_v3_pb_7_pe_.ltl",
+      "evasion0.ltl",
+      "g-unreal-110.ltl",
+      "g-unreal-111.ltl",
+      "g-unreal-112.ltl",
+      "g-unreal-113.ltl",
+      "g-unreal-114.ltl",
+      "g-unreal-19.ltl",
+      "g-unreal-33.ltl",
+      "g-unreal-35.ltl",
+      "g-unreal-36.ltl",
+      "generalized_buffer_pb_5_pe_.ltl",
+      "heim-double-x10.ltl",
+      "heim-double-x11.ltl",
+      "heim-double-x12.ltl",
+      "heim-double-x13.ltl",
+      "heim-double-x9.ltl",
+      "infinite-race-u10.ltl",
+      "infinite-race-u6.ltl",
+      "infinite-race-u7.ltl",
+      "infinite-race-u8.ltl",
+      "infinite-race-unequal-24.ltl",
+      "lift_gr1+_pb_3_pe_.ltl",
+      "lift_unary_enc_pb_4_pe_.ltl",
+      "load_balancer_pb_6_pe_.ltl",
+      "load_balancer_pb_7_pe_.ltl",
+      "ltl2dpa22.ltl",
+      "prioritized_arbiter_pb_6_pe_.ltl",
+      "reversible-lane-u-unreal.ltl",
+      "reversible-lane-u1.ltl",
+      "robot-grid-reach-repeated-with-obstacles-2d-real.ltl",
+      "robot-resource-2d2.ltl",
+      "robot-resource-2d3.ltl",
+      "robot-to-target-charging0.ltl",
+      "round_robin_arbiter_pb_5_pe_.ltl",
+      "rw_arbiter_pb_3_pe_.ltl",
+      "simple_arbiter_with_hints_pb_6_pe_.ltl",
+      "square5x50.ltl",
+      "square5x51.ltl",
+      "square5x52.ltl"
+    ],
+    "losses_over_archived": [],
+    "conflicts": 0
+  },
+  "interpretation": "The archived selection summaries mix first successful caps 1/5/17 and do not carry binary hashes. The preserved selection builds use debug -O0 -g, no LTO; current main and new configurations use release -O3 plus -Ofast -march=native, LTO, NDEBUG. The fresh mainline control gains 60 answers before any OTF change. This audit does not isolate how much of the difference is due to compilation versus the other source/protocol differences.",
+  "unchanged_external_controls": "The archived ltlsynt and Acacia 1.x CSVs are retained without rerunning those tools."
+}

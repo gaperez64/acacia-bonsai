@@ -45,6 +45,22 @@ P7 was recovered without consuming stash
 `b37ba53f042b11cd7a991f1fc33e079f75f7fc7a` (`p7-verify`). Its old 43-test result
 was a debug build without native TLSF and is historical evidence only.
 
+The earlier local CSVs were audited for reuse during the closing run. The
+preserved selection builds (`build_cs_mix_contra`, `build_cs_mix_bbox`,
+`build_cs_inc_any`) and the old semantic reference (`build_p5_B`) compile the
+solver at `-O0 -g`, without LTO. The current mainline and OTF builds use the
+same optimized release profile. The archived selection tables also combine
+the first successful result from caps 1/5/17 rather than measuring each input
+once at 17 seconds. Most decisively, the fresh mainline contradiction control
+answers 1,123 cases versus the archive's 1,063: 60 gains, no losses, and no
+opposite verdicts, before adding any OTF work. Those gains cannot be credited
+to the candidate. The archived CSVs remain historical evidence, while the
+closing decision uses matched release baselines. The audit and per-instance
+differences are in [`spot-otf-baseline-reuse-audit.json`](spot-otf-baseline-reuse-audit.json).
+This audit does not isolate compilation from all source/protocol differences.
+The archived external `ltlsynt` and Acacia 1.x measurements are preserved;
+neither external tool is rerun for this sprint.
+
 ## Completion checklist
 
 - [x] Restore P7 and freeze/rebuild current mainline shipping baselines.
