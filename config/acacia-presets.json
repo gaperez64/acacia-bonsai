@@ -320,7 +320,7 @@
     },
     "best_four_arm_contradiction": {
       "description": "Ship backward and forward realizability arms plus formula and automaton forward unrealizability arms, re-enabling exact equivariant solving and adding forced-output contradiction checks to the F reference.",
-      "role": "shipping",
+      "role": "reference",
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "enable_equivariant_solver": true,
       "forced_output_contradiction": true,
@@ -357,7 +357,7 @@
     },
     "otf_sparse_formula": {
       "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a sparse guarded formula-unreal worker.",
-      "role": "sweep",
+      "role": "shipping",
       "inherits": "otf_contradiction",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
     },
@@ -485,7 +485,7 @@
   },
   "groups": {
     "docker_default": [
-      "best_four_arm_contradiction",
+      "otf_sparse_formula",
       "best_decomp_rank_bucketed_semantic_mona",
       "best_four_arm_bboxtree",
       "best_decomp_mona_any"

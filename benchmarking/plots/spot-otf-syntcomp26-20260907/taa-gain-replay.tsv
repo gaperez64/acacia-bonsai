@@ -1,0 +1,7 @@
+instance	formula_sha256	k	equivalence	wrapper_requested	wrapper_total	wrapper_ratio	underlying_requested	underlying_total	underlying_ratio
+amba_decomposed_encode_pb_20_pe_.ltl	27c890571a826c50eb6de5cd6f5d01414750e1525844b83e382df5f8fff44f3a	2	agree	53	78	0.6794871794871795	53	78	0.6794871794871795
+amba_decomposed_encode_pb_20_pe_.ltl	27c890571a826c50eb6de5cd6f5d01414750e1525844b83e382df5f8fff44f3a	5	agree	78	78	1.0	78	78	1.0
+amba_decomposed_lock_pb_15_pe_.ltl	3fa65a8011fdbac99a58e4ff25e5c71e697b28bcc91028d8b702d3fca6c34853	2	agree	65	66	0.9848484848484849	65	66	0.9848484848484849
+amba_decomposed_lock_pb_15_pe_.ltl	3fa65a8011fdbac99a58e4ff25e5c71e697b28bcc91028d8b702d3fca6c34853	5	agree	66	66	1.0	66	66	1.0
+amba_decomposed_lock_pb_16_pe_.ltl	95f29d0eb3624e00e3eff102dc993d31d43ae33a3c300a770b80e8d20374c068	2	agree	69	70	0.9857142857142858	69	70	0.9857142857142858
+amba_decomposed_lock_pb_16_pe_.ltl	95f29d0eb3624e00e3eff102dc993d31d43ae33a3c300a770b80e8d20374c068	5	agree	70	70	1.0	70	70	1.0

@@ -1,0 +1,34 @@
+{
+  "cap_seconds": 60,
+  "memory_max": "8G",
+  "memory_swap_max": "0",
+  "instances": [
+    "06.ltl",
+    "infinite-race-u10.ltl"
+  ],
+  "labels": [
+    "main-best_four_arm_contradiction",
+    "otf_sparse_automaton",
+    "otf_sparse_formula"
+  ],
+  "primary_losses": {
+    "otf_sparse_automaton": [
+      "06.ltl"
+    ],
+    "otf_sparse_formula": [
+      "06.ltl",
+      "infinite-race-u10.ltl"
+    ]
+  },
+  "manifest_sha256": "2dd562748ee493082c9651c637fafe1caa53858ba71994f5bfb7f74d2f2066cc",
+  "primary_sha256": {
+    "main-best_four_arm_contradiction": "d8d02d2558f68c9b209a000b4ac8411a8331645993024a95f52375115dd09699",
+    "otf_sparse_automaton": "f526934a454d67e3762cd623ded327c9d2082847843aea20f09582b98ea12723",
+    "otf_sparse_formula": "4d1b2ffa85cdd059fd1de732919a2f1f5d726ff272de2366ff9770febe075f29"
+  },
+  "source_sha256": {
+    "06.ltl": "c11ea2e2d94ee3c109b833df27de068ed8306e68a113e671ca3dad1f79b534dd",
+    "infinite-race-u10.ltl": "b600997ea4667bcd905f9ad07c3a10b2fb32470e1d944a7e50b36111257cee63"
+  },
+  "purpose": "Separate 60-second diagnosis of all primary losses from both eligible sparse presets. Actual compiled defaults, native TLSF, no diagnostic or budget environment override. No result replaces a 17-second primary or repetition result."
+}

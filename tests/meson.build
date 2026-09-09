@@ -168,8 +168,8 @@ test ('spot-letter-oracle', spot_letter_oracle_test,
       suite : ['unit', 'spot-letter-oracle'])
 
 # Not gated on acacia_spot_guarded_backend: the engine header compiles without
-# it, only the backend dispatch is gated.  CI builds the docker_default presets,
-# none of which set the option, so gating the test here would mean it never ran.
+# it, only the backend dispatch is gated, so the test runs in every build --
+# including the plain default one, where the backend itself is absent.
 spot_guarded_forward_safety_test = executable (
   'spot-guarded-forward-safety-test',
   'spot_guarded_forward_safety_test.cc',

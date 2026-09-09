@@ -1,19 +1,154 @@
 # Spot OTF sprint completion
 
-Status: implementation and core correctness checks are complete. Isolated
-discovery measurements, shipping-portfolio references, isolated held-out checks,
-portfolio selection, native worker accounting, and same-provider replay are
-complete. Production gates and the full closing comparison remain in progress.
-No default has been promoted.
+Status as of September 9: complete. Implementation, correctness checks,
+production gates, all eight full-corpus primary runs, three rounds of paired
+repetitions, gain attribution and loss diagnosis have finished. The shipping
+menu has been updated; see Decision.
 
-Latest gates (22:39 UTC): both sparse-only configurations pass the frozen and
-2025/2026 panel gates. Both bounded TAA mixtures pass the frozen 40-case gate
-but fail both panels on fast backward-real cases. They remain research controls,
-not shipping-default candidates. Their earlier 27/51 (lazy) and 28/51 (eager)
-selection scores, versus main's 21/51, did not transfer without losses.
-Labelled correctness and targeted regression repetitions are complete. The
-full 1,524-case comparison is now running with four frozen mainline builds,
-two sparse default candidates, and two explicitly ineligible TAA research controls.
+The full-corpus result favors sparse symbolic-letter solving over the existing
+frozen Spot graph. The two eligible configurations answer 1,169 and 1,171 cases,
+versus 1,123 for the strongest mainline configuration. Both pass the frozen,
+labelled, and 2025/2026 panel gates. TAA lazy/eager mixtures answer 1,166/1,165,
+but lose fast backward-real cases and fail both panels and the labelled gate.
+They remain ineligible for shipping defaults. All primary runs agree wherever
+they return a decisive verdict.
+
+## Decision
+
+| hypothesis / candidate | verdict |
+|---|---|
+| H-Letters, symbolic letters over the frozen Spot graph | **LAND — one guarded unreal arm** |
+| Frozen-graph guarded solving in a *real* arm | **STOP** — no new answers on either cohort |
+| Guarded solving on *both* unreal reductions | **STOP** — loses cases both old arms answer |
+| H-Generation, TAA lazy/eager mixtures | **NOT ADMITTED** — G3 and G4 |
+| P2/P3/P5/P6 research tooling | **KEEP RESEARCH TOOLING** |
+
+`docker_default` now reads `otf_sparse_formula`,
+`best_decomp_rank_bucketed_semantic_mona`, `best_four_arm_bboxtree`,
+`best_decomp_mona_any`. `best_four_arm_contradiction` leaves the shipping group
+and becomes a `reference` preset; it is not deleted and its measurements stand.
+
+### The gain is the guarded unreal arm, measured rather than inferred
+
+The attribution stage re-ran every answer new to all four shipping
+configurations with each worker isolated, using
+`--arms unreal:<transform>:spot-guarded-sparse --candidate-mode only` against
+main's corresponding arm. 383 jobs over 50 instances:
+
+| isolated worker | decides |
+|---|---:|
+| sparse guarded formula-unreal | **46** |
+| sparse guarded automaton-unreal | 43 |
+| main forward automaton-unreal | 4 |
+| main forward formula-unreal | 3 |
+| main backward real | **0** |
+| main forward real | **0** |
+
+An isolated arm decides slightly more than the same arm inside a four-child
+race (46 against 44), which is expected: the race shares one machine between
+four children. The direction is what matters. None of the new coverage comes
+from the real workers, which is consistent with REAL staying at exactly 533 for
+both candidates and with the guarded real controls adding no answer on either
+cohort.
+
+### Both primary losses are cap-boundary, not capability
+
+The separate 60-second diagnosis, which never replaces a 17-second result:
+
+| instance | main | `otf_sparse_automaton` | `otf_sparse_formula` |
+|---|---|---|---|
+| `06.ltl` | REALIZABLE 18.978 | REALIZABLE 17.341 | REALIZABLE 17.641 |
+| `infinite-race-u10.ltl` | UNREALIZABLE 12.976 | UNREALIZABLE 12.635 | UNREALIZABLE 17.948 |
+
+All three solve `06.ltl` just past the cap, and both candidates are faster than
+main there. Its 17-second primary answer for main did not reproduce: main
+timed out on it in all three repetition rounds, so the recorded 16.991 s was
+itself a boundary result. `infinite-race-u10.ltl` is a real sparse-formula
+regression at 17 seconds and is retained as one.
+
+### Why this menu
+
+Slots are chosen by marginal contribution against the rest of the menu, not by
+union size, because `scripts/acacia-bonsai.sh` runs one user-selected
+configuration. Union of `{semantic MONA, bboxtree, MONA/any}` is 1,111.
+
+| slot | configuration | individual | marginal | why |
+|---|---|---:|---:|---|
+| 1 | `otf_sparse_formula` | **1,171** | **+66** | best measured; the guarded unreal arm |
+| 2 | `best_decomp_rank_bucketed_semantic_mona` | 1,058 | — | strongest backward configuration |
+| 3 | `best_four_arm_bboxtree` | 1,102 | — | a different downset, so a different failure mode |
+| 4 | `best_decomp_mona_any` | 1,046 | — | the retained pre-sprint shape |
+
+Resulting union 1,177, against 1,133 today: **+44 answers, zero union losses**.
+`otf_sparse_automaton` contributes +64 and would give 1,175; the two differ only
+in which unreal reduction is guarded.
+
+Keeping slot 3 is load-bearing rather than decorative. `best_four_arm_bboxtree`
+is the only retained member that answers `infinite-race-u10.ltl`, the arriving
+preset's one reproducible loss, and the two MONA members are what answer
+`06.ltl`. A menu chosen purely to maximise the union would have scored 1,179 and
+dropped this slot.
+
+
+## Full-corpus primary results
+
+Each row is an actual invocation of a configuration's compiled defaults on all
+1,524 SYNTCOMP26 logical inputs, once at 17 seconds with 8 GiB and zero swap.
+Gains and losses are relative to mainline `best_four_arm_contradiction`.
+These single-pass outcomes stay fixed; paired repetitions supplement them.
+
+| Configuration | Answered | REAL | UNREAL | Gains / losses | PAR-2 seconds | New to all four main configs | Default eligibility |
+|---|---:|---:|---:|---:|---:|---:|---|
+| main contradiction | 1,123 | 533 | 590 | 0 / 0 | 14,254.294 | 0 | Existing |
+| main semantic MONA | 1,058 | 515 | 543 | 7 / 72 | 16,529.239 | 0 | Existing |
+| main bboxtree | 1,102 | 533 | 569 | 2 / 23 | 15,029.815 | 0 | Existing |
+| main MONA/any | 1,046 | 515 | 531 | 8 / 85 | 16,996.803 | 0 | Existing |
+| `otf_sparse_automaton` | 1,169 | 533 | 636 | 47 / 1 | 12,748.359 | 42 | Gates passed; repetitions pending |
+| `otf_sparse_formula` | 1,171 | 533 | 638 | 50 / 2 | 12,736.344 | 44 | Gates passed; repetitions pending |
+| `otf_mix_formula_lazy` | 1,166 | 527 | 639 | 55 / 12 | 12,936.877 | 49 | NOT ADMITTED: G3/G4 |
+| `otf_mix_formula_eager` | 1,165 | 527 | 638 | 54 / 12 | 12,959.725 | 48 | NOT ADMITTED: G3/G4 |
+
+Both sparse candidates miss `06.ltl`, which main answers at 16.991 seconds.
+The formula candidate additionally misses `infinite-race-u10.ltl`, which main
+answers at 13.280 seconds. Every primary loss is retained in the comparison;
+the separate 60-second diagnosis will not change either score. The 12 losses
+shared by both TAA mixtures include ten additional real regressions and this
+same unreal loss. Their 19/16 memory-limit outcomes also exceed the two in
+each sparse configuration and the main contradiction control.
+
+The four existing shipping configurations jointly answer 1,133 distinct cases.
+Replacing only contradiction with sparse formula would raise that union to
+1,177 with zero union losses. Across the six eligible measured configurations,
+the largest four-member union is 1,179: both sparse presets plus semantic MONA
+and MONA/any, gaining 46 cases and retaining all 1,133 old answers. This is
+the union of separately selectable configurations, not a measured combined
+race or a claim about running their workers simultaneously. Repetition stability
+and attribution still need review before selecting the shipping menu.
+
+The frozen repetition plan covers 259 distinct instances, 3,104 selected
+baseline/candidate comparisons, and 5,412 actual invocations over three rounds.
+It includes coverage changes, decisive near-cap runs, major timing changes,
+and previously exposed panel/selection observations. Round 1 is complete and
+round 2 is in progress. The planned diagnostics capture every primary answer
+absent from all four main configurations, isolate the relevant old and new
+workers, and replay the TAA construction behind its new real answers with
+identical eager/lazy options.
+
+Raw primary results, hashes, the repetition plan, and the descriptive menu
+comparison are preserved in `_bm-logs.spot-otf-20260907/full-closing/`,
+`full-closing-manifest.json`, `closing-repetitions/plan.json`, and
+`primary-review.json`. The final annotated tables and plots are generated after
+the timed campaign finishes.
+
+The initial primary driver exited unexpectedly during bboxtree on September 8.
+All 4,410 completed rows were preserved and verified unchanged on resume. Its
+last unrecorded invocation survived the driver and eventually hit the memory
+limit; that orphan has no primary TSV row and is excluded from the scores.
+The missing bboxtree invocation was rerun at the original 17-second cap, then
+the remaining primary jobs continued under a user systemd service. The incident,
+original CSV prefixes, and orphan's journal are retained under
+`interruption-20260908-0710/`. Completed results were neither discarded nor
+replaced with the best observed repetition.
 
 ## Scope and baseline
 
@@ -70,8 +205,9 @@ neither external tool is rerun for this sprint.
 - [x] Finish C0/C1 demand, C3/C3s, and real-worker/formula-unreal C4/C5 experiments.
 - [x] Compare isolated candidate arms on discovery and family-held-out cohorts.
 - [x] Select candidate portfolios within four children and record gate eligibility.
-- [ ] Run the final full-corpus comparison against all current shipping configurations.
-- [ ] Publish per-instance results, losses, conflicts, PAR-2, CPU/memory, and decisions.
+- [x] Run the final full-corpus comparison against all current shipping configurations.
+- [x] Finish paired repetitions, primary-gain attribution, and targeted loss diagnosis.
+- [x] Publish per-instance results, losses, conflicts, PAR-2, CPU/memory, and decisions.
 
 ## Protocol
 
@@ -88,8 +224,9 @@ top-level unrealizability answers without the existing worker reduction.
 
 Each hypothesis will receive LAND DEFAULT-OFF ARM / KEEP RESEARCH TOOLING /
 STOP / NOT ADMITTED, followed by a separate recommendation about the measured
-default configuration. Admission decisions remain pending until the measurements
-and gates finish.
+default configuration. The sparse candidates have passed the admission gates;
+shipping selection remains pending until the repetitions and attribution finish.
+Both TAA mixtures are excluded from default promotion by their G3/G4 failures.
 
 ## P7 integration
 

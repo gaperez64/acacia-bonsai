@@ -1,0 +1,76 @@
+{
+  "presets": [
+    "otf_sparse_automaton",
+    "otf_sparse_formula",
+    "otf_mix_formula_lazy",
+    "otf_mix_formula_eager"
+  ],
+  "roles": {
+    "otf_sparse_automaton": {
+      "role": "default-candidate",
+      "default_eligible": true,
+      "g1": "PASS",
+      "g3": "PASS",
+      "g4": "PASS: only allowed timeouts",
+      "labelled_counts": {
+        "OK": 575,
+        "TIMEOUT": 49
+      }
+    },
+    "otf_sparse_formula": {
+      "role": "default-candidate",
+      "default_eligible": true,
+      "g1": "PASS",
+      "g3": "PASS",
+      "g4": "PASS: only allowed timeouts",
+      "labelled_counts": {
+        "OK": 575,
+        "TIMEOUT": 49
+      }
+    },
+    "otf_mix_formula_lazy": {
+      "role": "research-control",
+      "default_eligible": false,
+      "g1": "PASS",
+      "g3": "FAIL: fast-main real coverage losses",
+      "g4": "FAIL: three UNKNOWN outcomes; matched main timed out on all three",
+      "labelled_counts": {
+        "OK": 574,
+        "TIMEOUT": 47,
+        "FAIL": 3
+      }
+    },
+    "otf_mix_formula_eager": {
+      "role": "research-control",
+      "default_eligible": false,
+      "g1": "PASS",
+      "g3": "FAIL: fast-main real coverage losses",
+      "g4": "FAIL: three UNKNOWN outcomes; matched main timed out on all three",
+      "labelled_counts": {
+        "OK": 573,
+        "TIMEOUT": 48,
+        "FAIL": 3
+      }
+    }
+  },
+  "rationale": "Run the final comparison against all four frozen mainline shipping configurations. Both sparse configurations passed unit, frozen, native panel, and labelled gates and may be considered for defaults after full coverage and repetitions. Both TAA mixtures remain research controls: their five fast-main real panel losses and three labelled UNKNOWN failures prohibit default promotion. Their full results quantify the reach and costs of the alternate TAA construction without waiving either failed gate.",
+  "protocol": {
+    "instances": 1524,
+    "cap_seconds": 17,
+    "memory_max": "8G",
+    "memory_swap_max": "0",
+    "collect_rusage": true,
+    "sequential": true,
+    "flags": ""
+  },
+  "evidence_sha256": {
+    "selected-builds.json": "e6091e1dba9be246d753c1d21e6599a78633f631cd1575f5bb6124c37f127489",
+    "final-selection.json": "d16403c1d0de1915c774360fd08933ad0d8b098f383fff15d89121f6ea61bd20",
+    "g1-selected-status.json": "8b9ff447e4bc7422820b67e3aca810e6f5c938add55453b39fe6a787755e0600",
+    "g3-selected-status.json": "83766ffd5c229d3fce99888396582368309c46c2a714beb393d7b6cb5e0f56ce",
+    "g4-selected/results.json": "22751bcf31898d2cc5232ae0b5fda1226c191db99e26a196e5395ebf0a796ac0",
+    "g4-selected/main-matched-failures.json": "888809bc9388ae2e2da56435be5977bc549b2077f15a4e616d58ab1df8819ccf",
+    "g1-tradeoff-repetitions/results.csv": "2c4844189ba3d0930652373640dd818cb75965448e21bcedc0a02c130d981556",
+    "adaptive-selection-closed.json": "8e8b2e125944c0b9a1fe56365d9c99cdf5906fd9f1e6ace942ba13189e789d19"
+  }
+}
