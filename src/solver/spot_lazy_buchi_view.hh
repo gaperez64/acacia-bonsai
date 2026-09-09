@@ -1,6 +1,6 @@
 #pragma once
 
-// P5, otf.md 8.4: one acceptance obligation per transition, never skip levels.
+// P5, OTF-AND-SPOT.md handoff 8.4: one acceptance obligation per transition, never skip levels.
 // Use with SpotRows::GenericTransitionBuchi; initial rank and cursor are zero.
 #include "solver/spot_letter_oracle.hh"
 
@@ -285,7 +285,7 @@ namespace acacia::spot_lazy {
     }, limits);
   }
 
-  // Helper audit (pinned Spot, see benchmarking/SPOT-OTF-API-AUDIT.md):
+  // Helper audit (pinned Spot, see benchmarking/OTF-AND-SPOT.md):
   // acc predicates/equality inspect acc_code; ap/ap_vars/copy_ap_of/register_ap
   // inspect/register only AP metadata; graph::is_existential reads its storage
   // flag; state hash/compare/clone/destroy and release_iter manage local objects.
