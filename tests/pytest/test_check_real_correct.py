@@ -8,7 +8,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "benchmarking"))
-from suite_paths import resolve_instance
+from suite_paths import resolve_instance  # noqa: E402
 
 
 def run_fake(

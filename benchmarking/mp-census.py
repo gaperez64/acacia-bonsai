@@ -7,7 +7,10 @@ formula, so the census shows directly whether decomposition changes reach --
 an earlier measurement on undecomposed formulas accepted 2 of 300.
 """
 from __future__ import annotations
-import argparse, pathlib, subprocess, sys
+import argparse
+import pathlib
+import subprocess
+import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from benchlib import read_part            # noqa: E402
 from suite_paths import load_source_map   # noqa: E402
@@ -25,9 +28,10 @@ def main() -> int:
     args = p.parse_args()
 
     smap = load_source_map(pathlib.Path(args.source_map))
-    names = [l for raw in pathlib.Path(args.list).read_text().splitlines()
-             if (l := raw.strip()) and not l.startswith("#")]
-    out = pathlib.Path(args.out); out.parent.mkdir(parents=True, exist_ok=True)
+    names = [line for raw in pathlib.Path(args.list).read_text().splitlines()
+             if (line := raw.strip()) and not line.startswith("#")]
+    out = pathlib.Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
     header = False
     with out.open("w") as sink:
         for i, name in enumerate(names, 1):
@@ -47,10 +51,14 @@ def main() -> int:
                 done = subprocess.run(cmd, capture_output=True, text=True,
                                       timeout=args.timeout)
             except subprocess.TimeoutExpired:
-                print(f"TIMEOUT\t{name}", file=sink, flush=True); continue
+                print(f"TIMEOUT\t{name}", file=sink, flush=True)
+                continue
             if done.returncode != 0 or not done.stdout.strip():
-                print(f"ERROR\t{name}", file=sink, flush=True); continue
-            sink.write(done.stdout); sink.flush(); header = True
+                print(f"ERROR\t{name}", file=sink, flush=True)
+                continue
+            sink.write(done.stdout)
+            sink.flush()
+            header = True
             if i % 40 == 0:
                 print(f"# {i}/{len(names)}", file=sys.stderr, flush=True)
     return 0

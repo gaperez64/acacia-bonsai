@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import collections
 import csv
-import json
 import pathlib
 import sys
 

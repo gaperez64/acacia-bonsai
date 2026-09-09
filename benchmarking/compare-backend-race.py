@@ -122,7 +122,8 @@ def main() -> int:
         base_metrics, cand_metrics = score(base_rows, args.cap), score(cand_rows, args.cap)
     except (OSError, ValueError, KeyError) as error:
         parser.error(str(error))
-    group = lambda name: families[name] if families else family(name)
+    def group(name):
+        return families[name] if families else family(name)
     base = {n: (r["result"], r["seconds"]) for n, r in base_rows.items() if r["result"] in DECISIVE}
     cand = {n: (r["result"], r["seconds"]) for n, r in cand_rows.items() if r["result"] in DECISIVE}
 

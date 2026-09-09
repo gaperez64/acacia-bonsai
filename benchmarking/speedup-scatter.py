@@ -80,7 +80,7 @@ def main(argv=None):
                         textcoords="offset points", xytext=(-8, 8),
                         ha="right", fontsize=8, color="#1a9850")
     if lost:
-        ax.scatter([l[0] for l in lost], [l[1] for l in lost], s=95,
+        ax.scatter([pt[0] for pt in lost], [pt[1] for pt in lost], s=95,
                    marker="X", color="#d73027", edgecolors="black",
                    linewidths=0.5, zorder=4,
                    label=f"lost: only {args.baseline_label} solves ({len(lost)})")

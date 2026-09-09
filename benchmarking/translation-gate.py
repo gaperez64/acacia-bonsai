@@ -26,6 +26,8 @@ import pathlib
 import re
 import statistics
 
+from benchlib import SOLVED
+
 FORMS = ("S-current", "B-native", "G-native", "B-from-G", "S-from-G")
 
 
@@ -85,7 +87,8 @@ def main() -> int:
     for path in args.verdicts:
         for row in csv.DictReader(open(path)):
             verdict[row["instance"]] = row["result"]
-    solved = lambda name: verdict.get(name) in ("REALIZABLE", "UNREALIZABLE")
+    def solved(name):
+        return verdict.get(name) in SOLVED
 
     workers = load([pathlib.Path(p) for p in args.census])
     complete = {k: v for k, v in workers.items() if {"S-current", "B-native"} <= v.keys()}
@@ -116,7 +119,8 @@ def main() -> int:
                 action_blown += 1
 
     if not ratios:
-        print("no comparable workers"); return 1
+        print("no comparable workers")
+        return 1
 
     print("B-native / S-current counting-core ratio")
     print(f"  workers compared : {len(ratios)}")
