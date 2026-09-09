@@ -86,7 +86,7 @@ Environment:
   BENCHMARK_CGROUP_SCOPE=solver|meson    Cgroup each solver process or the whole Meson run (default: solver).
   BENCHMARK_CGROUP_MEMORY_MAX=MEMORY     Same as -m.
   BENCHMARK_CGROUP_SWAP_MAX=MEMORY       systemd MemorySwapMax value (default: 0).
-  BENCHMARK_COMPILE_PROFILE=normal|lowmem
+  BENCHMARK_COMPILE_PROFILE=normal|lowmem|checked
   BENCHMARK_COMPILE_JOBS=N               Meson compile parallelism (default: 1).
   BENCHMARK_TEST_JOBS=N                  Meson benchmark/test parallelism (default: 1).
 EOF
@@ -124,8 +124,18 @@ case $BENCHMARK_COMPILE_PROFILE in
         compile_args=(-j "$BENCHMARK_COMPILE_JOBS")
         echo "Using low-memory Meson compile profile, compile jobs $BENCHMARK_COMPILE_JOBS"
         ;;
+    checked)
+        ## Optimized, but still checked: the buildtype is not 'release', so the
+        ## project's b_ndebug=if-release leaves assert() enabled, and
+        ## _GLIBCXX_ASSERTIONS stays on. acacia_compiler_profile stays 'debug'
+        ## so none of -Ofast/-march=native/-DNDEBUG/-DNO_VERBOSE is added: the
+        ## binary is portable and still verbose. For correctness suites that are
+        ## too slow to run at -O0 but must keep their assertions.
+        setup_args=(--buildtype=debugoptimized -Ddebug=false -Db_lto=false -Dacacia_compiler_profile=debug)
+        echo "Using checked Meson compile profile (optimized, assertions kept)"
+        ;;
     *)
-        print -u2 "ERROR: BENCHMARK_COMPILE_PROFILE must be 'normal' or 'lowmem' (got '$BENCHMARK_COMPILE_PROFILE')."
+        print -u2 "ERROR: BENCHMARK_COMPILE_PROFILE must be 'normal', 'lowmem' or 'checked' (got '$BENCHMARK_COMPILE_PROFILE')."
         exit 2
         ;;
 esac
