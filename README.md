@@ -22,18 +22,20 @@ container so `-march=native` can target the host:
 docker pull ghcr.io/gaperez64/acacia-bonsai:latest
 docker run --name acacia -it ghcr.io/gaperez64/acacia-bonsai:latest
 ./scripts/compile.sh
-./scripts/acacia-bonsai.sh best_decomp_rank_bucketed_mona \
-  -f 'G F req -> G F grant' -i req -o grant
+./scripts/acacia-bonsai.sh -f 'G F req -> G F grant' -i req -o grant
+cat examples/realizable.tlsf | ./scripts/acacia-bonsai.sh --tlsf
 cat examples/realizable.tlsf | \
-  ./scripts/acacia-bonsai.sh best_decomp_rank_bucketed_mona --tlsf
-cat examples/realizable.tlsf | \
-  ./scripts/acacia-synthesis.sh best_decomp_rank_bucketed_mona --tlsf > controller.aag
+  ./scripts/acacia-synthesis.sh --tlsf > controller.aag
 ```
 
 The CLI example intentionally omits `--rm`: compilation happens inside the
 named container, so removing it on exit would discard the binaries. Re-enter
-it with `docker start -ai acacia`. Run the wrapper without arguments to list
-the configurations it accepts.
+it with `docker start -ai acacia`.
+
+The wrappers name no configuration, so they follow the `docker_default` group
+rather than pinning a preset that the group can outgrow. Pass a name as the
+first argument to choose a different shipped configuration, or run a wrapper
+without arguments to list the ones it accepts.
 
 # Dependencies
 
@@ -54,8 +56,9 @@ git submodule update --init
 This is deliberately non-recursive; Acacia disables TLSF-tools' optional
 OxiDD backend.
 
-Some of the tests also depend on:
-- Valgrind
+The corpus test driver (`tests/check-real-correct.sh`) can optionally run the
+solver under Valgrind (`-V`) or Callgrind (`-c`); no test does so by default,
+so Valgrind is only needed if you ask for it.
 
 ## Installing dependencies on macOS
 

@@ -1,0 +1,32 @@
+name: Install build packages
+description: >
+  Install the toolchain and build dependencies the C++ jobs need. Kept in one
+  place so the package list cannot drift between workflows.
+
+inputs:
+  extra:
+    description: Additional space-separated packages (e.g. swig graphviz for the Python job).
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Install packages
+      shell: bash
+      run: |
+        set -euo pipefail
+        # A third-party repo preinstalled on the runner (Chrome, Microsoft) can
+        # fail to refresh and take the whole step down with exit 100. apt says
+        # itself that it falls back to the previous indices, and the packages
+        # below come from the Ubuntu archive, so a partial refresh is not a
+        # reason to fail. The install that follows still is.
+        sudo apt update || echo "apt update reported errors; continuing with existing indices" >&2
+        # zsh: self-benchmark.sh is a zsh script.
+        # flex/bison: the native TLSF frontend's parser.
+        # libtool: provides libltdl, which Spot's dynamic loading needs.
+        sudo apt install -y zsh meson git g++-14 python-is-python3 \
+                            ninja-build wget python3-pip pkg-config \
+                            libffi-dev libtool flex bison ccache \
+                            ${{ inputs.extra }}
+        sudo pip install --upgrade meson
