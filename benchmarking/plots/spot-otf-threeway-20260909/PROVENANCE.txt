@@ -36,6 +36,19 @@ reuse:     The ltlsynt and Acacia 1.x CSVs are the archived full-selection runs
            1,063.  Both Acacia series here are fresh release builds from this
            sprint's own closing campaign.
 
+caveat:    Build parity for Acacia 1.x, checked rather than assumed. v1 was
+           compiled -DNDEBUG -O3 -march=native -O3 -flto -fuse-linker-plugin
+           -DNO_VERBOSE, so it has O3, LTO and native tuning. The current builds
+           add -Ofast (and use -flto=auto rather than -flto), which comes from
+           acacia_compiler_profile=release -- an option that does not exist in
+           v1's tree. That single difference is unmeasured; -ffast-math is not
+           obviously relevant to a BDD/antichain solver, but no measurement here
+           establishes that. Note b_lto reads False in v1's Meson options while
+           -flto is present on the command line, because the flag comes from the
+           project's own profile arguments; the option value alone is misleading.
+           This is a much narrower gap than the archived *current* Acacia CSVs,
+           which were -O0 -g with no LTO and were rejected for that reason.
+
 caveat:    The two Acacia series were measured 2026-09-07/08 and the two external
            series 2026-09-05, on the same machine under the same protocol.  This
            is a cross-campaign comparison for the external tools, which is the
