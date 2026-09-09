@@ -1,0 +1,47 @@
+question:  Where does the Spot OTF shipping default sit against the previous
+           default, ltlsynt, and Acacia 1.x on the full SYNTCOMP26 selection?
+
+acacia:    sprint/spot-otf at c39fda66
+           new default   otf_sparse_formula, binary sha256 2c75e57ab35e2864...
+           old default   best_four_arm_contradiction, sha256 3d979d59d8f742de...
+                         built from master 1c028f13, release profile
+posets:    139e143
+v1:        Acacia 1.x 5ffd8f99, binary preserved under
+           _bm-logs.fmcad26-head-6dda2f3b-20260822/build/acacia-v1-best23
+ltlsynt:   ltlsynt (spot) 2.15.1.dev
+syfco:     SyFCo (v1.2.1.2)
+corpus:    tests/suites/benchmarks/syntcomp26/all.list, 1,524 logical inputs;
+           flat TLSF corpus materialized at ./tlsf-corpus (1,586 files)
+
+routes:    Acacia arms use the native TLSF frontend (-T) with their compiled
+           defaults and empty runtime flags.  ltlsynt takes SyFCo's unadapted
+           pairs plus --semantics.  Acacia 1.x takes SyFCo pairs with the
+           semantics overwritten to the declared target, since v1 predates the
+           TLSF frontend.
+
+protocol:  17-second cap, 8 GiB, zero swap, one sequential invocation per
+           systemd scope.
+
+reuse:     The ltlsynt and Acacia 1.x CSVs are the archived full-selection runs
+           from benchmarking/plots/three-way-full-20260905/, reused unchanged as
+           that directory's own PROVENANCE instructs: neither external tool
+           changes between sprints.  v1.csv there is already padded with
+           SYFCO-FAIL rows for the seven finding_nemo specs so every series
+           carries 1,524 rows, which cactus-report.py requires.
+           The archived *Acacia* CSVs were NOT reused.  spot-otf-baseline-reuse-
+           audit.json records that they came from -O0 -g no-LTO builds and staged
+           caps; a fresh release main answers 1,123 where the archive shows
+           1,063.  Both Acacia series here are fresh release builds from this
+           sprint's own closing campaign.
+
+caveat:    The two Acacia series were measured 2026-09-07/08 and the two external
+           series 2026-09-05, on the same machine under the same protocol.  This
+           is a cross-campaign comparison for the external tools, which is the
+           established practice here because they do not change; it is not a
+           single interleaved campaign.
+caveat:    finding_nemo_pb_1..7 cannot be converted by SyFCo's ltlxba printer, so
+           both SyFCo-routed arms are charged SYFCO-FAIL on them.  ltlsynt's own
+           native --tlsf route fails identically, because it calls SyFCo.
+           Acacia's native frontend solves two of the seven.
+
+started:   2026-09-09T12:20:54Z
