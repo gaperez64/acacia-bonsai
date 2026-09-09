@@ -1134,3 +1134,18 @@ namespace acacia::diagnostics {
 #endif
 
 }  // namespace acacia::diagnostics
+
+// Timing a phase is the same two lines everywhere: fetch the record, and start
+// a scoped timer on one of its fields, tolerating a null record. Written out,
+// it also has to be fenced, because the no-op diagnostics have no such fields
+// to name -- so seven call sites in solver_invoker.cc each carried an #if
+// around two lines. The fence belongs here instead.
+#if ACACIA_ENABLE_DIAGNOSTICS
+# define ACACIA_DIAG_SCOPED_TIMER(field)                                      \
+    auto* acacia_diag_record_##field = ::acacia::diagnostics::current ();      \
+    ::acacia::diagnostics::scoped_timer acacia_diag_timer_##field (           \
+        acacia_diag_record_##field ? &acacia_diag_record_##field->field        \
+                                   : nullptr)
+#else
+# define ACACIA_DIAG_SCOPED_TIMER(field) ((void) 0)
+#endif
