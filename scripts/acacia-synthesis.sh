@@ -8,8 +8,7 @@
 # tool from outside the container, e.g.:
 #
 #     cat spec.tlsf | docker run -i ... \
-#         /opt/acacia-bonsai/scripts/acacia-synthesis.sh \
-#         <config> --tlsf > out.aag
+#         /opt/acacia-bonsai/scripts/acacia-synthesis.sh --tlsf > out.aag
 #
 # Exit code matches the underlying binary:
 #   0  REALIZABLE   (controller printed on stdout)
@@ -20,42 +19,20 @@
 set -e
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
-mapfile -t CONFIGS < <(python3 "$REPO_ROOT/scripts/acacia-config.py" list-group docker_default)
 
-usage() {
-    cat <<EOF
-Usage: $0 <config_name> [--tlsf] [acacia-bonsai arguments...]
-
-Available configurations:
-EOF
-    for c in "${CONFIGS[@]}"; do
-        echo "  $c"
-    done
-    echo "" >&2
-    echo "Note: do NOT pass -s yourself; this script supplies it." >&2
-    exit 1
-}
-
-if [ $# -lt 1 ]; then
-    usage
+WRAPPER="$SCRIPT_DIR/acacia-bonsai.sh"
+if [ ! -x "$WRAPPER" ]; then
+    echo "Error: acacia-bonsai.sh not found next to acacia-synthesis.sh" >&2
+    exit 3
 fi
 
-CONFIG="$1"
-shift
-
-valid=false
-for c in "${CONFIGS[@]}"; do
-    if [ "$c" = "$CONFIG" ]; then
-        valid=true
-        break
-    fi
-done
-
-if [ "$valid" = false ]; then
-    echo "Error: unknown configuration '$CONFIG'" >&2
+# Configuration naming, lookup and validation belong to acacia-bonsai.sh; this
+# script forwards to it rather than keeping a second copy that can disagree.
+# With no arguments, let the wrapper print the usage and the configuration list.
+if [ $# -lt 1 ]; then
+    echo "Note: do NOT pass -s yourself; this script supplies it." >&2
     echo "" >&2
-    usage
+    exec "$WRAPPER"
 fi
 
 # Reject a user-supplied -s; we own that flag.
@@ -65,12 +42,6 @@ for arg in "$@"; do
         exit 3
     fi
 done
-
-WRAPPER="$(dirname "$0")/acacia-bonsai.sh"
-if [ ! -x "$WRAPPER" ]; then
-    echo "Error: acacia-bonsai.sh not found next to acacia-synthesis.sh" >&2
-    exit 3
-fi
 
 OUT_AAG=$(mktemp --suffix=.aag)
 trap 'rm -f "$OUT_AAG"' EXIT
@@ -82,7 +53,7 @@ trap 'rm -f "$OUT_AAG"' EXIT
 # `set -e` would kill us on a non-zero exit code, but UNREALIZABLE/UNKNOWN are
 # legitimate outcomes we need to propagate, so capture the status manually.
 status=0
-"$WRAPPER" "$CONFIG" "$@" -s "$OUT_AAG" 1>&2 || status=$?
+"$WRAPPER" "$@" -s "$OUT_AAG" 1>&2 || status=$?
 
 # Only on REALIZABLE (exit code 0) is an AAG file produced.
 if [ "$status" -eq 0 ] && [ -s "$OUT_AAG" ]; then

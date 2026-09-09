@@ -13,14 +13,19 @@ mapfile -t CONFIGS < <(python3 "$REPO_ROOT/scripts/acacia-config.py" list-group 
 
 usage() {
     cat <<EOF
-Usage: $0 <config_name> [--tlsf] [acacia-bonsai arguments...]
+Usage: $0 [config_name] [--tlsf] [acacia-bonsai arguments...]
+
+  config_name       Optional. Defaults to the first configuration in the
+                    docker_default group (currently ${CONFIGS[0]}). The group
+                    is the pointer: it is repointed when the measurements say
+                    so, and a preset name is a historical label, not a claim
+                    about which configuration is currently best.
 
   --tlsf            Read a TLSF spec from stdin through the linked native
                     frontend. Suitable for piping a spec into the container,
                     e.g.:
                       cat spec.tlsf | docker run -i ... \\
-                          /opt/acacia-bonsai/scripts/acacia-bonsai.sh \\
-                          <config> --tlsf
+                          /opt/acacia-bonsai/scripts/acacia-bonsai.sh --tlsf
 
 Available configurations:
 EOF
@@ -34,22 +39,29 @@ if [ $# -lt 1 ]; then
     usage
 fi
 
-CONFIG="$1"
-shift
+# The first argument is a configuration name only if it does not look like an
+# option. Configuration names never start with '-' (see the registry's naming
+# rules), so this is unambiguous, and it lets the documented examples name no
+# preset at all rather than hardcoding one that the group can outgrow.
+if [[ "$1" != -* ]]; then
+    CONFIG="$1"
+    shift
 
-# Validate config name
-valid=false
-for c in "${CONFIGS[@]}"; do
-    if [ "$c" = "$CONFIG" ]; then
-        valid=true
-        break
+    valid=false
+    for c in "${CONFIGS[@]}"; do
+        if [ "$c" = "$CONFIG" ]; then
+            valid=true
+            break
+        fi
+    done
+
+    if [ "$valid" = false ]; then
+        echo "Error: unknown configuration '$CONFIG'" >&2
+        echo "" >&2
+        usage
     fi
-done
-
-if [ "$valid" = false ]; then
-    echo "Error: unknown configuration '$CONFIG'" >&2
-    echo "" >&2
-    usage
+else
+    CONFIG="${CONFIGS[0]}"
 fi
 
 BINARY="$REPO_ROOT/build_${CONFIG}/src/acacia-bonsai"
