@@ -7,89 +7,49 @@ name: Python interface tests
 
 on:
   push:
-    branches: [master, python-interface-2]
+    branches: [master]
   pull_request:
-    branches: [master, python-interface-2]
+    branches: [master]
 
 permissions:
   contents: read
 
-env:
-  SPOT_VERSION: 2.15.1
+concurrency:
+  group: python-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - name: Install packages
-        run: |
-          sudo apt update
-          sudo apt install -y zsh meson git g++-14 python-is-python3 \
-                      ninja-build gnupg wget python3-pip python3-dev \
-                      pkg-config libffi-dev swig graphviz \
-                      libtool gpg
-          sudo pip install --upgrade meson
-          sudo pip install pytest
-
-      - name: Install newer libltldl
-        run: |
-          set -euo pipefail
-          deb=libltdl7_2.5.4-4build1_amd64.deb
-          for url in \
-            http://archive.ubuntu.com/ubuntu/pool/main/libt/libtool/${deb} \
-            http://launchpadlibrarian.net/815947228/${deb}
-          do
-            if wget --tries=5 --waitretry=10 --retry-connrefused --retry-on-http-error=503,504 -O "${deb}" "${url}"; then
-              sudo dpkg -i "${deb}" || sudo apt -f install -y
-              sudo apt -f install -y
-              exit 0
-            fi
-          done
-          echo "failed to download ${deb}" >&2
-          exit 1
-
-      - name: Checkout repository and submodules
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Restore Spot cache
-        id: spot-cache
-        uses: actions/cache@v5
+      - uses: ./.github/actions/setup-packages
         with:
-          # Distinct from main.yml's cache because that build uses
-          # --disable-python; mixing would skip rebuilding when switching
-          # jobs. Spot is installed into /opt/spot_install (matching
-          # Dockerfile.boomslang) rather than /usr/local so the Python
-          # bindings land in a predictable, cacheable location.
-          path: /opt/spot_install
-          key: spot-${{ env.SPOT_VERSION }}-maxacc64-py-opt-${{ runner.os }}
+          extra: python3-dev swig graphviz
 
-      - name: Install Spot (with Python bindings)
-        if: steps.spot-cache.outputs.cache-hit != 'true'
-        run: |
-          wget http://www.lre.epita.fr/dload/spot/spot-${SPOT_VERSION}.tar.gz
-          tar -xvzf spot-${SPOT_VERSION}.tar.gz
-          cd spot-${SPOT_VERSION}
-          sudo mkdir -p /opt/spot_install
-          sudo chown "$USER" /opt/spot_install
-          ./configure --enable-max-accsets=64 --prefix=/opt/spot_install
-          make -j"$(nproc)"
-          make install
+      - name: Install pytest
+        run: sudo pip install pytest
 
-      - name: Register Spot shared libraries with ldconfig
-        run: |
-          echo "/opt/spot_install/lib" | sudo tee /etc/ld.so.conf.d/spot.conf
-          sudo ldconfig
+      # Spot's Python bindings are needed here, so this asks for a different
+      # build than the C++ jobs and gets its own cache key.
+      - uses: ./.github/actions/setup-spot
+        with:
+          python: 'true'
+
+      - uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: python-bindings
+          max-size: 500M
 
       - name: Compile acacia-bonsai with Python bindings
-        env:
-          PKG_CONFIG_PATH: /opt/spot_install/lib/pkgconfig
         run: |
           export CXX=g++-14
           meson setup build_python --buildtype=release -Dbuild_python=true
-          meson compile -C build_python -j1
+          meson compile -C build_python -j "$(nproc)"
 
       - name: Run pytest
         run: |

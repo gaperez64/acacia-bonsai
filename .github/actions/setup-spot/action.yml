@@ -1,0 +1,128 @@
+name: Set up Spot
+description: >
+  Install the pinned Spot release into a cacheable prefix and register it for
+  pkg-config, the linker and PATH. Owns the Spot version and the configure
+  flags, which were previously copied across five workflows and two
+  Dockerfiles and had already drifted apart.
+
+inputs:
+  version:
+    description: Spot release to install.
+    required: false
+    default: '2.15.1'
+  prefix:
+    description: Install prefix. Kept off /usr/local so it is writable during a cache restore.
+    required: false
+    default: /opt/spot_install
+  python:
+    description: Build Spot's Python bindings ('true' or 'false').
+    required: false
+    default: 'false'
+  cc:
+    description: C compiler used to configure Spot.
+    required: false
+    default: gcc-14
+  cxx:
+    description: >
+      C++ compiler used to configure Spot. Posets requires g++, and linking
+      against Spot requires Spot to have been built with the same compiler.
+    required: false
+    default: g++-14
+
+outputs:
+  prefix:
+    description: The prefix Spot was installed into.
+    value: ${{ inputs.prefix }}
+  cache-hit:
+    description: Whether the Spot install came from the cache.
+    value: ${{ steps.spot-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install a newer libltdl
+      shell: bash
+      run: |
+        set -euo pipefail
+        deb=libltdl7_2.5.4-4build1_amd64.deb
+        for url in \
+          http://archive.ubuntu.com/ubuntu/pool/main/libt/libtool/${deb} \
+          http://launchpadlibrarian.net/815947228/${deb}
+        do
+          if wget --tries=5 --waitretry=10 --retry-connrefused \
+                  --retry-on-http-error=503,504 -O "${deb}" "${url}"; then
+            sudo dpkg -i "${deb}" || sudo apt -f install -y
+            sudo apt -f install -y
+            exit 0
+          fi
+        done
+        echo "failed to download ${deb}" >&2
+        exit 1
+
+    - name: Prepare the Spot install prefix
+      shell: bash
+      run: |
+        sudo mkdir -p "${{ inputs.prefix }}"
+        sudo chown -R "$USER:$USER" "${{ inputs.prefix }}"
+
+    - name: Restore the Spot cache
+      id: spot-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ inputs.prefix }}
+        # The python and non-python builds must not share a key: one has
+        # bindings the other lacks, and a shared key would silently skip the
+        # rebuild when switching between them.
+        key: spot-${{ inputs.version }}-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cxx }}-maxacc64-py${{ inputs.python }}-v3
+
+    - name: Build and install Spot
+      id: install-spot
+      if: steps.spot-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        CC: ${{ inputs.cc }}
+        CXX: ${{ inputs.cxx }}
+      run: |
+        set -euo pipefail
+        tarball="spot-${{ inputs.version }}.tar.gz"
+        for host in https://www.lrde.epita.fr http://www.lre.epita.fr; do
+          if wget -q --tries=3 --retry-connrefused -O "${tarball}" \
+                  "${host}/dload/spot/${tarball}"; then
+            break
+          fi
+        done
+        test -s "${tarball}"
+        tar -xzf "${tarball}"
+        cd "spot-${{ inputs.version }}"
+        python_flag=--disable-python
+        if [ "${{ inputs.python }}" = "true" ]; then
+          python_flag=--enable-python
+        fi
+        ./configure \
+          --prefix="${{ inputs.prefix }}" \
+          --enable-max-accsets=64 \
+          "${python_flag}" \
+          --disable-static \
+          --disable-doxygen
+        make -j"$(nproc)"
+        make install
+
+    - name: Save the Spot cache
+      # Saved only after a successful build, so a broken install is never cached.
+      if: steps.spot-cache.outputs.cache-hit != 'true' && steps.install-spot.outcome == 'success'
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ inputs.prefix }}
+        key: ${{ steps.spot-cache.outputs.cache-primary-key }}
+
+    - name: Register Spot
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "${{ inputs.prefix }}/bin" >> "$GITHUB_PATH"
+        echo "PKG_CONFIG_PATH=${{ inputs.prefix }}/lib/pkgconfig" >> "$GITHUB_ENV"
+        echo "LD_LIBRARY_PATH=${{ inputs.prefix }}/lib" >> "$GITHUB_ENV"
+        echo "${{ inputs.prefix }}/lib" | sudo tee /etc/ld.so.conf.d/spot.conf
+        sudo ldconfig
+        PKG_CONFIG_PATH="${{ inputs.prefix }}/lib/pkgconfig" pkg-config --modversion libspot
+        LD_LIBRARY_PATH="${{ inputs.prefix }}/lib" "${{ inputs.prefix }}/bin/ltlfilt" --version

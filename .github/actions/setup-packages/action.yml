@@ -1,0 +1,27 @@
+name: Install build packages
+description: >
+  Install the toolchain and build dependencies the C++ jobs need. Kept in one
+  place so the package list cannot drift between workflows.
+
+inputs:
+  extra:
+    description: Additional space-separated packages (e.g. swig graphviz for the Python job).
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Install packages
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt update
+        # zsh: self-benchmark.sh is a zsh script.
+        # flex/bison: the native TLSF frontend's parser.
+        # libtool: provides libltdl, which Spot's dynamic loading needs.
+        sudo apt install -y zsh meson git g++-14 python-is-python3 \
+                            ninja-build wget python3-pip pkg-config \
+                            libffi-dev libtool flex bison ccache \
+                            ${{ inputs.extra }}
+        sudo pip install --upgrade meson
