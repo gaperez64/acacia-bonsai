@@ -49,6 +49,53 @@ reusing that archived v1 series.
 85 to 100 C while the clock swung between 4452 and 2107 MHz. Coverage figures are robust, but
 fine-grained PAR-2 deltas should not be quoted as precise.
 
+## The Acacia 1.x rows are measured with a binary that misreports crashes
+
+Read the `Acacia 1.x` rows above, and every `best23_only` crossover set, with
+this in mind: **the 1.x binary reports REALIZABLE when a worker is killed by a
+signal.**
+
+Before `e84b968c` (2026-04-16, "Fix false REALIZABLE on benchmarks where mona
+precomputer corrupted bdd_dict"), the parent loop in `src/acacia-bonsai.cc`
+called `WEXITSTATUS (status)` without first checking `WIFEXITED`. A child
+killed by SIGABRT has raw wait status 134, and `WEXITSTATUS (134)` is 0, which
+is `EXIT_CODE_REAL`. An instance that exhausts memory aborts, so any
+out-of-memory instance could return as a fast, confident REALIZABLE.
+
+The binary used for the 1.x rows is the snapshot under
+`_bm-logs.fmcad26-head-6dda2f3b-20260822/source/acacia-v1`. Its
+`src/acacia-bonsai.cc` contains no `WIFEXITED` check at all, and does
+`ret = WEXITSTATUS (ret)` at line 596. `e84b968c` is absent from `TACAS23`,
+`v1.9` and `v1.9.2`, and present from `v2.0.9` onward.
+
+This was found while investigating `SPIPureNext.ltl`, which the syntcomp24
+0s-20s crossover records as solved by 1.x in 9.437 s and unsolved by current.
+Current Acacia returns UNKNOWN on it after `std::bad_alloc`; every probe of it
+across `v1.9` through master exhausted its address-space cap. A pre-fix
+revision was replayed under GDB and observed printing `REALIZABLE` after a
+worker terminated with `WIFSIGNALED` true and raw status 134. So the 9.437 s is
+consistent with time-to-exhaust-memory, not time-to-solve.
+
+Consequences for reading this document:
+
+- Only `REALIZABLE` rows can be fabricated this way. `UNREALIZABLE` is exit
+  code 1, which a crash cannot produce, so those rows are unaffected.
+- In the syntcomp24 0s-20s `best23_only` set, ten of the rows are REALIZABLE.
+  The multi-second ones are the ones to distrust, since they match
+  time-to-OOM: `SPIPureNext` 9.437 s, `simple_arbiter_enc11` 16.107 s,
+  `simple_arbiter_enc10` 8.725 s, `prioritized_arbiter_enc10` 5.906 s.
+- The 1.x solved counts in the table above may therefore be overstated. They
+  have not been remeasured, because the 1.x tree builds Spot as a subproject
+  and could not be rebuilt in the environment where this was found.
+- An apparent regression whose boundary sits between `v1.9.2` and `v2.0.9` may
+  be this fix making a pre-existing failure honest rather than a capability
+  being lost.
+
+What is verified here is the defect, its absence from the benchmarked binary,
+and that the instance is memory-bound. What is inferred is that this specific
+historical 9.437 s row was one of those crashes; that inference has not been
+confirmed by rerunning the 1.x binary.
+
 ## Verdict correctness
 
 The campaign compared every verdict against the SYNTCOMP `//STATUS` metadata. Acacia 1.x
