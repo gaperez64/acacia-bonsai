@@ -1,9 +1,11 @@
-question:  Where does the Spot OTF shipping default sit against the previous
-           default, ltlsynt, and Acacia 1.x on the full SYNTCOMP26 selection?
+question:  Where does the arriving shipping configuration sit against the one
+           it replaces, ltlsynt, and Acacia 1.x on the full SYNTCOMP26 selection?
+           Note there is no "default" configuration: acacia-bonsai.sh requires an
+           explicit preset name and every docker_default member is built.
 
 acacia:    sprint/spot-otf at c39fda66
-           new default   otf_sparse_formula, binary sha256 2c75e57ab35e2864...
-           old default   best_four_arm_contradiction, sha256 3d979d59d8f742de...
+           arriving   otf_sparse_formula, binary sha256 2c75e57ab35e2864...
+           departing  best_four_arm_contradiction, sha256 3d979d59d8f742de...
                          built from master 1c028f13, release profile
 posets:    139e143
 v1:        Acacia 1.x 5ffd8f99, binary preserved under
