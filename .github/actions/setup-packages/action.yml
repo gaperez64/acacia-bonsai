@@ -16,7 +16,12 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        sudo apt update
+        # A third-party repo preinstalled on the runner (Chrome, Microsoft) can
+        # fail to refresh and take the whole step down with exit 100. apt says
+        # itself that it falls back to the previous indices, and the packages
+        # below come from the Ubuntu archive, so a partial refresh is not a
+        # reason to fail. The install that follows still is.
+        sudo apt update || echo "apt update reported errors; continuing with existing indices" >&2
         # zsh: self-benchmark.sh is a zsh script.
         # flex/bison: the native TLSF frontend's parser.
         # libtool: provides libltdl, which Spot's dynamic loading needs.
