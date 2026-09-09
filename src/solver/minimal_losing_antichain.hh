@@ -6,7 +6,7 @@
 /// sixteen downward-closed set implementations and no upward-closed dual, so
 /// this small dual antichain is deliberately hand-rolled.  Coordinate sums are
 /// used only as a necessary-condition prefilter; every dominance decision
-/// itself uses the Posets partial order.
+/// itself uses the supplied coordinate order (the Posets partial order by default).
 
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +15,13 @@
 
 namespace acacia::solver_detail {
 
-  template <typename State>
+  template <typename State> struct losing_rank_leq {
+      bool operator() (const State& a, const State& b) const {
+        return a.partial_order (b).leq ();
+      }
+  };
+
+  template <typename State, typename Leq = losing_rank_leq<State>>
   class minimal_losing_antichain {
       using rank_type = std::int64_t;
 
@@ -45,7 +51,7 @@ namespace acacia::solver_detail {
             ++prefilter_skips;
             continue;
           }
-          if (generator.value.partial_order (r).leq ()) {
+          if (Leq {} (generator.value, r)) {
             ++hits;
             return true;
           }
@@ -65,7 +71,7 @@ namespace acacia::solver_detail {
           if (r_rank > generators[read].rank)
             ++prefilter_skips;
           else
-            remove = r.partial_order (generators[read].value).leq ();
+            remove = Leq {} (r, generators[read].value);
 
           if (remove) {
             ++removals;

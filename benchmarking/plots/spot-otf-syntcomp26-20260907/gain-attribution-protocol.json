@@ -1,0 +1,3370 @@
+{
+  "cap_seconds": 17,
+  "memory_max": "8G",
+  "memory_swap_max": "0",
+  "jobs": [
+    {
+      "instance": "F-G-contradiction-16.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-16.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-16.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-16.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-16.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-16.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-16.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-16.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-17.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-17.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-17.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-17.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-17.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-17.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-17.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-17.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-18.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-18.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-18.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-18.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-18.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-18.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-18.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-18.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-19.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-19.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-19.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-19.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "F-G-contradiction-19.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-19.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-19.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "F-G-contradiction-19.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction3.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction3.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction3.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction3.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction3.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction3.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction3.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction3.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction4.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction4.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction4.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction4.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction4.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction4.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction4.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction4.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction5.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction5.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction5.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction5.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction5.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction5.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction5.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction5.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction6.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction6.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "GF-G-contradiction6.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction6.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction6.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "GF-G-contradiction6.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_encode_pb_20_pe_.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "amba_decomposed_encode_pb_20_pe_.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "amba_decomposed_encode_pb_20_pe_.ltl",
+      "label": "main-real-backward",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "real:small:backward"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_encode_pb_20_pe_.ltl",
+      "label": "main-real-forward",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "real:small:forward"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_encode_pb_20_pe_.ltl",
+      "label": "taa-real-lazy-only",
+      "build": "otf_mix_formula_lazy",
+      "flags": [
+        "--arms",
+        "real:small:spot-guarded:spot-lazy",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_encode_pb_20_pe_.ltl",
+      "label": "taa-real-eager-only",
+      "build": "otf_mix_formula_eager",
+      "flags": [
+        "--arms",
+        "real:small:spot-guarded:spot-eager",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_15_pe_.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_15_pe_.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_15_pe_.ltl",
+      "label": "main-real-backward",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "real:small:backward"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_15_pe_.ltl",
+      "label": "main-real-forward",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "real:small:forward"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_15_pe_.ltl",
+      "label": "taa-real-lazy-only",
+      "build": "otf_mix_formula_lazy",
+      "flags": [
+        "--arms",
+        "real:small:spot-guarded:spot-lazy",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_15_pe_.ltl",
+      "label": "taa-real-eager-only",
+      "build": "otf_mix_formula_eager",
+      "flags": [
+        "--arms",
+        "real:small:spot-guarded:spot-eager",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_16_pe_.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_16_pe_.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_16_pe_.ltl",
+      "label": "main-real-backward",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "real:small:backward"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_16_pe_.ltl",
+      "label": "main-real-forward",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "real:small:forward"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_16_pe_.ltl",
+      "label": "taa-real-lazy-only",
+      "build": "otf_mix_formula_lazy",
+      "flags": [
+        "--arms",
+        "real:small:spot-guarded:spot-lazy",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_16_pe_.ltl",
+      "label": "taa-real-eager-only",
+      "build": "otf_mix_formula_eager",
+      "flags": [
+        "--arms",
+        "real:small:spot-guarded:spot-eager",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "g-unreal-34.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-34.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-34.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-34.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-34.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "g-unreal-34.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "g-unreal-34.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "g-unreal-34.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "g-unreal-37.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-37.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-37.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-37.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-37.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "g-unreal-37.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "g-unreal-37.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "g-unreal-37.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "g-unreal-38.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-38.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-38.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-38.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-38.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "g-unreal-38.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "g-unreal-38.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "g-unreal-38.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "g-unreal-39.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-39.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-39.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-39.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "g-unreal-39.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "g-unreal-39.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "g-unreal-39.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "g-unreal-39.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "infinite-race-u9.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "infinite-race-u9.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "infinite-race-u9.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "infinite-race-u9.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "infinite-race-u9.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "infinite-race-u9.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "infinite-race-u9.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "infinite-race-unequal-25.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "infinite-race-unequal-25.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "infinite-race-unequal-25.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "infinite-race-unequal-25.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "infinite-race-unequal-25.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "infinite-race-unequal-25.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "ltl2dba_C2_unreal_pb_16_pe_.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "ltl2dba_C2_unreal_pb_16_pe_.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "ltl2dba_C2_unreal_pb_16_pe_.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "ltl2dba_C2_unreal_pb_16_pe_.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "ltl2dba_C2_unreal_pb_16_pe_.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "ltl2dba_theta_pb_14_pe_.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "ltl2dba_theta_pb_14_pe_.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "ltl2dba_theta_pb_14_pe_.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "ltl2dba_theta_pb_14_pe_.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "ltl2dba_theta_pb_14_pe_.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "ltl2dba_theta_pb_14_pe_.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "ltl2dba_theta_pb_14_pe_.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "ltl2dba_theta_pb_14_pe_.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d10.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d10.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d10.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d10.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d10.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d10.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d10.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d10.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d11.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d11.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d11.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d11.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d11.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d11.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d11.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d11.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d12.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d12.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d12.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d12.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d12.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d12.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d12.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d12.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d13.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d13.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d13.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d13.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d13.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d13.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d13.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d13.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d14.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d14.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d14.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d14.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d14.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d14.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d14.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d14.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d15.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d15.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d15.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d15.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d15.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d15.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d15.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d15.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d16.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d16.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d16.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d16.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d16.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d16.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d16.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d16.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d17.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d17.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d17.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d17.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d17.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d17.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d17.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d17.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d18.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d18.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d18.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d18.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d18.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d18.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d18.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d18.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d19.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d19.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d19.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d19.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d19.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d19.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d19.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d19.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d20.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d20.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d20.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d20.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d20.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d20.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d20.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d20.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d21.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d21.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d21.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d21.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d21.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d21.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d21.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d21.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d22.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d22.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d22.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d22.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d22.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d22.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d22.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d22.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d23.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d23.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d23.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d23.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d23.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d23.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d23.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d23.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d4.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d4.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d4.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d4.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d4.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d4.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d4.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d4.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d5.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d5.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d5.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d5.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d5.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d5.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d5.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d5.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d6.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d6.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d6.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d6.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d6.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d6.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d6.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d6.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d7.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d7.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d7.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d7.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d7.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d7.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d7.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d7.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d8.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d8.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d8.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d8.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d8.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d8.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d8.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d8.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d9.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d9.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d9.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d9.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-resource-2d9.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d9.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d9.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-resource-2d9.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging1.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging1.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging1.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging1.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging1.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging1.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging1.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging1.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging2.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging2.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging2.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging2.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging2.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging2.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging2.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging2.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging3.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging3.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging3.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging3.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging3.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging3.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging3.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging3.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging4.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging4.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging4.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging4.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging4.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging4.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging4.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging4.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging5.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging5.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging5.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging5.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging5.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging5.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging5.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging5.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging6.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging6.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging6.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging6.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "robot-to-target-charging6.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging6.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging6.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "robot-to-target-charging6.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "sort42.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "sort42.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "sort42.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "sort42.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "sort42.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "sort42.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "sort42.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "sort50.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "sort50.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "sort50.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "sort50.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "sort50.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "sort50.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "sort50.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "square5x53.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "square5x53.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "square5x53.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "square5x53.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "square5x53.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "square5x53.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "square5x53.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "square5x53.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "square5x54.ltl",
+      "label": "otf_sparse_automaton-race",
+      "build": "otf_sparse_automaton",
+      "flags": []
+    },
+    {
+      "instance": "square5x54.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "square5x54.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "square5x54.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "square5x54.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "square5x54.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "square5x54.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "square5x54.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "thermostat-GF-unreal0.ltl",
+      "label": "otf_sparse_formula-race",
+      "build": "otf_sparse_formula",
+      "flags": []
+    },
+    {
+      "instance": "thermostat-GF-unreal0.ltl",
+      "label": "otf_mix_formula_lazy-race",
+      "build": "otf_mix_formula_lazy",
+      "flags": []
+    },
+    {
+      "instance": "thermostat-GF-unreal0.ltl",
+      "label": "otf_mix_formula_eager-race",
+      "build": "otf_mix_formula_eager",
+      "flags": []
+    },
+    {
+      "instance": "thermostat-GF-unreal0.ltl",
+      "label": "main-forward-unreal-formula",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:formula:forward"
+      ]
+    },
+    {
+      "instance": "thermostat-GF-unreal0.ltl",
+      "label": "sparse-unreal-formula",
+      "build": "otf_sparse_formula",
+      "flags": [
+        "--arms",
+        "unreal:formula:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    },
+    {
+      "instance": "thermostat-GF-unreal0.ltl",
+      "label": "main-forward-unreal-automaton",
+      "build": "main-best_four_arm_contradiction",
+      "flags": [
+        "--arms",
+        "unreal:automaton:forward"
+      ]
+    },
+    {
+      "instance": "thermostat-GF-unreal0.ltl",
+      "label": "sparse-unreal-automaton",
+      "build": "otf_sparse_automaton",
+      "flags": [
+        "--arms",
+        "unreal:automaton:spot-guarded-sparse",
+        "--candidate-mode",
+        "only"
+      ]
+    }
+  ],
+  "gains": {
+    "otf_sparse_automaton": {
+      "F-G-contradiction-16.ltl": "UNREALIZABLE",
+      "F-G-contradiction-17.ltl": "UNREALIZABLE",
+      "F-G-contradiction-18.ltl": "UNREALIZABLE",
+      "F-G-contradiction-19.ltl": "UNREALIZABLE",
+      "GF-G-contradiction3.ltl": "UNREALIZABLE",
+      "GF-G-contradiction4.ltl": "UNREALIZABLE",
+      "GF-G-contradiction5.ltl": "UNREALIZABLE",
+      "g-unreal-34.ltl": "UNREALIZABLE",
+      "g-unreal-37.ltl": "UNREALIZABLE",
+      "g-unreal-38.ltl": "UNREALIZABLE",
+      "g-unreal-39.ltl": "UNREALIZABLE",
+      "infinite-race-unequal-25.ltl": "UNREALIZABLE",
+      "ltl2dba_C2_unreal_pb_16_pe_.ltl": "UNREALIZABLE",
+      "ltl2dba_theta_pb_14_pe_.ltl": "UNREALIZABLE",
+      "robot-resource-2d10.ltl": "UNREALIZABLE",
+      "robot-resource-2d11.ltl": "UNREALIZABLE",
+      "robot-resource-2d12.ltl": "UNREALIZABLE",
+      "robot-resource-2d13.ltl": "UNREALIZABLE",
+      "robot-resource-2d14.ltl": "UNREALIZABLE",
+      "robot-resource-2d15.ltl": "UNREALIZABLE",
+      "robot-resource-2d16.ltl": "UNREALIZABLE",
+      "robot-resource-2d17.ltl": "UNREALIZABLE",
+      "robot-resource-2d18.ltl": "UNREALIZABLE",
+      "robot-resource-2d19.ltl": "UNREALIZABLE",
+      "robot-resource-2d20.ltl": "UNREALIZABLE",
+      "robot-resource-2d21.ltl": "UNREALIZABLE",
+      "robot-resource-2d22.ltl": "UNREALIZABLE",
+      "robot-resource-2d23.ltl": "UNREALIZABLE",
+      "robot-resource-2d4.ltl": "UNREALIZABLE",
+      "robot-resource-2d5.ltl": "UNREALIZABLE",
+      "robot-resource-2d6.ltl": "UNREALIZABLE",
+      "robot-resource-2d7.ltl": "UNREALIZABLE",
+      "robot-resource-2d8.ltl": "UNREALIZABLE",
+      "robot-resource-2d9.ltl": "UNREALIZABLE",
+      "robot-to-target-charging1.ltl": "UNREALIZABLE",
+      "robot-to-target-charging2.ltl": "UNREALIZABLE",
+      "robot-to-target-charging3.ltl": "UNREALIZABLE",
+      "robot-to-target-charging4.ltl": "UNREALIZABLE",
+      "robot-to-target-charging5.ltl": "UNREALIZABLE",
+      "robot-to-target-charging6.ltl": "UNREALIZABLE",
+      "square5x53.ltl": "UNREALIZABLE",
+      "square5x54.ltl": "UNREALIZABLE"
+    },
+    "otf_sparse_formula": {
+      "F-G-contradiction-16.ltl": "UNREALIZABLE",
+      "F-G-contradiction-17.ltl": "UNREALIZABLE",
+      "F-G-contradiction-18.ltl": "UNREALIZABLE",
+      "F-G-contradiction-19.ltl": "UNREALIZABLE",
+      "GF-G-contradiction3.ltl": "UNREALIZABLE",
+      "GF-G-contradiction4.ltl": "UNREALIZABLE",
+      "GF-G-contradiction5.ltl": "UNREALIZABLE",
+      "g-unreal-34.ltl": "UNREALIZABLE",
+      "g-unreal-37.ltl": "UNREALIZABLE",
+      "g-unreal-38.ltl": "UNREALIZABLE",
+      "g-unreal-39.ltl": "UNREALIZABLE",
+      "infinite-race-u9.ltl": "UNREALIZABLE",
+      "ltl2dba_theta_pb_14_pe_.ltl": "UNREALIZABLE",
+      "robot-resource-2d10.ltl": "UNREALIZABLE",
+      "robot-resource-2d11.ltl": "UNREALIZABLE",
+      "robot-resource-2d12.ltl": "UNREALIZABLE",
+      "robot-resource-2d13.ltl": "UNREALIZABLE",
+      "robot-resource-2d14.ltl": "UNREALIZABLE",
+      "robot-resource-2d15.ltl": "UNREALIZABLE",
+      "robot-resource-2d16.ltl": "UNREALIZABLE",
+      "robot-resource-2d17.ltl": "UNREALIZABLE",
+      "robot-resource-2d18.ltl": "UNREALIZABLE",
+      "robot-resource-2d19.ltl": "UNREALIZABLE",
+      "robot-resource-2d20.ltl": "UNREALIZABLE",
+      "robot-resource-2d21.ltl": "UNREALIZABLE",
+      "robot-resource-2d22.ltl": "UNREALIZABLE",
+      "robot-resource-2d23.ltl": "UNREALIZABLE",
+      "robot-resource-2d4.ltl": "UNREALIZABLE",
+      "robot-resource-2d5.ltl": "UNREALIZABLE",
+      "robot-resource-2d6.ltl": "UNREALIZABLE",
+      "robot-resource-2d7.ltl": "UNREALIZABLE",
+      "robot-resource-2d8.ltl": "UNREALIZABLE",
+      "robot-resource-2d9.ltl": "UNREALIZABLE",
+      "robot-to-target-charging1.ltl": "UNREALIZABLE",
+      "robot-to-target-charging2.ltl": "UNREALIZABLE",
+      "robot-to-target-charging3.ltl": "UNREALIZABLE",
+      "robot-to-target-charging4.ltl": "UNREALIZABLE",
+      "robot-to-target-charging5.ltl": "UNREALIZABLE",
+      "robot-to-target-charging6.ltl": "UNREALIZABLE",
+      "sort42.ltl": "UNREALIZABLE",
+      "sort50.ltl": "UNREALIZABLE",
+      "square5x53.ltl": "UNREALIZABLE",
+      "square5x54.ltl": "UNREALIZABLE",
+      "thermostat-GF-unreal0.ltl": "UNREALIZABLE"
+    },
+    "otf_mix_formula_lazy": {
+      "F-G-contradiction-16.ltl": "UNREALIZABLE",
+      "F-G-contradiction-17.ltl": "UNREALIZABLE",
+      "F-G-contradiction-18.ltl": "UNREALIZABLE",
+      "F-G-contradiction-19.ltl": "UNREALIZABLE",
+      "GF-G-contradiction3.ltl": "UNREALIZABLE",
+      "GF-G-contradiction4.ltl": "UNREALIZABLE",
+      "GF-G-contradiction5.ltl": "UNREALIZABLE",
+      "GF-G-contradiction6.ltl": "UNREALIZABLE",
+      "amba_decomposed_encode_pb_20_pe_.ltl": "REALIZABLE",
+      "amba_decomposed_lock_pb_15_pe_.ltl": "REALIZABLE",
+      "amba_decomposed_lock_pb_16_pe_.ltl": "REALIZABLE",
+      "g-unreal-34.ltl": "UNREALIZABLE",
+      "g-unreal-37.ltl": "UNREALIZABLE",
+      "g-unreal-38.ltl": "UNREALIZABLE",
+      "g-unreal-39.ltl": "UNREALIZABLE",
+      "infinite-race-u9.ltl": "UNREALIZABLE",
+      "infinite-race-unequal-25.ltl": "UNREALIZABLE",
+      "ltl2dba_theta_pb_14_pe_.ltl": "UNREALIZABLE",
+      "robot-resource-2d10.ltl": "UNREALIZABLE",
+      "robot-resource-2d11.ltl": "UNREALIZABLE",
+      "robot-resource-2d12.ltl": "UNREALIZABLE",
+      "robot-resource-2d13.ltl": "UNREALIZABLE",
+      "robot-resource-2d14.ltl": "UNREALIZABLE",
+      "robot-resource-2d15.ltl": "UNREALIZABLE",
+      "robot-resource-2d16.ltl": "UNREALIZABLE",
+      "robot-resource-2d17.ltl": "UNREALIZABLE",
+      "robot-resource-2d18.ltl": "UNREALIZABLE",
+      "robot-resource-2d19.ltl": "UNREALIZABLE",
+      "robot-resource-2d20.ltl": "UNREALIZABLE",
+      "robot-resource-2d21.ltl": "UNREALIZABLE",
+      "robot-resource-2d22.ltl": "UNREALIZABLE",
+      "robot-resource-2d23.ltl": "UNREALIZABLE",
+      "robot-resource-2d4.ltl": "UNREALIZABLE",
+      "robot-resource-2d5.ltl": "UNREALIZABLE",
+      "robot-resource-2d6.ltl": "UNREALIZABLE",
+      "robot-resource-2d7.ltl": "UNREALIZABLE",
+      "robot-resource-2d8.ltl": "UNREALIZABLE",
+      "robot-resource-2d9.ltl": "UNREALIZABLE",
+      "robot-to-target-charging1.ltl": "UNREALIZABLE",
+      "robot-to-target-charging2.ltl": "UNREALIZABLE",
+      "robot-to-target-charging3.ltl": "UNREALIZABLE",
+      "robot-to-target-charging4.ltl": "UNREALIZABLE",
+      "robot-to-target-charging5.ltl": "UNREALIZABLE",
+      "robot-to-target-charging6.ltl": "UNREALIZABLE",
+      "sort42.ltl": "UNREALIZABLE",
+      "sort50.ltl": "UNREALIZABLE",
+      "square5x53.ltl": "UNREALIZABLE",
+      "square5x54.ltl": "UNREALIZABLE",
+      "thermostat-GF-unreal0.ltl": "UNREALIZABLE"
+    },
+    "otf_mix_formula_eager": {
+      "F-G-contradiction-16.ltl": "UNREALIZABLE",
+      "F-G-contradiction-17.ltl": "UNREALIZABLE",
+      "F-G-contradiction-18.ltl": "UNREALIZABLE",
+      "F-G-contradiction-19.ltl": "UNREALIZABLE",
+      "GF-G-contradiction3.ltl": "UNREALIZABLE",
+      "GF-G-contradiction4.ltl": "UNREALIZABLE",
+      "GF-G-contradiction5.ltl": "UNREALIZABLE",
+      "GF-G-contradiction6.ltl": "UNREALIZABLE",
+      "amba_decomposed_encode_pb_20_pe_.ltl": "REALIZABLE",
+      "amba_decomposed_lock_pb_15_pe_.ltl": "REALIZABLE",
+      "amba_decomposed_lock_pb_16_pe_.ltl": "REALIZABLE",
+      "g-unreal-34.ltl": "UNREALIZABLE",
+      "g-unreal-37.ltl": "UNREALIZABLE",
+      "g-unreal-38.ltl": "UNREALIZABLE",
+      "g-unreal-39.ltl": "UNREALIZABLE",
+      "infinite-race-u9.ltl": "UNREALIZABLE",
+      "ltl2dba_theta_pb_14_pe_.ltl": "UNREALIZABLE",
+      "robot-resource-2d10.ltl": "UNREALIZABLE",
+      "robot-resource-2d11.ltl": "UNREALIZABLE",
+      "robot-resource-2d12.ltl": "UNREALIZABLE",
+      "robot-resource-2d13.ltl": "UNREALIZABLE",
+      "robot-resource-2d14.ltl": "UNREALIZABLE",
+      "robot-resource-2d15.ltl": "UNREALIZABLE",
+      "robot-resource-2d16.ltl": "UNREALIZABLE",
+      "robot-resource-2d17.ltl": "UNREALIZABLE",
+      "robot-resource-2d18.ltl": "UNREALIZABLE",
+      "robot-resource-2d19.ltl": "UNREALIZABLE",
+      "robot-resource-2d20.ltl": "UNREALIZABLE",
+      "robot-resource-2d21.ltl": "UNREALIZABLE",
+      "robot-resource-2d22.ltl": "UNREALIZABLE",
+      "robot-resource-2d23.ltl": "UNREALIZABLE",
+      "robot-resource-2d4.ltl": "UNREALIZABLE",
+      "robot-resource-2d5.ltl": "UNREALIZABLE",
+      "robot-resource-2d6.ltl": "UNREALIZABLE",
+      "robot-resource-2d7.ltl": "UNREALIZABLE",
+      "robot-resource-2d8.ltl": "UNREALIZABLE",
+      "robot-resource-2d9.ltl": "UNREALIZABLE",
+      "robot-to-target-charging1.ltl": "UNREALIZABLE",
+      "robot-to-target-charging2.ltl": "UNREALIZABLE",
+      "robot-to-target-charging3.ltl": "UNREALIZABLE",
+      "robot-to-target-charging4.ltl": "UNREALIZABLE",
+      "robot-to-target-charging5.ltl": "UNREALIZABLE",
+      "robot-to-target-charging6.ltl": "UNREALIZABLE",
+      "sort42.ltl": "UNREALIZABLE",
+      "sort50.ltl": "UNREALIZABLE",
+      "square5x53.ltl": "UNREALIZABLE",
+      "square5x54.ltl": "UNREALIZABLE",
+      "thermostat-GF-unreal0.ltl": "UNREALIZABLE"
+    }
+  },
+  "manifest_sha256": "2dd562748ee493082c9651c637fafe1caa53858ba71994f5bfb7f74d2f2066cc",
+  "primary_sha256": {
+    "main-best_four_arm_contradiction": "d8d02d2558f68c9b209a000b4ac8411a8331645993024a95f52375115dd09699",
+    "main-best_decomp_rank_bucketed_semantic_mona": "cce6507cd702e6f807b9684309525606935805fc3860a7487e4b6d5b0780b98f",
+    "main-best_four_arm_bboxtree": "e45c3d9d81d6b33fa95451d78ac120df4fb13c1318b318b631f35caedcdce99c",
+    "main-best_decomp_mona_any": "7016ffc16a75a528f0f760c674b2e84454beb35a5d99c83c0138e7cc2aa9dab4",
+    "otf_sparse_automaton": "f526934a454d67e3762cd623ded327c9d2082847843aea20f09582b98ea12723",
+    "otf_sparse_formula": "4d1b2ffa85cdd059fd1de732919a2f1f5d726ff272de2366ff9770febe075f29",
+    "otf_mix_formula_lazy": "3d3e94eab1a53c23aa819b6e8fc3248f3aa9198e10adb2a9f16ea095b9786026",
+    "otf_mix_formula_eager": "ffef241daa88707225611c36e255d9e7d6dcb17ad8837629dc5843b2a10fcefd"
+  },
+  "repetition_plan_sha256": "4eab179c73a35f13a3bcad164a1a35cf869efb8c2933a98718917b2322baf46a",
+  "repetitions_sha256": "a4975c678dc4e6301c0ef40be8cf06798377ca4cfd9c7fe00d432a3b4c240129",
+  "source_sha256": {
+    "F-G-contradiction-16.ltl": "66c1b8f52a798b6f09bf2684bcc09135b142d3965c1a9375479e8c693fcd5d69",
+    "F-G-contradiction-17.ltl": "65e35f1cfadede9fa977ee7e3140b5ba9ebff8c23040b67cd168decc4267458a",
+    "F-G-contradiction-18.ltl": "413b4fc8f501c0c5438620ab8bf6771e37e2fbbbbb4cf2a6e22ed09c7cbb18f6",
+    "F-G-contradiction-19.ltl": "b348ababbaf0a1e7d702d89bf516d395172db81e87ef66a0bb7b175a7fb8611f",
+    "GF-G-contradiction3.ltl": "036711327b86e9cb4191bf98b25ee6d5910d32061178df9a44d03c049438757e",
+    "GF-G-contradiction4.ltl": "42bb0bd95600a08b52d4174edcbeb88de1c752bd47a29f3c3661bb6c6a341983",
+    "GF-G-contradiction5.ltl": "92f9348ced9c98682f1df9a341f64c2f823545cea3a7ab14d1d1e44575240084",
+    "g-unreal-34.ltl": "2f86cb0543455d1974a81e5c93fb16896276de46b15477157646a9a970ea9c63",
+    "g-unreal-37.ltl": "db46a20e6b7d7e2d97295ddc53b4d8b4312eb9280c9862229954e7f998cf8fb4",
+    "g-unreal-38.ltl": "e809a51353b09505938d26a096938db350790c1834d909935f1631136fc9de24",
+    "g-unreal-39.ltl": "700bdfacb78a4ba11d53709c2701ab2835ac72656a53841841880e05bcae5987",
+    "infinite-race-unequal-25.ltl": "61a552548076a62b6bfa19917873cfe08d9eaef6d91f3bcd6b02b84e3af9dff8",
+    "ltl2dba_C2_unreal_pb_16_pe_.ltl": "8f1eaefc43417987ed946c1724fa68416d9e01feea21b7364dd7ffa17356be6a",
+    "ltl2dba_theta_pb_14_pe_.ltl": "a934c9739065224efcddf75b0d50ce7aab6c533334ae0d7c2648c4be2da2243f",
+    "robot-resource-2d10.ltl": "882054962b5ca144e094d34ef8ae58882020f1de4328bd1f80948841daecc606",
+    "robot-resource-2d11.ltl": "70c960e53635bb308481efda87993e62316ea110fe83e774652ebda0a1a669d7",
+    "robot-resource-2d12.ltl": "8da24ed601598f4255da1ce0d00477e867ffcdf5c69dad88f3bc4958eaa3154b",
+    "robot-resource-2d13.ltl": "36deb35be66ced933b4d4503a5b7dca063f9c636b449ef0ed19b14ca41ecf51d",
+    "robot-resource-2d14.ltl": "eeb13ff4879c1cd3d7b29616cc9c44c09cfda6528d71d99e1db7b024efee79d2",
+    "robot-resource-2d15.ltl": "d5118d06f95093a290d753c1ebf9d8680ea4f20f07369ad2b380626332a63a8c",
+    "robot-resource-2d16.ltl": "8286e95151374cf48307f2fc8b21a153dd73cc95eee3320cfd28b95b33eb92b5",
+    "robot-resource-2d17.ltl": "e090bfb77b0fc3c01fcb3937f61a2cdf7c0c358d7a33c475b2ce18282b6dfd66",
+    "robot-resource-2d18.ltl": "3bf2d63d7ea9cebfe3f6745c056ecc0173512909c5a6c5f110a84395f17bd74a",
+    "robot-resource-2d19.ltl": "6dba1bb30f0aa5857b9276ee2ec9e242f7e01a7b29b9fe36d77a5f54763e185e",
+    "robot-resource-2d20.ltl": "52e1349e28e44a4de9b39075b0e2c76074cb46472cd98db1db26bd322a047d41",
+    "robot-resource-2d21.ltl": "96c680aa426252457437534a5f1ea2a863a548970ab76265f5a39312c09ac531",
+    "robot-resource-2d22.ltl": "fa06c85063d0b32ffecee377818c18740f5b2b024f91cd04b8c86c17a3c25382",
+    "robot-resource-2d23.ltl": "1c7c5a6e19655dc66aaf390c8ca3960fe9d2e0da2b80ce10e985fb48a740e866",
+    "robot-resource-2d4.ltl": "8ef356d3fd11cdbfdefad94f9452e8a85570a699c1d8624a42be5b3fa868f5e9",
+    "robot-resource-2d5.ltl": "5f74b1fa422a162dff735cea01ac435461a7d73285f012b518878eed2b5dc707",
+    "robot-resource-2d6.ltl": "9902b32061e06bf6b6f7aa644af8572d3c53cdd4468317acf941d27733114ecf",
+    "robot-resource-2d7.ltl": "abe5981be94213705fe5b04dd60e7037e4bfcaf0db0b124d1519d07461b629fe",
+    "robot-resource-2d8.ltl": "0d40b4778da0bc1e41bc2799096562e8ca7e2cb609aa2478d586e3838551e8ac",
+    "robot-resource-2d9.ltl": "8eeb9978abdef5a87d8045ca63f7e65a32702f719ed688eac9ac476c354f726f",
+    "robot-to-target-charging1.ltl": "55586f4b0719ee80e032430ea1c80cb8f9f893469b6cc3d30fff617a12946b84",
+    "robot-to-target-charging2.ltl": "f954854a1ecb90a87ebe3722c58c1a8d12bb6ac9dfcaa7a813a37b1cc53b586f",
+    "robot-to-target-charging3.ltl": "7508dd51595000293b5a6dfddc21357d605d1db523016edfe1170174f39da650",
+    "robot-to-target-charging4.ltl": "e0e2219fcddfbbe1400c3b4ed62d797755967edfb2be7bddbccc25438fbf4ac0",
+    "robot-to-target-charging5.ltl": "4385f6d86bc32e9e512e80791f72a2cd900d6bd77b4e6b20e53118aab063d627",
+    "robot-to-target-charging6.ltl": "1d20cddb3dd0330f80e5d505d0d003860abfaf3f064cb6857b28123d1553a82a",
+    "square5x53.ltl": "83d4caeb18766dcdebe2e95450e8ab1bfa3403f5e97854a9037caad003edaf35",
+    "square5x54.ltl": "22a5825ccd2f621559007bca1582257f1a1fb95daaabb0552e0f1add9e94e719",
+    "infinite-race-u9.ltl": "c5af33630dff8069694bfcaeec5d1befd01b8ac85af99c0d58409f59aee4092a",
+    "sort42.ltl": "eeb9e707f90925ca81039549584989db5649c81e45833c88ea039bad8df06e49",
+    "sort50.ltl": "4ce9d5ad6d177dd2d476f0bfd5fb0f4a2e22846722733bc73cbc2c44fddee63b",
+    "thermostat-GF-unreal0.ltl": "df0fb222beb62fa10e493e59e6926a6afc7ff0bbd42b7a9adc06687b344b26b9",
+    "GF-G-contradiction6.ltl": "c3752f27f89cdeed0ef9ec3aca3325697f98b57a24b472e9c35f2d70a68948f6",
+    "amba_decomposed_encode_pb_20_pe_.ltl": "2ba6b5c167664586dbb32752d2b42ea75ea5e3b0a63338eb8a6c69e87e19f88f",
+    "amba_decomposed_lock_pb_15_pe_.ltl": "15f18abd3193587f946df1a46bd5bdc21ef425936eadc94ef28a741e5214b224",
+    "amba_decomposed_lock_pb_16_pe_.ltl": "65e4dd3176ac686280b56e7cac7cf65f2972d0f783c0c39295c0926138c74d32"
+  },
+  "purpose": "Diagnostic native attribution of every primary answer absent from all four main configurations. Capture actual default races, isolate both relevant old arms and guarded candidates. These instrumented measurements never replace primary or paired timing.",
+  "environment_overrides": [
+    "ACACIA_SPOT_CAPTURE_DIR",
+    "ACACIA_SPOT_CAPTURE_HISTORY=1",
+    "ACACIA_DIAG_INSTANCE"
+  ],
+  "budget_environment": {}
+}

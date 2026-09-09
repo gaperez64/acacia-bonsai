@@ -71,6 +71,7 @@ namespace acacia::solver_detail {
           if (forward_applications >= forward_application_budget)
             return {-1, true};
           ++forward_applications;
+          acacia::diagnostics::observe_support_demand (initial, action);
           const auto image =
               actioner.apply (initial, action, actioners::direction::forward);
           if (envelope.contains (image)) {
@@ -154,12 +155,14 @@ namespace acacia::solver_detail {
                 const state* image;
                 bool in_envelope;
                 if (cached == nullptr) {
+                  acacia::diagnostics::observe_support_demand (generator, action);
                   uncached_image.emplace (actioner.apply (
                       generator, action, actioners::direction::forward));
                   image = &*uncached_image;
                   in_envelope = envelope.contains (*image);
                 } else {
                   if (not cached->computed) {
+                    acacia::diagnostics::observe_support_demand (generator, action);
                     cached->image.emplace (actioner.apply (
                         generator, action, actioners::direction::forward));
                     cached->in_envelope = envelope.contains (*cached->image);

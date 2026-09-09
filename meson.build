@@ -71,6 +71,10 @@ if get_option ('acacia_preset') != ''
   build_conf.set_quoted ('ACACIA_PRESET', get_option ('acacia_preset'))
 endif
 build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
+build_conf.set ('ACACIA_DEFAULT_CANDIDATE_MODE',
+                'acacia::candidate_mode::' + get_option ('acacia_default_candidate_mode'))
+build_conf.set ('ACACIA_SPOT_TAA_MAX_RANK_NODES',
+                get_option ('acacia_spot_taa_max_rank_nodes'))
 build_conf.set ('DEFAULT_K', get_option ('acacia_default_k'))
 build_conf.set ('DEFAULT_KMIN', get_option ('acacia_default_kmin'))
 build_conf.set ('DEFAULT_KINC', get_option ('acacia_default_kinc'))
@@ -212,6 +216,10 @@ if get_option ('acacia_local_certificate')
 else
   build_conf.set ('ACACIA_LOCAL_CERTIFICATE', 0)
 endif
+build_conf.set ('ACACIA_SPOT_GUARDED_BACKEND',
+                get_option ('acacia_spot_guarded_backend') ? 1 : 0)
+build_conf.set ('ACACIA_SPOT_LAZY_PROVIDER',
+                get_option ('acacia_spot_lazy_provider') ? 1 : 0)
 if get_option ('acacia_forward_safety_solver')
   build_conf.set ('ACACIA_FORWARD_SAFETY_SOLVER', 1)
 else

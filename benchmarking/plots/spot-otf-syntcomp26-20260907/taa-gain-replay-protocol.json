@@ -1,0 +1,124 @@
+{
+  "jobs": [
+    {
+      "instance": "amba_decomposed_encode_pb_20_pe_.ltl",
+      "worker_formula": "!((G((!hgrant_0 & !hgrant_1 & !hgrant_2 & !hgrant_3 & !hgrant_4 & !hgrant_5 & !hgrant_6 & !hgrant_7 & !hgrant_8 & !hgrant_9 & ((!hgrant_10 & !hgrant_11 & !hgrant_12 & !hgrant_13 & !hgrant_14 & ((!hgrant_15 & !hgrant_16 & !hgrant_17 & (!hgrant_18 | !hgrant_19)) | (!hgrant_18 & !hgrant_19 & ((!hgrant_15 & !hgrant_16) | (!hgrant_17 & (!hgrant_15 | !hgrant_16)))))) | (!hgrant_15 & !hgrant_16 & !hgrant_17 & !hgrant_18 & !hgrant_19 & ((!hgrant_10 & !hgrant_11 & !hgrant_12 & (!hgrant_13 | !hgrant_14)) | (!hgrant_13 & !hgrant_14 & ((!hgrant_10 & !hgrant_11) | (!hgrant_12 & (!hgrant_10 | !hgrant_11)))))))) | (!hgrant_10 & !hgrant_11 & !hgrant_12 & !hgrant_13 & !hgrant_14 & !hgrant_15 & !hgrant_16 & !hgrant_17 & !hgrant_18 & !hgrant_19 & ((!hgrant_0 & !hgrant_1 & !hgrant_2 & !hgrant_3 & !hgrant_4 & ((!hgrant_5 & !hgrant_6 & !hgrant_7 & (!hgrant_8 | !hgrant_9)) | (!hgrant_8 & !hgrant_9 & ((!hgrant_5 & !hgrant_6) | (!hgrant_7 & (!hgrant_5 | !hgrant_6)))))) | (!hgrant_5 & !hgrant_6 & !hgrant_7 & !hgrant_8 & !hgrant_9 & ((!hgrant_0 & !hgrant_1 & !hgrant_2 & (!hgrant_3 | !hgrant_4)) | (!hgrant_3 & !hgrant_4 & ((!hgrant_0 & !hgrant_1) | (!hgrant_2 & (!hgrant_0 | !hgrant_1))))))))) & G(hgrant_0 | hgrant_1 | hgrant_2 | hgrant_3 | hgrant_4 | hgrant_5 | hgrant_6 | hgrant_7 | hgrant_8 | hgrant_9 | hgrant_10 | hgrant_11 | hgrant_12 | hgrant_13 | hgrant_14 | hgrant_15 | hgrant_16 | hgrant_17 | hgrant_18 | hgrant_19)) -> G((hready -> (hgrant_0 <-> X(!hmaster_0 & !hmaster_1 & !hmaster_2 & !hmaster_3 & !hmaster_4))) & (hready -> (hgrant_1 <-> X(hmaster_0 & !hmaster_1 & !hmaster_2 & !hmaster_3 & !hmaster_4))) & (hready -> (hgrant_2 <-> X(!hmaster_0 & hmaster_1 & !hmaster_2 & !hmaster_3 & !hmaster_4))) & (hready -> (hgrant_3 <-> X(hmaster_0 & hmaster_1 & !hmaster_2 & !hmaster_3 & !hmaster_4))) & (hready -> (hgrant_4 <-> X(!hmaster_0 & !hmaster_1 & hmaster_2 & !hmaster_3 & !hmaster_4))) & (hready -> (hgrant_5 <-> X(hmaster_0 & !hmaster_1 & hmaster_2 & !hmaster_3 & !hmaster_4))) & (hready -> (hgrant_6 <-> X(!hmaster_0 & hmaster_1 & hmaster_2 & !hmaster_3 & !hmaster_4))) & (hready -> (hgrant_7 <-> X(hmaster_0 & hmaster_1 & hmaster_2 & !hmaster_3 & !hmaster_4))) & (hready -> (hgrant_8 <-> X(!hmaster_0 & !hmaster_1 & !hmaster_2 & hmaster_3 & !hmaster_4))) & (hready -> (hgrant_9 <-> X(hmaster_0 & !hmaster_1 & !hmaster_2 & hmaster_3 & !hmaster_4))) & (hready -> (hgrant_10 <-> X(!hmaster_0 & hmaster_1 & !hmaster_2 & hmaster_3 & !hmaster_4))) & (hready -> (hgrant_11 <-> X(hmaster_0 & hmaster_1 & !hmaster_2 & hmaster_3 & !hmaster_4))) & (hready -> (hgrant_12 <-> X(!hmaster_0 & !hmaster_1 & hmaster_2 & hmaster_3 & !hmaster_4))) & (hready -> (hgrant_13 <-> X(hmaster_0 & !hmaster_1 & hmaster_2 & hmaster_3 & !hmaster_4))) & (hready -> (hgrant_14 <-> X(!hmaster_0 & hmaster_1 & hmaster_2 & hmaster_3 & !hmaster_4))) & (hready -> (hgrant_15 <-> X(hmaster_0 & hmaster_1 & hmaster_2 & hmaster_3 & !hmaster_4))) & (hready -> (hgrant_16 <-> X(!hmaster_0 & !hmaster_1 & !hmaster_2 & !hmaster_3 & hmaster_4))) & (hready -> (hgrant_17 <-> X(hmaster_0 & !hmaster_1 & !hmaster_2 & !hmaster_3 & hmaster_4))) & (hready -> (hgrant_18 <-> X(!hmaster_0 & hmaster_1 & !hmaster_2 & !hmaster_3 & hmaster_4))) & (hready -> (hgrant_19 <-> X(hmaster_0 & hmaster_1 & !hmaster_2 & !hmaster_3 & hmaster_4))) & (!hready -> ((hmaster_0 <-> Xhmaster_0) & (hmaster_1 <-> Xhmaster_1) & (hmaster_2 <-> Xhmaster_2) & (hmaster_3 <-> Xhmaster_3) & (hmaster_4 <-> Xhmaster_4)))))",
+      "partition": "uuuuuuuuuuuuuuuuuuuucccccu",
+      "worker_formula_sha256": "27c890571a826c50eb6de5cd6f5d01414750e1525844b83e382df5f8fff44f3a",
+      "options": {
+        "kmin": "2",
+        "kmax": "99",
+        "kinc": "3",
+        "max_provider_states": "200000",
+        "max_rows": "200000",
+        "max_rank_nodes": "1000",
+        "max_expansions": "18446744073709551615",
+        "max_query_steps": "18446744073709551615"
+      },
+      "sources": [
+        {
+          "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-gain-attribution/67/captures/755970-1.json",
+          "sha256": "498b38171ecdb623026ad64d8671e6f564e701b490b31ee9322841eb3db1a919",
+          "native_ap_order": "8:hgrant_08:hgrant_18:hgrant_28:hgrant_38:hgrant_48:hgrant_58:hgrant_68:hgrant_78:hgrant_88:hgrant_99:hgrant_109:hgrant_119:hgrant_129:hgrant_139:hgrant_149:hgrant_159:hgrant_169:hgrant_179:hgrant_189:hgrant_196:hready9:hmaster_09:hmaster_19:hmaster_29:hmaster_39:hmaster_4",
+          "native_partition": "uuuuuuuuuuuuuuuuuuuuuccccc",
+          "native_label": "taa-real-lazy-only",
+          "native_result": "REALIZABLE"
+        },
+        {
+          "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-gain-attribution/68/captures/755975-1.json",
+          "sha256": "0116f0f69321ca201a1c3383d3e396ce8b6d0c1857da3841147640e1ea56fb5a",
+          "native_ap_order": "8:hgrant_08:hgrant_18:hgrant_28:hgrant_38:hgrant_48:hgrant_58:hgrant_68:hgrant_78:hgrant_88:hgrant_99:hgrant_109:hgrant_119:hgrant_129:hgrant_139:hgrant_149:hgrant_159:hgrant_169:hgrant_179:hgrant_189:hgrant_196:hready9:hmaster_09:hmaster_19:hmaster_29:hmaster_39:hmaster_4",
+          "native_partition": "uuuuuuuuuuuuuuuuuuuuuccccc",
+          "native_label": "taa-real-eager-only",
+          "native_result": "REALIZABLE"
+        }
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_15_pe_.ltl",
+      "worker_formula": "!((G((!hgrant_0 & !hgrant_1 & !hgrant_2 & !hgrant_3 & !hgrant_4 & !hgrant_5 & !hgrant_6 & !hgrant_7 & ((!hgrant_8 & !hgrant_9 & !hgrant_10 & !hgrant_11 & ((!hgrant_12 & !hgrant_13) | (!hgrant_14 & (!hgrant_12 | !hgrant_13)))) | (!hgrant_12 & !hgrant_13 & !hgrant_14 & ((!hgrant_8 & !hgrant_9 & (!hgrant_10 | !hgrant_11)) | (!hgrant_10 & !hgrant_11 & (!hgrant_8 | !hgrant_9)))))) | (!hgrant_8 & !hgrant_9 & !hgrant_10 & !hgrant_11 & !hgrant_12 & !hgrant_13 & !hgrant_14 & ((!hgrant_0 & !hgrant_1 & !hgrant_2 & !hgrant_3 & ((!hgrant_4 & !hgrant_5 & (!hgrant_6 | !hgrant_7)) | (!hgrant_6 & !hgrant_7 & (!hgrant_4 | !hgrant_5)))) | (!hgrant_4 & !hgrant_5 & !hgrant_6 & !hgrant_7 & ((!hgrant_0 & !hgrant_1 & (!hgrant_2 | !hgrant_3)) | (!hgrant_2 & !hgrant_3 & (!hgrant_0 | !hgrant_1))))))) & G(hgrant_0 | hgrant_1 | hgrant_2 | hgrant_3 | hgrant_4 | hgrant_5 | hgrant_6 | hgrant_7 | hgrant_8 | hgrant_9 | hgrant_10 | hgrant_11 | hgrant_12 | hgrant_13 | hgrant_14)) -> G(((decide & Xhgrant_0) -> (Xlocked <-> Xhlock_0)) & ((decide & Xhgrant_1) -> (Xlocked <-> Xhlock_1)) & ((decide & Xhgrant_2) -> (Xlocked <-> Xhlock_2)) & ((decide & Xhgrant_3) -> (Xlocked <-> Xhlock_3)) & ((decide & Xhgrant_4) -> (Xlocked <-> Xhlock_4)) & ((decide & Xhgrant_5) -> (Xlocked <-> Xhlock_5)) & ((decide & Xhgrant_6) -> (Xlocked <-> Xhlock_6)) & ((decide & Xhgrant_7) -> (Xlocked <-> Xhlock_7)) & ((decide & Xhgrant_8) -> (Xlocked <-> Xhlock_8)) & ((decide & Xhgrant_9) -> (Xlocked <-> Xhlock_9)) & ((decide & Xhgrant_10) -> (Xlocked <-> Xhlock_10)) & ((decide & Xhgrant_11) -> (Xlocked <-> Xhlock_11)) & ((decide & Xhgrant_12) -> (Xlocked <-> Xhlock_12)) & ((decide & Xhgrant_13) -> (Xlocked <-> Xhlock_13)) & ((decide & Xhgrant_14) -> (Xlocked <-> Xhlock_14)) & (!decide -> (locked <-> Xlocked))))",
+      "partition": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuc",
+      "worker_formula_sha256": "3fa65a8011fdbac99a58e4ff25e5c71e697b28bcc91028d8b702d3fca6c34853",
+      "options": {
+        "kmin": "2",
+        "kmax": "99",
+        "kinc": "3",
+        "max_provider_states": "200000",
+        "max_rows": "200000",
+        "max_rank_nodes": "1000",
+        "max_expansions": "18446744073709551615",
+        "max_query_steps": "18446744073709551615"
+      },
+      "sources": [
+        {
+          "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-gain-attribution/73/captures/756021-1.json",
+          "sha256": "9c647711ac9c424a1ce89e50b4c2458751f8b4746e4411e7ef6f052af9c506d5",
+          "native_ap_order": "8:hgrant_08:hgrant_18:hgrant_28:hgrant_38:hgrant_48:hgrant_58:hgrant_68:hgrant_78:hgrant_88:hgrant_99:hgrant_109:hgrant_119:hgrant_129:hgrant_139:hgrant_146:decide6:locked7:hlock_07:hlock_17:hlock_27:hlock_37:hlock_47:hlock_57:hlock_67:hlock_77:hlock_87:hlock_98:hlock_108:hlock_118:hlock_128:hlock_138:hlock_14",
+          "native_partition": "uuuuuuuuuuuuuuuucuuuuuuuuuuuuuuu",
+          "native_label": "taa-real-lazy-only",
+          "native_result": "REALIZABLE"
+        },
+        {
+          "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-gain-attribution/74/captures/756026-1.json",
+          "sha256": "cc4298add81e41532697626feecdfc21255b3ab71d2b0e1508e6f0595275c498",
+          "native_ap_order": "8:hgrant_08:hgrant_18:hgrant_28:hgrant_38:hgrant_48:hgrant_58:hgrant_68:hgrant_78:hgrant_88:hgrant_99:hgrant_109:hgrant_119:hgrant_129:hgrant_139:hgrant_146:decide6:locked7:hlock_07:hlock_17:hlock_27:hlock_37:hlock_47:hlock_57:hlock_67:hlock_77:hlock_87:hlock_98:hlock_108:hlock_118:hlock_128:hlock_138:hlock_14",
+          "native_partition": "uuuuuuuuuuuuuuuucuuuuuuuuuuuuuuu",
+          "native_label": "taa-real-eager-only",
+          "native_result": "REALIZABLE"
+        }
+      ]
+    },
+    {
+      "instance": "amba_decomposed_lock_pb_16_pe_.ltl",
+      "worker_formula": "!((G((!hgrant_0 & !hgrant_1 & !hgrant_2 & !hgrant_3 & !hgrant_4 & !hgrant_5 & !hgrant_6 & !hgrant_7 & ((!hgrant_8 & !hgrant_9 & !hgrant_10 & !hgrant_11 & ((!hgrant_12 & !hgrant_13 & (!hgrant_14 | !hgrant_15)) | (!hgrant_14 & !hgrant_15 & (!hgrant_12 | !hgrant_13)))) | (!hgrant_12 & !hgrant_13 & !hgrant_14 & !hgrant_15 & ((!hgrant_8 & !hgrant_9 & (!hgrant_10 | !hgrant_11)) | (!hgrant_10 & !hgrant_11 & (!hgrant_8 | !hgrant_9)))))) | (!hgrant_8 & !hgrant_9 & !hgrant_10 & !hgrant_11 & !hgrant_12 & !hgrant_13 & !hgrant_14 & !hgrant_15 & ((!hgrant_0 & !hgrant_1 & !hgrant_2 & !hgrant_3 & ((!hgrant_4 & !hgrant_5 & (!hgrant_6 | !hgrant_7)) | (!hgrant_6 & !hgrant_7 & (!hgrant_4 | !hgrant_5)))) | (!hgrant_4 & !hgrant_5 & !hgrant_6 & !hgrant_7 & ((!hgrant_0 & !hgrant_1 & (!hgrant_2 | !hgrant_3)) | (!hgrant_2 & !hgrant_3 & (!hgrant_0 | !hgrant_1))))))) & G(hgrant_0 | hgrant_1 | hgrant_2 | hgrant_3 | hgrant_4 | hgrant_5 | hgrant_6 | hgrant_7 | hgrant_8 | hgrant_9 | hgrant_10 | hgrant_11 | hgrant_12 | hgrant_13 | hgrant_14 | hgrant_15)) -> G(((decide & Xhgrant_0) -> (Xlocked <-> Xhlock_0)) & ((decide & Xhgrant_1) -> (Xlocked <-> Xhlock_1)) & ((decide & Xhgrant_2) -> (Xlocked <-> Xhlock_2)) & ((decide & Xhgrant_3) -> (Xlocked <-> Xhlock_3)) & ((decide & Xhgrant_4) -> (Xlocked <-> Xhlock_4)) & ((decide & Xhgrant_5) -> (Xlocked <-> Xhlock_5)) & ((decide & Xhgrant_6) -> (Xlocked <-> Xhlock_6)) & ((decide & Xhgrant_7) -> (Xlocked <-> Xhlock_7)) & ((decide & Xhgrant_8) -> (Xlocked <-> Xhlock_8)) & ((decide & Xhgrant_9) -> (Xlocked <-> Xhlock_9)) & ((decide & Xhgrant_10) -> (Xlocked <-> Xhlock_10)) & ((decide & Xhgrant_11) -> (Xlocked <-> Xhlock_11)) & ((decide & Xhgrant_12) -> (Xlocked <-> Xhlock_12)) & ((decide & Xhgrant_13) -> (Xlocked <-> Xhlock_13)) & ((decide & Xhgrant_14) -> (Xlocked <-> Xhlock_14)) & ((decide & Xhgrant_15) -> (Xlocked <-> Xhlock_15)) & (!decide -> (locked <-> Xlocked))))",
+      "partition": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuc",
+      "worker_formula_sha256": "95f29d0eb3624e00e3eff102dc993d31d43ae33a3c300a770b80e8d20374c068",
+      "options": {
+        "kmin": "2",
+        "kmax": "99",
+        "kinc": "3",
+        "max_provider_states": "200000",
+        "max_rows": "200000",
+        "max_rank_nodes": "1000",
+        "max_expansions": "18446744073709551615",
+        "max_query_steps": "18446744073709551615"
+      },
+      "sources": [
+        {
+          "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-gain-attribution/79/captures/756074-1.json",
+          "sha256": "aaf441c270aebe61bcd6cbe75608e2daa60a47d8b5e6de7fb76ace942c021a48",
+          "native_ap_order": "8:hgrant_08:hgrant_18:hgrant_28:hgrant_38:hgrant_48:hgrant_58:hgrant_68:hgrant_78:hgrant_88:hgrant_99:hgrant_109:hgrant_119:hgrant_129:hgrant_139:hgrant_149:hgrant_156:decide6:locked7:hlock_07:hlock_17:hlock_27:hlock_37:hlock_47:hlock_57:hlock_67:hlock_77:hlock_87:hlock_98:hlock_108:hlock_118:hlock_128:hlock_138:hlock_148:hlock_15",
+          "native_partition": "uuuuuuuuuuuuuuuuucuuuuuuuuuuuuuuuu",
+          "native_label": "taa-real-lazy-only",
+          "native_result": "REALIZABLE"
+        },
+        {
+          "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-gain-attribution/80/captures/756080-1.json",
+          "sha256": "de7d08c58af9a150cd6ee5ac3ae3cc7c13d55582ea7278da5292da1114a76edb",
+          "native_ap_order": "8:hgrant_08:hgrant_18:hgrant_28:hgrant_38:hgrant_48:hgrant_58:hgrant_68:hgrant_78:hgrant_88:hgrant_99:hgrant_109:hgrant_119:hgrant_129:hgrant_139:hgrant_149:hgrant_156:decide6:locked7:hlock_07:hlock_17:hlock_27:hlock_37:hlock_47:hlock_57:hlock_67:hlock_77:hlock_87:hlock_98:hlock_108:hlock_118:hlock_128:hlock_138:hlock_148:hlock_15",
+          "native_partition": "uuuuuuuuuuuuuuuuucuuuuuuuuuuuuuuuu",
+          "native_label": "taa-real-eager-only",
+          "native_result": "REALIZABLE"
+        }
+      ]
+    }
+  ],
+  "unavailable_captures": [],
+  "replay_binary": {
+    "path": "/home/gperez/GIT-repos/acacia-bonsai/build_otf_capture/src/acacia-spot-provider-replay",
+    "sha256": "b861370ac7e1b238d223f407ff30de17f94b724f573305ad4bb31d6781f560c2"
+  },
+  "replay_source_sha": "e706165748388412e9f8df1bcb86226121616b20",
+  "build_manifest_sha256": "e2725d262fc5e930d60a805de32274e2600d90cc5daf37353b2d18fe1543394e",
+  "attribution_protocol_sha256": "b10e7beec85f1d91a3447d36d68e757dec7dd99a763f02d9d70302dc13a773a6",
+  "attribution_results_sha256": "0e59a252d8063b80599894e2bdb0f9f78ebcc837f7348fab07f7f8990d0f63c6",
+  "cap_seconds": 17,
+  "outer_cleanup_cap_seconds": 20,
+  "address_space_mib": 8192,
+  "memory_max": "8G",
+  "memory_swap_max": "0",
+  "refined_rules": false,
+  "budget_environment": {},
+  "ordering": "One fresh C4 and C5 process per captured construction; reverse order on alternating jobs.",
+  "interpretation": "Captured transformed worker formula and partition, without another negation. C4/C5 share lexical AP order and the captured K range and supported limits. Native BDD order can differ; these are fixed-K construction checks, not replacement native timings. Censored eager traversals supply no denominator."
+}

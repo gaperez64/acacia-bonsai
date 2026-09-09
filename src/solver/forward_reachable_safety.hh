@@ -17,6 +17,7 @@
 
 #include "actioners/direction.hh"
 #include "configuration.hh"
+#include "solver/diagnostics.hh"
 #include "solver/forward_game_nodes.hh"
 #include "solver/minimal_losing_antichain.hh"
 
@@ -39,23 +40,6 @@
 #include <vector>
 
 namespace acacia::solver_detail {
-
-  enum class forward_result_status { win_k, lose_k, resource_limit };
-
-  enum class losing_reason {
-    env_unsafe,
-    env_subsumed,
-    env_losing_input,
-    ctrl_all_losing,
-  };
-
-  struct losing_proof {
-      std::size_t id;
-      losing_reason reason;
-      std::size_t node;
-      std::size_t witness = 0;
-      std::vector<std::size_t> dependencies;
-  };
 
   enum class forward_resource_limit {
     none,
@@ -190,6 +174,7 @@ namespace acacia::solver_detail {
 
       std::size_t action_index = 0;
       for (const auto& action : actions) {
+        acacia::diagnostics::observe_support_demand (parent_rank, action);
         State successor = actioner.apply (
             parent_rank, action, actioners::direction::forward);
         ++result.raw_actions;
@@ -316,8 +301,8 @@ namespace acacia::solver_detail {
         /// Coordinate-sum buckets containing only currently non-losing ranks.
         env_rank_index coverable_envs;
 #endif
-        std::deque<queued_node> open_queue;
-        std::deque<queued_node> losing_queue;
+        forward_work_queue<queued_node> open_queue;
+        forward_work_queue<queued_node> losing_queue;
         minimal_losing_antichain<state> losing_antichain;
         std::vector<std::size_t> losing_antichain_generators;
         std::vector<losing_proof> losing_proofs;
@@ -965,6 +950,8 @@ namespace acacia::solver_detail {
           std::ranges::advance (action, ctrl.next_action_index);
           while (ctrl.next_action_index < action_count) {
             const std::size_t action_index = ctrl.next_action_index++;
+            acacia::diagnostics::observe_support_demand (
+                env_nodes[ctrl.parent_env].rank, *action);
             state successor = actioner.apply (
                 env_nodes[ctrl.parent_env].rank, *action,
                 actioners::direction::forward);

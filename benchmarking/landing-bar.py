@@ -121,11 +121,15 @@ def run_solver(
     *,
     tlsf_source_maps: Mapping[str, pathlib.Path] | None = None,
     tlsf_corpus: pathlib.Path | None = None,
+    tlsf_only: bool = False,
 ) -> tuple[Result, str, str, list[str]]:
     suite, separator, instance = key.partition("/")
     target = pathlib.Path()
     has_ltl_source = False
-    if isinstance(instance_sources, Mapping):
+    if tlsf_only:
+        if not tlsf_source_maps or tlsf_corpus is None:
+            raise ValueError("TLSF remeasurement requires a TLSF source map and corpus")
+    elif isinstance(instance_sources, Mapping):
         source_map_path = instance_sources.get(suite)
         if separator and source_map_path is not None:
             source_map = load_source_map(source_map_path)
@@ -149,6 +153,8 @@ def run_solver(
         and tlsf_source_maps
         and tlsf_corpus is not None
     ):
+        # Explicit native remeasurements skip LTL lookup above. Otherwise this
+        # remains the legacy fallback for instances without an LTL source.
         # The campaign runs one suite per invocation and keys its rows by bare
         # instance name, so there is usually no suite prefix to look up.  Only
         # requiring the prefixed form left this fallback unreachable from the
@@ -171,9 +177,10 @@ def run_solver(
 
     if not target.is_file():
         raise ValueError(
-            f"cannot locate remeasurement target {key} through {instance_sources}"
+            f"cannot locate {'TLSF ' if tlsf_only else ''}remeasurement target "
+            f"{key} through {tlsf_source_maps if tlsf_only else instance_sources}"
         )
-    if target.suffix.lower() == ".tlsf":
+    if tlsf_only or target.suffix.lower() == ".tlsf":
         command = [str(binary), "-T", str(target)]
     else:
         part = target.with_suffix(".part")
@@ -269,6 +276,12 @@ def main(argv: list[str] | None = None) -> int:
         type=pathlib.Path,
         help="directory produced by syntcomp-corpus.py materialize",
     )
+    parser.add_argument(
+        "--tlsf-only",
+        action="store_true",
+        help="remeasure through the TLSF map even when an LTL source also exists; "
+             "use for native TLSF primary measurements",
+    )
     parser.add_argument("--memory-max", default="8G")
     parser.add_argument("--memory-swap-max", default="0")
     args = parser.parse_args(argv)
@@ -303,6 +316,8 @@ def main(argv: list[str] | None = None) -> int:
                 f"--tlsf-source-map is not a file: {tlsf_source_map_path}"
             )
         tlsf_source_maps[suite] = tlsf_source_map_path
+    if args.tlsf_only and not tlsf_source_maps:
+        parser.error("--tlsf-only requires --tlsf-source-map and --tlsf-corpus")
     if tlsf_source_maps and args.tlsf_corpus is None:
         parser.error("--tlsf-corpus is required with --tlsf-source-map")
     if args.tlsf_corpus is not None and not args.tlsf_corpus.is_dir():
@@ -364,6 +379,7 @@ def main(argv: list[str] | None = None) -> int:
                     {
                         "tlsf_source_maps": tlsf_source_maps,
                         "tlsf_corpus": args.tlsf_corpus,
+                        "tlsf_only": args.tlsf_only,
                     }
                     if tlsf_source_maps
                     else {}

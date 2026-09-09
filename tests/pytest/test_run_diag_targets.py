@@ -132,6 +132,16 @@ def test_semantic_censuses_are_explicitly_opt_in():
     assert ordinary["KEEP"] == dominance["KEEP"] == decode["KEEP"] == "yes"
 
 
+def test_support_demand_is_explicitly_opt_in():
+    module = load_run_diag_targets()
+    inherited = {"ACACIA_DIAG_SUPPORT_DEMAND": "1", "KEEP": "yes"}
+    ordinary = _diag_env(module, inherited)
+    measured = _diag_env(module, inherited, support_demand=True)
+    assert "ACACIA_DIAG_SUPPORT_DEMAND" not in ordinary
+    assert measured["ACACIA_DIAG_SUPPORT_DEMAND"] == "1"
+    assert ordinary["KEEP"] == measured["KEEP"] == "yes"
+
+
 def test_filter_stream_discards_raw_noise_without_losing_diagnostics():
     module = load_benchlib()
     raw = "noise\nACACIA_DIAG pid=1 checkpoint=solve-loop\nmore noise\n"

@@ -94,6 +94,7 @@ def diagnostic_environment(
     alphabet_census_only: bool,
     semantic_dominance: bool,
     semantic_decode: bool,
+    support_demand: bool = False,
 ) -> dict[str, str]:
     """Build the child environment, keeping the expensive census opt-in."""
     env = base.copy()
@@ -125,6 +126,10 @@ def diagnostic_environment(
         env["ACACIA_DIAG_SEMANTIC_DECODE"] = "1"
     else:
         env.pop("ACACIA_DIAG_SEMANTIC_DECODE", None)
+    if support_demand:
+        env["ACACIA_DIAG_SUPPORT_DEMAND"] = "1"
+    else:
+        env.pop("ACACIA_DIAG_SUPPORT_DEMAND", None)
     return env
 
 
@@ -210,6 +215,11 @@ def main() -> int:
         "requires a run that reaches the precomputer, so not with --alphabet-census-only",
     )
     parser.add_argument(
+        "--support-demand",
+        action="store_true",
+        help="measure active source-row demand without changing solver decisions",
+    )
+    parser.add_argument(
         "--via-wrapper",
         action="store_true",
         help="run check-real-correct.sh instead of the diagnostics binary directly",
@@ -268,6 +278,7 @@ def main() -> int:
         alphabet_census_only=args.alphabet_census_only,
         semantic_dominance=args.semantic_dominance,
         semantic_decode=args.semantic_decode,
+        support_demand=args.support_demand,
     )
     csv_path = pathlib.Path(args.csv)
     csv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -293,6 +304,32 @@ def main() -> int:
         "translation_ms",
         "aut_states",
         "aut_edges",
+        "support_demand_enabled",
+        "support_graph_ready",
+        "support_graph_states",
+        "support_graph_edges",
+        "support_search_rows",
+        "support_verification_rows",
+        "support_verification_only_rows",
+        "support_union_rows",
+        "support_union_edges",
+        "support_k",
+        "support_k_union_rows",
+        "support_k_union_edges",
+        "support_search_applications",
+        "support_verification_applications",
+        "support_median",
+        "support_p95",
+        "support_max",
+        "support_action_profiles_used",
+        "support_action_profile_ids",
+        "support_action_construction_ms",
+        "support_verification_ms",
+        "support_formula_fnv1a64",
+        "support_phase",
+        "support_backend",
+        "support_rho_q",
+        "support_rho_e",
         "fast_class",
         "fast_class_ms",
         "fast_solve_ms",

@@ -116,10 +116,68 @@ test ('translator-options',
 game_backend_test = executable ('game-backend-test',
                                 'game_backend_test.cc',
                                 include_directories : inc,
-                                dependencies : [spot_dep])
+                                dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
 test ('game-backend',
       game_backend_test,
       suite : ['unit', 'game-backend'])
+
+spot_rows_test = executable (
+  'spot-rows-test',
+  'spot_rows_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-rows', spot_rows_test, suite : ['unit', 'spot-rows'])
+
+# P5 headers and regressions compile in the default build; no backend gate.
+spot_lazy_buchi_view_test = executable (
+  'spot-lazy-buchi-view-test',
+  'spot_lazy_buchi_view_test.cc',
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep],
+)
+test ('spot-lazy-buchi-view', spot_lazy_buchi_view_test,
+      suite : ['unit', 'spot-lazy'])
+
+# The shared P6 engine compiles without either production dispatch gate.
+spot_provider_replay_test = executable(
+  'spot-provider-replay-test',
+  'spot_provider_replay_test.cc',
+  include_directories: inc,
+  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test('spot-provider-replay', spot_provider_replay_test,
+     suite: ['unit', 'spot-provider-replay'])
+
+sparse_forward_rank_test = executable (
+  'sparse-forward-rank-test',
+  'sparse_forward_rank_test.cc',
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep],
+)
+test ('sparse-forward-rank', sparse_forward_rank_test,
+      suite : ['unit', 'sparse-rank'])
+
+spot_letter_oracle_test = executable (
+  'spot-letter-oracle-test',
+  'spot_letter_oracle_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-letter-oracle', spot_letter_oracle_test,
+      suite : ['unit', 'spot-letter-oracle'])
+
+# Not gated on acacia_spot_guarded_backend: the engine header compiles without
+# it, only the backend dispatch is gated, so the test runs in every build --
+# including the plain default one, where the backend itself is absent.
+spot_guarded_forward_safety_test = executable (
+  'spot-guarded-forward-safety-test',
+  'spot_guarded_forward_safety_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-guarded-forward-safety', spot_guarded_forward_safety_test,
+      suite : ['unit', 'spot-guarded'])
 
 transition_payload_test = executable (
   'transition-payload-test',
@@ -183,6 +241,15 @@ test ('diagnostics-attempt',
       diagnostics_attempt_test,
       suite : ['unit', 'diagnostics'])
 
+support_demand_test = executable (
+  'support-demand-test',
+  'support_demand_test.cc',
+  include_directories : inc,
+  cpp_args : ['-DACACIA_ENABLE_DIAGNOSTICS=1'],
+  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep],
+)
+test ('support-demand', support_demand_test, suite : ['unit', 'diagnostics'])
+
 syntactic_bypass_test = executable ('syntactic-bypass-test',
                                     'syntactic_bypass_test.cc',
                                     include_directories : inc,
@@ -234,9 +301,46 @@ test ('degenerate-io-cli',
       depends : [ab_exe])
 
 game_backend_cli = find_program ('check-game-backend-cli.sh')
+# Exercise the real worker boundary even in docker_default CI. This test-only
+# binary uses the same sources; no installed binary, preset or arm is changed.
+game_backend_integration_sources = [
+  '../src/acacia-bonsai.cc',
+  '../src/version.cc',
+  '../src/solver/mealy_to_moore.cc',
+  '../src/solver/solver_invoker.cc',
+  '../src/solver/solve_game.cc',
+  '../src/solver/solve_game_vector.cc',
+]
+if get_option ('acacia_enable_tlsf_frontend')
+  game_backend_integration_sources += '../src/tlsf_frontend.cc'
+endif
+game_backend_integration = executable (
+  'game-backend-integration', game_backend_integration_sources, version_h,
+  include_directories : inc,
+  cpp_args : ['-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'],
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
+  install : false,
+)
+test ('game-backend-integration', game_backend_cli,
+      args : [game_backend_integration,
+              get_option ('acacia_forward_safety_solver').to_string (), 'true', 'true',
+              (compiler_profile == 'debug').to_string (),
+              get_option ('acacia_default_candidate_mode'),
+              get_option ('acacia_spot_taa_max_rank_nodes').to_string ()],
+      suite : ['unit', 'game-backend'], depends : [game_backend_integration])
+if get_option ('acacia_enable_tlsf_frontend')
+  test ('spot-worker-boundary', py,
+        args : [files ('check-spot-worker.py'), game_backend_integration],
+        suite : ['unit', 'tlsf', 'game-backend'], depends : [game_backend_integration])
+endif
 test ('game-backend-cli',
       game_backend_cli,
-      args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string ()],
+      args : [ab_exe, get_option ('acacia_forward_safety_solver').to_string (),
+              get_option ('acacia_spot_guarded_backend').to_string (),
+              get_option ('acacia_spot_lazy_provider').to_string (),
+              (compiler_profile == 'debug').to_string (),
+              get_option ('acacia_default_candidate_mode'),
+              get_option ('acacia_spot_taa_max_rank_nodes').to_string ()],
       suite : ['unit', 'game-backend'],
       depends : [ab_exe])
 
@@ -266,6 +370,7 @@ if get_option ('acacia_default_unreal_x') == 'both'
   default_unreal_children = 2
 endif
 default_check_children = default_real_children + default_unreal_children
+# Compiling spot-guarded leaves this default unchanged, as in arg_parser.hh.
 default_game_backend = 'backward'
 if get_option ('acacia_forward_safety_solver')
   default_game_backend = 'forward'

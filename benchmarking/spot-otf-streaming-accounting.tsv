@@ -1,0 +1,9 @@
+instance	polarity	arm	completed_k	status	certificate	factory_ms	acceptance_setup_ms	eager_ms	completed_search_ms	completed_verification_ms	underlying_rows_generated	wrapper_rows_generated	total_status	total_underlying_rows	total_wrapper_rows	rank_bytes_max	peak_rss_bytes	process_wall_ms
+01.ltl	real	c4		UNKNOWN	unverified	0.728450	0.028801	3.986657	NA	NA	34	211	complete	34	211	NA	261394432	17016.401238
+01.ltl	real	c5		UNKNOWN	unverified	0.776905	0.031433	0.000000	NA	NA	33	194	not_enumerated	NA	NA	NA	261242880	17016.038363
+amba_decomposed_encode_pb_20_pe_.ltl	real	c4	2,5	WIN_K	verified	81.561368	0.054612	7618.930593	319.935807	54.267408	78	78	complete	78	78	3564592	41537536	8090.822190
+amba_decomposed_encode_pb_20_pe_.ltl	real	c5	2,5	WIN_K	verified	81.941633	0.056007	0.000000	7835.538853	54.930941	78	78	not_enumerated	NA	NA	3564592	41533440	7988.336673
+amba_decomposed_lock_pb_14_pe_.ltl	real	c4	2,5	WIN_K	verified	17.211132	0.038777	211.986482	3.585411	1.425318	62	62	complete	62	62	32624	23465984	239.861644
+amba_decomposed_lock_pb_14_pe_.ltl	real	c5	2,5	WIN_K	verified	16.781509	0.035956	0.000000	217.318600	1.487734	62	62	not_enumerated	NA	NA	32624	23461888	241.334153
+full_arbiter_unreal1_pb_2_8_pe_.ltl	unreal	c4		UNKNOWN	unverified	52.319851	0.049806	16949.083476	NA	NA	1	1	censored	NA	NA	NA	71368704	17004.358912
+full_arbiter_unreal1_pb_2_8_pe_.ltl	unreal	c5		UNKNOWN	unverified	49.649098	0.058382	0.000000	NA	NA	1	1	not_enumerated	NA	NA	NA	71389184	17004.432793

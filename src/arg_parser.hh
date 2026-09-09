@@ -41,6 +41,7 @@ struct arg_parse_result {
     std::optional<std::vector<UNREAL_X_T>> unreal_strategies = std::nullopt;
     std::optional<std::vector<portfolio_arm>> arms = std::nullopt;
     TRANSLATION_PREF_T primary_translation_pref = ACACIA_TRANSLATION_PREF;
+    // Compiling spot-guarded never changes the default; select it explicitly.
 #if ACACIA_FORWARD_SAFETY_SOLVER
     acacia::game_backend real_backend = acacia::game_backend::forward;
     acacia::game_backend unreal_backend = acacia::game_backend::forward;
@@ -49,6 +50,9 @@ struct arg_parse_result {
     acacia::game_backend unreal_backend = acacia::game_backend::backward;
 #endif
     unsigned verbose_level = 0;
+    acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
+    acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
+    acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;
@@ -130,15 +134,20 @@ void show_help (const char* program_name) {
       << "                    set the unrealizability translator preference to\n"
       << "                    [small|any] without also selecting a realizability\n"
       << "                    check; mutually exclusive with -r\n"
-      << "  --real-backend VAL       use the [backward|forward] game backend for real arms\n"
-      << "  --unreal-backend VAL     use the [backward|forward] game backend for unreal arms\n"
+      << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for real arms\n"
+      << "  --real-provider VAL      use [frozen-graph|spot-lazy|spot-eager] automaton provider (default frozen-graph)\n"
+      << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal requires frozen-graph\n"
+      << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
+      << acacia::candidate_mode_name (ACACIA_DEFAULT_CANDIDATE_MODE) << ")\n"
+      << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
-      << "                    polarity:transform:backend, where polarity is real or\n"
+      << "                    polarity:transform:backend[:provider], where polarity is real or\n"
       << "                    unreal; real transforms are small or any; unreal\n"
       << "                    transforms are formula or automaton; backends are\n"
-      << "                    backward or forward; unreal arms use the build's\n"
+      << "                    backward, forward, spot-guarded or spot-guarded-sparse; unreal arms use the build's\n"
       << "                    primary translation preference; mutually exclusive\n"
-      << "                    with -r, -u, and the per-polarity options above\n"
+      << "                    with -r, -u, and per-polarity backend/translation options\n"
+      << "                    provider options apply to arms without an explicit provider\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -268,6 +277,23 @@ void process_arg_spot_fast (const std::string& arg, arg_parse_result& result) {
     error (EXIT_CODE_ERROR, "Error: unexpected Spot fast-path option %s\n", arg.c_str ());
 }
 
+void process_arg_provider (const std::string& arg, acacia::automaton_provider& provider,
+                            const char* option) {
+  const auto parsed = acacia::parse_automaton_provider (arg);
+  if (not parsed)
+    error (EXIT_CODE_ERROR,
+           "Error: unexpected value %s for --%s; expected frozen-graph, spot-lazy or spot-eager.\n",
+           arg.c_str (), option);
+  provider = *parsed;
+#if !ACACIA_SPOT_LAZY_PROVIDER
+  if (provider != acacia::automaton_provider::frozen_graph)
+    error (EXIT_CODE_ERROR,
+           "Error: unsupported configuration: --%s requests %s, but this binary was "
+           "built without the Spot lazy provider (ACACIA_SPOT_LAZY_PROVIDER); configure with "
+           "-Dacacia_spot_lazy_provider=true.\n", option, arg.c_str ());
+#endif
+}
+
 void process_arg_game_backend (const std::string& arg, acacia::game_backend& backend,
                                const char* option) {
   if (auto parsed = acacia::parse_game_backend (arg); parsed.has_value ()) {
@@ -280,10 +306,17 @@ void process_arg_game_backend (const std::string& arg, acacia::game_backend& bac
              "-Dacacia_forward_safety_solver=true.\n",
              option);
 #endif
+#if !ACACIA_SPOT_GUARDED_BACKEND
+    if (acacia::is_guarded_backend (backend))
+      error (EXIT_CODE_ERROR,
+             "Error: --%s requests spot-guarded, but this binary was built without the "
+             "Spot guarded backend (ACACIA_SPOT_GUARDED_BACKEND); configure with "
+             "-Dacacia_spot_guarded_backend=true.\n", option);
+#endif
   }
   else
     error (EXIT_CODE_ERROR,
-           "Error: unexpected value %s for --%s; expected backward or forward.\n",
+           "Error: unexpected value %s for --%s; expected backward, forward, spot-guarded or spot-guarded-sparse.\n",
            arg.c_str (), option);
 }
 
@@ -300,8 +333,8 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
     case portfolio_arm_parse_error::malformed_spec:
       error (EXIT_CODE_ERROR,
              "Error: invalid field count in --arms spec %s; expected "
-             "polarity:transform:backend (real|unreal, small|any or "
-             "formula|automaton, backward|forward).\n",
+             "polarity:transform:backend[:provider] (real|unreal, small|any or "
+             "formula|automaton, backward|forward|spot-guarded).\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::polarity:
@@ -322,7 +355,11 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       break;
     case portfolio_arm_parse_error::backend:
       error (EXIT_CODE_ERROR,
-             "Error: invalid backend %s in --arms spec %s; expected backward or forward.\n",
+             "Error: invalid backend %s in --arms spec %s; expected backward, forward, spot-guarded or spot-guarded-sparse.\n",
+             parsed.value.c_str (), parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::provider:
+      error (EXIT_CODE_ERROR, "Error: invalid provider %s in --arms spec %s.\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::duplicate:
@@ -338,6 +375,14 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
              "Error: --arms requests the forward backend, but this binary was built "
              "without the forward safety solver (ACACIA_FORWARD_SAFETY_SOLVER); "
              "configure with -Dacacia_forward_safety_solver=true.\n");
+#endif
+#if !ACACIA_SPOT_GUARDED_BACKEND
+  for (const auto& arm : parsed.arms)
+    if (acacia::is_guarded_backend (arm.backend))
+      error (EXIT_CODE_ERROR,
+             "Error: --arms requests spot-guarded, but this binary was built without the "
+             "Spot guarded backend (ACACIA_SPOT_GUARDED_BACKEND); configure with "
+             "-Dacacia_spot_guarded_backend=true.\n");
 #endif
   result.arms = std::move (parsed.arms);
 }
@@ -388,6 +433,9 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_REAL_BACKEND = 1002;
   static constexpr int OPT_UNREAL_BACKEND = 1003;
   static constexpr int OPT_ARMS = 1004;
+  static constexpr int OPT_REAL_PROVIDER = 1005;
+  static constexpr int OPT_UNREAL_PROVIDER = 1006;
+  static constexpr int OPT_CANDIDATE_MODE = 1007;
   bool unreal_translation_pref_specified = false;
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
@@ -399,6 +447,9 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"real-backend", required_argument, nullptr, OPT_REAL_BACKEND},
       {"unreal-backend", required_argument, nullptr, OPT_UNREAL_BACKEND},
       {"arms", required_argument, nullptr, OPT_ARMS},
+      {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
+      {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
+      {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -498,6 +549,19 @@ arg_parse_result arg_parser (int argc, char** argv) {
         process_arg_unreal (optarg, retval);
         break;
       case 's': retval.synth_fname = optarg; break;
+      case OPT_REAL_PROVIDER:
+        process_arg_provider (optarg, retval.real_provider, "real-provider");
+        break;
+      case OPT_UNREAL_PROVIDER:
+        process_arg_provider (optarg, retval.unreal_provider, "unreal-provider");
+        break;
+      case OPT_CANDIDATE_MODE:
+        if (auto mode = acacia::parse_candidate_mode (optarg))
+          retval.candidate = *mode;
+        else
+          error (EXIT_CODE_ERROR,
+                 "Error: --candidate-mode expects only or fallback.\n");
+        break;
       case OPT_SPOT_FAST: process_arg_spot_fast (optarg, retval); break;
       case OPT_REAL_BACKEND:
         if (retval.arms.has_value ())
@@ -614,6 +678,30 @@ arg_parse_result arg_parser (int argc, char** argv) {
         retval.arms->push_back ({true, retval.primary_translation_pref, strategy,
                                  retval.unreal_backend});
   }
+
+  for (auto& arm : *retval.arms) {
+    // Validate default arms too, using the same compile-gate errors as explicit
+    // backend requests. A provider selection never changes the backend.
+    process_arg_game_backend (acacia::game_backend_name (arm.backend), arm.backend, "arms");
+    if (!arm.provider_explicit)
+      arm.provider = arm.unreal ? retval.unreal_provider : retval.real_provider;
+    process_arg_provider (acacia::automaton_provider_name (arm.provider), arm.provider, "arms");
+    if (arm.provider != acacia::automaton_provider::frozen_graph) {
+      if (arm.unreal && arm.unreal_x == UNREAL_X_AUTOMATON)
+        error (EXIT_CODE_ERROR,
+               "Error: unsupported configuration: the automaton-unreal route must remain eager; "
+               "use frozen-graph or the formula-unreal route.\n");
+      if (arm.backend != acacia::game_backend::spot_guarded)
+        error (EXIT_CODE_ERROR,
+               "Error: unsupported configuration: a Spot TAA provider requires --real-backend spot-guarded "
+               "or the corresponding unreal/--arms selection.\n");
+    }
+  }
+
+  for (size_t i = 0; i < retval.arms->size (); ++i)
+    for (size_t j = 0; j < i; ++j)
+      if ((*retval.arms)[i] == (*retval.arms)[j])
+        error (EXIT_CODE_ERROR, "Error: duplicate arm after provider selection.\n");
 
   if (sgn_kmin.has_value ()) {
     if (*sgn_kmin > 0) {

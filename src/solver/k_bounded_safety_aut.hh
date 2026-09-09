@@ -169,6 +169,17 @@ class k_bounded_safety_aut_detail {
 #endif
 
       VECTOR_ELT_T k = kfrom;
+      acacia::diagnostics::set_support_backend ("backward");
+      acacia::diagnostics::set_support_graph (aut);
+      acacia::diagnostics::set_support_k (static_cast<int> (k));
+#if ACACIA_ENABLE_DIAGNOSTICS
+      std::optional<acacia::diagnostics::scoped_timer> construction_timer;
+      if (acacia::diagnostics::support_demand_enabled ()) {
+        if (auto* diag = acacia::diagnostics::current ())
+          construction_timer.emplace (&diag->support_action_construction_ms);
+        acacia::diagnostics::snapshot ("support-before-action-construction");
+      }
+#endif
 
       // Precompute the input and output actions.
       auto inputs_to_ios = get_inputs_to_ios ();
@@ -178,6 +189,10 @@ class k_bounded_safety_aut_detail {
       auto actioner = actioner_maker.make (aut, inputs_to_ios, k);
       verb_do (1, vout << "Fetching IO actions" << std::endl);
       auto input_output_fwd_actions = actioner.actions ();
+      acacia::diagnostics::set_support_actions (input_output_fwd_actions);
+#if ACACIA_ENABLE_DIAGNOSTICS
+      construction_timer.reset ();
+#endif
 #if ACACIA_ENABLE_DIAGNOSTICS
       acacia::antichain_snapshot::record_all_input_actions (input_output_fwd_actions);
 #endif  // list<pair<bdd, list<action_vec>>>
@@ -377,6 +392,7 @@ class k_bounded_safety_aut_detail {
                        << std::endl);
       k = static_cast<VECTOR_ELT_T> (next_k);
       actioner.setK (k);
+      acacia::diagnostics::set_support_k (static_cast<int> (k));
       acacia::diagnostics::set_k_last_next (static_cast<int> (next_k));
 #if ACACIA_LOCAL_CERTIFICATE
       local_probe_schedule.reset_marks ();
@@ -411,6 +427,11 @@ class k_bounded_safety_aut_detail {
     // UPre(f) = f \cap f1i
     // f1i = \cup_{o \in O} f1io
     // f1io = PreHat (f, i, o)
+    // Both backward apply sites below are preimages: m[p] is a destination
+    // bound, including -1 constraints. supp(m) is not outgoing-source demand.
+    // Forward probe applications are measured in local_certificate.hh and
+    // certificate checks in certificate_verifier.hh instead. The f.apply in
+    // raise_bound_to_or_give_up only lifts K and requests no transition rows.
     template <typename Action, typename Actioner>
     void cpre_inplace (SetOfStates& f, const Action& io_action, Actioner& actioner,
                        [[maybe_unused]] int k = -1, [[maybe_unused]] int loop = -1) {

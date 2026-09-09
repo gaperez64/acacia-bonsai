@@ -8,24 +8,27 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "benchmarking" / "landing-campaign.sh"
 
 
-def write_csv(path, result):
+def write_csv(path, result, *, seconds=1):
     with path.open("w", newline="") as handle:
         writer = csv.DictWriter(
             handle, fieldnames=["instance", "result", "seconds", "exit"]
         )
         writer.writeheader()
         writer.writerow(
-            {"instance": "one.ltl", "result": result, "seconds": 1, "exit": 0}
+            {"instance": "one.ltl", "result": result, "seconds": seconds, "exit": 0}
         )
 
 
-def run_campaign(tmp_path, baseline_result, candidate_result, *, outer_cgroup=True):
+def run_campaign(tmp_path, baseline_result, candidate_result, *, outer_cgroup=True,
+                 scope_mode="campaign", previous_scope_mode=None):
     manifest = tmp_path / "panel.list"
     manifest.write_text("one.ltl\n")
     output = tmp_path / "output"
     output.mkdir()
     write_csv(output / "baseline-demo.csv", baseline_result)
     write_csv(output / "candidate-demo.csv", candidate_result)
+    if previous_scope_mode is not None:
+        (output / "meta.txt").write_text(f"scope_mode={previous_scope_mode}\n")
 
     fake_binary = tmp_path / "must-not-run"
     fake_binary.write_text("#!/bin/sh\nexit 99\n")
@@ -48,6 +51,8 @@ def run_campaign(tmp_path, baseline_result, candidate_result, *, outer_cgroup=Tr
             manifest,
             "--timeout",
             "17",
+            "--scope-mode",
+            scope_mode,
             "--output",
             output,
         ],
@@ -77,6 +82,47 @@ def test_gate_failure_reaches_status(tmp_path):
     assert (output / "status.txt").read_text() == "COMPLETE FAIL exit=1\n"
     assert (output / "summary.txt").read_text().startswith("GATE FAIL\n")
     assert "GATE FAIL" in (output / "landing-demo.txt").read_text()
+
+
+def test_native_panel_remeasurement_keeps_tlsf_when_ltl_also_exists(tmp_path):
+    suite = tmp_path / "tests" / "suites" / "benchmarks" / "demo"
+    suite.mkdir(parents=True)
+    manifest = suite / "panel.list"
+    manifest.write_text("one.ltl\n")
+    (suite / "sources.tsv").write_text("instance\tsource\none.ltl\tcontent.ltl\n")
+    (suite / "tlsf-sources.tsv").write_text("instance\ttlsf\none.ltl\tone.tlsf\n")
+    ltl_root = tmp_path / "tests" / "ltl"
+    ltl_root.mkdir()
+    (ltl_root / "content.ltl").write_text("G request\n")
+    (ltl_root / "content.part").write_text(".inputs request\n.outputs grant\n")
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    (corpus / "one.tlsf").write_text("INFO {}\nMAIN {}\n")
+    output = tmp_path / "output"
+    output.mkdir()
+    write_csv(output / "baseline-demo.csv", "REALIZABLE", seconds=16)
+    write_csv(output / "candidate-demo.csv", "TIMEOUT", seconds=17)
+    solver = tmp_path / "record-argv"
+    solver.write_text(
+        '#!/bin/sh\nprintf "%s\\n" "$@" >> "$ARGS_LOG"\n'
+        'echo REALIZABLE\n'
+    )
+    solver.chmod(0o755)
+    argv_log = tmp_path / "argv.txt"
+    env = dict(os.environ, ACACIA_OUTER_CGROUP="1", ARGS_LOG=str(argv_log))
+
+    result = subprocess.run(
+        [SCRIPT, "--baseline-bin", solver, "--candidate-bin", solver,
+         "--suite", "demo", "--list", manifest, "--timeout", "17",
+         "--tlsf-corpus", corpus, "--output", output],
+        cwd=ROOT, env=env, capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert argv_log.read_text().splitlines() == [
+        "-T", str(corpus / "one.tlsf"), "-T", str(corpus / "one.tlsf"),
+    ]
+    assert "GATE PASS" in (output / "landing-demo.txt").read_text()
 
 
 def test_tlsf_corpus_survives_the_scope_re_exec(tmp_path):
@@ -175,3 +221,90 @@ def test_a_suite_with_a_tlsf_map_takes_the_tlsf_route(tmp_path):
     argv = (tmp_path / "argv.txt").read_text().splitlines()
     assert "-T" in argv, f"the TLSF route was not taken: {argv}"
     assert str(corpus / "one.tlsf") in argv
+
+
+def test_cannot_resume_with_a_different_scope_mode(tmp_path):
+    result, _ = run_campaign(
+        tmp_path, "REALIZABLE", "REALIZABLE", outer_cgroup=False,
+        scope_mode="instance", previous_scope_mode="campaign",
+    )
+    assert result.returncode == 2
+    assert "cannot resume with a different scope mode" in result.stderr
+
+
+def test_instance_resume_requires_scope_provenance(tmp_path):
+    result, _ = run_campaign(
+        tmp_path, "REALIZABLE", "REALIZABLE", outer_cgroup=False,
+        scope_mode="instance",
+    )
+    assert result.returncode == 2
+    assert "without scope provenance" in result.stderr
+
+
+def test_instance_resume_keeps_matching_scope_results(tmp_path):
+    result, output = run_campaign(
+        tmp_path, "REALIZABLE", "REALIZABLE", outer_cgroup=False,
+        scope_mode="instance", previous_scope_mode="instance",
+    )
+    assert result.returncode == 0, result.stderr
+    assert "scope_mode=instance\n" in (output / "meta.txt").read_text()
+
+
+def test_instance_scopes_survive_a_solver_oom(tmp_path, monkeypatch):
+    """An OOM belongs to one solver invocation; the driver must finish both panels."""
+    monkeypatch.delenv("ACACIA_OUTER_CGROUP", raising=False)
+    monkeypatch.setenv("SCOPE_TEST_DIR", str(tmp_path))
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ['PATH']}")
+    fake_systemd_run = bin_dir / "systemd-run"
+    fake_systemd_run.write_text('''#!/usr/bin/env bash
+set -eu
+printf '%s\\n' "$@" >> "$SCOPE_TEST_DIR/scope-argv"
+while [[ $1 == --* ]]; do shift; done
+exec "$@"
+''')
+    fake_systemd_run.chmod(0o755)
+    fake_systemctl = bin_dir / "systemctl"
+    fake_systemctl.write_text('''#!/usr/bin/env bash
+case $2 in
+  show) printf 'Result=oom-kill\\nMemoryPeak=8589934592\\nLoadState=not-found\\nActiveState=inactive\\nSubState=dead\\n' ;;
+  stop|list-units) ;;
+  *) exit 99 ;;
+esac
+''')
+    fake_systemctl.chmod(0o755)
+    fake_binary = bin_dir / "solver"
+    fake_binary.write_text('''#!/usr/bin/env bash
+case $2 in
+  */one.tlsf) exit 137 ;;
+  *) echo REALIZABLE ;;
+esac
+''')
+    fake_binary.chmod(0o755)
+    listing = tmp_path / "panel.list"
+    listing.write_text("one.ltl\ntwo.ltl\n")
+    (tmp_path / "tlsf-sources.tsv").write_text(
+        "instance\ttlsf\none.ltl\tone.tlsf\ntwo.ltl\ttwo.tlsf\n"
+    )
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    for name in ["one", "two"]:
+        (corpus / f"{name}.tlsf").write_text("INFO {}\n")
+    output = tmp_path / "output"
+    result = subprocess.run(
+        [SCRIPT, "--baseline-bin", fake_binary, "--candidate-bin", fake_binary,
+         "--suite", "demo", "--list", listing, "--timeout", "17",
+         "--tlsf-corpus", corpus, "--scope-mode", "instance", "--output", output],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    for side in ["baseline", "candidate"]:
+        rows = list(csv.DictReader((output / f"{side}-demo.csv").open()))
+        assert [row["result"] for row in rows] == ["RESOURCE_LIMIT", "REALIZABLE"]
+    scope_args = (tmp_path / "scope-argv").read_text().splitlines()
+    units = [arg for arg in scope_args if arg.startswith("--unit=")]
+    assert len(units) == len(set(units)) == 4
+    assert all(unit.startswith("--unit=acacia-subset-") for unit in units)
+    assert scope_args.count("--property=MemoryMax=8G") == 4
+    assert scope_args.count("--property=MemorySwapMax=0") == 4

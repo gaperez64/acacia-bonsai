@@ -295,7 +295,8 @@ def test_run_solver_builds_tlsf_command(tmp_path):
     assert command == [str(solver), "-T", str(tlsf)]
 
 
-def test_run_solver_keeps_ltl_partition_command(tmp_path):
+@pytest.mark.parametrize("tlsf_only", [False, True])
+def test_run_solver_selects_matching_frontend_with_both_sources(tmp_path, tlsf_only):
     suite_dir = tmp_path / "tests" / "suites" / "benchmarks" / "panel"
     suite_dir.mkdir(parents=True)
     ltl_root = tmp_path / "tests" / "ltl"
@@ -324,12 +325,13 @@ def test_run_solver_keeps_ltl_partition_command(tmp_path):
             "0",
             tlsf_source_maps={"panel": tlsf_source_map},
             tlsf_corpus=tlsf_corpus,
+            **({"tlsf_only": True} if tlsf_only else {}),
         )
 
     assert result.verdict == "REALIZABLE"
     assert stdout == "REALIZABLE\n"
     assert stderr == ""
-    assert command == [
+    expected = [
         str(solver),
         "-F",
         str(ltl),
@@ -338,6 +340,34 @@ def test_run_solver_keeps_ltl_partition_command(tmp_path):
         "-o",
         "grant",
     ]
+    if tlsf_only:
+        expected = [str(solver), "-T", str(tlsf_corpus / "example.tlsf")]
+    assert command == expected
+
+
+def test_tlsf_only_does_not_fall_back_to_existing_ltl(tmp_path):
+    ltl = tmp_path / "example.ltl"
+    ltl.write_text("G request\n")
+    ltl.with_suffix(".part").write_text(".inputs request\n.outputs grant\n")
+    tlsf_map = tmp_path / "tlsf-sources.tsv"
+    tlsf_map.write_text("instance\ttlsf\n")
+
+    with pytest.raises(ValueError, match="cannot locate TLSF remeasurement target"):
+        landing_bar.run_solver(
+            tmp_path / "must-not-run", tmp_path, ltl.name, 1, "8G", "0",
+            tlsf_source_maps={"panel": tlsf_map}, tlsf_corpus=tmp_path,
+            tlsf_only=True,
+        )
+
+
+def test_tlsf_only_requires_explicit_source_map(tmp_path, capsys):
+    with pytest.raises(SystemExit) as error:
+        landing_bar.main([
+            str(tmp_path / "baseline.csv"), str(tmp_path / "candidate.csv"),
+            "--tlsf-only",
+        ])
+    assert error.value.code == 2
+    assert "--tlsf-only requires --tlsf-source-map" in capsys.readouterr().err
 
 
 def test_tlsf_source_map_resolves_through_cli_corpus(tmp_path):

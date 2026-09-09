@@ -1,6 +1,9 @@
 #pragma once
 
 #include "actioners/direction.hh"
+#include "solver/diagnostics.hh"
+
+#include <optional>
 
 namespace acacia::solver_detail {
 
@@ -16,6 +19,9 @@ namespace acacia::solver_detail {
       unsigned long long* forward_applications = nullptr,
       unsigned long long forward_application_budget = 0,
       bool* budget_exhausted = nullptr) {
+    std::optional<acacia::diagnostics::scoped_fine_timer> demand_timer;
+    if (acacia::diagnostics::support_demand_enabled ())
+      demand_timer.emplace (acacia::diagnostics::fine_metric::support_verification);
     unsigned long long ignored_forward_applications = 0;
     unsigned long long& applications =
         forward_applications == nullptr ? ignored_forward_applications
@@ -43,6 +49,7 @@ namespace acacia::solver_detail {
           // game action.  In particular, do not consume a solver-selected
           // environment id, a cached image, or downward-cover metadata: a bad
           // cover must be unable to certify its own false WIN.
+          acacia::diagnostics::observe_support_demand (generator, action, true);
           const auto image =
               actioner.apply (generator, action, actioners::direction::forward);
           if (candidate.contains (image)) {

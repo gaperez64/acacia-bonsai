@@ -114,6 +114,39 @@ in [benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
 
 # Compile-time configurations
 
+The experimental Spot paths require `-Dacacia_spot_guarded_backend=true`;
+the TAA providers also require `-Dacacia_spot_lazy_provider=true`.
+`--arms real:small:spot-guarded:spot-lazy,unreal:formula:spot-guarded:spot-lazy`
+selects a lazy worker for each polarity. `spot-eager` is the fully enumerated
+control of the same TAA/cursor construction. With the default `frozen-graph`
+provider, `spot-guarded` uses dense ranks and `spot-guarded-sparse` preserves
+the same mixed numeric/Boolean domain in sparse storage. Automaton-unreal
+requires `frozen-graph`.
+
+These paths verify decisions before returning them. Candidate limits produce
+an inconclusive result; `--candidate-mode fallback` explicitly rebuilds the
+existing frozen/backward path after a candidate failure. Synthesis uses the
+existing frozen/backward implementation. For diagnostic runs,
+`ACACIA_SPOT_CAPTURE_DIR` enables JSON records of the actual transformed
+worker formulas, AP partitions, phases, and measured counters.
+
+`-Dacacia_default_candidate_mode=only|fallback` sets the build's default;
+`--candidate-mode` still overrides it. Both TAA providers use
+`-Dacacia_spot_taa_max_rank_nodes=200000` by default, independently of frozen
+guarded search. The common `ACACIA_SPOT_MAX_RANK_NODES` environment override
+applies to both; `ACACIA_SPOT_TAA_MAX_RANK_NODES` takes precedence for TAA only.
+The experimental `otf_taa_fallback_lazy` and `otf_taa_fallback_eager` presets
+use a 1,000-node TAA cap and backward fallback, alongside forward real and
+both original forward unreal workers. They remain outside the shipping group.
+The `otf_mix_formula_lazy` and `otf_mix_formula_eager` presets instead use
+sparse guarded formula-unreal solving alongside forward automaton-unreal,
+forward real, and bounded TAA real with backward fallback. Their 1,000-node
+TAA cap leaves frozen guarded search's 200,000-node budget unchanged. These
+four-worker mixtures are experimental configurations under evaluation.
+The node cap is not a deadline: TAA construction or a row/query operation can
+exhaust the external timeout before backward fallback starts. The mixed TAA
+presets currently fail the panel coverage gate on some fast backward-real cases.
+
 Acacia-Bonsai's optimized variants are compile-time configurations.  The
 configuration registry lives in `config/acacia-options.json` and
 `config/acacia-presets.json`; `scripts/acacia-config.py` validates presets and

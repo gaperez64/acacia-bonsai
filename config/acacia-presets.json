@@ -320,7 +320,7 @@
     },
     "best_four_arm_contradiction": {
       "description": "Ship backward and forward realizability arms plus formula and automaton forward unrealizability arms, re-enabling exact equivariant solving and adding forced-output contradiction checks to the F reference.",
-      "role": "shipping",
+      "role": "reference",
       "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
       "enable_equivariant_solver": true,
       "forced_output_contradiction": true,
@@ -333,6 +333,119 @@
       "ios_precomputer": "semantic_mona",
       "forward_safety_solver": true,
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "otf_contradiction": {
+      "description": "Compare Spot guarded and TAA arms using the best_four_arm_contradiction components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_four_arm_contradiction",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "otf_sparse": {
+      "description": "Candidate four-worker portfolio retaining backward and forward realizability with sparse guarded formula and automaton unrealizability workers.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:spot-guarded-sparse"
+    },
+    "otf_sparse_automaton": {
+      "description": "Retain backward and forward realizability and forward formula-unreal solving, adding a sparse guarded automaton-unreal worker.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:spot-guarded-sparse"
+    },
+    "otf_sparse_formula": {
+      "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a sparse guarded formula-unreal worker.",
+      "role": "shipping",
+      "inherits": "otf_contradiction",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
+    },
+    "otf_taa_lazy": {
+      "description": "Candidate four-worker portfolio retaining backward and forward realizability, with sparse guarded formula-unreal and lazy TAA realizability workers.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,real:small:spot-guarded:spot-lazy"
+    },
+    "otf_taa_eager": {
+      "description": "Same-construction eager TAA control for the sparse formula-unreal and TAA-real candidate portfolio.",
+      "role": "sweep",
+      "inherits": "otf_taa_lazy",
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,real:small:spot-guarded:spot-eager"
+    },
+    "otf_taa_real_lazy": {
+      "description": "Retain backward and forward realizability and forward automaton-unreal solving, adding a lazy TAA realizability worker.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_arms": "real:small:backward,real:small:forward,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
+    },
+    "otf_taa_real_eager": {
+      "description": "Same-construction eager control for the TAA-real portfolio that retains the existing forward automaton-unreal worker.",
+      "role": "sweep",
+      "inherits": "otf_taa_real_lazy",
+      "default_arms": "real:small:backward,real:small:forward,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
+    },
+    "otf_taa_fallback_lazy": {
+      "description": "Try bounded lazy TAA realizability with backward fallback, retaining forward real and both original forward unreal workers.",
+      "role": "sweep",
+      "inherits": "otf_contradiction",
+      "default_candidate_mode": "fallback",
+      "spot_taa_max_rank_nodes": 1000,
+      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
+    },
+    "otf_taa_fallback_eager": {
+      "description": "Same-construction eager control for bounded TAA realizability with backward fallback and both original unreal workers.",
+      "role": "sweep",
+      "inherits": "otf_taa_fallback_lazy",
+      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
+    },
+    "otf_mix_formula_lazy": {
+      "description": "Combine sparse guarded formula-unreal solving with bounded lazy TAA realizability and backward fallback, retaining forward real and automaton-unreal workers.",
+      "role": "sweep",
+      "inherits": "otf_taa_fallback_lazy",
+      "default_arms": "real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,real:small:spot-guarded:spot-lazy"
+    },
+    "otf_mix_formula_eager": {
+      "description": "Same-construction eager control for the sparse formula-unreal and bounded TAA realizability mixture with backward fallback.",
+      "role": "sweep",
+      "inherits": "otf_mix_formula_lazy",
+      "default_arms": "real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,real:small:spot-guarded:spot-eager"
+    },
+    "otf_semantic": {
+      "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_decomp_rank_bucketed_semantic_mona",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:small:backward,unreal:formula:backward,unreal:automaton:backward"
+    },
+    "otf_bbox": {
+      "description": "Compare Spot guarded and TAA arms using the best_four_arm_bboxtree components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_four_arm_bboxtree",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:small:backward,real:small:forward,unreal:formula:forward,unreal:automaton:forward"
+    },
+    "otf_any": {
+      "description": "Compare Spot guarded and TAA arms using the best_decomp_mona_any components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_decomp_mona_any",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:any:backward,unreal:formula:backward,unreal:automaton:backward"
+    },
+    "otf_forward": {
+      "description": "Compare Spot guarded and TAA arms using the best_decomp_rank_bucketed_semantic_mona_forward components and unchanged default arm selection.",
+      "role": "sweep",
+      "inherits": "best_decomp_rank_bucketed_semantic_mona_forward",
+      "spot_guarded_backend": true,
+      "spot_lazy_provider": true,
+      "forward_safety_solver": true,
+      "default_arms": "real:small:forward,unreal:formula:forward,unreal:automaton:forward"
     }
   },
   "tool_baselines": {
@@ -372,7 +485,7 @@
   },
   "groups": {
     "docker_default": [
-      "best_four_arm_contradiction",
+      "otf_sparse_formula",
       "best_decomp_rank_bucketed_semantic_mona",
       "best_four_arm_bboxtree",
       "best_decomp_mona_any"

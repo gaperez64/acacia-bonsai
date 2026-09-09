@@ -1,0 +1,46 @@
+{
+  "primary_sha256": "a906af7a5c6bd3a82a42541a03753691dd68d07c5075ca11ed966f5160702980",
+  "repetition_summary_sha256": "fdadd0f143a8a9ac7435dd515211ef658eab4371bcb56c3a9300eaad0ab32aa4",
+  "repetition_resources_sha256": "4336e1f90b1da600e064becb396a05343e290d0e7918aadfcbabc92e8ec30233",
+  "selected_menu_for_review": [
+    "main-best_decomp_rank_bucketed_semantic_mona",
+    "main-best_decomp_mona_any",
+    "otf_sparse_automaton",
+    "otf_sparse_formula"
+  ],
+  "copied": {
+    "gain-attribution.tsv": {
+      "source": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-gain-attribution/summary.tsv",
+      "sha256": "3ba6c212ecfd96d129b6fab811197c2ef9459485608d4766247ef1045de9b13c"
+    },
+    "gain-attribution-protocol.json": {
+      "source": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-gain-attribution/protocol.json",
+      "sha256": "b10e7beec85f1d91a3447d36d68e757dec7dd99a763f02d9d70302dc13a773a6"
+    },
+    "loss-diagnosis.tsv": {
+      "source": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-loss-diagnosis/summary.tsv",
+      "sha256": "41e457b39390d7d10704f5c12cf3be23ce3ef730cc6704def89f7fdb7a716b30"
+    },
+    "loss-diagnosis-protocol.json": {
+      "source": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-loss-diagnosis/protocol.json",
+      "sha256": "6b9fb69b2008635c53e732671386a243bed5f6bd5148273a60b36baa9836e2a2"
+    },
+    "taa-gain-replay.tsv": {
+      "source": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-taa-replay/summary.tsv",
+      "sha256": "b4bba9dd99371b030ef08a375ea77cedcbdf8dcc70f85147648fea364a4a847f"
+    },
+    "taa-gain-replay-protocol.json": {
+      "source": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-taa-replay/protocol.json",
+      "sha256": "2715c1522f136778900860cfdaec69195e019bcbbf791973bf6f5b7acbb7b2c7"
+    },
+    "admission.json": {
+      "source": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-admission.json",
+      "sha256": "c893e6c63db5357423687c5a168968d761ae9d3bcbb6b78c893dec1ffc88f80e"
+    },
+    "repetition-plan.json": {
+      "source": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.spot-otf-20260907/closing-repetitions/plan.json",
+      "sha256": "4eab179c73a35f13a3bcad164a1a35cf869efb8c2933a98718917b2322baf46a"
+    }
+  },
+  "interpretation": "Evidence for review. No configuration/default mutation is performed. Worker histories contain only persisted milestones; cancelled or capped workers may have performed additional unrecorded work."
+}
