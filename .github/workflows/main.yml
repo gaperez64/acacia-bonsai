@@ -56,7 +56,7 @@ jobs:
       - name: Compile and test the debug configuration
         run: |
           jobs="$(nproc)"
-          export BENCHMARK_COMPILE_JOBS="$jobs" BENCHMARK_TEST_JOBS="$jobs"
+          export BENCHMARK_COMPILE_JOBS="$jobs"
           ./self-benchmark.sh -c base -j -b unit
           rm -f build_base/benchmarked
           ./self-benchmark.sh -c base -j -b ab/tiny
@@ -77,15 +77,22 @@ jobs:
       matrix:
         # Almost all of a suite's wall clock is instances sitting at the
         # timeout cap rather than instances being solved, so the lever is how
-        # many run at once. synthesis is much the largest and is sharded with
-        # Meson's --slice; the others are short enough whole.
+        # many run at once. That parallelism comes from sharding with Meson's
+        # --slice, one shard per runner, rather than from running several
+        # solvers inside one runner: a shard gets the whole machine's memory,
+        # where four solvers sharing one would get a quarter each. synthesis is
+        # much the largest suite and takes eight shards; the others run whole.
         include:
           - {suite: ab/small, slice: ''}
           - {suite: ab/issue54, slice: ''}
-          - {suite: synthesis, slice: '1/4'}
-          - {suite: synthesis, slice: '2/4'}
-          - {suite: synthesis, slice: '3/4'}
-          - {suite: synthesis, slice: '4/4'}
+          - {suite: synthesis, slice: '1/8'}
+          - {suite: synthesis, slice: '2/8'}
+          - {suite: synthesis, slice: '3/8'}
+          - {suite: synthesis, slice: '4/8'}
+          - {suite: synthesis, slice: '5/8'}
+          - {suite: synthesis, slice: '6/8'}
+          - {suite: synthesis, slice: '7/8'}
+          - {suite: synthesis, slice: '8/8'}
     steps:
       - uses: actions/checkout@v7
         with: {fetch-depth: 0, submodules: true}
@@ -98,7 +105,7 @@ jobs:
           BENCHMARK_COMPILE_PROFILE: checked
         run: |
           jobs="$(nproc)"
-          export BENCHMARK_COMPILE_JOBS="$jobs" BENCHMARK_TEST_JOBS="$jobs"
+          export BENCHMARK_COMPILE_JOBS="$jobs"
           slice=""
           if [ -n "${{ matrix.slice }}" ]; then
             slice="-s ${{ matrix.slice }}"
