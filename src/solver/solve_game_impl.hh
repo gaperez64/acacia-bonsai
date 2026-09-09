@@ -1,5 +1,6 @@
-#include "solver/spot_worker_record.hh"
 #pragma once
+
+#include "solver/spot_worker_record.hh"
 
 #include "actioners/no_ios_precomputation.hh"
 #include "config/component_checks.hh"
