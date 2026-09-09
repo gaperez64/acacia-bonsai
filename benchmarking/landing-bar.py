@@ -9,6 +9,8 @@ import os
 import pathlib
 import shlex
 import sys
+from benchlib import par2 as par2_score
+
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -95,11 +97,11 @@ def load_csv(path: pathlib.Path) -> dict[str, Result]:
 
 def summary(rows: dict[str, Result], timeout: float) -> tuple[Counter, float]:
     counts = Counter(result.kind for result in rows.values())
-    par2 = sum(
-        result.seconds if result.kind == "solved" else 2 * timeout
-        for result in rows.values()
+    solved_seconds = sum(
+        result.seconds for result in rows.values() if result.kind == "solved"
     )
-    return counts, par2
+    unsolved = len(rows) - counts["solved"]
+    return counts, par2_score(solved_seconds, unsolved, timeout)
 
 
 def print_summary(label: str, rows: dict[str, Result], timeout: float) -> None:

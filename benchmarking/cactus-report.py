@@ -20,6 +20,8 @@ import argparse
 import csv
 import math
 import pathlib
+from benchlib import par2 as par2_score
+
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -163,7 +165,7 @@ def summarize(
     non_solved = Counter(
         result.result for result in rows.values() if not result.solved
     )
-    par2 = solved_time + 2 * timeout * sum(non_solved.values())
+    par2 = par2_score(solved_time, sum(non_solved.values()), timeout)
     return Summary(
         label,
         len(solved_rows),

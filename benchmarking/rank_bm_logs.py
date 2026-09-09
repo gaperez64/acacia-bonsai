@@ -13,7 +13,7 @@ import glob
 import os
 import sys
 
-from benchlib import load_meson_jsonl
+from benchlib import load_meson_jsonl, par2 as par2_score
 
 
 def outcome(obj):
@@ -81,8 +81,7 @@ def main():
     ranked = []
     for name, counts, t_ok, _ in rows:
         nonanswers = counts["timeout"] + counts["unknown"] + counts["error"]
-        par2 = t_ok + 2 * timeout * nonanswers
-        ranked.append((name, counts, t_ok, par2))
+        ranked.append((name, counts, t_ok, par2_score(t_ok, nonanswers, timeout)))
     ranked.sort(key=lambda r: r[3])
 
     width = max(len(r[0]) for r in ranked)

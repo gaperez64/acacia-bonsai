@@ -25,6 +25,8 @@ import argparse
 import csv
 import json
 import math
+from benchlib import par2 as par2_score
+
 import pathlib
 import statistics
 import sys
@@ -75,8 +77,9 @@ def score(rows: dict[str, dict], cap: float) -> dict:
     metrics = dict(total=len(rows), answered=len(answered),
                    real=sum(r["result"] == "REALIZABLE" for r in answered),
                    unreal=sum(r["result"] == "UNREALIZABLE" for r in answered),
-                   par2_seconds=sum(r["seconds"] for r in answered)
-                       + (len(rows) - len(answered)) * 2 * cap,
+                   par2_seconds=par2_score(
+                       sum(r["seconds"] for r in answered),
+                       len(rows) - len(answered), cap),
                    answered_seconds=sum(r["seconds"] for r in answered))
     for column in ("cpu_seconds", "scope_cpu_seconds", "max_process_rss_bytes", "scope_memory_peak_bytes"):
         values = [float(r[column]) for r in rows.values() if r.get(column) not in (None, "")]
