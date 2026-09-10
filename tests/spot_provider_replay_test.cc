@@ -25,6 +25,9 @@ int main () {
   const int report_fd = open ("/dev/null", O_WRONLY);
   const auto report = pipe_reporter (report_fd);
   unsigned checks = 0, corruptions = 0, arithmetic = 0;
+  unsigned redundant_loss_events = 0;
+  std::size_t losing_events = 0, antichain_insertions = 0;
+  std::size_t broad_scans = 0, nodes_scanned = 0;
   for (const char* f :
        {"true", "false", "F a", "G a", "GF a", "GF a & GF b", "G(a -> F b)", "(a U b) | G c"}) {
     const auto dict = spot::make_bdd_dict ();
@@ -74,6 +77,33 @@ int main () {
               return 3;
             ++arithmetic;
           }
+        // Losing-region accounting.  These hold in any correct version and are
+        // the baseline the growth-gated scan has to improve without breaking:
+        // today one broad scan runs per loss event, so scans >= insertions.
+        if (actual.subsumption_hits > actual.subsumption_queries)
+          return 8;
+        if (actual.losing_antichain_size + actual.losing_removals
+            != actual.losing_insertions)
+          return 9;
+        if (actual.losing_antichain_size > actual.losing_antichain_peak)
+          return 10;
+        if (actual.subsumption_nodes_invalidated > actual.subsumption_nodes_checked)
+          return 11;
+        if (actual.subsumption_nodes_checked
+            > actual.subsumption_scans * actual.nodes.size ())
+          return 12;
+        if (actual.subsumption_scans < actual.losing_insertions)
+          return 13;
+        // A loss event whose rank was already inside the losing region: the
+        // proof is recorded but no generator is added.  These are exactly the
+        // events whose broad scan can find nothing.
+        if (actual.proofs.size () > actual.losing_insertions)
+          ++redundant_loss_events;
+        losing_events += actual.proofs.size ();
+        antichain_insertions += actual.losing_insertions;
+        broad_scans += actual.subsumption_scans;
+        nodes_scanned += actual.subsumption_nodes_checked;
+
         auto corrupt = actual;
         if (win) {
           corrupt.nodes[corrupt.initial].choices.clear ();
@@ -93,6 +123,15 @@ int main () {
   }
   std::cout << checks << " explicit-game matches, " << arithmetic << " sparse arithmetic matches, "
             << corruptions << " corrupt certificates rejected\n";
+  std::cout << losing_events << " loss events, " << antichain_insertions
+            << " antichain insertions, " << broad_scans << " broad scans over "
+            << nodes_scanned << " node checks, " << redundant_loss_events
+            << " games with a redundant loss event\n";
+  if (redundant_loss_events == 0) {
+    // Without one of these the growth gate would be untested by this sweep.
+    std::cerr << "FAIL: no game produced a loss event inside the known region\n";
+    return 14;
+  }
   {
     // A forged strategy omits the accepting successor row. The verifier must
     // request it, charge it as additional active work, and reject the strategy.

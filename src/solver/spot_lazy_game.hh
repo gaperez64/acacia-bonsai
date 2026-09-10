@@ -551,19 +551,33 @@ namespace acacia::spot_lazy_game {
       std::vector<Rank> generators_;
 
     public:
+      // Counter names and mutability mirror solver_detail::minimal_losing_antichain,
+      // the dense twin of this structure, so the two solvers' logs read alike.
+      // The query pair is mutable because subsumes() is const.
+      mutable std::size_t queries = 0, hits = 0;
+      std::size_t insertions = 0, removals = 0, peak = 0;
+
       bool subsumes (const Rank& r) const {
+        ++queries;
         for (const auto& g : generators_)
-          if (g.leq (r))
+          if (g.leq (r)) {
+            ++hits;
             return true;
+          }
         return false;
       }
       bool insert (const Rank& r) {
         if (subsumes (r))
           return false;
+        const auto before = generators_.size ();
         std::erase_if (generators_, [&] (const Rank& g) { return r.leq (g); });
+        removals += before - generators_.size ();
         generators_.push_back (r);
+        ++insertions;
+        peak = std::max (peak, generators_.size ());
         return true;
       }
+      std::size_t size () const { return generators_.size (); }
       size_t bytes () const {
         size_t result = 0;
         for (const auto& r : generators_)
@@ -616,6 +630,15 @@ namespace acacia::spot_lazy_game {
       bool pending_expansion = false;
       std::vector<Rank> generators;
       std::size_t expansions = 0, choices_created = 0, reopened_sources = 0;
+      // Losing-region work.  subsumption_scans counts broad passes over the
+      // interned nodes; nodes_checked and nodes_invalidated are that pass's
+      // numerator and denominator.  The antichain's own counters come from
+      // LossSet.  Names follow the dense forward solver's child_metrics.
+      std::size_t subsumption_scans = 0;
+      std::size_t subsumption_nodes_checked = 0, subsumption_nodes_invalidated = 0;
+      std::size_t subsumption_queries = 0, subsumption_hits = 0;
+      std::size_t losing_insertions = 0, losing_removals = 0;
+      std::size_t losing_antichain_size = 0, losing_antichain_peak = 0;
       double prep_ms = 0, solve_ms = 0, verify_ms = 0;
   };
 
@@ -796,6 +819,31 @@ namespace acacia::spot_lazy_game {
         }
         view_.report.count ("rank_interner_bytes", bytes);
         view_.report.count ("losing_antichain_rank_bytes", losing_.bytes ());
+        // Emitted from the live counters, not from result_, which solve() has
+        // moved from by the time this runs.  publish_counters() copies these
+        // same members, so a string sink and a SolveResult reader agree.
+        view_.report.count ("subsumption_scans", subsumption_scans_);
+        view_.report.count ("subsumption_nodes_checked", nodes_checked_);
+        view_.report.count ("subsumption_nodes_invalidated", nodes_invalidated_);
+        view_.report.count ("subsumption_queries", losing_.queries);
+        view_.report.count ("subsumption_hits", losing_.hits);
+        view_.report.count ("losing_insertions", losing_.insertions);
+        view_.report.count ("losing_removals", losing_.removals);
+        view_.report.count ("losing_antichain_size", losing_.size ());
+        view_.report.count ("losing_antichain_peak", losing_.peak);
+      }
+      // Copy the live counters into the result.  Called once, from solve(),
+      // before either return; ~Search then emits the same values.
+      void publish_counters () {
+        result_.subsumption_scans = subsumption_scans_;
+        result_.subsumption_nodes_checked = nodes_checked_;
+        result_.subsumption_nodes_invalidated = nodes_invalidated_;
+        result_.subsumption_queries = losing_.queries;
+        result_.subsumption_hits = losing_.hits;
+        result_.losing_insertions = losing_.insertions;
+        result_.losing_removals = losing_.removals;
+        result_.losing_antichain_size = losing_.size ();
+        result_.losing_antichain_peak = losing_.peak;
       }
       SolveResult solve () {
         view_.phase = Phase::search;
@@ -820,6 +868,7 @@ namespace acacia::spot_lazy_game {
         result_.solve_ms = detail::elapsed (started);
         result_.pending_loss = not losses_.empty ();
         result_.pending_expansion = not open_.empty ();
+        publish_counters ();  // before both returns below, and before verification
         if (not search.value) {
           result_.failure = search.unknown;
           result_.status = search.unknown == Unknown::resource_limit
@@ -869,6 +918,8 @@ namespace acacia::spot_lazy_game {
       size_t before_search_ = view_.cache->complete_rows ();
       solver_detail::forward_work_queue<RankNodeId> open_, losses_;
       LossSet losing_;
+      std::size_t subsumption_scans_ = 0;
+      std::size_t nodes_checked_ = 0, nodes_invalidated_ = 0;
       // Only these generator IDs are reduced; immutable proofs are never erased.
       std::vector<std::size_t> generators_;
 
@@ -962,10 +1013,18 @@ namespace acacia::spot_lazy_game {
           }
           // Preserve the existing solver's losing-subsumption invalidation,
           // including fully covered nodes that are no longer on the open queue.
-          for (RankNodeId source = 0; source < result_.nodes.size (); ++source)
-            if (not result_.nodes[source].losing)
-              if (const auto proof = subsumer (result_.nodes[source].rank))
-                enqueue_loss (source, losing_reason::env_subsumed, {*proof});
+          // One full pass over every interned node, per loss event, whether or
+          // not this event enlarged the losing region.
+          ++subsumption_scans_;
+          for (RankNodeId source = 0; source < result_.nodes.size (); ++source) {
+            ++nodes_checked_;
+            if (result_.nodes[source].losing)
+              continue;
+            if (const auto proof = subsumer (result_.nodes[source].rank)) {
+              ++nodes_invalidated_;
+              enqueue_loss (source, losing_reason::env_subsumed, {*proof});
+            }
+          }
           losses_.pop_front ();
         }
       }
