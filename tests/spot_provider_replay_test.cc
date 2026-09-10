@@ -29,6 +29,9 @@ int main () {
   std::size_t losing_events = 0, antichain_insertions = 0;
   std::size_t broad_scans = 0, nodes_scanned = 0;
   std::size_t subsumption_queries = 0, subsumption_hits = 0;
+  std::size_t expansions_total = 0, choices_total = 0, nodes_total = 0;
+  std::size_t reopened_total = 0, invalidated_total = 0, removals_total = 0;
+  std::size_t reopen_enqueues_total = 0;
   for (const char* f :
        {"true", "false", "F a", "G a", "GF a", "GF a & GF b", "G(a -> F b)", "(a U b) | G c"}) {
     const auto dict = spot::make_bdd_dict ();
@@ -93,13 +96,25 @@ int main () {
         if (actual.subsumption_nodes_checked
             > actual.subsumption_scans * actual.nodes.size ())
           return 12;
-        if (actual.subsumption_scans < actual.losing_insertions)
+        // One broad scan per generator, not one per loss event: the scan is
+        // what makes the region's growth known, so it runs exactly when the
+        // region grows.
+        if (actual.subsumption_scans != actual.losing_insertions)
           return 13;
+        if (actual.reopen_enqueues > actual.reopened_sources)
+          return 15;
         // A loss event whose rank was already inside the losing region: the
         // proof is recorded but no generator is added.  These are exactly the
         // events whose broad scan can find nothing.
         if (actual.proofs.size () > actual.losing_insertions)
           ++redundant_loss_events;
+        expansions_total += actual.expansions;
+        choices_total += actual.choices_created;
+        nodes_total += actual.nodes.size ();
+        reopened_total += actual.reopened_sources;
+        reopen_enqueues_total += actual.reopen_enqueues;
+        invalidated_total += actual.subsumption_nodes_invalidated;
+        removals_total += actual.losing_removals;
         subsumption_queries += actual.subsumption_queries;
         subsumption_hits += actual.subsumption_hits;
         losing_events += actual.proofs.size ();
@@ -132,6 +147,12 @@ int main () {
             << " games with a redundant loss event\n";
   std::cout << subsumption_queries << " subsumption queries, " << subsumption_hits
             << " hits\n";
+  // The search itself must be untouched by how the losing region is scanned.
+  std::cout << "search shape: " << expansions_total << " expansions, " << choices_total
+            << " choices, " << nodes_total << " nodes, " << reopened_total
+            << " reopened, " << invalidated_total << " invalidated, " << removals_total
+            << " removals\n";
+  std::cout << "reopen enqueues: " << reopen_enqueues_total << "\n";
   if (redundant_loss_events == 0) {
     // Without one of these the growth gate would be untested by this sweep.
     std::cerr << "FAIL: no game produced a loss event inside the known region\n";

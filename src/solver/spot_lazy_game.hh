@@ -658,7 +658,7 @@ namespace acacia::spot_lazy_game {
       // interned nodes; nodes_checked and nodes_invalidated are that pass's
       // numerator and denominator.  The antichain's own counters come from
       // LossSet.  Names follow the dense forward solver's child_metrics.
-      std::size_t subsumption_scans = 0;
+      std::size_t subsumption_scans = 0, reopen_enqueues = 0;
       std::size_t subsumption_nodes_checked = 0, subsumption_nodes_invalidated = 0;
       std::size_t subsumption_queries = 0, subsumption_hits = 0;
       std::size_t losing_insertions = 0, losing_removals = 0;
@@ -849,6 +849,7 @@ namespace acacia::spot_lazy_game {
         view_.report.count ("subsumption_scans", subsumption_scans_);
         view_.report.count ("subsumption_nodes_checked", nodes_checked_);
         view_.report.count ("subsumption_nodes_invalidated", nodes_invalidated_);
+        view_.report.count ("reopen_enqueues", reopen_enqueues_);
         view_.report.count ("subsumption_queries", losing_.queries);
         view_.report.count ("subsumption_hits", losing_.hits);
         view_.report.count ("losing_insertions", losing_.insertions);
@@ -862,6 +863,7 @@ namespace acacia::spot_lazy_game {
         result_.subsumption_scans = subsumption_scans_;
         result_.subsumption_nodes_checked = nodes_checked_;
         result_.subsumption_nodes_invalidated = nodes_invalidated_;
+        result_.reopen_enqueues = reopen_enqueues_;
         result_.subsumption_queries = losing_.queries;
         result_.subsumption_hits = losing_.hits;
         result_.losing_insertions = losing_.insertions;
@@ -944,6 +946,7 @@ namespace acacia::spot_lazy_game {
       LossSet losing_;
       std::size_t subsumption_scans_ = 0;
       std::size_t nodes_checked_ = 0, nodes_invalidated_ = 0;
+      std::size_t reopen_enqueues_ = 0;
       void enqueue (RankNodeId id) {
         auto& node = result_.nodes[id];
         if (not node.losing && not node.queued) {
@@ -982,8 +985,28 @@ namespace acacia::spot_lazy_game {
         node.losing = true;
         if (id == result_.initial)
           result_.initial_proof = proof_id;
-        losing_.insert (rank, proof_id);
         losses_.push_back (id);
+        if (not losing_.insert (rank, proof_id))
+          return;  // rank was already inside the region: nothing new is implied
+        // The region grew, so broadcast the one generator that grew it.  Only
+        // ranks above `rank` can be newly implied: everything above an older
+        // generator was marked when that generator was inserted, and this scan
+        // is the step that establishes it.  Testing `rank` alone is therefore
+        // equivalent to re-testing every generator, at one comparison per node.
+        //
+        // enqueue_loss never interns, so result_.nodes is fixed for the whole
+        // cascade, and a node marked here has a rank above `rank`, so its own
+        // insert() returns false and it cannot start a further scan.
+        ++subsumption_scans_;
+        for (RankNodeId source = 0; source < result_.nodes.size (); ++source) {
+          ++nodes_checked_;
+          if (result_.nodes[source].losing)
+            continue;
+          if (Oracle::leq (rank, result_.nodes[source].rank)) {
+            ++nodes_invalidated_;
+            enqueue_loss (source, losing_reason::env_subsumed, {proof_id});
+          }
+        }
       }
       void recompute_coverage (RankNodeId id) {
         auto& node = result_.nodes[id];
@@ -1015,23 +1038,18 @@ namespace acacia::spot_lazy_game {
             recompute_coverage (source);
             if (not result_.nodes[source].losing) {
               ++result_.reopened_sources;
+              // reopened_sources counts attempts, and an attempt on a node that
+              // is already queued does nothing.  Counting the enqueues too is
+              // what makes the pair readable: the attempts move when losses are
+              // discovered earlier, the enqueues move only if the search does.
+              if (not result_.nodes[source].queued)
+                ++reopen_enqueues_;
               enqueue (source);  // target loss is NOT a proof of source loss
             }
           }
-          // Preserve the existing solver's losing-subsumption invalidation,
-          // including fully covered nodes that are no longer on the open queue.
-          // One full pass over every interned node, per loss event, whether or
-          // not this event enlarged the losing region.
-          ++subsumption_scans_;
-          for (RankNodeId source = 0; source < result_.nodes.size (); ++source) {
-            ++nodes_checked_;
-            if (result_.nodes[source].losing)
-              continue;
-            if (const auto proof = subsumer (result_.nodes[source].rank)) {
-              ++nodes_invalidated_;
-              enqueue_loss (source, losing_reason::env_subsumed, {*proof});
-            }
-          }
+          // Subsumption invalidation is not here any more: it happens once per
+          // generator, in enqueue_loss, where the region is what grows.  This
+          // drain no longer appends to its own queue.
           losses_.pop_front ();
         }
       }

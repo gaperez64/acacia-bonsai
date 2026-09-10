@@ -259,6 +259,7 @@ namespace replay {
     report.count ("losing_proofs", r.proofs.size ());
     report.count ("strategy_generators", r.generators.size ());
     report.count ("reopened_sources", r.reopened_sources);
+    report.count ("reopen_enqueues", r.reopen_enqueues);
     report.count ("subsumption_scans", r.subsumption_scans);
     report.count ("subsumption_nodes_checked", r.subsumption_nodes_checked);
     report.count ("subsumption_nodes_invalidated", r.subsumption_nodes_invalidated);
@@ -373,7 +374,8 @@ namespace replay {
         for (const auto* key :
              {"search_ms", "verification_ms", "attempt_ms", "game_states", "guarded_choices",
               "certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes",
-              "reopened_sources", "subsumption_scans", "subsumption_nodes_checked",
+              "reopened_sources", "reopen_enqueues", "subsumption_scans",
+              "subsumption_nodes_checked",
               "subsumption_nodes_invalidated", "subsumption_queries", "subsumption_hits",
               "losing_insertions", "losing_removals", "losing_antichain_size",
               "losing_antichain_peak"})
@@ -520,6 +522,7 @@ namespace replay {
                                           "losing_proofs",
                                           "strategy_generators",
                                           "reopened_sources",
+                                          "reopen_enqueues",
                                           "subsumption_scans",
                                           "subsumption_nodes_checked",
                                           "subsumption_nodes_invalidated",
