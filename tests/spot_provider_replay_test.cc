@@ -32,6 +32,7 @@ int main () {
   std::size_t expansions_total = 0, choices_total = 0, nodes_total = 0;
   std::size_t reopened_total = 0, invalidated_total = 0, removals_total = 0;
   std::size_t reopen_enqueues_total = 0, prefilter_skips_total = 0;
+  std::size_t region_inputs = 0;
   for (const char* f :
        {"true", "false", "F a", "G a", "GF a", "GF a & GF b", "G(a -> F b)", "(a U b) | G c"}) {
     const auto dict = spot::make_bdd_dict ();
@@ -123,6 +124,34 @@ int main () {
         broad_scans += actual.subsumption_scans;
         nodes_scanned += actual.subsumption_nodes_checked;
 
+        // What a choice region actually promises, checked against
+        // rows::evaluate_sparse -- an arithmetic oracle the solver never uses.
+        // Under exact covering every admitted input must reach the target
+        // itself; under inequality covering it must reach at or below it. The
+        // flag-off branch is what stops the default contract being widened by
+        // accident later.
+        for (const auto& node : actual.nodes)
+          for (const auto& choice : node.choices) {
+            // Deactivated choices are checked too. The region's promise is
+            // about the rank arithmetic, which does not change when the target
+            // is later proved losing, and a choice that is created and then
+            // dropped is exactly where the two covering modes diverge.
+            const auto& target = actual.nodes[choice.successor].rank;
+            for (auto u : valuations (a, a.inputs)) {
+              if ((u & choice.input_region) == bddfalse)
+                continue;
+              const auto post =
+                  rows::evaluate_sparse (store.cache, a, node.rank, u & choice.output, K);
+              if (not post.value || not post.value->leq (target))
+                return 6;
+#if !ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
+              if (not (*post.value == target))
+                return 7;
+#endif
+              ++region_inputs;
+            }
+          }
+
         auto corrupt = actual;
         if (win) {
           corrupt.nodes[corrupt.initial].choices.clear ();
@@ -153,7 +182,13 @@ int main () {
             << " choices, " << nodes_total << " nodes, " << reopened_total
             << " reopened, " << invalidated_total << " invalidated, " << removals_total
             << " removals\n";
-  std::cout << "reopen enqueues: " << reopen_enqueues_total << "\n";
+  std::cout << "reopen enqueues: " << reopen_enqueues_total << ", "
+            << region_inputs << " choice-region inputs checked against the\n"
+               "                 independent sparse arithmetic\n";
+  if (region_inputs == 0) {
+    std::cerr << "FAIL: no choice region was checked\n";
+    return 16;
+  }
   if (redundant_loss_events == 0) {
     // Without one of these the growth gate would be untested by this sweep.
     std::cerr << "FAIL: no game produced a loss event inside the known region\n";

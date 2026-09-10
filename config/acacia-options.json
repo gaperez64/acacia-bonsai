@@ -672,6 +672,20 @@
         }
       ]
     },
+    "spot_guarded_inequality_covering": {
+      "meson": "acacia_spot_guarded_inequality_covering",
+      "type": "boolean",
+      "default": false,
+      "description": "Cover guarded inputs with the <= successor preimage instead of the exact successor",
+      "macros": [
+        {
+          "name": "ACACIA_SPOT_GUARDED_INEQUALITY_COVERING",
+          "emit": "true",
+          "encoding": "constant",
+          "value": 1
+        }
+      ]
+    },
     "forward_safety_solver": {
       "meson": "acacia_forward_safety_solver",
       "type": "boolean",

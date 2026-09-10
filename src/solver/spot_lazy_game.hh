@@ -479,6 +479,16 @@ namespace acacia::spot_lazy_game {
       letters::Result<bdd> eq (const Rank& r, const Rank& s) {
         return query<bdd> ([&] (auto& b) { return preimage (prepare (r, b), s, 2, b); });
       }
+      // The letters under which the successor of r is at or below s, rather
+      // than exactly s.  This is the same downward preimage the inductive
+      // invariant check already aggregates; it is exposed here so guarded
+      // expansion and the certificate verifier can build a choice region from
+      // it.  Per coordinate the term forbids the successor exceeding s there,
+      // over supp(s) union the destinations of r; outside that set both sides
+      // are absent, so the constraint is vacuous.
+      letters::Result<bdd> down (const Rank& r, const Rank& s) {
+        return query<bdd> ([&] (auto& b) { return preimage (prepare (r, b), s, 1, b); });
+      }
       letters::Result<bdd> bad (const Rank& r, const std::vector<Rank>& L, uint64_t) {
         return query<bdd> ([&] (auto& b) { return aggregate (r, L, true, b); });
       }
@@ -733,9 +743,18 @@ namespace acacia::spot_lazy_game {
           detail::require (choice.successor < certificate.nodes.size ());
           const auto& target = certificate.nodes[choice.successor];
           detail::require (not target.losing && rows->is_safe (target.rank, K));
-          const bdd eq = detail::take (oracle.eq (node.rank, target.rank));
+          // Rebuilt here from the fresh Reader and Oracle above, never taken
+          // from the search: a choice that claims too much input space must
+          // fail this, which is the whole point of recomputing it. The gate
+          // matches expand()'s, so a flag-off binary verifies the exact
+          // obligation it searched under.
+#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
+          const bdd reaches = detail::take (oracle.down (node.rank, target.rank));
+#else
+          const bdd reaches = detail::take (oracle.eq (node.rank, target.rank));
+#endif
           const bdd exact =
-              detail::take (oracle.restrict_total (eq, choice.output, Variables::outputs));
+              detail::take (oracle.restrict_total (reaches, choice.output, Variables::outputs));
           covered = detail::take (oracle.query<bdd> ([&] (auto& b) {
             b.require_support (choice.input_region, alphabet.inputs);
             detail::require (b.satisfiable (choice.input_region));
@@ -1103,8 +1122,16 @@ namespace acacia::spot_lazy_game {
             detail::take (oracle_.query<bdd> ([&] (auto& b) { return b.land (*input, *output); }));
         auto successor = detail::take (oracle_.evaluate (rank, letter));
         detail::require (rows_->is_safe (successor, K_) && not losing_.subsumes (successor));
-        const bdd eq = detail::take (oracle_.eq (rank, successor));
-        const bdd exact = detail::take (oracle_.restrict_total (eq, *output, Variables::outputs));
+        // Widening this from "reaches exactly the successor" to "reaches at or
+        // below it" lets one choice claim more of the missing input space. The
+        // successor itself is unchanged, so the target is still a rank the
+        // search reached and verified, not a synthesized upper bound.
+#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
+        const bdd reaches = detail::take (oracle_.down (rank, successor));
+#else
+        const bdd reaches = detail::take (oracle_.eq (rank, successor));
+#endif
+        const bdd exact = detail::take (oracle_.restrict_total (reaches, *output, Variables::outputs));
         const bdd region = detail::take (oracle_.query<bdd> ([&] (auto& b) {
           const bdd C = b.land (missing, exact);
           b.require_support (C, alphabet_.inputs);
