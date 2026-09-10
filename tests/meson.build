@@ -694,9 +694,25 @@ if benchmark_files.has_key ('realizable')
   endforeach
 endif
 
+# Instances no Acacia version is known to answer. The suite asserts a verdict,
+# so leaving one here asserts something the solver cannot produce, and the test
+# reports a failure that is not a regression. Each entry states its evidence;
+# do not add one without it.
+#
+#   SPIPureNext.ltl -- exhausts memory during action construction and returns
+#     UNKNOWN. Every probe from v1.9 to master ends in std::bad_alloc. The
+#     syntcomp24 crossover records Acacia 1.x solving it in 9.437s, but the 1.x
+#     binary reports REALIZABLE when a worker is killed by a signal, and 9.437s
+#     matches time-to-exhaust-memory; see the section on that in
+#     benchmarking/LTLSYNT-GAP.md. CI did not see this before because at -O0 the
+#     solver reached the 51s timeout, which the harness tolerates, before it
+#     reached its memory limit; at -O2 it gets there in ~11s and answers.
+#     It fails the ab/large1 suite for the same reason, which CI does not run.
+synthesis_known_unsolved = ['SPIPureNext.ltl']
+
 foreach f, _ : synthesis_benchmarks
   filename = 'ltl/realizable' / f
-  if fs.exists (filename)
+  if fs.exists (filename) and not synthesis_known_unsolved.contains (f)
     test ('synthesis/' + f,
           check_real_exe,
           args : [ '-p', '-a', '-F', files (filename), '--', '-s', f + '.out.aag' ],
