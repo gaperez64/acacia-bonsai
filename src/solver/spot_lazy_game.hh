@@ -555,7 +555,7 @@ namespace acacia::spot_lazy_game {
       // Counter names and mutability mirror solver_detail::minimal_losing_antichain,
       // the dense twin of this structure, so the two solvers' logs read alike.
       // The query pair is mutable because subsumes() is const.
-      mutable std::size_t queries = 0, hits = 0;
+      mutable std::size_t queries = 0, hits = 0, prefilter_skips = 0;
       std::size_t insertions = 0, removals = 0, peak = 0;
 
       // The proof that witnesses a subsumption is found by the same scan that
@@ -564,11 +564,19 @@ namespace acacia::spot_lazy_game {
       // repeated every leq to learn something the first walk already knew.
       std::optional<std::size_t> subsumer (const Rank& r) const {
         ++queries;
-        for (std::size_t i = 0; i < generators_.size (); ++i)
+        for (std::size_t i = 0; i < generators_.size (); ++i) {
+          // Called explicitly rather than left to leq, which runs it again on
+          // a candidate that passes: two integer comparisons against a merge
+          // join, and it keeps leq self-contained for its many other callers.
+          if (not generators_[i].prefilter_leq (r)) {
+            ++prefilter_skips;
+            continue;
+          }
           if (generators_[i].leq (r)) {
             ++hits;
             return proofs_[i];
           }
+        }
         return std::nullopt;
       }
       bool subsumes (const Rank& r) const { return subsumer (r).has_value (); }
@@ -661,6 +669,7 @@ namespace acacia::spot_lazy_game {
       std::size_t subsumption_scans = 0, reopen_enqueues = 0;
       std::size_t subsumption_nodes_checked = 0, subsumption_nodes_invalidated = 0;
       std::size_t subsumption_queries = 0, subsumption_hits = 0;
+      std::size_t subsumption_prefilter_skips = 0;
       std::size_t losing_insertions = 0, losing_removals = 0;
       std::size_t losing_antichain_size = 0, losing_antichain_peak = 0;
       double prep_ms = 0, solve_ms = 0, verify_ms = 0;
@@ -852,6 +861,7 @@ namespace acacia::spot_lazy_game {
         view_.report.count ("reopen_enqueues", reopen_enqueues_);
         view_.report.count ("subsumption_queries", losing_.queries);
         view_.report.count ("subsumption_hits", losing_.hits);
+        view_.report.count ("subsumption_prefilter_skips", losing_.prefilter_skips);
         view_.report.count ("losing_insertions", losing_.insertions);
         view_.report.count ("losing_removals", losing_.removals);
         view_.report.count ("losing_antichain_size", losing_.size ());
@@ -866,6 +876,7 @@ namespace acacia::spot_lazy_game {
         result_.reopen_enqueues = reopen_enqueues_;
         result_.subsumption_queries = losing_.queries;
         result_.subsumption_hits = losing_.hits;
+        result_.subsumption_prefilter_skips = losing_.prefilter_skips;
         result_.losing_insertions = losing_.insertions;
         result_.losing_removals = losing_.removals;
         result_.losing_antichain_size = losing_.size ();

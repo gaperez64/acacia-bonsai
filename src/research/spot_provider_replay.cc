@@ -265,6 +265,7 @@ namespace replay {
     report.count ("subsumption_nodes_invalidated", r.subsumption_nodes_invalidated);
     report.count ("subsumption_queries", r.subsumption_queries);
     report.count ("subsumption_hits", r.subsumption_hits);
+    report.count ("subsumption_prefilter_skips", r.subsumption_prefilter_skips);
     report.count ("losing_insertions", r.losing_insertions);
     report.count ("losing_removals", r.losing_removals);
     report.count ("losing_antichain_size", r.losing_antichain_size);
@@ -376,7 +377,7 @@ namespace replay {
               "certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes",
               "reopened_sources", "reopen_enqueues", "subsumption_scans",
               "subsumption_nodes_checked",
-              "subsumption_nodes_invalidated", "subsumption_queries", "subsumption_hits",
+              "subsumption_nodes_invalidated", "subsumption_queries", "subsumption_hits", "subsumption_prefilter_skips",
               "losing_insertions", "losing_removals", "losing_antichain_size",
               "losing_antichain_peak"})
           report.put (key, "NA");
@@ -528,6 +529,7 @@ namespace replay {
                                           "subsumption_nodes_invalidated",
                                           "subsumption_queries",
                                           "subsumption_hits",
+                                          "subsumption_prefilter_skips",
                                           "losing_insertions",
                                           "losing_removals",
                                           "losing_antichain_size",

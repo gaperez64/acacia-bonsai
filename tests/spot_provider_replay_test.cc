@@ -31,7 +31,7 @@ int main () {
   std::size_t subsumption_queries = 0, subsumption_hits = 0;
   std::size_t expansions_total = 0, choices_total = 0, nodes_total = 0;
   std::size_t reopened_total = 0, invalidated_total = 0, removals_total = 0;
-  std::size_t reopen_enqueues_total = 0;
+  std::size_t reopen_enqueues_total = 0, prefilter_skips_total = 0;
   for (const char* f :
        {"true", "false", "F a", "G a", "GF a", "GF a & GF b", "G(a -> F b)", "(a U b) | G c"}) {
     const auto dict = spot::make_bdd_dict ();
@@ -117,6 +117,7 @@ int main () {
         removals_total += actual.losing_removals;
         subsumption_queries += actual.subsumption_queries;
         subsumption_hits += actual.subsumption_hits;
+        prefilter_skips_total += actual.subsumption_prefilter_skips;
         losing_events += actual.proofs.size ();
         antichain_insertions += actual.losing_insertions;
         broad_scans += actual.subsumption_scans;
@@ -146,7 +147,7 @@ int main () {
             << nodes_scanned << " node checks, " << redundant_loss_events
             << " games with a redundant loss event\n";
   std::cout << subsumption_queries << " subsumption queries, " << subsumption_hits
-            << " hits\n";
+            << " hits, " << prefilter_skips_total << " prefilter skips\n";
   // The search itself must be untouched by how the losing region is scanned.
   std::cout << "search shape: " << expansions_total << " expansions, " << choices_total
             << " choices, " << nodes_total << " nodes, " << reopened_total
