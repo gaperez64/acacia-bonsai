@@ -238,12 +238,31 @@ def tlsf_status(path: pathlib.Path) -> str | None:
 
 
 def read_status_exceptions(
-    path: pathlib.Path, corpus: pathlib.Path
+    path: pathlib.Path, corpus: pathlib.Path, required: bool = False
 ) -> dict[str, str | None]:
-    """Load status corrections and verify them against the current corpus."""
+    """Load status corrections and verify them against the current corpus.
+
+    `required` says the caller named this path rather than inheriting the
+    default.  A named file that is not there is a misconfiguration, and a silent
+    empty table is the worst way to report it: every catalogued wrong //STATUS
+    then reads as a fresh verdict conflict, which under the default policy
+    aborts the run at whichever instance it reaches first.  That looks exactly
+    like a soundness bug in the solver and is not one.
+    """
     try:
         stream = path.open(encoding="utf-8", newline="")
-    except FileNotFoundError:
+    except FileNotFoundError as error:
+        if required:
+            raise CoverageError(
+                f"status exceptions {path} does not exist; without it every "
+                f"adjudicated wrong //STATUS annotation is reported as a verdict "
+                f"conflict"
+            ) from error
+        print(
+            f"WARNING: no status exceptions at {path}; adjudicated wrong "
+            f"//STATUS annotations will be reported as verdict conflicts",
+            file=sys.stderr,
+        )
         return {}
     except OSError as error:
         raise CoverageError(
@@ -555,9 +574,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--status-exceptions",
         type=pathlib.Path,
-        default=pathlib.Path(__file__).with_name("syntcomp26-status-exceptions.tsv"),
+        default=None,
         metavar="PATH",
-        help="evidence-bearing TLSF status corrections (missing means none)",
+        help="evidence-bearing TLSF status corrections; defaults to the table "
+             "beside this script, and a path given here must exist",
     )
     parser.add_argument(
         "--caps", required=True, type=parse_caps, metavar="1,5,17,60"
@@ -607,7 +627,14 @@ def run(args: argparse.Namespace) -> int:
     tlsf_map = read_tlsf_map(pathlib.Path(args.tlsf_map))
     corpus = pathlib.Path(args.tlsf_corpus)
     targets = resolve_targets(instances, tlsf_map, corpus)
-    exceptions = read_status_exceptions(args.status_exceptions, corpus)
+    # A named path must exist; the default may legitimately be absent, and a
+    # copy of this script run from outside the repo will find it absent.
+    named = args.status_exceptions is not None
+    exceptions_path = (
+        args.status_exceptions if named
+        else pathlib.Path(__file__).with_name("syntcomp26-status-exceptions.tsv")
+    )
+    exceptions = read_status_exceptions(exceptions_path, corpus, required=named)
     expectations: dict[str, tuple[str | None, str]] = {}
     for instance, (tlsf_file, tlsf_path) in targets.items():
         if tlsf_file in exceptions:
