@@ -26,10 +26,19 @@ import sys
 DECISIVE = {"REALIZABLE", "UNREALIZABLE"}
 
 
-def load(path: pathlib.Path, cap: float) -> dict[str, tuple[str, float]]:
+def load(path: pathlib.Path, cap: float) -> tuple[dict[str, tuple[str, float]], list[str]]:
+    """Return (answers, every instance the arm was run on).
+
+    The second half matters for PAR-2.  A summary carries a row per instance in
+    the list, decided or not, so it is the arm's real denominator; scoring
+    against the instances some arm happened to answer would flatter an arm that
+    answers few of them, which is the opposite of what PAR-2 is for.
+    """
     answers: dict[str, tuple[str, float]] = {}
+    attempted: list[str] = []
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle, delimiter="\t"):
+            attempted.append(row["instance"])
             if row["decisive_result"] not in DECISIVE:
                 continue
             solved_at = row["smallest_cap_solved"]
@@ -37,7 +46,7 @@ def load(path: pathlib.Path, cap: float) -> dict[str, tuple[str, float]]:
                 continue
             answers[row["instance"]] = (
                 row["decisive_result"], float(row["decisive_seconds"]))
-    return answers
+    return answers, attempted
 
 
 def par2(answers, instances, cap):
@@ -58,13 +67,24 @@ def main() -> int:
                     help="comma-separated arm labels forming the current shipping union")
     args = ap.parse_args()
 
-    arms = {}
+    arms, attempted = {}, {}
     for path in sorted(args.census_dir.glob("*-summary.tsv")):
-        arms[path.name.removesuffix("-summary.tsv")] = load(path, args.cap)
+        name = path.name.removesuffix("-summary.tsv")
+        arms[name], attempted[name] = load(path, args.cap)
     if not arms:
         print(f"no *-summary.tsv under {args.census_dir}", file=sys.stderr)
         return 1
 
+    # Every arm runs the same list, so disagreement means a truncated or
+    # interrupted campaign and PAR-2 would silently compare different
+    # denominators.  Say so rather than average over it.
+    sizes = {name: len(rows) for name, rows in attempted.items()}
+    if len(set(sizes.values())) > 1:
+        print("WARNING: arms were run on different instance counts; PAR-2 is not "
+              "comparable across them until the census finishes.", file=sys.stderr)
+        for name, count in sorted(sizes.items(), key=lambda kv: kv[1]):
+            print(f"  {name}: {count}", file=sys.stderr)
+    panel = sorted({i for rows in attempted.values() for i in rows})
     instances = sorted({i for a in arms.values() for i in a})
 
     # A verdict conflict is a soundness bug, never portfolio data.
@@ -79,8 +99,10 @@ def main() -> int:
         print("\n".join(conflicts), file=sys.stderr)
         return 1
 
-    print(f"# Arm census: {len(arms)} arms, {len(instances)} instances answered by "
-          f"at least one arm, cap {args.cap:g}s\n")
+    print(f"# Arm census: {len(arms)} arms over {len(panel)} instances, "
+          f"{len(instances)} answered by at least one arm, cap {args.cap:g}s\n")
+    print(f"PAR-2 scores every one of the {len(panel)} instances: a solved one costs "
+          f"its time, an unsolved one costs {2 * args.cap:g}s.\n")
 
     print("## Table A - individual arms\n")
     print("| arm | solved | REAL | UNREAL | PAR-2 | median solved |")
@@ -91,7 +113,7 @@ def main() -> int:
         times = sorted(s for _, s in a.values())
         med = times[len(times) // 2] if times else float("nan")
         print(f"| `{name}` | {len(a)} | {real} | {len(a)-real} | "
-              f"{par2(a, instances, args.cap):.1f} | {med:.2f} |")
+              f"{par2(a, panel, args.cap):.1f} | {med:.2f} |")
 
     print("\n## Table B - unique and marginal contribution\n")
     ship = [s for s in args.shipping.split(",") if s]
