@@ -95,8 +95,7 @@ fi
 
 gate_complete=0
 campaign_started=0
-scope_guard_outer=0
-scope_snapshot=$(mktemp /tmp/acacia-scope-snapshot.XXXXXX)
+. "$repo_root/benchmarking/lib/scope-guard.sh"
 
 write_summary () {
   local verdict=$1
@@ -121,24 +120,12 @@ on_exit () {
       printf 'COMPLETE FAIL exit=%d\n' "$rc" > "$output/status.txt"
     fi
   fi
-  if (( scope_guard_outer == 1 )); then
-    python3 "$repo_root/benchmarking/sweep-acacia-scopes.py" \
-      --stop --snapshot "$scope_snapshot" || true
-    rm -f "$scope_snapshot"
-  fi
+  acacia_scope_guard_end
   return "$rc"
 }
 trap on_exit EXIT
 
-if [[ -z ${ACACIA_CAMPAIGN_SCOPE_GUARD:-} ]]; then
-  if ! python3 "$repo_root/benchmarking/sweep-acacia-scopes.py" \
-       --check --snapshot "$scope_snapshot"; then
-    [[ ${ACACIA_ALLOW_STRAY_SCOPES:-0} == 1 ]] || exit 1
-    echo "landing-campaign: continuing with ACACIA_ALLOW_STRAY_SCOPES=1; measurements may be under contention" >&2
-  fi
-  export ACACIA_CAMPAIGN_SCOPE_GUARD="landing-campaign:$$"
-  scope_guard_outer=1
-fi
+acacia_scope_guard_begin landing-campaign || exit 1
 
 # Put the complete campaign in one bounded scope.  Child tools see the marker
 # and create process groups only, avoiding nested per-instance systemd scopes.

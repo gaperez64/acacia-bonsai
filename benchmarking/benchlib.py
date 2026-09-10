@@ -678,6 +678,23 @@ def run_systemd_scope(
             signal.signal(handled_signal, previous)
 
 
+#: The two verdicts that count as an answer. Every other outcome -- a timeout,
+#: a resource limit, UNKNOWN, an error -- is a non-answer, and PAR-2 charges it.
+SOLVED = frozenset({"REALIZABLE", "UNREALIZABLE"})
+
+
+def par2(solved_seconds: float, unsolved: int, timeout: float) -> float:
+    """PAR-2: measured time for the instances that answered, and twice the cap
+    charged for every instance that did not.
+
+    Callers classify their own rows -- what counts as an answer differs between
+    the Meson testlog and the campaign CSVs, and that judgement belongs with
+    the reader of each format. What must not differ is the arithmetic, which
+    used to be written out at four call sites.
+    """
+    return solved_seconds + 2.0 * timeout * unsolved
+
+
 def verdict_from_output(text: str | None, *, on_conflict: str = "last") -> str | None:
     """Parse line-anchored verdicts so a diagnostic containing the word cannot flip one.
 

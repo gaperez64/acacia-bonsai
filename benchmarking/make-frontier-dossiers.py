@@ -86,7 +86,7 @@ def main(argv=None) -> int:
         out.append(f"- **family key**: `{family_key}`")
         out.append(f"- **failure kind at the boundary**: {rows[0].get('failure_kind', '-')}")
         out.append(f"- **points observed in 2026**: {len(members)}")
-        out.append(f"- **frozen targets from this family**: "
+        out.append("- **frozen targets from this family**: "
                    + ", ".join(f"`{r['instance']}`" for r in rows))
         out.append("")
 

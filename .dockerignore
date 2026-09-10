@@ -1,2 +1,21 @@
-# anything that starts with build
+# The build context is sent to the daemon in full, so anything large and
+# reproducible is excluded here. This mirrors .gitignore's bulky entries: in a
+# working tree those directories hold tens of gigabytes of build output and
+# benchmark logs, none of which an image needs.
+#
+# .git is deliberately NOT excluded: meson.build derives the version through
+# vcs_tag() and scripts/git-version.py, both of which need it.
+
 build*
+_bm-logs*
+mkplottable/
+tlsf-corpus/
+selection-ltl-2025v2/
+.venv/
+virtenv/
+.pytest_cache/
+__pycache__/
+*.pyc
+_trash
+builddir
+buildir

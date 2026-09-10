@@ -42,3 +42,18 @@ install = ["--tags=python-runtime"]
 # self-contained — otherwise `pip install` from sdist can't resolve
 # dependency('posets') via its wrap fallback.
 dist = ["--include-subprojects"]
+
+[tool.ruff]
+# The lint that reviews have been run against was never recorded, so it could
+# not be reproduced. These are the rules the tree already honours: ruff's
+# default set (pycodestyle errors, pyflakes) plus E402, which is what the
+# thirteen existing `# noqa: E402` markers were written against -- without it
+# selected, those markers read as unused rather than as load-bearing.
+#
+# Deliberately not selected yet: isort (I001), flake8-comprehensions (C408) and
+# the pyupgrade/refurb families, which together flag around 190 further places.
+# Those are worth doing, but as their own change rather than smuggled in here.
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "E402"]

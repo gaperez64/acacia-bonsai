@@ -3,6 +3,7 @@ _bm-logs*/
 selection-ltl-2025v2/
 .pytest_cache/
 virtenv/
+.venv/
 tags
 *.zip
 loss-set*.csv

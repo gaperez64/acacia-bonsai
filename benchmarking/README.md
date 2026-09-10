@@ -1,44 +1,48 @@
 # At a glimpse: suggested process
 
 In the coming sections of this README, all of the following commands are
-explained and justified. We sum up the process we suggest
-here for convenience.
+explained and justified. We sum up the process we suggest here for
+convenience.
+
+Build the configurations you want to compare:
 ```
-./self-benchmark.sh -b ab/syntcomp21/crit -t 1
+./self-benchmark.sh -R -c best_decomp_mona,otf_sparse_formula
 ```
-Wait for completion of benchmarking of multiple versions of Acacia-Bonsai.
-This can take a few hours!
 
+Run each binary over the same instances, recording a verdict and a wall-clock
+time per instance. Keep the campaign inside a memory scope, and run
+sequentially, as the measurement protocol at the end of this file requires:
 ```
-mkdir mkplottable
-
-for f in _bm-logs/*.json; do \
-    meson-to-mkplot.sh $(basename $f .json) $f > mkplottable/$(basename $f); \
-  done
-
-mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to plot.pdf mkplottable/*.json
+python3 benchmarking/run-subset.py \
+  --bin build_best_decomp_mona/src/acacia-bonsai \
+  --list tests/suites/benchmarks/syntcomp26/all.list \
+  --timeout 17 --systemd-scope --memory-max 8G \
+  --csv _bm-logs/best_decomp_mona.csv
 ```
-Now `plot.pdf` contains a plot of the benchmarking of the
-different configurations of Acacia-Bonsai.
 
-## Dependency
-Above, we are using `mkplot.py` (https://github.com/alexeyignatiev/mkplot), a
-tool to produce cactus plots.
+Turn the CSVs into a PAR-2 table and a cactus plot:
+```
+python3 benchmarking/cactus-report.py \
+  --csv baseline=_bm-logs/best_decomp_mona.csv \
+  --csv candidate=_bm-logs/otf_sparse_formula.csv \
+  --title "SYNTCOMP26" --timeout 17 \
+  --out-prefix _bm-logs/comparison --markdown _bm-logs/comparison.md
+```
+`--virtual-best LABEL=a,b` adds a synthetic portfolio series that keeps, per
+instance, the fastest member that solved it. The dated directories under
+`benchmarking/plots/` are the committed outputs of exactly this step.
 
-  
 # Generating the plots
 
-Once a few JSON files have been produced in _bm-logs/, one can convert the files
-to a format that mkplot understands.  To convert one JSON from the test output
-to the mkplot format, one can use:
-```
-meson-to-mkplot.sh 'Title of Plot' testlog.json > mkplottable.json
-```
+`cactus-report.py` writes both `PATH.png` and `PATH.pdf` from `--out-prefix`,
+and the PAR-2 table as Markdown from `--markdown`. Only REALIZABLE and
+UNREALIZABLE rows count as solved; every other outcome is charged twice the
+timeout in PAR-2 and omitted from the cactus curve, so a timeout cannot be
+read as a fast answer.
 
-Survival, a.k.a. cactus, plots are then generated using, for instance:
-```
-mkplot.py --lloc='upper left' --ymin=1e-2 --ylog -b pdf --save-to plot.pdf mkplottable/*.json
-```
+For the per-instance view that a cactus plot cannot give -- which instances a
+change actually helped, rather than how the sorted curves compare --
+`speedup-scatter.py` plots one point per instance against the diagonal.
 
 # Ranking configurations by PAR-2
 

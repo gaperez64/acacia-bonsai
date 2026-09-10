@@ -25,6 +25,8 @@ import argparse
 import csv
 import json
 import math
+from benchlib import par2 as par2_score
+
 import pathlib
 import statistics
 import sys
@@ -75,8 +77,9 @@ def score(rows: dict[str, dict], cap: float) -> dict:
     metrics = dict(total=len(rows), answered=len(answered),
                    real=sum(r["result"] == "REALIZABLE" for r in answered),
                    unreal=sum(r["result"] == "UNREALIZABLE" for r in answered),
-                   par2_seconds=sum(r["seconds"] for r in answered)
-                       + (len(rows) - len(answered)) * 2 * cap,
+                   par2_seconds=par2_score(
+                       sum(r["seconds"] for r in answered),
+                       len(rows) - len(answered), cap),
                    answered_seconds=sum(r["seconds"] for r in answered))
     for column in ("cpu_seconds", "scope_cpu_seconds", "max_process_rss_bytes", "scope_memory_peak_bytes"):
         values = [float(r[column]) for r in rows.values() if r.get(column) not in (None, "")]
@@ -119,7 +122,8 @@ def main() -> int:
         base_metrics, cand_metrics = score(base_rows, args.cap), score(cand_rows, args.cap)
     except (OSError, ValueError, KeyError) as error:
         parser.error(str(error))
-    group = lambda name: families[name] if families else family(name)
+    def group(name):
+        return families[name] if families else family(name)
     base = {n: (r["result"], r["seconds"]) for n, r in base_rows.items() if r["result"] in DECISIVE}
     cand = {n: (r["result"], r["seconds"]) for n, r in cand_rows.items() if r["result"] in DECISIVE}
 

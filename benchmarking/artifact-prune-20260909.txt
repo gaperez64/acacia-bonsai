@@ -1,0 +1,314 @@
+# Artifact prune manifest
+# generated 2026-09-09T17:49:09Z at 30788551
+# These directories were removed. They were gitignored build output and
+# campaign logs that no tracked file, top-level note, shipped configuration,
+# or committed binary hash referred to, and that were not write-protected.
+# 260 directories, about 33 GB. The tree went from 42 GB to 9.4 GB.
+
+## kept
+_bm-logs
+_bm-logs-ltlsynt-component-bypass-2025
+_bm-logs-ltlsynt-component-bypass-20260804
+_bm-logs-ltlsynt-gap-campaign-20260803-224955
+_bm-logs-ltlsynt-gap-campaign-20260804-tier3-contiguous
+_bm-logs-ltlsynt-phase1-any-small-aborted-20260803
+_bm-logs-ltlsynt-phase1-small-any-20260803
+_bm-logs-top4-on-2024_20s
+_bm-logs.final-v1-current-1d48a15f-20260825
+_bm-logs.fmcad26-head-6dda2f3b-20260822
+_bm-logs.gap-plan-20260804
+_bm-logs.ltlsynt-route-20260828
+_bm-logs.semantic-census-20260829
+_bm-logs.small-invariant-20260830
+_bm-logs.spot-otf-20260907
+_bm-logs.syntcomp25-basis-20260828
+_bm-logs.three-way-20260828
+_bm-logs.three-way-full-20260905
+_bm-logs.three-way-probe-20260831
+_bm-logs.tlsf-native-20260814
+build
+build_base
+build_best_decomp_mona
+build_best_decomp_mona_any
+build_best_decomp_mona_diag
+build_best_decomp_rank_bucketed_mona_eq_min_blocks_2
+build_cs_inc_any
+build_cs_mix_bbox
+build_cs_mix_contra
+build_diag_shipping
+build_gap_action_dedup
+build_local
+build_ltlsynt
+build_otf_capture
+build_otf_diag
+build_p5_B
+build_p5_F
+build_p5_S
+build_res
+build_research
+build_s2ref_B
+build_sprint_diag
+build_sprint_semantic
+build_tlsf
+
+## removed
+22MB	_bm-logs-all-on-2021crit
+5.2MB	_bm-logs-preprocessing-baseline
+5.4MB	_bm-logs-preprocessing-tlsfprep
+27MB	_bm-logs-symmetry-eq-first-20260802
+27MB	_bm-logs-symmetry-noeq-first-20260802
+1.6MB	_bm-logs-translation-race-20260804
+187KB	_bm-logs.alphabet-census-20260814
+4.3MB	_bm-logs.docker-round1-20260818
+9.0MB	_bm-logs.docker-round2-combined-20260818
+5.0MB	_bm-logs.docker-round2-syntcomp24-20260818
+5.2MB	_bm-logs.docker-round2-syntcomp25-20260818
+7.0MB	_bm-logs.final-combined-20260815
+634MB	_bm-logs.fmcad26-pr118-132ffe3d-20260819
+26KB	_bm-logs.g2s-forward
+26KB	_bm-logs.g2s-full-20260830
+26KB	_bm-logs.g2s-local-20260830
+26KB	_bm-logs.g2s-local-tuned-20260830
+26KB	_bm-logs.g2s-memo-20260830
+12KB	_bm-logs.g2s-semantic-20260829
+101KB	_bm-logs.g3-forward
+117KB	_bm-logs.g3-local-20260830
+116KB	_bm-logs.g3-memo-20260830
+115KB	_bm-logs.g3-semantic-20260830
+18KB	_bm-logs.gates-20260810
+76KB	_bm-logs.master-vs-branch-20260817
+262KB	_bm-logs.master-vs-branch-20260817-r2
+76KB	_bm-logs.master-vs-branch-20260817-syntcomp21-clean
+158KB	_bm-logs.master-vs-branch-20260817-syntcomp21-clean-r2
+14MB	_bm-logs.mp-census-20260828
+31MB	_bm-logs.pre-docker-round1-20260818
+603MB	_bm-logs.pre-symmetry-gates-20260802
+87KB	_bm-logs.race4-contention-20260826
+15KB	_bm-logs.semantic-census-smoke
+235KB	_bm-logs.simulation-density-20260827
+272KB	_bm-logs.smallany-validation-20260826
+12KB	_bm-logs.step1-baseline
+114B	_bm-logs.step1-csr
+7.3KB	_bm-logs.step1-final
+19KB	_bm-logs.step1-microbench
+22KB	_bm-logs.step1-picker
+4.2KB	_bm-logs.step1-slice5
+4.2KB	_bm-logs.step1-slice6
+4.2KB	_bm-logs.step1-slice7
+34KB	_bm-logs.step1-stack
+6.6MB	_bm-logs.step1-stack-g3-20260814
+3.4KB	_bm-logs.step2-arena
+13KB	_bm-logs.step2-cached-sum
+188B	_bm-logs.step2-vpopcnt
+253KB	_bm-logs.stepc-correctness-20260814
+896B	_bm-logs.stepc-g1-20260814
+22KB	_bm-logs.stepc-g3-20260814
+301KB	_bm-logs.stepc-tlsf-parity-20260814
+28KB	_bm-logs.survivor-census-20260828
+44KB	_bm-logs.tba-prototype-20260827
+61KB	_bm-logs.tlsf-payoff-20260828
+1.4MB	_bm-logs.translation-census-20260827
+66MB	build_base_iosprecom_mona
+89MB	build_base_iosprecom_mona.pre-metadata.overnight-20260706
+3.8MB	build_base_iosprecom_mona.pre-metadata.resume-topconfigs-20260707
+204MB	build_best_decomp_bboxtree_mona
+177MB	build_best_decomp_bboxtree_mona.pre-docker-round1-20260818
+178MB	build_best_decomp_bboxtree_mona_cached_sum
+155MB	build_best_decomp_bboxtree_mona_profile
+205MB	build_best_decomp_bboxtree_mona_race
+332MB	build_best_decomp_bboxtree_mona_tlsf
+184MB	build_best_decomp_comptrie_mona
+155MB	build_best_decomp_cst_mona
+170MB	build_best_decomp_cst_mona.pre-meson-profile.posets-ltlsynt-sweep-20260708-085149
+155MB	build_best_decomp_cst_mona.pre-metadata.small-any-main-20260708-221546-pr
+171MB	build_best_decomp_filtered_vector_mona
+126MB	build_best_decomp_filtered_vector_mona.pre-docker-round1-20260818
+172MB	build_best_decomp_filtered_vector_mona_race
+132MB	build_best_decomp_kdtree_mona
+131MB	build_best_decomp_kdtree_mona.pre-meson-profile.posets-ltlsynt-sweep-20260708-085149
+147MB	build_best_decomp_kdtree_mona.pre-metadata.overnight-20260706
+3.8MB	build_best_decomp_kdtree_mona.pre-metadata.resume-topconfigs-20260707
+131MB	build_best_decomp_kdtree_mona.pre-posets-6023926.posets-rank-filter-20260709-kdtree
+161MB	build_best_decomp_mona.pre-docker-round1-20260818
+114MB	build_best_decomp_mona.pre-equivariant-current-20260711
+104MB	build_best_decomp_mona.pre-meson-profile.posets-ltlsynt-sweep-20260708-085149
+104MB	build_best_decomp_mona.pre-metadata.posets-downset-sweep-20260708-075950
+104MB	build_best_decomp_mona.pre-metadata.small-any-main-20260708-201631-pr
+105MB	build_best_decomp_mona.pre-metadata.three-posets-rsimp-20260708-190656
+106MB	build_best_decomp_mona.pre-posets-rank-filter-20260709
+107MB	build_best_decomp_mona.pre-shipping-flip-20260712
+139MB	build_best_decomp_mona.pre-symmetry-gates-20260802
+106MB	build_best_decomp_mona_any.pre-phase1-20260803
+276MB	build_best_decomp_mona_any_tlsf
+162MB	build_best_decomp_mona_arena
+151MB	build_best_decomp_mona_cached_sum
+185MB	build_best_decomp_mona_cpre_batch
+72MB	build_best_decomp_mona_delta2
+107MB	build_best_decomp_mona_elevator
+138MB	build_best_decomp_mona_equivariant
+126MB	build_best_decomp_mona_equivariant.pre-equivariant-current-20260711
+158MB	build_best_decomp_mona_equivariant_diag
+3.7MB	build_best_decomp_mona_equivariant_diag.partial-20260711
+72MB	build_best_decomp_mona_mp_nba
+121MB	build_best_decomp_mona_noequivariant
+108MB	build_best_decomp_mona_noequivariant.pre-symmetry-gates-20260802
+118MB	build_best_decomp_mona_profile
+153MB	build_best_decomp_mona_race
+159MB	build_best_decomp_mona_reduce
+152MB	build_best_decomp_mona_sl
+116MB	build_best_decomp_mona_spotfast_all
+116MB	build_best_decomp_mona_spotfast_det
+108MB	build_best_decomp_mona_spotfast_det_and_gfg
+116MB	build_best_decomp_mona_spotfast_off
+277MB	build_best_decomp_mona_tlsf
+276MB	build_best_decomp_mona_tlsf.pre-step9-final-20260818
+156MB	build_best_decomp_rank_bucketed_mona
+113MB	build_best_decomp_rank_bucketed_mona.pre-docker-round1-20260818
+168MB	build_best_decomp_rank_bucketed_mona_eq_baseline
+169MB	build_best_decomp_rank_bucketed_mona_eq_max_states_2048
+169MB	build_best_decomp_rank_bucketed_mona_eq_min_clients_2
+157MB	build_best_decomp_rank_bucketed_mona_race
+175MB	build_best_decomp_rank_bucketed_mona_tlsf
+4.5MB	build_best_decomp_rank_bucketed_mona_tlsf.failed-no-pkgconfig-20260818
+182MB	build_best_decomp_sharingtree_mona
+140MB	build_best_decomp_sharingtrie_mona.pre-meson-profile.posets-ltlsynt-sweep-20260708-085149
+150MB	build_best_decomp_sharingtrie_mona.pre-metadata.overnight-20260706
+3.9MB	build_best_decomp_sharingtrie_mona.pre-metadata.resume-topconfigs-20260707
+140MB	build_best_decomp_sharingtrie_mona.pre-metadata.small-any-main-20260708-221546-pr
+168MB	build_best_decomp_simpsharingtree_mona
+119MB	build_best_decomp_skiplist_mona
+620MB	build_best_decomp_skiplist_mona.pre-meson-profile.posets-ltlsynt-sweep-20260708-085149
+119MB	build_best_decomp_skiplist_mona.pre-metadata.small-any-main-20260708-221546-pr
+130MB	build_best_decomp_skiplist_mona_L10_p4
+130MB	build_best_decomp_skiplist_mona_L12_p2
+132MB	build_best_decomp_skiplist_mona_L16_p4
+132MB	build_best_decomp_skiplist_mona_L20_p2
+129MB	build_best_decomp_skiplist_mona_L8_p2
+129MB	build_best_decomp_skiplist_mona_L8_p4
+105MB	build_best_mona
+122MB	build_best_mona.pre-metadata
+142MB	build_chk
+81MB	build_cov_semantic_mona
+84MB	build_cov_semantic_mona_diag
+82MB	build_cov_semantic_mona_local
+203MB	build_cs_inc_bbox
+195MB	build_cs_inc_mona
+197MB	build_cs_inc_rb
+142MB	build_d0
+140MB	build_def
+143MB	build_default_s1
+171MB	build_dispatch_base
+252MB	build_dispatch_hybrid
+68MB	build_eq_exhaustive
+68MB	build_eq_relaxed
+316MB	build_fastpath
+368MB	build_fastpath_tests
+125MB	build_final_otf_mix_formula_eager
+124MB	build_final_otf_mix_formula_lazy
+71MB	build_final_zero_tail
+86MB	build_fwd
+40MB	build_ident
+40MB	build_ident_after
+265MB	build_k16_base
+188MB	build_k16_hybrid
+153MB	build_landing_candidate
+160MB	build_landing_tlsf
+68MB	build_local_diag
+171MB	build_m0
+129MB	build_mpnba
+58MB	build_mpnba_fix
+60MB	build_mut
+192MB	build_o1_eager
+192MB	build_o1_lazy
+191MB	build_o2
+191MB	build_o4
+140MB	build_off
+20MB	build_otf_any
+21MB	build_otf_bbox
+21MB	build_otf_contradiction
+19MB	build_otf_forward
+115MB	build_otf_gateoff
+340MB	build_otf_san
+118MB	build_otf_semantic
+221MB	build_p1
+184MB	build_p1_cand
+197MB	build_p1_gate_base
+198MB	build_p1_gate_cand
+158MB	build_p1r
+56MB	build_p1x
+205MB	build_p2_cand
+194MB	build_p2_gate_base
+200MB	build_p2_gate_cand
+194MB	build_p3_base
+191MB	build_p3_fbase
+190MB	build_p3_fgeo
+194MB	build_p3_geo
+163MB	build_p4_covering
+197MB	build_p4_fdiag
+456MB	build_p7
+798MB	build_posets_stats
+1.5GB	build_pr113_accepted
+156MB	build_prune_gate
+64MB	build_python_zero_tail
+155MB	build_race4
+158MB	build_res2
+168MB	build_s0
+224MB	build_s1
+170MB	build_s2_c0
+72MB	build_s2_c1
+166MB	build_s2_c2
+72MB	build_s2_c3
+81MB	build_s2_c4
+82MB	build_s2_c5
+72MB	build_s2_c6
+200MB	build_s2mix
+193MB	build_s2ref_F
+198MB	build_s3a_nosum
+198MB	build_s3a_sum
+193MB	build_s3c_nosum
+193MB	build_s3c_sum
+163MB	build_sba_ctl
+119MB	build_selected_otf_sparse
+125MB	build_selected_otf_sparse_automaton
+124MB	build_selected_otf_sparse_formula
+119MB	build_selected_otf_taa_eager
+120MB	build_selected_otf_taa_fallback_eager
+120MB	build_selected_otf_taa_fallback_lazy
+119MB	build_selected_otf_taa_lazy
+119MB	build_selected_otf_taa_real_eager
+119MB	build_selected_otf_taa_real_lazy
+201MB	build_ship
+59MB	build_sim
+115MB	build_spot_defaults_compat
+68MB	build_sprint_baseline
+68MB	build_sprint_semantic_diag
+170MB	build_ss_v0
+82MB	build_ss_v1
+81MB	build_ss_v2
+72MB	build_ss_v3
+196MB	build_stage2
+183MB	build_stage2_backward
+68MB	build_static_deletion
+82MB	build_static_deletion_metrics
+72MB	build_static_deletion_shipping
+74MB	build_static_deletion_zero_tail
+297MB	build_symmetry_probe
+71MB	build_tail_bare_diag2
+70MB	build_tail_bare_lto
+59MB	build_tail_bare_nolto
+1.5KB	build_tail_zero_diag
+79MB	build_tail_zero_diag2
+70MB	build_tail_zero_lto
+62MB	build_tail_zero_nolto
+140MB	build_tba
+163MB	build_tba_e2e
+140MB	build_tc
+189MB	build_threeway
+208MB	build_tlsf_diag
+136MB	build_tp
+137MB	build_tp_on
+366MB	build_transpref_small
+193MB	build_tw_best_decomp_bboxtree_mona_tlsf
+189MB	build_tw_best_decomp_mona_any_tlsf
+188MB	build_tw_best_decomp_mona_tlsf
+142MB	build_v
