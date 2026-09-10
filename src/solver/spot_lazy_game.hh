@@ -549,6 +549,7 @@ namespace acacia::spot_lazy_game {
   // prefilter (its implicit -1 tail would depend on the discovered arena).
   class LossSet {
       std::vector<Rank> generators_;
+      std::vector<std::size_t> proofs_;  // parallel to generators_
 
     public:
       // Counter names and mutability mirror solver_detail::minimal_losing_antichain,
@@ -557,26 +558,49 @@ namespace acacia::spot_lazy_game {
       mutable std::size_t queries = 0, hits = 0;
       std::size_t insertions = 0, removals = 0, peak = 0;
 
-      bool subsumes (const Rank& r) const {
+      // The proof that witnesses a subsumption is found by the same scan that
+      // decides it.  Recovering it with a second pass over a parallel list, as
+      // this class and Search used to between them, walked every generator and
+      // repeated every leq to learn something the first walk already knew.
+      std::optional<std::size_t> subsumer (const Rank& r) const {
         ++queries;
-        for (const auto& g : generators_)
-          if (g.leq (r)) {
+        for (std::size_t i = 0; i < generators_.size (); ++i)
+          if (generators_[i].leq (r)) {
             ++hits;
-            return true;
+            return proofs_[i];
           }
-        return false;
+        return std::nullopt;
       }
-      bool insert (const Rank& r) {
+      bool subsumes (const Rank& r) const { return subsumer (r).has_value (); }
+      bool insert (const Rank& r, std::size_t proof) {
         if (subsumes (r))
           return false;
-        const auto before = generators_.size ();
-        std::erase_if (generators_, [&] (const Rank& g) { return r.leq (g); });
-        removals += before - generators_.size ();
+        // Compact both vectors together: they are parallel, and an erase_if on
+        // one alone would silently misattribute every later witness.
+        std::size_t write = 0;
+        for (std::size_t read = 0; read < generators_.size (); ++read) {
+          if (r.leq (generators_[read])) {
+            ++removals;
+            continue;
+          }
+          if (write != read) {
+            generators_[write] = generators_[read];
+            proofs_[write] = proofs_[read];
+          }
+          ++write;
+        }
+        generators_.erase (generators_.begin () + static_cast<std::ptrdiff_t> (write),
+                           generators_.end ());
+        proofs_.erase (proofs_.begin () + static_cast<std::ptrdiff_t> (write), proofs_.end ());
         generators_.push_back (r);
+        proofs_.push_back (proof);
         ++insertions;
         peak = std::max (peak, generators_.size ());
         return true;
       }
+      // Contiguous, so Oracle::bad's const std::vector<Rank>& binds with no copy.
+      const std::vector<Rank>& ranks () const { return generators_; }
+      const std::vector<std::size_t>& proof_ids () const { return proofs_; }
       std::size_t size () const { return generators_.size (); }
       size_t bytes () const {
         size_t result = 0;
@@ -920,9 +944,6 @@ namespace acacia::spot_lazy_game {
       LossSet losing_;
       std::size_t subsumption_scans_ = 0;
       std::size_t nodes_checked_ = 0, nodes_invalidated_ = 0;
-      // Only these generator IDs are reduced; immutable proofs are never erased.
-      std::vector<std::size_t> generators_;
-
       void enqueue (RankNodeId id) {
         auto& node = result_.nodes[id];
         if (not node.losing && not node.queued) {
@@ -942,40 +963,26 @@ namespace acacia::spot_lazy_game {
         enqueue (id);
         return id;
       }
-      std::vector<Rank> losing_ranks () const {
-        std::vector<Rank> ranks;
-        for (const auto id : generators_)
-          ranks.push_back (result_.proofs[id].rank);
-        return ranks;
-      }
       std::optional<std::size_t> subsumer (const Rank& r) const {
-        if (not losing_.subsumes (r))
-          return std::nullopt;
-        for (const auto id : generators_)
-          if (Oracle::leq (result_.proofs[id].rank, r))
-            return id;
-        detail::require (false);
-        return std::nullopt;
+        return losing_.subsumer (r);
       }
       void enqueue_loss (RankNodeId id, losing_reason reason, std::vector<std::size_t> deps = {},
                          std::optional<bdd> input = {}, std::vector<RowIdentity> rows = {}) {
         auto& node = result_.nodes[id];
         if (node.losing)
           return;
+        // Copy before the push_back below can reallocate result_.proofs, and
+        // before node is used across it.
+        const Rank rank = node.rank;
         const auto proof_id = result_.proofs.size ();
         for (const auto dep : deps)
           detail::require (dep < proof_id);
         result_.proofs.push_back (
-            {{proof_id, reason, id, 0, std::move (deps)}, node.rank, input, std::move (rows)});
+            {{proof_id, reason, id, 0, std::move (deps)}, rank, input, std::move (rows)});
         node.losing = true;
         if (id == result_.initial)
           result_.initial_proof = proof_id;
-        if (losing_.insert (node.rank)) {
-          std::erase_if (generators_, [&] (auto old) {
-            return Oracle::leq (node.rank, result_.proofs[old].rank);
-          });
-          generators_.push_back (proof_id);
-        }
+        losing_.insert (rank, proof_id);
         losses_.push_back (id);
       }
       void recompute_coverage (RankNodeId id) {
@@ -1050,10 +1057,12 @@ namespace acacia::spot_lazy_game {
             [&] (auto& b) { return b.negate (result_.nodes[id].covered_inputs); }));
         const auto input = detail::take (oracle_.model (missing, Variables::inputs));
         detail::require (input.has_value ());
-        const bdd bad = detail::take (oracle_.bad (rank, losing_ranks (), result_.proofs.size ()));
+        const bdd bad = detail::take (oracle_.bad (rank, losing_.ranks (), result_.proofs.size ()));
         const bdd bad_c = detail::take (oracle_.restrict_total (bad, *input, Variables::inputs));
         if (bad_c == bddtrue) {
-          enqueue_loss (id, losing_reason::env_losing_input, generators_, input,
+          // deps is taken by value, so this copies the witness list before any
+          // later insert can compact it.  Do not make the parameter a reference.
+          enqueue_loss (id, losing_reason::env_losing_input, losing_.proof_ids (), input,
                         std::move (row_ids));
           return;
         }

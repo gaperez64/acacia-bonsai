@@ -28,6 +28,7 @@ int main () {
   unsigned redundant_loss_events = 0;
   std::size_t losing_events = 0, antichain_insertions = 0;
   std::size_t broad_scans = 0, nodes_scanned = 0;
+  std::size_t subsumption_queries = 0, subsumption_hits = 0;
   for (const char* f :
        {"true", "false", "F a", "G a", "GF a", "GF a & GF b", "G(a -> F b)", "(a U b) | G c"}) {
     const auto dict = spot::make_bdd_dict ();
@@ -99,6 +100,8 @@ int main () {
         // events whose broad scan can find nothing.
         if (actual.proofs.size () > actual.losing_insertions)
           ++redundant_loss_events;
+        subsumption_queries += actual.subsumption_queries;
+        subsumption_hits += actual.subsumption_hits;
         losing_events += actual.proofs.size ();
         antichain_insertions += actual.losing_insertions;
         broad_scans += actual.subsumption_scans;
@@ -127,6 +130,8 @@ int main () {
             << " antichain insertions, " << broad_scans << " broad scans over "
             << nodes_scanned << " node checks, " << redundant_loss_events
             << " games with a redundant loss event\n";
+  std::cout << subsumption_queries << " subsumption queries, " << subsumption_hits
+            << " hits\n";
   if (redundant_loss_events == 0) {
     // Without one of these the growth gate would be untested by this sweep.
     std::cerr << "FAIL: no game produced a loss event inside the known region\n";
