@@ -159,11 +159,19 @@ case $BENCHMARK_CGROUP_SCOPE in
         ;;
 esac
 
+## The cap bounds one solver, so with several running at once each may claim
+## only its share of the machine.  Handing every one of BENCHMARK_TEST_JOBS
+## solvers 80% of RAM overcommits it: the suite then dies partway with no
+## testlog, on whichever shard happens to hold the heavy instances.  An
+## explicit -m or BENCHMARK_CGROUP_MEMORY_MAX is never rescaled; the caller
+## has said what they want.
 default_benchmark_cgroup_memory_max() {
     local mem_kib
     mem_kib=$(awk '/^MemTotal:/ { print $2; exit }' /proc/meminfo 2>/dev/null)
     if [[ $mem_kib == <-> ]]; then
-        local cap_mib=$(( mem_kib * 8 / 10 / 1024 ))
+        local jobs=$BENCHMARK_TEST_JOBS
+        (( jobs >= 1 )) || jobs=1
+        local cap_mib=$(( mem_kib * 8 / 10 / 1024 / jobs ))
         if (( cap_mib > 0 )); then
             echo "${cap_mib}M"
             return
