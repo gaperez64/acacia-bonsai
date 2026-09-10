@@ -1,13 +1,8 @@
 #pragma once
 
-#undef MAX_CRITICAL_INPUTS
-#define MAX_CRITICAL_INPUTS 1
-
 #include "actioners/direction.hh"
 #include "configuration.hh"
 #include "utils/bdd_helper.hh"
-#include "utils/lambda_ptr.hh"
-#include "utils/ref_ptr_cmp.hh"
 #include "solver/antichain_snapshot.hh"
 #include "solver/k_schedule.hh"
 #include "solver/local_certificate.hh"
@@ -502,9 +497,11 @@ class k_bounded_safety_aut_detail {
       }
 
       SetOfStates f1i (std::move (f1i_vec));
-#elif CPRE_AVOID_UNIONS == 2
-# error Not implemented yet: Remove unions altogether and have intersect take a list
 #endif
+      // A third variant -- no unions at all, with intersect taking a list --
+      // was reserved here as an #error. acacia_cpre_avoid_unions is a boolean,
+      // so that arm was unreachable twice over; this comment is what it was
+      // actually carrying.
 
       {
         ACACIA_SYMMETRY_PROFILE_SCOPE (classic_intersect);

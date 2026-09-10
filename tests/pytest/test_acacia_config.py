@@ -25,7 +25,6 @@ NEW_OPTION_CASES = [
      False, True, "1"),
     ("symmetry_verbose_diagnostics", "ACACIA_SYMMETRY_VERBOSE_DIAGNOSTICS",
      False, True, "1"),
-    ("ltl_frontend", "ACACIA_LTL_FRONTEND", "baseline", "mp_nba", "ACACIA_LTL_FRONTEND_MP_NBA"),
     ("forward_eager_minimal_successors", "ACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS",
      False, True, "1"),
     ("transition_acceptance", "ACACIA_TRANSITION_ACCEPTANCE", False, True, "1"),
@@ -392,10 +391,7 @@ def test_new_options_preserve_defaults_and_flow_through_frontends(
     options, _ = module.load_registry()
     option = options["options"][name]
     assert option["default"] == default
-    expected_default = (
-        "ACACIA_LTL_FRONTEND_BASELINE" if name == "ltl_frontend" else str(int(default))
-    )
-    assert f"-D{macro}={expected_default}" in module.preprocessor_flags(
+    assert f"-D{macro}={int(default)}" in module.preprocessor_flags(
         options, module.defaults(options)
     )
     if isinstance(default, bool):
@@ -436,10 +432,7 @@ def test_constants_are_documentation_only():
     options, presets = module.load_registry()
     module.command_validate(options, presets)
     constants = options["constants"]
-    assert set(constants) == {
-        "VECTOR_ELT_T", "ACACIA_LTL_FRONTEND_BASELINE",
-        "ACACIA_LTL_FRONTEND_MP_NBA", "VECTOR_IMPL_AUTO",
-    }
+    assert set(constants) == {"VECTOR_ELT_T", "VECTOR_IMPL_AUTO"}
     values = module.defaults(options)
     assert set(constants).isdisjoint(values)
     flags = module.preprocessor_flags(options, values)
@@ -620,7 +613,6 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DDEFAULT_SPOT_FAST=SPOT_FAST_DET_AND_GFG",
         "-DACACIA_TRANSLATION_PREF=spot::postprocessor::Small",
         "-DACACIA_TRANSLATION_PREFS=spot::postprocessor::Small, spot::postprocessor::Any",
-        "-DACACIA_LTL_FRONTEND=ACACIA_LTL_FRONTEND_BASELINE",
         "-DACACIA_ENABLE_REALIZABILITY_SIMPLIFIER=0",
         "-DACACIA_ENABLE_SYNTACTIC_BYPASS=1",
         "-DACACIA_FORCED_OUTPUT_CONTRADICTION=0",

@@ -14,9 +14,3 @@
 
 #include "config/derived_gates.hh"
 #include "config/validate.hh"
-
-#ifdef NO_SIMD
-# pragma message("Compiling without SIMD")
-#else
-# pragma message("Compiling with SIMD")
-#endif

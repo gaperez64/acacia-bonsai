@@ -240,27 +240,6 @@
         }
       ]
     },
-    "ltl_frontend": {
-      "meson": "acacia_ltl_frontend",
-      "type": "combo",
-      "default": "baseline",
-      "choices": [
-        "baseline",
-        "mp_nba"
-      ],
-      "description": "Compile-time LTL frontend selection",
-      "macros": [
-        {
-          "name": "ACACIA_LTL_FRONTEND",
-          "emit": "always",
-          "encoding": "map",
-          "map": {
-            "baseline": "ACACIA_LTL_FRONTEND_BASELINE",
-            "mp_nba": "ACACIA_LTL_FRONTEND_MP_NBA"
-          }
-        }
-      ]
-    },
     "enable_realizability_simplifier": {
       "meson": "acacia_enable_realizability_simplifier",
       "type": "boolean",
@@ -620,7 +599,10 @@
       "meson": "acacia_default_candidate_mode",
       "type": "combo",
       "default": "only",
-      "choices": ["only", "fallback"],
+      "choices": [
+        "only",
+        "fallback"
+      ],
       "description": "Default response to a Spot candidate resource limit; the CLI can override it",
       "macros": [
         {
@@ -786,20 +768,6 @@
       "sources": [
         "src/config/acacia_build_config.hh.in",
         "meson.options"
-      ]
-    },
-    "ACACIA_LTL_FRONTEND_BASELINE": {
-      "value": 0,
-      "description": "Baseline enum value of ACACIA_LTL_FRONTEND, not an option. Together with ACACIA_LTL_FRONTEND_MP_NBA it defines the two admissible values. The generated header defines it unconditionally.",
-      "sources": [
-        "src/config/acacia_build_config.hh.in"
-      ]
-    },
-    "ACACIA_LTL_FRONTEND_MP_NBA": {
-      "value": 1,
-      "description": "MP-NBA enum value of ACACIA_LTL_FRONTEND, not an option. Together with ACACIA_LTL_FRONTEND_BASELINE it defines the two admissible values. The generated header defines it unconditionally.",
-      "sources": [
-        "src/config/acacia_build_config.hh.in"
       ]
     },
     "VECTOR_IMPL_AUTO": {
