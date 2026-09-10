@@ -498,13 +498,23 @@ def run_systemd_scope(
     unit_prefix: str = "acacia-bench",
     capture_filter: Callable[[str], bool] | None = None,
     capture_consumer: Callable[[str], None] | None = None,
+    allowed_cpus: str | None = None,
+    cpu_quota: str | None = None,
 ) -> RunResult:
-    """Run cmd in a memory-limited user scope and stop the scope on timeout.
+    """Run cmd in a resource-limited user scope and stop the scope on timeout.
 
     A process-group timeout alone is insufficient here: systemd migrates the
     solver out of the systemd-run client's process group.  Naming the scope
     lets the timeout path stop the solver and all decomposed children before
     collecting the client's pipes.
+
+    A portfolio invocation races several children inside this one scope, so
+    every limit here is a whole-race budget rather than a per-child one.  That
+    is what makes `allowed_cpus` and `cpu_quota` necessary for comparing worker
+    counts: without them a race of eight children is handed eight times the CPU
+    of a race of one, and the comparison measures the extra hardware rather
+    than the portfolio.  Both are left unset by default, which keeps existing
+    single-invocation campaigns byte-identical to before.
     """
     if not unit_prefix.startswith("acacia-"):
         raise ValueError("unit_prefix must start with 'acacia-' so campaign sweeps can find it")
@@ -518,8 +528,15 @@ def run_systemd_scope(
         "--property=KillMode=control-group",
         f"--property=MemoryMax={memory_max}",
         f"--property=MemorySwapMax={memory_swap_max}",
-        *cmd,
     ]
+    # Only appended when asked for: an unset property and a property set to the
+    # machine's full width are not the same thing to systemd, and campaigns
+    # already recorded were run with neither.
+    if allowed_cpus is not None:
+        scoped_cmd.append(f"--property=AllowedCPUs={allowed_cpus}")
+    if cpu_quota is not None:
+        scoped_cmd.append(f"--property=CPUQuota={cpu_quota}")
+    scoped_cmd += [*cmd]
     started = time.monotonic()
     proc = subprocess.Popen(
         scoped_cmd,

@@ -72,6 +72,8 @@ OUTPUT_COLUMNS = [
     "scope_memory_peak_bytes",
     "memory_max",
     "memory_swap_max",
+    "allowed_cpus",
+    "cpu_quota",
     "collect_rusage",
     "worker_records_dir",
     "scope_unit",
@@ -560,6 +562,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--caps", required=True, type=parse_caps, metavar="1,5,17,60"
     )
+    parser.add_argument("--allowed-cpus", metavar="0-3",
+                        help="pin the whole solver invocation to these CPUs; a race of "
+                             "any worker count then gets the same cores (systemd AllowedCPUs)")
+    parser.add_argument("--cpu-quota", metavar="200%",
+                        help="cap total CPU for the whole solver invocation (systemd CPUQuota)")
     parser.add_argument("--memory-max", required=True, metavar="8G")
     parser.add_argument("--memory-swap-max", required=True, metavar="0")
     parser.add_argument("--output", required=True, metavar="TSV")
@@ -623,6 +630,9 @@ def run(args: argparse.Namespace) -> int:
         "acacia_sha": acacia_sha, "binary_sha256": binary_sha256,
         "preset": args.preset, "flags": args.flags,
         "memory_max": args.memory_max, "memory_swap_max": args.memory_swap_max,
+        # In the resume guard because a run continued under a different CPU
+        # budget is a different measurement, exactly as for the memory cap.
+        "allowed_cpus": args.allowed_cpus or "", "cpu_quota": args.cpu_quota or "",
         "collect_rusage": str(getattr(args, "collect_rusage", False)).lower(),
         "worker_records_dir": str(records_root) if records_root else "",
     }
@@ -719,6 +729,8 @@ def run(args: argparse.Namespace) -> int:
                     timeout=cap,
                     memory_max=args.memory_max,
                     memory_swap_max=args.memory_swap_max,
+                    allowed_cpus=args.allowed_cpus,
+                    cpu_quota=args.cpu_quota,
                     unit_prefix="acacia-syntcomp26-coverage",
                     env=run_env,
                 )

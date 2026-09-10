@@ -332,3 +332,62 @@ def test_sweep_cli_stop_without_a_snapshot_clears_everything(monkeypatch, tmp_pa
 
     stopped = [command[3] for command in calls if command[2] == "stop"]
     assert stopped == ["acacia-bench-123.scope", "acacia-subset-999.scope"]
+
+
+class _Captured(Exception):
+    """Abort run_systemd_scope once the scope argv has been built."""
+
+
+def _scope_argv(monkeypatch, **kwargs):
+    """Return the systemd-run argv run_systemd_scope would have executed.
+
+    Popen raises rather than returning a fake: the argv is fully built by then,
+    and stopping there avoids standing in for the reader threads and the
+    systemctl accounting, none of which this is about.
+    """
+    seen = {}
+
+    def popen(cmd, *a, **kw):
+        seen["argv"] = list(cmd)
+        raise _Captured
+
+    monkeypatch.setattr(benchlib.subprocess, "Popen", popen)
+    with pytest.raises(_Captured):
+        benchlib.run_systemd_scope(
+            ["solver"], 17, "8G", unit_prefix="acacia-test", **kwargs)
+    return seen["argv"]
+
+
+def test_cpu_budget_is_absent_unless_asked_for(monkeypatch):
+    # An unset property and one set to the machine's full width are different
+    # things to systemd, and every campaign recorded so far ran with neither.
+    argv = _scope_argv(monkeypatch)
+    assert not [a for a in argv if "AllowedCPUs" in a or "CPUQuota" in a]
+
+
+def test_cpu_budget_reaches_systemd_when_asked_for(monkeypatch):
+    argv = _scope_argv(monkeypatch, allowed_cpus="0-3", cpu_quota="200%")
+    assert "--property=AllowedCPUs=0-3" in argv
+    assert "--property=CPUQuota=200%" in argv
+    # The budget must precede the command, or systemd-run reads it as an
+    # argument to the solver rather than a property of the scope.
+    assert argv.index("--property=AllowedCPUs=0-3") < argv.index("solver")
+    assert argv.index("--property=CPUQuota=200%") < argv.index("solver")
+
+
+def test_either_half_of_the_budget_can_be_set_alone(monkeypatch):
+    only_cpus = _scope_argv(monkeypatch, allowed_cpus="0-1")
+    assert "--property=AllowedCPUs=0-1" in only_cpus
+    assert not [a for a in only_cpus if "CPUQuota" in a]
+    only_quota = _scope_argv(monkeypatch, cpu_quota="50%")
+    assert "--property=CPUQuota=50%" in only_quota
+    assert not [a for a in only_quota if "AllowedCPUs" in a]
+
+
+def test_cpu_budget_applies_to_the_whole_race_not_each_child(monkeypatch):
+    # One scope wraps the portfolio parent and every child it forks, so the
+    # budget is what makes a 1-worker and an 8-worker race comparable.
+    argv = _scope_argv(monkeypatch, allowed_cpus="0-3")
+    assert "--property=KillMode=control-group" in argv
+    assert argv.count("--property=AllowedCPUs=0-3") == 1
+    assert argv[-1] == "solver"
