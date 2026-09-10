@@ -221,10 +221,7 @@ namespace {
     }
     spot::twa_graph_ptr aut;
     {
-#if ACACIA_ENABLE_DIAGNOSTICS
-      auto* diag = acacia::diagnostics::current ();
-      acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
-#endif
+      ACACIA_DIAG_SCOPED_TIMER (translation_ms);
       aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
     }
     observe_translated_automaton (aut);
@@ -399,10 +396,7 @@ namespace {
         acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
         {
-# if ACACIA_ENABLE_DIAGNOSTICS
-          auto* diag = acacia::diagnostics::current ();
-          acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
-# endif
+          ACACIA_DIAG_SCOPED_TIMER (translation_ms);
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
         }
         observe_translated_automaton (aut);
@@ -496,10 +490,7 @@ namespace {
         acacia::translation::validate_options (extra_options);
         spot::twa_graph_ptr aut;
         {
-#if ACACIA_ENABLE_DIAGNOSTICS
-          auto* diag = acacia::diagnostics::current ();
-          acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
-#endif
+          ACACIA_DIAG_SCOPED_TIMER (translation_ms);
           aut = translate_with_diagnostics (spot_formula, trans, translation_pref);
         }
         if (provider != acacia::automaton_provider::frozen_graph)
@@ -696,10 +687,7 @@ namespace {
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
         std::optional<spot::twa_graph_ptr> maybe_strat;
         {
-#if ACACIA_ENABLE_DIAGNOSTICS
-          auto* diag = acacia::diagnostics::current ();
-          acacia::diagnostics::scoped_timer timer (diag ? &diag->solve_ms : nullptr);
-#endif
+          ACACIA_DIAG_SCOPED_TIMER (solve_ms);
           maybe_strat = solve_game (aut, opt_k, opt_kmin, opt_kinc,
                                     // we obtain the subset of inputs by projecting out the set of
                                     // all outputs from the cube of all atomic propositions
@@ -737,10 +725,7 @@ namespace {
     if (not synth_fname.has_value () and (input_aps.empty () or output_aps.empty ())) {
       acacia::degenerate_io::verdict direct;
       {
-#if ACACIA_ENABLE_DIAGNOSTICS
-        auto* diag = acacia::diagnostics::current ();
-        acacia::diagnostics::scoped_timer timer (diag ? &diag->translation_ms : nullptr);
-#endif
+        ACACIA_DIAG_SCOPED_TIMER (translation_ms);
         direct = acacia::degenerate_io::try_direct (spot_formula, input_aps, output_aps,
                                                     translation_pref);
       }
@@ -764,11 +749,7 @@ namespace {
     if (not synth_fname.has_value ()) {
       acacia::forced_output_contradiction::result contradiction;
       {
-# if ACACIA_ENABLE_DIAGNOSTICS
-        auto* diag = acacia::diagnostics::current ();
-        acacia::diagnostics::scoped_timer timer (
-            diag ? &diag->forced_contradiction_ms : nullptr);
-# endif
+        ACACIA_DIAG_SCOPED_TIMER (forced_contradiction_ms);
         contradiction = acacia::forced_output_contradiction::try_direct (
             spot_formula, input_aps, output_aps);
       }
@@ -824,10 +805,7 @@ namespace {
     if (not synth_fname.has_value ()) {
       acacia::syntactic_bypass::result direct;
       {
-# if ACACIA_ENABLE_DIAGNOSTICS
-        auto* diag = acacia::diagnostics::current ();
-        acacia::diagnostics::scoped_timer timer (diag ? &diag->syntactic_bypass_ms : nullptr);
-# endif
+        ACACIA_DIAG_SCOPED_TIMER (syntactic_bypass_ms);
         direct = acacia::syntactic_bypass::try_direct (spot_formula, output_aps);
       }
 # if ACACIA_ENABLE_DIAGNOSTICS
