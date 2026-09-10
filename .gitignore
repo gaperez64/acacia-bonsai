@@ -168,6 +168,9 @@ fabric.properties
 
 ## Doxygen
 
+doc/doxygen/
+# Doxygen used to write html/ and latex/ at the top of the tree; it now
+# writes into doc/doxygen/. These two stay so an old checkout stays clean.
 html/**/*
 latex/**/*
 

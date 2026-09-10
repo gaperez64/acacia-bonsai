@@ -117,38 +117,13 @@ in [benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
 
 # Compile-time configurations
 
-The experimental Spot paths require `-Dacacia_spot_guarded_backend=true`;
-the TAA providers also require `-Dacacia_spot_lazy_provider=true`.
-`--arms real:small:spot-guarded:spot-lazy,unreal:formula:spot-guarded:spot-lazy`
-selects a lazy worker for each polarity. `spot-eager` is the fully enumerated
-control of the same TAA/cursor construction. With the default `frozen-graph`
-provider, `spot-guarded` uses dense ranks and `spot-guarded-sparse` preserves
-the same mixed numeric/Boolean domain in sparse storage. Automaton-unreal
-requires `frozen-graph`.
-
-These paths verify decisions before returning them. Candidate limits produce
-an inconclusive result; `--candidate-mode fallback` explicitly rebuilds the
-existing frozen/backward path after a candidate failure. Synthesis uses the
-existing frozen/backward implementation. For diagnostic runs,
-`ACACIA_SPOT_CAPTURE_DIR` enables JSON records of the actual transformed
-worker formulas, AP partitions, phases, and measured counters.
-
-`-Dacacia_default_candidate_mode=only|fallback` sets the build's default;
-`--candidate-mode` still overrides it. Both TAA providers use
-`-Dacacia_spot_taa_max_rank_nodes=200000` by default, independently of frozen
-guarded search. The common `ACACIA_SPOT_MAX_RANK_NODES` environment override
-applies to both; `ACACIA_SPOT_TAA_MAX_RANK_NODES` takes precedence for TAA only.
-The experimental `otf_taa_fallback_lazy` and `otf_taa_fallback_eager` presets
-use a 1,000-node TAA cap and backward fallback, alongside forward real and
-both original forward unreal workers. They remain outside the shipping group.
-The `otf_mix_formula_lazy` and `otf_mix_formula_eager` presets instead use
-sparse guarded formula-unreal solving alongside forward automaton-unreal,
-forward real, and bounded TAA real with backward fallback. Their 1,000-node
-TAA cap leaves frozen guarded search's 200,000-node budget unchanged. These
-four-worker mixtures are experimental configurations under evaluation.
-The node cap is not a deadline: TAA construction or a row/query operation can
-exhaust the external timeout before backward fallback starts. The mixed TAA
-presets currently fail the panel coverage gate on some fast backward-real cases.
+Some configurations use Spot's on-the-fly paths rather than the frozen
+automaton graph, selected per polarity through `--arms` and gated at build time
+by `-Dacacia_spot_guarded_backend` and `-Dacacia_spot_lazy_provider`. One of
+them is currently shipped. What each provider does, which mixtures were
+measured, which were rejected and why, and the environment overrides that bound
+them are recorded in
+[benchmarking/OTF-AND-SPOT.md](benchmarking/OTF-AND-SPOT.md).
 
 Acacia-Bonsai's optimized variants are compile-time configurations.  The
 configuration registry lives in `config/acacia-options.json` and
@@ -190,7 +165,7 @@ staleness fingerprint, and plain `list-presets` prints only names for scripts.
 `best_decomp_mona` is the plain vector-backed downset configuration, kept as
 the reference point for downset comparisons.
 
-All four shipped configurations enable the exact equivariant solver. It automatically
+Every shipped configuration enables the exact equivariant solver. It automatically
 declines to the classic solver when no verified profitable symmetry is
 available, or when fewer than `acacia_equivariant_min_blocks` client-state
 blocks are found (default 2). Use `best_decomp_rank_bucketed_mona_noequivariant`

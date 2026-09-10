@@ -373,7 +373,7 @@ so the prototype was removed from the final head.
   fewer instructions; the other five capped under both. Profiles put about 90% of cycles in the
   same downset comparison path, and the dominant 192-byte partial-order kernel is byte-identical.
   The controlled measurements and disassembly are recorded in
-  `benchmarking/STATE-VECTOR-TAIL-STUDY.md`. They show no mechanism or consistent measurement by
+  `benchmarking/DATA-STRUCTURES.md`. They show no mechanism or consistent measurement by
   which the zero-length wrapper outperforms the underlying vector, so the redundant type was
   removed.
 

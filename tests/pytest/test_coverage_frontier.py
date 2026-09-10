@@ -1,6 +1,6 @@
 """Tests for build-coverage-frontier.py.
 
-Every coverage number in SYNTCOMP26-COVERAGE-FRONTIER.md flows through this
+Every coverage number in COVERAGE.md flows through this
 script, and its delicate part is the ordering: a multi-parameter family must be
 compared componentwise, never by a lexicographic total order dressed up as a
 cutoff.  These tests pin that behaviour and the strictness that protects it.

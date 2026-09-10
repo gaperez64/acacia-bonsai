@@ -1,3 +1,24 @@
+# What is in this directory
+
+| document | status |
+|---|---|
+| [README.md](README.md) (this file) | how to measure: plots, PAR-2, panels, the gates, the measurement protocol |
+| [LTLSYNT-GAP.md](LTLSYNT-GAP.md) | **living.** The standing comparison against `ltlsynt` and the residual gap |
+| [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md) | **living.** Upstream-facing reproducers for Spot and `ltlsynt` defects |
+| [SEMANTIC-ACTIONS-AND-M2-SPRINT.md](SEMANTIC-ACTIONS-AND-M2-SPRINT.md) | **living**, replace-in-place. M1 landed; M2 closed as a representation problem |
+| [SMALL-INDUCTIVE-INVARIANT-SPRINT.md](SMALL-INDUCTIVE-INVARIANT-SPRINT.md) | **living**, replace-in-place. Small inductive invariants for the M2 downset |
+| [OTF-AND-SPOT.md](OTF-AND-SPOT.md) | closed. On-the-fly Spot solving: the result of record, the coverage packages, the API audit, the handoff spec |
+| [COVERAGE.md](COVERAGE.md) | closed. Where the solver stops on SYNTCOMP 2026, and the forward safety-game solver |
+| [DATA-STRUCTURES.md](DATA-STRUCTURES.md) | closed. Downset and state-vector representations, and four attempts to change them |
+| `plots/<campaign>/` | dated, immutable campaign outputs with their provenance |
+| `frontiers/` | generated family dossiers (`make-frontier-dossiers.py`) |
+
+A **living** record is replaced in place: each campaign rewrites its own section
+rather than appending, and rejected experiments move to a "What has been tried"
+section and stay there. A **closed** record states its decision up front and is
+not expected to change; it is kept because its numbers are the evidence for that
+decision, and re-deriving them costs corpus-days.
+
 # At a glimpse: suggested process
 
 In the coming sections of this README, all of the following commands are
@@ -125,9 +146,9 @@ representation measurements that closed the compressed-downset branch -- is in
 
 The completed zero-tail versus bare-vector ablation — five-by-20-second
 LTO/no-LTO runs, profile, and disassembly comparison — is in
-[STATE-VECTOR-TAIL-STUDY.md](STATE-VECTOR-TAIL-STUDY.md). The TLSF
+[DATA-STRUCTURES.md](DATA-STRUCTURES.md). The TLSF
 normalization/HOA replay outcome is in
-[TLSF-NORMALIZATION-STUDY.md](TLSF-NORMALIZATION-STUDY.md).
+[DATA-STRUCTURES.md](DATA-STRUCTURES.md).
 The checksum-verified final current-versus-Acacia-1.x cactus plots are in
 [plots/final-v1-current-20260825](plots/final-v1-current-20260825/README.md).
 
