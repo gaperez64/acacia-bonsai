@@ -29,6 +29,13 @@ namespace acacia::spot_rows {
             entries_.back ().second = std::max (entries_.back ().second, value);
           else entries_.emplace_back (q, value);
         }
+        // Hash of the normalized entries, computed once here because
+        // entries_ cannot change afterwards.  hash() used to recompute this
+        // chain on every call, and both Search::interned_ and Oracle::prepared_
+        // are unordered_map<Rank, ...>, so every lookup re-hashed the vector.
+        for (const auto& [q, value] : entries_)
+          for (const auto v : {std::size_t (q), std::size_t (value)})
+            hash_ ^= v + std::size_t (0x9e3779b9) + (hash_ << 6) + (hash_ >> 2);
       }
       const std::vector<Entry>& entries () const { return entries_; }
       Value at (StateId q) const {
@@ -45,13 +52,7 @@ namespace acacia::spot_rows {
         }
         return true;
       }
-      std::size_t hash () const {
-        std::size_t h = 0;
-        for (const auto& [q, value] : entries_)
-          for (const auto v : {std::size_t (q), std::size_t (value)})
-            h ^= v + std::size_t (0x9e3779b9) + (h << 6) + (h >> 2);
-        return h;
-      }
+      std::size_t hash () const { return hash_; }
       bool is_safe (Value K) const {
         check_bound (K);
         bool safe = true;
@@ -76,6 +77,12 @@ namespace acacia::spot_rows {
       // No mutable entries, arena pointer/size, Boolean threshold, or bound in
       // the key. A value can be assigned, but its stored pairs cannot be edited.
       std::vector<Entry> entries_;
+      // Derived from entries_ by the constructor, which is the only writer.
+      // Defaulted copy and move carry it; a moved-from rank keeps a hash for
+      // entries it no longer owns, which no caller observes because interning
+      // copies into the map before moving into the node (spot_lazy_game.hh
+      // intern()) and never reads the source again.
+      std::size_t hash_ = 0;
   };
 
   // Exact P2 row arithmetic with sparse keys and P3's checked BDD operations.

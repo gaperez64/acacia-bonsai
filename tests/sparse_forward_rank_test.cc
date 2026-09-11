@@ -29,6 +29,17 @@ namespace {
     expect ("missing is -1", rank.at (0) == -1 && rank.at (1) == 3 && rank.at (9) == -1);
     const Sparse same {{{4, 0}, {1, 3}}, 4};
     expect ("hash and equality ignore construction order and K", rank == same && rank.hash () == same.hash ());
+
+    // The hash is derived once by the constructor, so every route to the same
+    // normalized entries must carry the same value: a copy, a move target, and
+    // a rank whose -1 entries were dropped rather than never supplied.
+    const Sparse copied {rank};
+    Sparse moved_from {{{4, 0}, {1, 3}}, 3};
+    const Sparse moved {std::move (moved_from)};
+    const Sparse dropped {{{1, 3}, {4, 0}, {2, -1}, {7, -1}}, 3};
+    expect ("cached hash survives copy, move and dropped -1 entries",
+            copied.hash () == rank.hash () && moved.hash () == rank.hash ()
+            && dropped.hash () == rank.hash () && dropped == rank);
     expect ("bound is numeric safe envelope", not rank.is_safe (3) && rank.is_safe (4));
     const Sparse empty {{}, 3}, zeros {{{0, 0}}, 3}, other {{{5, 0}}, 3};
     expect ("empty bottom, zero is active", empty.leq (zeros) && not zeros.leq (empty) && empty != zeros);
@@ -46,6 +57,10 @@ namespace {
             && Byte::increment (126, true, 127) == 127 && Byte::increment (-1, true, 127) == -1);
     const auto max = std::numeric_limits<std::int32_t>::max ();
     expect ("int32 addition also widens", Sparse::increment (max, true, max) == max);
+
+    const Byte byte_rank {{{1, 3}, {4, 0}}, 127}, byte_same {{{4, 0}, {1, 3}}, 100};
+    expect ("narrow value type hashes like the wide one",
+            byte_rank.hash () == byte_same.hash () && byte_rank == byte_same);
 
     // Exhaustive componentwise order against independent dense coordinates.
     for (int a = 0; a < 64; ++a)
