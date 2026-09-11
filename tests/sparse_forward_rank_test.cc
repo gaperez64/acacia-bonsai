@@ -73,8 +73,51 @@ namespace {
           right.emplace_back (q * 3, bv);
           leq &= av <= bv;
         }
-        expect ("exhaustive sparse order", Sparse (left, 2).leq (Sparse (right, 2)) == leq);
+        const Sparse l {left, 2}, r {right, 2};
+        expect ("exhaustive sparse order", l.leq (r) == leq);
+        // The lemma the prefilter rests on, checked on every one of the 4096
+        // pairs: leq is a refinement of the O(1) necessary condition, and an
+        // equal mass under leq leaves only equality.
+        if (leq) {
+          expect ("leq implies the prefilter admits", l.prefilter_leq (r));
+          expect ("leq implies smaller support", l.entries ().size () <= r.entries ().size ());
+          expect ("leq implies no greater mass", l.mass () <= r.mass ());
+          if (l.mass () == r.mass ())
+            expect ("leq with equal mass is equality", l == r);
+        }
       }
+
+    // Support size alone does not decide the order, and neither does mass:
+    // two coordinates at 0 weigh the same as one coordinate at 1.
+    const Sparse wide {{{0, 0}, {1, 0}}, 3}, tall {{{0, 1}}, 3};
+    expect ("equal mass, different support, incomparable both ways",
+            wide.mass () == tall.mass () && wide.mass () == 2
+            && not wide.leq (tall) && not tall.leq (wide));
+    const Sparse light {{{0, 0}, {1, 0}}, 3}, heavy {{{0, 3}, {1, 3}}, 3};
+    expect ("equal support size, different mass, ordered one way",
+            light.entries ().size () == heavy.entries ().size ()
+            && light.mass () < heavy.mass () && light.leq (heavy) && not heavy.leq (light));
+
+    // Arena independence: mass is a sum over the support, so a coordinate far
+    // out in the state space weighs exactly what its value says, and a dense
+    // coordinate sum's implicit -1 tail never enters.
+    const Sparse near {{{0, 1}}, 3};
+    const Sparse remote {{{std::numeric_limits<StateId>::max (), 1}}, 3};
+    expect ("mass does not depend on where the coordinate sits",
+            near.mass () == remote.mass () && Sparse ({}, 3).mass () == 0);
+
+    // A term is at most K+1 <= 2^31 and the guard trips at int64max/2, so a
+    // rank that abandons its mass would need about 2^33 entries -- tens of
+    // gigabytes of pairs. The branch is therefore unreachable by construction,
+    // and exists so that correctness does not rest on that being true. What is
+    // testable is that a large but valid mass stays usable and exact.
+    using Byte8 = SparseForwardRank<std::int8_t>;
+    std::vector<Byte8::Entry> heavy_entries;
+    for (StateId q = 0; q < 8; ++q) heavy_entries.emplace_back (q, 127);
+    const Byte8 saturated {heavy_entries, 127}, one {{{0, 127}}, 127};
+    expect ("large valid mass stays usable", saturated.mass () == 8 * 128);
+    expect ("large-mass rank still orders exactly",
+            saturated.leq (saturated) && not saturated.leq (one) && one.leq (saturated));
   }
 
   void rows_and_discovery () {

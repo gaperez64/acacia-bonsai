@@ -149,6 +149,19 @@ spot_provider_replay_test = executable(
 test('spot-provider-replay', spot_provider_replay_test,
      suite: ['unit', 'spot-provider-replay'])
 
+# The same sources with inequality covering forced on, so both states of the
+# option are exercised in every build including the default one where it is
+# off. The -D wins over the generated value because of the #ifndef guard.
+spot_provider_replay_leq_test = executable(
+  'spot-provider-replay-leq-test',
+  'spot_provider_replay_test.cc',
+  include_directories: inc,
+  cpp_args: ['-DACACIA_SPOT_GUARDED_INEQUALITY_COVERING=1'],
+  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test('spot-provider-replay-leq', spot_provider_replay_leq_test,
+     suite: ['unit', 'spot-provider-replay'])
+
 sparse_forward_rank_test = executable (
   'sparse-forward-rank-test',
   'sparse_forward_rank_test.cc',
@@ -177,6 +190,16 @@ spot_guarded_forward_safety_test = executable (
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
 )
 test ('spot-guarded-forward-safety', spot_guarded_forward_safety_test,
+      suite : ['unit', 'spot-guarded'])
+
+spot_guarded_forward_safety_leq_test = executable (
+  'spot-guarded-forward-safety-leq-test',
+  'spot_guarded_forward_safety_test.cc',
+  include_directories : inc,
+  cpp_args : ['-DACACIA_SPOT_GUARDED_INEQUALITY_COVERING=1'],
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test ('spot-guarded-forward-safety-leq', spot_guarded_forward_safety_leq_test,
       suite : ['unit', 'spot-guarded'])
 
 transition_payload_test = executable (

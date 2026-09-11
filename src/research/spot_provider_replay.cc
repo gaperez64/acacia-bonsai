@@ -258,6 +258,18 @@ namespace replay {
     report.count ("expansions", r.expansions);
     report.count ("losing_proofs", r.proofs.size ());
     report.count ("strategy_generators", r.generators.size ());
+    report.count ("reopened_sources", r.reopened_sources);
+    report.count ("reopen_enqueues", r.reopen_enqueues);
+    report.count ("subsumption_scans", r.subsumption_scans);
+    report.count ("subsumption_nodes_checked", r.subsumption_nodes_checked);
+    report.count ("subsumption_nodes_invalidated", r.subsumption_nodes_invalidated);
+    report.count ("subsumption_queries", r.subsumption_queries);
+    report.count ("subsumption_hits", r.subsumption_hits);
+    report.count ("subsumption_prefilter_skips", r.subsumption_prefilter_skips);
+    report.count ("losing_insertions", r.losing_insertions);
+    report.count ("losing_removals", r.losing_removals);
+    report.count ("losing_antichain_size", r.losing_antichain_size);
+    report.count ("losing_antichain_peak", r.losing_antichain_peak);
   }
   int worker (const Options& o, Reporter report) {
     const auto job = Clock::now ();
@@ -362,7 +374,12 @@ namespace replay {
             report.count (std::string (prefix) + key, 0);
         for (const auto* key :
              {"search_ms", "verification_ms", "attempt_ms", "game_states", "guarded_choices",
-              "certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes"})
+              "certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes",
+              "reopened_sources", "reopen_enqueues", "subsumption_scans",
+              "subsumption_nodes_checked",
+              "subsumption_nodes_invalidated", "subsumption_queries", "subsumption_hits", "subsumption_prefilter_skips",
+              "losing_insertions", "losing_removals", "losing_antichain_size",
+              "losing_antichain_peak"})
           report.put (key, "NA");
         const auto before_search = store.search_generated, before_verify = store.verify_generated;
         SolveResult result;
@@ -505,6 +522,18 @@ namespace replay {
                                           "expansions",
                                           "losing_proofs",
                                           "strategy_generators",
+                                          "reopened_sources",
+                                          "reopen_enqueues",
+                                          "subsumption_scans",
+                                          "subsumption_nodes_checked",
+                                          "subsumption_nodes_invalidated",
+                                          "subsumption_queries",
+                                          "subsumption_hits",
+                                          "subsumption_prefilter_skips",
+                                          "losing_insertions",
+                                          "losing_removals",
+                                          "losing_antichain_size",
+                                          "losing_antichain_peak",
                                           "parse_ms",
                                           "eager_ms",
                                           "search_ms",

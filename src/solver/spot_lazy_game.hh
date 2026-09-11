@@ -479,6 +479,16 @@ namespace acacia::spot_lazy_game {
       letters::Result<bdd> eq (const Rank& r, const Rank& s) {
         return query<bdd> ([&] (auto& b) { return preimage (prepare (r, b), s, 2, b); });
       }
+      // The letters under which the successor of r is at or below s, rather
+      // than exactly s.  This is the same downward preimage the inductive
+      // invariant check already aggregates; it is exposed here so guarded
+      // expansion and the certificate verifier can build a choice region from
+      // it.  Per coordinate the term forbids the successor exceeding s there,
+      // over supp(s) union the destinations of r; outside that set both sides
+      // are absent, so the constraint is vacuous.
+      letters::Result<bdd> down (const Rank& r, const Rank& s) {
+        return query<bdd> ([&] (auto& b) { return preimage (prepare (r, b), s, 1, b); });
+      }
       letters::Result<bdd> bad (const Rank& r, const std::vector<Rank>& L, uint64_t) {
         return query<bdd> ([&] (auto& b) { return aggregate (r, L, true, b); });
       }
@@ -549,21 +559,67 @@ namespace acacia::spot_lazy_game {
   // prefilter (its implicit -1 tail would depend on the discovered arena).
   class LossSet {
       std::vector<Rank> generators_;
+      std::vector<std::size_t> proofs_;  // parallel to generators_
 
     public:
-      bool subsumes (const Rank& r) const {
-        for (const auto& g : generators_)
-          if (g.leq (r))
-            return true;
-        return false;
+      // Counter names and mutability mirror solver_detail::minimal_losing_antichain,
+      // the dense twin of this structure, so the two solvers' logs read alike.
+      // The query pair is mutable because subsumes() is const.
+      mutable std::size_t queries = 0, hits = 0, prefilter_skips = 0;
+      std::size_t insertions = 0, removals = 0, peak = 0;
+
+      // The proof that witnesses a subsumption is found by the same scan that
+      // decides it.  Recovering it with a second pass over a parallel list, as
+      // this class and Search used to between them, walked every generator and
+      // repeated every leq to learn something the first walk already knew.
+      std::optional<std::size_t> subsumer (const Rank& r) const {
+        ++queries;
+        for (std::size_t i = 0; i < generators_.size (); ++i) {
+          // Called explicitly rather than left to leq, which runs it again on
+          // a candidate that passes: two integer comparisons against a merge
+          // join, and it keeps leq self-contained for its many other callers.
+          if (not generators_[i].prefilter_leq (r)) {
+            ++prefilter_skips;
+            continue;
+          }
+          if (generators_[i].leq (r)) {
+            ++hits;
+            return proofs_[i];
+          }
+        }
+        return std::nullopt;
       }
-      bool insert (const Rank& r) {
+      bool subsumes (const Rank& r) const { return subsumer (r).has_value (); }
+      bool insert (const Rank& r, std::size_t proof) {
         if (subsumes (r))
           return false;
-        std::erase_if (generators_, [&] (const Rank& g) { return r.leq (g); });
+        // Compact both vectors together: they are parallel, and an erase_if on
+        // one alone would silently misattribute every later witness.
+        std::size_t write = 0;
+        for (std::size_t read = 0; read < generators_.size (); ++read) {
+          if (r.leq (generators_[read])) {
+            ++removals;
+            continue;
+          }
+          if (write != read) {
+            generators_[write] = generators_[read];
+            proofs_[write] = proofs_[read];
+          }
+          ++write;
+        }
+        generators_.erase (generators_.begin () + static_cast<std::ptrdiff_t> (write),
+                           generators_.end ());
+        proofs_.erase (proofs_.begin () + static_cast<std::ptrdiff_t> (write), proofs_.end ());
         generators_.push_back (r);
+        proofs_.push_back (proof);
+        ++insertions;
+        peak = std::max (peak, generators_.size ());
         return true;
       }
+      // Contiguous, so Oracle::bad's const std::vector<Rank>& binds with no copy.
+      const std::vector<Rank>& ranks () const { return generators_; }
+      const std::vector<std::size_t>& proof_ids () const { return proofs_; }
+      std::size_t size () const { return generators_.size (); }
       size_t bytes () const {
         size_t result = 0;
         for (const auto& r : generators_)
@@ -616,6 +672,16 @@ namespace acacia::spot_lazy_game {
       bool pending_expansion = false;
       std::vector<Rank> generators;
       std::size_t expansions = 0, choices_created = 0, reopened_sources = 0;
+      // Losing-region work.  subsumption_scans counts broad passes over the
+      // interned nodes; nodes_checked and nodes_invalidated are that pass's
+      // numerator and denominator.  The antichain's own counters come from
+      // LossSet.  Names follow the dense forward solver's child_metrics.
+      std::size_t subsumption_scans = 0, reopen_enqueues = 0;
+      std::size_t subsumption_nodes_checked = 0, subsumption_nodes_invalidated = 0;
+      std::size_t subsumption_queries = 0, subsumption_hits = 0;
+      std::size_t subsumption_prefilter_skips = 0;
+      std::size_t losing_insertions = 0, losing_removals = 0;
+      std::size_t losing_antichain_size = 0, losing_antichain_peak = 0;
       double prep_ms = 0, solve_ms = 0, verify_ms = 0;
   };
 
@@ -677,9 +743,18 @@ namespace acacia::spot_lazy_game {
           detail::require (choice.successor < certificate.nodes.size ());
           const auto& target = certificate.nodes[choice.successor];
           detail::require (not target.losing && rows->is_safe (target.rank, K));
-          const bdd eq = detail::take (oracle.eq (node.rank, target.rank));
+          // Rebuilt here from the fresh Reader and Oracle above, never taken
+          // from the search: a choice that claims too much input space must
+          // fail this, which is the whole point of recomputing it. The gate
+          // matches expand()'s, so a flag-off binary verifies the exact
+          // obligation it searched under.
+#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
+          const bdd reaches = detail::take (oracle.down (node.rank, target.rank));
+#else
+          const bdd reaches = detail::take (oracle.eq (node.rank, target.rank));
+#endif
           const bdd exact =
-              detail::take (oracle.restrict_total (eq, choice.output, Variables::outputs));
+              detail::take (oracle.restrict_total (reaches, choice.output, Variables::outputs));
           covered = detail::take (oracle.query<bdd> ([&] (auto& b) {
             b.require_support (choice.input_region, alphabet.inputs);
             detail::require (b.satisfiable (choice.input_region));
@@ -796,6 +871,35 @@ namespace acacia::spot_lazy_game {
         }
         view_.report.count ("rank_interner_bytes", bytes);
         view_.report.count ("losing_antichain_rank_bytes", losing_.bytes ());
+        // Emitted from the live counters, not from result_, which solve() has
+        // moved from by the time this runs.  publish_counters() copies these
+        // same members, so a string sink and a SolveResult reader agree.
+        view_.report.count ("subsumption_scans", subsumption_scans_);
+        view_.report.count ("subsumption_nodes_checked", nodes_checked_);
+        view_.report.count ("subsumption_nodes_invalidated", nodes_invalidated_);
+        view_.report.count ("reopen_enqueues", reopen_enqueues_);
+        view_.report.count ("subsumption_queries", losing_.queries);
+        view_.report.count ("subsumption_hits", losing_.hits);
+        view_.report.count ("subsumption_prefilter_skips", losing_.prefilter_skips);
+        view_.report.count ("losing_insertions", losing_.insertions);
+        view_.report.count ("losing_removals", losing_.removals);
+        view_.report.count ("losing_antichain_size", losing_.size ());
+        view_.report.count ("losing_antichain_peak", losing_.peak);
+      }
+      // Copy the live counters into the result.  Called once, from solve(),
+      // before either return; ~Search then emits the same values.
+      void publish_counters () {
+        result_.subsumption_scans = subsumption_scans_;
+        result_.subsumption_nodes_checked = nodes_checked_;
+        result_.subsumption_nodes_invalidated = nodes_invalidated_;
+        result_.reopen_enqueues = reopen_enqueues_;
+        result_.subsumption_queries = losing_.queries;
+        result_.subsumption_hits = losing_.hits;
+        result_.subsumption_prefilter_skips = losing_.prefilter_skips;
+        result_.losing_insertions = losing_.insertions;
+        result_.losing_removals = losing_.removals;
+        result_.losing_antichain_size = losing_.size ();
+        result_.losing_antichain_peak = losing_.peak;
       }
       SolveResult solve () {
         view_.phase = Phase::search;
@@ -820,6 +924,7 @@ namespace acacia::spot_lazy_game {
         result_.solve_ms = detail::elapsed (started);
         result_.pending_loss = not losses_.empty ();
         result_.pending_expansion = not open_.empty ();
+        publish_counters ();  // before both returns below, and before verification
         if (not search.value) {
           result_.failure = search.unknown;
           result_.status = search.unknown == Unknown::resource_limit
@@ -869,9 +974,9 @@ namespace acacia::spot_lazy_game {
       size_t before_search_ = view_.cache->complete_rows ();
       solver_detail::forward_work_queue<RankNodeId> open_, losses_;
       LossSet losing_;
-      // Only these generator IDs are reduced; immutable proofs are never erased.
-      std::vector<std::size_t> generators_;
-
+      std::size_t subsumption_scans_ = 0;
+      std::size_t nodes_checked_ = 0, nodes_invalidated_ = 0;
+      std::size_t reopen_enqueues_ = 0;
       void enqueue (RankNodeId id) {
         auto& node = result_.nodes[id];
         if (not node.losing && not node.queued) {
@@ -891,41 +996,47 @@ namespace acacia::spot_lazy_game {
         enqueue (id);
         return id;
       }
-      std::vector<Rank> losing_ranks () const {
-        std::vector<Rank> ranks;
-        for (const auto id : generators_)
-          ranks.push_back (result_.proofs[id].rank);
-        return ranks;
-      }
       std::optional<std::size_t> subsumer (const Rank& r) const {
-        if (not losing_.subsumes (r))
-          return std::nullopt;
-        for (const auto id : generators_)
-          if (Oracle::leq (result_.proofs[id].rank, r))
-            return id;
-        detail::require (false);
-        return std::nullopt;
+        return losing_.subsumer (r);
       }
       void enqueue_loss (RankNodeId id, losing_reason reason, std::vector<std::size_t> deps = {},
                          std::optional<bdd> input = {}, std::vector<RowIdentity> rows = {}) {
         auto& node = result_.nodes[id];
         if (node.losing)
           return;
+        // Copy before the push_back below can reallocate result_.proofs, and
+        // before node is used across it.
+        const Rank rank = node.rank;
         const auto proof_id = result_.proofs.size ();
         for (const auto dep : deps)
           detail::require (dep < proof_id);
         result_.proofs.push_back (
-            {{proof_id, reason, id, 0, std::move (deps)}, node.rank, input, std::move (rows)});
+            {{proof_id, reason, id, 0, std::move (deps)}, rank, input, std::move (rows)});
         node.losing = true;
         if (id == result_.initial)
           result_.initial_proof = proof_id;
-        if (losing_.insert (node.rank)) {
-          std::erase_if (generators_, [&] (auto old) {
-            return Oracle::leq (node.rank, result_.proofs[old].rank);
-          });
-          generators_.push_back (proof_id);
-        }
         losses_.push_back (id);
+        if (not losing_.insert (rank, proof_id))
+          return;  // rank was already inside the region: nothing new is implied
+        // The region grew, so broadcast the one generator that grew it.  Only
+        // ranks above `rank` can be newly implied: everything above an older
+        // generator was marked when that generator was inserted, and this scan
+        // is the step that establishes it.  Testing `rank` alone is therefore
+        // equivalent to re-testing every generator, at one comparison per node.
+        //
+        // enqueue_loss never interns, so result_.nodes is fixed for the whole
+        // cascade, and a node marked here has a rank above `rank`, so its own
+        // insert() returns false and it cannot start a further scan.
+        ++subsumption_scans_;
+        for (RankNodeId source = 0; source < result_.nodes.size (); ++source) {
+          ++nodes_checked_;
+          if (result_.nodes[source].losing)
+            continue;
+          if (Oracle::leq (rank, result_.nodes[source].rank)) {
+            ++nodes_invalidated_;
+            enqueue_loss (source, losing_reason::env_subsumed, {proof_id});
+          }
+        }
       }
       void recompute_coverage (RankNodeId id) {
         auto& node = result_.nodes[id];
@@ -957,15 +1068,18 @@ namespace acacia::spot_lazy_game {
             recompute_coverage (source);
             if (not result_.nodes[source].losing) {
               ++result_.reopened_sources;
+              // reopened_sources counts attempts, and an attempt on a node that
+              // is already queued does nothing.  Counting the enqueues too is
+              // what makes the pair readable: the attempts move when losses are
+              // discovered earlier, the enqueues move only if the search does.
+              if (not result_.nodes[source].queued)
+                ++reopen_enqueues_;
               enqueue (source);  // target loss is NOT a proof of source loss
             }
           }
-          // Preserve the existing solver's losing-subsumption invalidation,
-          // including fully covered nodes that are no longer on the open queue.
-          for (RankNodeId source = 0; source < result_.nodes.size (); ++source)
-            if (not result_.nodes[source].losing)
-              if (const auto proof = subsumer (result_.nodes[source].rank))
-                enqueue_loss (source, losing_reason::env_subsumed, {*proof});
+          // Subsumption invalidation is not here any more: it happens once per
+          // generator, in enqueue_loss, where the region is what grows.  This
+          // drain no longer appends to its own queue.
           losses_.pop_front ();
         }
       }
@@ -991,10 +1105,12 @@ namespace acacia::spot_lazy_game {
             [&] (auto& b) { return b.negate (result_.nodes[id].covered_inputs); }));
         const auto input = detail::take (oracle_.model (missing, Variables::inputs));
         detail::require (input.has_value ());
-        const bdd bad = detail::take (oracle_.bad (rank, losing_ranks (), result_.proofs.size ()));
+        const bdd bad = detail::take (oracle_.bad (rank, losing_.ranks (), result_.proofs.size ()));
         const bdd bad_c = detail::take (oracle_.restrict_total (bad, *input, Variables::inputs));
         if (bad_c == bddtrue) {
-          enqueue_loss (id, losing_reason::env_losing_input, generators_, input,
+          // deps is taken by value, so this copies the witness list before any
+          // later insert can compact it.  Do not make the parameter a reference.
+          enqueue_loss (id, losing_reason::env_losing_input, losing_.proof_ids (), input,
                         std::move (row_ids));
           return;
         }
@@ -1006,8 +1122,16 @@ namespace acacia::spot_lazy_game {
             detail::take (oracle_.query<bdd> ([&] (auto& b) { return b.land (*input, *output); }));
         auto successor = detail::take (oracle_.evaluate (rank, letter));
         detail::require (rows_->is_safe (successor, K_) && not losing_.subsumes (successor));
-        const bdd eq = detail::take (oracle_.eq (rank, successor));
-        const bdd exact = detail::take (oracle_.restrict_total (eq, *output, Variables::outputs));
+        // Widening this from "reaches exactly the successor" to "reaches at or
+        // below it" lets one choice claim more of the missing input space. The
+        // successor itself is unchanged, so the target is still a rank the
+        // search reached and verified, not a synthesized upper bound.
+#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
+        const bdd reaches = detail::take (oracle_.down (rank, successor));
+#else
+        const bdd reaches = detail::take (oracle_.eq (rank, successor));
+#endif
+        const bdd exact = detail::take (oracle_.restrict_total (reaches, *output, Variables::outputs));
         const bdd region = detail::take (oracle_.query<bdd> ([&] (auto& b) {
           const bdd C = b.land (missing, exact);
           b.require_support (C, alphabet_.inputs);

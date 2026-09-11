@@ -4,6 +4,7 @@
 
 #include <concepts>
 #include <functional>
+#include <limits>
 
 namespace acacia::spot_rows {
   // This is an Acacia value type, not a Posets container. In C4/C5 every
@@ -29,13 +30,18 @@ namespace acacia::spot_rows {
             entries_.back ().second = std::max (entries_.back ().second, value);
           else entries_.emplace_back (q, value);
         }
-        // Hash of the normalized entries, computed once here because
-        // entries_ cannot change afterwards.  hash() used to recompute this
+        // Summaries of the normalized entries, computed once here because
+        // entries_ cannot change afterwards.  hash() used to recompute its
         // chain on every call, and both Search::interned_ and Oracle::prepared_
         // are unordered_map<Rank, ...>, so every lookup re-hashed the vector.
-        for (const auto& [q, value] : entries_)
+        for (const auto& [q, value] : entries_) {
           for (const auto v : {std::size_t (q), std::size_t (value)})
             hash_ ^= v + std::size_t (0x9e3779b9) + (hash_ << 6) + (hash_ >> 2);
+          if (mass_ >= 0) {
+            mass_ += std::int64_t (value) + 1;
+            if (mass_ > mass_limit) mass_ = -1;  // unusable, never wrapped
+          }
+        }
       }
       const std::vector<Entry>& entries () const { return entries_; }
       Value at (StateId q) const {
@@ -44,7 +50,29 @@ namespace acacia::spot_rows {
         return it != entries_.end () && it->first == q ? it->second : Value (-1);
       }
       bool operator== (const SparseForwardRank& rhs) const { return entries_ == rhs.entries_; }
+      // Necessary conditions for leq, exact and O(1).  Since -1 entries are
+      // dropped at construction every stored value is >= 0, so a <= b forces
+      // supp(a) subset supp(b), hence both a smaller support and a smaller
+      // shifted mass M(r) = sum over supp(r) of (r(q)+1).  M is a sum over the
+      // support alone, so unlike a dense coordinate sum it does not depend on
+      // how much of the automaton has been discovered.
+      //
+      // Public so the losing antichain can count the comparisons it skips.
+      bool prefilter_leq (const SparseForwardRank& rhs) const {
+        if (entries_.size () > rhs.entries_.size ()) return false;
+        if (mass_ < 0 || rhs.mass_ < 0) return true;  // unusable summary: decide exactly
+        return mass_ <= rhs.mass_;
+      }
+      std::int64_t mass () const { return mass_; }
       bool leq (const SparseForwardRank& rhs) const {
+        if (not prefilter_leq (rhs)) return false;
+        // Equal mass forces equality under <=.  M(rhs) - M(this) splits into
+        // sum over supp(this) of (rhs(q)-this(q)), every term >= 0, plus sum
+        // over the coordinates rhs has and this does not of (rhs(q)+1), every
+        // term >= 1.  A zero difference empties the second group and zeroes
+        // the first, so the two ranks have the same support and the same
+        // values.  Checking that directly is cheaper than the merge below.
+        if (mass_ >= 0 && mass_ == rhs.mass_) return entries_ == rhs.entries_;
         auto right = rhs.entries_.begin ();
         for (const auto& [q, value] : entries_) {
           while (right != rhs.entries_.end () && right->first < q) ++right;
@@ -77,12 +105,19 @@ namespace acacia::spot_rows {
       // No mutable entries, arena pointer/size, Boolean threshold, or bound in
       // the key. A value can be assigned, but its stored pairs cannot be edited.
       std::vector<Entry> entries_;
+      // The largest mass an accumulation may reach before it is abandoned.
+      // Every term is at most K+1 <= 2^31, so one check per term cannot wrap.
+      static constexpr std::int64_t mass_limit
+          = std::numeric_limits<std::int64_t>::max () / 2;
       // Derived from entries_ by the constructor, which is the only writer.
       // Defaulted copy and move carry it; a moved-from rank keeps a hash for
       // entries it no longer owns, which no caller observes because interning
       // copies into the map before moving into the node (spot_lazy_game.hh
       // intern()) and never reads the source again.
       std::size_t hash_ = 0;
+      // Shifted support mass; -1 means the accumulation left the checked range
+      // and the filter must be skipped rather than trusted.
+      std::int64_t mass_ = 0;
   };
 
   // Exact P2 row arithmetic with sparse keys and P3's checked BDD operations.

@@ -7,6 +7,7 @@
 | [SPOT-ANOMALIES.md](SPOT-ANOMALIES.md) | **living.** Upstream-facing reproducers for Spot and `ltlsynt` defects |
 | [SEMANTIC-ACTIONS-AND-M2-SPRINT.md](SEMANTIC-ACTIONS-AND-M2-SPRINT.md) | **living**, replace-in-place. M1 landed; M2 closed as a representation problem |
 | [SMALL-INDUCTIVE-INVARIANT-SPRINT.md](SMALL-INDUCTIVE-INVARIANT-SPRINT.md) | **living**, replace-in-place. Small inductive invariants for the M2 downset |
+| [ADAPTIVE-PORTFOLIO-OTFUR-SPRINT.md](ADAPTIVE-PORTFOLIO-OTFUR-SPRINT.md) | **living**, replace-in-place. Work removed from the sparse guarded solver; the arm census is not yet run |
 | [OTF-AND-SPOT.md](OTF-AND-SPOT.md) | closed. On-the-fly Spot solving: the result of record, the coverage packages, the API audit, the handoff spec |
 | [COVERAGE.md](COVERAGE.md) | closed. Where the solver stops on SYNTCOMP 2026, and the forward safety-game solver |
 | [DATA-STRUCTURES.md](DATA-STRUCTURES.md) | closed. Downset and state-vector representations, and four attempts to change them |
