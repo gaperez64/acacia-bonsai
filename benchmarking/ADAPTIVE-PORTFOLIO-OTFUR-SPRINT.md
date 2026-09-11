@@ -274,6 +274,11 @@ the tail, which is where §7's capability arm would have to earn its place.
   `meson.build` is the fourth, and `tests/check-config-frontends.py` compares
   only two.
 - **G1 and G3 have not run.**
+- **G5 is skipped by decision.** It checks that the TLSF frontend gives the same
+  verdicts natively and through SyFCo, and nothing in this sprint touches the
+  frontend. The preset that triggered it is sweep-role and off by default, and
+  running it would need a full SyFCo reconversion — the pairs on disk cover 1,517
+  of the 1,579 it expects — plus about 3,000 solver runs.
 
 ## 11. Corrections to the record
 
@@ -314,10 +319,13 @@ the tail, which is where §7's capability arm would have to earn its place.
 
 1. **Finish the race curve** and fill §9. `race5` decides whether the one arm
    with capability pays for the contention a fifth worker adds.
-2. **G1 per patch** on the stacked revisions, and **G3 paired** for #154, #155
-   and #156 against the kept `3fb9f113` baseline. Read PAR-2 against the 21.1 s /
-   12.1 s noise floors. **G4/G5** for the `otf_sparse_formula_inequality_covering`
-   preset, which were skipped when it was added.
+2. **Gates, queued to run after the race curve.** The stack landed on master as
+   one unit, so G1 and G3 compare master's `otf_sparse_formula` against the kept
+   `3fb9f113` baseline rather than patch by patch: **G1** on the 40 frozen
+   sentinels, **G3** paired on the syntcomp25 and syntcomp26 panels (read PAR-2
+   against the 21.1 s / 12.1 s noise floors), then **G4** on that candidate and on
+   the `otf_sparse_formula_inequality_covering` preset #156 added. **G5 is skipped
+   by decision** (§10).
 3. **A 60 s diagnostic re-run of the 20 hard-set unlocks**, to separate
    capability from cap-boundary; it does not rewrite the 17 s results.
 4. If `race5` pays: a sweep preset adding `real:small:spot-guarded-sparse`, then
