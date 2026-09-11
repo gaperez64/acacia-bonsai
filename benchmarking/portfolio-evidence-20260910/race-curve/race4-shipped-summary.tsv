@@ -1,0 +1,495 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+race4-shipped	06.ltl				true	TIMEOUT	17
+race4-shipped	07.ltl				true	TIMEOUT	17
+race4-shipped	08.ltl				true	TIMEOUT	17
+race4-shipped	Alarm_2d1010f8.ltl	17	REALIZABLE	0.0241567479679361	false	REALIZABLE	17
+race4-shipped	Alarm_a5f99bc6.ltl				true	TIMEOUT	17
+race4-shipped	Automata16S.ltl				true	TIMEOUT	17
+race4-shipped	Automata32S.ltl				true	TIMEOUT	17
+race4-shipped	CheckAlarm_6bea956e.ltl	17	UNREALIZABLE	0.025037114042788744	false	UNREALIZABLE	17
+race4-shipped	CheckCoffeMachineBroken1_a5f99bc6.ltl	17	REALIZABLE	0.03365814097924158	false	REALIZABLE	17
+race4-shipped	CheckCoffeMachine_3461125b.ltl	17	UNREALIZABLE	0.04667644499568269	false	UNREALIZABLE	17
+race4-shipped	CheckShades_1a2942e3.ltl	17	UNREALIZABLE	0.03562858002260327	false	UNREALIZABLE	17
+race4-shipped	CheckTimer_54e1f7d2.ltl	17	UNREALIZABLE	0.03716084099141881	false	UNREALIZABLE	17
+race4-shipped	Core_fa4d4ce3.ltl	17	UNREALIZABLE	0.051064589992165565	false	UNREALIZABLE	17
+race4-shipped	Demo1_06e9cad4.ltl				true	TIMEOUT	17
+race4-shipped	Demo1_2c5b09da.ltl				true	TIMEOUT	17
+race4-shipped	Demo1_63831f8c.ltl				true	TIMEOUT	17
+race4-shipped	Demo1_c2b9e44d.ltl				true	TIMEOUT	17
+race4-shipped	Demo1_d65ed84e.ltl				true	TIMEOUT	17
+race4-shipped	EscalatorSmart.ltl	17	REALIZABLE	0.03841268795076758	false	REALIZABLE	17
+race4-shipped	F-G-contradiction-110.ltl				true	TIMEOUT	17
+race4-shipped	F-G-contradiction-111.ltl				true	TIMEOUT	17
+race4-shipped	F-G-contradiction-112.ltl				true	TIMEOUT	17
+race4-shipped	F-G-contradiction-113.ltl				true	TIMEOUT	17
+race4-shipped	F-G-contradiction-114.ltl				true	TIMEOUT	17
+race4-shipped	F-G-contradiction-15.ltl	17	UNREALIZABLE	0.35055172198917717	false	UNREALIZABLE	17
+race4-shipped	FelixSpecFixed2.2.core_fa8592c8.ltl	17	UNREALIZABLE	0.018855898000765592	false	UNREALIZABLE	17
+race4-shipped	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT	17
+race4-shipped	FelixSpecFixed3.core_b209ff21.ltl	17	UNREALIZABLE	0.06657713203458115	false	UNREALIZABLE	17
+race4-shipped	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT	17
+race4-shipped	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT	17
+race4-shipped	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT	17
+race4-shipped	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT	17
+race4-shipped	Full_f1477cc5.ltl				true	TIMEOUT	17
+race4-shipped	GF-G-contradiction2.ltl	17	UNREALIZABLE	0.2706178019871004	false	UNREALIZABLE	17
+race4-shipped	GF-G-contradiction6.ltl	17	UNREALIZABLE	16.116530290979426	false	UNREALIZABLE	17
+race4-shipped	GF-G-contradiction7.ltl				true	TIMEOUT	17
+race4-shipped	IntendDemo_42dc4fff.ltl	17	UNREALIZABLE	0.05365624895785004	false	UNREALIZABLE	17
+race4-shipped	KitchenTimerV9.ltl	17	REALIZABLE	0.12824793899198994	false	REALIZABLE	17
+race4-shipped	LedMatrix.ltl				true	TIMEOUT	17
+race4-shipped	Light_a50cadd7.ltl	17	UNREALIZABLE	0.032967878971248865	false	UNREALIZABLE	17
+race4-shipped	Lights2_b02056d6.ltl	17	REALIZABLE	0.1923228470259346	false	REALIZABLE	17
+race4-shipped	LightsTotal_2c5b09da.ltl	17	UNREALIZABLE	0.051853235985618085	false	UNREALIZABLE	17
+race4-shipped	Morning2_06e9cad4.ltl				true	TIMEOUT	17
+race4-shipped	Morning2_2c5b09da.ltl				true	TIMEOUT	17
+race4-shipped	Morning2_407db2cc.ltl				true	TIMEOUT	17
+race4-shipped	Morning2_63831f8c.ltl				true	TIMEOUT	17
+race4-shipped	Morning2_68c86764.ltl				true	TIMEOUT	17
+race4-shipped	Morning2_d65ed84e.ltl				true	TIMEOUT	17
+race4-shipped	Morning2s_06cf2373.ltl				true	TIMEOUT	17
+race4-shipped	Morning2s_06e9cad4.ltl				true	TIMEOUT	17
+race4-shipped	Morning2s_2c5b09da.ltl				true	TIMEOUT	17
+race4-shipped	Morning2s_42dc4fff.ltl				true	TIMEOUT	17
+race4-shipped	Morning2s_9cbf2546.ltl				true	TIMEOUT	17
+race4-shipped	Morning2s_d6c5ac79.ltl				true	TIMEOUT	17
+race4-shipped	MorningMin_d6c5ac79.ltl	17	REALIZABLE	0.03117827099049464	false	REALIZABLE	17
+race4-shipped	Morning_88c5c1c3.ltl				true	TIMEOUT	17
+race4-shipped	Morning_9cac58d3.ltl				true	TIMEOUT	17
+race4-shipped	OneCounter.ltl	17	REALIZABLE	3.027631260047201	false	REALIZABLE	17
+race4-shipped	OneCounterGuiA5.ltl	17	UNREALIZABLE	0.10176244901958853	false	UNREALIZABLE	17
+race4-shipped	OneCounterInRangeA2.ltl	17	UNREALIZABLE	0.026900805009063333	false	UNREALIZABLE	17
+race4-shipped	SPIPureNext.ltl				true	TIMEOUT	17
+race4-shipped	SPIReadSdi.ltl	17	REALIZABLE	0.03178501198999584	false	REALIZABLE	17
+race4-shipped	Sensor.ltl	17	REALIZABLE	0.15056839998578653	false	REALIZABLE	17
+race4-shipped	SingleContoller_d65ed84e.ltl	17	UNREALIZABLE	0.03151739697204903	false	UNREALIZABLE	17
+race4-shipped	TwoCounters3.ltl	17	REALIZABLE	1.5486876409850083	false	REALIZABLE	17
+race4-shipped	TwoCountersDisButA5.ltl	17	UNREALIZABLE	0.1263584730331786	false	UNREALIZABLE	17
+race4-shipped	TwoCountersDisButA9.ltl	17	UNREALIZABLE	0.19005596899660304	false	UNREALIZABLE	17
+race4-shipped	TwoCountersGui.ltl	17	UNREALIZABLE	0.040175771981012076	false	UNREALIZABLE	17
+race4-shipped	UnderapproxDemo2.ltl	17	UNREALIZABLE	0.028323771024588495	false	UNREALIZABLE	17
+race4-shipped	Warnlight_a50cadd7.ltl	17	UNREALIZABLE	0.03500648803310469	false	UNREALIZABLE	17
+race4-shipped	Window2Min_88c5c1c3.ltl	17	REALIZABLE	0.02896532998420298	false	REALIZABLE	17
+race4-shipped	WindowMin_a5f99bc6.ltl	17	REALIZABLE	0.03674392000539228	false	REALIZABLE	17
+race4-shipped	abcg_arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.10483170999214053	false	REALIZABLE	17
+race4-shipped	abcg_arbiter_pb_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.13108544499846175	false	REALIZABLE	17
+race4-shipped	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_encode_pb_16_pe_.ltl	17	REALIZABLE	0.9705939760315232	false	REALIZABLE	17
+race4-shipped	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_encode_pb_4_pe_.ltl	17	REALIZABLE	0.03418853098992258	false	REALIZABLE	17
+race4-shipped	amba_decomposed_lock_pb_11_pe_.ltl	17	REALIZABLE	1.8552809790126048	false	REALIZABLE	17
+race4-shipped	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	7.065314730047248	false	REALIZABLE	17
+race4-shipped	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_decomposed_lock_pb_3_pe_.ltl	17	REALIZABLE	0.033066017960663885	false	REALIZABLE	17
+race4-shipped	amba_decomposed_shift.ltl	17	REALIZABLE	0.03658192401053384	false	REALIZABLE	17
+race4-shipped	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_gr_pb_2_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_gr_pb_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	amba_gr_pb_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter-paper-unreal-unreal.ltl	17	UNREALIZABLE	0.026899130956735462	false	UNREALIZABLE	17
+race4-shipped	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.03991905401926488	false	REALIZABLE	17
+race4-shipped	arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.4057809069636278	false	REALIZABLE	17
+race4-shipped	arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_buffer_pb_4_pe_.ltl	17	REALIZABLE	0.04968406300758943	false	REALIZABLE	17
+race4-shipped	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_cancel_pb_1_pe_.ltl	17	REALIZABLE	0.033819776959717274	false	REALIZABLE	17
+race4-shipped	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	box-real.ltl	17	REALIZABLE	0.05995953601086512	false	REALIZABLE	17
+race4-shipped	chain-4-real.ltl				true	TIMEOUT	17
+race4-shipped	chain-5-real.ltl				true	TIMEOUT	17
+race4-shipped	chain-60.ltl				true	TIMEOUT	17
+race4-shipped	chain-70.ltl				true	TIMEOUT	17
+race4-shipped	chain-simple-30-real.ltl	17	REALIZABLE	0.40718268300406635	false	REALIZABLE	17
+race4-shipped	chain-simple-50-real.ltl	17	REALIZABLE	0.7406237079994753	false	REALIZABLE	17
+race4-shipped	chomp_pb_2_2_pe_.ltl	17	REALIZABLE	0.07279197900788859	false	REALIZABLE	17
+race4-shipped	chomp_pb_2_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_2_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_3_2_pe_.ltl	17	REALIZABLE	3.634342302044388	false	REALIZABLE	17
+race4-shipped	chomp_pb_3_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_3_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_3_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_3_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_4_2_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_4_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_4_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_4_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v1_pb_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v1_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v1_pb_13_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v1_pb_14_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v1_pb_15_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v2_pb_12_pe_.ltl	17	REALIZABLE	0.7640361420344561	false	REALIZABLE	17
+race4-shipped	collector_v2_pb_27_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v3_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v3_pb_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v3_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v3_pb_13_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v3_pb_15_pe_.ltl				true	TIMEOUT	17
+race4-shipped	collector_v3_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	evasion-real.ltl				true	TIMEOUT	17
+race4-shipped	evasion0.ltl	17	UNREALIZABLE	0.5602404930396006	false	UNREALIZABLE	17
+race4-shipped	f-real-real.ltl				true	TIMEOUT	17
+race4-shipped	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	follow0.ltl				true	TIMEOUT	17
+race4-shipped	follow1.ltl				true	TIMEOUT	17
+race4-shipped	follow2.ltl				true	TIMEOUT	17
+race4-shipped	follow3.ltl				true	TIMEOUT	17
+race4-shipped	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	full_arbiter_unreal1_pb_2_14_pe_.ltl	17	UNREALIZABLE	0.024935358960647136	false	UNREALIZABLE	17
+race4-shipped	full_arbiter_unreal1_pb_3_2_pe_.ltl	17	UNREALIZABLE	0.03659091598819941	false	UNREALIZABLE	17
+race4-shipped	g-real0.ltl	17	UNREALIZABLE	0.06468742300057784	false	UNREALIZABLE	17
+race4-shipped	g-unreal-1-unreal.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-113.ltl	17	UNREALIZABLE	7.669775604037568	false	UNREALIZABLE	17
+race4-shipped	g-unreal-116.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-117.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-118.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-119.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-120.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-18.ltl	17	UNREALIZABLE	1.221232435957063	false	UNREALIZABLE	17
+race4-shipped	g-unreal-20.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-21.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-310.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-311.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-312.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-313.ltl				true	TIMEOUT	17
+race4-shipped	g-unreal-314.ltl				true	TIMEOUT	17
+race4-shipped	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	gf-unreal20.ltl	17	UNREALIZABLE	0.029557996022049338	false	UNREALIZABLE	17
+race4-shipped	gf-unreal46.ltl	17	UNREALIZABLE	0.04926775099011138	false	UNREALIZABLE	17
+race4-shipped	heim-double-x-real.ltl				true	TIMEOUT	17
+race4-shipped	heim-double-x1.ltl	17	UNREALIZABLE	0.06180352799128741	false	UNREALIZABLE	17
+race4-shipped	helipad-contradict0.ltl				true	TIMEOUT	17
+race4-shipped	helipad-contradict1.ltl				true	TIMEOUT	17
+race4-shipped	helipad-real.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u10.ltl	17	UNREALIZABLE	11.033675484010018	false	UNREALIZABLE	17
+race4-shipped	infinite-race-u11.ltl	17	UNREALIZABLE	12.791627269994933	false	UNREALIZABLE	17
+race4-shipped	infinite-race-u12.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u13.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u14.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u15.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u16.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u17.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u18.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u19.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u20.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u21.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u22.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u23.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u24.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u25.ltl				true	TIMEOUT	17
+race4-shipped	infinite-race-u3.ltl	17	UNREALIZABLE	0.0797108099795878	false	UNREALIZABLE	17
+race4-shipped	infinite-race-unequal-22.ltl	17	UNREALIZABLE	0.06735317199490964	false	UNREALIZABLE	17
+race4-shipped	infinite-race-unequal-25.ltl	17	UNREALIZABLE	12.862323118024506	false	UNREALIZABLE	17
+race4-shipped	infinite-race-unequal-26.ltl				true	TIMEOUT	17
+race4-shipped	items_processing-real.ltl				true	TIMEOUT	17
+race4-shipped	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_pb_2_pe_.ltl	17	REALIZABLE	0.03744972200365737	false	REALIZABLE	17
+race4-shipped	lift_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	lift_wrong_physics_unreal_pb_10_pe_.ltl	17	UNREALIZABLE	1.1306765910121612	false	UNREALIZABLE	17
+race4-shipped	lift_wrong_physics_unreal_pb_5_pe_.ltl	17	UNREALIZABLE	0.03019677201518789	false	UNREALIZABLE	17
+race4-shipped	lift_wrong_physics_unreal_pb_9_pe_.ltl	17	UNREALIZABLE	0.4530318499892019	false	UNREALIZABLE	17
+race4-shipped	lilydemo04_modified.ltl	17	UNREALIZABLE	0.017949511006008834	false	UNREALIZABLE	17
+race4-shipped	load_balancer_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_pb_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_2_14_pe_.ltl	17	UNREALIZABLE	0.32504720299039036	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	0.7198743509943597	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_2_16_pe_.ltl	17	UNREALIZABLE	1.5629368840018287	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_2_2_pe_.ltl	17	UNREALIZABLE	0.017965996987186372	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_2_8_pe_.ltl	17	UNREALIZABLE	0.03167298500193283	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_3_10_pe_.ltl	17	UNREALIZABLE	0.15395797899691388	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_3_12_pe_.ltl	17	UNREALIZABLE	0.5764113049954176	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_3_8_pe_.ltl	17	UNREALIZABLE	0.05132414901163429	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	1.0032940249657258	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_5_4_pe_.ltl	17	UNREALIZABLE	0.6533541820244864	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_6_3_pe_.ltl	17	UNREALIZABLE	0.6581991749699228	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	11.403852936986368	false	UNREALIZABLE	17
+race4-shipped	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba11.ltl	17	REALIZABLE	0.03678865195252001	false	REALIZABLE	17
+race4-shipped	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_C2_unreal_pb_12_pe_.ltl	17	UNREALIZABLE	0.5181008719955571	false	UNREALIZABLE	17
+race4-shipped	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_E_pb_7_pe_.ltl	17	REALIZABLE	0.026805308007169515	false	REALIZABLE	17
+race4-shipped	ltl2dba_E_pb_9_pe_.ltl	17	REALIZABLE	0.033262289012782276	false	REALIZABLE	17
+race4-shipped	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_R_pb_1_pe_.ltl	17	REALIZABLE	0.018213002011179924	false	REALIZABLE	17
+race4-shipped	ltl2dba_R_pb_5_pe_.ltl	17	UNREALIZABLE	0.07689049100736156	false	UNREALIZABLE	17
+race4-shipped	ltl2dba_R_pb_6_pe_.ltl	17	UNREALIZABLE	0.5510096490033902	false	UNREALIZABLE	17
+race4-shipped	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_U1_pb_8_pe_.ltl	17	REALIZABLE	0.02473964204546064	false	REALIZABLE	17
+race4-shipped	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_theta_pb_12_pe_.ltl	17	UNREALIZABLE	2.3747695150086656	false	UNREALIZABLE	17
+race4-shipped	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT	17
+race4-shipped	ltl2dba_theta_pb_7_pe_.ltl	17	UNREALIZABLE	0.06207967805676162	false	UNREALIZABLE	17
+race4-shipped	mux_pb_16_pe_.ltl	17	REALIZABLE	0.021307926974259317	false	REALIZABLE	17
+race4-shipped	mux_pb_200_pe_.ltl	17	REALIZABLE	0.05445909599075094	false	REALIZABLE	17
+race4-shipped	narylatch_pb_11_pe_.ltl	17	REALIZABLE	0.03990364697529003	false	REALIZABLE	17
+race4-shipped	narylatch_pb_16_pe_.ltl	17	REALIZABLE	0.04553335497621447	false	REALIZABLE	17
+race4-shipped	narylatch_pb_32_pe_.ltl	17	REALIZABLE	0.04981630697147921	false	REALIZABLE	17
+race4-shipped	ordered-visits-choice-real.ltl				true	UNKNOWN	17
+race4-shipped	package-delivery-real.ltl				true	TIMEOUT	17
+race4-shipped	patrolling-alarm21.ltl	17	UNREALIZABLE	0.6692389179952443	false	UNREALIZABLE	17
+race4-shipped	patrolling-alarm7.ltl	17	UNREALIZABLE	0.09066602599341422	false	UNREALIZABLE	17
+race4-shipped	patrolling11.ltl	17	UNREALIZABLE	0.15563497802941129	false	UNREALIZABLE	17
+race4-shipped	patrolling15.ltl	17	UNREALIZABLE	0.36096077295951545	false	UNREALIZABLE	17
+race4-shipped	precise-reachability-real.ltl	17	REALIZABLE	0.11115918401628733	false	REALIZABLE	17
+race4-shipped	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.04237037600250915	false	REALIZABLE	17
+race4-shipped	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	0.03329609602224082	false	UNREALIZABLE	17
+race4-shipped	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	17	UNREALIZABLE	0.032330530986655504	false	UNREALIZABLE	17
+race4-shipped	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT	17
+race4-shipped	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT	17
+race4-shipped	reversible-lane-r-real.ltl				true	TIMEOUT	17
+race4-shipped	reversible-lane-u-unreal.ltl	17	UNREALIZABLE	0.09238144301343709	false	UNREALIZABLE	17
+race4-shipped	reversible-lane-u0.ltl	17	UNREALIZABLE	0.07782308297464624	false	UNREALIZABLE	17
+race4-shipped	reversible-lane-u1.ltl	17	UNREALIZABLE	0.07464403001358733	false	UNREALIZABLE	17
+race4-shipped	robot-cat-real-2d-real.ltl				true	TIMEOUT	17
+race4-shipped	robot-cat-unreal-1d-unreal.ltl	17	UNREALIZABLE	0.17964253498939797	false	UNREALIZABLE	17
+race4-shipped	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT	17
+race4-shipped	robot-grid-commute-1d-real.ltl	17	REALIZABLE	2.076070996990893	false	REALIZABLE	17
+race4-shipped	robot-grid-commute-2d-real.ltl				true	TIMEOUT	17
+race4-shipped	robot-grid-reach-2d-real.ltl	17	REALIZABLE	2.793764160014689	false	REALIZABLE	17
+race4-shipped	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	17	REALIZABLE	0.04529129603179172	false	REALIZABLE	17
+race4-shipped	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT	17
+race4-shipped	robot-resource-1d-unreal.ltl	17	UNREALIZABLE	0.10712275502737612	false	UNREALIZABLE	17
+race4-shipped	robot-resource-1d1.ltl	17	UNREALIZABLE	0.028557542013004422	false	UNREALIZABLE	17
+race4-shipped	robot-to-target-charging-real.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal0.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal1.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal2.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal3.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal4.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal5.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal6.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal7.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging-unreal8.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging10.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging11.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging12.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging13.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging14.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging15.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging16.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging17.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging18.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging19.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging20.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging21.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging22.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging23.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging24.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging25.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging6.ltl	17	UNREALIZABLE	7.542931411997415	false	UNREALIZABLE	17
+race4-shipped	robot-to-target-charging7.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging8.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target-charging9.ltl				true	TIMEOUT	17
+race4-shipped	robot-to-target0.ltl				true	TIMEOUT	17
+race4-shipped	robot_analyze_samples_v1-real.ltl				true	TIMEOUT	17
+race4-shipped	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+race4-shipped	robot_collect_samples_v2-real.ltl				true	TIMEOUT	17
+race4-shipped	robot_collect_samples_v3-real.ltl				true	TIMEOUT	17
+race4-shipped	robot_collect_samples_v4-real.ltl				true	TIMEOUT	17
+race4-shipped	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+race4-shipped	robot_deliver_products_20.ltl				true	TIMEOUT	17
+race4-shipped	robot_deliver_products_30.ltl				true	TIMEOUT	17
+race4-shipped	robot_deliver_products_40.ltl				true	TIMEOUT	17
+race4-shipped	robot_deliver_products_50.ltl				true	TIMEOUT	17
+race4-shipped	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	robot_grid_pb_7_7_pe_.ltl				true	MEMOUT	17
+race4-shipped	robot_grid_pb_8_8_pe_.ltl				true	MEMOUT	17
+race4-shipped	robot_repair0.ltl				true	TIMEOUT	17
+race4-shipped	robot_repair1.ltl				true	TIMEOUT	17
+race4-shipped	robot_repair2.ltl				true	TIMEOUT	17
+race4-shipped	robot_repair3.ltl				true	TIMEOUT	17
+race4-shipped	robot_repair4.ltl				true	TIMEOUT	17
+race4-shipped	robot_repair5.ltl				true	TIMEOUT	17
+race4-shipped	robot_running-real.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	1.0403277410077862	false	UNREALIZABLE	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT	17
+race4-shipped	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	scheduler-real.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_unreal1_pb_16_1_pe_.ltl	17	UNREALIZABLE	0.03145026200218126	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_3_11_pe_.ltl	17	UNREALIZABLE	0.03304741100873798	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	0.030719526985194534	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_3_8_pe_.ltl	17	UNREALIZABLE	0.03304081998066977	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_3_9_pe_.ltl	17	UNREALIZABLE	0.03014081803848967	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_4_12_pe_.ltl	17	UNREALIZABLE	0.033227812964469194	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_4_4_pe_.ltl	17	UNREALIZABLE	0.029857505986001343	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	0.03090350900311023	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	0.03656089602736756	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_5_2_pe_.ltl	17	UNREALIZABLE	0.031660495966207236	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_5_3_pe_.ltl	17	UNREALIZABLE	0.03431853197980672	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_5_4_pe_.ltl	17	UNREALIZABLE	0.03560303698759526	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	0.03615543700288981	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_5_6_pe_.ltl	17	UNREALIZABLE	0.03031437797471881	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_5_9_pe_.ltl	17	UNREALIZABLE	0.03184213803615421	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_6_1_pe_.ltl	17	UNREALIZABLE	0.02942824800265953	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_6_2_pe_.ltl	17	UNREALIZABLE	0.03462317900266498	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_6_3_pe_.ltl	17	UNREALIZABLE	0.03464794805040583	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal1_pb_8_8_pe_.ltl	17	UNREALIZABLE	0.03558994404738769	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal2_pb_25_pe_.ltl	17	UNREALIZABLE	0.03736984496936202	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.03538763499818742	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal2_pb_75_pe_.ltl	17	UNREALIZABLE	0.056707128998823464	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_unreal2_pb_8_pe_.ltl	17	UNREALIZABLE	0.03172722301678732	false	UNREALIZABLE	17
+race4-shipped	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT	17
+race4-shipped	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT	17
+race4-shipped	sort4-real.ltl				true	TIMEOUT	17
+race4-shipped	sort40.ltl	17	UNREALIZABLE	0.18985918397083879	false	UNREALIZABLE	17
+race4-shipped	sort51.ltl				true	TIMEOUT	17
+race4-shipped	sort52.ltl				true	TIMEOUT	17
+race4-shipped	sort53.ltl				true	TIMEOUT	17
+race4-shipped	square5x5-real.ltl				true	TIMEOUT	17
+race4-shipped	tasks-unreal0.ltl				true	TIMEOUT	17
+race4-shipped	tasks-unreal1.ltl				true	TIMEOUT	17
+race4-shipped	tasks-unreal2.ltl				true	TIMEOUT	17
+race4-shipped	taxi-service-real.ltl				true	TIMEOUT	17
+race4-shipped	taxi-service-u-unreal.ltl	17	UNREALIZABLE	0.08838112896773964	false	UNREALIZABLE	17
+race4-shipped	thermostat-F-real.ltl				true	TIMEOUT	17
+race4-shipped	thermostat-GF-real.ltl				true	TIMEOUT	17
+race4-shipped	thermostat-GF-unreal1.ltl				true	TIMEOUT	17
+race4-shipped	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+race4-shipped	tmp_13cfc6f2.ltl	17	REALIZABLE	0.734797150013037	false	REALIZABLE	17
+race4-shipped	unordered-visits-charging0.ltl				true	TIMEOUT	17
+race4-shipped	workstation_resupply_pb_2_pe_.ltl	17	REALIZABLE	0.3583846059627831	false	REALIZABLE	17
+race4-shipped	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	17
+race4-shipped	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	17
+race4-shipped	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT	17
+race4-shipped	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	17
+race4-shipped	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT	17

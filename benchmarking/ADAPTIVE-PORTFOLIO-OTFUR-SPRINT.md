@@ -6,8 +6,9 @@ wrong about the tree it was written against.
 
 **Status: the code is on master and unit-gated. Three campaigns have run** — a
 22-arm isolated census on the 180-instance panel, 10 arms on the 353 instances
-the shipping configuration cannot solve, and a fixed-budget race curve (partial,
-§9). **G1 and G3 have not run.** Nothing here is a full-corpus coverage claim,
+the shipping configuration cannot solve, and a fixed-budget race curve (§9).
+**G1, G3 and G4 were queued after it and are not reported here; G5 is skipped
+(§10).** Nothing here is a full-corpus coverage claim,
 and `docker_default` is unchanged.
 
 Raw evidence: [portfolio-evidence-20260910/](portfolio-evidence-20260910/),
@@ -250,17 +251,34 @@ controller, so systemd accepts the property and drops it. `CPUQuota` is
 enforced — eight busy loops under a 400% quota used 12.3 CPU-seconds in 3 s with
 30 throttle events, against 24 unthrottled.
 
-| config | arms | panel solved | vs its isolated union | hard set solved |
-|---|---:|---:|---:|---:|
-| `race4-shipped` | 4 | 140 / 180 | 142 (−2) | 4 / 353 |
-| `race5-plus-guarded-real` | 5 | *running* | | |
-| `race2-best` | 2 | *pending* | | |
+| config | arms | panel / 180 | its isolated union | lost to racing | hard / 353 | total / 494 |
+|---|---:|---:|---:|---:|---:|---:|
+| `race4-shipped` | 4 | 140 | 142 | 2 | 4 | 144 |
+| `race5-plus-guarded-real` | 5 | 141 | 143 | 2 | 6 | **146** |
+| `race2-best` | 2 | 131 | 133 | 2 | **9** | 140 |
 
-On typical instances racing costs almost nothing — 140 of the 142 its arms reach
-alone. On the hard set it keeps 4 of the 14 its arms reach alone
-(`GF-G-contradiction6`, `infinite-race-u10`, `infinite-race-u11`,
-`infinite-race-unequal-25`). Contention is cheap on the panel and expensive on
-the tail, which is where §7's capability arm would have to earn its place.
+Racing costs the same 2 instances whatever the worker count, so the differences
+below are about what each configuration can reach, not about racing overhead.
+
+**The fifth arm pays.** Adding `real:small:spot-guarded-sparse` nets +2: it gains
+all five of §7's capability instances and loses three hard-set instances to the
+contention it adds (`GF-G-contradiction6`, `infinite-race-u11`,
+`infinite-race-unequal-25`). That is a preset candidate, not a preset change: it
+is one run, the three losses need repetitions, and the admission rules ask for a
+full-corpus campaign first.
+
+**Two arms is worst overall and best on the tail** — 140 total, but 9 hard
+instances against 4 and 6. Fewer workers means more budget each, which buys hard
+instances and costs easy ones.
+
+**Choosing the configuration per instance has real headroom.** The best fixed
+configuration reaches 146; an oracle over these three reaches **155**, and the
+shipped four contributes nothing unique, so `race5` and `race2` alone realise the
+whole 155. That headroom is worker count, not arm identity — the opposite of what
+P5 proposed, and the one portfolio hypothesis this sprint has not closed. Two
+cautions: this instance set is 71% hard instances where the corpus is 23%, so the
+relative gain here overstates the corpus gain; and a real selector has to predict
+the choice per instance and pay for the prediction.
 
 ## 10. Correctness
 
@@ -309,16 +327,20 @@ the tail, which is where §7's capability arm would have to earn its place.
 | `Post <= target` covering reduces search | **LAND DEFAULT-OFF ARM** | semantically distinct; four nodes on 3-AP games |
 | The patch stack changes a shipped result | **LAND DEFAULT** | removes `infinite-race-u10`'s regression, 3/5 → 5/5 (§8) |
 | Individual arms hide a better virtual solver | **STOP — NO MEASURED BENEFIT** on the panel | shipped four = best four; oracle +1; no unique arm |
-| …on instances the shipped config cannot solve | **OPEN** | guarded-real adds 5 by capability; pending `race5` (§9) |
+| …on instances the shipped config cannot solve | **LAND DEFAULT-OFF ARM**, candidate | the 5-arm race nets +2 over the shipped four (§9); needs repetitions and a full-corpus campaign before any preset change |
 | Learned per-instance arm selection (P5) | **STOP — NO MEASURED BENEFIT** | nothing uniquely reachable to select between |
+| Learned per-instance *worker-count* selection | **OPEN — measured headroom** | oracle over the race configurations reaches 155 against 146 for the best fixed one (§9) |
 | Dominance index / SIMD (P4) | **STOP — NO MEASURED BENEFIT** | two prior negatives; arms differ in cost, not reach |
 | TAA lazy provider (R2) | **STOP — NO MEASURED BENEFIT** | lazy ≡ eager in verdicts; both ⊂ frozen graph |
 | `--allowed-cpus` without cpuset | **LAND DEFAULT** (refusal) | systemd drops it silently; `CPUQuota` is enforced |
 
 ## 13. What to do next, in order
 
-1. **Finish the race curve** and fill §9. `race5` decides whether the one arm
-   with capability pays for the contention a fifth worker adds.
+1. **Repeat `race5`'s three losses and five gains**, then run it over the full
+   1,524 before proposing a preset. It nets +2 on this set (§9).
+2. **Scope a worker-count selector.** The oracle over race configurations is 155
+   against 146 fixed (§9). Unlike P5 this has measured headroom, and it needs a
+   cheap per-instance predictor and an honest accounting of its own cost.
 2. **Gates, queued to run after the race curve.** The stack landed on master as
    one unit, so G1 and G3 compare master's `otf_sparse_formula` against the kept
    `3fb9f113` baseline rather than patch by patch: **G1** on the 40 frozen
@@ -338,11 +360,11 @@ the tail, which is where §7's capability arm would have to earn its place.
 
 ## 14. Not done, and why
 
-- **P5 learned selector.** The census shows nothing to select between (§6), and
-  the one genuine hard-set gain is a single arm, which a fixed preset captures.
-  What the data does support is a narrower question — how many workers, or which
-  polarity, per instance — because contention is the largest effect measured
-  (§7, §9). That is a hypothesis for the race curve, not a result.
+- **P5 learned selector, as proposed.** The census shows nothing to select
+  between on arm identity (§6), and the one genuine hard-set gain is a single
+  arm that a fixed preset captures. The narrower question — how many workers per
+  instance — is no longer a hypothesis: §9 measures 9 instances of headroom for
+  it. Scoping that is item 2 of §13.
 - **P4 index and SIMD.** Two prior negatives, and #154 removed the scan it
   targeted.
 - **R1 interaction census.** Not started.
