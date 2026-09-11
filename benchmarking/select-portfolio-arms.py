@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
-"""Select the best <=4-arm subset from an isolated arm census (§7.5).
+"""Select the best arm subset from an isolated arm census (§7.5).
 
 Reads the *-summary.tsv files run-syntcomp26-coverage.py writes for each arm
 (solver_label, instance, smallest_cap_solved, decisive_result, decisive_seconds,
-still_unsolved_at_60, failure_kind_at_60) and enumerates every arm subset of size
-1 to 4 that:
+still_unsolved_at_max_cap, failure_kind_at_max_cap, max_cap_s) and enumerates
+every arm subset of size 1 to --max-arms that:
   - includes at least one arm that returned REALIZABLE somewhere in the census
   - includes at least one arm that returned UNREALIZABLE somewhere in the census
   - contains no duplicate arm
+
+--max-arms defaults to 4 because the shipped portfolios have four workers, but
+it is a default and not a ceiling: nothing in the toolchain or the binary caps
+the arm count, and acacia-bonsai forks one child per arm.
+
+Only answers first decided at or below --cap seconds are counted.  This matters
+because decisive_result holds the answer from the *earliest* staged cap that
+decided the instance, so a census run with --caps 1,5,17,60 stores 60-second
+answers in the same column as 17-second ones; without the filter they would
+inflate a union that the protocol reads at 17 seconds.
 
 Before any subset is scored, every instance is checked for verdict agreement
 across the arms that answered it.  A single REALIZABLE/UNREALIZABLE conflict is a
@@ -16,7 +26,7 @@ taking whichever arm answered faster, which would silently grow a union by an
 instance the subset decides inconsistently.
 
 ranked by, in order:
-  1. size of the union of decisive answers at cap 17s (larger is better)
+  1. size of the union of decisive answers at or below --cap (larger is better)
   2. sum of decisive_seconds on the instances the subset answers (smaller is better)
   3. count of answers with decisive_seconds < 1.0 (larger is better)
   4. number of arms in the subset (fewer is better)
@@ -45,19 +55,42 @@ import sys
 DECISIVE = {"REALIZABLE", "UNREALIZABLE"}
 
 
-def load_arm(path: pathlib.Path) -> dict[str, tuple[str, float]]:
-    """Return {instance: (decisive_result, decisive_seconds)} for one arm."""
+def load_arm(path: pathlib.Path, cap: float) -> dict[str, tuple[str, float]]:
+    """Return {instance: (decisive_result, decisive_seconds)} for one arm.
+
+    Only answers first obtained at a staged cap of `cap` seconds or less are
+    returned.  run-syntcomp26-coverage.py fills decisive_result from the
+    *earliest* cap that decided the instance, so a census run with
+    --caps 1,5,17,60 records 60-second answers in the same column as 17-second
+    ones.  Counting those in a 17-second union would credit a subset with
+    coverage it does not have at the protocol cap.  smallest_cap_solved is the
+    column that distinguishes them, and it is authoritative: an empty value
+    means the instance was never decided at any cap.
+    """
     answers: dict[str, tuple[str, float]] = {}
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle, delimiter="\t"):
             result = row["decisive_result"]
-            if result in DECISIVE:
-                answers[row["instance"]] = (result, float(row["decisive_seconds"]))
+            if result not in DECISIVE:
+                continue
+            solved_at = row["smallest_cap_solved"]
+            if solved_at == "":
+                raise CensusError(
+                    f"{path.name}: {row['instance']} has decisive_result "
+                    f"{result} but no smallest_cap_solved; the summary is "
+                    f"inconsistent and cannot be filtered by cap")
+            if float(solved_at) > cap:
+                continue
+            answers[row["instance"]] = (result, float(row["decisive_seconds"]))
     return answers
 
 
 class ArmConflict(Exception):
     """Two arms of one subset returned opposite verdicts for the same instance."""
+
+
+class CensusError(Exception):
+    """A summary file is malformed or internally inconsistent."""
 
 
 def evaluate(subset: tuple[str, ...], arms: dict[str, dict[str, tuple[str, float]]]):
@@ -90,6 +123,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--census-dir", required=True, type=pathlib.Path,
                         help="directory of <arm-name>-summary.tsv files")
+    parser.add_argument("--cap", type=float, default=17.0, metavar="SECONDS",
+                        help="count only answers first obtained at this staged "
+                             "cap or below (default 17, the protocol cap)")
     parser.add_argument("--max-arms", type=int, default=4)
     parser.add_argument("--top", type=int, default=20)
     parser.add_argument("--output", type=pathlib.Path)
@@ -100,10 +136,15 @@ def main() -> int:
         print(f"no *-summary.tsv files found under {args.census_dir}", file=sys.stderr)
         return 1
 
+    print(f"counting answers first decided at <= {args.cap:g}s")
     arms: dict[str, dict[str, tuple[str, float]]] = {}
     for path in summaries:
         name = path.name.removesuffix("-summary.tsv")
-        arms[name] = load_arm(path)
+        try:
+            arms[name] = load_arm(path, args.cap)
+        except CensusError as error:
+            print(f"FATAL: {error}", file=sys.stderr)
+            return 1
         counts = {}
         for result, _ in arms[name].values():
             counts[result] = counts.get(result, 0) + 1
@@ -149,6 +190,9 @@ def main() -> int:
             "sum_decisive_seconds": round(total_seconds, 2),
             "under_1s": under_one_s,
             "arm_count": len(subset),
+            # A union is only meaningful against the cap it was read at, so the
+            # saved table carries it rather than leaving a reader to assume one.
+            "cap_s": f"{args.cap:g}",
         }
         rows.append(row)
         print(f"  {row['decisive_union']:>5} decided  "
@@ -160,7 +204,7 @@ def main() -> int:
         with args.output.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()) if rows else
                                     ["arms", "decisive_union", "sum_decisive_seconds",
-                                     "under_1s", "arm_count"], delimiter="\t")
+                                     "under_1s", "arm_count", "cap_s"], delimiter="\t")
             writer.writeheader()
             writer.writerows(rows)
         print(f"\nwrote {args.output}")

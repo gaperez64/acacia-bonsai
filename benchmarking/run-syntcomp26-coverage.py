@@ -10,6 +10,15 @@ adjudication, never waives it, so collected results must not be used beforehand.
 Known bad annotations are handled by a per-instance, evidence-bearing exceptions
 table; exceptions correct specific expectations rather than providing a way to
 switch off conflict checking.
+
+The <output>-summary.tsv sidecar reports, per instance, the answer from the
+*earliest* cap that decided it: decisive_result and decisive_seconds say what
+was decided and how long it took, and smallest_cap_solved says under which cap
+that happened.  A consumer that reads coverage at one particular cap must
+therefore filter on smallest_cap_solved -- otherwise a campaign run with
+--caps 1,5,17,60 contributes its 60-second answers to a 17-second total.
+still_unsolved_at_max_cap, failure_kind_at_max_cap and max_cap_s describe the
+largest cap of this campaign, whatever it was, and not any fixed cap.
 """
 
 from __future__ import annotations
@@ -83,8 +92,9 @@ SUMMARY_COLUMNS = [
     "smallest_cap_solved",
     "decisive_result",
     "decisive_seconds",
-    "still_unsolved_at_60",
-    "failure_kind_at_60",
+    "still_unsolved_at_max_cap",
+    "failure_kind_at_max_cap",
+    "max_cap_s",
 ]
 STATUS_RE = re.compile(
     r"^\s*//\s*STATUS\s*:\s*(?P<status>[A-Za-z]+)\s*$", re.IGNORECASE
@@ -522,8 +532,9 @@ def write_summary(
                 "smallest_cap_solved": earliest["cap_s"] if earliest else "",
                 "decisive_result": earliest["result"] if earliest else "",
                 "decisive_seconds": earliest["seconds"] if earliest else "",
-                "still_unsolved_at_60": str(not solved_by_largest).lower(),
-                "failure_kind_at_60": largest_row["result"] if largest_row else "",
+                "still_unsolved_at_max_cap": str(not solved_by_largest).lower(),
+                "failure_kind_at_max_cap": largest_row["result"] if largest_row else "",
+                "max_cap_s": str(largest_cap),
             }
         )
 
