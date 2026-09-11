@@ -489,6 +489,26 @@ def run_process_group(
         _terminate_process_group(proc)
 
 
+def user_manager_controllers(uid: int | None = None) -> set[str] | None:
+    """Return the cgroup controllers delegated to this user's systemd manager.
+
+    `None` means the answer could not be read, which is not the same as an
+    empty set: callers that need a controller should refuse on either.
+    """
+    uid = os.getuid() if uid is None else uid
+    path = pathlib.Path(
+        f"/sys/fs/cgroup/user.slice/user-{uid}.slice/user@{uid}.service/cgroup.controllers"
+    )
+    try:
+        return set(path.read_text(encoding="utf-8").split())
+    except OSError:
+        return None
+
+
+class ScopeConstraintError(RuntimeError):
+    """A scope property was requested that this systemd cannot enforce."""
+
+
 def run_systemd_scope(
     cmd: list[str],
     timeout: float,
@@ -518,6 +538,22 @@ def run_systemd_scope(
     """
     if not unit_prefix.startswith("acacia-"):
         raise ValueError("unit_prefix must start with 'acacia-' so campaign sweeps can find it")
+    if allowed_cpus is not None:
+        # systemd accepts AllowedCPUs on a user scope whether or not it can
+        # apply it.  Without the cpuset controller delegated to the user
+        # manager the property is dropped: the scope gets no cpuset.cpus, its
+        # processes keep the full affinity mask, and a campaign labelled as a
+        # fixed-core comparison silently runs on every core.  CPUQuota rides
+        # the cpu controller, which user managers normally do have.
+        controllers = user_manager_controllers()
+        if controllers is None or "cpuset" not in controllers:
+            found = "unreadable" if controllers is None else " ".join(sorted(controllers))
+            raise ScopeConstraintError(
+                f"allowed_cpus={allowed_cpus!r} cannot be enforced: the user systemd "
+                f"manager's delegated controllers are [{found}], without cpuset, so "
+                f"AllowedCPUs would be silently ignored. Use cpu_quota for a fixed CPU "
+                f"budget, or delegate cpuset to user@.service."
+            )
     unit = f"{unit_prefix}-{os.getpid()}-{uuid.uuid4().hex[:12]}"
     scoped_cmd = [
         "systemd-run",

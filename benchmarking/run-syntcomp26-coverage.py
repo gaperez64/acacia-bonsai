@@ -563,8 +563,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--caps", required=True, type=parse_caps, metavar="1,5,17,60"
     )
     parser.add_argument("--allowed-cpus", metavar="0-3",
-                        help="pin the whole solver invocation to these CPUs; a race of "
-                             "any worker count then gets the same cores (systemd AllowedCPUs)")
+                        help="pin the whole solver invocation to these CPUs (systemd "
+                             "AllowedCPUs); refused unless cpuset is delegated to the user "
+                             "manager, since systemd otherwise ignores it silently")
     parser.add_argument("--cpu-quota", metavar="200%",
                         help="cap total CPU for the whole solver invocation (systemd CPUQuota)")
     parser.add_argument("--memory-max", required=True, metavar="8G")

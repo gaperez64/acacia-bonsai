@@ -338,7 +338,7 @@ class _Captured(Exception):
     """Abort run_systemd_scope once the scope argv has been built."""
 
 
-def _scope_argv(monkeypatch, **kwargs):
+def _scope_argv(monkeypatch, controllers=frozenset({"cpuset", "cpu", "io", "memory", "pids"}), **kwargs):
     """Return the systemd-run argv run_systemd_scope would have executed.
 
     Popen raises rather than returning a fake: the argv is fully built by then,
@@ -352,6 +352,10 @@ def _scope_argv(monkeypatch, **kwargs):
         raise _Captured
 
     monkeypatch.setattr(benchlib.subprocess, "Popen", popen)
+    # The argv tests assume a manager that can enforce every property they set;
+    # the refusal when it cannot is tested separately below.
+    monkeypatch.setattr(benchlib, "user_manager_controllers",
+                        lambda uid=None: set(controllers) if controllers is not None else None)
     with pytest.raises(_Captured):
         benchlib.run_systemd_scope(
             ["solver"], 17, "8G", unit_prefix="acacia-test", **kwargs)
@@ -391,3 +395,36 @@ def test_cpu_budget_applies_to_the_whole_race_not_each_child(monkeypatch):
     assert "--property=KillMode=control-group" in argv
     assert argv.count("--property=AllowedCPUs=0-3") == 1
     assert argv[-1] == "solver"
+
+
+@pytest.mark.parametrize("controllers", [
+    {"cpu", "io", "memory", "pids"},  # what a stock Fedora user manager delegates
+    None,                             # controllers file unreadable
+])
+def test_allowed_cpus_is_refused_when_cpuset_is_not_delegated(monkeypatch, controllers):
+    # systemd accepts AllowedCPUs on a user scope and then drops it, so the
+    # processes keep every core and a "fixed-core" campaign is mislabelled.
+    # That silent drop is what this refuses.
+    monkeypatch.setattr(benchlib.subprocess, "Popen",
+                        lambda *a, **kw: pytest.fail("started a process"))
+    monkeypatch.setattr(benchlib, "user_manager_controllers", lambda uid=None: controllers)
+    with pytest.raises(benchlib.ScopeConstraintError, match="cpu_quota"):
+        benchlib.run_systemd_scope(["solver"], 17, "8G", unit_prefix="acacia-test",
+                                   allowed_cpus="0-3")
+
+
+def test_cpu_quota_needs_no_cpuset(monkeypatch):
+    argv = _scope_argv(monkeypatch, controllers={"cpu", "io", "memory", "pids"},
+                       cpu_quota="400%")
+    assert "--property=CPUQuota=400%" in argv
+
+
+def test_user_manager_controllers_reads_the_delegation(tmp_path, monkeypatch):
+    base = tmp_path / "user.slice" / "user-1000.slice" / "user@1000.service"
+    base.mkdir(parents=True)
+    (base / "cgroup.controllers").write_text("cpu io memory pids\n")
+    real_path = benchlib.pathlib.Path
+    monkeypatch.setattr(benchlib.pathlib, "Path",
+                        lambda p: real_path(str(p).replace("/sys/fs/cgroup", str(tmp_path))))
+    assert benchlib.user_manager_controllers(1000) == {"cpu", "io", "memory", "pids"}
+    assert benchlib.user_manager_controllers(4242) is None
