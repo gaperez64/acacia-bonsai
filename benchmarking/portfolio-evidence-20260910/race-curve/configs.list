@@ -1,0 +1,3 @@
+race4-shipped|real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward
+race5-plus-guarded-real|real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,real:small:spot-guarded-sparse
+race2-best|real:small:forward,unreal:formula:spot-guarded-sparse

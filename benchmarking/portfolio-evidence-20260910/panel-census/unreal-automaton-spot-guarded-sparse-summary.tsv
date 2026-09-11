@@ -1,0 +1,181 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+unreal-automaton-spot-guarded-sparse	Alarm_2d1010f8.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	CheckAlarm_6bea956e.ltl	1	UNREALIZABLE	0.021022077999077737	false		17
+unreal-automaton-spot-guarded-sparse	CheckCoffeMachineBroken1_a5f99bc6.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	CheckCoffeMachine_3461125b.ltl	1	UNREALIZABLE	0.02039234002586454	false		17
+unreal-automaton-spot-guarded-sparse	CheckShades_1a2942e3.ltl	1	UNREALIZABLE	0.022708727978169918	false		17
+unreal-automaton-spot-guarded-sparse	CheckTimer_54e1f7d2.ltl	1	UNREALIZABLE	0.02038677700329572	false		17
+unreal-automaton-spot-guarded-sparse	Core_fa4d4ce3.ltl	1	UNREALIZABLE	0.024191294971387833	false		17
+unreal-automaton-spot-guarded-sparse	EscalatorSmart.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	FelixSpecFixed2.2.core_fa8592c8.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	OneCounterInRangeA2.ltl	1	UNREALIZABLE	0.022274174029007554	false		17
+unreal-automaton-spot-guarded-sparse	SPIReadSdi.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	Sensor.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	Window2Min_88c5c1c3.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	WindowMin_a5f99bc6.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	abcg_arbiter_pb_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	amba_decomposed_encode_pb_4_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	amba_decomposed_lock_pb_3_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	amba_decomposed_shift.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	arbiter-paper-unreal-unreal.ltl	1	UNREALIZABLE	0.03477373195346445	false		17
+unreal-automaton-spot-guarded-sparse	arbiter_pb_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	arbiter_with_cancel_pb_1_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	chomp_pb_2_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	full_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.017041813989635557	false		17
+unreal-automaton-spot-guarded-sparse	lift_pb_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	lift_wrong_physics_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.02944297401700169	false		17
+unreal-automaton-spot-guarded-sparse	lilydemo04_modified.ltl	1	UNREALIZABLE	0.023985670995898545	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.021996242983732373	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.026025443978141993	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.15655584196792915	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.05441706895362586	false		17
+unreal-automaton-spot-guarded-sparse	ltl2dba11.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	ltl2dba_R_pb_1_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	ltl2dba_R_pb_5_pe_.ltl	1	UNREALIZABLE	0.08213353902101517	false		17
+unreal-automaton-spot-guarded-sparse	ltl2dba_theta_pb_7_pe_.ltl	1	UNREALIZABLE	0.044326814997475594	false		17
+unreal-automaton-spot-guarded-sparse	narylatch_pb_11_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	narylatch_pb_16_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	narylatch_pb_32_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	precise-reachability-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	prioritized_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot-grid-reach-repeated-with-obstacles-1d-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	F-G-contradiction-15.ltl	1	UNREALIZABLE	0.4786333569791168	false		17
+unreal-automaton-spot-guarded-sparse	FelixSpecFixed3.core_b209ff21.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	GF-G-contradiction2.ltl	1	UNREALIZABLE	0.16787837096489966	false		17
+unreal-automaton-spot-guarded-sparse	KitchenTimerV9.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	Lights2_b02056d6.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	LightsTotal_2c5b09da.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	MorningMin_d6c5ac79.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	OneCounter.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	OneCounterGuiA5.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	SingleContoller_d65ed84e.ltl	1	UNREALIZABLE	0.026567330991383642	false		17
+unreal-automaton-spot-guarded-sparse	TwoCounters3.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	TwoCountersDisButA5.ltl	1	UNREALIZABLE	0.10866608296055347	false		17
+unreal-automaton-spot-guarded-sparse	TwoCountersGui.ltl	1	UNREALIZABLE	0.02210640796693042	false		17
+unreal-automaton-spot-guarded-sparse	amba_decomposed_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	amba_decomposed_encode_pb_16_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	amba_decomposed_lock_pb_11_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	amba_decomposed_lock_pb_12_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	arbiter_with_buffer_pb_4_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	chain-simple-30-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	chain-simple-50-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	chomp_pb_3_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	collector_v2_pb_12_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	full_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.01779725996311754	false		17
+unreal-automaton-spot-guarded-sparse	g-real0.ltl	1	UNREALIZABLE	0.04637094703502953	false		17
+unreal-automaton-spot-guarded-sparse	g-unreal-18.ltl	5	UNREALIZABLE	3.6752212150022388	false		17
+unreal-automaton-spot-guarded-sparse	gf-unreal20.ltl	1	UNREALIZABLE	0.02959693199954927	false		17
+unreal-automaton-spot-guarded-sparse	heim-double-x1.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	infinite-race-u3.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	infinite-race-unequal-22.ltl	1	UNREALIZABLE	0.04754288704134524	false		17
+unreal-automaton-spot-guarded-sparse	lift_wrong_physics_unreal_pb_10_pe_.ltl	1	UNREALIZABLE	0.7307954870047979	false		17
+unreal-automaton-spot-guarded-sparse	lift_wrong_physics_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.26958140498027205	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.34742627799278125	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.7035956949694082	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	1.5393963279784657	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.6148818159708753	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_4_6_pe_.ltl	5	UNREALIZABLE	0.9807675360352732	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.6339803080190904	false		17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.48541770700830966	false		17
+unreal-automaton-spot-guarded-sparse	ltl2dba_C2_unreal_pb_12_pe_.ltl	1	UNREALIZABLE	0.3522420269437134	false		17
+unreal-automaton-spot-guarded-sparse	ltl2dba_E_pb_7_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	ltl2dba_R_pb_6_pe_.ltl	1	UNREALIZABLE	0.5138983529759571	false		17
+unreal-automaton-spot-guarded-sparse	ltl2dba_U1_pb_8_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	ltl2dba_theta_pb_12_pe_.ltl	5	UNREALIZABLE	1.3553513859515078	false		17
+unreal-automaton-spot-guarded-sparse	mux_pb_16_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	patrolling-alarm7.ltl	1	UNREALIZABLE	0.06380083097610623	false		17
+unreal-automaton-spot-guarded-sparse	patrolling11.ltl	1	UNREALIZABLE	0.09093644702807069	false		17
+unreal-automaton-spot-guarded-sparse	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.026092332031112164	false		17
+unreal-automaton-spot-guarded-sparse	reversible-lane-u0.ltl	1	UNREALIZABLE	0.10712634900119156	false		17
+unreal-automaton-spot-guarded-sparse	robot-cat-unreal-1d-unreal.ltl	1	UNREALIZABLE	0.059233351959846914	false		17
+unreal-automaton-spot-guarded-sparse	robot-grid-commute-1d-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot-grid-reach-2d-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot-resource-1d1.ltl	1	UNREALIZABLE	0.03873836400453001	false		17
+unreal-automaton-spot-guarded-sparse	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.9518818170181476	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.022722718014847487	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.021238284010905772	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.02477258100407198	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.020148814015556127	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.017322188999969512	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.021432215988170356	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.023009882017504424	false		17
+unreal-automaton-spot-guarded-sparse	sort40.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	taxi-service-u-unreal.ltl	1	UNREALIZABLE	0.06744866701774299	false		17
+unreal-automaton-spot-guarded-sparse	workstation_resupply_pb_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	F-G-contradiction-111.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	IntendDemo_42dc4fff.ltl	1	UNREALIZABLE	0.04163159499876201	false		17
+unreal-automaton-spot-guarded-sparse	Light_a50cadd7.ltl	1	UNREALIZABLE	0.020827378961257637	false		17
+unreal-automaton-spot-guarded-sparse	TwoCountersDisButA9.ltl	1	UNREALIZABLE	0.10858504701172933	false		17
+unreal-automaton-spot-guarded-sparse	UnderapproxDemo2.ltl	1	UNREALIZABLE	0.0210291079711169	false		17
+unreal-automaton-spot-guarded-sparse	Warnlight_a50cadd7.ltl	1	UNREALIZABLE	0.021186032972764224	false		17
+unreal-automaton-spot-guarded-sparse	arbiter_pb_7_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	box-real.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	evasion-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	evasion0.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	g-unreal-1-unreal.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	g-unreal-113.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	gf-unreal46.ltl	1	UNREALIZABLE	0.03458882396807894	false		17
+unreal-automaton-spot-guarded-sparse	heim-double-x-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	helipad-contradict0.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	helipad-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	lift_pb_6_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	10.306998059968464	false	UNREALIZABLE	17
+unreal-automaton-spot-guarded-sparse	ltl2dba_E_pb_9_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	mux_pb_200_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	package-delivery-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	patrolling-alarm21.ltl	1	UNREALIZABLE	0.27149678097339347	false		17
+unreal-automaton-spot-guarded-sparse	patrolling15.ltl	1	UNREALIZABLE	0.1687484520371072	false		17
+unreal-automaton-spot-guarded-sparse	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	1	UNREALIZABLE	0.021521190996281803	false		17
+unreal-automaton-spot-guarded-sparse	reversible-lane-u-unreal.ltl	1	UNREALIZABLE	0.10910092596895993	false		17
+unreal-automaton-spot-guarded-sparse	reversible-lane-u1.ltl	1	UNREALIZABLE	0.10408605495467782	false		17
+unreal-automaton-spot-guarded-sparse	robot-resource-1d-unreal.ltl	1	UNREALIZABLE	0.09581220499239862	false		17
+unreal-automaton-spot-guarded-sparse	robot-to-target-charging-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot-to-target-charging6.ltl	17	UNREALIZABLE	4.620498378004413	false	UNREALIZABLE	17
+unreal-automaton-spot-guarded-sparse	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot_repair2.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot_running-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	scheduler-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_16_1_pe_.ltl	1	UNREALIZABLE	0.02500398497795686	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.0243937480263412	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.01730271300766617	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.020514526986517012	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.015880246995948255	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.019097197044175118	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.02005039801588282	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.023617129016201943	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_5_5_pe_.ltl	1	UNREALIZABLE	0.024351992993615568	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_5_6_pe_.ltl	1	UNREALIZABLE	0.009737314016092569	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_5_9_pe_.ltl	1	UNREALIZABLE	0.018290418956894428	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.017859472951386124	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal1_pb_8_8_pe_.ltl	1	UNREALIZABLE	0.024216268036980182	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal2_pb_25_pe_.ltl	1	UNREALIZABLE	0.02872776100412011	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal2_pb_75_pe_.ltl	1	UNREALIZABLE	0.042000486981123686	false		17
+unreal-automaton-spot-guarded-sparse	simple_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.02131266798824072	false		17
+unreal-automaton-spot-guarded-sparse	square5x5-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	tasks-unreal1.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	tmp_13cfc6f2.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	unordered-visits-charging0.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	Full_f1477cc5.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	reversible-lane-r-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot-cat-real-2d-real.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	robot_repair5.ltl				true	TIMEOUT	17
+unreal-automaton-spot-guarded-sparse	round_robin_arbiter_pb_8_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-spot-guarded-sparse	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	17

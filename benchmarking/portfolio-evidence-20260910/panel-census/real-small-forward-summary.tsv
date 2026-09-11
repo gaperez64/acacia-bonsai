@@ -1,0 +1,181 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+real-small-forward	Alarm_2d1010f8.ltl	1	REALIZABLE	0.020417214022018015	false		17
+real-small-forward	CheckAlarm_6bea956e.ltl				true	UNKNOWN	17
+real-small-forward	CheckCoffeMachineBroken1_a5f99bc6.ltl	1	REALIZABLE	0.03430262400070205	false		17
+real-small-forward	CheckCoffeMachine_3461125b.ltl				true	UNKNOWN	17
+real-small-forward	CheckShades_1a2942e3.ltl				true	UNKNOWN	17
+real-small-forward	CheckTimer_54e1f7d2.ltl				true	UNKNOWN	17
+real-small-forward	Core_fa4d4ce3.ltl				true	UNKNOWN	17
+real-small-forward	EscalatorSmart.ltl	1	REALIZABLE	0.02822468098020181	false		17
+real-small-forward	FelixSpecFixed2.2.core_fa8592c8.ltl				true	UNKNOWN	17
+real-small-forward	OneCounterInRangeA2.ltl				true	UNKNOWN	17
+real-small-forward	SPIReadSdi.ltl	1	REALIZABLE	0.02144207403762266	false		17
+real-small-forward	Sensor.ltl	1	REALIZABLE	0.1338876059744507	false		17
+real-small-forward	Window2Min_88c5c1c3.ltl	1	REALIZABLE	0.02790709398686886	false		17
+real-small-forward	WindowMin_a5f99bc6.ltl	1	REALIZABLE	0.029974928009323776	false		17
+real-small-forward	abcg_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.10307617497164756	false		17
+real-small-forward	amba_decomposed_encode_pb_4_pe_.ltl	1	REALIZABLE	0.02008790004765615	false		17
+real-small-forward	amba_decomposed_lock_pb_3_pe_.ltl	1	REALIZABLE	0.017531804973259568	false		17
+real-small-forward	amba_decomposed_shift.ltl	1	REALIZABLE	0.016848429979290813	false		17
+real-small-forward	arbiter-paper-unreal-unreal.ltl				true	UNKNOWN	17
+real-small-forward	arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.028946970007382333	false		17
+real-small-forward	arbiter_with_cancel_pb_1_pe_.ltl	1	REALIZABLE	0.021144768979866058	false		17
+real-small-forward	chomp_pb_2_2_pe_.ltl	1	REALIZABLE	0.07056783599546179	false		17
+real-small-forward	full_arbiter_unreal1_pb_3_2_pe_.ltl				true	UNKNOWN	17
+real-small-forward	lift_pb_2_pe_.ltl	1	REALIZABLE	0.02184887300245464	false		17
+real-small-forward	lift_wrong_physics_unreal_pb_5_pe_.ltl				true	UNKNOWN	17
+real-small-forward	lilydemo04_modified.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_2_2_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_2_8_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_3_10_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	17
+real-small-forward	ltl2dba11.ltl	1	REALIZABLE	0.030377525952644646	false		17
+real-small-forward	ltl2dba_R_pb_1_pe_.ltl	1	REALIZABLE	0.03323532402282581	false		17
+real-small-forward	ltl2dba_R_pb_5_pe_.ltl				true	UNKNOWN	17
+real-small-forward	ltl2dba_theta_pb_7_pe_.ltl				true	UNKNOWN	17
+real-small-forward	narylatch_pb_11_pe_.ltl	1	REALIZABLE	0.028797392966225743	false		17
+real-small-forward	narylatch_pb_16_pe_.ltl	1	REALIZABLE	0.03749462601263076	false		17
+real-small-forward	narylatch_pb_32_pe_.ltl	1	REALIZABLE	0.036395402043126523	false		17
+real-small-forward	precise-reachability-real.ltl	1	REALIZABLE	0.11262659699423239	false		17
+real-small-forward	prioritized_arbiter_pb_5_pe_.ltl	1	REALIZABLE	0.42385695897974074	false		17
+real-small-forward	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	1	REALIZABLE	0.03824619896477088	false		17
+real-small-forward	F-G-contradiction-15.ltl				true	UNKNOWN	17
+real-small-forward	FelixSpecFixed3.core_b209ff21.ltl				true	UNKNOWN	17
+real-small-forward	GF-G-contradiction2.ltl				true	UNKNOWN	17
+real-small-forward	KitchenTimerV9.ltl	1	REALIZABLE	0.11898211698280647	false		17
+real-small-forward	Lights2_b02056d6.ltl	1	REALIZABLE	0.17395906301680952	false		17
+real-small-forward	LightsTotal_2c5b09da.ltl				true	UNKNOWN	17
+real-small-forward	MorningMin_d6c5ac79.ltl	1	REALIZABLE	0.027973824995569885	false		17
+real-small-forward	OneCounter.ltl	5	REALIZABLE	2.1770403669797815	false		17
+real-small-forward	OneCounterGuiA5.ltl				true	UNKNOWN	17
+real-small-forward	SingleContoller_d65ed84e.ltl				true	UNKNOWN	17
+real-small-forward	TwoCounters3.ltl	1	REALIZABLE	0.9944417459773831	false		17
+real-small-forward	TwoCountersDisButA5.ltl				true	UNKNOWN	17
+real-small-forward	TwoCountersGui.ltl				true	UNKNOWN	17
+real-small-forward	amba_decomposed_arbiter_pb_5_pe_.ltl				true	UNKNOWN	17
+real-small-forward	amba_decomposed_encode_pb_16_pe_.ltl	1	REALIZABLE	0.5342172399978153	false		17
+real-small-forward	amba_decomposed_lock_pb_11_pe_.ltl	5	REALIZABLE	1.065284321026411	false		17
+real-small-forward	amba_decomposed_lock_pb_12_pe_.ltl	5	REALIZABLE	3.876661759975832	false		17
+real-small-forward	amba_decomposed_lock_pb_13_pe_.ltl	17	REALIZABLE	13.53686277003726	false	REALIZABLE	17
+real-small-forward	arbiter_pb_5_pe_.ltl	1	REALIZABLE	0.8395165799884126	false		17
+real-small-forward	arbiter_with_buffer_pb_4_pe_.ltl	1	REALIZABLE	0.050385803973767906	false		17
+real-small-forward	chain-simple-30-real.ltl	5	REALIZABLE	1.1140723070129752	false		17
+real-small-forward	chain-simple-50-real.ltl	5	REALIZABLE	4.560970762977377	false		17
+real-small-forward	chomp_pb_3_2_pe_.ltl	5	REALIZABLE	3.103939056978561	false		17
+real-small-forward	collector_v2_pb_12_pe_.ltl				true	UNKNOWN	17
+real-small-forward	full_arbiter_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	17
+real-small-forward	g-real0.ltl				true	UNKNOWN	17
+real-small-forward	g-unreal-18.ltl				true	UNKNOWN	17
+real-small-forward	gf-unreal20.ltl				true	UNKNOWN	17
+real-small-forward	heim-double-x1.ltl				true	UNKNOWN	17
+real-small-forward	infinite-race-u3.ltl				true	UNKNOWN	17
+real-small-forward	infinite-race-unequal-22.ltl				true	UNKNOWN	17
+real-small-forward	lift_wrong_physics_unreal_pb_10_pe_.ltl				true	TIMEOUT	17
+real-small-forward	lift_wrong_physics_unreal_pb_9_pe_.ltl				true	TIMEOUT	17
+real-small-forward	load_balancer_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_2_16_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_3_12_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_5_4_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_6_3_pe_.ltl				true	UNKNOWN	17
+real-small-forward	ltl2dba_C2_unreal_pb_12_pe_.ltl				true	UNKNOWN	17
+real-small-forward	ltl2dba_E_pb_7_pe_.ltl	1	REALIZABLE	0.019117112969979644	false		17
+real-small-forward	ltl2dba_R_pb_6_pe_.ltl				true	UNKNOWN	17
+real-small-forward	ltl2dba_U1_pb_8_pe_.ltl	1	REALIZABLE	0.020581155025865883	false		17
+real-small-forward	ltl2dba_theta_pb_12_pe_.ltl				true	UNKNOWN	17
+real-small-forward	mux_pb_16_pe_.ltl	1	REALIZABLE	0.031226080958731472	false		17
+real-small-forward	patrolling-alarm7.ltl				true	UNKNOWN	17
+real-small-forward	patrolling11.ltl				true	UNKNOWN	17
+real-small-forward	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	17
+real-small-forward	reversible-lane-u0.ltl				true	TIMEOUT	17
+real-small-forward	robot-cat-unreal-1d-unreal.ltl				true	TIMEOUT	17
+real-small-forward	robot-grid-commute-1d-real.ltl	5	REALIZABLE	1.583528648945503	false		17
+real-small-forward	robot-grid-reach-2d-real.ltl	5	REALIZABLE	2.8768999709864147	false		17
+real-small-forward	robot-resource-1d1.ltl				true	UNKNOWN	17
+real-small-forward	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_4_4_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_5_2_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_5_3_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_6_1_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_6_2_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal2_pb_4_pe_.ltl				true	UNKNOWN	17
+real-small-forward	sort40.ltl				true	TIMEOUT	17
+real-small-forward	taxi-service-u-unreal.ltl				true	UNKNOWN	17
+real-small-forward	workstation_resupply_pb_2_pe_.ltl	1	REALIZABLE	0.27781750401481986	false		17
+real-small-forward	F-G-contradiction-111.ltl				true	TIMEOUT	17
+real-small-forward	IntendDemo_42dc4fff.ltl				true	TIMEOUT	17
+real-small-forward	Light_a50cadd7.ltl				true	UNKNOWN	17
+real-small-forward	TwoCountersDisButA9.ltl				true	UNKNOWN	17
+real-small-forward	UnderapproxDemo2.ltl				true	UNKNOWN	17
+real-small-forward	Warnlight_a50cadd7.ltl				true	UNKNOWN	17
+real-small-forward	arbiter_pb_7_pe_.ltl				true	UNKNOWN	17
+real-small-forward	box-real.ltl	1	REALIZABLE	0.06146922503830865	false		17
+real-small-forward	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	17
+real-small-forward	evasion-real.ltl				true	TIMEOUT	17
+real-small-forward	evasion0.ltl				true	TIMEOUT	17
+real-small-forward	g-unreal-1-unreal.ltl				true	UNKNOWN	17
+real-small-forward	g-unreal-113.ltl				true	UNKNOWN	17
+real-small-forward	gf-unreal46.ltl				true	UNKNOWN	17
+real-small-forward	heim-double-x-real.ltl				true	UNKNOWN	17
+real-small-forward	helipad-contradict0.ltl				true	TIMEOUT	17
+real-small-forward	helipad-real.ltl				true	TIMEOUT	17
+real-small-forward	lift_pb_6_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal2_pb_5_pe_.ltl				true	UNKNOWN	17
+real-small-forward	ltl2dba_E_pb_9_pe_.ltl	1	REALIZABLE	0.021463390963617712	false		17
+real-small-forward	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+real-small-forward	mux_pb_200_pe_.ltl	1	REALIZABLE	0.032007559027988464	false		17
+real-small-forward	package-delivery-real.ltl				true	TIMEOUT	17
+real-small-forward	patrolling-alarm21.ltl				true	UNKNOWN	17
+real-small-forward	patrolling15.ltl				true	UNKNOWN	17
+real-small-forward	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+real-small-forward	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl				true	UNKNOWN	17
+real-small-forward	reversible-lane-u-unreal.ltl				true	TIMEOUT	17
+real-small-forward	reversible-lane-u1.ltl				true	TIMEOUT	17
+real-small-forward	robot-resource-1d-unreal.ltl				true	UNKNOWN	17
+real-small-forward	robot-to-target-charging-real.ltl				true	TIMEOUT	17
+real-small-forward	robot-to-target-charging6.ltl				true	TIMEOUT	17
+real-small-forward	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+real-small-forward	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+real-small-forward	robot_repair2.ltl				true	TIMEOUT	17
+real-small-forward	robot_running-real.ltl				true	TIMEOUT	17
+real-small-forward	scheduler-real.ltl				true	TIMEOUT	17
+real-small-forward	simple_arbiter_unreal1_pb_16_1_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_3_11_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_3_9_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_4_12_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_4_7_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_5_4_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_5_5_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_5_6_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_5_9_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_6_3_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal1_pb_8_8_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal2_pb_25_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal2_pb_75_pe_.ltl				true	UNKNOWN	17
+real-small-forward	simple_arbiter_unreal2_pb_8_pe_.ltl				true	UNKNOWN	17
+real-small-forward	square5x5-real.ltl				true	TIMEOUT	17
+real-small-forward	tasks-unreal1.ltl				true	TIMEOUT	17
+real-small-forward	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+real-small-forward	tmp_13cfc6f2.ltl	1	REALIZABLE	0.6446271219756454	false		17
+real-small-forward	unordered-visits-charging0.ltl				true	TIMEOUT	17
+real-small-forward	workstation_resupply_pb_3_pe_.ltl	17	REALIZABLE	13.872808199957944	false	REALIZABLE	17
+real-small-forward	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	17
+real-small-forward	Full_f1477cc5.ltl				true	TIMEOUT	17
+real-small-forward	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+real-small-forward	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+real-small-forward	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+real-small-forward	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+real-small-forward	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+real-small-forward	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	17
+real-small-forward	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	17
+real-small-forward	load_balancer_unreal1_pb_6_4_pe_.ltl				true	UNKNOWN	17
+real-small-forward	load_balancer_unreal1_pb_6_5_pe_.ltl				true	UNKNOWN	17
+real-small-forward	reversible-lane-r-real.ltl				true	TIMEOUT	17
+real-small-forward	robot-cat-real-2d-real.ltl				true	TIMEOUT	17
+real-small-forward	robot_repair5.ltl				true	TIMEOUT	17
+real-small-forward	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+real-small-forward	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	17

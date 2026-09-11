@@ -1,0 +1,10 @@
+real:small:backward
+real:small:forward
+real:small:spot-guarded-sparse
+unreal:formula:backward
+unreal:formula:forward
+unreal:formula:spot-guarded-sparse
+unreal:automaton:backward
+unreal:automaton:forward
+unreal:automaton:spot-guarded-sparse
+unreal:automaton:spot-guarded

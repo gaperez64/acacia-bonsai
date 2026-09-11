@@ -1,29 +1,42 @@
 # Adaptive arm portfolios and OTFUR work elimination
 
-Living record. What the sparse guarded solver stopped doing, what it now
-measures about itself, and what the handoff that proposed this sprint got wrong
-about the tree it was written against.
+Living record. What the sparse guarded solver stopped doing, what the solver's
+arms can and cannot reach, and what the handoff that proposed this sprint got
+wrong about the tree it was written against.
 
-**Status: the code work described here is landed and unit-gated. The corpus
-campaign is not run.** Every number below comes from the fixed-seed unit sweeps,
-on games of at most three atomic propositions at K <= 3. They establish
-mechanism and equivalence, not corpus value. Do not quote them as coverage or
-PAR-2 evidence, and do not change `docker_default` on them.
+**Status: the code is on master and unit-gated. Three campaigns have run** — a
+22-arm isolated census on the 180-instance panel, 10 arms on the 353 instances
+the shipping configuration cannot solve, and a fixed-budget race curve (partial,
+§9). **G1 and G3 have not run.** Nothing here is a full-corpus coverage claim,
+and `docker_default` is unchanged.
+
+Raw evidence: [portfolio-evidence-20260910/](portfolio-evidence-20260910/),
+summary TSVs only, as [config-selection-20260906/](config-selection-20260906/)
+does; full binary and harness hashes are in its `PROVENANCE`.
 
 ## 1. Frozen environment
 
 | item | value |
 |---|---|
-| Acacia | `4f51b9b6`, branch `sprint/otfur-work-elimination`, based on `8678d53f` |
+| Acacia, campaigns | `b6da274f` (this sprint's patch stack on `3fb9f113`) |
+| Acacia, pre-patch baseline | `3fb9f113`, kept built in `../acacia-prepatch` for G3 |
+| campaign binary | `otf_sparse_formula`, release profile, SHA-256 `5451c91e2a133ac5…` |
+| baseline binary | `otf_sparse_formula` at `3fb9f113`, SHA-256 `2d5707332ec4ff2e…` |
+| harness | a pinned copy of `run-syntcomp26-coverage.py`, SHA-256 `94ae42592693d980…` |
 | Posets | `139e143` |
 | Spot | 2.15.1.dev, `/usr/local/lib/pkgconfig/libspot.pc` |
 | compiler | GCC 16.2.1 20260819 (Red Hat 16.2.1-2) |
-| host | 11th Gen Core i7-11850H, 16 threads, 15 GB, zram swap active |
-| verification build | `-Dacacia_spot_guarded_backend=true -Dacacia_spot_guarded_inequality_covering=true -Dacacia_forward_safety_solver=true -Dacacia_spot_lazy_provider=true` |
-| that binary | SHA-256 `0a531373cf88db9f87b146e442ed3956e9261af355dbdd0be6619a3ba3e9ddce` |
+| host | 11th Gen Core i7-11850H, 8 cores / 16 threads, 15 GB, zram swap ~7 GB in use |
+| protocol | 17 s cap (the panel census staged 1/5/17, read at ≤ 17; the rest uniform), 8 GiB `MemoryMax`, zero swap, one invocation at a time |
 
-The binary hash is recorded for reproduction only. It is not campaign
-provenance: no campaign was run with it.
+The harness was run from a pinned copy so that a branch switch in the work tree
+could not change the instrument mid-campaign; it then needs `--status-exceptions`
+and `--acacia-sha` passed explicitly, because both default to paths relative to
+the script's own location (see #159).
+
+Memory-limit outcomes deserve less trust than timeouts here: with zram near full
+there is little headroom above the 8 GiB cap. Only the TAA provider arms (§6)
+produced MEMOUTs in any number.
 
 ## 2. What the handoff assumed, and what is actually true
 
@@ -39,67 +52,39 @@ sprint records into three. `SPOT-STREAMING-OTFUR-SPRINT.md`,
 
 **Its frozen baseline predates the memory fix.** PR #147 landed after
 `3fe3598a`. CI had been running four solvers per runner while handing each the
-default cap of 80% of the machine. Any isolated-versus-race number measured
-under that arrangement is suspect in exactly the direction the handoff reads it,
-and its "concurrency can hurt individual arms" evidence — 46 isolated against 44
-raced, on a 50-instance attribution cohort — is two instances wide to begin with.
+default cap of 80% of the machine, and the handoff's "concurrency can hurt
+individual arms" evidence — 46 isolated against 44 raced, on a 50-instance
+attribution cohort — is two instances wide to begin with.
 
-**The existing arm census contains no guarded arm.** This is the finding that
-decides whether P0 is worth running at all. `OTF-AND-SPOT.md` reports twelve
-arms in isolation over the 180-instance panel, and concludes that four arms
-reach the twelve-arm oracle ceiling at 137/180 with only two answers unique to
-any single arm. Read alone, that kills the portfolio hypothesis. But its
-`B`/`S`/`F` are *backward*, *backward-with-local-certificates* and *forward*
-(legend, `OTF-AND-SPOT.md:1036-1038`) — not the sparse guarded backend. The
-guarded unreal arm, which is where the whole +66 of the last sprint came from,
-was never in that census. Its redundancy conclusion therefore does not transfer,
-and P0 has real information to produce — as an extension of that census, not a
-restart.
+**The existing arm census contained no guarded arm.** `OTF-AND-SPOT.md` reports
+twelve arms over the panel and concludes that four reach the twelve-arm ceiling
+at 137/180. Its `B`/`S`/`F` are *backward*, *backward-with-local-certificates*
+and *forward* (legend, `OTF-AND-SPOT.md:1036-1038`), not the sparse guarded
+backend that produced the last sprint's +66. That is why §6 was worth running.
 
-**P4 was already attempted twice.** O3 batched invalidation was reverted after
-measuring maximum batch sizes of 2, 5, 2, 5 and 1. O5 indexed the antichain's
-generator list, measured no change, and was discarded — the list peaks at 177
-entries. Neither should be re-run. The structure that would address the
-22,261-to-1 scan ratio O3 measured is an index over the *visited node* set, and
-the repo had already identified that and deferred it.
+**P4 was already attempted twice.** O3 batched invalidation was reverted and O5
+indexed a generator list that peaks at 177 entries. Neither should be re-run.
 
 ## 3. An arm census was being read at the wrong cap
 
 `select-portfolio-arms.py` ranked subsets by "the union of decisive answers at
-cap 17s", its own words, while never reading `smallest_cap_solved`.
+cap 17s" while never reading `smallest_cap_solved`, and
 `run-syntcomp26-coverage.py` fills `decisive_result` from the *earliest* staged
-cap that decided an instance, so a campaign run with `--caps 1,5,17,60` files its
-60-second answers in the same column as its 17-second ones.
-
-The files that trip it are in the tree: `_coverage26/B-runs-summary.tsv` and
-`S-runs-summary.tsv` hold 37 and 35 instances first decided at 60 seconds.
-
-Selecting over `_coverage26` at `--cap 17` reproduces the coverage PR #125
-published for those same three configurations. Without the filter it does not:
+cap. `_coverage26/B-runs-summary.tsv` and `S-runs-summary.tsv` hold 37 and 35
+instances first decided at 60 seconds. Filtering at `--cap 17` reproduces PR
+#125's published table; not filtering does not, and reorders the ranking:
 
 | configuration | published (17 s) | `--cap 17` | unfiltered |
 |---|---:|---:|---:|
 | B | 1056 | **1056** | 1093 |
 | S | 1065 | **1065** | 1100 |
 | F | 1053 | **1053** | 1053 |
-| B ∪ S | 1065 | **1065** | 1100 |
 | B ∪ S ∪ F | 1090 | **1090** | 1113 |
-
-It also reordered the ranking, so this was not only an inflated total: unfiltered,
-`B+F26` ties for first at 1113; at 17 seconds `F26+S` wins 1090 to 1089.
-
-`--cap` now defaults to 17, a decisive row with no `smallest_cap_solved` is
-fatal rather than silently counted, and the saved table carries `cap_s`.
-`compare-backend-race.py` already filtered this way; the selector was the
-outlier. The summary's `still_unsolved_at_60` and `failure_kind_at_60` were
-computed at `max(--caps)` and misnamed for every campaign not ending at 60; they
-are now `*_at_max_cap` beside a `max_cap_s` that says which cap that was.
 
 ## 4. Losing-region work, measured
 
-All figures from the `spot-provider-replay` sweep: 8 formulas x every
-input/output partition x K in {1,2,3}, 72 games, each cross-checked against the
-explicit forward game.
+From the `spot-provider-replay` sweep: 8 formulas × every input/output partition
+× K in {1,2,3}, 72 games, each cross-checked against the explicit forward game.
 
 | revision | loss events | insertions | broad scans | node checks | subsumption queries | prefilter skips |
 |---|---:|---:|---:|---:|---:|---:|
@@ -108,137 +93,253 @@ explicit forward game.
 | growth-gated scan | 136 | 117 | **117** | **757** | **975** | — |
 | mass prefilter | 136 | 117 | 117 | 757 | 975 | **187** |
 
-19 of 136 loss events add no generator. Their rank already lies inside the
-upward-closed losing region, so the pass they used to trigger searched a region
-the earlier passes had already searched. Gating the scan on the insert that
-decides whether the region grew removes exactly those, and testing only the new
-generator rather than all of them cuts node checks 28.5% and subsumption queries
-33.7%.
+19 of 136 loss events add no generator, so the pass they triggered searched a
+region already searched. Gating the scan on the insert that decides whether the
+region grew removes exactly those; testing only the new generator cuts node
+checks 28.5% and subsumption queries 33.7%. The search is unchanged — expansions
+529, choices 329, nodes 229 in every revision. A probe measured the equivalence
+argument directly: maximum `enqueue_loss` depth 2, zero nested calls that scan.
 
-The search itself is unchanged, which is the point: expansions (529), choices
-(329), nodes (229), invalidations (19) and removals (43) are identical across
-all four revisions.
+`reopened_sources` moves 127 → 99 without the search moving. It counts attempts,
+and `reopen_enqueues`, added to make that legible, is 55 either way.
 
-`reopened_sources` is the one counter that moves without the search moving —
-127 to 99 — and it needs reading rather than comparing. It counts reopen
-*attempts*, and an attempt on an already-queued node does nothing. Marking a
-cascade at enqueue time means 28 of those attempts now find the node already
-losing. `reopen_enqueues` was added to make the pair legible and is 55 either
-way, which is why the expansion count did not move.
-
-The mass filter is exact, so it may not move anything but its own counter, and
-does not. Its lemma — `l <= r` forces both a no-larger support and a no-larger
-shifted mass `M(r) = sum over supp(r) of (r(q)+1)`, and equal mass under `<=`
-leaves only equality — is checked on all 4,096 pairs of the exhaustive order
-test. `M` is a sum over stored entries alone, which is what makes it work where
-the dense coordinate sum could not: no dependence on how much of the automaton
-has been discovered.
+The mass filter's lemma — `l <= r` forces a no-larger support and a no-larger
+shifted mass `M(r) = Σ_{supp(r)} (r(q)+1)`, and equal mass under `<=` leaves only
+equality — is checked on all 4,096 pairs of the exhaustive order test.
 
 ## 5. Guard covering, measured
 
 `acacia_spot_guarded_inequality_covering`, default **off**.
 
-| mode | expansions | choices | nodes | node checks | reopen enqueues | region inputs verified |
-|---|---:|---:|---:|---:|---:|---:|
-| exact (default) | 529 | 329 | 229 | 757 | 55 | 438 |
-| `<=` covering | **525** | **325** | **227** | **751** | 59 | 438 |
+| mode | expansions | choices | nodes | node checks | reopen enqueues |
+|---|---:|---:|---:|---:|---:|
+| exact (default) | 529 | 329 | 229 | 757 | 55 |
+| `<=` covering | **525** | **325** | **227** | **751** | 59 |
 
-The direction is the one the mechanism predicts — fewer choices, fewer nodes —
-and `reopen_enqueues` moves the other way, which is the expected cost: a wider
-region hands back more input space when its target is deactivated. The margins
-are four nodes on three-AP games. They say the mechanism works, and nothing
-about whether it pays.
+The `<= target` predicate was already in the file as `Oracle::preimage`'s
+downward kind; the handoff's proposed new BDD construction would have been
+redundant. The differential test first checked only active choices and passed in
+both modes; checking every claimed region against `rows::evaluate_sparse` makes
+it discriminate, and forcing the exact assertion under `<=` covering now fails.
+Margins are four nodes on 3-AP games: the mechanism works, and whether it pays
+is untested.
 
-Two things are worth recording about how this was checked, because the first
-version of the check was wrong.
+## 6. The arm census: roughly five solvers wearing twenty-two names
 
-The `<= target` predicate was **already in the file**: `Oracle::preimage`'s
-downward kind, which the inductive invariant check already aggregates. The
-handoff's §3.4 proposes deriving a new BDD construction for it. That would have
-been redundant, and its own instruction to re-derive from the current rank-update
-code is what caught it.
+22 arms, each run alone over the panel; zero verdict conflicts. Every arm is
+polarity-pure.
 
-The differential test first checked only *active* choices, and passed in both
-modes — discriminating nothing. The two modes diverge in choices that are created
-and later deactivated. Checking every claimed region, active or not, against
-`rows::evaluate_sparse` — an arithmetic oracle the solver does not use — makes
-the test real: forcing the exact-covering assertion on under `<=` covering now
-fails, which is the evidence that the flag does something semantic rather than
-only reordering work.
+| arm | solved | PAR-2 |
+|---|---:|---:|
+| `unreal:formula:spot-guarded-sparse` | **85** | **3302.8** |
+| `unreal:formula:forward` / `:spot-guarded` | 84 | 3333.8 / 3319.8 |
+| `unreal:automaton:` forward / sparse / dense | 83 | 3341.7 / 3329.6 / 3328.6 |
+| `unreal:formula:backward` | 83 | 3388.7 |
+| `unreal:automaton:backward` | 81 | 3454.3 |
+| `real:*` frozen-graph arms (8 of them) | 47–48 | 4522.6–4570.4 |
+| `unreal:formula:spot-guarded:` lazy / eager | 36 | 4912.0 / 4908.7 |
+| `real:*:spot-guarded:` lazy / eager (4) | 28 | ~5204 |
 
-The verifier gets the matching swap and rebuilds the predicate from its own
-fresh `Reader` and `Oracle`, so a choice claiming too much input space still
-fails there. Gating the verifier too is what makes "flag off changes nothing"
-checkable; it is confirmed byte-identical on every counter above.
+| k | best fixed subset, isolated union |
+|---:|---:|
+| 1 | 85 |
+| 2 | 133 |
+| 3 | 140 |
+| 4 | 142 |
+| **5** | **143** |
+| all 22 | **143** |
 
-`propagate_losses` stays conservative and untouched. Under `<=` a concrete
-successor strictly below a losing target need not be losing, so deactivating the
-choice and reopening the source, rather than propagating the target's loss
-backwards, stops being merely correct and becomes load-bearing.
+**The shipping preset is an optimal fixed four.** The isolated union of
+`otf_sparse_formula`'s four arms is 142, equal to the best four-arm subset, and
+the 22-arm oracle beats it by one instance, `heim-double-x-real.ltl`, reached
+only by the guarded *real* arms. **No arm has a unique answer.**
 
-## 6. Correctness
+What the 22 collapse to, measured rather than assumed:
+
+| collapse | evidence |
+|---|---|
+| `any` ≡ `small` | identical answer sets on all five backends tested (28–48) |
+| dense guarded ⊆ sparse guarded | identical on real and automaton-unreal, 84 ⊂ 85 on formula |
+| TAA lazy ≡ TAA eager | identical on both polarities; on real, identical MEMOUTs too |
+| TAA ⊂ frozen graph | strict subset on both polarities (36 ⊂ 84, 28 ⊂ 47) |
+| guarded formula ⊇ forward formula | 84 ⊂ 85 on the panel, and it holds on the hard set |
+
+The TAA result is the handoff's R2 question answered by its own matched control
+(§R2.4): laziness changes memory pressure — 19 against 44 MEMOUTs on the
+formula-unreal arm — and not one verdict. The loss is in the TAA construction.
+
+The table's `k`-subsets name `real:any:*` arms where `real:small:*` would do
+equally; that is alphabetical tie-breaking over provably identical arms.
+
+## 7. What the shipped configuration cannot solve
+
+The 353 instances `otf_sparse_formula` leaves undecided at 17 s in the closing
+threeway campaign (1,171 of 1,524), each run alone under 10 arms chosen from §6's
+collapses — nine distinct behaviours plus a dense-guarded control.
+
+| arm | unlocked | in the shipped preset |
+|---|---:|---|
+| `real:small:spot-guarded-sparse` | **9** | no |
+| `unreal:formula:spot-guarded-sparse` | 8 | yes |
+| `unreal:automaton:spot-guarded-sparse` | 7 | no |
+| `unreal:automaton:spot-guarded` (control) | 5 | no |
+| `real:small:backward` / `forward` | 4 / 4 | yes |
+| `unreal:automaton:backward` | 2 | no |
+| `unreal:automaton:forward` | 1 | yes |
+| `unreal:formula:backward` / `forward` | 1 / 1 | no |
+
+**20 of 353 are decided by some arm, and 14 of those by an arm the shipped
+preset already contains, simply running alone.** Those are contention relief,
+not capability: the same arm, the same cap, one scope instead of four.
+
+**Five are capability**, all from one arm, `real:small:spot-guarded-sparse`, and
+mostly under a second: `SPIPureNext` (0.42 s), `heim-double-x-real`,
+`ordered-visits-choice-real`, `thermostat-F-real`, `robot_grid_pb_5_5_pe_`. The
+sixth instance beyond the shipped arms, `g-unreal-116`, lands at 17.00 s and
+16.93 s under two different arms: boundary noise.
+
+The control: panel-identical dense and sparse automaton-unreal arms separate on
+the hard set, 5 ⊂ 7, in the direction that vindicates dropping dense.
+
+### SPIPureNext
+
+The repository recorded this instance as one "no Acacia version is known to
+answer" (`f271f396`). The guarded real arm answers REALIZABLE in 0.42 s. The TLSF
+carries no `//STATUS`, so the verdict needed an independent source:
+
+| solver (SYNTCOMP 2026 `tlsfReal`) | outcome |
+|---|---|
+| Acacia-Bonsai, all four 2026 submissions | out, ~40 GB, ~1,750 s |
+| ltlsynt acd / ds / lar | out |
+| **SemML** | **REALIZABLE, 9.9 s** |
+| **Strix** | **REALIZABLE, 1.7 s** |
+
+Both are recorded `NEW-REALIZABLE` in the competition's model-checking results.
+Locally, six ltlsynt strategies fail: four exhaust 8 GiB in about 78 s, two time
+out. Acacia 1.x's earlier REALIZABLE does not count as corroboration, being the
+crash-misreport kind documented in `LTLSYNT-GAP.md`. Source: Zenodo
+`10.5281/zenodo.21451603`, `SyntComp26_prelim.zip`, SHA-256 `d64b3648…` — not the
+`8a703832…` release the corpus is pinned to; the record has been updated since,
+and it was used only to read verdicts for this instance.
+
+## 8. The regression the patch stack removes
+
+`OTF-AND-SPOT.md` records `infinite-race-u10.ltl` as `otf_sparse_formula`'s one
+reproducible 17 s loss, introduced when the guarded formula arm replaced the
+forward one. Alone, the guarded arm is the faster of the two (8.86 s against
+9.30 s): the loss was a race effect, not a weaker arm. Paired A/B on the shipped
+race, same machine and session, alternating order:
+
+| | 17 s cap, 5 rounds | 60 s uncensored |
+|---|---|---:|
+| pre `3fb9f113` | TIMEOUT, 16.22, TIMEOUT, 16.62, 16.54 — **3/5** | 18.10 s |
+| post `b6da274f` | 10.65, 10.56, 10.18, 11.37, 11.63 — **5/5** | 10.89 s |
+
+The pre-patch uncensored time matches the recorded 17.95 s. The effect is the
+whole stack's, most plausibly #154/#155 acting on the guarded formula arm;
+inequality covering is off in this preset. One instance, not a corpus claim.
+
+## 9. The race curve (Regime F, partial)
+
+Each configuration is one race invocation per instance under the same budget:
+`CPUQuota=400%` (four CPUs of time), one 8 GiB scope, zero swap, 17 s. Instance
+set: the panel plus the hard set, 494 after an overlap of 39.
+
+`AllowedCPUs` cannot be used here: the user manager is not delegated the cpuset
+controller, so systemd accepts the property and drops it. `CPUQuota` is
+enforced — eight busy loops under a 400% quota used 12.3 CPU-seconds in 3 s with
+30 throttle events, against 24 unthrottled.
+
+| config | arms | panel solved | vs its isolated union | hard set solved |
+|---|---:|---:|---:|---:|
+| `race4-shipped` | 4 | 140 / 180 | 142 (−2) | 4 / 353 |
+| `race5-plus-guarded-real` | 5 | *running* | | |
+| `race2-best` | 2 | *pending* | | |
+
+On typical instances racing costs almost nothing — 140 of the 142 its arms reach
+alone. On the hard set it keeps 4 of the 14 its arms reach alone
+(`GF-G-contradiction6`, `infinite-race-u10`, `infinite-race-u11`,
+`infinite-race-unequal-25`). Contention is cheap on the panel and expensive on
+the tail, which is where §7's capability arm would have to earn its place.
+
+## 10. Correctness
 
 - `meson test --suite unit`: **42 tests, Fail: 0**, both flag states built from
-  the same sources in every build.
-- The 5,000-game fixed-seed harness agrees four ways — sparse `Search`, the
-  dense guarded solver, the explicit forward game, and the backward antichain —
-  under exact and `<=` covering alike.
-- Config frontends agree on all 44 shared scalar options. Note the registry has
-  **four** frontends, not the three CLAUDE.md names: `config/acacia-options.json`,
-  `meson.options`, the `#ifndef` block in `src/config/acacia_build_config.hh.in`,
-  and the `build_conf.set` line in `meson.build`. Omitting the last leaves
-  `@ACACIA_…@` unsubstituted. `tests/check-config-frontends.py` compares only the
-  first two; `tests/pytest/test_acacia_config.py` pins the `.hh.in` block, and it
-  runs in `python-test.yml` rather than `--suite unit`.
-- Six unrealizable formulas decided identically by the `<=`-covering guarded arm
-  and the independent backward solver.
-- G1/G3 are **not run**. They need paired binaries and corpus time.
+  the same sources in every build; the 5,000-game harness agrees four ways under
+  exact and `<=` covering.
+- Zero verdict conflicts across 22 census arms, 10 hard-set arms, and every race
+  so far.
+- Config frontends agree on all 44 shared scalar options. The registry has
+  **four** frontends, not the three CLAUDE.md names: the `build_conf.set` line in
+  `meson.build` is the fourth, and `tests/check-config-frontends.py` compares
+  only two.
+- **G1 and G3 have not run.**
 
-## 7. Decisions
+## 11. Corrections to the record
+
+- **SPIPureNext is answerable.** `f271f396` calls it "an instance no Acacia
+  version is known to answer". `real:small:spot-guarded-sparse` answers it, and
+  Strix and SemML confirm the verdict. The synthesis-suite exclusion that commit
+  made is still right: synthesis forces the backward backend, which does
+  `bad_alloc`.
+- **`infinite-race-u10` was not a capability regression** (§8).
+- **#157's pinning verification was wrong.** It set `AllowedCPUs=0-1` and
+  `CPUQuota=150%` together and read `nproc` = 2 as proof of the pin; recent
+  coreutils `nproc` honours the CPU quota. `897f9cb7` now refuses `allowed_cpus`
+  where cpuset is not delegated. This record's own previous §8 recommended
+  `AllowedCPUs`; only `CPUQuota` works on a stock user manager.
+- **`00a066ae` carried an unannounced file**, the first draft of
+  `arm-census-report.py`, swept in by `git add -A`. That draft scores PAR-2 over
+  answered instances only. `9db9902b` fixes it; it reaches master with #161.
+
+## 12. Decisions
 
 | hypothesis | decision | evidence |
 |---|---|---|
-| Census unions were read at a single cap | **LAND DEFAULT** | filtered selection reproduces PR #125's published table; unfiltered does not, and reorders the ranking |
-| Rank hashing is recomputed per lookup | **LAND DEFAULT** | 1.7x-2.6x on interner lookups by support size; +8 bytes per rank |
-| Loss events rescan a region that did not grow | **LAND DEFAULT** | 19 of 136 events redundant; scans 136 to 117, node checks -28.5%, search identical |
-| The witness needs a second scan to recover | **LAND DEFAULT** | pure refactor, all six counters identical across revisions |
-| Sparse ranks admit an arena-independent prefilter | **LAND DEFAULT-OFF risk** | exact, 187 comparisons skipped, +8 bytes per rank; the memory trade is a corpus question |
-| `Post <= target` covering reduces search | **LAND DEFAULT-OFF ARM** | mechanism confirmed and semantically distinct; margins are four nodes on 3-AP games |
-| Individual arms hide a better virtual solver | **OPEN** | the only census that exists has no guarded arm in it |
-| Learned arm selection | **STOP — GATED** | not started; requires the census above to show headroom first |
-| Dominance index / SIMD | **STOP — NO MEASURED BENEFIT** | O3 reverted, O5 discarded; the real target is the visited-node set, and the scan may no longer be hot |
+| Census unions were read at a single cap | **LAND DEFAULT** | reproduces PR #125's table; unfiltered does not |
+| Rank hashing is recomputed per lookup | **LAND DEFAULT** | 1.7–2.6× on interner lookups; +8 bytes per rank |
+| Loss events rescan a region that did not grow | **LAND DEFAULT** | scans 136→117, node checks −28.5%, search identical |
+| The witness needs a second scan to recover | **LAND DEFAULT** | pure refactor, every counter identical |
+| Sparse ranks admit an arena-independent prefilter | **LAND DEFAULT** | exact; 187 comparisons skipped; +8 bytes per rank |
+| `Post <= target` covering reduces search | **LAND DEFAULT-OFF ARM** | semantically distinct; four nodes on 3-AP games |
+| The patch stack changes a shipped result | **LAND DEFAULT** | removes `infinite-race-u10`'s regression, 3/5 → 5/5 (§8) |
+| Individual arms hide a better virtual solver | **STOP — NO MEASURED BENEFIT** on the panel | shipped four = best four; oracle +1; no unique arm |
+| …on instances the shipped config cannot solve | **OPEN** | guarded-real adds 5 by capability; pending `race5` (§9) |
+| Learned per-instance arm selection (P5) | **STOP — NO MEASURED BENEFIT** | nothing uniquely reachable to select between |
+| Dominance index / SIMD (P4) | **STOP — NO MEASURED BENEFIT** | two prior negatives; arms differ in cost, not reach |
+| TAA lazy provider (R2) | **STOP — NO MEASURED BENEFIT** | lazy ≡ eager in verdicts; both ⊂ frozen graph |
+| `--allowed-cpus` without cpuset | **LAND DEFAULT** (refusal) | systemd drops it silently; `CPUQuota` is enforced |
 
-## 8. What to do next, in order
+## 13. What to do next, in order
 
-1. **The census.** 16 runtime arms (4 polarity/transform x 4 backends) in one
-   binary — `game_backend` is a runtime enum now, so the prior census's "cannot
-   be built today" limitation is gone. Panel first
-   (`syntcomp26/panel.list`, 180 instances): the full set is ~5 h per arm, and
-   the panel is the precedent and its stated reason. Two parser constraints:
-   automaton-unreal requires `frozen-graph`, and a non-frozen provider requires
-   backend `spot-guarded` exactly, not `spot-guarded-sparse`.
-2. **G1 and G3 for the landed patches**, `--baseline-bin` being the same
-   configuration built from the previous revision, per patch. Read PAR-2 against
-   the 21.1 s / 12.1 s noise floors.
-3. **The `<=` covering A/B**, `otf_sparse_formula_inequality_covering` against
-   flag-off `otf_sparse_formula` at the same revision.
-4. **Race regime work is blocked.** `benchlib.run_systemd_scope` sets only
-   `MemoryMax` and `MemorySwapMax`. There is no CPU quota or cpuset, so the
-   handoff's fixed-budget regime is not measurable today, and a 1-vs-8-worker
-   comparison without it is a scaled-resource experiment wearing the wrong label.
-   Add `AllowedCPUs`/`CPUQuota` passthrough before running any race comparison.
+1. **Finish the race curve** and fill §9. `race5` decides whether the one arm
+   with capability pays for the contention a fifth worker adds.
+2. **G1 per patch** on the stacked revisions, and **G3 paired** for #154, #155
+   and #156 against the kept `3fb9f113` baseline. Read PAR-2 against the 21.1 s /
+   12.1 s noise floors. **G4/G5** for the `otf_sparse_formula_inequality_covering`
+   preset, which were skipped when it was added.
+3. **A 60 s diagnostic re-run of the 20 hard-set unlocks**, to separate
+   capability from cap-boundary; it does not rewrite the 17 s results.
+4. If `race5` pays: a sweep preset adding `real:small:spot-guarded-sparse`, then
+   the full-corpus gates before any `docker_default` change.
+5. *Optional:* bisect the stacked revisions for which patch fixed §8.
+6. Harness: a caught `std::bad_alloc` is recorded as ERROR with an empty
+   `resource_reason`, not MEMOUT; `self-benchmark.sh` does not set
+   `PKG_CONFIG_PATH` for a `/usr/local` Spot; `--conflict-policy stop` aborts on
+   status-annotation mismatches as readily as on arm disagreements.
 
-## 9. Not done, and why
+## 14. Not done, and why
 
-- **P5 learned selector.** Gated on §8.1. Building it before the census would be
-  building it against a redundancy result measured without the arms in question.
-- **P4 index and SIMD.** Two prior negative results, and P1 may have removed the
-  hot path it targets. Revisit only if a profile still shows one.
-- **R1 composition, R2 lazy translation.** No prototype. `ltl_to_tgba_fm_otf`
-  does exist in the linked Spot (`/usr/local/include/spot/twaalgos/ltl2tgba_fm.hh:164`),
-  so R2's probe is feasible; its acceptance-inventory obligation is a design
-  question to write down before any code.
-- **The dense guarded twin.** `spot_guarded_forward_safety.hh` is a near
-  line-for-line clone and shares every defect fixed here. It is deliberately
-  untouched: its only users are `sweep`-role presets that failed admission, and
-  changing it would perturb frozen measurements for no shipped arm.
+- **P5 learned selector.** The census shows nothing to select between (§6), and
+  the one genuine hard-set gain is a single arm, which a fixed preset captures.
+  What the data does support is a narrower question — how many workers, or which
+  polarity, per instance — because contention is the largest effect measured
+  (§7, §9). That is a hypothesis for the race curve, not a result.
+- **P4 index and SIMD.** Two prior negatives, and #154 removed the scan it
+  targeted.
+- **R1 interaction census.** Not started.
+- **R2 FM-explorer probe.** Not built; the TAA provider's measured result (§6)
+  weakens the case. `ltl_to_tgba_fm_otf` exists in the linked Spot if revisited.
+- **The dense guarded twin**, `spot_guarded_forward_safety.hh`, shares every
+  defect fixed here and is deliberately untouched: its users are `sweep`-role
+  presets that failed admission.
