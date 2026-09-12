@@ -492,6 +492,16 @@ namespace acacia::spot_lazy_game {
       letters::Result<bdd> bad (const Rank& r, const std::vector<Rank>& L, uint64_t) {
         return query<bdd> ([&] (auto& b) { return aggregate (r, L, true, b); });
       }
+      // Return Bad and its uncovered losing inputs in the same checked query.
+      // The projection is only a search region; proofs still need a total cube.
+      letters::Result<std::pair<bdd, bdd>> bad (const Rank& r, const std::vector<Rank>& L,
+                                               uint64_t, bdd missing) {
+        return query<std::pair<bdd, bdd>> ([&] (auto& b) {
+          const bdd predicate = aggregate (r, L, true, b);
+          const bdd H = b.forall (predicate, b.vars (Variables::outputs));
+          return std::pair {predicate, b.land (missing, H)};
+        });
+      }
       letters::Result<letters::Invariant> invariant (const Rank& initial,
                                                      const std::vector<Rank>& G, uint64_t) {
         return query<letters::Invariant> ([&] (auto& b) {
@@ -642,6 +652,7 @@ namespace acacia::spot_lazy_game {
   using guarded::RowIdentity;
   enum class SuccessorRelation { exact, downward };
   enum class OutputChoice { constant, existential };
+  enum class LosingInputSearch { off, on };
   struct ChoiceSemantics {
       SuccessorRelation successor_relation;
       OutputChoice output_choice;
@@ -910,12 +921,14 @@ namespace acacia::spot_lazy_game {
   class Search {
     public:
       Search (RowStore& view, letters::WorkerAlphabet alphabet, std::int32_t K, Limits limits = {},
-              ChoiceSemantics semantics = default_choice_semantics)
+              ChoiceSemantics semantics = default_choice_semantics,
+              LosingInputSearch losing_input_search = LosingInputSearch::off)
         : view_ (view),
           alphabet_ (std::move (alphabet)),
           K_ (K),
           limits_ (limits),
           semantics_ (semantics),
+          losing_input_search_ (losing_input_search),
           rows_ (std::make_shared<Reader> (view_, false, limits.rows)),
           oracle_ (*rows_, view_, alphabet_, K) {
         result_.provider = view_.provider;
@@ -1029,6 +1042,7 @@ namespace acacia::spot_lazy_game {
       std::int32_t K_;
       Limits limits_;
       const ChoiceSemantics semantics_;
+      const LosingInputSearch losing_input_search_;
       std::shared_ptr<Reader> rows_;
       Oracle oracle_;
       SolveResult result_;
@@ -1165,10 +1179,27 @@ namespace acacia::spot_lazy_game {
           return;
         const bdd missing = detail::take (oracle_.query<bdd> (
             [&] (auto& b) { return b.negate (result_.nodes[id].covered_inputs); }));
-        const auto input = detail::take (oracle_.model (missing, Variables::inputs));
-        detail::require (input.has_value ());
-        const bdd bad = detail::take (oracle_.bad (rank, losing_.ranks (), result_.proofs.size ()));
-        const bdd bad_c = detail::take (oracle_.restrict_total (bad, *input, Variables::inputs));
+        std::optional<bdd> input;
+        bdd bad, bad_c;
+        if (losing_input_search_ == LosingInputSearch::on) {
+          const auto [predicate, D] = detail::take (
+              oracle_.bad (rank, losing_.ranks (), result_.proofs.size (), missing));
+          bad = predicate;
+          if (D != bddfalse) {
+            input = detail::take (oracle_.model (D, Variables::inputs));
+            detail::require (input.has_value ());
+            bad_c = bddtrue;
+          }
+        }
+        if (not input) {
+          // With the option off, preserve the original query order and work.
+          // An empty D only falls back to sampling; it does not prove a win.
+          input = detail::take (oracle_.model (missing, Variables::inputs));
+          detail::require (input.has_value ());
+          if (losing_input_search_ != LosingInputSearch::on)
+            bad = detail::take (oracle_.bad (rank, losing_.ranks (), result_.proofs.size ()));
+          bad_c = detail::take (oracle_.restrict_total (bad, *input, Variables::inputs));
+        }
         if (bad_c == bddtrue) {
           // deps is taken by value, so this copies the witness list before any
           // later insert can compact it.  Do not make the parameter a reference.

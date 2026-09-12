@@ -16,6 +16,11 @@ constexpr ChoiceSemantics all_semantics[] {
     {SuccessorRelation::downward, OutputChoice::constant},
     {SuccessorRelation::downward, OutputChoice::existential}};
 
+void expect (bool condition, const std::string& name) {
+  if (not condition)
+    throw std::runtime_error ("FAIL: " + name);
+}
+
 std::vector<bdd> valuations (const letters::WorkerAlphabet& a, bdd vars) {
   std::vector<bdd> out {bddtrue};
   for (int v : a.order) {
@@ -64,6 +69,61 @@ int choice_regions (RowStore& store, const letters::WorkerAlphabet& a, int K,
   return 0;
 }
 
+bdd check_losing_inputs (RowStore& store, const letters::WorkerAlphabet& a, int K,
+                        const Rank& rank, const std::vector<Rank>& earlier,
+                        std::size_t& input_checks) {
+  Reader reader {store, false, {}};
+  Oracle oracle {reader, store, a, K};
+  const auto projected = oracle.bad (rank, earlier, earlier.size (), bddtrue);
+  expect (projected.value.has_value (), "checked universal projection succeeds");
+  const auto [bad, H] = *projected.value;
+  bdd expected_H = bddfalse;
+  const auto inputs = valuations (a, a.inputs);
+  for (auto u : inputs) {
+    bool every_output_bad = true;
+    for (auto c : valuations (a, a.outputs)) {
+      const auto post = rows::evaluate_sparse (store.cache, a, rank, u & c, K);
+      expect (post.value.has_value (), "independent successor arithmetic succeeds");
+      bool unsafe_or_losing = not reader.is_safe (*post.value, K);
+      for (const auto& loss : earlier)
+        unsafe_or_losing |= loss.leq (*post.value);
+      expect (((bad & u & c) != bddfalse) == unsafe_or_losing,
+              "Bad matches unsafe or already-losing successor arithmetic");
+      every_output_bad &= unsafe_or_losing;
+    }
+    expect (((H & u) != bddfalse) == every_output_bad,
+            "H contains an input exactly when every output is bad");
+    if (every_output_bad)
+      expected_H |= u;
+    ++input_checks;
+  }
+  expect (H == expected_H, "universal projection leaves exactly the losing inputs free");
+  const bdd missing = inputs.front ();
+  const auto masked = oracle.bad (rank, earlier, earlier.size (), missing);
+  expect (masked.value && masked.value->first == bad && masked.value->second == (missing & H),
+          "D excludes covered inputs and shares the same Bad predicate");
+  return H;
+}
+
+void check_losing_certificate (RowStore& store, const letters::WorkerAlphabet& a, int K,
+                               const SolveResult& result) {
+  const auto checked = verify_losing_proof (store, a, K, result, {}, result.semantics);
+  expect (checked.value && *checked.value, "symbolic losing proof independently replays");
+  for (std::size_t id = 0; id < result.proofs.size (); ++id) {
+    const auto& proof = result.proofs[id];
+    expect (proof.record.id == id, "losing proof IDs are chronological");
+    for (auto dep : proof.record.dependencies)
+      expect (dep < id, "losing proof depends only on earlier proofs");
+    if (proof.record.reason == losing_reason::env_losing_input) {
+      Reader reader {store, false, {}};
+      Oracle oracle {reader, store, a, K};
+      expect (proof.input.has_value (), "losing input proof stores a witness");
+      const auto total = oracle.restrict_total (bddtrue, *proof.input, Variables::inputs);
+      expect (total.value && *total.value == bddtrue, "stored witness is a total input cube");
+    }
+  }
+}
+
 int differential (const Reporter& report, ChoiceSemantics semantics) {
   unsigned checks = 0, corruptions = 0, arithmetic = 0;
   unsigned redundant_loss_events = 0;
@@ -74,6 +134,7 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
   std::size_t reopened_total = 0, invalidated_total = 0, removals_total = 0;
   std::size_t reopen_enqueues_total = 0, prefilter_skips_total = 0;
   std::size_t region_inputs = 0;
+  std::size_t losing_input_checks = 0, symbolic_region_inputs = 0;
   for (const char* f :
        {"true", "false", "F a", "G a", "GF a", "GF a & GF b", "G(a -> F b)", "(a U b) | G c"}) {
     const auto dict = spot::make_bdd_dict ();
@@ -117,6 +178,26 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
                                   : solver_detail::forward_result_status::lose_k)) {
           std::cerr << "MISMATCH " << f << ' ' << part << ' ' << K << '\n';
           return 1;
+        }
+        const auto symbolic = Search {store, a, K, {}, semantics, LosingInputSearch::on}.solve ();
+        expect (symbolic.status == actual.status && symbolic.failure == Unknown::none,
+                "S2 on/off fixed-K outcomes agree for every automaton, partition and mode");
+        expect (choice_regions (store, a, K, symbolic, symbolic_region_inputs) == 0,
+                "symbolic search preserves choice-region arithmetic");
+        for (const auto& node : symbolic.nodes)
+          check_losing_inputs (store, a, K, node.rank, {}, losing_input_checks);
+        if (not win) {
+          check_losing_certificate (store, a, K, symbolic);
+          LossSet earlier;
+          for (const auto& proof : symbolic.proofs) {
+            check_losing_inputs (store, a, K, proof.rank, earlier.ranks (), losing_input_checks);
+            earlier.insert (proof.rank, proof.record.id);
+          }
+          auto invalid = symbolic;
+          invalid.proofs.at (*invalid.initial_proof)
+              .record.dependencies.push_back (*invalid.initial_proof);
+          expect (not verify_losing_proof (store, a, K, invalid, {}, semantics).value,
+                  "symbolic proof with a nonchronological dependency is rejected");
         }
         Reader reader {store, false, {}};
         Oracle sparse {reader, store, a, K};
@@ -192,6 +273,9 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
   }
   std::cout << checks << " explicit-game matches, " << arithmetic << " sparse arithmetic matches, "
             << corruptions << " corrupt certificates rejected\n";
+  std::cout << checks << " S2 on/off matches, " << losing_input_checks
+            << " universally losing inputs checked by enumeration, " << symbolic_region_inputs
+            << " S2 choice-region inputs checked\n";
   std::cout << losing_events << " loss events, " << antichain_insertions
             << " antichain insertions, " << broad_scans << " broad scans over "
             << nodes_scanned << " node checks, " << redundant_loss_events
@@ -249,11 +333,6 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
       return 7;
   }
   return 0;
-}
-
-void expect (bool condition, const std::string& name) {
-  if (not condition)
-    throw std::runtime_error ("FAIL: " + name);
 }
 
 // These kernels use transition-Buchi rows and Search directly, with the same
@@ -351,6 +430,170 @@ void missing_output_kernel () {
                                              ? SuccessorRelation::downward : SuccessorRelation::exact;
     expect (not verify_losing_proof (store, k.alphabet, 1, corrupt, {}, semantics).value,
             "losing certificate also validates the requested tag");
+  }
+}
+
+void last_losing_input () {
+  Kernel k {2};
+  const bdd u = k.ap ("u", true), c = k.ap ("c", false);
+  const bdd v = k.ap ("v", true), d = k.ap ("d", false);
+  const bdd last = u & v;
+  const bdd legal = !last & bdd_biimp (u, c) & bdd_biimp (v, d);
+  k.graph->new_edge (0, 0, legal);
+  k.graph->new_edge (0, 1, !legal, {0});
+  k.graph->new_edge (1, 1, bddtrue, {0});
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  Reader reader {store, false, {}};
+  Oracle oracle {reader, store, k.alphabet, 1};
+  std::size_t input_checks = 0;
+  expect (check_losing_inputs (store, k.alphabet, 1, reader.initial_rank (), {}, input_checks) == last,
+          "the only losing input is the final total valuation");
+  bdd remaining = bddtrue;
+  const auto inputs = valuations (k.alphabet, k.alphabet.inputs);
+  for (auto u : inputs) {
+    const auto picked = oracle.model (remaining, Variables::inputs);
+    expect (picked.value && *picked.value && **picked.value == u,
+            "test enumeration agrees with deterministic model ordering");
+    remaining &= !u;
+  }
+  expect (inputs.back () == last && remaining == bddfalse, "losing input is last in model order");
+  for (auto semantics : all_semantics) {
+    const auto sampled = Search {store, k.alphabet, 1, {}, semantics}.solve ();
+    const auto symbolic = Search {store, k.alphabet, 1, {}, semantics, LosingInputSearch::on}.solve ();
+    expect (sampled.status == forward_result_status::lose_k && symbolic.status == sampled.status,
+            "last-input kernel loses in both searches");
+    expect (symbolic.expansions == 1 && symbolic.choices_created == 0 &&
+            symbolic.expansions < sampled.expansions && sampled.choices_created > 0,
+            "symbolic search finds the final losing input before any arbitrary selection");
+    const auto& proof = symbolic.proofs.at (*symbolic.initial_proof);
+    expect (proof.record.reason == losing_reason::env_losing_input && proof.input == last &&
+            proof.record.dependencies.empty (), "immediate symbolic witness uses the existing rule");
+    check_losing_certificate (store, k.alphabet, 1, symbolic);
+    std::cout << "last losing input "
+              << (semantics.output_choice == OutputChoice::constant ? "constant" : "existential")
+              << ": S2 off/on " << sampled.expansions << '/' << symbolic.expansions
+              << " expansions, " << sampled.choices_created << '/' << symbolic.choices_created
+              << " choices\n";
+  }
+}
+
+void later_losing_input () {
+  Kernel k {3};
+  k.ap ("u", true);
+  k.ap ("c", false);
+  k.ap ("unused_input", true);
+  k.graph->new_edge (0, 1, bddtrue);
+  k.graph->new_edge (1, 2, bddtrue, {0});
+  k.graph->new_edge (2, 2, bddtrue, {0});
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  Reader reader {store, false, {}};
+  std::size_t input_checks = 0;
+  expect (check_losing_inputs (store, k.alphabet, 1, reader.initial_rank (), {}, input_checks)
+              == bddfalse, "delayed-loss root has no immediate losing input");
+  for (auto semantics : all_semantics) {
+    const auto sampled = Search {store, k.alphabet, 1, {}, semantics}.solve ();
+    const auto symbolic = Search {store, k.alphabet, 1, {}, semantics, LosingInputSearch::on}.solve ();
+    expect (symbolic.status == forward_result_status::lose_k && symbolic.status == sampled.status,
+            "empty D falls back and still discovers the later loss");
+    const auto& root = symbolic.nodes.at (symbolic.initial);
+    expect (symbolic.choices_created == 1 && root.choices.size () == 1 &&
+            root.choices[0].input_region == bddtrue && not root.choices[0].active &&
+            symbolic.reopened_sources > 0, "fallback creates a choice that is invalidated and reopened");
+    expect (symbolic.expansions == sampled.expansions &&
+            symbolic.choices_created == sampled.choices_created &&
+            symbolic.reopened_sources == sampled.reopened_sources,
+            "fallback retains the delayed-loss search behavior");
+    const auto& proof = symbolic.proofs.at (*symbolic.initial_proof);
+    expect (not proof.record.dependencies.empty (), "later root loss needs an earlier proof");
+    std::vector<Rank> earlier;
+    for (auto dep : proof.record.dependencies)
+      earlier.push_back (symbolic.proofs.at (dep).rank);
+    expect (check_losing_inputs (store, k.alphabet, 1, root.rank, earlier, input_checks) == bddtrue,
+            "known losing successors make every root input losing");
+    check_losing_certificate (store, k.alphabet, 1, symbolic);
+    // H=true omits both inputs, but the witness must supply both of them.
+    expect (proof.input == valuations (k.alphabet, k.alphabet.inputs).front (),
+            "symbolic proof fills even inputs absent from H");
+    auto corrupt = symbolic;
+    corrupt.proofs.at (*corrupt.initial_proof).input = bddtrue;
+    const auto rejected = verify_losing_proof (store, k.alphabet, 1, corrupt, {}, semantics);
+    expect (not rejected.value && rejected.unknown == Unknown::invalid_query,
+            "verifier rejects storing a symbolic region instead of a total input cube");
+  }
+}
+
+void losing_input_query_failure () {
+  // Enough row work that the Bad query budget exceeds all expansion setup
+  // queries. Its projection is false: a failed projection must not return it.
+  Kernel k {8};
+  k.ap ("u", true);
+  k.ap ("c", false);
+  for (unsigned q = 1; q < 8; ++q) {
+    k.graph->new_edge (0, q, bddtrue);
+    k.graph->new_edge (q, q, bddtrue);
+  }
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  Reader reader {store, false, {}};
+  const Rank rank = reader.initial_rank ();
+  std::size_t checkpoints = 0;
+  letters::QueryLimits counting;
+  counting.aborted = [] (void* data) { ++*static_cast<std::size_t*> (data); return false; };
+  counting.abort_data = &checkpoints;
+  Oracle measure {reader, store, k.alphabet, 1};
+  measure.set_limits (counting);
+  expect (measure.query<bool> ([] (auto&) { return true; }).value.has_value (),
+          "validate alphabet before measuring Bad");
+  checkpoints = 0;
+  expect (measure.bad (rank, {}, 0).value.has_value (), "measure the complete Bad query");
+  const auto bad_steps = checkpoints;
+  auto operations = [] (Oracle& oracle) {
+    std::size_t result = 0;
+    oracle.report (Reporter {[&] (const auto& key, const auto& value) {
+      if (key == "bdd_operations") result = std::stoull (value);
+    }}, "");
+    return result;
+  };
+  for (bool limited : {false, true}) {
+    Oracle oracle {reader, store, k.alphabet, 1};
+    expect (oracle.query<bool> ([] (auto&) { return true; }).value.has_value (),
+            "validate fresh alphabet before the budgeted query");
+    const auto before = operations (oracle);
+    letters::QueryLimits limits;
+    if (limited) limits.max_steps = bad_steps;
+    oracle.set_limits (limits);
+    const auto result = oracle.bad (rank, {}, 0, bddtrue);
+    if (limited) {
+      expect (not result.value && result.unknown == Unknown::resource_limit,
+              "budget failure during forall is UNKNOWN, not a present false projection");
+      // The old query's final step pays for entry to forall; its post-operation
+      // checkpoint exhausts this budget, before the land forming D can run.
+      expect (operations (oracle) == operations (measure) + 1,
+              "budget fails after the new forall operation and before conjunction");
+      oracle.set_limits ({});
+      const auto recovered = oracle.bad (rank, {}, 0, bddtrue);
+      expect (recovered.value && recovered.value->second == bddfalse,
+              "a fresh query after quantification failure can return a present false");
+    }
+    else {
+      expect (result.value && result.value->second == bddfalse && result.unknown == Unknown::none,
+              "unsatisfiable D is a present result");
+      expect (operations (oracle) > before, "projection uses the checked BDD boundary");
+    }
+  }
+  for (auto semantics : all_semantics) {
+    Limits limits;
+    limits.queries.max_steps = bad_steps;
+    const auto failed = Search {store, k.alphabet, 1, limits, semantics, LosingInputSearch::on}.solve ();
+    // Search retains its existing resource-limit subtype of an inconclusive
+    // result; neither WIN_K nor LOSE_K is published.
+    expect (failed.status == forward_result_status::resource_limit &&
+            failed.failure == Unknown::resource_limit && failed.expansions == 1 &&
+            failed.nodes.at (failed.initial).active_rows_complete &&
+            failed.choices_created == 0 && failed.proofs.empty (),
+            "search quantification budget exhaustion remains inconclusive");
   }
 }
 
@@ -524,16 +767,19 @@ void empty_alphabets_and_failures () {
 int main () {
   const int report_fd = open ("/dev/null", O_WRONLY);
   const auto report = pipe_reporter (report_fd);
-  for (auto semantics : all_semantics) {
-    std::cout << (semantics.successor_relation == SuccessorRelation::exact ? "exact" : "downward")
-              << '+' << (semantics.output_choice == OutputChoice::constant ? "constant" : "existential")
-              << (semantics == default_choice_semantics ? " (default)" : "") << '\n';
-    if (const int code = differential (report, semantics))
-      return code;
-  }
   try {
+    for (auto semantics : all_semantics) {
+      std::cout << (semantics.successor_relation == SuccessorRelation::exact ? "exact" : "downward")
+                << '+' << (semantics.output_choice == OutputChoice::constant ? "constant" : "existential")
+                << (semantics == default_choice_semantics ? " (default)" : "") << '\n';
+      if (const int code = differential (report, semantics))
+        return code;
+    }
     copy_kernels ();
     missing_output_kernel ();
+    last_losing_input ();
+    later_losing_input ();
+    losing_input_query_failure ();
     corrupt_certificates ();
     successor_relations ();
     empty_alphabets_and_failures ();
@@ -541,6 +787,7 @@ int main () {
     std::cerr << e.what () << '\n';
     return 17;
   }
-  std::cout << "quantifier-order, certificate corruption, empty-alphabet and query-failure checks passed\n";
+  std::cout << "S2 last-input, fallback, proof chronology and quantification-budget checks passed\n"
+               "quantifier-order, certificate corruption, empty-alphabet and query-failure checks passed\n";
   close (report_fd);
 }
