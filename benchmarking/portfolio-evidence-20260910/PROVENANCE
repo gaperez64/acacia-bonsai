@@ -10,6 +10,10 @@ acacia:    b6da274fa4468cf6b1dd82bd3ae0d8aa8cdb5fb2 (the sprint's patch stack on
 baseline:  3fb9f113d3c47294ae3527092850b90f59ec0635, same preset and profile
            binary sha256 2d5707332ec4ff2e1347598825f84e6ef56c350a1c52b4edc50a76496719ade4
            used for the infinite-race-u10 A/B (report section 8); kept built for G3
+           NOTE: rebuilt 2026-09-12 03:04 while fixing G1, so the binary now in
+           acacia-prepatch hashes d9db7dab83e1d8ab..., not the sha256 above. Same
+           revision and preset, but the release profile is not reproducible. The
+           candidate gate binary ba3159daef74bd1e... was removed with its worktree.
 posets:    139e143
 spot:      2.15.1.dev
 
