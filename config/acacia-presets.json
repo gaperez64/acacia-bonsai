@@ -367,6 +367,12 @@
       "inherits": "otf_contradiction",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
     },
+    "otf_sparse_formula_diag": {
+      "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile sparse guarded formula-unreal solving.",
+      "role": "diagnostic",
+      "inherits": "otf_sparse_formula",
+      "enable_diagnostics": true
+    },
     "otf_taa_lazy": {
       "description": "Candidate four-worker portfolio retaining backward and forward realizability, with sparse guarded formula-unreal and lazy TAA realizability workers.",
       "role": "sweep",
