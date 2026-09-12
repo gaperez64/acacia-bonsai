@@ -1,0 +1,5 @@
+baseline: total=180 solved=140 timeout=40 unknown=0 error=0 PAR-2=1435.329s
+candidate: total=180 solved=140 timeout=40 unknown=0 error=0 PAR-2=1433.502s
+verdict changes: 0
+coverage losses: 0
+GATE PASS

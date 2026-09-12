@@ -1,0 +1,740 @@
+baseline_binary=/home/gperez/GIT-repos/acacia-prepatch/build_otf_sparse_formula/src/acacia-bonsai
+baseline_sha256=2d5707332ec4ff2e1347598825f84e6ef56c350a1c52b4edc50a76496719ade4
+baseline_source_revision=3fb9f113d3c47294ae3527092850b90f59ec0635
+baseline_posets_revision=139e14336b7a1f0bc064022e587ea4e1b9a81427
+baseline_tlsf_tools_revision=b42d5ef4a680252e04820ac7f073f5d786a43f7c
+candidate_binary=/home/gperez/GIT-repos/acacia-report/build_otf_sparse_formula/src/acacia-bonsai
+candidate_sha256=ba3159daef74bd1ee450d0e5ee958df3a0b294ff969563fbf5e56988e69331a3
+candidate_source_revision=29d59037bda378b912e0d17291bd235988e9f423
+candidate_posets_revision=139e14336b7a1f0bc064022e587ea4e1b9a81427
+candidate_tlsf_tools_revision=b42d5ef4a680252e04820ac7f073f5d786a43f7c
+tlsf_corpus=/tmp/claude-1000/-home-gperez-GIT-repos-acacia-bonsai/cf609c9d-c895-4144-9c7a-c08acb8ba1d6/scratchpad/tlsf
+scope_mode=instance
+
+[baseline meson options]
+Core properties:
+  Source dir /home/gperez/GIT-repos/acacia-prepatch
+  Build dir  /home/gperez/GIT-repos/acacia-prepatch/build_otf_sparse_formula
+
+Global build options:
+  
+  Core options                   Current Value                    Possible Values                  Description                                                  
+  --------------                 -------------                    ---------------                  -----------                                                  
+  auto_features                  auto                             [enabled, disabled, auto]        Override value of all 'auto' features                        
+  backend                        ninja                            [ninja, vs, vs2010, vs2012,      Backend to use                                               
+                                                                   vs2013, vs2015, vs2017, vs2019,                                                              
+                                                                   vs2022, vs2026, xcode, none]                                                                 
+  genvslite                      vs2022                           [vs2022, vs2026]                 Setup multiple buildtype-suffixed ninja-backend build        
+                                                                                                   directories, and a [builddir]_vs containing a Visual Studio  
+                                                                                                   meta-backend with multiple configurations that calls into    
+                                                                                                   them                                                         
+  buildtype                      release                          [plain, debug, debugoptimized,   Build type to use                                            
+                                                                   release, minsize, custom]                                                                    
+  debug                          false                            [True, False]                    Enable debug symbols and other information                   
+  default_library                shared                           [shared, static, both]           Default library type                                         
+  default_both_libraries         shared                           [shared, static, auto]           Default library type for both_libraries                      
+  install_umask                  0022                             [>= 0, <= 511]                   Default umask to apply on permissions of installed files     
+  layout                         mirror                           [mirror, flat]                   Build directory layout                                       
+  optimization                   3                                [plain, 0, g, 1, 2, 3, s]        Optimization level                                           
+  prefer_static                  false                            [True, False]                    Whether to try static linking before shared linking          
+  strip                          false                            [True, False]                    Strip targets on install                                     
+  unity                          off                              [on, off, subprojects]           Unity build                                                  
+  unity_size                     4                                [>= 2]                           Unity block size                                             
+  warning_level                  1                                [0, 1, 2, 3, everything]         Compiler warning level to use                                
+  werror                         false                            [True, False]                    Treat warnings as errors                                     
+  wrap_mode                      default                          [default, nofallback,            Wrap mode                                                    
+                                                                   nodownload, forcefallback,                                                                   
+                                                                   nopromote]                                                                                   
+  force_fallback_for             []                                                                Force fallback for those subprojects                         
+  vsenv                          false                            [True, False]                    Activate Visual Studio environment                           
+  os2_emxomf                     false                            [True, False]                    Use OMF format on OS/2                                       
+  pkg_config_path                [/usr/local/lib/pkgconfig]                                        List of additional paths for pkg-config to search            
+  cmake_prefix_path              []                                                                List of additional prefixes for cmake to search              
+  
+  Backend options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  backend_max_links              0                                [>= 0]                           Maximum number of linker processes to run or 0 for no limit  
+  
+  Base options                   Current Value                    Possible Values                  Description                                                  
+  --------------                 -------------                    ---------------                  -----------                                                  
+  b_pie                          false                            [True, False]                    Build executables as position independent                    
+  b_pch                          true                             [True, False]                    Use precompiled headers                                      
+  b_lto_threads                  0                                []                               Use multiple threads for Link Time Optimization              
+  b_pgo                          off                              [off, generate, use]             Use profile guided optimization                              
+  b_colorout                     always                           [auto, always, never]            Use colored output                                           
+  b_sanitize                     []                                                                Code sanitizer to use                                        
+  b_thinlto_cache_dir                                                                              Directory to store ThinLTO cache objects                     
+  b_lto                          true                             [True, False]                    Use link time optimization                                   
+  b_asneeded                     true                             [True, False]                    Use -Wl,--as-needed when linking                             
+  b_ndebug                       true                             [true, false, if-release]        Disable asserts                                              
+  b_thinlto_cache                false                            [True, False]                    Use LLVM ThinLTO caching for faster incremental builds       
+  b_coverage                     false                            [True, False]                    Enable coverage tracking.                                    
+  b_lundef                       true                             [True, False]                    Use -Wl,--no-undefined when linking                          
+  b_staticpic                    true                             [True, False]                    Build static libraries as position independent               
+  
+  Compiler options               Current Value                    Possible Values                  Description                                                  
+  ------------------             -------------                    ---------------                  -----------                                                  
+  c_args                         []                                                                Extra arguments passed to the c compiler                     
+  c_link_args                    []                                                                Extra arguments passed to the c linker                       
+  c_std                          none                             [none, c89, c99, c11, c17, c18,  c language standard to use                                   
+                                                                   c2x, c23, c2y, gnu89, gnu99,                                                                 
+                                                                   gnu11, gnu17, gnu18, gnu2x,                                                                  
+                                                                   gnu23, gnu2y]                                                                                
+  cpp_args                       []                                                                Extra arguments passed to the cpp compiler                   
+  cpp_link_args                  []                                                                Extra arguments passed to the cpp linker                     
+  cpp_std                        c++23                            [none, c++98, c++03, c++11,      cpp language standard to use                                 
+                                                                   c++14, c++17, c++1z, c++2a,                                                                  
+                                                                   c++20, c++23, c++26, gnu++98,                                                                
+                                                                   gnu++03, gnu++11, gnu++14,                                                                   
+                                                                   gnu++17, gnu++1z, gnu++2a,                                                                   
+                                                                   gnu++20, gnu++23, gnu++26]                                                                   
+  cpp_eh                         default                          [none, default, a, s, sc]        C++ exception handling type.                                 
+  cpp_rtti                       true                             [True, False]                    Enable RTTI                                                  
+  cpp_debugstl                   false                            [True, False]                    STL debug mode                                               
+  cpp_importstd                  false                            [false, true]                    Use #import std.                                             
+  
+  pkgconfig module options       Current Value                    Possible Values                  Description                                                  
+  --------------------------     -------------                    ---------------                  -----------                                                  
+  pkgconfig.relocatable          false                            [True, False]                    Generate pkgconfig files as relocatable                      
+  
+  python module options          Current Value                    Possible Values                  Description                                                  
+  -----------------------        -------------                    ---------------                  -----------                                                  
+  python.bytecompile             0                                [>= -1, <= 2]                    Whether to compile bytecode                                  
+  python.install_env             prefix                           [auto, prefix, system, venv]     Which python environment to install to                       
+  python.platlibdir                                                                                Directory for site-specific, platform-specific files.        
+  python.purelibdir                                                                                Directory for site-specific, non-platform-specific files.    
+  python.allow_limited_api       true                             [True, False]                    Whether to allow use of the Python Limited API               
+  python.build_config                                                                              Config file containing the build details for the target      
+                                                                                                   Python installation.                                         
+  
+  Directories                    Current Value                    Possible Values                  Description                                                  
+  -------------                  -------------                    ---------------                  -----------                                                  
+  prefix                         /usr/local                                                        Installation prefix                                          
+  bindir                         bin                                                               Executable directory                                         
+  datadir                        share                                                             Data file directory                                          
+  includedir                     include                                                           Header file directory                                        
+  infodir                        share/info                                                        Info page directory                                          
+  libdir                         lib64                                                             Library directory                                            
+  licensedir                                                                                       Licenses directory                                           
+  libexecdir                     libexec                                                           Library executable directory                                 
+  localedir                      share/locale                                                      Locale data directory                                        
+  localstatedir                  /var/local                                                        Localstate data directory                                    
+  mandir                         share/man                                                         Manual page directory                                        
+  sbindir                        sbin                                                              System executable directory                                  
+  sharedstatedir                 /var/local/lib                                                    Architecture-independent data directory                      
+  sysconfdir                     etc                                                               Sysconf data directory                                       
+  
+  Testing options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  errorlogs                      true                             [True, False]                    Whether to print the logs from failing tests                 
+  stdsplit                       true                             [True, False]                    Split stdout and stderr in test logs                         
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  acacia_actioner                standard                         [standard,                       acacia_actioner                                              
+                                                                   no_ios_precomputation]                                                                       
+  acacia_aut_preprocessor        standard                         [surely_losing,                  Compile-time automaton preprocessor selection                
+                                                                   no_preprocessing, standard,                                                                  
+                                                                   elevator]                                                                                    
+  acacia_boolean_states          forward_saturation               [forward_saturation,             Which states get numeric rank coordinates; transition_core is
+                                                                   no_boolean_states,              the transition-acceptance counterpart of forward_saturation  
+                                                                   transition_core]                                                                             
+  acacia_compile_all_components  false                            [True, False]                    acacia_compile_all_components                                
+  acacia_compiler_profile        release                          [debug, release, lowmem]         Extra compiler flags for Acacia local benchmarking profiles  
+  acacia_cpre_avoid_unions       false                            [True, False]                    acacia_cpre_avoid_unions                                     
+  acacia_decompose_spec          true                             [True, False]                    acacia_decompose_spec                                        
+  acacia_default_arms            real:small:backward,real:small:f                                  Default portfolio in --arms syntax; empty uses the historical
+                                 orward,unreal:formula:spot-                                       default                                                      
+                                 guarded-                                                                                                                       
+                                 sparse,unreal:automaton:forward                                                                                                
+  acacia_default_candidate_mode  only                             [only, fallback]                 Default response to a Spot candidate resource limit; the CLI 
+                                                                                                   can override it                                              
+  acacia_default_k               99                               [>= 1, <= 127]                   Default final K (bounded by the signed-char counter          
+                                                                                                   representation)                                              
+  acacia_default_kinc            3                                [>= 1, <= 127]                   Default K increment                                          
+  acacia_default_kmin            2                                [>= 1, <= 127]                   Default initial K (must not exceed acacia_default_k at       
+                                                                                                   runtime)                                                     
+  acacia_default_spot_fast       det                              [off, det, det_and_gfg]          acacia_default_spot_fast                                     
+  acacia_default_unreal_x        both                             [both, automaton, formula]       acacia_default_unreal_x                                      
+  acacia_enable_diagnostics      false                            [True, False]                    Compile compact Acacia phase diagnostics, gated at runtime by
+                                                                                                   ACACIA_DIAG                                                  
+acacia_enable_equivariant_solver true                             [True, False]                    Compile and enable the exact equivariant solver path         
+  acacia_enable_realizability_si true                             [True, False]                    Enable Spot realizability-preserving formula simplification  
+mplifier                                                                                           before solving and after decomposition                       
+  acacia_enable_syntactic_bypass true                             [True, False]                    Enable Spot direct-strategy checks before automaton          
+                                                                                                   construction                                                 
+  acacia_enable_tlsf_frontend    true                             [True, False]                    Build the optional native TLSF frontend (requires flex and   
+                                                                                                   bison)                                                       
+  acacia_equivariant_exhaustive_ false                            [True, False]                    Use exhaustive symmetry detection to select the largest full 
+detect                                                                                             symmetric subgroup instead of fast star-generator recognition
+  acacia_equivariant_max_orbits  4096                             [>= 1]                           Maximum input orbits, including shared-input assignments,    
+                                                                                                   admitted to equivariant solving                              
+  acacia_equivariant_max_output_ 4096                             [>= 1]                           Maximum output valuations enumerated for equivariant orbit   
+letters                                                                                            sweeping; exceeding the cap declines the equivariant solver  
+  acacia_equivariant_max_states  512                              [>= 1]                           Maximum automaton states admitted to unhinted equivariant    
+                                                                                                   recognition                                                  
+  acacia_equivariant_max_sweep_c 4                                [>= 0]                           Maximum client count for direct orbit sweeping: small orbits 
+lients                                                                                             can cost less than generator-fixpoint closure; larger groups 
+                                                                                                   use the representative/picker loop for greater payoff (0     
+                                                                                                   disables sweeping)                                           
+  acacia_equivariant_min_blocks  2                                [>= 0]                           Minimum client-state block count required by the equivariant 
+                                                                                                   solver (0 disables this payoff gate)                         
+  acacia_equivariant_min_clients 3                                [>= 2]                           Minimum indexed client count admitted to equivariant         
+                                                                                                   recognition                                                  
+  acacia_equivariant_validate_fa false                            [True, False]                    Cross-check fast symmetry recognition against exhaustive     
+st_recognition                                                                                     detection, reporting mismatches and asserting agreement      
+  acacia_forced_output_contradic true                             [True, False]                    Enable the forced-output contradiction checker in the        
+tion                                                                                               decision-only syntactic bypass                               
+  acacia_forward_conditional_cov false                            [True, False]                    Enable conditional downward covering of optimistic successors
+ering                                                                                                                                                           
+  acacia_forward_eager_minimal_s false                            [True, False]                    Eagerly apply and Pareto-minimise every forward controller   
+uccessors                                                                                          action (comparison mode)                                     
+  acacia_forward_safety_solver   true                             [True, False]                    Use the on-the-fly forward safety-game solver instead of the 
+                                                                                                   backward antichain fixed point                               
+  acacia_input_picker            critical                         [critical_pq, critical,          acacia_input_picker                                          
+                                                                   critical_rnd, critical_fullrnd]                                                              
+  acacia_ios_precomputer         semantic_mona                    [standard, delegate, fake_vars,  acacia_ios_precomputer                                       
+                                                                   powset, mona, semantic_mona]                                                                 
+  acacia_k_schedule              linear                           [linear, geometric,              Bound-raising schedule for the K loop                        
+                                                                   cheap_loss_adaptive,                                                                         
+                                                                   direct_max]                                                                                  
+  acacia_local_certificate       false                            [True, False]                    Enable the bounded local winning-certificate and root-       
+                                                                                                   refutation probe                                             
+  acacia_no_simd                 false                            [True, False]                    acacia_no_simd                                               
+  acacia_preset                  otf_sparse_formula                                                Named build configuration; empty for a hand-assembled        
+                                                                                                   configuration                                                
+  acacia_profile_dominance       false                            [True, False]                    Prune globally dominated semantic actions after decoding, per
+                                                                                                   input                                                        
+  acacia_simd_is_max             false                            [True, False]                    acacia_simd_is_max                                           
+  acacia_spot_guarded_backend    true                             [True, False]                    Compile the explicitly selected Spot guarded-input safety-   
+                                                                                                   game backend                                                 
+  acacia_spot_lazy_provider      true                             [True, False]                    Compile the explicitly selected Spot TAA provider for real   
+                                                                                                   and formula-unreal workers                                   
+  acacia_spot_taa_max_rank_nodes 200000                           [>= 0]                           Default per-attempt rank-node cap for both TAA providers;    
+                                                                                                   frozen guarded solving keeps its own limit                   
+  acacia_symmetry_profile        false                            [True, False]                    Collect and report phase timings and call counts for symmetry
+                                                                                                   and equivariant solving                                      
+  acacia_symmetry_verbose_diagno false                            [True, False]                    Run an additional symmetry-detection pass on the final game  
+stics                                                                                              automaton for verbose and phase diagnostics                  
+  acacia_tlsf_corpus_dir                                                                           Path to the directory produced by benchmarking/syntcomp-     
+                                                                                                   corpus.py materialize                                        
+  acacia_transition_acceptance   false                            [True, False]                    Carry transition acceptance into rank actions                
+  acacia_translation_pref        small                            [small, any, small+any,          Spot translator postprocessor preference list for            
+                                                                   deterministic]                  realizability checks                                         
+  acacia_vector_downset          rank_bucketed_vector_backed      [vector_backed,                  acacia_vector_downset                                        
+                                                                   vector_or_kdtree_backed,                                                                     
+                                                                   kdtree_backed, bboxtree_backed,                                                              
+                                                                   comptrie_backed,                                                                             
+                                                                   sharingtree_backed,                                                                          
+                                                                   simple_sharingtree_backed,                                                                   
+                                                                   sharingtrie_backed,                                                                          
+                                                                   skiplist_backed, cst_backed,                                                                 
+                                                                   rank_bucketed_vector_backed,                                                                 
+                                                                   filtered_vector_backed,                                                                      
+                                                                   vector_backed_bin]                                                                           
+  acacia_vector_impl             auto                             [auto, simd_vector_backed,       acacia_vector_impl                                           
+                                                                   simd_vector_backed_sum,                                                                      
+                                                                   vector_backed]                                                                               
+  build_python                   false                            [True, False]                    Build the Python interface (requires swig)                   
+  build_research_tools           false                            [True, False]                    Build uninstalled experiment helpers such as HOA replay      
+  build_tests                    true                             [True, False]                    Build the test suite                                         
+
+Subproject posets:
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  acacia_actioner                standard                         [standard,                       acacia_actioner                                              
+                                                                   no_ios_precomputation]                                                                       
+  acacia_aut_preprocessor        surely_losing                    [surely_losing,                  Compile-time automaton preprocessor selection                
+                                                                   no_preprocessing, standard,                                                                  
+                                                                   elevator]                                                                                    
+  acacia_boolean_states          forward_saturation               [forward_saturation,             Which states get numeric rank coordinates; transition_core is
+                                                                   no_boolean_states,              the transition-acceptance counterpart of forward_saturation  
+                                                                   transition_core]                                                                             
+  acacia_compile_all_components  false                            [True, False]                    acacia_compile_all_components                                
+  acacia_compiler_profile        debug                            [debug, release, lowmem]         Extra compiler flags for Acacia local benchmarking profiles  
+  acacia_cpre_avoid_unions       false                            [True, False]                    acacia_cpre_avoid_unions                                     
+  acacia_decompose_spec          true                             [True, False]                    acacia_decompose_spec                                        
+  acacia_default_arms                                                                              Default portfolio in --arms syntax; empty uses the historical
+                                                                                                   default                                                      
+  acacia_default_candidate_mode  only                             [only, fallback]                 Default response to a Spot candidate resource limit; the CLI 
+                                                                                                   can override it                                              
+  acacia_default_k               99                               [>= 1, <= 127]                   Default final K (bounded by the signed-char counter          
+                                                                                                   representation)                                              
+  acacia_default_kinc            3                                [>= 1, <= 127]                   Default K increment                                          
+  acacia_default_kmin            2                                [>= 1, <= 127]                   Default initial K (must not exceed acacia_default_k at       
+                                                                                                   runtime)                                                     
+  acacia_default_spot_fast       det                              [off, det, det_and_gfg]          acacia_default_spot_fast                                     
+  acacia_default_unreal_x        both                             [both, automaton, formula]       acacia_default_unreal_x                                      
+  acacia_enable_diagnostics      false                            [True, False]                    Compile compact Acacia phase diagnostics, gated at runtime by
+                                                                                                   ACACIA_DIAG                                                  
+acacia_enable_equivariant_solver true                             [True, False]                    Compile and enable the exact equivariant solver path         
+  acacia_enable_realizability_si true                             [True, False]                    Enable Spot realizability-preserving formula simplification  
+mplifier                                                                                           before solving and after decomposition                       
+  acacia_enable_syntactic_bypass true                             [True, False]                    Enable Spot direct-strategy checks before automaton          
+                                                                                                   construction                                                 
+  acacia_enable_tlsf_frontend    false                            [True, False]                    Build the optional native TLSF frontend (requires flex and   
+                                                                                                   bison)                                                       
+  acacia_equivariant_exhaustive_ false                            [True, False]                    Use exhaustive symmetry detection to select the largest full 
+detect                                                                                             symmetric subgroup instead of fast star-generator recognition
+  acacia_equivariant_max_orbits  4096                             [>= 1]                           Maximum input orbits, including shared-input assignments,    
+                                                                                                   admitted to equivariant solving                              
+  acacia_equivariant_max_output_ 4096                             [>= 1]                           Maximum output valuations enumerated for equivariant orbit   
+letters                                                                                            sweeping; exceeding the cap declines the equivariant solver  
+  acacia_equivariant_max_states  512                              [>= 1]                           Maximum automaton states admitted to unhinted equivariant    
+                                                                                                   recognition                                                  
+  acacia_equivariant_max_sweep_c 4                                [>= 0]                           Maximum client count for direct orbit sweeping: small orbits 
+lients                                                                                             can cost less than generator-fixpoint closure; larger groups 
+                                                                                                   use the representative/picker loop for greater payoff (0     
+                                                                                                   disables sweeping)                                           
+  acacia_equivariant_min_blocks  2                                [>= 0]                           Minimum client-state block count required by the equivariant 
+                                                                                                   solver (0 disables this payoff gate)                         
+  acacia_equivariant_min_clients 3                                [>= 2]                           Minimum indexed client count admitted to equivariant         
+                                                                                                   recognition                                                  
+  acacia_equivariant_validate_fa false                            [True, False]                    Cross-check fast symmetry recognition against exhaustive     
+st_recognition                                                                                     detection, reporting mismatches and asserting agreement      
+  acacia_forced_output_contradic false                            [True, False]                    Enable the forced-output contradiction checker in the        
+tion                                                                                               decision-only syntactic bypass                               
+  acacia_forward_conditional_cov false                            [True, False]                    Enable conditional downward covering of optimistic successors
+ering                                                                                                                                                           
+  acacia_forward_eager_minimal_s false                            [True, False]                    Eagerly apply and Pareto-minimise every forward controller   
+uccessors                                                                                          action (comparison mode)                                     
+  acacia_forward_safety_solver   false                            [True, False]                    Use the on-the-fly forward safety-game solver instead of the 
+                                                                                                   backward antichain fixed point                               
+  acacia_input_picker            critical_pq                      [critical_pq, critical,          acacia_input_picker                                          
+                                                                   critical_rnd, critical_fullrnd]                                                              
+  acacia_ios_precomputer         standard                         [standard, delegate, fake_vars,  acacia_ios_precomputer                                       
+                                                                   powset, mona, semantic_mona]                                                                 
+  acacia_k_schedule              linear                           [linear, geometric,              Bound-raising schedule for the K loop                        
+                                                                   cheap_loss_adaptive,                                                                         
+                                                                   direct_max]                                                                                  
+  acacia_local_certificate       false                            [True, False]                    Enable the bounded local winning-certificate and root-       
+                                                                                                   refutation probe                                             
+  acacia_no_simd                 false                            [True, False]                    acacia_no_simd                                               
+  acacia_preset                                                                                    Named build configuration; empty for a hand-assembled        
+                                                                                                   configuration                                                
+  acacia_profile_dominance       false                            [True, False]                    Prune globally dominated semantic actions after decoding, per
+                                                                                                   input                                                        
+  acacia_simd_is_max             true                             [True, False]                    acacia_simd_is_max                                           
+  acacia_spot_guarded_backend    false                            [True, False]                    Compile the explicitly selected Spot guarded-input safety-   
+                                                                                                   game backend                                                 
+  acacia_spot_lazy_provider      false                            [True, False]                    Compile the explicitly selected Spot TAA provider for real   
+                                                                                                   and formula-unreal workers                                   
+  acacia_spot_taa_max_rank_nodes 200000                           [>= 0]                           Default per-attempt rank-node cap for both TAA providers;    
+                                                                                                   frozen guarded solving keeps its own limit                   
+  acacia_symmetry_profile        false                            [True, False]                    Collect and report phase timings and call counts for symmetry
+                                                                                                   and equivariant solving                                      
+  acacia_symmetry_verbose_diagno false                            [True, False]                    Run an additional symmetry-detection pass on the final game  
+stics                                                                                              automaton for verbose and phase diagnostics                  
+  acacia_tlsf_corpus_dir                                                                           Path to the directory produced by benchmarking/syntcomp-     
+                                                                                                   corpus.py materialize                                        
+  acacia_transition_acceptance   false                            [True, False]                    Carry transition acceptance into rank actions                
+  acacia_translation_pref        small                            [small, any, small+any,          Spot translator postprocessor preference list for            
+                                                                   deterministic]                  realizability checks                                         
+  acacia_vector_downset          vector_backed                    [vector_backed,                  acacia_vector_downset                                        
+                                                                   vector_or_kdtree_backed,                                                                     
+                                                                   kdtree_backed, bboxtree_backed,                                                              
+                                                                   comptrie_backed,                                                                             
+                                                                   sharingtree_backed,                                                                          
+                                                                   simple_sharingtree_backed,                                                                   
+                                                                   sharingtrie_backed,                                                                          
+                                                                   skiplist_backed, cst_backed,                                                                 
+                                                                   rank_bucketed_vector_backed,                                                                 
+                                                                   filtered_vector_backed,                                                                      
+                                                                   vector_backed_bin]                                                                           
+  acacia_vector_impl             auto                             [auto, simd_vector_backed,       acacia_vector_impl                                           
+                                                                   simd_vector_backed_sum,                                                                      
+                                                                   vector_backed]                                                                               
+  build_python                   false                            [True, False]                    Build the Python interface (requires swig)                   
+  build_research_tools           false                            [True, False]                    Build uninstalled experiment helpers such as HOA replay      
+  build_tests                    true                             [True, False]                    Build the test suite                                         
+
+Subproject tlsf-tools:
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  cpu                            baseline                         [baseline, x86-64-v2, avx2,      Target CPU ISA for the compile-time SIMD kernels             
+                                                                   avx512, neon, native]           (include/tlsf/simd.h) and compiler auto-vectorization.       
+                                                                                                   baseline = portable scalar; x86-64-v2/avx2/avx512 = x86 SIMD;
+                                                                                                   neon = AArch64 NEON; native = -march=native for this machine.
+  oxidd                          disabled                         [enabled, disabled, auto]        Build OxiDD-backed research solver tools; use -Doxidd=enabled
+                                                                                                   with -Dresearch_tools=true after building external/oxidd     
+                                                                                                   artifacts                                                    
+  research_tools                 false                            [True, False]                    Build decomposition, solver, bench, and template research    
+                                                                                                   CLIs                                                         
+  sanitize                       none                             [none, address, undefined,       Enable sanitizers (for development builds)                   
+                                                                   address,undefined]                                                                           
+
+Currently set option augments:
+posets:cpp_std       c++20     
+tlsf-tools:warning_level3         
+tlsf-tools:werror    false     
+tlsf-tools:cpp_std   c++23     
+
+[candidate meson options]
+Core properties:
+  Source dir /home/gperez/GIT-repos/acacia-report
+  Build dir  /home/gperez/GIT-repos/acacia-report/build_otf_sparse_formula
+
+Global build options:
+  
+  Core options                   Current Value                    Possible Values                  Description                                                  
+  --------------                 -------------                    ---------------                  -----------                                                  
+  auto_features                  auto                             [enabled, disabled, auto]        Override value of all 'auto' features                        
+  backend                        ninja                            [ninja, vs, vs2010, vs2012,      Backend to use                                               
+                                                                   vs2013, vs2015, vs2017, vs2019,                                                              
+                                                                   vs2022, vs2026, xcode, none]                                                                 
+  genvslite                      vs2022                           [vs2022, vs2026]                 Setup multiple buildtype-suffixed ninja-backend build        
+                                                                                                   directories, and a [builddir]_vs containing a Visual Studio  
+                                                                                                   meta-backend with multiple configurations that calls into    
+                                                                                                   them                                                         
+  buildtype                      release                          [plain, debug, debugoptimized,   Build type to use                                            
+                                                                   release, minsize, custom]                                                                    
+  debug                          false                            [True, False]                    Enable debug symbols and other information                   
+  default_library                shared                           [shared, static, both]           Default library type                                         
+  default_both_libraries         shared                           [shared, static, auto]           Default library type for both_libraries                      
+  install_umask                  0022                             [>= 0, <= 511]                   Default umask to apply on permissions of installed files     
+  layout                         mirror                           [mirror, flat]                   Build directory layout                                       
+  optimization                   3                                [plain, 0, g, 1, 2, 3, s]        Optimization level                                           
+  prefer_static                  false                            [True, False]                    Whether to try static linking before shared linking          
+  strip                          false                            [True, False]                    Strip targets on install                                     
+  unity                          off                              [on, off, subprojects]           Unity build                                                  
+  unity_size                     4                                [>= 2]                           Unity block size                                             
+  warning_level                  1                                [0, 1, 2, 3, everything]         Compiler warning level to use                                
+  werror                         false                            [True, False]                    Treat warnings as errors                                     
+  wrap_mode                      default                          [default, nofallback,            Wrap mode                                                    
+                                                                   nodownload, forcefallback,                                                                   
+                                                                   nopromote]                                                                                   
+  force_fallback_for             []                                                                Force fallback for those subprojects                         
+  vsenv                          false                            [True, False]                    Activate Visual Studio environment                           
+  os2_emxomf                     false                            [True, False]                    Use OMF format on OS/2                                       
+  pkg_config_path                [/usr/local/lib/pkgconfig]                                        List of additional paths for pkg-config to search            
+  cmake_prefix_path              []                                                                List of additional prefixes for cmake to search              
+  
+  Backend options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  backend_max_links              0                                [>= 0]                           Maximum number of linker processes to run or 0 for no limit  
+  
+  Base options                   Current Value                    Possible Values                  Description                                                  
+  --------------                 -------------                    ---------------                  -----------                                                  
+  b_colorout                     always                           [auto, always, never]            Use colored output                                           
+  b_lto_threads                  0                                []                               Use multiple threads for Link Time Optimization              
+  b_pgo                          off                              [off, generate, use]             Use profile guided optimization                              
+  b_coverage                     false                            [True, False]                    Enable coverage tracking.                                    
+  b_pch                          true                             [True, False]                    Use precompiled headers                                      
+  b_sanitize                     []                                                                Code sanitizer to use                                        
+  b_staticpic                    true                             [True, False]                    Build static libraries as position independent               
+  b_pie                          false                            [True, False]                    Build executables as position independent                    
+  b_asneeded                     true                             [True, False]                    Use -Wl,--as-needed when linking                             
+  b_ndebug                       true                             [true, false, if-release]        Disable asserts                                              
+  b_lto                          true                             [True, False]                    Use link time optimization                                   
+  b_thinlto_cache                false                            [True, False]                    Use LLVM ThinLTO caching for faster incremental builds       
+  b_thinlto_cache_dir                                                                              Directory to store ThinLTO cache objects                     
+  b_lundef                       true                             [True, False]                    Use -Wl,--no-undefined when linking                          
+  
+  Compiler options               Current Value                    Possible Values                  Description                                                  
+  ------------------             -------------                    ---------------                  -----------                                                  
+  c_args                         []                                                                Extra arguments passed to the c compiler                     
+  c_link_args                    []                                                                Extra arguments passed to the c linker                       
+  c_std                          none                             [none, c89, c99, c11, c17, c18,  c language standard to use                                   
+                                                                   c2x, c23, c2y, gnu89, gnu99,                                                                 
+                                                                   gnu11, gnu17, gnu18, gnu2x,                                                                  
+                                                                   gnu23, gnu2y]                                                                                
+  cpp_args                       []                                                                Extra arguments passed to the cpp compiler                   
+  cpp_link_args                  []                                                                Extra arguments passed to the cpp linker                     
+  cpp_std                        c++23                            [none, c++98, c++03, c++11,      cpp language standard to use                                 
+                                                                   c++14, c++17, c++1z, c++2a,                                                                  
+                                                                   c++20, c++23, c++26, gnu++98,                                                                
+                                                                   gnu++03, gnu++11, gnu++14,                                                                   
+                                                                   gnu++17, gnu++1z, gnu++2a,                                                                   
+                                                                   gnu++20, gnu++23, gnu++26]                                                                   
+  cpp_eh                         default                          [none, default, a, s, sc]        C++ exception handling type.                                 
+  cpp_rtti                       true                             [True, False]                    Enable RTTI                                                  
+  cpp_debugstl                   false                            [True, False]                    STL debug mode                                               
+  cpp_importstd                  false                            [false, true]                    Use #import std.                                             
+  
+  pkgconfig module options       Current Value                    Possible Values                  Description                                                  
+  --------------------------     -------------                    ---------------                  -----------                                                  
+  pkgconfig.relocatable          false                            [True, False]                    Generate pkgconfig files as relocatable                      
+  
+  python module options          Current Value                    Possible Values                  Description                                                  
+  -----------------------        -------------                    ---------------                  -----------                                                  
+  python.bytecompile             0                                [>= -1, <= 2]                    Whether to compile bytecode                                  
+  python.install_env             prefix                           [auto, prefix, system, venv]     Which python environment to install to                       
+  python.platlibdir                                                                                Directory for site-specific, platform-specific files.        
+  python.purelibdir                                                                                Directory for site-specific, non-platform-specific files.    
+  python.allow_limited_api       true                             [True, False]                    Whether to allow use of the Python Limited API               
+  python.build_config                                                                              Config file containing the build details for the target      
+                                                                                                   Python installation.                                         
+  
+  Directories                    Current Value                    Possible Values                  Description                                                  
+  -------------                  -------------                    ---------------                  -----------                                                  
+  prefix                         /usr/local                                                        Installation prefix                                          
+  bindir                         bin                                                               Executable directory                                         
+  datadir                        share                                                             Data file directory                                          
+  includedir                     include                                                           Header file directory                                        
+  infodir                        share/info                                                        Info page directory                                          
+  libdir                         lib64                                                             Library directory                                            
+  licensedir                                                                                       Licenses directory                                           
+  libexecdir                     libexec                                                           Library executable directory                                 
+  localedir                      share/locale                                                      Locale data directory                                        
+  localstatedir                  /var/local                                                        Localstate data directory                                    
+  mandir                         share/man                                                         Manual page directory                                        
+  sbindir                        sbin                                                              System executable directory                                  
+  sharedstatedir                 /var/local/lib                                                    Architecture-independent data directory                      
+  sysconfdir                     etc                                                               Sysconf data directory                                       
+  
+  Testing options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  errorlogs                      true                             [True, False]                    Whether to print the logs from failing tests                 
+  stdsplit                       true                             [True, False]                    Split stdout and stderr in test logs                         
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  acacia_actioner                standard                         [standard,                       acacia_actioner                                              
+                                                                   no_ios_precomputation]                                                                       
+  acacia_aut_preprocessor        standard                         [surely_losing,                  Compile-time automaton preprocessor selection                
+                                                                   no_preprocessing, standard,                                                                  
+                                                                   elevator]                                                                                    
+  acacia_boolean_states          forward_saturation               [forward_saturation,             Which states get numeric rank coordinates; transition_core is
+                                                                   no_boolean_states,              the transition-acceptance counterpart of forward_saturation  
+                                                                   transition_core]                                                                             
+  acacia_compile_all_components  false                            [True, False]                    acacia_compile_all_components                                
+  acacia_compiler_profile        release                          [debug, release, lowmem]         Extra compiler flags for Acacia local benchmarking profiles  
+  acacia_cpre_avoid_unions       false                            [True, False]                    acacia_cpre_avoid_unions                                     
+  acacia_decompose_spec          true                             [True, False]                    acacia_decompose_spec                                        
+  acacia_default_arms            real:small:backward,real:small:f                                  Default portfolio in --arms syntax; empty uses the historical
+                                 orward,unreal:formula:spot-                                       default                                                      
+                                 guarded-                                                                                                                       
+                                 sparse,unreal:automaton:forward                                                                                                
+  acacia_default_candidate_mode  only                             [only, fallback]                 Default response to a Spot candidate resource limit; the CLI 
+                                                                                                   can override it                                              
+  acacia_default_k               99                               [>= 1, <= 127]                   Default final K (bounded by the signed-char counter          
+                                                                                                   representation)                                              
+  acacia_default_kinc            3                                [>= 1, <= 127]                   Default K increment                                          
+  acacia_default_kmin            2                                [>= 1, <= 127]                   Default initial K (must not exceed acacia_default_k at       
+                                                                                                   runtime)                                                     
+  acacia_default_spot_fast       det                              [off, det, det_and_gfg]          acacia_default_spot_fast                                     
+  acacia_default_unreal_x        both                             [both, automaton, formula]       acacia_default_unreal_x                                      
+  acacia_enable_diagnostics      false                            [True, False]                    Compile compact Acacia phase diagnostics, gated at runtime by
+                                                                                                   ACACIA_DIAG                                                  
+acacia_enable_equivariant_solver true                             [True, False]                    Compile and enable the exact equivariant solver path         
+  acacia_enable_realizability_si true                             [True, False]                    Enable Spot realizability-preserving formula simplification  
+mplifier                                                                                           before solving and after decomposition                       
+  acacia_enable_syntactic_bypass true                             [True, False]                    Enable Spot direct-strategy checks before automaton          
+                                                                                                   construction                                                 
+  acacia_enable_tlsf_frontend    true                             [True, False]                    Build the optional native TLSF frontend (requires flex and   
+                                                                                                   bison)                                                       
+  acacia_equivariant_exhaustive_ false                            [True, False]                    Use exhaustive symmetry detection to select the largest full 
+detect                                                                                             symmetric subgroup instead of fast star-generator recognition
+  acacia_equivariant_max_orbits  4096                             [>= 1]                           Maximum input orbits, including shared-input assignments,    
+                                                                                                   admitted to equivariant solving                              
+  acacia_equivariant_max_output_ 4096                             [>= 1]                           Maximum output valuations enumerated for equivariant orbit   
+letters                                                                                            sweeping; exceeding the cap declines the equivariant solver  
+  acacia_equivariant_max_states  512                              [>= 1]                           Maximum automaton states admitted to unhinted equivariant    
+                                                                                                   recognition                                                  
+  acacia_equivariant_max_sweep_c 4                                [>= 0]                           Maximum client count for direct orbit sweeping: small orbits 
+lients                                                                                             can cost less than generator-fixpoint closure; larger groups 
+                                                                                                   use the representative/picker loop for greater payoff (0     
+                                                                                                   disables sweeping)                                           
+  acacia_equivariant_min_blocks  2                                [>= 0]                           Minimum client-state block count required by the equivariant 
+                                                                                                   solver (0 disables this payoff gate)                         
+  acacia_equivariant_min_clients 3                                [>= 2]                           Minimum indexed client count admitted to equivariant         
+                                                                                                   recognition                                                  
+  acacia_equivariant_validate_fa false                            [True, False]                    Cross-check fast symmetry recognition against exhaustive     
+st_recognition                                                                                     detection, reporting mismatches and asserting agreement      
+  acacia_forced_output_contradic true                             [True, False]                    Enable the forced-output contradiction checker in the        
+tion                                                                                               decision-only syntactic bypass                               
+  acacia_forward_conditional_cov false                            [True, False]                    Enable conditional downward covering of optimistic successors
+ering                                                                                                                                                           
+  acacia_forward_eager_minimal_s false                            [True, False]                    Eagerly apply and Pareto-minimise every forward controller   
+uccessors                                                                                          action (comparison mode)                                     
+  acacia_forward_safety_solver   true                             [True, False]                    Use the on-the-fly forward safety-game solver instead of the 
+                                                                                                   backward antichain fixed point                               
+  acacia_input_picker            critical                         [critical_pq, critical,          acacia_input_picker                                          
+                                                                   critical_rnd, critical_fullrnd]                                                              
+  acacia_ios_precomputer         semantic_mona                    [standard, delegate, fake_vars,  acacia_ios_precomputer                                       
+                                                                   powset, mona, semantic_mona]                                                                 
+  acacia_k_schedule              linear                           [linear, geometric,              Bound-raising schedule for the K loop                        
+                                                                   cheap_loss_adaptive,                                                                         
+                                                                   direct_max]                                                                                  
+  acacia_local_certificate       false                            [True, False]                    Enable the bounded local winning-certificate and root-       
+                                                                                                   refutation probe                                             
+  acacia_no_simd                 false                            [True, False]                    acacia_no_simd                                               
+  acacia_preset                  otf_sparse_formula                                                Named build configuration; empty for a hand-assembled        
+                                                                                                   configuration                                                
+  acacia_profile_dominance       false                            [True, False]                    Prune globally dominated semantic actions after decoding, per
+                                                                                                   input                                                        
+  acacia_simd_is_max             false                            [True, False]                    acacia_simd_is_max                                           
+  acacia_spot_guarded_backend    true                             [True, False]                    Compile the explicitly selected Spot guarded-input safety-   
+                                                                                                   game backend                                                 
+  acacia_spot_guarded_inequality false                            [True, False]                    Cover guarded inputs with the <= successor preimage instead  
+_covering                                                                                          of the exact successor                                       
+  acacia_spot_lazy_provider      true                             [True, False]                    Compile the explicitly selected Spot TAA provider for real   
+                                                                                                   and formula-unreal workers                                   
+  acacia_spot_taa_max_rank_nodes 200000                           [>= 0]                           Default per-attempt rank-node cap for both TAA providers;    
+                                                                                                   frozen guarded solving keeps its own limit                   
+  acacia_symmetry_profile        false                            [True, False]                    Collect and report phase timings and call counts for symmetry
+                                                                                                   and equivariant solving                                      
+  acacia_symmetry_verbose_diagno false                            [True, False]                    Run an additional symmetry-detection pass on the final game  
+stics                                                                                              automaton for verbose and phase diagnostics                  
+  acacia_tlsf_corpus_dir                                                                           Path to the directory produced by benchmarking/syntcomp-     
+                                                                                                   corpus.py materialize                                        
+  acacia_transition_acceptance   false                            [True, False]                    Carry transition acceptance into rank actions                
+  acacia_translation_pref        small                            [small, any, small+any,          Spot translator postprocessor preference list for            
+                                                                   deterministic]                  realizability checks                                         
+  acacia_vector_downset          rank_bucketed_vector_backed      [vector_backed,                  acacia_vector_downset                                        
+                                                                   vector_or_kdtree_backed,                                                                     
+                                                                   kdtree_backed, bboxtree_backed,                                                              
+                                                                   comptrie_backed,                                                                             
+                                                                   sharingtree_backed,                                                                          
+                                                                   simple_sharingtree_backed,                                                                   
+                                                                   sharingtrie_backed,                                                                          
+                                                                   skiplist_backed, cst_backed,                                                                 
+                                                                   rank_bucketed_vector_backed,                                                                 
+                                                                   filtered_vector_backed,                                                                      
+                                                                   vector_backed_bin]                                                                           
+  acacia_vector_impl             auto                             [auto, simd_vector_backed,       acacia_vector_impl                                           
+                                                                   simd_vector_backed_sum,                                                                      
+                                                                   vector_backed]                                                                               
+  build_python                   false                            [True, False]                    Build the Python interface (requires swig)                   
+  build_research_tools           false                            [True, False]                    Build uninstalled experiment helpers such as HOA replay      
+  build_tests                    true                             [True, False]                    Build the test suite                                         
+
+Subproject posets:
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  acacia_actioner                standard                         [standard,                       acacia_actioner                                              
+                                                                   no_ios_precomputation]                                                                       
+  acacia_aut_preprocessor        surely_losing                    [surely_losing,                  Compile-time automaton preprocessor selection                
+                                                                   no_preprocessing, standard,                                                                  
+                                                                   elevator]                                                                                    
+  acacia_boolean_states          forward_saturation               [forward_saturation,             Which states get numeric rank coordinates; transition_core is
+                                                                   no_boolean_states,              the transition-acceptance counterpart of forward_saturation  
+                                                                   transition_core]                                                                             
+  acacia_compile_all_components  false                            [True, False]                    acacia_compile_all_components                                
+  acacia_compiler_profile        debug                            [debug, release, lowmem]         Extra compiler flags for Acacia local benchmarking profiles  
+  acacia_cpre_avoid_unions       false                            [True, False]                    acacia_cpre_avoid_unions                                     
+  acacia_decompose_spec          true                             [True, False]                    acacia_decompose_spec                                        
+  acacia_default_arms                                                                              Default portfolio in --arms syntax; empty uses the historical
+                                                                                                   default                                                      
+  acacia_default_candidate_mode  only                             [only, fallback]                 Default response to a Spot candidate resource limit; the CLI 
+                                                                                                   can override it                                              
+  acacia_default_k               99                               [>= 1, <= 127]                   Default final K (bounded by the signed-char counter          
+                                                                                                   representation)                                              
+  acacia_default_kinc            3                                [>= 1, <= 127]                   Default K increment                                          
+  acacia_default_kmin            2                                [>= 1, <= 127]                   Default initial K (must not exceed acacia_default_k at       
+                                                                                                   runtime)                                                     
+  acacia_default_spot_fast       det                              [off, det, det_and_gfg]          acacia_default_spot_fast                                     
+  acacia_default_unreal_x        both                             [both, automaton, formula]       acacia_default_unreal_x                                      
+  acacia_enable_diagnostics      false                            [True, False]                    Compile compact Acacia phase diagnostics, gated at runtime by
+                                                                                                   ACACIA_DIAG                                                  
+acacia_enable_equivariant_solver true                             [True, False]                    Compile and enable the exact equivariant solver path         
+  acacia_enable_realizability_si true                             [True, False]                    Enable Spot realizability-preserving formula simplification  
+mplifier                                                                                           before solving and after decomposition                       
+  acacia_enable_syntactic_bypass true                             [True, False]                    Enable Spot direct-strategy checks before automaton          
+                                                                                                   construction                                                 
+  acacia_enable_tlsf_frontend    false                            [True, False]                    Build the optional native TLSF frontend (requires flex and   
+                                                                                                   bison)                                                       
+  acacia_equivariant_exhaustive_ false                            [True, False]                    Use exhaustive symmetry detection to select the largest full 
+detect                                                                                             symmetric subgroup instead of fast star-generator recognition
+  acacia_equivariant_max_orbits  4096                             [>= 1]                           Maximum input orbits, including shared-input assignments,    
+                                                                                                   admitted to equivariant solving                              
+  acacia_equivariant_max_output_ 4096                             [>= 1]                           Maximum output valuations enumerated for equivariant orbit   
+letters                                                                                            sweeping; exceeding the cap declines the equivariant solver  
+  acacia_equivariant_max_states  512                              [>= 1]                           Maximum automaton states admitted to unhinted equivariant    
+                                                                                                   recognition                                                  
+  acacia_equivariant_max_sweep_c 4                                [>= 0]                           Maximum client count for direct orbit sweeping: small orbits 
+lients                                                                                             can cost less than generator-fixpoint closure; larger groups 
+                                                                                                   use the representative/picker loop for greater payoff (0     
+                                                                                                   disables sweeping)                                           
+  acacia_equivariant_min_blocks  2                                [>= 0]                           Minimum client-state block count required by the equivariant 
+                                                                                                   solver (0 disables this payoff gate)                         
+  acacia_equivariant_min_clients 3                                [>= 2]                           Minimum indexed client count admitted to equivariant         
+                                                                                                   recognition                                                  
+  acacia_equivariant_validate_fa false                            [True, False]                    Cross-check fast symmetry recognition against exhaustive     
+st_recognition                                                                                     detection, reporting mismatches and asserting agreement      
+  acacia_forced_output_contradic false                            [True, False]                    Enable the forced-output contradiction checker in the        
+tion                                                                                               decision-only syntactic bypass                               
+  acacia_forward_conditional_cov false                            [True, False]                    Enable conditional downward covering of optimistic successors
+ering                                                                                                                                                           
+  acacia_forward_eager_minimal_s false                            [True, False]                    Eagerly apply and Pareto-minimise every forward controller   
+uccessors                                                                                          action (comparison mode)                                     
+  acacia_forward_safety_solver   false                            [True, False]                    Use the on-the-fly forward safety-game solver instead of the 
+                                                                                                   backward antichain fixed point                               
+  acacia_input_picker            critical_pq                      [critical_pq, critical,          acacia_input_picker                                          
+                                                                   critical_rnd, critical_fullrnd]                                                              
+  acacia_ios_precomputer         standard                         [standard, delegate, fake_vars,  acacia_ios_precomputer                                       
+                                                                   powset, mona, semantic_mona]                                                                 
+  acacia_k_schedule              linear                           [linear, geometric,              Bound-raising schedule for the K loop                        
+                                                                   cheap_loss_adaptive,                                                                         
+                                                                   direct_max]                                                                                  
+  acacia_local_certificate       false                            [True, False]                    Enable the bounded local winning-certificate and root-       
+                                                                                                   refutation probe                                             
+  acacia_no_simd                 false                            [True, False]                    acacia_no_simd                                               
+  acacia_preset                                                                                    Named build configuration; empty for a hand-assembled        
+                                                                                                   configuration                                                
+  acacia_profile_dominance       false                            [True, False]                    Prune globally dominated semantic actions after decoding, per
+                                                                                                   input                                                        
+  acacia_simd_is_max             true                             [True, False]                    acacia_simd_is_max                                           
+  acacia_spot_guarded_backend    false                            [True, False]                    Compile the explicitly selected Spot guarded-input safety-   
+                                                                                                   game backend                                                 
+  acacia_spot_guarded_inequality false                            [True, False]                    Cover guarded inputs with the <= successor preimage instead  
+_covering                                                                                          of the exact successor                                       
+  acacia_spot_lazy_provider      false                            [True, False]                    Compile the explicitly selected Spot TAA provider for real   
+                                                                                                   and formula-unreal workers                                   
+  acacia_spot_taa_max_rank_nodes 200000                           [>= 0]                           Default per-attempt rank-node cap for both TAA providers;    
+                                                                                                   frozen guarded solving keeps its own limit                   
+  acacia_symmetry_profile        false                            [True, False]                    Collect and report phase timings and call counts for symmetry
+                                                                                                   and equivariant solving                                      
+  acacia_symmetry_verbose_diagno false                            [True, False]                    Run an additional symmetry-detection pass on the final game  
+stics                                                                                              automaton for verbose and phase diagnostics                  
+  acacia_tlsf_corpus_dir                                                                           Path to the directory produced by benchmarking/syntcomp-     
+                                                                                                   corpus.py materialize                                        
+  acacia_transition_acceptance   false                            [True, False]                    Carry transition acceptance into rank actions                
+  acacia_translation_pref        small                            [small, any, small+any,          Spot translator postprocessor preference list for            
+                                                                   deterministic]                  realizability checks                                         
+  acacia_vector_downset          vector_backed                    [vector_backed,                  acacia_vector_downset                                        
+                                                                   vector_or_kdtree_backed,                                                                     
+                                                                   kdtree_backed, bboxtree_backed,                                                              
+                                                                   comptrie_backed,                                                                             
+                                                                   sharingtree_backed,                                                                          
+                                                                   simple_sharingtree_backed,                                                                   
+                                                                   sharingtrie_backed,                                                                          
+                                                                   skiplist_backed, cst_backed,                                                                 
+                                                                   rank_bucketed_vector_backed,                                                                 
+                                                                   filtered_vector_backed,                                                                      
+                                                                   vector_backed_bin]                                                                           
+  acacia_vector_impl             auto                             [auto, simd_vector_backed,       acacia_vector_impl                                           
+                                                                   simd_vector_backed_sum,                                                                      
+                                                                   vector_backed]                                                                               
+  build_python                   false                            [True, False]                    Build the Python interface (requires swig)                   
+  build_research_tools           false                            [True, False]                    Build uninstalled experiment helpers such as HOA replay      
+  build_tests                    true                             [True, False]                    Build the test suite                                         
+
+Subproject tlsf-tools:
+  
+  Project options                Current Value                    Possible Values                  Description                                                  
+  -----------------              -------------                    ---------------                  -----------                                                  
+  cpu                            baseline                         [baseline, x86-64-v2, avx2,      Target CPU ISA for the compile-time SIMD kernels             
+                                                                   avx512, neon, native]           (include/tlsf/simd.h) and compiler auto-vectorization.       
+                                                                                                   baseline = portable scalar; x86-64-v2/avx2/avx512 = x86 SIMD;
+                                                                                                   neon = AArch64 NEON; native = -march=native for this machine.
+  oxidd                          disabled                         [enabled, disabled, auto]        Build OxiDD-backed research solver tools; use -Doxidd=enabled
+                                                                                                   with -Dresearch_tools=true after building external/oxidd     
+                                                                                                   artifacts                                                    
+  research_tools                 false                            [True, False]                    Build decomposition, solver, bench, and template research    
+                                                                                                   CLIs                                                         
+  sanitize                       none                             [none, address, undefined,       Enable sanitizers (for development builds)                   
+                                                                   address,undefined]                                                                           
+
+Currently set option augments:
+posets:cpp_std       c++20     
+tlsf-tools:warning_level3         
+tlsf-tools:werror    false     
+tlsf-tools:cpp_std   c++23     
+
+[spot metadata]
+spot_version=2.15.1.dev
+spot_max_accsets=64

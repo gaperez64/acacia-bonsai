@@ -7,8 +7,7 @@ wrong about the tree it was written against.
 **Status: the code is on master and unit-gated. Three campaigns have run** — a
 22-arm isolated census on the 180-instance panel, 10 arms on the 353 instances
 the shipping configuration cannot solve, and a fixed-budget race curve (§9).
-**G1, G3 and G4 were queued after it and are not reported here; G5 is skipped
-(§10).** Nothing here is a full-corpus coverage claim,
+**G1, G3 and G4 have since run and all pass (§10); G5 is skipped by decision.** Nothing here is a full-corpus coverage claim,
 and `docker_default` is unchanged.
 
 Raw evidence: [portfolio-evidence-20260910/](portfolio-evidence-20260910/),
@@ -240,7 +239,7 @@ The pre-patch uncensored time matches the recorded 17.95 s. The effect is the
 whole stack's, most plausibly #154/#155 acting on the guarded formula arm;
 inequality covering is off in this preset. One instance, not a corpus claim.
 
-## 9. The race curve (Regime F, partial)
+## 9. The race curve (Regime F)
 
 Each configuration is one race invocation per instance under the same budget:
 `CPUQuota=400%` (four CPUs of time), one 8 GiB scope, zero swap, 17 s. Instance
@@ -291,7 +290,46 @@ the choice per instance and pay for the prediction.
   **four** frontends, not the three CLAUDE.md names: the `build_conf.set` line in
   `meson.build` is the fourth, and `tests/check-config-frontends.py` compares
   only two.
-- **G1 and G3 have not run.**
+### Gates
+
+Candidate: master's `otf_sparse_formula`, built fresh, SHA-256 `ba3159daef74bd1e…`.
+Baseline: the same preset at `3fb9f113`, SHA-256 `2d5707332ec4ff2e…`.
+
+| gate | result |
+|---|---|
+| G1, frozen sentinels | **PASS** — 40 rows verified, 40/40 solved, 0 verdict changes, 0 coverage losses |
+| G3, landing bar | **PASS** — syntcomp25 124 → 125, syntcomp26 140 → 140, 0 verdict changes, 0 coverage losses |
+| G4, candidate | **PASS** — Ok 575, Fail 0, Timeout 49, no false-positive/negative marker |
+| G4, the #156 preset | **PASS** — identical: same counts, and the same 49 instances time out |
+| G5 | skipped by decision, below |
+
+**G3 is the gate that speaks to coverage, and it says the patches cost nothing
+and gain nothing measurable on the panels.** Its one extra answer,
+`workstation_resupply_pb_3_pe_`, is a cap-boundary flip: TIMEOUT at 17.053 s
+against REALIZABLE at 16.673 s. PAR-2 moves −14.9 s on syntcomp25 and −1.8 s on
+syntcomp26, both inside the 21.1 s / 12.1 s noise floors. The patches' one
+user-visible win is §8's, on an instance these panels do not contain.
+
+G1's own PAR-2 line reads 101.867 s against 39.747 s. That is **not** a measured
+speedup: the gate builds its baseline from the frozen `baseline_seconds` in
+`regress-expected.tsv` rather than from the supplied baseline binary, so the two
+sides were never measured under the same conditions. G3 is the measured
+comparison.
+
+G4 being identical on both builds is itself a result, because the option really
+is compiled in — the generated `acacia_build_config.hh` reads 1 in the preset
+build and 0 in the candidate. So inequality covering changes internals without
+changing a single corpus verdict. `SPIPureNext.ltl` is among the 49 timeouts, via
+`ab/large1`, for the memory reason `tests/meson.build` documents; CI does not run
+the large suites.
+
+The G1 **control** — the same gate with the pre-patch build in the candidate slot
+— is **invalid and deliberately not repeated**. Its build directory records the
+main work tree as its source directory, residue from a mistake in §11, so the
+gate compared a testlog from one tree against expectations from another: 25
+missing rows and 25 unexpected inputs, with no verdict changes and no coverage
+losses. Its purpose was to show that G1's failures were environmental, and the
+candidate passing outright makes that moot.
 - **G5 is skipped by decision.** It checks that the TLSF frontend gives the same
   verdicts natively and through SyFCo, and nothing in this sprint touches the
   frontend. The preset that triggered it is sweep-role and off by default, and
@@ -314,6 +352,22 @@ the choice per instance and pay for the prediction.
 - **`00a066ae` carried an unannounced file**, the first draft of
   `arm-census-report.py`, swept in by `git add -A`. That draft scores PAR-2 over
   answered instances only. `9db9902b` fixes it; it reaches master with #161.
+- **Three G1 alarms were mine, not the solver's.** The first run reported 15
+  failures, all `missing syntcomp25/<x>.ltl`: `tests/meson.build` skips
+  TLSF-backed entries when `acacia_tlsf_corpus_dir` is empty, and it was empty in
+  both builds. Exporting `ACACIA_TLSF_CORPUS` does not help — the gate scripts
+  read it at run time, meson never does. The second attempt set the option with
+  `meson setup --reconfigure -D… BUILDDIR` from the wrong directory, so meson took
+  the cwd as the source tree, paired a master build directory with a branch that
+  lacks `acacia_spot_guarded_inequality_covering`, and aborted; a later ninja
+  regeneration then restored the empty option. `meson configure`, which takes only
+  a build directory, is the command that cannot get this wrong. Both mistakes hid
+  behind a third: `systemd-run --scope` does not propagate the wrapped command's
+  exit status, so the driver logged `exit=0` over a meson error. Verify by
+  outcome — here, the registered sentinel count — never by a wrapper's exit code.
+- **A G4 prediction was wrong in form.** I expected `SPIPureNext` to *fail* G4 via
+  `ab/large1`; it reaches the 30 s test timeout first, so it counts as a timeout,
+  which the gate allows.
 
 ## 12. Decisions
 
@@ -341,22 +395,17 @@ the choice per instance and pay for the prediction.
 2. **Scope a worker-count selector.** The oracle over race configurations is 155
    against 146 fixed (§9). Unlike P5 this has measured headroom, and it needs a
    cheap per-instance predictor and an honest accounting of its own cost.
-2. **Gates, queued to run after the race curve.** The stack landed on master as
-   one unit, so G1 and G3 compare master's `otf_sparse_formula` against the kept
-   `3fb9f113` baseline rather than patch by patch: **G1** on the 40 frozen
-   sentinels, **G3** paired on the syntcomp25 and syntcomp26 panels (read PAR-2
-   against the 21.1 s / 12.1 s noise floors), then **G4** on that candidate and on
-   the `otf_sparse_formula_inequality_covering` preset #156 added. **G5 is skipped
-   by decision** (§10).
-3. **A 60 s diagnostic re-run of the 20 hard-set unlocks**, to separate
-   capability from cap-boundary; it does not rewrite the 17 s results.
+3. **A 60 s diagnostic re-run of the 20 hard-set unlocks**, to separate capability
+   from cap-boundary; it does not rewrite the 17 s results.
 4. If `race5` pays: a sweep preset adding `real:small:spot-guarded-sparse`, then
    the full-corpus gates before any `docker_default` change.
 5. *Optional:* bisect the stacked revisions for which patch fixed §8.
 6. Harness: a caught `std::bad_alloc` is recorded as ERROR with an empty
    `resource_reason`, not MEMOUT; `self-benchmark.sh` does not set
    `PKG_CONFIG_PATH` for a `/usr/local` Spot; `--conflict-policy stop` aborts on
-   status-annotation mismatches as readily as on arm disagreements.
+   status-annotation mismatches as readily as on arm disagreements; and
+   `regression-gate.sh` reports a build's unregistered sentinels as regression
+   failures, which reads as a solver fault rather than a configuration one.
 
 ## 14. Not done, and why
 
