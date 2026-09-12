@@ -677,6 +677,12 @@ namespace acacia::spot_lazy_game {
 #else
       OutputChoice::constant};
 #endif
+  inline constexpr LosingInputSearch default_losing_input_search {
+#if ACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH
+      LosingInputSearch::on};
+#else
+      LosingInputSearch::off};
+#endif
   struct SparseChoice {
       bdd input_region;
       // Present exactly in constant mode, where it must be a total output cube.
@@ -922,7 +928,7 @@ namespace acacia::spot_lazy_game {
     public:
       Search (RowStore& view, letters::WorkerAlphabet alphabet, std::int32_t K, Limits limits = {},
               ChoiceSemantics semantics = default_choice_semantics,
-              LosingInputSearch losing_input_search = LosingInputSearch::off)
+              LosingInputSearch losing_input_search = default_losing_input_search)
         : view_ (view),
           alphabet_ (std::move (alphabet)),
           K_ (K),

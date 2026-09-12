@@ -355,6 +355,12 @@
       "inherits": "otf_sparse_formula",
       "spot_guarded_existential_outputs": true
     },
+    "otf_sparse_losing_input": {
+      "description": "otf_sparse_formula with the sparse guarded unreal worker searching for a losing input before sampling an uncovered input.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula",
+      "spot_guarded_losing_input_search": true
+    },
     "otf_sparse_formula_inequality_covering": {
       "description": "otf_sparse_formula with the guarded unreal worker covering inputs by the <= successor preimage rather than the exact one.",
       "role": "sweep",
