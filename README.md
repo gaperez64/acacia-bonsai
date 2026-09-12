@@ -32,10 +32,9 @@ The CLI example intentionally omits `--rm`: compilation happens inside the
 named container, so removing it on exit would discard the binaries. Re-enter
 it with `docker start -ai acacia`.
 
-The wrappers name no configuration, so they follow the `docker_default` group
-rather than pinning a preset that the group can outgrow. Pass a name as the
-first argument to choose a different shipped configuration, or run a wrapper
-without arguments to list the ones it accepts.
+The wrappers name no configuration and follow the `docker_default` group. Pass
+a name as the first argument to choose a different shipped configuration, or run
+a wrapper without arguments to list the ones it accepts.
 
 # Dependencies
 
@@ -89,62 +88,75 @@ src/acacia-bonsai -f '((G (F (req))) -> (G (F (grant))))' -i req -o grant
 REALIZABLE
 ```
 
-This produces a debug build. Build an optimized registered preset with:
+This produces a debug build. Build an optimized registered configuration with:
 ```
-./self-benchmark.sh -c best_decomp_mona -R
+preset=$(python3 scripts/acacia-config.py list-group docker_default | head -1)
+./self-benchmark.sh -c $preset -R
 ```
 
 The `-c` option selects a configuration and the `-R` option disables the
-benchmarking step, so that only setup and compilation are done. If compilation
-memory is tight, add `-L` to use the low-memory compile profile.
+benchmarking step, so that only setup and compilation are done; the build lands
+in `build_<preset>`. If compilation memory is tight, add `-L` to use the
+low-memory compile profile.
 
 The Meson option `acacia_enable_tlsf_frontend` is off by default, so a bare
 `meson setup build` does not require Flex and Bison. Every configuration preset
 enables the frontend, so any `self-benchmark.sh -c NAME` build includes it:
 ```
-./self-benchmark.sh -L -R -c best_decomp_mona
-build_best_decomp_mona/src/acacia-bonsai -T spec.tlsf
+build_$preset/src/acacia-bonsai -T spec.tlsf
 ```
-`-T/--tlsf FILE` parses TLSF natively. The wrapper accepts TLSF on standard
-input with `--tlsf` through the linked frontend; no external TLSF
-converter or metadata binary is used at runtime. Moore-target controller
-conversion is likewise performed inside Acacia.
+`-T/--tlsf FILE` parses TLSF natively and the wrapper accepts TLSF on standard
+input with `--tlsf`. No external TLSF converter is needed at runtime, and
+Moore-target controller conversion happens inside Acacia.
 
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
-The current comparison with `ltlsynt`, residual gap analysis, and durable experiment record are
-in [benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
+The comparison with `ltlsynt` is in
+[benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
 
 # Compile-time configurations
 
-Some configurations use Spot's on-the-fly paths rather than the frozen
-automaton graph, selected per polarity through `--arms` and gated at build time
-by `-Dacacia_spot_guarded_backend` and `-Dacacia_spot_lazy_provider`. One of
-them is currently shipped. What each provider does, which mixtures were
-measured, which were rejected and why, and the environment overrides that bound
-them are recorded in
+Acacia-Bonsai's optimized variants are compile-time configurations. The registry
+holds the options in `config/acacia-options.json` and the presets that combine
+them in `config/acacia-presets.json`; `scripts/acacia-config.py` validates
+presets and translates them to Meson options, and `meson.build` writes the
+result into `acacia_build_config.hh`.
+
+The options pick data structures and algorithms, for instance:
+
+- `acacia_vector_downset`: the downset representation (`vector_backed`,
+  `rank_bucketed_vector_backed`, `kdtree_backed`, `bboxtree_backed`, sharing
+  trees, and others).
+- `acacia_vector_impl`: the vector type stored in the downset, SIMD or plain
+  (`auto` follows `acacia_no_simd`).
+- `acacia_forward_safety_solver`: use the on-the-fly forward safety-game solver
+  instead of the backward antichain fixed point.
+- `acacia_ios_precomputer`: how input/output letters are precomputed
+  (`standard`, `mona`, `semantic_mona`, ...).
+- `acacia_k_schedule`: how the K loop raises its bound (`linear`, `geometric`,
+  ...), with `acacia_default_k`, `_kmin` and `_kinc` setting its parameters.
+- `acacia_translation_pref`: the Spot translator preference, `small` by default,
+  also `any`, `small+any` and `deterministic`.
+- `acacia_decompose_spec`: decompose the specification before solving.
+- `acacia_enable_equivariant_solver`: compile the exact equivariant solver. It
+  declines to the classic solver when no verified profitable symmetry is
+  available, or when fewer than `acacia_equivariant_min_blocks` client-state
+  blocks are found.
+
+Some configurations take Spot's on-the-fly paths instead of the frozen automaton
+graph, gated by `-Dacacia_spot_guarded_backend` and `-Dacacia_spot_lazy_provider`
+and selected per polarity through `--arms`; the providers are described in
 [benchmarking/OTF-AND-SPOT.md](benchmarking/OTF-AND-SPOT.md).
 
-Acacia-Bonsai's optimized variants are compile-time configurations.  The
-configuration registry lives in `config/acacia-options.json` and
-`config/acacia-presets.json`; `scripts/acacia-config.py` validates presets and
-translates them to Meson options.
-
-Inspect and validate the registry with:
+Inspect the registry with:
 ```
 python3 scripts/acacia-config.py validate
-python3 scripts/acacia-config.py list-presets
-python3 scripts/acacia-config.py list-presets --long
-python3 scripts/acacia-config.py show best_decomp_mona
+python3 scripts/acacia-config.py list-presets              # names only
+python3 scripts/acacia-config.py list-presets --long       # with role and description
+python3 scripts/acacia-config.py show best_decomp_mona     # resolved options
 python3 scripts/acacia-config.py show best_decomp_mona --describe
 python3 scripts/acacia-config.py meson-args best_decomp_mona
 ```
-
-`meson.build` writes these choices into `acacia_build_config.hh`. The Spot
-translator preference is registry-backed as
-`acacia_translation_pref`; the default is `small`. The values `any` and
-`small+any` are available for ablation and racing presets such as
-`best_decomp_mona_any` and `best_decomp_mona_race`.
 
 The configurations we ship are whichever ones the `docker_default` group names:
 
@@ -152,34 +164,19 @@ The configurations we ship are whichever ones the `docker_default` group names:
 python3 scripts/acacia-config.py list-group docker_default
 ```
 
-That group is the pointer, and it is repointed when the measurements say so --
-the Docker image, the TLSF examples above and CI all read it rather than naming
-a preset. A preset name is a historical label, not a claim about which
-configuration is currently best. The `best` in existing names was accurate when
-those presets were chosen and silently stopped being so; that is why the group
-is the pointer and the name is not. `scripts/acacia-config.py list-presets --long`
-lists each preset's role and purpose. `scripts/acacia-config.py show <preset>`
-reports its complete resolved options; add `--describe` to include role and
-description as siblings of the options object. Plain `show` remains the build
-staleness fingerprint, and plain `list-presets` prints only names for scripts.
-`best_decomp_mona` is the plain vector-backed downset configuration, kept as
-the reference point for downset comparisons.
+The Docker images, the TLSF examples above and CI all read that group. A preset
+name is a historical label, not a claim about which configuration is currently
+best.
 
-Every shipped configuration enables the exact equivariant solver. It automatically
-declines to the classic solver when no verified profitable symmetry is
-available, or when fewer than `acacia_equivariant_min_blocks` client-state
-blocks are found (default 2). Use `best_decomp_rank_bucketed_mona_noequivariant`
-for the explicit classic-only escape hatch and performance ablation. New
-presets should inherit from the nearest existing configuration and override
-only the values being tested. Each preset declares a one-line `description` and
-a `role`: `shipping` exactly for `docker_default` members, `reference` for
-measurement controls, `sweep` for comparison arms, `diagnostic` for instrumented
-builds, or `legacy` for historical configurations. Metadata does not affect
-resolved options or configuration hashes. New names are limited to 40 characters
-and cannot contain the token `best`; all existing names are grandfathered and
-remain unchanged. The registry's currently empty `aliases` map can map an old
-name directly to a current preset after a future rename; lookup reports the
-alias on stderr and resolves to the current preset's options and hash.
+Each preset declares a `role`: `shipping` for `docker_default` members,
+`reference` for measurement controls, `sweep` for comparison arms, `diagnostic`
+for instrumented builds, `legacy` for historical configurations.
+`best_decomp_mona` is the plain vector-backed downset configuration, kept as the
+reference point for downset comparisons, and
+`best_decomp_rank_bucketed_mona_noequivariant` is the classic-solver-only
+ablation. A new preset inherits from the nearest existing configuration and
+overrides only the values being tested; new names are limited to 40 characters
+and cannot contain `best`, while existing names are grandfathered.
 
 # Documentation
 
