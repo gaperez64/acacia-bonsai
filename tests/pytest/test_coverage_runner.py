@@ -130,10 +130,15 @@ def campaign(tmp_path):
     (tmp_path / "case.tlsf").write_text("//STATUS: realizable\n")
     (tmp_path / "list").write_text("case.ltl\n")
     (tmp_path / "map").write_text("instance\ttlsf\ncase.ltl\tcase.tlsf\n")
+    # An empty table rather than a path to nothing: this fixture wants "no
+    # corrections", and a named file that does not exist now says the caller
+    # misconfigured the run.
+    write_status_exceptions(tmp_path / "exceptions.tsv", [])
     return coverage.build_parser().parse_args([
         "--bin", str(binary), "--solver-label", "candidate",
         "--list", str(tmp_path / "list"), "--tlsf-map", str(tmp_path / "map"),
-        "--tlsf-corpus", str(tmp_path), "--status-exceptions", str(tmp_path / "absent"),
+        "--tlsf-corpus", str(tmp_path),
+        "--status-exceptions", str(tmp_path / "exceptions.tsv"),
         "--caps", "17", "--memory-max", "8G", "--memory-swap-max", "0",
         "--output", str(tmp_path / "out.tsv"), "--acacia-sha", "frozen-sha",
         "--preset", "test-preset", "--collect-rusage",
@@ -222,3 +227,24 @@ def test_resume_rejects_rebuilt_binary_and_censored_usage_stays_absent(monkeypat
     campaign.resume = True
     with pytest.raises(coverage.CoverageError, match="differs"):
         coverage.run(campaign)
+
+
+def test_named_status_exceptions_must_exist(tmp_path):
+    # The failure this prevents is expensive and looks like something else: an
+    # empty table makes every adjudicated wrong //STATUS read as a fresh verdict
+    # conflict, which under the default policy aborts the run, which looks like
+    # a soundness bug in the solver.
+    with pytest.raises(coverage.CoverageError, match="does not exist"):
+        coverage.read_status_exceptions(
+            tmp_path / "absent.tsv", tmp_path, required=True)
+
+
+def test_absent_default_status_exceptions_warns_but_proceeds(tmp_path, capsys):
+    assert coverage.read_status_exceptions(tmp_path / "absent.tsv", tmp_path) == {}
+    assert "WARNING" in capsys.readouterr().err
+
+
+def test_empty_status_exceptions_table_is_not_an_error(tmp_path):
+    write_status_exceptions(tmp_path / "exceptions.tsv", [])
+    assert coverage.read_status_exceptions(
+        tmp_path / "exceptions.tsv", tmp_path, required=True) == {}
