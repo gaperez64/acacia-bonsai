@@ -636,16 +636,57 @@ namespace acacia::spot_lazy_game {
   using solver_detail::forward_result_status;
   using solver_detail::losing_reason;
   // P4 OTFUR and verifier specialization: same queue order, loss propagation,
-  // exact guarded choices, proof chronology and inductive certificate checks.
+  // guarded choices, proof chronology and inductive certificate checks.
   using guarded::ChoiceRef;
-  using guarded::GuardedChoice;
   using guarded::RankNodeId;
   using guarded::RowIdentity;
+  enum class SuccessorRelation { exact, downward };
+  enum class OutputChoice { constant, existential };
+  struct ChoiceSemantics {
+      SuccessorRelation successor_relation;
+      OutputChoice output_choice;
+      bool operator== (const ChoiceSemantics&) const = default;
+      bool valid () const {
+        return (successor_relation == SuccessorRelation::exact ||
+                successor_relation == SuccessorRelation::downward) &&
+               (output_choice == OutputChoice::constant ||
+                output_choice == OutputChoice::existential);
+      }
+  };
+  // Preserve the existing build's default; either dimension can independently
+  // be overridden by internal callers in the same binary.
+  inline constexpr ChoiceSemantics default_choice_semantics {
+#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
+      SuccessorRelation::downward,
+#else
+      SuccessorRelation::exact,
+#endif
+      OutputChoice::constant};
+  struct SparseChoice {
+      bdd input_region;
+      // Present exactly in constant mode, where it must be a total output cube.
+      // Existential choices store no output witness or cached projection.
+      std::optional<bdd> constant_output;
+      RankNodeId successor;
+      bool active = true;
+
+      static SparseChoice constant (bdd region, bdd output, RankNodeId target) {
+        return SparseChoice (region, output, target);
+      }
+      static SparseChoice existential (bdd region, RankNodeId target) {
+        return SparseChoice (region, std::nullopt, target);
+      }
+
+    private:
+      // Named factories prevent old aggregate initializers changing meaning.
+      SparseChoice (bdd region, std::optional<bdd> output, RankNodeId target)
+        : input_region (region), constant_output (output), successor (target) {}
+  };
   struct GuardedRankNode {
       Rank rank;
       bool active_rows_complete = false;
       bool losing = false;
-      std::vector<GuardedChoice> choices;
+      std::vector<SparseChoice> choices;
       bdd covered_inputs = bddfalse;
       std::vector<ChoiceRef> incoming;
       bool queued = false;
@@ -662,6 +703,7 @@ namespace acacia::spot_lazy_game {
       // Certificates contain BDD guards; retain their AP registrations until
       // after every guard is destroyed (members are destroyed in reverse).
       spot::const_twa_ptr provider;
+      ChoiceSemantics semantics = default_choice_semantics;
       forward_result_status status = forward_result_status::unknown;
       Unknown failure = Unknown::none;
       RankNodeId initial = 0;
@@ -692,6 +734,14 @@ namespace acacia::spot_lazy_game {
     using guarded::detail::require;
     using guarded::detail::row_ok;
     using guarded::detail::take;
+    inline void validate_semantics (const SolveResult& certificate, ChoiceSemantics requested) {
+      require (requested.valid () && certificate.semantics.valid () &&
+               certificate.semantics == requested);
+      for (const auto& node : certificate.nodes)
+        for (const auto& choice : node.choices)
+          require (choice.constant_output.has_value () ==
+                   (certificate.semantics.output_choice == OutputChoice::constant));
+    }
     inline std::vector<RowIdentity> complete_rows (Reader& rows, Oracle& oracle,
                                                    const Rank& rank) {
       return take (oracle.query<std::vector<RowIdentity>> ([&] (auto& b) {
@@ -713,8 +763,10 @@ namespace acacia::spot_lazy_game {
   // themselves. The verifier may generate additional active provider rows.
   inline letters::Result<std::vector<Rank>> verify_winning_certificate (
       RowStore& view, const letters::WorkerAlphabet& alphabet, std::int32_t K,
-      const SolveResult& certificate, const Limits& limits = {}) {
+      const SolveResult& certificate, const Limits& limits = {},
+      ChoiceSemantics requested = default_choice_semantics) {
     return detail::checked<std::vector<Rank>> ([&] {
+      detail::validate_semantics (certificate, requested);
       auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
       Oracle oracle {*rows, view, alphabet, K};
       MetricReport metrics {oracle, view.report, "verify_"};
@@ -745,20 +797,20 @@ namespace acacia::spot_lazy_game {
           detail::require (not target.losing && rows->is_safe (target.rank, K));
           // Rebuilt here from the fresh Reader and Oracle above, never taken
           // from the search: a choice that claims too much input space must
-          // fail this, which is the whole point of recomputing it. The gate
-          // matches expand()'s, so a flag-off binary verifies the exact
-          // obligation it searched under.
-#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
-          const bdd reaches = detail::take (oracle.down (node.rank, target.rank));
-#else
-          const bdd reaches = detail::take (oracle.eq (node.rank, target.rank));
-#endif
-          const bdd exact =
-              detail::take (oracle.restrict_total (reaches, choice.output, Variables::outputs));
+          // fail this. The validated certificate tag selects the obligation.
+          const bdd reaches = detail::take (
+              certificate.semantics.successor_relation == SuccessorRelation::downward
+                  ? oracle.down (node.rank, target.rank) : oracle.eq (node.rank, target.rank));
+          const bdd projection = detail::take (
+              certificate.semantics.output_choice == OutputChoice::constant
+                  ? oracle.restrict_total (reaches, *choice.constant_output, Variables::outputs)
+                  : oracle.query<bdd> ([&] (auto& b) {
+                      return b.exists (reaches, b.vars (Variables::outputs));
+                    }));
           covered = detail::take (oracle.query<bdd> ([&] (auto& b) {
             b.require_support (choice.input_region, alphabet.inputs);
             detail::require (b.satisfiable (choice.input_region));
-            detail::require (b.land (choice.input_region, b.negate (exact)) == bddfalse);
+            detail::require (b.land (choice.input_region, b.negate (projection)) == bddfalse);
             return b.lor (covered, choice.input_region);
           }));
           todo.push_back (choice.successor);
@@ -791,11 +843,12 @@ namespace acacia::spot_lazy_game {
     });
   }
 
-  inline letters::Result<bool> verify_losing_proof (RowStore& view,
-                                                    const letters::WorkerAlphabet& alphabet,
-                                                    std::int32_t K, const SolveResult& certificate,
-                                                    const Limits& limits = {}) {
+  inline letters::Result<bool> verify_losing_proof (
+      RowStore& view, const letters::WorkerAlphabet& alphabet, std::int32_t K,
+      const SolveResult& certificate, const Limits& limits = {},
+      ChoiceSemantics requested = default_choice_semantics) {
     return detail::checked<bool> ([&] {
+      detail::validate_semantics (certificate, requested);
       auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
       Oracle oracle {*rows, view, alphabet, K};
       MetricReport metrics {oracle, view.report, "verify_"};
@@ -852,14 +905,17 @@ namespace acacia::spot_lazy_game {
 
   class Search {
     public:
-      Search (RowStore& view, letters::WorkerAlphabet alphabet, std::int32_t K, Limits limits = {})
+      Search (RowStore& view, letters::WorkerAlphabet alphabet, std::int32_t K, Limits limits = {},
+              ChoiceSemantics semantics = default_choice_semantics)
         : view_ (view),
           alphabet_ (std::move (alphabet)),
           K_ (K),
           limits_ (limits),
+          semantics_ (semantics),
           rows_ (std::make_shared<Reader> (view_, false, limits.rows)),
           oracle_ (*rows_, view_, alphabet_, K) {
         result_.provider = view_.provider;
+        result_.semantics = semantics_;
         oracle_.set_limits (limits_.queries);
       }
       ~Search () {
@@ -907,6 +963,7 @@ namespace acacia::spot_lazy_game {
         MetricReport metrics {oracle_, view_.report, "search_"};
         const auto started = std::chrono::steady_clock::now ();
         const auto search = detail::checked<bool> ([&] {
+          detail::require (semantics_.valid ());
           result_.initial = intern (rows_->initial_rank ());
           for (;;) {
             propagate_losses ();
@@ -941,13 +998,13 @@ namespace acacia::spot_lazy_game {
         view_.report.ms ("stage_started_clock_ms", clock_ms ());
         const auto verifying = std::chrono::steady_clock::now ();
         if (result_.nodes[result_.initial].losing) {
-          const auto verified = verify_losing_proof (view_, alphabet_, K_, result_, limits_);
+          const auto verified = verify_losing_proof (view_, alphabet_, K_, result_, limits_, semantics_);
           result_.status = verified.value && *verified.value ? forward_result_status::lose_k
                                                              : forward_result_status::unknown;
           result_.failure = verified.unknown;
         }
         else {
-          auto verified = verify_winning_certificate (view_, alphabet_, K_, result_, limits_);
+          auto verified = verify_winning_certificate (view_, alphabet_, K_, result_, limits_, semantics_);
           if (verified.value) {
             result_.generators = std::move (*verified.value);
             result_.status = forward_result_status::win_k;
@@ -967,6 +1024,7 @@ namespace acacia::spot_lazy_game {
       letters::WorkerAlphabet alphabet_;
       std::int32_t K_;
       Limits limits_;
+      const ChoiceSemantics semantics_;
       std::shared_ptr<Reader> rows_;
       Oracle oracle_;
       SolveResult result_;
@@ -1126,14 +1184,20 @@ namespace acacia::spot_lazy_game {
         // below it" lets one choice claim more of the missing input space. The
         // successor itself is unchanged, so the target is still a rank the
         // search reached and verified, not a synthesized upper bound.
-#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
-        const bdd reaches = detail::take (oracle_.down (rank, successor));
-#else
-        const bdd reaches = detail::take (oracle_.eq (rank, successor));
-#endif
-        const bdd exact = detail::take (oracle_.restrict_total (reaches, *output, Variables::outputs));
+        const bdd reaches = detail::take (semantics_.successor_relation == SuccessorRelation::downward
+                                             ? oracle_.down (rank, successor)
+                                             : oracle_.eq (rank, successor));
+        // The sampled total output selected the target. Existential covering
+        // may use a different output at each input while retaining that target;
+        // quantify only the worker outputs, inside the checked query scope.
+        const bdd projection = detail::take (
+            semantics_.output_choice == OutputChoice::constant
+                ? oracle_.restrict_total (reaches, *output, Variables::outputs)
+                : oracle_.query<bdd> ([&] (auto& b) {
+                    return b.exists (reaches, b.vars (Variables::outputs));
+                  }));
         const bdd region = detail::take (oracle_.query<bdd> ([&] (auto& b) {
-          const bdd C = b.land (missing, exact);
+          const bdd C = b.land (missing, projection);
           b.require_support (C, alphabet_.inputs);
           detail::require (b.restrict_total (C, *input, Variables::inputs) == bddtrue);
           // Real runtime checks: every choice adds a previously uncovered input.
@@ -1147,7 +1211,9 @@ namespace acacia::spot_lazy_game {
         detail::require (not result_.nodes[sid].losing);
         auto& source = result_.nodes[id];
         const auto choice_id = source.choices.size ();
-        source.choices.push_back ({region, *output, sid, true});
+        source.choices.push_back (semantics_.output_choice == OutputChoice::constant
+                                     ? SparseChoice::constant (region, *output, sid)
+                                     : SparseChoice::existential (region, sid));
         result_.nodes[sid].incoming.push_back ({id, choice_id});
         ++result_.choices_created;
         source.covered_inputs = detail::take (
