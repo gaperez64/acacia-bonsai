@@ -1,0 +1,181 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+real-small-spot-guarded	Alarm_2d1010f8.ltl	1	REALIZABLE	0.027182883000932634	false		17
+real-small-spot-guarded	CheckAlarm_6bea956e.ltl				true	UNKNOWN	17
+real-small-spot-guarded	CheckCoffeMachineBroken1_a5f99bc6.ltl	1	REALIZABLE	0.03657332499278709	false		17
+real-small-spot-guarded	CheckCoffeMachine_3461125b.ltl				true	UNKNOWN	17
+real-small-spot-guarded	CheckShades_1a2942e3.ltl				true	UNKNOWN	17
+real-small-spot-guarded	CheckTimer_54e1f7d2.ltl				true	UNKNOWN	17
+real-small-spot-guarded	Core_fa4d4ce3.ltl				true	TIMEOUT	17
+real-small-spot-guarded	EscalatorSmart.ltl	1	REALIZABLE	0.03806046297540888	false		17
+real-small-spot-guarded	FelixSpecFixed2.2.core_fa8592c8.ltl				true	TIMEOUT	17
+real-small-spot-guarded	OneCounterInRangeA2.ltl				true	UNKNOWN	17
+real-small-spot-guarded	SPIReadSdi.ltl	1	REALIZABLE	0.036118666001129895	false		17
+real-small-spot-guarded	Sensor.ltl	5	REALIZABLE	1.3412367589771748	false		17
+real-small-spot-guarded	Window2Min_88c5c1c3.ltl	1	REALIZABLE	0.015135900001041591	false		17
+real-small-spot-guarded	WindowMin_a5f99bc6.ltl	1	REALIZABLE	0.015361111029051244	false		17
+real-small-spot-guarded	abcg_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.1433028369792737	false		17
+real-small-spot-guarded	amba_decomposed_encode_pb_4_pe_.ltl	1	REALIZABLE	0.03220377501565963	false		17
+real-small-spot-guarded	amba_decomposed_lock_pb_3_pe_.ltl	1	REALIZABLE	0.0350492270081304	false		17
+real-small-spot-guarded	amba_decomposed_shift.ltl	1	REALIZABLE	0.02951432898407802	false		17
+real-small-spot-guarded	arbiter-paper-unreal-unreal.ltl				true	UNKNOWN	17
+real-small-spot-guarded	arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.022157497995067388	false		17
+real-small-spot-guarded	arbiter_with_cancel_pb_1_pe_.ltl	1	REALIZABLE	0.031468687986489385	false		17
+real-small-spot-guarded	chomp_pb_2_2_pe_.ltl	1	REALIZABLE	0.10046601301291957	false		17
+real-small-spot-guarded	full_arbiter_unreal1_pb_3_2_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	lift_pb_2_pe_.ltl	1	REALIZABLE	0.04590561299119145	false		17
+real-small-spot-guarded	lift_wrong_physics_unreal_pb_5_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	lilydemo04_modified.ltl				true	UNKNOWN	17
+real-small-spot-guarded	load_balancer_unreal1_pb_2_2_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	load_balancer_unreal1_pb_2_8_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	load_balancer_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	load_balancer_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	ltl2dba11.ltl	1	REALIZABLE	0.02000664098886773	false		17
+real-small-spot-guarded	ltl2dba_R_pb_1_pe_.ltl	1	REALIZABLE	0.03119333495851606	false		17
+real-small-spot-guarded	ltl2dba_R_pb_5_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	ltl2dba_theta_pb_7_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	narylatch_pb_11_pe_.ltl	1	REALIZABLE	0.025034047954250127	false		17
+real-small-spot-guarded	narylatch_pb_16_pe_.ltl	1	REALIZABLE	0.02215497603174299	false		17
+real-small-spot-guarded	narylatch_pb_32_pe_.ltl	1	REALIZABLE	0.0227066469960846	false		17
+real-small-spot-guarded	precise-reachability-real.ltl	1	REALIZABLE	0.1074110419722274	false		17
+real-small-spot-guarded	prioritized_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	1	REALIZABLE	0.04191805003210902	false		17
+real-small-spot-guarded	F-G-contradiction-15.ltl				true	TIMEOUT	17
+real-small-spot-guarded	FelixSpecFixed3.core_b209ff21.ltl				true	TIMEOUT	17
+real-small-spot-guarded	GF-G-contradiction2.ltl				true	TIMEOUT	17
+real-small-spot-guarded	KitchenTimerV9.ltl	1	REALIZABLE	0.12091250298544765	false		17
+real-small-spot-guarded	Lights2_b02056d6.ltl	1	REALIZABLE	0.21002843702444807	false		17
+real-small-spot-guarded	LightsTotal_2c5b09da.ltl				true	TIMEOUT	17
+real-small-spot-guarded	MorningMin_d6c5ac79.ltl	1	REALIZABLE	0.040667574969120324	false		17
+real-small-spot-guarded	OneCounter.ltl	5	REALIZABLE	2.176635832991451	false		17
+real-small-spot-guarded	OneCounterGuiA5.ltl				true	UNKNOWN	17
+real-small-spot-guarded	SingleContoller_d65ed84e.ltl				true	TIMEOUT	17
+real-small-spot-guarded	TwoCounters3.ltl	1	REALIZABLE	0.8661414650268853	false		17
+real-small-spot-guarded	TwoCountersDisButA5.ltl				true	UNKNOWN	17
+real-small-spot-guarded	TwoCountersGui.ltl				true	UNKNOWN	17
+real-small-spot-guarded	amba_decomposed_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	amba_decomposed_encode_pb_16_pe_.ltl	1	REALIZABLE	0.48280534998048097	false		17
+real-small-spot-guarded	amba_decomposed_lock_pb_11_pe_.ltl	1	REALIZABLE	0.9831539900042117	false		17
+real-small-spot-guarded	amba_decomposed_lock_pb_12_pe_.ltl	5	REALIZABLE	3.759834650962148	false		17
+real-small-spot-guarded	amba_decomposed_lock_pb_13_pe_.ltl	17	REALIZABLE	13.069005683995783	false	REALIZABLE	17
+real-small-spot-guarded	arbiter_pb_5_pe_.ltl	17	REALIZABLE	11.586953915015329	false	REALIZABLE	17
+real-small-spot-guarded	arbiter_with_buffer_pb_4_pe_.ltl	1	REALIZABLE	0.07106886402470991	false		17
+real-small-spot-guarded	chain-simple-30-real.ltl	1	REALIZABLE	0.7373502690461464	false		17
+real-small-spot-guarded	chain-simple-50-real.ltl	5	REALIZABLE	1.7702473209938034	false		17
+real-small-spot-guarded	chomp_pb_3_2_pe_.ltl	5	REALIZABLE	3.0693339519784786	false		17
+real-small-spot-guarded	collector_v2_pb_12_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	full_arbiter_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	g-real0.ltl				true	TIMEOUT	17
+real-small-spot-guarded	g-unreal-18.ltl				true	UNKNOWN	17
+real-small-spot-guarded	gf-unreal20.ltl				true	UNKNOWN	17
+real-small-spot-guarded	heim-double-x1.ltl				true	UNKNOWN	17
+real-small-spot-guarded	infinite-race-u3.ltl				true	TIMEOUT	17
+real-small-spot-guarded	infinite-race-unequal-22.ltl				true	TIMEOUT	17
+real-small-spot-guarded	lift_wrong_physics_unreal_pb_10_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	lift_wrong_physics_unreal_pb_9_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	load_balancer_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	load_balancer_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	load_balancer_unreal1_pb_2_16_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	load_balancer_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	load_balancer_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	load_balancer_unreal1_pb_5_4_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	load_balancer_unreal1_pb_6_3_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	ltl2dba_C2_unreal_pb_12_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	ltl2dba_E_pb_7_pe_.ltl	1	REALIZABLE	0.0281909920158796	false		17
+real-small-spot-guarded	ltl2dba_R_pb_6_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	ltl2dba_U1_pb_8_pe_.ltl	1	REALIZABLE	0.021320889005437493	false		17
+real-small-spot-guarded	ltl2dba_theta_pb_12_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	mux_pb_16_pe_.ltl	1	REALIZABLE	0.028410304978024215	false		17
+real-small-spot-guarded	patrolling-alarm7.ltl				true	TIMEOUT	17
+real-small-spot-guarded	patrolling11.ltl				true	TIMEOUT	17
+real-small-spot-guarded	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	reversible-lane-u0.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot-cat-unreal-1d-unreal.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot-grid-commute-1d-real.ltl	5	REALIZABLE	1.4150391580187716	false		17
+real-small-spot-guarded	robot-grid-reach-2d-real.ltl	5	REALIZABLE	2.474295235995669	false		17
+real-small-spot-guarded	robot-resource-1d1.ltl				true	UNKNOWN	17
+real-small-spot-guarded	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_4_4_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_5_2_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_5_3_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_6_1_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_6_2_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal2_pb_4_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	sort40.ltl				true	TIMEOUT	17
+real-small-spot-guarded	taxi-service-u-unreal.ltl				true	TIMEOUT	17
+real-small-spot-guarded	workstation_resupply_pb_2_pe_.ltl	5	REALIZABLE	2.1564867809647694	false		17
+real-small-spot-guarded	F-G-contradiction-111.ltl				true	TIMEOUT	17
+real-small-spot-guarded	IntendDemo_42dc4fff.ltl				true	TIMEOUT	17
+real-small-spot-guarded	Light_a50cadd7.ltl				true	UNKNOWN	17
+real-small-spot-guarded	TwoCountersDisButA9.ltl				true	UNKNOWN	17
+real-small-spot-guarded	UnderapproxDemo2.ltl				true	UNKNOWN	17
+real-small-spot-guarded	Warnlight_a50cadd7.ltl				true	UNKNOWN	17
+real-small-spot-guarded	arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	box-real.ltl	1	REALIZABLE	0.05037535500014201	false		17
+real-small-spot-guarded	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	evasion-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	evasion0.ltl				true	TIMEOUT	17
+real-small-spot-guarded	g-unreal-1-unreal.ltl				true	TIMEOUT	17
+real-small-spot-guarded	g-unreal-113.ltl				true	UNKNOWN	17
+real-small-spot-guarded	gf-unreal46.ltl				true	UNKNOWN	17
+real-small-spot-guarded	heim-double-x-real.ltl	1	REALIZABLE	0.34919734904542565	false		17
+real-small-spot-guarded	helipad-contradict0.ltl				true	TIMEOUT	17
+real-small-spot-guarded	helipad-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	lift_pb_6_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	load_balancer_unreal2_pb_5_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	ltl2dba_E_pb_9_pe_.ltl	1	REALIZABLE	0.021086574997752905	false		17
+real-small-spot-guarded	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	mux_pb_200_pe_.ltl	1	REALIZABLE	0.04055560001870617	false		17
+real-small-spot-guarded	package-delivery-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	patrolling-alarm21.ltl				true	TIMEOUT	17
+real-small-spot-guarded	patrolling15.ltl				true	TIMEOUT	17
+real-small-spot-guarded	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	reversible-lane-u-unreal.ltl				true	TIMEOUT	17
+real-small-spot-guarded	reversible-lane-u1.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot-resource-1d-unreal.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot-to-target-charging-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot-to-target-charging6.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot_repair2.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot_running-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	scheduler-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_16_1_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_3_11_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_3_9_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_4_12_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_4_7_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_5_4_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_5_5_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_5_6_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_5_9_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_6_3_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal1_pb_8_8_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal2_pb_25_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal2_pb_75_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	simple_arbiter_unreal2_pb_8_pe_.ltl				true	UNKNOWN	17
+real-small-spot-guarded	square5x5-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	tasks-unreal1.ltl				true	TIMEOUT	17
+real-small-spot-guarded	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+real-small-spot-guarded	tmp_13cfc6f2.ltl	1	REALIZABLE	0.647198009013664	false		17
+real-small-spot-guarded	unordered-visits-charging0.ltl				true	TIMEOUT	17
+real-small-spot-guarded	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	Full_f1477cc5.ltl				true	TIMEOUT	17
+real-small-spot-guarded	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	reversible-lane-r-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot-cat-real-2d-real.ltl				true	TIMEOUT	17
+real-small-spot-guarded	robot_repair5.ltl				true	TIMEOUT	17
+real-small-spot-guarded	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+real-small-spot-guarded	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	17

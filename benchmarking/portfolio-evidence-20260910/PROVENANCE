@@ -1,0 +1,56 @@
+question:  Does any arm, alone or in a portfolio, reach instances the shipping
+           otf_sparse_formula configuration does not -- and how much of what the
+           arms reach alone survives racing them under one fixed budget?
+           Written up in benchmarking/ADAPTIVE-PORTFOLIO-OTFUR-SPRINT.md, sections 6-9.
+
+acacia:    b6da274fa4468cf6b1dd82bd3ae0d8aa8cdb5fb2 (the sprint's patch stack on 3fb9f113)
+           preset otf_sparse_formula, self-benchmark.sh -R (release profile: -O3, LTO,
+           acacia_compiler_profile=release, so -Ofast -march=native -- not portable)
+           binary sha256 5451c91e2a133ac5a51ceb7294d3892e923a58727a2a7e49477e1376ca4c5f73
+baseline:  3fb9f113d3c47294ae3527092850b90f59ec0635, same preset and profile
+           binary sha256 2d5707332ec4ff2e1347598825f84e6ef56c350a1c52b4edc50a76496719ade4
+           used for the infinite-race-u10 A/B (report section 8); kept built for G3
+posets:    139e143
+spot:      2.15.1.dev
+
+harness:   a pinned copy of benchmarking/run-syntcomp26-coverage.py and benchlib.py taken
+           from 00a066ae, run from outside the work tree so that a branch switch could not
+           change it mid-campaign
+             run-syntcomp26-coverage.py  94ae42592693d98094c664613722bb8e98c5b14d4f405d004852fdee80350ecf
+             benchlib.py                 999a35829a81f4a5176515ec27253dbfa77188cf0e2f3e4f128db4053e9ca4fb
+           passed explicitly, because from a pinned copy both would resolve wrongly:
+             --status-exceptions benchmarking/syntcomp26-status-exceptions.tsv
+             --acacia-sha b6da274fa4468cf6b1dd82bd3ae0d8aa8cdb5fb2
+           every arm ran with --candidate-mode only
+
+corpus:    tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv over the materialized flat
+           TLSF corpus (1,586 files)
+
+host:      11th Gen Core i7-11850H, 8 cores / 16 threads, 15 GB, zram swap ~7 GB in use.
+           Little headroom above the 8 GiB cap: trust MEMOUT rows less than timeouts.
+
+panel-census/   22 arms (arms.list), each alone, over
+                tests/suites/benchmarks/syntcomp26/panel.list (180 instances).
+                Staged caps 1,5,17; read at cap <= 17 through smallest_cap_solved.
+                8 GiB MemoryMax, zero swap, one invocation at a time, no CPU limit.
+                2026-09-10 13:07 to 2026-09-11 01:32.
+
+hard-set/       10 arms (arms.list), each alone, over instances.list: the 353 of 1,524
+                that otf_sparse_formula leaves undecided in the closing threeway campaign,
+                _bm-logs.spot-otf-20260907/full-closing/otf_sparse_formula-summary.tsv
+                (1,171 decided at a uniform 17 s).
+                Uniform 17 s cap, 8 GiB, zero swap, one invocation at a time, no CPU limit.
+                2026-09-11 01:33 to 19:12. Arm 4 (unreal:formula:backward) was interrupted
+                by a session restart after 22 instances and resumed with --resume; rows are
+                fsynced per instance, so the one in flight was simply re-run.
+
+race-curve/     One race invocation per instance per config (configs.list) over
+                instances.list: the panel plus the hard set, 494 after an overlap of 39.
+                Uniform 17 s, 8 GiB for the whole race, zero swap, CPUQuota=400%.
+                AllowedCPUs was tried first and is silently ignored here, because the user
+                manager is not delegated cpuset; that attempt ran a few minutes unpinned and
+                is kept as _bm-logs.20260911-race-curve-UNPINNED-partial, not evidence.
+                Summaries are added here when the run completes.
+
+not here:  the raw per-run TSVs, which stay in the gitignored _bm-logs.20260910-arm-census,
+           _bm-logs.20260910-unlocked-coverage and _bm-logs.20260911-race-curve.

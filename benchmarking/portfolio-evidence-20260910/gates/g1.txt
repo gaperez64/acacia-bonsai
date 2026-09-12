@@ -1,0 +1,6 @@
+verified 40 frozen regression rows
+baseline: total=40 solved=40 timeout=0 unknown=0 error=0 PAR-2=101.867s
+candidate: total=40 solved=40 timeout=0 unknown=0 error=0 PAR-2=39.747s
+verdict changes: 0
+coverage losses: 0
+GATE PASS

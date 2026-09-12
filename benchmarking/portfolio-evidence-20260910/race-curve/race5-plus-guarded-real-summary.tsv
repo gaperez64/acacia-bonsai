@@ -1,0 +1,495 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+race5-plus-guarded-real	06.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	07.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	08.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Alarm_2d1010f8.ltl	17	REALIZABLE	0.022366079036146402	false	REALIZABLE	17
+race5-plus-guarded-real	Alarm_a5f99bc6.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Automata16S.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Automata32S.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	CheckAlarm_6bea956e.ltl	17	UNREALIZABLE	0.030293190968222916	false	UNREALIZABLE	17
+race5-plus-guarded-real	CheckCoffeMachineBroken1_a5f99bc6.ltl	17	REALIZABLE	0.029063592024613172	false	REALIZABLE	17
+race5-plus-guarded-real	CheckCoffeMachine_3461125b.ltl	17	UNREALIZABLE	0.0343939820304513	false	UNREALIZABLE	17
+race5-plus-guarded-real	CheckShades_1a2942e3.ltl	17	UNREALIZABLE	0.03495004604337737	false	UNREALIZABLE	17
+race5-plus-guarded-real	CheckTimer_54e1f7d2.ltl	17	UNREALIZABLE	0.03230100398650393	false	UNREALIZABLE	17
+race5-plus-guarded-real	Core_fa4d4ce3.ltl	17	UNREALIZABLE	0.05022125301184133	false	UNREALIZABLE	17
+race5-plus-guarded-real	Demo1_06e9cad4.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Demo1_2c5b09da.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Demo1_63831f8c.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Demo1_c2b9e44d.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Demo1_d65ed84e.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	EscalatorSmart.ltl	17	REALIZABLE	0.044744355021975935	false	REALIZABLE	17
+race5-plus-guarded-real	F-G-contradiction-110.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	F-G-contradiction-111.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	F-G-contradiction-112.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	F-G-contradiction-113.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	F-G-contradiction-114.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	F-G-contradiction-15.ltl	17	UNREALIZABLE	0.38788145704893395	false	UNREALIZABLE	17
+race5-plus-guarded-real	FelixSpecFixed2.2.core_fa8592c8.ltl	17	UNREALIZABLE	0.028667406004387885	false	UNREALIZABLE	17
+race5-plus-guarded-real	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	FelixSpecFixed3.core_b209ff21.ltl	17	UNREALIZABLE	0.059420117002446204	false	UNREALIZABLE	17
+race5-plus-guarded-real	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Full_f1477cc5.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	GF-G-contradiction2.ltl	17	UNREALIZABLE	0.27153564599575475	false	UNREALIZABLE	17
+race5-plus-guarded-real	GF-G-contradiction6.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	GF-G-contradiction7.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	IntendDemo_42dc4fff.ltl	17	UNREALIZABLE	0.061756502953357995	false	UNREALIZABLE	17
+race5-plus-guarded-real	KitchenTimerV9.ltl	17	REALIZABLE	0.13887554197572172	false	REALIZABLE	17
+race5-plus-guarded-real	LedMatrix.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Light_a50cadd7.ltl	17	UNREALIZABLE	0.03058139100903645	false	UNREALIZABLE	17
+race5-plus-guarded-real	Lights2_b02056d6.ltl	17	REALIZABLE	0.21852544700959697	false	REALIZABLE	17
+race5-plus-guarded-real	LightsTotal_2c5b09da.ltl	17	UNREALIZABLE	0.062161501962691545	false	UNREALIZABLE	17
+race5-plus-guarded-real	Morning2_06e9cad4.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2_2c5b09da.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2_407db2cc.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2_63831f8c.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2_68c86764.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2_d65ed84e.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2s_06cf2373.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2s_06e9cad4.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2s_2c5b09da.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2s_42dc4fff.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2s_9cbf2546.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning2s_d6c5ac79.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	MorningMin_d6c5ac79.ltl	17	REALIZABLE	0.03214249899610877	false	REALIZABLE	17
+race5-plus-guarded-real	Morning_88c5c1c3.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	Morning_9cac58d3.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	OneCounter.ltl	17	REALIZABLE	3.8475872200215235	false	REALIZABLE	17
+race5-plus-guarded-real	OneCounterGuiA5.ltl	17	UNREALIZABLE	0.11011465598130599	false	UNREALIZABLE	17
+race5-plus-guarded-real	OneCounterInRangeA2.ltl	17	UNREALIZABLE	0.021266963973175734	false	UNREALIZABLE	17
+race5-plus-guarded-real	SPIPureNext.ltl	17	REALIZABLE	0.64055253501283	false	REALIZABLE	17
+race5-plus-guarded-real	SPIReadSdi.ltl	17	REALIZABLE	0.031105778005439788	false	REALIZABLE	17
+race5-plus-guarded-real	Sensor.ltl	17	REALIZABLE	0.16622885095421225	false	REALIZABLE	17
+race5-plus-guarded-real	SingleContoller_d65ed84e.ltl	17	UNREALIZABLE	0.03317075397353619	false	UNREALIZABLE	17
+race5-plus-guarded-real	TwoCounters3.ltl	17	REALIZABLE	2.0470841920468956	false	REALIZABLE	17
+race5-plus-guarded-real	TwoCountersDisButA5.ltl	17	UNREALIZABLE	0.14590008498635143	false	UNREALIZABLE	17
+race5-plus-guarded-real	TwoCountersDisButA9.ltl	17	UNREALIZABLE	0.24478350504068658	false	UNREALIZABLE	17
+race5-plus-guarded-real	TwoCountersGui.ltl	17	UNREALIZABLE	0.048477392992936075	false	UNREALIZABLE	17
+race5-plus-guarded-real	UnderapproxDemo2.ltl	17	UNREALIZABLE	0.03181425103684887	false	UNREALIZABLE	17
+race5-plus-guarded-real	Warnlight_a50cadd7.ltl	17	UNREALIZABLE	0.03159074601717293	false	UNREALIZABLE	17
+race5-plus-guarded-real	Window2Min_88c5c1c3.ltl	17	REALIZABLE	0.03761820599902421	false	REALIZABLE	17
+race5-plus-guarded-real	WindowMin_a5f99bc6.ltl	17	REALIZABLE	0.03911404899554327	false	REALIZABLE	17
+race5-plus-guarded-real	abcg_arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.10838803998194635	false	REALIZABLE	17
+race5-plus-guarded-real	abcg_arbiter_pb_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.14622127800248563	false	REALIZABLE	17
+race5-plus-guarded-real	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_encode_pb_16_pe_.ltl	17	REALIZABLE	1.3486479950370267	false	REALIZABLE	17
+race5-plus-guarded-real	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_encode_pb_4_pe_.ltl	17	REALIZABLE	0.03950200800318271	false	REALIZABLE	17
+race5-plus-guarded-real	amba_decomposed_lock_pb_11_pe_.ltl	17	REALIZABLE	2.352890951966401	false	REALIZABLE	17
+race5-plus-guarded-real	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	8.377288362011313	false	REALIZABLE	17
+race5-plus-guarded-real	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_decomposed_lock_pb_3_pe_.ltl	17	REALIZABLE	0.035067176970187575	false	REALIZABLE	17
+race5-plus-guarded-real	amba_decomposed_shift.ltl	17	REALIZABLE	0.027202196011785418	false	REALIZABLE	17
+race5-plus-guarded-real	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_gr_pb_2_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_gr_pb_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	amba_gr_pb_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter-paper-unreal-unreal.ltl	17	UNREALIZABLE	0.048522565979510546	false	UNREALIZABLE	17
+race5-plus-guarded-real	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.03982967499177903	false	REALIZABLE	17
+race5-plus-guarded-real	arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.479420084040612	false	REALIZABLE	17
+race5-plus-guarded-real	arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_buffer_pb_4_pe_.ltl	17	REALIZABLE	0.06585345399798825	false	REALIZABLE	17
+race5-plus-guarded-real	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_cancel_pb_1_pe_.ltl	17	REALIZABLE	0.03282618900993839	false	REALIZABLE	17
+race5-plus-guarded-real	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	box-real.ltl	17	REALIZABLE	0.06498273595934734	false	REALIZABLE	17
+race5-plus-guarded-real	chain-4-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chain-5-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chain-60.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chain-70.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chain-simple-30-real.ltl	17	REALIZABLE	0.5246873759897426	false	REALIZABLE	17
+race5-plus-guarded-real	chain-simple-50-real.ltl	17	REALIZABLE	0.9508148359600455	false	REALIZABLE	17
+race5-plus-guarded-real	chomp_pb_2_2_pe_.ltl	17	REALIZABLE	0.08989097899757326	false	REALIZABLE	17
+race5-plus-guarded-real	chomp_pb_2_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_2_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_3_2_pe_.ltl	17	REALIZABLE	4.362878959043883	false	REALIZABLE	17
+race5-plus-guarded-real	chomp_pb_3_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_3_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_3_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_3_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_4_2_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_4_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_4_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_4_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v1_pb_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v1_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v1_pb_13_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v1_pb_14_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v1_pb_15_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v2_pb_12_pe_.ltl	17	REALIZABLE	0.9805886800168082	false	REALIZABLE	17
+race5-plus-guarded-real	collector_v2_pb_27_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v3_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v3_pb_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v3_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v3_pb_13_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v3_pb_15_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	collector_v3_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	evasion-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	evasion0.ltl	17	UNREALIZABLE	0.7266920970287174	false	UNREALIZABLE	17
+race5-plus-guarded-real	f-real-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	follow0.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	follow1.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	follow2.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	follow3.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	full_arbiter_unreal1_pb_2_14_pe_.ltl	17	UNREALIZABLE	0.039370253041852266	false	UNREALIZABLE	17
+race5-plus-guarded-real	full_arbiter_unreal1_pb_3_2_pe_.ltl	17	UNREALIZABLE	0.03412402200046927	false	UNREALIZABLE	17
+race5-plus-guarded-real	g-real0.ltl	17	UNREALIZABLE	0.06286320701474324	false	UNREALIZABLE	17
+race5-plus-guarded-real	g-unreal-1-unreal.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-113.ltl	17	UNREALIZABLE	7.424339390010573	false	UNREALIZABLE	17
+race5-plus-guarded-real	g-unreal-116.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-117.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-118.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-119.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-120.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-18.ltl	17	UNREALIZABLE	1.1847862840513699	false	UNREALIZABLE	17
+race5-plus-guarded-real	g-unreal-20.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-21.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-310.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-311.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-312.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-313.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	g-unreal-314.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	gf-unreal20.ltl	17	UNREALIZABLE	0.02550794603303075	false	UNREALIZABLE	17
+race5-plus-guarded-real	gf-unreal46.ltl	17	UNREALIZABLE	0.038544060953427106	false	UNREALIZABLE	17
+race5-plus-guarded-real	heim-double-x-real.ltl	17	REALIZABLE	0.5268036900088191	false	REALIZABLE	17
+race5-plus-guarded-real	heim-double-x1.ltl	17	UNREALIZABLE	0.06357706000562757	false	UNREALIZABLE	17
+race5-plus-guarded-real	helipad-contradict0.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	helipad-contradict1.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	helipad-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u10.ltl	17	UNREALIZABLE	13.21558441099478	false	UNREALIZABLE	17
+race5-plus-guarded-real	infinite-race-u11.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u12.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u13.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u14.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u15.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u16.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u17.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u18.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u19.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u20.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u21.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u22.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u23.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u24.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u25.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-u3.ltl	17	UNREALIZABLE	0.08784958097385243	false	UNREALIZABLE	17
+race5-plus-guarded-real	infinite-race-unequal-22.ltl	17	UNREALIZABLE	0.0664114790270105	false	UNREALIZABLE	17
+race5-plus-guarded-real	infinite-race-unequal-25.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	infinite-race-unequal-26.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	items_processing-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_pb_2_pe_.ltl	17	REALIZABLE	0.037851422966923565	false	REALIZABLE	17
+race5-plus-guarded-real	lift_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	lift_wrong_physics_unreal_pb_10_pe_.ltl	17	UNREALIZABLE	1.4299145949771628	false	UNREALIZABLE	17
+race5-plus-guarded-real	lift_wrong_physics_unreal_pb_5_pe_.ltl	17	UNREALIZABLE	0.03436009504366666	false	UNREALIZABLE	17
+race5-plus-guarded-real	lift_wrong_physics_unreal_pb_9_pe_.ltl	17	UNREALIZABLE	0.5655206130468287	false	UNREALIZABLE	17
+race5-plus-guarded-real	lilydemo04_modified.ltl	17	UNREALIZABLE	0.02157947700470686	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_pb_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_2_14_pe_.ltl	17	UNREALIZABLE	0.3838401369866915	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	0.798187559004873	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_2_16_pe_.ltl	17	UNREALIZABLE	1.6965900029754266	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_2_2_pe_.ltl	17	UNREALIZABLE	0.02225326996995136	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_2_8_pe_.ltl	17	UNREALIZABLE	0.03173037798842415	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_3_10_pe_.ltl	17	UNREALIZABLE	0.16394118597963825	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_3_12_pe_.ltl	17	UNREALIZABLE	0.6501661179936491	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_3_8_pe_.ltl	17	UNREALIZABLE	0.054610355000477284	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	1.2926060809986666	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_5_4_pe_.ltl	17	UNREALIZABLE	0.8069414389901794	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_6_3_pe_.ltl	17	UNREALIZABLE	0.8024154340382665	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	13.471701231959742	false	UNREALIZABLE	17
+race5-plus-guarded-real	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba11.ltl	17	REALIZABLE	0.032567793037742376	false	REALIZABLE	17
+race5-plus-guarded-real	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_C2_unreal_pb_12_pe_.ltl	17	UNREALIZABLE	0.6417306920047849	false	UNREALIZABLE	17
+race5-plus-guarded-real	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_E_pb_7_pe_.ltl	17	REALIZABLE	0.03055251797195524	false	REALIZABLE	17
+race5-plus-guarded-real	ltl2dba_E_pb_9_pe_.ltl	17	REALIZABLE	0.03850813600001857	false	REALIZABLE	17
+race5-plus-guarded-real	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_R_pb_1_pe_.ltl	17	REALIZABLE	0.02222888096002862	false	REALIZABLE	17
+race5-plus-guarded-real	ltl2dba_R_pb_5_pe_.ltl	17	UNREALIZABLE	0.08923020301153883	false	UNREALIZABLE	17
+race5-plus-guarded-real	ltl2dba_R_pb_6_pe_.ltl	17	UNREALIZABLE	0.7213725720066577	false	UNREALIZABLE	17
+race5-plus-guarded-real	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_U1_pb_8_pe_.ltl	17	REALIZABLE	0.029080647975206375	false	REALIZABLE	17
+race5-plus-guarded-real	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_theta_pb_12_pe_.ltl	17	UNREALIZABLE	2.9933893060078844	false	UNREALIZABLE	17
+race5-plus-guarded-real	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	ltl2dba_theta_pb_7_pe_.ltl	17	UNREALIZABLE	0.06076346896588802	false	UNREALIZABLE	17
+race5-plus-guarded-real	mux_pb_16_pe_.ltl	17	REALIZABLE	0.020513956027571112	false	REALIZABLE	17
+race5-plus-guarded-real	mux_pb_200_pe_.ltl	17	REALIZABLE	0.05240558198420331	false	REALIZABLE	17
+race5-plus-guarded-real	narylatch_pb_11_pe_.ltl	17	REALIZABLE	0.038017998973373324	false	REALIZABLE	17
+race5-plus-guarded-real	narylatch_pb_16_pe_.ltl	17	REALIZABLE	0.040903167973738164	false	REALIZABLE	17
+race5-plus-guarded-real	narylatch_pb_32_pe_.ltl	17	REALIZABLE	0.04584316594991833	false	REALIZABLE	17
+race5-plus-guarded-real	ordered-visits-choice-real.ltl	17	REALIZABLE	0.04419244802556932	false	REALIZABLE	17
+race5-plus-guarded-real	package-delivery-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	patrolling-alarm21.ltl	17	UNREALIZABLE	0.7640047749737278	false	UNREALIZABLE	17
+race5-plus-guarded-real	patrolling-alarm7.ltl	17	UNREALIZABLE	0.0905632270150818	false	UNREALIZABLE	17
+race5-plus-guarded-real	patrolling11.ltl	17	UNREALIZABLE	0.18547126895282418	false	UNREALIZABLE	17
+race5-plus-guarded-real	patrolling15.ltl	17	UNREALIZABLE	0.40190528496168554	false	UNREALIZABLE	17
+race5-plus-guarded-real	precise-reachability-real.ltl	17	REALIZABLE	0.13188400596845895	false	REALIZABLE	17
+race5-plus-guarded-real	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.04680021299282089	false	REALIZABLE	17
+race5-plus-guarded-real	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	0.034215003019198775	false	UNREALIZABLE	17
+race5-plus-guarded-real	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	17	UNREALIZABLE	0.02050839498406276	false	UNREALIZABLE	17
+race5-plus-guarded-real	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	reversible-lane-r-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	reversible-lane-u-unreal.ltl	17	UNREALIZABLE	0.0975276930257678	false	UNREALIZABLE	17
+race5-plus-guarded-real	reversible-lane-u0.ltl	17	UNREALIZABLE	0.08676268300041556	false	UNREALIZABLE	17
+race5-plus-guarded-real	reversible-lane-u1.ltl	17	UNREALIZABLE	0.10158958594547585	false	UNREALIZABLE	17
+race5-plus-guarded-real	robot-cat-real-2d-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-cat-unreal-1d-unreal.ltl	17	UNREALIZABLE	0.23149069701321423	false	UNREALIZABLE	17
+race5-plus-guarded-real	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-grid-commute-1d-real.ltl	17	REALIZABLE	2.3364939599996433	false	REALIZABLE	17
+race5-plus-guarded-real	robot-grid-commute-2d-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-grid-reach-2d-real.ltl	17	REALIZABLE	3.969086384982802	false	REALIZABLE	17
+race5-plus-guarded-real	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	17	REALIZABLE	0.044760719989426434	false	REALIZABLE	17
+race5-plus-guarded-real	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-resource-1d-unreal.ltl	17	UNREALIZABLE	0.12287422199733555	false	UNREALIZABLE	17
+race5-plus-guarded-real	robot-resource-1d1.ltl	17	UNREALIZABLE	0.03536645299755037	false	UNREALIZABLE	17
+race5-plus-guarded-real	robot-to-target-charging-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal0.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal1.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal2.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal3.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal4.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal5.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal6.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal7.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging-unreal8.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging10.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging11.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging12.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging13.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging14.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging15.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging16.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging17.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging18.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging19.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging20.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging21.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging22.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging23.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging24.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging25.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging6.ltl	17	UNREALIZABLE	10.38057994900737	false	UNREALIZABLE	17
+race5-plus-guarded-real	robot-to-target-charging7.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging8.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target-charging9.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot-to-target0.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_analyze_samples_v1-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_collect_samples_v2-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_collect_samples_v3-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_collect_samples_v4-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_deliver_products_20.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_deliver_products_30.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_deliver_products_40.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_deliver_products_50.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_grid_pb_5_5_pe_.ltl	17	REALIZABLE	11.291977084008977	false	REALIZABLE	17
+race5-plus-guarded-real	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_grid_pb_7_7_pe_.ltl				true	MEMOUT	17
+race5-plus-guarded-real	robot_grid_pb_8_8_pe_.ltl				true	MEMOUT	17
+race5-plus-guarded-real	robot_repair0.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_repair1.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_repair2.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_repair3.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_repair4.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_repair5.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	robot_running-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	1.2520641550072469	false	UNREALIZABLE	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	scheduler-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_16_1_pe_.ltl	17	UNREALIZABLE	0.03176724101649597	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_3_11_pe_.ltl	17	UNREALIZABLE	0.03189692401792854	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	0.03602044400759041	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_3_8_pe_.ltl	17	UNREALIZABLE	0.03695511497789994	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_3_9_pe_.ltl	17	UNREALIZABLE	0.029946355032734573	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_4_12_pe_.ltl	17	UNREALIZABLE	0.032873388030566275	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_4_4_pe_.ltl	17	UNREALIZABLE	0.035064275027252734	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	0.033824726997409016	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	0.03473566402681172	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_5_2_pe_.ltl	17	UNREALIZABLE	0.03716076799901202	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_5_3_pe_.ltl	17	UNREALIZABLE	0.035353031009435654	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_5_4_pe_.ltl	17	UNREALIZABLE	0.03288712300127372	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	0.03879023698391393	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_5_6_pe_.ltl	17	UNREALIZABLE	0.027485539962071925	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_5_9_pe_.ltl	17	UNREALIZABLE	0.026272893010172993	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_6_1_pe_.ltl	17	UNREALIZABLE	0.033714894962031394	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_6_2_pe_.ltl	17	UNREALIZABLE	0.03239919902989641	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_6_3_pe_.ltl	17	UNREALIZABLE	0.033447804977186024	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal1_pb_8_8_pe_.ltl	17	UNREALIZABLE	0.04103420797036961	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal2_pb_25_pe_.ltl	17	UNREALIZABLE	0.03803298098500818	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.0359129779972136	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal2_pb_75_pe_.ltl	17	UNREALIZABLE	0.058516195975244045	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_unreal2_pb_8_pe_.ltl	17	UNREALIZABLE	0.015443725045770407	false	UNREALIZABLE	17
+race5-plus-guarded-real	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	sort4-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	sort40.ltl	17	UNREALIZABLE	0.2631966809858568	false	UNREALIZABLE	17
+race5-plus-guarded-real	sort51.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	sort52.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	sort53.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	square5x5-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	tasks-unreal0.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	tasks-unreal1.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	tasks-unreal2.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	taxi-service-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	taxi-service-u-unreal.ltl	17	UNREALIZABLE	0.08804594702087343	false	UNREALIZABLE	17
+race5-plus-guarded-real	thermostat-F-real.ltl	17	REALIZABLE	1.858672279980965	false	REALIZABLE	17
+race5-plus-guarded-real	thermostat-GF-real.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	thermostat-GF-unreal1.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	tmp_13cfc6f2.ltl	17	REALIZABLE	0.982647700002417	false	REALIZABLE	17
+race5-plus-guarded-real	unordered-visits-charging0.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	workstation_resupply_pb_2_pe_.ltl	17	REALIZABLE	0.38080026395618916	false	REALIZABLE	17
+race5-plus-guarded-real	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	17
+race5-plus-guarded-real	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT	17

@@ -1,0 +1,181 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+unreal-automaton-backward	Alarm_2d1010f8.ltl				true	UNKNOWN	17
+unreal-automaton-backward	CheckAlarm_6bea956e.ltl	1	UNREALIZABLE	0.02586516604060307	false		17
+unreal-automaton-backward	CheckCoffeMachineBroken1_a5f99bc6.ltl				true	UNKNOWN	17
+unreal-automaton-backward	CheckCoffeMachine_3461125b.ltl	1	UNREALIZABLE	0.018718693987466395	false		17
+unreal-automaton-backward	CheckShades_1a2942e3.ltl	1	UNREALIZABLE	0.03723941999487579	false		17
+unreal-automaton-backward	CheckTimer_54e1f7d2.ltl	1	UNREALIZABLE	0.03368551703169942	false		17
+unreal-automaton-backward	Core_fa4d4ce3.ltl	1	UNREALIZABLE	0.043348150968085974	false		17
+unreal-automaton-backward	EscalatorSmart.ltl				true	TIMEOUT	17
+unreal-automaton-backward	FelixSpecFixed2.2.core_fa8592c8.ltl				true	UNKNOWN	17
+unreal-automaton-backward	OneCounterInRangeA2.ltl	1	UNREALIZABLE	0.016568774997722358	false		17
+unreal-automaton-backward	SPIReadSdi.ltl				true	UNKNOWN	17
+unreal-automaton-backward	Sensor.ltl				true	TIMEOUT	17
+unreal-automaton-backward	Window2Min_88c5c1c3.ltl				true	UNKNOWN	17
+unreal-automaton-backward	WindowMin_a5f99bc6.ltl				true	UNKNOWN	17
+unreal-automaton-backward	abcg_arbiter_pb_2_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	amba_decomposed_encode_pb_4_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	amba_decomposed_lock_pb_3_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	amba_decomposed_shift.ltl				true	UNKNOWN	17
+unreal-automaton-backward	arbiter-paper-unreal-unreal.ltl	1	UNREALIZABLE	0.07568414800334722	false		17
+unreal-automaton-backward	arbiter_pb_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	arbiter_with_cancel_pb_1_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	chomp_pb_2_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	full_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.0386051430250518	false		17
+unreal-automaton-backward	lift_pb_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	lift_wrong_physics_unreal_pb_5_pe_.ltl	1	UNREALIZABLE	0.03394889103947207	false		17
+unreal-automaton-backward	lilydemo04_modified.ltl	1	UNREALIZABLE	0.024179788015317172	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_2_2_pe_.ltl	1	UNREALIZABLE	0.039125586044974625	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_2_8_pe_.ltl	1	UNREALIZABLE	0.05046528798993677	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_3_10_pe_.ltl	1	UNREALIZABLE	0.15431275201262906	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.04973650199826807	false		17
+unreal-automaton-backward	ltl2dba11.ltl				true	UNKNOWN	17
+unreal-automaton-backward	ltl2dba_R_pb_1_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	ltl2dba_R_pb_5_pe_.ltl	1	UNREALIZABLE	0.09720111795468256	false		17
+unreal-automaton-backward	ltl2dba_theta_pb_7_pe_.ltl	1	UNREALIZABLE	0.08076063595945016	false		17
+unreal-automaton-backward	narylatch_pb_11_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	narylatch_pb_16_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	narylatch_pb_32_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	precise-reachability-real.ltl				true	UNKNOWN	17
+unreal-automaton-backward	prioritized_arbiter_pb_5_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	robot-grid-reach-repeated-with-obstacles-1d-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	F-G-contradiction-15.ltl				true	TIMEOUT	17
+unreal-automaton-backward	FelixSpecFixed3.core_b209ff21.ltl				true	TIMEOUT	17
+unreal-automaton-backward	GF-G-contradiction2.ltl				true	TIMEOUT	17
+unreal-automaton-backward	KitchenTimerV9.ltl				true	UNKNOWN	17
+unreal-automaton-backward	Lights2_b02056d6.ltl				true	TIMEOUT	17
+unreal-automaton-backward	LightsTotal_2c5b09da.ltl				true	TIMEOUT	17
+unreal-automaton-backward	MorningMin_d6c5ac79.ltl				true	UNKNOWN	17
+unreal-automaton-backward	OneCounter.ltl				true	UNKNOWN	17
+unreal-automaton-backward	OneCounterGuiA5.ltl				true	UNKNOWN	17
+unreal-automaton-backward	SingleContoller_d65ed84e.ltl	1	UNREALIZABLE	0.03799405600875616	false		17
+unreal-automaton-backward	TwoCounters3.ltl				true	UNKNOWN	17
+unreal-automaton-backward	TwoCountersDisButA5.ltl	1	UNREALIZABLE	0.10624401998938993	false		17
+unreal-automaton-backward	TwoCountersGui.ltl	1	UNREALIZABLE	0.03947601898107678	false		17
+unreal-automaton-backward	amba_decomposed_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	amba_decomposed_encode_pb_16_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	amba_decomposed_lock_pb_11_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	amba_decomposed_lock_pb_12_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	amba_decomposed_lock_pb_13_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	arbiter_pb_5_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	arbiter_with_buffer_pb_4_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	chain-simple-30-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	chain-simple-50-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	chomp_pb_3_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	collector_v2_pb_12_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	full_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.021516750974114984	false		17
+unreal-automaton-backward	g-real0.ltl	5	UNREALIZABLE	4.766224308987148	false		17
+unreal-automaton-backward	g-unreal-18.ltl	5	UNREALIZABLE	1.174581024039071	false		17
+unreal-automaton-backward	gf-unreal20.ltl	1	UNREALIZABLE	0.03534076805226505	false		17
+unreal-automaton-backward	heim-double-x1.ltl				true	TIMEOUT	17
+unreal-automaton-backward	infinite-race-u3.ltl				true	TIMEOUT	17
+unreal-automaton-backward	infinite-race-unequal-22.ltl	5	UNREALIZABLE	0.9490693350089714	false		17
+unreal-automaton-backward	lift_wrong_physics_unreal_pb_10_pe_.ltl	1	UNREALIZABLE	0.9891951649915427	false		17
+unreal-automaton-backward	lift_wrong_physics_unreal_pb_9_pe_.ltl	1	UNREALIZABLE	0.3712402929668315	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.29644661396741867	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.6380636480171233	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_2_16_pe_.ltl	5	UNREALIZABLE	1.3689194690086879	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_3_12_pe_.ltl	1	UNREALIZABLE	0.5245966999791563	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.902890699042473	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.5752478929935023	false		17
+unreal-automaton-backward	load_balancer_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.5264697319944389	false		17
+unreal-automaton-backward	ltl2dba_C2_unreal_pb_12_pe_.ltl	1	UNREALIZABLE	0.40891646296950057	false		17
+unreal-automaton-backward	ltl2dba_E_pb_7_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	ltl2dba_R_pb_6_pe_.ltl	1	UNREALIZABLE	0.527665394009091	false		17
+unreal-automaton-backward	ltl2dba_U1_pb_8_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	ltl2dba_theta_pb_12_pe_.ltl	5	UNREALIZABLE	2.7629225290147588	false		17
+unreal-automaton-backward	mux_pb_16_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	patrolling-alarm7.ltl	1	UNREALIZABLE	0.21313182899029925	false		17
+unreal-automaton-backward	patrolling11.ltl	1	UNREALIZABLE	0.8641636410029605	false		17
+unreal-automaton-backward	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	1	UNREALIZABLE	0.022493974945973605	false		17
+unreal-automaton-backward	reversible-lane-u0.ltl	5	UNREALIZABLE	2.3061658759834245	false		17
+unreal-automaton-backward	robot-cat-unreal-1d-unreal.ltl	17	UNREALIZABLE	9.938555485976394	false	UNREALIZABLE	17
+unreal-automaton-backward	robot-grid-commute-1d-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot-grid-reach-2d-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot-resource-1d1.ltl	5	UNREALIZABLE	1.150371037016157	false		17
+unreal-automaton-backward	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.8049682100536302	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.018864437006413937	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.030674307025037706	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.04017319204285741	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.03522292000707239	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.03165798698319122	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.029199709999375045	false		17
+unreal-automaton-backward	simple_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.04219046898651868	false		17
+unreal-automaton-backward	sort40.ltl				true	TIMEOUT	17
+unreal-automaton-backward	taxi-service-u-unreal.ltl	5	UNREALIZABLE	1.0684276219690219	false		17
+unreal-automaton-backward	workstation_resupply_pb_2_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	F-G-contradiction-111.ltl				true	TIMEOUT	17
+unreal-automaton-backward	IntendDemo_42dc4fff.ltl	1	UNREALIZABLE	0.043213481025304645	false		17
+unreal-automaton-backward	Light_a50cadd7.ltl	1	UNREALIZABLE	0.02557850000448525	false		17
+unreal-automaton-backward	TwoCountersDisButA9.ltl	1	UNREALIZABLE	0.17189631302608177	false		17
+unreal-automaton-backward	UnderapproxDemo2.ltl	1	UNREALIZABLE	0.027191384986508638	false		17
+unreal-automaton-backward	Warnlight_a50cadd7.ltl	1	UNREALIZABLE	0.0358964970218949	false		17
+unreal-automaton-backward	arbiter_pb_7_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	box-real.ltl				true	UNKNOWN	17
+unreal-automaton-backward	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	evasion-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	evasion0.ltl				true	TIMEOUT	17
+unreal-automaton-backward	g-unreal-1-unreal.ltl				true	TIMEOUT	17
+unreal-automaton-backward	g-unreal-113.ltl	5	UNREALIZABLE	3.9513754769577645	false		17
+unreal-automaton-backward	gf-unreal46.ltl	1	UNREALIZABLE	0.03819088399177417	false		17
+unreal-automaton-backward	heim-double-x-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	helipad-contradict0.ltl				true	TIMEOUT	17
+unreal-automaton-backward	helipad-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	lift_pb_6_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	9.930819351982791	false	UNREALIZABLE	17
+unreal-automaton-backward	ltl2dba_E_pb_9_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	mux_pb_200_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	package-delivery-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	patrolling-alarm21.ltl	17	UNREALIZABLE	12.240107202960644	false	UNREALIZABLE	17
+unreal-automaton-backward	patrolling15.ltl	5	UNREALIZABLE	2.892909281013999	false		17
+unreal-automaton-backward	prioritized_arbiter_pb_9_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	1	UNREALIZABLE	0.026409947022330016	false		17
+unreal-automaton-backward	reversible-lane-u-unreal.ltl	17	UNREALIZABLE	5.782016531040426	false	UNREALIZABLE	17
+unreal-automaton-backward	reversible-lane-u1.ltl	5	UNREALIZABLE	3.5194200039841235	false		17
+unreal-automaton-backward	robot-resource-1d-unreal.ltl	17	UNREALIZABLE	14.592748365015723	false	UNREALIZABLE	17
+unreal-automaton-backward	robot-to-target-charging-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot-to-target-charging6.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot_repair2.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot_running-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	scheduler-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_16_1_pe_.ltl	1	UNREALIZABLE	0.027479044045321643	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.027670384966768324	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.03628208197187632	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.03143818798707798	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.03130983398295939	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.03418339695781469	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.03518835501745343	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.03138376504648477	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_5_5_pe_.ltl	1	UNREALIZABLE	0.03190963400993496	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_5_6_pe_.ltl	1	UNREALIZABLE	0.03448858699994162	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_5_9_pe_.ltl	1	UNREALIZABLE	0.03322144696721807	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.031149319023825228	false		17
+unreal-automaton-backward	simple_arbiter_unreal1_pb_8_8_pe_.ltl	1	UNREALIZABLE	0.041078770998865366	false		17
+unreal-automaton-backward	simple_arbiter_unreal2_pb_25_pe_.ltl	1	UNREALIZABLE	0.033437369973398745	false		17
+unreal-automaton-backward	simple_arbiter_unreal2_pb_75_pe_.ltl	1	UNREALIZABLE	0.06279823801014572	false		17
+unreal-automaton-backward	simple_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.03288293199148029	false		17
+unreal-automaton-backward	square5x5-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	tasks-unreal1.ltl				true	TIMEOUT	17
+unreal-automaton-backward	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+unreal-automaton-backward	tmp_13cfc6f2.ltl				true	TIMEOUT	17
+unreal-automaton-backward	unordered-visits-charging0.ltl				true	TIMEOUT	17
+unreal-automaton-backward	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	Full_f1477cc5.ltl				true	TIMEOUT	17
+unreal-automaton-backward	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT	17
+unreal-automaton-backward	reversible-lane-r-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot-cat-real-2d-real.ltl				true	TIMEOUT	17
+unreal-automaton-backward	robot_repair5.ltl				true	TIMEOUT	17
+unreal-automaton-backward	round_robin_arbiter_pb_8_pe_.ltl				true	UNKNOWN	17
+unreal-automaton-backward	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	17

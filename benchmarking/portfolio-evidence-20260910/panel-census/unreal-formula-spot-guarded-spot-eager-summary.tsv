@@ -1,0 +1,181 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+unreal-formula-spot-guarded-spot-eager	Alarm_2d1010f8.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	CheckAlarm_6bea956e.ltl	1	UNREALIZABLE	0.20393329596845433	false		17
+unreal-formula-spot-guarded-spot-eager	CheckCoffeMachineBroken1_a5f99bc6.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	CheckCoffeMachine_3461125b.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	CheckShades_1a2942e3.ltl	5	UNREALIZABLE	3.475147225020919	false		17
+unreal-formula-spot-guarded-spot-eager	CheckTimer_54e1f7d2.ltl	1	UNREALIZABLE	0.026894241978880018	false		17
+unreal-formula-spot-guarded-spot-eager	Core_fa4d4ce3.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	EscalatorSmart.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	FelixSpecFixed2.2.core_fa8592c8.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	OneCounterInRangeA2.ltl	1	UNREALIZABLE	0.23981730500236154	false		17
+unreal-formula-spot-guarded-spot-eager	SPIReadSdi.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	Sensor.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	Window2Min_88c5c1c3.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	WindowMin_a5f99bc6.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	abcg_arbiter_pb_2_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_decomposed_encode_pb_4_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_decomposed_lock_pb_3_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_decomposed_shift.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	arbiter-paper-unreal-unreal.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	arbiter_pb_2_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	arbiter_with_cancel_pb_1_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	chomp_pb_2_2_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	full_arbiter_unreal1_pb_3_2_pe_.ltl	1	UNREALIZABLE	0.023406091961078346	false		17
+unreal-formula-spot-guarded-spot-eager	lift_pb_2_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	lift_wrong_physics_unreal_pb_5_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	lilydemo04_modified.ltl	1	UNREALIZABLE	0.035355361993424594	false		17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_2_2_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_2_8_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba11.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_R_pb_1_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_R_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_theta_pb_7_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	narylatch_pb_11_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	narylatch_pb_16_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	narylatch_pb_32_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	precise-reachability-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	prioritized_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-grid-reach-repeated-with-obstacles-1d-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	F-G-contradiction-15.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	FelixSpecFixed3.core_b209ff21.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	GF-G-contradiction2.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	KitchenTimerV9.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	Lights2_b02056d6.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	LightsTotal_2c5b09da.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	MorningMin_d6c5ac79.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	OneCounter.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	OneCounterGuiA5.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	SingleContoller_d65ed84e.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	TwoCounters3.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	TwoCountersDisButA5.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	TwoCountersGui.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_decomposed_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_decomposed_encode_pb_16_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_decomposed_lock_pb_11_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_decomposed_lock_pb_12_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_decomposed_lock_pb_13_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	arbiter_with_buffer_pb_4_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	chain-simple-30-real.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	chain-simple-50-real.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	chomp_pb_3_2_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	collector_v2_pb_12_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	full_arbiter_unreal1_pb_2_14_pe_.ltl	1	UNREALIZABLE	0.025816664041485637	false		17
+unreal-formula-spot-guarded-spot-eager	g-real0.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	g-unreal-18.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	gf-unreal20.ltl	1	UNREALIZABLE	0.02037029404891655	false		17
+unreal-formula-spot-guarded-spot-eager	heim-double-x1.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	infinite-race-u3.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	infinite-race-unequal-22.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	lift_wrong_physics_unreal_pb_10_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	lift_wrong_physics_unreal_pb_9_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_2_14_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_2_15_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_2_16_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_4_6_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_5_4_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_6_3_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_C2_unreal_pb_12_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_E_pb_7_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_R_pb_6_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_U1_pb_8_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_theta_pb_12_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	mux_pb_16_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	patrolling-alarm7.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	patrolling11.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	8.051342685997952	false	UNREALIZABLE	17
+unreal-formula-spot-guarded-spot-eager	reversible-lane-u0.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-cat-unreal-1d-unreal.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-grid-commute-1d-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-grid-reach-2d-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-resource-1d1.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_3_6_pe_.ltl	1	UNREALIZABLE	0.016805634018965065	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_4_4_pe_.ltl	1	UNREALIZABLE	0.017650117981247604	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_5_2_pe_.ltl	1	UNREALIZABLE	0.016095747996587306	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_5_3_pe_.ltl	1	UNREALIZABLE	0.02549798705149442	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_6_1_pe_.ltl	1	UNREALIZABLE	0.021920728031545877	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_6_2_pe_.ltl	1	UNREALIZABLE	0.018893906963057816	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal2_pb_4_pe_.ltl	1	UNREALIZABLE	0.01912530604749918	false		17
+unreal-formula-spot-guarded-spot-eager	sort40.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	taxi-service-u-unreal.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	workstation_resupply_pb_2_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	F-G-contradiction-111.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	IntendDemo_42dc4fff.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	Light_a50cadd7.ltl	1	UNREALIZABLE	0.020788141002412885	false		17
+unreal-formula-spot-guarded-spot-eager	TwoCountersDisButA9.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	UnderapproxDemo2.ltl	1	UNREALIZABLE	0.019560621003620327	false		17
+unreal-formula-spot-guarded-spot-eager	Warnlight_a50cadd7.ltl	1	UNREALIZABLE	0.023579205968417227	false		17
+unreal-formula-spot-guarded-spot-eager	arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	box-real.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	chomp_pb_2_5_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	evasion-real.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	evasion0.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	g-unreal-1-unreal.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	g-unreal-113.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	gf-unreal46.ltl	1	UNREALIZABLE	0.03944015601882711	false		17
+unreal-formula-spot-guarded-spot-eager	heim-double-x-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	helipad-contradict0.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	helipad-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	lift_pb_6_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal2_pb_5_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_E_pb_9_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	mux_pb_200_pe_.ltl				true	UNKNOWN	17
+unreal-formula-spot-guarded-spot-eager	package-delivery-real.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	patrolling-alarm21.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	patrolling15.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	prioritized_arbiter_pb_9_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	reversible-lane-u-unreal.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	reversible-lane-u1.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-resource-1d-unreal.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-to-target-charging-real.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-to-target-charging6.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot_repair2.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot_running-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	scheduler-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_16_1_pe_.ltl	1	UNREALIZABLE	0.022411611978895962	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_3_11_pe_.ltl	1	UNREALIZABLE	0.019250056007876992	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_3_8_pe_.ltl	1	UNREALIZABLE	0.017054334981366992	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_3_9_pe_.ltl	1	UNREALIZABLE	0.018654431973118335	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_4_12_pe_.ltl	1	UNREALIZABLE	0.01859558600699529	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_4_6_pe_.ltl	1	UNREALIZABLE	0.015537722036242485	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_4_7_pe_.ltl	1	UNREALIZABLE	0.027708770998287946	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_5_4_pe_.ltl	1	UNREALIZABLE	0.02095246099634096	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_5_5_pe_.ltl	1	UNREALIZABLE	0.022016630973666906	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_5_6_pe_.ltl	1	UNREALIZABLE	0.018144100031349808	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_5_9_pe_.ltl	1	UNREALIZABLE	0.020625895995181054	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_6_3_pe_.ltl	1	UNREALIZABLE	0.02315276104491204	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal1_pb_8_8_pe_.ltl	1	UNREALIZABLE	0.02016388700576499	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal2_pb_25_pe_.ltl	1	UNREALIZABLE	0.023767759033944458	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal2_pb_75_pe_.ltl	1	UNREALIZABLE	0.03912333498010412	false		17
+unreal-formula-spot-guarded-spot-eager	simple_arbiter_unreal2_pb_8_pe_.ltl	1	UNREALIZABLE	0.021132986003067344	false		17
+unreal-formula-spot-guarded-spot-eager	square5x5-real.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	tasks-unreal1.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	tmp_13cfc6f2.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	unordered-visits-charging0.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	workstation_resupply_pb_3_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	workstation_resupply_pb_4_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	Full_f1477cc5.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	lift_gr1_pb_10_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	lift_gr1_pb_8_pe_.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	reversible-lane-r-real.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	robot-cat-real-2d-real.ltl				true	MEMOUT	17
+unreal-formula-spot-guarded-spot-eager	robot_repair5.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+unreal-formula-spot-guarded-spot-eager	workstation_resupply_pb_6_pe_.ltl				true	MEMOUT	17

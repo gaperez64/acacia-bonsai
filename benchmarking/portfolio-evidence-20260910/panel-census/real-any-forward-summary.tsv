@@ -1,0 +1,181 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+real-any-forward	Alarm_2d1010f8.ltl	1	REALIZABLE	0.018114651029463857	false		17
+real-any-forward	CheckAlarm_6bea956e.ltl				true	UNKNOWN	17
+real-any-forward	CheckCoffeMachineBroken1_a5f99bc6.ltl	1	REALIZABLE	0.03388646797975525	false		17
+real-any-forward	CheckCoffeMachine_3461125b.ltl				true	UNKNOWN	17
+real-any-forward	CheckShades_1a2942e3.ltl				true	UNKNOWN	17
+real-any-forward	CheckTimer_54e1f7d2.ltl				true	UNKNOWN	17
+real-any-forward	Core_fa4d4ce3.ltl				true	UNKNOWN	17
+real-any-forward	EscalatorSmart.ltl	1	REALIZABLE	0.02931210002861917	false		17
+real-any-forward	FelixSpecFixed2.2.core_fa8592c8.ltl				true	UNKNOWN	17
+real-any-forward	OneCounterInRangeA2.ltl				true	UNKNOWN	17
+real-any-forward	SPIReadSdi.ltl	1	REALIZABLE	0.015213456994388252	false		17
+real-any-forward	Sensor.ltl	1	REALIZABLE	0.11789976397994906	false		17
+real-any-forward	Window2Min_88c5c1c3.ltl	1	REALIZABLE	0.017612610012292862	false		17
+real-any-forward	WindowMin_a5f99bc6.ltl	1	REALIZABLE	0.04361944302218035	false		17
+real-any-forward	abcg_arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.11822514899540693	false		17
+real-any-forward	amba_decomposed_encode_pb_4_pe_.ltl	1	REALIZABLE	0.018769650952890515	false		17
+real-any-forward	amba_decomposed_lock_pb_3_pe_.ltl	1	REALIZABLE	0.029686341003980488	false		17
+real-any-forward	amba_decomposed_shift.ltl	1	REALIZABLE	0.030823491048067808	false		17
+real-any-forward	arbiter-paper-unreal-unreal.ltl				true	UNKNOWN	17
+real-any-forward	arbiter_pb_2_pe_.ltl	1	REALIZABLE	0.023340978019405156	false		17
+real-any-forward	arbiter_with_cancel_pb_1_pe_.ltl	1	REALIZABLE	0.020814787014387548	false		17
+real-any-forward	chomp_pb_2_2_pe_.ltl	1	REALIZABLE	0.06543228297960013	false		17
+real-any-forward	full_arbiter_unreal1_pb_3_2_pe_.ltl				true	UNKNOWN	17
+real-any-forward	lift_pb_2_pe_.ltl	1	REALIZABLE	0.03801218798616901	false		17
+real-any-forward	lift_wrong_physics_unreal_pb_5_pe_.ltl				true	UNKNOWN	17
+real-any-forward	lilydemo04_modified.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_2_2_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_2_8_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_3_10_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	17
+real-any-forward	ltl2dba11.ltl	1	REALIZABLE	0.024558646022342145	false		17
+real-any-forward	ltl2dba_R_pb_1_pe_.ltl	1	REALIZABLE	0.03662649996113032	false		17
+real-any-forward	ltl2dba_R_pb_5_pe_.ltl				true	UNKNOWN	17
+real-any-forward	ltl2dba_theta_pb_7_pe_.ltl				true	UNKNOWN	17
+real-any-forward	narylatch_pb_11_pe_.ltl	1	REALIZABLE	0.020422655041329563	false		17
+real-any-forward	narylatch_pb_16_pe_.ltl	1	REALIZABLE	0.04587081499630585	false		17
+real-any-forward	narylatch_pb_32_pe_.ltl	1	REALIZABLE	0.03435091598657891	false		17
+real-any-forward	precise-reachability-real.ltl	1	REALIZABLE	0.11884291097521782	false		17
+real-any-forward	prioritized_arbiter_pb_5_pe_.ltl	1	REALIZABLE	0.42014170001493767	false		17
+real-any-forward	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	1	REALIZABLE	0.03961700695799664	false		17
+real-any-forward	F-G-contradiction-15.ltl				true	UNKNOWN	17
+real-any-forward	FelixSpecFixed3.core_b209ff21.ltl				true	UNKNOWN	17
+real-any-forward	GF-G-contradiction2.ltl				true	UNKNOWN	17
+real-any-forward	KitchenTimerV9.ltl	1	REALIZABLE	0.07066594494972378	false		17
+real-any-forward	Lights2_b02056d6.ltl	1	REALIZABLE	0.18788386398227885	false		17
+real-any-forward	LightsTotal_2c5b09da.ltl				true	UNKNOWN	17
+real-any-forward	MorningMin_d6c5ac79.ltl	1	REALIZABLE	0.04607603600015864	false		17
+real-any-forward	OneCounter.ltl	5	REALIZABLE	1.2955946299480274	false		17
+real-any-forward	OneCounterGuiA5.ltl				true	UNKNOWN	17
+real-any-forward	SingleContoller_d65ed84e.ltl				true	UNKNOWN	17
+real-any-forward	TwoCounters3.ltl	5	REALIZABLE	0.9053853529621847	false		17
+real-any-forward	TwoCountersDisButA5.ltl				true	UNKNOWN	17
+real-any-forward	TwoCountersGui.ltl				true	UNKNOWN	17
+real-any-forward	amba_decomposed_arbiter_pb_5_pe_.ltl				true	UNKNOWN	17
+real-any-forward	amba_decomposed_encode_pb_16_pe_.ltl	1	REALIZABLE	0.4996204740018584	false		17
+real-any-forward	amba_decomposed_lock_pb_11_pe_.ltl	1	REALIZABLE	0.3061898250016384	false		17
+real-any-forward	amba_decomposed_lock_pb_12_pe_.ltl	1	REALIZABLE	0.8070562640205026	false		17
+real-any-forward	amba_decomposed_lock_pb_13_pe_.ltl	5	REALIZABLE	2.1148598860017955	false		17
+real-any-forward	arbiter_pb_5_pe_.ltl	1	REALIZABLE	0.8155307419947349	false		17
+real-any-forward	arbiter_with_buffer_pb_4_pe_.ltl	1	REALIZABLE	0.04545483901165426	false		17
+real-any-forward	chain-simple-30-real.ltl	5	REALIZABLE	1.0735257540363818	false		17
+real-any-forward	chain-simple-50-real.ltl	5	REALIZABLE	4.511712286970578	false		17
+real-any-forward	chomp_pb_3_2_pe_.ltl	5	REALIZABLE	1.1713478970341384	false		17
+real-any-forward	collector_v2_pb_12_pe_.ltl				true	UNKNOWN	17
+real-any-forward	full_arbiter_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	17
+real-any-forward	g-real0.ltl				true	UNKNOWN	17
+real-any-forward	g-unreal-18.ltl				true	UNKNOWN	17
+real-any-forward	gf-unreal20.ltl				true	UNKNOWN	17
+real-any-forward	heim-double-x1.ltl				true	UNKNOWN	17
+real-any-forward	infinite-race-u3.ltl				true	UNKNOWN	17
+real-any-forward	infinite-race-unequal-22.ltl				true	UNKNOWN	17
+real-any-forward	lift_wrong_physics_unreal_pb_10_pe_.ltl				true	TIMEOUT	17
+real-any-forward	lift_wrong_physics_unreal_pb_9_pe_.ltl				true	TIMEOUT	17
+real-any-forward	load_balancer_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_2_16_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_3_12_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_5_4_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_6_3_pe_.ltl				true	UNKNOWN	17
+real-any-forward	ltl2dba_C2_unreal_pb_12_pe_.ltl				true	UNKNOWN	17
+real-any-forward	ltl2dba_E_pb_7_pe_.ltl	1	REALIZABLE	0.0196218520286493	false		17
+real-any-forward	ltl2dba_R_pb_6_pe_.ltl				true	UNKNOWN	17
+real-any-forward	ltl2dba_U1_pb_8_pe_.ltl	1	REALIZABLE	0.014842832984868437	false		17
+real-any-forward	ltl2dba_theta_pb_12_pe_.ltl				true	UNKNOWN	17
+real-any-forward	mux_pb_16_pe_.ltl	1	REALIZABLE	0.019718450028449297	false		17
+real-any-forward	patrolling-alarm7.ltl				true	UNKNOWN	17
+real-any-forward	patrolling11.ltl				true	UNKNOWN	17
+real-any-forward	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	17
+real-any-forward	reversible-lane-u0.ltl				true	TIMEOUT	17
+real-any-forward	robot-cat-unreal-1d-unreal.ltl				true	TIMEOUT	17
+real-any-forward	robot-grid-commute-1d-real.ltl	5	REALIZABLE	1.5483810940058902	false		17
+real-any-forward	robot-grid-reach-2d-real.ltl	5	REALIZABLE	2.788059296028223	false		17
+real-any-forward	robot-resource-1d1.ltl				true	UNKNOWN	17
+real-any-forward	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_4_4_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_5_2_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_5_3_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_6_1_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_6_2_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal2_pb_4_pe_.ltl				true	UNKNOWN	17
+real-any-forward	sort40.ltl				true	TIMEOUT	17
+real-any-forward	taxi-service-u-unreal.ltl				true	UNKNOWN	17
+real-any-forward	workstation_resupply_pb_2_pe_.ltl	1	REALIZABLE	0.27992628002539277	false		17
+real-any-forward	F-G-contradiction-111.ltl				true	TIMEOUT	17
+real-any-forward	IntendDemo_42dc4fff.ltl				true	TIMEOUT	17
+real-any-forward	Light_a50cadd7.ltl				true	UNKNOWN	17
+real-any-forward	TwoCountersDisButA9.ltl				true	TIMEOUT	17
+real-any-forward	UnderapproxDemo2.ltl				true	UNKNOWN	17
+real-any-forward	Warnlight_a50cadd7.ltl				true	UNKNOWN	17
+real-any-forward	arbiter_pb_7_pe_.ltl				true	UNKNOWN	17
+real-any-forward	box-real.ltl	1	REALIZABLE	0.05101170501438901	false		17
+real-any-forward	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	17
+real-any-forward	evasion-real.ltl				true	TIMEOUT	17
+real-any-forward	evasion0.ltl				true	TIMEOUT	17
+real-any-forward	g-unreal-1-unreal.ltl				true	UNKNOWN	17
+real-any-forward	g-unreal-113.ltl				true	UNKNOWN	17
+real-any-forward	gf-unreal46.ltl				true	UNKNOWN	17
+real-any-forward	heim-double-x-real.ltl				true	UNKNOWN	17
+real-any-forward	helipad-contradict0.ltl				true	TIMEOUT	17
+real-any-forward	helipad-real.ltl				true	TIMEOUT	17
+real-any-forward	lift_pb_6_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal2_pb_5_pe_.ltl				true	UNKNOWN	17
+real-any-forward	ltl2dba_E_pb_9_pe_.ltl	1	REALIZABLE	0.026167057978454977	false		17
+real-any-forward	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+real-any-forward	mux_pb_200_pe_.ltl	1	REALIZABLE	0.03891638794448227	false		17
+real-any-forward	package-delivery-real.ltl				true	TIMEOUT	17
+real-any-forward	patrolling-alarm21.ltl				true	UNKNOWN	17
+real-any-forward	patrolling15.ltl				true	UNKNOWN	17
+real-any-forward	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+real-any-forward	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl				true	UNKNOWN	17
+real-any-forward	reversible-lane-u-unreal.ltl				true	TIMEOUT	17
+real-any-forward	reversible-lane-u1.ltl				true	TIMEOUT	17
+real-any-forward	robot-resource-1d-unreal.ltl				true	UNKNOWN	17
+real-any-forward	robot-to-target-charging-real.ltl				true	TIMEOUT	17
+real-any-forward	robot-to-target-charging6.ltl				true	TIMEOUT	17
+real-any-forward	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+real-any-forward	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+real-any-forward	robot_repair2.ltl				true	TIMEOUT	17
+real-any-forward	robot_running-real.ltl				true	TIMEOUT	17
+real-any-forward	scheduler-real.ltl				true	TIMEOUT	17
+real-any-forward	simple_arbiter_unreal1_pb_16_1_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_3_11_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_3_9_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_4_12_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_4_7_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_5_4_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_5_5_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_5_6_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_5_9_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_6_3_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal1_pb_8_8_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal2_pb_25_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal2_pb_75_pe_.ltl				true	UNKNOWN	17
+real-any-forward	simple_arbiter_unreal2_pb_8_pe_.ltl				true	UNKNOWN	17
+real-any-forward	square5x5-real.ltl				true	TIMEOUT	17
+real-any-forward	tasks-unreal1.ltl				true	TIMEOUT	17
+real-any-forward	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+real-any-forward	tmp_13cfc6f2.ltl	1	REALIZABLE	0.624416419013869	false		17
+real-any-forward	unordered-visits-charging0.ltl				true	TIMEOUT	17
+real-any-forward	workstation_resupply_pb_3_pe_.ltl	17	REALIZABLE	14.026703261013608	false	REALIZABLE	17
+real-any-forward	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	17
+real-any-forward	Full_f1477cc5.ltl				true	TIMEOUT	17
+real-any-forward	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+real-any-forward	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+real-any-forward	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+real-any-forward	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+real-any-forward	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+real-any-forward	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	17
+real-any-forward	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	17
+real-any-forward	load_balancer_unreal1_pb_6_4_pe_.ltl				true	UNKNOWN	17
+real-any-forward	load_balancer_unreal1_pb_6_5_pe_.ltl				true	UNKNOWN	17
+real-any-forward	reversible-lane-r-real.ltl				true	TIMEOUT	17
+real-any-forward	robot-cat-real-2d-real.ltl				true	TIMEOUT	17
+real-any-forward	robot_repair5.ltl				true	TIMEOUT	17
+real-any-forward	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+real-any-forward	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	17
