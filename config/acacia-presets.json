@@ -349,6 +349,12 @@
       "inherits": "otf_contradiction",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:spot-guarded-sparse"
     },
+    "otf_sparse_existential": {
+      "description": "otf_sparse_formula with the sparse guarded unreal worker covering inputs using existentially quantified outputs.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula",
+      "spot_guarded_existential_outputs": true
+    },
     "otf_sparse_formula_inequality_covering": {
       "description": "otf_sparse_formula with the guarded unreal worker covering inputs by the <= successor preimage rather than the exact one.",
       "role": "sweep",

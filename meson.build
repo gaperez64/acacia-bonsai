@@ -214,6 +214,8 @@ build_conf.set ('ACACIA_SPOT_GUARDED_BACKEND',
                 get_option ('acacia_spot_guarded_backend') ? 1 : 0)
 build_conf.set ('ACACIA_SPOT_GUARDED_INEQUALITY_COVERING',
                 get_option ('acacia_spot_guarded_inequality_covering') ? 1 : 0)
+build_conf.set ('ACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS',
+                get_option ('acacia_spot_guarded_existential_outputs') ? 1 : 0)
 build_conf.set ('ACACIA_SPOT_LAZY_PROVIDER',
                 get_option ('acacia_spot_lazy_provider') ? 1 : 0)
 if get_option ('acacia_forward_safety_solver')
