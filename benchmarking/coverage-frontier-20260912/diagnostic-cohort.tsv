@@ -1,0 +1,47 @@
+instance	tier	family	reason
+SPIPureNext.ltl	A	SPIPureNext	unique to race5-plus-guarded-real (0.64s)
+heim-double-x-real.ltl	A	heim-double-x-real	unique to race5-plus-guarded-real (0.53s)
+ordered-visits-choice-real.ltl	A	ordered-visits-choice-real	unique to race5-plus-guarded-real (0.04s)
+robot_grid_pb_5_5_pe_.ltl	A	robot_grid	unique to race5-plus-guarded-real (11.29s)
+thermostat-F-real.ltl	A	thermostat-F-real	unique to race5-plus-guarded-real (1.86s)
+06.ltl	B	numeric	race2-best only (16.22s)
+07.ltl	B	numeric	race2-best only (15.04s)
+GF-G-contradiction7.ltl	B	GF-G-contradiction	race2-best only (14.15s)
+TwoCountersDisButA9.ltl	B	TwoCountersDisButA	race4-shipped only (0.19s)
+amba_decomposed_arbiter_pb_5_pe_.ltl	B	amba_decomposed_arbiter_pb_5_pe	race4-shipped only (0.13s)
+collector_v2_pb_12_pe_.ltl	B	collector	race4-shipped only (0.76s)
+g-unreal-113.ltl	B	g-unreal	race4-shipped only (7.67s)
+lift_wrong_physics_unreal_pb_10_pe_.ltl	B	lift_wrong_physics_unreal_pb_10_pe	race4-shipped only (1.13s)
+lift_wrong_physics_unreal_pb_9_pe_.ltl	B	lift_wrong_physics_unreal_pb_9_pe	race4-shipped only (0.45s)
+load_balancer_unreal1_pb_4_6_pe_.ltl	B	load_balancer_unreal1_pb_4_6_pe	race4-shipped only (1.00s)
+load_balancer_unreal1_pb_5_4_pe_.ltl	B	load_balancer_unreal1_pb_5_4_pe	race4-shipped only (0.65s)
+load_balancer_unreal1_pb_6_3_pe_.ltl	B	load_balancer_unreal1_pb_6_3_pe	race4-shipped only (0.66s)
+load_balancer_unreal2_pb_5_pe_.ltl	B	load_balancer_unreal2_pb_5_pe	race4-shipped only (11.40s)
+robot-to-target-charging7.ltl	B	robot-to-target-charging	race2-best only (14.01s)
+taxi-service-real.ltl	B	taxi-service-real	race2-best only (16.78s)
+workstation_resupply_pb_3_pe_.ltl	B	workstation_resupply_pb_3_pe	race2-best only (14.79s)
+Alarm_a5f99bc6.ltl	C	Alarm	unsolved by all three
+Demo1_06e9cad4.ltl	C	Demo	unsolved by all three
+F-G-contradiction-110.ltl	C	F-G-contradiction	unsolved by all three
+FelixSpecFixed2_fa4d4ce3.ltl	C	FelixSpecFixed	unsolved by all three
+Morning2_06e9cad4.ltl	C	Morning	unsolved by all three
+Morning2s_06cf2373.ltl	C	Morning2s	unsolved by all three
+chain-60.ltl	C	chain	unsolved by all three
+collector_v1_pb_11_pe_.ltl	C	collector	unsolved by all three
+follow0.ltl	C	follow	unsolved by all three
+g-unreal-116.ltl	C	g-unreal	unsolved by all three
+helipad-contradict0.ltl	C	helipad-contradict	unsolved by all three
+infinite-race-u12.ltl	C	infinite-race-u	unsolved by all three
+ltl2dba_C2_unreal_pb_100_pe_.ltl	C	ltl2dba_C	unsolved by all three
+ltl2dba_R_pb_10_pe_.ltl	C	ltl2dba_R	unsolved by all three
+ltl2dba_theta_pb_100_pe_.ltl	C	ltl2dba_theta	unsolved by all three
+prioritized_arbiter_unreal2_pb_100_pe_.ltl	C	prioritized_arbiter_unreal	unsolved by all three
+robot-to-target-charging-unreal0.ltl	C	robot-to-target-charging-unreal	unsolved by all three
+robot-to-target-charging10.ltl	C	robot-to-target-charging	unsolved by all three
+robot_deliver_products_20.ltl	C	robot_deliver_products	unsolved by all three
+robot_grid_pb_6_6_pe_.ltl	C	robot_grid	unsolved by all three
+robot_repair0.ltl	C	robot_repair	unsolved by all three
+round_robin_arbiter_unreal1_pb_3_10_pe_.ltl	C	round_robin_arbiter_unreal	unsolved by all three
+sort51.ltl	C	sort	unsolved by all three
+tasks-unreal0.ltl	C	tasks-unreal	unsolved by all three
+thermostat-GF-unreal1.ltl	C	thermostat-GF-unreal	unsolved by all three
