@@ -98,6 +98,8 @@ option('acacia_spot_guarded_inequality_covering', type: 'boolean', value: false,
        description: 'Cover guarded inputs with the <= successor preimage instead of the exact successor')
 option('acacia_spot_guarded_existential_outputs', type: 'boolean', value: false,
        description: 'Cover guarded inputs with existentially quantified outputs instead of a constant output')
+option('acacia_spot_guarded_losing_input_search', type: 'boolean', value: false,
+       description: 'Search guarded inputs for a losing input before sampling an uncovered input')
 option('acacia_spot_lazy_provider', type: 'boolean', value: false,
        description: 'Compile the explicitly selected Spot TAA provider for real and formula-unreal workers')
 option('acacia_forward_safety_solver', type: 'boolean', value: false,

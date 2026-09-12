@@ -686,6 +686,20 @@
         }
       ]
     },
+    "spot_guarded_losing_input_search": {
+      "meson": "acacia_spot_guarded_losing_input_search",
+      "type": "boolean",
+      "default": false,
+      "description": "Search guarded inputs for a losing input before sampling an uncovered input",
+      "macros": [
+        {
+          "name": "ACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH",
+          "emit": "true",
+          "encoding": "constant",
+          "value": 1
+        }
+      ]
+    },
     "spot_guarded_inequality_covering": {
       "meson": "acacia_spot_guarded_inequality_covering",
       "type": "boolean",

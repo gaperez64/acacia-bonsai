@@ -175,6 +175,19 @@ spot_provider_replay_exists_test = executable(
 test('spot-provider-replay-exists', spot_provider_replay_exists_test,
      suite: ['unit', 'spot-provider-replay'])
 
+# The same sources with losing input search forced on, so both states of the
+# option are exercised in every build including the default one where it is
+# off. The -D wins over the generated value because of the #ifndef guard.
+spot_provider_replay_losing_input_test = executable(
+  'spot-provider-replay-losing-input-test',
+  'spot_provider_replay_test.cc',
+  include_directories: inc,
+  cpp_args: ['-DACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH=1'],
+  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test('spot-provider-replay-losing-input', spot_provider_replay_losing_input_test,
+     suite: ['unit', 'spot-provider-replay'])
+
 sparse_forward_rank_test = executable (
   'sparse-forward-rank-test',
   'sparse_forward_rank_test.cc',

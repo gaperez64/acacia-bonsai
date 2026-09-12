@@ -419,7 +419,8 @@ void missing_output_kernel () {
           bdd_exist (legal, k.alphabet.ap_vars) == bddtrue,
           "missing-output kernel distinguishes projection over outputs from all APs");
   for (auto semantics : all_semantics) {
-    const auto result = Search {store, k.alphabet, 1, {}, semantics}.solve ();
+    // Keep the sampling control independent of the build's default.
+    const auto result = Search {store, k.alphabet, 1, {}, semantics, LosingInputSearch::off}.solve ();
     expect (result.status == forward_result_status::lose_k, "input with no legal output loses");
     const auto& node = result.nodes.at (result.initial);
     expect (node.covered_inputs != bddtrue && node.choices.size () == 1 &&
@@ -430,6 +431,19 @@ void missing_output_kernel () {
                                              ? SuccessorRelation::downward : SuccessorRelation::exact;
     expect (not verify_losing_proof (store, k.alphabet, 1, corrupt, {}, semantics).value,
             "losing certificate also validates the requested tag");
+
+    const auto symbolic = Search {store, k.alphabet, 1, {}, semantics, LosingInputSearch::on}.solve ();
+    const auto& root = symbolic.nodes.at (symbolic.initial);
+    expect (symbolic.status == forward_result_status::lose_k && root.losing,
+            "symbolic missing-output search proves the initial node losing");
+    expect (symbolic.expansions == 1 && symbolic.choices_created == 0 && root.choices.empty () &&
+            root.covered_inputs == bddfalse,
+            "symbolic missing-output search loses before creating a covering choice");
+    check_losing_certificate (store, k.alphabet, 1, symbolic);
+    const auto& proof = symbolic.proofs.at (*symbolic.initial_proof);
+    expect (proof.record.reason == losing_reason::env_losing_input && proof.input == u &&
+            proof.record.dependencies.empty (),
+            "symbolic missing-output loss records the immediate losing input");
   }
 }
 
@@ -459,7 +473,7 @@ void last_losing_input () {
   }
   expect (inputs.back () == last && remaining == bddfalse, "losing input is last in model order");
   for (auto semantics : all_semantics) {
-    const auto sampled = Search {store, k.alphabet, 1, {}, semantics}.solve ();
+    const auto sampled = Search {store, k.alphabet, 1, {}, semantics, LosingInputSearch::off}.solve ();
     const auto symbolic = Search {store, k.alphabet, 1, {}, semantics, LosingInputSearch::on}.solve ();
     expect (sampled.status == forward_result_status::lose_k && symbolic.status == sampled.status,
             "last-input kernel loses in both searches");
@@ -493,7 +507,7 @@ void later_losing_input () {
   expect (check_losing_inputs (store, k.alphabet, 1, reader.initial_rank (), {}, input_checks)
               == bddfalse, "delayed-loss root has no immediate losing input");
   for (auto semantics : all_semantics) {
-    const auto sampled = Search {store, k.alphabet, 1, {}, semantics}.solve ();
+    const auto sampled = Search {store, k.alphabet, 1, {}, semantics, LosingInputSearch::off}.solve ();
     const auto symbolic = Search {store, k.alphabet, 1, {}, semantics, LosingInputSearch::on}.solve ();
     expect (symbolic.status == forward_result_status::lose_k && symbolic.status == sampled.status,
             "empty D falls back and still discovers the later loss");
