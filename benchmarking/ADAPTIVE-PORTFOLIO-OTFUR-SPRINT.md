@@ -38,6 +38,11 @@ Memory-limit outcomes deserve less trust than timeouts here: with zram near full
 there is little headroom above the 8 GiB cap. Only the TAA provider arms (§6)
 produced MEMOUTs in any number.
 
+The two gate binaries named below were rebuilt after the gates had run (§11), so
+their recorded hashes no longer identify artifacts on disk. The campaign binary
+`5451c91e2a133ac5…` is unaffected: it was frozen read-only before that happened
+and still matches.
+
 ## 2. What the handoff assumed, and what is actually true
 
 The sprint specification was written against `master` at `3fe3598a`. Four of its
@@ -368,6 +373,16 @@ candidate passing outright makes that moot.
 - **A G4 prediction was wrong in form.** I expected `SPIPureNext` to *fail* G4 via
   `ab/large1`; it reaches the 30 s test timeout first, so it counts as a timeout,
   which the gate allows.
+- **Two recorded binary hashes no longer identify artifacts on disk.** The G1 fix
+  ran `meson compile` on both gate build directories, rebuilding them at 03:03
+  and 03:04 — after the gates had run. The candidate `ba3159daef74bd1e…` is gone
+  along with its worktree; the baseline is now `d9db7dab83e1d8ab…`, rebuilt from
+  the same revision `3fb9f113` at the same preset and still kept in
+  `../acacia-prepatch` for G3. Neither is a byte-identical replacement, because
+  the release profile is not reproducible: `-Ofast -march=native`, and the version
+  is embedded from git. The gate *results* stand — they were measured against the
+  binaries whose hashes are recorded — but those two hashes are no longer
+  verifiable.
 
 ## 12. Decisions
 
