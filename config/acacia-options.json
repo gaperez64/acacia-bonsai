@@ -672,6 +672,20 @@
         }
       ]
     },
+    "spot_guarded_existential_outputs": {
+      "meson": "acacia_spot_guarded_existential_outputs",
+      "type": "boolean",
+      "default": false,
+      "description": "Cover guarded inputs with existentially quantified outputs instead of a constant output",
+      "macros": [
+        {
+          "name": "ACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS",
+          "emit": "true",
+          "encoding": "constant",
+          "value": 1
+        }
+      ]
+    },
     "spot_guarded_inequality_covering": {
       "meson": "acacia_spot_guarded_inequality_covering",
       "type": "boolean",

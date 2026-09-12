@@ -661,7 +661,11 @@ namespace acacia::spot_lazy_game {
 #else
       SuccessorRelation::exact,
 #endif
+#if ACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS
+      OutputChoice::existential};
+#else
       OutputChoice::constant};
+#endif
   struct SparseChoice {
       bdd input_region;
       // Present exactly in constant mode, where it must be a total output cube.
