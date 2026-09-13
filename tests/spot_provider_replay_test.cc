@@ -6,6 +6,7 @@
 #include "research/explicit_forward_game.hh"
 
 #include <fcntl.h>
+#include <random>
 #include <type_traits>
 using namespace replay;
 static_assert (not std::is_aggregate_v<SparseChoice>);
@@ -20,6 +21,170 @@ void expect (bool condition, const std::string& name) {
   if (not condition)
     throw std::runtime_error ("FAIL: " + name);
 }
+
+namespace acacia::spot_lazy_game {
+// Test access uses the existing replay-test build guard. The legacy coverage
+// path lives entirely here and never participates in production expansion.
+struct SearchTestAccess {
+    static auto& result (Search& s) { return s.result_; }
+    static auto& oracle (Search& s) { return s.oracle_; }
+    static void drain (Search& s) { s.propagate_losses (); }
+    static void initialize (Search& s) {
+      s.result_.initial = s.intern (s.rows_->initial_rank ());
+      detail::take (s.oracle_.query<bool> ([] (auto&) { return true; }));
+    }
+    static void loss (Search& s, RankNodeId target) {
+      s.result_.nodes.at (target).losing = true;
+      s.losses_.push_back (target);
+    }
+    static void check_coverage (Search& s) {
+      for (RankNodeId id = 0; id < s.result_.nodes.size (); ++id)
+        expect (s.reconstruct_coverage (id) == s.result_.nodes[id].covered_inputs,
+                "incremental coverage equals a fresh left-to-right OR");
+    }
+    static std::size_t activate (Search& s, RankNodeId source, bdd candidate, RankNodeId target) {
+      auto& node = s.result_.nodes.at (source);
+      const auto region = detail::take (s.oracle_.query<bdd> ([&] (auto& b) {
+        return b.land (candidate, b.negate (node.covered_inputs));
+      }));
+      expect (region != bddfalse && not s.result_.nodes.at (target).losing,
+              "activation admits only missing inputs with a live target");
+      const auto id = node.choices.size ();
+      node.choices.push_back (s.semantics_.output_choice == OutputChoice::constant
+                                 ? SparseChoice::constant (region, bddtrue, target)
+                                 : SparseChoice::existential (region, target));
+      s.result_.nodes[target].incoming.push_back ({source, id});
+      node.covered_inputs = detail::take (s.oracle_.query<bdd> ([&] (auto& b) {
+        return b.lor (node.covered_inputs, region);
+      }));
+      check_coverage (s);
+      return id;
+    }
+    static void legacy_rebuild (Search& s, RankNodeId id) {
+      auto& node = s.result_.nodes[id];
+      node.covered_inputs = detail::take (s.oracle_.query<bdd> ([&] (auto& b) {
+        bdd covered = bddfalse;
+        for (auto& choice : node.choices) {
+          b.step ();
+          if (s.result_.nodes[choice.successor].losing)
+            choice.active = false;
+          if (choice.active)
+            covered = b.lor (covered, choice.input_region);
+        }
+        return covered;
+      }));
+    }
+    static void legacy_drain (Search& s) {
+      while (not s.losses_.empty ()) {
+        const auto id = s.losses_.front ();
+        std::set<RankNodeId> affected;
+        for (const auto& ref : s.result_.nodes[id].incoming) {
+          auto& choice = s.result_.nodes[ref.source].choices[ref.choice];
+          if (choice.active && choice.successor == id) {
+            choice.active = false;
+            affected.insert (ref.source);
+          }
+        }
+        for (const auto source : affected) {
+          legacy_rebuild (s, source);
+          if (not s.result_.nodes[source].losing) {
+            ++s.result_.reopened_sources;
+            if (not s.result_.nodes[source].queued)
+              ++s.reopen_enqueues_;
+            s.enqueue (source);
+          }
+        }
+        s.losses_.pop_front ();
+      }
+    }
+    static void same_decisions (Search& s, Search& ref) {
+      const auto& a = s.result_;
+      const auto& b = ref.result_;
+      expect (s.open_ == ref.open_ && s.losses_ == ref.losses_ &&
+              s.interned_ == ref.interned_ && s.losing_.ranks () == ref.losing_.ranks () &&
+              s.losing_.proof_ids () == ref.losing_.proof_ids (),
+              "S3 preserves queue order, interning and losing generators at every step");
+      expect (a.initial == b.initial && a.initial_proof == b.initial_proof &&
+              a.expansions == b.expansions && a.choices_created == b.choices_created &&
+              a.nodes.size () == b.nodes.size () && a.proofs.size () == b.proofs.size () &&
+              s.reopen_enqueues_ == ref.reopen_enqueues_ &&
+              s.subsumption_scans_ == ref.subsumption_scans_ &&
+              s.nodes_checked_ == ref.nodes_checked_ && s.nodes_invalidated_ == ref.nodes_invalidated_,
+              "S3 preserves search decisions and actual reopen enqueues");
+      // Legacy rebuilding eagerly cleared choices for other pending targets,
+      // suppressing their later reopen attempts. S3 accounts for each event;
+      // queued flags still ensure exactly the same actual enqueues above.
+      expect (a.reopened_sources >= b.reopened_sources,
+              "explicit invalidations retain every legacy reopen attempt");
+      for (std::size_t id = 0; id < a.nodes.size (); ++id) {
+        const auto& x = a.nodes[id];
+        const auto& y = b.nodes[id];
+        expect (x.rank == y.rank && x.active_rows_complete == y.active_rows_complete &&
+                x.losing == y.losing && x.queued == y.queued &&
+                x.covered_inputs == y.covered_inputs && x.choices.size () == y.choices.size () &&
+                x.incoming.size () == y.incoming.size (), "S3 preserves every node");
+        for (std::size_t j = 0; j < x.choices.size (); ++j) {
+          const auto& c = x.choices[j];
+          const auto& d = y.choices[j];
+          expect (c.input_region == d.input_region && c.constant_output == d.constant_output &&
+                  c.successor == d.successor && c.active == d.active,
+                  "S3 preserves every choice, output, target and invalidation");
+        }
+        for (std::size_t j = 0; j < x.incoming.size (); ++j)
+          expect (x.incoming[j].source == y.incoming[j].source &&
+                  x.incoming[j].choice == y.incoming[j].choice,
+                  "S3 preserves reverse-edge order");
+      }
+      for (std::size_t id = 0; id < a.proofs.size (); ++id) {
+        const auto& x = a.proofs[id];
+        const auto& y = b.proofs[id];
+        expect (x.rank == y.rank && x.input == y.input && x.rows == y.rows &&
+                x.record.id == y.record.id && x.record.reason == y.record.reason &&
+                x.record.node == y.record.node && x.record.witness == y.record.witness &&
+                x.record.dependencies == y.record.dependencies,
+                "S3 preserves proof allocation, witnesses, dependencies and row obligations");
+      }
+    }
+    static SolveResult compare_rebuild (RowStore& store, const letters::WorkerAlphabet& alphabet,
+                                       int K, ChoiceSemantics semantics, LosingInputSearch mode) {
+      Search s {store, alphabet, K, {}, semantics, mode};
+      Search ref {store, alphabet, K, {}, semantics, mode};
+      detail::take (detail::checked<bool> ([&] {
+        store.phase = Phase::search;
+        s.result_.initial = s.intern (s.rows_->initial_rank ());
+        ref.result_.initial = ref.intern (ref.rows_->initial_rank ());
+        for (;;) {
+          s.propagate_losses ();
+          legacy_drain (ref);
+          same_decisions (s, ref);
+          check_coverage (s);
+          if (s.result_.nodes[s.result_.initial].losing || s.open_.empty ())
+            break;
+          for (auto* search : {&s, &ref}) {
+            const auto id = search->open_.front ();
+            search->open_.pop_front ();
+            search->result_.nodes[id].queued = false;
+            ++search->result_.expansions;
+            // All losses have drained. Rebuilding before the unchanged setup
+            // is equivalent to the old rebuild immediately after that setup.
+            if (search == &ref)
+              legacy_rebuild (ref, id);
+            search->expand (id);
+          }
+          same_decisions (s, ref);
+          check_coverage (s);
+        }
+        return true;
+      }));
+      // Finish through the real solve()/verification boundary in both cases.
+      auto actual = s.solve ();
+      const auto expected = ref.solve ();
+      expect (actual.status == expected.status && actual.failure == expected.failure &&
+              actual.generators == expected.generators, "S3 preserves verified certificates");
+      return actual;
+    }
+};
+} // namespace acacia::spot_lazy_game
 
 std::vector<bdd> valuations (const letters::WorkerAlphabet& a, bdd vars) {
   std::vector<bdd> out {bddtrue};
@@ -182,6 +347,11 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
         const auto symbolic = Search {store, a, K, {}, semantics, LosingInputSearch::on}.solve ();
         expect (symbolic.status == actual.status && symbolic.failure == Unknown::none,
                 "S2 on/off fixed-K outcomes agree for every automaton, partition and mode");
+        for (auto mode : {LosingInputSearch::off, LosingInputSearch::on}) {
+          const auto incremental = SearchTestAccess::compare_rebuild (store, a, K, semantics, mode);
+          expect (incremental.status == actual.status && incremental.failure == Unknown::none,
+                  "S3 and legacy rebuild match the explicit game with S2 off and on");
+        }
         expect (choice_regions (store, a, K, symbolic, symbolic_region_inputs) == 0,
                 "symbolic search preserves choice-region arithmetic");
         for (const auto& node : symbolic.nodes)
@@ -276,6 +446,7 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
   std::cout << checks << " S2 on/off matches, " << losing_input_checks
             << " universally losing inputs checked by enumeration, " << symbolic_region_inputs
             << " S2 choice-region inputs checked\n";
+  std::cout << 2 * checks << " S3/legacy rebuild traces match with S2 off/on\n";
   std::cout << losing_events << " loss events, " << antichain_insertions
             << " antichain insertions, " << broad_scans << " broad scans over "
             << nodes_scanned << " node checks, " << redundant_loss_events
@@ -356,6 +527,160 @@ struct Kernel {
     }
     auto view () const { return std::make_shared<lazy::LazyBuchiView> (graph); }
 };
+
+void incremental_coverage_events () {
+  Kernel k {1};
+  const bdd u = k.ap ("u", true), v = k.ap ("v", true);
+  RowStore store {k.view (), {}, {}};
+  Search s {store, k.alphabet, 1};
+  auto& result = SearchTestAccess::result (s);
+  result.nodes.resize (5, GuardedRankNode {Rank {{}, 1}});
+  auto& oracle = SearchTestAccess::oracle (s);
+  const auto regions = acacia::spot_lazy_game::detail::take (
+      oracle.query<std::vector<bdd>> ([&] (auto& b) {
+        return std::vector<bdd> {b.land (u, v), b.land (u, b.negate (v)), b.negate (u)};
+      }));
+  const auto first = SearchTestAccess::activate (s, 0, regions[0], 1);
+  SearchTestAccess::activate (s, 0, regions[1], 1);
+  SearchTestAccess::activate (s, 0, regions[2], 2);
+  result.nodes[1].incoming.push_back ({0, first}); // Duplicate reference to an active choice.
+  SearchTestAccess::loss (s, 1);
+  SearchTestAccess::loss (s, 1); // Repeated processing of the same target loss.
+  SearchTestAccess::drain (s);
+  SearchTestAccess::check_coverage (s);
+  expect (result.nodes[0].covered_inputs == regions[2] && result.reopened_sources == 1,
+          "one target invalidates both choices once despite duplicate events/references");
+  const auto replacement = SearchTestAccess::activate (s, 0, u, 3);
+  result.nodes[1].incoming.push_back ({0, replacement}); // Active, but wrong target identity.
+  SearchTestAccess::loss (s, 1);
+  SearchTestAccess::drain (s);
+  SearchTestAccess::check_coverage (s);
+  expect (result.nodes[0].covered_inputs == bddtrue && result.reopened_sources == 1,
+          "stale invalidations cannot subtract historical regions overlapping a replacement");
+
+  // Two distinct pending losses affect one source. The old reconstruction
+  // hid the second reopen attempt by clearing it while processing the first.
+  SearchTestAccess::loss (s, 2);
+  SearchTestAccess::loss (s, 3);
+  SearchTestAccess::drain (s);
+  SearchTestAccess::check_coverage (s);
+  s.publish_counters ();
+  expect (result.nodes[0].covered_inputs == bddfalse && result.reopened_sources == 3 &&
+          result.reopen_enqueues == 1,
+          "distinct losses count both invalidations but enqueue the affected source only once");
+  SearchTestAccess::activate (s, 4, bddtrue, 4);
+  SearchTestAccess::loss (s, 4);
+  SearchTestAccess::loss (s, 4);
+  SearchTestAccess::drain (s);
+  SearchTestAccess::check_coverage (s);
+  expect (not result.nodes[4].choices[0].active && result.nodes[4].covered_inputs == bddfalse &&
+          result.reopened_sources == 3, "losing self-loop subtracts once without reopening itself");
+}
+
+void incremental_coverage_property () {
+  Kernel k {1};
+  for (unsigned i = 0; i < 4; ++i)
+    k.ap ("u" + std::to_string (i), true);
+  RowStore store {k.view (), {}, {}};
+  std::size_t activations = 0, invalidations = 0, overlaps = 0;
+  for (unsigned seed = 0; seed < 16; ++seed) {
+    std::mt19937 random {seed};
+    Search s {store, k.alphabet, 1};
+    auto& result = SearchTestAccess::result (s);
+    result.nodes.push_back (GuardedRankNode {Rank {{}, 1}});
+    auto& oracle = SearchTestAccess::oracle (s);
+    const auto cubes = acacia::spot_lazy_game::detail::take (
+        oracle.query<std::vector<bdd>> ([&] (auto& b) {
+          return b.call ([&] { return valuations (k.alphabet, k.alphabet.inputs); });
+        }));
+    for (unsigned step = 0; step < 256; ++step) {
+      if (result.nodes.size () == 1 || (random () % 2 && result.nodes[0].covered_inputs != bddtrue)) {
+        const auto region = acacia::spot_lazy_game::detail::take (oracle.query<bdd> ([&] (auto& b) {
+          bdd candidate = bddfalse;
+          for (auto cube : cubes)
+            if (random () % 2)
+              candidate = b.lor (candidate, cube);
+          const auto missing = b.negate (result.nodes[0].covered_inputs);
+          auto region = b.land (candidate, missing);
+          if (region == bddfalse)
+            region = missing;
+          for (const auto& old : result.nodes[0].choices)
+            if (not old.active && b.land (region, old.input_region) != bddfalse) {
+              ++overlaps;
+              break;
+            }
+          return region;
+        }));
+        // Reuse live targets as well as creating fresh ones, so one loss can
+        // invalidate many disjoint regions without recycling historical choices.
+        RankNodeId target = random () % result.nodes.size ();
+        if (target == 0 || result.nodes[target].losing) {
+          target = result.nodes.size ();
+          result.nodes.push_back (GuardedRankNode {Rank {{}, 1}});
+        }
+        SearchTestAccess::activate (s, 0, region, target);
+        ++activations;
+      }
+      else {
+        const auto target = 1 + random () % (result.nodes.size () - 1);
+        if (not result.nodes[target].incoming.empty ())
+          result.nodes[target].incoming.push_back (result.nodes[target].incoming.front ());
+        SearchTestAccess::loss (s, target);
+        SearchTestAccess::drain (s);
+        ++invalidations;
+      }
+      SearchTestAccess::check_coverage (s);
+    }
+  }
+  expect (activations > 100 && invalidations > 100 && overlaps > 100,
+          "random coverage histories exercise activation, loss and overlapping historical regions");
+  std::cout << activations + invalidations << " randomized coverage operations checked, "
+            << overlaps << " activations overlap inactive history\n";
+}
+
+void incremental_coverage_failure () {
+  Kernel k {1};
+  const bdd u = k.ap ("u", true);
+  k.graph->new_edge (0, 0, bddtrue);
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  // Fail after each BDD operation, and at the final query checkpoint. Repeat
+  // on the second choice so the loss has already been partially propagated.
+  for (std::size_t checkpoint : {3, 5, 6, 9, 11, 12}) {
+    Search s {store, k.alphabet, 1};
+    SearchTestAccess::initialize (s);
+    auto& result = SearchTestAccess::result (s);
+    result.nodes.resize (2, GuardedRankNode {Rank {{}, 1}});
+    auto& oracle = SearchTestAccess::oracle (s);
+    const auto not_u = acacia::spot_lazy_game::detail::take (
+        oracle.query<bdd> ([&] (auto& b) { return b.negate (u); }));
+    SearchTestAccess::activate (s, 0, u, 1);
+    SearchTestAccess::activate (s, 0, not_u, 1);
+    SearchTestAccess::loss (s, 1);
+    struct Budget { std::size_t calls = 0, fail_at; } budget {0, checkpoint};
+    letters::QueryLimits limits;
+    limits.aborted = [] (void* data) {
+      auto& budget = *static_cast<Budget*> (data);
+      if (++budget.calls == budget.fail_at)
+        throw std::bad_alloc (); // Existing checked boundary classifies resource failures.
+      return false;
+    };
+    limits.abort_data = &budget;
+    oracle.set_limits (limits);
+    const auto failed = s.solve ();
+    expect (budget.calls == checkpoint && failed.status == forward_result_status::resource_limit &&
+            failed.failure == Unknown::resource_limit && failed.pending_loss &&
+            failed.generators.empty () && store.phase == Phase::search,
+            "resource failure during coverage subtraction leaves an inconclusive pending loss");
+    expect (failed.nodes[0].choices[0].active == (checkpoint <= 6) &&
+            failed.nodes[0].choices[1].active &&
+            failed.nodes[0].covered_inputs == (checkpoint <= 6 ? bddtrue : not_u),
+            "failed update publishes neither its union nor its inactive flag");
+    expect (not verify_winning_certificate (store, k.alphabet, 1, failed).value &&
+            not verify_losing_proof (store, k.alphabet, 1, failed).value,
+            "neither certificate verifier can accept a failed coverage update");
+  }
+}
 
 void check_regions (RowStore& store, const letters::WorkerAlphabet& a, const SolveResult& result) {
   std::size_t count = 0;
@@ -790,6 +1115,9 @@ int main () {
         return code;
     }
     copy_kernels ();
+    incremental_coverage_events ();
+    incremental_coverage_property ();
+    incremental_coverage_failure ();
     missing_output_kernel ();
     last_losing_input ();
     later_losing_input ();

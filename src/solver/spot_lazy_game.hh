@@ -925,6 +925,9 @@ namespace acacia::spot_lazy_game {
   }
 
   class Search {
+#ifdef ACACIA_PROVIDER_REPLAY_TESTING
+      friend struct SearchTestAccess;
+#endif
     public:
       Search (RowStore& view, letters::WorkerAlphabet alphabet, std::int32_t K, Limits limits = {},
               ChoiceSemantics semantics = default_choice_semantics,
@@ -1120,34 +1123,45 @@ namespace acacia::spot_lazy_game {
           }
         }
       }
-      void recompute_coverage (RankNodeId id) {
-        auto& node = result_.nodes[id];
-        node.covered_inputs = detail::take (oracle_.query<bdd> ([&] (auto& b) {
+#ifdef ACACIA_PROVIDER_REPLAY_TESTING
+      // Read-only reconstruction for invariant tests; the certificate verifier
+      // independently rebuilds coverage too. Never used on the expansion path.
+      bdd reconstruct_coverage (RankNodeId id) {
+        return detail::take (oracle_.query<bdd> ([&] (auto& b) {
           bdd covered = bddfalse;
-          for (auto& choice : node.choices) {
+          for (const auto& choice : result_.nodes[id].choices) {
             b.step ();
-            if (result_.nodes[choice.successor].losing)
-              choice.active = false;
             if (choice.active)
               covered = b.lor (covered, choice.input_region);
           }
           return covered;
         }));
       }
+#endif
       void propagate_losses () {
         while (not losses_.empty ()) {
           const auto id = losses_.front ();
           // Keep the event pending until ALL incoming invalidations complete.
           std::set<RankNodeId> affected;
           for (const auto& ref : result_.nodes[id].incoming) {
-            auto& choice = result_.nodes[ref.source].choices[ref.choice];
+            auto& source = result_.nodes[ref.source];
+            auto& choice = source.choices[ref.choice];
             if (choice.active && choice.successor == id) {
+              // Active regions are pairwise disjoint: expand intersects every
+              // new region with the still-missing inputs. Thus removing C_j
+              // from their union is exactly Covered AND NOT C_j. Check the
+              // current flag and target above: inactive historical regions can
+              // overlap newer choices and must never be subtracted twice.
+              source.covered_inputs = detail::take (oracle_.query<bdd> ([&] (auto& b) {
+                return b.land (source.covered_inputs, b.negate (choice.input_region));
+              }));
+              // Publish the flag only after the checked update succeeds. A
+              // failure leaves this loss pending and solve() inconclusive.
               choice.active = false;
               affected.insert (ref.source);
             }
           }
           for (const auto source : affected) {
-            recompute_coverage (source);
             if (not result_.nodes[source].losing) {
               ++result_.reopened_sources;
               // reopened_sources counts attempts, and an attempt on a node that
@@ -1180,7 +1194,8 @@ namespace acacia::spot_lazy_game {
         }
         auto row_ids = detail::complete_rows (*rows_, oracle_, rank);
         result_.nodes[id].active_rows_complete = true;
-        recompute_coverage (id);
+        // solve() drains all incoming invalidations before expanding a node;
+        // additions below and propagate_losses maintain the active union.
         if (result_.nodes[id].covered_inputs == bddtrue)
           return;
         const bdd missing = detail::take (oracle_.query<bdd> (
