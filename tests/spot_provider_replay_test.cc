@@ -22,6 +22,86 @@ void expect (bool condition, const std::string& name) {
     throw std::runtime_error ("FAIL: " + name);
 }
 
+void check_verifier_split (const Fields& fields) {
+  for (const auto* key : {"queries", "steps", "bdd_operations"}) {
+    std::size_t sum = 0;
+    for (const auto* phase : {"traversal", "invariant", "proof_bad"})
+      sum += std::stoull (fields.at (std::string ("verify_") + phase + "_" + key));
+    expect (sum == std::stoull (fields.at (std::string ("verify_") + key)),
+            "verifier phases partition the cumulative " + std::string (key));
+  }
+}
+
+void check_solve_counters (const SolveResult& result, const Fields& fields) {
+  expect (result.scan_tombstones + result.scan_prefilter_rejects + result.scan_exact_compares ==
+              result.subsumption_nodes_checked, "scan buckets partition every loop iteration");
+  expect (result.scan_exact_compares >= result.subsumption_nodes_invalidated,
+          "every invalidation requires an exact comparison");
+  expect (result.proofs_total == result.proofs.size () &&
+          result.proofs_in_initial_cone <= result.proofs_total, "proof cone fits the certificate");
+  std::size_t sum = 0, maximum = 0;
+  std::set<std::size_t> cone;
+  if (result.initial_proof) cone.insert (*result.initial_proof);
+  // Independent chronological propagation, rather than the production DFS.
+  for (auto it = result.proofs.rbegin (); it != result.proofs.rend (); ++it) {
+    const auto& deps = it->record.dependencies;
+    sum += deps.size ();
+    maximum = std::max (maximum, deps.size ());
+    if (cone.contains (it->record.id)) cone.insert (deps.begin (), deps.end ());
+  }
+  expect (result.proofs_in_initial_cone == cone.size () &&
+          result.dependency_list_len_sum == sum && result.dependency_list_len_max == maximum,
+          "shape counters describe the recorded dependencies, including an absent root");
+  Fields published;
+  rank_metrics (result, Reporter {[&] (const auto& k, const auto& v) { published[k] = v; }});
+  for (const auto* key : {"scan_tombstones", "scan_prefilter_rejects", "scan_exact_compares",
+                         "proofs_total", "proofs_in_initial_cone", "dependency_list_len_sum",
+                         "dependency_list_len_max"}) {
+    expect (fields.at (key) == published.at (key),
+            "destructor and SolveResult reader agree on " + std::string (key));
+    expect (std::count (columns.begin (), columns.end (), key) == 1,
+            "replay TSV contains exactly one column for " + std::string (key));
+  }
+  check_verifier_split (fields);
+  const bool win = result.status == forward_result_status::win_k;
+  for (const auto* key : {"queries", "steps", "bdd_operations"}) {
+    const auto suffix = std::string ("_") + key;
+    expect (std::stoull (fields.at ("verify_proof_bad" + suffix)) ==
+                (win ? 0 : std::stoull (fields.at ("verify" + suffix))),
+            "only the losing verifier charges the proof loop");
+    if (not win)
+      expect (fields.at ("verify_traversal" + suffix) == "0" &&
+              fields.at ("verify_invariant" + suffix) == "0", "losing replay resets winning phases");
+    for (const auto* phase : {"traversal", "invariant", "proof_bad"})
+      expect (std::count (columns.begin (), columns.end (), "verify_" + std::string (phase) + suffix)
+                  == 1, "verifier split is retained in the replay TSV");
+  }
+  if (win) {
+    std::size_t queries = 1;  // maximal-antichain construction
+    std::set<RankNodeId> reached {result.initial};
+    std::vector<RankNodeId> todo {result.initial};
+    while (not todo.empty ()) {
+      const auto id = todo.back ();
+      todo.pop_back ();
+      ++queries;  // complete_rows
+      for (const auto& choice : result.nodes[id].choices)
+        if (choice.active) {
+          queries += 3;  // reachability, output projection, coverage
+          if (reached.insert (choice.successor).second) todo.push_back (choice.successor);
+        }
+    }
+    expect (std::stoull (fields.at ("verify_traversal_queries")) == queries &&
+            fields.at ("verify_invariant_queries") == "1", "winning query counts follow the obligations");
+  }
+  else {
+    std::size_t queries = result.proofs.size ();  // chronology for EVERY proof
+    for (const auto& proof : result.proofs)
+      if (proof.record.reason == losing_reason::env_losing_input) queries += 3;
+    expect (std::stoull (fields.at ("verify_proof_bad_queries")) == queries,
+            "losing query count includes every proof, its rows, Bad and input restriction");
+  }
+}
+
 namespace acacia::spot_lazy_game {
 // Test access uses the existing replay-test build guard. The legacy coverage
 // path lives entirely here and never participates in production expansion.
@@ -32,6 +112,19 @@ struct SearchTestAccess {
     static void initialize (Search& s) {
       s.result_.initial = s.intern (s.rows_->initial_rank ());
       detail::take (s.oracle_.query<bool> ([] (auto&) { return true; }));
+    }
+    static SolveResult scan_buckets (RowStore& store, const letters::WorkerAlphabet& alphabet) {
+      Search s {store, alphabet, 2};
+      s.intern (Rank {{{0, 1}}, 2});
+      const auto tombstone = s.intern (Rank {{{2, 0}}, 2});
+      s.result_.nodes[tombstone].losing = true;
+      s.intern (Rank {{}, 2});                  // support rejection
+      s.intern (Rank {{{1, 0}}, 2});            // mass rejection
+      s.intern (Rank {{{1, 1}}, 2});            // equal mass, exact rejection
+      s.intern (Rank {{{0, 1}, {1, 0}}, 2});    // merge join, invalidated
+      s.enqueue_loss (0, losing_reason::env_unsafe);
+      s.publish_counters ();
+      return std::move (s.result_);
     }
     static void loss (Search& s, RankNodeId target) {
       s.result_.nodes.at (target).losing = true;
@@ -305,7 +398,11 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
     const auto dict = spot::make_bdd_dict ();
     auto p = spot::ltl_to_taa (spot::parse_infix_psl (f).f, dict, false);
     auto w = std::make_shared<lazy::LazyBuchiView> (p);
-    RowStore store {w, {}, report};
+    Fields observed;
+    RowStore store {w, {}, Reporter {[&] (const auto& key, const auto& value) {
+      observed[key] = value;
+      report.put (key, value);
+    }}};
     store.enumerate_and_freeze ();
     const auto n = store.cache->state_count ();
     for (unsigned mask = 0; mask < (1u << p->ap ().size ()); ++mask) {
@@ -344,7 +441,9 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
           std::cerr << "MISMATCH " << f << ' ' << part << ' ' << K << '\n';
           return 1;
         }
+        check_solve_counters (actual, observed);
         const auto symbolic = Search {store, a, K, {}, semantics, LosingInputSearch::on}.solve ();
+        check_solve_counters (symbolic, observed);
         expect (symbolic.status == actual.status && symbolic.failure == Unknown::none,
                 "S2 on/off fixed-K outcomes agree for every automaton, partition and mode");
         for (auto mode : {LosingInputSearch::off, LosingInputSearch::on}) {
@@ -527,6 +626,130 @@ struct Kernel {
     }
     auto view () const { return std::make_shared<lazy::LazyBuchiView> (graph); }
 };
+
+void verifier_phase_metrics () {
+  Kernel k {1};
+  k.graph->new_edge (0, 0, bddtrue);
+  Fields observed;
+  bool abort_invariant = false, traversal_finished = false;
+  RowStore store {k.view (), {}, Reporter {[&] (const auto& key, const auto& value) {
+    observed[key] = value;
+    if (abort_invariant && key == "verify_traversal_queries" && value != "0")
+      traversal_finished = true;
+  }}};
+  store.enumerate_and_freeze ();
+  for (auto semantics : all_semantics) {
+    const auto result = Search {store, k.alphabet, 1, {}, semantics}.solve ();
+    check_solve_counters (result, observed);
+    const auto successful = observed;
+    // Warm only the rank predicates that traversal uses, then independently
+    // measure the invariant via the original cumulative Oracle::report API.
+    Reader reader {store, true, {}};
+    Oracle oracle {reader, store, k.alphabet, 1};
+    const auto& rank = result.nodes.at (result.initial).rank;
+    detail::take (semantics.successor_relation == SuccessorRelation::exact
+                      ? oracle.eq (rank, rank) : oracle.down (rank, rank));
+    Fields before, after;
+    oracle.report (Reporter {[&] (const auto& key, const auto& value) { before[key] = value; }}, "");
+    expect (detail::take (oracle.invariant (rank, result.generators, 0)) == letters::Invariant::verified,
+            "independent invariant succeeds with the traversal's predicate cache");
+    oracle.report (Reporter {[&] (const auto& key, const auto& value) { after[key] = value; }}, "");
+    for (const auto* key : {"queries", "steps", "bdd_operations"})
+      expect (std::stoull (successful.at (std::string ("verify_invariant_") + key)) ==
+                  std::stoull (after.at (key)) - std::stoull (before.at (key)),
+              "invariant bucket equals independently measured warm-cache " + std::string (key));
+    expect (std::stoull (successful.at ("verify_invariant_bdd_operations")) > 0 &&
+            std::stoull (successful.at ("verify_traversal_bdd_operations")) > 0,
+            "both winning phases do BDD work");
+
+    Limits limits;
+    limits.verifier_queries.max_steps = 0;
+    const auto failed = verify_winning_certificate (store, k.alphabet, 1, result, limits, semantics);
+    expect (not failed.value && failed.unknown == Unknown::resource_limit &&
+            observed.at ("verify_traversal_queries") == "1" &&
+            observed.at ("verify_invariant_queries") == "0", "early failure charges traversal only");
+    check_verifier_split (observed);
+
+    limits = {};
+    limits.verifier_queries.aborted = [] (void* data) { return *static_cast<bool*> (data); };
+    limits.verifier_queries.abort_data = &traversal_finished;
+    abort_invariant = true;
+    const auto aborted = verify_winning_certificate (store, k.alphabet, 1, result, limits, semantics);
+    abort_invariant = traversal_finished = false;
+    expect (not aborted.value && aborted.unknown == Unknown::aborted &&
+            observed.at ("verify_invariant_queries") == "1" &&
+            observed.at ("verify_invariant_steps") == "0" &&
+            observed.at ("verify_invariant_bdd_operations") == "0",
+            "failure entering the invariant charges its query without repeating traversal work");
+    for (const auto* key : {"queries", "steps", "bdd_operations"}) {
+      const auto field = std::string ("verify_traversal_") + key;
+      expect (observed.at (field) == successful.at (field), "invariant failure preserves traversal totals");
+    }
+    check_verifier_split (observed);
+  }
+
+  Kernel loss {2};
+  loss.graph->new_edge (0, 1, bddtrue);
+  loss.graph->new_edge (1, 1, bddtrue, {0});
+  RowStore losing_store {loss.view (), {}, store.report};
+  losing_store.enumerate_and_freeze ();
+  const auto result = Search {losing_store, loss.alphabet, 1}.solve ();
+  expect (result.status == forward_result_status::lose_k, "proof-loop fixture loses");
+  check_solve_counters (result, observed);
+  const auto successful = observed;
+  auto corrupt = result;
+  // An orphan proof must still be checked, even though it cannot be in the
+  // initial proof's transitive cone. Fail on its missing input after all the
+  // original Bad obligations have completed.
+  auto orphan = corrupt.proofs.at (*corrupt.initial_proof);
+  orphan.record.id = corrupt.proofs.size ();
+  orphan.input.reset ();
+  corrupt.proofs.push_back (std::move (orphan));
+  const auto failed = verify_losing_proof (losing_store, loss.alphabet, 1, corrupt);
+  expect (not failed.value && failed.unknown == Unknown::invalid_query &&
+          std::stoull (observed.at ("verify_proof_bad_queries")) ==
+              std::stoull (successful.at ("verify_proof_bad_queries")) + 1,
+          "losing replay still checks an orphan after every original proof");
+  check_verifier_split (observed);
+}
+
+void certificate_shape_metrics () {
+  Kernel k {1};
+  Fields observed;
+  RowStore store {k.view (), {}, Reporter {[&] (const auto& key, const auto& value) {
+    observed[key] = value;
+  }}};
+  const auto scan = SearchTestAccess::scan_buckets (store, k.alphabet);
+  expect (scan.subsumption_nodes_checked == 6 && scan.scan_tombstones == 2 &&
+          scan.scan_prefilter_rejects == 2 && scan.scan_exact_compares == 2 &&
+          scan.subsumption_nodes_invalidated == 1,
+          "scan classifies tombstones, both prefilters, equal-mass rejection and merge-join success");
+  expect (observed.at ("scan_tombstones") == "2" && observed.at ("scan_prefilter_rejects") == "2" &&
+          observed.at ("scan_exact_compares") == "2", "scan reporting survives moving the result");
+  for (bool has_root : {false, true}) {
+    SolveResult published;
+    {
+      Search search {store, k.alphabet, 1};
+      auto& result = SearchTestAccess::result (search);
+      // Diamond sharing proof 0, plus orphan proof 1. Closure counts shared
+      // dependencies once, while list lengths count every recorded edge.
+      const std::vector<std::vector<std::size_t>> deps {{}, {}, {0}, {0}, {2, 3}};
+      for (std::size_t id = 0; id < deps.size (); ++id)
+        result.proofs.push_back ({{id, losing_reason::env_subsumed, 0, 0, deps[id]},
+                                 Rank {{{0, 0}}, 1}, {}, {}});
+      if (has_root) result.initial_proof = 4;
+      search.publish_counters ();
+      published = std::move (result);
+    }
+    expect (published.proofs_total == 5 && published.proofs_in_initial_cone == (has_root ? 4 : 0) &&
+            published.dependency_list_len_sum == 4 && published.dependency_list_len_max == 2,
+            "diamond closure excludes orphans, deduplicates shared dependencies and handles no root");
+    expect (observed.at ("proofs_total") == "5" &&
+            observed.at ("proofs_in_initial_cone") == (has_root ? "4" : "0") &&
+            observed.at ("dependency_list_len_sum") == "4" &&
+            observed.at ("dependency_list_len_max") == "2", "shape reporting survives moving the result");
+  }
+}
 
 void incremental_coverage_events () {
   Kernel k {1};
@@ -1115,6 +1338,8 @@ int main () {
         return code;
     }
     copy_kernels ();
+    verifier_phase_metrics ();
+    certificate_shape_metrics ();
     incremental_coverage_events ();
     incremental_coverage_property ();
     incremental_coverage_failure ();
