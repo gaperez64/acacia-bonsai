@@ -541,6 +541,13 @@ namespace acacia::spot_lazy_game {
         return query<std::optional<bdd>> ([&] (auto& b) { return b.model (f, vars); });
       }
       static bool leq (const Rank& a, const Rank& b) { return a.leq (b); }
+      struct WorkMetrics {
+          size_t queries = 0, steps = 0, bdd_operations = 0;
+      };
+      WorkMetrics work_metrics () const {
+        const auto& m = boundary_.metrics ();
+        return {queries_, m.steps, m.bdd_operations};
+      }
       void report (Reporter out, const std::string& prefix) const {
         if (!out.sink) return;
         const auto& m = boundary_.metrics ();
@@ -643,6 +650,34 @@ namespace acacia::spot_lazy_game {
       std::string prefix;
       ~MetricReport () { oracle.report (out, prefix); }
   };
+  // Disjoint differences of the same monotone counters used by Oracle::report.
+  // Keep partial work on exceptional exits, just like the cumulative report.
+  // Peaks and retained bytes are not additive and are deliberately not split.
+  struct VerifierMetricReport {
+      Oracle& oracle;
+      Reporter out;
+      std::string phase;
+      Oracle::WorkMetrics before;
+      VerifierMetricReport (Oracle& oracle, Reporter out, std::string phase)
+        : oracle (oracle), out (out), phase (std::move (phase)), before (oracle.work_metrics ()) {
+        for (const auto* part : {"traversal", "invariant", "proof_bad"})
+          for (const auto* key : {"queries", "steps", "bdd_operations"})
+            out.count (std::string ("verify_") + part + "_" + key, 0);
+      }
+      void finish_phase () {
+        const auto after = oracle.work_metrics ();
+        const auto prefix = "verify_" + phase + "_";
+        out.count (prefix + "queries", after.queries - before.queries);
+        out.count (prefix + "steps", after.steps - before.steps);
+        out.count (prefix + "bdd_operations", after.bdd_operations - before.bdd_operations);
+        before = after;
+      }
+      void next_phase (std::string next) {
+        finish_phase ();
+        phase = std::move (next);
+      }
+      ~VerifierMetricReport () { finish_phase (); }
+  };
   using solver_detail::forward_result_status;
   using solver_detail::losing_reason;
   // P4 OTFUR and verifier specialization: same queue order, loss propagation,
@@ -741,10 +776,13 @@ namespace acacia::spot_lazy_game {
       // LossSet.  Names follow the dense forward solver's child_metrics.
       std::size_t subsumption_scans = 0, reopen_enqueues = 0;
       std::size_t subsumption_nodes_checked = 0, subsumption_nodes_invalidated = 0;
+      std::size_t scan_tombstones = 0, scan_prefilter_rejects = 0, scan_exact_compares = 0;
       std::size_t subsumption_queries = 0, subsumption_hits = 0;
       std::size_t subsumption_prefilter_skips = 0;
       std::size_t losing_insertions = 0, losing_removals = 0;
       std::size_t losing_antichain_size = 0, losing_antichain_peak = 0;
+      std::size_t proofs_total = 0, proofs_in_initial_cone = 0;
+      std::size_t dependency_list_len_sum = 0, dependency_list_len_max = 0;
       double prep_ms = 0, solve_ms = 0, verify_ms = 0;
   };
 
@@ -791,6 +829,7 @@ namespace acacia::spot_lazy_game {
       auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
       Oracle oracle {*rows, view, alphabet, K};
       MetricReport metrics {oracle, view.report, "verify_"};
+      VerifierMetricReport phases {oracle, view.report, "traversal"};
       oracle.set_limits (limits.verifier_queries);
       detail::require (certificate.failure == Unknown::none && not certificate.pending_loss &&
                        not certificate.pending_expansion &&
@@ -858,6 +897,9 @@ namespace acacia::spot_lazy_game {
         return result;
       }));
       // A second obligation: forall u exists c Good at EVERY maximal generator.
+      // Building the maximal antichain above belongs to traversal; this bucket
+      // measures only the final invariant query, with the existing warm cache.
+      phases.next_phase ("invariant");
       detail::require (detail::take (oracle.invariant (rows->initial_rank (), generators, 0)) ==
                        letters::Invariant::verified);
       return generators;
@@ -873,6 +915,9 @@ namespace acacia::spot_lazy_game {
       auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
       Oracle oracle {*rows, view, alphabet, K};
       MetricReport metrics {oracle, view.report, "verify_"};
+      // Includes chronology, rebuilt rows and input restriction around each
+      // Bad obligation, as well as the row-independent proof rules.
+      VerifierMetricReport phases {oracle, view.report, "proof_bad"};
       oracle.set_limits (limits.verifier_queries);
       detail::require (certificate.failure == Unknown::none && not certificate.pending_loss &&
                        certificate.initial_proof &&
@@ -959,6 +1004,9 @@ namespace acacia::spot_lazy_game {
         view_.report.count ("subsumption_scans", subsumption_scans_);
         view_.report.count ("subsumption_nodes_checked", nodes_checked_);
         view_.report.count ("subsumption_nodes_invalidated", nodes_invalidated_);
+        view_.report.count ("scan_tombstones", scan_tombstones_);
+        view_.report.count ("scan_prefilter_rejects", scan_prefilter_rejects_);
+        view_.report.count ("scan_exact_compares", scan_exact_compares_);
         view_.report.count ("reopen_enqueues", reopen_enqueues_);
         view_.report.count ("subsumption_queries", losing_.queries);
         view_.report.count ("subsumption_hits", losing_.hits);
@@ -967,13 +1015,45 @@ namespace acacia::spot_lazy_game {
         view_.report.count ("losing_removals", losing_.removals);
         view_.report.count ("losing_antichain_size", losing_.size ());
         view_.report.count ("losing_antichain_peak", losing_.peak);
+        view_.report.count ("proofs_total", proofs_total_);
+        view_.report.count ("proofs_in_initial_cone", proofs_in_initial_cone_);
+        view_.report.count ("dependency_list_len_sum", dependency_list_len_sum_);
+        view_.report.count ("dependency_list_len_max", dependency_list_len_max_);
       }
       // Copy the live counters into the result.  Called once, from solve(),
       // before either return; ~Search then emits the same values.
       void publish_counters () {
+        proofs_total_ = result_.proofs.size ();
+        proofs_in_initial_cone_ = dependency_list_len_sum_ = dependency_list_len_max_ = 0;
+        for (const auto& proof : result_.proofs) {
+          const auto length = proof.record.dependencies.size ();
+          dependency_list_len_sum_ += length;
+          dependency_list_len_max_ = std::max (dependency_list_len_max_, length);
+        }
+        // Observe the recorded graph only. The verifier still visits EVERY
+        // proof in chronological order, including proofs outside this cone.
+        // No initial proof (including a winning solve) means an empty cone.
+        if (result_.initial_proof) {
+          std::vector<bool> seen (proofs_total_, false);
+          std::vector<std::size_t> todo {*result_.initial_proof};
+          seen[*result_.initial_proof] = true;
+          while (not todo.empty ()) {
+            const auto id = todo.back ();
+            todo.pop_back ();
+            ++proofs_in_initial_cone_;
+            for (const auto dep : result_.proofs[id].record.dependencies)
+              if (not seen[dep]) {
+                seen[dep] = true;
+                todo.push_back (dep);
+              }
+          }
+        }
         result_.subsumption_scans = subsumption_scans_;
         result_.subsumption_nodes_checked = nodes_checked_;
         result_.subsumption_nodes_invalidated = nodes_invalidated_;
+        result_.scan_tombstones = scan_tombstones_;
+        result_.scan_prefilter_rejects = scan_prefilter_rejects_;
+        result_.scan_exact_compares = scan_exact_compares_;
         result_.reopen_enqueues = reopen_enqueues_;
         result_.subsumption_queries = losing_.queries;
         result_.subsumption_hits = losing_.hits;
@@ -982,6 +1062,10 @@ namespace acacia::spot_lazy_game {
         result_.losing_removals = losing_.removals;
         result_.losing_antichain_size = losing_.size ();
         result_.losing_antichain_peak = losing_.peak;
+        result_.proofs_total = proofs_total_;
+        result_.proofs_in_initial_cone = proofs_in_initial_cone_;
+        result_.dependency_list_len_sum = dependency_list_len_sum_;
+        result_.dependency_list_len_max = dependency_list_len_max_;
       }
       SolveResult solve () {
         view_.phase = Phase::search;
@@ -1061,6 +1145,9 @@ namespace acacia::spot_lazy_game {
       LossSet losing_;
       std::size_t subsumption_scans_ = 0;
       std::size_t nodes_checked_ = 0, nodes_invalidated_ = 0;
+      std::size_t scan_tombstones_ = 0, scan_prefilter_rejects_ = 0, scan_exact_compares_ = 0;
+      std::size_t proofs_total_ = 0, proofs_in_initial_cone_ = 0;
+      std::size_t dependency_list_len_sum_ = 0, dependency_list_len_max_ = 0;
       std::size_t reopen_enqueues_ = 0;
       void enqueue (RankNodeId id) {
         auto& node = result_.nodes[id];
@@ -1115,8 +1202,16 @@ namespace acacia::spot_lazy_game {
         ++subsumption_scans_;
         for (RankNodeId source = 0; source < result_.nodes.size (); ++source) {
           ++nodes_checked_;
-          if (result_.nodes[source].losing)
+          if (result_.nodes[source].losing) {
+            ++scan_tombstones_;
             continue;
+          }
+          if (not rank.prefilter_leq (result_.nodes[source].rank)) {
+            ++scan_prefilter_rejects_;
+            continue;
+          }
+          // Includes leq's equal-mass equality shortcut as well as merge joins.
+          ++scan_exact_compares_;
           if (Oracle::leq (rank, result_.nodes[source].rank)) {
             ++nodes_invalidated_;
             enqueue_loss (source, losing_reason::env_subsumed, {proof_id});
