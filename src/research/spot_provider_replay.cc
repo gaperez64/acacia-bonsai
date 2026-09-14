@@ -263,6 +263,9 @@ namespace replay {
     report.count ("subsumption_scans", r.subsumption_scans);
     report.count ("subsumption_nodes_checked", r.subsumption_nodes_checked);
     report.count ("subsumption_nodes_invalidated", r.subsumption_nodes_invalidated);
+    report.count ("scan_tombstones", r.scan_tombstones);
+    report.count ("scan_prefilter_rejects", r.scan_prefilter_rejects);
+    report.count ("scan_exact_compares", r.scan_exact_compares);
     report.count ("subsumption_queries", r.subsumption_queries);
     report.count ("subsumption_hits", r.subsumption_hits);
     report.count ("subsumption_prefilter_skips", r.subsumption_prefilter_skips);
@@ -270,6 +273,10 @@ namespace replay {
     report.count ("losing_removals", r.losing_removals);
     report.count ("losing_antichain_size", r.losing_antichain_size);
     report.count ("losing_antichain_peak", r.losing_antichain_peak);
+    report.count ("proofs_total", r.proofs_total);
+    report.count ("proofs_in_initial_cone", r.proofs_in_initial_cone);
+    report.count ("dependency_list_len_sum", r.dependency_list_len_sum);
+    report.count ("dependency_list_len_max", r.dependency_list_len_max);
   }
   int worker (const Options& o, Reporter report) {
     const auto job = Clock::now ();
@@ -372,14 +379,19 @@ namespace replay {
               "threshold_hits", "preimage_hits", "cache_rank_bytes"})
           for (const auto* prefix : {"search_", "verify_"})
             report.count (std::string (prefix) + key, 0);
+        for (const auto* phase : {"traversal", "invariant", "proof_bad"})
+          for (const auto* key : {"queries", "steps", "bdd_operations"})
+            report.count (std::string ("verify_") + phase + "_" + key, 0);
         for (const auto* key :
              {"search_ms", "verification_ms", "attempt_ms", "game_states", "guarded_choices",
               "certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes",
               "reopened_sources", "reopen_enqueues", "subsumption_scans",
               "subsumption_nodes_checked",
+              "scan_tombstones", "scan_prefilter_rejects", "scan_exact_compares",
               "subsumption_nodes_invalidated", "subsumption_queries", "subsumption_hits", "subsumption_prefilter_skips",
               "losing_insertions", "losing_removals", "losing_antichain_size",
-              "losing_antichain_peak"})
+              "losing_antichain_peak", "proofs_total", "proofs_in_initial_cone",
+              "dependency_list_len_sum", "dependency_list_len_max"})
           report.put (key, "NA");
         const auto before_search = store.search_generated, before_verify = store.verify_generated;
         SolveResult result;
@@ -517,6 +529,15 @@ namespace replay {
                                           "verify_peak_result_nodes",
                                           "verify_threshold_hits",
                                           "verify_preimage_hits",
+                                          "verify_traversal_queries",
+                                          "verify_traversal_steps",
+                                          "verify_traversal_bdd_operations",
+                                          "verify_invariant_queries",
+                                          "verify_invariant_steps",
+                                          "verify_invariant_bdd_operations",
+                                          "verify_proof_bad_queries",
+                                          "verify_proof_bad_steps",
+                                          "verify_proof_bad_bdd_operations",
                                           "game_states",
                                           "guarded_choices",
                                           "expansions",
@@ -527,6 +548,9 @@ namespace replay {
                                           "subsumption_scans",
                                           "subsumption_nodes_checked",
                                           "subsumption_nodes_invalidated",
+                                          "scan_tombstones",
+                                          "scan_prefilter_rejects",
+                                          "scan_exact_compares",
                                           "subsumption_queries",
                                           "subsumption_hits",
                                           "subsumption_prefilter_skips",
@@ -534,6 +558,10 @@ namespace replay {
                                           "losing_removals",
                                           "losing_antichain_size",
                                           "losing_antichain_peak",
+                                          "proofs_total",
+                                          "proofs_in_initial_cone",
+                                          "dependency_list_len_sum",
+                                          "dependency_list_len_max",
                                           "parse_ms",
                                           "eager_ms",
                                           "search_ms",

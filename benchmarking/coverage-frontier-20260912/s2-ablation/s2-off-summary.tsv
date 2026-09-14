@@ -1,0 +1,47 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+s2-off	SPIPureNext.ltl				true	TIMEOUT	17
+s2-off	heim-double-x-real.ltl				true	TIMEOUT	17
+s2-off	ordered-visits-choice-real.ltl				true	UNKNOWN	17
+s2-off	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT	17
+s2-off	thermostat-F-real.ltl				true	TIMEOUT	17
+s2-off	06.ltl				true	TIMEOUT	17
+s2-off	07.ltl				true	TIMEOUT	17
+s2-off	GF-G-contradiction7.ltl				true	TIMEOUT	17
+s2-off	TwoCountersDisButA9.ltl	17	UNREALIZABLE	0.19638471199868945	false	UNREALIZABLE	17
+s2-off	amba_decomposed_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.12799013900075806	false	REALIZABLE	17
+s2-off	collector_v2_pb_12_pe_.ltl	17	REALIZABLE	0.7972599110071314	false	REALIZABLE	17
+s2-off	g-unreal-113.ltl	17	UNREALIZABLE	7.554624285003229	false	UNREALIZABLE	17
+s2-off	lift_wrong_physics_unreal_pb_10_pe_.ltl	17	UNREALIZABLE	1.1787566309940303	false	UNREALIZABLE	17
+s2-off	lift_wrong_physics_unreal_pb_9_pe_.ltl	17	UNREALIZABLE	0.46322729599341983	false	UNREALIZABLE	17
+s2-off	load_balancer_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	1.0829518789978465	false	UNREALIZABLE	17
+s2-off	load_balancer_unreal1_pb_5_4_pe_.ltl	17	UNREALIZABLE	0.6886492810008349	false	UNREALIZABLE	17
+s2-off	load_balancer_unreal1_pb_6_3_pe_.ltl	17	UNREALIZABLE	0.5985978890021215	false	UNREALIZABLE	17
+s2-off	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	12.71908555200207	false	UNREALIZABLE	17
+s2-off	robot-to-target-charging7.ltl				true	TIMEOUT	17
+s2-off	taxi-service-real.ltl				true	TIMEOUT	17
+s2-off	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	17
+s2-off	Alarm_a5f99bc6.ltl				true	TIMEOUT	17
+s2-off	Demo1_06e9cad4.ltl				true	TIMEOUT	17
+s2-off	F-G-contradiction-110.ltl				true	TIMEOUT	17
+s2-off	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT	17
+s2-off	Morning2_06e9cad4.ltl				true	TIMEOUT	17
+s2-off	Morning2s_06cf2373.ltl				true	TIMEOUT	17
+s2-off	chain-60.ltl				true	TIMEOUT	17
+s2-off	collector_v1_pb_11_pe_.ltl				true	TIMEOUT	17
+s2-off	follow0.ltl				true	TIMEOUT	17
+s2-off	g-unreal-116.ltl				true	TIMEOUT	17
+s2-off	helipad-contradict0.ltl				true	TIMEOUT	17
+s2-off	infinite-race-u12.ltl				true	TIMEOUT	17
+s2-off	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT	17
+s2-off	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT	17
+s2-off	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT	17
+s2-off	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT	17
+s2-off	robot-to-target-charging-unreal0.ltl				true	TIMEOUT	17
+s2-off	robot-to-target-charging10.ltl				true	TIMEOUT	17
+s2-off	robot_deliver_products_20.ltl				true	TIMEOUT	17
+s2-off	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT	17
+s2-off	robot_repair0.ltl				true	TIMEOUT	17
+s2-off	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	17
+s2-off	sort51.ltl				true	TIMEOUT	17
+s2-off	tasks-unreal0.ltl				true	TIMEOUT	17
+s2-off	thermostat-GF-unreal1.ltl				true	TIMEOUT	17

@@ -1,0 +1,10 @@
+# Cross-polarity repertoire: real/small backward, forward, or guarded-sparse
+# crossed with unreal/formula guarded-sparse or unreal/automaton forward.
+# Each line selects one actual two-arm invocation sharing the whole budget.
+# rf-ugf is the previously measured fixed-pair control.
+rb-ugf|real:small:backward,unreal:formula:spot-guarded-sparse
+rf-ugf|real:small:forward,unreal:formula:spot-guarded-sparse
+rg-ugf|real:small:spot-guarded-sparse,unreal:formula:spot-guarded-sparse
+rb-ufa|real:small:backward,unreal:automaton:forward
+rf-ufa|real:small:forward,unreal:automaton:forward
+rg-ufa|real:small:spot-guarded-sparse,unreal:automaton:forward

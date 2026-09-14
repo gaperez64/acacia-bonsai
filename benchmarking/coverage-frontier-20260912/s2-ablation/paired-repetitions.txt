@@ -1,0 +1,13 @@
+=== GF-G-contradiction7 ===
+  round 1   off: UNREALIZABLE 15.81    on: UNREALIZABLE 14.44
+  round 2   off: UNREALIZABLE 16.48    on: UNREALIZABLE 15.17
+  round 3   off: UNREALIZABLE 16.98    on: UNREALIZABLE 16.05
+  round 4   off: TIMEOUT 17.06    on: UNREALIZABLE 15.23
+  round 5   off: TIMEOUT 17.06    on: UNREALIZABLE 14.76
+=== workstation_resupply_pb_3_pe_ ===
+  round 1   off: REALIZABLE 16.54    on: REALIZABLE 16.82
+  round 2   off: TIMEOUT 17.04    on: TIMEOUT 17.03
+  round 3   off: TIMEOUT 17.03    on: TIMEOUT 17.04
+  round 4   off: TIMEOUT 17.04    on: REALIZABLE 16.07
+  round 5   off: REALIZABLE 16.02    on: REALIZABLE 16.32
+DONE

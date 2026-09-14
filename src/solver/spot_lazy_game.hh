@@ -492,6 +492,16 @@ namespace acacia::spot_lazy_game {
       letters::Result<bdd> bad (const Rank& r, const std::vector<Rank>& L, uint64_t) {
         return query<bdd> ([&] (auto& b) { return aggregate (r, L, true, b); });
       }
+      // Return Bad and its uncovered losing inputs in the same checked query.
+      // The projection is only a search region; proofs still need a total cube.
+      letters::Result<std::pair<bdd, bdd>> bad (const Rank& r, const std::vector<Rank>& L,
+                                               uint64_t, bdd missing) {
+        return query<std::pair<bdd, bdd>> ([&] (auto& b) {
+          const bdd predicate = aggregate (r, L, true, b);
+          const bdd H = b.forall (predicate, b.vars (Variables::outputs));
+          return std::pair {predicate, b.land (missing, H)};
+        });
+      }
       letters::Result<letters::Invariant> invariant (const Rank& initial,
                                                      const std::vector<Rank>& G, uint64_t) {
         return query<letters::Invariant> ([&] (auto& b) {
@@ -531,6 +541,13 @@ namespace acacia::spot_lazy_game {
         return query<std::optional<bdd>> ([&] (auto& b) { return b.model (f, vars); });
       }
       static bool leq (const Rank& a, const Rank& b) { return a.leq (b); }
+      struct WorkMetrics {
+          size_t queries = 0, steps = 0, bdd_operations = 0;
+      };
+      WorkMetrics work_metrics () const {
+        const auto& m = boundary_.metrics ();
+        return {queries_, m.steps, m.bdd_operations};
+      }
       void report (Reporter out, const std::string& prefix) const {
         if (!out.sink) return;
         const auto& m = boundary_.metrics ();
@@ -633,19 +650,99 @@ namespace acacia::spot_lazy_game {
       std::string prefix;
       ~MetricReport () { oracle.report (out, prefix); }
   };
+  // Disjoint differences of the same monotone counters used by Oracle::report.
+  // Keep partial work on exceptional exits, just like the cumulative report.
+  // Peaks and retained bytes are not additive and are deliberately not split.
+  struct VerifierMetricReport {
+      Oracle& oracle;
+      Reporter out;
+      std::string phase;
+      Oracle::WorkMetrics before;
+      VerifierMetricReport (Oracle& oracle, Reporter out, std::string phase)
+        : oracle (oracle), out (out), phase (std::move (phase)), before (oracle.work_metrics ()) {
+        for (const auto* part : {"traversal", "invariant", "proof_bad"})
+          for (const auto* key : {"queries", "steps", "bdd_operations"})
+            out.count (std::string ("verify_") + part + "_" + key, 0);
+      }
+      void finish_phase () {
+        const auto after = oracle.work_metrics ();
+        const auto prefix = "verify_" + phase + "_";
+        out.count (prefix + "queries", after.queries - before.queries);
+        out.count (prefix + "steps", after.steps - before.steps);
+        out.count (prefix + "bdd_operations", after.bdd_operations - before.bdd_operations);
+        before = after;
+      }
+      void next_phase (std::string next) {
+        finish_phase ();
+        phase = std::move (next);
+      }
+      ~VerifierMetricReport () { finish_phase (); }
+  };
   using solver_detail::forward_result_status;
   using solver_detail::losing_reason;
   // P4 OTFUR and verifier specialization: same queue order, loss propagation,
-  // exact guarded choices, proof chronology and inductive certificate checks.
+  // guarded choices, proof chronology and inductive certificate checks.
   using guarded::ChoiceRef;
-  using guarded::GuardedChoice;
   using guarded::RankNodeId;
   using guarded::RowIdentity;
+  enum class SuccessorRelation { exact, downward };
+  enum class OutputChoice { constant, existential };
+  enum class LosingInputSearch { off, on };
+  struct ChoiceSemantics {
+      SuccessorRelation successor_relation;
+      OutputChoice output_choice;
+      bool operator== (const ChoiceSemantics&) const = default;
+      bool valid () const {
+        return (successor_relation == SuccessorRelation::exact ||
+                successor_relation == SuccessorRelation::downward) &&
+               (output_choice == OutputChoice::constant ||
+                output_choice == OutputChoice::existential);
+      }
+  };
+  // Preserve the existing build's default; either dimension can independently
+  // be overridden by internal callers in the same binary.
+  inline constexpr ChoiceSemantics default_choice_semantics {
+#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
+      SuccessorRelation::downward,
+#else
+      SuccessorRelation::exact,
+#endif
+#if ACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS
+      OutputChoice::existential};
+#else
+      OutputChoice::constant};
+#endif
+  inline constexpr LosingInputSearch default_losing_input_search {
+#if ACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH
+      LosingInputSearch::on};
+#else
+      LosingInputSearch::off};
+#endif
+  struct SparseChoice {
+      bdd input_region;
+      // Present exactly in constant mode, where it must be a total output cube.
+      // Existential choices store no output witness or cached projection.
+      std::optional<bdd> constant_output;
+      RankNodeId successor;
+      bool active = true;
+
+      static SparseChoice constant (bdd region, bdd output, RankNodeId target) {
+        return SparseChoice (region, output, target);
+      }
+      static SparseChoice existential (bdd region, RankNodeId target) {
+        return SparseChoice (region, std::nullopt, target);
+      }
+
+    private:
+      // Named factories prevent old aggregate initializers changing meaning.
+      SparseChoice (bdd region, std::optional<bdd> output, RankNodeId target)
+        : input_region (region), constant_output (output), successor (target) {}
+  };
   struct GuardedRankNode {
       Rank rank;
       bool active_rows_complete = false;
       bool losing = false;
-      std::vector<GuardedChoice> choices;
+      std::vector<SparseChoice> choices;
       bdd covered_inputs = bddfalse;
       std::vector<ChoiceRef> incoming;
       bool queued = false;
@@ -662,6 +759,7 @@ namespace acacia::spot_lazy_game {
       // Certificates contain BDD guards; retain their AP registrations until
       // after every guard is destroyed (members are destroyed in reverse).
       spot::const_twa_ptr provider;
+      ChoiceSemantics semantics = default_choice_semantics;
       forward_result_status status = forward_result_status::unknown;
       Unknown failure = Unknown::none;
       RankNodeId initial = 0;
@@ -678,10 +776,13 @@ namespace acacia::spot_lazy_game {
       // LossSet.  Names follow the dense forward solver's child_metrics.
       std::size_t subsumption_scans = 0, reopen_enqueues = 0;
       std::size_t subsumption_nodes_checked = 0, subsumption_nodes_invalidated = 0;
+      std::size_t scan_tombstones = 0, scan_prefilter_rejects = 0, scan_exact_compares = 0;
       std::size_t subsumption_queries = 0, subsumption_hits = 0;
       std::size_t subsumption_prefilter_skips = 0;
       std::size_t losing_insertions = 0, losing_removals = 0;
       std::size_t losing_antichain_size = 0, losing_antichain_peak = 0;
+      std::size_t proofs_total = 0, proofs_in_initial_cone = 0;
+      std::size_t dependency_list_len_sum = 0, dependency_list_len_max = 0;
       double prep_ms = 0, solve_ms = 0, verify_ms = 0;
   };
 
@@ -692,6 +793,14 @@ namespace acacia::spot_lazy_game {
     using guarded::detail::require;
     using guarded::detail::row_ok;
     using guarded::detail::take;
+    inline void validate_semantics (const SolveResult& certificate, ChoiceSemantics requested) {
+      require (requested.valid () && certificate.semantics.valid () &&
+               certificate.semantics == requested);
+      for (const auto& node : certificate.nodes)
+        for (const auto& choice : node.choices)
+          require (choice.constant_output.has_value () ==
+                   (certificate.semantics.output_choice == OutputChoice::constant));
+    }
     inline std::vector<RowIdentity> complete_rows (Reader& rows, Oracle& oracle,
                                                    const Rank& rank) {
       return take (oracle.query<std::vector<RowIdentity>> ([&] (auto& b) {
@@ -713,11 +822,14 @@ namespace acacia::spot_lazy_game {
   // themselves. The verifier may generate additional active provider rows.
   inline letters::Result<std::vector<Rank>> verify_winning_certificate (
       RowStore& view, const letters::WorkerAlphabet& alphabet, std::int32_t K,
-      const SolveResult& certificate, const Limits& limits = {}) {
+      const SolveResult& certificate, const Limits& limits = {},
+      ChoiceSemantics requested = default_choice_semantics) {
     return detail::checked<std::vector<Rank>> ([&] {
+      detail::validate_semantics (certificate, requested);
       auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
       Oracle oracle {*rows, view, alphabet, K};
       MetricReport metrics {oracle, view.report, "verify_"};
+      VerifierMetricReport phases {oracle, view.report, "traversal"};
       oracle.set_limits (limits.verifier_queries);
       detail::require (certificate.failure == Unknown::none && not certificate.pending_loss &&
                        not certificate.pending_expansion &&
@@ -745,20 +857,20 @@ namespace acacia::spot_lazy_game {
           detail::require (not target.losing && rows->is_safe (target.rank, K));
           // Rebuilt here from the fresh Reader and Oracle above, never taken
           // from the search: a choice that claims too much input space must
-          // fail this, which is the whole point of recomputing it. The gate
-          // matches expand()'s, so a flag-off binary verifies the exact
-          // obligation it searched under.
-#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
-          const bdd reaches = detail::take (oracle.down (node.rank, target.rank));
-#else
-          const bdd reaches = detail::take (oracle.eq (node.rank, target.rank));
-#endif
-          const bdd exact =
-              detail::take (oracle.restrict_total (reaches, choice.output, Variables::outputs));
+          // fail this. The validated certificate tag selects the obligation.
+          const bdd reaches = detail::take (
+              certificate.semantics.successor_relation == SuccessorRelation::downward
+                  ? oracle.down (node.rank, target.rank) : oracle.eq (node.rank, target.rank));
+          const bdd projection = detail::take (
+              certificate.semantics.output_choice == OutputChoice::constant
+                  ? oracle.restrict_total (reaches, *choice.constant_output, Variables::outputs)
+                  : oracle.query<bdd> ([&] (auto& b) {
+                      return b.exists (reaches, b.vars (Variables::outputs));
+                    }));
           covered = detail::take (oracle.query<bdd> ([&] (auto& b) {
             b.require_support (choice.input_region, alphabet.inputs);
             detail::require (b.satisfiable (choice.input_region));
-            detail::require (b.land (choice.input_region, b.negate (exact)) == bddfalse);
+            detail::require (b.land (choice.input_region, b.negate (projection)) == bddfalse);
             return b.lor (covered, choice.input_region);
           }));
           todo.push_back (choice.successor);
@@ -785,20 +897,27 @@ namespace acacia::spot_lazy_game {
         return result;
       }));
       // A second obligation: forall u exists c Good at EVERY maximal generator.
+      // Building the maximal antichain above belongs to traversal; this bucket
+      // measures only the final invariant query, with the existing warm cache.
+      phases.next_phase ("invariant");
       detail::require (detail::take (oracle.invariant (rows->initial_rank (), generators, 0)) ==
                        letters::Invariant::verified);
       return generators;
     });
   }
 
-  inline letters::Result<bool> verify_losing_proof (RowStore& view,
-                                                    const letters::WorkerAlphabet& alphabet,
-                                                    std::int32_t K, const SolveResult& certificate,
-                                                    const Limits& limits = {}) {
+  inline letters::Result<bool> verify_losing_proof (
+      RowStore& view, const letters::WorkerAlphabet& alphabet, std::int32_t K,
+      const SolveResult& certificate, const Limits& limits = {},
+      ChoiceSemantics requested = default_choice_semantics) {
     return detail::checked<bool> ([&] {
+      detail::validate_semantics (certificate, requested);
       auto rows = std::make_shared<Reader> (view, true, limits.verifier_rows);
       Oracle oracle {*rows, view, alphabet, K};
       MetricReport metrics {oracle, view.report, "verify_"};
+      // Includes chronology, rebuilt rows and input restriction around each
+      // Bad obligation, as well as the row-independent proof rules.
+      VerifierMetricReport phases {oracle, view.report, "proof_bad"};
       oracle.set_limits (limits.verifier_queries);
       detail::require (certificate.failure == Unknown::none && not certificate.pending_loss &&
                        certificate.initial_proof &&
@@ -851,15 +970,23 @@ namespace acacia::spot_lazy_game {
   }
 
   class Search {
+#ifdef ACACIA_PROVIDER_REPLAY_TESTING
+      friend struct SearchTestAccess;
+#endif
     public:
-      Search (RowStore& view, letters::WorkerAlphabet alphabet, std::int32_t K, Limits limits = {})
+      Search (RowStore& view, letters::WorkerAlphabet alphabet, std::int32_t K, Limits limits = {},
+              ChoiceSemantics semantics = default_choice_semantics,
+              LosingInputSearch losing_input_search = default_losing_input_search)
         : view_ (view),
           alphabet_ (std::move (alphabet)),
           K_ (K),
           limits_ (limits),
+          semantics_ (semantics),
+          losing_input_search_ (losing_input_search),
           rows_ (std::make_shared<Reader> (view_, false, limits.rows)),
           oracle_ (*rows_, view_, alphabet_, K) {
         result_.provider = view_.provider;
+        result_.semantics = semantics_;
         oracle_.set_limits (limits_.queries);
       }
       ~Search () {
@@ -877,6 +1004,9 @@ namespace acacia::spot_lazy_game {
         view_.report.count ("subsumption_scans", subsumption_scans_);
         view_.report.count ("subsumption_nodes_checked", nodes_checked_);
         view_.report.count ("subsumption_nodes_invalidated", nodes_invalidated_);
+        view_.report.count ("scan_tombstones", scan_tombstones_);
+        view_.report.count ("scan_prefilter_rejects", scan_prefilter_rejects_);
+        view_.report.count ("scan_exact_compares", scan_exact_compares_);
         view_.report.count ("reopen_enqueues", reopen_enqueues_);
         view_.report.count ("subsumption_queries", losing_.queries);
         view_.report.count ("subsumption_hits", losing_.hits);
@@ -885,13 +1015,45 @@ namespace acacia::spot_lazy_game {
         view_.report.count ("losing_removals", losing_.removals);
         view_.report.count ("losing_antichain_size", losing_.size ());
         view_.report.count ("losing_antichain_peak", losing_.peak);
+        view_.report.count ("proofs_total", proofs_total_);
+        view_.report.count ("proofs_in_initial_cone", proofs_in_initial_cone_);
+        view_.report.count ("dependency_list_len_sum", dependency_list_len_sum_);
+        view_.report.count ("dependency_list_len_max", dependency_list_len_max_);
       }
       // Copy the live counters into the result.  Called once, from solve(),
       // before either return; ~Search then emits the same values.
       void publish_counters () {
+        proofs_total_ = result_.proofs.size ();
+        proofs_in_initial_cone_ = dependency_list_len_sum_ = dependency_list_len_max_ = 0;
+        for (const auto& proof : result_.proofs) {
+          const auto length = proof.record.dependencies.size ();
+          dependency_list_len_sum_ += length;
+          dependency_list_len_max_ = std::max (dependency_list_len_max_, length);
+        }
+        // Observe the recorded graph only. The verifier still visits EVERY
+        // proof in chronological order, including proofs outside this cone.
+        // No initial proof (including a winning solve) means an empty cone.
+        if (result_.initial_proof) {
+          std::vector<bool> seen (proofs_total_, false);
+          std::vector<std::size_t> todo {*result_.initial_proof};
+          seen[*result_.initial_proof] = true;
+          while (not todo.empty ()) {
+            const auto id = todo.back ();
+            todo.pop_back ();
+            ++proofs_in_initial_cone_;
+            for (const auto dep : result_.proofs[id].record.dependencies)
+              if (not seen[dep]) {
+                seen[dep] = true;
+                todo.push_back (dep);
+              }
+          }
+        }
         result_.subsumption_scans = subsumption_scans_;
         result_.subsumption_nodes_checked = nodes_checked_;
         result_.subsumption_nodes_invalidated = nodes_invalidated_;
+        result_.scan_tombstones = scan_tombstones_;
+        result_.scan_prefilter_rejects = scan_prefilter_rejects_;
+        result_.scan_exact_compares = scan_exact_compares_;
         result_.reopen_enqueues = reopen_enqueues_;
         result_.subsumption_queries = losing_.queries;
         result_.subsumption_hits = losing_.hits;
@@ -900,6 +1062,10 @@ namespace acacia::spot_lazy_game {
         result_.losing_removals = losing_.removals;
         result_.losing_antichain_size = losing_.size ();
         result_.losing_antichain_peak = losing_.peak;
+        result_.proofs_total = proofs_total_;
+        result_.proofs_in_initial_cone = proofs_in_initial_cone_;
+        result_.dependency_list_len_sum = dependency_list_len_sum_;
+        result_.dependency_list_len_max = dependency_list_len_max_;
       }
       SolveResult solve () {
         view_.phase = Phase::search;
@@ -907,6 +1073,7 @@ namespace acacia::spot_lazy_game {
         MetricReport metrics {oracle_, view_.report, "search_"};
         const auto started = std::chrono::steady_clock::now ();
         const auto search = detail::checked<bool> ([&] {
+          detail::require (semantics_.valid ());
           result_.initial = intern (rows_->initial_rank ());
           for (;;) {
             propagate_losses ();
@@ -941,13 +1108,13 @@ namespace acacia::spot_lazy_game {
         view_.report.ms ("stage_started_clock_ms", clock_ms ());
         const auto verifying = std::chrono::steady_clock::now ();
         if (result_.nodes[result_.initial].losing) {
-          const auto verified = verify_losing_proof (view_, alphabet_, K_, result_, limits_);
+          const auto verified = verify_losing_proof (view_, alphabet_, K_, result_, limits_, semantics_);
           result_.status = verified.value && *verified.value ? forward_result_status::lose_k
                                                              : forward_result_status::unknown;
           result_.failure = verified.unknown;
         }
         else {
-          auto verified = verify_winning_certificate (view_, alphabet_, K_, result_, limits_);
+          auto verified = verify_winning_certificate (view_, alphabet_, K_, result_, limits_, semantics_);
           if (verified.value) {
             result_.generators = std::move (*verified.value);
             result_.status = forward_result_status::win_k;
@@ -967,6 +1134,8 @@ namespace acacia::spot_lazy_game {
       letters::WorkerAlphabet alphabet_;
       std::int32_t K_;
       Limits limits_;
+      const ChoiceSemantics semantics_;
+      const LosingInputSearch losing_input_search_;
       std::shared_ptr<Reader> rows_;
       Oracle oracle_;
       SolveResult result_;
@@ -976,6 +1145,9 @@ namespace acacia::spot_lazy_game {
       LossSet losing_;
       std::size_t subsumption_scans_ = 0;
       std::size_t nodes_checked_ = 0, nodes_invalidated_ = 0;
+      std::size_t scan_tombstones_ = 0, scan_prefilter_rejects_ = 0, scan_exact_compares_ = 0;
+      std::size_t proofs_total_ = 0, proofs_in_initial_cone_ = 0;
+      std::size_t dependency_list_len_sum_ = 0, dependency_list_len_max_ = 0;
       std::size_t reopen_enqueues_ = 0;
       void enqueue (RankNodeId id) {
         auto& node = result_.nodes[id];
@@ -1030,42 +1202,61 @@ namespace acacia::spot_lazy_game {
         ++subsumption_scans_;
         for (RankNodeId source = 0; source < result_.nodes.size (); ++source) {
           ++nodes_checked_;
-          if (result_.nodes[source].losing)
+          if (result_.nodes[source].losing) {
+            ++scan_tombstones_;
             continue;
+          }
+          if (not rank.prefilter_leq (result_.nodes[source].rank)) {
+            ++scan_prefilter_rejects_;
+            continue;
+          }
+          // Includes leq's equal-mass equality shortcut as well as merge joins.
+          ++scan_exact_compares_;
           if (Oracle::leq (rank, result_.nodes[source].rank)) {
             ++nodes_invalidated_;
             enqueue_loss (source, losing_reason::env_subsumed, {proof_id});
           }
         }
       }
-      void recompute_coverage (RankNodeId id) {
-        auto& node = result_.nodes[id];
-        node.covered_inputs = detail::take (oracle_.query<bdd> ([&] (auto& b) {
+#ifdef ACACIA_PROVIDER_REPLAY_TESTING
+      // Read-only reconstruction for invariant tests; the certificate verifier
+      // independently rebuilds coverage too. Never used on the expansion path.
+      bdd reconstruct_coverage (RankNodeId id) {
+        return detail::take (oracle_.query<bdd> ([&] (auto& b) {
           bdd covered = bddfalse;
-          for (auto& choice : node.choices) {
+          for (const auto& choice : result_.nodes[id].choices) {
             b.step ();
-            if (result_.nodes[choice.successor].losing)
-              choice.active = false;
             if (choice.active)
               covered = b.lor (covered, choice.input_region);
           }
           return covered;
         }));
       }
+#endif
       void propagate_losses () {
         while (not losses_.empty ()) {
           const auto id = losses_.front ();
           // Keep the event pending until ALL incoming invalidations complete.
           std::set<RankNodeId> affected;
           for (const auto& ref : result_.nodes[id].incoming) {
-            auto& choice = result_.nodes[ref.source].choices[ref.choice];
+            auto& source = result_.nodes[ref.source];
+            auto& choice = source.choices[ref.choice];
             if (choice.active && choice.successor == id) {
+              // Active regions are pairwise disjoint: expand intersects every
+              // new region with the still-missing inputs. Thus removing C_j
+              // from their union is exactly Covered AND NOT C_j. Check the
+              // current flag and target above: inactive historical regions can
+              // overlap newer choices and must never be subtracted twice.
+              source.covered_inputs = detail::take (oracle_.query<bdd> ([&] (auto& b) {
+                return b.land (source.covered_inputs, b.negate (choice.input_region));
+              }));
+              // Publish the flag only after the checked update succeeds. A
+              // failure leaves this loss pending and solve() inconclusive.
               choice.active = false;
               affected.insert (ref.source);
             }
           }
           for (const auto source : affected) {
-            recompute_coverage (source);
             if (not result_.nodes[source].losing) {
               ++result_.reopened_sources;
               // reopened_sources counts attempts, and an attempt on a node that
@@ -1098,15 +1289,33 @@ namespace acacia::spot_lazy_game {
         }
         auto row_ids = detail::complete_rows (*rows_, oracle_, rank);
         result_.nodes[id].active_rows_complete = true;
-        recompute_coverage (id);
+        // solve() drains all incoming invalidations before expanding a node;
+        // additions below and propagate_losses maintain the active union.
         if (result_.nodes[id].covered_inputs == bddtrue)
           return;
         const bdd missing = detail::take (oracle_.query<bdd> (
             [&] (auto& b) { return b.negate (result_.nodes[id].covered_inputs); }));
-        const auto input = detail::take (oracle_.model (missing, Variables::inputs));
-        detail::require (input.has_value ());
-        const bdd bad = detail::take (oracle_.bad (rank, losing_.ranks (), result_.proofs.size ()));
-        const bdd bad_c = detail::take (oracle_.restrict_total (bad, *input, Variables::inputs));
+        std::optional<bdd> input;
+        bdd bad, bad_c;
+        if (losing_input_search_ == LosingInputSearch::on) {
+          const auto [predicate, D] = detail::take (
+              oracle_.bad (rank, losing_.ranks (), result_.proofs.size (), missing));
+          bad = predicate;
+          if (D != bddfalse) {
+            input = detail::take (oracle_.model (D, Variables::inputs));
+            detail::require (input.has_value ());
+            bad_c = bddtrue;
+          }
+        }
+        if (not input) {
+          // With the option off, preserve the original query order and work.
+          // An empty D only falls back to sampling; it does not prove a win.
+          input = detail::take (oracle_.model (missing, Variables::inputs));
+          detail::require (input.has_value ());
+          if (losing_input_search_ != LosingInputSearch::on)
+            bad = detail::take (oracle_.bad (rank, losing_.ranks (), result_.proofs.size ()));
+          bad_c = detail::take (oracle_.restrict_total (bad, *input, Variables::inputs));
+        }
         if (bad_c == bddtrue) {
           // deps is taken by value, so this copies the witness list before any
           // later insert can compact it.  Do not make the parameter a reference.
@@ -1126,14 +1335,20 @@ namespace acacia::spot_lazy_game {
         // below it" lets one choice claim more of the missing input space. The
         // successor itself is unchanged, so the target is still a rank the
         // search reached and verified, not a synthesized upper bound.
-#if ACACIA_SPOT_GUARDED_INEQUALITY_COVERING
-        const bdd reaches = detail::take (oracle_.down (rank, successor));
-#else
-        const bdd reaches = detail::take (oracle_.eq (rank, successor));
-#endif
-        const bdd exact = detail::take (oracle_.restrict_total (reaches, *output, Variables::outputs));
+        const bdd reaches = detail::take (semantics_.successor_relation == SuccessorRelation::downward
+                                             ? oracle_.down (rank, successor)
+                                             : oracle_.eq (rank, successor));
+        // The sampled total output selected the target. Existential covering
+        // may use a different output at each input while retaining that target;
+        // quantify only the worker outputs, inside the checked query scope.
+        const bdd projection = detail::take (
+            semantics_.output_choice == OutputChoice::constant
+                ? oracle_.restrict_total (reaches, *output, Variables::outputs)
+                : oracle_.query<bdd> ([&] (auto& b) {
+                    return b.exists (reaches, b.vars (Variables::outputs));
+                  }));
         const bdd region = detail::take (oracle_.query<bdd> ([&] (auto& b) {
-          const bdd C = b.land (missing, exact);
+          const bdd C = b.land (missing, projection);
           b.require_support (C, alphabet_.inputs);
           detail::require (b.restrict_total (C, *input, Variables::inputs) == bddtrue);
           // Real runtime checks: every choice adds a previously uncovered input.
@@ -1147,7 +1362,9 @@ namespace acacia::spot_lazy_game {
         detail::require (not result_.nodes[sid].losing);
         auto& source = result_.nodes[id];
         const auto choice_id = source.choices.size ();
-        source.choices.push_back ({region, *output, sid, true});
+        source.choices.push_back (semantics_.output_choice == OutputChoice::constant
+                                     ? SparseChoice::constant (region, *output, sid)
+                                     : SparseChoice::existential (region, sid));
         result_.nodes[sid].incoming.push_back ({id, choice_id});
         ++result_.choices_created;
         source.covered_inputs = detail::take (
