@@ -30,6 +30,11 @@ NUMERIC_FIELDS = (
     "search_preimage_hits", "search_peak_live_nodes", "search_cache_rank_bytes",
     "rank_interner_bytes", "wrapper_rows_generated", "wrapper_states_discovered",
     "wrapper_edges_generated",
+    "scan_tombstones", "scan_prefilter_rejects", "scan_exact_compares",
+    "verify_traversal_queries", "verify_traversal_steps", "verify_traversal_bdd_operations",
+    "verify_invariant_queries", "verify_invariant_steps", "verify_invariant_bdd_operations",
+    "verify_proof_bad_queries", "verify_proof_bad_steps", "verify_proof_bad_bdd_operations",
+    "proofs_total", "proofs_in_initial_cone", "dependency_list_len_sum", "dependency_list_len_max",
 )
 MECHANISMS = (
     "game_states", "guarded_choices", "choices-per-node", "subsumption_scans",
@@ -125,7 +130,7 @@ def load_workers(args):
             raise ValueError(f"{args.cohort}: duplicate normalized instance {key!r}")
         tiers[key] = row["tier"]
 
-    campaign_path = args.campaign_dir / f"{args.label}.tsv"
+    campaign_path = args.campaign_tsv or args.campaign_dir / f"{args.label}.tsv"
     campaigns = {}
     required = ("solver_label", "instance", "cap_s", "result", "seconds", "timed_out")
     for row in read_tsv(campaign_path, required):
@@ -147,7 +152,7 @@ def load_workers(args):
     for key, cap in campaigns:
         selected[key] = max(cap, selected.get(key, cap))
 
-    summary_path = args.campaign_dir / f"{args.label}-summary.tsv"
+    summary_path = args.summary_tsv or args.campaign_dir / f"{args.label}-summary.tsv"
     summaries = {}
     for row in read_tsv(summary_path, ("solver_label", "instance", "max_cap_s")):
         if row["solver_label"] != args.label:
@@ -226,6 +231,45 @@ def markdown_table(headers, rows):
 
 def display(value):
     return "absent" if value is None else format(value, ".6f").rstrip("0").rstrip(".")
+
+
+def distribution_row(field, values, percentage=False):
+    suffix = "%" if percentage else ""
+    return [field, len(values),
+            display(median(values)) + suffix if values else "absent",
+            display(max(values)) + suffix if values else "absent"]
+
+
+def counter_distribution(workers, field, denominator=None, percentage=False):
+    values = []
+    for worker in workers:
+        value = worker.numbers.get(field)
+        if value is None:
+            continue
+        if denominator is not None:
+            total = worker.numbers.get(denominator)
+            if total is None or total == 0:
+                continue
+            value /= total
+        values.append(100 * value if percentage else value)
+    metric = f"{field} / {denominator}" if denominator else field
+    return distribution_row(metric, values, percentage)
+
+
+def field_presence(workers, fields):
+    present = sum(any(field in w.numbers for field in fields) for w in workers)
+    if not present:
+        return "Fields absent from all search-reaching sparse guarded workers."
+    return (f"Fields present in {present}/{len(workers)} search-reaching sparse guarded workers. "
+            "Each statistic uses only its required fields; absent fields are excluded.")
+
+
+def identity_row(workers, total, fields):
+    complete = [w for w in workers if all(field in w.numbers for field in (*fields, total))]
+    violations = [w.instance for w in complete
+                  if sum(w.numbers[field] for field in fields) != w.numbers[total]]
+    return [total, len(complete), len(violations) if complete else "absent",
+            ", ".join(violations) if violations else "none" if complete else "absent"]
 
 
 def make_report(workers, label):
@@ -310,8 +354,7 @@ def make_report(workers, label):
                 value = worker.numbers.get(field)
             if value is not None:
                 values.append(value)
-        mechanisms.append([field, len(values), display(median(values)) if values else "absent",
-                           display(max(values)) if values else "absent"])
+        mechanisms.append(distribution_row(field, values))
     lines += markdown_table(["Metric", "n", "Median", "Max"], mechanisms)
 
     capped = [w for w in workers if w.timed_out]
@@ -354,21 +397,94 @@ def make_report(workers, label):
         "these arms, so no exact all-arm killed-worker count is identifiable from "
         "these files. Treat their last stages as potentially censored, not durations.", "",
     ]
+
+    scan_fields = ("scan_tombstones", "scan_prefilter_rejects", "scan_exact_compares")
+    phases = ("traversal", "invariant", "proof_bad")
+    phase_fields = tuple(f"verify_{phase}_bdd_operations" for phase in phases)
+    certificate_fields = ("proofs_total", "proofs_in_initial_cone",
+                          "dependency_list_len_max", "dependency_list_len_sum")
+    lines += [
+        "The counters in the following three sections describe the LAST verified K attempt: "
+        "each fixed-K attempt writes into the same worker record. They are not totals across K.",
+        "",
+        "## 5. Scan composition", "", field_presence(searched, scan_fields), "",
+        "Shares = 100 × counter / subsumption_nodes_checked, requiring a positive total. "
+        "Zero totals have undefined shares and are excluded. "
+        "The identity check requires all three scan counters and the total, including zero totals.",
+        "",
+    ]
+    lines += markdown_table(
+        ["Share", "n", "Median", "Max"],
+        [counter_distribution(searched, field, "subsumption_nodes_checked", percentage=True)
+         for field in scan_fields],
+    )
+    lines += markdown_table(
+        ["Identity total (sum of scan counters)", "n checked", "Violating workers", "Instances"],
+        [identity_row(searched, "subsumption_nodes_checked", scan_fields)],
+    )
+    lines += [
+        "## 6. Verifier phase split", "",
+        field_presence(searched, tuple(f"verify_{phase}_{key}" for phase in phases
+                                      for key in ("queries", "steps", "bdd_operations"))), "",
+        "Shares = 100 × phase BDD operations / verify_bdd_operations, requiring a positive "
+        "total. Zero totals have undefined shares and are excluded. Dominance requires all "
+        "three phase counters and a positive total; ties count for every tied largest phase. "
+        "Each identity check sums traversal, invariant and proof_bad for its key, "
+        "requiring all three counters and the cumulative total, including zero totals.", "",
+    ]
+    lines += markdown_table(
+        ["Share", "n", "Median", "Max"],
+        [counter_distribution(searched, field, "verify_bdd_operations", percentage=True)
+         for field in phase_fields],
+    )
+    comparable = [w for w in searched
+                  if all(field in w.numbers for field in (*phase_fields, "verify_bdd_operations"))
+                  and w.numbers["verify_bdd_operations"] > 0]
+    dominance = []
+    for phase, field in zip(phases, phase_fields):
+        dominant = [w.instance for w in comparable
+                    if w.numbers[field] == max(w.numbers[key] for key in phase_fields)]
+        dominance.append([phase, len(comparable), len(dominant) if comparable else "absent",
+                          ", ".join(dominant) if dominant else "none" if comparable else "absent"])
+    lines += markdown_table(["Largest phase", "n compared", "Workers", "Instances"], dominance)
+    lines += markdown_table(
+        ["Identity total (sum of phases)", "n checked", "Violating workers", "Instances"],
+        [identity_row(searched, f"verify_{key}", tuple(f"verify_{phase}_{key}" for phase in phases))
+         for key in ("queries", "steps", "bdd_operations")],
+    )
+    lines += [
+        "## 7. Certificate shape", "", field_presence(searched, certificate_fields), "",
+        "All certificate statistics require proofs_total > 0. The initial-cone ratio also "
+        "requires proofs_in_initial_cone; dependency lengths each require their own field. "
+        "The ratio is proofs_in_initial_cone / proofs_total.", "",
+    ]
+    certificates = [w for w in searched
+                    if "proofs_total" in w.numbers and w.numbers["proofs_total"] > 0]
+    lines += markdown_table(
+        ["Metric", "n", "Median", "Max"],
+        [counter_distribution(certificates, "proofs_in_initial_cone", "proofs_total"),
+         *(counter_distribution(certificates, field)
+           for field in ("dependency_list_len_max", "dependency_list_len_sum"))],
+    )
     return "\n".join(lines)
 
 
 def make_tsv(workers):
-    counters = list(NUMERIC_FIELDS)
+    # Append the new counters after the entire legacy header.
+    appended_start = NUMERIC_FIELDS.index("scan_tombstones")
+    appended_counters = NUMERIC_FIELDS[appended_start:]
+    counters = list(NUMERIC_FIELDS[:appended_start])
     counters += sorted({field for w in workers for field in w.numbers}
-                       - set(counters) - {"k", "kmax"})
+                       - set(NUMERIC_FIELDS) - {"k", "kmax"})
     fields = ["instance", "tier", "arm", "stage_reached", "status", "k",
               "campaign_result", "campaign_seconds", *counters, *ARM_FIELDS,
-              "campaign_cap_s", "campaign_timed_out", "record_path"]
+              "campaign_cap_s", "campaign_timed_out", "record_path", *appended_counters]
     stream = io.StringIO(newline="")
     writer = csv.DictWriter(stream, fields, delimiter="\t", lineterminator="\n")
     writer.writeheader()
     for worker in workers:
-        row = {field: worker.record[field] for field in (*counters, *ARM_FIELDS, "status", "k")
+        row = {field: worker.record[field]
+               for field in (*counters, *appended_counters, *ARM_FIELDS, "status", "k")
                if field in worker.record}
         row.update(instance=worker.instance, tier=worker.tier, arm=worker.arm,
                    stage_reached=worker.record["stage"], campaign_result=worker.campaign["result"],
@@ -382,6 +498,8 @@ def make_tsv(workers):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--campaign-dir", type=Path, default=Path("_bm-logs.20260912-s0-phases"))
+    parser.add_argument("--campaign-tsv", type=Path, help="Override the label-based campaign TSV path")
+    parser.add_argument("--summary-tsv", type=Path, help="Override the label-based summary TSV path")
     parser.add_argument(
         "--cohort", type=Path,
         default=Path("benchmarking/coverage-frontier-20260912/diagnostic-cohort.tsv"),
