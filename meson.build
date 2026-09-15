@@ -313,6 +313,27 @@ actioner = get_option ('acacia_actioner')
 if actioner == 'no_ios_precomputation' and ios_precomputer != 'delegate'
   error ('acacia_actioner=no_ios_precomputation requires acacia_ios_precomputer=delegate')
 endif
+# Keep the component requirements in scripts/acacia-config.py validate_preset
+# here too: direct Meson overrides do not pass through preset validation.
+# state_is_accepting calls in symmetry.hh and equivariant_k_bounded_safety_aut.hh
+# were audited but not observed to fail; enable_equivariant_solver stays allowed.
+if get_option ('acacia_transition_acceptance')
+  if boolean_states not in ['transition_core', 'no_boolean_states']
+    error ('acacia_transition_acceptance=true requires acacia_boolean_states=transition_core or no_boolean_states')
+  endif
+  if aut_preprocessor not in ['standard', 'no_preprocessing']
+    error ('acacia_transition_acceptance=true requires acacia_aut_preprocessor=standard or no_preprocessing')
+  endif
+  if actioner != 'standard'
+    error ('acacia_transition_acceptance=true requires acacia_actioner=standard')
+  endif
+  if ios_precomputer not in ['standard', 'powset', 'fake_vars']
+    error ('acacia_transition_acceptance=true requires acacia_ios_precomputer=standard, powset or fake_vars')
+  endif
+  if get_option ('acacia_spot_guarded_backend')
+    error ('acacia_transition_acceptance=true requires acacia_spot_guarded_backend=false')
+  endif
+endif
 actioner_types = {
   'standard' : 'actioners::standard',
   'no_ios_precomputation' : 'actioners::no_ios_precomputation',

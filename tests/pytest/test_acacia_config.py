@@ -401,6 +401,10 @@ def test_new_options_preserve_defaults_and_flow_through_frontends(
         ]
 
     presets = {"presets": {"custom": {name: selected}}}
+    if name == "transition_acceptance":
+        presets["presets"]["custom"].update(
+            boolean_states="transition_core", aut_preprocessor="standard",
+        )
     module.validate_preset(options, presets, "custom")
     values = module.normalize_preset(options, presets, "custom")
     meson_value = str(selected).lower() if isinstance(selected, bool) else str(selected)
