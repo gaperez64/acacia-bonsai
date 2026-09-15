@@ -1,6 +1,6 @@
-// P6 replay. One invocation, one capped worker, one TAA factory, one arm.
+// The previous sprint's P6 replay. One invocation, one capped worker, one TAA factory, one arm.
 // --formula is the captured bad-language WORKER formula (no extra negation).
-// Search and verification are shared with the P7 worker integration.
+// Search and verification are shared with the previous sprint's P7 worker integration.
 #include "solver/k_schedule.hh"
 #include "solver/spot_lazy_game.hh"
 #include "solver/spot_guarded_forward_safety.hh"
@@ -8,6 +8,7 @@
 #include "utils/verbose.hh"
 #include <unordered_map>
 
+#include <algorithm>
 #include <cerrno>
 #include <charconv>
 #include <csignal>
@@ -33,6 +34,175 @@ namespace posets::vectors {
 namespace replay {
   using namespace acacia::spot_lazy_game;
   using Fields = std::map<std::string, std::string>;
+
+  enum class CounterReset { none, row_zero, attempt_zero, attempt_na };
+  struct Column {
+      const char* key;
+      CounterReset reset = CounterReset::none;
+      unsigned reset_order = 0;
+      bool rank_bytes = false;
+  };
+  // TSV order and reset emission order are both observable: an interrupted worker
+  // leaves partially reset counters. Keep each counter's reset position within
+  // its group explicit, independent of TSV order, alongside rollup membership.
+  // game_node_rank_bytes is already included in certificate_rank_bytes.
+  constexpr Column column_schema[] {
+      {"arm"},
+      {"worker_formula"},
+      {"provider"},
+      {"spot_version"},
+      {"refined_rules"},
+      {"wrapper"},
+      {"initial_convention"},
+      {"rank_domain"},
+      {"partition"},
+      {"ap_order"},
+      {"k"},
+      {"kmin"},
+      {"kmax"},
+      {"kinc"},
+      {"k_schedule"},
+      {"caps"},
+      {"worker_pid"},
+      {"status"},
+      {"certificate"},
+      {"worker_result"},
+      {"reason"},
+      {"stage"},
+      {"factory_measurement"},
+      {"factory_ms"},
+      {"factory_baseline_peak_bytes"},
+      {"factory_peak_bytes"},
+      {"factory_rss_before_bytes"},
+      {"factory_rss_after_bytes"},
+      {"factory_scope"},
+      {"acceptance_setup_ms"},
+      {"acceptance_setup_peak_bytes"},
+      {"acceptance_sets"},
+      {"provider_acceptance"},
+      {"underlying_rows_requested", CounterReset::row_zero, 1},
+      {"underlying_rows_generated", CounterReset::row_zero, 2},
+      {"wrapper_rows_requested", CounterReset::row_zero, 3},
+      {"wrapper_rows_generated", CounterReset::row_zero, 4},
+      {"underlying_states_discovered"},
+      {"wrapper_states_discovered"},
+      {"wrapper_edges_generated", CounterReset::row_zero, 5},
+      {"eager_rows_generated", CounterReset::row_zero, 6},
+      {"search_rows_requested", CounterReset::row_zero, 7},
+      {"search_only_rows_requested", CounterReset::row_zero, 8},
+      {"verification_rows_requested", CounterReset::row_zero, 9},
+      {"verification_additional_rows", CounterReset::row_zero, 10},
+      {"verification_rows_rebuilt", CounterReset::row_zero, 11},
+      {"search_generated_rows"},
+      {"verification_generated_rows"},
+      {"search_rows_generated_cumulative", CounterReset::row_zero, 12},
+      {"verification_rows_generated_cumulative", CounterReset::row_zero, 13},
+      {"row_generation_ms"},
+      {"total_status"},
+      {"total_underlying_rows"},
+      {"total_wrapper_rows"},
+      {"total_wrapper_edges"},
+      {"rank_support_distribution"},
+      {"rank_support_sum"},
+      {"rank_support_max"},
+      {"rank_bytes"},
+      {"rank_bytes_scope"},
+      {"game_node_rank_bytes"},
+      {"certificate_rank_bytes", CounterReset::attempt_na, 6, true},
+      {"rank_interner_bytes", CounterReset::attempt_na, 7, true},
+      {"losing_antichain_rank_bytes", CounterReset::attempt_na, 8, true},
+      {"losing_journal_rank_bytes", CounterReset::attempt_na, 9, true},
+      {"incremental_bad_cache_bytes", CounterReset::attempt_na, 10, true},
+      {"search_cache_rank_bytes", CounterReset::attempt_zero, 15, true},
+      {"verify_cache_rank_bytes", CounterReset::attempt_zero, 16, true},
+      {"search_queries", CounterReset::attempt_zero, 1},
+      {"search_steps", CounterReset::attempt_zero, 3},
+      {"search_bdd_operations", CounterReset::attempt_zero, 5},
+      {"search_peak_live_nodes", CounterReset::attempt_zero, 7},
+      {"search_peak_result_nodes", CounterReset::attempt_zero, 9},
+      {"search_threshold_hits", CounterReset::attempt_zero, 11},
+      {"search_preimage_hits", CounterReset::attempt_zero, 13},
+      {"incremental_bad_journal_replay", CounterReset::attempt_na, 11},
+      {"incremental_bad_cache_hits", CounterReset::attempt_na, 12},
+      {"incremental_bad_full_rebuilds", CounterReset::attempt_na, 13},
+      {"verify_queries", CounterReset::attempt_zero, 2},
+      {"verify_steps", CounterReset::attempt_zero, 4},
+      {"verify_bdd_operations", CounterReset::attempt_zero, 6},
+      {"verify_peak_live_nodes", CounterReset::attempt_zero, 8},
+      {"verify_peak_result_nodes", CounterReset::attempt_zero, 10},
+      {"verify_threshold_hits", CounterReset::attempt_zero, 12},
+      {"verify_preimage_hits", CounterReset::attempt_zero, 14},
+      {"verify_traversal_queries", CounterReset::attempt_zero, 17},
+      {"verify_traversal_steps", CounterReset::attempt_zero, 18},
+      {"verify_traversal_bdd_operations", CounterReset::attempt_zero, 19},
+      {"verify_invariant_queries", CounterReset::attempt_zero, 20},
+      {"verify_invariant_steps", CounterReset::attempt_zero, 21},
+      {"verify_invariant_bdd_operations", CounterReset::attempt_zero, 22},
+      {"verify_proof_bad_queries", CounterReset::attempt_zero, 23},
+      {"verify_proof_bad_steps", CounterReset::attempt_zero, 24},
+      {"verify_proof_bad_bdd_operations", CounterReset::attempt_zero, 25},
+      {"game_states", CounterReset::attempt_na, 4},
+      {"guarded_choices", CounterReset::attempt_na, 5},
+      {"expansions"},
+      {"losing_proofs"},
+      {"strategy_generators"},
+      {"reopened_sources", CounterReset::attempt_na, 14},
+      {"reopen_enqueues", CounterReset::attempt_na, 15},
+      {"subsumption_scans", CounterReset::attempt_na, 16},
+      {"subsumption_nodes_checked", CounterReset::attempt_na, 17},
+      {"subsumption_nodes_invalidated", CounterReset::attempt_na, 21},
+      {"scan_tombstones", CounterReset::attempt_na, 18},
+      {"scan_prefilter_rejects", CounterReset::attempt_na, 19},
+      {"scan_exact_compares", CounterReset::attempt_na, 20},
+      {"subsumption_queries", CounterReset::attempt_na, 22},
+      {"subsumption_hits", CounterReset::attempt_na, 23},
+      {"subsumption_prefilter_skips", CounterReset::attempt_na, 24},
+      {"losing_insertions", CounterReset::attempt_na, 25},
+      {"losing_removals", CounterReset::attempt_na, 26},
+      {"losing_antichain_size", CounterReset::attempt_na, 27},
+      {"losing_antichain_peak", CounterReset::attempt_na, 28},
+      {"proofs_total", CounterReset::attempt_na, 29},
+      {"proofs_in_initial_cone", CounterReset::attempt_na, 30},
+      {"dependency_list_len_sum", CounterReset::attempt_na, 31},
+      {"dependency_list_len_max", CounterReset::attempt_na, 32},
+      {"parse_ms"},
+      {"eager_ms"},
+      {"search_ms", CounterReset::attempt_na, 1},
+      {"verification_ms", CounterReset::attempt_na, 2},
+      {"attempt_ms", CounterReset::attempt_na, 3},
+      {"end_to_end_ms"},
+      {"process_wall_ms"},
+      {"peak_rss_bytes"},
+      {"measurement"},
+      {"exit_code"},
+  };
+  template <typename Predicate>
+  std::vector<std::string> column_keys (Predicate include) {
+    std::vector<std::string> keys;
+    for (const auto& column : column_schema)
+      if (include (column))
+        keys.emplace_back (column.key);
+    return keys;
+  }
+  std::vector<std::string> reset_keys (CounterReset reset) {
+    std::vector<const Column*> ordered;
+    for (const auto& column : column_schema)
+      if (column.reset == reset)
+        ordered.push_back (&column);
+    std::sort (ordered.begin (), ordered.end (), [] (const Column* a, const Column* b) {
+      return a->reset_order < b->reset_order;
+    });
+    std::vector<std::string> keys;
+    for (const auto* column : ordered)
+      keys.emplace_back (column->key);
+    return keys;
+  }
+  const auto columns = column_keys ([] (const Column&) { return true; });
+  const auto row_counter_keys = reset_keys (CounterReset::row_zero);
+  const auto attempt_zero_keys = reset_keys (CounterReset::attempt_zero);
+  const auto attempt_na_keys = reset_keys (CounterReset::attempt_na);
+  const auto rank_byte_keys = column_keys ([] (const Column& c) { return c.rank_bytes; });
+
   struct InvalidInput : std::runtime_error {
       using std::runtime_error::runtime_error;
   };
@@ -297,12 +467,7 @@ namespace replay {
     report.put ("total_wrapper_edges", "NA");
     report.put ("factory_measurement", "censored");
     report.count ("k", size_t (o.k));
-    for (const auto* key :
-         {"underlying_rows_requested", "underlying_rows_generated", "wrapper_rows_requested",
-          "wrapper_rows_generated", "wrapper_edges_generated", "eager_rows_generated",
-          "search_rows_requested", "search_only_rows_requested", "verification_rows_requested",
-          "verification_additional_rows", "verification_rows_rebuilt",
-          "search_rows_generated_cumulative", "verification_rows_generated_cumulative"})
+    for (const auto& key : row_counter_keys)
       report.count (key, 0);
     report.ms ("row_generation_ms", 0);
     int exit_code = 2;
@@ -382,27 +547,9 @@ namespace replay {
         report.put ("status", "UNKNOWN");
         report.put ("certificate", "unverified");
         report.put ("worker_result", "inconclusive");
-        for (const auto* key :
-             {"queries", "steps", "bdd_operations", "peak_live_nodes", "peak_result_nodes",
-              "threshold_hits", "preimage_hits", "cache_rank_bytes"})
-          for (const auto* prefix : {"search_", "verify_"})
-            report.count (std::string (prefix) + key, 0);
-        for (const auto* phase : {"traversal", "invariant", "proof_bad"})
-          for (const auto* key : {"queries", "steps", "bdd_operations"})
-            report.count (std::string ("verify_") + phase + "_" + key, 0);
-        for (const auto* key :
-             {"search_ms", "verification_ms", "attempt_ms", "game_states", "guarded_choices",
-              "certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes",
-              "losing_journal_rank_bytes", "incremental_bad_cache_bytes",
-              "incremental_bad_journal_replay", "incremental_bad_cache_hits",
-              "incremental_bad_full_rebuilds",
-              "reopened_sources", "reopen_enqueues", "subsumption_scans",
-              "subsumption_nodes_checked",
-              "scan_tombstones", "scan_prefilter_rejects", "scan_exact_compares",
-              "subsumption_nodes_invalidated", "subsumption_queries", "subsumption_hits", "subsumption_prefilter_skips",
-              "losing_insertions", "losing_removals", "losing_antichain_size",
-              "losing_antichain_peak", "proofs_total", "proofs_in_initial_cone",
-              "dependency_list_len_sum", "dependency_list_len_max"})
+        for (const auto& key : attempt_zero_keys)
+          report.count (key, 0);
+        for (const auto& key : attempt_na_keys)
           report.put (key, "NA");
         const auto before_search = store.search_generated, before_verify = store.verify_generated;
         SolveResult result;
@@ -460,134 +607,6 @@ namespace replay {
     return exit_code;
   }
 
-  const std::vector<std::string> columns {"arm",
-                                          "worker_formula",
-                                          "provider",
-                                          "spot_version",
-                                          "refined_rules",
-                                          "wrapper",
-                                          "initial_convention",
-                                          "rank_domain",
-                                          "partition",
-                                          "ap_order",
-                                          "k",
-                                          "kmin",
-                                          "kmax",
-                                          "kinc",
-                                          "k_schedule",
-                                          "caps",
-                                          "worker_pid",
-                                          "status",
-                                          "certificate",
-                                          "worker_result",
-                                          "reason",
-                                          "stage",
-                                          "factory_measurement",
-                                          "factory_ms",
-                                          "factory_baseline_peak_bytes",
-                                          "factory_peak_bytes",
-                                          "factory_rss_before_bytes",
-                                          "factory_rss_after_bytes",
-                                          "factory_scope",
-                                          "acceptance_setup_ms",
-                                          "acceptance_setup_peak_bytes",
-                                          "acceptance_sets",
-                                          "provider_acceptance",
-                                          "underlying_rows_requested",
-                                          "underlying_rows_generated",
-                                          "wrapper_rows_requested",
-                                          "wrapper_rows_generated",
-                                          "underlying_states_discovered",
-                                          "wrapper_states_discovered",
-                                          "wrapper_edges_generated",
-                                          "eager_rows_generated",
-                                          "search_rows_requested",
-                                          "search_only_rows_requested",
-                                          "verification_rows_requested",
-                                          "verification_additional_rows",
-                                          "verification_rows_rebuilt",
-                                          "search_generated_rows",
-                                          "verification_generated_rows",
-                                          "search_rows_generated_cumulative",
-                                          "verification_rows_generated_cumulative",
-                                          "row_generation_ms",
-                                          "total_status",
-                                          "total_underlying_rows",
-                                          "total_wrapper_rows",
-                                          "total_wrapper_edges",
-                                          "rank_support_distribution",
-                                          "rank_support_sum",
-                                          "rank_support_max",
-                                          "rank_bytes",
-                                          "rank_bytes_scope",
-                                          "game_node_rank_bytes",
-                                          "certificate_rank_bytes",
-                                          "rank_interner_bytes",
-                                          "losing_antichain_rank_bytes",
-                                          "losing_journal_rank_bytes",
-                                          "incremental_bad_cache_bytes",
-                                          "search_cache_rank_bytes",
-                                          "verify_cache_rank_bytes",
-                                          "search_queries",
-                                          "search_steps",
-                                          "search_bdd_operations",
-                                          "search_peak_live_nodes",
-                                          "search_peak_result_nodes",
-                                          "search_threshold_hits",
-                                          "search_preimage_hits",
-                                          "incremental_bad_journal_replay",
-                                          "incremental_bad_cache_hits",
-                                          "incremental_bad_full_rebuilds",
-                                          "verify_queries",
-                                          "verify_steps",
-                                          "verify_bdd_operations",
-                                          "verify_peak_live_nodes",
-                                          "verify_peak_result_nodes",
-                                          "verify_threshold_hits",
-                                          "verify_preimage_hits",
-                                          "verify_traversal_queries",
-                                          "verify_traversal_steps",
-                                          "verify_traversal_bdd_operations",
-                                          "verify_invariant_queries",
-                                          "verify_invariant_steps",
-                                          "verify_invariant_bdd_operations",
-                                          "verify_proof_bad_queries",
-                                          "verify_proof_bad_steps",
-                                          "verify_proof_bad_bdd_operations",
-                                          "game_states",
-                                          "guarded_choices",
-                                          "expansions",
-                                          "losing_proofs",
-                                          "strategy_generators",
-                                          "reopened_sources",
-                                          "reopen_enqueues",
-                                          "subsumption_scans",
-                                          "subsumption_nodes_checked",
-                                          "subsumption_nodes_invalidated",
-                                          "scan_tombstones",
-                                          "scan_prefilter_rejects",
-                                          "scan_exact_compares",
-                                          "subsumption_queries",
-                                          "subsumption_hits",
-                                          "subsumption_prefilter_skips",
-                                          "losing_insertions",
-                                          "losing_removals",
-                                          "losing_antichain_size",
-                                          "losing_antichain_peak",
-                                          "proofs_total",
-                                          "proofs_in_initial_cone",
-                                          "dependency_list_len_sum",
-                                          "dependency_list_len_max",
-                                          "parse_ms",
-                                          "eager_ms",
-                                          "search_ms",
-                                          "verification_ms",
-                                          "attempt_ms",
-                                          "end_to_end_ms",
-                                          "process_wall_ms",
-                                          "peak_rss_bytes",
-                                          "measurement",
-                                          "exit_code"};
   std::string value (const Fields& f, const std::string& k) {
     auto it = f.find (k);
     return it == f.end () ? "NA" : it->second;
@@ -735,10 +754,7 @@ namespace replay {
         f["measurement"] = "complete";
       size_t bytes = 0;
       bool known = true;
-      for (const auto* key :
-           {"certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes",
-            "losing_journal_rank_bytes", "incremental_bad_cache_bytes",
-            "search_cache_rank_bytes", "verify_cache_rank_bytes"}) {
+      for (const auto& key : rank_byte_keys) {
         if (value (f, key) == "NA")
           known = false;
         else

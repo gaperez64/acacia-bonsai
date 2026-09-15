@@ -129,7 +129,7 @@ spot_rows_test = executable (
 )
 test ('spot-rows', spot_rows_test, suite : ['unit', 'spot-rows'])
 
-# P5 headers and regressions compile in the default build; no backend gate.
+# The previous sprint's P5 headers and regressions compile in the default build; no backend gate.
 spot_lazy_buchi_view_test = executable (
   'spot-lazy-buchi-view-test',
   'spot_lazy_buchi_view_test.cc',
@@ -139,77 +139,28 @@ spot_lazy_buchi_view_test = executable (
 test ('spot-lazy-buchi-view', spot_lazy_buchi_view_test,
       suite : ['unit', 'spot-lazy'])
 
-# The shared P6 engine compiles without either production dispatch gate.
-spot_provider_replay_test = executable(
-  'spot-provider-replay-test',
-  'spot_provider_replay_test.cc',
-  include_directories: inc,
-  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
-)
-test('spot-provider-replay', spot_provider_replay_test,
-     suite: ['unit', 'spot-provider-replay'])
-
-# The same sources with inequality covering forced on, so both states of the
-# option are exercised in every build including the default one where it is
-# off. The -D wins over the generated value because of the #ifndef guard.
-spot_provider_replay_leq_test = executable(
-  'spot-provider-replay-leq-test',
-  'spot_provider_replay_test.cc',
-  include_directories: inc,
-  cpp_args: ['-DACACIA_SPOT_GUARDED_INEQUALITY_COVERING=1'],
-  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
-)
-test('spot-provider-replay-leq', spot_provider_replay_leq_test,
-     suite: ['unit', 'spot-provider-replay'])
-
-# The same sources with existential outputs forced on, so both states of the
-# option are exercised in every build including the default one where it is
-# off. The -D wins over the generated value because of the #ifndef guard.
-spot_provider_replay_exists_test = executable(
-  'spot-provider-replay-exists-test',
-  'spot_provider_replay_test.cc',
-  include_directories: inc,
-  cpp_args: ['-DACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS=1'],
-  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
-)
-test('spot-provider-replay-exists', spot_provider_replay_exists_test,
-     suite: ['unit', 'spot-provider-replay'])
-
-# The same sources with losing input search forced on, so both states of the
-# option are exercised in every build including the default one where it is
-# off. The -D wins over the generated value because of the #ifndef guard.
-spot_provider_replay_losing_input_test = executable(
-  'spot-provider-replay-losing-input-test',
-  'spot_provider_replay_test.cc',
-  include_directories: inc,
-  cpp_args: ['-DACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH=1'],
-  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
-)
-test('spot-provider-replay-losing-input', spot_provider_replay_losing_input_test,
-     suite: ['unit', 'spot-provider-replay'])
-
-# Force the incremental Bad default on; internal callers exercise both states.
-spot_provider_replay_incremental_bad_test = executable(
-  'spot-provider-replay-incremental-bad-test',
-  'spot_provider_replay_test.cc',
-  include_directories: inc,
-  cpp_args: ['-DACACIA_SPOT_GUARDED_INCREMENTAL_BAD=1'],
-  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
-)
-test('spot-provider-replay-incremental-bad', spot_provider_replay_incremental_bad_test,
-     suite: ['unit', 'spot-provider-replay'])
-
-# Force the lean verifier default on; internal options also exercise both
-# states in this binary. The #ifndef guard lets -D override the generated value.
-spot_provider_replay_lean_verifier_test = executable(
-  'spot-provider-replay-lean-verifier-test',
-  'spot_provider_replay_test.cc',
-  include_directories: inc,
-  cpp_args: ['-DACACIA_SPOT_GUARDED_LEAN_VERIFIER=1'],
-  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
-)
-test('spot-provider-replay-lean-verifier', spot_provider_replay_lean_verifier_test,
-     suite: ['unit', 'spot-provider-replay'])
+# The previous sprint's shared P6 engine compiles without either production
+# dispatch gate. Variants force each option on; internal callers also exercise
+# both states. The #ifndef guards let -D override the generated defaults.
+spot_provider_replay_variants = [
+  ['spot-provider-replay', []],
+  ['spot-provider-replay-leq', ['-DACACIA_SPOT_GUARDED_INEQUALITY_COVERING=1']],
+  ['spot-provider-replay-exists', ['-DACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS=1']],
+  ['spot-provider-replay-losing-input', ['-DACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH=1']],
+  ['spot-provider-replay-incremental-bad', ['-DACACIA_SPOT_GUARDED_INCREMENTAL_BAD=1']],
+  ['spot-provider-replay-lean-verifier', ['-DACACIA_SPOT_GUARDED_LEAN_VERIFIER=1']],
+]
+foreach variant : spot_provider_replay_variants
+  spot_provider_replay_test = executable(
+    variant[0] + '-test',
+    'spot_provider_replay_test.cc',
+    include_directories: inc,
+    cpp_args: variant[1],
+    dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+  )
+  test(variant[0], spot_provider_replay_test,
+       suite: ['unit', 'spot-provider-replay'])
+endforeach
 
 sparse_forward_rank_test = executable (
   'sparse-forward-rank-test',

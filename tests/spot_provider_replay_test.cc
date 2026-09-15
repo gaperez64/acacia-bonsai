@@ -106,8 +106,9 @@ void check_solve_counters (const SolveResult& result, const Fields& fields) {
 }
 
 namespace acacia::spot_lazy_game {
-// Test access uses the existing replay-test build guard. The legacy coverage
-// path lives entirely here and never participates in production expansion.
+// SearchTestAccess exposes search state and operations under the replay-test
+// build guard. Its legacy_* helpers are a test-only reference implementation
+// used to compare against production expansion.
 struct SearchTestAccess {
     static auto& result (Search& s) { return s.result_; }
     static auto& oracle (Search& s) { return s.oracle_; }
@@ -232,8 +233,9 @@ struct SearchTestAccess {
               s.nodes_checked_ == ref.nodes_checked_ && s.nodes_invalidated_ == ref.nodes_invalidated_,
               "S3 preserves search decisions and actual reopen enqueues");
       // Legacy rebuilding eagerly cleared choices for other pending targets,
-      // suppressing their later reopen attempts. S3 accounts for each event;
-      // queued flags still ensure exactly the same actual enqueues above.
+      // suppressing their later reopen attempts. The previous sprint's S3
+      // accounts for each event; queued flags still ensure exactly the same
+      // actual enqueues above.
       expect (a.reopened_sources >= b.reopened_sources,
               "explicit invalidations retain every legacy reopen attempt");
       for (std::size_t id = 0; id < a.nodes.size (); ++id) {
