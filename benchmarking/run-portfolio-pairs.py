@@ -23,6 +23,11 @@ Opposite decisive verdicts for an instance, including across repetitions, make
 the campaign fail; the conflicts sidecar contains the decisive evidence rows
 and the summary withholds decisive labels for that instance.
 
+The default ``stop`` error policy fails on the first ERROR or CRASH. ``collect``
+keeps these unsolved rows, prints their diagnostics, and finishes the campaign
+before exiting 2 with a summary of failures, including those loaded on resume.
+The error policy may change on resume without changing the measured treatment.
+
 A metadata sidecar guards the ordered pairs, selected instances, repetitions,
 binary, flags, and resources on resume. Rows are flushed and fsynced per run;
 summary/conflict sidecars are rebuilt from those rows, including after a clean
@@ -49,7 +54,8 @@ from benchlib import build_preset, campaign_scope_guard, classify_run, run_syste
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DECISIVE_RESULTS = {"REALIZABLE", "UNREALIZABLE"}
-NORMALIZED_RESULTS = DECISIVE_RESULTS | {"UNKNOWN", "TIMEOUT", "MEMOUT", "CRASH", "ERROR"}
+ERROR_RESULTS = {"ERROR", "CRASH"}
+NORMALIZED_RESULTS = DECISIVE_RESULTS | ERROR_RESULTS | {"UNKNOWN", "TIMEOUT", "MEMOUT"}
 # Keep the coverage runner's schema and append only the pair coordinates.
 PAIR_COLUMNS = ["pair_id", "arm_tokens", "repetition_id", "order_index"]
 OUTPUT_COLUMNS = [
@@ -297,6 +303,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cpu-quota", help="whole-invocation systemd CPUQuota, e.g. 200%%")
     parser.add_argument("--output", required=True, type=pathlib.Path, metavar="TSV")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--error-policy", choices=("stop", "collect"), default="stop",
+        help="stop at the first binary error/crash (default), or collect all and exit 2",
+    )
     parser.add_argument("--limit", type=nonnegative_int, metavar="N")
     parser.add_argument("--repetitions", type=positive_int, default=1, metavar="N")
     parser.add_argument("--preset", metavar="NAME",
@@ -328,12 +338,19 @@ def run(args: argparse.Namespace) -> int:
         "pairs": [pair_metadata(label, arms) for label, arms in pairs.items()],
         "targets": [[instance, str(path)] for instance, path in targets.items()],
         "repetitions": args.repetitions, "order": args.order,
+        "error_policy": args.error_policy,
     }
     output = args.output
     output.parent.mkdir(parents=True, exist_ok=True)
     metadata_path = output.with_name(f"{output.stem}-metadata.json")
-    if args.resume and output.exists():
-        if not metadata_path.is_file() or json.loads(metadata_path.read_text()) != campaign:
+    resuming = args.resume and output.exists()
+    if resuming:
+        recorded_campaign = json.loads(metadata_path.read_text()) if metadata_path.is_file() else {}
+        # Stopping policy is not part of the measured treatment. Allow switching
+        # it, including for campaigns whose metadata predates --error-policy.
+        if not isinstance(recorded_campaign, dict) or {
+            **recorded_campaign, "error_policy": args.error_policy,
+        } != campaign:
             raise PairError(
                 "resume configuration, schedule or binary differs from recorded campaign"
             )
@@ -348,10 +365,13 @@ def run(args: argparse.Namespace) -> int:
         raise PairError(
             f"recorded verdict conflicts require adjudication: {', '.join(sorted(conflicts))}"
         )
-    if any(row["result"] in {"ERROR", "CRASH"} for row in rows):
+    errors = [row for row in rows if row["result"] in ERROR_RESULTS]
+    if errors and args.error_policy == "stop":
         raise PairError(
             "recorded binary error/crash; inspect the campaign before starting a new output"
         )
+    if resuming:
+        atomic_write(metadata_path, lambda stream: json.dump(campaign, stream, indent=2))
     completed = {int(row["order_index"]) for row in rows}
     try:
         with output.open("a", encoding="utf-8", newline="") as stream:
@@ -399,10 +419,14 @@ def run(args: argparse.Namespace) -> int:
                 print(f"order={slot} repetition={repetition} pair={label} instance={instance} "
                       f"cap={metadata['cap_s']}s result={result} seconds={solver_run.seconds:.3f}",
                       flush=True)
-                if result in {"ERROR", "CRASH"}:
+                if result in ERROR_RESULTS:
                     diagnostic = "\n".join((solver_run.stdout, solver_run.stderr)).strip()
-                    raise PairError(f"binary failed for pair {label}; --arms {arms!r}; "
-                                    f"exit={solver_run.returncode}\n{diagnostic}")
+                    message = (f"binary failed for pair {label}; --arms {arms!r}; "
+                               f"exit={solver_run.returncode}\n{diagnostic}")
+                    if args.error_policy == "stop":
+                        raise PairError(message)
+                    print(f"error: {message}", file=sys.stderr, flush=True)
+                    errors.append(row)
                 if result in DECISIVE_RESULTS and any(
                     previous["instance"] == instance
                     and previous["result"] in DECISIVE_RESULTS and previous["result"] != result
@@ -414,6 +438,14 @@ def run(args: argparse.Namespace) -> int:
     finally:
         write_sidecars(output, pairs, targets, rows, metadata["cap_s"], args.repetitions)
     print(f"wrote {output}\nwrote {output.with_name(f'{output.stem}-summary.tsv')}")
+    if errors:
+        affected = "; ".join(
+            f"pair={label} instance={instance}"
+            for label, instance in sorted({(row["pair_id"], row["instance"]) for row in errors})
+        )
+        print(f"ERRORS COLLECTED: {len(errors)} ERROR/CRASH rows (see {output}): {affected}",
+              file=sys.stderr)
+        return 2
     return 0
 
 
