@@ -218,6 +218,8 @@ build_conf.set ('ACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS',
                 get_option ('acacia_spot_guarded_existential_outputs') ? 1 : 0)
 build_conf.set ('ACACIA_SPOT_GUARDED_LOSING_INPUT_SEARCH',
                 get_option ('acacia_spot_guarded_losing_input_search') ? 1 : 0)
+build_conf.set ('ACACIA_SPOT_GUARDED_INCREMENTAL_BAD',
+                get_option ('acacia_spot_guarded_incremental_bad') ? 1 : 0)
 build_conf.set ('ACACIA_SPOT_GUARDED_LEAN_VERIFIER',
                 get_option ('acacia_spot_guarded_lean_verifier') ? 1 : 0)
 build_conf.set ('ACACIA_SPOT_LAZY_PROVIDER',

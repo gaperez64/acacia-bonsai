@@ -56,6 +56,9 @@ void check_solve_counters (const SolveResult& result, const Fields& fields) {
   rank_metrics (result, Reporter {[&] (const auto& k, const auto& v) { published[k] = v; }});
   for (const auto* key : {"scan_tombstones", "scan_prefilter_rejects", "scan_exact_compares",
                          "proofs_total", "proofs_in_initial_cone", "dependency_list_len_sum",
+                         "losing_journal_rank_bytes", "incremental_bad_cache_bytes",
+                         "incremental_bad_journal_replay", "incremental_bad_cache_hits",
+                         "incremental_bad_full_rebuilds",
                          "dependency_list_len_max"}) {
     expect (fields.at (key) == published.at (key),
             "destructor and SolveResult reader agree on " + std::string (key));
@@ -108,6 +111,30 @@ namespace acacia::spot_lazy_game {
 struct SearchTestAccess {
     static auto& result (Search& s) { return s.result_; }
     static auto& oracle (Search& s) { return s.oracle_; }
+    static auto& journal (Search& s) { return s.oracle_.search_loss_journal_; }
+    static auto& losing (Search& s) { return s.losing_; }
+    static auto& bad_cache (Search& s) { return s.oracle_.search_bad_cache_; }
+    static size_t bad_journal_replay (Search& s) { return s.oracle_.search_bad_journal_replay_; }
+    static bool prepared_empty (Search& s) { return s.oracle_.prepared_.empty (); }
+    static void bad_budget (Search& s, size_t bytes) { s.oracle_.search_bad_budget_ = bytes; }
+    static void insert_loss (Search& s, const Rank& rank) {
+      s.enqueue_loss (s.intern (rank), losing_reason::env_unsafe);
+    }
+    static auto search_bad (Search& s, const Rank& rank) {
+      return s.oracle_.search_bad_from_loss_journal (rank, s.losing_.ranks ());
+    }
+    static auto search_bad (Search& s, const Rank& rank, bdd missing) {
+      return s.oracle_.search_bad_from_loss_journal (rank, s.losing_.ranks (), missing);
+    }
+    static void check_bad (Search& s, const Rank& rank) {
+      Reader reader {s.view_, false, {}};
+      Oracle fresh {reader, s.view_, s.alphabet_, s.K_};
+      const auto expected = detail::take (fresh.bad (rank, s.losing_.ranks (), 0));
+      expect (detail::take (search_bad (s, rank)) == expected,
+              "journal union equals a fresh aggregate over the live antichain");
+      expect (journal (s).size () == s.losing_.insertions,
+              "journal contains exactly the genuinely inserted generators");
+    }
     static void drain (Search& s) { s.propagate_losses (); }
     static void initialize (Search& s) {
       s.result_.initial = s.intern (s.rows_->initial_rank ());
@@ -274,6 +301,52 @@ struct SearchTestAccess {
       const auto expected = ref.solve ();
       expect (actual.status == expected.status && actual.failure == expected.failure &&
               actual.generators == expected.generators, "S3 preserves verified certificates");
+      return actual;
+    }
+    static SolveResult compare_incremental_bad (RowStore& store,
+                                                const letters::WorkerAlphabet& alphabet,
+                                                int K, ChoiceSemantics semantics,
+                                                LosingInputSearch mode, LeanVerifier lean) {
+      Search s {store, alphabet, K, {}, semantics, mode, lean, IncrementalBad::on};
+      Search ref {store, alphabet, K, {}, semantics, mode, lean, IncrementalBad::off};
+      detail::take (detail::checked<bool> ([&] {
+        store.phase = Phase::search;
+        initialize (s);
+        initialize (ref);
+        for (;;) {
+          s.propagate_losses ();
+          ref.propagate_losses ();
+          same_decisions (s, ref);
+          expect (s.result_.reopened_sources == ref.result_.reopened_sources,
+                  "D1b also preserves every reopen attempt");
+          if (s.result_.nodes[s.result_.initial].losing || s.open_.empty ())
+            break;
+          for (auto* search : {&s, &ref}) {
+            const auto id = search->open_.front ();
+            search->open_.pop_front ();
+            search->result_.nodes[id].queued = false;
+            ++search->result_.expansions;
+            search->expand (id);
+          }
+          same_decisions (s, ref);
+        }
+        return true;
+      }));
+      auto actual = s.solve ();
+      const auto expected = ref.solve ();
+      expect (actual.status == expected.status && actual.failure == expected.failure &&
+              actual.generators == expected.generators &&
+              actual.pending_loss == expected.pending_loss &&
+              actual.pending_expansion == expected.pending_expansion,
+              "D1b preserves verified certificates and verdicts");
+      expect (expected.incremental_bad_cache_bytes == 0 &&
+              expected.losing_journal_rank_bytes == 0 &&
+              expected.incremental_bad_cache_hits == 0 &&
+              expected.incremental_bad_journal_replay == 0 &&
+              expected.incremental_bad_full_rebuilds == 0,
+              "disabled D1b retains no journal or incremental cache and performs no replay");
+      expect (actual.incremental_bad_full_rebuilds == 0,
+              "small differential games fit the incremental cache budget");
       return actual;
     }
 };
@@ -486,6 +559,12 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
           const auto incremental = SearchTestAccess::compare_rebuild (store, a, K, semantics, mode);
           expect (incremental.status == actual.status && incremental.failure == Unknown::none,
                   "S3 and legacy rebuild match the explicit game with S2 off and on");
+          for (auto policy : {LeanVerifier::off, LeanVerifier::on}) {
+            const auto cached = SearchTestAccess::compare_incremental_bad (
+                store, a, K, semantics, mode, policy);
+            expect (cached.status == actual.status && cached.failure == Unknown::none,
+                    "D1b matches every fixed-K game with S2 and V1 off and on");
+          }
         }
         expect (choice_regions (store, a, K, symbolic, symbolic_region_inputs) == 0,
                 "symbolic search preserves choice-region arithmetic");
@@ -960,6 +1039,270 @@ void certificate_shape_metrics () {
             observed.at ("proofs_in_initial_cone") == (has_root ? "4" : "0") &&
             observed.at ("dependency_list_len_sum") == "4" &&
             observed.at ("dependency_list_len_max") == "2", "shape reporting survives moving the result");
+  }
+}
+
+void incremental_bad_unions () {
+  Kernel k {3};
+  const bdd u = k.ap ("u", true), c = k.ap ("c", false);
+  k.graph->new_edge (0, 1, u);
+  k.graph->new_edge (0, 2, !u);
+  k.graph->new_edge (1, 1, c, {0});
+  k.graph->new_edge (1, 2, !c);
+  k.graph->new_edge (2, 2, bddtrue, {0});
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  const std::vector<Rank> sources {Rank {{{0, 0}}, 2}, Rank {{{0, 1}}, 2},
+                                  Rank {{{1, 1}}, 2}, Rank {{{1, 0}, {2, 0}}, 2},
+                                  Rank {{}, 2}};
+  size_t removals = 0;
+  for (unsigned seed = 0; seed < 8; ++seed) {
+    Search s {store, k.alphabet, 2, {}, default_choice_semantics,
+              LosingInputSearch::off, LeanVerifier::off, IncrementalBad::on};
+    for (const auto& source : sources)
+      SearchTestAccess::check_bad (s, source);
+    // Inject loss events to test the set algebra independently of whether
+    // these ranks are losing in this game. Dominated entries are kept only in
+    // the journal; duplicate and already-subsumed events must not be appended.
+    std::vector<Rank> targets {Rank {{{1, 1}}, 2}, Rank {{{2, 1}}, 2},
+                              Rank {{{1, 0}}, 2}, Rank {{{2, 0}}, 2}};
+    if (seed != 0) {
+      std::mt19937 random {seed};
+      std::shuffle (targets.begin (), targets.end (), random);
+    }
+    targets.push_back (targets.front ());
+    targets.push_back (Rank {{{1, 1}, {2, 1}}, 2});
+    targets.push_back (Rank {{}, 2}); // removes every remaining generator
+    for (const auto& target : targets) {
+      SearchTestAccess::insert_loss (s, target);
+      for (const auto& source : sources)
+        SearchTestAccess::check_bad (s, source);
+    }
+    removals += SearchTestAccess::losing (s).removals;
+    s.publish_counters ();
+    expect (SearchTestAccess::result (s).incremental_bad_journal_replay ==
+                sources.size () * SearchTestAccess::journal (s).size (),
+            "each source replays every inserted generator exactly once across removals");
+    expect (SearchTestAccess::journal (s).size () > SearchTestAccess::losing (s).size (),
+            "removed generators survive in the journal");
+  }
+  expect (removals > 8, "small histories exercise antichain removals");
+
+  // A source can miss several insertions; both overloads then use the same
+  // completed prefix, while the output projection is always recomputed.
+  Search s {store, k.alphabet, 2, {}, default_choice_semantics,
+            LosingInputSearch::off, LeanVerifier::off, IncrementalBad::on};
+  SearchTestAccess::check_bad (s, sources[0]);
+  SearchTestAccess::insert_loss (s, Rank {{{1, 1}}, 2});
+  SearchTestAccess::insert_loss (s, Rank {{{1, 0}}, 2});
+  SearchTestAccess::check_bad (s, sources[0]);
+  auto& oracle = SearchTestAccess::oracle (s);
+  const auto before = oracle.work_metrics ();
+  SearchTestAccess::search_bad (s, sources[0]);
+  expect (oracle.work_metrics ().bdd_operations == before.bdd_operations,
+          "unchanged cached Bad performs no BDD operations");
+  for (auto missing : {bdd (bddtrue), u, !u}) {
+    const auto expected = detail::take (oracle.bad (
+        sources[0], SearchTestAccess::losing (s).ranks (), 0, missing));
+    expect (detail::take (SearchTestAccess::search_bad (s, sources[0], missing)) == expected,
+            "losing-input query recomputes forall and intersects the current missing region");
+  }
+  // Ordinary Bad is never served from the journal, even on the same Oracle
+  // with a warm cache and the same nominal epoch.
+  expect (detail::take (oracle.bad (sources[0], {}, 0)) == bddfalse &&
+          detail::take (SearchTestAccess::search_bad (s, sources[0])) == u,
+          "explicit dependency subsets remain independent of the search journal");
+}
+
+void incremental_bad_budget () {
+  Kernel k {2};
+  const bdd u = k.ap ("u", true);
+  k.graph->new_edge (0, 1, u);
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  const Rank source {{{0, 0}}, 1}, target {{{1, 0}}, 1};
+  for (bool warm : {false, true}) {
+    Search s {store, k.alphabet, 1, {}, default_choice_semantics,
+              LosingInputSearch::off, LeanVerifier::off, IncrementalBad::on};
+    size_t budget = 0;
+    if (warm) {
+      SearchTestAccess::check_bad (s, source);
+      s.publish_counters ();
+      budget = SearchTestAccess::result (s).incremental_bad_cache_bytes;
+    }
+    SearchTestAccess::bad_budget (s, budget);
+    SearchTestAccess::insert_loss (s, target);
+    for (unsigned i = 0; i < 2; ++i)
+      SearchTestAccess::check_bad (s, source);
+    s.publish_counters ();
+    const auto& result = SearchTestAccess::result (s);
+    expect (result.incremental_bad_full_rebuilds == 2 &&
+            result.incremental_bad_cache_bytes == 0 && SearchTestAccess::bad_cache (s).empty (),
+            "admission and growth overflow both release the cache and use full rebuilds");
+    expect (result.incremental_bad_journal_replay == (warm ? 1 : 0),
+            "budget exhaustion does not repeatedly replay a journal that cannot fit");
+  }
+}
+
+void incremental_bad_failure () {
+  Kernel k {3};
+  const bdd u = k.ap ("u", true), c = k.ap ("c", false);
+  k.graph->new_edge (0, 1, u | c);
+  k.graph->new_edge (0, 2, !u);
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  const Rank source {{{0, 0}}, 2};
+  size_t checkpoints = 0;
+  // First count all checkpoints of a successful warm-cache extension. Then
+  // fail at each one, including during replay, forall and the final checkpoint.
+  for (size_t fail_at = 0; fail_at <= checkpoints; ++fail_at) {
+    Search s {store, k.alphabet, 2, {}, default_choice_semantics,
+              LosingInputSearch::off, LeanVerifier::off, IncrementalBad::on};
+    SearchTestAccess::insert_loss (s, Rank {{{1, 1}}, 2});
+    SearchTestAccess::check_bad (s, source);
+    SearchTestAccess::insert_loss (s, Rank {{{1, 0}}, 2});
+    SearchTestAccess::insert_loss (s, Rank {{{2, 0}}, 2});
+    struct Budget { size_t calls = 0, fail_at; } budget {0, fail_at};
+    letters::QueryLimits limits;
+    limits.aborted = [] (void* data) {
+      auto& budget = *static_cast<Budget*> (data);
+      if (++budget.calls == budget.fail_at)
+        throw std::bad_alloc ();
+      return false;
+    };
+    limits.abort_data = &budget;
+    auto& oracle = SearchTestAccess::oracle (s);
+    oracle.set_limits (limits);
+    const auto query = SearchTestAccess::search_bad (s, source, bddtrue);
+    oracle.set_limits ({});
+    if (fail_at == 0) {
+      expect (query.value.has_value (), "reference cache extension completes");
+      checkpoints = budget.calls;
+      continue;
+    }
+    expect (not query.value && query.unknown == Unknown::resource_limit &&
+            SearchTestAccess::bad_cache (s).empty () && SearchTestAccess::prepared_empty (s),
+            "every failed query checkpoint clears Prepared and incremental Bad together");
+    expect (SearchTestAccess::journal (s).size () == 3,
+            "failed queries preserve the complete losing insertion journal");
+    s.publish_counters ();
+    const auto before = SearchTestAccess::result (s);
+    expect (before.incremental_bad_cache_bytes == 0, "failure resets retained cache byte accounting");
+    SearchTestAccess::check_bad (s, source);
+    s.publish_counters ();
+    const auto& after = SearchTestAccess::result (s);
+    expect (after.incremental_bad_cache_hits == before.incremental_bad_cache_hits &&
+            after.incremental_bad_journal_replay == before.incremental_bad_journal_replay + 3,
+            "retry replays the entire journal without reusing an interrupted cache");
+    // An unrelated failed query has the same invalidation contract.
+    limits = {};
+    limits.max_steps = 0;
+    oracle.set_limits (limits);
+    expect (not oracle.eq (source, source).value && SearchTestAccess::bad_cache (s).empty () &&
+            SearchTestAccess::prepared_empty (s), "failed non-Bad query also clears both caches");
+  }
+  expect (checkpoints > 10, "failure sweep reaches replay and output quantification checkpoints");
+}
+
+void incremental_bad_publication_failure () {
+  Kernel k {3};
+  const bdd u = k.ap ("u", true), c = k.ap ("c", false);
+  k.graph->new_edge (0, 1, u | c);
+  k.graph->new_edge (0, 2, !u);
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  const Rank source {{{0, 0}}, 2};
+  Search s {store, k.alphabet, 2, {}, default_choice_semantics,
+            LosingInputSearch::off, LeanVerifier::off, IncrementalBad::on};
+  SearchTestAccess::insert_loss (s, Rank {{{1, 1}}, 2});
+  SearchTestAccess::check_bad (s, source);
+  const auto before_index = SearchTestAccess::bad_cache (s).at (source).journal_index;
+  expect (before_index == 1, "publication fixture starts with a completed nonempty prefix");
+  SearchTestAccess::insert_loss (s, Rank {{{1, 0}}, 2});
+  SearchTestAccess::insert_loss (s, Rank {{{2, 0}}, 2});
+  const auto journal_size = SearchTestAccess::journal (s).size ();
+  expect (journal_size == before_index + 2, "publication fixture has two pending journal entries");
+
+  struct Failure {
+      Search& search;
+      const Rank& source;
+      size_t fail_after_replay;
+      std::optional<size_t> published_index;
+  } failure {s, source, SearchTestAccess::bad_journal_replay (s) + 2, {}};
+  letters::QueryLimits limits;
+  limits.aborted = [] (void* data) {
+    auto& failure = *static_cast<Failure*> (data);
+    if (SearchTestAccess::bad_journal_replay (failure.search) == failure.fail_after_replay) {
+      // The first new OR has completed; the second entry has just started.
+      // Pins publishing journal_index in the cache before the union completes,
+      // even if the loop retains its original start and failure cleanup works.
+      // Observe before query cleanup erases the interrupted cache entry.
+      failure.published_index = SearchTestAccess::bad_cache (failure.search)
+                                    .at (failure.source).journal_index;
+      throw std::bad_alloc ();
+    }
+    return false;
+  };
+  limits.abort_data = &failure;
+  auto& oracle = SearchTestAccess::oracle (s);
+  oracle.set_limits (limits);
+  const auto query = SearchTestAccess::search_bad (s, source);
+  oracle.set_limits ({});
+  expect (not query.value && query.unknown == Unknown::resource_limit &&
+          failure.published_index.has_value (), "failure is injected part-way through journal replay");
+  expect (*failure.published_index == before_index,
+          "incomplete union leaves the published journal index at the completed prefix");
+  expect (SearchTestAccess::bad_cache (s).empty () && SearchTestAccess::prepared_empty (s) &&
+          SearchTestAccess::journal (s).size () == journal_size,
+          "failure clears both caches and preserves the journal");
+
+  const auto before_retry = SearchTestAccess::bad_journal_replay (s);
+  SearchTestAccess::check_bad (s, source);
+  expect (SearchTestAccess::bad_journal_replay (s) == before_retry + journal_size,
+          "retry replays the full journal, including every entry past the unpublished index");
+  const auto& completed = SearchTestAccess::bad_cache (s).at (source);
+  expect (completed.journal_index == journal_size && completed.predicate == bddtrue,
+          "retry publishes the complete union over the current generators");
+}
+
+void incremental_bad_verifier_isolation () {
+  Kernel k {3};
+  k.graph->new_edge (0, 1, bddtrue);
+  k.graph->new_edge (1, 2, bddtrue);
+  k.graph->new_edge (2, 2, bddtrue, {0});
+  RowStore store {k.view (), {}, {}};
+  store.enumerate_and_freeze ();
+  for (auto policy : {LeanVerifier::off, LeanVerifier::on}) {
+    Search s {store, k.alphabet, 1, {}, default_choice_semantics,
+              LosingInputSearch::on, policy, IncrementalBad::on};
+    auto certificate = s.solve ();
+    expect (certificate.status == forward_result_status::lose_k, "delayed-loss fixture verifies");
+    const auto root = certificate.proofs.at (*certificate.initial_proof);
+    auto& oracle = SearchTestAccess::oracle (s);
+    expect (detail::take (oracle.bad (root.rank, {}, 0)) == bddfalse &&
+            detail::take (SearchTestAccess::search_bad (s, root.rank)) == bddtrue,
+            "root Bad needs a frontier generator beyond the empty dependency subset");
+    // Move the root obligation before the frontier entry it actually needs,
+    // without declaring any forward dependency. A whole-frontier cache would
+    // wrongly validate it; chronological subset replay must reject it.
+    certificate.proofs.insert (certificate.proofs.begin (), root);
+    for (size_t id = 0; id < certificate.proofs.size (); ++id) {
+      auto& record = certificate.proofs[id].record;
+      record.id = id;
+      if (id == 0)
+        record.dependencies.clear ();
+      else
+        for (auto& dep : record.dependencies) ++dep;
+    }
+    certificate.initial_proof = 0;
+    const auto rejected = verify_losing_proof (store, k.alphabet, 1, certificate, {},
+                                               default_choice_semantics, policy);
+    expect (not rejected.value && rejected.unknown == Unknown::invalid_query,
+            "verifier rejects a proof valid only using a later frontier entry");
+    certificate.proofs[0].record.dependencies = {root.record.dependencies.front () + 1};
+    expect (not verify_losing_proof (store, k.alphabet, 1, certificate, {},
+                                    default_choice_semantics, policy).value,
+            "declaring the later dependency is also rejected by chronology");
   }
 }
 
@@ -1556,6 +1899,11 @@ int main () {
     verifier_phase_metrics ();
     certificate_shape_metrics ();
     incremental_coverage_events ();
+    incremental_bad_unions ();
+    incremental_bad_budget ();
+    incremental_bad_failure ();
+    incremental_bad_publication_failure ();
+    incremental_bad_verifier_isolation ();
     incremental_coverage_property ();
     incremental_coverage_failure ();
     missing_output_kernel ();

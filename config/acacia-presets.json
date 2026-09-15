@@ -367,6 +367,12 @@
       "inherits": "otf_sparse_formula",
       "spot_guarded_lean_verifier": true
     },
+    "otf_sparse_incremental_bad": {
+      "description": "otf_sparse_formula with incremental bad predicates in the sparse guarded search.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula",
+      "spot_guarded_incremental_bad": true
+    },
     "otf_sparse_formula_inequality_covering": {
       "description": "otf_sparse_formula with the guarded unreal worker covering inputs by the <= successor preimage rather than the exact one.",
       "role": "sweep",

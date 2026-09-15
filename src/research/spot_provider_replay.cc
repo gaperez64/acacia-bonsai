@@ -110,7 +110,9 @@ namespace replay {
         << "  is certificate sources outside that union. Search-only is their set difference.\n"
         << "  Factory RSS/peak are process measurements, not allocation attribution.\n"
         << "  Rank bytes sum retained payload snapshots for nodes, proofs, interner,\n"
-        << "  antichain, generators and query caches; allocator/map overhead is excluded.\n"
+        << "  antichain, generators, loss journal and query caches; allocator/map overhead\n"
+        << "  is excluded. Incremental Bad charges 32 bytes per BDD node per retained root,\n"
+        << "  counting shared nodes again; its cache payload budget is 8 MiB.\n"
         << "  NA totals are censored/unknown; obtain C5's denominator from a separate C4 run.\n"
         << "  Exit 0: verified WIN_K; 2: inconclusive (including LOSE_K at Kmax);\n"
         << "  1: invalid invocation/input. LOSE_K never means LTL unrealizability.\n";
@@ -252,7 +254,13 @@ namespace replay {
       certificate_bytes += rank_bytes (g);
     report.count ("certificate_rank_bytes", certificate_bytes);
     report.put ("rank_bytes_scope",
-                "sum_of_retained_component_payload_snapshots_excludes_allocator_and_map_overhead");
+                "sum_of_retained_component_payload_snapshots_includes_incremental_bad_bdd_node_charge"
+                "_excludes_allocator_and_map_overhead");
+    report.count ("losing_journal_rank_bytes", r.losing_journal_rank_bytes);
+    report.count ("incremental_bad_journal_replay", r.incremental_bad_journal_replay);
+    report.count ("incremental_bad_cache_hits", r.incremental_bad_cache_hits);
+    report.count ("incremental_bad_full_rebuilds", r.incremental_bad_full_rebuilds);
+    report.count ("incremental_bad_cache_bytes", r.incremental_bad_cache_bytes);
     report.count ("game_states", r.nodes.size ());
     report.count ("guarded_choices", r.choices_created);
     report.count ("expansions", r.expansions);
@@ -385,6 +393,9 @@ namespace replay {
         for (const auto* key :
              {"search_ms", "verification_ms", "attempt_ms", "game_states", "guarded_choices",
               "certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes",
+              "losing_journal_rank_bytes", "incremental_bad_cache_bytes",
+              "incremental_bad_journal_replay", "incremental_bad_cache_hits",
+              "incremental_bad_full_rebuilds",
               "reopened_sources", "reopen_enqueues", "subsumption_scans",
               "subsumption_nodes_checked",
               "scan_tombstones", "scan_prefilter_rejects", "scan_exact_compares",
@@ -513,6 +524,8 @@ namespace replay {
                                           "certificate_rank_bytes",
                                           "rank_interner_bytes",
                                           "losing_antichain_rank_bytes",
+                                          "losing_journal_rank_bytes",
+                                          "incremental_bad_cache_bytes",
                                           "search_cache_rank_bytes",
                                           "verify_cache_rank_bytes",
                                           "search_queries",
@@ -522,6 +535,9 @@ namespace replay {
                                           "search_peak_result_nodes",
                                           "search_threshold_hits",
                                           "search_preimage_hits",
+                                          "incremental_bad_journal_replay",
+                                          "incremental_bad_cache_hits",
+                                          "incremental_bad_full_rebuilds",
                                           "verify_queries",
                                           "verify_steps",
                                           "verify_bdd_operations",
@@ -721,6 +737,7 @@ namespace replay {
       bool known = true;
       for (const auto* key :
            {"certificate_rank_bytes", "rank_interner_bytes", "losing_antichain_rank_bytes",
+            "losing_journal_rank_bytes", "incremental_bad_cache_bytes",
             "search_cache_rank_bytes", "verify_cache_rank_bytes"}) {
         if (value (f, key) == "NA")
           known = false;

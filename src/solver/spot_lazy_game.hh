@@ -358,6 +358,10 @@ namespace acacia::spot_lazy_game {
   // deterministic valuation picker and quantifiers are the existing P3 ones.
   // D(r) union support(target), never the discovered arena, defines a query.
   class Oracle {
+      friend class Search;
+#ifdef ACACIA_PROVIDER_REPLAY_TESTING
+      friend struct SearchTestAccess;
+#endif
       struct Prepared {
           std::map<StateId, std::vector<std::pair<int64_t, bdd>>> destinations;
           std::map<std::pair<StateId, int64_t>, bdd> thresholds;
@@ -367,6 +371,24 @@ namespace acacia::spot_lazy_game {
       letters::Oracle boundary_;
       int K_;
       std::unordered_map<Rank, Prepared> prepared_;
+      // These members belong only to this Oracle's owning fixed-K Search.
+      // The verifier cannot call the private search entry points below and its
+      // public bad() always aggregates precisely the supplied dependency set.
+      struct SearchBad {
+          bdd unsafe = bddfalse;
+          bdd predicate = bddfalse;  // unsafe OR all covered target preimages
+          size_t journal_index = 0, unsafe_bytes = 0, bytes = 0;
+      };
+      std::vector<Rank> search_loss_journal_;
+      std::unordered_map<Rank, SearchBad> search_bad_cache_;
+      // Retained payload budget, including a conservative 32-byte charge per
+      // reachable BDD node in each root (sharing is deliberately counted twice).
+      // This bounds the new cache, not Prepared or BuDDy's global allocator.
+      static constexpr size_t search_bad_node_bytes = 32;
+      size_t search_bad_budget_ = 8 * 1024 * 1024;
+      size_t search_bad_bytes_ = 0;
+      bool search_bad_exhausted_ = false;
+      size_t search_bad_journal_replay_ = 0, search_bad_hits_ = 0, search_bad_fallbacks_ = 0;
       size_t queries_ = 0, threshold_hits_ = 0, preimage_hits_ = 0;
       Prepared& prepare (const Rank& r, letters::detail::Letters& b) {
         (void) r.is_safe (K_);
@@ -446,21 +468,101 @@ namespace acacia::spot_lazy_game {
         p.preimages.emplace (key, result);
         return result;
       }
+      bdd unsafe (Prepared& p, letters::detail::Letters& b) {
+        bdd result = bddfalse;
+        for (const auto& [q, edges] : p.destinations) {
+          (void) edges;
+          result = b.lor (result, threshold (p, q, rows_.safe_cap (q, K_) + 1, b));
+        }
+        return result;
+      }
       bdd aggregate (const Rank& r, const std::vector<Rank>& targets, bool bad,
                      letters::detail::Letters& b) {
         auto& p = prepare (r, b);
-        bdd result = bddfalse;
-        if (bad)
-          for (const auto& [q, edges] : p.destinations) {
-            (void) edges;
-            result = b.lor (result, threshold (p, q, rows_.safe_cap (q, K_) + 1, b));
-          }
+        bdd result = bad ? unsafe (p, b) : bdd (bddfalse);
         for (const auto& target : targets) {
           b.step ();
           result = b.lor (result, preimage (p, target, bad ? 0 : 1, b));
         }
         b.nodes (result);
         return result;
+      }
+      void record_search_loss (const Rank& rank) { search_loss_journal_.push_back (rank); }
+      size_t search_journal_bytes () const {
+        size_t bytes = search_loss_journal_.capacity () * sizeof (Rank);
+        for (const auto& rank : search_loss_journal_)
+          bytes += rank_bytes (rank) - sizeof (Rank);
+        return bytes;
+      }
+      void clear_search_bad_cache () {
+        search_bad_cache_.clear ();
+        search_bad_bytes_ = 0;
+      }
+      bdd aggregate_search_bad (const Rank& r, const std::vector<Rank>& live,
+                                letters::detail::Letters& b) {
+        const auto fallback = [&] {
+          ++search_bad_fallbacks_;
+          return aggregate (r, live, true, b);
+        };
+        if (search_bad_exhausted_)
+          return fallback ();
+        const auto found = search_bad_cache_.find (r);
+        const size_t old_bytes = found == search_bad_cache_.end () ? 0 : found->second.bytes;
+        const size_t base_bytes = rank_bytes (r) + sizeof (SearchBad);
+        if (base_bytes > search_bad_budget_ - (search_bad_bytes_ - old_bytes)) {
+          clear_search_bad_cache ();
+          search_bad_exhausted_ = true;
+          return fallback ();
+        }
+        auto& p = prepare (r, b);
+        SearchBad next;
+        if (found != search_bad_cache_.end ()) {
+          ++search_bad_hits_;
+          if (found->second.journal_index == search_loss_journal_.size ())
+            return found->second.predicate;
+          next = found->second;
+        }
+        else {
+          next.unsafe = unsafe (p, b);
+          next.unsafe_bytes = size_t (b.nodes (next.unsafe)) * search_bad_node_bytes;
+          next.predicate = next.unsafe;
+        }
+        // LossSet removes g' only when the newcomer g <= g'. UpPre(g') is
+        // contained in UpPre(g), so retaining removed generators in this union
+        // is exact. This journal never crosses Search's fixed-K lifetime.
+        for (size_t i = next.journal_index; i < search_loss_journal_.size (); ++i) {
+          b.step ();
+          ++search_bad_journal_replay_;
+          next.predicate = b.lor (next.predicate, preimage (p, search_loss_journal_[i], 0, b));
+        }
+        next.bytes = base_bytes + next.unsafe_bytes +
+                     size_t (b.nodes (next.predicate)) * search_bad_node_bytes;
+        if (next.bytes > search_bad_budget_ - (search_bad_bytes_ - old_bytes)) {
+          // Stop trying to admit entries for this attempt, avoiding repeated
+          // journal replays for a cache that cannot fit. Full Bad stays exact.
+          clear_search_bad_cache ();
+          search_bad_exhausted_ = true;
+          return fallback ();
+        }
+        // Publish only a completed union. Even a failure at query's final
+        // checkpoint clears both caches; the append-only journal survives.
+        next.journal_index = search_loss_journal_.size ();
+        search_bad_cache_.insert_or_assign (r, next);
+        search_bad_bytes_ = search_bad_bytes_ - old_bytes + next.bytes;
+        return next.predicate;
+      }
+      letters::Result<bdd> search_bad_from_loss_journal (const Rank& r,
+                                                       const std::vector<Rank>& live) {
+        return query<bdd> ([&] (auto& b) { return aggregate_search_bad (r, live, b); });
+      }
+      letters::Result<std::pair<bdd, bdd>> search_bad_from_loss_journal (
+          const Rank& r, const std::vector<Rank>& live, bdd missing) {
+        return query<std::pair<bdd, bdd>> ([&] (auto& b) {
+          const bdd predicate = aggregate_search_bad (r, live, b);
+          // Universal quantification is recomputed on every request.
+          const bdd H = b.forall (predicate, b.vars (Variables::outputs));
+          return std::pair {predicate, b.land (missing, H)};
+        });
       }
 
     public:
@@ -473,8 +575,10 @@ namespace acacia::spot_lazy_game {
       letters::Result<T> query (F&& f) {
         ++queries_;
         auto result = boundary_.query<T> (std::forward<F> (f));
-        if (!result.value)
+        if (!result.value) {
           prepared_.clear ();
+          clear_search_bad_cache ();
+        }
         return result;
       }
       letters::Result<bdd> eq (const Rank& r, const Rank& s) {
@@ -735,6 +839,7 @@ namespace acacia::spot_lazy_game {
   enum class SuccessorRelation { exact, downward };
   enum class OutputChoice { constant, existential };
   enum class LosingInputSearch { off, on };
+  enum class IncrementalBad { off, on };
   enum class LeanVerifier { off, on };
   struct ChoiceSemantics {
       SuccessorRelation successor_relation;
@@ -771,6 +876,12 @@ namespace acacia::spot_lazy_game {
       LeanVerifier::on};
 #else
       LeanVerifier::off};
+#endif
+  inline constexpr IncrementalBad default_incremental_bad {
+#if ACACIA_SPOT_GUARDED_INCREMENTAL_BAD
+      IncrementalBad::on};
+#else
+      IncrementalBad::off};
 #endif
   struct SparseChoice {
       bdd input_region;
@@ -837,6 +948,9 @@ namespace acacia::spot_lazy_game {
       std::size_t losing_antichain_size = 0, losing_antichain_peak = 0;
       std::size_t proofs_total = 0, proofs_in_initial_cone = 0;
       std::size_t dependency_list_len_sum = 0, dependency_list_len_max = 0;
+      std::size_t incremental_bad_journal_replay = 0, incremental_bad_cache_hits = 0;
+      std::size_t incremental_bad_full_rebuilds = 0, incremental_bad_cache_bytes = 0;
+      std::size_t losing_journal_rank_bytes = 0;
       double prep_ms = 0, solve_ms = 0, verify_ms = 0;
   };
 
@@ -1037,7 +1151,8 @@ namespace acacia::spot_lazy_game {
       Search (RowStore& view, letters::WorkerAlphabet alphabet, std::int32_t K, Limits limits = {},
               ChoiceSemantics semantics = default_choice_semantics,
               LosingInputSearch losing_input_search = default_losing_input_search,
-              LeanVerifier lean_verifier = default_lean_verifier)
+              LeanVerifier lean_verifier = default_lean_verifier,
+              IncrementalBad incremental_bad = default_incremental_bad)
         : view_ (view),
           alphabet_ (std::move (alphabet)),
           K_ (K),
@@ -1045,6 +1160,7 @@ namespace acacia::spot_lazy_game {
           semantics_ (semantics),
           losing_input_search_ (losing_input_search),
           lean_verifier_ (lean_verifier),
+          incremental_bad_ (incremental_bad),
           rows_ (std::make_shared<Reader> (view_, false, limits.rows)),
           oracle_ (*rows_, view_, alphabet_, K) {
         result_.provider = view_.provider;
@@ -1060,6 +1176,11 @@ namespace acacia::spot_lazy_game {
         }
         view_.report.count ("rank_interner_bytes", bytes);
         view_.report.count ("losing_antichain_rank_bytes", losing_.bytes ());
+        view_.report.count ("losing_journal_rank_bytes", oracle_.search_journal_bytes ());
+        view_.report.count ("incremental_bad_journal_replay", oracle_.search_bad_journal_replay_);
+        view_.report.count ("incremental_bad_cache_hits", oracle_.search_bad_hits_);
+        view_.report.count ("incremental_bad_full_rebuilds", oracle_.search_bad_fallbacks_);
+        view_.report.count ("incremental_bad_cache_bytes", oracle_.search_bad_bytes_);
         // Emitted from the live counters, not from result_, which solve() has
         // moved from by the time this runs.  publish_counters() copies these
         // same members, so a string sink and a SolveResult reader agree.
@@ -1128,6 +1249,11 @@ namespace acacia::spot_lazy_game {
         result_.proofs_in_initial_cone = proofs_in_initial_cone_;
         result_.dependency_list_len_sum = dependency_list_len_sum_;
         result_.dependency_list_len_max = dependency_list_len_max_;
+        result_.losing_journal_rank_bytes = oracle_.search_journal_bytes ();
+        result_.incremental_bad_journal_replay = oracle_.search_bad_journal_replay_;
+        result_.incremental_bad_cache_hits = oracle_.search_bad_hits_;
+        result_.incremental_bad_full_rebuilds = oracle_.search_bad_fallbacks_;
+        result_.incremental_bad_cache_bytes = oracle_.search_bad_bytes_;
       }
       SolveResult solve () {
         view_.phase = Phase::search;
@@ -1201,6 +1327,7 @@ namespace acacia::spot_lazy_game {
       const ChoiceSemantics semantics_;
       const LosingInputSearch losing_input_search_;
       const LeanVerifier lean_verifier_;
+      const IncrementalBad incremental_bad_;
       std::shared_ptr<Reader> rows_;
       Oracle oracle_;
       SolveResult result_;
@@ -1255,6 +1382,8 @@ namespace acacia::spot_lazy_game {
         losses_.push_back (id);
         if (not losing_.insert (rank, proof_id))
           return;  // rank was already inside the region: nothing new is implied
+        if (incremental_bad_ == IncrementalBad::on)
+          oracle_.record_search_loss (rank);
         // The region grew, so broadcast the one generator that grew it.  Only
         // ranks above `rank` can be newly implied: everything above an older
         // generator was marked when that generator was inserted, and this scan
@@ -1364,7 +1493,9 @@ namespace acacia::spot_lazy_game {
         bdd bad, bad_c;
         if (losing_input_search_ == LosingInputSearch::on) {
           const auto [predicate, D] = detail::take (
-              oracle_.bad (rank, losing_.ranks (), result_.proofs.size (), missing));
+              incremental_bad_ == IncrementalBad::on
+                  ? oracle_.search_bad_from_loss_journal (rank, losing_.ranks (), missing)
+                  : oracle_.bad (rank, losing_.ranks (), result_.proofs.size (), missing));
           bad = predicate;
           if (D != bddfalse) {
             input = detail::take (oracle_.model (D, Variables::inputs));
@@ -1378,7 +1509,10 @@ namespace acacia::spot_lazy_game {
           input = detail::take (oracle_.model (missing, Variables::inputs));
           detail::require (input.has_value ());
           if (losing_input_search_ != LosingInputSearch::on)
-            bad = detail::take (oracle_.bad (rank, losing_.ranks (), result_.proofs.size ()));
+            bad = detail::take (
+                incremental_bad_ == IncrementalBad::on
+                    ? oracle_.search_bad_from_loss_journal (rank, losing_.ranks ())
+                    : oracle_.bad (rank, losing_.ranks (), result_.proofs.size ()));
           bad_c = detail::take (oracle_.restrict_total (bad, *input, Variables::inputs));
         }
         if (bad_c == bddtrue) {
