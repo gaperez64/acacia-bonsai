@@ -188,6 +188,18 @@ spot_provider_replay_losing_input_test = executable(
 test('spot-provider-replay-losing-input', spot_provider_replay_losing_input_test,
      suite: ['unit', 'spot-provider-replay'])
 
+# Force the lean verifier default on; internal options also exercise both
+# states in this binary. The #ifndef guard lets -D override the generated value.
+spot_provider_replay_lean_verifier_test = executable(
+  'spot-provider-replay-lean-verifier-test',
+  'spot_provider_replay_test.cc',
+  include_directories: inc,
+  cpp_args: ['-DACACIA_SPOT_GUARDED_LEAN_VERIFIER=1'],
+  dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+)
+test('spot-provider-replay-lean-verifier', spot_provider_replay_lean_verifier_test,
+     suite: ['unit', 'spot-provider-replay'])
+
 sparse_forward_rank_test = executable (
   'sparse-forward-rank-test',
   'sparse_forward_rank_test.cc',

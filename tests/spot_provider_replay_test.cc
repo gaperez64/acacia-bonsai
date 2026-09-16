@@ -365,8 +365,10 @@ bdd check_losing_inputs (RowStore& store, const letters::WorkerAlphabet& a, int 
 
 void check_losing_certificate (RowStore& store, const letters::WorkerAlphabet& a, int K,
                                const SolveResult& result) {
-  const auto checked = verify_losing_proof (store, a, K, result, {}, result.semantics);
-  expect (checked.value && *checked.value, "symbolic losing proof independently replays");
+  for (auto lean : {LeanVerifier::off, LeanVerifier::on}) {
+    const auto checked = verify_losing_proof (store, a, K, result, {}, result.semantics, lean);
+    expect (checked.value && *checked.value, "losing proof independently replays with either cache policy");
+  }
   for (std::size_t id = 0; id < result.proofs.size (); ++id) {
     const auto& proof = result.proofs[id];
     expect (proof.record.id == id, "losing proof IDs are chronological");
@@ -380,6 +382,30 @@ void check_losing_certificate (RowStore& store, const letters::WorkerAlphabet& a
       expect (total.value && *total.value == bddtrue, "stored witness is a total input cube");
     }
   }
+}
+
+void check_lean_dependencies (const SolveResult& full, const SolveResult& lean) {
+  expect (full.status == lean.status && lean.failure == Unknown::none &&
+          full.proofs.size () == lean.proofs.size () && full.initial_proof == lean.initial_proof &&
+          full.expansions == lean.expansions && full.choices_created == lean.choices_created &&
+          full.nodes.size () == lean.nodes.size (), "lean verification preserves search decisions");
+  for (std::size_t id = 0; id < full.proofs.size (); ++id) {
+    const auto& before = full.proofs[id];
+    const auto& after = lean.proofs[id];
+    expect (before.record.id == after.record.id && before.record.node == after.record.node &&
+            before.record.reason == after.record.reason && before.rank == after.rank &&
+            before.input == after.input && before.rows == after.rows,
+            "lean proofs retain their identity and independent row obligations");
+    const auto& candidates = before.record.dependencies;
+    const auto& recorded = after.record.dependencies;
+    expect (std::includes (candidates.begin (), candidates.end (), recorded.begin (), recorded.end ()),
+            "lean dependencies are an ordered subset of the same option-off proof");
+    if (after.record.reason != losing_reason::env_losing_input)
+      expect (candidates == recorded, "unsafe and subsumption dependencies are unchanged");
+  }
+  expect (lean.dependency_list_len_sum <= full.dependency_list_len_sum &&
+          lean.dependency_list_len_max <= full.dependency_list_len_max,
+          "recorded dependency counters reflect the smaller certificate");
 }
 
 int differential (const Reporter& report, ChoiceSemantics semantics) {
@@ -447,6 +473,16 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
         expect (symbolic.status == actual.status && symbolic.failure == Unknown::none,
                 "S2 on/off fixed-K outcomes agree for every automaton, partition and mode");
         for (auto mode : {LosingInputSearch::off, LosingInputSearch::on}) {
+          const auto full = Search {store, a, K, {}, semantics, mode, LeanVerifier::off}.solve ();
+          check_solve_counters (full, observed);
+          const auto lean = Search {store, a, K, {}, semantics, mode, LeanVerifier::on}.solve ();
+          check_solve_counters (lean, observed);
+          expect (lean.status == actual.status, "V1 on/off matches every fixed-K explicit game");
+          check_lean_dependencies (full, lean);
+          if (not win) {
+            check_losing_certificate (store, a, K, full);
+            check_losing_certificate (store, a, K, lean);
+          }
           const auto incremental = SearchTestAccess::compare_rebuild (store, a, K, semantics, mode);
           expect (incremental.status == actual.status && incremental.failure == Unknown::none,
                   "S3 and legacy rebuild match the explicit game with S2 off and on");
@@ -546,6 +582,7 @@ int differential (const Reporter& report, ChoiceSemantics semantics) {
             << " universally losing inputs checked by enumeration, " << symbolic_region_inputs
             << " S2 choice-region inputs checked\n";
   std::cout << 2 * checks << " S3/legacy rebuild traces match with S2 off/on\n";
+  std::cout << 2 * checks << " V1 on/off explicit-game matches and dependency subset checks\n";
   std::cout << losing_events << " loss events, " << antichain_insertions
             << " antichain insertions, " << broad_scans << " broad scans over "
             << nodes_scanned << " node checks, " << redundant_loss_events
@@ -626,6 +663,181 @@ struct Kernel {
     }
     auto view () const { return std::make_shared<lazy::LazyBuchiView> (graph); }
 };
+
+void lean_verifier_dependencies () {
+  // Both output branches lose after two steps. By the time the second branch
+  // loses, the antichain also contains irrelevant proofs from the first one.
+  // The root still needs both branches: removing either leaves a legal output.
+  Kernel k {5};
+  k.ap ("u", true);
+  const bdd c = k.ap ("c", false);
+  k.graph->new_edge (0, 1, !c);
+  k.graph->new_edge (0, 2, c);
+  k.graph->new_edge (1, 3, bddtrue);
+  k.graph->new_edge (2, 4, bddtrue);
+  k.graph->new_edge (3, 3, bddtrue, {0});
+  k.graph->new_edge (4, 4, bddtrue, {0});
+  Fields observed;
+  RowStore store {k.view (), {}, Reporter {[&] (const auto& key, const auto& value) {
+    observed[key] = value;
+  }}};
+  store.enumerate_and_freeze ();
+  for (auto semantics : all_semantics)
+    for (auto mode : {LosingInputSearch::off, LosingInputSearch::on}) {
+      const auto full = Search {store, k.alphabet, 1, {}, semantics, mode, LeanVerifier::off}.solve ();
+      check_solve_counters (full, observed);
+      const auto lean = Search {store, k.alphabet, 1, {}, semantics, mode, LeanVerifier::on}.solve ();
+      check_solve_counters (lean, observed);
+      expect (lean.status == forward_result_status::lose_k, "two delayed output branches lose");
+      check_lean_dependencies (full, lean);
+      check_losing_certificate (store, k.alphabet, 1, full);
+      check_losing_certificate (store, k.alphabet, 1, lean);
+      expect (lean.dependency_list_len_sum < full.dependency_list_len_sum,
+              "lean search removes irrelevant antichain dependencies");
+      expect (lean.proofs.at (*lean.initial_proof).record.dependencies.size () == 2,
+              "root retains both required output branches");
+      for (auto policy : {LeanVerifier::off, LeanVerifier::on}) {
+        for (std::size_t id = 0; id < lean.proofs.size (); ++id) {
+          const auto& proof = lean.proofs[id];
+          if (proof.record.reason != losing_reason::env_losing_input)
+            continue;
+          for (std::size_t i = 0; i < proof.record.dependencies.size (); ++i) {
+            auto corrupt = lean;
+            auto& deps = corrupt.proofs[id].record.dependencies;
+            deps.erase (deps.begin () + static_cast<std::ptrdiff_t> (i));
+            const auto rejected = verify_losing_proof (store, k.alphabet, 1, corrupt, {},
+                                                       semantics, policy);
+            expect (not rejected.value && rejected.unknown == Unknown::invalid_query,
+                    "shrinking a minimal dependency list below sufficiency is rejected");
+          }
+        }
+        auto corrupt = lean;
+        corrupt.proofs.at (*corrupt.initial_proof).record.dependencies.clear ();
+        const auto rejected = verify_losing_proof (store, k.alphabet, 1, corrupt, {}, semantics, policy);
+        expect (not rejected.value && rejected.unknown == Unknown::invalid_query,
+                "missing all-output dependency rejected");
+      }
+
+      // Replay the SAME certificate to isolate eviction from dependency pruning.
+      detail::take (verify_losing_proof (store, k.alphabet, 1, full, {}, semantics, LeanVerifier::off));
+      const auto cached = observed;
+      detail::take (verify_losing_proof (store, k.alphabet, 1, full, {}, semantics, LeanVerifier::on));
+      expect (cached.at ("verify_preimage_hits") == "0" &&
+              observed.at ("verify_preimage_hits") == "0" &&
+              std::stoull (observed.at ("verify_cache_rank_bytes")) <
+                  std::stoull (cached.at ("verify_cache_rank_bytes")),
+              "losing replay releases preimages that have no reuse");
+      for (const auto* key : {"verify_queries", "verify_steps", "verify_bdd_operations",
+                             "verify_threshold_hits"})
+        expect (observed.at (key) == cached.at (key), "eviction preserves losing replay work");
+      std::cout << "two delayed output branches, "
+                << (semantics.successor_relation == SuccessorRelation::exact ? "exact" : "downward")
+                << '+' << (semantics.output_choice == OutputChoice::constant ? "constant" : "existential")
+                << ", S2 " << (mode == LosingInputSearch::on ? "on" : "off")
+                << ": dependency_list_len_sum V1 off/on " << full.dependency_list_len_sum
+                << '/' << lean.dependency_list_len_sum << ", verify_cache_rank_bytes "
+                << cached.at ("verify_cache_rank_bytes") << '/'
+                << observed.at ("verify_cache_rank_bytes") << '\n';
+    }
+}
+
+void lean_verifier_winning_cache () {
+  // The initial rank is strictly below the next rank, which is the only
+  // maximal generator. Its downward preimage is reused by the invariant.
+  Kernel k {2};
+  k.graph->new_edge (0, 0, bddtrue);
+  k.graph->new_edge (0, 1, bddtrue);
+  k.graph->new_edge (1, 1, bddtrue);
+  Fields observed;
+  RowStore store {k.view (), {}, Reporter {[&] (const auto& key, const auto& value) {
+    observed[key] = value;
+  }}};
+  store.enumerate_and_freeze ();
+  const ChoiceSemantics semantics {SuccessorRelation::downward, OutputChoice::constant};
+  const auto result = Search {store, k.alphabet, 1, {}, semantics}.solve ();
+  expect (result.status == forward_result_status::win_k && result.generators.size () == 1 &&
+          result.nodes.size () > 1, "winning cache fixture has a dominated source outside G");
+  detail::take (verify_winning_certificate (store, k.alphabet, 1, result, {}, semantics,
+                                          LeanVerifier::off));
+  const auto cached = observed;
+  detail::take (verify_winning_certificate (store, k.alphabet, 1, result, {}, semantics,
+                                          LeanVerifier::on));
+  expect (std::stoull (observed.at ("verify_preimage_hits")) > 0 &&
+          observed.at ("verify_preimage_hits") == cached.at ("verify_preimage_hits") &&
+          std::stoull (observed.at ("verify_cache_rank_bytes")) <
+              std::stoull (cached.at ("verify_cache_rank_bytes")),
+          "winning replay evicts nonmaximal preimages and retains invariant reuse at G");
+  expect (observed.at ("verify_invariant_bdd_operations") ==
+              cached.at ("verify_invariant_bdd_operations"), "invariant keeps its warm-cache work");
+
+  Reader reader {store, true, {}};
+  Oracle oracle {reader, store, k.alphabet, 1};
+  const auto& rank = result.generators.front ();
+  const auto expected = detail::take (oracle.down (rank, rank));
+  oracle.clear_preimages (rank);
+  oracle.report (store.report, "before_");
+  expect (detail::take (oracle.down (rank, rank)) == expected,
+          "evicting a preimage preserves its reconstructed predicate");
+  oracle.report (store.report, "after_");
+  expect (observed.at ("after_preimage_hits") == observed.at ("before_preimage_hits") &&
+          std::stoull (observed.at ("after_threshold_hits")) >
+              std::stoull (observed.at ("before_threshold_hits")),
+          "preimage eviction retains the thresholds memo");
+}
+
+void lean_verifier_retained_thresholds () {
+  // As in the winning-cache fixture, the initial source is strictly below G.
+  Kernel k {2};
+  k.graph->new_edge (0, 0, bddtrue);
+  k.graph->new_edge (0, 1, bddtrue);
+  k.graph->new_edge (1, 1, bddtrue);
+  Fields observed;
+  RowStore store {k.view (), {}, Reporter {[&] (const auto& key, const auto& value) {
+    observed[key] = value;
+  }}};
+  store.enumerate_and_freeze ();
+  const ChoiceSemantics semantics {SuccessorRelation::downward, OutputChoice::constant};
+  const auto result = Search {store, k.alphabet, 1, {}, semantics}.solve ();
+  expect (result.status == forward_result_status::win_k && result.generators.size () == 1,
+          "threshold retention fixture has a single winning generator");
+  const auto& evicted = result.nodes.at (result.initial).rank;
+  const auto& retained = result.generators.front ();
+  expect (evicted != retained && evicted.leq (retained),
+          "threshold retention fixture excludes the dominated initial source from G");
+
+  Reader reader {store, true, {}};
+  Oracle oracle {reader, store, k.alphabet, 1};
+  // Each downward query warms a preimage and the threshold at level 1 for
+  // each destination, for both the excluded and retained source.
+  const auto expected_evicted = detail::take (oracle.down (evicted, retained));
+  const auto expected_retained = detail::take (oracle.down (retained, retained));
+  oracle.retain_preimages (result.generators);
+  oracle.report (store.report, "before_");
+
+  // Predicate equality guards reconstruction; unchanged preimage hits prove
+  // eviction really happened. Both would still pass if retain_preimages also
+  // cleared thresholds for evicted sources. The threshold-hit increase fails
+  // under that mutation: this query visits each threshold once, so a cleared
+  // memo produces only misses. Snapshot before querying the retained source
+  // so its hits cannot conceal the loss of the evicted source's thresholds.
+  expect (detail::take (oracle.down (evicted, retained)) == expected_evicted,
+          "retain_preimages preserves the evicted source's reconstructed predicate");
+  oracle.report (store.report, "rebuilt_");
+  expect (observed.at ("rebuilt_preimage_hits") == observed.at ("before_preimage_hits"),
+          "retain_preimages evicts the excluded source's preimage");
+  expect (std::stoull (observed.at ("rebuilt_threshold_hits")) >
+              std::stoull (observed.at ("before_threshold_hits")),
+          "retain_preimages preserves the evicted source's thresholds memo");
+
+  // The retained predicate and its cache hit check selective eviction. They
+  // also pass under the thresholds mutation, which affects only sources outside G.
+  expect (detail::take (oracle.down (retained, retained)) == expected_retained,
+          "retain_preimages preserves the retained source's predicate");
+  oracle.report (store.report, "retained_");
+  expect (std::stoull (observed.at ("retained_preimage_hits")) ==
+              std::stoull (observed.at ("rebuilt_preimage_hits")) + 1,
+          "retain_preimages keeps the retained source's preimage warm");
+}
 
 void verifier_phase_metrics () {
   Kernel k {1};
@@ -1338,6 +1550,9 @@ int main () {
         return code;
     }
     copy_kernels ();
+    lean_verifier_dependencies ();
+    lean_verifier_winning_cache ();
+    lean_verifier_retained_thresholds ();
     verifier_phase_metrics ();
     certificate_shape_metrics ();
     incremental_coverage_events ();
