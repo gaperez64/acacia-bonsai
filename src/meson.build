@@ -1,3 +1,10 @@
+closure_buchi_provider_lib = static_library (
+  'closure-buchi-provider',
+  'solver/closure_buchi_provider.cc',
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep],
+)
+
 ab_sources = [
   'acacia-bonsai.cc',
   'version.cc',
