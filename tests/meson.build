@@ -134,6 +134,16 @@ spot_rows_test = executable (
 )
 test ('spot-rows', spot_rows_test, suite : ['unit', 'spot-rows'])
 
+closure_buchi_provider_test = executable (
+  'closure_buchi_provider_test',
+  'closure_buchi_provider_test.cc',
+  include_directories : inc,
+  link_with : closure_buchi_provider_lib,
+  dependencies : [spot_dep, bddx_dep],
+)
+test ('closure_buchi_provider_test', closure_buchi_provider_test,
+      suite : ['unit', 'closure-buchi'])
+
 # The previous sprint's P5 headers and regressions compile in the default build; no backend gate.
 spot_lazy_buchi_view_test = executable (
   'spot-lazy-buchi-view-test',
