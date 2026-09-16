@@ -396,7 +396,9 @@ def atomic_write_tsv(
             pass
 
 
-def load_output(path: pathlib.Path) -> list[dict[str, str]]:
+def load_output(
+    path: pathlib.Path, *, allow_missing_memory: bool = False,
+) -> list[dict[str, str]]:
     try:
         stream = path.open(encoding="utf-8", newline="")
     except OSError as error:
@@ -404,7 +406,11 @@ def load_output(path: pathlib.Path) -> list[dict[str, str]]:
     with stream:
         reader = csv.DictReader(stream, delimiter="\t")
         legacy_columns = [column for column in OUTPUT_COLUMNS if column != "scope_unit"]
-        if reader.fieldnames not in (OUTPUT_COLUMNS, legacy_columns):
+        optional = {"max_process_rss_bytes", "scope_memory_peak_bytes"} if allow_missing_memory else set()
+        header = [column for column in (reader.fieldnames or []) if column not in optional]
+        expected = [[column for column in columns if column not in optional]
+                    for columns in (OUTPUT_COLUMNS, legacy_columns)]
+        if header not in expected or len(set(reader.fieldnames or [])) != len(reader.fieldnames or []):
             raise CoverageError(
                 f"resume output {path} has an unexpected header; expected "
                 + "\t".join(OUTPUT_COLUMNS)
@@ -430,6 +436,8 @@ def load_output(path: pathlib.Path) -> list[dict[str, str]]:
                     f"expectation_source {row['expectation_source']!r}"
                 )
             row.setdefault("scope_unit", "")
+            for column in optional:
+                row.setdefault(column, "")
             rows.append(dict(row))
     return rows
 
@@ -577,14 +585,15 @@ def write_summary(
     return summary_path
 
 
-def export_cactus_csv(
+def load_uniform_observations(
     summary: pathlib.Path,
     runs: pathlib.Path,
     instance_list: pathlib.Path,
     expected_cap: float,
-    output: pathlib.Path,
-) -> pathlib.Path:
-    """Validate one uniform-cap observation per ID, then export CSV + raw TSV.
+    *,
+    allow_missing_memory: bool = False,
+) -> dict[str, dict[str, str]]:
+    """Read validated, complete, uniform-cap observations without running solvers.
 
     Summary fields select the outcome; raw runs supply actual exits and times.
     No solver output is parsed and no repetition or staged cap is selected.
@@ -631,14 +640,14 @@ def export_cactus_csv(
     if any(None in row or None in row.values() for row in summary_rows):
         raise CoverageError(f"{summary}: malformed summary row")
     summaries = index_rows(summary_rows, summary)
-    raw_rows = load_output(runs)
+    raw_rows = load_output(runs, allow_missing_memory=allow_missing_memory)
     # Inspect every recorded cap, including rows a staged summary would hide.
     for row in raw_rows:
         check_cap(row["cap_s"], f"{runs}: {row['instance']} cap_s")
     observations = index_rows(raw_rows, runs)
     conflicts = runs.with_name(f"{runs.stem}-conflicts.tsv")
     if conflicts.exists() and load_conflicts(conflicts):
-        raise CoverageError(f"{conflicts}: unresolved verdict conflicts block export")
+        raise CoverageError(f"{conflicts}: unresolved verdict conflicts block reporting")
     for field in (
         "solver_label", "acacia_sha", "binary_sha256", "preset", "flags",
         "memory_max", "memory_swap_max", "allowed_cpus", "cpu_quota", "collect_rusage",
@@ -646,7 +655,6 @@ def export_cactus_csv(
         if len({row[field] for row in raw_rows}) != 1:
             raise CoverageError(f"{runs}: mixed provenance field {field}")
 
-    csv_rows, sidecar_rows = [], []
     for instance, row in summaries.items():
         context = f"{summary}: {instance}"
         observed = observations[instance]
@@ -680,13 +688,31 @@ def export_cactus_csv(
                 raise CoverageError(f"{context}: unsolved row contains decisive fields")
         if status != observed["result"] or row["failure_kind_at_max_cap"] != status:
             raise CoverageError(f"{context}: summary status disagrees with raw run")
-        csv_rows.append((instance, result, seconds if solved else expected_cap, exit_code))
+    return {instance: observations[instance] for instance in summaries}
+
+
+def export_cactus_csv(
+    summary: pathlib.Path,
+    runs: pathlib.Path,
+    instance_list: pathlib.Path,
+    expected_cap: float,
+    output: pathlib.Path,
+) -> pathlib.Path:
+    """Validate one uniform-cap observation per ID, then export CSV + raw TSV."""
+    observations = load_uniform_observations(summary, runs, instance_list, expected_cap)
+    csv_rows, sidecar_rows = [], []
+    for instance, observed in observations.items():
+        status = observed["result"]
+        result = {"MEMOUT": "RESOURCE_LIMIT", "CRASH": "ERROR"}.get(status, status)
+        seconds = float(observed["seconds"]) if status in DECISIVE_RESULTS else expected_cap
+        csv_rows.append((instance, result, seconds, int(observed["exit_code"])))
         sidecar_rows.append({
             "instance": instance, "result": status, "exit_code": observed["exit_code"],
             "seconds": observed["seconds"], "cap_s": observed["cap_s"],
         })
 
     raw_output = output.with_suffix(".raw.tsv")
+    conflicts = runs.with_name(f"{runs.stem}-conflicts.tsv")
     inputs = {path.resolve() for path in (summary, runs, instance_list, conflicts)}
     if output.resolve() == raw_output.resolve() or inputs & {
         output.resolve(), raw_output.resolve(),
