@@ -53,6 +53,7 @@ struct arg_parse_result {
     acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
     acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
+    acacia::LossCheckPolicy loss_check_policy = acacia::LossCheckPolicy::verify_all;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;
@@ -134,6 +135,8 @@ void show_help (const char* program_name) {
       << "                    set the unrealizability translator preference to\n"
       << "                    [small|any] without also selecting a realizability\n"
       << "                    check; mutually exclusive with -r\n"
+      << "  --loss-check-policy VAL  [verify-all|scheduling-hint] (default verify-all)\n"
+      << "                          sparse/Spot TAA increasing-K decisions; ignored elsewhere, including synthesis\n"
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for real arms\n"
       << "  --real-provider VAL      use [frozen-graph|spot-lazy|spot-eager] automaton provider (default frozen-graph)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal requires frozen-graph\n"
@@ -436,6 +439,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   static constexpr int OPT_REAL_PROVIDER = 1005;
   static constexpr int OPT_UNREAL_PROVIDER = 1006;
   static constexpr int OPT_CANDIDATE_MODE = 1007;
+  static constexpr int OPT_LOSS_CHECK_POLICY = 1008;
   bool unreal_translation_pref_specified = false;
   bool real_backend_specified = false;
   bool unreal_backend_specified = false;
@@ -450,6 +454,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
       {"real-provider", required_argument, nullptr, OPT_REAL_PROVIDER},
       {"unreal-provider", required_argument, nullptr, OPT_UNREAL_PROVIDER},
       {"candidate-mode", required_argument, nullptr, OPT_CANDIDATE_MODE},
+      {"loss-check-policy", required_argument, nullptr, OPT_LOSS_CHECK_POLICY},
 #if ACACIA_ENABLE_TLSF_FRONTEND
       {"tlsf", required_argument, nullptr, 'T'},
 #endif
@@ -554,6 +559,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
         break;
       case OPT_UNREAL_PROVIDER:
         process_arg_provider (optarg, retval.unreal_provider, "unreal-provider");
+        break;
+      case OPT_LOSS_CHECK_POLICY:
+        if (auto policy = acacia::parse_loss_check_policy (optarg))
+          retval.loss_check_policy = *policy;
+        else
+          error (EXIT_CODE_ERROR,
+                 "Error: --loss-check-policy expects verify-all or scheduling-hint.\n");
         break;
       case OPT_CANDIDATE_MODE:
         if (auto mode = acacia::parse_candidate_mode (optarg))

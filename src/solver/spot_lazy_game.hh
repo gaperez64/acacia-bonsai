@@ -3,6 +3,7 @@
 // Shared P6 sparse guarded search and independent certificate replay. The
 // eager replay and real worker use exactly the same construction and engine.
 #include "solver/sparse_forward_rank.hh"
+#include "solver/spot_scheduled_attempt.hh"
 #include "solver/spot_guarded_forward_safety.hh"
 #include "solver/spot_lazy_buchi_view.hh"
 #include <functional>
@@ -1082,8 +1083,8 @@ namespace acacia::spot_lazy_game {
         view_.report.count ("dependency_list_len_sum", dependency_list_len_sum_);
         view_.report.count ("dependency_list_len_max", dependency_list_len_max_);
       }
-      // Copy the live counters into the result.  Called once, from solve(),
-      // before either return; ~Search then emits the same values.
+      // Copy the live counters into the result. Called once after exploration,
+      // before verification or a hint; ~Search then emits the same values.
       void publish_counters () {
         proofs_total_ = result_.proofs.size ();
         proofs_in_initial_cone_ = dependency_list_len_sum_ = dependency_list_len_max_ = 0;
@@ -1130,6 +1131,51 @@ namespace acacia::spot_lazy_game {
         result_.dependency_list_len_max = dependency_list_len_max_;
       }
       SolveResult solve () {
+        if (not explore ()) return std::move (result_);
+        return verify ();
+      }
+
+      // Arbitrary scheduling advice can only change which K values are attempted;
+      // it cannot establish a decisive answer. Every reported answer still has a
+      // checked winning certificate for the correctly transformed job. Advice can
+      // reduce coverage, so it remains experimental. Failed checkers are never
+      // advice, and final winning verification is mandatory.
+      ScheduledAttempt solve_for_schedule (LossCheckPolicy policy = LossCheckPolicy::verify_all) {
+        if (not explore ()) return verified_attempt (result_, K_);
+        return finish_for_schedule (policy);
+      }
+
+    private:
+      ScheduledAttempt finish_for_schedule (LossCheckPolicy policy) {
+        if (result_.failure != Unknown::none || result_.pending_loss)
+          return UnknownAttempt {K_, {}, result_.failure != Unknown::none
+              ? result_.failure : Unknown::invalid_query};
+        if (policy == LossCheckPolicy::scheduling_hint && result_.nodes[result_.initial].losing) {
+          // Loss propagation has drained normally. Pending expansion of unrelated
+          // nodes is allowed by the exact losing checker too; pending losses are not.
+          const auto complete = detail::checked<bool> ([&] {
+            view_.check_contract ();
+            if (limits_.queries.aborted && limits_.queries.aborted (limits_.queries.abort_data))
+              throw detail::Failure {Unknown::aborted};
+            detail::require (result_.initial_proof && *result_.initial_proof < result_.proofs.size ());
+            return true;
+          });
+          if (not complete.value) return UnknownAttempt {K_, {}, complete.unknown};
+          const auto started = view_.report.sink ? Clock::now () : Clock::time_point {};
+          const LossHint hint {K_, {result_.prep_ms, result_.solve_ms, 0,
+              result_.nodes.size (), result_.choices_created, result_.proofs.size (), result_.expansions}};
+          view_.report.count ("loss_hints", 1);
+          if (view_.report.sink) view_.report.ms ("loss_hint_ms", elapsed (started));
+          return hint;
+        }
+        return verified_attempt (verify (), K_);
+      }
+
+      bool explore () {
+        for (const auto* key : {"loss_verification_calls", "win_verification_calls", "loss_hints"})
+          view_.report.count (key, 0);
+        for (const auto* key : {"loss_verification_ms", "win_verification_ms", "loss_hint_ms"})
+          view_.report.ms (key, 0);
         view_.phase = Phase::search;
         view_.report.ms ("stage_started_clock_ms", clock_ms ());
         MetricReport metrics {oracle_, view_.report, "search_"};
@@ -1159,12 +1205,15 @@ namespace acacia::spot_lazy_game {
           result_.status = search.unknown == Unknown::resource_limit
                                ? forward_result_status::resource_limit
                                : forward_result_status::unknown;
-          return std::move (result_);
+          return false;
         }
         view_.snapshot ();
         view_.report.count ("search_generated_rows",
                             view_.cache->complete_rows () - before_search_);
         oracle_.report (view_.report, "search_");
+        return true;
+      }
+      SolveResult verify () {
         view_.phase = Phase::verify;
         view_.report.ms ("search_ms", result_.solve_ms);
         view_.report.put ("stage", "verification");
@@ -1199,6 +1248,8 @@ namespace acacia::spot_lazy_game {
         result_.verify_ms = detail::elapsed (verifying);
         if (result_.nodes[result_.initial].losing)
           view_.report.ms ("loss_verification_ms", result_.verify_ms);
+        else
+          view_.report.ms ("win_verification_ms", result_.verify_ms);
         return std::move (result_);
       }
 

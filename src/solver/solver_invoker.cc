@@ -288,6 +288,7 @@ namespace {
       const acacia::game_backend backend;
       const acacia::automaton_provider provider;
       const acacia::candidate_mode candidate;
+      const acacia::LossCheckPolicy loss_check_policy;
       spot::option_map extra_options {acacia::translation::make_options ()};
       const std::optional<std::string> synth_fname;
       const bool synthesize_moore;
@@ -307,6 +308,7 @@ namespace {
                    std::optional<UNREAL_X_T> check_unreal, TRANSLATION_PREF_T translation_pref,
                    SPOT_FAST_T spot_fast, acacia::game_backend backend,
                    acacia::automaton_provider provider, acacia::candidate_mode candidate,
+                   acacia::LossCheckPolicy loss_check_policy,
                    const std::optional<std::string>& synth_fname,
                    bool synthesize_moore,
                    const std::vector<symmetry::indexed_family_hint>& indexed_family_hints)
@@ -322,6 +324,7 @@ namespace {
           backend {backend},
           provider {provider},
           candidate {candidate},
+          loss_check_policy {loss_check_policy},
           synth_fname {synth_fname},
           synthesize_moore {synthesize_moore},
           indexed_family_hints {indexed_family_hints} {
@@ -442,6 +445,7 @@ namespace {
           capture.put ("requested_provider", acacia::automaton_provider_name (provider));
           capture.put ("requested_backend", acacia::game_backend_name (backend));
           capture.put ("candidate_mode", acacia::candidate_mode_name (candidate));
+          capture.put ("loss_check_policy", acacia::loss_check_policy_name (loss_check_policy));
           capture.put ("kmin", std::to_string (opt_kmin));
           capture.put ("kmax", std::to_string (opt_k));
           capture.put ("kinc", std::to_string (opt_kinc));
@@ -466,7 +470,8 @@ namespace {
           // create_automaton(). The lazy branch performs no further adaptation.
           const auto result = acacia::spot_lazy_worker::solve (
               spot_formula, dict, all_inputs, all_outputs, opt_kmin, opt_k, opt_kinc,
-              acacia::spot_taa_candidate_limits (), provider == acacia::automaton_provider::spot_eager);
+              acacia::spot_taa_candidate_limits (), provider == acacia::automaton_provider::spot_eager,
+              loss_check_policy);
           if (result == acacia::spot_lazy_worker::Outcome::win)
             return acacia::diagnostics::finish (true, provider == acacia::automaton_provider::spot_eager
                 ? "spot-eager-verified-win" : "spot-lazy-verified-win");
@@ -704,7 +709,8 @@ namespace {
                                     bdd_exist (aut->ap_vars (), all_outputs),
                                     // same for the outputs
                                     bdd_exist (aut->ap_vars (), all_inputs),
-                                    synth_fname.has_value (), indexed_family_hints, effective_backend, candidate);
+                                    synth_fname.has_value (), indexed_family_hints, effective_backend, candidate,
+                                    loss_check_policy);
         }
         if (maybe_strat.has_value ()) {
           if (synth_fname.has_value ())
@@ -951,7 +957,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               acacia::game_backend backend,
               const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata,
-              acacia::automaton_provider provider, acacia::candidate_mode candidate) {
+              acacia::automaton_provider provider, acacia::candidate_mode candidate,
+              acacia::LossCheckPolicy loss_check_policy) {
   // Protect internal callers as well as the CLI synthesis route.
   if (synth_fname.has_value ()) {
     backend = acacia::synthesis_backend (backend, true);
@@ -1050,8 +1057,8 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
   // Create BDDs for the input and output APs, and associate them with the
   // runner that we will use for the transformation and (un)real check.
   run_one_ltl runner (dict, input_aps, output_aps, opt_k, opt_kmin, opt_kinc, check_unreal,
-                      translation_pref, spot_fast, backend, provider, candidate, synth_fname, synthesize_moore,
-                      indexed_family_hints);
+                      translation_pref, spot_fast, backend, provider, candidate, loss_check_policy,
+                      synth_fname, synthesize_moore, indexed_family_hints);
 
   if (auto answer = try_unreal_safety_core_witnesses (spot_formula, check_unreal, runner);
       answer.has_value ())

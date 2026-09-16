@@ -18,6 +18,17 @@ namespace acacia {
   // selects it for an existing arm.
   enum class automaton_provider : unsigned char { frozen_graph, spot_lazy, spot_eager };
   enum class candidate_mode : unsigned char { only, fallback };
+  enum class LossCheckPolicy { verify_all, scheduling_hint };
+
+  inline const char* loss_check_policy_name (LossCheckPolicy policy) {
+    return policy == LossCheckPolicy::verify_all ? "verify-all" : "scheduling-hint";
+  }
+
+  inline std::optional<LossCheckPolicy> parse_loss_check_policy (std::string_view name) {
+    if (name == "verify-all") return LossCheckPolicy::verify_all;
+    if (name == "scheduling-hint") return LossCheckPolicy::scheduling_hint;
+    return std::nullopt;
+  }
 
   inline const char* automaton_provider_name (automaton_provider provider) {
     switch (provider) {

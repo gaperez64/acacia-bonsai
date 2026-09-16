@@ -110,7 +110,8 @@ int main (int argc, char** argv) {
                                   unreal_x, translation_pref, arg_values.spot_fast,
                                   backend,
                                   unreal_x.has_value () ? std::nullopt : arg_values.synth_fname,
-                                  arg_values.metadata, provider, arg_values.candidate);
+                                  arg_values.metadata, provider, arg_values.candidate,
+                                  arg_values.loss_check_policy);
         verb_do (1, vout << "returning " << res << "\n");
 
         if (unreal_x.has_value ())
