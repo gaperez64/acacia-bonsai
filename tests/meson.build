@@ -120,6 +120,7 @@ test ('translator-options',
 
 game_backend_test = executable ('game-backend-test',
                                 'game_backend_test.cc',
+                                link_with : closure_buchi_provider_lib,
                                 include_directories : inc,
                                 dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
 test ('game-backend',
@@ -168,6 +169,7 @@ foreach variant : spot_provider_replay_variants
   spot_provider_replay_test = executable(
     variant[0] + '-test',
     'spot_provider_replay_test.cc',
+    link_with: closure_buchi_provider_lib,
     include_directories: inc,
     cpp_args: variant[1],
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
@@ -353,6 +355,7 @@ if get_option ('acacia_enable_tlsf_frontend')
 endif
 game_backend_integration = executable (
   'game-backend-integration', game_backend_integration_sources, version_h,
+  link_with : closure_buchi_provider_lib,
   include_directories : inc,
   cpp_args : ['-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'],
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,

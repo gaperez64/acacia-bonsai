@@ -41,13 +41,14 @@ with tempfile.TemporaryDirectory(prefix="acacia-spot-worker-") as directory:
 MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
 ''')
             pair = []
-            for provider in ("spot-eager", "spot-lazy"):
+            for provider in ("spot-eager", "spot-lazy", "closure-buchi-eager", "closure-buchi"):
                 captures = root / f"{policy}-{index}-{provider}"
                 arm = "real:small" if polarity == "real" else "unreal:formula"
                 env = dict(os.environ, ACACIA_SPOT_CAPTURE_DIR=str(captures),
                            ACACIA_SPOT_CAPTURE_HISTORY="1")
+                backend = "spot-guarded-sparse" if provider.startswith("closure") else "spot-guarded"
                 command = [binary, "-T", str(spec), "--spot-fast", "off", "-K", "5",
-                           "--arms", f"{arm}:spot-guarded:{provider}",
+                           "--arms", f"{arm}:{backend}:{provider}",
                            "--loss-check-policy", policy]
                 result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=10)
                 assert result.returncode == expected, (command, result.stdout, result.stderr)
@@ -69,18 +70,47 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
                 assert record["inputs"] == (["i"] if polarity == "real" else ["o"])
                 assert record["outputs"] == (["o"] if polarity == "real" else ["i"])
                 assert record["requested_provider"] == provider and record["provider"] == provider
+                if provider.startswith("closure"):
+                    checksum = 14695981039346656037
+                    for byte in record["worker_boundary"].encode():
+                        checksum = ((checksum ^ byte) * 1099511628211) & ((1 << 64) - 1)
+                    assert record["worker_boundary_hash"] == f"fnv1a64:{checksum:016x}"
+                    assert record["worker_formula"] in record["worker_boundary"]
+                    assert f"target={target}" in record["worker_target_semantics"]
+                    assert record["initial_convention"] == "cursor=0,rank=0"
+                    assert record["fallback"] == "false"
+                    assert "underlying_rows_requested" not in record
+                    for metric in ("closure_factory_ms", "closure_normalization_ms",
+                                   "closure_raw_row_ms", "closure_cursor_row_ms",
+                                   "closure_branches_considered", "closure_branches_pruned",
+                                   "closure_guards_generated", "closure_states_discovered",
+                                   "closure_complete_rows", "closure_edges", "closure_retained_bytes",
+                                   "factory_return_ms", "first_row_ms", "first_useful_rank_query_ms",
+                                   "verification_additional_rows", "rank_support_max"):
+                        assert float(record[metric]) >= 0, (metric, record)
+                    before = next(r for r in history if r.get("stage") == "attempt-start")
+                    assert int(before["closure_complete_rows"]) == (
+                        0 if provider == "closure-buchi" else int(before["total_wrapper_rows"]))
+                    assert not any(r.get("stage") in ("preprocessing", "action-construction", "fallback-translation")
+                                   for r in history)
                 pair.append(record)
             for field in ("worker_formula", "inputs", "outputs", "ap_order", "partition", "k", "status"):
                 assert pair[0][field] == pair[1][field], (field, pair)
+            for field in ("worker_formula", "inputs", "outputs", "ap_order", "partition", "k",
+                          "status", "worker_boundary_hash"):
+                assert pair[2][field] == pair[3][field], (field, pair)
+            assert pair[0]["worker_formula"] == pair[2]["worker_formula"]
+            assert int(pair[3]["wrapper_rows_generated"]) <= int(pair[2]["total_wrapper_rows"])
             assert pair[0]["worker_pid"] != pair[1]["worker_pid"]
             assert int(pair[1]["wrapper_rows_generated"]) <= int(pair[0]["total_wrapper_rows"])
-    print("PASS native TLSF boundary: 5 eager/lazy pairs per policy and verified attempt histories")
+    print("PASS native TLSF boundary: 5 TAA and 5 closure eager/lazy pairs per policy and verified attempt histories")
 
     # Both wrappers and both polarities: losses/hints only schedule, wins alone
     # map to REALIZABLE/UNREALIZABLE. Real attempts use the original job and
     # unreal attempts use the existing swapped/shifted/negated job. Omitting the
     # policy must verify losses too: scheduling hints are strictly opt-in.
-    for backend in ("spot-guarded-sparse", "spot-guarded:spot-lazy", "spot-guarded:spot-eager"):
+    for backend in ("spot-guarded-sparse", "spot-guarded:spot-lazy", "spot-guarded:spot-eager",
+                    "spot-guarded-sparse:closure-buchi", "spot-guarded-sparse:closure-buchi-eager"):
         for polarity in ("real:small", "unreal:formula"):
             for policy in (None, "verify-all", "scheduling-hint"):
                 policy_args = () if policy is None else ("--loss-check-policy", policy)
@@ -125,6 +155,30 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
     print("PASS runtime policies (omitted/verify-all/scheduling-hint): frozen/lazy/eager, "
           "both polarities, UNKNOWN caps, checker counts and metadata")
 
+    for provider in ("closure-buchi", "closure-buchi-eager"):
+        for limit, cap, reason in (("ACACIA_SPOT_MAX_PROVIDER_STATES", "0", "closure-buchi:state_limit"),
+                                   ("ACACIA_SPOT_MAX_ROWS", "1", "resource_limit")):
+            previous = os.environ.get(limit)
+            os.environ[limit] = cap
+            try:
+                records, histories = captured_run(
+                    root, f"decline-{provider}-{limit}", "G(i <-> X(o))",
+                    backend=f"spot-guarded-sparse:{provider}", expected=2,
+                    extra=("--candidate-mode", "fallback"))
+            finally:
+                if previous is None:
+                    del os.environ[limit]
+                else:
+                    os.environ[limit] = previous
+            assert len(records) == 1, records
+            record = records[0]
+            assert record["worker_result"] == "unknown" and record["reason"] == reason, record
+            assert record["fallback"] == "false" and record["segment_id"] == "1"
+            assert record["worker_boundary_hash"].startswith("fnv1a64:")
+            assert not any(r.get("stage") in ("preprocessing", "fallback-translation")
+                           for history in histories for r in history)
+    print("PASS closure factory/row limits: typed UNKNOWN, retained boundary identity, no fallback")
+
     records, histories = captured_run(root, "fast-enabled", "G(i <-> X(o))")
     assert len(records) == 1
     record = records[0]
@@ -167,4 +221,4 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
     assert all(r["stage"] == "attempt-end" and r["search_started"] == "true"
                and r["worker_end"] == "returned" for r in records)
     print("PASS decomposition: completed search records for every captured component")
-print("10 native TLSF boundary pairs: semantics, polarity, exact construction, and certificates agree")
+print("20 native TLSF boundary pairs: semantics, polarity, exact construction, and certificates agree")

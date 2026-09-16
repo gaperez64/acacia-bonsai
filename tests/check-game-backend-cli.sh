@@ -307,3 +307,42 @@ PY
         grep -qx UNKNOWN <<<"$output"
     fi
 fi
+
+# Closure selection is independent of TAA and never falls back, even with the
+# legacy fallback policy requested. Validate before workers or synthesis start.
+for provider in closure-buchi closure-buchi-eager; do
+    if [[ $guarded_enabled == true ]]; then
+        for transform in small any; do
+            output=$(run 0 -f 'G(i <-> X(o))' -i i -o o -K 5 \
+                --arms "real:$transform:spot-guarded-sparse:$provider")
+            grep -qx REALIZABLE <<<"$output"
+        done
+        output=$(run 1 -f 'G(o <-> X(i))' -i i -o o -K 5 \
+            --arms "unreal:formula:spot-guarded-sparse:$provider")
+        grep -qx UNREALIZABLE <<<"$output"
+        for backend in backward forward spot-guarded; do
+            output=$(run 3 "${common[@]}" --arms "real:small:$backend:$provider")
+            [[ $output == *'requires spot-guarded-sparse'* || $output == *'built without'* ]]
+        done
+        output=$(run 3 "${common[@]}" --arms "unreal:automaton:spot-guarded-sparse:$provider")
+        [[ $output == *'automaton-unreal route must remain eager'* ]]
+        for arm in real:small unreal:formula; do
+            output=$(run 3 "${common[@]}" -s /dev/null --arms "$arm:spot-guarded-sparse:$provider")
+            [[ $output == *'does not support controller synthesis'* ]]
+        done
+        output=$(run 0 "${common[@]}" -r small --real-backend spot-guarded-sparse \
+            --real-provider "$provider")
+        grep -qx REALIZABLE <<<"$output"
+        for mode in only fallback; do
+            output=$(ACACIA_SPOT_MAX_PROVIDER_STATES=0 run 2 \
+                -f 'G(i <-> X(o))' -i i -o o -v --candidate-mode "$mode" \
+                --arms "real:small:spot-guarded-sparse:$provider")
+            [[ $output != *'fallback provider='* && $output != *'REALIZABLE'* ]]
+            [[ $verbose_enabled != true || $output == *'closure-buchi:state_limit'* ]]
+        done
+    else
+        output=$(run 3 --real-provider "$provider")
+        [[ $output == *'acacia_spot_guarded_backend=true'* ]]
+    fi
+done
+printf '%s\n' 'PASS closure arm validation, TAA-independent selection, typed decline, no fallback'

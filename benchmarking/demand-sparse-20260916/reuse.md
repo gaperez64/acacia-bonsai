@@ -345,3 +345,84 @@ Historical trust ledger: S0/failure-phases fields support last observed explicit
 The worktree's populated dependency directories are source snapshots without submodule `.git` metadata. The manifest uses superproject gitlink pins, not an accidental superproject `rev-parse` result. A content check against the pinned objects in the main checkout matched all 297 tracked posets files and 567/568 TLSF files; the sole difference is `scripts/version-archive.txt`, whose Git archive placeholders are expanded to `describe=v1.5.0-7-gb42d5ef`, `commit=b42d5ef`. The dependency pins remain those in §0.1.
 
 The exact broad Ruff command reports **135 pre-existing findings**, all inside the untouched `tests/syntcomp-benchmarks` submodule; excluding only that vendored directory passes. Full pytest collection with `PYTHONPATH=build/src/python:benchmarking` is blocked by missing Python-3.14 `spot`; the available installed Spot Python extension targets 3.13 and cannot serve this interpreter. The remaining suite passes **642 tests, 1 skipped** (excluding the two binding modules); a separate run of the binding module's tests that do not require Spot passes **11 tests, 2 deselected**. No dependency was installed or mismatched Python extension loaded to conceal this limitation.
+
+### P2 integration — closure provider (17 September 2026)
+
+The explicit fourth arm field now accepts `closure-buchi` and
+`closure-buchi-eager` with `spot-guarded-sparse`, for `real:small`, `real:any`
+and `unreal:formula`. Validation rejects other backends, automaton-unreal and
+controller synthesis. The existing guarded compile option makes this factory
+available independently of the TAA option. No preset, registry default or
+shipping arm changed. Explicit closure arms remain UNKNOWN on decline/failure,
+even when the legacy candidate fallback option is selected.
+
+`spot_lazy_worker.hh::make_closure_store` is the shared worker/replay factory.
+It adapts the core through `GenericTransitionBuchi`, without `LazyBuchiView`.
+The generic RowStore snapshot never inspects a TAA `CursorState`. Eager mode
+only enumerates/freezes this same RowStore before the existing Search. The
+worker retains provider/raw rows outside its K loop; ranks, proofs, oracles,
+strategies and verification are fresh per attempt. `verify-all` remains the
+default loss policy. Frozen-arm Boolean preprocessing is unchanged.
+
+At the transformed worker boundary, the record contains the exact formula,
+ordered input/output interface (including unused APs), target/polarity metadata,
+infinite-word game semantics and zero initial rank/cursor. `worker_boundary`
+is a length-delimited encoding; `worker_boundary_hash` is FNV-1a-64 over its
+bytes, an identity checksum rather than a security hash. No formula negation
+or partition swap occurs in the provider factory. Closure counters distinguish
+factory return, first completed row and first completed useful rank query,
+normalization, raw/cursor generation, attempted branches/guards, published
+rows/edges, states and estimated retained bytes. Existing search support and
+verification-added-row counters are reused.
+
+The existing replay adds `--provider taa|closure-buchi` (default `taa`). C4 is
+eager, C5 lazy; `--export-hoa FILE` is C4-only and prints a graph assembled from
+its completed row cache, without enumerating the provider again. The existing
+formula, lexical partition, resource caps and repeated-K flags remain in use.
+`--max-acceptance-sets` is TAA-only. The existing offline Python comparison
+requires matching closure boundary hashes and uses closure raw-row counts.
+It is an offline comparator, not a campaign launcher.
+
+Integration correctness extends `spot_provider_replay_test.cc`: 8 small specs,
+both worker transformations, K=1..3 and all 4 existing choice semantics give
+192 lazy/eager/reference comparisons (88 wins, 104 losses), 271 fully enumerated
+reference rank nodes and 1,920 checked valuation successors in the default build
+(1,872 with symbolic losing-input search). Coordinates are
+matched by sorted obligation formulas plus cursor, never local integer IDs.
+Eight mutations cover missing edges, increment, initial rank, input coverage,
+stale/dead targets, chronology and row correspondence. Mid-search publication
+failure remains typed UNKNOWN; 82 discovered states leave saved sparse rank
+hash/equality/mass/dominance and allocation unchanged. Existing core language
+and fault tests remain unchanged. Native worker tests also exercise Mealy,
+Moore and Strict frontend lowering, both policies and cross-K records.
+
+This is correctness/integration work only: no benchmarks, provider performance
+admission, portfolio promotion or closing campaign were run.
+
+Validation in the existing debug `build/`, with guarded backend enabled and TAA
+still disabled: `meson compile -C build -j 1` and the unit suite pass (50/50).
+The replay tests run in all five existing compile variants. Ruff passes on the
+three touched Python files; the replay pytest has 39 passing cases. Registry
+validation and frontend agreement checks pass (46 shared scalar options, the
+existing documented TLSF default divergence).
+
+Smoke command: `build/src/acacia-bonsai -K 5 -T FILE`, then repeat with each of
+`--arms real:small:spot-guarded-sparse:closure-buchi` and
+`--arms unreal:formula:spot-guarded-sparse:closure-buchi`:
+
+| FILE under tests/ltl/ | Default | Closure real | Closure formula-unreal |
+|---|---|---|---|
+| realizable/ltl2dba22.tlsf | REALIZABLE | REALIZABLE | UNKNOWN |
+| realizable/lilydemo13.tlsf | REALIZABLE | REALIZABLE | UNKNOWN |
+| unrealizable/ltl2dba27.tlsf | UNREALIZABLE | UNKNOWN | UNREALIZABLE |
+| unrealizable/UnderapproxDemo.tlsf | UNREALIZABLE | UNKNOWN | UNREALIZABLE |
+
+For `--provider closure-buchi --formula true --k 1 --kmax 3 --kinc 1`, replay C4
+and C5 both produce three verified LOSE_K results (exit 2, never a final opposite
+verdict). C4 retains 2 rows throughout; C5 retains 1, 2, 2 rows. C4's
+`--export-hoa` output is complete. The existing Python comparator reports agree
+at all three bounds. Default TAA C4/C5 still produce verified WIN_K for `false`.
+Factory state-limit and unsupported-operator declines report typed UNKNOWN;
+invalid selectors, C5 export and closure acceptance-set overrides are rejected.
+Small command/output evidence is retained in `build_scratch/p2int/`; no scratch
+build tree or performance campaign was created.

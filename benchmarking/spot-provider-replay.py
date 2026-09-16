@@ -76,6 +76,10 @@ def equivalence(c4, c5):
             return "incomparable"
         if c4[key] != c5[key]:
             return "incomparable"
+    if c4["provider"] == "closure-buchi":
+        boundary = c4.get("worker_boundary_hash")
+        if not boundary or boundary == "NA" or boundary != c5.get("worker_boundary_hash"):
+            return "incomparable"
     if c4.get("worker_pid") == c5.get("worker_pid") and c4.get("worker_pid") not in (None, "NA"):
         # Conservatively reject PID reuse too; it is not evidence of independence.
         return "incomparable"
@@ -98,7 +102,9 @@ def summarize(c4, c5):
     return dict(equivalence=comparison, c5_generation=generated,
                 wrapper_utilization=utilization(c5.get("wrapper_rows_generated"),
                                                 c4.get("total_wrapper_rows"), total_status),
-                underlying_utilization=utilization(c5.get("underlying_rows_generated"),
+                underlying_utilization=utilization(c5.get(
+                    "closure_raw_rows" if c5.get("provider") == "closure-buchi"
+                    else "underlying_rows_generated"),
                                                    c4.get("total_underlying_rows"), total_status))
 
 

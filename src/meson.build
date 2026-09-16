@@ -23,6 +23,7 @@ endif
 #subdir ('python_pybind')
 
 ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
+                     link_with : closure_buchi_provider_lib,
                      include_directories : inc,
                      install: true,
                      install_tag: 'cli',
@@ -32,6 +33,7 @@ if get_option('build_research_tools')
   acacia_spot_provider_replay_exe = executable(
     'acacia-spot-provider-replay',
     'research/spot_provider_replay.cc',
+    link_with: closure_buchi_provider_lib,
     include_directories: inc,
     install: false,
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],

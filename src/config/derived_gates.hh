@@ -1,5 +1,10 @@
 #pragma once
 
+// Closure rows use the sparse guarded engine, independently of the TAA opt-in.
+#ifndef ACACIA_COMPILE_DEMAND_PROVIDER
+# define ACACIA_COMPILE_DEMAND_PROVIDER (ACACIA_SPOT_LAZY_PROVIDER || ACACIA_SPOT_GUARDED_BACKEND)
+#endif
+
 #ifndef ACACIA_COMPILE_ALL_COMPONENTS
 # define ACACIA_COMPILE_ALL_COMPONENTS 0
 #endif

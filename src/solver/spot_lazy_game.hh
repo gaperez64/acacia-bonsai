@@ -119,6 +119,11 @@ namespace acacia::spot_lazy_game {
   // Exact immutable graph storage is P2's complete row cache, NOT an optimized
   // twa_graph copy. Freeze checks closure and makes any subsequent miss fatal.
   // Both arms have the identical storage; only C4 calls enumerate_and_freeze().
+  struct FixedBuchi {
+      rows::GenericTransitionBuchi rows;
+      std::function<void (const Reporter&)> snapshot;
+      std::function<void ()> check;
+  };
   class RowStore {
     public:
       std::shared_ptr<lazy::LazyBuchiView> view;
@@ -132,6 +137,24 @@ namespace acacia::spot_lazy_game {
       size_t eager_generated = 0, search_generated = 0, verify_generated = 0;
       double generation_ms = 0;
       bool frozen = false;
+      std::function<void (const Reporter&)> provider_snapshot;
+      std::function<void ()> provider_check;
+      std::exception_ptr row_error;
+      Clock::time_point factory_started = Clock::now ();
+      std::optional<double> useful_query_ms;
+
+      RowStore (FixedBuchi v, rows::RowLimits l, Reporter r = {})
+        : provider (std::move (v.rows.provider)),
+          cache (std::make_shared<rows::SpotRows> (rows::GenericTransitionBuchi {provider}, l)),
+          report (r), provider_snapshot (std::move (v.snapshot)), provider_check (std::move (v.check)) {
+        discover ();
+      }
+      void useful_query () {
+        if (!useful_query_ms && phase == Phase::search) {
+          useful_query_ms = elapsed (factory_started);
+          report.ms ("first_useful_rank_query_ms", *useful_query_ms);
+        }
+      }
 
       RowStore (std::shared_ptr<lazy::LazyBuchiView> v, rows::RowLimits l, Reporter r)
         : view (std::move (v)),
@@ -144,7 +167,10 @@ namespace acacia::spot_lazy_game {
       RowStore (rows::FrozenAcacia v, rows::RowLimits l, Reporter r = {})
         : provider (v.graph), frozen_view (v),
           cache (std::make_shared<rows::SpotRows> (v, l)), report (r) { discover (); }
-      void check_contract () const { if (view) view->check_contract (); }
+      void check_contract () const {
+        if (view) view->check_contract ();
+        if (provider_check) provider_check ();
+      }
       int safe_cap (StateId q, int K) const {
         return frozen_view && q >= frozen_view->bool_threshold ? 0 : K - 1;
       }
@@ -178,11 +204,13 @@ namespace acacia::spot_lazy_game {
         }
         if (missing)
           snapshot ();
-        if (row.status != rows::Status::complete || !row.row)
+        if (row.status != rows::Status::complete || !row.row) {
+          row_error = row.error;
           throw letters::detail::Failure {row.status == rows::Status::resource_limit
                                               ? Unknown::resource_limit
                                               : Unknown::row_failure,
                                           row.error};
+        }
         return *row.row;
       }
       void enumerate_and_freeze () {
@@ -192,6 +220,7 @@ namespace acacia::spot_lazy_game {
         frozen = true;
       }
       void snapshot () const {
+        if (useful_query_ms) report.ms ("first_useful_rank_query_ms", *useful_query_ms);
         // Stored counters only; no provider traversal.
         if (!report.sink) return;
         if (frozen_view) {
@@ -202,16 +231,19 @@ namespace acacia::spot_lazy_game {
           report.ms ("row_generation_ms", generation_ms);
           return;
         }
-        const auto* init = dynamic_cast<const lazy::detail::CursorState*> (
-            cache->canonical_state (cache->initial_id ()));
-        require (init != nullptr);
-        report.count ("underlying_rows_generated", view->underlying_rows ());
-        const auto* observed =
-            dynamic_cast<const ObservedProvider*> (init->context->provider.get ());
-        report.count ("underlying_rows_requested", observed ? observed->requests () : 0);
+        if (provider_snapshot) provider_snapshot (report);
+        if (view) {
+          const auto* init = dynamic_cast<const lazy::detail::CursorState*> (
+              cache->canonical_state (cache->initial_id ()));
+          require (init != nullptr);
+          report.count ("underlying_rows_generated", view->underlying_rows ());
+          const auto* observed =
+              dynamic_cast<const ObservedProvider*> (init->context->provider.get ());
+          report.count ("underlying_rows_requested", observed ? observed->requests () : 0);
+          report.count ("underlying_states_discovered", init->context->ids.size ());
+        }
         report.count ("wrapper_rows_requested", requests);
         report.count ("wrapper_rows_generated", cache->complete_rows ());
-        report.count ("underlying_states_discovered", init->context->ids.size ());
         report.count ("wrapper_states_discovered", cache->state_count ());
         report.count ("wrapper_edges_generated", generated_edges);
         report.count ("search_rows_requested", search_sources.size ());
@@ -365,11 +397,14 @@ namespace acacia::spot_lazy_game {
           std::map<std::pair<int, std::vector<Rank::Entry>>, bdd> preimages;
       };
       Reader& rows_;
+      RowStore& store_;
+      bool used_rank_ = false;
       letters::Oracle boundary_;
       int K_;
       std::unordered_map<Rank, Prepared> prepared_;
       size_t queries_ = 0, threshold_hits_ = 0, preimage_hits_ = 0;
       Prepared& prepare (const Rank& r, letters::detail::Letters& b) {
+        used_rank_ = true;
         (void) r.is_safe (K_);
         if (auto it = prepared_.find (r); it != prepared_.end ())
           return it->second;
@@ -466,16 +501,19 @@ namespace acacia::spot_lazy_game {
 
     public:
       Oracle (Reader& r, RowStore& store, letters::WorkerAlphabet a, int K)
-        : rows_ (r),
+        : rows_ (r), store_ (store),
           boundary_ (store.cache, std::move (a), K),
           K_ (K) {}
       void set_limits (letters::QueryLimits l) { boundary_.set_limits (l); }
       template <typename T, typename F>
       letters::Result<T> query (F&& f) {
         ++queries_;
+        used_rank_ = false;
         auto result = boundary_.query<T> (std::forward<F> (f));
         if (!result.value)
           prepared_.clear ();
+        else if (used_rank_)
+          store_.useful_query ();
         return result;
       }
       letters::Result<bdd> eq (const Rank& r, const Rank& s) {
@@ -1100,6 +1138,23 @@ namespace acacia::spot_lazy_game {
       // Copy the live counters into the result. Called once after exploration,
       // before verification or a hint; ~Search then emits the same values.
       void publish_counters () {
+        if (view_.report.sink) {
+          std::map<size_t, size_t> histogram;
+          size_t sum = 0, maximum = 0;
+          for (const auto& node : result_.nodes) {
+            const auto n = node.rank.entries ().size ();
+            ++histogram[n];
+            sum += n;
+            maximum = std::max (maximum, n);
+          }
+          std::string distribution;
+          for (const auto [n, count] : histogram)
+            distribution += (distribution.empty () ? "" : ",") + std::to_string (n) +
+                            ":" + std::to_string (count);
+          view_.report.put ("rank_support_distribution", distribution);
+          view_.report.count ("rank_support_sum", sum);
+          view_.report.count ("rank_support_max", maximum);
+        }
         proofs_total_ = result_.proofs.size ();
         proofs_in_initial_cone_ = dependency_list_len_sum_ = dependency_list_len_max_ = 0;
         for (const auto& proof : result_.proofs) {
