@@ -14,12 +14,13 @@ namespace acacia::solver_detail {
       spot::twa_graph_ptr aut, const VECTOR_ELT_T& kmax, const VECTOR_ELT_T& kmin,
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
       const std::vector<symmetry::indexed_family_hint>& hints, acacia::game_backend backend,
-      acacia::candidate_mode candidate) {
+      acacia::candidate_mode candidate,
+      acacia::LossCheckPolicy loss_check_policy) {
     using Vector = posets::vectors::VECTOR_IMPL<VECTOR_ELT_T>;
     using Downset = posets::downsets::VECTOR_AND_BITSET_DOWNSET_IMPL<Vector>;
 
     return solve_with_downset<Downset> (aut, kmax, kmin, kinc, all_inputs, all_outputs,
-                                        do_synthesis, hints, backend, candidate);
+                                        do_synthesis, hints, backend, candidate, loss_check_policy);
   }
 
 }  // namespace acacia::solver_detail

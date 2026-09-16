@@ -73,6 +73,36 @@ namespace {
       records::end_attempt ("WIN", "spot-game");
     }
     has (contents (attempts), "worker_end", "returned");
+    const auto hints = root / "hints";
+    setenv ("ACACIA_SPOT_CAPTURE_DIR", hints.c_str (), 1);
+    {
+      records::Record record;
+      for (int k = 1; k <= 3; ++k) {
+        records::begin_attempt (k);
+        auto text = contents (hints);
+        check (text.find ("\"loss_hints\"") == std::string::npos);
+        check (text.find ("\"win_verification_ms\"") == std::string::npos);
+        records::phase ("search");
+        records::put ("loss_hints", k < 3 ? "1" : "0");
+        records::put ("loss_hint_ms", k < 3 ? "0.5" : "0");
+        records::put ("loss_verification_calls", "0");
+        records::put ("loss_verification_ms", "0");
+        records::put ("win_verification_calls", k == 3 ? "1" : "0");
+        records::put ("win_verification_ms", k == 3 ? "2" : "0");
+        records::end_attempt (k < 3 ? "LOSS_HINT" : "WIN_K", k < 3 ? "loss-hint" : "verified-win");
+        text = contents (hints);
+        has (text, "evidence", k < 3 ? "loss-hint" : "verified-win");
+        if (k < 3) check (text.find ("verified") == std::string::npos);
+      }
+    }
+    const auto totals = contents (hints);
+    has (totals, "cumulative_loss_hints", "2.000000");
+    has (totals, "cumulative_loss_hint_ms", "1.000000");
+    has (totals, "cumulative_loss_verification_calls", "0.000000");
+    has (totals, "cumulative_loss_verification_ms", "0.000000");
+    has (totals, "cumulative_win_verification_calls", "1.000000");
+    has (totals, "cumulative_win_verification_ms", "2.000000");
+    std::cout << "PASS hint records: distinct evidence, fresh counters, cumulative calls and times\n";
     for (bool unreal : {false, true}) {
       const auto empty = root / (unreal ? "empty-unreal" : "empty-real");
       setenv ("ACACIA_SPOT_CAPTURE_DIR", empty.c_str (), 1);

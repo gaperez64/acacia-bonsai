@@ -109,6 +109,7 @@ namespace acacia::spot_records {
         // and provider-lifetime counters must never be summed as work counters.
         for (const auto* key : {"search_ms", "verification_ms", "loss_verification_ms",
                                "loss_verification_calls", "win_verification_calls",
+                               "win_verification_ms", "loss_hints", "loss_hint_ms",
                                "attempt_row_generation_ms", "attempt_rows_generated"}) {
           const auto found = values_.find (key);
           if (found != values_.end ()) {
@@ -137,7 +138,7 @@ namespace acacia::spot_records {
               key.starts_with ("requested_")) return false;
           for (const auto* keep : {"record_version", "invocation_id", "instance", "inputs",
                                   "outputs", "polarity", "transform", "translation_pref",
-                                  "candidate_mode", "kmin", "kmax", "kinc"})
+                                  "candidate_mode", "loss_check_policy", "kmin", "kmax", "kinc"})
             if (key == keep) return false;
           return true;
         });

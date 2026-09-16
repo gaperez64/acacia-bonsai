@@ -211,6 +211,10 @@ namespace acacia::spot_lazy_game {
 // used to compare against production expansion.
 struct SearchTestAccess {
     static auto& result (Search& s) { return s.result_; }
+    static bool explore (Search& s) { return s.explore (); }
+    static auto finish (Search& s, acacia::LossCheckPolicy policy) {
+      return s.finish_for_schedule (policy);
+    }
     static auto& oracle (Search& s) { return s.oracle_; }
     static void drain (Search& s) { s.propagate_losses (); }
     static void initialize (Search& s) {
@@ -767,6 +771,144 @@ struct Kernel {
     }
     auto view () const { return std::make_shared<lazy::LazyBuchiView> (graph); }
 };
+
+void scheduling_loss_policy () {
+  using acacia::LossCheckPolicy;
+  using acacia::k_schedule::kind;
+  using namespace acacia::spot_lazy_game;
+  static_assert (std::is_same_v<decltype (std::declval<Search&> ().solve ()), SolveResult>);
+  static_assert (not std::is_convertible_v<LossHint, SolveResult>);
+  static_assert (not std::is_convertible_v<ScheduledAttempt, SolveResult>);
+  Kernel loss {1};
+  loss.graph->new_edge (0, 0, bddtrue, {0});
+  // Two accepting transitions require K=3, then a nonaccepting sink wins.
+  Kernel later {3};
+  later.graph->new_edge (0, 1, bddtrue, {0});
+  later.graph->new_edge (1, 2, bddtrue, {0});
+  later.graph->new_edge (2, 2, bddtrue);
+  std::map<std::string, std::string> counts;
+  Reporter report {[&] (const auto& key, const auto& value) { counts[key] = value; }};
+  const auto calls = [&] (unsigned losing, unsigned winning, unsigned hints) {
+    expect (counts["loss_verification_calls"] == std::to_string (losing) &&
+            counts["win_verification_calls"] == std::to_string (winning) &&
+            counts["loss_hints"] == std::to_string (hints), "checker and hint counts");
+    for (const auto* key : {"loss_verification_ms", "win_verification_ms", "loss_hint_ms"})
+      expect (std::stod (counts.at (key)) >= 0, "checker/hint timing is present");
+  };
+  for (auto policy : {LossCheckPolicy::verify_all, LossCheckPolicy::scheduling_hint}) {
+    const bool hints = policy == LossCheckPolicy::scheduling_hint;
+    RowStore store {loss.view (), {}, report};
+    const auto attempt = Search {store, loss.alphabet, 1}.solve_for_schedule (policy);
+    expect (std::holds_alternative<LossHint> (attempt) == hints &&
+            std::holds_alternative<VerifiedLoss> (attempt) == !hints, "policy separates loss evidence");
+    calls (!hints, 0, hints);
+    expect (scheduling_evidence (attempt).have_certificate == !hints, "hint has no certificate");
+    expect (std::string (attempt_status (attempt)) == (hints ? "LOSS_HINT" : "LOSE_K") &&
+            std::string (attempt_evidence (attempt)) == (hints ? "loss-hint" : "verified-loss"),
+            "hint metadata never claims verification");
+    // The exact interface remains fully verified even after a hinted attempt.
+    const auto exact = Search {store, loss.alphabet, 1}.solve ();
+    calls (1, 0, 0);
+    expect (exact.status == forward_result_status::lose_k &&
+            exact.proofs.size () == attempt_metrics (attempt).proofs &&
+            exact.expansions == attempt_metrics (attempt).expansions,
+            "same completed exploration and proof construction; exact loss remains checked");
+    expect (std::holds_alternative<VerifiedLoss> (
+        Search {store, loss.alphabet, 1}.solve_for_schedule ()), "schedule defaults to full checking");
+    calls (1, 0, 0);
+
+    RowStore later_store {later.view (), {}, report};
+    for (int k = 1; k <= 3; ++k) {
+      const auto result = Search {later_store, later.alphabet, k}.solve_for_schedule (policy);
+      const auto step = schedule_attempt (result, kind::linear, 1, 3, 1);
+      calls (k < 3 && !hints, k == 3, k < 3 && hints);
+      expect (step.action == (k == 3 ? SchedulingAction::win : SchedulingAction::advance),
+              "later checked win after nondecisive losses or hints");
+    }
+    Limits limits;
+    limits.verifier_queries.max_steps = 0;
+    const auto failed_win = Search {later_store, later.alphabet, 3, limits}.solve_for_schedule (policy);
+    expect (std::holds_alternative<UnknownAttempt> (failed_win) &&
+            attempt_failure (failed_win) == Unknown::resource_limit,
+            "winning verification failure is inconclusive under either policy");
+    calls (0, 1, 0);
+    if (!hints) {
+      const auto failed_loss = Search {store, loss.alphabet, 1, limits}.solve_for_schedule (policy);
+      expect (std::holds_alternative<UnknownAttempt> (failed_loss), "failed loss checker is never advice");
+      calls (1, 0, 0);
+    }
+    // Corrupt a winning candidate at the actual search/verification boundary.
+    Search corrupt {later_store, later.alphabet, 3};
+    expect (SearchTestAccess::explore (corrupt), "completed winning search");
+    auto& certificate = SearchTestAccess::result (corrupt);
+    certificate.nodes[certificate.initial].choices.clear ();
+    const auto rejected = SearchTestAccess::finish (corrupt, policy);
+    expect (std::holds_alternative<UnknownAttempt> (rejected), "corrupt winning candidate rejected");
+    calls (0, 1, 0);
+
+    for (unsigned failure = 0; failure < 5; ++failure) {
+      Limits limited;
+      auto semantics = default_choice_semantics;
+      if (failure == 0) limited.max_expansions = 0;
+      if (failure == 1) limited.queries.aborted = [] (void*) { return true; };
+      if (failure == 2) limited.rows.max_rows = 0;
+      if (failure == 3) semantics.successor_relation = static_cast<SuccessorRelation> (99);
+      auto alphabet = loss.alphabet;
+      if (failure == 4) alphabet.inputs = bddfalse;
+      RowStore failed_store {loss.view (), limited.rows, report};
+      const auto failed = Search {failed_store, alphabet, 1, limited, semantics}.solve_for_schedule (policy);
+      expect (not std::holds_alternative<LossHint> (failed) &&
+              schedule_attempt (failed, kind::linear, 1, 3, 1).action == SchedulingAction::inconclusive,
+              "resource, cancellation, row or malformed-data failure is never a hint");
+      calls (0, 0, 0);
+    }
+    Kernel broken {1};
+    broken.graph->new_edge (0, 0, bddtrue, {0});
+    RowStore broken_store {broken.view (), {}, report};
+    broken.graph->register_ap ("late-ap"); // Violate the provider's frozen AP contract.
+    const auto provider_failed = Search {broken_store, broken.alphabet, 1}.solve_for_schedule (policy);
+    expect (std::holds_alternative<UnknownAttempt> (provider_failed), "provider contract failure is inconclusive");
+    calls (0, 0, 0);
+    bool cancel = false;
+    Limits cancellable;
+    cancellable.queries.aborted = [] (void* flag) { return *static_cast<bool*> (flag); };
+    cancellable.queries.abort_data = &cancel;
+    Search cancelled {store, loss.alphabet, 1, cancellable};
+    expect (SearchTestAccess::explore (cancelled), "search completes before cancellation");
+    cancel = true;
+    if (hints) {
+      const auto stopped = SearchTestAccess::finish (cancelled, policy);
+      expect (std::holds_alternative<UnknownAttempt> (stopped) &&
+              attempt_failure (stopped) == Unknown::aborted, "late cancellation is not advice");
+      calls (0, 0, 0);
+    }
+    Search unfinished {store, loss.alphabet, 1};
+    expect (SearchTestAccess::explore (unfinished), "completed losing search");
+    SearchTestAccess::result (unfinished).pending_loss = true;
+    expect (std::holds_alternative<UnknownAttempt> (SearchTestAccess::finish (unfinished, policy)),
+            "unfinished propagation cannot produce advice");
+    calls (0, 0, 0);
+  }
+  // Adversarial advice for a game that actually wins: exercise the SAME reducer
+  // used by both decision wrappers, for every supported scheduling policy.
+  for (auto schedule : {kind::linear, kind::geometric, kind::cheap_loss_adaptive, kind::direct_max}) {
+    int k = 1;
+    for (unsigned attempts = 0;; ++attempts) {
+      expect (attempts < 5, "forged hints terminate at the configured cap");
+      ScheduledAttempt forged = LossHint {k, {}};
+      expect (not scheduling_evidence (forged).have_certificate, "forged advice is not a theorem");
+      const auto step = schedule_attempt (forged, schedule, 1, 5, 1);
+      if (step.action == SchedulingAction::exhausted) {
+        expect (k == 5, "all hints end inconclusively at K cap");
+        break;
+      }
+      expect (step.action == SchedulingAction::advance && step.next_k > k,
+              "forged advice cannot establish either polarity's verdict");
+      k = step.next_k;
+    }
+  }
+  std::cout << "PASS scheduling policy: checker counts, later wins, failures, exact isolation, forged hints\n";
+}
 
 void lean_verifier_dependencies () {
   // Both output branches lose after two steps. By the time the second branch
@@ -1654,6 +1796,7 @@ int main () {
         return code;
     }
     copy_kernels ();
+    scheduling_loss_policy ();
     lean_verifier_dependencies ();
     lean_verifier_winning_cache ();
     lean_verifier_retained_thresholds ();

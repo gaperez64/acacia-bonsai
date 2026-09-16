@@ -16,7 +16,8 @@ namespace acacia::spot_lazy_worker {
   // controller synthesis. The caller supplies the existing transformed job.
   inline Outcome solve (spot::formula worker_formula, const spot::bdd_dict_ptr& dict,
                          bdd all_inputs, bdd all_outputs, int kmin, int kmax, int kinc,
-                         spot_guarded::Limits limits = spot_taa_candidate_limits (), bool eager = false) {
+                         spot_guarded::Limits limits = spot_taa_candidate_limits (), bool eager = false,
+                         LossCheckPolicy loss_check_policy = LossCheckPolicy::verify_all) {
     namespace game = spot_lazy_game;
     const auto started = game::Clock::now ();
     game::Reporter report;
@@ -107,30 +108,25 @@ namespace acacia::spot_lazy_worker {
         spot_records::phase ("search");
         const auto result = [&] {
           game::Search search {store, alphabet, int32_t (k), limits};
-          return search.solve ();
+          return search.solve_for_schedule (loss_check_policy);
         } ();
         view->check_contract ();
         store.snapshot ();
-        report.ms ("search_ms", result.solve_ms);
-        report.ms ("verification_ms", result.verify_ms);
-        report.count ("game_states", result.nodes.size ());
-        report.count ("guarded_choices", result.choices_created);
-        report.put ("status", solver_detail::forward_result_name (result.status));
-        report.put ("reason", spot_letters::unknown_name (result.failure));
+        const auto& metrics = game::attempt_metrics (result);
+        report.ms ("search_ms", metrics.solve_ms);
+        report.ms ("verification_ms", metrics.verify_ms);
+        report.count ("game_states", metrics.nodes);
+        report.count ("guarded_choices", metrics.choices);
+        report.put ("status", game::attempt_status (result));
+        report.put ("reason", spot_letters::unknown_name (game::attempt_failure (result)));
         report.ms ("attempt_row_generation_ms", store.generation_ms - generation_before);
         report.count ("attempt_rows_generated", store.cache->complete_rows () - rows_before);
-        spot_records::end_attempt (solver_detail::forward_result_name (result.status),
-            result.status == solver_detail::forward_result_status::win_k ? "verified-win" :
-            result.status == solver_detail::forward_result_status::lose_k ? "verified-loss" : "none");
-        if (result.status == solver_detail::forward_result_status::win_k)
-          return Outcome::win;
-        if (result.status != solver_detail::forward_result_status::lose_k)
-          return Outcome::unknown;
-        const auto next = k_schedule::next (
-            ACACIA_K_SCHEDULE, k, kmin, kmax, kinc,
-            {static_cast<long long> (result.solve_ms), result.proofs.size (), result.expansions, true});
-        if (not next) return Outcome::kmax;
-        k = *next;
+        spot_records::end_attempt (game::attempt_status (result), game::attempt_evidence (result));
+        const auto step = game::schedule_attempt (result, ACACIA_K_SCHEDULE, kmin, kmax, kinc);
+        if (step.action == game::SchedulingAction::win) return Outcome::win;
+        if (step.action == game::SchedulingAction::inconclusive) return Outcome::unknown;
+        if (step.action == game::SchedulingAction::exhausted) return Outcome::kmax;
+        k = step.next_k;
       }
     } catch (const std::exception& e) {
       report.put ("reason", e.what ());

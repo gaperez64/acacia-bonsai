@@ -56,4 +56,5 @@ bool run_ltl (std::vector<std::string> input_aps, std::vector<std::string> outpu
               const std::optional<std::string>& synth_fname,
               const specification_metadata& metadata = {},
               acacia::automaton_provider provider = acacia::automaton_provider::frozen_graph,
-              acacia::candidate_mode candidate = acacia::candidate_mode::only);
+              acacia::candidate_mode candidate = acacia::candidate_mode::only,
+              acacia::LossCheckPolicy loss_check_policy = acacia::LossCheckPolicy::verify_all);

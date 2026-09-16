@@ -171,7 +171,8 @@ namespace acacia::solver_detail {
       const VECTOR_ELT_T& kinc, const bdd& all_inputs, const bdd& all_outputs, bool do_synthesis,
       [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints,
       acacia::game_backend backend,
-      [[maybe_unused]] acacia::candidate_mode candidate) {
+      [[maybe_unused]] acacia::candidate_mode candidate,
+      [[maybe_unused]] acacia::LossCheckPolicy loss_check_policy) {
     backend = acacia::synthesis_backend (backend, do_synthesis);
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
@@ -203,17 +204,8 @@ namespace acacia::solver_detail {
       for (long long k = kmin;;) {
         spot_records::begin_attempt (k);
         acacia::diagnostics::set_support_k (static_cast<int> (k));
-        struct Attempt {
-          forward_result_status status;
-          spot_letters::Unknown failure;
-          double prep_ms, solve_ms, verify_ms;
-          size_t nodes, choices, proofs, expansions;
-        };
-        const auto run = [&] () -> Attempt {
-          const auto summarize = [] (const auto& r) -> Attempt {
-            return {r.status, r.failure, r.prep_ms, r.solve_ms, r.verify_ms,
-                    r.nodes.size (), r.choices_created, r.proofs.size (), r.expansions};
-          };
+        namespace game = spot_lazy_game;
+        const auto run = [&] () -> game::ScheduledAttempt {
           if (backend == acacia::game_backend::spot_guarded_sparse) {
             spot_lazy_game::Reporter report;
             if (spot_records::active)
@@ -223,14 +215,16 @@ namespace acacia::solver_detail {
             spot_lazy_game::Search search {store, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()};
             const auto prep_ms = std::chrono::duration<double, std::milli> (
                 std::chrono::steady_clock::now () - prepared).count ();
-            auto result = summarize (search.solve ());
+            auto result = search.solve_for_schedule (loss_check_policy);
             store.snapshot ();
             report.ms ("attempt_row_generation_ms", store.generation_ms);
             report.count ("attempt_rows_generated", store.cache->complete_rows ());
-            result.prep_ms = prep_ms;
+            std::visit ([&] (auto& attempt) { attempt.metrics.prep_ms = prep_ms; }, result);
             return result;
           }
-          return summarize (spot_guarded::solve (view, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()));
+          return game::verified_attempt (
+              spot_guarded::solve (view, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()),
+              static_cast<int32_t> (k));
         };
         if (spot_records::active) {
           spot_records::put ("provider", "frozen-graph");
@@ -239,29 +233,29 @@ namespace acacia::solver_detail {
           spot_records::phase ("search");
         }
         const auto result = run ();
+        const auto& metrics = game::attempt_metrics (result);
+        const auto step = game::schedule_attempt (result, ACACIA_K_SCHEDULE, kmin, kmax, kinc);
         if (spot_records::active) {
-          spot_records::put ("status", forward_result_name (result.status));
-          spot_records::put ("prep_ms", std::to_string (result.prep_ms));
-          spot_records::put ("search_ms", std::to_string (result.solve_ms));
-          spot_records::put ("verification_ms", std::to_string (result.verify_ms));
-          spot_records::put ("guarded_choices", std::to_string (result.choices));
-          spot_records::put ("game_states", std::to_string (result.nodes));
-          spot_records::end_attempt (forward_result_name (result.status),
-              result.status == forward_result_status::win_k ? "verified-win" :
-              result.status == forward_result_status::lose_k ? "verified-loss" : "none");
+          spot_records::put ("status", game::attempt_status (result));
+          spot_records::put ("prep_ms", std::to_string (metrics.prep_ms));
+          spot_records::put ("search_ms", std::to_string (metrics.solve_ms));
+          spot_records::put ("verification_ms", std::to_string (metrics.verify_ms));
+          spot_records::put ("guarded_choices", std::to_string (metrics.choices));
+          spot_records::put ("game_states", std::to_string (metrics.nodes));
+          spot_records::end_attempt (game::attempt_status (result), game::attempt_evidence (result));
         }
         verb_do (1, vout << "spot-guarded K=" << k
-                         << " prep_ms=" << result.prep_ms << " solve_ms=" << result.solve_ms
-                         << " verify_ms=" << result.verify_ms
-                         << " ranks=" << result.nodes << " choices=" << result.choices
-                         << " status=" << forward_result_name (result.status) << std::endl);
-        if (result.status == forward_result_status::win_k) {
+                         << " prep_ms=" << metrics.prep_ms << " solve_ms=" << metrics.solve_ms
+                         << " verify_ms=" << metrics.verify_ms
+                         << " ranks=" << metrics.nodes << " choices=" << metrics.choices
+                         << " status=" << game::attempt_status (result) << std::endl);
+        if (step.action == game::SchedulingAction::win) {
           acacia::diagnostics::set_final_reason ("spot-guarded-verified-win");
           return aut;
         }
-        if (result.status != forward_result_status::lose_k) {
+        if (step.action == game::SchedulingAction::inconclusive) {
           acacia::diagnostics::set_final_reason (
-              std::string {"spot-guarded-unknown-"} + spot_letters::unknown_name (result.failure));
+              std::string {"spot-guarded-unknown-"} + spot_letters::unknown_name (game::attempt_failure (result)));
           if (candidate == acacia::candidate_mode::only) return std::nullopt;
           std::cerr << "spot-guarded UNKNOWN: fallback provider=frozen-graph backend=backward; "
                        "rebuilding game actions on the existing preprocessed frozen graph\n";
@@ -269,14 +263,12 @@ namespace acacia::solver_detail {
           spot_records::segment ("frozen-graph", "backward", true);
           break;
         }
-        const auto next = acacia::k_schedule::next (
-            ACACIA_K_SCHEDULE, k, kmin, kmax, kinc,
-            {static_cast<long long> (result.solve_ms), result.proofs, result.expansions, true});
-        if (not next) {
-          acacia::diagnostics::set_final_reason ("spot-guarded-kmax-lose");
+        if (step.action == game::SchedulingAction::exhausted) {
+          acacia::diagnostics::set_final_reason (std::holds_alternative<game::LossHint> (result)
+              ? "spot-guarded-kmax-hint" : "spot-guarded-kmax-lose");
           return std::nullopt;
         }
-        k = *next;
+        k = step.next_k;
       }
     }
 #else

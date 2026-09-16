@@ -15,4 +15,5 @@ std::optional<spot::twa_graph_ptr> solve_game (spot::twa_graph_ptr aut, const VE
                                                bool do_synthesis,
                                                const std::vector<symmetry::indexed_family_hint>& hints,
                                                acacia::game_backend backend,
-      acacia::candidate_mode candidate = acacia::candidate_mode::only);
+      acacia::candidate_mode candidate = acacia::candidate_mode::only,
+      acacia::LossCheckPolicy loss_check_policy = acacia::LossCheckPolicy::verify_all);

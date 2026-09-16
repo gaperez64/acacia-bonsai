@@ -91,6 +91,17 @@ def test_unknown_outcomes_are_never_fixed_k_losses(status):
     assert m.equivalence(c4, c5) == "inconclusive"
 
 
+@pytest.mark.parametrize("certificate", ["verified", "unverified", "loss-hint"])
+def test_scheduling_hints_cannot_be_reported_as_exact_evidence(certificate):
+    m = load_module()
+    c4, c5 = records(m)
+    for row in (c4, c5):
+        row.update(status="LOSS_HINT", evidence="loss-hint", certificate=certificate)
+    # Even a forged verification label cannot turn scheduling advice into an
+    # exact fixed-K result or agreement between independently checked results.
+    assert m.equivalence(c4, c5) == "inconclusive"
+
+
 def test_unverified_and_shared_process_results_cannot_establish_equivalence():
     m = load_module()
     c4, c5 = records(m)

@@ -44,6 +44,21 @@ output=$(run 0 -f 'G(o)' -i i -o o -r small --real-backend backward \
     --real-provider frozen-graph -v)
 [[ $verbose_enabled != true || ( $output == *'backend=backward'* && $output == *'provider=frozen-graph'* ) ]]
 
+# Validated runtime policy; nonapplicable backends ignore it coherently.
+for policy in verify-all scheduling-hint; do
+    output=$(run 0 -f 'G(o)' -i i -o o --arms real:small:backward \
+        --loss-check-policy "$policy")
+    grep -qx REALIZABLE <<<"$output"
+done
+for policy in '' unchecked VERIFY-ALL; do
+    output=$(run 3 --loss-check-policy="$policy")
+    [[ $output == *'--loss-check-policy expects verify-all or scheduling-hint'* ]]
+done
+output=$(run 3 --loss-check-policy)
+[[ $output == *'requires an argument'* ]]
+output=$(run 2 -h)
+[[ $output == *'--loss-check-policy VAL'* && $output == *'(default verify-all)'* ]]
+
 common=(-f 'G(o)' -i i -o o)
 backward_arms='real:any:backward,unreal:formula:backward'
 
@@ -133,7 +148,7 @@ if [[ $guarded_enabled == true ]]; then
     synthesis_output=$(mktemp)
     trap 'rm -f -- "$synthesis_output"' EXIT
     output=$(run 0 -f 'G(i <-> X(o))' -i i -o o --spot-fast off -v \
-        -s "$synthesis_output" --arms real:small:spot-guarded)
+        -s "$synthesis_output" --arms real:small:spot-guarded --loss-check-policy scheduling-hint)
     [[ $verbose_enabled != true || ( $output == *'Forcing the real backend to backward for synthesis'* ) ]]
     [[ $verbose_enabled != true || ( $output == *'backend=backward'* && $output != *'spot-guarded K='* ) ]]
     [[ -s $synthesis_output ]]
@@ -143,7 +158,7 @@ if [[ $guarded_enabled == true ]]; then
         [[ $mode == fallback ]] && status=0
         output=$(ACACIA_SPOT_MAX_EXPANSIONS=0 run "$status" \
             -f 'G(i <-> X(o))' -i i -o o --spot-fast off -v \
-            --arms real:small:spot-guarded --candidate-mode "$mode")
+            --arms real:small:spot-guarded --candidate-mode "$mode" --loss-check-policy scheduling-hint)
         [[ $verbose_enabled != true || ( $output == *'spot-guarded K='* ) ]]
         if [[ $mode == only ]]; then
             grep -qx UNKNOWN <<<"$output"
@@ -190,7 +205,7 @@ if [[ $lazy_enabled == true ]]; then
             status=2
             [[ $mode == fallback ]] && status=0
             output=$(ACACIA_SPOT_MAX_EXPANSIONS=0 run "$status" "${lazy[@]}" \
-                --candidate-mode "$mode")
+                --candidate-mode "$mode" --loss-check-policy scheduling-hint)
             if [[ $mode == only ]]; then
                 grep -qx UNKNOWN <<<"$output"
                 [[ $output != *'fallback provider='* ]]
