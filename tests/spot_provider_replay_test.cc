@@ -22,6 +22,105 @@ void expect (bool condition, const std::string& name) {
     throw std::runtime_error ("FAIL: " + name);
 }
 
+void loss_set_compaction () {
+  // Deliberately avoid Rank's cached summaries and the in-place compaction:
+  // rebuild a list of (rank, proof) pairs with exact coordinate comparisons.
+  const auto leq = [] (const Rank& a, const Rank& b) {
+    for (const auto& [q, value] : a.entries ())
+      if (value > b.at (q)) return false;
+    return true;
+  };
+  const auto exercise = [&] (const std::string& name, const std::vector<Rank>& inputs,
+                             const std::vector<std::size_t>& removed) {
+    LossSet actual;
+    std::vector<std::pair<Rank, std::size_t>> reference;
+    auto queries = inputs;
+    queries.emplace_back (std::vector<Rank::Entry> {}, 3);
+    queries.emplace_back (std::vector<Rank::Entry> {{99, 3}}, 3);
+    // Several generators subsume this query: the FIRST proof must stay identical.
+    queries.emplace_back (
+        std::vector<Rank::Entry> {{0, 3}, {1, 3}, {2, 3}, {3, 3}, {4, 3}, {5, 3}, {6, 3}}, 3);
+    const auto witness = [&] (const Rank& query) -> std::optional<std::size_t> {
+      for (const auto& [rank, proof] : reference)
+        if (leq (rank, query)) return proof;
+      return std::nullopt;
+    };
+#if ACACIA_ENABLE_DIAGNOSTICS
+    std::size_t moves = 0;
+#endif
+    for (std::size_t step = 0; step < inputs.size (); ++step) {
+      const auto& input = inputs[step];
+      const auto proof = 101 + 17 * step;  // Distinct from every vector index.
+      const bool accepted = not witness (input).has_value ();
+      const auto before = actual.removals;
+      std::vector<const Rank::Entry*> payloads;
+      if (accepted) {
+        std::vector<std::pair<Rank, std::size_t>> next;
+        for (std::size_t i = 0; i < reference.size (); ++i) {
+          if (leq (input, reference[i].first)) continue;
+#if ACACIA_ENABLE_DIAGNOSTICS
+          moves += i != next.size ();
+#endif
+          next.push_back (reference[i]);
+          payloads.push_back (actual.ranks ()[i].entries ().data ());
+        }
+        next.emplace_back (input, proof);
+        reference = std::move (next);
+      }
+      expect (actual.insert (input, proof) == accepted, name + ": insertion result");
+      expect (actual.removals - before == removed[step], name + ": removal positions exercised");
+      expect (actual.size () == reference.size () && actual.proof_ids ().size () == reference.size (),
+              name + ": parallel vector lengths");
+      for (std::size_t i = 0; i < reference.size (); ++i) {
+        const auto& rank = actual.ranks ()[i];
+        const auto& [expected, id] = reference[i];
+        expect (rank == expected && rank.hash () == expected.hash () && rank.mass () == expected.mass (),
+                name + ": survivor order, entries and cached summaries");
+        expect (actual.proof_ids ()[i] == id, name + ": proof compacted with its generator");
+        if (i < payloads.size ())
+          expect (rank.entries ().data () == payloads[i], name + ": survivor payload moved, not copied");
+      }
+      for (const auto& query : queries)
+        expect (actual.subsumer (query) == witness (query), name + ": selected proof matches reference");
+#if ACACIA_ENABLE_DIAGNOSTICS
+      expect (actual.compaction_moves == moves && actual.compaction_deep_copies == 0,
+              name + ": diagnostics distinguish moves from deep copies");
+#endif
+      // An input aliasing a live generator is rejected before any move.
+      expect (not actual.insert (actual.ranks ().front (), 9999), name + ": aliased duplicate rejected");
+    }
+  };
+
+  struct Case { const char* name; unsigned mask; std::size_t removed; };
+  for (const auto c : {Case {"no removal", 0, 0}, {"first slot", 1, 1}, {"last slot", 32, 1},
+                       {"alternating slots", 21, 3}, {"all removed", 63, 6}}) {
+    std::vector<Rank> inputs;
+    // Private coordinates make the initial generators pairwise incomparable.
+    // The mask specifies precisely which slots the common-coordinate rank removes.
+    for (StateId i = 0; i < 6; ++i)
+      inputs.emplace_back (std::vector<Rank::Entry> {{0, (c.mask & (1u << i)) ? 2 : 0}, {i + 1, 2}}, 3);
+    inputs.emplace_back (std::vector<Rank::Entry> {{0, 1}}, 3);
+    auto removed = std::vector<std::size_t> (6, 0);
+    removed.push_back (c.removed);
+    inputs.push_back (inputs.back ());  // Rejection must preserve the original proof.
+    removed.push_back (0);
+    exercise (c.name, inputs, removed);
+  }
+
+  std::vector<Rank> inputs;
+  std::vector<std::size_t> removed;
+  for (int value : {2, 1, 0})
+    for (StateId i = 0; i < 6; ++i) {
+      inputs.emplace_back (std::vector<Rank::Entry> {{0, 2}, {i + 1, value}}, 3);
+      removed.push_back (value == 2 ? 0 : 1);
+    }
+  inputs.emplace_back (std::vector<Rank::Entry> {}, 3);
+  removed.push_back (6);
+  exercise ("repeated compaction", inputs, removed);
+  std::cout << "LossSet: no/first/last/alternating/all removals, repeated compaction, payload moves "
+               "and selected-proof identity pass\n";
+}
+
 void check_verifier_split (const Fields& fields) {
   for (const auto* key : {"queries", "steps", "bdd_operations"}) {
     std::size_t sum = 0;
@@ -33,6 +132,10 @@ void check_verifier_split (const Fields& fields) {
 }
 
 void check_solve_counters (const SolveResult& result, const Fields& fields) {
+#if ACACIA_ENABLE_DIAGNOSTICS
+  expect (fields.contains ("losing_compaction_moves") && fields.at ("losing_compaction_deep_copies") == "0",
+          "diagnostic reporter distinguishes compaction moves from deep copies");
+#endif
   expect (result.scan_tombstones + result.scan_prefilter_rejects + result.scan_exact_compares ==
               result.subsumption_nodes_checked, "scan buckets partition every loop iteration");
   expect (result.scan_exact_compares >= result.subsumption_nodes_invalidated,
@@ -1566,6 +1669,7 @@ int main () {
     corrupt_certificates ();
     successor_relations ();
     empty_alphabets_and_failures ();
+    loss_set_compaction ();
   } catch (const std::exception& e) {
     std::cerr << e.what () << '\n';
     return 17;
