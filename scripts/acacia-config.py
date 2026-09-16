@@ -105,6 +105,33 @@ def validate_preset(options: dict[str, Any], presets: dict[str, Any], name: str)
     if values["actioner"] == "no_ios_precomputation" and values["ios_precomputer"] != "delegate":
         raise SystemExit(f"{name}: no_ios_precomputation requires delegate ios_precomputer")
 
+    # These passes either query state acceptance or discard edge marks. Keep
+    # this in sync with Meson's checks: command-line -D overrides bypass presets.
+    # state_is_accepting calls in symmetry.hh and equivariant_k_bounded_safety_aut.hh
+    # were audited but not observed to fail; enable_equivariant_solver stays allowed.
+    if values["transition_acceptance"]:
+        if values["boolean_states"] not in {"transition_core", "no_boolean_states"}:
+            raise SystemExit(
+                f"{name}: transition_acceptance=true requires "
+                "boolean_states=transition_core or no_boolean_states"
+            )
+        if values["aut_preprocessor"] not in {"standard", "no_preprocessing"}:
+            raise SystemExit(
+                f"{name}: transition_acceptance=true requires "
+                "aut_preprocessor=standard or no_preprocessing"
+            )
+        if values["actioner"] != "standard":
+            raise SystemExit(f"{name}: transition_acceptance=true requires actioner=standard")
+        if values["ios_precomputer"] not in {"standard", "powset", "fake_vars"}:
+            raise SystemExit(
+                f"{name}: transition_acceptance=true requires "
+                "ios_precomputer=standard, powset or fake_vars"
+            )
+        if values["spot_guarded_backend"]:
+            raise SystemExit(
+                f"{name}: transition_acceptance=true requires spot_guarded_backend=false"
+            )
+
 
 def validate_preset_metadata(presets: dict[str, Any], name: str) -> None:
     data = presets["presets"][name]

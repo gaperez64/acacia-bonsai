@@ -78,6 +78,11 @@ test ('config-frontends-agree',
       args : [files ('check-config-frontends.py'), meson.project_source_root ()],
       suite : ['unit', 'config-frontends'])
 
+test ('config-transition-acceptance',
+      py,
+      args : [files ('check-transition-acceptance-config.py'), meson.project_source_root ()],
+      suite : ['unit', 'config-frontends'])
+
 if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
   cpre_replay_smoke = find_program ('check-cpre-replay.sh')
   test ('cpre-replay-smoke',
