@@ -14,6 +14,9 @@ import pytest
 
 BENCHMARKING = pathlib.Path(__file__).resolve().parents[2] / "benchmarking"
 SCRIPT = BENCHMARKING / "run-portfolio-pairs.py"
+# A moving ref stops being legacy when --error-policy lands; never update this pin
+# to a newer commit. It must remain the parent of the commit introducing the option.
+LEGACY_SCRIPT_REF = "8a22a015^:benchmarking/run-portfolio-pairs.py"
 PAIRS = {
     "alpha": "real:small:backward,unreal:formula:forward",
     "beta": "real:small:forward,unreal:automaton:forward",
@@ -53,10 +56,18 @@ pairs = load()
 
 @pytest.fixture
 def legacy_pairs():
-    source = subprocess.run(
-        ["git", "show", "origin/master:benchmarking/run-portfolio-pairs.py"],
-        cwd=BENCHMARKING.parent, check=True, capture_output=True,
-    ).stdout
+    try:
+        source = subprocess.run(
+            ["git", "show", LEGACY_SCRIPT_REF],
+            cwd=BENCHMARKING.parent, check=True, capture_output=True,
+        ).stdout
+    except subprocess.CalledProcessError as exc:
+        pytest.skip(
+            f"Cannot read pinned legacy driver {LEGACY_SCRIPT_REF} "
+            f"(shallow clone or missing history): {exc.stderr.decode().strip()}"
+        )
+    if b"--error-policy" in source:
+        pytest.fail(f"Pinned driver {LEGACY_SCRIPT_REF} contains --error-policy and is not legacy")
     # Keep the real historical source inside the worktree so ROOT resolves correctly.
     with tempfile.TemporaryDirectory(prefix=".pytest-legacy-pairs-", dir=BENCHMARKING.parent) as temp:
         script = pathlib.Path(temp) / SCRIPT.name
