@@ -75,6 +75,7 @@ namespace acacia::solver_detail {
                   .count ());
         };
 
+        acacia::spot_records::phase ("action-construction");
         auto inputs_to_ios =
             (ios_precomputer_maker.make (aut, input_support, output_support)) ();
         auto actioner = actioner_maker.make (aut, inputs_to_ios, kfrom);
@@ -93,6 +94,8 @@ namespace acacia::solver_detail {
 
         VECTOR_ELT_T k = kfrom;
         for (;;) {
+          acacia::spot_records::begin_attempt (k);
+          acacia::spot_records::phase ("search");
           actioner.setK (k);
           acacia::diagnostics::set_support_k (static_cast<int> (k));
 
@@ -138,10 +141,12 @@ namespace acacia::solver_detail {
           if (result.status == forward_result_status::resource_limit) {
             const std::string reason = resource_reason (result.resource_limit);
             finish (reason);
+            acacia::spot_records::end_attempt ("RESOURCE_LIMIT", "none");
             return std::nullopt;
           }
 
           if (result.status == forward_result_status::lose_k) {
+            acacia::spot_records::end_attempt ("LOSE_K", "fixed-k-proof");
             if (k >= kto) {
               finish ("forward-kmax-lose");
               return std::nullopt;
@@ -172,6 +177,7 @@ namespace acacia::solver_detail {
 
           SetOfStates candidate {std::move (result.strategy_ranks)};
           const SetOfStates envelope {safe.copy ()};
+          acacia::spot_records::phase ("verification");
           const auto verify_started = clock::now ();
           unsigned long long verification_applications = 0;
           bool verification_budget_exhausted = false;
@@ -186,6 +192,7 @@ namespace acacia::solver_detail {
           acacia::diagnostics::set_forward_certificate_verify_ms (verify_ms);
 
           if (not verified or verification_budget_exhausted) {
+            acacia::spot_records::end_attempt ("UNKNOWN", "failed-verification");
             fallback_to_backward = true;
             const std::string reason =
                 verification_budget_exhausted
@@ -197,6 +204,7 @@ namespace acacia::solver_detail {
             return std::nullopt;
           }
 
+          acacia::spot_records::end_attempt ("WIN_K", "verified-win");
           finish ("forward-verified-win");
           return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
               std::make_pair (k, std::move (candidate)));

@@ -1,0 +1,1640 @@
+{
+  "dependencies": {
+    "posets": "139e14336b7a1f0bc064022e587ea4e1b9a81427",
+    "tlsf_tools": "b42d5ef4a680252e04820ac7f073f5d786a43f7c",
+    "working_tree_identity": "Populated source snapshots without submodule .git metadata; pins are superproject gitlinks, not inferred submodule HEADs",
+    "std_simd_wrap_sha256": "c40aa39eaa0c5b478121e1e92f75b448fa818a1f58401c53a6bc8cf5ed6f5bd0",
+    "std_simd_revision": "31653668ded22df437b2173d3ad13dea2c3345f7",
+    "posets_snapshot_check": {
+      "n_files": 297,
+      "differences": []
+    },
+    "tlsf_tools_snapshot_check": {
+      "n_files": 568,
+      "differences": [
+        "scripts/version-archive.txt"
+      ]
+    }
+  },
+  "schema": "acacia-demand-sparse-p0-v1",
+  "checkout": "/home/gperez/GIT-repos/acacia-wt-demand-sparse",
+  "source_pin": "6410fd3417f5c05f901ed6afc5094947103c157d",
+  "baseline": {
+    "binary": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/bin/candidate-f7919b83",
+    "sha256": "0f4f48b6b751be91d9e0575105d4678d47dbccb8c998c01d71f9597abe22fb99",
+    "mode": "0o555",
+    "source_rev": "f7919b83c4b19a85f22381cc7dbfc98519d81de0",
+    "equivalent_source_pin": "6410fd3417f5c05f901ed6afc5094947103c157d",
+    "source_diff_command": "git diff --stat f7919b83 6410fd34 -- src subprojects meson.build meson.options config",
+    "source_diff_stdout": "",
+    "preset": "otf_sparse_formula",
+    "options_file": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/candidate-options.txt",
+    "options_sha256": "094502d7eda29643553b4d98972a13e7218a08cfd2f42f1d029a53d93f34c0a2",
+    "resolved_options": {
+      "acacia_actioner": "standard",
+      "acacia_aut_preprocessor": "standard",
+      "acacia_boolean_states": "forward_saturation",
+      "acacia_compile_all_components": "False",
+      "acacia_compiler_profile": "release",
+      "acacia_cpre_avoid_unions": "False",
+      "acacia_decompose_spec": "True",
+      "acacia_default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward",
+      "acacia_default_candidate_mode": "only",
+      "acacia_default_k": "99",
+      "acacia_default_kinc": "3",
+      "acacia_default_kmin": "2",
+      "acacia_default_spot_fast": "det",
+      "acacia_default_unreal_x": "both",
+      "acacia_enable_diagnostics": "False",
+      "acacia_enable_equivariant_solver": "True",
+      "acacia_enable_realizability_simplifier": "True",
+      "acacia_enable_syntactic_bypass": "True",
+      "acacia_enable_tlsf_frontend": "True",
+      "acacia_equivariant_exhaustive_detect": "False",
+      "acacia_equivariant_max_orbits": "4096",
+      "acacia_equivariant_max_output_letters": "4096",
+      "acacia_equivariant_max_states": "512",
+      "acacia_equivariant_max_sweep_clients": "4",
+      "acacia_equivariant_min_blocks": "2",
+      "acacia_equivariant_min_clients": "3",
+      "acacia_equivariant_validate_fast_recognition": "False",
+      "acacia_forced_output_contradiction": "True",
+      "acacia_forward_conditional_covering": "False",
+      "acacia_forward_eager_minimal_successors": "False",
+      "acacia_forward_safety_solver": "True",
+      "acacia_input_picker": "critical",
+      "acacia_ios_precomputer": "semantic_mona",
+      "acacia_k_schedule": "linear",
+      "acacia_local_certificate": "False",
+      "acacia_no_simd": "False",
+      "acacia_preset": "otf_sparse_formula",
+      "acacia_profile_dominance": "False",
+      "acacia_simd_is_max": "False",
+      "acacia_spot_guarded_backend": "True",
+      "acacia_spot_guarded_existential_outputs": "False",
+      "acacia_spot_guarded_inequality_covering": "False",
+      "acacia_spot_guarded_lean_verifier": "False",
+      "acacia_spot_guarded_losing_input_search": "False",
+      "acacia_spot_lazy_provider": "True",
+      "acacia_spot_taa_max_rank_nodes": "200000",
+      "acacia_symmetry_profile": "False",
+      "acacia_symmetry_verbose_diagnostics": "False",
+      "acacia_tlsf_corpus_dir": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus",
+      "acacia_transition_acceptance": "False",
+      "acacia_translation_pref": "small",
+      "acacia_vector_downset": "rank_bucketed_vector_backed",
+      "acacia_vector_impl": "auto",
+      "b_lto": "True",
+      "b_ndebug": "true",
+      "buildtype": "release",
+      "optimization": "3"
+    },
+    "arms": [
+      "real:small:backward",
+      "real:small:forward",
+      "unreal:formula:spot-guarded-sparse",
+      "unreal:automaton:forward"
+    ],
+    "resolved_arms": [
+      "real:small:backward:frozen-graph",
+      "real:small:forward:frozen-graph",
+      "unreal:formula:spot-guarded-sparse:frozen-graph",
+      "unreal:automaton:forward:frozen-graph"
+    ],
+    "frontend": "native TLSF -T; declared semantics/target lowered by the pinned frontend",
+    "runtime_flags": "",
+    "ldd": "linux-vdso.so.1 (0x00007fdf8e9c6000)\n\tlibspot.so.0 => /usr/local/lib/libspot.so.0 (0x00007fdf8e400000)\n\tlibbddx.so.0 => /usr/local/lib/libbddx.so.0 (0x00007fdf8e999000)\n\tlibstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007fdf8e000000)\n\tlibgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007fdf8e3d3000)\n\tlibc.so.6 => /lib64/libc.so.6 (0x00007fdf8de07000)\n\tlibm.so.6 => /lib64/libm.so.6 (0x00007fdf8e2bc000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007fdf8e9c8000)",
+    "linked_libraries": [
+      {
+        "soname": "libspot.so.0",
+        "path": "/usr/local/lib/libspot.so.0",
+        "resolved": "/usr/local/lib/libspot.so.0.0.0",
+        "sha256": "0d6dbbb6c985bd3001d1df5b6b562e5b403a00ec0d6bb3275fc0617b3d5faf32"
+      },
+      {
+        "soname": "libbddx.so.0",
+        "path": "/usr/local/lib/libbddx.so.0",
+        "resolved": "/usr/local/lib/libbddx.so.0.0.0",
+        "sha256": "a991f2049c44e3f3cf9102b7d40d9efc2c5bb2b8a3a1af7d120f7c23c9caf44d"
+      },
+      {
+        "soname": "libstdc++.so.6",
+        "path": "/lib64/libstdc++.so.6",
+        "resolved": "/usr/lib64/libstdc++.so.6.0.36",
+        "sha256": "fc224ee3cc56b9b3e58453bfb9a0cac3a696e60fd33ba48b6a30eb22b76cc867"
+      },
+      {
+        "soname": "libgcc_s.so.1",
+        "path": "/lib64/libgcc_s.so.1",
+        "resolved": "/usr/lib64/libgcc_s-16-20260819.so.1",
+        "sha256": "c71a62b5ef442ab8cf4470874dee6f2383d73a744f0006b6d287412f131c2e09"
+      },
+      {
+        "soname": "libc.so.6",
+        "path": "/lib64/libc.so.6",
+        "resolved": "/usr/lib64/libc.so.6",
+        "sha256": "01cccbe278d898add05282986a9346d4dda4b3d2b84bc496f9c04c66016528db"
+      },
+      {
+        "soname": "libm.so.6",
+        "path": "/lib64/libm.so.6",
+        "resolved": "/usr/lib64/libm.so.6",
+        "sha256": "6f7365a58fc0778dbc8869d70cdd4822ab93d879c29e84bb491d447961735e56"
+      }
+    ],
+    "observations": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/d1-candidate.tsv",
+    "observed_result_counts": {
+      "REALIZABLE": 533,
+      "TIMEOUT": 347,
+      "UNREALIZABLE": 641,
+      "UNKNOWN": 1,
+      "MEMOUT": 2
+    }
+  },
+  "external": {
+    "ltlsynt": {
+      "bin": "/usr/local/sbin/ltlsynt",
+      "sha256": "ea761a1c0594278bd4b525369977677520c8b9d3dcc2f5a45dab91d961663900",
+      "version": "/usr/local/sbin/ltlsynt (spot) 2.15.1.dev"
+    },
+    "provenance": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/three-way/d6-provenance.tsv",
+    "observations": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/three-way/ltlsynt.csv",
+    "result_counts": {
+      "REALIZABLE": 573,
+      "TIMEOUT": 255,
+      "UNREALIZABLE": 684,
+      "SYFCO-FAIL": 7,
+      "UNKNOWN": 2,
+      "ERROR": 3
+    }
+  },
+  "corpus": {
+    "list": "tests/suites/benchmarks/syntcomp26/all.list",
+    "sha256": "0226e5cd2cadc033544f0901bd900dd31dd7add813ef216558826468e0b7b5c7",
+    "n_ids": 1524,
+    "duplicate_ids": [],
+    "tlsf_map": {
+      "path": "tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv",
+      "sha256": "9fbc4007b18065296d592f14bd9ef0e9e95a4893a4d4477e0153013fa531f92f",
+      "every_id_mapped_once": true,
+      "n_rows": 1524
+    },
+    "materialized": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus",
+    "marker": {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/.acacia-tlsf-corpus",
+      "sha256": "4b69bad194323325bc424b94419d911b1127b5a0af79cd149a12a3754218c807",
+      "contents": {
+        "entries": 1586,
+        "manifest_sha256": "6f2e459918335f5af41f435d4755bf76352fc11a7d07693fdf5d3786d0bdb615"
+      }
+    },
+    "selected_inputs_sha256": "40be795102f6c70e5fe02ac39145a5ba7157a6d6e87079867182ff0db82cffa5"
+  },
+  "harness": {
+    "helpers": {
+      "run-syntcomp26-coverage.py": {
+        "sha256": "9f11372fcb4214aec672fcbb467b3cb9177d13352f66dad3651f43622c047fab",
+        "git_hash_object": "0178463fdce6781969b9f7e6eaf0dbc604fcdb40",
+        "historical_f7919b83_sha256": "9f11372fcb4214aec672fcbb467b3cb9177d13352f66dad3651f43622c047fab"
+      },
+      "run-subset.py": {
+        "sha256": "a0bf4ce74e33c9c966a5d6c0fcfda0f19d2ab79333c99869b786a8e938cea125",
+        "git_hash_object": "b34168b66d6597d3e90762e7539661a9d6d3beec",
+        "historical_f7919b83_sha256": "a0bf4ce74e33c9c966a5d6c0fcfda0f19d2ab79333c99869b786a8e938cea125"
+      },
+      "benchlib.py": {
+        "sha256": "3989eefa83e9e2c51e79732a36946addbe9e4f0eab2180dca958bf7e2dfcd1cb",
+        "git_hash_object": "818846658d32dae3c45e7fff9bb1e3dc7510d4c2",
+        "historical_f7919b83_sha256": "3989eefa83e9e2c51e79732a36946addbe9e4f0eab2180dca958bf7e2dfcd1cb"
+      },
+      "cactus-report.py": {
+        "sha256": "571179127e908743a1ff59afd5321d596e7bc626a80c751e2b4dec7b1e0df4dc",
+        "git_hash_object": "1189a10e239b7d4f890d074507b084b1da9b1746",
+        "historical_f7919b83_sha256": "571179127e908743a1ff59afd5321d596e7bc626a80c751e2b4dec7b1e0df4dc"
+      }
+    },
+    "threeway_entry_points": [
+      {
+        "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/closing.sh",
+        "sha256": "4fc670e82f49311ec5f15d359e39b93f7ec60fdd8dd252bf059b097bc7b725c9",
+        "commands": "#!/usr/bin/env bash\n# Closing sequence, strictly sequential: D3 pair campaign (rf-ugf, rf-ufa), D1 candidate,\n# D2 baseline, D5 five-arm race. Regime: cgroup MemoryMax=8G, MemorySwapMax=0, no CPU quota,\n# 17 s cap, full 1,524. Waits for CANDIDATE_READY (written by hand at freeze time, lines\n# candidate_bin=, candidate_rev=, candidate_tree=) and a quiet machine before EVERY campaign.\nset -uo pipefail\nMAIN=/home/gperez/GIT-repos/acacia-bonsai\nG=$MAIN/_bm-logs.20260915-closing\nLOG=$G/closing.log\nsay () { echo \"[$(date -u +%FT%TZ)] $*\" >> \"$LOG\"; }\nfail () { say \"ABORT: $*\"; touch \"$G/CLOSING_FAILED\"; exit 1; }\nquiet () {\n    say \"waiting for a quiet machine\"\n    while :; do\n        while ps -eo cmd | grep -qE '[c]odex exec|[n]inja|[c]c1plus|[l]to1|[r]un-syntcomp26-coverage.py|[r]un-portfolio-pairs.py|[m]eson test'; do sleep 30; done\n        sleep 120\n        ps -eo cmd | grep -qE '[c]odex exec|[n]inja|[c]c1plus|[l]to1|[r]un-syntcomp26-coverage.py|[r]un-portfolio-pairs.py|[m]eson test' || break\n    done\n    say \"quiet; load $(cut -d' ' -f1-3 /proc/loadavg)\"\n}\ncd \"$MAIN\"\nsay \"waiting for CANDIDATE_READY\"\nuntil [ -f \"$G/CANDIDATE_READY\" ]; do sleep 60; done\n. \"$G/CANDIDATE_READY\"\nBASE_SRC=/home/gperez/GIT-repos/acacia-wt-baseline-1557235d/build_otf_sparse_formula_release/src/acacia-bonsai\nBASE_SHA=5ed5dccfa36cad97571974c4103149f1f49857855b197c69624b586d16c7a351\n[ -x \"$candidate_bin\" ] || fail \"candidate binary missing: $candidate_bin\"\n[ \"$(sha256sum \"$BASE_SRC\" | cut -d' ' -f1)\" = \"$BASE_SHA\" ] || fail \"baseline hash changed\"\n[ -x /usr/bin/time ] || fail \"GNU time missing for --collect-rusage\"\nif [ ! -f \"$G/bin/FROZEN\" ]; then\n    mkdir -p \"$G/bin\"\n    cp \"$candidate_bin\" \"$G/bin/candidate-$candidate_rev\"; cp \"$BASE_SRC\" \"$G/bin/baseline-1557235d\"\n    chmod 0555 \"$G/bin/\"*\n    { printf 'label\\trev\\ttree\\tsha256\\tsource\\n'\n      printf 'candidate\\t%s\\t%s\\t%s\\t%s\\n' \"$candidate_rev\" \"$candidate_tree\" \"$(sha256sum \"$G/bin/candidate-$candidate_rev\" | cut -d' ' -f1)\" \"$candidate_bin\"\n      printf 'baseline\\t1557235d\\t-\\t%s\\t%s\\n' \"$(sha256sum \"$G/bin/baseline-1557235d\" | cut -d' ' -f1)\" \"$BASE_SRC\"; } > \"$G/bin/freeze-manifest.tsv\"\n    touch \"$G/bin/FROZEN\"; chmod a-w \"$G/bin\"\n    say \"froze binaries: $(tr '\\n' ' ' < \"$G/bin/freeze-manifest.tsv\")\"\nfi\nCAND=\"$G/bin/candidate-$candidate_rev\"; BASE=\"$G/bin/baseline-1557235d\"\nCOMMON=(--list tests/suites/benchmarks/syntcomp26/all.list\n        --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv\n        --tlsf-corpus \"$MAIN/tlsf-corpus\" --memory-max 8G --memory-swap-max 0)\nFIVE=\"real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward,real:small:spot-guarded-sparse\"\nrun_step () {  # name, command...\n    local name=$1; shift\n    [ -f \"$G/$name.done\" ] && { say \"$name already done\"; return; }\n    quiet\n    say \"START $name\"\n    \"$@\" >> \"$G/$name.log\" 2>&1\n    local rc=$?\n    say \"END $name rc=$rc\"\n    echo \"$rc\" > \"$G/$name.done\"\n}\nrun_step d3-pairs python3 /home/gperez/GIT-repos/acacia-wt-pairs-error-policy/benchmarking/run-portfolio-pairs.py --error-policy collect --bin \"$CAND\" --pairs \"$G/d3-pairs.list\" \\\n    \"${COMMON[@]}\" --cap 17 --repetitions 1 --order interleaved \\\n    --preset otf_sparse_formula --acacia-sha \"$candidate_rev\" --output \"$G/d3-pairs.tsv\" --resume\nrun_step d1-candidate python3 benchmarking/run-syntcomp26-coverage.py --bin \"$CAND\" \\\n    --solver-label \"d1-candidate-$candidate_rev\" \"${COMMON[@]}\" --caps 17 --conflict-policy collect \\\n    --collect-rusage --preset otf_sparse_formula --acacia-sha \"$candidate_rev\" --output \"$G/d1-candidate.tsv\" --resume\nrun_step d2-baseline python3 benchmarking/run-syntcomp26-coverage.py --bin \"$BASE\" \\\n    --solver-label d2-baseline-1557235d \"${COMMON[@]}\" --caps 17 --conflict-policy collect \\\n    --collect-rusage --preset otf_sparse_formula --acacia-sha 1557235d --output \"$G/d2-baseline.tsv\" --resume\nrun_step d5-five-arm python3 benchmarking/run-syntcomp26-coverage.py --bin \"$CAND\" \\\n    --solver-label \"d5-five-arm-$candidate_rev\" \"${COMMON[@]}\" --caps 17 --conflict-policy collect \\\n    --collect-rusage --flags \"--arms $FIVE\" --preset otf_sparse_formula --acacia-sha \"$candidate_rev\" \\\n    --output \"$G/d5-five-arm.tsv\" --resume\nsay \"CLOSING CAMPAIGNS DONE\"\ntouch \"$G/CLOSING_DONE\"\n"
+      },
+      {
+        "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/ltlsynt.sh",
+        "sha256": "77834d6b62019ca99d6e6d71570644d53cbd4de8cd578d1a6bf3c9ebdf30a784",
+        "commands": "#!/usr/bin/env bash\n# D6: fresh ltlsynt run on the 1,524 SYNTCOMP26 instances under the closing regime, then the three-way table\n# (ltlsynt, Acacia before the sprint = D2 baseline 1557235d, new Acacia = D1 candidate). Runs after the closing\n# repetitions; run-subset.py refuses to start while acacia-* scopes are running.\nset -uo pipefail\nMAIN=/home/gperez/GIT-repos/acacia-bonsai\nK=$MAIN/_bm-logs.20260915-closing; T=$K/three-way; LOG=$K/ltlsynt.log\nsay () { echo \"[$(date -u +%FT%TZ)] $*\" >> \"$LOG\"; }\nmkdir -p \"$T\"\nsay \"waiting for CLOSING_REPS_DONE\"\nuntil [ -f \"$K/CLOSING_REPS_DONE\" ]; do sleep 60; done\ncd \"$MAIN\"\nLT=$(command -v ltlsynt)\n{ echo \"ltlsynt_bin\t$LT\"; echo \"ltlsynt_sha256\t$(sha256sum \"$LT\" | cut -d' ' -f1)\"\n  echo \"ltlsynt_version\t$(ltlsynt --version 2>&1 | head -1)\"; echo \"syfco_version\t$(syfco --version 2>&1 | head -1)\"\n  echo \"kernel\t$(uname -r)\"; echo \"started_utc\t$(date -u +%FT%TZ)\"; } > \"$T/d6-provenance.tsv\"\ngrep -vE '^\\s*(#|$)' tests/suites/benchmarks/syntcomp26/all.list > \"$T/all-instances.list\"\nsay \"instances: $(wc -l < \"$T/all-instances.list\")\"\nif [ ! -f \"$K/d6-ltlsynt.done\" ]; then\n    sleep 120; say \"START d6-ltlsynt\"\n    python3 benchmarking/run-subset.py --tool ltlsynt --bin \"$LT\" --list \"$T/all-instances.list\" \\\n        --tlsf-map tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv --tlsf-corpus \"$MAIN/tlsf-corpus\" \\\n        --syfco-cache \"$T/syfco-cache\" --systemd-scope --memory-max 8G --memory-swap-max 0 --timeout 17 \\\n        --csv \"$T/ltlsynt.csv\" > \"$K/d6-ltlsynt.log\" 2>&1\n    rc=$?; echo $rc > \"$K/d6-ltlsynt.done\"; say \"END d6-ltlsynt rc=$rc\"\nfi\necho \"finished_utc\t$(date -u +%FT%TZ)\" >> \"$T/d6-provenance.tsv\"\npython3 - \"$K\" \"$T\" <<'PY' >> \"$LOG\" 2>&1\nimport csv, sys, pathlib\nK, T = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])\nfor src, dst in (('d2-baseline', 'acacia-1557235d'), ('d1-candidate', 'acacia-new')):\n    rows = list(csv.DictReader(open(K / f'{src}-summary.tsv'), delimiter='\\t'))\n    with open(T / f'{dst}.csv', 'w', newline='') as h:\n        w = csv.writer(h); w.writerow(['instance', 'result', 'seconds', 'exit'])\n        for r in rows:\n            solved = r['still_unsolved_at_max_cap'] == 'false'\n            res = r['decisive_result'] if solved else (r['failure_kind_at_max_cap'] or 'UNSOLVED')\n            secs = r['decisive_seconds'] if solved else r.get('max_cap_s', '17')\n            w.writerow([r['instance'], res, secs, 0])\n    print(f'converted {src} -> {dst}.csv ({len(rows)} rows)')\nPY\npython3 benchmarking/cactus-report.py --csv \"ltlsynt=$T/ltlsynt.csv\" --csv \"Acacia before sprint (1557235d)=$T/acacia-1557235d.csv\" \\\n    --csv \"Acacia new=$T/acacia-new.csv\" --title \"SYNTCOMP26 (1,524): ltlsynt vs Acacia before and after the sprint\" \\\n    --timeout 17 --out-prefix \"$T/three-way\" --markdown \"$T/three-way.md\" >> \"$LOG\" 2>&1 || say \"cactus-report failed (data intact)\"\nsay \"LTLSYNT DONE\"; touch \"$K/LTLSYNT_DONE\"\n"
+      }
+    ],
+    "resume_guard_scope": "Binary/configuration/resource checks only; also validate corpus/helpers/host/epoch/instrumentation/repetition before reuse."
+  },
+  "host": {
+    "kernel": "7.2.5-200.fc44.x86_64",
+    "uname": "Linux fedora.home 7.2.5-200.fc44.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Sep 11 15:11:05 UTC 2026 x86_64 GNU/Linux",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-11850H @ 2.50GHz",
+    "spot": "2.15.1.dev",
+    "gxx": "g++ (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+    "historical_kernel": "7.2.5-200.fc44.x86_64",
+    "linked_library_epoch_caveat": "Hashes resolve current libraries; closing did not freeze historical library bytes separately."
+  },
+  "regime": {
+    "cap": 17,
+    "memory": "8G",
+    "memory_bytes": 8589934592,
+    "swap": 0,
+    "cpu_quota": "none",
+    "allowed_cpus": "none",
+    "invocations": "sequential",
+    "instrumentation": "D1/D6 primary timings without worker capture; S0/A2b/D7 separate capture-only diagnostics",
+    "repetition_id": "D1 primary run_index 0..1523 / D6 one primary per ID",
+    "measurement_epoch": {
+      "d1_first": "2026-09-15T23:35:38.211648Z",
+      "d1_last": "2026-09-16T01:28:07.698370Z",
+      "d6_started": "2026-09-16T06:32:16Z",
+      "d6_finished": "2026-09-16T07:56:50Z"
+    }
+  },
+  "packages": {
+    "P0": {
+      "status": "modify",
+      "source_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        16,
+        17,
+        18,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        36,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47
+      ]
+    },
+    "P1a": {
+      "status": "modify",
+      "source_indices": [
+        3,
+        4,
+        5,
+        19
+      ]
+    },
+    "P1b": {
+      "status": "modify",
+      "source_indices": [
+        3,
+        14,
+        15
+      ]
+    },
+    "P2": {
+      "status": "new",
+      "source_indices": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        14,
+        15,
+        20,
+        21,
+        22,
+        23,
+        25,
+        27,
+        28,
+        37,
+        38,
+        39,
+        40,
+        41,
+        49,
+        50,
+        51
+      ]
+    },
+    "P3a": {
+      "status": "modify",
+      "source_indices": [
+        10,
+        14,
+        26
+      ]
+    },
+    "P3b": {
+      "status": "deferred",
+      "source_indices": [
+        11,
+        14,
+        24,
+        26
+      ]
+    },
+    "P3c": {
+      "status": "deferred",
+      "source_indices": [
+        12,
+        14,
+        24,
+        26
+      ]
+    },
+    "P3d": {
+      "status": "deferred",
+      "source_indices": [
+        13,
+        14,
+        24,
+        26
+      ]
+    },
+    "P4": {
+      "status": "deferred",
+      "source_indices": [
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48
+      ]
+    },
+    "P5": {
+      "status": "modify",
+      "source_indices": [
+        33,
+        34,
+        35,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47
+      ]
+    }
+  },
+  "sources": [
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "src/solver/spot_worker_record.hh",
+      "symbol": "class Record {",
+      "reason": "Extend the existing atomic snapshot/history sink with attempt resets, end evidence and fallback segments; no new sink.",
+      "line": 33,
+      "git_hash_object": "b24ab9139744c7dfd1e534d3af7d737b0ca4bfd0",
+      "baseline_git_blob": "5706b9cddfb66999f8d318e4f018cddbaea9f735"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "src/solver/diagnostics.hh",
+      "symbol": "inline bool finish",
+      "reason": "Publish observed worker result through the existing finish boundary; retain monotonic timers and scoped diagnostics.",
+      "line": 1013,
+      "git_hash_object": "816dba2edeaf5391b83853c20783346a92849c99",
+      "baseline_git_blob": "b2d711cdeffebc9ecb10cf2c7d764a392a2f704e"
+    },
+    {
+      "packages": [
+        "P0",
+        "P2"
+      ],
+      "status": "modify",
+      "file": "src/solver/solver_invoker.cc",
+      "symbol": "acacia::spot_records::Record capture",
+      "reason": "Mark transformed worker, preprocessing and Boolean discovery; P2 can select its factory here later.",
+      "line": 432,
+      "git_hash_object": "5e172276288e4d449d65d57ebf9854f3f4818f57",
+      "baseline_git_blob": "0854648665318fdb343ac9471f914a7926607ed9"
+    },
+    {
+      "packages": [
+        "P0",
+        "P1a",
+        "P1b"
+      ],
+      "status": "modify",
+      "file": "src/solver/solve_game_impl.hh",
+      "symbol": "for (long long k = kmin",
+      "reason": "P0 marks attempts only; frozen sparse RowStore remains inside this K loop for P1b.",
+      "line": 203,
+      "git_hash_object": "99bcfa216cc5713d16f118a424fd7c338f29943a",
+      "baseline_git_blob": "283455dcaf6316406276943bf16fa5d816c70469"
+    },
+    {
+      "packages": [
+        "P0",
+        "P1a",
+        "P2"
+      ],
+      "status": "modify",
+      "file": "src/solver/spot_lazy_worker.hh",
+      "symbol": "game::RowStore store",
+      "reason": "P0 repairs attempt reporting; immutable RowStore retention already exists outside K.",
+      "line": 88,
+      "git_hash_object": "398547b5380cc1fbae1acbb6644fafb0bb5f7bdf",
+      "baseline_git_blob": "f47f9eea2b04435be0e93831f9602b6e391ed582"
+    },
+    {
+      "packages": [
+        "P1a",
+        "P2"
+      ],
+      "status": "already present",
+      "file": "src/solver/spot_lazy_game.hh",
+      "symbol": "class Search {",
+      "reason": "Shared exact sparse engine and independent winning/losing checkers remain authoritative.",
+      "line": 1032,
+      "git_hash_object": "b4f93020aa5f565f771783746874bb8abf7546b5",
+      "baseline_git_blob": "b9c1325c51d8c3203b3d8cf903336d2276706701"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "modify",
+      "file": "src/solver/spot_lazy_game.hh",
+      "symbol": "class RowStore {",
+      "reason": "Current constructors accept FrozenAcacia or LazyBuchiView, not a generic twa; later add one generic path.",
+      "line": 121,
+      "git_hash_object": "b4f93020aa5f565f771783746874bb8abf7546b5",
+      "baseline_git_blob": "b9c1325c51d8c3203b3d8cf903336d2276706701"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "already present",
+      "file": "src/solver/spot_lazy_game.hh",
+      "symbol": "class Reader {",
+      "reason": "Reuse verifier reconstruction and current sparse Reader.",
+      "line": 298,
+      "git_hash_object": "b4f93020aa5f565f771783746874bb8abf7546b5",
+      "baseline_git_blob": "b9c1325c51d8c3203b3d8cf903336d2276706701"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "already present",
+      "file": "src/solver/spot_lazy_game.hh",
+      "symbol": "class Oracle {",
+      "reason": "Reuse guarded predicates and current limits.",
+      "line": 360,
+      "git_hash_object": "b4f93020aa5f565f771783746874bb8abf7546b5",
+      "baseline_git_blob": "b9c1325c51d8c3203b3d8cf903336d2276706701"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "already present",
+      "file": "src/solver/spot_lazy_game.hh",
+      "symbol": "class CertificateSource final",
+      "reason": "Reuse independent logical row reconstruction with retained provider ownership.",
+      "line": 250,
+      "git_hash_object": "b4f93020aa5f565f771783746874bb8abf7546b5",
+      "baseline_git_blob": "b9c1325c51d8c3203b3d8cf903336d2276706701"
+    },
+    {
+      "packages": [
+        "P3a"
+      ],
+      "status": "modify",
+      "file": "src/solver/spot_lazy_game.hh",
+      "symbol": "generators_[write] = generators_[read]",
+      "reason": "Deep-copy compaction remains; the move change is a separate package.",
+      "line": 669,
+      "git_hash_object": "b4f93020aa5f565f771783746874bb8abf7546b5",
+      "baseline_git_blob": "b9c1325c51d8c3203b3d8cf903336d2276706701"
+    },
+    {
+      "packages": [
+        "P3b"
+      ],
+      "status": "deferred",
+      "file": "src/solver/spot_lazy_game.hh",
+      "symbol": "++nodes_checked_",
+      "reason": "Broad node scan exists; sampled CPU gate is unevaluated.",
+      "line": 1278,
+      "git_hash_object": "b4f93020aa5f565f771783746874bb8abf7546b5",
+      "baseline_git_blob": "b9c1325c51d8c3203b3d8cf903336d2276706701"
+    },
+    {
+      "packages": [
+        "P3c"
+      ],
+      "status": "deferred",
+      "file": "src/solver/spot_lazy_game.hh",
+      "symbol": "class LossSet {",
+      "reason": "No sampled >=10% CPU plus >=128-live-generator query evidence; retain scalar exact filtering.",
+      "line": 624,
+      "git_hash_object": "b4f93020aa5f565f771783746874bb8abf7546b5",
+      "baseline_git_blob": "b9c1325c51d8c3203b3d8cf903336d2276706701"
+    },
+    {
+      "packages": [
+        "P3d"
+      ],
+      "status": "deferred",
+      "file": "src/solver/sparse_forward_rank.hh",
+      "symbol": "std::vector<Entry> entries_",
+      "reason": "Owning vectors remain; allocation/copy and duplicate-byte gates are unevaluated.",
+      "line": 107,
+      "git_hash_object": "6977c71469ddf410656a9f985da1a8b5e1d36448",
+      "baseline_git_blob": "6977c71469ddf410656a9f985da1a8b5e1d36448"
+    },
+    {
+      "packages": [
+        "P1b",
+        "P2",
+        "P3a",
+        "P3b",
+        "P3c",
+        "P3d"
+      ],
+      "status": "already present",
+      "file": "src/solver/sparse_forward_rank.hh",
+      "symbol": "class SparseForwardRank",
+      "reason": "Reuse exact sparse support/hash/mass/order; absent coordinates remain -1.",
+      "line": 17,
+      "git_hash_object": "6977c71469ddf410656a9f985da1a8b5e1d36448",
+      "baseline_git_blob": "6977c71469ddf410656a9f985da1a8b5e1d36448"
+    },
+    {
+      "packages": [
+        "P1b",
+        "P2"
+      ],
+      "status": "already present",
+      "file": "src/solver/spot_rows.hh",
+      "symbol": "struct GenericTransitionBuchi",
+      "reason": "Underlying SpotRows already has generic transition-Buchi support, stable IDs and transactional rows.",
+      "line": 32,
+      "git_hash_object": "ed440f94088fb127bbae82fea63edb6425ea309f",
+      "baseline_git_blob": "ed440f94088fb127bbae82fea63edb6425ea309f"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "src/solver/forward_k_bounded_safety_aut.hh",
+      "symbol": "std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> solve",
+      "reason": "Mark shared action construction, K search, verification and attempt outcome.",
+      "line": 53,
+      "git_hash_object": "102b64b1af6e5e65ea8a5ed1a5c275ce8036cc7b",
+      "baseline_git_blob": "5b3ae2dc119e4234d97bb4a36620d97011dc67ce"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "src/solver/k_bounded_safety_aut.hh",
+      "symbol": "std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> solve",
+      "reason": "Mark backward action/search/K boundaries without calling fixed-point evidence an independent certificate check.",
+      "line": 150,
+      "git_hash_object": "aee9871c2e638d09046c5c18dcb5b034ae7dbdbc",
+      "baseline_git_blob": "4f9f846ae7e62c285140db423a4089e34249cd1b"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "src/solver/spot_guarded_forward_safety.hh",
+      "symbol": "SolveResult solve",
+      "reason": "Flush dense guarded verification entry before the checker can be interrupted.",
+      "line": 246,
+      "git_hash_object": "0dc656ee3fb54cc2dbd4a25015aab28eef934c73",
+      "baseline_git_blob": "2b35ef27390541150c06be3ae5bab9472169e5ee"
+    },
+    {
+      "packages": [
+        "P1a"
+      ],
+      "status": "modify",
+      "file": "src/solver/k_schedule.hh",
+      "symbol": "struct loss_evidence",
+      "reason": "have_certificate is separate from LOSE_K; future scheduling hints must leave it false.",
+      "line": 11,
+      "git_hash_object": "3fe1840038ca6f72d16df9c87ca51ab7fbc26e14",
+      "baseline_git_blob": "3fe1840038ca6f72d16df9c87ca51ab7fbc26e14"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "modify",
+      "file": "src/solver/game_backend.hh",
+      "symbol": "enum class automaton_provider",
+      "reason": "Typed provider parser exists; closure-buchi is absent.",
+      "line": 19,
+      "git_hash_object": "5b95bd8a32919ab75f7218afea21c4bebeb1e80d",
+      "baseline_git_blob": "5b95bd8a32919ab75f7218afea21c4bebeb1e80d"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "modify",
+      "file": "src/portfolio_arm.hh",
+      "symbol": "if (third_colon != std::string::npos)",
+      "reason": "Fourth provider field already parses; actual path is src/portfolio_arm.hh, not src/solver/.",
+      "line": 138,
+      "git_hash_object": "883c47782854e85c8214938ea93242708fa4ee73",
+      "baseline_git_blob": "883c47782854e85c8214938ea93242708fa4ee73"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "modify",
+      "file": "src/arg_parser.hh",
+      "symbol": "if (arm.provider != acacia::automaton_provider::frozen_graph)",
+      "reason": "Provider compile gate and backend/polarity validation already exist at src/arg_parser.hh.",
+      "line": 689,
+      "git_hash_object": "cb6d71df052e073d2eb2ce4e811bfd487995d0e2",
+      "baseline_git_blob": "cb6d71df052e073d2eb2ce4e811bfd487995d0e2"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "modify",
+      "file": "src/research/spot_provider_replay.cc",
+      "symbol": "void usage",
+      "reason": "Reuse C4/C5 eager/lazy, transformed formula/partition, limits and repeated-K loop; selector/export missing.",
+      "line": 255,
+      "git_hash_object": "3afb66674cf6d0b7deed34ca355da1a87809fca0",
+      "baseline_git_blob": "3afb66674cf6d0b7deed34ca355da1a87809fca0"
+    },
+    {
+      "packages": [
+        "P3b",
+        "P3c",
+        "P3d"
+      ],
+      "status": "deferred",
+      "file": "src/research/antichain_replay.cc",
+      "symbol": "void usage",
+      "reason": "Dense snapshot replay exists; no sparse trace mode; extend only after a gate fires.",
+      "line": 73,
+      "git_hash_object": "bb0beb95bf86ca09b4a4d337396bbd42fa2917a3",
+      "baseline_git_blob": "bb0beb95bf86ca09b4a4d337396bbd42fa2917a3"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "already present",
+      "file": "tests/spot_provider_replay_test.cc",
+      "symbol": "int main",
+      "reason": "Reuse exact/cross-engine and certificate mutation tests, compiled in multiple policy variants.",
+      "line": 1542,
+      "git_hash_object": "cf36e4a3bf329acbd8d8d09c0ad73caf06a263e5",
+      "baseline_git_blob": "cf36e4a3bf329acbd8d8d09c0ad73caf06a263e5"
+    },
+    {
+      "packages": [
+        "P3a",
+        "P3b",
+        "P3c",
+        "P3d"
+      ],
+      "status": "already present",
+      "file": "tests/sparse_forward_rank_test.cc",
+      "symbol": "int main",
+      "reason": "Reuse normalization, growth-stable hashing, mass and exact sparse/dense order checks.",
+      "line": 179,
+      "git_hash_object": "694538eecf2f936dba677eea403e6908eacdc453",
+      "baseline_git_blob": "694538eecf2f936dba677eea403e6908eacdc453"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "already present",
+      "file": "tests/spot_lazy_buchi_view_test.cc",
+      "symbol": "void language_checks",
+      "reason": "Reuse complete materialization and Spot are_equivalent language cross-checks.",
+      "line": 117,
+      "git_hash_object": "0c69790c1d1241afbb805827ffbc9def843046e7",
+      "baseline_git_blob": "0c69790c1d1241afbb805827ffbc9def843046e7"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "already present",
+      "file": "benchmarking/spot-provider-replay.py",
+      "symbol": "def equivalence",
+      "reason": "Reuse C4/C5 identity-aware fixed-K comparison; it is not a translator language proof.",
+      "line": 65,
+      "git_hash_object": "d180f5b3f50ca62a3f2ec838b9e18a00437d9620",
+      "baseline_git_blob": "d180f5b3f50ca62a3f2ec838b9e18a00437d9620"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "benchmarking/summarize-worker-phases.py",
+      "symbol": "def load_workers",
+      "reason": "Remove fixed cohort/single sparse arm assumptions; preserve censoring and recover only complete history prefixes.",
+      "line": 164,
+      "git_hash_object": "6c0e76a7723d296314f91cef5e823137ab8e4f48",
+      "baseline_git_blob": "5eb0c9b87990bdbd3d0de1cf4b303a8f9504220c"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "tests/diagnostics_attempt_test.cc",
+      "symbol": "void worker_records",
+      "reason": "Extend existing diagnostic fixture with two attempts, fallback, exceptions, real parent kill and nested accounting.",
+      "line": 21,
+      "git_hash_object": "2feb9f94b875efbcd0a92630e90c344dcebb9ae8",
+      "baseline_git_blob": "20c8f9cc4c28320d0fd923aa805c266b4cda4927"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "tests/pytest/test_summarize_diag_phases.py",
+      "symbol": "def load_worker_module",
+      "reason": "Extend phase fixtures for legacy, cancellation, truncation and arbitrary cohorts/arm counts.",
+      "line": 157,
+      "git_hash_object": "a0bfa36eb0bc46d0324d2b88834a203d93b3386b",
+      "baseline_git_blob": "a01a957456506fd5d0611dee1ef883d17728ae68"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "tests/check-spot-worker.py",
+      "symbol": "cases =",
+      "reason": "Extend native TLSF live worker fixture with lifecycle/history and inclusive row-time assertions.",
+      "line": 28,
+      "git_hash_object": "3f470098f15c1b7729d613b1d005d70a950a11f2",
+      "baseline_git_blob": "04d1b1c0adbdb0ecf2083fadc6cf3ef064857937"
+    },
+    {
+      "packages": [
+        "P0",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "benchmarking/run-syntcomp26-coverage.py",
+      "symbol": "OUTPUT_COLUMNS",
+      "reason": "Reuse resume, durable results, full-invocation limits, CPU quota/cpuset checks; no runner changes.",
+      "line": 51,
+      "git_hash_object": "0178463fdce6781969b9f7e6eaf0dbc604fcdb40",
+      "baseline_git_blob": "0178463fdce6781969b9f7e6eaf0dbc604fcdb40"
+    },
+    {
+      "packages": [
+        "P0",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "benchmarking/benchlib.py",
+      "symbol": "def run_systemd_scope",
+      "reason": "Reuse common bounded execution/normalization/PAR2; no execution of campaigns in P0.",
+      "line": 512,
+      "git_hash_object": "818846658d32dae3c45e7fff9bb1e3dc7510d4c2",
+      "baseline_git_blob": "818846658d32dae3c45e7fff9bb1e3dc7510d4c2"
+    },
+    {
+      "packages": [
+        "P5"
+      ],
+      "status": "modify",
+      "file": "benchmarking/cactus-report.py",
+      "symbol": "def render_markdown",
+      "reason": "Existing PAR2 total/equal-set checks/PNG/PDF; later add missing summary fields, untouched in P0.",
+      "line": 183,
+      "git_hash_object": "1189a10e239b7d4f890d074507b084b1da9b1746",
+      "baseline_git_blob": "1189a10e239b7d4f890d074507b084b1da9b1746"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "already present",
+      "file": "benchmarking/freeze-baseline-manifest.py",
+      "symbol": "def build_metadata",
+      "reason": "Useful hash/build collection patterns; build-directory schema does not describe the retained external binary and campaign ledger.",
+      "line": 156,
+      "git_hash_object": "2ce5165dd281e9907335597ac33481da0b52ce39",
+      "baseline_git_blob": "2ce5165dd281e9907335597ac33481da0b52ce39"
+    },
+    {
+      "packages": [
+        "P2",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "config/acacia-options.json",
+      "symbol": "{",
+      "reason": "Registry/frontends already agree; do not add a build variant or change shipping presets in P0.",
+      "line": 1,
+      "git_hash_object": "c2fec7da1859d1b8d08a7faa91da080a31050403",
+      "baseline_git_blob": "c2fec7da1859d1b8d08a7faa91da080a31050403"
+    },
+    {
+      "packages": [
+        "P2",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "config/acacia-presets.json",
+      "symbol": "{",
+      "reason": "Registry/frontends already agree; do not add a build variant or change shipping presets in P0.",
+      "line": 1,
+      "git_hash_object": "ef243c9ad67e8533cbe93c73edd63d49aab52821",
+      "baseline_git_blob": "ef243c9ad67e8533cbe93c73edd63d49aab52821"
+    },
+    {
+      "packages": [
+        "P2",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "meson.options",
+      "symbol": "option('build_tests'",
+      "reason": "Registry/frontends already agree; do not add a build variant or change shipping presets in P0.",
+      "line": 1,
+      "git_hash_object": "70a96b2be6884c24f6cd543f5ed0b3ca3dc61eed",
+      "baseline_git_blob": "70a96b2be6884c24f6cd543f5ed0b3ca3dc61eed"
+    },
+    {
+      "packages": [
+        "P2",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "meson.build",
+      "symbol": "project (",
+      "reason": "Registry/frontends already agree; do not add a build variant or change shipping presets in P0.",
+      "line": 1,
+      "git_hash_object": "5b23bf975155b380eec7207bd8da10472f212f8e",
+      "baseline_git_blob": "5b23bf975155b380eec7207bd8da10472f212f8e"
+    },
+    {
+      "packages": [
+        "P2",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "src/config/acacia_build_config.hh.in",
+      "symbol": "#pragma once",
+      "reason": "Registry/frontends already agree; do not add a build variant or change shipping presets in P0.",
+      "line": 1,
+      "git_hash_object": "cdc151eaa049602fe34ad1080c669224da58d8d2",
+      "baseline_git_blob": "cdc151eaa049602fe34ad1080c669224da58d8d2"
+    },
+    {
+      "packages": [
+        "P0",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "tests/suites/benchmarks/syntcomp26/all.list",
+      "symbol": "01.ltl",
+      "reason": "Existing logical corpus list; validated unchanged, do not rebuild the universe.",
+      "line": 4,
+      "git_hash_object": "2eb83157ac81706c48b778418d7082cd5cf335bc",
+      "baseline_git_blob": "2eb83157ac81706c48b778418d7082cd5cf335bc"
+    },
+    {
+      "packages": [
+        "P0",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv",
+      "symbol": "instance",
+      "reason": "Existing native TLSF source map; every selected ID maps exactly once.",
+      "line": 1,
+      "git_hash_object": "591e29bd527f0c6b472a9de27c8af0e71e013490",
+      "baseline_git_blob": "591e29bd527f0c6b472a9de27c8af0e71e013490"
+    },
+    {
+      "packages": [
+        "P0",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "benchmarking/coverage-frontier-20260912/diagnostic-cohort.tsv",
+      "symbol": "instance",
+      "reason": "Existing frozen cohort and tiers; no reselection.",
+      "line": 1,
+      "git_hash_object": "953bb43f6c6ebb571024b3caa3ea1f8b3d64fada",
+      "baseline_git_blob": "953bb43f6c6ebb571024b3caa3ea1f8b3d64fada"
+    },
+    {
+      "packages": [
+        "P0",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "benchmarking/coverage-frontier-20260912/p1-pairs.md",
+      "symbol": "# P1",
+      "reason": "Existing selector/pair evidence; reuse verdict sets under their own identity.",
+      "line": 1,
+      "git_hash_object": "1855dd1f4a0cbf3bb19caee431e6131f0d3b8de8",
+      "baseline_git_blob": "1855dd1f4a0cbf3bb19caee431e6131f0d3b8de8"
+    },
+    {
+      "packages": [
+        "P0",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "benchmarking/portfolio-evidence-20260910/PROVENANCE",
+      "symbol": "question:",
+      "reason": "Existing isolated-arm/race identities, including the CPU-quota distinction.",
+      "line": 1,
+      "git_hash_object": "01851dbb4760b4015b56a897e72f30b2b8b9941f",
+      "baseline_git_blob": "01851dbb4760b4015b56a897e72f30b2b8b9941f"
+    },
+    {
+      "packages": [
+        "P0",
+        "P4",
+        "P5"
+      ],
+      "status": "already present",
+      "file": "subprojects/std-simd.wrap",
+      "symbol": "revision =",
+      "reason": "Reuse the existing pinned SIMD abstraction only if a later profile gate fires.",
+      "line": 3,
+      "git_hash_object": "be54171e2fbc0f8b3e38829e7af05af3eba267ff",
+      "baseline_git_blob": "be54171e2fbc0f8b3e38829e7af05af3eba267ff"
+    },
+    {
+      "packages": [
+        "P4"
+      ],
+      "status": "deferred",
+      "file": "benchmarking/COVERAGE-DIRECTED-FORWARD-SPRINT.md",
+      "symbol": "## D. Family-level frontiers",
+      "reason": "Use named five-arm gains and losses to screen one four-arm replacement later.",
+      "line": 65,
+      "git_hash_object": "18392832fa449d05d65c86e4b0b7671ab8d015ac",
+      "baseline_git_blob": "18392832fa449d05d65c86e4b0b7671ab8d015ac"
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "new",
+      "file": "src/solver/closure_buchi_provider.hh",
+      "symbol": "closure-buchi (absent)",
+      "reason": "New closure provider is reserved for P2; absent files have no blob hash or line.",
+      "line": null,
+      "git_hash_object": null
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "new",
+      "file": "src/solver/closure_buchi_provider.cc",
+      "symbol": "closure-buchi (absent)",
+      "reason": "New closure provider is reserved for P2; absent files have no blob hash or line.",
+      "line": null,
+      "git_hash_object": null
+    },
+    {
+      "packages": [
+        "P2"
+      ],
+      "status": "new",
+      "file": "tests/closure_buchi_provider_test.cc",
+      "symbol": "closure-buchi (absent)",
+      "reason": "New closure provider is reserved for P2; absent files have no blob hash or line.",
+      "line": null,
+      "git_hash_object": null
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "src/solver/spot_nba_fastpath.hh",
+      "symbol": "inline fast_path_result try_spot_nba_fast_path",
+      "reason": "Record direct Spot solving and GFG precondition checks as unbounded attempts with the effective backend.",
+      "baseline_git_blob": "258886830641f1ac3c944d7afa24af2fe54c85db",
+      "line": 442,
+      "git_hash_object": "bd3ba3d911b0de2a91ffa6932f1e4df7ca55ea97"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "src/solver/equivariant_k_bounded_safety_aut.hh",
+      "symbol": "result<SetOfStates> solve_orbit_sweep",
+      "reason": "Record both exact equivariant K loops, construction, search, outcomes and declines.",
+      "baseline_git_blob": "00247affc1942ced11ded22a19dcd1dc284eddbf",
+      "line": 545,
+      "git_hash_object": "696e963a73aff7302afeb22e4129772140fee276"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "tests/spot_nba_fastpath_test.cc",
+      "symbol": "bool fast_path_records",
+      "reason": "Check deterministic/GFG loss records and distinguish GFG precondition verification from solving.",
+      "baseline_git_blob": "67c7841ac20bf6bac90734e8b684221cff9546d4",
+      "line": 119,
+      "git_hash_object": "672dbbe6eb5ee9c0e71dc355c18cb13160aaa51e"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "tests/equivariant_pre_test.cc",
+      "symbol": "bool check_record_lifecycle",
+      "reason": "Check accepted closure/sweep wins, repeated-K losses and ordered lifecycle boundaries.",
+      "baseline_git_blob": "984d8d94e8eaf8b1238adc1503955905afdf94bb",
+      "line": 517,
+      "git_hash_object": "92c2594f163fd290012cc6828f17efd361b83a4e"
+    },
+    {
+      "packages": [
+        "P0"
+      ],
+      "status": "modify",
+      "file": "src/solver/solver_invoker.hh",
+      "symbol": "inline bool finish_empty_translation",
+      "reason": "Keep the zero-state worker return testable: unbounded language evidence, with real/unreal polarity unchanged.",
+      "baseline_git_blob": "37aecf6d1ebc6db15c4e913094bc4592d840c996",
+      "line": 44,
+      "git_hash_object": "667878eb7737cdac4092b0ecf2db5faee1d8128c"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/bin/candidate-f7919b83",
+      "status": "reuse",
+      "reason": "Frozen 0555 binary; matches retained freeze manifest and every D1 binary_sha256; source-equivalent to 6410fd34.",
+      "sha256": "0f4f48b6b751be91d9e0575105d4678d47dbccb8c998c01d71f9597abe22fb99",
+      "bytes": 1278336
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/bin/freeze-manifest.tsv",
+      "status": "reuse",
+      "reason": "Original binary/source identity.",
+      "sha256": "d4dfb006736e491552c1471692fae92d9a6536f9f28f9c46fea6a946d8b0bc2f",
+      "bytes": 419
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/candidate-options.txt",
+      "status": "reuse",
+      "reason": "Resolved option set for this frozen candidate, including native release profile and four arms.",
+      "sha256": "094502d7eda29643553b4d98972a13e7218a08cfd2f42f1d029a53d93f34c0a2",
+      "bytes": 2009
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/d1-candidate.tsv",
+      "status": "reuse",
+      "reason": "1524 primary uniform-17-second observations; retain raw exit/status and repetition identity.",
+      "sha256": "29cf79c82674a1e76686fef1b539985764736e06070449d9e0d7c1207b3199dc",
+      "bytes": 519327
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/d1-candidate-summary.tsv",
+      "status": "reuse",
+      "reason": "Derived D1 summary; one cap only, so no staged-cap timing substitution.",
+      "sha256": "c88f31fd3453d704f5477b450f38821f635e0b78e96aac99857dce9f148121b4",
+      "bytes": 146838
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/three-way/ltlsynt.csv",
+      "status": "reuse",
+      "reason": "1524 primary external observations from same closing epoch; preserve conversion failures.",
+      "sha256": "3edbe5a2ad649f68add59896329eecdbedde775bf92ff732e4b0185af18af5aa",
+      "bytes": 72322
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/three-way/d6-provenance.tsv",
+      "status": "reuse",
+      "reason": "External hash/version/kernel and epoch; literal backslash-t separators in retained file.",
+      "sha256": "3b18ad91f5d283995c2cf4ae9a7d84c13d120a7dd7e71ac7427d9c418456c963",
+      "bytes": 285
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/closing.sh",
+      "status": "reuse",
+      "reason": "Retained Acacia orchestration entry point; documentation only, never executed in P0.",
+      "sha256": "4fc670e82f49311ec5f15d359e39b93f7ec60fdd8dd252bf059b097bc7b725c9",
+      "bytes": 4292
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/ltlsynt.sh",
+      "status": "reuse",
+      "reason": "Retained D6/conversion/cactus entry point; conversion has limitations reserved for P5.",
+      "sha256": "77834d6b62019ca99d6e6d71570644d53cbd4de8cd578d1a6bf3c9ebdf30a784",
+      "bytes": 2914
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/closing.log",
+      "status": "reuse",
+      "reason": "Retained campaign timestamps/commands and completion status.",
+      "sha256": "434b3fa90b2a765e6215ef919d99c0b4c89016f37ba20c3949acb36b20437db3",
+      "bytes": 2138
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/close/SPRINT-CLOSE.md",
+      "status": "reuse",
+      "reason": "Historical closure, kernel and failure attribution; no new timing claim.",
+      "sha256": "99e4a6409abe58565fd9630044b3acfe17e8211b34ad103e6788ba8200e42d5a",
+      "bytes": 10192
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/d3-pairs.tsv",
+      "status": "reuse",
+      "reason": "Two fixed measured pairs; cannot prove a four-arm replacement.",
+      "sha256": "d34369d728238d0427196bab0c958dd41bed92f6f64e9ec41694e4a1db9fe973",
+      "bytes": 1299633
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/d3-pairs-summary.tsv",
+      "status": "reuse",
+      "reason": "Pair verdict sets and primary outcomes.",
+      "sha256": "bc1ccf1fbf0fe016e1d55c996594cba28718e1fc4a789c5eecf39705fdd09e9e",
+      "bytes": 429989
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/d3-pairs-metadata.json",
+      "status": "reuse",
+      "reason": "Exact pair campaign identity and error policy.",
+      "sha256": "b699da119490c527b8dd946c8d49be4c79fb0bea4489b3431137922d2d5c3672",
+      "bytes": 204053
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/d5-five-arm.tsv",
+      "status": "reuse",
+      "reason": "Measured five-arm no-quota race, not a four-arm replacement.",
+      "sha256": "c524edb4afff1377dce99c4bcfe118f8b5924b4b428505eca5fb4551cf3bfebd",
+      "bytes": 724974
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/d5-five-arm-summary.tsv",
+      "status": "reuse",
+      "reason": "Primary five-arm gains/losses, subject to retained repetitions.",
+      "sha256": "816548b687c0939050236319fe7aefa8274c9301122dd9bd6ac4bebde199a252",
+      "bytes": 145325
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/reps",
+      "status": "reuse",
+      "reason": "Retained confirmation repetitions; never take per-instance fastest run.",
+      "sha256": "dd2c34d30e1422a2a4ded6ea826f7c1e9a3c4e621f3bf7f3c1bf6c1edbb663a4",
+      "n_files": 108,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/close/wrec",
+      "status": "reuse",
+      "reason": "1405 legacy final snapshots; stages/lower-bound reached K, not cumulative completed-attempt cost.",
+      "sha256": "8c3e3eccdddfd9440c8965e32474b578c5e7acf656fac01492c93376a39d1aad",
+      "n_files": 1405,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/close/d7-unsolved.tsv",
+      "status": "reuse",
+      "reason": "350 historical misses revisited; retain denominator and parent outcome.",
+      "sha256": "7bca9addf6cfe62cd99a65c6ffbfb61f6570a359b6ab11500fef07676aa45407",
+      "bytes": 141452
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/close/d7-unsolved-summary.tsv",
+      "status": "reuse",
+      "reason": "Derived D7 miss evidence; no full-corpus replacement.",
+      "sha256": "74b19ea61841c1a12f32f21a5314ecf7a0b97c34cf8f490e36cbbb839271434b",
+      "bytes": 23995
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/g2s",
+      "status": "reuse",
+      "reason": "Perf stat hardware totals exist; no sampled sparse-search attribution.",
+      "sha256": "efb9eaede3986179f8046dd49b63cab05f8f6084b9f6458416582b3ae29db7aa",
+      "n_files": 122,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/close/d7-phases.tsv",
+      "status": "regenerate missing",
+      "reason": "No d7-phases file found; raw wrec and SPRINT-CLOSE.md already provide existing observations. No new census in P0.",
+      "sha256": null
+    },
+    {
+      "path": "benchmarking/run-syntcomp26-coverage.py",
+      "status": "reuse",
+      "reason": "Existing helper identity in this checkout; do not assume historical helper hashes without checking the historical source.",
+      "sha256": "9f11372fcb4214aec672fcbb467b3cb9177d13352f66dad3651f43622c047fab",
+      "bytes": 34223
+    },
+    {
+      "path": "benchmarking/run-subset.py",
+      "status": "reuse",
+      "reason": "Existing helper identity in this checkout; do not assume historical helper hashes without checking the historical source.",
+      "sha256": "a0bf4ce74e33c9c966a5d6c0fcfda0f19d2ab79333c99869b786a8e938cea125",
+      "bytes": 13229
+    },
+    {
+      "path": "benchmarking/benchlib.py",
+      "status": "reuse",
+      "reason": "Existing helper identity in this checkout; do not assume historical helper hashes without checking the historical source.",
+      "sha256": "3989eefa83e9e2c51e79732a36946addbe9e4f0eab2180dca958bf7e2dfcd1cb",
+      "bytes": 33185
+    },
+    {
+      "path": "benchmarking/cactus-report.py",
+      "status": "reuse",
+      "reason": "Existing helper identity in this checkout; do not assume historical helper hashes without checking the historical source.",
+      "sha256": "571179127e908743a1ff59afd5321d596e7bc626a80c751e2b4dec7b1e0df4dc",
+      "bytes": 13147
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/diagnostic-cohort.list",
+      "status": "reuse",
+      "reason": "Frozen 46-instance target list, reused unchanged.",
+      "sha256": "3d26a5ae64576862e036dd1065a9e47a16735b659dfe7c1bcfe9df0271a13bc5",
+      "bytes": 1760
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/diagnostic-cohort.tsv",
+      "status": "reuse",
+      "reason": "Frozen tiers/selection metadata.",
+      "sha256": "60f960c95f9cafb6208e8d41ba8c9c2a88de2746bdc6e1140c5b62e217ef45c9",
+      "bytes": 3316
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/failure-phases.md",
+      "status": "reuse",
+      "reason": "Legacy stage/censoring caveats; last-attempt distributions only.",
+      "sha256": "891d2294ad62f91f9cc68d54726bf365892427429a8b3f85e4f139213ea71deb",
+      "bytes": 5233
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/failure-phases.tsv",
+      "status": "reuse",
+      "reason": "Per-worker stage/current K and stale last-completed attempt counters; not cumulative loss time.",
+      "sha256": "85f011d7bd1c43ef07361ec06867422ba5c03e442169db7858d79e5148966d71",
+      "bytes": 53941
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/a2b-profile.md",
+      "status": "reuse",
+      "reason": "13-worker count composition, explicitly no CPU-time attribution.",
+      "sha256": "d5e8861cf45261e3e14c450dcab655c29c7a0f2512dd6fe3aa16a28988551188",
+      "bytes": 5240
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/t1-translation.md",
+      "status": "reuse",
+      "reason": "Negative translation/TAA/AST studies; reuse conclusions, do not repeat.",
+      "sha256": "ef3bd13d248265c172ac7cf667644a3034eea37985c984b7c1174b7e09047a90",
+      "bytes": 5532
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/t1-translation",
+      "status": "reuse",
+      "reason": "Retained translation attribution tables; historical per-construction outcomes.",
+      "sha256": "dee64ee1aff778c714e8c9e22ffc1dc5c62f990ad210640e59b7e0d3bdf85cdd",
+      "n_files": 1,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/s2-ablation",
+      "status": "reuse",
+      "reason": "Existing symbolic losing-input ablation; mechanism/outcome evidence, no new measurement.",
+      "sha256": "c430de485f2dc022551efdd5ff76d2de0f8dbf9aa7e0e859e34c3bf7cd3a3608",
+      "n_files": 3,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/p1-pairs.md",
+      "status": "reuse",
+      "reason": "Historical 180-panel fixed-pair/oracle sets, not replacement admission.",
+      "sha256": "be445003140c239f8d54009fec891df903a1068ea5e3e43a0dd4178756ce68b6",
+      "bytes": 4638
+    },
+    {
+      "path": "benchmarking/coverage-frontier-20260912/p1-pairs",
+      "status": "reuse",
+      "reason": "Committed pair metadata and summary.",
+      "sha256": "4dc0bdad1f03944a959ec97a735e63d381715420978f510a908111d5072c94ea",
+      "n_files": 2,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "benchmarking/p4-forward-expansion-profile.tsv",
+      "status": "reuse",
+      "reason": "Structural counts or historical arm/race evidence; regime-specific, not sampled sparse CPU.",
+      "sha256": "a9bf2cb5bd30853441a1a2ea63daead9579a9717814b598eb6014ea0e9af4462",
+      "bytes": 695
+    },
+    {
+      "path": "benchmarking/portfolio-evidence-20260910",
+      "status": "reuse",
+      "reason": "Structural counts or historical arm/race evidence; regime-specific, not sampled sparse CPU.",
+      "sha256": "d4b1f16ebf7e844f00f456aede97e75d68d261a8a34fd70fcf84f4922e76130f",
+      "n_files": 48,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "benchmarking/COVERAGE-DIRECTED-FORWARD-SPRINT.md",
+      "status": "reuse",
+      "reason": "Structural counts or historical arm/race evidence; regime-specific, not sampled sparse CPU.",
+      "sha256": "9cb81ae2a9cbae0199fe340b58251b4c7f1cd3fa5609633e1972c39367ee361d",
+      "bytes": 9912
+    },
+    {
+      "path": "benchmarking/ADAPTIVE-PORTFOLIO-OTFUR-SPRINT.md",
+      "status": "reuse",
+      "reason": "Structural counts or historical arm/race evidence; regime-specific, not sampled sparse CPU.",
+      "sha256": "679bde05cc25df4479710e31dd70892b71fa06b706b6cfc7c9a0e056d18c43ae",
+      "bytes": 24901
+    },
+    {
+      "path": "benchmarking/plots/spot-otf-threeway-20260909",
+      "status": "incompatible",
+      "reason": "Older three-way context only: different epoch/build/caps/series; not the new sprint reference dataset.",
+      "sha256": "9c098af20ea89bfcb6adc10501f75ca2af2163d66f8d9a1b85d14d68922c9da4",
+      "n_files": 5,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "benchmarking/plots/three-way-20260829",
+      "status": "incompatible",
+      "reason": "Older three-way context only: different epoch/build/caps/series; not the new sprint reference dataset.",
+      "sha256": "48ad8f70e9d039b83450566b0b71e1be63e2afe81f92cf6182edf3a685b092d7",
+      "n_files": 7,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "benchmarking/plots/three-way-full-20260905",
+      "status": "incompatible",
+      "reason": "Older three-way context only: different epoch/build/caps/series; not the new sprint reference dataset.",
+      "sha256": "27f07b69e0d4e803e30eb8c8e5d58b1dc0375b622b209c9f3d9b31a18fa1ee11",
+      "n_files": 8,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "benchmarking/plots/three-way-probe-20260831",
+      "status": "incompatible",
+      "reason": "Older three-way context only: different epoch/build/caps/series; not the new sprint reference dataset.",
+      "sha256": "c32f7424f907383598d1a549465f8e31299eb67ea571f39ff84b4926152d845f",
+      "n_files": 8,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260912-s0-phases/wrec",
+      "status": "reuse",
+      "reason": "Legacy frozen sparse repeated-K evidence; no attempt histories or cumulative verification totals.",
+      "sha256": "30167eb0593610fda8584a2c072783671a28d341cf08b3b0f12a7200bc5d0a20",
+      "n_files": 184,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec",
+      "status": "reuse",
+      "reason": "Last-verified-attempt counters only; no history.jsonl, no cumulative verification timing.",
+      "sha256": "e02e111acf52843fb4f853dc27744d99b3ebfd63d12318a43531335e434714a0",
+      "n_files": 184,
+      "hash_kind": "sha256(sorted relative-path TAB file-sha256 LF)"
+    },
+    {
+      "path": "tests/suites/benchmarks/syntcomp26/all.list",
+      "status": "reuse",
+      "reason": "Identity checked; 1524 unique logical IDs each mapped exactly once and every mapped TLSF exists.",
+      "sha256": "0226e5cd2cadc033544f0901bd900dd31dd7add813ef216558826468e0b7b5c7",
+      "bytes": 40929
+    },
+    {
+      "path": "tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv",
+      "status": "reuse",
+      "reason": "Identity checked; 1524 unique logical IDs each mapped exactly once and every mapped TLSF exists.",
+      "sha256": "9fbc4007b18065296d592f14bd9ef0e9e95a4893a4d4477e0153013fa531f92f",
+      "bytes": 82772
+    },
+    {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/.acacia-tlsf-corpus",
+      "status": "reuse",
+      "reason": "Materialized marker describes 1586 entries; logical corpus is the 1524-ID selection.",
+      "sha256": "4b69bad194323325bc424b94419d911b1127b5a0af79cd149a12a3754218c807",
+      "bytes": 105
+    }
+  ],
+  "decisions": {
+    "cumulative_loss_verification": "not recorded",
+    "sampled_sparse_search_cpu": "gate unevaluated",
+    "frozen_sparse_multiple_k": [
+      {
+        "instance": "Alarm_a5f99bc6.ltl",
+        "k": 5,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/Alarm_a5f99bc6.ltl/102208-1.json",
+        "line": 1,
+        "sha256": "4823bbde9acea5839a47a737be0e8b0e2e48a40789476abc0f41d491c8011145"
+      },
+      {
+        "instance": "F-G-contradiction-110.ltl",
+        "k": 17,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/F-G-contradiction-110.ltl/102285-1.json",
+        "line": 1,
+        "sha256": "146e78a16daa03a72bedd5405875118b26a27396c5007b7dbf2725064459ec71"
+      },
+      {
+        "instance": "GF-G-contradiction7.ltl",
+        "k": 11,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/GF-G-contradiction7.ltl/101761-1.json",
+        "line": 1,
+        "sha256": "4d2d841d431905207b5266162f485a0577e0dfdf591c3267366fa70181370bb8"
+      },
+      {
+        "instance": "g-unreal-113.ltl",
+        "k": 20,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/g-unreal-113.ltl/101832-1.json",
+        "line": 1,
+        "sha256": "ff578e0892bc25904aa39dcb01302c9391212a8aa5def6c1c368e174fb577360"
+      },
+      {
+        "instance": "g-unreal-116.ltl",
+        "k": 26,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/g-unreal-116.ltl/102634-1.json",
+        "line": 1,
+        "sha256": "8054af846caabdce4ea4e88dff74ac4f8c77533c5cb4aa5520b7fef325c89a25"
+      },
+      {
+        "instance": "heim-double-x-real.ltl",
+        "k": 20,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/heim-double-x-real.ltl/101455-1.json",
+        "line": 1,
+        "sha256": "64f89be96b64ab89eb24715f9764e39d7fe2eeb82b32591e48fdc01d1ac45568"
+      },
+      {
+        "instance": "infinite-race-u12.ltl",
+        "k": 11,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/infinite-race-u12.ltl/102694-1.json",
+        "line": 1,
+        "sha256": "467c17eb8c20b250ba103d6970716109317e8b133d5f2d3a378c55771aca0d2e"
+      },
+      {
+        "instance": "ordered-visits-choice-real.ltl",
+        "k": 99,
+        "kmin": 2,
+        "stage": "verified-attempt",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/ordered-visits-choice-real.ltl/101539-1.json",
+        "line": 1,
+        "sha256": "65ea0704244e79c4d8a3317c675019e02d77e6bfd203c522c3b3bb382b973941"
+      },
+      {
+        "instance": "robot-to-target-charging10.ltl",
+        "k": 14,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/robot-to-target-charging10.ltl/102815-1.json",
+        "line": 1,
+        "sha256": "1cf3a335806b4bbaafca6e9e9d76cf213418e655d6041a00b1c402fcc668bfcc"
+      },
+      {
+        "instance": "robot-to-target-charging7.ltl",
+        "k": 14,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/robot-to-target-charging7.ltl/101942-1.json",
+        "line": 1,
+        "sha256": "09574a776da16290ca7189f4d134459e2717872cdba6aae22b1b380b8d483692"
+      },
+      {
+        "instance": "taxi-service-real.ltl",
+        "k": 5,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/taxi-service-real.ltl/102009-1.json",
+        "line": 1,
+        "sha256": "e692b1dbe46664afcb5d557b9a9825293d04f339033e8c38fbf4d6600023b509"
+      },
+      {
+        "instance": "thermostat-F-real.ltl",
+        "k": 20,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/thermostat-F-real.ltl/101647-1.json",
+        "line": 1,
+        "sha256": "0ce48b63fb41dc43477b1ce0aa04cbee9f1fdbaa07476474f97ef8c1a0229294"
+      },
+      {
+        "instance": "workstation_resupply_pb_3_pe_.ltl",
+        "k": 29,
+        "kmin": 2,
+        "stage": "search",
+        "record": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-a2b-profile/wrec/a2b-master-c4e0eb80/17/workstation_resupply_pb_3_pe_.ltl/102056-1.json",
+        "line": 1,
+        "sha256": "ba4645f3c8da927d4f77a9caf3542b84c16a60388c24d07163293d30e41106ad"
+      }
+    ],
+    "four_arm_candidate": [
+      "real:small:backward",
+      "real:small:spot-guarded-sparse",
+      "unreal:formula:spot-guarded-sparse",
+      "unreal:automaton:forward"
+    ],
+    "four_arm_status": "Only a proposed screen: displaces forward-real; workstation_resupply_pb_3_pe_ is an isolated-arm sentinel, and no four-arm replacement was measured."
+  },
+  "verification": {
+    "build": "meson setup build; debug; PKG_CONFIG_PATH=/usr/local/lib/pkgconfig; compile -j 8",
+    "local_test_options": {
+      "acacia_enable_tlsf_frontend": true,
+      "acacia_forward_safety_solver": true,
+      "build_python": true
+    },
+    "unit": {
+      "passed": 48,
+      "failed": 0
+    },
+    "ruff": {
+      "errors": 135,
+      "all_in": "tests/syntcomp-benchmarks",
+      "excluding_vendor": "passed"
+    },
+    "pytest_full": "collection blocked: Python 3.14 spot binding absent; installed Spot binding is Python 3.13",
+    "pytest_without_binding_modules": {
+      "passed": 642,
+      "skipped": 1
+    },
+    "python_api_without_two_spot_tests": {
+      "passed": 11,
+      "deselected": 2
+    },
+    "config_frontends": "46 shared scalar options agree; one documented TLSF-default divergence",
+    "existing_d7_consumer": "1405 rows processed without cohort restriction; scratch outputs only in /tmp"
+  }
+}

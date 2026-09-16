@@ -2,6 +2,7 @@
 
 #include "configuration.hh"
 #include "solver/spot_fast_mode.hh"
+#include "solver/spot_worker_record.hh"
 #include "utils/verbose.hh"
 
 #include <algorithm>
@@ -379,9 +380,12 @@ namespace acacia::spot_fastpath {
 
   inline fast_path_result deterministic_forbidden_fast_path (
       const spot::twa_graph_ptr& aut_forbid, const bdd& all_outputs,
-      bool want_strategy, bool want_winning_region = false) {
+      bool want_strategy, bool want_winning_region = false, bool capture_search = false) {
     fast_path_result res;
 
+    // Elevator preprocessing also uses this helper for individual SCCs. Only
+    // the whole-worker fast path owns the surrounding lifecycle attempt.
+    if (capture_search) spot_records::phase ("action-construction");
     auto good = complete_copy_with_rejecting_sink (aut_forbid);
     good->set_acceptance (1, spot::acc_cond::acc_code::cobuchi ());
     spot::set_synthesis_outputs (good, all_outputs);
@@ -389,9 +393,15 @@ namespace acacia::spot_fastpath {
     spot::synthesis_info gi;
     gi.sp = spot::synthesis_info::splittype::AUTO;
     auto arena = spot::split_2step (good, gi);
+    if (capture_search) spot_records::phase ("search");
+    const auto search_started =
+        capture_search && spot_records::active ? detail::clock::now () : detail::clock::time_point {};
     const bool p_out_wins = want_winning_region
         ? spot::solve_parity_game (arena, true)
         : spot::solve_game (arena, gi);
+    if (capture_search && spot_records::active)
+      spot_records::put ("search_ms", std::to_string (
+          std::chrono::duration<double, std::milli> (detail::clock::now () - search_started).count ()));
 
     res.conclusive = true;
     res.current_output_player_wins = p_out_wins;
@@ -413,9 +423,16 @@ namespace acacia::spot_fastpath {
       const bdd& all_outputs) {
     fast_path_result res;
 
+    spot_records::phase ("action-construction");
     auto arena = detail::build_gfg_decision_arena (aut_forbid, all_inputs, all_outputs);
     arena->set_acceptance (1, spot::acc_cond::acc_code::cobuchi ());
+    spot_records::phase ("search");
+    const auto search_started =
+        spot_records::active ? detail::clock::now () : detail::clock::time_point {};
     const bool p_out_wins = spot::solve_game (arena);
+    if (spot_records::active)
+      spot_records::put ("search_ms", std::to_string (
+          std::chrono::duration<double, std::milli> (detail::clock::now () - search_started).count ()));
 
     res.conclusive = true;
     res.current_output_player_wins = p_out_wins;
@@ -431,6 +448,9 @@ namespace acacia::spot_fastpath {
     if (not detail::has_mode (mode, SPOT_FAST_DET))
       return {};
 
+    spot_records::segment ("frozen-graph", "spot-fast");
+    spot_records::begin_attempt ();
+    spot_records::phase ("preprocessing");
     const bool can_use_gfg_decision =
         detail::has_mode (mode, SPOT_FAST_GFG_DECISION) and
         allow_gfg_decision and not want_controller_strategy;
@@ -453,9 +473,18 @@ namespace acacia::spot_fastpath {
       result.gfg_budget_declined = true;
     }
     else {
+      // This checks the GFG precondition, not a winning certificate for the
+      // specification. The subsequent game solve is an exact fixed point.
+      if (spot_records::active) spot_records::put ("verification_kind", "gfg-precondition");
+      spot_records::phase ("verification");
+      const auto verification_started =
+          spot_records::active ? detail::clock::now () : detail::clock::time_point {};
       result.classification = detail::two_token_game_eve_wins (aut_forbid)
           ? nba_fast_class::gfg_buchi
           : nba_fast_class::non_gfg_buchi;
+      if (spot_records::active)
+        spot_records::put ("verification_ms", std::to_string (
+            std::chrono::duration<double, std::milli> (detail::clock::now () - verification_started).count ()));
     }
     result.classification_ms = detail::elapsed_ms (class_started);
 
@@ -464,15 +493,17 @@ namespace acacia::spot_fastpath {
                             << detail::class_name (c) << std::endl);
 
     if (c == nba_fast_class::deterministic_buchi and detail::has_mode (mode, SPOT_FAST_DET)) {
+      if (spot_records::active) spot_records::put ("backend", "spot-fast-det");
       const auto solve_started = detail::clock::now ();
       auto res = deterministic_forbidden_fast_path (aut_forbid, all_outputs,
-                                                    want_controller_strategy);
+                                                    want_controller_strategy, false, true);
       res.classification = result.classification;
       res.classification_ran = result.classification_ran;
       res.gfg_disabled = result.gfg_disabled;
       res.gfg_budget_declined = result.gfg_budget_declined;
       res.classification_ms = result.classification_ms;
       res.solve_ms = detail::elapsed_ms (solve_started);
+      spot_records::end_attempt (res.current_output_player_wins ? "WIN" : "LOSE", "spot-game");
       if (want_controller_strategy and not res.current_output_player_wins)
         return {};
       return res;
@@ -480,6 +511,7 @@ namespace acacia::spot_fastpath {
 
     if (c == nba_fast_class::gfg_buchi and
         can_use_gfg_decision) {
+      if (spot_records::active) spot_records::put ("backend", "spot-fast-gfg");
       const auto solve_started = detail::clock::now ();
       auto res = gfg_forbidden_decision_only_fast_path (aut_forbid, all_inputs, all_outputs);
       res.classification = result.classification;
@@ -488,9 +520,11 @@ namespace acacia::spot_fastpath {
       res.gfg_budget_declined = result.gfg_budget_declined;
       res.classification_ms = result.classification_ms;
       res.solve_ms = detail::elapsed_ms (solve_started);
+      spot_records::end_attempt (res.current_output_player_wins ? "WIN" : "LOSE", "spot-game");
       return res;
     }
 
+    spot_records::end_attempt ("UNKNOWN", "declined");
     return result;
   }
 
