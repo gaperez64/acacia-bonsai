@@ -50,11 +50,11 @@ namespace acacia::spot_lazy_game {
   // or output stream is created by the shared search/verifier implementation.
   struct Reporter {
       std::function<void (const std::string&, const std::string&)> sink;
-      void put (const std::string& k, const std::string& v) const {
-        if (sink) sink (k, v);
+      void put (std::string_view k, std::string_view v) const {
+        if (sink) sink (std::string (k), std::string (v));
       }
-      void count (const std::string& k, size_t v) const { if (sink) put (k, std::to_string (v)); }
-      void ms (const std::string& k, double v) const { if (sink) put (k, decimal (v)); }
+      void count (std::string_view k, size_t v) const { if (sink) put (k, std::to_string (v)); }
+      void ms (std::string_view k, double v) const { if (sink) put (k, decimal (v)); }
   };
 
   enum class Phase { eager, search, verify };
@@ -1166,10 +1166,14 @@ namespace acacia::spot_lazy_game {
                             view_.cache->complete_rows () - before_search_);
         oracle_.report (view_.report, "search_");
         view_.phase = Phase::verify;
+        view_.report.ms ("search_ms", result_.solve_ms);
         view_.report.put ("stage", "verification");
         view_.report.ms ("stage_started_clock_ms", clock_ms ());
         const auto verifying = std::chrono::steady_clock::now ();
         if (result_.nodes[result_.initial].losing) {
+          view_.report.count ("loss_verification_calls", 1);
+          view_.report.put ("verification_kind", "loss");
+          spot_records::phase ("verification");
           const auto verified = verify_losing_proof (view_, alphabet_, K_, result_, limits_,
                                                      semantics_, lean_verifier_);
           result_.status = verified.value && *verified.value ? forward_result_status::lose_k
@@ -1177,6 +1181,9 @@ namespace acacia::spot_lazy_game {
           result_.failure = verified.unknown;
         }
         else {
+          view_.report.count ("win_verification_calls", 1);
+          view_.report.put ("verification_kind", "win");
+          spot_records::phase ("verification");
           auto verified = verify_winning_certificate (view_, alphabet_, K_, result_, limits_,
                                                        semantics_, lean_verifier_);
           if (verified.value) {
@@ -1190,6 +1197,8 @@ namespace acacia::spot_lazy_game {
           }
         }
         result_.verify_ms = detail::elapsed (verifying);
+        if (result_.nodes[result_.initial].losing)
+          view_.report.ms ("loss_verification_ms", result_.verify_ms);
         return std::move (result_);
       }
 

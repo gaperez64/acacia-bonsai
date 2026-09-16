@@ -550,6 +550,9 @@ namespace acacia::solver_detail::equivariant {
     using state = typename SetOfStates::value_type;
     const unsigned num_states = aut->num_states ();
 
+    spot_records::segment ("frozen-graph", "backward-equivariant-sweep");
+    spot_records::begin_attempt (kmin);
+    spot_records::phase ("action-construction");
     orbit_build_result orbits;
     {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_orbit_build);
@@ -559,12 +562,14 @@ namespace acacia::solver_detail::equivariant {
       const char* reason =
           orbits.decline_reason ? orbits.decline_reason : "empty input orbit universe";
       acacia::diagnostics::set_equivariant_decline (reason);
+      spot_records::end_attempt ("UNKNOWN", "declined");
       return {false, std::nullopt};
     }
 
     const unsigned num_types = orbit_type_count (*orbits);
     if (num_types == 0) {
       acacia::diagnostics::set_equivariant_decline ("empty input type universe");
+      spot_records::end_attempt ("UNKNOWN", "declined");
       return {false, std::nullopt};
     }
 
@@ -600,6 +605,7 @@ namespace acacia::solver_detail::equivariant {
     posets::utils::vector_mm<VECTOR_ELT_T> permute_out (num_states, 0);
 
     acacia::diagnostics::snapshot ("after-action-construction");
+    spot_records::phase ("search");
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_solve_loop);
     while (true) {
       acacia::diagnostics::observe_loop (f.size (), k);
@@ -625,11 +631,14 @@ namespace acacia::solver_detail::equivariant {
         } while (std::next_permutation (sequence.begin (), sequence.end ()));
 
         if (not f.contains (state (init))) {
+          spot_records::end_attempt ("LOSE_K", "fixedpoint-refutation");
           if (k >= kmax) {
             acacia::diagnostics::set_final_reason ("kmax-initial-out");
             return {true, std::nullopt};
           }
           k += kinc;
+          spot_records::begin_attempt (k);
+          spot_records::phase ("action-construction");
           actioner.setK (k);
           acacia::diagnostics::set_support_k (static_cast<int> (k));
           f = f.apply ([&] (const state& maximal) {
@@ -638,6 +647,7 @@ namespace acacia::solver_detail::equivariant {
               bumped[q] = maximal[q] + kinc;
             return state (bumped);
           });
+          spot_records::phase ("search");
           incremented = true;
           break;
         }
@@ -647,6 +657,7 @@ namespace acacia::solver_detail::equivariant {
         continue;
       if (not changed) {
         acacia::diagnostics::set_final_reason ("fixedpoint");
+        spot_records::end_attempt ("WIN_K", "fixedpoint");
         std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> win;
         win.emplace (k, std::move (f));
         return {true, std::move (win)};
@@ -674,9 +685,11 @@ namespace acacia::solver_detail::equivariant {
     acacia::solver_detail::symmetric::profile::global ().reset ();
 #endif
 
-    auto decline = [] (const char* reason) {
+    bool attempt_started = false;
+    auto decline = [&] (const char* reason) {
       verb_do (1, vout << "[equivariant] declining: " << reason << "\n");
       acacia::diagnostics::set_equivariant_decline (reason);
+      if (attempt_started) spot_records::end_attempt ("UNKNOWN", "declined");
       return result<SetOfStates> {false, std::nullopt};
     };
 
@@ -742,6 +755,10 @@ namespace acacia::solver_detail::equivariant {
       return solve_orbit_sweep<SetOfStates> (aut, kmax, kmin, kinc, all_inputs, all_outputs, G, *L,
                                              actioner_maker);
 
+    spot_records::segment ("frozen-graph", "backward-equivariant");
+    spot_records::begin_attempt (kmin);
+    spot_records::phase ("action-construction");
+    attempt_started = true;
     representative_build_result representatives;
     {
       ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_orbit_build);
@@ -802,6 +819,7 @@ namespace acacia::solver_detail::equivariant {
 
     int loopcount = 0;
     acacia::diagnostics::snapshot ("after-action-construction");
+    spot_records::phase ("search");
     ACACIA_SYMMETRY_PROFILE_SCOPE (equivariant_solve_loop);
     while (true) {
       ++loopcount;
@@ -819,6 +837,7 @@ namespace acacia::solver_detail::equivariant {
         verb_do (1, vout << "[equivariant] fixed point reached at K=" << (int) k << ", f of size "
                          << f.size () << "\n");
         acacia::diagnostics::set_final_reason ("fixedpoint");
+        spot_records::end_attempt ("WIN_K", "fixedpoint");
         std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> win;
         win.emplace (k, std::move (f));
         return {true, std::move (win)};
@@ -830,6 +849,7 @@ namespace acacia::solver_detail::equivariant {
       acacia::diagnostics::snapshot_loop_progress ("equivariant-after-closure");
 
       if (not f.contains (state (init))) {
+        spot_records::end_attempt ("LOSE_K", "fixedpoint-refutation");
         if (k >= kmax) {
           verb_do (1, vout << "[equivariant] initial state out at max K\n");
           acacia::diagnostics::set_final_reason ("kmax-initial-out");
@@ -838,6 +858,8 @@ namespace acacia::solver_detail::equivariant {
         verb_do (1, vout << "[equivariant] Incrementing k from " << (int) k << " to "
                          << (int) (k + kinc) << "\n");
         k += kinc;
+        spot_records::begin_attempt (k);
+        spot_records::phase ("action-construction");
         actioner.setK (k);
         acacia::diagnostics::set_support_k (static_cast<int> (k));
         f = f.apply ([&] (const state& s) {
@@ -852,6 +874,7 @@ namespace acacia::solver_detail::equivariant {
         // do not cross bool_threshold, so it commutes with every generator.
         assert (not close_under_generators (f, G, permute_in, permute_out));
 #endif
+        spot_records::phase ("search");
       }
     }
   }

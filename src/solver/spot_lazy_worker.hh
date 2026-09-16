@@ -98,12 +98,17 @@ namespace acacia::spot_lazy_worker {
         report.count ("total_wrapper_rows", store.cache->complete_rows ());
       }
       for (long long k = kmin;;) {
+        spot_records::begin_attempt (k);
         report.count ("k", k);
+        const auto rows_before = store.cache->complete_rows ();
+        const auto generation_before = store.generation_ms;
         // Immutable provider rows survive K; all rank, proof, oracle, strategy
         // and verification data belong to this attempt and are discarded.
         spot_records::phase ("search");
-        game::Search search {store, alphabet, int32_t (k), limits};
-        const auto result = search.solve ();
+        const auto result = [&] {
+          game::Search search {store, alphabet, int32_t (k), limits};
+          return search.solve ();
+        } ();
         view->check_contract ();
         store.snapshot ();
         report.ms ("search_ms", result.solve_ms);
@@ -112,7 +117,11 @@ namespace acacia::spot_lazy_worker {
         report.count ("guarded_choices", result.choices_created);
         report.put ("status", solver_detail::forward_result_name (result.status));
         report.put ("reason", spot_letters::unknown_name (result.failure));
-        spot_records::phase ("verified-attempt");
+        report.ms ("attempt_row_generation_ms", store.generation_ms - generation_before);
+        report.count ("attempt_rows_generated", store.cache->complete_rows () - rows_before);
+        spot_records::end_attempt (solver_detail::forward_result_name (result.status),
+            result.status == solver_detail::forward_result_status::win_k ? "verified-win" :
+            result.status == solver_detail::forward_result_status::lose_k ? "verified-loss" : "none");
         if (result.status == solver_detail::forward_result_status::win_k)
           return Outcome::win;
         if (result.status != solver_detail::forward_result_status::lose_k)
@@ -129,6 +138,7 @@ namespace acacia::spot_lazy_worker {
       report.put ("reason", "provider-or-query-failure");
     }
     report.put ("status", "UNKNOWN");
+    spot_records::end_attempt ("UNKNOWN", "exception");
     return Outcome::unknown;
   }
 } // namespace acacia::spot_lazy_worker
