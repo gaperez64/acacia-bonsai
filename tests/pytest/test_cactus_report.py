@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import importlib.util
 import os
 import pathlib
 import subprocess
 import sys
+from dataclasses import replace
 
 import pytest
 
@@ -59,6 +61,9 @@ def test_par2_arithmetic_and_markdown(tmp_path):
     assert summary.total == 3
     assert summary.solved_time == 4.0
     assert summary.par2 == 24.0
+    assert summary.par2_mean == 8.0
+    assert summary.real == summary.unreal == 1
+    assert summary.cactus_endpoint == summary.solved
     assert summary.non_solved == {"TIMEOUT": 1}
 
     markdown = tmp_path / "plots" / "tiny.md"
@@ -80,6 +85,9 @@ def test_par2_arithmetic_and_markdown(tmp_path):
     table = markdown.read_text()
     assert "| series | solved | of | PAR-2 (s) | total time on solved (s) |" in table
     assert "| solver | **2** | 3 | **24.000** | 4.000 |" in table
+    assert "| REAL | UNREAL | PAR-2 mean (s) | Raw dataset hash |" in table
+    assert f"| 1 | 1 | 8.000 | {hashlib.sha256(source.read_bytes()).hexdigest()} |" in table
+    assert len({len(line.split("|")) for line in table.splitlines()}) == 1
 
 
 def test_virtual_best_uses_per_instance_minimum_and_keeps_failure(tmp_path):
@@ -183,7 +191,7 @@ def test_mismatched_instance_sets_exit_nonzero_and_name_differences(tmp_path):
 
 
 def test_figure_files(tmp_path):
-    pytest.importorskip("matplotlib")
+    pytest.importorskip("matplotlib", reason="matplotlib is optional; table tests run without it")
     module = load_cactus_report()
     source = tmp_path / "solver.csv"
     write_rows(
@@ -271,3 +279,110 @@ def test_requires_at_least_one_output(tmp_path):
 
     assert completed.returncode != 0
     assert "at least one of --out-prefix or --markdown is required" in completed.stderr
+
+
+@pytest.mark.parametrize("result,seconds,message", [
+    ("MEMOUT", "1", "unknown result"),
+    ("CRASH", "1", "unknown result"),
+    ("OTHER", "1", "unknown result"),
+    ("TIMEOUT", "nan", "finite"),
+    ("TIMEOUT", "inf", "finite"),
+    ("TIMEOUT", "-1", "non-negative"),
+])
+def test_load_csv_rejects_invalid_result_or_time(tmp_path, result, seconds, message):
+    module = load_cactus_report()
+    source = tmp_path / "invalid.csv"
+    write_rows(source, [row("a", result, seconds)])
+    with pytest.raises(ValueError, match=message):
+        module.load_csv(source)
+
+
+def test_load_csv_rejects_duplicate_instances(tmp_path):
+    module = load_cactus_report()
+    source = tmp_path / "duplicate.csv"
+    write_rows(source, [row("a", "REALIZABLE", 1), row("a", "TIMEOUT", 17)])
+    with pytest.raises(ValueError, match="duplicate instance"):
+        module.load_csv(source)
+
+
+def test_failure_categories_all_pay_par2_even_for_immediate_returns(tmp_path):
+    module = load_cactus_report()
+    source = tmp_path / "failures.csv"
+    write_rows(source, [row(str(i), result, 0) for i, result in enumerate(module.NON_SOLVED_RESULTS)])
+    summary = module.summarize("failures", module.load_csv(source), 17)
+    assert summary.solved == summary.real == summary.unreal == summary.cactus_endpoint == 0
+    assert summary.par2 == 170
+    assert summary.par2_mean == 34
+    assert summary.non_solved == dict.fromkeys(module.NON_SOLVED_RESULTS, 1)
+    table = module.render_markdown([summary])
+    assert "| TIMEOUT | RESOURCE_LIMIT | UNKNOWN | ERROR | SYFCO-FAIL |" in table
+    assert "| 1 | 1 | 1 | 1 | 1 | 0 | 0 | 34.000 |" in table
+
+
+@pytest.mark.parametrize("change,message", [
+    ({"cactus_endpoint": 2}, "cactus curve endpoint"),
+    ({"real": 2}, "REAL \\+ UNREAL"),
+    ({"par2_mean": 99}, "PAR-2 mean"),
+    ({"total": 2}, "dataset size"),
+])
+def test_inconsistent_summary_cannot_be_rendered(change, message):
+    module = load_cactus_report()
+    summary = module.summarize("solver", {"a": module.RunResult("REALIZABLE", 1)}, 17)
+    with pytest.raises(ValueError, match=message):
+        module.render_markdown([replace(summary, **change)])
+
+
+def test_inconsistent_curve_endpoint_fails_report_before_writing(tmp_path, monkeypatch):
+    module = load_cactus_report()
+    source = tmp_path / "solver.csv"
+    write_rows(source, [row("a", "REALIZABLE", 1)])
+    monkeypatch.setattr(module, "cactus_seconds", lambda rows: [])
+    output = tmp_path / "unused.md"
+    with pytest.raises(SystemExit) as error:
+        module.main(["--csv", f"solver={source}", "--title", "bad", "--markdown", str(output)])
+    assert error.value.code != 0
+    assert not output.exists()
+
+
+def test_par2_mean_rounding_and_shared_scoring(monkeypatch):
+    module = load_cactus_report()
+    calls = []
+    original = module.par2_score
+    def score(solved_seconds, unsolved, timeout):
+        calls.append((solved_seconds, unsolved, timeout))
+        return original(solved_seconds, unsolved, timeout)
+    monkeypatch.setattr(module, "par2_score", score)
+    rows = {str(i): module.RunResult("REALIZABLE", time) for i, time in enumerate([1, 1, 2])}
+    summary = module.summarize("solver", rows, 17)
+    assert calls == [(4, 0, 17)]
+    assert summary.par2_mean == pytest.approx(4 / 3)
+    assert summary.par2_mean * summary.total == pytest.approx(summary.par2)
+    assert "| 3 | 0 | 1.333 |" in module.render_markdown([summary])
+
+
+def test_plot_keeps_sorted_wall_times_log_axis_and_table_endpoint(tmp_path, monkeypatch):
+    pytest.importorskip("matplotlib", reason="matplotlib is optional; table tests run without it")
+    module = load_cactus_report()
+    import matplotlib.axes
+
+    rows = {
+        "slow": module.RunResult("UNREALIZABLE", 3),
+        "timeout": module.RunResult("TIMEOUT", 17),
+        "fast": module.RunResult("REALIZABLE", 1),
+    }
+    summary = module.summarize("solver", rows, 17)
+    plotted = []
+    scales = []
+    original_plot, original_scale = matplotlib.axes.Axes.plot, matplotlib.axes.Axes.set_yscale
+    def plot(axis, x, y, **kwargs):
+        plotted.append((list(x), list(y)))
+        return original_plot(axis, x, y, **kwargs)
+    def set_yscale(axis, value, **kwargs):
+        scales.append(value)
+        return original_scale(axis, value, **kwargs)
+    monkeypatch.setattr(matplotlib.axes.Axes, "plot", plot)
+    monkeypatch.setattr(matplotlib.axes.Axes, "set_yscale", set_yscale)
+    module.write_cactus_plot({"solver": rows}, "Curve", tmp_path / "curve", [summary])
+    assert plotted == [([1, 2], [1, 3])]
+    assert plotted[0][0][-1] == summary.solved
+    assert "log" in scales

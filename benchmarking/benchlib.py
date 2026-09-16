@@ -784,6 +784,13 @@ TOOL_EXIT_CODES = {
     "ltlsynt": {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2},
 }
 
+# Vocabulary of run-subset.py CSVs and the cactus reporting view. Coverage
+# exports normalize failure subtypes to this view without reclassifying runs.
+CACTUS_SOLVED_RESULTS = frozenset(("REALIZABLE", "UNREALIZABLE"))
+CACTUS_NON_SOLVED_RESULTS = (
+    "TIMEOUT", "RESOURCE_LIMIT", "UNKNOWN", "ERROR", "SYFCO-FAIL",
+)
+
 
 def classify_run(run: RunResult, tool: str = "acacia") -> str:
     """Classify a bounded tool run, requiring output/exit-code agreement."""

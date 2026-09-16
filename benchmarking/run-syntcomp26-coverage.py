@@ -19,6 +19,11 @@ therefore filter on smallest_cap_solved -- otherwise a campaign run with
 --caps 1,5,17,60 contributes its 60-second answers to a 17-second total.
 still_unsolved_at_max_cap, failure_kind_at_max_cap and max_cap_s describe the
 largest cap of this campaign, whatever it was, and not any fixed cap.
+
+Saved uniform-cap observations can be exported without running a solver:
+  run-syntcomp26-coverage.py export-cactus --summary run-summary.tsv \
+      --list tests/suites/benchmarks/syntcomp26/all.list --cap 17 --output run.csv
+This reads run.tsv and its conflicts sidecar, and writes run.csv plus run.raw.tsv.
 """
 
 from __future__ import annotations
@@ -27,6 +32,7 @@ import argparse
 import csv
 import datetime
 import hashlib
+import math
 import os
 import pathlib
 import re
@@ -34,7 +40,14 @@ import shlex
 import subprocess
 import sys
 
-from benchlib import RunResult, campaign_scope_guard, classify_run, run_systemd_scope
+from benchlib import (
+    CACTUS_NON_SOLVED_RESULTS,
+    TOOL_EXIT_CODES,
+    RunResult,
+    campaign_scope_guard,
+    classify_run,
+    run_systemd_scope,
+)
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -564,6 +577,155 @@ def write_summary(
     return summary_path
 
 
+def export_cactus_csv(
+    summary: pathlib.Path,
+    runs: pathlib.Path,
+    instance_list: pathlib.Path,
+    expected_cap: float,
+    output: pathlib.Path,
+) -> pathlib.Path:
+    """Validate one uniform-cap observation per ID, then export CSV + raw TSV.
+
+    Summary fields select the outcome; raw runs supply actual exits and times.
+    No solver output is parsed and no repetition or staged cap is selected.
+    A nonempty collect-policy sidecar blocks export: it has no adjudication field.
+    """
+    if not math.isfinite(expected_cap) or expected_cap <= 0:
+        raise CoverageError("expected cap must be finite and greater than zero")
+    expected = read_instance_list(instance_list)
+    if not expected or len(set(expected)) != len(expected):
+        raise CoverageError(f"{instance_list}: empty list or duplicate instances")
+
+    def index_rows(rows, path):
+        indexed = {}
+        for row in rows:
+            instance = row["instance"]
+            if not instance or instance in indexed:
+                raise CoverageError(f"{path}: missing or duplicate instance {instance!r}")
+            indexed[instance] = row
+        missing, extra = set(expected) - indexed.keys(), indexed.keys() - set(expected)
+        if missing or extra:
+            raise CoverageError(
+                f"{path}: instance sets differ; missing: {sorted(missing)}; extra: {sorted(extra)}"
+            )
+        return indexed
+
+    def number(value, context):
+        try:
+            result = float(value)
+        except ValueError:
+            raise CoverageError(f"{context}: invalid number {value!r}") from None
+        if not math.isfinite(result) or result < 0:
+            raise CoverageError(f"{context}: must be finite and non-negative, got {value!r}")
+        return result
+
+    def check_cap(value, context):
+        if number(value, context) != expected_cap:
+            raise CoverageError(f"{context}: expected uniform cap {expected_cap:g}, got {value!r}")
+
+    with summary.open(encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        if reader.fieldnames != SUMMARY_COLUMNS:
+            raise CoverageError(f"{summary}: unexpected summary header")
+        summary_rows = list(reader)
+    if any(None in row or None in row.values() for row in summary_rows):
+        raise CoverageError(f"{summary}: malformed summary row")
+    summaries = index_rows(summary_rows, summary)
+    raw_rows = load_output(runs)
+    # Inspect every recorded cap, including rows a staged summary would hide.
+    for row in raw_rows:
+        check_cap(row["cap_s"], f"{runs}: {row['instance']} cap_s")
+    observations = index_rows(raw_rows, runs)
+    conflicts = runs.with_name(f"{runs.stem}-conflicts.tsv")
+    if conflicts.exists() and load_conflicts(conflicts):
+        raise CoverageError(f"{conflicts}: unresolved verdict conflicts block export")
+    for field in (
+        "solver_label", "acacia_sha", "binary_sha256", "preset", "flags",
+        "memory_max", "memory_swap_max", "allowed_cpus", "cpu_quota", "collect_rusage",
+    ):
+        if len({row[field] for row in raw_rows}) != 1:
+            raise CoverageError(f"{runs}: mixed provenance field {field}")
+
+    csv_rows, sidecar_rows = [], []
+    for instance, row in summaries.items():
+        context = f"{summary}: {instance}"
+        observed = observations[instance]
+        if not row["solver_label"] or row["solver_label"] != observed["solver_label"]:
+            raise CoverageError(f"{context}: solver_label disagrees with raw run")
+        check_cap(row["max_cap_s"], f"{context} max_cap_s")
+        seconds = number(observed["seconds"], f"{runs}: {instance} seconds")
+        try:
+            exit_code = int(observed["exit_code"])
+        except ValueError:
+            raise CoverageError(f"{runs}: {instance}: invalid exit_code") from None
+        if row["still_unsolved_at_max_cap"] not in {"true", "false"}:
+            raise CoverageError(f"{context}: invalid still_unsolved_at_max_cap")
+        solved = row["still_unsolved_at_max_cap"] == "false"
+        status = row["decisive_result"] if solved else row["failure_kind_at_max_cap"]
+        result = {"MEMOUT": "RESOURCE_LIMIT", "CRASH": "ERROR"}.get(status, status)
+        if solved:
+            if status not in DECISIVE_RESULTS:
+                raise CoverageError(f"{context}: solved row needs a REALIZABLE/UNREALIZABLE verdict")
+            if exit_code != TOOL_EXIT_CODES["acacia"][status]:
+                raise CoverageError(f"{context}: solved verdict disagrees with exit_code {exit_code}")
+            check_cap(row["smallest_cap_solved"], f"{context} smallest_cap_solved")
+            if number(row["decisive_seconds"], f"{context} decisive_seconds") != seconds:
+                raise CoverageError(f"{context}: decisive_seconds disagrees with raw run")
+        else:
+            if result not in CACTUS_NON_SOLVED_RESULTS:
+                raise CoverageError(f"{context}: unsupported status mapping {status!r}")
+            if any(row[field] for field in (
+                "decisive_result", "decisive_seconds", "smallest_cap_solved",
+            )):
+                raise CoverageError(f"{context}: unsolved row contains decisive fields")
+        if status != observed["result"] or row["failure_kind_at_max_cap"] != status:
+            raise CoverageError(f"{context}: summary status disagrees with raw run")
+        csv_rows.append((instance, result, seconds if solved else expected_cap, exit_code))
+        sidecar_rows.append({
+            "instance": instance, "result": status, "exit_code": observed["exit_code"],
+            "seconds": observed["seconds"], "cap_s": observed["cap_s"],
+        })
+
+    raw_output = output.with_suffix(".raw.tsv")
+    inputs = {path.resolve() for path in (summary, runs, instance_list, conflicts)}
+    if output.resolve() == raw_output.resolve() or inputs & {
+        output.resolve(), raw_output.resolve(),
+    }:
+        raise CoverageError("export paths must be distinct from each other and the inputs")
+    # All checks precede either write, including when replacing existing exports.
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(("instance", "result", "seconds", "exit"))
+        writer.writerows(csv_rows)
+    atomic_write_tsv(raw_output, ["instance", "result", "exit_code", "seconds", "cap_s"],
+                     sidecar_rows)
+    return raw_output
+
+
+def export_cactus_main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description=export_cactus_csv.__doc__)
+    parser.add_argument("--summary", required=True, type=pathlib.Path)
+    parser.add_argument("--runs", type=pathlib.Path,
+                        help="raw TSV (default: SUMMARY with -summary.tsv replaced by .tsv)")
+    parser.add_argument("--list", required=True, type=pathlib.Path)
+    parser.add_argument("--cap", required=True, type=float)
+    parser.add_argument("--output", required=True, type=pathlib.Path,
+                        help="cactus CSV; also writes OUTPUT with suffix .raw.tsv")
+    args = parser.parse_args(argv)
+    if args.runs is None:
+        if not args.summary.name.endswith("-summary.tsv"):
+            parser.error("--runs is required unless --summary ends in -summary.tsv")
+        args.runs = args.summary.with_name(args.summary.name.removesuffix("-summary.tsv") + ".tsv")
+    try:
+        sidecar = export_cactus_csv(args.summary, args.runs, args.list, args.cap, args.output)
+    except (CoverageError, OSError) as error:
+        parser.error(str(error))
+    print(f"wrote {args.output}")
+    print(f"wrote {sidecar}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bin", required=True, metavar="PATH")
@@ -844,7 +1006,7 @@ def run(args: argparse.Namespace) -> int:
 
 
 @campaign_scope_guard("run-syntcomp26-coverage")
-def main() -> int:
+def campaign_main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     try:
@@ -852,6 +1014,13 @@ def main() -> int:
     except CoverageError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
+
+
+def main() -> int:
+    # Reporting must never enter the campaign guard (which inspects/cleans scopes).
+    if sys.argv[1:2] == ["export-cactus"]:
+        return export_cactus_main(sys.argv[2:])
+    return campaign_main()
 
 
 if __name__ == "__main__":
