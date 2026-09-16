@@ -2,6 +2,8 @@
 
 184 worker records; 46 instances. One row per instance/arm at its largest recorded cap. Campaign seconds describe the whole invocation.
 
+The campaign used the `otf_sparse_formula_diag` preset.
+
 ## 1. Routing table
 
 Sparse guarded arm: `unreal/formula/spot-guarded-sparse/frozen-graph`.

@@ -103,8 +103,9 @@ void check_solve_counters (const SolveResult& result, const Fields& fields) {
 }
 
 namespace acacia::spot_lazy_game {
-// Test access uses the existing replay-test build guard. The legacy coverage
-// path lives entirely here and never participates in production expansion.
+// SearchTestAccess exposes search state and operations under the replay-test
+// build guard. Its legacy_* helpers are a test-only reference implementation
+// used to compare against production expansion.
 struct SearchTestAccess {
     static auto& result (Search& s) { return s.result_; }
     static auto& oracle (Search& s) { return s.oracle_; }
