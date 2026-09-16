@@ -183,6 +183,160 @@ def assess(argv):
     return stump.evaluate(instances, names, args.pairs, args.depth)
 
 
+def summary_fixture(tmp_path, cases):
+    """Match run-portfolio-pairs.py's summary, including blank run metadata."""
+    argv = selector_fixture(tmp_path, cases)
+    labels = []
+    pairs = ("rf-ugf", "rf-ufa")
+    arms = ("real:small:forward,unreal:formula:spot-guarded-sparse",
+            "real:small:forward,unreal:automaton:forward")
+    for name, _, _, result_a, result_b in cases:
+        for pair, arm_tokens, result in zip(pairs, arms, (result_a, result_b)):
+            if result is None:
+                continue
+            decisive = result in {"REALIZABLE", "UNREALIZABLE"}
+            labels.append({
+                "solver_label": pair, "instance": name,
+                "smallest_cap_solved": "17" if decisive else "",
+                "decisive_result": result if decisive else "",
+                "decisive_seconds": "0.25" if decisive else "",
+                "still_unsolved_at_max_cap": "false" if decisive else "true",
+                "failure_kind_at_max_cap": result, "max_cap_s": "17",
+                "pair_id": pair, "arm_tokens": arm_tokens,
+                "repetition_id": "1" if decisive else "",
+                "order_index": str(len(labels)) if decisive else "",
+            })
+    write_tsv(tmp_path / "labels.tsv", [
+        "solver_label", "instance", "smallest_cap_solved", "decisive_result",
+        "decisive_seconds", "still_unsolved_at_max_cap", "failure_kind_at_max_cap", "max_cap_s",
+        "pair_id", "arm_tokens", "repetition_id", "order_index",
+    ], labels)
+    return [*argv, "--pairs", ",".join(pairs)]
+
+
+@pytest.mark.parametrize("failure_kind", ["TIMEOUT", "UNKNOWN", "ERROR", "CRASH"])
+def test_empty_decisive_summary_row_is_unsolved_not_missing(tmp_path, failure_kind):
+    cases = [(f"one-{fold}", fold, (0,), "UNREALIZABLE", failure_kind) for fold in range(2)]
+    argv = summary_fixture(tmp_path, cases)
+    _, labels = read_tsv(tmp_path / "labels.tsv")
+    unsolved = [row for row in labels if row["solver_label"] == "rf-ufa"]
+    assert all(row["decisive_result"] == row["repetition_id"] == "" for row in unsolved)
+    assert all(row["failure_kind_at_max_cap"] == failure_kind for row in unsolved)
+    output, scores, training, _ = assess(argv)
+    assert scores[-1]["labelled"] == scores[-1]["pair_a"] == 2
+    assert scores[-1]["missing"] == scores[-1]["pair_b"] == 0
+    assert [row["eligible"] for row in training] == [1, 1, 2]
+    assert all(row["rf-ufa_solved"] == "false" for row in output)
+
+
+def test_both_pairs_unsolved_summary_is_labelled_and_cannot_be_solved(tmp_path):
+    cases = [(f"neither-{fold}", fold, (0,), "TIMEOUT", "ERROR") for fold in range(2)]
+    output, scores, training, _ = assess(summary_fixture(tmp_path, cases))
+    assert [row["labelled"] for row in scores] == [1, 1, 2]
+    assert [row["eligible"] for row in training] == [1, 1, 2]
+    assert all(row[key] == 0 for row in scores
+               for key in ("missing", "selector", "pair_a", "pair_b", "default", "oracle"))
+    assert all(row["rf-ugf_solved"] == row["rf-ufa_solved"] == row["choice_solved"] == "false"
+               for row in output)
+
+
+def test_summary_missing_means_no_pair_row(tmp_path):
+    cases = [
+        ("present", 0, (0,), "TIMEOUT", "ERROR"),
+        ("missing-a", 0, (0,), None, "ERROR"),
+        ("missing-b", 1, (0,), "TIMEOUT", None),
+        ("missing-both", 1, (0,), None, None),
+    ]
+    output, scores, training, _ = assess(summary_fixture(tmp_path, cases))
+    assert scores[-1]["labelled"] == training[-1]["eligible"] == 1
+    assert scores[-1]["missing"] == 3
+    assert scores[-1]["selector"] == scores[-1]["oracle"] == 0
+    by_name = {row["instance"]: row for row in output}
+    assert by_name["present"]["choice_solved"] == "false"
+    assert by_name["missing-a"]["rf-ufa_solved"] == "false"
+    assert by_name["missing-b"]["rf-ugf_solved"] == "false"
+    for name, pair in (("missing-a", "rf-ugf"), ("missing-b", "rf-ufa"),
+                       ("missing-both", "rf-ugf"), ("missing-both", "rf-ufa")):
+        assert by_name[name][f"{pair}_solved"] == by_name[name]["choice_solved"] == ""
+
+
+def mixed_summary_cases():
+    return [(f"f{fold}-{name}", fold, (x,), a, b) for fold in range(2) for name, x, a, b in (
+        ("ugf-only", 0, "UNREALIZABLE", "TIMEOUT"),
+        ("ufa-only", 4, "TIMEOUT", "UNREALIZABLE"),
+        ("both", 2, "REALIZABLE", "REALIZABLE"),
+        ("neither", 3, "UNKNOWN", "ERROR"),
+        ("real-only", 6, "TIMEOUT", "REALIZABLE"),
+    )]
+
+
+def test_summary_per_fold_counts_and_totals_are_consistent(tmp_path):
+    cases = mixed_summary_cases() + [(f"missing-{fold}", fold, (1,), "UNREALIZABLE", None)
+                                     for fold in range(2)]
+    output, scores, training, _ = assess(summary_fixture(tmp_path, cases))
+    for row in scores:
+        assert row["selector"] <= row["oracle"] <= row["labelled"]
+        assert row["pair_a"] <= row["oracle"]
+        assert row["pair_b"] <= row["oracle"]
+        assert row["default"] <= row["oracle"]
+    for score in scores[:-1]:
+        held_out = [row for row in output if row["fold"] == score["fold"]]
+        assert score["labelled"] == 5
+        assert score["missing"] == 1
+        assert score["labelled"] + score["missing"] == len(held_out)
+        labelled = [row for row in held_out if row["choice_solved"] != ""]
+        assert score["selector"] == sum(row["choice_solved"] == "true" for row in labelled)
+        for key, pair in (("pair_a", "rf-ugf"), ("pair_b", "rf-ufa")):
+            assert score[key] == sum(row[f"{pair}_solved"] == "true" for row in labelled)
+        assert score["oracle"] == sum(
+            row["rf-ugf_solved"] == "true" or row["rf-ufa_solved"] == "true" for row in labelled)
+    for key in ("labelled", "selector", "pair_a", "pair_b", "default", "oracle", "missing"):
+        assert scores[-1][key] == sum(row[key] for row in scores[:-1])
+    assert scores[-1]["labelled"] + scores[-1]["missing"] == len(cases)
+    assert [row["realizable_only"] for row in training] == [1, 1, 2]
+    assert [row["eligible"] for row in training] == [4, 4, 8]
+
+
+def test_real_summary_schema_cli_regression(tmp_path):
+    argv = summary_fixture(tmp_path, mixed_summary_cases())
+    assert stump.main(argv) == 0
+    columns, predictions = read_tsv(tmp_path / "predictions.tsv")
+    assert columns == ["instance", "fold", "chosen_pair", "rf-ugf_solved", "rf-ufa_solved",
+                       "choice_solved"]
+    assert len(predictions) == 10
+    assert all(row["choice_solved"] != "" for row in predictions)
+    assert all(row["choice_solved"] == "false" for row in predictions
+               if row["instance"].endswith("neither"))
+    report = (tmp_path / "report.md").read_text()
+    assert "| 0 | 5 | 4 | 2 | 3 | rf-ugf | 2 | 4 | 0 |" in report
+    assert "| 1 | 5 | 4 | 2 | 3 | rf-ugf | 2 | 4 | 0 |" in report
+    assert "| Total | 10 | 8 | 4 | 6 | per fold | 4 | 8 | 0 |" in report
+
+
+@pytest.mark.parametrize("repetition", [1, 2])
+def test_unsolved_summary_retained_with_explicit_repetition_filter(tmp_path, repetition):
+    argv = summary_fixture(tmp_path, [("one", 0, (0,), "UNREALIZABLE", "ERROR")])
+
+    def add_second_repetition(rows):
+        rows.append({**rows[0], "repetition_id": "2"})
+
+    rewrite_tsv(tmp_path / "labels.tsv", add_second_repetition)
+    output, scores, _, _ = assess([*argv, "--repetition", str(repetition)])
+    assert scores[-1]["labelled"] == 1
+    assert scores[-1]["missing"] == 0
+    assert output[0]["rf-ugf_solved"] == "true"
+    assert output[0]["rf-ufa_solved"] == "false"
+
+
+def test_duplicate_unsolved_summary_row_rejected(tmp_path, capsys):
+    argv = summary_fixture(tmp_path, [("one", 0, (0,), "TIMEOUT", "ERROR")])
+    rewrite_tsv(tmp_path / "labels.tsv", lambda rows: rows.append(rows[0].copy()))
+    with pytest.raises(SystemExit) as error:
+        stump.main(argv)
+    assert error.value.code == 2
+    assert "duplicate label row for ('rf-ugf', 'one', 1)" in capsys.readouterr().err
+
+
 def threshold_cases():
     return [(f"f{fold}-x{x}", fold, (x,),
              "UNREALIZABLE" if x < 2.5 else "TIMEOUT",

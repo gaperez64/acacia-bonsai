@@ -133,7 +133,11 @@ def load_instances(args: argparse.Namespace) -> tuple[list[str], list[Instance]]
     })
     labels = {}
     for row in label_rows:
-        if row["solver_label"] not in args.pairs or row["repetition_id"] != str(args.repetition):
+        if row["solver_label"] not in args.pairs:
+            continue
+        # Summary rows without a decisive run have no repetition_id. They still
+        # supply an unsolved label; only explicit repetition IDs filter rows out.
+        if row["repetition_id"] and row["repetition_id"] != str(args.repetition):
             continue
         key = (row["solver_label"], row["instance"], args.repetition)
         if key in labels:
