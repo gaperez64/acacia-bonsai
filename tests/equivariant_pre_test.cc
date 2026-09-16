@@ -514,6 +514,80 @@ namespace {
            expect ("reference sweep rejects unreal fixture", not reference.has_value ());
   }
 
+  bool check_record_lifecycle (bool sweep, bool losing) {
+    namespace records = acacia::spot_records;
+    char directory[] = "/tmp/acacia-equivariant-record-XXXXXX";
+    if (not expect ("capture directory", mkdtemp (directory) != nullptr)) return false;
+    setenv ("ACACIA_SPOT_CAPTURE_DIR", directory, 1);
+    setenv ("ACACIA_SPOT_CAPTURE_HISTORY", "1", 1);
+    const fixture fx = make_aut (3, losing);
+    posets::vectors::bool_threshold = fx.aut->num_states ();
+    bool ok = true;
+    {
+      records::Record capture;
+      records::segment ("frozen-graph", "backward");
+      records::phase ("boolean-discovery");
+      const auto result = [&] {
+        if (not sweep)
+          return eq::try_solve<SetOfStates> (
+              fx.aut, 3, 1, 1, fx.all_inputs, fx.all_outputs, ios_precomputers::mona (),
+              actioners::standard<state> (), input_pickers::critical ());
+        const auto indexed = symmetry::analyze_indexed_aps (fx.aut, fx.all_inputs, fx.all_outputs);
+        const auto G = symmetry::detect_full_symmetric_generators (fx.aut, indexed);
+        const auto L = symmetry::compute_block_layout (G, fx.aut->num_states ());
+        return eq::solve_orbit_sweep<SetOfStates> (
+            fx.aut, 3, 1, 1, fx.all_inputs, fx.all_outputs, G, *L, actioners::standard<state> ());
+      } ();
+      ok &= expect ("captured equivariant result", result.attempted && result.win.has_value () != losing);
+    }
+    const auto has = [] (const std::string& line, const char* key, const std::string& value) {
+      return line.find ('"' + std::string (key) + "\":\"" + value + '"') != std::string::npos;
+    };
+    unsigned starts = 0, ends = 0;
+    bool actions = false, search = false;
+    for (const auto& entry : std::filesystem::directory_iterator (directory)) {
+      std::ifstream input (entry.path ());
+      std::string line;
+      if (entry.path ().extension () == ".json") {
+        std::getline (input, line);
+        ok &= expect ("equivariant completed record",
+                      has (line, "worker_end", "returned") && has (line, "stage", "attempt-end") &&
+                      has (line, "attempt_end", "true") && has (line, "search_started", "true") &&
+                      has (line, "status", losing ? "LOSE_K" : "WIN_K") &&
+                      has (line, "evidence", losing ? "fixedpoint-refutation" : "fixedpoint") &&
+                      has (line, "backend", sweep ? "backward-equivariant-sweep" : "backward-equivariant"));
+        continue;
+      }
+      while (std::getline (input, line)) {
+        if (has (line, "stage", "attempt-start")) {
+          ++starts;
+          actions = search = false;
+          ok &= expect ("equivariant K start/reset",
+                        has (line, "attempt_id", std::to_string (starts)) &&
+                        has (line, "k", std::to_string (starts)) &&
+                        has (line, "status", "UNKNOWN") && has (line, "evidence", "none") &&
+                        has (line, "attempt_end", "false") && has (line, "search_started", "false"));
+        }
+        if (has (line, "stage", "action-construction")) actions = true;
+        if (has (line, "stage", "search")) {
+          ok &= expect ("equivariant actions precede search", actions);
+          search = true;
+        }
+        if (has (line, "stage", "attempt-end") && has (line, "worker_end", "unobserved")) {
+          ++ends;
+          ok &= expect ("equivariant search precedes outcome", search && has (line, "search_started", "true"));
+        }
+      }
+    }
+    ok &= expect ("equivariant attempts balanced", starts > 0 && starts == ends && (!losing || starts == 3));
+    unsetenv ("ACACIA_SPOT_CAPTURE_DIR");
+    unsetenv ("ACACIA_SPOT_CAPTURE_HISTORY");
+    std::filesystem::remove_all (directory);
+    if (ok) std::cout << "PASS equivariant-" << (sweep ? "sweep" : "closure")
+                     << (losing ? "-repeated-k-loss" : "-win") << " lifecycle\n";
+    return ok;
+  }
+
 }  // namespace
 
 int main () {
@@ -527,6 +601,9 @@ int main () {
   ok &= run_partial_symmetry_case ();
   ok &= run_syntax_hint_case ();
   ok &= run_unreal_case ();
+  for (bool sweep : {false, true})
+    for (bool losing : {false, true})
+      ok &= check_record_lifecycle (sweep, losing);
 
   posets::vectors::bool_threshold = old_bool_threshold;
 

@@ -1,8 +1,8 @@
 """Turn captured campaign worker records into the S0 failure-phase table and report.
 
 Use the largest recorded cap for each instance; never combine counters across workers
-or K attempts. Empty TSV cells mean absent measurements. A search snapshot can retain
-timings from an earlier completed attempt while its K already names the next attempt.
+or K attempts. Empty TSV cells mean absent measurements. Legacy snapshots can retain
+stale counters; version 2 resets current-attempt fields and labels cumulative totals.
 """
 
 import argparse
@@ -20,7 +20,8 @@ from statistics import median
 ARM_FIELDS = ("polarity", "transform", "requested_backend", "requested_provider")
 STAGES = (
     "before-translation", "fallback-translation", "preprocessing", "factory",
-    "enumeration", "search", "verification", "verified-attempt",
+    "enumeration", "boolean-discovery", "action-construction", "segment-start",
+    "attempt-start", "search", "verification", "verified-attempt", "attempt-end",
 )
 NUMERIC_FIELDS = (
     "search_ms", "verification_ms", "row_generation_ms", "prep_ms", "game_states",
@@ -35,6 +36,8 @@ NUMERIC_FIELDS = (
     "verify_invariant_queries", "verify_invariant_steps", "verify_invariant_bdd_operations",
     "verify_proof_bad_queries", "verify_proof_bad_steps", "verify_proof_bad_bdd_operations",
     "proofs_total", "proofs_in_initial_cone", "dependency_list_len_sum", "dependency_list_len_max",
+    "attempt_elapsed_ms", "attempt_row_generation_ms", "attempt_rows_generated",
+    "loss_verification_calls", "win_verification_calls", "loss_verification_ms",
 )
 MECHANISMS = (
     "game_states", "guarded_choices", "choices-per-node", "subsumption_scans",
@@ -98,7 +101,13 @@ class Worker:
         return "/".join(self.record[field] for field in ARM_FIELDS)
 
     @property
+    def backend(self):
+        return self.record.get("backend", self.record["requested_backend"])
+
+    @property
     def reached_search(self):
+        if "search_started" in self.record:
+            return self.record["search_started"] == "true"
         return self.record["stage"] in ("search", "verification", "verified-attempt")
 
     @property
@@ -108,6 +117,10 @@ class Worker:
     @property
     def terminal_attempt(self):
         """A verified attempt is terminal only on an outcome or the last losing K."""
+        if self.record.get("record_incomplete") == "true":
+            return False
+        if self.record.get("record_version") == "2":
+            return self.record.get("worker_end") == "returned"
         if self.record["stage"] != "verified-attempt" or not self.record.get("status"):
             return False
         if self.record["status"] == "WIN_K":
@@ -122,9 +135,35 @@ class Worker:
         )
 
 
+def read_record(path):
+    """Recover only a complete history prefix; never infer a return after truncation."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeError):
+        history = path.with_suffix(".history.jsonl")
+        record = None
+        lines = history.read_bytes().splitlines(keepends=True)
+        for index, line in enumerate(lines):
+            try:
+                if not line.endswith(b"\n"):
+                    raise ValueError("incomplete history line")
+                candidate = json.loads(line)
+                if not isinstance(candidate, dict):
+                    raise ValueError("expected a JSON object")
+                record = candidate
+            except (ValueError, UnicodeError):
+                if index != len(lines) - 1:
+                    raise ValueError(f"{history}: corrupt non-trailing history record") from None
+        if record is None:
+            raise ValueError(f"{history}: no complete history record")
+        record["record_incomplete"] = "true"
+        record["worker_end"] = "unobserved"
+        return record
+
+
 def load_workers(args):
     tiers = {}
-    for row in read_tsv(args.cohort, ("instance", "tier")):
+    for row in read_tsv(args.cohort, ("instance", "tier")) if args.cohort else ():
         key = instance_key(row["instance"])
         if key in tiers:
             raise ValueError(f"{args.cohort}: duplicate normalized instance {key!r}")
@@ -137,8 +176,9 @@ def load_workers(args):
         if row["solver_label"] != args.label:
             continue
         key = instance_key(row["instance"])
-        if key not in tiers:
+        if args.cohort and key not in tiers:
             raise ValueError(f"{campaign_path}: unmatched cohort instance {row['instance']!r}")
+        tiers.setdefault(key, "unclassified")
         cap = number(row["cap_s"], campaign_path, "cap_s")
         number(row["seconds"], campaign_path, "seconds")
         if row["timed_out"] not in ("true", "false"):
@@ -181,7 +221,7 @@ def load_workers(args):
     workers = {}
     for path in paths:
         try:
-            record = json.loads(path.read_text(encoding="utf-8"))
+            record = read_record(path)
             if not isinstance(record, dict):
                 raise ValueError("expected a JSON object")
             for field in ("instance", "stage", *ARM_FIELDS):
@@ -192,7 +232,9 @@ def load_workers(args):
             if "status" in record and not isinstance(record["status"], str):
                 raise ValueError("invalid status")
             fields = set(NUMERIC_FIELDS) | {"k", "kmax"}
-            fields.update(field for field in record if field.startswith(("verify_", "search_")))
+            fields.update(field for field in record
+                          if field.startswith(("verify_", "search_", "cumulative_"))
+                          and field != "search_started")
             numbers = {field: number(record[field], path, field)
                        for field in fields if field in record}
             key = instance_key(record["instance"])
@@ -204,22 +246,20 @@ def load_workers(args):
             if cap != selected[key]:
                 continue
             worker = Worker(path, record, campaigns[key, cap], tiers[key], numbers)
-            worker_key = key, worker.arm
+            # Legacy filenames already encode PID/sequence, including multiple
+            # transformed components handled by the same requested arm.
+            worker_key = key, worker.arm, record.get("worker_id", path.stem)
             if worker_key in workers:
                 raise ValueError(f"duplicate instance/arm, also in {workers[worker_key].path}")
             workers[worker_key] = worker
         except (OSError, UnicodeError, ValueError) as error:
             raise ValueError(f"{path}: cannot parse worker record: {error}") from error
 
-    arms = {arm for _, arm in workers}
+    arms = {arm for _, arm, _ in workers}
     for key in selected:
-        missing = arms - {arm for instance, arm in workers if instance == key}
+        missing = arms - {arm for instance, arm, _ in workers if instance == key}
         if missing or not arms:
             raise ValueError(f"{root}: missing workers for {key!r}: {sorted(missing)}")
-    sparse = [w for w in workers.values()
-              if w.record["requested_backend"] == "spot-guarded-sparse"]
-    if len({w.arm for w in sparse}) != 1 or len(sparse) != len(selected):
-        raise ValueError(f"{root}: expected exactly one sparse guarded arm per instance")
     return sorted(workers.values(), key=lambda w: (w.instance, w.arm))
 
 
@@ -273,16 +313,19 @@ def identity_row(workers, total, fields):
 
 
 def make_report(workers, label):
-    sparse = [w for w in workers if w.record["requested_backend"] == "spot-guarded-sparse"]
+    sparse = [w for w in workers if w.backend == "spot-guarded-sparse"]
     searched = [w for w in sparse if w.reached_search]
     tiers = sorted({w.tier for w in sparse})
     stages = [stage for stage in STAGES if any(w.record["stage"] == stage for w in sparse)]
     counts = Counter((w.record["stage"], w.tier) for w in sparse)
     lines = [
         f"# {label}: worker failure phases", "",
-        f"{len(workers)} worker records; {len(sparse)} instances. One row per instance/arm "
+        f"{len(workers)} worker records; {len({w.instance for w in workers})} instances. "
+        "One row per worker "
         "at its largest recorded cap. Campaign seconds describe the whole invocation.", "",
-        "## 1. Routing table", "", f"Sparse guarded arm: `{sparse[0].arm}`.", "",
+        "## 1. Routing table", "",
+        "Sparse guarded arms: " + (", ".join(sorted({w.arm for w in sparse})) or "none") + ".",
+        "The routing and mechanism tables use the effective backend of the current segment.", "",
     ]
     routing = [[stage, *(counts[stage, tier] for tier in tiers),
                 sum(counts[stage, tier] for tier in tiers)] for stage in stages]
@@ -291,7 +334,8 @@ def make_report(workers, label):
     lines += markdown_table(["Furthest stage", *tiers, "Total"], routing)
     before = sum(not w.reached_search for w in sparse)
     lines += [
-        f"{before}/{len(sparse)} workers stopped before search: the game was never reached. "
+        f"{before}/{len(sparse)} workers have no search-entry evidence. "
+        "A legacy label without an explicit marker does not prove search was never reached. "
         "`before-translation` (or `fallback-translation`) is translation-bound; "
         "`preprocessing`, `factory`, or `enumeration` is preprocessing-bound. "
         "These are last observed boundaries, not completed phase durations.", "",
@@ -301,7 +345,11 @@ def make_report(workers, label):
         "Timings and counters in a `search` snapshot "
         "may survive from the preceding completed K attempt; the recorded K can already "
         "refer to the new, unfinished attempt. These are snapshot distributions, not "
-        "whole-run totals or measurements of the unfinished attempt.", "",
+        "whole-run totals or measurements of the unfinished attempt. "
+        "Version 2 clears current-attempt fields; cumulative_* totals contain observed "
+        "ended-attempt contributions, with separate started/ended/completed counts. "
+        "Row generation is an inclusive subcomponent of search/verification and must not "
+        "be added to either when computing wall-time shares.", "",
     ]
     shares, missing, zero_total = [], [], []
     for worker in searched:
@@ -365,11 +413,12 @@ def make_report(workers, label):
     uncapped_decisive = [w for w in unfinished if not w.timed_out
                         and w.campaign["result"] in ("REALIZABLE", "UNREALIZABLE")]
     conventional = [w for w in workers
-                    if w.record["requested_backend"] in ("backward", "forward")]
+                    if w.backend in ("backward", "forward")]
     conventional_capped = [w for w in conventional if w.timed_out]
     lines += [
         "## 4. Censoring note", "",
-        f"{len({w.instance for w in capped})}/{len(sparse)} campaign invocations timed out, "
+        f"{len({w.instance for w in capped})}/{len({w.instance for w in workers})} "
+        "campaign invocations timed out, "
         f"covering {len(capped)}/{len(workers)} captured workers. "
         f"Among sparse guarded workers, {len(censored)}/{len(sparse_capped)} in timed-out "
         f"invocations ({len(censored)}/{len(sparse)} overall) lack a terminal attempt snapshot. "
@@ -378,7 +427,9 @@ def make_report(workers, label):
         "do not prove the individual process was alive when the kill occurred.", "",
         f"{len(terminal)}/{len(sparse)} sparse workers have terminal attempt evidence. "
         "`verified-attempt` marks completion of one K attempt, not automatically worker "
-        "completion: terminal evidence requires WIN_K, UNKNOWN/RESOURCE_LIMIT in "
+        "completion. Version 2 requires an observed worker_end=returned; an exception "
+        "or parent cancellation is not a normal return. Legacy terminal attempt evidence "
+        "requires WIN_K, UNKNOWN/RESOURCE_LIMIT in "
         "candidate-only mode, or LOSE_K with k >= kmax. "
         "Retained timings or a LOSE_K status at stage `search` do not mark "
         "completion of the worker.", "",
@@ -387,7 +438,7 @@ def make_report(workers, label):
         f"Of those, {len(uncapped_decisive)} belong to decisive portfolio runs, consistent "
         "with cancellation after another arm answered. They are excluded from the "
         "cap-censored count.", "",
-        f"Backward and forward workers emit no final-record marker. Of their "
+        f"Legacy backward and forward workers emit no final-record marker. Of all their "
         f"{len(conventional)} records, {len(conventional_capped)} belong to capped "
         f"invocations and {len(conventional) - len(conventional_capped)} to uncapped "
         "invocations. The capped count establishes exposure to a campaign timeout, "
@@ -404,8 +455,8 @@ def make_report(workers, label):
     certificate_fields = ("proofs_total", "proofs_in_initial_cone",
                           "dependency_list_len_max", "dependency_list_len_sum")
     lines += [
-        "The counters in the following three sections describe the LAST verified K attempt: "
-        "each fixed-K attempt writes into the same worker record. They are not totals across K.",
+        "The counters below are current-attempt fields in version 2. In legacy snapshots "
+        "they may describe an earlier completed K. They are not totals across K.",
         "",
         "## 5. Scan composition", "", field_presence(searched, scan_fields), "",
         "Shares = 100 × counter / subsumption_nodes_checked, requiring a positive total. "
@@ -478,13 +529,17 @@ def make_tsv(workers):
                        - set(NUMERIC_FIELDS) - {"k", "kmax"})
     fields = ["instance", "tier", "arm", "stage_reached", "status", "k",
               "campaign_result", "campaign_seconds", *counters, *ARM_FIELDS,
-              "campaign_cap_s", "campaign_timed_out", "record_path", *appended_counters]
+              "campaign_cap_s", "campaign_timed_out", "record_path", *appended_counters,
+              "record_version", "worker_id", "invocation_id", "segment_id", "attempt_id",
+              "search_started", "attempt_end", "evidence", "worker_end", "record_incomplete",
+              "provider", "backend", "fallback", "verification_kind", "worker_result",
+              "worker_reason"]
     stream = io.StringIO(newline="")
     writer = csv.DictWriter(stream, fields, delimiter="\t", lineterminator="\n")
     writer.writeheader()
     for worker in workers:
         row = {field: worker.record[field]
-               for field in (*counters, *appended_counters, *ARM_FIELDS, "status", "k")
+               for field in fields
                if field in worker.record}
         row.update(instance=worker.instance, tier=worker.tier, arm=worker.arm,
                    stage_reached=worker.record["stage"], campaign_result=worker.campaign["result"],
@@ -501,8 +556,7 @@ def main():
     parser.add_argument("--campaign-tsv", type=Path, help="Override the label-based campaign TSV path")
     parser.add_argument("--summary-tsv", type=Path, help="Override the label-based summary TSV path")
     parser.add_argument(
-        "--cohort", type=Path,
-        default=Path("benchmarking/coverage-frontier-20260912/diagnostic-cohort.tsv"),
+        "--cohort", type=Path, help="Optional instance/tier TSV; otherwise use campaign IDs",
     )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)

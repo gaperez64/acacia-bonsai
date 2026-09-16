@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "solver/spot_worker_record.hh"
 #include "version.hh"
 #include "solver/k_schedule.hh"
 #include "solver/symmetry.hh"
@@ -1010,6 +1011,7 @@ namespace acacia::diagnostics {
   }
 
   inline bool finish (bool solved, std::string reason) {
+    spot_records::worker_result (solved, reason);
     if (auto* m = current ()) {
       m->result = solved ? "solved" : "unknown";
       if (m->final_reason == "unknown")
@@ -1126,7 +1128,10 @@ namespace acacia::diagnostics {
   inline void set_forward_total_ms (double) {}
   inline void set_forward_final_reason (std::string) {}
   inline void set_final_reason (std::string) {}
-  inline bool finish (bool solved, std::string) { return solved; }
+  inline bool finish (bool solved, std::string reason) {
+    spot_records::worker_result (solved, reason);
+    return solved;
+  }
   inline void set_equivariant_decline (std::string) {}
   inline void set_equivariant_attempt (size_t, size_t, size_t) {}
   inline void set_symmetry_structure (symmetry::structure_report) {}

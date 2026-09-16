@@ -185,6 +185,7 @@ namespace acacia::solver_detail {
       if (eq.attempted)
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut, all_inputs,
                                               all_outputs);
+      spot_records::segment ("frozen-graph", "backward", true);
     }
 #endif
 
@@ -200,6 +201,7 @@ namespace acacia::solver_detail {
       // This branch precedes ALL semantic-action-table construction. Each K
       // owns fresh search, row and oracle instances, including its verification.
       for (long long k = kmin;;) {
+        spot_records::begin_attempt (k);
         acacia::diagnostics::set_support_k (static_cast<int> (k));
         struct Attempt {
           forward_result_status status;
@@ -222,6 +224,9 @@ namespace acacia::solver_detail {
             const auto prep_ms = std::chrono::duration<double, std::milli> (
                 std::chrono::steady_clock::now () - prepared).count ();
             auto result = summarize (search.solve ());
+            store.snapshot ();
+            report.ms ("attempt_row_generation_ms", store.generation_ms);
+            report.count ("attempt_rows_generated", store.cache->complete_rows ());
             result.prep_ms = prep_ms;
             return result;
           }
@@ -241,7 +246,9 @@ namespace acacia::solver_detail {
           spot_records::put ("verification_ms", std::to_string (result.verify_ms));
           spot_records::put ("guarded_choices", std::to_string (result.choices));
           spot_records::put ("game_states", std::to_string (result.nodes));
-          spot_records::phase ("verified-attempt");
+          spot_records::end_attempt (forward_result_name (result.status),
+              result.status == forward_result_status::win_k ? "verified-win" :
+              result.status == forward_result_status::lose_k ? "verified-loss" : "none");
         }
         verb_do (1, vout << "spot-guarded K=" << k
                          << " prep_ms=" << result.prep_ms << " solve_ms=" << result.solve_ms
@@ -259,6 +266,7 @@ namespace acacia::solver_detail {
           std::cerr << "spot-guarded UNKNOWN: fallback provider=frozen-graph backend=backward; "
                        "rebuilding game actions on the existing preprocessed frozen graph\n";
           acacia::diagnostics::set_support_backend ("backward");
+          spot_records::segment ("frozen-graph", "backward", true);
           break;
         }
         const auto next = acacia::k_schedule::next (
@@ -298,6 +306,7 @@ namespace acacia::solver_detail {
       if (not forward.should_fallback_to_backward ())
         return post_real<SpecializedDownset> (
             std::move (win), do_synthesis, aut, all_inputs, all_outputs);
+      spot_records::segment ("frozen-graph", "backward", true);
     }
 #else
     // CLI requests are rejected while parsing.  Abort if an internal caller

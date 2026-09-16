@@ -116,6 +116,70 @@ namespace {
     return true;
   }
 
+  bool fast_path_records (bool gfg) {
+    namespace records = acacia::spot_records;
+    char directory[] = "/tmp/acacia-fast-record-XXXXXX";
+    if (not mkdtemp (directory)) return false;
+    setenv ("ACACIA_SPOT_CAPTURE_DIR", directory, 1);
+    setenv ("ACACIA_SPOT_CAPTURE_HISTORY", "1", 1);
+    bool ok = true;
+    {
+      records::Record capture;
+      records::segment ("frozen-graph", "spot-guarded-sparse");
+      records::phase ("preprocessing");
+      // The elevator's auxiliary SCC query must not relabel worker progress.
+      ok &= deterministic_winning_region_covers_all_original_states ();
+      for (const auto& entry : std::filesystem::directory_iterator (directory)) {
+        std::ifstream input (entry.path ());
+        std::string line;
+        while (std::getline (input, line))
+          ok &= line.find ("\"search_started\":\"true\"") == std::string::npos &&
+                line.find ("\"stage\":\"search\"") == std::string::npos &&
+                line.find ("\"stage\":\"action-construction\"") == std::string::npos;
+      }
+      auto aut = gfg ? make_nondet_gfg_buchi () : make_deterministic_buchi ();
+      const auto result = acacia::spot_fastpath::try_spot_nba_fast_path (
+          aut, bddtrue, bddtrue, false, true, SPOT_FAST_DET_AND_GFG);
+      ok &= result.conclusive && !result.current_output_player_wins;
+    }
+    const auto has = [] (const std::string& line, const char* key, const char* value) {
+      return line.find ('"' + std::string (key) + "\":\"" + value + '"') != std::string::npos;
+    };
+    bool actions = false, search = false, verification = false, ended = false;
+    for (const auto& entry : std::filesystem::directory_iterator (directory)) {
+      if (entry.path ().extension () != ".jsonl") continue;
+      std::ifstream input (entry.path ());
+      std::string line;
+      while (std::getline (input, line)) {
+        if (has (line, "stage", "verification")) {
+          verification = true;
+          ok &= has (line, "verification_kind", "gfg-precondition");
+        }
+        if (has (line, "stage", "action-construction")) actions = true;
+        if (has (line, "stage", "search")) {
+          search = true;
+          ok &= actions && (verification == gfg);
+        }
+        if (has (line, "stage", "attempt-end")) {
+          ended = true;
+          ok &= search && has (line, "search_started", "true") &&
+                has (line, "attempt_end", "true") && has (line, "status", "LOSE") &&
+                has (line, "evidence", "spot-game") &&
+                has (line, "backend", gfg ? "spot-fast-gfg" : "spot-fast-det") &&
+                line.find ("\"k\"") == std::string::npos;
+          ok &= (line.find ("\"verification_ms\"") != std::string::npos) == gfg;
+        }
+      }
+    }
+    ok &= ended;
+    unsetenv ("ACACIA_SPOT_CAPTURE_DIR");
+    unsetenv ("ACACIA_SPOT_CAPTURE_HISTORY");
+    std::filesystem::remove_all (directory);
+    std::cout << (ok ? "PASS " : "FAIL ") << "spot-fast-" << (gfg ? "gfg" : "det")
+              << "-loss lifecycle (GFG precondition verification only)\n";
+    return ok;
+  }
+
 }  // namespace
 
 int main () {
@@ -137,6 +201,8 @@ int main () {
                       nba_fast_class::non_gfg_buchi);
   ok &= deterministic_winning_region_covers_all_original_states ();
   ok &= spot_fast_modes_require_det_bit ();
+  ok &= fast_path_records (false);
+  ok &= fast_path_records (true);
 
   return ok ? 0 : 1;
 }

@@ -445,6 +445,8 @@ namespace {
           capture.put ("kmin", std::to_string (opt_kmin));
           capture.put ("kmax", std::to_string (opt_k));
           capture.put ("kinc", std::to_string (opt_kinc));
+          acacia::spot_records::segment (acacia::automaton_provider_name (provider),
+                                         acacia::game_backend_name (backend));
           acacia::spot_records::phase ("before-translation");
         }
         // Create the automaton for the formula we have prepared.
@@ -478,7 +480,7 @@ namespace {
                        "rebuilding translation and preprocessing from captured worker formula; "
                        "lazy_materialization=none\n";
           effective_backend = acacia::game_backend::backward;
-          acacia::spot_records::put ("fallback", "frozen-graph:backward");
+          acacia::spot_records::segment ("frozen-graph", "backward", true);
           acacia::spot_records::phase ("fallback-translation");
           acacia::diagnostics::set_support_backend ("backward");
         }
@@ -534,8 +536,7 @@ namespace {
                            << (check_unreal.has_value () ? "inconclusive on unreal path"
                                                          : "spec is valid, realizable")
                            << std::endl);
-          return acacia::diagnostics::finish (not check_unreal.has_value (),
-                                              "empty-translated-automaton");
+          return acacia::solver_detail::finish_empty_translation (check_unreal.has_value ());
         }
 
 #if ACACIA_ENABLE_DIAGNOSTICS
@@ -580,6 +581,10 @@ namespace {
                            << "\n");
           return acacia::diagnostics::finish (fast.current_output_player_wins, "spot-fast-path");
         }
+        if (acacia::spot_fastpath::detail::has_mode (spot_fast, SPOT_FAST_DET))
+          acacia::spot_records::segment ("frozen-graph",
+                                         acacia::game_backend_name (effective_backend), true);
+        acacia::spot_records::phase ("preprocessing");
         acacia::diagnostics::snapshot ("after-spot-fast");
 
         {
@@ -647,6 +652,7 @@ namespace {
           return acacia::diagnostics::finish (false, "empty-after-preprocessing");
         }
 
+        acacia::spot_records::phase ("boolean-discovery");
         posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
         // Boolean-state discovery can renumber the graph. Out-degrees must
         // use the same final source coordinates as the ranks and actions.

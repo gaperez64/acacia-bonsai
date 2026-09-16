@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration.hh"
+#include "solver/diagnostics.hh"
 #include "solver/game_backend.hh"
 #include "solver/spot_fast_mode.hh"
 #include "solver/symmetry_certificate.hh"
@@ -34,6 +35,16 @@ inline const char* translation_pref_name (TRANSLATION_PREF_T preference) {
       return "deterministic";
     default:
       return "unknown";
+  }
+}
+
+namespace acacia::solver_detail {
+  // A zero-state translation decides the real worker without a K search. The
+  // unreal orientation remains inconclusive (its transformed language differs).
+  inline bool finish_empty_translation (bool checking_unreal) {
+    spot_records::begin_attempt ();
+    spot_records::end_attempt (checking_unreal ? "UNKNOWN" : "WIN", "empty-language");
+    return diagnostics::finish (!checking_unreal, "empty-translated-automaton");
   }
 }
 
