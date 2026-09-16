@@ -3,8 +3,11 @@
 import csv
 import importlib.util
 import json
+import os
 import pathlib
+import subprocess
 import sys
+import tempfile
 
 import pytest
 
@@ -16,12 +19,27 @@ PAIRS = {
     "beta": "real:small:forward,unreal:automaton:forward",
 }
 INSTANCES = ["error", "crash", "later"]
+# Independent oracle: rotate the first pair across both instances and repetitions.
+INTERLEAVED_COORDINATES = [
+    (1, "error.ltl", "alpha"),
+    (1, "error.ltl", "beta"),
+    (2, "error.ltl", "beta"),
+    (2, "error.ltl", "alpha"),
+    (1, "crash.ltl", "beta"),
+    (1, "crash.ltl", "alpha"),
+    (2, "crash.ltl", "alpha"),
+    (2, "crash.ltl", "beta"),
+    (1, "later.ltl", "alpha"),
+    (1, "later.ltl", "beta"),
+    (2, "later.ltl", "beta"),
+    (2, "later.ltl", "alpha"),
+]
 
 
-def load():
+def load(script=SCRIPT):
     sys.path.insert(0, str(BENCHMARKING))
     try:
-        spec = importlib.util.spec_from_file_location("run_portfolio_pairs", SCRIPT)
+        spec = importlib.util.spec_from_file_location("run_portfolio_pairs", script)
         module = importlib.util.module_from_spec(spec)
         assert spec.loader is not None
         spec.loader.exec_module(module)
@@ -31,6 +49,19 @@ def load():
 
 
 pairs = load()
+
+
+@pytest.fixture
+def legacy_pairs():
+    source = subprocess.run(
+        ["git", "show", "origin/master:benchmarking/run-portfolio-pairs.py"],
+        cwd=BENCHMARKING.parent, check=True, capture_output=True,
+    ).stdout
+    # Keep the real historical source inside the worktree so ROOT resolves correctly.
+    with tempfile.TemporaryDirectory(prefix=".pytest-legacy-pairs-", dir=BENCHMARKING.parent) as temp:
+        script = pathlib.Path(temp) / SCRIPT.name
+        script.write_bytes(source)
+        yield load(script)
 
 
 @pytest.fixture
@@ -176,23 +207,18 @@ def test_collect_without_errors_succeeds(monkeypatch, campaign, capsys):
 
 
 @pytest.mark.parametrize("result", ["ERROR", "CRASH"])
-@pytest.mark.parametrize("recorded_policy", ["collect", "stop", "legacy"])
+@pytest.mark.parametrize("recorded_policy", ["collect", "stop"])
 def test_resume_collect_skips_failures_and_keeps_them_in_final_count(
     monkeypatch, campaign, tmp_path, capsys, result, recorded_policy,
 ):
     mock_invocations(monkeypatch, [result, KeyboardInterrupt()])
-    policy = "stop" if recorded_policy == "legacy" else recorded_policy
-    assert run_main(monkeypatch, campaign, "--error-policy", policy) == (
-        130 if policy == "collect" else 2
+    assert run_main(monkeypatch, campaign, "--error-policy", recorded_policy) == (
+        130 if recorded_policy == "collect" else 2
     )
     output = tmp_path / "out.tsv"
     original = output.read_bytes()
     recorded_row, = read_tsv(output)
     metadata_path = tmp_path / "out-metadata.json"
-    if recorded_policy == "legacy":
-        metadata = json.loads(metadata_path.read_text())
-        del metadata["error_policy"]
-        metadata_path.write_text(json.dumps(metadata))
     capsys.readouterr()
 
     calls = mock_invocations(monkeypatch, ["REALIZABLE"] * 5)
@@ -214,6 +240,131 @@ def test_resume_collect_skips_failures_and_keeps_them_in_final_count(
     assert len(calls) == 5
     assert output.read_bytes() == completed
     assert capsys.readouterr().err == captured.err
+
+
+def test_resume_collect_from_real_legacy_preserves_tsv_prefix(
+    monkeypatch, campaign, tmp_path, legacy_pairs, capsys,
+):
+    from benchlib import RunResult
+
+    binary = tmp_path / "solver"
+    binary.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json, pathlib, sys\n"
+        "log = pathlib.Path(__file__).with_suffix('.json')\n"
+        "calls = json.loads(log.read_text()) if log.exists() else []\n"
+        "calls.append([sys.argv[2], pathlib.Path(sys.argv[-1]).name])\n"
+        "log.write_text(json.dumps(calls))\n"
+        "if len(calls) == 3:\n"
+        "    print('Exception caught: std::bad_alloc', file=sys.stderr)\n"
+        "    sys.exit(3)\n"
+        "print('REALIZABLE')\n"
+    )
+
+    def scoped(cmd, **kwargs):
+        # Exercise the fake executable, replacing only the systemd scope wrapper.
+        run = subprocess.run([sys.executable, *cmd], capture_output=True, text=True, check=False)
+        return RunResult(
+            run.stdout, run.stderr, run.returncode, 0.04, False,
+            stdout_bytes=len(run.stdout), stderr_bytes=len(run.stderr),
+            scope_unit="acacia-test.scope",
+        )
+
+    monkeypatch.setattr(legacy_pairs, "run_systemd_scope", scoped)
+    monkeypatch.setattr(pairs, "run_systemd_scope", scoped)
+    args = legacy_pairs.build_parser().parse_args([*campaign, "--repetitions", "2"])
+    with pytest.raises(legacy_pairs.PairError, match="binary failed for pair beta"):
+        legacy_pairs.run(args)
+    output = tmp_path / "out.tsv"
+    original = output.read_bytes()
+    original_rows = read_tsv(output)
+    assert [row["result"] for row in original_rows] == ["REALIZABLE", "REALIZABLE", "ERROR"]
+    metadata_path = tmp_path / "out-metadata.json"
+    assert "error_policy" not in json.loads(metadata_path.read_text())
+    expected_calls = [
+        [PAIRS[label], instance.replace(".ltl", ".tlsf")]
+        for _, instance, label in INTERLEAVED_COORDINATES
+    ]
+    log = binary.with_suffix(".json")
+    assert json.loads(log.read_text()) == expected_calls[:3]
+    capsys.readouterr()
+
+    assert run_main(
+        monkeypatch, campaign, "--resume", "--error-policy", "collect", "--repetitions", "2",
+    ) == 2
+    assert output.read_bytes()[:len(original)] == original
+    assert json.loads(log.read_text()) == expected_calls
+    rows = read_tsv(output)
+    assert rows[:3] == original_rows
+    assert [
+        (int(row["repetition_id"]), row["instance"], row["pair_id"]) for row in rows
+    ] == INTERLEAVED_COORDINATES
+    assert [row["run_index"] for row in rows] == [str(index) for index in range(12)]
+    assert [row["order_index"] for row in rows] == [str(index) for index in range(12)]
+    assert [row["result"] for row in rows[3:]] == ["REALIZABLE"] * 9
+    assert json.loads(metadata_path.read_text())["error_policy"] == "collect"
+    assert "ERRORS COLLECTED: 1 ERROR/CRASH rows" in capsys.readouterr().err
+
+
+def test_resume_collect_follows_rotating_schedule(monkeypatch, campaign, tmp_path):
+    # Interrupt halfway through the second instance's first repetition.
+    first_calls = mock_invocations(monkeypatch, ["ERROR"] + ["REALIZABLE"] * 4 + [KeyboardInterrupt()])
+    options = ["--error-policy", "collect", "--repetitions", "2", "--order", "interleaved"]
+    assert run_main(monkeypatch, campaign, *options) == 130
+    output = tmp_path / "out.tsv"
+    original = output.read_bytes()
+    assert len(read_tsv(output)) == 5
+
+    resumed_calls = mock_invocations(monkeypatch, ["REALIZABLE"] * 7)
+    assert run_main(monkeypatch, campaign, *options, "--resume") == 2
+    assert output.read_bytes().startswith(original)
+    rows = read_tsv(output)
+    assert [
+        (int(row["repetition_id"]), row["instance"], row["pair_id"]) for row in rows
+    ] == INTERLEAVED_COORDINATES
+    expected_calls = [
+        (PAIRS[label], instance.replace(".ltl", ".tlsf"))
+        for _, instance, label in INTERLEAVED_COORDINATES
+    ]
+    assert first_calls == expected_calls[:6]  # The sixth invocation was interrupted.
+    assert resumed_calls == expected_calls[5:]
+    assert [row["run_index"] for row in rows] == [str(index) for index in range(12)]
+    assert [row["order_index"] for row in rows] == [str(index) for index in range(12)]
+
+
+def test_collect_persists_each_row_before_next_invocation(monkeypatch, campaign, tmp_path):
+    output = tmp_path / "out.tsv"
+    completed = []
+    synced_row_counts = []
+    real_fsync = os.fsync
+    outcomes = ["ERROR", "CRASH"] + ["REALIZABLE"] * 4
+
+    def fsync(fd):
+        real_fsync(fd)
+        # Ignore metadata, header creation and summary/conflict sidecars.
+        if output.exists() and os.path.samestat(os.fstat(fd), output.stat()):
+            synced_row_counts.append(len(read_tsv(output)))
+
+    def assert_persisted():
+        # Reopen the TSV while the driver's append stream is still open.
+        assert [
+            (row["arm_tokens"], row["tlsf_file"], row["result"]) for row in read_tsv(output)
+        ] == completed, "every completed row must be readable before the next invocation"
+        assert synced_row_counts == list(range(1, len(completed) + 1)), (
+            "every completed row must be fsynced before the next invocation"
+        )
+
+    def scoped(cmd, **kwargs):
+        assert_persisted()
+        result = outcomes[len(completed)]
+        completed.append((cmd[2], pathlib.Path(cmd[-1]).name, result))
+        return solver_result(result)
+
+    monkeypatch.setattr(pairs.os, "fsync", fsync)
+    monkeypatch.setattr(pairs, "run_systemd_scope", scoped)
+    assert run_main(monkeypatch, campaign, "--error-policy", "collect") == 2
+    assert len(completed) == 6
+    assert_persisted()  # Also require durability for the last row, with no next invocation.
 
 
 @pytest.mark.parametrize("result", ["ERROR", "CRASH"])
