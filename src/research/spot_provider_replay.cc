@@ -270,7 +270,7 @@ namespace replay {
     return value;
   }
   void usage (std::ostream& out, const char* program) {
-    out << "usage: " << program << " --arm c4|c5 --formula WORKER_LTL --k K\n"
+    out << "usage: " << program << " --arm c4|c5 (--formula WORKER_LTL | --formula-file FILE) --k K\n"
         << "  [--provider taa|closure-buchi] [--export-hoa FILE (c4 only)]\n"
         << "  [--closure-row-expansion enumerative|symbolic-boolean]\n"
         << "  [--stop-after-first-row]\n"
@@ -299,6 +299,9 @@ namespace replay {
         << "  same factory/store as an ordinary run) and reports row_status: row_complete\n"
         << "  or row_failed, never a realizability verdict; no K-schedule search runs.\n"
         << "  Exit 0: the row completed; 2: it failed/hit a limit; 1: invalid invocation.\n"
+        << "  --formula-file reads the (already transformed) formula from a file instead\n"
+        << "  of argv, for jobs long enough to exceed the kernel's per-argument length\n"
+        << "  limit; trailing newline(s) are stripped. Mutually exclusive with --formula.\n"
         << "  Counts ending in cumulative and provider row/state counts are job totals.\n"
         << "  search_rows_requested is the union across K; verification_additional_rows\n"
         << "  is certificate sources outside that union. Search-only is their set difference.\n"
@@ -339,6 +342,15 @@ namespace replay {
         o.export_hoa = next ();
       else if (arg == "--formula")
         o.formula = next ();
+      else if (arg == "--formula-file") {
+        std::ifstream in (next ());
+        if (!in) fail ("--formula-file: cannot open file");
+        std::ostringstream text;
+        text << in.rdbuf ();
+        o.formula = text.str ();
+        while (!o.formula.empty () && (o.formula.back () == '\n' || o.formula.back () == '\r'))
+          o.formula.pop_back ();
+      }
       else if (arg == "--partition")
         o.partition = next ();
       else if (arg == "--k")
@@ -386,8 +398,10 @@ namespace replay {
       fail ("--max-acceptance-sets applies only to the TAA provider");
     if (o.provider_name != "closure-buchi" && seen.contains ("--closure-row-expansion"))
       fail ("--closure-row-expansion applies only to the closure-buchi provider");
+    if (seen.contains ("--formula") && seen.contains ("--formula-file"))
+      fail ("--formula and --formula-file are mutually exclusive");
     if (o.formula.empty () || o.k < 1)
-      fail ("--formula and positive --k are required");
+      fail ("--formula (or --formula-file) and positive --k are required");
     if (!seen.contains ("--kmax"))
       o.kmax = o.k;
     if (o.kmax < o.k || o.kinc < 1 || o.kmax > std::numeric_limits<VECTOR_ELT_T>::max ())
