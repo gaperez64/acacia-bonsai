@@ -430,6 +430,7 @@ namespace {
           spot_formula = spot::formula::Not (spot_formula);
 
         acacia::spot_records::Record capture;
+        auto* const record = acacia::spot_records::active;
         if (capture) {
           std::ostringstream text;
           text << spot_formula;
@@ -445,9 +446,9 @@ namespace {
           capture.put ("kmin", std::to_string (opt_kmin));
           capture.put ("kmax", std::to_string (opt_k));
           capture.put ("kinc", std::to_string (opt_kinc));
-          acacia::spot_records::segment (acacia::automaton_provider_name (provider),
-                                         acacia::game_backend_name (backend));
-          acacia::spot_records::phase ("before-translation");
+          capture.segment (acacia::automaton_provider_name (provider),
+                           acacia::game_backend_name (backend));
+          capture.phase ("before-translation");
         }
         // Create the automaton for the formula we have prepared.
         if (acacia::is_guarded_backend (backend))
@@ -480,8 +481,8 @@ namespace {
                        "rebuilding translation and preprocessing from captured worker formula; "
                        "lazy_materialization=none\n";
           effective_backend = acacia::game_backend::backward;
-          acacia::spot_records::segment ("frozen-graph", "backward", true);
-          acacia::spot_records::phase ("fallback-translation");
+          if (record) record->segment ("frozen-graph", "backward", true);
+          if (record) record->phase ("fallback-translation");
           acacia::diagnostics::set_support_backend ("backward");
         }
 #endif
@@ -499,7 +500,7 @@ namespace {
           std::cerr << acacia::automaton_provider_name (provider) << " fallback translation_ms="
                     << std::chrono::duration<double, std::milli> (
                            std::chrono::steady_clock::now () - fallback_started).count () << '\n';
-        acacia::spot_records::phase ("preprocessing");
+        if (record) record->phase ("preprocessing");
         observe_translated_automaton (aut);
         acacia::diagnostics::set_support_phase ("preprocessing");
         acacia::diagnostics::snapshot ("after-translation");
@@ -581,10 +582,9 @@ namespace {
                            << "\n");
           return acacia::diagnostics::finish (fast.current_output_player_wins, "spot-fast-path");
         }
-        if (acacia::spot_fastpath::detail::has_mode (spot_fast, SPOT_FAST_DET))
-          acacia::spot_records::segment ("frozen-graph",
-                                         acacia::game_backend_name (effective_backend), true);
-        acacia::spot_records::phase ("preprocessing");
+        if (record && acacia::spot_fastpath::detail::has_mode (spot_fast, SPOT_FAST_DET))
+          record->segment ("frozen-graph", acacia::game_backend_name (effective_backend), true);
+        if (record) record->phase ("preprocessing");
         acacia::diagnostics::snapshot ("after-spot-fast");
 
         {
@@ -652,7 +652,7 @@ namespace {
           return acacia::diagnostics::finish (false, "empty-after-preprocessing");
         }
 
-        acacia::spot_records::phase ("boolean-discovery");
+        if (record) record->phase ("boolean-discovery");
         posets::vectors::bool_threshold = (BOOLEAN_STATES::make (aut, opt_k)) ();
         // Boolean-state discovery can renumber the graph. Out-degrees must
         // use the same final source coordinates as the ranks and actions.

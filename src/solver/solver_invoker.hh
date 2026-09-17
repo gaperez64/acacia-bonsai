@@ -42,8 +42,10 @@ namespace acacia::solver_detail {
   // A zero-state translation decides the real worker without a K search. The
   // unreal orientation remains inconclusive (its transformed language differs).
   inline bool finish_empty_translation (bool checking_unreal) {
-    spot_records::begin_attempt ();
-    spot_records::end_attempt (checking_unreal ? "UNKNOWN" : "WIN", "empty-language");
+    if (auto* record = spot_records::active) {
+      record->begin_attempt ();
+      record->end_attempt (checking_unreal ? "UNKNOWN" : "WIN", "empty-language");
+    }
     return diagnostics::finish (!checking_unreal, "empty-translated-automaton");
   }
 }

@@ -29,7 +29,7 @@ namespace acacia::spot_lazy_game {
   using Clock = std::chrono::steady_clock;
   inline double elapsed (Clock::time_point start) { return guarded::detail::elapsed (start); }
   inline double clock_ms () {
-    return std::chrono::duration<double, std::milli> (Clock::now ().time_since_epoch ()).count ();
+    return std::chrono::duration<double, std::milli> (spot_records::now ().time_since_epoch ()).count ();
   }
 
   [[noreturn]] inline void fail (const std::string& s) {
@@ -51,7 +51,12 @@ namespace acacia::spot_lazy_game {
   struct Reporter {
       std::function<void (const std::string&, const std::string&)> sink;
       void put (std::string_view k, std::string_view v) const {
-        if (sink) sink (std::string (k), std::string (v));
+        if (sink) {
+#ifdef ACACIA_RECORD_COST_TEST
+          ++spot_records::report_values;
+#endif
+          sink (std::string (k), std::string (v));
+        }
       }
       void count (std::string_view k, size_t v) const { if (sink) put (k, std::to_string (v)); }
       void ms (std::string_view k, double v) const { if (sink) put (k, decimal (v)); }
@@ -148,25 +153,29 @@ namespace acacia::spot_lazy_game {
         return frozen_view && q >= frozen_view->bool_threshold ? 0 : K - 1;
       }
       const rows::CompleteRankRow& get (StateId source) {
+        const bool reporting = bool (report.sink);
         check_contract ();
-        if (report.sink && phase == Phase::search)
+        if (reporting && phase == Phase::search)
           search_sources.insert (source);
-        if (report.sink && phase == Phase::verify)
+        if (reporting && phase == Phase::verify)
           verifier_sources.insert (source);
         const bool missing = cache->state (source) != rows::RowState::complete;
         if (missing && frozen)
           fail ("frozen graph row miss");
-        const auto started = missing && report.sink ? Clock::now () : Clock::time_point {};
+        const auto started = missing && reporting ? spot_records::now () : Clock::time_point {};
         if (missing) {
           ++requests;
-          snapshot ();
-          report.ms ("row_started_clock_ms", clock_ms ());
-          report.put ("row_generation_active", "true");
+          if (reporting) {
+            snapshot ();
+            report.ms ("row_started_clock_ms", clock_ms ());
+            report.put ("row_generation_active", "true");
+          }
         }
         const auto row = cache->row (source);
-        if (missing && report.sink)
-          generation_ms += elapsed (started);
-        if (missing)
+        if (missing && reporting)
+          generation_ms += std::chrono::duration<double, std::milli> (
+              spot_records::now () - started).count ();
+        if (missing && reporting)
           report.put ("row_generation_active", "false");
         discover ();
         if (missing && row.row) {
@@ -175,7 +184,7 @@ namespace acacia::spot_lazy_game {
              : phase == Phase::search ? search_generated
                                       : verify_generated);
         }
-        if (missing)
+        if (missing && reporting)
           snapshot ();
         if (row.status != rows::Status::complete || !row.row)
           throw letters::detail::Failure {row.status == rows::Status::resource_limit
@@ -1130,8 +1139,10 @@ namespace acacia::spot_lazy_game {
         result_.dependency_list_len_max = dependency_list_len_max_;
       }
       SolveResult solve () {
+        auto* const record = spot_records::active;
+        const bool reporting = bool (view_.report.sink);
         view_.phase = Phase::search;
-        view_.report.ms ("stage_started_clock_ms", clock_ms ());
+        if (reporting) view_.report.ms ("stage_started_clock_ms", clock_ms ());
         MetricReport metrics {oracle_, view_.report, "search_"};
         const auto started = std::chrono::steady_clock::now ();
         const auto search = detail::checked<bool> ([&] {
@@ -1166,14 +1177,18 @@ namespace acacia::spot_lazy_game {
                             view_.cache->complete_rows () - before_search_);
         oracle_.report (view_.report, "search_");
         view_.phase = Phase::verify;
-        view_.report.ms ("search_ms", result_.solve_ms);
-        view_.report.put ("stage", "verification");
-        view_.report.ms ("stage_started_clock_ms", clock_ms ());
+        if (reporting) {
+          view_.report.ms ("search_ms", result_.solve_ms);
+          view_.report.put ("stage", "verification");
+          view_.report.ms ("stage_started_clock_ms", clock_ms ());
+        }
         const auto verifying = std::chrono::steady_clock::now ();
         if (result_.nodes[result_.initial].losing) {
-          view_.report.count ("loss_verification_calls", 1);
-          view_.report.put ("verification_kind", "loss");
-          spot_records::phase ("verification");
+          if (reporting) {
+            view_.report.count ("loss_verification_calls", 1);
+            view_.report.put ("verification_kind", "loss");
+          }
+          if (record) record->phase ("verification");
           const auto verified = verify_losing_proof (view_, alphabet_, K_, result_, limits_,
                                                      semantics_, lean_verifier_);
           result_.status = verified.value && *verified.value ? forward_result_status::lose_k
@@ -1181,9 +1196,11 @@ namespace acacia::spot_lazy_game {
           result_.failure = verified.unknown;
         }
         else {
-          view_.report.count ("win_verification_calls", 1);
-          view_.report.put ("verification_kind", "win");
-          spot_records::phase ("verification");
+          if (reporting) {
+            view_.report.count ("win_verification_calls", 1);
+            view_.report.put ("verification_kind", "win");
+          }
+          if (record) record->phase ("verification");
           auto verified = verify_winning_certificate (view_, alphabet_, K_, result_, limits_,
                                                        semantics_, lean_verifier_);
           if (verified.value) {
@@ -1197,7 +1214,7 @@ namespace acacia::spot_lazy_game {
           }
         }
         result_.verify_ms = detail::elapsed (verifying);
-        if (result_.nodes[result_.initial].losing)
+        if (reporting && result_.nodes[result_.initial].losing)
           view_.report.ms ("loss_verification_ms", result_.verify_ms);
         return std::move (result_);
       }

@@ -18,6 +18,7 @@ namespace acacia::spot_lazy_worker {
                          bdd all_inputs, bdd all_outputs, int kmin, int kmax, int kinc,
                          spot_guarded::Limits limits = spot_taa_candidate_limits (), bool eager = false) {
     namespace game = spot_lazy_game;
+    auto* const record = spot_records::active;
     const auto started = game::Clock::now ();
     game::Reporter report;
     const char* provider_name = eager ? "spot-eager" : "spot-lazy";
@@ -25,7 +26,7 @@ namespace acacia::spot_lazy_worker {
       spot_records::put (key, value);
       verb_do (1, utils::vout << provider_name << ' ' << key << '=' << value << std::endl);
     };
-    if (spot_records::active) report.sink = sink;
+    if (record) report.sink = sink;
     verb_do (1, report.sink = sink);
     struct Accounting {
         game::Reporter report;
@@ -57,7 +58,7 @@ namespace acacia::spot_lazy_worker {
       report.count ("max_provider_states", provider_limits.max_states);
       const auto factory_started = game::Clock::now ();
       report.put ("stage", "factory");
-      spot_records::phase ("factory");
+      if (record) record->phase ("factory");
       auto built = spot_lazy::make_view ([&] () -> spot::const_twa_ptr {
         if (not worker_formula.is_ltl_formula ())
           throw spot_lazy::Declined ("TAA route requires LTL");
@@ -92,19 +93,19 @@ namespace acacia::spot_lazy_worker {
       if (eager) {
         const auto enumeration_started = game::Clock::now ();
         report.put ("stage", "enumeration");
-        spot_records::phase ("enumeration");
+        if (record) record->phase ("enumeration");
         store.enumerate_and_freeze ();
         report.ms ("eager_ms", game::elapsed (enumeration_started));
         report.count ("total_wrapper_rows", store.cache->complete_rows ());
       }
       for (long long k = kmin;;) {
-        spot_records::begin_attempt (k);
+        if (record) record->begin_attempt (k);
         report.count ("k", k);
-        const auto rows_before = store.cache->complete_rows ();
-        const auto generation_before = store.generation_ms;
+        const auto rows_before = report.sink ? store.cache->complete_rows () : 0;
+        const auto generation_before = report.sink ? store.generation_ms : 0;
         // Immutable provider rows survive K; all rank, proof, oracle, strategy
         // and verification data belong to this attempt and are discarded.
-        spot_records::phase ("search");
+        if (record) record->phase ("search");
         const auto result = [&] {
           game::Search search {store, alphabet, int32_t (k), limits};
           return search.solve ();
@@ -117,9 +118,11 @@ namespace acacia::spot_lazy_worker {
         report.count ("guarded_choices", result.choices_created);
         report.put ("status", solver_detail::forward_result_name (result.status));
         report.put ("reason", spot_letters::unknown_name (result.failure));
-        report.ms ("attempt_row_generation_ms", store.generation_ms - generation_before);
-        report.count ("attempt_rows_generated", store.cache->complete_rows () - rows_before);
-        spot_records::end_attempt (solver_detail::forward_result_name (result.status),
+        if (report.sink) {
+          report.ms ("attempt_row_generation_ms", store.generation_ms - generation_before);
+          report.count ("attempt_rows_generated", store.cache->complete_rows () - rows_before);
+        }
+        if (record) record->end_attempt (solver_detail::forward_result_name (result.status),
             result.status == solver_detail::forward_result_status::win_k ? "verified-win" :
             result.status == solver_detail::forward_result_status::lose_k ? "verified-loss" : "none");
         if (result.status == solver_detail::forward_result_status::win_k)
@@ -138,7 +141,7 @@ namespace acacia::spot_lazy_worker {
       report.put ("reason", "provider-or-query-failure");
     }
     report.put ("status", "UNKNOWN");
-    spot_records::end_attempt ("UNKNOWN", "exception");
+    if (record) record->end_attempt ("UNKNOWN", "exception");
     return Outcome::unknown;
   }
 } // namespace acacia::spot_lazy_worker

@@ -18,6 +18,22 @@
 #include <unistd.h>
 
 namespace acacia::spot_records {
+#ifdef ACACIA_RECORD_COST_TEST
+  // Only the cost-regression test binary observes these counters. Count entry,
+  // even without an active sink, so moving a guard into a callee fails the test.
+  inline thread_local size_t record_calls = 0, timer_reads = 0, report_values = 0;
+#endif
+  inline void observe_record_call () {
+#ifdef ACACIA_RECORD_COST_TEST
+    ++record_calls;
+#endif
+  }
+  inline auto now () {
+#ifdef ACACIA_RECORD_COST_TEST
+    ++timer_reads;
+#endif
+    return std::chrono::steady_clock::now ();
+  }
   inline std::string quote (const std::string& s) {
     constexpr char hex[] = "0123456789abcdef";
     std::string out = "\"";
@@ -35,21 +51,27 @@ namespace acacia::spot_records {
       std::filesystem::path path_;
       bool history_ = false;
       std::map<std::string, std::string> values_;
-      std::set<std::string> attempt_keys_;
-      std::map<std::string, double> totals_;
-      unsigned long attempt_id_ = 0, segment_id_ = 0;
-      bool attempt_open_ = false, tracking_attempt_ = false;
-      int exceptions_ = std::uncaught_exceptions ();
       using Clock = std::chrono::steady_clock;
-      Clock::time_point attempt_started_ {};
+      struct Lifecycle {
+        std::set<std::string> attempt_keys_;
+        std::map<std::string, double> totals_;
+        unsigned long attempt_id_ = 0, segment_id_ = 0;
+        bool attempt_open_ = false, tracking_attempt_ = false;
+        int exceptions_ = 0;
+        Clock::time_point attempt_started_ {};
+      };
+      // No P0 container construction/destruction or exception query without a sink.
+      std::optional<Lifecycle> lifecycle_;
       void clear_attempt () {
-        tracking_attempt_ = false;
-        for (const auto& key : attempt_keys_) values_.erase (key);
-        attempt_keys_.clear ();
+        lifecycle_->tracking_attempt_ = false;
+        for (const auto& key : lifecycle_->attempt_keys_) values_.erase (key);
+        lifecycle_->attempt_keys_.clear ();
       }
     public:
       Record () {
         if (const char* directory = std::getenv ("ACACIA_SPOT_CAPTURE_DIR"); directory && *directory) {
+          lifecycle_.emplace ();
+          lifecycle_->exceptions_ = std::uncaught_exceptions ();
           static unsigned long sequence = 0;
           path_ = std::filesystem::path (directory) /
                   (std::to_string (getpid ()) + "-" + std::to_string (++sequence) + ".json");
@@ -68,28 +90,32 @@ namespace acacia::spot_records {
       }
       explicit operator bool () const { return !path_.empty (); }
       void put (const std::string& key, const std::string& value) {
+        observe_record_call ();
         if (*this) {
           values_[key] = quote (value);
-          if (tracking_attempt_ && !key.starts_with ("cumulative_") &&
-              key != "provider" && key != "backend") attempt_keys_.insert (key);
+          if (lifecycle_->tracking_attempt_ && !key.starts_with ("cumulative_") &&
+              key != "provider" && key != "backend") lifecycle_->attempt_keys_.insert (key);
         }
       }
-      void phase (std::string_view value) {
+      // Keep serialization and its unwind paths out of inlined solver loops.
+      [[gnu::noinline]] void phase (std::string_view value) {
+        observe_record_call ();
         if (!*this) return;
         put ("stage", std::string (value));
         put ("stage_started_clock_ms", std::to_string (
-            std::chrono::duration<double, std::milli> (Clock::now ().time_since_epoch ()).count ()));
+            std::chrono::duration<double, std::milli> (now ().time_since_epoch ()).count ()));
         if (value == "search") put ("search_started", "true");
         flush ();
       }
-      void begin_attempt (std::optional<long long> k = std::nullopt) {
+      [[gnu::noinline]] void begin_attempt (std::optional<long long> k = std::nullopt) {
+        observe_record_call ();
         if (!*this) return;
-        if (attempt_open_) end_attempt ("UNKNOWN", "interrupted");
+        if (lifecycle_->attempt_open_) end_attempt ("UNKNOWN", "interrupted");
         clear_attempt ();
-        tracking_attempt_ = attempt_open_ = true;
-        attempt_started_ = Clock::now ();
-        put ("attempt_id", std::to_string (++attempt_id_));
-        put ("cumulative_attempts_started", std::to_string (attempt_id_));
+        lifecycle_->tracking_attempt_ = lifecycle_->attempt_open_ = true;
+        lifecycle_->attempt_started_ = now ();
+        put ("attempt_id", std::to_string (++lifecycle_->attempt_id_));
+        put ("cumulative_attempts_started", std::to_string (lifecycle_->attempt_id_));
         // Direct Spot/language decisions have no K bound.
         if (k) put ("k", std::to_string (*k));
         put ("search_started", "false");
@@ -98,13 +124,14 @@ namespace acacia::spot_records {
         put ("evidence", "none");
         phase ("attempt-start");
       }
-      void end_attempt (std::string_view status, std::string_view evidence) {
-        if (!*this || !attempt_open_) return;
+      [[gnu::noinline]] void end_attempt (std::string_view status, std::string_view evidence) {
+        observe_record_call ();
+        if (!*this || !lifecycle_->attempt_open_) return;
         put ("status", std::string (status));
         put ("evidence", std::string (evidence));
         put ("attempt_end", "true");
         put ("attempt_elapsed_ms", std::to_string (
-            std::chrono::duration<double, std::milli> (Clock::now () - attempt_started_).count ()));
+            std::chrono::duration<double, std::milli> (now () - lifecycle_->attempt_started_).count ()));
         // Only observed additive measurements of ended attempts are accumulated. Peaks
         // and provider-lifetime counters must never be summed as work counters.
         for (const auto* key : {"search_ms", "verification_ms", "loss_verification_ms",
@@ -112,22 +139,24 @@ namespace acacia::spot_records {
                                "attempt_row_generation_ms", "attempt_rows_generated"}) {
           const auto found = values_.find (key);
           if (found != values_.end ()) {
-            totals_[key] += std::stod (found->second.substr (1));
-            put (std::string ("cumulative_") + key, std::to_string (totals_[key]));
+            lifecycle_->totals_[key] += std::stod (found->second.substr (1));
+            put (std::string ("cumulative_") + key, std::to_string (lifecycle_->totals_[key]));
           }
         }
-        put ("cumulative_attempts_ended", std::to_string (++totals_["attempts_ended"]));
+        put ("cumulative_attempts_ended", std::to_string (++lifecycle_->totals_["attempts_ended"]));
         if (evidence != "exception" && evidence != "incomplete" && evidence != "interrupted")
-          put ("cumulative_attempts_completed", std::to_string (++totals_["attempts_completed"]));
-        attempt_open_ = false;
+          put ("cumulative_attempts_completed", std::to_string (++lifecycle_->totals_["attempts_completed"]));
+        lifecycle_->attempt_open_ = false;
         phase ("attempt-end");
       }
-      void segment (std::string_view provider, std::string_view backend, bool fallback) {
+      [[gnu::noinline]] void segment (std::string_view provider, std::string_view backend,
+                                     bool fallback = false) {
+        observe_record_call ();
         if (!*this) return;
-        if (attempt_open_) end_attempt ("UNKNOWN", "interrupted");
+        if (lifecycle_->attempt_open_) end_attempt ("UNKNOWN", "interrupted");
         // Preserve a failed factory's final status in optional history even
         // when it never reached a K attempt.
-        if (segment_id_ != 0) flush ();
+        if (lifecycle_->segment_id_ != 0) flush ();
         clear_attempt ();
         // Keep the transformed-job identity; factory/row metrics from a declined
         // provider must not describe the replacement even if no K was started.
@@ -141,7 +170,7 @@ namespace acacia::spot_records {
             if (key == keep) return false;
           return true;
         });
-        put ("segment_id", std::to_string (++segment_id_));
+        put ("segment_id", std::to_string (++lifecycle_->segment_id_));
         put ("provider", std::string (provider));
         put ("backend", std::string (backend));
         put ("fallback", fallback ? "true" : "false");
@@ -191,8 +220,8 @@ namespace acacia::spot_records {
       }
       ~Record () {
         try { if (*this) {
-          const bool exception = std::uncaught_exceptions () > exceptions_;
-          if (attempt_open_) end_attempt ("UNKNOWN", exception ? "exception" : "incomplete");
+          const bool exception = std::uncaught_exceptions () > lifecycle_->exceptions_;
+          if (lifecycle_->attempt_open_) end_attempt ("UNKNOWN", exception ? "exception" : "incomplete");
           put ("worker_end", exception ? "exception" : "returned");
           flush ();
         } } catch (...) { /* A failed capture must not replace the worker's exception. */ }
@@ -200,21 +229,27 @@ namespace acacia::spot_records {
       }
   };
   inline void put (const std::string& key, const std::string& value) {
+    observe_record_call ();
     if (active) active->put (key, value);
   }
   inline void phase (std::string_view value) {
+    observe_record_call ();
     if (active) active->phase (value);
   }
   inline void begin_attempt (std::optional<long long> k = std::nullopt) {
+    observe_record_call ();
     if (active) active->begin_attempt (k);
   }
   inline void end_attempt (std::string_view status, std::string_view evidence) {
+    observe_record_call ();
     if (active) active->end_attempt (status, evidence);
   }
   inline void segment (std::string_view provider, std::string_view backend, bool fallback = false) {
+    observe_record_call ();
     if (active) active->segment (provider, backend, fallback);
   }
   inline void worker_result (bool solved, std::string_view reason) {
+    observe_record_call ();
     if (active) {
       active->put ("worker_result", solved ? "solved" : "unknown");
       active->put ("worker_reason", std::string (reason));

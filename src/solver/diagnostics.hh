@@ -1010,12 +1010,12 @@ namespace acacia::diagnostics {
       m->final_reason = std::move (reason);
   }
 
-  inline bool finish (bool solved, std::string reason) {
-    spot_records::worker_result (solved, reason);
+  inline bool finish (bool solved, std::string_view reason) {
+    if (spot_records::active) spot_records::worker_result (solved, reason);
     if (auto* m = current ()) {
       m->result = solved ? "solved" : "unknown";
       if (m->final_reason == "unknown")
-        m->final_reason = std::move (reason);
+        m->final_reason = reason;
     }
     return solved;
   }
@@ -1128,8 +1128,8 @@ namespace acacia::diagnostics {
   inline void set_forward_total_ms (double) {}
   inline void set_forward_final_reason (std::string) {}
   inline void set_final_reason (std::string) {}
-  inline bool finish (bool solved, std::string reason) {
-    spot_records::worker_result (solved, reason);
+  inline bool finish (bool solved, std::string_view reason) {
+    if (spot_records::active) spot_records::worker_result (solved, reason);
     return solved;
   }
   inline void set_equivariant_decline (std::string) {}

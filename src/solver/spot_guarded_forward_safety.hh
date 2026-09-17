@@ -244,6 +244,7 @@ namespace acacia::spot_guarded {
         oracle_.set_limits (limits_.queries);
       }
       SolveResult solve () {
+        auto* const record = spot_records::active;
         const auto started = std::chrono::steady_clock::now ();
         const auto search = detail::checked<bool> ([&] {
           result_.initial = intern (rows_->initial_rank ());
@@ -260,7 +261,7 @@ namespace acacia::spot_guarded {
           }
         });
         result_.solve_ms = detail::elapsed (started);
-        if (spot_records::active) {
+        if (record) {
           const auto& m = oracle_.metrics ();
           spot_records::put ("search_bdd_operations", std::to_string (m.bdd_operations));
           spot_records::put ("search_peak_live_nodes", std::to_string (m.peak_live_nodes));
@@ -275,26 +276,26 @@ namespace acacia::spot_guarded {
                                ? forward_result_status::resource_limit : forward_result_status::unknown;
           return std::move (result_);
         }
-        if (spot_records::active)
+        if (record)
           spot_records::put ("search_ms", std::to_string (result_.solve_ms));
         const auto verifying = std::chrono::steady_clock::now ();
         if (result_.nodes[result_.initial].losing) {
-          if (spot_records::active) {
+          if (record) {
             spot_records::put ("loss_verification_calls", "1");
             spot_records::put ("verification_kind", "loss");
           }
-          spot_records::phase ("verification");
+          if (record) record->phase ("verification");
           const auto verified = verify_losing_proof (view_, alphabet_, K_, result_, limits_);
           result_.status = verified.value && *verified.value ? forward_result_status::lose_k
                                                            : forward_result_status::unknown;
           result_.failure = verified.unknown;
         }
         else {
-          if (spot_records::active) {
+          if (record) {
             spot_records::put ("win_verification_calls", "1");
             spot_records::put ("verification_kind", "win");
           }
-          spot_records::phase ("verification");
+          if (record) record->phase ("verification");
           auto verified = verify_winning_certificate (view_, alphabet_, K_, result_, limits_);
           if (verified.value) {
             result_.generators = std::move (*verified.value);
@@ -306,7 +307,7 @@ namespace acacia::spot_guarded {
           }
         }
         result_.verify_ms = detail::elapsed (verifying);
-        if (spot_records::active && result_.nodes[result_.initial].losing)
+        if (record && result_.nodes[result_.initial].losing)
           spot_records::put ("loss_verification_ms", std::to_string (result_.verify_ms));
         return std::move (result_);
       }

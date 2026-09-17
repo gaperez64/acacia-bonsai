@@ -172,6 +172,7 @@ namespace acacia::solver_detail {
       [[maybe_unused]] const std::vector<symmetry::indexed_family_hint>& hints,
       acacia::game_backend backend,
       [[maybe_unused]] acacia::candidate_mode candidate) {
+    auto* const record = spot_records::active;
     backend = acacia::synthesis_backend (backend, do_synthesis);
     acacia::config::checks::check_solver_components<SpecializedDownset> ();
 #if ACACIA_ENABLE_EQUIVARIANT_SOLVER
@@ -185,7 +186,7 @@ namespace acacia::solver_detail {
       if (eq.attempted)
         return post_real<SpecializedDownset> (std::move (eq.win), do_synthesis, aut, all_inputs,
                                               all_outputs);
-      spot_records::segment ("frozen-graph", "backward", true);
+      if (record) record->segment ("frozen-graph", "backward", true);
     }
 #endif
 
@@ -201,7 +202,7 @@ namespace acacia::solver_detail {
       // This branch precedes ALL semantic-action-table construction. Each K
       // owns fresh search, row and oracle instances, including its verification.
       for (long long k = kmin;;) {
-        spot_records::begin_attempt (k);
+        if (record) record->begin_attempt (k);
         acacia::diagnostics::set_support_k (static_cast<int> (k));
         struct Attempt {
           forward_result_status status;
@@ -216,7 +217,7 @@ namespace acacia::solver_detail {
           };
           if (backend == acacia::game_backend::spot_guarded_sparse) {
             spot_lazy_game::Reporter report;
-            if (spot_records::active)
+            if (record)
               report.sink = [] (const auto& key, const auto& value) { spot_records::put (key, value); };
             const auto prepared = std::chrono::steady_clock::now ();
             spot_lazy_game::RowStore store {view, spot_candidate_limits ().rows, report};
@@ -224,22 +225,24 @@ namespace acacia::solver_detail {
             const auto prep_ms = std::chrono::duration<double, std::milli> (
                 std::chrono::steady_clock::now () - prepared).count ();
             auto result = summarize (search.solve ());
-            store.snapshot ();
-            report.ms ("attempt_row_generation_ms", store.generation_ms);
-            report.count ("attempt_rows_generated", store.cache->complete_rows ());
+            if (record) {
+              store.snapshot ();
+              report.ms ("attempt_row_generation_ms", store.generation_ms);
+              report.count ("attempt_rows_generated", store.cache->complete_rows ());
+            }
             result.prep_ms = prep_ms;
             return result;
           }
           return summarize (spot_guarded::solve (view, alphabet, static_cast<int32_t> (k), spot_candidate_limits ()));
         };
-        if (spot_records::active) {
+        if (record) {
           spot_records::put ("provider", "frozen-graph");
           spot_records::put ("backend", acacia::game_backend_name (backend));
           spot_records::put ("k", std::to_string (k));
           spot_records::phase ("search");
         }
         const auto result = run ();
-        if (spot_records::active) {
+        if (record) {
           spot_records::put ("status", forward_result_name (result.status));
           spot_records::put ("prep_ms", std::to_string (result.prep_ms));
           spot_records::put ("search_ms", std::to_string (result.solve_ms));
@@ -266,7 +269,7 @@ namespace acacia::solver_detail {
           std::cerr << "spot-guarded UNKNOWN: fallback provider=frozen-graph backend=backward; "
                        "rebuilding game actions on the existing preprocessed frozen graph\n";
           acacia::diagnostics::set_support_backend ("backward");
-          spot_records::segment ("frozen-graph", "backward", true);
+          if (record) record->segment ("frozen-graph", "backward", true);
           break;
         }
         const auto next = acacia::k_schedule::next (
@@ -306,7 +309,7 @@ namespace acacia::solver_detail {
       if (not forward.should_fallback_to_backward ())
         return post_real<SpecializedDownset> (
             std::move (win), do_synthesis, aut, all_inputs, all_outputs);
-      spot_records::segment ("frozen-graph", "backward", true);
+      if (record) record->segment ("frozen-graph", "backward", true);
     }
 #else
     // CLI requests are rejected while parsing.  Abort if an internal caller

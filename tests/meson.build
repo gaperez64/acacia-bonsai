@@ -268,6 +268,14 @@ test ('diagnostics-attempt',
       diagnostics_attempt_test,
       suite : ['unit', 'diagnostics'])
 
+record_cost_test = executable (
+  'record-cost-test', 'record_cost_test.cc',
+  include_directories : inc,
+  cpp_args : ['-DACACIA_RECORD_COST_TEST=1', '-DACACIA_ENABLE_DIAGNOSTICS=0', '-DNO_VERBOSE'],
+  dependencies : [spot_dep, bddx_dep, posets_dep, stdsimd_dep],
+)
+test ('record-cost', record_cost_test, suite : ['unit', 'diagnostics'])
+
 support_demand_test = executable (
   'support-demand-test',
   'support_demand_test.cc',

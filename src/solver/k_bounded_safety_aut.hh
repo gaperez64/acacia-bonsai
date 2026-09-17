@@ -148,6 +148,7 @@ class k_bounded_safety_aut_detail {
     }
 
     std::optional<std::pair<VECTOR_ELT_T, SetOfStates>> solve () {
+      auto* const record = acacia::spot_records::active;
 #if ACACIA_SYMMETRY_PROFILE
       struct classic_profile_reporter {
           ~classic_profile_reporter () {
@@ -176,8 +177,10 @@ class k_bounded_safety_aut_detail {
       }
 #endif
 
-      acacia::spot_records::begin_attempt (k);
-      acacia::spot_records::phase ("action-construction");
+      if (record) {
+        record->begin_attempt (k);
+        record->phase ("action-construction");
+      }
       // Precompute the input and output actions.
       auto inputs_to_ios = get_inputs_to_ios ();
       // ^ ios_precomputers::detail::standard_container<shared_ptr<spot::twa_graph>,
@@ -214,7 +217,7 @@ class k_bounded_safety_aut_detail {
 #endif
       reset_bound_evidence (f.size ());
       acacia::diagnostics::snapshot ("after-action-construction");
-      acacia::spot_records::phase ("search");
+      if (record) record->phase ("search");
 
       do {
         ++bound_loops;
@@ -257,7 +260,7 @@ class k_bounded_safety_aut_detail {
               acacia::diagnostics::set_local_probe (
                   "win", local.forward_applications, local.nodes, true, false);
               acacia::diagnostics::set_final_reason ("local-win-certificate");
-              acacia::spot_records::end_attempt ("WIN_K", "local-certificate");
+              if (record) record->end_attempt ("WIN_K", "local-certificate");
               return std::make_optional<std::pair<VECTOR_ELT_T, SetOfStates>> (
                   std::make_pair (k, std::move (*local.win)));
             }
@@ -265,7 +268,7 @@ class k_bounded_safety_aut_detail {
               acacia::diagnostics::trace_local_probe ((int) k, loopcount, f.size (),
                                                       "root-refuted", local.forward_applications,
                                                       local.nodes);
-              const bool bound_raised = raise_bound_or_give_up (f, k, actioner);
+              const bool bound_raised = raise_bound_or_give_up (f, k, actioner, record);
               acacia::diagnostics::set_local_probe (
                   "root-refuted", local.forward_applications, local.nodes, true, bound_raised);
               if (not bound_raised)
@@ -300,7 +303,7 @@ class k_bounded_safety_aut_detail {
         {
           verb_do (3, vout << "Exit because of no more inputs being picked\n");
           acacia::diagnostics::set_final_reason ("fixedpoint");
-          acacia::spot_records::end_attempt ("WIN_K", "fixedpoint");
+          if (record) record->end_attempt ("WIN_K", "fixedpoint");
 #if ACACIA_ENABLE_DIAGNOSTICS
           acacia::antichain_snapshot::record_final (f, k, loopcount);
 #endif
@@ -312,7 +315,7 @@ class k_bounded_safety_aut_detail {
         acacia::diagnostics::snapshot_loop_progress ("classic-after-cpre");
 
         if (not f.contains (state (init))) {
-          if (not raise_bound_or_give_up (f, k, actioner))
+          if (not raise_bound_or_give_up (f, k, actioner, record))
             return std::nullopt;
           continue;
         }
@@ -366,8 +369,9 @@ class k_bounded_safety_aut_detail {
     // region Y is a subset of X, and the lift is monotone, so lifting X gives a
     // larger, still-sound warm start for the next bound.
     template <typename Actioner>
-    bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner) {
-      acacia::spot_records::end_attempt ("LOSE_K", "fixedpoint-refutation");
+    bool raise_bound_or_give_up (SetOfStates& f, VECTOR_ELT_T& k, Actioner& actioner,
+                                 acacia::spot_records::Record* record) {
+      if (record) record->end_attempt ("LOSE_K", "fixedpoint-refutation");
       const auto next_k = acacia::k_schedule::next (
           ACACIA_K_SCHEDULE, static_cast<long long> (k),
           static_cast<long long> (kfrom), static_cast<long long> (kto),
@@ -378,12 +382,13 @@ class k_bounded_safety_aut_detail {
         return false;
       }
 
-      return raise_bound_to_or_give_up (f, k, actioner, *next_k);
+      return raise_bound_to_or_give_up (f, k, actioner, *next_k, record);
     }
 
     template <typename Actioner>
     bool raise_bound_to_or_give_up (SetOfStates& f, VECTOR_ELT_T& k,
-                                    Actioner& actioner, long long next_k) {
+                                    Actioner& actioner, long long next_k,
+                                    acacia::spot_records::Record* record) {
       const long long current_k = static_cast<long long> (k);
       const long long delta = next_k - current_k;
       assert (delta > 0);
@@ -392,8 +397,10 @@ class k_bounded_safety_aut_detail {
       verb_do (1, vout << "Incrementing k from " << (int) k << " to " << next_k
                        << std::endl);
       k = static_cast<VECTOR_ELT_T> (next_k);
-      acacia::spot_records::begin_attempt (k);
-      acacia::spot_records::phase ("search");
+      if (record) {
+        record->begin_attempt (k);
+        record->phase ("search");
+      }
       actioner.setK (k);
       acacia::diagnostics::set_support_k (static_cast<int> (k));
       acacia::diagnostics::set_k_last_next (static_cast<int> (next_k));
