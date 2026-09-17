@@ -62,6 +62,37 @@ UNREALIZABLE rows count as solved; every other outcome is charged twice the
 timeout in PAR-2 and omitted from the cactus curve, so a timeout cannot be
 read as a fast answer.
 
+For saved `run-syntcomp26-coverage.py` observations, export the coverage summary
+and its raw runs before passing them to the same reporter:
+
+```sh
+python3 benchmarking/run-syntcomp26-coverage.py export-cactus \
+  --summary /path/to/acacia-summary.tsv --runs /path/to/acacia.tsv \
+  --list tests/suites/benchmarks/syntcomp26/all.list --cap 17 \
+  --output /path/to/acacia.csv
+```
+
+`--runs` defaults to the summary path with `-summary.tsv` replaced by `.tsv`.
+Export validates the exact list, one observation per ID, uniform cap, finite
+nonnegative times, summary/run agreement, solved verdict/exit agreement, and
+uniform recorded solver/resource provenance before writing. Staged campaigns,
+missing observations, and nonempty `<runs-stem>-conflicts.tsv` sidecars are
+rejected; collected conflicts need adjudication before reporting. Keep the
+original runs and conflict sidecar together. Export does not run a solver or
+inspect systemd scopes.
+
+The CSV preserves real exit codes and solved wall times. Nonsolved rows use the
+cap as their CSV time and map MEMOUT to RESOURCE_LIMIT and CRASH to ERROR.
+The accompanying `acacia.raw.tsv` retains each original result, exit code, wall
+time, and cap for subtype counts. Other unsupported failures stop the export.
+The report keeps its existing columns (TIMEOUT, RESOURCE_LIMIT, UNKNOWN, ERROR,
+SYFCO-FAIL for timeouts, memory failures, unknowns, errors/crashes, and conversion
+failures), and appends REAL, UNREAL, PAR-2 mean, and the SHA-256 of each input CSV.
+Virtual-best rows are marked `derived` in the hash column. The reporter checks
+verdict totals, cactus endpoints, and PAR-2 total/mean agreement. CSVs themselves
+do not contain caps or provenance; use the validated export for coverage data
+and the matching recorded regime for `run-subset.py` CSVs.
+
 For the per-instance view that a cactus plot cannot give -- which instances a
 change actually helped, rather than how the sorted curves compare --
 `speedup-scatter.py` plots one point per instance against the diagonal.

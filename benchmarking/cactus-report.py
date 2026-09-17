@@ -18,22 +18,20 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
+import io
 import math
 import pathlib
-from benchlib import par2 as par2_score
+from benchlib import (
+    CACTUS_NON_SOLVED_RESULTS as NON_SOLVED_RESULTS,
+    CACTUS_SOLVED_RESULTS as SOLVED_RESULTS,
+    par2 as par2_score,
+)
 
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-SOLVED_RESULTS = frozenset(("REALIZABLE", "UNREALIZABLE"))
-NON_SOLVED_RESULTS = (
-    "TIMEOUT",
-    "RESOURCE_LIMIT",
-    "UNKNOWN",
-    "ERROR",
-    "SYFCO-FAIL",
-)
 KNOWN_RESULTS = SOLVED_RESULTS | frozenset(NON_SOLVED_RESULTS)
 MARKERS = ("o", "s", "^", "D", "v", "P", "X", "*", "+", "x")
 LINESTYLES = ("-", "--", "-.", ":")
@@ -50,6 +48,14 @@ class RunResult:
         return self.result in SOLVED_RESULTS
 
 
+class CsvRows(dict[str, RunResult]):
+    """Rows with the hash of the exact bytes parsed, preserving the mapping API."""
+
+    def __init__(self, raw_dataset_hash: str):
+        super().__init__()
+        self.raw_dataset_hash = raw_dataset_hash
+
+
 @dataclass(frozen=True)
 class Summary:
     series: str
@@ -58,6 +64,11 @@ class Summary:
     par2: float
     solved_time: float
     non_solved: Counter[str]
+    real: int
+    unreal: int
+    par2_mean: float
+    cactus_endpoint: int
+    raw_dataset_hash: str
 
 
 def _split_assignment(value: str, option: str) -> tuple[str, str]:
@@ -71,8 +82,9 @@ def _split_assignment(value: str, option: str) -> tuple[str, str]:
 
 def load_csv(path: pathlib.Path) -> dict[str, RunResult]:
     """Load one run-subset.py CSV, rejecting malformed or duplicate rows."""
-    rows: dict[str, RunResult] = {}
-    with path.open(newline="") as handle:
+    data = path.read_bytes()
+    rows = CsvRows(hashlib.sha256(data).hexdigest())
+    with io.StringIO(data.decode("utf-8"), newline="") as handle:
         reader = csv.DictReader(handle)
         required = {"instance", "result", "seconds", "exit"}
         missing_columns = required - set(reader.fieldnames or ())
@@ -156,6 +168,25 @@ def make_virtual_best(
     return portfolio
 
 
+def cactus_seconds(rows: Mapping[str, RunResult]) -> list[float]:
+    """The plotted curve: sorted per-instance wall times of solved rows."""
+    return sorted(result.seconds for result in rows.values() if result.solved)
+
+
+def validate_summary(summary: Summary) -> None:
+    """Keep verdict counts, scoring, and the plotted endpoint in agreement."""
+    if summary.solved != summary.cactus_endpoint:
+        raise ValueError(f"{summary.series}: solved count differs from cactus curve endpoint")
+    if summary.real + summary.unreal != summary.solved:
+        raise ValueError(f"{summary.series}: REAL + UNREAL differs from solved count")
+    if summary.total <= 0 or summary.solved + sum(summary.non_solved.values()) != summary.total:
+        raise ValueError(f"{summary.series}: outcome counts differ from dataset size")
+    if not math.isfinite(summary.par2) or not math.isclose(
+        summary.par2_mean * summary.total, summary.par2, rel_tol=1e-12, abs_tol=1e-9,
+    ):
+        raise ValueError(f"{summary.series}: PAR-2 mean * N differs from total")
+
+
 def summarize(
     label: str, rows: Mapping[str, RunResult], timeout: float
 ) -> Summary:
@@ -166,14 +197,21 @@ def summarize(
         result.result for result in rows.values() if not result.solved
     )
     par2 = par2_score(solved_time, sum(non_solved.values()), timeout)
-    return Summary(
+    summary = Summary(
         label,
         len(solved_rows),
         len(rows),
         par2,
         solved_time,
         non_solved,
+        sum(result.result == "REALIZABLE" for result in solved_rows),
+        sum(result.result == "UNREALIZABLE" for result in solved_rows),
+        par2 / len(rows) if rows else 0.0,
+        len(cactus_seconds(rows)),
+        getattr(rows, "raw_dataset_hash", ""),
     )
+    validate_summary(summary)
+    return summary
 
 
 def _markdown_cell(value: str) -> str:
@@ -182,6 +220,8 @@ def _markdown_cell(value: str) -> str:
 
 def render_markdown(summaries: Sequence[Summary]) -> str:
     """Render summaries as a PAR-2-ranked Markdown table."""
+    for summary in summaries:
+        validate_summary(summary)
     ranked = sorted(summaries, key=lambda summary: (summary.par2, summary.series))
     best_solved = max(summary.solved for summary in ranked)
     best_par2 = min(summary.par2 for summary in ranked)
@@ -201,10 +241,14 @@ def render_markdown(summaries: Sequence[Summary]) -> str:
         "PAR-2 (s)",
         "total time on solved (s)",
         *outcomes,
+        "REAL",
+        "UNREAL",
+        "PAR-2 mean (s)",
+        "Raw dataset hash",
     ]
     alignments = ["---", "---:", "---:", "---:", "---:"] + [
         "---:" for _ in outcomes
-    ]
+    ] + ["---:", "---:", "---:", "---"]
     lines = [
         "| " + " | ".join(headers) + " |",
         "|" + "|".join(alignments) + "|",
@@ -223,6 +267,10 @@ def render_markdown(summaries: Sequence[Summary]) -> str:
             par2,
             f"{summary.solved_time:.3f}",
             *(str(summary.non_solved[outcome]) for outcome in outcomes),
+            str(summary.real),
+            str(summary.unreal),
+            f"{summary.par2_mean:.3f}",
+            summary.raw_dataset_hash or "derived",
         ]
         lines.append("| " + " | ".join(cells) + " |")
     return "\n".join(lines) + "\n"
@@ -237,6 +285,7 @@ def write_cactus_plot(
     series: Mapping[str, Mapping[str, RunResult]],
     title: str,
     out_prefix: pathlib.Path,
+    summaries: Sequence[Summary] | None = None,
 ) -> tuple[pathlib.Path, pathlib.Path]:
     """Write PNG and PDF cactus plots and return their paths."""
     import matplotlib
@@ -248,7 +297,12 @@ def write_cactus_plot(
     colormap = matplotlib.colormaps["viridis"]
     denominator = max(len(series) - 1, 1)
     for index, (label, rows) in enumerate(series.items()):
-        seconds = sorted(result.seconds for result in rows.values() if result.solved)
+        seconds = cactus_seconds(rows)
+        if summaries is not None:
+            summary = next(summary for summary in summaries if summary.series == label)
+            validate_summary(summary)
+            if len(seconds) != summary.solved:
+                raise ValueError(f"{label}: solved count differs from cactus curve endpoint")
         axis.plot(
             range(1, len(seconds) + 1),
             seconds,
@@ -361,7 +415,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             write_markdown(args.markdown, summaries)
         if args.out_prefix is not None:
             try:
-                png, pdf = write_cactus_plot(series, args.title, args.out_prefix)
+                png, pdf = write_cactus_plot(series, args.title, args.out_prefix, summaries)
             except ImportError as exc:
                 missing_module = exc.name or "matplotlib"
                 raise ValueError(
