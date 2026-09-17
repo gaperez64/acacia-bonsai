@@ -1,0 +1,10 @@
+target	N_states	E_edges	I_inputs	O_outputs	B_boolean_states	Dmax	B_over_N_percent	b1_verdict
+SPIPureNext.ltl	295	333	1	27	2	23	0.7	gain
+heim-double-x-real.ltl	669	3894	14	1	16	40	2.4	gain
+ordered-visits-choice-real.ltl	25	90	8	1	6	8	24.0	gain
+robot_grid_pb_5_5_pe_.ltl	2577	42266	12	5	626	2576	24.3	gain
+thermostat-F-real.ltl	1533	27205	14	1	152	192	9.9	gain
+workstation_resupply_pb_3_pe_.ltl	151	1685	3	11	99	36	65.6	LOSS
+amba_decomposed_arbiter_pb_5_pe_.ltl	28	69	6	7	11	22	39.3	protected (solves via backward)
+collector_v2_pb_12_pe_.ltl	53	219	12	1	38	28	71.7	protected (solves via backward)
+Alarm_a5f99bc6.ltl	1245	118250	14	6	1171	216	94.1	protected (solves via backward)

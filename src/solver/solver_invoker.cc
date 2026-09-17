@@ -10,6 +10,7 @@
 #include "solver/diagnostics.hh"
 #include "solver/forced_output_contradiction.hh"
 #include "solver/mealy_to_moore.hh"
+#include "solver/real_backend_selector.hh"
 #include "solver/realizability_simplify.hh"
 #include "solver/solve_game.hh"
 #include "solver/spot_nba_fastpath.hh"
@@ -666,6 +667,20 @@ namespace {
 #endif
         acacia::diagnostics::snapshot ("before-solve");
         verb_do (1, vout << "Found " << posets::vectors::bool_threshold << " boolean states.\n");
+        // B2 (§8.2) structural-feature capture: N/E/I/O/B/Dmax from the final,
+        // preprocessed frozen automaton, before any backend-specific action
+        // table. Diagnostic-only (behind -v); no cost when not requested.
+        verb_do (1, {
+          std::size_t dmax = 0;
+          for (unsigned s = 0; s < aut->num_states (); ++s) {
+            std::size_t degree = 0;
+            for ([[maybe_unused]] const auto& e : aut->out (s)) ++degree;
+            dmax = std::max (dmax, degree);
+          }
+          vout << "Structural features: N=" << aut->num_states () << " E=" << aut->num_edges ()
+               << " I=" << input_aps.size () << " O=" << output_aps.size ()
+               << " B=" << posets::vectors::bool_threshold << " Dmax=" << dmax << std::endl;
+        });
         verb_do (4, dict->dump (utils::vout));
 
         // [DIAG] symmetry detection on the final game automaton. Keep this
@@ -698,6 +713,42 @@ namespace {
                     << std::chrono::duration<double, std::milli> (
                            std::chrono::steady_clock::now () - fallback_started).count () << '\n';
         assert (not synth_fname.has_value () or not check_unreal.has_value ());
+#if ACACIA_REAL_BACKEND_SELECTOR && ACACIA_SPOT_GUARDED_BACKEND
+        // B2 (§8.3): selection precedes action-table construction, happens
+        // once, and never re-translates or re-preprocesses. Real-forward
+        // slot, decision-only, frozen graph, after Boolean-state renumbering
+        // -- exactly the conditions above this point. Any other job (unreal,
+        // synthesis, a non-forward backend, a research provider) bypasses
+        // the selector entirely and keeps its original backend.
+        if (not check_unreal.has_value () and not synth_fname.has_value () and
+            effective_backend == acacia::game_backend::forward and
+            provider == acacia::automaton_provider::frozen_graph) {
+          // Only already-cached counts: no edge/degree scan, no extra pass
+          // over the automaton. edges/max_out_degree are left at 0 (unused
+          // by the frozen rule, which reads only states/boolean_states).
+          acacia::RealBackendFeatures rb_features;
+          rb_features.states = aut->num_states ();
+          rb_features.inputs = input_aps.size ();
+          rb_features.outputs = output_aps.size ();
+          rb_features.boolean_states = posets::vectors::bool_threshold;
+          rb_features.available = true;
+          static constexpr acacia::RealBackendRule rb_rule {
+              true, ACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT};
+          const auto requested_backend = effective_backend;
+          effective_backend = acacia::choose_real_backend (rb_features, rb_rule);
+          acacia::spot_records::put ("real_backend_selector_requested",
+                                     acacia::game_backend_name (requested_backend));
+          acacia::spot_records::put ("real_backend_selector_effective",
+                                     acacia::game_backend_name (effective_backend));
+          acacia::spot_records::put ("real_backend_selector_rule", "b2-boolean-percent-v1");
+          acacia::spot_records::put ("real_backend_selector_states",
+                                     std::to_string (rb_features.states));
+          acacia::spot_records::put ("real_backend_selector_boolean_states",
+                                     std::to_string (rb_features.boolean_states));
+          acacia::spot_records::put ("real_backend_selector_max_boolean_percent",
+                                     std::to_string (rb_rule.max_boolean_percent));
+        }
+#endif
         std::optional<spot::twa_graph_ptr> maybe_strat;
         {
           ACACIA_DIAG_SCOPED_TIMER (solve_ms);

@@ -9,6 +9,7 @@ ab_sources = [
   'acacia-bonsai.cc',
   'version.cc',
   'solver/mealy_to_moore.cc',
+  'solver/real_backend_selector.cc',
   'solver/solver_invoker.cc',
   'solver/solve_game.cc',
   'solver/solve_game_vector.cc',

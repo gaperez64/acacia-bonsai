@@ -35,5 +35,19 @@
   },
   "docker_default_group": ["otf_sparse_formula", "best_decomp_rank_bucketed_semantic_mona",
                             "best_four_arm_bboxtree", "best_decomp_mona_any"],
-  "status": "A2 complete (no P2 target newly unblocked; mechanism improvement measured and reported in boolean-rows.md). A3 not attempted (no direct duplicate-residual-key evidence). A4 does not proceed this sprint (no useful query to attribute a deployment to). B track next."
+  "status": "Sprint complete. A1/A2: mechanism fix validated, no P2 target newly unblocked, A3 not attempted, A4 does not proceed. B1: confirmed hint-free 5/5 gain + confirmed workstation regression. B2: rule derived (boolean_states/states<=30%), directly verified correct, deployment candidate still fails admission on workstation for an unrelated (LTO code-placement) reason. Nothing admitted; candidate=baseline; closing report reuses the previous sprint's rows (proven solver-source-identical).",
+  "b2_selector": {
+    "commits": ["real_backend_selector code + registry + tests, see git log on this branch"],
+    "rule": "spot-guarded-sparse when 100*boolean_states/states <= 30, else forward",
+    "registry_option": "acacia_real_backend_selector (default false)",
+    "threshold_option": "acacia_real_backend_selector_max_boolean_percent (default 30)",
+    "admitted": false,
+    "disposition": "not admitted: workstation_resupply_pb_3_pe_ regresses in the deployment-candidate confirmation even though the selector is directly verified to choose forward for it in both control and treatment; matches the previous sprint's documented LTO code-placement finding on the same instance"
+  },
+  "closing_reuse": {
+    "reused_from": "benchmarking/demand-sparse-20260916/closing/",
+    "baseline_csv_sha256": "922ac3533a56a4427d66f74e9d27c7fb03e42948cef63376fd11573864623c39",
+    "ltlsynt_csv_sha256": "f81beba80ab5639b01c05d921d000aa0022060adf8255d9b4a4b739f8d0e1cfb",
+    "justification": "git diff --stat 6410fd34 7e6e932a -- src/ meson.build meson.options config/ subprojects/posets is empty; the previously-measured frozen baseline binary is documented as solver-source-identical to 6410fd34"
+  }
 }

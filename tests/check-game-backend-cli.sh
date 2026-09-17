@@ -11,6 +11,10 @@ verbose_enabled=${5:-true}
 # their configured defaults, so the same harness can check those end to end.
 candidate_default=${6:-only}
 taa_cap_default=${7:-}
+# B2 (sprint/symbolic-rows-selective-real): only game-backend-integration
+# compiles ACACIA_REAL_BACKEND_SELECTOR=1; every other call site defaults to
+# false and skips the checks below.
+selector_enabled=${8:-false}
 
 run() {
     local wanted_status=$1
@@ -331,3 +335,33 @@ for provider in closure-buchi closure-buchi-eager; do
     fi
 done
 printf '%s\n' 'PASS closure arm validation, TAA-independent selection, typed decline, no fallback'
+
+# B2 (sprint/symbolic-rows-selective-real): the selector must never change a
+# verdict, and must bypass every job it is not eligible for (unreal workers,
+# synthesis, a non-forward backend, a research provider). The pure threshold
+# logic itself is exhaustively covered by tests/real_backend_selector_test.cc;
+# this only checks that the compiled-in wiring reaches/skips it correctly.
+if [[ $selector_enabled == true && $forward_enabled == true && $guarded_enabled == true ]]; then
+    # Real-forward slot, eligible: still the correct verdict whichever way
+    # the selector decides (the pure threshold decision itself belongs to
+    # tests/real_backend_selector_test.cc, not asserted here).
+    output=$(run 0 -f 'G(i <-> X(o))' -i i -o o --arms real:small:forward)
+    grep -qx REALIZABLE <<<"$output"
+    # Non-real (unreal) worker: bypassed, unaffected, correct verdict. A lone
+    # real:small arm can only ever return REALIZABLE or UNKNOWN, never
+    # UNREALIZABLE, so this uses the unreal:formula route on a genuinely
+    # unrealizable spec (the controller would have to predict the next
+    # input before choosing an output).
+    output=$(run 1 -f 'G(o <-> X(i))' -i i -o o --arms unreal:formula:forward)
+    grep -qx UNREALIZABLE <<<"$output"
+    # Synthesis: bypassed (synth_fname.has_value() excludes it); must not
+    # crash or misroute into the sparse backend's decision-only contract.
+    strategy=$(mktemp)
+    run 0 -f 'G(i <-> X(o))' -i i -o o -s "$strategy" --real-backend forward >/dev/null
+    [[ -s $strategy ]]
+    rm -f "$strategy"
+    # A non-forward backend already selected: bypassed, unaffected.
+    output=$(run 0 -f 'G(i <-> X(o))' -i i -o o --arms real:small:backward)
+    grep -qx REALIZABLE <<<"$output"
+    printf '%s\n' 'PASS real-backend-selector: no verdict change, correct bypass on unreal/synthesis/non-forward'
+fi

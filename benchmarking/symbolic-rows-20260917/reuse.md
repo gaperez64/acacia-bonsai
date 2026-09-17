@@ -37,3 +37,21 @@ No second runner, event system, PAR-2 calculator, chart generator, formula
 parser or TLSF lowering pass was created. `run-a2-first-row.py` is a thin
 driver over the existing replay binary's CLI and TSV output; it does not
 duplicate any of the tools listed above.
+
+## B1/B2 — selective sparse-real dispatch
+
+| Item | Status | Reason |
+| --- | --- | --- |
+| P4 target list (10 IDs) | **reuse** | `_bm-logs.20260916-demand-sparse/targets/p4.list`, hash-verified identical to the previous sprint's frozen list |
+| `run-syntcomp26-coverage.py`, `paired-admission.py` | **reuse** | Unchanged; B1's screen and the deployment-candidate confirmation both use the existing arm-override mechanism (`--flags="--arms ..."`) and the existing evaluator, no new runner |
+| Boolean-state discovery boundary in `solver_invoker.cc` | **reuse** | The `-v` structural-feature print and the selector hook both sit at the pre-existing `posets::vectors::bool_threshold`/"before-solve" point; no new preprocessing pass |
+| A way to read N/E/B/Dmax for a target from the command line | **missing** | Added one `verb_do(1, ...)` boundary print (diagnostic only, `-DNO_VERBOSE` compiles it out in release, matching every other verbose diagnostic in this file) |
+| A way to replay a job whose transformed formula exceeds ~128 KiB | **missing** | Already added in A2 (`--formula-file`); reused here for nothing new |
+| Closing three-way campaign | **reuse (byte-identical)** | See `decisions.md`/`closing/README.md`: candidate=baseline, proven solver-source-identical to the already-measured frozen binary, no new corpus run |
+
+No second runner, arm-selection mechanism, evaluator or PAR-2/plot tool was
+created. `real_backend_selector.{hh,cc}` and its test are new (no prior
+sprint had this code); the registry entries follow the existing
+`acacia-options.json`/`meson.options`/`acacia_build_config.hh.in` pattern
+exactly, plus the one required (and easy to miss) `build_conf.set(...)`
+line in `meson.build` itself.

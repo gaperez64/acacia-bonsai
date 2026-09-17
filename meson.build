@@ -212,6 +212,10 @@ else
 endif
 build_conf.set ('ACACIA_SPOT_GUARDED_BACKEND',
                 get_option ('acacia_spot_guarded_backend') ? 1 : 0)
+build_conf.set ('ACACIA_REAL_BACKEND_SELECTOR',
+                get_option ('acacia_real_backend_selector') ? 1 : 0)
+build_conf.set ('ACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT',
+                get_option ('acacia_real_backend_selector_max_boolean_percent'))
 build_conf.set ('ACACIA_SPOT_GUARDED_INEQUALITY_COVERING',
                 get_option ('acacia_spot_guarded_inequality_covering') ? 1 : 0)
 build_conf.set ('ACACIA_SPOT_GUARDED_EXISTENTIAL_OUTPUTS',

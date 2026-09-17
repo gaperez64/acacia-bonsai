@@ -94,6 +94,10 @@ option('acacia_spot_taa_max_rank_nodes', type: 'integer', value: 200000, min: 0,
        description: 'Default per-attempt rank-node cap for both TAA providers; frozen guarded solving keeps its own limit')
 option('acacia_spot_guarded_backend', type: 'boolean', value: false,
        description: 'Compile the explicitly selected Spot guarded-input safety-game backend')
+option('acacia_real_backend_selector', type: 'boolean', value: false,
+       description: 'B2 (sprint/symbolic-rows-selective-real): structural real-slot forward/sparse selection, decision-only, disabled by default')
+option('acacia_real_backend_selector_max_boolean_percent', type: 'integer', value: 30, min: 0, max: 100,
+       description: 'Frozen 100*boolean_states/states threshold for acacia_real_backend_selector: at or below this, prefer spot-guarded-sparse')
 option('acacia_spot_guarded_inequality_covering', type: 'boolean', value: false,
        description: 'Cover guarded inputs with the <= successor preimage instead of the exact successor')
 option('acacia_spot_guarded_existential_outputs', type: 'boolean', value: false,

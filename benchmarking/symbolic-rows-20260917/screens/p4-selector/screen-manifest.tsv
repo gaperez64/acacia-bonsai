@@ -1,0 +1,5 @@
+tag	p4-selector
+list_sha256	9eab657c8c936403b5a2102f45beb868bb292a3acef49dfa5d12ddaf3b4e7e2a
+rounds	5
+A	control|build_sr_candidate/src/acacia-bonsai|31144e84|no selector, default arms
+B	treatment|build_sr_selector/src/acacia-bonsai|31144e84|selector enabled (30% boolean-state threshold), default arms, no --arms override
