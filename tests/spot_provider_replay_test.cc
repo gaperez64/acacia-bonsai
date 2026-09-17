@@ -1760,6 +1760,51 @@ void closure_mutations_and_growth () {
             << growing->cache->state_count () << " states preserve saved sparse rank\n";
 }
 
+// A1/A2 CLI surface: --closure-row-expansion and --stop-after-first-row.
+Options parse (std::vector<std::string> args) {
+  args.insert (args.begin (), "acacia-spot-provider-replay");
+  std::vector<char*> argv;
+  for (auto& a : args) argv.push_back (a.data ());
+  return parse_options (int (argv.size ()), argv.data ());
+}
+bool rejected (std::vector<std::string> args) {
+  try {
+    parse (std::move (args));
+  } catch (const std::exception&) {
+    return true;
+  }
+  return false;
+}
+void cli_flags () {
+  const std::vector<std::string> base {"--arm", "c5", "--formula", "p", "--k", "1",
+                                       "--provider", "closure-buchi"};
+  auto with = [&] (std::vector<std::string> extra) {
+    auto args = base;
+    args.insert (args.end (), extra.begin (), extra.end ());
+    return args;
+  };
+  expect (parse (base).row_expansion == acacia::closure_buchi::RowExpansion::symbolic_boolean,
+          "default row expansion is symbolic-boolean");
+  expect (!parse (base).stop_after_first_row, "default is not stop-after-first-row");
+  expect (parse (with ({"--closure-row-expansion", "enumerative"})).row_expansion ==
+              acacia::closure_buchi::RowExpansion::enumerative,
+          "--closure-row-expansion enumerative parses");
+  expect (parse (with ({"--closure-row-expansion", "symbolic-boolean"})).row_expansion ==
+              acacia::closure_buchi::RowExpansion::symbolic_boolean,
+          "--closure-row-expansion symbolic-boolean parses");
+  expect (parse (with ({"--stop-after-first-row"})).stop_after_first_row,
+          "--stop-after-first-row parses");
+  expect (rejected (with ({"--closure-row-expansion", "bogus"})),
+          "an unknown --closure-row-expansion value is rejected");
+  expect (rejected (with ({"--closure-row-expansion", "enumerative",
+                          "--closure-row-expansion", "enumerative"})),
+          "a duplicate --closure-row-expansion is rejected, like every other option");
+  expect (rejected ({"--arm", "c5", "--formula", "p", "--k", "1", "--provider", "taa",
+                     "--closure-row-expansion", "enumerative"}),
+          "--closure-row-expansion is rejected for --provider taa");
+  std::cout << "cli_flags: PASS\n";
+}
+
 int main () {
   const int report_fd = open ("/dev/null", O_WRONLY);
   const auto report = pipe_reporter (report_fd);
@@ -1771,6 +1816,7 @@ int main () {
       if (const int code = differential (report, semantics))
         return code;
     }
+    cli_flags ();
     closure_games ();
     closure_mutations_and_growth ();
     copy_kernels ();

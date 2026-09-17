@@ -251,6 +251,7 @@ namespace replay {
       Limits game;
       acacia::closure_buchi::RowExpansion row_expansion =
           acacia::closure_buchi::RowExpansion::symbolic_boolean;
+      bool stop_after_first_row = false;
   };
   std::string need_argument (int& i, int argc, char** argv) {
     if (++i >= argc)
@@ -272,6 +273,7 @@ namespace replay {
     out << "usage: " << program << " --arm c4|c5 --formula WORKER_LTL --k K\n"
         << "  [--provider taa|closure-buchi] [--export-hoa FILE (c4 only)]\n"
         << "  [--closure-row-expansion enumerative|symbolic-boolean]\n"
+        << "  [--stop-after-first-row]\n"
         << "  [--partition uc...] [--kmax K --kinc N]\n"
         << "  [--timeout-seconds N] [--max-memory-mib N] [--max-states N]\n"
         << "  [--max-rows N] [--max-row-edges N] [--max-acceptance-sets N]\n"
@@ -293,6 +295,10 @@ namespace replay {
         << "  memoized BDD before continuing; enumerative is the pre-fix frozen control\n"
         << "  that still forks one branch per disjunct. Applies only to --provider\n"
         << "  closure-buchi; both must agree on every raw (T,P)->guard extensionally.\n"
+        << "  --stop-after-first-row requests only the initial state's row (through the\n"
+        << "  same factory/store as an ordinary run) and reports row_status: row_complete\n"
+        << "  or row_failed, never a realizability verdict; no K-schedule search runs.\n"
+        << "  Exit 0: the row completed; 2: it failed/hit a limit; 1: invalid invocation.\n"
         << "  Counts ending in cumulative and provider row/state counts are job totals.\n"
         << "  search_rows_requested is the union across K; verification_additional_rows\n"
         << "  is certificate sources outside that union. Search-only is their set difference.\n"
@@ -327,6 +333,8 @@ namespace replay {
           fail ("--closure-row-expansion expects enumerative or symbolic-boolean");
         o.row_expansion = *parsed;
       }
+      else if (arg == "--stop-after-first-row")
+        o.stop_after_first_row = true;
       else if (arg == "--export-hoa")
         o.export_hoa = next ();
       else if (arg == "--formula")
@@ -622,6 +630,30 @@ namespace replay {
       // zero generated rows. This assertion is live in release builds.
       else
         require (store.cache->state_count () == 1 && store.cache->complete_rows () == 0);
+      // Diagnose first-row progress without a realizability verdict: request
+      // only the initial state's row through the same factory/store as an
+      // ordinary run, then stop before any K-schedule search. Row success/
+      // failure only; store.row_error carries the typed reason on failure.
+      if (o.stop_after_first_row) {
+        report.put ("stage", "first_row_only");
+        const auto row_started = Clock::now ();
+        const auto result = store.cache->row (store.cache->initial_id ());
+        report.ms ("row_generation_ms", elapsed (row_started));
+        store.check_contract ();
+        store.snapshot ();
+        report.ms ("end_to_end_ms", elapsed (job));
+        report.count ("peak_rss_bytes", peak_bytes ());
+        const bool complete = result.status == rows::Status::complete;
+        report.put ("status", complete ? "ROW_COMPLETE" : "ROW_FAILED");
+        report.put ("worker_result", complete ? "row_complete" : "row_failed");
+        report.put ("reason", complete ? "none" : acacia::spot_lazy_worker::failure_reason (
+            result.error, result.status == rows::Status::resource_limit
+                               ? "resource_limit" : "row_failure"));
+        report.put ("certificate", "not_applicable");
+        report.put ("stage", "first_row_complete");
+        report.put ("emit", "1");
+        return complete ? 0 : 2;
+      }
       if (!o.export_hoa.empty ()) {
         auto graph = export_graph (store);
         std::ofstream out (o.export_hoa);
@@ -768,7 +800,9 @@ namespace replay {
     const int code = WIFEXITED (status) ? WEXITSTATUS (status) : 2;
     const bool died =
         !WIFEXITED (status) || (value (current, "worker_result") == "win" && code != 0);
-    const bool partial = died || value (current, "stage") != "attempt_complete";
+    const auto final_stage = value (current, "stage");
+    const bool partial =
+        died || (final_stage != "attempt_complete" && final_stage != "first_row_complete");
     if (partial) {
       if (died && value (current, "stage") == "attempt_complete" && !attempts.empty ())
         attempts.pop_back ();  // do not publish a verdict after fatal teardown
