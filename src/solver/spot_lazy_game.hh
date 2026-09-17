@@ -670,10 +670,6 @@ namespace acacia::spot_lazy_game {
       // The query pair is mutable because subsumes() is const.
       mutable std::size_t queries = 0, hits = 0, prefilter_skips = 0;
       std::size_t insertions = 0, removals = 0, peak = 0;
-#if ACACIA_ENABLE_DIAGNOSTICS
-      std::size_t compaction_moves = 0;
-      static constexpr std::size_t compaction_deep_copies = 0;
-#endif
 
       // The proof that witnesses a subsumption is found by the same scan that
       // decides it.  Recovering it with a second pass over a parallel list, as
@@ -709,14 +705,8 @@ namespace acacia::spot_lazy_game {
             continue;
           }
           if (write != read) {
-            // write < read: the moved-from slot is never visited again and
-            // is overwritten by a later survivor or erased with the suffix.
-            // Rank moves are nonthrowing; leq and proof assignment do not throw.
-            generators_[write] = std::move (generators_[read]);
+            generators_[write] = generators_[read];
             proofs_[write] = proofs_[read];
-#if ACACIA_ENABLE_DIAGNOSTICS
-            ++compaction_moves;
-#endif
           }
           ++write;
         }
@@ -1124,10 +1114,6 @@ namespace acacia::spot_lazy_game {
         view_.report.count ("subsumption_prefilter_skips", losing_.prefilter_skips);
         view_.report.count ("losing_insertions", losing_.insertions);
         view_.report.count ("losing_removals", losing_.removals);
-#if ACACIA_ENABLE_DIAGNOSTICS
-        view_.report.count ("losing_compaction_moves", losing_.compaction_moves);
-        view_.report.count ("losing_compaction_deep_copies", losing_.compaction_deep_copies);
-#endif
         view_.report.count ("losing_antichain_size", losing_.size ());
         view_.report.count ("losing_antichain_peak", losing_.peak);
         view_.report.count ("proofs_total", proofs_total_);

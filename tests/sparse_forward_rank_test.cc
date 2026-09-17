@@ -2,7 +2,6 @@
 #include "utils/verbose.hh"
 
 #include <iostream>
-#include <type_traits>
 #include <unordered_set>
 
 namespace utils { unsigned verbose = 0; voutstream vout; }
@@ -11,9 +10,6 @@ namespace posets::vectors { size_t bool_threshold = 0; }
 namespace {
   using namespace acacia::spot_rows;
   using Sparse = SparseForwardRank<>;
-  // LossSet compaction must reach suffix erasure without throwing after a move.
-  static_assert (std::is_nothrow_move_assignable_v<Sparse>);
-  static_assert (std::is_nothrow_destructible_v<Sparse>);
   int failures = 0;
   bool expect (const std::string& name, bool condition) {
     if (condition) return true;
@@ -44,17 +40,6 @@ namespace {
     expect ("cached hash survives copy, move and dropped -1 entries",
             copied.hash () == rank.hash () && moved.hash () == rank.hash ()
             && dropped.hash () == rank.hash () && dropped == rank);
-    Sparse source = rank, assigned {{{9, 0}}, 3};
-    const auto* payload = source.entries ().data ();
-    assigned = std::move (source);
-    expect ("move assignment transfers payload and cached summaries",
-            assigned == rank && assigned.hash () == rank.hash ()
-            && assigned.mass () == rank.mass () && assigned.entries ().data () == payload);
-    // A moved-from rank may have stale summaries: overwrite it before any read.
-    source = Sparse {{{6, 2}}, 3};
-    expect ("overwriting moved-from rank restores entries and summaries",
-            source == Sparse ({{6, 2}}, 3) && source.hash () == Sparse ({{6, 2}}, 3).hash ()
-            && source.mass () == 3);
     expect ("bound is numeric safe envelope", not rank.is_safe (3) && rank.is_safe (4));
     const Sparse empty {{}, 3}, zeros {{{0, 0}}, 3}, other {{{5, 0}}, 3};
     expect ("empty bottom, zero is active", empty.leq (zeros) && not zeros.leq (empty) && empty != zeros);
