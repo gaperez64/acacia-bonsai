@@ -61,6 +61,9 @@ namespace replay {
       {"closure_guards_generated"}, {"closure_states_discovered"},
       {"closure_complete_rows"}, {"closure_raw_rows"}, {"closure_edges"},
       {"closure_retained_bytes"},
+      {"row_expansion_mode"}, {"boolean_conversion_ms"},
+      {"boolean_cache_hits"}, {"boolean_cache_misses"},
+      {"boolean_conversion_calls"}, {"boolean_complete_entries"},
       {"spot_version"},
       {"refined_rules"},
       {"wrapper"},
@@ -246,6 +249,8 @@ namespace replay {
       size_t max_memory_mib = 1024;
       lazy::Limits provider;
       Limits game;
+      acacia::closure_buchi::RowExpansion row_expansion =
+          acacia::closure_buchi::RowExpansion::symbolic_boolean;
   };
   std::string need_argument (int& i, int argc, char** argv) {
     if (++i >= argc)
@@ -266,6 +271,7 @@ namespace replay {
   void usage (std::ostream& out, const char* program) {
     out << "usage: " << program << " --arm c4|c5 --formula WORKER_LTL --k K\n"
         << "  [--provider taa|closure-buchi] [--export-hoa FILE (c4 only)]\n"
+        << "  [--closure-row-expansion enumerative|symbolic-boolean]\n"
         << "  [--partition uc...] [--kmax K --kinc N]\n"
         << "  [--timeout-seconds N] [--max-memory-mib N] [--max-states N]\n"
         << "  [--max-rows N] [--max-row-edges N] [--max-acceptance-sets N]\n"
@@ -282,6 +288,11 @@ namespace replay {
         << "  2000000 edges per row/choices; query steps/live BDD nodes unlimited.\n"
         << "  --k defaults to one fixed-K attempt; --kmax uses the compiled worker\n"
         << "  schedule with fresh search/proofs/caches/strategy at each K.\n"
+        << "  --closure-row-expansion selects the closure provider's Boolean-obligation\n"
+        << "  handling: symbolic-boolean (default) folds a Boolean subformula into one\n"
+        << "  memoized BDD before continuing; enumerative is the pre-fix frozen control\n"
+        << "  that still forks one branch per disjunct. Applies only to --provider\n"
+        << "  closure-buchi; both must agree on every raw (T,P)->guard extensionally.\n"
         << "  Counts ending in cumulative and provider row/state counts are job totals.\n"
         << "  search_rows_requested is the union across K; verification_additional_rows\n"
         << "  is certificate sources outside that union. Search-only is their set difference.\n"
@@ -309,6 +320,13 @@ namespace replay {
         o.arm = next ();
       else if (arg == "--provider")
         o.provider_name = next ();
+      else if (arg == "--closure-row-expansion") {
+        const auto value = next ();
+        const auto parsed = acacia::closure_buchi::parse_row_expansion (value);
+        if (!parsed)
+          fail ("--closure-row-expansion expects enumerative or symbolic-boolean");
+        o.row_expansion = *parsed;
+      }
       else if (arg == "--export-hoa")
         o.export_hoa = next ();
       else if (arg == "--formula")
@@ -358,6 +376,8 @@ namespace replay {
       fail ("--export-hoa requires eager --arm c4");
     if (o.provider_name == "closure-buchi" && seen.contains ("--max-acceptance-sets"))
       fail ("--max-acceptance-sets applies only to the TAA provider");
+    if (o.provider_name != "closure-buchi" && seen.contains ("--closure-row-expansion"))
+      fail ("--closure-row-expansion applies only to the closure-buchi provider");
     if (o.formula.empty () || o.k < 1)
       fail ("--formula and positive --k are required");
     if (!seen.contains ("--kmax"))
@@ -537,6 +557,7 @@ namespace replay {
         acacia::closure_buchi::Options options;
         options.max_states = o.provider.max_states;
         options.max_live_bdd_nodes = o.provider.max_live_bdd_nodes;
+        options.row_expansion = o.row_expansion;
         owned_store = acacia::spot_lazy_worker::make_closure_store (
             f, dict, o.provider.rows, report, options);
         provider = owned_store->provider;

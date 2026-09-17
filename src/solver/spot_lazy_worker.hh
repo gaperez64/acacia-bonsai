@@ -80,8 +80,9 @@ namespace acacia::spot_lazy_worker {
     if (auto* failure = std::get_if<closure_buchi::Failure> (&built))
       throw closure_buchi::AdapterFailure (*failure);
     auto provider = std::get<std::shared_ptr<closure_buchi::Provider>> (std::move (built));
-    auto snapshot = [provider] (const game::Reporter& r) {
+    auto snapshot = [provider, mode = options.row_expansion] (const game::Reporter& r) {
       const auto& c = provider->counters ();
+      r.put ("row_expansion_mode", closure_buchi::row_expansion_name (mode));
       r.ms ("closure_factory_ms", c.factory_ns / 1e6);
       r.ms ("closure_normalization_ms", c.normalization_ns / 1e6);
       r.ms ("closure_raw_row_ms", c.raw_row_ns / 1e6);
@@ -95,6 +96,12 @@ namespace acacia::spot_lazy_worker {
       r.count ("closure_raw_rows", c.raw_rows);
       r.count ("closure_edges", c.edges);
       r.count ("closure_retained_bytes", c.retained_bytes);
+      // A1 Boolean-guard folding; all 0 under RowExpansion::enumerative.
+      r.ms ("boolean_conversion_ms", c.boolean_conversion_ns / 1e6);
+      r.count ("boolean_cache_hits", c.boolean_cache_hits);
+      r.count ("boolean_cache_misses", c.boolean_cache_misses);
+      r.count ("boolean_conversion_calls", c.boolean_conversion_calls);
+      r.count ("boolean_complete_entries", c.boolean_complete_entries);
     };
     auto store = std::make_unique<game::RowStore> (
         game::FixedBuchi {{provider}, snapshot, {}}, rows, report);

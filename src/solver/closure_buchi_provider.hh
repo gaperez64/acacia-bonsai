@@ -4,8 +4,10 @@
 
 #include <exception>
 #include <functional>
+#include <optional>
 #include <span>
 #include <spot/twa/twagraph.hh>
+#include <string_view>
 #include <variant>
 
 namespace acacia::closure_buchi {
@@ -39,6 +41,20 @@ namespace acacia::closure_buchi {
       std::function<bool ()> cancelled;
       std::function<bool (FaultPoint)> fail;
   };
+  // enumerative is the pre-A1 control: a pure Boolean Or still forks one
+  // branch per disjunct, recursively. symbolic_boolean folds a whole Boolean
+  // subformula into one memoized BDD before continuing (see closure_buchi.cc,
+  // Impl::boolean_guard). Both must agree on every raw_row (T,P)->guard
+  // extensionally; only branch count, order and transient BDDs may differ.
+  enum class RowExpansion { enumerative, symbolic_boolean };
+  inline const char* row_expansion_name (RowExpansion e) {
+    return e == RowExpansion::enumerative ? "enumerative" : "symbolic-boolean";
+  }
+  inline std::optional<RowExpansion> parse_row_expansion (std::string_view name) {
+    if (name == "enumerative") return RowExpansion::enumerative;
+    if (name == "symbolic-boolean") return RowExpansion::symbolic_boolean;
+    return std::nullopt;
+  }
   struct Options {
       std::size_t max_normalization_nodes = 100000;
       std::size_t max_normalization_depth = 512;
@@ -52,6 +68,7 @@ namespace acacia::closure_buchi {
       // Estimated live provider + scratch storage, excluding the shared BDD
       // manager (limited above). Allocation failures are caught independently.
       std::size_t max_bytes = std::numeric_limits<std::size_t>::max ();
+      RowExpansion row_expansion = RowExpansion::symbolic_boolean;
       std::shared_ptr<Hooks> hooks;
   };
   struct Edge {
@@ -66,6 +83,15 @@ namespace acacia::closure_buchi {
       std::uint64_t branches_considered = 0, branches_pruned = 0, guards_generated = 0;
       std::size_t states_discovered = 0, complete_rows = 0, raw_rows = 0, edges = 0;
       std::size_t retained_bytes = 0;
+      // symbolic_boolean only (RowExpansion::enumerative leaves these at 0).
+      // hits/misses count fold sites in expand(); conversion_calls counts
+      // distinct closure IDs actually evaluated (each at most once ever, so
+      // this is bounded by closure size, never by branch/row count).
+      // complete_entries is the cache's final populated size, literals and
+      // constants included.
+      std::uint64_t boolean_conversion_ns = 0;
+      std::uint64_t boolean_cache_hits = 0, boolean_cache_misses = 0;
+      std::uint64_t boolean_conversion_calls = 0, boolean_complete_entries = 0;
   };
 
   // twa has no typed failure channel. Its adapter throws this exception before

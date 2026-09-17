@@ -197,7 +197,8 @@ namespace acacia::closure_buchi {
       std::unordered_map<Formula, ClosureId> ids;
       Set untils;
       std::vector<Formula> aps;
-      std::vector<std::optional<bdd>> literals;
+      std::vector<std::optional<bdd>> literals;  // generalized boolean_guard cache
+      std::vector<unsigned char> is_boolean;
       std::deque<Underlying> underlying;
       std::map<Set, std::size_t> underlying_ids;  // exact lexicographic comparison
       std::deque<Cursor> states;
@@ -251,6 +252,36 @@ namespace acacia::closure_buchi {
             literals[i] =
                 a.is (Op::ap) ? bdd_ithvar (dict->varnum (ap)) : bdd_nithvar (dict->varnum (ap));
             ++stats.guards_generated;
+            ++stats.boolean_complete_entries;
+          } else if (a.is (Op::tt)) {
+            literals[i] = bddtrue;
+            ++stats.boolean_complete_entries;
+          } else if (a.is (Op::ff)) {
+            literals[i] = bddfalse;
+            ++stats.boolean_complete_entries;
+          }
+        }
+        // Every child of closure[i] was pushed onto `work` strictly after i's
+        // own id was assigned above, so child ids are always > i: a single
+        // reverse pass sees every child of And/Or before the node itself,
+        // with no recursion and no dependency on insertion/discovery order.
+        is_boolean.resize (closure.size ());
+        for (std::size_t i = closure.size (); i-- > 0; ) {
+          auto a = closure[i];
+          switch (a.kind ()) {
+            case Op::tt: case Op::ff: case Op::ap: case Op::Not:
+              is_boolean[i] = 1;
+              break;
+            case Op::And: case Op::Or: {
+              bool boolean = true;
+              for (auto c : a)
+                boolean = boolean && is_boolean[ids.at (c)];
+              is_boolean[i] = boolean;
+              break;
+            }
+            default:
+              is_boolean[i] = 0;
+              break;
           }
         }
         intern ({ids.at (normalized)}, 0);
@@ -312,6 +343,46 @@ namespace acacia::closure_buchi {
             return result;
           }
       };
+
+      // Memoized postorder evaluator over Boolean closure IDs, reusing the
+      // `literals` cache (RowBudget::guard is the checked AND/OR operation,
+      // so this stays inside the same fatal-BuDDy/cancellation boundary as
+      // ordinary branch expansion). Iterative: bounded by heap, not native
+      // call-stack depth, so a long chain of nested Boolean And/Or cannot
+      // overflow the stack. Only a completely computed result is cached;
+      // RowBudget::guard/hit throw (uncached) on a limit or cancellation
+      // before any partial value is stored, so a retried row after a
+      // transient failure recomputes cleanly. Reused across rows, cursors
+      // and K attempts within this provider: a closure id is evaluated at
+      // most once for the provider's lifetime.
+      bdd boolean_guard (ClosureId root, RowBudget& budget) {
+        if (!literals[root]) {
+          Timer timer {stats.boolean_conversion_ns};
+          std::vector<ClosureId> work {root};
+          while (!work.empty ()) {
+            auto id = work.back ();
+            if (literals[id]) { work.pop_back (); continue; }
+            auto a = closure[id];
+            bool ready = true;
+            for (auto c : a) {
+              auto child = ids.at (c);
+              if (!literals[child]) { work.push_back (child); ready = false; }
+            }
+            if (!ready)
+              continue;
+            work.pop_back ();
+            const bool conjunction = a.kind () == Op::And;
+            bdd result = conjunction ? bdd (bddtrue) : bdd (bddfalse);
+            for (auto c : a)
+              result = budget.guard (result, *literals[ids.at (c)], !conjunction);
+            literals[id] = result;
+            ++stats.boolean_conversion_calls;
+            ++stats.boolean_complete_entries;
+          }
+        }
+        return *literals[root];
+      }
+
       struct Branch {
           Set work, next, postponed;
           std::vector<unsigned char> done;
@@ -352,7 +423,18 @@ namespace acacia::closure_buchi {
             b.work.pop_back ();
             if (b.done[id])
               continue;
-            b.done[id] = 1;  // only CURRENT obligations, never erase next/postponed
+            b.done[id] = 1;  // only the CURRENT (root) obligation, never a descendant
+            if (options.row_expansion == RowExpansion::symbolic_boolean && is_boolean[id]) {
+              // Sound because expanding a Boolean obligation introduces no
+              // future/postponed obligation: every satisfying alternative
+              // shares the same temporal continuation, so their guards
+              // combine as current_guard AND B(id) before continuing. No
+              // witness branch, so no exponential blowup on e.g. a wide
+              // conjunction of disjunctions. Never touches b.next/b.postponed.
+              literals[id] ? ++stats.boolean_cache_hits : ++stats.boolean_cache_misses;
+              b.guard = budget.guard (b.guard, boolean_guard (id, budget));
+              continue;
+            }
             auto f = closure[id];
             auto child = [&] (unsigned i) { return ids.at (f[i]); };
             switch (f.kind ()) {

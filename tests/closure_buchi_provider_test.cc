@@ -638,6 +638,229 @@ namespace {
                "explosion stops with typed failure");
     }
   }
+
+  // A1: exact Boolean-guard folding in RowExpansion::symbolic_boolean, with
+  // RowExpansion::enumerative kept alive as the frozen pre-fix control.
+  F wide_and_or (unsigned n) {
+    std::vector<F> conjuncts;
+    for (unsigned i = 0; i < n; ++i)
+      conjuncts.push_back (
+          F::Or ({F::ap ("p" + std::to_string (i)), F::ap ("q" + std::to_string (i))}));
+    return F::G (F::And (conjuncts));
+  }
+
+  void boolean_folding () {
+    // Small interleaved family: raw maps agree between modes, and the
+    // self-loop is exact; symbolic branch count never grows with n (the
+    // whole Boolean AND folds as one step) while enumerative's does.
+    for (unsigned n : {1u, 3u, 8u}) {
+      auto f = wide_and_or (n);
+      auto dict = spot::make_bdd_dict ();
+      cb::Options oe;
+      oe.row_expansion = cb::RowExpansion::enumerative;
+      cb::Options os;
+      os.row_expansion = cb::RowExpansion::symbolic_boolean;
+      auto pe = value (Provider::create (f, dict, oe));
+      auto ps = value (Provider::create (f, dict, os));
+      auto re = value (pe->request_row (0));
+      auto rs = value (ps->request_row (0));
+      require (signature (*pe, re) == signature (*ps, rs),
+               "enumerative and symbolic raw maps agree: n=" + std::to_string (n));
+      require (rs.size () == 1 && rs[0].destination == 0 && rs[0].accepting,
+               "G(AND(p_i|q_i)) is a single guarded accepting self-loop: n=" +
+                   std::to_string (n));
+      require (ps->counters ().branches_considered <= 10,
+               "symbolic branch count does not grow with n: n=" + std::to_string (n));
+      if (n >= 3)
+        require (pe->counters ().branches_considered >= (1u << n),
+                 "enumerative branch count confirms the exponential baseline: n=" +
+                     std::to_string (n));
+    }
+    std::cout << "boolean_folding: small family (n=1,3,8) raw-map equality and branch counts\n";
+
+    // Larger version: symbolic completes under a deliberately small branch
+    // budget; the enumerative control's UNKNOWN there is not a mismatch.
+    {
+      auto f = wide_and_or (20);
+      auto dict = spot::make_bdd_dict ();
+      cb::Options oe;
+      oe.row_expansion = cb::RowExpansion::enumerative;
+      oe.max_branches_per_row = 100;
+      cb::Options os;
+      os.row_expansion = cb::RowExpansion::symbolic_boolean;
+      os.max_branches_per_row = 100;
+      auto pe = value (Provider::create (f, dict, oe));
+      auto ps = value (Provider::create (f, dict, os));
+      failure (pe->request_row (0), cb::FailureKind::branch_limit);
+      auto rs = value (ps->request_row (0));
+      require (rs.size () == 1 && rs[0].accepting,
+               "symbolic completes n=20 under a 100-branch budget where enumerative cannot");
+    }
+
+    // Shared Boolean sub-DAG across rows: compiled once, reused.
+    {
+      auto p = make ("(p | q) & X(p | q)");
+      auto row0 = value (p->request_row (0));
+      require (row0.size () == 1, "single destination");
+      const auto calls_after_row0 = p->counters ().boolean_conversion_calls;
+      require (calls_after_row0 >= 1, "first fold computes the shared (p|q)");
+      auto row1 = value (p->request_row (row0[0].destination));
+      require (p->counters ().boolean_conversion_calls == calls_after_row0,
+               "the shared Boolean sub-DAG is compiled once per provider, then reused");
+      require (p->counters ().boolean_cache_hits > 0, "the reuse is counted as a cache hit");
+      require (row1.size () == 1 && row1[0].condition == row0[0].condition,
+               "the second row's guard is the exact same reused Boolean BDD");
+    }
+
+    // False, tautological and overlapping guards: exact BDD semantics, and a
+    // cached false is distinguished from a missing/failed conversion.
+    {
+      auto taut = make ("a | !a");
+      auto rt = value (taut->request_row (0));
+      require (rt.size () == 1 && rt[0].condition == bddtrue, "tautology folds to bddtrue");
+      auto contra = make ("a & !a");
+      auto rc = value (contra->request_row (0));
+      require (rc.empty () && contra->counters ().branches_pruned > 0,
+               "contradiction folds to bddfalse and is pruned, not a failure");
+      require (contra->is_complete (0), "a pruned-to-empty row is still a complete, published row");
+      auto mixed = make ("(a & !a) | b");
+      auto dict = mixed->get_dict ();
+      auto rm = value (mixed->request_row (0));
+      require (rm.size () == 1 && rm[0].condition == bdd_ithvar (dict->varnum (F::ap ("b"))),
+               "a cached-false disjunct contributes nothing, not a missing/failed guard");
+    }
+
+    // (a OR b) AND a, and temporal embeddings: catch incorrectly marking
+    // every Boolean descendant done instead of only the processed root.
+    {
+      auto p = make ("(a | b) & a");
+      auto d = p->get_dict ();
+      auto r = value (p->request_row (0));
+      require (r.size () == 1 && r[0].condition == bdd_ithvar (d->varnum (F::ap ("a"))),
+               "(a|b)&a folds to exactly a: satisfying a|b never excuses the independent a");
+      auto embedded = make ("(a | b) & X a");
+      auto de = embedded->get_dict ();
+      auto re = value (embedded->request_row (0));
+      const auto ab = bdd_ithvar (de->varnum (F::ap ("a"))) | bdd_ithvar (de->varnum (F::ap ("b")));
+      require (re.size () == 1 && re[0].condition == ab,
+               "guard is the folded (a|b); the sibling X(a) obligation is untouched by that fold");
+      require (embedded->obligations (re[0].destination).size () == 1,
+               "X a still becomes exactly one next obligation, never skipped by the Boolean fold");
+    }
+
+    // Boolean guards inside U and R: postponement and accepting/nonaccepting
+    // edges are preserved when the current-obligation guard is folded.
+    {
+      auto u = make ("(p | q) U r");
+      auto du = u->get_dict ();
+      const auto r_var = bdd_ithvar (du->varnum (F::ap ("r")));
+      const auto pq_var = bdd_ithvar (du->varnum (F::ap ("p"))) | bdd_ithvar (du->varnum (F::ap ("q")));
+      auto ru = value (u->request_row (0));
+      require (ru.size () == 2, "U forks exactly the until's two branches");
+      bool saw_wait = false, saw_done = false;
+      for (auto& e : ru) {
+        if (e.condition == r_var) {
+          require (u->obligations (e.destination).empty (), "the r branch discharges the until");
+          saw_done = true;
+        }
+        else if (e.condition == pq_var) {
+          require (!u->obligations (e.destination).empty (), "the (p|q) branch keeps it postponed");
+          saw_wait = true;
+        }
+      }
+      require (saw_wait && saw_done, "both U branches use the folded Boolean guard correctly");
+
+      auto rf = make ("(p | q) R s");
+      auto dr = rf->get_dict ();
+      const auto s_var = bdd_ithvar (dr->varnum (F::ap ("s")));
+      const auto pq_var2 = bdd_ithvar (dr->varnum (F::ap ("p"))) | bdd_ithvar (dr->varnum (F::ap ("q")));
+      auto rr = value (rf->request_row (0));
+      require (rr.size () == 2, "R forks exactly the release's two branches");
+      bool saw_discharge = false, saw_repeat = false;
+      for (auto& e : rr) {
+        if (e.condition == (s_var & pq_var2)) {
+          require (rf->obligations (e.destination).empty (), "s and (p|q) now discharges R");
+          saw_discharge = true;
+        }
+        else if (e.condition == s_var) {
+          require (!rf->obligations (e.destination).empty (), "s alone keeps R pending");
+          saw_repeat = true;
+        }
+      }
+      require (saw_discharge && saw_repeat, "both R branches use the folded Boolean (p|q) correctly");
+    }
+
+    // Mixed a OR X b: a temporal subformula must never reach Boolean
+    // conversion, so the Or still forks exactly as before A1.
+    {
+      auto p = make ("p | X q");
+      auto d = p->get_dict ();
+      auto row = value (p->request_row (0));
+      require (row.size () == 2,
+               "a mixed Or with a temporal disjunct still forks: never Boolean-converted");
+      bool saw_p = false, saw_next_q = false;
+      for (auto& e : row) {
+        if (e.condition == bdd_ithvar (d->varnum (F::ap ("p")))) {
+          require (p->obligations (e.destination).empty (), "the p-only branch has no next obligation");
+          saw_p = true;
+        }
+        else if (e.condition == bddtrue) {
+          require (p->obligations (e.destination).size () == 1, "the X q branch postpones q, unconverted");
+          saw_next_q = true;
+        }
+      }
+      require (saw_p && saw_next_q, "mixed p | X q keeps exactly its two original branches");
+    }
+
+    // Same next set, different postponed sets, with a folded until guard:
+    // never merged away by acceptance-relevant distinctions.
+    {
+      auto p = make ("((p | q) U r) & X((p | q) U r)");
+      require (p->untils ().size () == 1, "shared until closure identity survives Boolean folding");
+      auto row = value (p->request_row (0));
+      require (row.size () == 2 && row[0].destination == row[1].destination &&
+                   row[0].accepting != row[1].accepting,
+               "same next obligations, different postponement/acceptance, preserved with a folded guard");
+    }
+
+    // Failure/cancellation during guard conversion or before publication: no
+    // partial row appears complete; retry agrees with a clean, undisturbed run.
+    {
+      auto f = wide_and_or (6);
+      auto dict = spot::make_bdd_dict ();
+      auto clean = value (Provider::create (f, dict));
+      const auto expected = signature (*clean, value (clean->request_row (0)));
+      auto hooks = std::make_shared<cb::Hooks> ();
+      cb::Options o;
+      o.hooks = hooks;
+      auto p = value (Provider::create (f, dict, o));
+      std::size_t seen = 0;
+      hooks->fail = [&] (auto point) { return point == cb::FaultPoint::guard && ++seen == 1; };
+      failure (p->request_row (0), cb::FailureKind::injected);
+      require (!p->is_complete (0) && p->complete_rows () == 0 && p->counters ().raw_rows == 0,
+               "no partial row is published after a failure inside Boolean conversion");
+      hooks->fail = {};
+      auto retry = value (p->request_row (0));
+      require (signature (*p, retry) == expected,
+               "retry after a failed Boolean conversion agrees with a clean, undisturbed run");
+    }
+
+    // Provider destruction with cloned Spot states, after the Boolean-guard
+    // cache has been populated: AP ownership and cached BDD lifetimes remain
+    // valid for as long as the clone is alive.
+    {
+      auto heavy = make ("(p | q) & (r | s)");
+      Owned clone {heavy->get_init_state ()};
+      auto hash = clone->hash ();
+      auto again = Owned {clone->clone ()};
+      require (clone->compare (again.get ()) == 0 && hash == again->hash (),
+               "cloned state over a Boolean-folded provider keeps its identity");
+      value (heavy->request_row (0));  // populate the compound-guard cache entries
+      heavy.reset ();  // provider, and its literals/is_boolean caches, destroyed
+      require (clone->hash () == hash, "clone outlives a provider whose Boolean cache was populated");
+    }
+    std::cout << "boolean_folding: PASS\n";
+  }
 }
 
 int main () {
@@ -646,6 +869,7 @@ int main () {
     faults ();
     limits_and_declines ();
     semantics ();
+    boolean_folding ();
     stress ();
     std::cout << "closure-buchi: PASS, " << assertions << " assertions\n";
     return 0;
