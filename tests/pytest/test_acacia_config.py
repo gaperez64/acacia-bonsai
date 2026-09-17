@@ -4,6 +4,7 @@ import importlib.util
 import json
 import pathlib
 import re
+import subprocess
 import sys
 
 import pytest
@@ -71,6 +72,52 @@ def test_candidate_mode_default_and_bounded_taa_presets():
         assert {'real:small:forward', 'unreal:formula:forward', 'unreal:automaton:forward'} <= set(arms)
         assert 'real:small:spot-guarded:spot-' + provider in arms
         assert name not in presets['groups']['docker_default']
+
+
+@pytest.mark.parametrize("policy", ["verify_all", "scheduling_hint"])
+def test_default_loss_check_policy_frontends(policy):
+    module = load_module()
+    options, _ = module.load_registry()
+    values = module.defaults(options)
+    assert values["default_loss_check_policy"] == "verify_all"
+    values["default_loss_check_policy"] = policy
+    assert f"-Dacacia_default_loss_check_policy={policy}" in module.meson_args(options, values)
+    macro = "ACACIA_DEFAULT_LOSS_CHECK_POLICY"
+    assert f"-D{macro}=acacia::LossCheckPolicy::{policy}" in module.preprocessor_flags(options, values)
+    template = (ROOT / "src/config/acacia_build_config.hh.in").read_text()
+    assert f"#ifndef {macro}\n# define {macro} @{macro}@\n#endif" in template
+
+
+def test_loss_hints_preset_changes_only_default_loss_check_policy():
+    module = load_module()
+    options, presets = module.load_registry()
+    baseline = "otf_sparse_formula"
+    candidate = "otf_sparse_formula_loss_hints"
+    shown = []
+    for name in (baseline, candidate):
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "show", name],
+            check=True, capture_output=True, text=True,
+        )
+        values = json.loads(result.stdout)
+        assert values == module.fingerprint_values(module.normalize_preset(options, presets, name))
+        assert values.pop("_preset") == name
+        shown.append(values)
+    before, after = shown
+    assert before.keys() == after.keys()
+    assert {key: (before[key], after[key]) for key in before if before[key] != after[key]} == {
+        "default_loss_check_policy": ("verify_all", "scheduling_hint"),
+    }
+    before_args = set(module.meson_args(options, module.normalize_preset(options, presets, baseline)))
+    after_args = set(module.meson_args(options, module.normalize_preset(options, presets, candidate)))
+    # Meson also records the preset's own name as build provenance.
+    assert before_args - after_args == {
+        "-Dacacia_default_loss_check_policy=verify_all", f"-Dacacia_preset={baseline}",
+    }
+    assert after_args - before_args == {
+        "-Dacacia_default_loss_check_policy=scheduling_hint", f"-Dacacia_preset={candidate}",
+    }
+    assert all(candidate not in group for group in presets["groups"].values())
 
 
 def test_every_preset_has_its_own_description_and_role():
@@ -643,6 +690,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DACACIA_ENABLE_DIAGNOSTICS=1",
         r'-DACACIA_DEFAULT_ARMS=\"real:identity:backward,unreal:identity:forward\"',
         "-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::only",
+        "-DACACIA_DEFAULT_LOSS_CHECK_POLICY=acacia::LossCheckPolicy::verify_all",
         "-DACACIA_SPOT_TAA_MAX_RANK_NODES=200000",
         "-DACACIA_LOCAL_CERTIFICATE=1",
         "-DACACIA_FORWARD_SAFETY_SOLVER=1",

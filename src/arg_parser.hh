@@ -53,7 +53,7 @@ struct arg_parse_result {
     acacia::automaton_provider real_provider = acacia::automaton_provider::frozen_graph;
     acacia::automaton_provider unreal_provider = acacia::automaton_provider::frozen_graph;
     acacia::candidate_mode candidate = ACACIA_DEFAULT_CANDIDATE_MODE;
-    acacia::LossCheckPolicy loss_check_policy = acacia::LossCheckPolicy::verify_all;
+    acacia::LossCheckPolicy loss_check_policy = ACACIA_DEFAULT_LOSS_CHECK_POLICY;
     SPOT_FAST_T spot_fast = DEFAULT_SPOT_FAST;
     std::optional<std::string> synth_fname = std::nullopt;
     specification_metadata metadata;
@@ -135,7 +135,8 @@ void show_help (const char* program_name) {
       << "                    set the unrealizability translator preference to\n"
       << "                    [small|any] without also selecting a realizability\n"
       << "                    check; mutually exclusive with -r\n"
-      << "  --loss-check-policy VAL  [verify-all|scheduling-hint] (default verify-all)\n"
+      << "  --loss-check-policy VAL  [verify-all|scheduling-hint] (default "
+      << acacia::loss_check_policy_name (ACACIA_DEFAULT_LOSS_CHECK_POLICY) << ")\n"
       << "                          sparse/Spot TAA increasing-K decisions; ignored elsewhere, including synthesis\n"
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for real arms\n"
       << "  --real-provider VAL      use [frozen-graph|spot-lazy|spot-eager] automaton provider (default frozen-graph)\n"

@@ -90,6 +90,9 @@ option('acacia_default_arms', type: 'string', value: '',
 option('acacia_default_candidate_mode', type: 'combo', value: 'only',
        choices: ['only', 'fallback'],
        description: 'Default response to a Spot candidate resource limit; the CLI can override it')
+option('acacia_default_loss_check_policy', type: 'combo', value: 'verify_all',
+       choices: ['verify_all', 'scheduling_hint'],
+       description: 'Default loss-check policy for sparse/Spot TAA increasing-K decisions; the CLI can override it')
 option('acacia_spot_taa_max_rank_nodes', type: 'integer', value: 200000, min: 0,
        description: 'Default per-attempt rank-node cap for both TAA providers; frozen guarded solving keeps its own limit')
 option('acacia_spot_guarded_backend', type: 'boolean', value: false,

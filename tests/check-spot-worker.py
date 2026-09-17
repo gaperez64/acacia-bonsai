@@ -8,6 +8,7 @@ import sys
 import tempfile
 
 binary = str(Path(sys.argv[1]).resolve())
+default_policy = sys.argv[2].replace("_", "-") if len(sys.argv) > 2 else "verify-all"
 
 
 def captured_run(root, name, formula, *, fast="det", backend="spot-guarded-sparse",
@@ -79,7 +80,7 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
     # Both wrappers and both polarities: losses/hints only schedule, wins alone
     # map to REALIZABLE/UNREALIZABLE. Real attempts use the original job and
     # unreal attempts use the existing swapped/shifted/negated job. Omitting the
-    # policy must verify losses too: scheduling hints are strictly opt-in.
+    # policy uses the compiled default, which remains verify-all unless configured.
     for backend in ("spot-guarded-sparse", "spot-guarded:spot-lazy", "spot-guarded:spot-eager"):
         for polarity in ("real:small", "unreal:formula"):
             for policy in (None, "verify-all", "scheduling-hint"):
@@ -105,7 +106,7 @@ MAIN {{ INPUTS {{ i; }} OUTPUTS {{ o; }} GUARANTEES {{ {formula}; }} }}
                             is_win = attempt["evidence"] == "verified-win"
                             if not winning:
                                 assert not is_win, (name, attempt)
-                            hint = not is_win and policy == "scheduling-hint"
+                            hint = not is_win and (policy or default_policy) == "scheduling-hint"
                             assert attempt["evidence"] == (
                                 "verified-win" if is_win else "loss-hint" if hint else "verified-loss"
                             ), (name, attempt)

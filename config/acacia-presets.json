@@ -385,6 +385,12 @@
       "inherits": "otf_contradiction",
       "default_arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward"
     },
+    "otf_sparse_formula_loss_hints": {
+      "description": "P1a candidate for gates using compiled defaults: otf_sparse_formula with scheduling-only loss hints; decisive wins remain independently verified.",
+      "role": "sweep",
+      "inherits": "otf_sparse_formula",
+      "default_loss_check_policy": "scheduling_hint"
+    },
     "otf_sparse_formula_diag": {
       "description": "Compile phase diagnostics, enabled at runtime by ACACIA_DIAG, to profile sparse guarded formula-unreal solving.",
       "role": "diagnostic",

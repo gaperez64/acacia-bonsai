@@ -11,6 +11,8 @@ verbose_enabled=${5:-true}
 # their configured defaults, so the same harness can check those end to end.
 candidate_default=${6:-only}
 taa_cap_default=${7:-}
+loss_check_default=${8:-verify_all}
+loss_check_default=${loss_check_default//_/-}
 
 run() {
     local wanted_status=$1
@@ -57,7 +59,40 @@ done
 output=$(run 3 --loss-check-policy)
 [[ $output == *'requires an argument'* ]]
 output=$(run 2 -h)
-[[ $output == *'--loss-check-policy VAL'* && $output == *'(default verify-all)'* ]]
+[[ $output == *"--loss-check-policy VAL  [verify-all|scheduling-hint] (default $loss_check_default)"* ]]
+
+if [[ $guarded_enabled == true ]]; then
+    # Check the effective policy at the worker boundary, including builds whose
+    # default is scheduling-hint. Both explicit CLI values must override it.
+    for policy in default verify-all scheduling-hint; do
+        (
+            capture_dir=$(mktemp -d)
+            trap 'rm -rf -- "$capture_dir"' EXIT
+            policy_args=()
+            expected_policy=$loss_check_default
+            if [[ $policy != default ]]; then
+                policy_args=(--loss-check-policy "$policy")
+                expected_policy=$policy
+            fi
+            output=$(ACACIA_SPOT_CAPTURE_DIR="$capture_dir" run 2 \
+                -f 'G F i & G F o' -i i -o o --spot-fast off -K 1 \
+                --arms real:small:spot-guarded-sparse "${policy_args[@]}")
+            grep -qx UNKNOWN <<<"$output"
+            python3 - "$capture_dir" "$expected_policy" <<'PY'
+import json, pathlib, sys
+records = [json.loads(p.read_text()) for p in pathlib.Path(sys.argv[1]).glob('*.json')]
+assert records, 'missing worker captures'
+hint = sys.argv[2] == 'scheduling-hint'
+for record in records:
+    assert record['evidence'] == ('loss-hint' if hint else 'verified-loss'), record
+    assert record['status'] == ('LOSS_HINT' if hint else 'LOSE_K'), record
+    assert record['worker_result'] == 'unknown', record
+    assert int(record['loss_hints']) == int(hint), record
+    assert int(record['loss_verification_calls']) == int(not hint), record
+PY
+        )
+    done
+fi
 
 common=(-f 'G(o)' -i i -o o)
 backward_arms='real:any:backward,unreal:formula:backward'

@@ -73,6 +73,8 @@ endif
 build_conf.set_quoted ('ACACIA_DEFAULT_ARMS', get_option ('acacia_default_arms'))
 build_conf.set ('ACACIA_DEFAULT_CANDIDATE_MODE',
                 'acacia::candidate_mode::' + get_option ('acacia_default_candidate_mode'))
+build_conf.set ('ACACIA_DEFAULT_LOSS_CHECK_POLICY',
+                'acacia::LossCheckPolicy::' + get_option ('acacia_default_loss_check_policy'))
 build_conf.set ('ACACIA_SPOT_TAA_MAX_RANK_NODES',
                 get_option ('acacia_spot_taa_max_rank_nodes'))
 build_conf.set ('DEFAULT_K', get_option ('acacia_default_k'))
