@@ -120,6 +120,7 @@ test ('translator-options',
 
 game_backend_test = executable ('game-backend-test',
                                 'game_backend_test.cc',
+                                link_with : closure_buchi_provider_lib,
                                 include_directories : inc,
                                 dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
 test ('game-backend',
@@ -133,6 +134,16 @@ spot_rows_test = executable (
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
 )
 test ('spot-rows', spot_rows_test, suite : ['unit', 'spot-rows'])
+
+closure_buchi_provider_test = executable (
+  'closure_buchi_provider_test',
+  'closure_buchi_provider_test.cc',
+  include_directories : inc,
+  link_with : closure_buchi_provider_lib,
+  dependencies : [spot_dep, bddx_dep],
+)
+test ('closure_buchi_provider_test', closure_buchi_provider_test,
+      suite : ['unit', 'closure-buchi'])
 
 # The previous sprint's P5 headers and regressions compile in the default build; no backend gate.
 spot_lazy_buchi_view_test = executable (
@@ -158,6 +169,7 @@ foreach variant : spot_provider_replay_variants
   spot_provider_replay_test = executable(
     variant[0] + '-test',
     'spot_provider_replay_test.cc',
+    link_with: closure_buchi_provider_lib,
     include_directories: inc,
     cpp_args: variant[1],
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
@@ -343,6 +355,7 @@ if get_option ('acacia_enable_tlsf_frontend')
 endif
 game_backend_integration = executable (
   'game-backend-integration', game_backend_integration_sources, version_h,
+  link_with : closure_buchi_provider_lib,
   include_directories : inc,
   cpp_args : ['-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'],
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
