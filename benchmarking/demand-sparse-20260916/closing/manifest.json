@@ -1,0 +1,121 @@
+{
+  "sprint": "demand-driven construction and sparse-forward (plan revision 2, 2026-09-16)",
+  "plan_sha256": "bedd4bd3c439393f80fc0a56825d52da07382d0264fb05f4fe9a442e7e33bf65",
+  "outcome": "no package admitted; candidate = baseline configuration; baseline rows reused for the candidate label (plan \u00a79.6)",
+  "baseline": {
+    "label": "Acacia baseline (= candidate)",
+    "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260915-closing/bin/candidate-f7919b83",
+    "sha256": "0f4f48b6b751be91d9e0575105d4678d47dbccb8c998c01d71f9597abe22fb99",
+    "source_rev": "f7919b83 (solver source identical to 6410fd34)",
+    "preset": "otf_sparse_formula",
+    "arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward",
+    "branch": "master",
+    "disposition": "baseline"
+  },
+  "evaluated_not_admitted": [
+    {
+      "label": "P0+P1a",
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260916-demand-sparse/bin/cand-hints-4cbf975c",
+      "sha256": "936b11b8b2c711bbc9296719b2018bdf25ec5bb8778b5fb60bdc4865916d29ae",
+      "source_rev": "4cbf975c",
+      "preset": "otf_sparse_formula_loss_hints",
+      "arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward",
+      "branch": "research/ds-p1a-loss-hints",
+      "disposition": "not admitted"
+    },
+    {
+      "label": "P0",
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.20260916-demand-sparse/bin/retained-e27dd528",
+      "sha256": "14b71f879273a287df70e5fe692b951e9eaf546ccb3ae91648bdcf143f0e2246",
+      "source_rev": "e27dd528",
+      "preset": "otf_sparse_formula",
+      "arms": "real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward",
+      "branch": "research/ds-p0-lifecycle-records",
+      "disposition": "not retained"
+    }
+  ],
+  "external": {
+    "tool": "ltlsynt",
+    "path": "/usr/local/sbin/ltlsynt",
+    "sha256": "ea761a1c0594278bd4b525369977677520c8b9d3dcc2f5a45dab91d961663900",
+    "version": "ltlsynt (spot) 2.15.1.dev",
+    "syfco": "SyFCo (v1.2.1.2)",
+    "adapter": "benchmarking/run-subset.py",
+    "conversion_timed": false
+  },
+  "corpus": {
+    "list": "tests/suites/benchmarks/syntcomp26/all.list",
+    "list_sha256": "0226e5cd2cadc033544f0901bd900dd31dd7add813ef216558826468e0b7b5c7",
+    "n_ids": 1524,
+    "tlsf_map": "tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv",
+    "tlsf_map_sha256": "9fbc4007b18065296d592f14bd9ef0e9e95a4893a4d4477e0153013fa531f92f"
+  },
+  "regime": {
+    "cap_s": 17,
+    "memory_max": "8G",
+    "memory_swap_max": "0",
+    "cpu_quota": null,
+    "sequential": true,
+    "epoch_utc": {
+      "P0+P1a": [
+        "2026-09-17T04:13:23Z",
+        "2026-09-17T06:04:54Z"
+      ],
+      "baseline": [
+        "2026-09-17T06:06:24Z",
+        "2026-09-17T07:58:49Z"
+      ],
+      "ltlsynt": [
+        "2026-09-17T08:00:19Z",
+        "2026-09-17T09:22:03Z"
+      ],
+      "P0": [
+        "2026-09-17T13:30:42Z",
+        "2026-09-17T15:23:04Z"
+      ]
+    }
+  },
+  "harness": {
+    "run-syntcomp26-coverage.py (campaigns, master 6410fd34)": "9f11372fcb4214aec672fcbb467b3cb9177d13352f66dad3651f43622c047fab",
+    "run-subset.py": "a0bf4ce74e33c9c966a5d6c0fcfda0f19d2ab79333c99869b786a8e938cea125",
+    "benchlib.py (campaigns)": "3989eefa83e9e2c51e79732a36946addbe9e4f0eab2180dca958bf7e2dfcd1cb",
+    "run-syntcomp26-coverage.py (export-cactus, PR #187 7919a06d)": "006d91bf7419419ab3fbe4778b470cd040add653c2832988c5c83e0d5ec8fa9d",
+    "cactus-report.py (PR #187 7919a06d)": "9a732e134013c51dd508c7ccb2ea265f44ef5ff6f344dbf3067fbf12bfddd535",
+    "paired-admission.py (PR #187 7919a06d)": "9c724785017f2587fd4fd4e05843cae04ba687aa411bbe134392d143b9b20a4d",
+    "benchlib.py (PR #187 7919a06d)": "be13185b0ab4e5a614170dd432beff229385f5e543bde70cf41b987adb18c1b5"
+  },
+  "drivers": {
+    "closing.sh": "78201510e23a437d25769eef87dd69b4eb0e06821abbcbfca05457da7edafcb3",
+    "closing2.sh": "bb2038e4bd08cb42a9338fec2df0775c8780249572510ebd19a284ca5aea2dc7",
+    "screen.sh": "9e2c4a9c16aa84ad47caa514d61dc3afae7455f20fb46d6adffa490ac1fb533d",
+    "lib.sh": "bceb9cad0d6fe81964d41c24609fba636f581461d008274a0b3230ab948a5b01",
+    "build-rev.sh": "a9f9a497c2f14b4e179fde65efdd72f756f2a6e1c6e1c1fb18a23239bf90fb9d",
+    "seq-candidate.sh": "1760ef48a4933bc0126f8a34a8bd4c4456a88d0d84d9231f74d1fb00f765b87a",
+    "closing-tables.py": "a9688eefbb9740e493124ef8d15abce5388ab2ddfdd45a7bfd081f7c0627e0a0",
+    "diag-wsr2.sh": "01a6e5422d22a3eb2ae18157eb62b9614bdfa52cbd64c5edfc77e522ccec1392",
+    "diag-gu115.sh": "fb67e97c760b447931cdd5df99ec2459aec6177dbd4167ad89828f737bb10869",
+    "diag-p0-unresolved.sh": "7cecb4157f1a3bd1429c0b33e675d5145d6732634d6ab15beb569216cd0a2ba7",
+    "diag-layout.sh": "0590d6ec5edba59dda7f0bc6a893f356406eea4634f134ed16cad6c444638939",
+    "diag-perfdiff.sh": "05569a9918c707ee28aa15944337d30b5150d5c069dfb01b7fd5fe48e8475206",
+    "diag-g2s-p0.sh": "7aa6aa185e0a450f33fd38aa2695c5a45c47d466202ff38fdc3f86774eb507fe"
+  },
+  "datasets": {
+    "acacia-baseline.csv": "922ac3533a56a4427d66f74e9d27c7fb03e42948cef63376fd11573864623c39",
+    "acacia-candidate.csv": "922ac3533a56a4427d66f74e9d27c7fb03e42948cef63376fd11573864623c39",
+    "evaluated-p0-not-admitted.csv": "291ab2e0b5e4a22bcef8cc6ec61dacb9bc11fa76d9ca40e7fbddd45fb83b65ae",
+    "evaluated-p0-p1a-not-admitted.csv": "ec67459585ccf9d7e333014611626528e550e266f911eb6a32163653012a1b89",
+    "ltlsynt.csv": "f81beba80ab5639b01c05d921d000aa0022060adf8255d9b4a4b739f8d0e1cfb",
+    "acacia-baseline.raw.tsv": "ae0bf447899010f815a9afb5108b0af66fceadd6bcacb24cb62855dba76f83cf",
+    "acacia-candidate.raw.tsv": "ae0bf447899010f815a9afb5108b0af66fceadd6bcacb24cb62855dba76f83cf",
+    "confirmations.tsv": "108612acac8305d5eb3db7ad5f2dd0c698de5198110a0cb72af7b2d0e81684bc",
+    "evaluated-p0-not-admitted.raw.tsv": "ac87c9ab05b3885cef621c2aecb57e9907505c2de3af3cf00387c98f45b6197c",
+    "evaluated-p0-p1a-not-admitted.raw.tsv": "a0381758748af59da11cae9835baf471ce27cd282532a379cd20c9f8dc51aa11",
+    "gains-losses.tsv": "b63130d79076ba04119133b2ec7c7be8a2fa3858c37ad31bcde33b41f66b9c82"
+  },
+  "host": {
+    "cpu": "11th Gen Intel(R) Core(TM) i7-11850H @ 2.50GHz",
+    "threads": 16,
+    "kernel": "7.2.5-200.fc44.x86_64",
+    "compiler_profile": "release (-Ofast -march=native, LTO)"
+  }
+}
