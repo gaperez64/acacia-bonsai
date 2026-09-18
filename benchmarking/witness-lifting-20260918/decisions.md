@@ -116,22 +116,33 @@ not a bug in this session's code, and not the proposer's job to work around beyo
 Switching to a one-hot pointer sidestepped it entirely. See the docstring of
 `build_arbiter_witness.py` for the full account. Not filed upstream this session.
 
-**round_robin_arbiter, n=10: inconclusive, not a failure.** Seeds/sanity verified with the same
+**round_robin_arbiter, n=10: root cause now precisely identified -- exponential blowup in the**
+**ASSUME antecedent's own automaton, not host contention.** Seeds/sanity verified with the same
 schema unmodified. The target check needed the conjunct-decomposer extended to split an
 implication's consequent while retaining the full antecedent (`A -> (G1 and G2)` → `(A->G1) and
 (A->G2)`, exactly plan section 7.2's rule — implemented, and does not change the already-verified
-arbiter or round_robin_arbiter seed/sanity results, which use the same code path). The n=10 attempt
-then timed out across three tries (30s, 45s with `nice`, 60s). Bisected precisely rather than
-guessed at: `tlsf2ltl`, formula parsing, AIGER-circuit loading and the 11-way conjunct split are all
-sub-millisecond; the stall is specifically inside Spot's `circuit.as_automaton()`, on a AIGER file
-that is byte-identical (same sha256) to the one that verified arbiter's n=10 target in 5.06s earlier
-in this same session. Same code, same circuit — only the host state differs. `ps`/`free` at the time
-of the failing retries showed the campaign's concurrent 4-arm portfolio using ~1.1 GiB RSS per arm
-(vs ~200-650 MiB during the earlier success) with available memory falling and buff/cache being
-actively reclaimed: a genuine, time-varying memory-pressure effect from the campaign's own
-legitimate work, not a defect in the schema, circuit or decomposer. Stopped rather than pushed
-further (further retries would just add more concurrent memory pressure of their own). Re-run in a
-quiet window once the campaign completes or reaches a real gap.
+arbiter or round_robin_arbiter seed/sanity results, which use the same code path).
+
+An early hypothesis (recorded in a prior version of this note) attributed the n=10 timeout to
+memory pressure from the concurrently-running W1 campaign. **That hypothesis is superseded**: a
+retry during a measurably lighter-load moment (~750 MiB RSS per campaign arm vs ~1.1 GiB earlier,
+9.6 vs 8.9 GiB available) still timed out at 60s. Bisecting further, translating the shared
+antecedent `A` (the 10-way-ANDed `ASSUME` block, each conjunct containing a weak-fairness term
+`F!(r_i && g_i)`) *alone*, with nothing else in the pipeline running, does not complete in 90s
+either -- ruling out contention as the primary cause. Measuring `A`'s automaton size across n
+confirms a clean exponential trend: n=5 → 0.828 s / 243 states, n=6 → 7.026 s / 729 states
+(both exactly 3^n), n=7 did not complete in the remaining budget. This is a genuine, structural
+translation cost: n independent per-client weak-fairness conjuncts on disjoint atomic propositions
+force a 3^n-state product in Spot's construction (each client's own fairness tracker needs its own
+independent memory), not an artifact of decomposition, host load, or this session's code. Tried
+`spot.translate` with `"Buchi"`/`"BA"`/`"generic"`/`"low"`/`"deterministic"` acceptance-type
+options looking for a cheaper construction; none completed within a 30 s combined budget at n=7
+either. Not pursued further -- this is exactly the "eager/unrestricted checking is the obstacle"
+condition plan section 7.3 describes as the trigger for W6 (candidate-restricted product
+construction), which builds the product against the *candidate-restricted* letter region instead
+of eagerly expanding the full antecedent automaton. Not implemented this session (W6 is a
+substantial, separately-justified subsystem); the exact reproducer (n and the antecedent formula)
+is preserved in `families/target-checks.tsv` for whoever picks this up.
 
 ## W5–W7 — not started
 
