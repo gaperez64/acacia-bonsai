@@ -161,11 +161,11 @@ def render(b: AigerBuilder, inputs, outputs, n: int) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--n", type=int, required=True)
     parser.add_argument("--output", required=True)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     b, inputs, outputs, n = build(args.n)
     text = render(b, inputs, outputs, n)
@@ -173,7 +173,8 @@ def main():
         fh.write(text)
     print(f"wrote {args.output}: n={n} max_var={b.next_var - 1} "
           f"latches={len(b.latches)} and_gates={len(b.gates)}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -136,3 +136,33 @@ def test_different_n_are_structurally_distinct():
         b, inputs, outputs, _ = witness.build(n)
         seen.add(witness.render(b, inputs, outputs, n))
     assert len(seen) == 5
+
+
+# ---------- main(): CLI entry point ----------
+
+def test_main_writes_the_expected_file_and_returns_zero(tmp_path):
+    out_path = tmp_path / "out.aag"
+    rc = witness.main(["--n", "5", "--output", str(out_path)])
+    assert rc == 0
+    b, inputs, outputs, n = witness.build(5)
+    assert out_path.read_text() == witness.render(b, inputs, outputs, n)
+
+
+def test_main_propagates_an_invalid_n(tmp_path):
+    out_path = tmp_path / "out.aag"
+    with pytest.raises(ValueError):
+        witness.main(["--n", "0", "--output", str(out_path)])
+    assert not out_path.exists()
+
+
+def test_main_argv_list_matches_sys_argv_invocation(tmp_path, monkeypatch):
+    # Regression test for a real gap this session found and fixed: main()
+    # used to read sys.argv directly and could not be called with an
+    # explicit argv list at all.
+    out_a, out_b = tmp_path / "a.aag", tmp_path / "b.aag"
+    argv = ["--n", "4", "--output", str(out_a)]
+    monkeypatch.setattr(sys, "argv", ["build_arbiter_witness.py", *argv])
+    assert witness.main(argv) == 0
+    argv[-1] = str(out_b)
+    assert witness.main(argv) == 0
+    assert out_a.read_text() == out_b.read_text()
