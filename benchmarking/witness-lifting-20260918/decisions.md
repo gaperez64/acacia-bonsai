@@ -109,16 +109,35 @@ their templates (plan section 6.1), none overlapping the prior sprint's `targets
 
    Traced Acacia's own internal UNREAL_X_FORMULA transformation precisely (`solver_invoker.cc`
    ~1090 and ~421): swap `input_aps`/`output_aps`, X-shift every atom that was an *original* output,
-   do **not** negate the objective. Before trusting a TLSF-level reconstruction of this, ran a paper
-   differential check (no execution) against a hand-picked tiny unrealizable game,
-   `G(o <-> X(i))` under Mealy — its only sensible environment strategy is the obviously-causal
-   `i(t+1) := not(o(t))`. The naive swap+shift, read back literally, instead gives the dualized
-   game's trivial `i := o` combinational strategy, which mapped back to the original round order
-   would have the environment's move at `t+1` depend on the system's move at the *same* `t+1` —
-   using information not yet available, exactly the unsound "future information" witness plan
-   section 7.1 forbids. **This is a real near-miss, not a hypothetical caution**: it shows the
-   formula-level swap+shift alone is not sufficient — the synthesized circuit also needs a
-   clock realignment this session could not derive with confidence, so it was not implemented.
+   do **not** negate the objective. Before trusting a TLSF-level reconstruction of this,
+   **actually ran it** (no build needed — this uses Acacia's raw `-f/-i/-o` CLI on tiny hand-written
+   formulas, not TLSF, on the already-compiled `build_otf_sparse_formula` binary) against a
+   hand-picked tiny unrealizable game: `G(o <-> X(i))` with `INPUTS{i} OUTPUTS{o}`. Confirmed
+   `UNREALIZABLE` via Acacia's own `-u formula` check first (independent sanity check). Its only
+   sensible environment strategy is the obviously-causal `i(t+1) := not(o(t))` — the environment,
+   seeing the system's move `o(t)`, immediately picks the next input to violate `o(t) <-> i(t+1)`.
+
+   Dualized per the traced recipe: `INPUTS{o} OUTPUTS{i}`, formula `G(X(o) <-> X(i))`, no negation.
+   `acacia-bonsai -f "G(X(o) <-> X(i))" -i o -o i` reports **REALIZABLE**, and `-s` produces a
+   3-gate, 1-latch AIGER circuit -- small enough to read directly rather than trust blindly: the
+   latch resets to 0 and its next-state is the constant 1, so in the swapped game's own time index
+   τ the circuit is `i(0)=0` (a don't-care -- the formula never constrains it) and, for τ>=1,
+   `i(τ) := o(τ)` (immediate same-round copy). That's internally consistent for the *swapped* game
+   (Mealy: new-input `o` before new-output `i`, same τ) but says nothing yet about the *original*
+   game, where the causal order is reversed (`i` chosen before `o`, same round) -- reading the
+   circuit's τ literally as the original round index would require the environment to see `o(t)`
+   before choosing `i(t)`, which is acausal in the original game and exactly the "future
+   information" plan section 7.1 forbids.
+
+   Tried the most natural fix -- reinterpret the circuit's output at swapped-round τ as the
+   environment's move at *original* round τ+1, i.e. `i(t+1) := o(t)` -- and checked what that
+   actually does to the original objective: substituting into `G(o <-> X(i))` gives
+   `o(t) <-> i(t+1) = o(t) <-> o(t)`, which is a **tautology** -- this reinterpretation makes the
+   "environment" cooperate with the system's original objective instead of defeating it, exactly
+   backwards from an UNREAL witness. **This is a decisive, empirically-confirmed near-miss, not a
+   hypothetical caution**: the formula-level swap+shift alone is not sufficient, the most obvious
+   one-step reinterpretation gets the polarity wrong rather than merely being imprecise, and this
+   session could not derive the correct reinterpretation with confidence, so no adapter was built.
 
    The safer path identified instead: extend Acacia itself — remove the `solver_invoker.cc:715`
    assert and route `synth_fname` through for the unreal-formula worker, whose `synthesis()` method
