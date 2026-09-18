@@ -50,25 +50,23 @@ def parameter_value(row: dict) -> object:
     return next(iter(values.values())) if values else 0
 
 
-def main() -> int:
-    coverage = load_coverage_module()
+def select_jobs(rows, baseline, tlsf_sources, already_used_ids, expected_verdict_fn, budget=BUDGET):
+    """Pure selection logic (plan section 4.3 item 1), no I/O.
 
-    p2_ids = set((ROOT / "benchmarking/symbolic-rows-20260917/targets/p2.list").read_text().split())
-    p4_ids = set((ROOT / "benchmarking/symbolic-rows-20260917/targets/p4.list").read_text().split())
-    already_used_ids = p2_ids | p4_ids
+    rows: family-instances.tsv rows (dicts with logical_instance, family_key,
+      parameter_confidence, parameter_values_json).
+    baseline: {instance: result} from the frozen 17s baseline CSV.
+    tlsf_sources: {instance: tlsf_file}.
+    already_used_ids: P2 | P4 instance IDs, excluded by family.
+    expected_verdict_fn: tlsf_file -> "REALIZABLE" | "UNREALIZABLE" | None,
+      e.g. a partial application of run-syntcomp26-coverage.py's own
+      expected_verdict() bound to the corpus directory.
 
-    with open(ROOT / "benchmarking/syntcomp26-family-instances.tsv", newline="") as fh:
-        rows = list(csv.DictReader(fh, delimiter="\t"))
+    Returns the frozen job list, one dict per job (an unsolved instance may
+    contribute one job, when a trusted verdict picks its orientation, or two,
+    one per orientation, when it does not).
+    """
     by_id = {r["logical_instance"]: r for r in rows}
-
-    with open(ROOT / "benchmarking/demand-sparse-20260916/closing/acacia-baseline.csv") as fh:
-        baseline = {r["instance"]: r["result"] for r in csv.DictReader(fh)}
-
-    with open(ROOT / "tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv", newline="") as fh:
-        tlsf_sources = {r["instance"]: r["tlsf"] for r in csv.DictReader(fh, delimiter="\t")}
-
-    corpus = ROOT / "tlsf-corpus"
-
     used_families = {by_id[iid]["family_key"] for iid in already_used_ids if iid in by_id}
     solved_statuses = {"REALIZABLE", "UNREALIZABLE"}
 
@@ -93,15 +91,14 @@ def main() -> int:
     jobs = []
     for family_key, row in ordered_instances:
         iid = row["logical_instance"]
-        tlsf_file = tlsf_sources[iid]
-        expected = coverage.expected_verdict(corpus / tlsf_file)
+        expected = expected_verdict_fn(tlsf_sources[iid])
         if expected == "REALIZABLE":
             orientations = ["real"]
         elif expected == "UNREALIZABLE":
             orientations = ["unreal"]
         else:
             orientations = ["real", "unreal"]
-        if len(jobs) + len(orientations) > BUDGET:
+        if len(jobs) + len(orientations) > budget:
             continue
         for orientation in orientations:
             jobs.append({
@@ -112,6 +109,31 @@ def main() -> int:
                 "baseline_17s_result": baseline[iid],
                 "parameter_values_json": row["parameter_values_json"],
             })
+    return jobs
+
+
+def main() -> int:
+    coverage = load_coverage_module()
+
+    p2_ids = set((ROOT / "benchmarking/symbolic-rows-20260917/targets/p2.list").read_text().split())
+    p4_ids = set((ROOT / "benchmarking/symbolic-rows-20260917/targets/p4.list").read_text().split())
+    already_used_ids = p2_ids | p4_ids
+
+    with open(ROOT / "benchmarking/syntcomp26-family-instances.tsv", newline="") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+
+    with open(ROOT / "benchmarking/demand-sparse-20260916/closing/acacia-baseline.csv") as fh:
+        baseline = {r["instance"]: r["result"] for r in csv.DictReader(fh)}
+
+    with open(ROOT / "tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv", newline="") as fh:
+        tlsf_sources = {r["instance"]: r["tlsf"] for r in csv.DictReader(fh, delimiter="\t")}
+
+    corpus = ROOT / "tlsf-corpus"
+
+    def expected_verdict_fn(tlsf_file):
+        return coverage.expected_verdict(corpus / tlsf_file)
+
+    jobs = select_jobs(rows, baseline, tlsf_sources, already_used_ids, expected_verdict_fn)
 
     out_path = ROOT / "benchmarking/witness-lifting-20260918/opening/provider-audit-jobs.tsv"
     columns = ["family_key", "logical_instance", "orientation", "trusted_status",
