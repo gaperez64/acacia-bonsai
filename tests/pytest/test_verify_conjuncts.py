@@ -123,6 +123,77 @@ def test_decomposition_is_exact(text):
     assert conjunction_matches_original(g, pieces)
 
 
+# ---------- main() end-to-end: real fixtures, no formula-level mocking ----------
+
+ROOT = Path(__file__).resolve().parents[2]
+TLSF2LTL = ROOT / "subprojects" / "tlsf-tools" / "build_nospot" / "tlsf2ltl"
+ARBITER_N2_TLSF = (ROOT / "benchmarking" / "witness-lifting-20260918" / "families" / "seeds" /
+                   "arbiter" / "arbiter_n2.tlsf")
+ARBITER_N2_AAG = (ROOT / "benchmarking" / "witness-lifting-20260918" / "families" / "seeds" /
+                  "arbiter" / "controllers" / "arbiter_n2.aag")
+
+needs_tlsf2ltl = pytest.mark.skipif(
+    not TLSF2LTL.exists(), reason="tlsf-tools' tlsf2ltl is a local build artifact, not tracked in git"
+)
+
+
+@needs_tlsf2ltl
+def test_main_verifies_a_known_good_seed_end_to_end(tmp_path, capsys):
+    rc = vc.main(["--aiger", str(ARBITER_N2_AAG), "--tlsf", str(ARBITER_N2_TLSF),
+                 "--tlsf2ltl", str(TLSF2LTL)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "verified (all conjuncts)" in out
+    assert "top-level conjuncts:" in out
+
+
+@needs_tlsf2ltl
+def test_main_reports_refuted_for_an_always_false_circuit(tmp_path, capsys):
+    # aag 2 2 0 2 0: 2 input variables (r_0, r_1), no gates, no latches; both
+    # outputs are the constant literal 0 (false). Violates "every request is
+    # eventually granted" for the very first request -- must be REFUTED,
+    # never falsely "verified".
+    bad_aiger = tmp_path / "always_false.aag"
+    bad_aiger.write_text(
+        "aag 2 2 0 2 0\n2\n4\n0\n0\ni0 r_0\ni1 r_1\no0 g_0\no1 g_1\n", encoding="utf-8"
+    )
+    rc = vc.main(["--aiger", str(bad_aiger), "--tlsf", str(ARBITER_N2_TLSF),
+                 "--tlsf2ltl", str(TLSF2LTL)])
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "REFUTED" in out
+    assert "verified (all conjuncts)" not in out
+    assert "counterexample:" in out
+
+
+@needs_tlsf2ltl
+def test_main_reports_missing_aps_and_does_not_attempt_any_check(tmp_path, capsys):
+    # Same shape as arbiter_n2's real controller, but its symbol table
+    # names a different AP (g_1 renamed to g_missing) than the formula
+    # needs -- must be caught before any translate/product work, not
+    # silently treated as an unconstrained free variable.
+    aiger_text = ARBITER_N2_AAG.read_text().replace("o1 g_1", "o1 g_missing")
+    renamed = tmp_path / "renamed.aag"
+    renamed.write_text(aiger_text, encoding="utf-8")
+    rc = vc.main(["--aiger", str(renamed), "--tlsf", str(ARBITER_N2_TLSF),
+                 "--tlsf2ltl", str(TLSF2LTL)])
+    out, err = capsys.readouterr()
+    assert rc == 2
+    assert "g_1" in err
+    assert "top-level conjuncts:" not in out  # never got past the AP check
+
+
+@needs_tlsf2ltl
+def test_main_argv_list_matches_sys_argv_invocation(monkeypatch):
+    # Regression test for a real gap this session found and fixed: main()
+    # used to read sys.argv directly and could not be called with an
+    # explicit argv list at all.
+    argv = ["--aiger", str(ARBITER_N2_AAG), "--tlsf", str(ARBITER_N2_TLSF),
+            "--tlsf2ltl", str(TLSF2LTL)]
+    monkeypatch.setattr(sys, "argv", ["verify_conjuncts.py", *argv])
+    assert vc.main(argv) == vc.main(None)
+
+
 def test_arbiter_shaped_formula_matches_the_manual_schema_docstring_example():
     # Mirrors the actual round_robin_arbiter n=3 shape this sprint hit
     # (Assume -> And(mutex, per-client fairness)), reduced to 2 clients.

@@ -70,14 +70,14 @@ def top_level_conjuncts(formula):
     return [formula]
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--aiger", required=True)
     parser.add_argument("--tlsf", required=True)
     parser.add_argument("--tlsf2ltl", default="tlsf2ltl")
     parser.add_argument("--per-conjunct-timeout", type=float, default=None,
                         help="not a hard timeout (single process); informational budget check only")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     import spot
 
