@@ -57,15 +57,31 @@ their templates (plan section 6.1), none overlapping the prior sprint's `targets
    started. Confirmed by reading the actual code (not just citing the handoff's caution) that `-s`
    never exports a controller for an unreal-arm win — `arg_parser.hh` keeps all unreal arms but
    drops extra real ones when `-s` is given, and `solver_invoker.cc:715` asserts `synth_fname` and
-   `check_unreal` are mutually exclusive on the main solve path. Traced Acacia's own internal
-   UNREAL_X_FORMULA transformation precisely (`solver_invoker.cc` ~1090 and ~421): swap
-   `input_aps`/`output_aps`, X-shift every atom that was an *original* output, and do **not** negate
-   the objective (only the REAL worker negates). A TLSF-level adapter following exactly this recipe
-   — feeding the swapped/shifted/unnegated spec into Acacia's ordinary `-s` (no `-u` at all) — is the
-   concrete next step. Not implemented this session: an off-by-one in the swap/shift/negation
-   combination would produce an witness that *looks* verified but isn't, and the plan requires
-   differential testing against explicit tiny games before trusting it on a family (section 6.3) —
-   real, separate work, not a one-line follow-on. See `families/selected.json` for the full account.
+   `check_unreal` are mutually exclusive on the main solve path. **Also checked ltlsynt** (already
+   installed on this host): `--aiger --verify` on a tiny confirmed-UNREALIZABLE seed prints only
+   `UNREALIZABLE` and exits 1 — no AIG at all when the environment wins. Not a usable exporter
+   either.
+
+   Traced Acacia's own internal UNREAL_X_FORMULA transformation precisely (`solver_invoker.cc`
+   ~1090 and ~421): swap `input_aps`/`output_aps`, X-shift every atom that was an *original* output,
+   do **not** negate the objective. Before trusting a TLSF-level reconstruction of this, ran a paper
+   differential check (no execution) against a hand-picked tiny unrealizable game,
+   `G(o <-> X(i))` under Mealy — its only sensible environment strategy is the obviously-causal
+   `i(t+1) := not(o(t))`. The naive swap+shift, read back literally, instead gives the dualized
+   game's trivial `i := o` combinational strategy, which mapped back to the original round order
+   would have the environment's move at `t+1` depend on the system's move at the *same* `t+1` —
+   using information not yet available, exactly the unsound "future information" witness plan
+   section 7.1 forbids. **This is a real near-miss, not a hypothetical caution**: it shows the
+   formula-level swap+shift alone is not sufficient — the synthesized circuit also needs a
+   clock realignment this session could not derive with confidence, so it was not implemented.
+
+   The safer path identified instead: extend Acacia itself — remove the `solver_invoker.cc:715`
+   assert and route `synth_fname` through for the unreal-formula worker, whose `synthesis()` method
+   is already dualization-aware internally (it operates on `strats`/`out_part` generically,
+   independent of `check_unreal`) — rather than reconstruct the dualization externally in TLSF text.
+   This needs a C++ change and a rebuild, appropriately deferred until the campaign reaches a quiet
+   window (plan section 14: no builds while primary measurements execute). Deferred deliberately.
+   See `families/selected.json` for the full account.
 
 See `families/selected.json` for full per-family detail including each `valid_parameter_predicate`
 (in particular: `round_robin_arbiter_unreal2` at n=1 would make the poison clause a vacuous empty
