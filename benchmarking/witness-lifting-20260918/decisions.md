@@ -36,6 +36,51 @@ of paired B/S rows for the instances of interest) and has not started.
 concurrent solver-adjacent work (builds, or even brief verification-pipeline runs) once it stops
 being brief — see W3/W4 below for where this actually bit.
 
+### W1 §4.3 — closure-buchi-provider mechanism audit, job selection only (step 1 of 5 complete)
+
+Plan section 4.3 explicitly caps this at "one broader mechanism audit, not four automatic full
+solver campaigns," and step 1 is pure data selection, freezable and reviewable before any provider
+execution: `opening/select-provider-audit-jobs.py`, output frozen at `opening/provider-audit-jobs.tsv`.
+
+Reused the existing 22 P2 targets (`symbolic-rows-20260917/targets/p2.list`, untouched) and added
+**64 new jobs from 39 instances across 27 previously-untouched, exact-parametric families** —
+every family already present in P2 or P4 is excluded by construction, not just by convention.
+"Previously unsolved" is read from the demand-sparse sprint's frozen 17s baseline
+(`acacia-baseline.csv`, explicitly labelled as that stale source, not fresh W1 data — the actual W1
+B/S rows aren't complete enough yet to redo this against). Within the 64-job budget, filled one
+parameter point (smallest and largest available unsolved value, for a size spread) for every
+eligible family *before* adding a second point to any family — 12 families got both points, 15 got
+one, because the orientation rule below inflated the job count past what 27×2 instances would need.
+
+**Orientation** (plan section 4.3 item 2 — "prefer the trusted orientation... never guess from the
+filename"): read each instance's own TLSF `STATUS` line via `expected_verdict()`, the exact same
+mechanism `run-syntcomp26-coverage.py` itself uses for conflict detection — not a new heuristic.
+Only 14/64 jobs (11 REALIZABLE, 3 UNREALIZABLE) had a declared status; the other 50 got **both**
+orientations as separately identified jobs, exactly as instructed, which is why 64 jobs cover only
+39 distinct instances.
+
+**Steps 2-5 of §4.3 (actually replaying these jobs through the closure-buchi provider — first-row
+budgets, enumerative-vs-symbolic comparison, terminal-pair/merge/prune counters) need the
+`build_check`-style checked/debugoptimized `acacia-spot-provider-replay` diagnostic binary and real
+solver time against 64 jobs.** Not run this session: deliberately kept off the shared host while
+the W1 campaign's own measurements are the priority, per the host-sharing rule above. This is a
+clean, reviewable handoff point — the selection is frozen and does not need redoing once a quiet
+window opens.
+
+A `build_check` directory already exists (gitignored, right options — `debugoptimized`, `b_lto`
+off, `build_research_tools`/`acacia_enable_tlsf_frontend` on, matching the prior sprint's documented
+recipe for this exact tool) with a compiled `acacia-spot-provider-replay`. **It is stale**: embedded
+version `31144e8-dirty`, several commits behind current HEAD (`d57f3afb`). Checked precisely how
+stale rather than assuming: `git diff --stat 31144e84 HEAD -- src/solver/closure_buchi_provider.cc
+src/solver/closure_buchi_provider.hh src/research/spot_provider_replay.cc` is empty — the provider
+and its replay tool have not changed at all. The only `src/` delta since then is B2's selector
+(`real_backend_selector.{cc,hh}`, +51 lines in `solver_invoker.cc`, all gated behind
+`acacia_real_backend_selector`, default false), plus registry/build-file wiring. Given `build_check`
+has LTO off, the code-placement sensitivity `selector.md` documents for `-Ofast -march=native`
+release builds specifically is unlikely to apply here. Net: this stale binary is probably still
+valid for a *mechanism/correctness* diagnostic (not a timing claim), but a fresh rebuild is cheap
+and removes the doubt entirely — do that first, once a quiet window opens, rather than debate reuse.
+
 ## W2 — attribution (not started)
 
 Blocked on W1 producing paired rows for the previously-problematic workstation instance and other
