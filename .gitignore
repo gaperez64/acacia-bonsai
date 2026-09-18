@@ -1,6 +1,9 @@
 _bm-logs
 _bm-logs*/
 selection-ltl-2025v2/
+# Reproducible-from-source cache copy, not primary evidence (see reuse.tsv);
+# large enough (tens of MiB, thousands of files) to keep out of git history.
+benchmarking/witness-lifting-20260918/opening/syfco-cache/
 .pytest_cache/
 virtenv/
 .venv/

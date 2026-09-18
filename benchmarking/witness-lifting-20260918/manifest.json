@@ -1,0 +1,89 @@
+{
+  "sprint": "broad-reevaluation-and-verified-witness-lifting",
+  "handoff_date": "2026-09-18",
+  "inspected_acacia_master": "50384cf69a733199fa17c9c571da1761d8451991",
+  "source_revision": "50384cf69a733199fa17c9c571da1761d8451991",
+  "dirty_patch": null,
+  "dirty_patch_hash": null,
+  "submodules": {
+    "subprojects/posets": "139e14336b7a1f0bc064022e587ea4e1b9a81427 (archive/step1-buffer-reuse-12-g139e143)",
+    "subprojects/tlsf-tools": "b42d5ef4a680252e04820ac7f073f5d786a43f7c (v1.5.0-7-gb42d5ef)",
+    "subprojects/tlsf-tools/external/oxidd": "9158645e51ab03b44355aff222fb39aec4d0a0f8 (v0.11.2)",
+    "tests/syntcomp-benchmarks": "4105caf1f1e5fd3b76657879bfce8021d130cbde (v2026)"
+  },
+  "spot_version": "2.15.1.dev",
+  "config_registry_checks": {
+    "docker_default_group": ["otf_sparse_formula", "best_decomp_rank_bucketed_semantic_mona", "best_four_arm_bboxtree", "best_decomp_mona_any"],
+    "headline_preset": "otf_sparse_formula",
+    "note": "docker_default is a set of independently-shipped Docker images, one per preset; the full-corpus PAR-2 headline table has always used preset otf_sparse_formula alone (see prior closing/README.md identities), not a 4-way combination. This sprint's B/S candidates use that same preset.",
+    "acacia-config.py validate": "passed, no output (clean)",
+    "check-config-frontends.py": "ok (documented divergence) acacia_enable_tlsf_frontend: meson=False json=True; 48 shared scalar options agree"
+  },
+  "candidate_matrix": {
+    "B": {
+      "role": "baseline",
+      "preset": "otf_sparse_formula",
+      "definition": "current master, shipping preset semantics, acacia_real_backend_selector=false (registry default), verify-all four-arm portfolio (real:small:backward,real:small:forward,unreal:formula:spot-guarded-sparse,unreal:automaton:forward)",
+      "build_dir": "build_w1_B",
+      "binary_path": "build_w1_B/src/acacia-bonsai",
+      "binary_sha256": "398a420bfa939a7c80c67a0357022ed6f09279a1c2878116c0602abd14392e4a",
+      "compile_profile": "release: --buildtype=release -Doptimization=3 -Db_lto=true -Ddebug=false -Db_ndebug=true -Dacacia_compiler_profile=release (acacia_compiler_profile=release also adds -Ofast -march=native)",
+      "meson_setup_args": "python3 scripts/acacia-config.py meson-args otf_sparse_formula, plus the release-profile flags above, plus -Dacacia_real_backend_selector=false (already the registry default for this preset)"
+    },
+    "S": {
+      "role": "mandatory broad candidate (existing structural real-backend selector)",
+      "preset": "otf_sparse_formula",
+      "definition": "identical tree/options to B, only -Dacacia_real_backend_selector=true (threshold left at its current default, -Dacacia_real_backend_selector_max_boolean_percent=30). Rule: choose_real_backend prefers spot-guarded-sparse for the real-forward slot when integer percent = (B*100)/N <= 30 (floor-rounded, not exactly 100B<=30N), else forward. Not rederived; reused as-is from src/solver/real_backend_selector.cc, merged in PR #189.",
+      "build_dir": "build_w1_S",
+      "binary_path": "build_w1_S/src/acacia-bonsai",
+      "binary_sha256": "f80ff3f62daaa6e22a6753a3f30a127baab424d0320949bc9957a6ff62ea5ebe",
+      "compile_profile": "identical to B except the one selector flag",
+      "known_unresolved_loss": "workstation_resupply_pb_3_pe_: near-cap loss at 17s in the prior sprint's deployment-candidate confirmation (build_sr_selector vs build_sr_candidate, 0/5 vs 2/5), attributed to LTO code-placement noise from linking real_backend_selector.cc rather than the selector's decision (directly verified requested=effective=forward for this instance in both control and treatment). Not resolved here; the broad campaign runs regardless per plan §1.2, and the loss remains reported."
+    },
+    "H": {
+      "role": "secondary broad candidate (clean scheduling-hint recovery)",
+      "status": "not attempted this session",
+      "recovery_blocker": "P1a (scheduling hints, commit d14cf955 on research/ds-p1a-loss-hints) was evaluated in the demand-sparse sprint bundled with P0 (lifecycle records) and showed a confirmed slowdown on g-unreal-115 with no qualifying benefit; a clean, P0/P3a-free recovery of only the typed scheduling hint has not been ported onto current master (50384cf6) and re-verified against its own semantic/mutation tests. Per §3.1, the campaign starts with B and S alone; H is deferred rather than measuring the old bundled P0+P1a stack under the H label."
+    },
+    "B_arch": {
+      "role": "build-drift bridge on known sentinels",
+      "status": "not built this session; not a mandatory full-corpus leg per §3.1. Available prior frozen binaries for future bridging: _bm-logs.20260916-demand-sparse/bin (candidate-f7919b83, sha 0f4f48b6b751be91d9e0575105d4678d47dbccb8c998c01d71f9597abe22fb99, preset otf_sparse_formula, solver-source-identical to 6410fd34)."
+    }
+  },
+  "correctness_checks": {
+    "unit_suite_B": "meson test -C build_w1_B --suite unit: Ok 50, Fail 0",
+    "unit_suite_S": "meson test -C build_w1_S --suite unit: Ok 50, Fail 0 (includes real-backend-selector-test: PASS, 18 assertions)",
+    "G1_baseline_bin": "build_best_decomp_rank_bucketed_mona_eq_min_blocks_2/src/acacia-bonsai (sha256 6467869a4411233ec148f7136fe6a6595a43205cc2bbd412f8d8beacb55ec2e9, the frozen G1 baseline pinned in benchmarking/README.md)",
+    "G1_B": "25/40 sentinels ran clean (Ok 25, Fail 0, 0 verdict changes, 0 coverage losses against the baseline-bin); 15/40 blocked, see g1_corpus_gap below",
+    "G1_S": "same: 25/40 clean, identical 15/40 blocked for the identical environment reason (not selector-specific)",
+    "g1_corpus_gap": "15 syntcomp25-panel sentinels resolve their TLSF source via tests/suites/benchmarks/syntcomp25/sources.tsv to hash-named paths under a 'syntcomp/<sha256>.ltl' tree. That tree has zero entries in the committed, reconstructable tests/suites/benchmarks/tlsf-manifest.tsv (grep -c '^syntcomp/' = 0) and was not found anywhere on this machine, though the demand-sparse sprint (2 days prior) reported G1 GATE PASS 40/40 -- that corpus has since been lost (not part of any write-protected or hash-pinned evidence directory, so not something this session should reconstruct from a filename). This is a pre-existing environment/tooling gap, not a build or code defect: G0 is clean on both binaries, and every G1 sentinel that could run shows zero verdict changes and zero coverage losses on both B and S. Recorded here rather than silently working around it; does not block the broad campaign per §3.2 (performance/tooling gaps do not veto research, only semantic or memory-safety failures do, and this is neither)."
+  },
+  "tlsf_corpus": {
+    "materialized_via": "python3 benchmarking/syntcomp-corpus.py init && python3 benchmarking/syntcomp-corpus.py materialize --out tlsf-corpus",
+    "path": "tlsf-corpus",
+    "file_count": 1586,
+    "verification": "materialized and verified 1586 files against tests/suites/benchmarks/tlsf-manifest.tsv"
+  },
+  "corpus": {
+    "list": "tests/suites/benchmarks/syntcomp26/all.list",
+    "tlsf_sources": "tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv",
+    "logical_instance_count": 1524,
+    "shard_count": 24,
+    "shard_method": "sha256(instance_id) % 24, deterministic, independent of performance/family outcome",
+    "shards_dir": "benchmarking/witness-lifting-20260918/opening/shards"
+  },
+  "host": {
+    "kernel": "Linux fedora.home 7.2.5-200.fc44.x86_64",
+    "cpus": 16,
+    "memory_total": "15Gi",
+    "affinity_quota_policy": "no CPU quota, MemoryMax=8G MemorySwapMax=0 per whole invocation via benchlib.run_systemd_scope (built into run-syntcomp26-coverage.py, no external wrapping needed)",
+    "sequencing": "strictly sequential, one solver invocation at a time, quiet host, no other build/profiling work run concurrently with primary measurement legs"
+  },
+  "harness": {
+    "coverage_runner": "benchmarking/run-syntcomp26-coverage.py (unmodified)",
+    "shard_and_order_driver": "benchmarking/run-witness-sprint.py (new, thin: shard generation + per-shard/per-epoch B/S order rotation + subprocess dispatch; no independent PAR-2 or scoring logic)",
+    "caps_invoked_separately": "caps 120 and 17 are always passed as separate --caps N invocations (never --caps 17,120) to avoid the staged-cap runner's earliest-decisive-cap summarization mixing regimes, per §4.1/[S9]",
+    "epoch_order": "epoch 1 canonical order B,S; each shard alternates starting candidate (even shard index: epoch-base order, odd: reversed); epoch 2 uses the reversed epoch-base order with the same per-shard alternation rule",
+    "ltlsynt_syfco_cache": "benchmarking/witness-lifting-20260918/opening/syfco-cache (copied from _bm-logs.20260916-demand-sparse/closing-run/three-way/syfco-cache; conversion cache only -- formula translation is cap-independent, reused across the 17s and 120s legs; no ltlsynt *timing* row is ever reused across caps)"
+  }
+}

@@ -1,0 +1,7 @@
+family_id	logical_instance	tlsf_file	n	role	correspondence_check
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_2_pe_.ltl	arbiter_pb_2_pe_.tlsf	2	seed	tlsf2tlsf --param n=2 --basic on the preserved original template; interface (r_0,r_1 / g_0,g_1) and Mealy semantics match the regenerated seed TLSF used for synthesis+checking
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_3_pe_.ltl	arbiter_pb_3_pe_.tlsf	3	seed	same, n=3
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_4_pe_.ltl	arbiter_pb_4_pe_.tlsf	4	sanity	same, n=4
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	arbiter_pb_10_pe_.tlsf	10	target	same, n=10 -- this IS the actual corpus target, not a regenerated stand-in; regenerated only for the manual/seed AIGER-checking pipeline, corpus row never overwritten
+param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	round_robin_arbiter_pb_10_pe_.ltl	round_robin_arbiter_pb_10_pe_.tlsf	10	target (selected, not yet pursued)	template read and hashed; seed/target pipeline not run this session
+param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf	round_robin_arbiter_unreal2_pb_7_pe_.ltl	round_robin_arbiter_unreal2_pb_7_pe_.tlsf	7	target (selected, not yet pursued)	template read and hashed; largest in-corpus n for this family is 7, not 10; seed/target pipeline not run this session

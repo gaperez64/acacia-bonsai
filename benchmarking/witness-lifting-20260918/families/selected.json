@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "selection_rationale": "Read from benchmarking/syntcomp26-family-instances.tsv (regenerated fresh this session via benchmarking/family_metadata.py: 325 families, 57 formally orderable, 734/1524 exact-provenance instances). Filtered to single-numeric-parameter, exact-provenance families with >=3 distinct in-corpus parameter points, then read each candidate's actual template before choosing (plan section 6.1: name only after reading). None of the three chosen families appear in the prior sprint's targets/p2.list or targets/p4.list (checked against benchmarking/symbolic-rows-20260917/targets/*.list).",
+  "families": [
+    {
+      "family_id": "param:tlsf/arbiters_zoo/parametric/arbiter.tlsf",
+      "role": "indexed/replicated REAL candidate",
+      "template_source": "families/templates/arbiter.tlsf",
+      "template_sha256": "a9839c448b1b56bb43ac2073afc07f2dde8af8af408a13f553e78b97ef280420",
+      "template_revision": "tests/syntcomp-benchmarks submodule 4105caf1f1e5fd3b76657879bfce8021d130cbde (v2026)",
+      "varying_parameters": ["n"],
+      "fixed_parameters": {},
+      "valid_parameter_predicate": "template comment states n>=1; MAIN declares INPUTS r[n]/OUTPUTS g[n] with no other n-dependent structure, so n>=1 is the only source-stated constraint (not statically enforced by tlsf2tlsf, which will substitute any integer)",
+      "seeds": [{"n": 2}, {"n": 3}],
+      "sanity_parameter": {"n": 4},
+      "target_parameters": {"n": 10},
+      "original_semantics": "Mealy",
+      "effective_move_order": "Mealy (SEMANTICS and TARGET both Mealy in source; unchanged by tlsf2tlsf --basic expansion)",
+      "signal_origin_map": "INPUTS r_0..r_{n-1} <- r[0..n-1]; OUTPUTS g_0..g_{n-1} <- g[0..n-1] (tlsf2tlsf's standard array-index naming, verified by inspection of the expanded seed TLSF, families/seeds/arbiter/arbiter_n2.tlsf)",
+      "target_logical_instance": "arbiter_pb_10_pe_.ltl",
+      "status": "FEASIBILITY PILOT SUCCEEDED. Seeds n=2,3 and sanity n=4 all REALIZABLE (Acacia, build_otf_sparse_formula b6da274) and VERIFIED (tlsf-tools verify_aiger_ltl.py, Spot 2.15.1.dev). Direct synthesis of the n=10 target timed out at 60s with the same solver -- arbiter_pb_10_pe_.ltl is a genuine miss for ordinary synthesis on this build. A manual schema (proposal_origin=manual, families/proposals/build_arbiter_witness.py: n pending-request latches + a one-hot rotating pointer, informed by but not decompiled from the seed AIGER circuits) was instantiated at n=10 and checked: monolithic single-formula translation did not complete in 90s, but exact top-level conjunct decomposition (families/proposals/verify_conjuncts.py, plan section 7.2) verified all 41 conjuncts in 5.06s total. VERIFIED target witness for arbiter_pb_10_pe_.ltl. See families/target-checks.tsv for the full row-by-row record."
+    },
+    {
+      "family_id": "param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf",
+      "role": "bounded-counter REAL candidate",
+      "template_source": "families/templates/round_robin_arbiter.tlsf",
+      "template_sha256": "2613f41ec64a05d3516c3561c64b429f987d4515e329f5779717277198495017",
+      "template_revision": "tests/syntcomp-benchmarks submodule 4105caf1f1e5fd3b76657879bfce8021d130cbde (v2026)",
+      "varying_parameters": ["n"],
+      "fixed_parameters": {},
+      "valid_parameter_predicate": "template default n=4, no explicit range comment; INPUTS r[n]/OUTPUTS g[n] with ASSUMPTIONS requiring each r[i] held until granted, so n>=1 is the only structurally implied bound",
+      "seeds": [{"n": 2}, {"n": 3}],
+      "sanity_parameter": {"n": 4},
+      "target_parameters": {"n": 10},
+      "original_semantics": "Mealy",
+      "effective_move_order": "Mealy",
+      "signal_origin_map": "same convention as arbiter: r_0..r_{n-1}, g_0..g_{n-1}",
+      "target_logical_instance": "round_robin_arbiter_pb_10_pe_.ltl",
+      "status": "Seeds n=2,3 and sanity n=4 VERIFIED, reusing the arbiter family's manual one-hot-pointer schema unmodified (it satisfies this family's ASSUME/ASSERT/GUARANTEE-shaped spec directly). Target n=10 (round_robin_arbiter_pb_10_pe_.ltl) is UNKNOWN/inconclusive: this family's formula is one Assume -> And(guarantees) implication rather than plain arbiter's bare And, so the conjunct decomposer needed extending to split an implication's consequent while retaining the full antecedent (done, families/proposals/verify_conjuncts.py); the n=10 check then timed out twice while the live W1 campaign was concurrently running a memory/BDD-heavy 4-arm-portfolio instance on the same host. Deferred rather than pushed further to avoid interfering with the campaign's own measurements -- not a correctness failure, a host-contention stopping point. Re-run in a quiet window."
+    },
+    {
+      "family_id": "param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
+      "role": "small-support UNREAL obstruction candidate",
+      "template_source": "families/templates/round_robin_arbiter_unreal2.tlsf",
+      "template_sha256": "c479b842361509f6877bab34307d6d1de6e60284b5506e121ddd9ffc1df01db0",
+      "template_revision": "tests/syntcomp-benchmarks submodule 4105caf1f1e5fd3b76657879bfce8021d130cbde (v2026)",
+      "varying_parameters": ["n"],
+      "fixed_parameters": {},
+      "valid_parameter_predicate": "template default n=2; the added poison INVARIANTS clause is `&&[0<=i<n]( &&[i<j<n] (r[i] && X r[j] -> F(g[i] && g[j])) )`, which is a vacuously true empty conjunction for n=1 -- meaning n=1 would NOT be a valid instantiation of the intended unrealizable obstruction (it would likely be realizable, same as the base round_robin_arbiter). Valid range for this family's intended obstruction is therefore n>=2, not n>=1 as the bare template comment would suggest; not yet independently confirmed by an actual n=1 solve.",
+      "seeds": [{"n": 2}, {"n": 3}],
+      "sanity_parameter": {"n": 4},
+      "target_parameters": {"n": 7},
+      "original_semantics": "Mealy",
+      "effective_move_order": "same base interface as round_robin_arbiter, with one added small-support pairwise poison clause over (i,j) with i<j<n -- this is the deliberate obstruction, sharing the same base family",
+      "signal_origin_map": "same convention: r_0..r_{n-1}, g_0..g_{n-1}",
+      "target_logical_instance": "round_robin_arbiter_unreal2_pb_7_pe_.ltl (largest in-corpus instantiation of this family; n=7, not n=10 -- this family's corpus coverage stops at 7)",
+      "status": "selected and justified from the actual template. Confirmed by direct code reading (not assumed from the handoff's caution alone) that Acacia's -s never exports a controller for an unreal-arm win: src/arg_parser.hh strips extra real arms when -s is given but keeps all unreal arms in the portfolio, and src/solver/solver_invoker.cc:715 asserts synth_fname and check_unreal are mutually exclusive on the main solve path. Traced the exact transformation Acacia's own UNREAL_X_FORMULA worker applies internally (solver_invoker.cc ~1090-1095 and ~421-433): swap input_aps<->output_aps, then wrap every atom that was an ORIGINAL output in X() (the move-order correction plan section 6.3 warns about), and do NOT negate the objective (only the REAL worker negates). A TLSF-level adapter (swap INPUTS/OUTPUTS declarations, X-shift the former-output atoms, feed the unnegated original guarantee to Acacia's ordinary -s synthesis with no -u flag at all) is the concrete next step this traces out -- but it was not implemented or run this session: getting the swap/shift/negation combination even slightly wrong produces an UNSOUND witness that 'verifies' by construction, and the plan is explicit that this needs differential testing against explicit tiny games before trusting it on a family, which is real, separate work, not a one-line follow-on. Deferred deliberately, not abandoned -- the mechanism is now fully characterized, not just flagged as hard."
+    }
+  ]
+}
