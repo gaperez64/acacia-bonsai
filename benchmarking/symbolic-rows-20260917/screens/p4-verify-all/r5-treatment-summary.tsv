@@ -1,0 +1,11 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+p4va-treatment-r5	SPIPureNext.ltl	17	REALIZABLE	0.5313075360027142	false	REALIZABLE	17
+p4va-treatment-r5	heim-double-x-real.ltl	17	REALIZABLE	0.42888400999072473	false	REALIZABLE	17
+p4va-treatment-r5	ordered-visits-choice-real.ltl	17	REALIZABLE	0.023035539998090826	false	REALIZABLE	17
+p4va-treatment-r5	robot_grid_pb_5_5_pe_.ltl	17	REALIZABLE	9.130670445010765	false	REALIZABLE	17
+p4va-treatment-r5	thermostat-F-real.ltl	17	REALIZABLE	1.4817758620047243	false	REALIZABLE	17
+p4va-treatment-r5	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	17
+p4va-treatment-r5	sort50.ltl	17	UNREALIZABLE	14.36337680798897	false	UNREALIZABLE	17
+p4va-treatment-r5	amba_decomposed_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.11851634200138506	false	REALIZABLE	17
+p4va-treatment-r5	collector_v2_pb_12_pe_.ltl	17	REALIZABLE	0.7962422130076448	false	REALIZABLE	17
+p4va-treatment-r5	Alarm_a5f99bc6.ltl				true	TIMEOUT	17

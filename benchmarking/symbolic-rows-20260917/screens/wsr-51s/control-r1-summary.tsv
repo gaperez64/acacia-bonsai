@@ -1,0 +1,2 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+wsr-control-r1	workstation_resupply_pb_3_pe_.ltl	51	REALIZABLE	15.690970558003755	false	REALIZABLE	51

@@ -5,6 +5,7 @@
 
 #include "research/explicit_forward_game.hh"
 
+#include <cstdlib>
 #include <fcntl.h>
 #include <random>
 #include <type_traits>
@@ -1539,6 +1540,288 @@ void empty_alphabets_and_failures () {
   }
 }
 
+// Structural identity deliberately ignores both provider and SpotRows local IDs.
+// Formula text identifies closure nodes across independent factory contexts.
+std::string closure_key (RowStore& store, StateId q) {
+  const auto p = std::dynamic_pointer_cast<const acacia::closure_buchi::Provider> (store.provider);
+  const auto id = p->state_id (store.cache->canonical_state (q));
+  std::vector<std::string> obligations;
+  for (auto c : p->obligations (id)) obligations.push_back (spot::str_psl (p->closure ()[c]));
+  std::sort (obligations.begin (), obligations.end ());
+  std::string key = std::to_string (p->cursor (id)) + ':';
+  for (const auto& f : obligations) key += std::to_string (f.size ()) + ':' + f;
+  return key;
+}
+
+void closure_games () {
+  unsigned games = 0, arithmetic = 0, wins = 0, losses = 0;
+  size_t reference_nodes = 0;
+  for (const char* text : {"true", "false", "G(u <-> c)", "G(u <-> X c)",
+                           "G(c <-> X u)", "GF u & GF c", "G(u -> F c)", "F(u & c)"}) {
+    for (bool unreal : {false, true}) {
+      auto f = spot::parse_infix_psl (text).f;
+      if (unreal) {
+        auto shift = [&] (auto&& self, spot::formula t) -> spot::formula {
+          if (t.is (spot::op::ap) && t.ap_name () == "c") return spot::formula::X (t);
+          return t.map ([&] (spot::formula child) { return self (self, child); });
+        };
+        f = shift (shift, f);
+      }
+      else f = spot::formula::Not (f);
+      for (int K : {1, 2, 3}) {
+        const auto dict = spot::make_bdd_dict ();
+        Fields observed;
+        auto lazy_store = acacia::spot_lazy_worker::make_closure_store (
+            f, dict, {}, Reporter {[&] (const auto& k, const auto& v) { observed[k] = v; }});
+        auto eager_store = acacia::spot_lazy_worker::make_closure_store (f, dict, {});
+        auto& demand = *lazy_store;
+        auto& eager = *eager_store;
+        expect (!demand.view && demand.cache->complete_rows () == 0,
+                "closure factory/snapshot uses generic path without TAA state cast or rows");
+        eager.enumerate_and_freeze ();
+        const auto n = eager.cache->state_count ();
+        std::map<std::string, StateId> structural;
+        for (size_t q = 0; q < n; ++q) structural.emplace (closure_key (eager, q), 0);
+        StateId next = 0;
+        for (auto& [key, id] : structural) id = next++;
+        auto coordinate = [&] (RowStore& store, StateId q) { return structural.at (closure_key (store, q)); };
+        Options opt;
+        std::string part;
+        std::vector<std::string> names;
+        for (auto ap : eager.provider->ap ()) names.push_back (ap.ap_name ());
+        std::sort (names.begin (), names.end ());
+        for (const auto& name : names) part += (name == (unreal ? "c" : "u")) ? 'u' : 'c';
+        opt.partition = part;
+        const auto a = alphabet (eager.provider, opt, {});
+        std::vector<std::vector<acacia::research::action_vec>> table;
+        for (auto u : valuations (a, a.inputs)) {
+          table.emplace_back ();
+          for (auto c : valuations (a, a.outputs)) {
+            acacia::research::action_vec action (n);
+            for (size_t q = 0; q < n; ++q)
+              for (const auto& e : eager.get (q).edges)
+                if ((e.condition & u & c) != bddfalse)
+                  action[coordinate (eager, e.destination)].emplace_back (coordinate (eager, q), e.increment);
+            table.back ().push_back (std::move (action));
+          }
+        }
+        const auto ref = acacia::research::solve_explicit_forward_game (
+            acacia::research::initial_vector (n, coordinate (eager, eager.cache->initial_id ())),
+            table, static_cast<VECTOR_ELT_T> (K), n);
+        expect (ref.status != acacia::research::forward_status::resource_limit, "reference fully enumerates");
+        reference_nodes += ref.env_nodes;
+        const auto expected = ref.status == acacia::research::forward_status::win_k
+                                  ? forward_result_status::win_k : forward_result_status::lose_k;
+        for (auto semantics : all_semantics) {
+          const auto lazy = Search {demand, a, K, {}, semantics}.solve ();
+          const auto full = Search {eager, a, K, {}, semantics}.solve ();
+          expect (lazy.status == expected && full.status == expected,
+                  std::string ("closure finite-K lazy/eager/reference: ") + text);
+          ++games;
+          ++(expected == forward_result_status::win_k ? wins : losses);
+          // Independently evaluate every valuation at every searched sparse
+          // rank against the dense reference action, in structural coordinates.
+          Reader reader {demand, false, {}};
+          Oracle oracle {reader, demand, a, K};
+          for (const auto& node : lazy.nodes) {
+            acacia::research::rank_vector rank (n, -1);
+            for (auto [q, v] : node.rank.entries ()) rank[coordinate (demand, q)] = v;
+            size_t ui = 0;
+            for (auto u : valuations (a, a.inputs)) {
+              size_t ci = 0;
+              for (auto c : valuations (a, a.outputs)) {
+                const auto value = oracle.evaluate (node.rank, u & c);
+                expect (value.value.has_value (), "complete lazy successor");
+                acacia::research::rank_vector actual (n, -1);
+                for (auto [q, v] : value.value->entries ()) actual[coordinate (demand, q)] = v;
+                expect (actual == acacia::research::apply_forward (rank, table[ui][ci++], K),
+                        "structural obligations/cursor successor matches dense reference");
+                ++arithmetic;
+              }
+              ++ui;
+            }
+          }
+        }
+        demand.snapshot ();
+        expect (observed.contains ("closure_branches_considered") &&
+                observed.contains ("first_row_ms") && observed.contains ("first_useful_rank_query_ms") &&
+                !observed.contains ("underlying_rows_requested"), "closure timing and counters, no TAA counters");
+        const auto before = eager.cache->complete_rows ();
+        const auto exported = export_graph (eager);
+        expect (exported->num_states () == n && before == eager.cache->complete_rows (),
+                "HOA export reuses C4 enumeration");
+        for (size_t q = 0; q < n; ++q) {
+          size_t i = 0;
+          const auto& edges = eager.get (q).edges;
+          for (const auto& edge : exported->out (q)) {
+            expect (i < edges.size () && edge.dst == edges[i].destination &&
+                    edge.cond == edges[i].condition && edge.acc.has (0) == edges[i].increment,
+                    "export preserves every complete source edge, guard and increment");
+            ++i;
+          }
+          expect (i == edges.size (), "export omits no source edges");
+        }
+      }
+    }
+  }
+  std::cout << "closure: " << games << " finite-K lazy/eager/reference matches (" << wins << " win, "
+            << losses << " loss), " << reference_nodes << " reference rank nodes, " << arithmetic
+            << " structural valuation successors; 8 specs, both polarities, K=1..3, 4 semantics\n";
+}
+
+void closure_mutations_and_growth () {
+  using namespace acacia::spot_lazy_worker;
+  using acacia::closure_buchi::Provider;
+  using acacia::closure_buchi::Hooks;
+  using acacia::closure_buchi::FaultPoint;
+  const auto dict = spot::make_bdd_dict ();
+  auto make = [&] (const char* f, acacia::closure_buchi::Options options = {}) {
+    return make_closure_store (spot::parse_infix_psl (f).f, dict, {}, {}, options);
+  };
+  unsigned mutations = 0;
+  auto winning = make ("F(u xor c)");
+  Options opt;
+  opt.partition = "cu"; // lexical c,u
+  auto a = alphabet (winning->provider, opt, {});
+  const auto good = Search {*winning, a, 2}.solve ();
+  expect (good.status == forward_result_status::win_k, "closure mutation winning fixture");
+  auto reject = [&] (auto mutate) {
+    auto bad = good;
+    mutate (bad);
+    expect (!verify_winning_certificate (*winning, a, 2, bad).value, "closure winning mutation rejected");
+    ++mutations;
+  };
+  reject ([] (auto& bad) { bad.nodes[bad.initial].rank = Rank {{{0, 1}}, 2}; });
+  reject ([] (auto& bad) { bad.nodes[bad.initial].choices.clear (); });
+  reject ([] (auto& bad) { bad.nodes[bad.initial].choices[0].successor = bad.nodes.size (); });
+  reject ([] (auto& bad) { bad.nodes[bad.nodes[bad.initial].choices[0].successor].losing = true; });
+
+  for (bool missing : {false, true}) {
+    auto store = make ("true");
+    auto empty = alphabet (store->provider, {}, {});
+    store->enumerate_and_freeze ();
+    // Corrupt search's normalized edge data, leave original Spot marks intact
+    // for fresh certificate reconstruction (the immutable provider is untouched).
+    for (size_t q = 0; q < store->cache->state_count (); ++q) {
+      auto& row = const_cast<rows::CompleteRankRow&> (store->get (q));
+      if (missing) row.edges.clear ();
+      else for (auto& edge : row.edges) edge.increment = false;
+    }
+    const auto failed = Search {*store, empty, 2}.solve ();
+    expect (failed.status == forward_result_status::unknown,
+            "missing source edge / incorrect increment cannot certify a false win");
+    ++mutations;
+  }
+  auto losing = make ("true");
+  auto empty = alphabet (losing->provider, {}, {});
+  const auto loss = Search {*losing, empty, 2}.solve ();
+  expect (loss.status == forward_result_status::lose_k, "closure losing fixture");
+  for (int mutation : {0, 1}) {
+    auto bad = loss;
+    if (mutation == 0) bad.proofs.at (*bad.initial_proof).record.dependencies.push_back (*bad.initial_proof);
+    else {
+      bool changed = false;
+      for (auto& proof : bad.proofs) if (!proof.rows.empty ()) {
+        proof.rows[0].source = losing->cache->state_count () + 17;
+        changed = true;
+        break;
+      }
+      expect (changed, "row correspondence mutation exercised");
+    }
+    expect (!verify_losing_proof (*losing, empty, 2, bad).value,
+            "closure chronology / row correspondence mutation rejected");
+    ++mutations;
+  }
+
+  auto hooks = std::make_shared<Hooks> ();
+  acacia::closure_buchi::Options limits;
+  limits.hooks = hooks;
+  auto failed = make ("X X true", limits);
+  auto p = std::dynamic_pointer_cast<const Provider> (failed->provider);
+  hooks->fail = [p] (FaultPoint point) { return point == FaultPoint::publication && p->complete_rows () == 1; };
+  const auto result = Search {*failed, alphabet (failed->provider, {}, {}), 2}.solve ();
+  expect (result.status == forward_result_status::unknown && p->complete_rows () == 1 &&
+          failed->cache->complete_rows () == 1 &&
+          failure_reason (failed->row_error, "missing") == "closure-buchi:injected",
+          "mid-search failure after complete first row remains typed UNKNOWN");
+  hooks->fail = {}; // release test hook's provider reference
+
+  auto growing = make_closure_store (spot::formula::X (80, spot::formula::ap ("p")), dict, {});
+  const Rank saved {{{0, 0}}, 3}, copy = saved, upper {{{0, 1}}, 3};
+  const auto hash = saved.hash (), bytes = rank_bytes (saved), capacity = saved.entries ().capacity ();
+  const auto mass = saved.mass ();
+  const auto* data = saved.entries ().data ();
+  growing->enumerate_and_freeze ();
+  expect (growing->cache->state_count () > 80 && saved == copy && saved.hash () == hash &&
+          saved.mass () == mass && saved.leq (upper) && !upper.leq (saved) &&
+          saved.entries ().capacity () == capacity && saved.entries ().data () == data &&
+          rank_bytes (saved) == bytes && saved.at (80) == -1,
+          "unrelated state growth preserves equality/hash/mass/dominance/storage, no dense tail");
+  std::cout << "closure: " << mutations << " certificate mutations rejected; injected mid-search UNKNOWN; "
+            << growing->cache->state_count () << " states preserve saved sparse rank\n";
+}
+
+// A1/A2 CLI surface: --closure-row-expansion and --stop-after-first-row.
+Options parse (std::vector<std::string> args) {
+  args.insert (args.begin (), "acacia-spot-provider-replay");
+  std::vector<char*> argv;
+  for (auto& a : args) argv.push_back (a.data ());
+  return parse_options (int (argv.size ()), argv.data ());
+}
+bool rejected (std::vector<std::string> args) {
+  try {
+    parse (std::move (args));
+  } catch (const std::exception&) {
+    return true;
+  }
+  return false;
+}
+void cli_flags () {
+  const std::vector<std::string> base {"--arm", "c5", "--formula", "p", "--k", "1",
+                                       "--provider", "closure-buchi"};
+  auto with = [&] (std::vector<std::string> extra) {
+    auto args = base;
+    args.insert (args.end (), extra.begin (), extra.end ());
+    return args;
+  };
+  expect (parse (base).row_expansion == acacia::closure_buchi::RowExpansion::symbolic_boolean,
+          "default row expansion is symbolic-boolean");
+  expect (!parse (base).stop_after_first_row, "default is not stop-after-first-row");
+  expect (parse (with ({"--closure-row-expansion", "enumerative"})).row_expansion ==
+              acacia::closure_buchi::RowExpansion::enumerative,
+          "--closure-row-expansion enumerative parses");
+  expect (parse (with ({"--closure-row-expansion", "symbolic-boolean"})).row_expansion ==
+              acacia::closure_buchi::RowExpansion::symbolic_boolean,
+          "--closure-row-expansion symbolic-boolean parses");
+  expect (parse (with ({"--stop-after-first-row"})).stop_after_first_row,
+          "--stop-after-first-row parses");
+  expect (rejected (with ({"--closure-row-expansion", "bogus"})),
+          "an unknown --closure-row-expansion value is rejected");
+  expect (rejected (with ({"--closure-row-expansion", "enumerative",
+                          "--closure-row-expansion", "enumerative"})),
+          "a duplicate --closure-row-expansion is rejected, like every other option");
+  expect (rejected ({"--arm", "c5", "--formula", "p", "--k", "1", "--provider", "taa",
+                     "--closure-row-expansion", "enumerative"}),
+          "--closure-row-expansion is rejected for --provider taa");
+  {
+    char path[] = "/tmp/replay-formula-file-test-XXXXXX";
+    const int fd = mkstemp (path);
+    expect (fd >= 0, "temp file for --formula-file");
+    const std::string text = "p & X q\n";
+    expect (write (fd, text.data (), text.size ()) == ssize_t (text.size ()),
+            "wrote formula file");
+    close (fd);
+    expect (parse ({"--arm", "c5", "--formula-file", path, "--k", "1"}).formula == "p & X q",
+            "--formula-file reads the file and strips the trailing newline");
+    expect (rejected ({"--arm", "c5", "--formula", "p", "--formula-file", path, "--k", "1"}),
+            "--formula and --formula-file are mutually exclusive");
+    expect (rejected ({"--arm", "c5", "--formula-file", "/nonexistent/path", "--k", "1"}),
+            "an unreadable --formula-file is rejected");
+    unlink (path);
+  }
+  std::cout << "cli_flags: PASS\n";
+}
+
 int main () {
   const int report_fd = open ("/dev/null", O_WRONLY);
   const auto report = pipe_reporter (report_fd);
@@ -1550,6 +1833,9 @@ int main () {
       if (const int code = differential (report, semantics))
         return code;
     }
+    cli_flags ();
+    closure_games ();
+    closure_mutations_and_growth ();
     copy_kernels ();
     lean_verifier_dependencies ();
     lean_verifier_winning_cache ();

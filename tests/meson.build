@@ -120,10 +120,21 @@ test ('translator-options',
 
 game_backend_test = executable ('game-backend-test',
                                 'game_backend_test.cc',
+                                link_with : closure_buchi_provider_lib,
                                 include_directories : inc,
                                 dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
 test ('game-backend',
       game_backend_test,
+      suite : ['unit', 'game-backend'])
+
+real_backend_selector_test = executable (
+  'real-backend-selector-test',
+  ['real_backend_selector_test.cc', '../src/solver/real_backend_selector.cc'],
+  link_with : closure_buchi_provider_lib,
+  include_directories : inc,
+  dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
+test ('real-backend-selector',
+      real_backend_selector_test,
       suite : ['unit', 'game-backend'])
 
 spot_rows_test = executable (
@@ -133,6 +144,16 @@ spot_rows_test = executable (
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
 )
 test ('spot-rows', spot_rows_test, suite : ['unit', 'spot-rows'])
+
+closure_buchi_provider_test = executable (
+  'closure_buchi_provider_test',
+  'closure_buchi_provider_test.cc',
+  include_directories : inc,
+  link_with : closure_buchi_provider_lib,
+  dependencies : [spot_dep, bddx_dep],
+)
+test ('closure_buchi_provider_test', closure_buchi_provider_test,
+      suite : ['unit', 'closure-buchi'])
 
 # The previous sprint's P5 headers and regressions compile in the default build; no backend gate.
 spot_lazy_buchi_view_test = executable (
@@ -158,6 +179,7 @@ foreach variant : spot_provider_replay_variants
   spot_provider_replay_test = executable(
     variant[0] + '-test',
     'spot_provider_replay_test.cc',
+    link_with: closure_buchi_provider_lib,
     include_directories: inc,
     cpp_args: variant[1],
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
@@ -334,6 +356,7 @@ game_backend_integration_sources = [
   '../src/acacia-bonsai.cc',
   '../src/version.cc',
   '../src/solver/mealy_to_moore.cc',
+  '../src/solver/real_backend_selector.cc',
   '../src/solver/solver_invoker.cc',
   '../src/solver/solve_game.cc',
   '../src/solver/solve_game_vector.cc',
@@ -343,8 +366,11 @@ if get_option ('acacia_enable_tlsf_frontend')
 endif
 game_backend_integration = executable (
   'game-backend-integration', game_backend_integration_sources, version_h,
+  link_with : closure_buchi_provider_lib,
   include_directories : inc,
-  cpp_args : ['-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1'],
+  cpp_args : ['-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1',
+              '-DACACIA_REAL_BACKEND_SELECTOR=1',
+              '-DACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT=30'],
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
   install : false,
 )
@@ -353,7 +379,8 @@ test ('game-backend-integration', game_backend_cli,
               get_option ('acacia_forward_safety_solver').to_string (), 'true', 'true',
               (compiler_profile == 'debug').to_string (),
               get_option ('acacia_default_candidate_mode'),
-              get_option ('acacia_spot_taa_max_rank_nodes').to_string ()],
+              get_option ('acacia_spot_taa_max_rank_nodes').to_string (),
+              'true'],  # ACACIA_REAL_BACKEND_SELECTOR=1 above
       suite : ['unit', 'game-backend'], depends : [game_backend_integration])
 if get_option ('acacia_enable_tlsf_frontend')
   test ('spot-worker-boundary', py,

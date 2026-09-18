@@ -1,0 +1,53 @@
+{
+  "sprint": "symbolic-rows-selective-real",
+  "pinned_production_baseline": "7e6e932a8c44a3e263ddde9ebd3c6e60ea1e0aab",
+  "research_recovery_points": {
+    "provider_core": "c1f60fffebba7a49c7ff1c8642118a35ddbd3556",
+    "worker_replay_integration": "64b961f049a42cbc51504897e29137b63078298c",
+    "research_branch_tip": "fd6d5a16658ebfa1478fc7bdbbf48db32edeb959",
+    "research_branch": "research/ds-p2-closure-buchi"
+  },
+  "commits": {
+    "R0": "e4883ec3",
+    "A1": "182bb061",
+    "A2_replay_tooling": "e9729dc709ce493c4ca8a1748b2bc9dee51eef03"
+  },
+  "excluded_research_commits": {
+    "P0_lifecycle_records": "4a04e882",
+    "P3a_move_compaction": "52d4c8e5",
+    "P1a_scheduling_hints": "d14cf955"
+  },
+  "a2_diagnostic_binary": {
+    "path": "build_check/src/acacia-spot-provider-replay",
+    "sha256": "94ab301c9b55abfe69fa5d9e73bc2cc24710323029684676ad85808767bbe161",
+    "built_from_commit": "e9729dc709ce493c4ca8a1748b2bc9dee51eef03",
+    "build_options": {
+      "buildtype": "debugoptimized",
+      "b_lto": false,
+      "acacia_enable_tlsf_frontend": true,
+      "build_research_tools": true
+    },
+    "note": "checked profile per CLAUDE.md, not the release measurement profile; used for completion/mechanism diagnosis only"
+  },
+  "target_lists": {
+    "p2.list": "5779ea54db76098b8e92c1c77beaf6bf008fb1f6772c2a75ba0f0dc8f0e3ec2b",
+    "p4.list": "9eab657c8c936403b5a2102f45beb868bb292a3acef49dfa5d12ddaf3b4e7e2a"
+  },
+  "docker_default_group": ["otf_sparse_formula", "best_decomp_rank_bucketed_semantic_mona",
+                            "best_four_arm_bboxtree", "best_decomp_mona_any"],
+  "status": "Sprint complete. A1/A2: mechanism fix validated, no P2 target newly unblocked, A3 not attempted, A4 does not proceed. B1: confirmed hint-free 5/5 gain + confirmed workstation regression. B2: rule derived (boolean_states/states<=30%), directly verified correct, deployment candidate still fails admission on workstation for an unrelated (LTO code-placement) reason. Nothing admitted; candidate=baseline; closing report reuses the previous sprint's rows (proven solver-source-identical).",
+  "b2_selector": {
+    "commits": ["real_backend_selector code + registry + tests, see git log on this branch"],
+    "rule": "spot-guarded-sparse when 100*boolean_states/states <= 30, else forward",
+    "registry_option": "acacia_real_backend_selector (default false)",
+    "threshold_option": "acacia_real_backend_selector_max_boolean_percent (default 30)",
+    "admitted": false,
+    "disposition": "not admitted: workstation_resupply_pb_3_pe_ regresses in the deployment-candidate confirmation even though the selector is directly verified to choose forward for it in both control and treatment; matches the previous sprint's documented LTO code-placement finding on the same instance"
+  },
+  "closing_reuse": {
+    "reused_from": "benchmarking/demand-sparse-20260916/closing/",
+    "baseline_csv_sha256": "922ac3533a56a4427d66f74e9d27c7fb03e42948cef63376fd11573864623c39",
+    "ltlsynt_csv_sha256": "f81beba80ab5639b01c05d921d000aa0022060adf8255d9b4a4b739f8d0e1cfb",
+    "justification": "git diff --stat 6410fd34 7e6e932a -- src/ meson.build meson.options config/ subprojects/posets is empty; the previously-measured frozen baseline binary is documented as solver-source-identical to 6410fd34"
+  }
+}

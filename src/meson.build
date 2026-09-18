@@ -1,7 +1,15 @@
+closure_buchi_provider_lib = static_library (
+  'closure-buchi-provider',
+  'solver/closure_buchi_provider.cc',
+  include_directories : inc,
+  dependencies : [spot_dep, bddx_dep],
+)
+
 ab_sources = [
   'acacia-bonsai.cc',
   'version.cc',
   'solver/mealy_to_moore.cc',
+  'solver/real_backend_selector.cc',
   'solver/solver_invoker.cc',
   'solver/solve_game.cc',
   'solver/solve_game_vector.cc',
@@ -16,6 +24,7 @@ endif
 #subdir ('python_pybind')
 
 ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
+                     link_with : closure_buchi_provider_lib,
                      include_directories : inc,
                      install: true,
                      install_tag: 'cli',
@@ -25,6 +34,7 @@ if get_option('build_research_tools')
   acacia_spot_provider_replay_exe = executable(
     'acacia-spot-provider-replay',
     'research/spot_provider_replay.cc',
+    link_with: closure_buchi_provider_lib,
     include_directories: inc,
     install: false,
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],

@@ -22,7 +22,8 @@ int main () {
   using acacia::automaton_provider;
   using acacia::candidate_mode;
 
-  for (auto provider : {automaton_provider::frozen_graph, automaton_provider::spot_lazy, automaton_provider::spot_eager}) {
+  for (auto provider : {automaton_provider::frozen_graph, automaton_provider::spot_lazy, automaton_provider::spot_eager,
+                        automaton_provider::closure_buchi, automaton_provider::closure_buchi_eager}) {
     if (acacia::parse_automaton_provider (acacia::automaton_provider_name (provider)) != provider)
       return 1;
     if (acacia::synthesis_provider (provider, true) != automaton_provider::frozen_graph)
@@ -51,6 +52,24 @@ int main () {
   if (solve (spot::formula::ff (), dict, bddtrue, bddtrue, 1, 3, 1, capped) != Outcome::unknown)
     return 1;
 
+  for (auto provider : {automaton_provider::closure_buchi, automaton_provider::closure_buchi_eager}) {
+    if (solve (spot::formula::ff (), dict, bddtrue, bddtrue, 1, 3, 1, {}, provider) != Outcome::win ||
+        solve (spot::formula::tt (), dict, bddtrue, bddtrue, 1, 3, 1, {}, provider) != Outcome::kmax)
+      return 1;
+    capped = {};
+    capped.rows.max_rows = 1;
+    if (solve (spot::formula::X (2, spot::formula::tt ()), dict, bddtrue, bddtrue,
+               2, 2, 1, capped, provider) != Outcome::unknown ||
+        solve (spot::formula::strong_X (spot::formula::ap ("p")), dict, bddtrue, bddtrue,
+               1, 3, 1, {}, provider) != Outcome::unknown)
+      return 1;
+    for (const auto* arm : {"real:small", "real:any", "unreal:formula"}) {
+      const auto parsed = parse_portfolio_arms (std::string (arm) + ":spot-guarded-sparse:" +
+                                               acacia::automaton_provider_name (provider));
+      if (parsed.error != portfolio_arm_parse_error::none || parsed.arms[0].provider != provider)
+        return 1;
+    }
+  }
   constexpr std::array names {
       std::pair {game_backend::backward, std::string_view {"backward"}},
       std::pair {game_backend::forward, std::string_view {"forward"}},

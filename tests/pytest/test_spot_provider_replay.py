@@ -117,3 +117,20 @@ def test_tsv_input_preserves_empty_partition_and_na(tmp_path):
     path = tmp_path / "arm.tsv"
     path.write_text("arm\tpartition\ttotal_wrapper_rows\nc5\t\tNA\n")
     assert load_module().read_rows(path) == [dict(arm="c5", partition="", total_wrapper_rows="NA")]
+
+
+def test_closure_selector_requires_same_boundary_and_uses_raw_rows():
+    m = load_module()
+    c4, c5 = records(m)
+    for row in (c4, c5):
+        row.update(provider="closure-buchi", worker_boundary_hash="fnv1a64:1234")
+    c5.update(closure_raw_rows="2", underlying_rows_generated="NA")
+    result = m.summarize(c4, c5)
+    assert result["equivalence"] == "agree"
+    assert result["underlying_utilization"]["ratio"] == 0.25
+    c5["worker_boundary_hash"] = "fnv1a64:5678"
+    assert m.equivalence(c4, c5) == "incomparable"
+    del c5["worker_boundary_hash"]
+    assert m.equivalence(c4, c5) == "incomparable"
+    c5.update(provider="ltl_to_taa", worker_boundary_hash="fnv1a64:1234")
+    assert m.equivalence(c4, c5) == "incomparable"

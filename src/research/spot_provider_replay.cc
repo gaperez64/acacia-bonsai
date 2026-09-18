@@ -1,7 +1,9 @@
-// The previous sprint's P6 replay. One invocation, one capped worker, one TAA factory, one arm.
+// Provider replay. One invocation, one capped worker, one selected factory, one arm.
 // --formula is the captured bad-language WORKER formula (no extra negation).
 // Search and verification are shared with the previous sprint's P7 worker integration.
 #include "solver/k_schedule.hh"
+#include "solver/spot_lazy_worker.hh"
+#include <spot/twaalgos/hoa.hh>
 #include "solver/spot_lazy_game.hh"
 #include "solver/spot_guarded_forward_safety.hh"
 #include "solver/spot_lazy_buchi_view.hh"
@@ -17,6 +19,7 @@
 #include <iostream>
 #include <spot/misc/version.hh>
 #include <spot/tl/parse.hh>
+#include <spot/tl/apcollect.hh>
 #include <spot/tl/print.hh>
 #include <sstream>
 #include <sys/resource.h>
@@ -50,6 +53,17 @@ namespace replay {
       {"arm"},
       {"worker_formula"},
       {"provider"},
+      {"worker_boundary"}, {"worker_boundary_hash"}, {"worker_target_semantics"},
+      {"factory_return_ms"}, {"first_row_ms"}, {"first_useful_rank_query_ms"},
+      {"closure_factory_ms"}, {"closure_normalization_ms"},
+      {"closure_raw_row_ms"}, {"closure_cursor_row_ms"},
+      {"closure_branches_considered"}, {"closure_branches_pruned"},
+      {"closure_guards_generated"}, {"closure_states_discovered"},
+      {"closure_complete_rows"}, {"closure_raw_rows"}, {"closure_edges"},
+      {"closure_retained_bytes"},
+      {"row_expansion_mode"}, {"boolean_conversion_ms"},
+      {"boolean_cache_hits"}, {"boolean_cache_misses"},
+      {"boolean_conversion_calls"}, {"boolean_complete_entries"},
       {"spot_version"},
       {"refined_rules"},
       {"wrapper"},
@@ -228,13 +242,16 @@ namespace replay {
 
 namespace replay {
   struct Options {
-      std::string arm, formula;
+      std::string arm, formula, provider_name = "taa", export_hoa;
       std::optional<std::string> partition;
       int k = 0, kmax = 0, kinc = DEFAULT_KINC;
       unsigned timeout_seconds = 10;
       size_t max_memory_mib = 1024;
       lazy::Limits provider;
       Limits game;
+      acacia::closure_buchi::RowExpansion row_expansion =
+          acacia::closure_buchi::RowExpansion::symbolic_boolean;
+      bool stop_after_first_row = false;
   };
   std::string need_argument (int& i, int argc, char** argv) {
     if (++i >= argc)
@@ -253,7 +270,10 @@ namespace replay {
     return value;
   }
   void usage (std::ostream& out, const char* program) {
-    out << "usage: " << program << " --arm c4|c5 --formula WORKER_LTL --k K\n"
+    out << "usage: " << program << " --arm c4|c5 (--formula WORKER_LTL | --formula-file FILE) --k K\n"
+        << "  [--provider taa|closure-buchi] [--export-hoa FILE (c4 only)]\n"
+        << "  [--closure-row-expansion enumerative|symbolic-boolean]\n"
+        << "  [--stop-after-first-row]\n"
         << "  [--partition uc...] [--kmax K --kinc N]\n"
         << "  [--timeout-seconds N] [--max-memory-mib N] [--max-states N]\n"
         << "  [--max-rows N] [--max-row-edges N] [--max-acceptance-sets N]\n"
@@ -264,12 +284,24 @@ namespace replay {
         << "  create_automaton(), not a raw specification. No negation or TLSF adaptation.\n"
         << "  Partition is u=input/c=output in lexical AP-name order; default: all c.\n"
         << "  Exactly one formula/arm per process. TAA refined_rules=false in both.\n"
-        << "  C4 freezes the exact P5 reachable row cache; C5 never enumerates it.\n"
+        << "  C4 freezes the selected provider's reachable row cache; C5 never enumerates it.\n"
         << "  Factory, acceptance setup and all query/row work count toward the caps.\n"
         << "  Defaults: 10 seconds, 1024 MiB address space, 200000 states/rows/ranks,\n"
         << "  2000000 edges per row/choices; query steps/live BDD nodes unlimited.\n"
         << "  --k defaults to one fixed-K attempt; --kmax uses the compiled worker\n"
         << "  schedule with fresh search/proofs/caches/strategy at each K.\n"
+        << "  --closure-row-expansion selects the closure provider's Boolean-obligation\n"
+        << "  handling: symbolic-boolean (default) folds a Boolean subformula into one\n"
+        << "  memoized BDD before continuing; enumerative is the pre-fix frozen control\n"
+        << "  that still forks one branch per disjunct. Applies only to --provider\n"
+        << "  closure-buchi; both must agree on every raw (T,P)->guard extensionally.\n"
+        << "  --stop-after-first-row requests only the initial state's row (through the\n"
+        << "  same factory/store as an ordinary run) and reports row_status: row_complete\n"
+        << "  or row_failed, never a realizability verdict; no K-schedule search runs.\n"
+        << "  Exit 0: the row completed; 2: it failed/hit a limit; 1: invalid invocation.\n"
+        << "  --formula-file reads the (already transformed) formula from a file instead\n"
+        << "  of argv, for jobs long enough to exceed the kernel's per-argument length\n"
+        << "  limit; trailing newline(s) are stripped. Mutually exclusive with --formula.\n"
         << "  Counts ending in cumulative and provider row/state counts are job totals.\n"
         << "  search_rows_requested is the union across K; verification_additional_rows\n"
         << "  is certificate sources outside that union. Search-only is their set difference.\n"
@@ -295,8 +327,30 @@ namespace replay {
       auto n = [&] { return number<size_t> (next (), arg); };
       if (arg == "--arm")
         o.arm = next ();
+      else if (arg == "--provider")
+        o.provider_name = next ();
+      else if (arg == "--closure-row-expansion") {
+        const auto value = next ();
+        const auto parsed = acacia::closure_buchi::parse_row_expansion (value);
+        if (!parsed)
+          fail ("--closure-row-expansion expects enumerative or symbolic-boolean");
+        o.row_expansion = *parsed;
+      }
+      else if (arg == "--stop-after-first-row")
+        o.stop_after_first_row = true;
+      else if (arg == "--export-hoa")
+        o.export_hoa = next ();
       else if (arg == "--formula")
         o.formula = next ();
+      else if (arg == "--formula-file") {
+        std::ifstream in (next ());
+        if (!in) fail ("--formula-file: cannot open file");
+        std::ostringstream text;
+        text << in.rdbuf ();
+        o.formula = text.str ();
+        while (!o.formula.empty () && (o.formula.back () == '\n' || o.formula.back () == '\r'))
+          o.formula.pop_back ();
+      }
       else if (arg == "--partition")
         o.partition = next ();
       else if (arg == "--k")
@@ -336,8 +390,18 @@ namespace replay {
     }
     if (o.arm != "c4" && o.arm != "c5")
       fail ("--arm c4|c5 is required (one arm per invocation)");
+    if (o.provider_name != "taa" && o.provider_name != "closure-buchi")
+      fail ("--provider expects taa or closure-buchi");
+    if (!o.export_hoa.empty () && o.arm != "c4")
+      fail ("--export-hoa requires eager --arm c4");
+    if (o.provider_name == "closure-buchi" && seen.contains ("--max-acceptance-sets"))
+      fail ("--max-acceptance-sets applies only to the TAA provider");
+    if (o.provider_name != "closure-buchi" && seen.contains ("--closure-row-expansion"))
+      fail ("--closure-row-expansion applies only to the closure-buchi provider");
+    if (seen.contains ("--formula") && seen.contains ("--formula-file"))
+      fail ("--formula and --formula-file are mutually exclusive");
     if (o.formula.empty () || o.k < 1)
-      fail ("--formula and positive --k are required");
+      fail ("--formula (or --formula-file) and positive --k are required");
     if (!seen.contains ("--kmax"))
       o.kmax = o.k;
     if (o.kmax < o.k || o.kinc < 1 || o.kmax > std::numeric_limits<VECTOR_ELT_T>::max ())
@@ -368,7 +432,7 @@ namespace replay {
       }
       ~TimedStage () { report.ms (name + "_ms", elapsed (start)); }
   };
-  letters::WorkerAlphabet alphabet (const std::shared_ptr<lazy::LazyBuchiView>& p,
+  letters::WorkerAlphabet alphabet (const spot::const_twa_ptr& p,
                                     const Options& o, Reporter report) {
     std::vector<std::pair<std::string, int>> aps;
     for (auto ap : p->ap ())
@@ -391,6 +455,22 @@ namespace replay {
     report.put ("ap_order", names);
     report.put ("partition", partition);
     return a;
+  }
+  // C4 has already completed every row. Export only that cache; in particular,
+  // do not call Provider::materialize or any successor iterator a second time.
+  spot::twa_graph_ptr export_graph (RowStore& store) {
+    require (store.frozen && store.cache->complete_rows () == store.cache->state_count ());
+    auto graph = spot::make_twa_graph (store.provider->get_dict ());
+    graph->copy_ap_of (store.provider);
+    graph->set_buchi ();
+    graph->prop_state_acc (false);
+    graph->new_states (store.cache->state_count ());
+    graph->set_init_state (store.cache->initial_id ());
+    for (size_t q = 0; q < store.cache->state_count (); ++q)
+      for (const auto& edge : store.get (q).edges)
+        graph->new_edge (q, edge.destination, edge.condition,
+                         edge.increment ? spot::acc_cond::mark_t {0} : spot::acc_cond::mark_t {});
+    return graph;
   }
   void rank_metrics (const SolveResult& r, Reporter report) {
     std::map<size_t, size_t> histogram;
@@ -467,7 +547,7 @@ namespace replay {
         if (parsed.format_errors (error))
           throw InvalidInput (error.str ());
         f = parsed.f;
-        if (!f.is_ltl_formula ()) {
+        if (!f.is_ltl_formula () && o.provider_name == "taa") {
           report.put ("reason", "unsupported_non_ltl");
           report.put ("status", "DECLINED");
           return 2;
@@ -478,41 +558,75 @@ namespace replay {
       const auto dict = spot::make_bdd_dict ();
       letters::BuddyErrors errors;
       spot::const_twa_ptr provider;
+      std::unique_ptr<RowStore> owned_store;
+      const auto factory_started = Clock::now ();
       report.count ("factory_baseline_peak_bytes", peak_bytes ());
       report.put ("factory_rss_before_bytes", rss_bytes ());
-      {
+      if (o.provider_name == "closure-buchi") {
+        spot::atomic_prop_set aps;
+        spot::atomic_prop_collect (f, &aps);
+        std::vector<std::string> names, inputs, outputs;
+        for (auto ap : aps) names.push_back (ap.ap_name ());
+        std::sort (names.begin (), names.end ());
+        const auto partition = o.partition.value_or (std::string (names.size (), 'c'));
+        if (partition.size () != names.size () || partition.find_first_not_of ("uc") != std::string::npos)
+          throw InvalidInput ("--partition requires one u/c per lexical AP");
+        for (size_t i = 0; i < names.size (); ++i)
+          (partition[i] == 'u' ? inputs : outputs).push_back (names[i]);
+        acacia::spot_lazy_worker::capture_boundary (
+            f, inputs, outputs, "captured-worker;effective=Mealy", report);
         TimedStage stage {report, "factory", job};
-        // Formula/TAA skeleton and any factory-internal factors are charged here.
-        // There is deliberately NO translator/reference/preparation outside it.
-        auto result = lazy::attempt ([&] () -> spot::const_twa_ptr {
-          lazy::detail::bdd_budget (o.provider);
-          auto p = spot::ltl_to_taa (f, dict, false);
-          lazy::detail::bdd_budget (o.provider);
-          return p;
-        });
+        acacia::closure_buchi::Options options;
+        options.max_states = o.provider.max_states;
+        options.max_live_bdd_nodes = o.provider.max_live_bdd_nodes;
+        options.row_expansion = o.row_expansion;
+        owned_store = acacia::spot_lazy_worker::make_closure_store (
+            f, dict, o.provider.rows, report, options);
+        provider = owned_store->provider;
+        report.put ("factory_measurement", "complete");
         report.count ("factory_peak_bytes", peak_bytes ());
         report.put ("factory_rss_after_bytes", rss_bytes ());
-        report.put ("factory_measurement", result.value ? "complete" : "censored");
-        if (!result.value) {
-          if (result.error)
-            std::rethrow_exception (result.error);
-          throw lazy::ResourceLimit ("factory failed");
+        report.count ("acceptance_sets", 1);
+        report.put ("provider_acceptance", "Inf(0)");
+        report.ms ("acceptance_setup_ms", 0); // fixed by the factory
+      }
+      else {
+        {
+          TimedStage stage {report, "factory", job};
+          // Formula/TAA skeleton and any factory-internal factors are charged here.
+          // There is deliberately NO translator/reference/preparation outside it.
+          auto result = lazy::attempt ([&] () -> spot::const_twa_ptr {
+            lazy::detail::bdd_budget (o.provider);
+            auto p = spot::ltl_to_taa (f, dict, false);
+            lazy::detail::bdd_budget (o.provider);
+            return p;
+          });
+          report.count ("factory_peak_bytes", peak_bytes ());
+          report.put ("factory_rss_after_bytes", rss_bytes ());
+          report.put ("factory_measurement", result.value ? "complete" : "censored");
+          if (!result.value) {
+            if (result.error)
+              std::rethrow_exception (result.error);
+            throw lazy::ResourceLimit ("factory failed");
+          }
+          provider = *result.value;
         }
-        provider = *result.value;
+        std::shared_ptr<lazy::LazyBuchiView> view;
+        {
+          TimedStage stage {report, "acceptance_setup", job};
+          view = std::make_shared<lazy::LazyBuchiView> (
+              std::make_shared<ObservedProvider> (provider, report), o.provider);
+          report.count ("acceptance_sets", provider->num_sets ());
+          std::ostringstream acceptance;
+          acceptance << provider->get_acceptance ();
+          report.put ("provider_acceptance", acceptance.str ());
+          report.count ("acceptance_setup_peak_bytes", peak_bytes ());
+        }
+        owned_store = std::make_unique<RowStore> (view, o.provider.rows, report);
       }
-      std::shared_ptr<lazy::LazyBuchiView> view;
-      {
-        TimedStage stage {report, "acceptance_setup", job};
-        view = std::make_shared<lazy::LazyBuchiView> (
-            std::make_shared<ObservedProvider> (provider, report), o.provider);
-        report.count ("acceptance_sets", provider->num_sets ());
-        std::ostringstream acceptance;
-        acceptance << provider->get_acceptance ();
-        report.put ("provider_acceptance", acceptance.str ());
-        report.count ("acceptance_setup_peak_bytes", peak_bytes ());
-      }
-      const auto a = alphabet (view, o, report);
-      RowStore store {view, o.provider.rows, report};
+      auto& store = *owned_store;
+      store.factory_started = factory_started;
+      const auto a = alphabet (store.provider, o, report);
       store.snapshot ();
       report.ms ("eager_ms", 0);
       if (o.arm == "c4") {
@@ -520,14 +634,47 @@ namespace replay {
         store.enumerate_and_freeze ();
         report.put ("total_status", "complete");
         report.count ("total_wrapper_rows", store.cache->complete_rows ());
-        report.count ("total_underlying_rows", view->underlying_rows ());
+        if (store.view) report.count ("total_underlying_rows", store.view->underlying_rows ());
+        else report.count ("total_underlying_rows",
+            std::dynamic_pointer_cast<const acacia::closure_buchi::Provider> (store.provider)
+                ->counters ().raw_rows);
         report.count ("total_wrapper_edges", store.generated_edges);
       }
       // C5 reaches this point with precisely one discovered initial state and
       // zero generated rows. This assertion is live in release builds.
       else
-        require (store.cache->state_count () == 1 && store.cache->complete_rows () == 0 &&
-                 view->underlying_rows () == 0);
+        require (store.cache->state_count () == 1 && store.cache->complete_rows () == 0);
+      // Diagnose first-row progress without a realizability verdict: request
+      // only the initial state's row through the same factory/store as an
+      // ordinary run, then stop before any K-schedule search. Row success/
+      // failure only; store.row_error carries the typed reason on failure.
+      if (o.stop_after_first_row) {
+        report.put ("stage", "first_row_only");
+        const auto row_started = Clock::now ();
+        const auto result = store.cache->row (store.cache->initial_id ());
+        report.ms ("row_generation_ms", elapsed (row_started));
+        store.check_contract ();
+        store.snapshot ();
+        report.ms ("end_to_end_ms", elapsed (job));
+        report.count ("peak_rss_bytes", peak_bytes ());
+        const bool complete = result.status == rows::Status::complete;
+        report.put ("status", complete ? "ROW_COMPLETE" : "ROW_FAILED");
+        report.put ("worker_result", complete ? "row_complete" : "row_failed");
+        report.put ("reason", complete ? "none" : acacia::spot_lazy_worker::failure_reason (
+            result.error, result.status == rows::Status::resource_limit
+                               ? "resource_limit" : "row_failure"));
+        report.put ("certificate", "not_applicable");
+        report.put ("stage", "first_row_complete");
+        report.put ("emit", "1");
+        return complete ? 0 : 2;
+      }
+      if (!o.export_hoa.empty ()) {
+        auto graph = export_graph (store);
+        std::ofstream out (o.export_hoa);
+        spot::print_hoa (out, graph);
+        out.close ();
+        if (!out) throw InvalidInput ("cannot write --export-hoa");
+      }
       for (long long k = o.k;;) {
         report.put ("stage", "starting_attempt");
         report.count ("k", size_t (k));
@@ -548,7 +695,7 @@ namespace replay {
           Search search {store, a, int32_t (k), o.game};
           result = search.solve ();
         }
-        view->check_contract ();
+        store.check_contract ();
         store.snapshot ();
         rank_metrics (result, report);
         report.count ("search_generated_rows", store.search_generated - before_search);
@@ -558,7 +705,8 @@ namespace replay {
         report.ms ("end_to_end_ms", elapsed (job));
         report.count ("peak_rss_bytes", peak_bytes ());
         report.put ("status", solver_detail::forward_result_name (result.status));
-        report.put ("reason", letters::unknown_name (result.failure));
+        report.put ("reason", acacia::spot_lazy_worker::failure_reason (
+            store.row_error, letters::unknown_name (result.failure)));
         const bool win = result.status == forward_result_status::win_k;
         const bool loss = result.status == forward_result_status::lose_k;
         report.put ("certificate", win || loss ? "verified" : "unverified");
@@ -574,11 +722,14 @@ namespace replay {
           return win ? 0 : 2;
         k = *next;
       }
+    } catch (const acacia::closure_buchi::AdapterFailure& e) {
+      report.put ("reason", std::string ("closure-buchi:") +
+          acacia::spot_lazy_worker::closure_failure_name (e.failure ().kind));
     } catch (const InvalidInput& e) {
       report.put ("reason", e.what ());
       exit_code = 1;
     } catch (const letters::detail::Failure& e) {
-      report.put ("reason", letters::unknown_name (e.why));
+      report.put ("reason", acacia::spot_lazy_worker::failure_reason (e.error, letters::unknown_name (e.why)));
     } catch (const lazy::Declined& e) {
       report.put ("status", "DECLINED");
       report.put ("reason", e.what ());
@@ -663,7 +814,9 @@ namespace replay {
     const int code = WIFEXITED (status) ? WEXITSTATUS (status) : 2;
     const bool died =
         !WIFEXITED (status) || (value (current, "worker_result") == "win" && code != 0);
-    const bool partial = died || value (current, "stage") != "attempt_complete";
+    const auto final_stage = value (current, "stage");
+    const bool partial =
+        died || (final_stage != "attempt_complete" && final_stage != "first_row_complete");
     if (partial) {
       if (died && value (current, "stage") == "attempt_complete" && !attempts.empty ())
         attempts.pop_back ();  // do not publish a verdict after fatal teardown
@@ -713,14 +866,16 @@ namespace replay {
     }
     for (auto& f : attempts) {
       f["arm"] = o.arm;
-      f["provider"] = "ltl_to_taa";
-      f["refined_rules"] = "false";
+      f["provider"] = o.provider_name == "taa" ? "ltl_to_taa" : "closure-buchi";
+      f["refined_rules"] = o.provider_name == "taa" ? "false" : "not_applicable";
       f["spot_version"] = spot::version ();
-      f["wrapper"] = "P5_single_cursor_one_obligation_per_edge_v1";
+      f["wrapper"] = o.provider_name == "taa" ? "P5_single_cursor_one_obligation_per_edge_v1"
+                                               : "closure_single_cursor_one_obligation_per_edge_v1";
       f["initial_convention"] = "cursor=0,rank=0";
       f["rank_domain"] = "all_numeric_sparse";
       f["factory_scope"] =
-          "TAA_formula_skeleton_including_all_internal_factor_setup_no_external_factors";
+          o.provider_name == "taa" ? "TAA_formula_skeleton_including_all_internal_factor_setup_no_external_factors"
+                                   : "closure_normalization_and_inventory_no_rows";
       f["kmin"] = std::to_string (o.k);
       f["kmax"] = std::to_string (o.kmax);
       f["kinc"] = std::to_string (o.kinc);

@@ -672,6 +672,35 @@
         }
       ]
     },
+    "real_backend_selector": {
+      "meson": "acacia_real_backend_selector",
+      "type": "boolean",
+      "default": false,
+      "description": "B2 (sprint/symbolic-rows-selective-real): structural real-slot forward/sparse selection, decision-only, disabled by default",
+      "macros": [
+        {
+          "name": "ACACIA_REAL_BACKEND_SELECTOR",
+          "emit": "true",
+          "encoding": "constant",
+          "value": 1
+        }
+      ]
+    },
+    "real_backend_selector_max_boolean_percent": {
+      "meson": "acacia_real_backend_selector_max_boolean_percent",
+      "type": "integer",
+      "default": 30,
+      "min": 0,
+      "max": 100,
+      "description": "Frozen 100*boolean_states/states threshold for acacia_real_backend_selector: at or below this, prefer spot-guarded-sparse",
+      "macros": [
+        {
+          "name": "ACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT",
+          "emit": "always",
+          "encoding": "value"
+        }
+      ]
+    },
     "spot_guarded_existential_outputs": {
       "meson": "acacia_spot_guarded_existential_outputs",
       "type": "boolean",

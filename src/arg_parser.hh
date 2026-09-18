@@ -135,7 +135,7 @@ void show_help (const char* program_name) {
       << "                    [small|any] without also selecting a realizability\n"
       << "                    check; mutually exclusive with -r\n"
       << "  --real-backend VAL       use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for real arms\n"
-      << "  --real-provider VAL      use [frozen-graph|spot-lazy|spot-eager] automaton provider (default frozen-graph)\n"
+      << "  --real-provider VAL      use [frozen-graph|spot-lazy|spot-eager|closure-buchi|closure-buchi-eager] automaton provider (default frozen-graph)\n"
       << "  --unreal-provider VAL    use the same providers for formula-unreal; automaton-unreal requires frozen-graph\n"
       << "  --candidate-mode VAL     [only|fallback] on candidate resource limits (default "
       << acacia::candidate_mode_name (ACACIA_DEFAULT_CANDIDATE_MODE) << ")\n"
@@ -148,6 +148,7 @@ void show_help (const char* program_name) {
       << "                    primary translation preference; mutually exclusive\n"
       << "                    with -r, -u, and per-polarity backend/translation options\n"
       << "                    provider options apply to arms without an explicit provider\n"
+      << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, decision only\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -282,11 +283,17 @@ void process_arg_provider (const std::string& arg, acacia::automaton_provider& p
   const auto parsed = acacia::parse_automaton_provider (arg);
   if (not parsed)
     error (EXIT_CODE_ERROR,
-           "Error: unexpected value %s for --%s; expected frozen-graph, spot-lazy or spot-eager.\n",
+           "Error: unexpected value %s for --%s; expected frozen-graph, spot-lazy or spot-eager, closure-buchi or closure-buchi-eager.\n",
            arg.c_str (), option);
   provider = *parsed;
+#if !ACACIA_SPOT_GUARDED_BACKEND
+  if (acacia::is_closure_provider (provider))
+    error (EXIT_CODE_ERROR, "Error: closure-buchi requires a binary built with "
+           "-Dacacia_spot_guarded_backend=true.\n");
+#endif
 #if !ACACIA_SPOT_LAZY_PROVIDER
-  if (provider != acacia::automaton_provider::frozen_graph)
+  if (provider == acacia::automaton_provider::spot_lazy ||
+      provider == acacia::automaton_provider::spot_eager)
     error (EXIT_CODE_ERROR,
            "Error: unsupported configuration: --%s requests %s, but this binary was "
            "built without the Spot lazy provider (ACACIA_SPOT_LAZY_PROVIDER); configure with "
@@ -648,6 +655,13 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (retval.synth_fname.has_value ()) {
+    const bool closure = acacia::is_closure_provider (retval.real_provider) ||
+                         acacia::is_closure_provider (retval.unreal_provider) ||
+        (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+          return acacia::is_closure_provider (arm.provider);
+        }));
+    if (closure)
+      error (EXIT_CODE_ERROR, "Error: closure-buchi does not support controller synthesis.\n");
     if (retval.arms.has_value ()) {
       bool kept_real_arm = false;
       std::erase_if (*retval.arms, [&kept_real_arm] (const portfolio_arm& arm) {
@@ -691,7 +705,11 @@ arg_parse_result arg_parser (int argc, char** argv) {
         error (EXIT_CODE_ERROR,
                "Error: unsupported configuration: the automaton-unreal route must remain eager; "
                "use frozen-graph or the formula-unreal route.\n");
-      if (arm.backend != acacia::game_backend::spot_guarded)
+      if (acacia::is_closure_provider (arm.provider)) {
+        if (arm.backend != acacia::game_backend::spot_guarded_sparse)
+          error (EXIT_CODE_ERROR, "Error: closure-buchi requires spot-guarded-sparse.\n");
+      }
+      else if (arm.backend != acacia::game_backend::spot_guarded)
         error (EXIT_CODE_ERROR,
                "Error: unsupported configuration: a Spot TAA provider requires --real-backend spot-guarded "
                "or the corresponding unreal/--arms selection.\n");
