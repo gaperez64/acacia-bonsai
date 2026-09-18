@@ -645,6 +645,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DACACIA_DEFAULT_CANDIDATE_MODE=acacia::candidate_mode::only",
         "-DACACIA_SPOT_TAA_MAX_RANK_NODES=200000",
         "-DACACIA_LOCAL_CERTIFICATE=1",
+        "-DACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT=30",
         "-DACACIA_FORWARD_SAFETY_SOLVER=1",
         "-DACACIA_FORWARD_CONDITIONAL_COVERING=1",
         "-DACACIA_ENABLE_EQUIVARIANT_SOLVER=1",
