@@ -1,0 +1,370 @@
+cap	epoch	instance	kind	baseline_status	baseline_seconds	candidate_status	candidate_seconds	delta_seconds
+120	1	09.ltl	slower	REALIZABLE	7.404	REALIZABLE	7.794	+0.390
+120	1	Alarm_06e9cad4.ltl	slower	REALIZABLE	1.593	REALIZABLE	1.782	+0.189
+120	1	Alarm_68c86764.ltl	slower	REALIZABLE	1.552	REALIZABLE	1.811	+0.258
+120	1	Alarm_a5f99bc6.ltl	slower	REALIZABLE	19.675	REALIZABLE	20.832	+1.157
+120	1	AllLights_2c5b09da.ltl	faster	UNREALIZABLE	1.013	UNREALIZABLE	0.933	-0.080
+120	1	AllLights_aeb1d897.ltl	faster	UNREALIZABLE	2.731	UNREALIZABLE	2.555	-0.176
+120	1	AllShades_66f450a4.ltl	faster	UNREALIZABLE	1.786	UNREALIZABLE	1.695	-0.091
+120	1	F-G-contradiction-110.ltl	slower	UNREALIZABLE	28.722	UNREALIZABLE	31.369	+2.647
+120	1	F-G-contradiction-111.ltl	faster	UNREALIZABLE	29.175	UNREALIZABLE	27.244	-1.931
+120	1	F-G-contradiction-15.ltl	slower	UNREALIZABLE	0.292	UNREALIZABLE	0.366	+0.074
+120	1	F-G-contradiction-19.ltl	slower	UNREALIZABLE	11.830	UNREALIZABLE	12.897	+1.067
+120	1	SPIPureNext.ltl	gain	TIMEOUT		REALIZABLE	0.514	
+120	1	amba_case_study_pb_4_pe_.ltl	unsolved-kind-change	MEMOUT		TIMEOUT		
+120	1	amba_decomposed_encode_pb_16_pe_.ltl	slower	REALIZABLE	1.003	REALIZABLE	1.056	+0.053
+120	1	amba_gr_pb_2_pe_.ltl	gain	TIMEOUT		REALIZABLE	57.918	
+120	1	arbiter_on_inpchange_pb_4_pe_.ltl	slower	REALIZABLE	0.774	REALIZABLE	1.206	+0.432
+120	1	arbiter_on_inpchange_pb_5_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	arbiter_on_inpchange_pb_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	arbiter_on_inpchange_pb_7_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	arbiter_with_buffer_pb_5_pe_.ltl	faster	REALIZABLE	0.920	REALIZABLE	0.868	-0.052
+120	1	chain-simple-70-real.ltl	faster	REALIZABLE	1.261	REALIZABLE	1.149	-0.112
+120	1	collector_v2_pb_11_pe_.ltl	slower	REALIZABLE	0.343	REALIZABLE	0.450	+0.108
+120	1	evasion-real.ltl	gain	TIMEOUT		REALIZABLE	23.632	
+120	1	f-real-real.ltl	gain	TIMEOUT		REALIZABLE	32.015	
+120	1	g-real-real.ltl	faster	REALIZABLE	5.448	REALIZABLE	2.902	-2.547
+120	1	g-unreal-110.ltl	faster	UNREALIZABLE	2.634	UNREALIZABLE	2.365	-0.270
+120	1	g-unreal-112.ltl	faster	UNREALIZABLE	7.320	UNREALIZABLE	6.481	-0.839
+120	1	g-unreal-115.ltl	faster	UNREALIZABLE	17.825	UNREALIZABLE	16.396	-1.429
+120	1	g-unreal-118.ltl	faster	UNREALIZABLE	67.496	UNREALIZABLE	63.921	-3.574
+120	1	g-unreal-120.ltl	faster	UNREALIZABLE	101.117	UNREALIZABLE	94.660	-6.457
+120	1	g-unreal-18.ltl	faster	UNREALIZABLE	1.295	UNREALIZABLE	1.114	-0.181
+120	1	g-unreal-19.ltl	faster	UNREALIZABLE	2.167	UNREALIZABLE	2.046	-0.121
+120	1	g-unreal-34.ltl	faster	UNREALIZABLE	0.992	UNREALIZABLE	0.929	-0.062
+120	1	g-unreal-35.ltl	slower	UNREALIZABLE	1.008	UNREALIZABLE	1.068	+0.060
+120	1	g-unreal-36.ltl	slower	UNREALIZABLE	1.119	UNREALIZABLE	1.177	+0.059
+120	1	heim-buechi-real.ltl	faster	REALIZABLE	2.178	REALIZABLE	2.028	-0.150
+120	1	heim-double-x-real.ltl	gain	TIMEOUT		REALIZABLE	0.419	
+120	1	heim-double-x10.ltl	slower	UNREALIZABLE	2.303	UNREALIZABLE	2.560	+0.257
+120	1	heim-double-x11.ltl	slower	UNREALIZABLE	2.796	UNREALIZABLE	3.115	+0.319
+120	1	heim-double-x9.ltl	slower	UNREALIZABLE	1.992	UNREALIZABLE	2.127	+0.135
+120	1	infinite-race-u10.ltl	slower	UNREALIZABLE	10.321	UNREALIZABLE	10.906	+0.586
+120	1	infinite-race-u12.ltl	slower	UNREALIZABLE	40.222	UNREALIZABLE	42.703	+2.481
+120	1	infinite-race-u13.ltl	slower	UNREALIZABLE	40.492	UNREALIZABLE	43.785	+3.292
+120	1	infinite-race-u15.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u16.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u17.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u18.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u19.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u20.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u21.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u22.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u23.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u24.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u25.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	infinite-race-u8.ltl	slower	UNREALIZABLE	2.401	UNREALIZABLE	2.569	+0.168
+120	1	infinite-race-u9.ltl	slower	UNREALIZABLE	8.623	UNREALIZABLE	9.271	+0.648
+120	1	lift_gr1+_pb_3_pe_.ltl	faster	REALIZABLE	1.293	REALIZABLE	1.197	-0.097
+120	1	lift_pb_3_pe_.ltl	slower	REALIZABLE	0.052	REALIZABLE	0.640	+0.588
+120	1	lift_pb_4_pe_.ltl	loss	REALIZABLE	0.291	MEMOUT		
+120	1	lift_pb_5_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	lift_pb_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	lift_unary_enc_pb_3_pe_.ltl	slower	REALIZABLE	0.075	REALIZABLE	0.645	+0.570
+120	1	lift_unary_enc_pb_4_pe_.ltl	loss	REALIZABLE	10.299	MEMOUT		
+120	1	lift_unary_enc_pb_5_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	lift_unary_enc_pb_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	load_balancer_unreal1_pb_2_15_pe_.ltl	slower	UNREALIZABLE	0.698	UNREALIZABLE	0.796	+0.098
+120	1	load_balancer_unreal1_pb_2_16_pe_.ltl	slower	UNREALIZABLE	1.519	UNREALIZABLE	1.783	+0.264
+120	1	load_balancer_unreal1_pb_4_10_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	load_balancer_unreal1_pb_4_11_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	load_balancer_unreal1_pb_4_12_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	load_balancer_unreal1_pb_4_7_pe_.ltl	slower	UNREALIZABLE	7.730	UNREALIZABLE	8.705	+0.976
+120	1	load_balancer_unreal1_pb_4_8_pe_.ltl	slower	UNREALIZABLE	84.496	UNREALIZABLE	93.267	+8.771
+120	1	load_balancer_unreal1_pb_5_5_pe_.ltl	slower	UNREALIZABLE	13.720	UNREALIZABLE	14.899	+1.179
+120	1	load_balancer_unreal1_pb_6_4_pe_.ltl	slower	UNREALIZABLE	22.590	UNREALIZABLE	23.969	+1.378
+120	1	ltl2dba_C2_unreal_pb_13_pe_.ltl	slower	UNREALIZABLE	1.182	UNREALIZABLE	1.258	+0.076
+120	1	ltl2dba_R_pb_6_pe_.ltl	faster	UNREALIZABLE	0.623	UNREALIZABLE	0.560	-0.063
+120	1	ltl2dba_R_pb_8_pe_.ltl	faster	UNREALIZABLE	90.990	UNREALIZABLE	84.974	-6.016
+120	1	ltl2dba_theta_pb_12_pe_.ltl	slower	UNREALIZABLE	2.253	UNREALIZABLE	2.569	+0.315
+120	1	ordered-visits-choice-real.ltl	gain	UNKNOWN		REALIZABLE	0.045	
+120	1	patrolling-alarm17.ltl	faster	UNREALIZABLE	0.477	UNREALIZABLE	0.415	-0.063
+120	1	patrolling-alarm26.ltl	faster	UNREALIZABLE	0.826	UNREALIZABLE	0.761	-0.065
+120	1	patrolling18.ltl	slower	UNREALIZABLE	0.486	UNREALIZABLE	0.544	+0.058
+120	1	patrolling20.ltl	faster	UNREALIZABLE	0.619	UNREALIZABLE	0.551	-0.068
+120	1	patrolling23.ltl	slower	UNREALIZABLE	0.660	UNREALIZABLE	0.745	+0.085
+120	1	patrolling25.ltl	slower	UNREALIZABLE	0.720	UNREALIZABLE	0.778	+0.058
+120	1	reversible-lane-r-real.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	robot-cat-real-1d-real.ltl	faster	REALIZABLE	2.693	REALIZABLE	2.225	-0.467
+120	1	robot-grid-commute-1d-real.ltl	faster	REALIZABLE	2.027	REALIZABLE	1.833	-0.194
+120	1	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	faster	REALIZABLE	12.390	REALIZABLE	8.208	-4.183
+120	1	robot-resource-2d17.ltl	slower	UNREALIZABLE	6.954	UNREALIZABLE	7.607	+0.653
+120	1	robot-resource-2d19.ltl	faster	UNREALIZABLE	8.747	UNREALIZABLE	8.297	-0.450
+120	1	robot-resource-2d9.ltl	faster	UNREALIZABLE	1.568	UNREALIZABLE	1.473	-0.094
+120	1	robot-to-target-charging13.ltl	slower	UNREALIZABLE	65.508	UNREALIZABLE	69.946	+4.438
+120	1	robot-to-target-charging14.ltl	loss	UNREALIZABLE	99.187	MEMOUT		
+120	1	robot-to-target0.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	robot_collect_samples_v2-real.ltl	faster	REALIZABLE	62.120	REALIZABLE	54.168	-7.952
+120	1	robot_grid_pb_3_3_pe_.ltl	slower	REALIZABLE	0.162	REALIZABLE	0.272	+0.110
+120	1	robot_grid_pb_4_4_pe_.ltl	slower	REALIZABLE	1.387	REALIZABLE	1.783	+0.396
+120	1	robot_grid_pb_5_5_pe_.ltl	gain	TIMEOUT		REALIZABLE	9.508	
+120	1	robot_grid_pb_6_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl	slower	UNREALIZABLE	60.728	UNREALIZABLE	64.043	+3.315
+120	1	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	faster	UNREALIZABLE	1.931	UNREALIZABLE	1.707	-0.224
+120	1	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	simple_arbiter_with_hints_pb_6_pe_.ltl	faster	REALIZABLE	2.167	REALIZABLE	1.939	-0.227
+120	1	sort42.ltl	faster	UNREALIZABLE	15.238	UNREALIZABLE	13.660	-1.579
+120	1	square5x5-real.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	1	square5x52.ltl	faster	UNREALIZABLE	1.438	UNREALIZABLE	1.363	-0.075
+120	1	square5x53.ltl	slower	UNREALIZABLE	4.910	UNREALIZABLE	5.378	+0.468
+120	1	taxi-service-real.ltl	faster	REALIZABLE	21.706	REALIZABLE	17.899	-3.807
+120	1	thermostat-F-real.ltl	gain	TIMEOUT		REALIZABLE	1.468	
+120	1	thermostat-GF-real.ltl	gain	TIMEOUT		REALIZABLE	46.179	
+120	1	thermostat-GF-unreal0.ltl	slower	UNREALIZABLE	2.097	UNREALIZABLE	2.214	+0.117
+120	1	tmp_13cfc6f2.ltl	slower	REALIZABLE	0.705	REALIZABLE	0.834	+0.129
+120	2	06.ltl	faster	REALIZABLE	19.995	REALIZABLE	18.146	-1.848
+120	2	07.ltl	slower	REALIZABLE	19.065	REALIZABLE	20.078	+1.013
+120	2	10.ltl	slower	REALIZABLE	3.470	REALIZABLE	3.701	+0.231
+120	2	11.ltl	faster	REALIZABLE	3.525	REALIZABLE	3.234	-0.291
+120	2	AllLights_63831f8c.ltl	faster	UNREALIZABLE	1.726	UNREALIZABLE	1.633	-0.093
+120	2	AllLights_aeb1d897.ltl	faster	UNREALIZABLE	2.696	UNREALIZABLE	2.495	-0.201
+120	2	F-G-contradiction-110.ltl	faster	UNREALIZABLE	30.208	UNREALIZABLE	28.329	-1.879
+120	2	F-G-contradiction-17.ltl	slower	UNREALIZABLE	9.869	UNREALIZABLE	10.780	+0.911
+120	2	F-G-contradiction-19.ltl	faster	UNREALIZABLE	13.347	UNREALIZABLE	12.438	-0.909
+120	2	GF-G-contradiction5.ltl	faster	UNREALIZABLE	2.372	UNREALIZABLE	2.152	-0.220
+120	2	Morning2_407db2cc.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	OneCounter.ltl	slower	REALIZABLE	2.972	REALIZABLE	3.174	+0.203
+120	2	SPIPureNext.ltl	gain	TIMEOUT		REALIZABLE	0.491	
+120	2	TwoCounters3.ltl	faster	REALIZABLE	1.660	REALIZABLE	1.509	-0.151
+120	2	amba_decomposed_arbiter_pb_6_pe_.ltl	faster	REALIZABLE	1.231	REALIZABLE	1.104	-0.128
+120	2	amba_gr_pb_2_pe_.ltl	gain	TIMEOUT		REALIZABLE	58.060	
+120	2	arbiter_on_inpchange_pb_4_pe_.ltl	slower	REALIZABLE	0.771	REALIZABLE	1.309	+0.538
+120	2	arbiter_on_inpchange_pb_5_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	arbiter_on_inpchange_pb_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	arbiter_on_inpchange_pb_7_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	arbiter_with_buffer_pb_5_pe_.ltl	faster	REALIZABLE	0.945	REALIZABLE	0.853	-0.091
+120	2	arbiter_with_cancel_pb_5_pe_.ltl	faster	REALIZABLE	1.205	REALIZABLE	1.125	-0.080
+120	2	chain-simple-70-real.ltl	faster	REALIZABLE	1.176	REALIZABLE	1.103	-0.072
+120	2	chain-simple-param-70-real.ltl	faster	REALIZABLE	1.259	REALIZABLE	1.128	-0.131
+120	2	collector_v1_pb_9_pe_.ltl	faster	REALIZABLE	2.915	REALIZABLE	2.722	-0.193
+120	2	collector_v2_pb_12_pe_.ltl	faster	REALIZABLE	0.843	REALIZABLE	0.759	-0.083
+120	2	evasion-real.ltl	gain	TIMEOUT		REALIZABLE	23.272	
+120	2	f-real-real.ltl	gain	TIMEOUT		REALIZABLE	32.577	
+120	2	finding_nemo_pb_2_pe_.ltl	slower	REALIZABLE	4.570	REALIZABLE	4.851	+0.281
+120	2	g-real-real.ltl	faster	REALIZABLE	4.104	REALIZABLE	2.762	-1.342
+120	2	g-unreal-110.ltl	faster	UNREALIZABLE	2.690	UNREALIZABLE	2.377	-0.313
+120	2	g-unreal-111.ltl	faster	UNREALIZABLE	4.353	UNREALIZABLE	3.998	-0.355
+120	2	g-unreal-114.ltl	faster	UNREALIZABLE	11.755	UNREALIZABLE	11.049	-0.707
+120	2	g-unreal-115.ltl	faster	UNREALIZABLE	18.956	UNREALIZABLE	16.702	-2.254
+120	2	g-unreal-117.ltl	slower	UNREALIZABLE	46.261	UNREALIZABLE	49.920	+3.658
+120	2	g-unreal-118.ltl	faster	UNREALIZABLE	68.269	UNREALIZABLE	64.595	-3.674
+120	2	g-unreal-120.ltl	faster	UNREALIZABLE	104.074	UNREALIZABLE	94.186	-9.887
+120	2	g-unreal-19.ltl	faster	UNREALIZABLE	2.138	UNREALIZABLE	1.983	-0.155
+120	2	g-unreal-35.ltl	faster	UNREALIZABLE	1.076	UNREALIZABLE	1.016	-0.061
+120	2	heim-buechi-real.ltl	slower	REALIZABLE	2.016	REALIZABLE	2.128	+0.112
+120	2	heim-double-x-real.ltl	gain	TIMEOUT		REALIZABLE	0.396	
+120	2	heim-double-x11.ltl	slower	UNREALIZABLE	2.561	UNREALIZABLE	2.803	+0.242
+120	2	heim-double-x8.ltl	slower	UNREALIZABLE	0.991	UNREALIZABLE	1.151	+0.160
+120	2	infinite-race-u14.ltl	slower	UNREALIZABLE	49.632	UNREALIZABLE	54.303	+4.672
+120	2	infinite-race-u15.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u16.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u17.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u18.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u19.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u20.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u21.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u22.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u23.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u24.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-u25.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	infinite-race-unequal-26.ltl	faster	UNREALIZABLE	62.924	UNREALIZABLE	58.770	-4.154
+120	2	lift_gr1+_pb_3_pe_.ltl	slower	REALIZABLE	1.195	REALIZABLE	1.299	+0.105
+120	2	lift_pb_3_pe_.ltl	slower	REALIZABLE	0.053	REALIZABLE	0.636	+0.583
+120	2	lift_pb_4_pe_.ltl	loss	REALIZABLE	0.276	MEMOUT		
+120	2	lift_pb_5_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	lift_pb_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	lift_unary_enc_pb_3_pe_.ltl	slower	REALIZABLE	0.073	REALIZABLE	0.703	+0.630
+120	2	lift_unary_enc_pb_4_pe_.ltl	loss	REALIZABLE	9.831	MEMOUT		
+120	2	lift_unary_enc_pb_5_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	lift_unary_enc_pb_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	lift_wrong_physics_unreal_pb_10_pe_.ltl	faster	UNREALIZABLE	1.228	UNREALIZABLE	1.095	-0.133
+120	2	load_balancer_pb_7_pe_.ltl	slower	REALIZABLE	4.864	REALIZABLE	5.156	+0.292
+120	2	load_balancer_unreal1_pb_2_15_pe_.ltl	slower	UNREALIZABLE	0.691	UNREALIZABLE	0.789	+0.098
+120	2	load_balancer_unreal1_pb_2_16_pe_.ltl	slower	UNREALIZABLE	1.544	UNREALIZABLE	1.709	+0.165
+120	2	load_balancer_unreal1_pb_4_10_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	load_balancer_unreal1_pb_4_11_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	load_balancer_unreal1_pb_4_12_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	load_balancer_unreal1_pb_4_6_pe_.ltl	slower	UNREALIZABLE	1.054	UNREALIZABLE	1.133	+0.079
+120	2	load_balancer_unreal1_pb_4_7_pe_.ltl	slower	UNREALIZABLE	7.684	UNREALIZABLE	8.242	+0.558
+120	2	load_balancer_unreal1_pb_4_8_pe_.ltl	slower	UNREALIZABLE	85.955	UNREALIZABLE	96.379	+10.424
+120	2	load_balancer_unreal1_pb_5_4_pe_.ltl	faster	UNREALIZABLE	0.721	UNREALIZABLE	0.657	-0.064
+120	2	load_balancer_unreal1_pb_5_5_pe_.ltl	slower	UNREALIZABLE	14.003	UNREALIZABLE	15.140	+1.137
+120	2	load_balancer_unreal1_pb_6_3_pe_.ltl	slower	UNREALIZABLE	0.592	UNREALIZABLE	0.669	+0.077
+120	2	load_balancer_unreal1_pb_6_4_pe_.ltl	slower	UNREALIZABLE	22.563	UNREALIZABLE	23.984	+1.422
+120	2	ltl2dba_C2_unreal_pb_13_pe_.ltl	slower	UNREALIZABLE	1.221	UNREALIZABLE	1.282	+0.061
+120	2	ordered-visits-choice-real.ltl	gain	UNKNOWN		REALIZABLE	0.041	
+120	2	patrolling-alarm22.ltl	slower	UNREALIZABLE	0.596	UNREALIZABLE	0.657	+0.061
+120	2	patrolling-alarm26.ltl	slower	UNREALIZABLE	0.773	UNREALIZABLE	0.875	+0.102
+120	2	patrolling17.ltl	faster	UNREALIZABLE	0.492	UNREALIZABLE	0.403	-0.088
+120	2	reversible-lane-r-real.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	robot-cat-real-1d-real.ltl	faster	REALIZABLE	2.553	REALIZABLE	2.197	-0.356
+120	2	robot-grid-reach-2d-real.ltl	faster	REALIZABLE	2.945	REALIZABLE	2.733	-0.212
+120	2	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	faster	REALIZABLE	12.562	REALIZABLE	7.784	-4.778
+120	2	robot-resource-2d14.ltl	faster	UNREALIZABLE	2.291	UNREALIZABLE	2.164	-0.126
+120	2	robot-resource-2d15.ltl	slower	UNREALIZABLE	2.245	UNREALIZABLE	2.538	+0.293
+120	2	robot-resource-2d19.ltl	faster	UNREALIZABLE	8.321	UNREALIZABLE	7.764	-0.557
+120	2	robot-resource-2d21.ltl	slower	UNREALIZABLE	9.021	UNREALIZABLE	9.518	+0.497
+120	2	robot-resource-2d8.ltl	faster	UNREALIZABLE	1.351	UNREALIZABLE	1.283	-0.068
+120	2	robot-to-target-charging0.ltl	faster	UNREALIZABLE	0.967	UNREALIZABLE	0.890	-0.076
+120	2	robot-to-target-charging5.ltl	slower	UNREALIZABLE	7.150	UNREALIZABLE	7.554	+0.404
+120	2	robot-to-target0.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	robot_collect_samples_v2-real.ltl	faster	REALIZABLE	60.742	REALIZABLE	52.533	-8.209
+120	2	robot_grid_pb_3_3_pe_.ltl	slower	REALIZABLE	0.153	REALIZABLE	0.269	+0.117
+120	2	robot_grid_pb_4_4_pe_.ltl	slower	REALIZABLE	1.309	REALIZABLE	1.665	+0.357
+120	2	robot_grid_pb_5_5_pe_.ltl	gain	TIMEOUT		REALIZABLE	9.402	
+120	2	robot_grid_pb_6_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	faster	UNREALIZABLE	1.768	UNREALIZABLE	1.637	-0.131
+120	2	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	square5x5-real.ltl	unsolved-kind-change	TIMEOUT		MEMOUT		
+120	2	square5x52.ltl	slower	UNREALIZABLE	1.325	UNREALIZABLE	1.418	+0.093
+120	2	square5x54.ltl	faster	UNREALIZABLE	7.459	UNREALIZABLE	6.746	-0.714
+120	2	taxi-service-real.ltl	faster	REALIZABLE	20.507	REALIZABLE	17.645	-2.861
+120	2	thermostat-F-real.ltl	gain	TIMEOUT		REALIZABLE	1.515	
+120	2	thermostat-GF-real.ltl	gain	TIMEOUT		REALIZABLE	47.976	
+120	2	thermostat-GF-unreal0.ltl	slower	UNREALIZABLE	2.032	UNREALIZABLE	2.139	+0.107
+120	2	workstation_resupply_pb_2_pe_.ltl	faster	REALIZABLE	0.355	REALIZABLE	0.297	-0.057
+17	1	03.ltl	faster	REALIZABLE	3.405	REALIZABLE	2.966	-0.439
+17	1	GF-G-contradiction6.ltl	gain	TIMEOUT		UNREALIZABLE	16.283	
+17	1	GF-G-contradiction7.ltl	loss	UNREALIZABLE	16.913	TIMEOUT		
+17	1	SPIPureNext.ltl	gain	TIMEOUT		REALIZABLE	0.531	
+17	1	amba_decomposed_arbiter_pb_6_pe_.ltl	faster	REALIZABLE	1.226	REALIZABLE	1.083	-0.143
+17	1	arbiter_on_inpchange_pb_4_pe_.ltl	slower	REALIZABLE	0.756	REALIZABLE	1.261	+0.505
+17	1	arbiter_with_buffer_pb_5_pe_.ltl	slower	REALIZABLE	0.838	REALIZABLE	0.893	+0.056
+17	1	g-real-real.ltl	faster	REALIZABLE	4.436	REALIZABLE	2.934	-1.502
+17	1	g-unreal-112.ltl	slower	UNREALIZABLE	6.692	UNREALIZABLE	7.199	+0.506
+17	1	g-unreal-113.ltl	faster	UNREALIZABLE	8.305	UNREALIZABLE	7.288	-1.017
+17	1	g-unreal-115.ltl	gain	TIMEOUT		UNREALIZABLE	16.935	
+17	1	g-unreal-19.ltl	faster	UNREALIZABLE	2.301	UNREALIZABLE	2.095	-0.206
+17	1	g-unreal-37.ltl	faster	UNREALIZABLE	2.055	UNREALIZABLE	1.918	-0.136
+17	1	g-unreal-38.ltl	slower	UNREALIZABLE	8.961	UNREALIZABLE	9.728	+0.768
+17	1	heim-buechi-real.ltl	faster	REALIZABLE	2.218	REALIZABLE	2.081	-0.137
+17	1	heim-double-x-real.ltl	gain	TIMEOUT		REALIZABLE	0.434	
+17	1	infinite-race-u6.ltl	faster	UNREALIZABLE	1.157	UNREALIZABLE	1.002	-0.155
+17	1	infinite-race-u7.ltl	faster	UNREALIZABLE	1.614	UNREALIZABLE	1.530	-0.084
+17	1	infinite-race-unequal-25.ltl	slower	UNREALIZABLE	12.802	UNREALIZABLE	13.844	+1.042
+17	1	lift_pb_3_pe_.ltl	slower	REALIZABLE	0.040	REALIZABLE	0.631	+0.592
+17	1	lift_pb_4_pe_.ltl	loss	REALIZABLE	0.267	TIMEOUT		
+17	1	lift_unary_enc_pb_3_pe_.ltl	slower	REALIZABLE	0.068	REALIZABLE	0.679	+0.612
+17	1	lift_unary_enc_pb_4_pe_.ltl	loss	REALIZABLE	9.981	TIMEOUT		
+17	1	load_balancer_unreal1_pb_2_15_pe_.ltl	slower	UNREALIZABLE	0.695	UNREALIZABLE	0.789	+0.095
+17	1	load_balancer_unreal1_pb_4_7_pe_.ltl	slower	UNREALIZABLE	7.769	UNREALIZABLE	8.734	+0.965
+17	1	load_balancer_unreal1_pb_5_5_pe_.ltl	slower	UNREALIZABLE	13.699	UNREALIZABLE	14.593	+0.894
+17	1	ltl2dba_C2_unreal_pb_14_pe_.ltl	faster	UNREALIZABLE	3.396	UNREALIZABLE	3.204	-0.191
+17	1	ltl2dba_theta_pb_14_pe_.ltl	faster	UNREALIZABLE	14.263	UNREALIZABLE	13.519	-0.744
+17	1	ordered-visits-choice-real.ltl	gain	UNKNOWN		REALIZABLE	0.042	
+17	1	patrolling-alarm17.ltl	faster	UNREALIZABLE	0.518	UNREALIZABLE	0.459	-0.058
+17	1	patrolling-alarm22.ltl	faster	UNREALIZABLE	0.674	UNREALIZABLE	0.603	-0.071
+17	1	patrolling-alarm26.ltl	slower	UNREALIZABLE	0.773	UNREALIZABLE	0.876	+0.103
+17	1	patrolling22.ltl	faster	UNREALIZABLE	0.670	UNREALIZABLE	0.612	-0.057
+17	1	robot-grid-commute-1d-real.ltl	faster	REALIZABLE	2.102	REALIZABLE	1.877	-0.226
+17	1	robot-grid-reach-2d-real.ltl	faster	REALIZABLE	3.190	REALIZABLE	2.864	-0.326
+17	1	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	faster	REALIZABLE	12.694	REALIZABLE	8.057	-4.637
+17	1	robot-resource-2d10.ltl	faster	UNREALIZABLE	1.713	UNREALIZABLE	1.624	-0.089
+17	1	robot-resource-2d11.ltl	slower	UNREALIZABLE	1.674	UNREALIZABLE	1.767	+0.094
+17	1	robot-resource-2d12.ltl	slower	UNREALIZABLE	1.794	UNREALIZABLE	1.947	+0.153
+17	1	robot-resource-2d13.ltl	faster	UNREALIZABLE	2.207	UNREALIZABLE	2.066	-0.142
+17	1	robot-resource-2d14.ltl	slower	UNREALIZABLE	2.097	UNREALIZABLE	2.339	+0.242
+17	1	robot-resource-2d16.ltl	slower	UNREALIZABLE	6.939	UNREALIZABLE	7.290	+0.350
+17	1	robot-resource-2d20.ltl	slower	UNREALIZABLE	8.581	UNREALIZABLE	9.095	+0.514
+17	1	robot-resource-2d23.ltl	faster	UNREALIZABLE	9.873	UNREALIZABLE	9.179	-0.694
+17	1	robot-resource-2d8.ltl	faster	UNREALIZABLE	1.415	UNREALIZABLE	1.276	-0.139
+17	1	robot-to-target-unreal0.ltl	faster	REALIZABLE	8.847	REALIZABLE	8.298	-0.549
+17	1	robot_grid_pb_3_3_pe_.ltl	slower	REALIZABLE	0.159	REALIZABLE	0.266	+0.108
+17	1	robot_grid_pb_4_4_pe_.ltl	slower	REALIZABLE	1.343	REALIZABLE	1.665	+0.322
+17	1	robot_grid_pb_5_5_pe_.ltl	gain	TIMEOUT		REALIZABLE	9.506	
+17	1	simple_arbiter_with_hints_pb_6_pe_.ltl	faster	REALIZABLE	2.104	REALIZABLE	1.938	-0.166
+17	1	square5x51.ltl	slower	UNREALIZABLE	1.157	UNREALIZABLE	1.234	+0.078
+17	1	thermostat-F-real.ltl	gain	TIMEOUT		REALIZABLE	1.499	
+17	1	thermostat-GF-unreal0.ltl	slower	UNREALIZABLE	2.014	UNREALIZABLE	2.188	+0.173
+17	1	workstation_resupply_pb_3_pe_.ltl	gain	TIMEOUT		REALIZABLE	16.697	
+17	2	03.ltl	slower	REALIZABLE	3.040	REALIZABLE	3.372	+0.332
+17	2	10.ltl	faster	REALIZABLE	3.686	REALIZABLE	3.392	-0.293
+17	2	11.ltl	faster	REALIZABLE	3.581	REALIZABLE	3.382	-0.199
+17	2	12.ltl	slower	REALIZABLE	5.251	REALIZABLE	5.757	+0.506
+17	2	13.ltl	slower	REALIZABLE	5.406	REALIZABLE	5.783	+0.376
+17	2	Alarm_70523fbe.ltl	slower	REALIZABLE	0.947	REALIZABLE	0.997	+0.050
+17	2	F-G-contradiction-19.ltl	faster	UNREALIZABLE	13.025	UNREALIZABLE	12.119	-0.907
+17	2	GF-G-contradiction6.ltl	slower	UNREALIZABLE	15.544	UNREALIZABLE	16.631	+1.087
+17	2	Morning_f2774e0b.ltl	slower	UNREALIZABLE	3.526	UNREALIZABLE	3.807	+0.281
+17	2	SPIPureNext.ltl	gain	TIMEOUT		REALIZABLE	0.473	
+17	2	arbiter_on_inpchange_pb_4_pe_.ltl	slower	REALIZABLE	0.794	REALIZABLE	1.233	+0.439
+17	2	buffer-storage-real.ltl	faster	REALIZABLE	0.665	REALIZABLE	0.586	-0.079
+17	2	chain-simple-40-real.ltl	faster	REALIZABLE	0.593	REALIZABLE	0.528	-0.065
+17	2	finding_nemo_pb_2_pe_.ltl	faster	REALIZABLE	4.889	REALIZABLE	4.583	-0.307
+17	2	g-real-real.ltl	faster	REALIZABLE	4.619	REALIZABLE	2.801	-1.818
+17	2	g-unreal-112.ltl	slower	UNREALIZABLE	6.724	UNREALIZABLE	7.232	+0.508
+17	2	g-unreal-18.ltl	faster	UNREALIZABLE	1.205	UNREALIZABLE	1.111	-0.094
+17	2	heim-buechi-real.ltl	faster	REALIZABLE	2.294	REALIZABLE	1.955	-0.339
+17	2	heim-double-x-real.ltl	gain	TIMEOUT		REALIZABLE	0.414	
+17	2	heim-double-x10.ltl	slower	UNREALIZABLE	2.295	UNREALIZABLE	2.482	+0.187
+17	2	heim-double-x13.ltl	slower	UNREALIZABLE	5.309	UNREALIZABLE	5.838	+0.529
+17	2	heim-double-x9.ltl	slower	UNREALIZABLE	2.099	UNREALIZABLE	2.229	+0.130
+17	2	infinite-race-u6.ltl	faster	UNREALIZABLE	1.143	UNREALIZABLE	1.079	-0.064
+17	2	lift_pb_3_pe_.ltl	slower	REALIZABLE	0.049	REALIZABLE	0.588	+0.539
+17	2	lift_pb_4_pe_.ltl	loss	REALIZABLE	0.279	TIMEOUT		
+17	2	lift_unary_enc_pb_3_pe_.ltl	slower	REALIZABLE	0.072	REALIZABLE	0.681	+0.609
+17	2	lift_unary_enc_pb_4_pe_.ltl	loss	REALIZABLE	9.782	TIMEOUT		
+17	2	load_balancer_pb_7_pe_.ltl	slower	REALIZABLE	4.988	REALIZABLE	5.250	+0.262
+17	2	load_balancer_unreal1_pb_3_12_pe_.ltl	slower	UNREALIZABLE	0.591	UNREALIZABLE	0.667	+0.075
+17	2	load_balancer_unreal1_pb_4_6_pe_.ltl	slower	UNREALIZABLE	1.052	UNREALIZABLE	1.141	+0.089
+17	2	load_balancer_unreal1_pb_4_7_pe_.ltl	slower	UNREALIZABLE	7.797	UNREALIZABLE	8.257	+0.460
+17	2	load_balancer_unreal1_pb_5_4_pe_.ltl	slower	UNREALIZABLE	0.682	UNREALIZABLE	0.741	+0.059
+17	2	load_balancer_unreal1_pb_5_5_pe_.ltl	slower	UNREALIZABLE	13.821	UNREALIZABLE	15.303	+1.482
+17	2	load_balancer_unreal2_pb_5_pe_.ltl	slower	UNREALIZABLE	11.609	UNREALIZABLE	13.484	+1.875
+17	2	ltl2dba_C2_unreal_pb_13_pe_.ltl	faster	UNREALIZABLE	1.250	UNREALIZABLE	1.167	-0.084
+17	2	ltl2dba_R_pb_7_pe_.ltl	slower	UNREALIZABLE	6.039	UNREALIZABLE	6.506	+0.467
+17	2	ordered-visits-choice-real.ltl	gain	UNKNOWN		REALIZABLE	0.045	
+17	2	patrolling-alarm19.ltl	faster	UNREALIZABLE	0.572	UNREALIZABLE	0.508	-0.064
+17	2	patrolling-alarm21.ltl	faster	UNREALIZABLE	0.681	UNREALIZABLE	0.620	-0.062
+17	2	patrolling-alarm23.ltl	slower	UNREALIZABLE	0.629	UNREALIZABLE	0.688	+0.059
+17	2	robot-cat-real-1d-real.ltl	faster	REALIZABLE	2.591	REALIZABLE	2.296	-0.296
+17	2	robot-grid-commute-1d-real.ltl	faster	REALIZABLE	2.124	REALIZABLE	1.784	-0.340
+17	2	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	faster	REALIZABLE	12.312	REALIZABLE	7.503	-4.809
+17	2	robot-resource-2d17.ltl	slower	UNREALIZABLE	7.213	UNREALIZABLE	7.700	+0.488
+17	2	robot-resource-2d19.ltl	faster	UNREALIZABLE	8.646	UNREALIZABLE	8.028	-0.618
+17	2	robot-resource-2d20.ltl	faster	UNREALIZABLE	9.167	UNREALIZABLE	8.679	-0.488
+17	2	robot_grid_pb_3_3_pe_.ltl	slower	REALIZABLE	0.164	REALIZABLE	0.267	+0.103
+17	2	robot_grid_pb_4_4_pe_.ltl	slower	REALIZABLE	1.268	REALIZABLE	1.776	+0.508
+17	2	robot_grid_pb_5_5_pe_.ltl	gain	TIMEOUT		REALIZABLE	9.848	
+17	2	round_robin_arbiter_pb_5_pe_.ltl	slower	REALIZABLE	13.124	REALIZABLE	13.830	+0.706
+17	2	rw_arbiter_pb_3_pe_.ltl	faster	REALIZABLE	0.802	REALIZABLE	0.745	-0.057
+17	2	simple_arbiter_with_hints_pb_6_pe_.ltl	faster	REALIZABLE	2.208	REALIZABLE	1.925	-0.284
+17	2	square5x52.ltl	faster	UNREALIZABLE	1.471	UNREALIZABLE	1.378	-0.093
+17	2	square5x53.ltl	slower	UNREALIZABLE	5.179	UNREALIZABLE	5.475	+0.296
+17	2	thermostat-F-real.ltl	gain	TIMEOUT		REALIZABLE	1.595	
+17	2	tmp_13cfc6f2.ltl	slower	REALIZABLE	0.712	REALIZABLE	0.798	+0.087
+17	2	unordered-visits-real.ltl	faster	REALIZABLE	9.020	REALIZABLE	8.158	-0.862
