@@ -11,12 +11,15 @@
 #include "research/rank_action_replay.hh"
 
 #include <algorithm>
+#include <charconv>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <limits>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -34,27 +37,43 @@ namespace acacia::research {
   };
 
   [[noreturn]] inline void fail (const std::string& message) {
-    std::cerr << "acacia-cpre-replay: " << message << '\n';
-    std::exit (1);
+    throw std::runtime_error (message);
   }
 
   inline long long field (const std::string& text, const std::string& key) {
     const auto at = text.find (key + "=");
     if (at == std::string::npos)
       return -1;
-    return std::strtoll (text.c_str () + at + key.size () + 1, nullptr, 10);
+    const auto begin = text.data () + at + key.size () + 1;
+    const auto end_at = text.find_first_of (" \t\r\n", at + key.size () + 1);
+    const auto end = end_at == std::string::npos ? text.data () + text.size ()
+                                                 : text.data () + end_at;
+    long long value = 0;
+    const auto parsed = std::from_chars (begin, end, value);
+    if (begin == end or parsed.ec != std::errc {} or parsed.ptr != end)
+      fail ("invalid integer for " + key);
+    return value;
   }
 
-  inline std::vector<VECTOR_ELT_T> parse_row (const std::string& line) {
-    std::vector<VECTOR_ELT_T> row;
+  inline std::vector<int> parse_row (const std::string& line) {
+    std::vector<int> row;
     std::istringstream in {line};
     int value;
     while (in >> value)
-      row.push_back (static_cast<VECTOR_ELT_T> (value));
+      row.push_back (value);
+    in.clear ();
+    in >> std::ws;
+    if (not in.eof ())
+      fail ("malformed rank row: " + line);
     return row;
   }
 
-  inline event load (const std::filesystem::path& path, size_t states) {
+  inline event load (const std::filesystem::path& path, size_t states,
+                     size_t bool_threshold) {
+    if (states == 0)
+      fail ("serialized CPre events cannot have zero dimensions");
+    if (bool_threshold > states)
+      fail ("Boolean split exceeds CPre event dimension");
     std::ifstream in {path};
     if (not in)
       fail ("cannot open " + path.string ());
@@ -63,19 +82,68 @@ namespace acacia::research {
     ev.states = states;
     std::string line;
     enum { none, before, actions, after } section = none;
+    bool saw_header = false, saw_before = false, saw_actions = false, saw_after = false;
+    size_t declared_before = std::numeric_limits<size_t>::max ();
+    size_t declared_actions = std::numeric_limits<size_t>::max ();
+    size_t declared_after = std::numeric_limits<size_t>::max ();
+    size_t line_number = 0;
 
     while (std::getline (in, line)) {
+      ++line_number;
+      if (not line.empty () and line.back () == '\r')
+        line.pop_back ();
       if (line.empty ())
         continue;
       if (line[0] == '#') {
+        if (saw_header or section != none)
+          fail ("duplicate or misplaced CPre header at line " +
+                std::to_string (line_number));
         ev.schema_version = static_cast<int> (field (line, "schema_version"));
         ev.k = static_cast<int> (field (line, "k"));
         ev.loop = static_cast<int> (field (line, "loop"));
+        const long long before_count = field (line, "before");
+        const long long action_count = field (line, "actions");
+        if (ev.schema_version != 2)
+          fail ("unsupported schema_version " + std::to_string (ev.schema_version));
+        if (ev.k < 1 or ev.k > std::numeric_limits<VECTOR_ELT_T>::max ())
+          fail ("CPre event K is outside the supported 1..127 range");
+        if (ev.loop < 0 or before_count < 0 or action_count <= 0)
+          fail ("invalid CPre header counts");
+        declared_before = static_cast<size_t> (before_count);
+        declared_actions = static_cast<size_t> (action_count);
+        saw_header = true;
         continue;
       }
-      if (line.rfind ("[before]", 0) == 0) { section = before; continue; }
-      if (line.rfind ("[actions]", 0) == 0) { section = actions; continue; }
-      if (line.rfind ("[after]", 0) == 0) { section = after; continue; }
+      if (not saw_header)
+        fail ("content before CPre header at line " + std::to_string (line_number));
+      if (line == "[before]") {
+        if (section != none or saw_before)
+          fail ("misordered [before] section");
+        section = before;
+        saw_before = true;
+        continue;
+      }
+      if (line == "[actions]") {
+        if (section != before or saw_actions)
+          fail ("misordered [actions] section");
+        section = actions;
+        saw_actions = true;
+        continue;
+      }
+      if (line.rfind ("[after]\t", 0) == 0) {
+        if (section != actions or saw_after)
+          fail ("misordered [after] section");
+        const std::string count = line.substr (8);
+        if (count.empty ())
+          fail ("missing [after] count");
+        const auto parsed = std::from_chars (count.data (), count.data () + count.size (),
+                                             declared_after);
+        if (parsed.ec != std::errc {} or parsed.ptr != count.data () + count.size ())
+          fail ("invalid [after] count");
+        section = after;
+        saw_after = true;
+        continue;
+      }
 
       if (section == before or section == after) {
         auto row = parse_row (line);
@@ -83,11 +151,26 @@ namespace acacia::research {
           fail ("row of width " + std::to_string (row.size ()) + " where meta.tsv says "
                 + std::to_string (states));
         posets::utils::vector_mm<VECTOR_ELT_T> v (states, 0);
-        std::copy (row.begin (), row.end (), v.begin ());
+        for (size_t i = 0; i < states; ++i) {
+          const int upper = i < bool_threshold ? ev.k - 1 : 0;
+          if (row[i] < -1 or row[i] > upper)
+            fail ("rank coordinate outside the event's safe box at line " +
+                  std::to_string (line_number));
+          v[i] = static_cast<VECTOR_ELT_T> (row[i]);
+        }
         (section == before ? ev.before : ev.after).push_back (std::move (v));
       }
       else if (section == actions) {
         if (line.rfind ("action\t", 0) == 0) {
+          std::istringstream header {line};
+          std::string label;
+          size_t index;
+          if (not (header >> label >> index) or label != "action"
+              or index != ev.actions.size ())
+            fail ("invalid or out-of-order action header: " + line);
+          header >> std::ws;
+          if (not header.eof ())
+            fail ("trailing data in action header: " + line);
           ev.actions.emplace_back (states);
           continue;
         }
@@ -98,12 +181,27 @@ namespace acacia::research {
         int increment;
         if (not (row >> i >> j >> increment))
           fail ("malformed transition row: " + line);
-        if (i >= states)
-          fail ("transition row indexes state " + std::to_string (i) + " of "
-                + std::to_string (states));
-        ev.actions.back ()[i].emplace_back (j, increment != 0);
+        row >> std::ws;
+        if (not row.eof ())
+          fail ("trailing data in transition row: " + line);
+        if (i >= states or j >= states)
+          fail ("transition row indexes a state outside dimension " +
+                std::to_string (states));
+        if (increment != 0 and increment != 1)
+          fail ("transition increment is not 0 or 1");
+        ev.actions.back ()[i].emplace_back (j, increment == 1);
       }
+      else
+        fail ("data outside a CPre section at line " + std::to_string (line_number));
     }
+    if (not saw_header or not saw_before or not saw_actions or not saw_after)
+      fail ("truncated CPre event: missing required section");
+    if (ev.before.size () != declared_before)
+      fail ("CPre before-count mismatch");
+    if (ev.actions.size () != declared_actions)
+      fail ("CPre action-count mismatch");
+    if (ev.after.size () != declared_after)
+      fail ("CPre after-count mismatch");
     return ev;
   }
 

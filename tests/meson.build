@@ -83,7 +83,43 @@ test ('config-transition-acceptance',
       args : [files ('check-transition-acceptance-config.py'), meson.project_source_root ()],
       suite : ['unit', 'config-frontends'])
 
+dual_rank_region_test = executable (
+  'dual-rank-region-test',
+  'dual_rank_region_test.cc',
+  link_with : dual_frontier_research_lib,
+  include_directories : inc,
+  dependencies : [posets_dep, stdsimd_dep],
+)
+test ('dual-rank-region', dual_rank_region_test,
+      suite : ['unit', 'research', 'dual-frontier'])
+
+dual_rank_predecessor_test = executable (
+  'dual-rank-predecessor-test',
+  'dual_rank_predecessor_test.cc',
+  link_with : dual_frontier_research_lib,
+  include_directories : inc,
+  dependencies : [posets_dep, stdsimd_dep],
+)
+test ('dual-rank-predecessor', dual_rank_predecessor_test,
+      suite : ['unit', 'research', 'dual-frontier'])
+
+dual_replay_parser_test = executable (
+  'dual-replay-parser-test',
+  'dual_replay_parser_test.cc',
+  include_directories : inc,
+  dependencies : [posets_dep, stdsimd_dep],
+)
+test ('dual-replay-parser', dual_replay_parser_test,
+      suite : ['unit', 'research', 'dual-frontier'])
+
 if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
+  dual_frontier_replay_smoke = find_program ('check-dual-frontier-replay.sh')
+  test ('dual-frontier-replay-smoke',
+        dual_frontier_replay_smoke,
+        args : [acacia_dual_frontier_replay_exe],
+        suite : ['unit', 'research', 'dual-frontier'],
+        depends : [acacia_dual_frontier_replay_exe])
+
   cpre_replay_smoke = find_program ('check-cpre-replay.sh')
   test ('cpre-replay-smoke',
         cpre_replay_smoke,

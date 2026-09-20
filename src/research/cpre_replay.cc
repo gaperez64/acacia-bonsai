@@ -111,10 +111,7 @@ int main (int argc, char** argv) {
 
     int mismatches = 0;
     for (const auto& path : find_events (root)) {
-      const event ev = load (path, states);
-      if (ev.schema_version != 2)
-        fail ("unsupported schema_version " + std::to_string (ev.schema_version) + " in "
-              + path.string ());
+      const event ev = load (path, states, posets::vectors::bool_threshold);
       const SetOfStates replayed = replay (ev);
 
       std::vector<state> recorded;

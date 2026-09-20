@@ -5,6 +5,21 @@ closure_buchi_provider_lib = static_library (
   dependencies : [spot_dep, bddx_dep],
 )
 
+# Exact dual-antichain research kernels.  Keep these outside the production
+# solver's template expansion and omit them when neither tests nor research
+# tools were requested.
+if get_option('build_tests') or get_option('build_research_tools')
+  dual_frontier_research_lib = static_library (
+    'dual-frontier-research',
+    [
+      'research/dual_rank_region.cc',
+      'research/dual_rank_predecessor.cc',
+    ],
+    include_directories : inc,
+    dependencies : [posets_dep, stdsimd_dep],
+  )
+endif
+
 ab_sources = [
   'acacia-bonsai.cc',
   'version.cc',
@@ -129,6 +144,15 @@ if get_option('build_research_tools')
       include_directories: inc,
       install: false,
       dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
+    )
+    # Exact dual-frontier conversion, CPre and persistent fixed-K experiment.
+    acacia_dual_frontier_replay_exe = executable(
+      'acacia-dual-frontier-replay',
+      'research/dual_frontier_replay.cc',
+      link_with: dual_frontier_research_lib,
+      include_directories: inc,
+      install: false,
+      dependencies: [posets_dep, stdsimd_dep],
     )
   endif
   acacia_automata_study_exe = executable(

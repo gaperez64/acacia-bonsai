@@ -279,9 +279,7 @@ int main (int argc, char** argv) {
 
     int mismatches = 0;
     for (const auto& path : find_events (root)) {
-      const event ev = load (path, states);
-      if (ev.schema_version != 2)
-        fail ("unsupported schema_version " + std::to_string (ev.schema_version));
+      const event ev = load (path, states, bool_threshold);
       const measurement m = replay (ev, bool_threshold, layout);
       const size_t numeric = std::min (bool_threshold, states);
       const size_t vars = numeric * (ev.k + 1) + (states - numeric);

@@ -10,8 +10,10 @@
 
 #include "research/rank_action_replay.hh"
 
+#include <charconv>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -37,6 +39,8 @@ namespace acacia::research {
 
   inline input_action_table load_input_actions (const std::filesystem::path& path,
                                                 size_t states) {
+    if (states == 0)
+      throw std::runtime_error ("serialized all-input table cannot have zero dimensions");
     std::ifstream in {path};
     if (not in)
       throw std::runtime_error ("cannot open " + path.string ());
@@ -44,23 +48,69 @@ namespace acacia::research {
     input_action_table table;
     table.states = states;
     std::string line;
+    bool saw_header = false;
+    size_t declared_inputs = std::numeric_limits<size_t>::max ();
+    size_t declared_actions = std::numeric_limits<size_t>::max ();
+    size_t declared_transitions = std::numeric_limits<size_t>::max ();
+    size_t actual_transitions = 0;
+    auto header_size = [&] (const std::string& text, const std::string& key) {
+      const auto at = text.find (key + "=");
+      if (at == std::string::npos)
+        throw std::runtime_error ("all-input header has no " + key);
+      const auto start = at + key.size () + 1;
+      const auto finish = text.find_first_of (" \t\r\n", start);
+      const auto* begin = text.data () + start;
+      const auto* end = finish == std::string::npos ? text.data () + text.size ()
+                                                    : text.data () + finish;
+      size_t value = 0;
+      const auto parsed = std::from_chars (begin, end, value);
+      if (begin == end or parsed.ec != std::errc {} or parsed.ptr != end)
+        throw std::runtime_error ("invalid all-input header field " + key);
+      return value;
+    };
+    size_t line_number = 0;
     while (std::getline (in, line)) {
+      ++line_number;
+      if (not line.empty () and line.back () == '\r')
+        line.pop_back ();
       if (line.empty ())
         continue;
       if (line[0] == '#') {
-        const auto at = line.find ("schema_version=");
-        if (at != std::string::npos)
-          table.schema_version =
-              static_cast<int> (std::strtol (line.c_str () + at + 15, nullptr, 10));
+        if (saw_header or not table.actions.empty ())
+          throw std::runtime_error ("duplicate or misplaced all-input header");
+        table.schema_version = static_cast<int> (header_size (line, "schema_version"));
+        declared_inputs = header_size (line, "inputs");
+        declared_actions = header_size (line, "actions");
+        declared_transitions = header_size (line, "transitions");
+        if (table.schema_version != 1)
+          throw std::runtime_error ("unsupported all-input-actions schema_version "
+                                    + std::to_string (table.schema_version));
+        saw_header = true;
         continue;
       }
-      if (line.rfind ("[input", 0) == 0) {
+      if (not saw_header)
+        throw std::runtime_error ("content before all-input header at line "
+                                  + std::to_string (line_number));
+      if (line.rfind ("[input\t", 0) == 0 and line.back () == ']') {
+        const std::string text = line.substr (7, line.size () - 8);
+        size_t index = 0;
+        const auto parsed = std::from_chars (text.data (), text.data () + text.size (), index);
+        if (text.empty () or parsed.ec != std::errc {}
+            or parsed.ptr != text.data () + text.size () or index != table.actions.size ())
+          throw std::runtime_error ("invalid or out-of-order input header: " + line);
         table.actions.emplace_back ();
         continue;
       }
       if (line.rfind ("action\t", 0) == 0) {
         if (table.actions.empty ())
           throw std::runtime_error ("action row before any input header");
+        const std::string text = line.substr (7);
+        size_t index = 0;
+        const auto parsed = std::from_chars (text.data (), text.data () + text.size (), index);
+        if (text.empty () or parsed.ec != std::errc {}
+            or parsed.ptr != text.data () + text.size ()
+            or index != table.actions.back ().size ())
+          throw std::runtime_error ("invalid or out-of-order action header: " + line);
         table.actions.back ().emplace_back (states);
         continue;
       }
@@ -71,14 +121,22 @@ namespace acacia::research {
       int increment;
       if (not (row >> i >> j >> increment))
         throw std::runtime_error ("malformed transition row: " + line);
-      if (i >= states)
-        throw std::runtime_error ("transition row indexes state " + std::to_string (i) + " of "
+      row >> std::ws;
+      if (not row.eof ())
+        throw std::runtime_error ("trailing data in transition row: " + line);
+      if (i >= states or j >= states)
+        throw std::runtime_error ("transition row indexes a state outside dimension "
                                   + std::to_string (states));
-      table.actions.back ().back ()[i].emplace_back (j, increment != 0);
+      if (increment != 0 and increment != 1)
+        throw std::runtime_error ("transition increment is not 0 or 1");
+      table.actions.back ().back ()[i].emplace_back (j, increment == 1);
+      ++actual_transitions;
     }
-    if (table.schema_version != 1)
-      throw std::runtime_error ("unsupported all-input-actions schema_version "
-                                + std::to_string (table.schema_version));
+    if (not saw_header)
+      throw std::runtime_error ("missing all-input-actions header");
+    if (table.input_count () != declared_inputs or table.action_count () != declared_actions
+        or actual_transitions != declared_transitions)
+      throw std::runtime_error ("all-input-actions declared count mismatch");
     return table;
   }
 
