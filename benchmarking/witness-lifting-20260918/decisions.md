@@ -22,19 +22,70 @@ does not exist yet — W1's campaign is still running).
   1586/1586 verified) and cut 24 deterministic shards from the real 1,524-instance
   `syntcomp26/all.list`.
 
-## W1 — broad campaign (running)
+## W1 — broad campaign (opening report complete)
 
 Launched `benchmarking/witness-lifting-20260918/commands.sh` detached (setsid+nohup) at
 2026-09-18T10:58 local. Sequence: 120s cap (epoch 1, epoch 2) → ltlsynt@120s → 17s cap
 (epoch 1, epoch 2) → ltlsynt@17s, B/S alternating per-shard (even shards: epoch-base order,
 odd: reversed; epoch 2 starts from the reversed epoch-base order) so within-epoch host drift
-cannot systematically favor one candidate. Progress: `opening/campaign-top-level.log`.
-This is a multi-day run; W2 attribution is blocked on it finishing (or at least a shard's worth
-of paired B/S rows for the instances of interest) and has not started.
+cannot systematically favor one candidate. Completed cleanly: `W1 OPENING CAMPAIGN COMPLETE` at
+2026-09-20T20:29:16, ~57.5h wall time, all 8 Acacia series and both ltlsynt series at 1524/1524
+rows, zero verdict conflicts anywhere.
 
 **Host-sharing rule adopted this session, beyond what the handoff states explicitly:** no
 concurrent solver-adjacent work (builds, or even brief verification-pipeline runs) once it stops
 being brief — see W3/W4 below for where this actually bit.
+
+**A real bug surfaced and was fixed before the opening report could be trusted:** `write_summary()`
+(in the wrapped coverage runner) rebuilds the `-summary.tsv` sidecar from only the *current
+invocation's* own `--list`, not the cumulative campaign — since `run-witness-sprint.py`'s `campaign`
+calls it once per shard against a shared `--output`, every series' summary ended up reflecting only
+the last shard processed (62 rows, not 1524). Fixed (post-shard-loop regeneration from the complete
+raw file and the full shard-instance union) and the 8 already-committed series repaired with a new
+`regenerate-summaries.py`, reusing the coverage runner's own `load_output()`/`write_summary()`
+rather than reimplementing summary logic. Delegated to codex (gpt-5.6-sol, xhigh) with an
+independent codex review pass that spot-checked regenerated content against raw rows by hand before
+approving (after one legitimate REQUEST CHANGES round on test coverage, addressed). Raw `.tsv` files
+were never touched — only the derived sidecar.
+
+### Opening report (plan section 4.4)
+
+Built from the corrected data with existing tools only (`export-cactus`, `cactus-report.py`, both
+unmodified) — no new PAR-2 implementation. Full tables/plots:
+`opening/{120s,17s}/epoch-{1,2}/three-way-par2.md` (+ PNG/PDF). Epoch 1 is the preregistered
+primary; epoch 2 is shown for repeatability, not as a second primary — the two agree closely
+(PAR-2 totals differ by under 22s at 17s cap, under 155s at 120s cap, well inside noise).
+
+**Headline finding: S beats B on both PAR-2 and coverage, at both caps, consistently across both
+epochs.** Arithmetic mean of the two epoch totals:
+
+| Cap | B mean PAR-2 | S mean PAR-2 | B solved | S solved |
+|---|---:|---:|---:|---:|
+| 17s | 12673.9 s | 12554.0 s (−0.95%) | 1173–1174 | 1177–1178 (net +4/+5) |
+| 120s | 75702.6 s | 74245.2 s (−1.93%) | 1221–1222 | 1228 (net +6/+7) |
+
+**This is discovery-epoch evidence, not confirmation-grade** — plan section 5 requires five fresh
+alternating pairs before any admission claim, and none have been run yet. No admission decision is
+made here. But it is real, broad, full-corpus support for the "research continuation" disposition at
+minimum (plan section 1.2's three-way distinction), which the prior sprint's 10-instance P4 screen
+could not by itself establish.
+
+**The prior sprint's documented near-cap regression on `workstation_resupply_pb_3_pe_` does not
+reproduce as a loss anywhere in this full-corpus data.** At 120s cap it is REALIZABLE on both B and
+S in both epochs (17.27/16.78s and 17.69/17.40s). At 17s cap it flips inconsistently across epochs —
+S wins epoch-1 (16.7s vs B TIMEOUT), both TIMEOUT in epoch-2 — rather than the clean B-wins/S-loses
+pattern the earlier 10-instance screen showed every time. This is consistent with the prior sprint's
+own attribution (LTO code-placement noise on a genuine ~17s knife-edge instance, `[[lto_code_placement_noise]]`),
+not a re-confirmed selector-decision error; it does not by itself clear this instance for admission
+(near-cap losses stay unresolved until adjudicated, not waived by absence in one campaign), but it
+substantially weakens the case that this is a systematic S regression rather than host/build noise.
+
+`opening/gains-losses.py` (codex-authored, independently reviewed — APPROVE) reuses the exact
+categorization from the prior sprint's `closing-tables.py` (gain/loss/verdict-conflict/unsolved-
+kind-change/faster/slower, same 5%-or-50ms threshold) across all 4 legs. Flagged-row counts stay
+small relative to corpus size (120s: 130/1524 and 128/1524; 17s: 54/1524 and 57/1524), zero
+verdict-conflicts anywhere — consistent with S being a narrow, well-targeted structural change
+rather than a broad behavioral shift.
 
 ### W1 §4.3 — closure-buchi-provider mechanism audit, job selection only (step 1 of 5 complete)
 
