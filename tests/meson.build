@@ -103,6 +103,16 @@ dual_rank_predecessor_test = executable (
 test ('dual-rank-predecessor', dual_rank_predecessor_test,
       suite : ['unit', 'research', 'dual-frontier'])
 
+dual_rank_delta_test = executable (
+  'dual-rank-delta-test',
+  'dual_rank_delta_test.cc',
+  link_with : dual_frontier_research_lib,
+  include_directories : inc,
+  dependencies : [posets_dep, stdsimd_dep],
+)
+test ('dual-rank-delta', dual_rank_delta_test,
+      suite : ['unit', 'research', 'dual-frontier'])
+
 dual_replay_parser_test = executable (
   'dual-replay-parser-test',
   'dual_replay_parser_test.cc',

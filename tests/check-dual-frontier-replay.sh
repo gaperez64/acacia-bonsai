@@ -31,6 +31,18 @@ printf '%s\n' \
 "$replay" --dir "$temporary" --task cpre --deadline-ms 0 \
   | awk -F '\t' 'NR == 2 { if ($19 != "yes" || $20 != "yes" || $21 != "complete") exit 1 }'
 
+"$replay" --dir "$temporary" --task delta --deadline-ms 0 \
+  | awk -F '\t' 'NR == 2 { if ($9 != 1 || $13 != "complete" || $21 != "yes") exit 1 }'
+
+# --loop isolation must select by filename before parsing.  Real bounded
+# campaigns preserve truncated siblings, and one must not poison another row.
+printf '%s\n' \
+  '# schema_version=2 loop=99 k=1 actions=1 before=1 input=truncated' \
+  '[before]' \
+  '0' >"$temporary/cpre-99.tsv"
+"$replay" --dir "$temporary" --task delta --loop 0 --deadline-ms 0 \
+  | awk -F '\t' 'NR == 2 { if ($13 != "complete" || $21 != "yes") exit 1 }'
+
 for mode in positive negative auto; do
   "$replay" --dir "$temporary" --task solve --k 1 --mode "$mode" --deadline-ms 0 \
     | awk -F '\t' 'NR == 2 { if ($1 != "lose_k" || $16 != "complete") exit 1 }'

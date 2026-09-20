@@ -13,6 +13,7 @@ if get_option('build_tests') or get_option('build_research_tools')
     'dual-frontier-research',
     [
       'research/dual_rank_region.cc',
+      'research/dual_rank_delta.cc',
       'research/dual_rank_predecessor.cc',
     ],
     include_directories : inc,

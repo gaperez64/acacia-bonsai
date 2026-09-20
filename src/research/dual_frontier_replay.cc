@@ -7,6 +7,7 @@
 
 #include "research/all_input_actions.hh"
 #include "research/cpre_event.hh"
+#include "research/dual_rank_delta.hh"
 #include "research/dual_rank_predecessor.hh"
 #include <system_error>
 
@@ -17,6 +18,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -30,7 +32,7 @@
 namespace {
   using namespace acacia::research;
 
-  enum class task_kind { convert, cpre, solve };
+  enum class task_kind { convert, cpre, delta, solve };
   enum class mode_kind { positive, negative, automatic };
 
   struct options {
@@ -70,11 +72,11 @@ namespace {
   }
 
   void usage (std::ostream& out, const char* program) {
-    out << "usage: " << program << " --dir DIR --task convert|cpre|solve\n"
+    out << "usage: " << program << " --dir DIR --task convert|cpre|delta|solve\n"
         << "       [--mode positive|negative|auto] [--k K] [--loop N] [--no-header]\n"
         << "       [--max-work N] [--max-workspace-bytes N] [--max-frontier N]\n"
         << "       [--deadline-ms N] [--max-sweeps N]\n"
-        << "  convert and cpre consume schema-2 cpre-<loop>.tsv events.\n"
+        << "  convert, cpre and delta consume schema-2 cpre-<loop>.tsv events.\n"
         << "  solve consumes schema-3 meta.tsv plus all-input-actions.tsv and requires --k.\n"
         << "  A deadline of 0 disables the per-operation wall-clock deadline.\n";
   }
@@ -91,6 +93,8 @@ namespace {
           result.task = task_kind::convert;
         else if (value == "cpre")
           result.task = task_kind::cpre;
+        else if (value == "delta")
+          result.task = task_kind::delta;
         else if (value == "solve")
           result.task = task_kind::solve;
         else
@@ -177,6 +181,10 @@ namespace {
     return (error ? directory : absolute).lexically_normal ().string ();
   }
 
+  bool selected_event_path (const std::filesystem::path& path, const std::optional<int>& loop) {
+    return not loop or path.filename () == "cpre-" + std::to_string (*loop) + ".tsv";
+  }
+
   long long peak_rss_kib () {
     rusage usage {};
     if (::getrusage (RUSAGE_SELF, &usage) != 0)
@@ -220,6 +228,22 @@ namespace {
             budget.peak_live_generators (), budget.elapsed ().count ()};
   }
 
+  struct measured_delta {
+      exclusion_delta_result result;
+      std::uint64_t work = 0;
+      std::size_t peak = 0;
+      std::size_t peak_generators = 0;
+      long long microseconds = 0;
+  };
+
+  template <typename Operation>
+  measured_delta measure_delta (const budget_limits& limits, Operation&& operation) {
+    operation_budget budget {limits};
+    exclusion_delta_result result = operation (budget);
+    return {std::move (result), budget.work (), budget.peak_workspace_bytes (),
+            budget.peak_live_generators (), budget.elapsed ().count ()};
+  }
+
   measured_region build_region (const rank_domain& domain, frontier_form form,
                                 std::vector<rank_vector> generators, const budget_limits& limits) {
     return measure_region (limits, [&] (operation_budget& budget) {
@@ -246,9 +270,11 @@ namespace {
     int failures = 0;
     bool selected = false;
     for (const auto& path : find_events (arguments.directory)) {
+      if (not selected_event_path (path, arguments.loop))
+        continue;
       const event ev = load (path, states, bool_threshold);
       if (arguments.loop and ev.loop != *arguments.loop)
-        continue;
+        cli_fail ("CPre filename loop disagrees with its header");
       selected = true;
       const rank_domain domain = rank_domain::fixed_box (states, ev.k, bool_threshold,
                                                          identity + "#k=" + std::to_string (ev.k));
@@ -311,9 +337,11 @@ namespace {
     int failures = 0;
     bool selected = false;
     for (const auto& path : find_events (arguments.directory)) {
+      if (not selected_event_path (path, arguments.loop))
+        continue;
       const event ev = load (path, states, bool_threshold);
       if (arguments.loop and ev.loop != *arguments.loop)
-        continue;
+        cli_fail ("CPre filename loop disagrees with its header");
       selected = true;
       const rank_domain domain = rank_domain::fixed_box (states, ev.k, bool_threshold,
                                                          identity + "#k=" + std::to_string (ev.k));
@@ -395,6 +423,112 @@ namespace {
     if (arguments.loop and not selected)
       cli_fail ("no CPre event matched --loop " + std::to_string (*arguments.loop));
     return failures == 0 ? 0 : 1;
+  }
+
+  int run_delta (const options& arguments, std::size_t states, std::size_t bool_threshold,
+                 const std::string& identity) {
+    if (arguments.header)
+      std::cout << "loop\tK\tdimensions\tactions\tbefore_maxima\tafter_maxima"
+                   "\tbefore_min_excluded\tafter_min_excluded\tdelta_min_excluded"
+                   "\tpositive_maxima_still_generators"
+                   "\tpositive_generator_survival_fraction"
+                   "\tbefore_maxima_still_contained\tdelta_construction_status"
+                   "\tconversion_work_before\tconversion_work_after\tdelta_work"
+                   "\tdelta_peak_workspace\tconversion_us_before\tconversion_us_after"
+                   "\tdelta_us\texact\tprocess_peak_rss_kib\n";
+
+    int semantic_failures = 0;
+    bool selected = false;
+    for (const auto& path : find_events (arguments.directory)) {
+      if (not selected_event_path (path, arguments.loop))
+        continue;
+      const event ev = load (path, states, bool_threshold);
+      if (arguments.loop and ev.loop != *arguments.loop)
+        cli_fail ("CPre filename loop disagrees with its header");
+      selected = true;
+      const rank_domain domain = rank_domain::fixed_box (states, ev.k, bool_threshold,
+                                                         identity + "#k=" + std::to_string (ev.k));
+      measured_region before =
+          build_region (domain, frontier_form::max_included, ev.before, arguments.limits);
+      measured_region after =
+          build_region (domain, frontier_form::max_included, ev.after, arguments.limits);
+      if (not before.result or not after.result) {
+        const completion status = not before.result ? before.result.status : after.result.status;
+        if (status == completion::invalid_input)
+          ++semantic_failures;
+        std::cout << ev.loop << '\t' << ev.k << '\t' << states << '\t' << ev.actions.size ()
+                  << '\t' << ev.before.size () << '\t' << ev.after.size ()
+                  << "\t-\t-\t-\t-\t-\t-\t" << completion_name (status)
+                  << "\t0\t0\t0\t0\t0\t0\t0\tincomplete\t" << peak_rss_kib () << '\n';
+        continue;
+      }
+
+      measured_region before_negative =
+          measure_region (arguments.limits, [&] (operation_budget& budget) {
+            return try_convert (*before.result.region, frontier_form::min_excluded, budget);
+          });
+      measured_region after_negative =
+          measure_region (arguments.limits, [&] (operation_budget& budget) {
+            return try_convert (*after.result.region, frontier_form::min_excluded, budget);
+          });
+
+      measured_delta delta;
+      if (before_negative.result and after_negative.result)
+        delta = measure_delta (arguments.limits, [&] (operation_budget& budget) {
+          return try_exclusion_delta (*before.result.region, *after.result.region,
+                                      *before_negative.result.region,
+                                      *after_negative.result.region, budget);
+        });
+
+      const completion status = not before_negative.result ? before_negative.result.status
+                                : not after_negative.result ? after_negative.result.status
+                                : not delta.result          ? delta.result.status
+                                                            : completion::complete;
+      const bool exact = delta.result and delta.result.exact;
+      if (status == completion::invalid_input or (status == completion::complete and not exact))
+        ++semantic_failures;
+
+      const auto count_or_dash = [] (const measured_region& measured) {
+        return measured.result
+                   ? std::to_string (measured.result.region->generators ().size ())
+                   : std::string {"-"};
+      };
+      const std::string delta_count =
+          delta.result ? std::to_string (delta.result.generators.size ()) : "-";
+      const std::string stable_count =
+          delta.result
+              ? std::to_string (delta.result.stats.positive_maxima_still_generators)
+              : "-";
+      const std::string contained_count =
+          delta.result ? std::to_string (delta.result.stats.before_maxima_still_contained) : "-";
+      std::ostringstream survival;
+      if (delta.result) {
+        const double fraction = before.result.region->generators ().empty ()
+                                    ? 1.0
+                                    : static_cast<double> (
+                                          delta.result.stats.positive_maxima_still_generators) /
+                                          static_cast<double> (
+                                              before.result.region->generators ().size ());
+        survival << std::fixed << std::setprecision (6) << fraction;
+      }
+      else
+        survival << '-';
+
+      std::cout << ev.loop << '\t' << ev.k << '\t' << states << '\t' << ev.actions.size ()
+                << '\t' << before.result.region->generators ().size () << '\t'
+                << after.result.region->generators ().size () << '\t'
+                << count_or_dash (before_negative) << '\t' << count_or_dash (after_negative)
+                << '\t' << delta_count << '\t' << stable_count << '\t' << survival.str () << '\t'
+                << contained_count << '\t' << completion_name (status) << '\t'
+                << before_negative.work << '\t' << after_negative.work << '\t' << delta.work
+                << '\t' << delta.peak << '\t' << before_negative.microseconds << '\t'
+                << after_negative.microseconds << '\t' << delta.microseconds << '\t'
+                << (exact ? "yes" : status == completion::complete ? "NO" : "incomplete") << '\t'
+                << peak_rss_kib () << '\n';
+    }
+    if (arguments.loop and not selected)
+      cli_fail ("no CPre event matched --loop " + std::to_string (*arguments.loop));
+    return semantic_failures == 0 ? 0 : 1;
   }
 
   const char* mode_name (mode_kind mode) {
@@ -672,6 +806,7 @@ int main (int argc, char** argv) {
     switch (arguments.task) {
       case task_kind::convert: return run_convert (arguments, states, bool_threshold, identity);
       case task_kind::cpre: return run_cpre (arguments, states, bool_threshold, identity);
+      case task_kind::delta: return run_delta (arguments, states, bool_threshold, identity);
       case task_kind::solve: return run_solve (arguments, states, bool_threshold, identity);
     }
   } catch (const std::exception& error) {

@@ -9,6 +9,7 @@
 #if ACACIA_ENABLE_DIAGNOSTICS
 
 # include <cstdlib>
+# include <exception>
 # include <filesystem>
 # include <fstream>
 # include <posets/vectors.hh>
@@ -66,6 +67,7 @@ namespace acacia::antichain_snapshot {
         size_t max_transitions = 4000000;
         bool cpre = false;
         size_t cpre_max_actions = 4096;
+        size_t cpre_min_frontier = 0;
         size_t cpre_dumps = 0;
         size_t cpre_maximum = 8;
         std::ofstream cpre_out;
@@ -107,6 +109,8 @@ namespace acacia::antichain_snapshot {
     snapshot.cpre = cpre != nullptr and *cpre != '\0' and std::string_view {cpre} != "0";
     snapshot.cpre_max_actions =
         detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MAX_ACTIONS", 4096, false);
+    snapshot.cpre_min_frontier =
+        detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MIN_FRONTIER", 0, true);
     snapshot.cpre_maximum =
         detail::env_size ("ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MAX", 8, true);
     snapshot.cpre_dumps = 0;
@@ -137,8 +141,19 @@ namespace acacia::antichain_snapshot {
                          std::to_string (snapshot.automata++);
     std::filesystem::create_directories (snapshot.directory);
 
-    std::ofstream hoa {snapshot.directory + "/automaton.hoa"};
-    spot::print_hoa (hoa, aut);
+    const std::string hoa_path = snapshot.directory + "/automaton.hoa";
+    try {
+      std::ofstream hoa {hoa_path};
+      spot::print_hoa (hoa, aut);
+    } catch (const std::exception& error) {
+      // CPre and antichain replay use only meta.tsv and the recorded rank
+      // actions.  Some transformed automata carry conservative Spot property
+      // flags that make print_hoa() reject an otherwise usable solver graph;
+      // keep that provenance gap explicit without disabling exact capture.
+      std::filesystem::remove (hoa_path);
+      std::ofstream skipped {hoa_path + ".skipped"};
+      skipped << error.what () << '\n';
+    }
 
     // The schema version is what lets a replay tool refuse data it cannot
     // read, rather than silently misparsing an older dump.
@@ -292,7 +307,7 @@ namespace acacia::antichain_snapshot {
                                   const std::string& input, const Actions& actions) {
     detail::snapshot_state& snapshot = detail::state ();
     if (snapshot.directory.empty () or not snapshot.cpre or
-        snapshot.cpre_dumps >= snapshot.cpre_maximum)
+        f.size () < snapshot.cpre_min_frontier or snapshot.cpre_dumps >= snapshot.cpre_maximum)
       return false;
     // An input class with a very large action list would dominate the dump; the
     // cap is recorded rather than silently applied.
