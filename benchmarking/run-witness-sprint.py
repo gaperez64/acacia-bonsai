@@ -22,6 +22,7 @@ skipped by the wrapped tool itself, not by a second bookkeeping layer here.
 """
 import argparse
 import hashlib
+import importlib.util
 import pathlib
 import subprocess
 import sys
@@ -29,6 +30,23 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 COVERAGE_RUNNER = pathlib.Path(__file__).resolve().parent / "run-syntcomp26-coverage.py"
+_COVERAGE_MODULE = None
+
+
+def load_coverage_module():
+    """Load the wrapped runner so summary repair uses its canonical logic."""
+    global _COVERAGE_MODULE
+    if _COVERAGE_MODULE is None:
+        spec = importlib.util.spec_from_file_location(
+            "witness_sprint_coverage", COVERAGE_RUNNER
+        )
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"cannot load coverage runner: {COVERAGE_RUNNER}")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        _COVERAGE_MODULE = module
+    return _COVERAGE_MODULE
 
 
 def read_instance_ids(list_path: pathlib.Path) -> list[str]:
@@ -39,6 +57,31 @@ def read_instance_ids(list_path: pathlib.Path) -> list[str]:
             continue
         ids.append(line)
     return ids
+
+
+def read_instance_union(list_paths: list[pathlib.Path]) -> list[str]:
+    """Return the ordered union covered by a complete set of list files."""
+    return list(
+        dict.fromkeys(
+            instance_id
+            for list_path in list_paths
+            for instance_id in read_instance_ids(list_path)
+        )
+    )
+
+
+def regenerate_series_summary(
+    output: pathlib.Path,
+    solver_label: str,
+    instances: list[str],
+    largest_cap: int,
+) -> pathlib.Path:
+    """Rebuild one summary from its accumulated raw rows and full universe."""
+    coverage = load_coverage_module()
+    rows = coverage.load_output(output)
+    return coverage.write_summary(
+        output, solver_label, instances, rows, largest_cap
+    )
 
 
 def shard_index(instance_id: str, n_shards: int) -> int:
@@ -93,6 +136,7 @@ def cmd_campaign(args: argparse.Namespace) -> int:
     if not shard_paths:
         print(f"FAIL: no shard_*.list under {args.shards_dir}", file=sys.stderr)
         return 1
+    campaign_instances = read_instance_union(shard_paths)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     log_path = args.out_dir / f"campaign-cap{args.cap}-epoch{args.epoch}.log"
@@ -146,6 +190,18 @@ def cmd_campaign(args: argparse.Namespace) -> int:
                 log(f"  FATAL: unexpected exit {result.returncode}, aborting leg")
                 return result.returncode
             log(f"  exit={result.returncode}")
+
+    if not args.dry_run:
+        for label, _ in candidates:
+            out_tsv = args.out_dir / f"{label}-cap{args.cap}-epoch{args.epoch}.tsv"
+            solver_label = f"{label}-cap{args.cap}-epoch{args.epoch}"
+            summary_path = regenerate_series_summary(
+                out_tsv, solver_label, campaign_instances, args.cap
+            )
+            log(
+                f"regenerated {summary_path.name} from all "
+                f"{len(campaign_instances)} campaign instances"
+            )
 
     log(f"DONE cap={args.cap} epoch={args.epoch}")
     return 0

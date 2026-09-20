@@ -1,63 +1,1525 @@
 solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+B-cap17-epoch2	01.ltl	17	REALIZABLE	0.02158170801703818	false	REALIZABLE	17
+B-cap17-epoch2	02.ltl	17	REALIZABLE	0.04747117598890327	false	REALIZABLE	17
+B-cap17-epoch2	03.ltl	17	REALIZABLE	3.0401281020021997	false	REALIZABLE	17
+B-cap17-epoch2	05.ltl	17	REALIZABLE	13.34602494200226	false	REALIZABLE	17
+B-cap17-epoch2	06.ltl				true	TIMEOUT	17
+B-cap17-epoch2	07.ltl				true	TIMEOUT	17
+B-cap17-epoch2	08.ltl				true	TIMEOUT	17
+B-cap17-epoch2	09.ltl	17	REALIZABLE	8.255118950997712	false	REALIZABLE	17
+B-cap17-epoch2	10.ltl	17	REALIZABLE	3.6856034889933653	false	REALIZABLE	17
+B-cap17-epoch2	11.ltl	17	REALIZABLE	3.581398327019997	false	REALIZABLE	17
+B-cap17-epoch2	12.ltl	17	REALIZABLE	5.251269835978746	false	REALIZABLE	17
+B-cap17-epoch2	13.ltl	17	REALIZABLE	5.406458548997762	false	REALIZABLE	17
+B-cap17-epoch2	ActionConverter.ltl	17	REALIZABLE	0.019649128982564434	false	REALIZABLE	17
+B-cap17-epoch2	AlarmMin_efe2feaf.ltl	17	REALIZABLE	0.022268226981395856	false	REALIZABLE	17
+B-cap17-epoch2	Alarm_06e9cad4.ltl	17	REALIZABLE	1.73234401200898	false	REALIZABLE	17
+B-cap17-epoch2	Alarm_2d1010f8.ltl	17	REALIZABLE	0.032000773993786424	false	REALIZABLE	17
+B-cap17-epoch2	Alarm_68c86764.ltl	17	REALIZABLE	1.7063121079991106	false	REALIZABLE	17
+B-cap17-epoch2	Alarm_70523fbe.ltl	17	REALIZABLE	0.9468805429933127	false	REALIZABLE	17
+B-cap17-epoch2	Alarm_88c5c1c3.ltl	17	REALIZABLE	0.0174442469724454	false	REALIZABLE	17
+B-cap17-epoch2	Alarm_9cac58d3.ltl	17	REALIZABLE	0.02121442899806425	false	REALIZABLE	17
+B-cap17-epoch2	Alarm_a5f99bc6.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Alarm_f2774e0b.ltl	17	REALIZABLE	0.9176830220094416	false	REALIZABLE	17
+B-cap17-epoch2	AllHeating_d6376bf9.ltl	17	REALIZABLE	0.022205351007869467	false	REALIZABLE	17
+B-cap17-epoch2	AllLights_06e9cad4.ltl	17	UNREALIZABLE	1.645963847025996	false	UNREALIZABLE	17
+B-cap17-epoch2	AllLights_2c5b09da.ltl	17	UNREALIZABLE	0.9414321549993474	false	UNREALIZABLE	17
+B-cap17-epoch2	AllLights_63831f8c.ltl	17	UNREALIZABLE	1.5882473249803297	false	UNREALIZABLE	17
+B-cap17-epoch2	AllLights_aeb1d897.ltl	17	UNREALIZABLE	2.7835244169982616	false	UNREALIZABLE	17
+B-cap17-epoch2	AllLights_b209ff21.ltl	17	UNREALIZABLE	2.5917960810184013	false	UNREALIZABLE	17
+B-cap17-epoch2	AllLights_d6c5ac79.ltl	17	UNREALIZABLE	2.520500707993051	false	UNREALIZABLE	17
+B-cap17-epoch2	AllShades_66f450a4.ltl	17	UNREALIZABLE	1.7746045910171233	false	UNREALIZABLE	17
+B-cap17-epoch2	Assumptions_a50cadd7.ltl	17	UNREALIZABLE	0.022067882993724197	false	UNREALIZABLE	17
+B-cap17-epoch2	Automata.ltl	17	REALIZABLE	0.04529636600636877	false	REALIZABLE	17
+B-cap17-epoch2	Automata16S.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Automata32S.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Button.ltl	17	REALIZABLE	0.018387799005722627	false	REALIZABLE	17
+B-cap17-epoch2	CheckAlarmBroken1_1a2942e3.ltl	17	REALIZABLE	0.02682068300782703	false	REALIZABLE	17
+B-cap17-epoch2	CheckAlarm_6bea956e.ltl	17	UNREALIZABLE	0.01709893101360649	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckCoffeMachineBroken1_a5f99bc6.ltl	17	REALIZABLE	0.018551036017015576	false	REALIZABLE	17
+B-cap17-epoch2	CheckCoffeMachine_3461125b.ltl	17	UNREALIZABLE	0.026747341005830094	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckCoffeMachine_f3987563.ltl	17	UNREALIZABLE	0.020804328989470378	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckDoor_c2b9e44d.ltl	17	UNREALIZABLE	0.02569724401109852	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckHeating_2418b67e.ltl	17	UNREALIZABLE	0.02030102099524811	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckHeating_3461125b.ltl	17	UNREALIZABLE	0.03135388201917522	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckLight_007df645.ltl	17	UNREALIZABLE	0.033126855007139966	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckLight_aeb1d897.ltl	17	UNREALIZABLE	0.016264571982901543	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckRoom_06e9cad4.ltl	17	UNREALIZABLE	0.020099337009014562	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckRoom_2c5b09da.ltl	17	UNREALIZABLE	0.01576962400577031	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckRoom_3916ec59.ltl	17	UNREALIZABLE	0.019528675999026746	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckRoom_70523fbe.ltl	17	UNREALIZABLE	0.014456696022534743	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckShades_1a2942e3.ltl	17	UNREALIZABLE	0.020399959001224488	false	UNREALIZABLE	17
 B-cap17-epoch2	CheckShades_3461125b.ltl	17	UNREALIZABLE	0.02215013199020177	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckShades_4d4ca5c4.ltl	17	UNREALIZABLE	0.02514419797807932	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckShades_aeb1d897.ltl	17	UNREALIZABLE	0.02409677198738791	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckTime_3916ec59.ltl	17	UNREALIZABLE	0.01908397499937564	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckTime_4b5e6eaa.ltl	17	UNREALIZABLE	0.02194668198353611	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckTime_54e1f7d2.ltl	17	UNREALIZABLE	0.03540552800404839	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckTimer_54e1f7d2.ltl	17	UNREALIZABLE	0.025496611022390425	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckTimer_fa8592c8.ltl	17	UNREALIZABLE	0.03317804500693455	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckWarnlightBroken1_70523fbe.ltl	17	REALIZABLE	0.02478015099768527	false	REALIZABLE	17
+B-cap17-epoch2	CheckWarnlight_1cf58fc1.ltl	17	UNREALIZABLE	0.01959770600660704	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckWarnlight_4b5a2bad.ltl	17	UNREALIZABLE	0.02552074901177548	false	UNREALIZABLE	17
 B-cap17-epoch2	CheckWarnlight_54e1f7d2.ltl	17	UNREALIZABLE	0.02282404201105237	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckWarnlight_6bea956e.ltl	17	UNREALIZABLE	0.014978463994339108	false	UNREALIZABLE	17
+B-cap17-epoch2	CheckWindows_54e1f7d2.ltl	17	UNREALIZABLE	0.017507832002593204	false	UNREALIZABLE	17
+B-cap17-epoch2	Cockpitboard.ltl	17	REALIZABLE	0.016198244004044682	false	REALIZABLE	17
+B-cap17-epoch2	Cockpitboard_efe2feaf.ltl	17	REALIZABLE	0.03639354498591274	false	REALIZABLE	17
+B-cap17-epoch2	CoffeMachine_974f4a68.ltl	17	REALIZABLE	0.018598755006678402	false	REALIZABLE	17
+B-cap17-epoch2	CoffeMachine_a50cadd7.ltl	17	UNREALIZABLE	0.030049197986954823	false	UNREALIZABLE	17
+B-cap17-epoch2	CoffeeMin_88f351a6.ltl	17	REALIZABLE	0.023060007020831108	false	REALIZABLE	17
+B-cap17-epoch2	Coffee_06e9cad4.ltl	17	REALIZABLE	0.03402337300940417	false	REALIZABLE	17
+B-cap17-epoch2	Coffee_235467da.ltl	17	REALIZABLE	0.046052633988438174	false	REALIZABLE	17
+B-cap17-epoch2	Coffee_2c5b09da.ltl	17	REALIZABLE	0.03489900901331566	false	REALIZABLE	17
+B-cap17-epoch2	Coffee_6479ef9a.ltl	17	REALIZABLE	0.028470606019254774	false	REALIZABLE	17
+B-cap17-epoch2	Coffee_d6376bf9.ltl	17	REALIZABLE	0.024652497988427058	false	REALIZABLE	17
+B-cap17-epoch2	Coffee_efe2feaf.ltl	17	REALIZABLE	0.032235653983661905	false	REALIZABLE	17
+B-cap17-epoch2	Coffee_f1477cc5.ltl	17	UNREALIZABLE	0.02407615300035104	false	UNREALIZABLE	17
+B-cap17-epoch2	Core_4b5a2bad.ltl	17	UNREALIZABLE	0.023589339980389923	false	UNREALIZABLE	17
+B-cap17-epoch2	Core_66f450a4.ltl	17	UNREALIZABLE	0.03254204598488286	false	UNREALIZABLE	17
+B-cap17-epoch2	Core_fa4d4ce3.ltl	17	UNREALIZABLE	0.03961184399668127	false	UNREALIZABLE	17
+B-cap17-epoch2	Core_solved_974f4a68.ltl	17	REALIZABLE	0.05096007100655697	false	REALIZABLE	17
+B-cap17-epoch2	Demo1_06e9cad4.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Demo1_2c5b09da.ltl				true	TIMEOUT	17
 B-cap17-epoch2	Demo1_63831f8c.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Demo1_c2b9e44d.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Demo1_d65ed84e.ltl				true	TIMEOUT	17
+B-cap17-epoch2	DeviceBehaviorChec_fa8592c8.ltl	17	UNREALIZABLE	0.023938261001603678	false	UNREALIZABLE	17
+B-cap17-epoch2	Door_2d1010f8.ltl	17	REALIZABLE	0.026741756999399513	false	REALIZABLE	17
+B-cap17-epoch2	EnemeyModule.ltl	17	REALIZABLE	0.020508144021732733	false	REALIZABLE	17
+B-cap17-epoch2	EscalatorBidirectional.ltl	17	REALIZABLE	0.03695798999979161	false	REALIZABLE	17
+B-cap17-epoch2	EscalatorBidirectionalInit.ltl	17	REALIZABLE	0.0314174180093687	false	REALIZABLE	17
+B-cap17-epoch2	EscalatorCounting.ltl	17	REALIZABLE	0.018518058990594	false	REALIZABLE	17
+B-cap17-epoch2	EscalatorCountingInit.ltl	17	REALIZABLE	0.01740642500226386	false	REALIZABLE	17
+B-cap17-epoch2	EscalatorNonCounting.ltl	17	REALIZABLE	0.017886974004795775	false	REALIZABLE	17
+B-cap17-epoch2	EscalatorNonReactive.ltl	17	REALIZABLE	0.02640011301264167	false	REALIZABLE	17
+B-cap17-epoch2	EscalatorSmart.ltl	17	REALIZABLE	0.044811555999331176	false	REALIZABLE	17
+B-cap17-epoch2	Example1_d6376bf9.ltl	17	REALIZABLE	0.018514413997763768	false	REALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-10.ltl	17	UNREALIZABLE	0.032172277016798034	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-11.ltl	17	UNREALIZABLE	0.057199934002710506	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-110.ltl				true	TIMEOUT	17
+B-cap17-epoch2	F-G-contradiction-111.ltl				true	TIMEOUT	17
+B-cap17-epoch2	F-G-contradiction-112.ltl				true	TIMEOUT	17
+B-cap17-epoch2	F-G-contradiction-113.ltl				true	TIMEOUT	17
+B-cap17-epoch2	F-G-contradiction-114.ltl				true	TIMEOUT	17
+B-cap17-epoch2	F-G-contradiction-12.ltl	17	UNREALIZABLE	0.06808023800840601	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-13.ltl	17	UNREALIZABLE	0.14872484799707308	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-14.ltl	17	UNREALIZABLE	0.3118690040137153	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-15.ltl	17	UNREALIZABLE	0.36364775599213317	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-16.ltl	17	UNREALIZABLE	8.852981188014382	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-17.ltl	17	UNREALIZABLE	10.053841188986553	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-18.ltl	17	UNREALIZABLE	12.487160405988107	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-19.ltl	17	UNREALIZABLE	13.025355210993439	false	UNREALIZABLE	17
+B-cap17-epoch2	F-G-contradiction-2-unreal.ltl	17	UNREALIZABLE	0.027118793019326404	false	UNREALIZABLE	17
+B-cap17-epoch2	FelixSpecFixed2.2.core_fa8592c8.ltl	17	UNREALIZABLE	0.0207506779988762	false	UNREALIZABLE	17
+B-cap17-epoch2	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT	17
+B-cap17-epoch2	FelixSpecFixed3.core_b209ff21.ltl	17	UNREALIZABLE	0.05453984800260514	false	UNREALIZABLE	17
+B-cap17-epoch2	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT	17
+B-cap17-epoch2	FelixSpecFixed4GuaranteesOnly_88f351a6.ltl	17	UNREALIZABLE	0.020073388004675508	false	UNREALIZABLE	17
+B-cap17-epoch2	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT	17
+B-cap17-epoch2	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT	17
+B-cap17-epoch2	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Full_f1477cc5.ltl				true	TIMEOUT	17
+B-cap17-epoch2	GF-G-contradiction0.ltl	17	UNREALIZABLE	0.043982862000120804	false	UNREALIZABLE	17
+B-cap17-epoch2	GF-G-contradiction1.ltl	17	UNREALIZABLE	0.062836780998623	false	UNREALIZABLE	17
+B-cap17-epoch2	GF-G-contradiction2.ltl	17	UNREALIZABLE	0.2484839370008558	false	UNREALIZABLE	17
+B-cap17-epoch2	GF-G-contradiction3.ltl	17	UNREALIZABLE	1.7258734369825106	false	UNREALIZABLE	17
+B-cap17-epoch2	GF-G-contradiction4.ltl	17	UNREALIZABLE	1.8162594129971694	false	UNREALIZABLE	17
+B-cap17-epoch2	GF-G-contradiction5.ltl	17	UNREALIZABLE	2.358135743008461	false	UNREALIZABLE	17
+B-cap17-epoch2	GF-G-contradiction6.ltl	17	UNREALIZABLE	15.544192136992933	false	UNREALIZABLE	17
+B-cap17-epoch2	GF-G-contradiction7.ltl	17	UNREALIZABLE	16.653308770008152	false	UNREALIZABLE	17
+B-cap17-epoch2	Gamelogic.ltl	17	REALIZABLE	0.03229789002216421	false	REALIZABLE	17
+B-cap17-epoch2	GamemodeChooser.ltl	17	REALIZABLE	0.0208702550153248	false	REALIZABLE	17
+B-cap17-epoch2	Gamemodule.ltl	17	REALIZABLE	0.023400195001158863	false	REALIZABLE	17
+B-cap17-epoch2	HeatingMin_d6c5ac79.ltl	17	REALIZABLE	0.02503929997328669	false	REALIZABLE	17
+B-cap17-epoch2	Heating_235467da.ltl	17	REALIZABLE	0.0352187380194664	false	REALIZABLE	17
+B-cap17-epoch2	Heating_974f4a68.ltl	17	REALIZABLE	0.04201346600893885	false	REALIZABLE	17
+B-cap17-epoch2	Heating_b02056d6.ltl	17	REALIZABLE	0.026891421002801508	false	REALIZABLE	17
+B-cap17-epoch2	Heating_b209ff21.ltl	17	REALIZABLE	0.023838603985495865	false	REALIZABLE	17
+B-cap17-epoch2	Increment.ltl	17	REALIZABLE	0.03668379900045693	false	REALIZABLE	17
+B-cap17-epoch2	IntendDemo_42dc4fff.ltl	17	UNREALIZABLE	0.05253205698681995	false	UNREALIZABLE	17
+B-cap17-epoch2	KitchenTimerV0.ltl	17	REALIZABLE	0.015288394002709538	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV1.ltl	17	REALIZABLE	0.023541361995739862	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV10.ltl	17	REALIZABLE	0.09654513699933887	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV2.ltl	17	REALIZABLE	0.0176699880103115	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV3.ltl	17	REALIZABLE	0.029897636006353423	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV4.ltl	17	REALIZABLE	0.049583329004235566	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV5.ltl	17	REALIZABLE	0.04290029700496234	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV6.ltl	17	REALIZABLE	0.06532240202068351	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV7.ltl	17	REALIZABLE	0.07492345300852321	false	REALIZABLE	17
 B-cap17-epoch2	KitchenTimerV8.ltl	17	REALIZABLE	0.07054178300313652	false	REALIZABLE	17
+B-cap17-epoch2	KitchenTimerV9.ltl	17	REALIZABLE	0.1326576989958994	false	REALIZABLE	17
+B-cap17-epoch2	LampController_974f4a68.ltl	17	REALIZABLE	0.03717701599816792	false	REALIZABLE	17
+B-cap17-epoch2	LedMatrix.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Light_a50cadd7.ltl	17	UNREALIZABLE	0.02535917199566029	false	UNREALIZABLE	17
 B-cap17-epoch2	Light_aeb1d897.ltl	17	UNREALIZABLE	0.031137619022047147	false	UNREALIZABLE	17
+B-cap17-epoch2	Light_d65ed84e.ltl	17	REALIZABLE	0.03079765199800022	false	REALIZABLE	17
+B-cap17-epoch2	Lights2Min_9cbf2546.ltl	17	REALIZABLE	0.019045938010094687	false	REALIZABLE	17
+B-cap17-epoch2	Lights2_06e9cad4.ltl	17	REALIZABLE	0.17476781300501898	false	REALIZABLE	17
+B-cap17-epoch2	Lights2_0f5381e9.ltl	17	REALIZABLE	0.187418482004432	false	REALIZABLE	17
+B-cap17-epoch2	Lights2_2c5b09da.ltl	17	REALIZABLE	0.05053410699474625	false	REALIZABLE	17
+B-cap17-epoch2	Lights2_9cac58d3.ltl	17	REALIZABLE	0.18823554899427108	false	REALIZABLE	17
+B-cap17-epoch2	Lights2_b02056d6.ltl	17	REALIZABLE	0.19321711399243213	false	REALIZABLE	17
+B-cap17-epoch2	Lights2_f1477cc5.ltl	17	UNREALIZABLE	0.0486110869969707	false	UNREALIZABLE	17
+B-cap17-epoch2	Lights2_f3987563.ltl	17	REALIZABLE	0.1734657850174699	false	REALIZABLE	17
+B-cap17-epoch2	Lights3Min_6479ef9a.ltl	17	REALIZABLE	0.03367693701875396	false	REALIZABLE	17
+B-cap17-epoch2	Lights3_06e9cad4.ltl	17	REALIZABLE	0.03448966800351627	false	REALIZABLE	17
+B-cap17-epoch2	Lights3_235467da.ltl	17	REALIZABLE	0.03576616401551291	false	REALIZABLE	17
+B-cap17-epoch2	Lights3_2c5b09da.ltl	17	REALIZABLE	0.01732310000807047	false	REALIZABLE	17
+B-cap17-epoch2	Lights3_3916ec59.ltl	17	REALIZABLE	0.03814485701150261	false	REALIZABLE	17
+B-cap17-epoch2	Lights3_6bea956e.ltl	17	REALIZABLE	0.03909699397627264	false	REALIZABLE	17
+B-cap17-epoch2	Lights3_f1477cc5.ltl	17	REALIZABLE	0.044999761012149975	false	REALIZABLE	17
+B-cap17-epoch2	LightsMin_6bea956e.ltl	17	REALIZABLE	0.02456085098674521	false	REALIZABLE	17
+B-cap17-epoch2	LightsTotal_06e9cad4.ltl	17	REALIZABLE	0.4250908789981622	false	REALIZABLE	17
+B-cap17-epoch2	LightsTotal_2c5b09da.ltl	17	UNREALIZABLE	0.058917760994518176	false	UNREALIZABLE	17
 B-cap17-epoch2	LightsTotal_9cbf2546.ltl	17	REALIZABLE	0.43113975500455126	false	REALIZABLE	17
+B-cap17-epoch2	LightsTotal_d65ed84e.ltl	17	REALIZABLE	0.3768441810098011	false	REALIZABLE	17
+B-cap17-epoch2	Lights_06e9cad4.ltl	17	REALIZABLE	0.04938836398650892	false	REALIZABLE	17
+B-cap17-epoch2	Lights_2c5b09da.ltl	17	REALIZABLE	0.029098105995217338	false	REALIZABLE	17
+B-cap17-epoch2	Lights_3461125b.ltl	17	REALIZABLE	0.03998197699547745	false	REALIZABLE	17
+B-cap17-epoch2	Lights_9cac58d3.ltl	17	REALIZABLE	0.04280549200484529	false	REALIZABLE	17
+B-cap17-epoch2	Lights_b0840146.ltl	17	REALIZABLE	0.05034715399960987	false	REALIZABLE	17
+B-cap17-epoch2	Lights_f3987563.ltl	17	REALIZABLE	0.032357455987948924	false	REALIZABLE	17
+B-cap17-epoch2	ModdifiedLedMatrix4X.ltl	17	UNREALIZABLE	0.5556941459944937	false	UNREALIZABLE	17
+B-cap17-epoch2	ModdifiedLedMatrix5X.ltl	17	REALIZABLE	0.12599432899150997	false	REALIZABLE	17
+B-cap17-epoch2	Morning2Min_6cbc6174.ltl	17	REALIZABLE	0.03388723899843171	false	REALIZABLE	17
+B-cap17-epoch2	Morning2_06e9cad4.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2_1cf58fc1.ltl	17	UNREALIZABLE	0.08101640400127508	false	UNREALIZABLE	17
+B-cap17-epoch2	Morning2_2c5b09da.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2_407db2cc.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2_4d4ca5c4.ltl	17	REALIZABLE	0.021190349012613297	false	REALIZABLE	17
+B-cap17-epoch2	Morning2_63831f8c.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2_68c86764.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2_9cac58d3.ltl	17	REALIZABLE	0.026497436017962173	false	REALIZABLE	17
+B-cap17-epoch2	Morning2_d65ed84e.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2s_06cf2373.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2s_06e9cad4.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2s_2c5b09da.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2s_42dc4fff.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2s_9cbf2546.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning2s_d6c5ac79.ltl				true	TIMEOUT	17
+B-cap17-epoch2	MorningMin_d6c5ac79.ltl	17	REALIZABLE	0.024258091987576336	false	REALIZABLE	17
+B-cap17-epoch2	Morning_14a3b3a2.ltl	17	UNREALIZABLE	3.696096577012213	false	UNREALIZABLE	17
+B-cap17-epoch2	Morning_4b5e6eaa.ltl	17	UNREALIZABLE	4.014089879026869	false	UNREALIZABLE	17
+B-cap17-epoch2	Morning_88c5c1c3.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning_9cac58d3.ltl				true	TIMEOUT	17
+B-cap17-epoch2	Morning_c92eb242.ltl	17	UNREALIZABLE	3.6268423719739076	false	UNREALIZABLE	17
+B-cap17-epoch2	Morning_f1477cc5.ltl	17	UNREALIZABLE	3.687086093996186	false	UNREALIZABLE	17
+B-cap17-epoch2	Morning_f2774e0b.ltl	17	UNREALIZABLE	3.5258614879858214	false	UNREALIZABLE	17
 B-cap17-epoch2	MusicAppFeedback.ltl	17	REALIZABLE	0.020478706021094695	false	REALIZABLE	17
+B-cap17-epoch2	MusicAppMotivating.ltl	17	REALIZABLE	0.023950600996613503	false	REALIZABLE	17
+B-cap17-epoch2	MusicAppSimple.ltl	17	REALIZABLE	0.03555186101584695	false	REALIZABLE	17
+B-cap17-epoch2	OneCounter.ltl	17	REALIZABLE	2.9979190560115967	false	REALIZABLE	17
+B-cap17-epoch2	OneCounterGui.ltl	17	UNREALIZABLE	0.022831987007521093	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterGuiA1.ltl	17	UNREALIZABLE	0.035828634980134666	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterGuiA2.ltl	17	UNREALIZABLE	0.03811896397382952	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterGuiA3.ltl	17	UNREALIZABLE	0.049467956996522844	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterGuiA4.ltl	17	UNREALIZABLE	0.05442000599578023	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterGuiA5.ltl	17	UNREALIZABLE	0.11410277299000882	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterGuiA6.ltl	17	UNREALIZABLE	0.3357917760149576	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterGuiA7.ltl	17	UNREALIZABLE	0.8956497489998583	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterGuiA8.ltl	17	UNREALIZABLE	3.2634490430064034	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterInRange.ltl	17	UNREALIZABLE	0.018183489999501035	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterInRangeA1.ltl	17	UNREALIZABLE	0.03385697098565288	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterInRangeA2.ltl	17	UNREALIZABLE	0.019925091008190066	false	UNREALIZABLE	17
+B-cap17-epoch2	OneCounterInRangeA3.ltl	17	REALIZABLE	0.038584945985348895	false	REALIZABLE	17
+B-cap17-epoch2	PlugController_fa4d4ce3.ltl	17	REALIZABLE	0.01943147397832945	false	REALIZABLE	17
+B-cap17-epoch2	Radarboard.ltl	17	REALIZABLE	0.030369577987585217	false	REALIZABLE	17
+B-cap17-epoch2	RegManager.ltl	17	REALIZABLE	0.029424862994346768	false	REALIZABLE	17
+B-cap17-epoch2	Room_a50cadd7.ltl	17	UNREALIZABLE	0.030249723000451922	false	UNREALIZABLE	17
+B-cap17-epoch2	RotationCalculator.ltl	17	REALIZABLE	0.036124140984611586	false	REALIZABLE	17
+B-cap17-epoch2	SPI.ltl	17	REALIZABLE	0.30734889800078236	false	REALIZABLE	17
+B-cap17-epoch2	SPIPureNext.ltl				true	TIMEOUT	17
+B-cap17-epoch2	SPIReadClk.ltl	17	REALIZABLE	0.03379026098991744	false	REALIZABLE	17
+B-cap17-epoch2	SPIReadManag.ltl	17	REALIZABLE	0.04746374499518424	false	REALIZABLE	17
+B-cap17-epoch2	SPIReadSdi.ltl	17	REALIZABLE	0.02584989697788842	false	REALIZABLE	17
+B-cap17-epoch2	SPIWriteClk.ltl	17	REALIZABLE	0.020345008990261704	false	REALIZABLE	17
+B-cap17-epoch2	SPIWriteManag.ltl	17	REALIZABLE	0.02027121401624754	false	REALIZABLE	17
+B-cap17-epoch2	SPIWriteSdi.ltl	17	REALIZABLE	0.0386993539868854	false	REALIZABLE	17
+B-cap17-epoch2	Scoreboard.ltl	17	REALIZABLE	0.01878666301490739	false	REALIZABLE	17
+B-cap17-epoch2	Sensor.ltl	17	REALIZABLE	0.13944371798424982	false	REALIZABLE	17
+B-cap17-epoch2	SensorInit.ltl	17	REALIZABLE	0.14691665300051682	false	REALIZABLE	17
+B-cap17-epoch2	SensorPart.ltl	17	REALIZABLE	0.04347042299923487	false	REALIZABLE	17
+B-cap17-epoch2	SensorRegister.ltl	17	REALIZABLE	0.03604340701713227	false	REALIZABLE	17
+B-cap17-epoch2	SensorSelector.ltl	17	REALIZABLE	0.03781178599456325	false	REALIZABLE	17
+B-cap17-epoch2	SensorSubmodulChooser.ltl	17	REALIZABLE	0.03894343998399563	false	REALIZABLE	17
+B-cap17-epoch2	Shades2Min_63831f8c.ltl	17	REALIZABLE	0.019358568999450654	false	REALIZABLE	17
+B-cap17-epoch2	Shades2_235467da.ltl	17	REALIZABLE	0.0364995879936032	false	REALIZABLE	17
+B-cap17-epoch2	Shades2_42dc4fff.ltl	17	REALIZABLE	0.041463220986770466	false	REALIZABLE	17
+B-cap17-epoch2	Shades2_70523fbe.ltl	17	REALIZABLE	0.02878896999754943	false	REALIZABLE	17
+B-cap17-epoch2	Shades2_a5f99bc6.ltl	17	REALIZABLE	0.017356944998027757	false	REALIZABLE	17
+B-cap17-epoch2	ShadesMin_aeb1d897.ltl	17	REALIZABLE	0.03164460702100769	false	REALIZABLE	17
+B-cap17-epoch2	Shades_6479ef9a.ltl	17	REALIZABLE	0.03183425098541193	false	REALIZABLE	17
+B-cap17-epoch2	Shades_974f4a68.ltl	17	REALIZABLE	0.04368252301355824	false	REALIZABLE	17
+B-cap17-epoch2	Shades_9cac58d3.ltl	17	REALIZABLE	0.019474543980322778	false	REALIZABLE	17
+B-cap17-epoch2	Shades_a02758ea.ltl	17	REALIZABLE	0.01975415399647318	false	REALIZABLE	17
+B-cap17-epoch2	SingleContoller_d65ed84e.ltl	17	UNREALIZABLE	0.029610099009005353	false	UNREALIZABLE	17
+B-cap17-epoch2	SliderDefault.ltl	17	REALIZABLE	0.04346906999126077	false	REALIZABLE	17
+B-cap17-epoch2	SliderDelayed.ltl	17	REALIZABLE	0.049316224991343915	false	REALIZABLE	17
+B-cap17-epoch2	SliderScored.ltl	17	REALIZABLE	0.04508891099249013	false	REALIZABLE	17
+B-cap17-epoch2	System_b0840146.ltl	17	UNREALIZABLE	0.02964640999562107	false	UNREALIZABLE	17
+B-cap17-epoch2	Time_a50cadd7.ltl	17	UNREALIZABLE	0.03243725499487482	false	UNREALIZABLE	17
+B-cap17-epoch2	Timer_a50cadd7.ltl	17	REALIZABLE	0.025465330021688715	false	REALIZABLE	17
+B-cap17-epoch2	TorcsAccelerating.ltl	17	REALIZABLE	0.03208370698848739	false	REALIZABLE	17
+B-cap17-epoch2	TorcsGearing.ltl	17	REALIZABLE	0.037797113007400185	false	REALIZABLE	17
+B-cap17-epoch2	TorcsSimple.ltl	17	REALIZABLE	0.039275595016079023	false	REALIZABLE	17
+B-cap17-epoch2	TorcsSteeringImproved.ltl	17	REALIZABLE	0.03631850998499431	false	REALIZABLE	17
+B-cap17-epoch2	TorcsSteeringSimple.ltl	17	REALIZABLE	0.01628365201759152	false	REALIZABLE	17
+B-cap17-epoch2	TorcsSteeringSmart.ltl	17	REALIZABLE	0.02003772000898607	false	REALIZABLE	17
+B-cap17-epoch2	TwoCounters.ltl	17	UNREALIZABLE	0.04478151901275851	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCounters2.ltl	17	UNREALIZABLE	0.042743883008370176	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCounters3.ltl	17	REALIZABLE	1.5374224569823127	false	REALIZABLE	17
+B-cap17-epoch2	TwoCounters4.ltl	17	REALIZABLE	0.02473567199194804	false	REALIZABLE	17
+B-cap17-epoch2	TwoCounters5.ltl	17	UNREALIZABLE	0.13235177798196673	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA0.ltl	17	UNREALIZABLE	0.04393777600489557	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA1.ltl	17	UNREALIZABLE	0.05023145000450313	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA2.ltl	17	UNREALIZABLE	0.0685582610021811	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA3.ltl	17	UNREALIZABLE	0.12613027999759652	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA4.ltl	17	UNREALIZABLE	0.1229940340272151	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA5.ltl	17	UNREALIZABLE	0.12346459701075219	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA6.ltl	17	UNREALIZABLE	0.133580917987274	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA7.ltl	17	UNREALIZABLE	0.154856577020837	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA8.ltl	17	UNREALIZABLE	0.1636987279925961	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButA9.ltl	17	UNREALIZABLE	0.20296699297614396	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersDisButAC.ltl	17	UNREALIZABLE	0.20182814297731966	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersGui.ltl	17	UNREALIZABLE	0.047133671992924064	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRange.ltl	17	UNREALIZABLE	0.040866388007998466	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeA1.ltl	17	UNREALIZABLE	0.024950068996986374	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeA2.ltl	17	UNREALIZABLE	0.0480135940015316	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeA3.ltl	17	UNREALIZABLE	0.02094286901410669	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeA4.ltl	17	UNREALIZABLE	0.048222699988400564	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeA5.ltl	17	UNREALIZABLE	0.04432484999415465	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeM0.ltl	17	UNREALIZABLE	0.04281301598530263	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeM1.ltl	17	UNREALIZABLE	0.02597321299253963	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeM2.ltl	17	UNREALIZABLE	0.026133001985726878	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeM3.ltl	17	UNREALIZABLE	0.04536362999351695	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersInRangeM4.ltl	17	UNREALIZABLE	0.02393332199426368	false	UNREALIZABLE	17
+B-cap17-epoch2	TwoCountersRefined.ltl	17	UNREALIZABLE	0.03344220301369205	false	UNREALIZABLE	17
 B-cap17-epoch2	TwoCountersRefinedRefined.ltl	17	REALIZABLE	0.04159606900066137	false	REALIZABLE	17
+B-cap17-epoch2	UnderapproxDemo2.ltl	17	UNREALIZABLE	0.029500628996174783	false	UNREALIZABLE	17
+B-cap17-epoch2	UnderapproxStrengthenedDemo.ltl	17	REALIZABLE	0.0180434710055124	false	REALIZABLE	17
+B-cap17-epoch2	Warnlight_2d1010f8.ltl	17	REALIZABLE	0.02823395299492404	false	REALIZABLE	17
+B-cap17-epoch2	Warnlight_a50cadd7.ltl	17	UNREALIZABLE	0.03858207198209129	false	UNREALIZABLE	17
+B-cap17-epoch2	Window2Min_88c5c1c3.ltl	17	REALIZABLE	0.02716377199976705	false	REALIZABLE	17
+B-cap17-epoch2	Window2_54e1f7d2.ltl	17	REALIZABLE	0.0502566100039985	false	REALIZABLE	17
+B-cap17-epoch2	Window2_6479ef9a.ltl	17	REALIZABLE	0.02017803699709475	false	REALIZABLE	17
+B-cap17-epoch2	Window2_9cac58d3.ltl	17	REALIZABLE	0.030064015998505056	false	REALIZABLE	17
+B-cap17-epoch2	Window2_aeb1d897.ltl	17	REALIZABLE	0.039061369985574856	false	REALIZABLE	17
+B-cap17-epoch2	Window2_f1477cc5.ltl	17	UNREALIZABLE	0.02852639599586837	false	UNREALIZABLE	17
+B-cap17-epoch2	WindowMin_a5f99bc6.ltl	17	REALIZABLE	0.03161424299469218	false	REALIZABLE	17
+B-cap17-epoch2	Window_235467da.ltl	17	REALIZABLE	0.024637049005832523	false	REALIZABLE	17
+B-cap17-epoch2	Window_42dc4fff.ltl	17	REALIZABLE	0.02816064900252968	false	REALIZABLE	17
+B-cap17-epoch2	Window_54e1f7d2.ltl	17	REALIZABLE	0.03575159201864153	false	REALIZABLE	17
+B-cap17-epoch2	Zoo0.ltl	17	REALIZABLE	0.03072815900668502	false	REALIZABLE	17
+B-cap17-epoch2	Zoo10.ltl	17	REALIZABLE	0.016271602973574772	false	REALIZABLE	17
+B-cap17-epoch2	Zoo5.ltl	17	REALIZABLE	0.044108005007728934	false	REALIZABLE	17
+B-cap17-epoch2	abcg_arbiter_pb_1_pe_.ltl	17	REALIZABLE	0.031884676980553195	false	REALIZABLE	17
+B-cap17-epoch2	abcg_arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.09001374800573103	false	REALIZABLE	17
+B-cap17-epoch2	abcg_arbiter_pb_3_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_case_study_pb_2_pe_.ltl	17	REALIZABLE	1.108541427005548	false	REALIZABLE	17
+B-cap17-epoch2	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT	17
 B-cap17-epoch2	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.026194287987891585	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_3_pe_.ltl	17	REALIZABLE	0.03160049399593845	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_4_pe_.ltl	17	REALIZABLE	0.045224379980936646	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.1340607930033002	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_6_pe_.ltl	17	REALIZABLE	1.1307240540045314	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_decode.ltl	17	REALIZABLE	0.01651368400780484	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_10_pe_.ltl	17	REALIZABLE	0.05613886599894613	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_11_pe_.ltl	17	REALIZABLE	0.061598033003974706	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_12_pe_.ltl	17	REALIZABLE	0.05671679801889695	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_13_pe_.ltl	17	REALIZABLE	0.08822036301717162	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_14_pe_.ltl	17	REALIZABLE	0.14234572599525563	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_15_pe_.ltl	17	REALIZABLE	0.3292265869968105	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_16_pe_.ltl	17	REALIZABLE	0.9485268740099855	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_encode_pb_2_pe_.ltl	17	REALIZABLE	0.03219832500326447	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_3_pe_.ltl	17	REALIZABLE	0.020337557012680918	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_4_pe_.ltl	17	REALIZABLE	0.019081120000919327	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_5_pe_.ltl	17	REALIZABLE	0.021238826011540368	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_6_pe_.ltl	17	REALIZABLE	0.023754943016683683	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_7_pe_.ltl	17	REALIZABLE	0.02789884599042125	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_8_pe_.ltl	17	REALIZABLE	0.053750335006043315	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_encode_pb_9_pe_.ltl	17	REALIZABLE	0.04611940300674178	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_10_pe_.ltl	17	REALIZABLE	0.48148559700348414	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_11_pe_.ltl	17	REALIZABLE	1.8360851200122852	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	7.204333131987369	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_13_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_lock_pb_2_pe_.ltl	17	REALIZABLE	0.039968948025489226	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_decomposed_lock_pb_3_pe_.ltl	17	REALIZABLE	0.017019839986460283	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_4_pe_.ltl	17	REALIZABLE	0.027655523008434102	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_5_pe_.ltl	17	REALIZABLE	0.02781700500054285	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_6_pe_.ltl	17	REALIZABLE	0.027235243993345648	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_7_pe_.ltl	17	REALIZABLE	0.03652537800371647	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_8_pe_.ltl	17	REALIZABLE	0.06263261998537928	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_lock_pb_9_pe_.ltl	17	REALIZABLE	0.13739519199589267	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_shift.ltl	17	REALIZABLE	0.034573069016914815	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_tburst4.ltl	17	REALIZABLE	0.03558051699656062	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_tincr.ltl	17	REALIZABLE	0.032939049997366965	false	REALIZABLE	17
+B-cap17-epoch2	amba_decomposed_tsingle.ltl	17	REALIZABLE	0.016541208984563127	false	REALIZABLE	17
+B-cap17-epoch2	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_gr_pb_2_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_gr_pb_3_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	amba_gr_pb_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter-paper-unreal-unreal.ltl	17	UNREALIZABLE	0.035347305005416274	false	UNREALIZABLE	17
+B-cap17-epoch2	arbiter-with-failure-real.ltl	17	REALIZABLE	0.04272332100663334	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_on_inpchange_pb_1_pe_.ltl	17	REALIZABLE	0.023425433988450095	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_on_inpchange_pb_2_pe_.ltl	17	REALIZABLE	0.02212723801494576	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_on_inpchange_pb_3_pe_.ltl	17	REALIZABLE	0.032540586980758235	false	REALIZABLE	17
 B-cap17-epoch2	arbiter_on_inpchange_pb_4_pe_.ltl	17	REALIZABLE	0.794320670014713	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_pb_1_pe_.ltl	17	REALIZABLE	0.024900130985770375	false	REALIZABLE	17
 B-cap17-epoch2	arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.019849933014484122	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_pb_3_pe_.ltl	17	REALIZABLE	0.042136830976232886	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_pb_4_pe_.ltl	17	REALIZABLE	0.034913161012809724	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.3636091780208517	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_buffer_pb_1_pe_.ltl	17	REALIZABLE	0.01569656399078667	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_buffer_pb_2_pe_.ltl	17	REALIZABLE	0.0403995800006669	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_buffer_pb_3_pe_.ltl	17	REALIZABLE	0.03196852799737826	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_buffer_pb_4_pe_.ltl	17	REALIZABLE	0.06704808000358753	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_buffer_pb_5_pe_.ltl	17	REALIZABLE	0.8735212530009449	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_cancel_pb_1_pe_.ltl	17	REALIZABLE	0.026805686997249722	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_cancel_pb_2_pe_.ltl	17	REALIZABLE	0.03462998100440018	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_cancel_pb_3_pe_.ltl	17	REALIZABLE	0.04610283000511117	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_cancel_pb_4_pe_.ltl	17	REALIZABLE	0.08303367800544947	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_cancel_pb_5_pe_.ltl	17	REALIZABLE	1.1825979749846738	false	REALIZABLE	17
+B-cap17-epoch2	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	batch-arbiter-real.ltl	17	REALIZABLE	0.03663922901614569	false	REALIZABLE	17
+B-cap17-epoch2	box-limited-real.ltl	17	REALIZABLE	0.03902662202017382	false	REALIZABLE	17
+B-cap17-epoch2	box-real.ltl	17	REALIZABLE	0.06177750899223611	false	REALIZABLE	17
+B-cap17-epoch2	box0.ltl	17	UNREALIZABLE	0.037171812989981845	false	UNREALIZABLE	17
+B-cap17-epoch2	box1.ltl	17	UNREALIZABLE	0.03860068699577823	false	UNREALIZABLE	17
+B-cap17-epoch2	buffer-storage-real.ltl	17	REALIZABLE	0.6654570490063634	false	REALIZABLE	17
+B-cap17-epoch2	chain-4-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chain-5-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chain-60.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chain-70.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chain-simple-10-real.ltl	17	REALIZABLE	0.13863043999299407	false	REALIZABLE	17
+B-cap17-epoch2	chain-simple-20-real.ltl	17	REALIZABLE	0.2627663279999979	false	REALIZABLE	17
+B-cap17-epoch2	chain-simple-30-real.ltl	17	REALIZABLE	0.4234916080022231	false	REALIZABLE	17
+B-cap17-epoch2	chain-simple-40-real.ltl	17	REALIZABLE	0.5931669079873245	false	REALIZABLE	17
+B-cap17-epoch2	chain-simple-5-real.ltl	17	REALIZABLE	0.08023797898204066	false	REALIZABLE	17
+B-cap17-epoch2	chain-simple-50-real.ltl	17	REALIZABLE	0.7311150280002039	false	REALIZABLE	17
+B-cap17-epoch2	chain-simple-60-real.ltl	17	REALIZABLE	0.9036679069977254	false	REALIZABLE	17
+B-cap17-epoch2	chain-simple-70-real.ltl	17	REALIZABLE	1.1267214319959749	false	REALIZABLE	17
+B-cap17-epoch2	chain-simple-param-70-real.ltl	17	REALIZABLE	1.2016985380032565	false	REALIZABLE	17
+B-cap17-epoch2	chomp_pb_2_2_pe_.ltl	17	REALIZABLE	0.08695589998387732	false	REALIZABLE	17
+B-cap17-epoch2	chomp_pb_2_3_pe_.ltl	17	REALIZABLE	3.7419233139953576	false	REALIZABLE	17
+B-cap17-epoch2	chomp_pb_2_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_2_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_3_2_pe_.ltl	17	REALIZABLE	3.702202215004945	false	REALIZABLE	17
+B-cap17-epoch2	chomp_pb_3_3_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_3_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_3_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_3_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_4_2_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_4_3_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_4_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_4_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v1_pb_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v1_pb_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v1_pb_13_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v1_pb_14_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v1_pb_15_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v1_pb_3_pe_.ltl	17	REALIZABLE	0.03219745500246063	false	REALIZABLE	17
+B-cap17-epoch2	collector_v1_pb_5_pe_.ltl	17	REALIZABLE	0.02559075999306515	false	REALIZABLE	17
+B-cap17-epoch2	collector_v1_pb_7_pe_.ltl	17	REALIZABLE	0.10221683999407105	false	REALIZABLE	17
+B-cap17-epoch2	collector_v1_pb_9_pe_.ltl	17	REALIZABLE	2.8538887519971468	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_10_pe_.ltl	17	REALIZABLE	0.15877928299596533	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_11_pe_.ltl	17	REALIZABLE	0.3366574340034276	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_12_pe_.ltl	17	REALIZABLE	0.8448803249921184	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_13_pe_.ltl	17	REALIZABLE	2.042341485997895	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_15_pe_.ltl	17	REALIZABLE	14.402699671976734	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_27_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v2_pb_3_pe_.ltl	17	REALIZABLE	0.03404704199056141	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_5_pe_.ltl	17	REALIZABLE	0.021033139986684546	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_7_pe_.ltl	17	REALIZABLE	0.04874248901614919	false	REALIZABLE	17
+B-cap17-epoch2	collector_v2_pb_9_pe_.ltl	17	REALIZABLE	0.08598444200470112	false	REALIZABLE	17
 B-cap17-epoch2	collector_v3_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v3_pb_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v3_pb_12_pe_.ltl				true	TIMEOUT	17
 B-cap17-epoch2	collector_v3_pb_13_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v3_pb_15_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	collector_v3_pb_3_pe_.ltl	17	REALIZABLE	0.03550017101224512	false	REALIZABLE	17
+B-cap17-epoch2	collector_v3_pb_5_pe_.ltl	17	REALIZABLE	0.04058185499161482	false	REALIZABLE	17
+B-cap17-epoch2	collector_v3_pb_7_pe_.ltl	17	REALIZABLE	1.0694172240037005	false	REALIZABLE	17
+B-cap17-epoch2	collector_v3_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	diagonal-real.ltl	17	REALIZABLE	0.0495219660224393	false	REALIZABLE	17
+B-cap17-epoch2	door_locking_problem_d6c5ac79.ltl	17	REALIZABLE	0.045263495994731784	false	REALIZABLE	17
 B-cap17-epoch2	elevator-paper-real.ltl	17	REALIZABLE	0.06482118900748901	false	REALIZABLE	17
+B-cap17-epoch2	evasion-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	evasion0.ltl	17	UNREALIZABLE	0.5693982469965704	false	UNREALIZABLE	17
+B-cap17-epoch2	example10_pb_1_pe_.ltl	17	REALIZABLE	0.024226592999184504	false	REALIZABLE	17
 B-cap17-epoch2	example10_pb_2_pe_.ltl	17	REALIZABLE	0.019689706998178735	false	REALIZABLE	17
+B-cap17-epoch2	example10a_pb_1_pe_.ltl	17	REALIZABLE	0.037659285007975996	false	REALIZABLE	17
+B-cap17-epoch2	example10a_pb_2_pe_.ltl	17	REALIZABLE	0.03408499600482173	false	REALIZABLE	17
+B-cap17-epoch2	example7_pb_1_pe_.ltl	17	REALIZABLE	0.020573652000166476	false	REALIZABLE	17
+B-cap17-epoch2	example7_pb_2_pe_.ltl	17	REALIZABLE	0.033853409986477345	false	REALIZABLE	17
+B-cap17-epoch2	example7a_pb_1_pe_.ltl	17	REALIZABLE	0.027419786987593397	false	REALIZABLE	17
 B-cap17-epoch2	example7a_pb_2_pe_.ltl	17	REALIZABLE	0.03222099400591105	false	REALIZABLE	17
+B-cap17-epoch2	example8_pb_1_pe_.ltl	17	REALIZABLE	0.013865233981050551	false	REALIZABLE	17
+B-cap17-epoch2	example8_pb_2_pe_.ltl	17	REALIZABLE	0.03397899999981746	false	REALIZABLE	17
+B-cap17-epoch2	example9_pb_1_pe_.ltl	17	REALIZABLE	0.03365047200350091	false	REALIZABLE	17
+B-cap17-epoch2	example9_pb_2_pe_.ltl	17	REALIZABLE	0.02349331000004895	false	REALIZABLE	17
+B-cap17-epoch2	f-real-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	f-unreal-unreal.ltl	17	UNREALIZABLE	0.045403741009067744	false	UNREALIZABLE	17
+B-cap17-epoch2	finding_nemo_pb_1_pe_.ltl	17	REALIZABLE	0.12353595299646258	false	REALIZABLE	17
+B-cap17-epoch2	finding_nemo_pb_2_pe_.ltl	17	REALIZABLE	4.889486580999801	false	REALIZABLE	17
+B-cap17-epoch2	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT	17
 B-cap17-epoch2	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT	17
 B-cap17-epoch2	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	follow0.ltl				true	TIMEOUT	17
+B-cap17-epoch2	follow1.ltl				true	TIMEOUT	17
+B-cap17-epoch2	follow2.ltl				true	TIMEOUT	17
+B-cap17-epoch2	follow3.ltl				true	TIMEOUT	17
+B-cap17-epoch2	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
 B-cap17-epoch2	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_10_pe_.ltl	17	UNREALIZABLE	0.014134077006019652	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_11_pe_.ltl	17	UNREALIZABLE	0.035775191005086526	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_12_pe_.ltl	17	UNREALIZABLE	0.01706544597982429	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_13_pe_.ltl	17	UNREALIZABLE	0.0314800720079802	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_14_pe_.ltl	17	UNREALIZABLE	0.031254074012394994	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	0.03390540601685643	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_16_pe_.ltl	17	UNREALIZABLE	0.03240343398647383	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_18_pe_.ltl	17	UNREALIZABLE	0.021438036987092346	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_1_pe_.ltl	17	UNREALIZABLE	0.025352190976263955	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_20_pe_.ltl	17	UNREALIZABLE	0.03553655100404285	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_21_pe_.ltl	17	UNREALIZABLE	0.03168986298260279	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_22_pe_.ltl	17	UNREALIZABLE	0.022426103008911014	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_24_pe_.ltl	17	UNREALIZABLE	0.023258922999957576	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_26_pe_.ltl	17	UNREALIZABLE	0.03818405300262384	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_2_pe_.ltl	17	UNREALIZABLE	0.0318476950051263	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_3_pe_.ltl	17	UNREALIZABLE	0.016210559027967975	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_4_pe_.ltl	17	UNREALIZABLE	0.03661107301013544	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_5_pe_.ltl	17	UNREALIZABLE	0.03273145097773522	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_6_pe_.ltl	17	UNREALIZABLE	0.02321863398537971	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_7_pe_.ltl	17	UNREALIZABLE	0.025960611004848033	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_8_pe_.ltl	17	UNREALIZABLE	0.02081117799389176	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_2_9_pe_.ltl	17	UNREALIZABLE	0.014848948019789532	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_10_pe_.ltl	17	UNREALIZABLE	0.03224034499726258	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_11_pe_.ltl	17	UNREALIZABLE	0.016813780996017158	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_12_pe_.ltl	17	UNREALIZABLE	0.032609203015454113	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_13_pe_.ltl	17	UNREALIZABLE	0.03409848202136345	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_14_pe_.ltl	17	UNREALIZABLE	0.01633325999137014	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_15_pe_.ltl	17	UNREALIZABLE	0.03290790299070068	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_1_pe_.ltl	17	UNREALIZABLE	0.015364380000391975	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_2_pe_.ltl	17	UNREALIZABLE	0.04158106099930592	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_3_pe_.ltl	17	UNREALIZABLE	0.02615624002646655	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_4_pe_.ltl	17	UNREALIZABLE	0.01673430801020004	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_5_pe_.ltl	17	UNREALIZABLE	0.020398239023052156	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	0.03300227099680342	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	0.039976447995286435	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_8_pe_.ltl	17	UNREALIZABLE	0.023200470983283594	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_3_9_pe_.ltl	17	UNREALIZABLE	0.03210747899720445	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_4_1_pe_.ltl	17	UNREALIZABLE	0.03317162601160817	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_4_2_pe_.ltl	17	UNREALIZABLE	0.03409894500509836	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_4_3_pe_.ltl	17	UNREALIZABLE	0.03193793699028902	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_4_4_pe_.ltl	17	UNREALIZABLE	0.03284413801156916	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_4_5_pe_.ltl	17	UNREALIZABLE	0.026244910986861214	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	0.034023970016278327	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	0.03110890500829555	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_4_8_pe_.ltl	17	UNREALIZABLE	0.03322982499958016	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal1_pb_6_8_pe_.ltl	17	UNREALIZABLE	0.017948727996554226	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal2_pb_2_pe_.ltl	17	UNREALIZABLE	0.016656513005727902	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal2_pb_3_pe_.ltl	17	UNREALIZABLE	0.017990398016991094	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.03831055201590061	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	0.03714675601804629	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal2_pb_6_pe_.ltl	17	UNREALIZABLE	0.039604647987289354	false	UNREALIZABLE	17
+B-cap17-epoch2	full_arbiter_unreal2_pb_7_pe_.ltl	17	UNREALIZABLE	0.02252737298840657	false	UNREALIZABLE	17
+B-cap17-epoch2	g-real-real.ltl	17	REALIZABLE	4.619035623996751	false	REALIZABLE	17
+B-cap17-epoch2	g-real0.ltl	17	UNREALIZABLE	0.0622069810051471	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-1-unreal.ltl				true	TIMEOUT	17
 B-cap17-epoch2	g-unreal-10.ltl	17	UNREALIZABLE	0.03261681299773045	false	UNREALIZABLE	17
 B-cap17-epoch2	g-unreal-11.ltl	17	UNREALIZABLE	0.041542388004017994	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-110.ltl	17	UNREALIZABLE	2.474217751994729	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-111.ltl	17	UNREALIZABLE	4.07149646000471	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-112.ltl	17	UNREALIZABLE	6.724083003005944	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-113.ltl	17	UNREALIZABLE	7.553884490975179	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-114.ltl	17	UNREALIZABLE	12.056750996998744	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-115.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-116.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-117.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-118.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-119.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-12.ltl	17	UNREALIZABLE	0.04869407098158263	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-120.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-13.ltl	17	UNREALIZABLE	0.03977727601886727	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-14.ltl	17	UNREALIZABLE	0.09078022401081398	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-15.ltl	17	UNREALIZABLE	0.14979692301130854	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-16.ltl	17	UNREALIZABLE	0.29933569600689225	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-17.ltl	17	UNREALIZABLE	0.3589008120179642	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-18.ltl	17	UNREALIZABLE	1.2046004199946765	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-19.ltl	17	UNREALIZABLE	2.0663098150107544	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-20.ltl				true	TIMEOUT	17
 B-cap17-epoch2	g-unreal-21.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-30.ltl	17	UNREALIZABLE	0.06460824198438786	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-31.ltl	17	UNREALIZABLE	0.05925965899950825	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-310.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-311.ltl				true	TIMEOUT	17
 B-cap17-epoch2	g-unreal-312.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-313.ltl				true	TIMEOUT	17
+B-cap17-epoch2	g-unreal-314.ltl				true	TIMEOUT	17
 B-cap17-epoch2	g-unreal-32.ltl	17	UNREALIZABLE	0.17999038298148662	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-33.ltl	17	UNREALIZABLE	0.5564364210003987	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-34.ltl	17	UNREALIZABLE	1.0074168469873257	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-35.ltl	17	UNREALIZABLE	1.0584722429921385	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-36.ltl	17	UNREALIZABLE	1.2283722019928973	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-37.ltl	17	UNREALIZABLE	1.993965711997589	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-38.ltl	17	UNREALIZABLE	9.372340765985427	false	UNREALIZABLE	17
+B-cap17-epoch2	g-unreal-39.ltl	17	UNREALIZABLE	11.69958527199924	false	UNREALIZABLE	17
+B-cap17-epoch2	generalized_buffer_pb_2_pe_.ltl	17	REALIZABLE	0.027111723000416532	false	REALIZABLE	17
+B-cap17-epoch2	generalized_buffer_pb_3_pe_.ltl	17	REALIZABLE	0.028895436989841983	false	REALIZABLE	17
+B-cap17-epoch2	generalized_buffer_pb_4_pe_.ltl	17	REALIZABLE	0.09735683098551817	false	REALIZABLE	17
+B-cap17-epoch2	generalized_buffer_pb_5_pe_.ltl	17	REALIZABLE	1.5766080120229162	false	REALIZABLE	17
+B-cap17-epoch2	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	gf-real-real.ltl	17	REALIZABLE	0.026785680995089933	false	REALIZABLE	17
+B-cap17-epoch2	gf-unreal0.ltl	17	UNREALIZABLE	0.020211978000588715	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal1.ltl	17	UNREALIZABLE	0.020446265989448875	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal10.ltl	17	UNREALIZABLE	0.04109548599808477	false	UNREALIZABLE	17
 B-cap17-epoch2	gf-unreal11.ltl	17	UNREALIZABLE	0.03295462200185284	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal12.ltl	17	UNREALIZABLE	0.03212507101125084	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal13.ltl	17	UNREALIZABLE	0.029043043992714956	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal14.ltl	17	UNREALIZABLE	0.022986105002928525	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal15.ltl	17	UNREALIZABLE	0.024264257022878155	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal16.ltl	17	UNREALIZABLE	0.03764978999970481	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal17.ltl	17	UNREALIZABLE	0.0345745810191147	false	UNREALIZABLE	17
 B-cap17-epoch2	gf-unreal18.ltl	17	UNREALIZABLE	0.04505490299197845	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal19.ltl	17	UNREALIZABLE	0.023189889994682744	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal2.ltl	17	UNREALIZABLE	0.018189990980317816	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal20.ltl	17	UNREALIZABLE	0.022594920999836177	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal21.ltl	17	UNREALIZABLE	0.02601203598896973	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal22.ltl	17	UNREALIZABLE	0.03508750000037253	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal23.ltl	17	UNREALIZABLE	0.031281166011467576	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal24.ltl	17	UNREALIZABLE	0.03846958899521269	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal25.ltl	17	UNREALIZABLE	0.04273191301035695	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal26.ltl	17	UNREALIZABLE	0.021214909997070208	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal27.ltl	17	UNREALIZABLE	0.031089033000171185	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal28.ltl	17	UNREALIZABLE	0.026815694000106305	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal29.ltl	17	UNREALIZABLE	0.022931095998501405	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal3.ltl	17	UNREALIZABLE	0.02144524798495695	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal30.ltl	17	UNREALIZABLE	0.03738531799172051	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal31.ltl	17	UNREALIZABLE	0.04447313601849601	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal32.ltl	17	UNREALIZABLE	0.02649588999338448	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal33.ltl	17	UNREALIZABLE	0.04714692599372938	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal34.ltl	17	UNREALIZABLE	0.025974752992624417	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal35.ltl	17	UNREALIZABLE	0.03349558400805108	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal36.ltl	17	UNREALIZABLE	0.04659598000580445	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal37.ltl	17	UNREALIZABLE	0.046180123987142	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal38.ltl	17	UNREALIZABLE	0.044013263017404824	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal39.ltl	17	UNREALIZABLE	0.0439273240044713	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal4.ltl	17	UNREALIZABLE	0.03944704600144178	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal40.ltl	17	UNREALIZABLE	0.0377229529840406	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal41.ltl	17	UNREALIZABLE	0.03339000200503506	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal42.ltl	17	UNREALIZABLE	0.0527928989904467	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal43.ltl	17	UNREALIZABLE	0.05353636099607684	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal44.ltl	17	UNREALIZABLE	0.05462391799665056	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal45.ltl	17	UNREALIZABLE	0.04578971100272611	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal46.ltl	17	UNREALIZABLE	0.049396218004403636	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal47.ltl	17	UNREALIZABLE	0.04349066998111084	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal5.ltl	17	UNREALIZABLE	0.02955634900717996	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal6.ltl	17	UNREALIZABLE	0.032829008996486664	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal7.ltl	17	UNREALIZABLE	0.032223983987933025	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal8.ltl	17	UNREALIZABLE	0.03946123700006865	false	UNREALIZABLE	17
+B-cap17-epoch2	gf-unreal9.ltl	17	UNREALIZABLE	0.04048861798946746	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-buechi-real.ltl	17	REALIZABLE	2.294105726003181	false	REALIZABLE	17
+B-cap17-epoch2	heim-double-x-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	heim-double-x0.ltl	17	UNREALIZABLE	0.060034194990294054	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x1.ltl	17	UNREALIZABLE	0.05892004899214953	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x10.ltl	17	UNREALIZABLE	2.2950478899874724	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x11.ltl	17	UNREALIZABLE	2.721934610977769	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x12.ltl	17	UNREALIZABLE	4.696927904005861	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x13.ltl	17	UNREALIZABLE	5.308600426011253	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x2.ltl	17	UNREALIZABLE	0.08270383399212733	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x3.ltl	17	UNREALIZABLE	0.13464769697748125	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x4.ltl	17	UNREALIZABLE	0.2562727390031796	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x5.ltl	17	UNREALIZABLE	0.31245048498385586	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x6.ltl	17	UNREALIZABLE	0.38028783598565497	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x7.ltl	17	UNREALIZABLE	0.41129263100447133	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x8.ltl	17	UNREALIZABLE	1.0943087140040006	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-double-x9.ltl	17	UNREALIZABLE	2.09885530298925	false	UNREALIZABLE	17
+B-cap17-epoch2	heim-fig7-unreal.ltl	17	UNREALIZABLE	0.035342525981832296	false	UNREALIZABLE	17
+B-cap17-epoch2	helipad-contradict0.ltl				true	TIMEOUT	17
+B-cap17-epoch2	helipad-contradict1.ltl				true	TIMEOUT	17
+B-cap17-epoch2	helipad-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-real.ltl	17	REALIZABLE	0.02957267197780311	false	REALIZABLE	17
 B-cap17-epoch2	infinite-race-u0.ltl	17	UNREALIZABLE	0.022752171993488446	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u1.ltl	17	UNREALIZABLE	0.04375432198867202	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u10.ltl	17	UNREALIZABLE	10.60870920601883	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u11.ltl	17	UNREALIZABLE	14.268724900000961	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u12.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u13.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u14.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u15.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u16.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u17.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u18.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u19.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u2.ltl	17	UNREALIZABLE	0.08402314697741531	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u20.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u21.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u22.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u23.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u24.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u25.ltl				true	TIMEOUT	17
+B-cap17-epoch2	infinite-race-u3.ltl	17	UNREALIZABLE	0.08365358901210129	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u4.ltl	17	UNREALIZABLE	0.11017164000077173	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u5.ltl	17	UNREALIZABLE	0.15852740299305879	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u6.ltl	17	UNREALIZABLE	1.1430148350191303	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u7.ltl	17	UNREALIZABLE	1.5888008000038099	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u8.ltl	17	UNREALIZABLE	2.412348985002609	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-u9.ltl	17	UNREALIZABLE	9.220914998993976	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-1-real.ltl	17	REALIZABLE	0.1630630980071146	false	REALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-10.ltl	17	UNREALIZABLE	0.02320682699792087	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-20.ltl	17	UNREALIZABLE	0.03689396000117995	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-21.ltl	17	UNREALIZABLE	0.054618174995994195	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-22.ltl	17	UNREALIZABLE	0.0819652079953812	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-23.ltl	17	UNREALIZABLE	0.12690330599434674	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-24.ltl	17	UNREALIZABLE	1.2087100879871286	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-25.ltl	17	UNREALIZABLE	13.572493685001973	false	UNREALIZABLE	17
+B-cap17-epoch2	infinite-race-unequal-26.ltl				true	TIMEOUT	17
+B-cap17-epoch2	items_processing-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	jarvis_gideon_a02758ea.ltl	17	UNREALIZABLE	0.018197486991994083	false	UNREALIZABLE	17
+B-cap17-epoch2	jarvis_philippe_484face8.ltl	17	UNREALIZABLE	0.0355378259846475	false	UNREALIZABLE	17
+B-cap17-epoch2	lazy_shades_problem_d6376bf9.ltl	17	REALIZABLE	0.04314985100063495	false	REALIZABLE	17
+B-cap17-epoch2	lift_gr1+_pb_2_pe_.ltl	17	REALIZABLE	0.029422411986161023	false	REALIZABLE	17
 B-cap17-epoch2	lift_gr1+_pb_3_pe_.ltl	17	REALIZABLE	1.3098324190068524	false	REALIZABLE	17
+B-cap17-epoch2	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_gr1_pb_2_pe_.ltl	17	REALIZABLE	0.025383438973221928	false	REALIZABLE	17
+B-cap17-epoch2	lift_gr1_pb_3_pe_.ltl	17	REALIZABLE	0.22327074999338947	false	REALIZABLE	17
+B-cap17-epoch2	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_pb_2_pe_.ltl	17	REALIZABLE	0.034078718977980316	false	REALIZABLE	17
+B-cap17-epoch2	lift_pb_3_pe_.ltl	17	REALIZABLE	0.04912879099720158	false	REALIZABLE	17
+B-cap17-epoch2	lift_pb_4_pe_.ltl	17	REALIZABLE	0.2794966970104724	false	REALIZABLE	17
+B-cap17-epoch2	lift_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_unary_enc_pb_2_pe_.ltl	17	REALIZABLE	0.03766185900894925	false	REALIZABLE	17
+B-cap17-epoch2	lift_unary_enc_pb_3_pe_.ltl	17	REALIZABLE	0.07234923599753529	false	REALIZABLE	17
+B-cap17-epoch2	lift_unary_enc_pb_4_pe_.ltl	17	REALIZABLE	9.782099300005939	false	REALIZABLE	17
+B-cap17-epoch2	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_10_pe_.ltl	17	UNREALIZABLE	1.1543300129997078	false	UNREALIZABLE	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_2_pe_.ltl	17	REALIZABLE	0.03956768198986538	false	REALIZABLE	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_3_pe_.ltl	17	UNREALIZABLE	0.021205247001489624	false	UNREALIZABLE	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_4_pe_.ltl	17	UNREALIZABLE	0.02444737998303026	false	UNREALIZABLE	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_5_pe_.ltl	17	UNREALIZABLE	0.03519582899753004	false	UNREALIZABLE	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_6_pe_.ltl	17	UNREALIZABLE	0.0393341590242926	false	UNREALIZABLE	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_7_pe_.ltl	17	UNREALIZABLE	0.08092386499629356	false	UNREALIZABLE	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_8_pe_.ltl	17	UNREALIZABLE	0.13036168398684822	false	UNREALIZABLE	17
+B-cap17-epoch2	lift_wrong_physics_unreal_pb_9_pe_.ltl	17	UNREALIZABLE	0.4623404630110599	false	UNREALIZABLE	17
+B-cap17-epoch2	lilydemo01.ltl	17	UNREALIZABLE	0.016826414997922257	false	UNREALIZABLE	17
+B-cap17-epoch2	lilydemo02.ltl	17	UNREALIZABLE	0.01986078600748442	false	UNREALIZABLE	17
+B-cap17-epoch2	lilydemo03.ltl	17	REALIZABLE	0.033795304014347494	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo04.ltl	17	REALIZABLE	0.01962159198592417	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo04_modified.ltl	17	UNREALIZABLE	0.03385368001181632	false	UNREALIZABLE	17
+B-cap17-epoch2	lilydemo05.ltl	17	REALIZABLE	0.01923547699698247	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo06.ltl	17	REALIZABLE	0.02696600300259888	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo07.ltl	17	REALIZABLE	0.028341269004158676	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo08.ltl	17	REALIZABLE	0.024785418005194515	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo09.ltl	17	REALIZABLE	0.0236625190009363	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo10.ltl	17	REALIZABLE	0.022884664009325206	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo11.ltl	17	UNREALIZABLE	0.030950062995543703	false	UNREALIZABLE	17
+B-cap17-epoch2	lilydemo12.ltl	17	REALIZABLE	0.017635399010032415	false	REALIZABLE	17
 B-cap17-epoch2	lilydemo13.ltl	17	REALIZABLE	0.022320863005006686	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo14.ltl	17	REALIZABLE	0.032002167019527406	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo15.ltl	17	REALIZABLE	0.016441027022665367	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo16.ltl	17	REALIZABLE	0.02309431799221784	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo17.ltl	17	REALIZABLE	0.016018325986806303	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo18.ltl	17	REALIZABLE	0.017018579004798084	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo19.ltl	17	REALIZABLE	0.03375850000884384	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo20.ltl	17	REALIZABLE	0.03794485499383882	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo21.ltl	17	REALIZABLE	0.0223454560036771	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo22.ltl	17	REALIZABLE	0.03946511901449412	false	REALIZABLE	17
+B-cap17-epoch2	lilydemo23.ltl	17	REALIZABLE	0.03284591098781675	false	REALIZABLE	17
+B-cap17-epoch2	load_balancer_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_pb_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_pb_2_pe_.ltl	17	REALIZABLE	0.033803694997914135	false	REALIZABLE	17
+B-cap17-epoch2	load_balancer_pb_3_pe_.ltl	17	REALIZABLE	0.04522739298408851	false	REALIZABLE	17
+B-cap17-epoch2	load_balancer_pb_4_pe_.ltl	17	REALIZABLE	0.04047187097603455	false	REALIZABLE	17
+B-cap17-epoch2	load_balancer_pb_5_pe_.ltl	17	REALIZABLE	0.13135474899900146	false	REALIZABLE	17
+B-cap17-epoch2	load_balancer_pb_6_pe_.ltl	17	REALIZABLE	0.49853323501884006	false	REALIZABLE	17
+B-cap17-epoch2	load_balancer_pb_7_pe_.ltl	17	REALIZABLE	4.9880335349880625	false	REALIZABLE	17
 B-cap17-epoch2	load_balancer_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_10_pe_.ltl	17	UNREALIZABLE	0.044318086991552263	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_11_pe_.ltl	17	UNREALIZABLE	0.06618258499656804	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_12_pe_.ltl	17	UNREALIZABLE	0.08806497900513932	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_13_pe_.ltl	17	UNREALIZABLE	0.17824486797326244	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_14_pe_.ltl	17	UNREALIZABLE	0.33929576401715167	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	0.7140235940169077	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_16_pe_.ltl	17	UNREALIZABLE	1.5361650889972225	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_1_pe_.ltl	17	UNREALIZABLE	0.01806857599876821	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_2_pe_.ltl	17	UNREALIZABLE	0.04032869701040909	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_3_pe_.ltl	17	UNREALIZABLE	0.033681337983580306	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_4_pe_.ltl	17	UNREALIZABLE	0.03460047801490873	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_5_pe_.ltl	17	UNREALIZABLE	0.04392209299840033	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_6_pe_.ltl	17	UNREALIZABLE	0.03509777598083019	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_7_pe_.ltl	17	UNREALIZABLE	0.037481137027498335	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_8_pe_.ltl	17	UNREALIZABLE	0.04140131099848077	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_2_9_pe_.ltl	17	UNREALIZABLE	0.025459135009441525	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_10_pe_.ltl	17	UNREALIZABLE	0.1538215360196773	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_11_pe_.ltl	17	UNREALIZABLE	0.276529434020631	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_12_pe_.ltl	17	UNREALIZABLE	0.5911175969813485	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_1_pe_.ltl	17	UNREALIZABLE	0.019929787988075987	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_2_pe_.ltl	17	UNREALIZABLE	0.04518166198977269	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_3_pe_.ltl	17	UNREALIZABLE	0.0324012020137161	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_4_pe_.ltl	17	UNREALIZABLE	0.043968260986730456	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_5_pe_.ltl	17	UNREALIZABLE	0.037861741991946474	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	0.0400890399760101	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	0.03512338502332568	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_8_pe_.ltl	17	UNREALIZABLE	0.062073436012724414	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_3_9_pe_.ltl	17	UNREALIZABLE	0.08352281598490663	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_1_pe_.ltl	17	UNREALIZABLE	0.027896187995793298	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_2_pe_.ltl	17	UNREALIZABLE	0.055309901013970375	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_3_pe_.ltl	17	UNREALIZABLE	0.04589072000817396	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_4_pe_.ltl	17	UNREALIZABLE	0.0528821460029576	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_5_pe_.ltl	17	UNREALIZABLE	0.18518332301755436	false	UNREALIZABLE	17
 B-cap17-epoch2	load_balancer_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	1.0519618440011982	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	7.797194424987538	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_5_2_pe_.ltl	17	UNREALIZABLE	0.05584202098543756	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_5_3_pe_.ltl	17	UNREALIZABLE	0.10735710398876108	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_5_4_pe_.ltl	17	UNREALIZABLE	0.6817448549845722	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	13.82140645198524	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_6_1_pe_.ltl	17	UNREALIZABLE	0.15171440099948086	false	UNREALIZABLE	17
 B-cap17-epoch2	load_balancer_unreal1_pb_6_2_pe_.ltl	17	UNREALIZABLE	0.20759863598505035	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_6_3_pe_.ltl	17	UNREALIZABLE	0.6781057249754667	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal1_pb_6_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal2_pb_2_pe_.ltl	17	REALIZABLE	0.02753407700220123	false	REALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal2_pb_3_pe_.ltl	17	UNREALIZABLE	0.036711474996991456	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.14751165299094282	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	11.608843835012522	false	UNREALIZABLE	17
+B-cap17-epoch2	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba01.ltl	17	REALIZABLE	0.017370663990732282	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba02.ltl	17	REALIZABLE	0.016846323997015134	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba03.ltl	17	REALIZABLE	0.019886664988007396	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba04.ltl	17	REALIZABLE	0.021571463003056124	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba05.ltl	17	REALIZABLE	0.03027536900481209	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba06.ltl	17	REALIZABLE	0.03707008599303663	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba07.ltl	17	REALIZABLE	0.019684571016114205	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba08.ltl	17	REALIZABLE	0.01691470600781031	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba09.ltl	17	REALIZABLE	0.020975762978196144	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba10.ltl	17	REALIZABLE	0.02019501698669046	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba11.ltl	17	REALIZABLE	0.03414829299435951	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba12.ltl	17	REALIZABLE	0.03331193799385801	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba13.ltl	17	REALIZABLE	0.030662713979836553	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba14.ltl	17	REALIZABLE	0.022768876020563766	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba15.ltl	17	REALIZABLE	0.013843485998222604	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba16.ltl	17	REALIZABLE	0.015649634995497763	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba17.ltl	17	REALIZABLE	0.029691108997212723	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba18.ltl	17	REALIZABLE	0.031018501991638914	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba19.ltl	17	REALIZABLE	0.028934241010574624	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba20.ltl	17	REALIZABLE	0.029644246998941526	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba21.ltl	17	REALIZABLE	0.03204588498920202	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba22.ltl	17	REALIZABLE	0.016074148006737232	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba23.ltl	17	REALIZABLE	0.027109148999443278	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba25.ltl	17	REALIZABLE	0.0325638510112185	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba26.ltl	17	REALIZABLE	0.022595788002945483	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba27.ltl	17	UNREALIZABLE	0.020314321998739615	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_100_pe_.ltl	17	REALIZABLE	0.03082944601192139	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_10_pe_.ltl	17	REALIZABLE	0.02500234599574469	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_12_pe_.ltl	17	REALIZABLE	0.033150308998301625	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_14_pe_.ltl	17	REALIZABLE	0.03458150100777857	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_16_pe_.ltl	17	REALIZABLE	0.032817389990668744	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_1_pe_.ltl	17	REALIZABLE	0.03092674500658177	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_25_pe_.ltl	17	REALIZABLE	0.025282521004555747	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_2_pe_.ltl	17	REALIZABLE	0.03290298199863173	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_3_pe_.ltl	17	REALIZABLE	0.019741396012250334	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_4_pe_.ltl	17	REALIZABLE	0.026045295991934836	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_50_pe_.ltl	17	REALIZABLE	0.023766547004925087	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_5_pe_.ltl	17	REALIZABLE	0.04368178697768599	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_60_pe_.ltl	17	REALIZABLE	0.030658818985102698	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_6_pe_.ltl	17	REALIZABLE	0.035971559991594404	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_70_pe_.ltl	17	REALIZABLE	0.033796534000430256	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_7_pe_.ltl	17	REALIZABLE	0.02743138701771386	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_80_pe_.ltl	17	REALIZABLE	0.015239744010614231	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_8_pe_.ltl	17	REALIZABLE	0.015453622996574268	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_pb_9_pe_.ltl	17	REALIZABLE	0.0339342060033232	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_10_pe_.ltl	17	UNREALIZABLE	0.10822565000853501	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_11_pe_.ltl	17	UNREALIZABLE	0.2558987930242438	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_12_pe_.ltl	17	UNREALIZABLE	0.5154129349975847	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_13_pe_.ltl	17	UNREALIZABLE	1.2502005920105148	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_14_pe_.ltl	17	UNREALIZABLE	3.2237505599914584	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_15_pe_.ltl	17	UNREALIZABLE	7.799912661022972	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_2_pe_.ltl	17	UNREALIZABLE	0.02422580900019966	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_3_pe_.ltl	17	UNREALIZABLE	0.0302481520047877	false	UNREALIZABLE	17
 B-cap17-epoch2	ltl2dba_C2_unreal_pb_4_pe_.ltl	17	UNREALIZABLE	0.017255065991776064	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_5_pe_.ltl	17	UNREALIZABLE	0.046444801992038265	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_6_pe_.ltl	17	UNREALIZABLE	0.04577044100733474	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_7_pe_.ltl	17	UNREALIZABLE	0.05072155798552558	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_8_pe_.ltl	17	UNREALIZABLE	0.03846734599210322	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_C2_unreal_pb_9_pe_.ltl	17	UNREALIZABLE	0.06659619399579242	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_10_pe_.ltl	17	REALIZABLE	0.040710784000111744	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_12_pe_.ltl	17	REALIZABLE	0.03299939801217988	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_14_pe_.ltl	17	REALIZABLE	0.029956414975458756	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_15_pe_.ltl	17	REALIZABLE	0.01621521098422818	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_16_pe_.ltl	17	REALIZABLE	0.01790953299496323	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_1_pe_.ltl	17	REALIZABLE	0.03305223601637408	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_2_pe_.ltl	17	REALIZABLE	0.022728723008185625	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_3_pe_.ltl	17	REALIZABLE	0.01753438400919549	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_4_pe_.ltl	17	REALIZABLE	0.034893717005616054	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_5_pe_.ltl	17	REALIZABLE	0.016093676997115836	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_6_pe_.ltl	17	REALIZABLE	0.015359365002950653	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_7_pe_.ltl	17	REALIZABLE	0.02045398301561363	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_E_pb_8_pe_.ltl	17	REALIZABLE	0.03369332302827388	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dba_E_pb_9_pe_.ltl	17	REALIZABLE	0.01827933799359016	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_100_pe_.ltl	17	REALIZABLE	0.01740648300619796	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_10_pe_.ltl	17	REALIZABLE	0.01530776298022829	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_12_pe_.ltl	17	REALIZABLE	0.020562417019391432	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_15_pe_.ltl	17	REALIZABLE	0.02284968298044987	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_18_pe_.ltl	17	REALIZABLE	0.03323082398856059	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_1_pe_.ltl	17	REALIZABLE	0.02308027000981383	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_25_pe_.ltl	17	REALIZABLE	0.027641069988021627	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_2_pe_.ltl	17	REALIZABLE	0.01595268800156191	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_3_pe_.ltl	17	REALIZABLE	0.031653433019528165	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_4_pe_.ltl	17	REALIZABLE	0.03537695200066082	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_50_pe_.ltl	17	REALIZABLE	0.01815387498936616	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_5_pe_.ltl	17	REALIZABLE	0.019485144002828747	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_6_pe_.ltl	17	REALIZABLE	0.02361140097491443	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_7_pe_.ltl	17	REALIZABLE	0.029893191007431597	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_Q_pb_8_pe_.ltl	17	REALIZABLE	0.016046102973632514	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_R_pb_1_pe_.ltl	17	REALIZABLE	0.01699842599919066	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_R_pb_2_pe_.ltl	17	UNREALIZABLE	0.026713277999078855	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_R_pb_3_pe_.ltl	17	UNREALIZABLE	0.0326923499815166	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_R_pb_4_pe_.ltl	17	UNREALIZABLE	0.04219121701316908	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_R_pb_5_pe_.ltl	17	UNREALIZABLE	0.09237129901885055	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_R_pb_6_pe_.ltl	17	UNREALIZABLE	0.6029206039966084	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_R_pb_7_pe_.ltl	17	UNREALIZABLE	6.0386030549998395	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_U1_pb_100_pe_.ltl	17	REALIZABLE	0.02693532800185494	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_10_pe_.ltl	17	REALIZABLE	0.03431689098943025	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_12_pe_.ltl	17	REALIZABLE	0.0328742089914158	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_15_pe_.ltl	17	REALIZABLE	0.019929603004129604	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dba_U1_pb_18_pe_.ltl	17	REALIZABLE	0.015740892995381728	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_1_pe_.ltl	17	REALIZABLE	0.017640199017478153	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_25_pe_.ltl	17	REALIZABLE	0.03488248700159602	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_2_pe_.ltl	17	REALIZABLE	0.020479312021052465	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_3_pe_.ltl	17	REALIZABLE	0.03262370597803965	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dba_U1_pb_4_pe_.ltl	17	REALIZABLE	0.01560105400858447	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_50_pe_.ltl	17	REALIZABLE	0.02952345000812784	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_5_pe_.ltl	17	REALIZABLE	0.037976544990669936	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_6_pe_.ltl	17	REALIZABLE	0.02753221901366487	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_7_pe_.ltl	17	REALIZABLE	0.03177125001093373	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_8_pe_.ltl	17	REALIZABLE	0.03316380502656102	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_U1_pb_9_pe_.ltl	17	REALIZABLE	0.021610461990348995	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_100_pe_.ltl	17	REALIZABLE	0.019003253983100876	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_10_pe_.ltl	17	REALIZABLE	0.0334164280211553	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_12_pe_.ltl	17	REALIZABLE	0.02651834601419978	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dba_alpha_pb_14_pe_.ltl	17	REALIZABLE	0.013978058996144682	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_16_pe_.ltl	17	REALIZABLE	0.01449899299768731	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_17_pe_.ltl	17	REALIZABLE	0.020925627992255613	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_18_pe_.ltl	17	REALIZABLE	0.03128524500061758	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_1_pe_.ltl	17	REALIZABLE	0.04161590299918316	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dba_alpha_pb_20_pe_.ltl	17	REALIZABLE	0.022443912021117285	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_25_pe_.ltl	17	REALIZABLE	0.016842203011037782	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_2_pe_.ltl	17	REALIZABLE	0.031756745011080056	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_3_pe_.ltl	17	REALIZABLE	0.0362123949744273	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_4_pe_.ltl	17	REALIZABLE	0.03428453500964679	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_50_pe_.ltl	17	REALIZABLE	0.015583570988383144	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_5_pe_.ltl	17	REALIZABLE	0.03102739099995233	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_6_pe_.ltl	17	REALIZABLE	0.03262574799009599	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_7_pe_.ltl	17	REALIZABLE	0.02956102098687552	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_alpha_pb_8_pe_.ltl	17	REALIZABLE	0.02481745500699617	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dba_beta_pb_100_pe_.ltl	17	REALIZABLE	0.0245327019947581	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_10_pe_.ltl	17	REALIZABLE	0.0334656480117701	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_15_pe_.ltl	17	REALIZABLE	0.01819510801578872	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_18_pe_.ltl	17	REALIZABLE	0.03706982798757963	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_1_pe_.ltl	17	REALIZABLE	0.025877961015794426	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_20_pe_.ltl	17	REALIZABLE	0.02861365000717342	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_25_pe_.ltl	17	REALIZABLE	0.03723745798924938	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_2_pe_.ltl	17	REALIZABLE	0.03421723601059057	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_30_pe_.ltl	17	REALIZABLE	0.026349119987571612	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_3_pe_.ltl	17	REALIZABLE	0.030876064993208274	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_4_pe_.ltl	17	REALIZABLE	0.02948364699841477	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_5_pe_.ltl	17	REALIZABLE	0.02518603700445965	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dba_beta_pb_6_pe_.ltl	17	REALIZABLE	0.018861190997995436	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_7_pe_.ltl	17	REALIZABLE	0.029156033997423947	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_beta_pb_8_pe_.ltl	17	REALIZABLE	0.033000311988871545	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_theta_pb_10_pe_.ltl	17	UNREALIZABLE	0.43420956798945554	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_12_pe_.ltl	17	UNREALIZABLE	2.2754015309910756	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_14_pe_.ltl	17	UNREALIZABLE	13.361014174006414	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_theta_pb_1_pe_.ltl	17	UNREALIZABLE	0.01579910799046047	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_theta_pb_2_pe_.ltl	17	UNREALIZABLE	0.025987532979343086	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_theta_pb_3_pe_.ltl	17	UNREALIZABLE	0.021150617016246542	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_4_pe_.ltl	17	UNREALIZABLE	0.03648132100352086	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	ltl2dba_theta_pb_5_pe_.ltl	17	UNREALIZABLE	0.0289026889950037	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_6_pe_.ltl	17	UNREALIZABLE	0.054755360004492104	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_7_pe_.ltl	17	UNREALIZABLE	0.068319056998007	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dba_theta_pb_8_pe_.ltl	17	UNREALIZABLE	0.10237898599007167	false	UNREALIZABLE	17
+B-cap17-epoch2	ltl2dpa01.ltl	17	REALIZABLE	0.020214087999192998	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa02.ltl	17	REALIZABLE	0.03279204698628746	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dpa03.ltl	17	REALIZABLE	0.024304585997015238	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa04.ltl	17	REALIZABLE	0.027413761999923736	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa05.ltl	17	REALIZABLE	0.02716392299043946	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa06.ltl	17	REALIZABLE	0.03304811802809127	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa07.ltl	17	REALIZABLE	0.034000680985627696	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa08.ltl	17	REALIZABLE	0.03727236998383887	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa09.ltl	17	REALIZABLE	0.029190834990004078	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa10.ltl	17	REALIZABLE	0.04193704199860804	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa11.ltl	17	REALIZABLE	0.025967513996874914	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa12.ltl	17	REALIZABLE	0.026042354991659522	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa13.ltl	17	REALIZABLE	0.022330759995384142	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa14.ltl	17	REALIZABLE	0.038153836998390034	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa15.ltl	17	REALIZABLE	0.023247234988957644	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa16.ltl	17	REALIZABLE	0.032704459998058155	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa17.ltl	17	REALIZABLE	0.027203617995837703	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa18.ltl	17	REALIZABLE	0.03673263097880408	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa19.ltl	17	REALIZABLE	0.0510834009910468	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa20.ltl	17	REALIZABLE	0.04441696600406431	false	REALIZABLE	17
 B-cap17-epoch2	ltl2dpa22.ltl	17	REALIZABLE	0.10026639298303053	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa23.ltl	17	REALIZABLE	0.027195950009627268	false	REALIZABLE	17
+B-cap17-epoch2	ltl2dpa24.ltl	17	REALIZABLE	0.034309116017539054	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_100_pe_.ltl	17	REALIZABLE	0.038267254014499485	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_10_pe_.ltl	17	REALIZABLE	0.01825140800792724	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_125_pe_.ltl	17	REALIZABLE	0.04573496099328622	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_12_pe_.ltl	17	REALIZABLE	0.03178988199215382	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_132_pe_.ltl	17	REALIZABLE	0.052657345979241654	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_150_pe_.ltl	17	REALIZABLE	0.05079342899261974	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_16_pe_.ltl	17	REALIZABLE	0.037408171978313476	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_175_pe_.ltl	17	REALIZABLE	0.04743737302487716	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_200_pe_.ltl	17	REALIZABLE	0.045039211021503434	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_32_pe_.ltl	17	REALIZABLE	0.028863356012152508	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_64_pe_.ltl	17	REALIZABLE	0.03428682702360675	false	REALIZABLE	17
+B-cap17-epoch2	mux_pb_8_pe_.ltl	17	REALIZABLE	0.016633252002066	false	REALIZABLE	17
+B-cap17-epoch2	narylatch_pb_10_pe_.ltl	17	REALIZABLE	0.038902328989934176	false	REALIZABLE	17
+B-cap17-epoch2	narylatch_pb_11_pe_.ltl	17	REALIZABLE	0.03571970999473706	false	REALIZABLE	17
+B-cap17-epoch2	narylatch_pb_12_pe_.ltl	17	REALIZABLE	0.04015363799408078	false	REALIZABLE	17
+B-cap17-epoch2	narylatch_pb_16_pe_.ltl	17	REALIZABLE	0.024220085004344583	false	REALIZABLE	17
+B-cap17-epoch2	narylatch_pb_32_pe_.ltl	17	REALIZABLE	0.047443724994082004	false	REALIZABLE	17
+B-cap17-epoch2	narylatch_pb_64_pe_.ltl	17	REALIZABLE	0.04031780202058144	false	REALIZABLE	17
+B-cap17-epoch2	narylatch_pb_8_pe_.ltl	17	REALIZABLE	0.021406023006420583	false	REALIZABLE	17
+B-cap17-epoch2	ordered-visits-choice-real.ltl				true	UNKNOWN	17
+B-cap17-epoch2	ordered-visits-real.ltl	17	REALIZABLE	0.03240112101775594	false	REALIZABLE	17
+B-cap17-epoch2	package-delivery-real.ltl				true	TIMEOUT	17
 B-cap17-epoch2	patrolling-alarm0.ltl	17	UNREALIZABLE	0.024191076983697712	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm1.ltl	17	UNREALIZABLE	0.04676891700364649	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm10.ltl	17	UNREALIZABLE	0.15776616299990565	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm11.ltl	17	UNREALIZABLE	0.18082958698505536	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm12.ltl	17	UNREALIZABLE	0.19991914299316704	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm13.ltl	17	UNREALIZABLE	0.22524402500130236	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm14.ltl	17	UNREALIZABLE	0.23546272100065835	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm15.ltl	17	UNREALIZABLE	0.3691805559792556	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm16.ltl	17	UNREALIZABLE	0.3581450410129037	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm17.ltl	17	UNREALIZABLE	0.48087516098166816	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm18.ltl	17	UNREALIZABLE	0.5415123770071659	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm19.ltl	17	UNREALIZABLE	0.5722957230173051	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm2.ltl	17	UNREALIZABLE	0.061455463990569115	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm20.ltl	17	UNREALIZABLE	0.5271290870150551	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm21.ltl	17	UNREALIZABLE	0.68141433497658	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm22.ltl	17	UNREALIZABLE	0.6449660419893917	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm23.ltl	17	UNREALIZABLE	0.6292434190108906	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm24.ltl	17	UNREALIZABLE	0.736182936001569	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm25.ltl	17	UNREALIZABLE	0.7427485130028799	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm26.ltl	17	UNREALIZABLE	0.8167903459980153	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm3.ltl	17	UNREALIZABLE	0.04845032698358409	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm4.ltl	17	UNREALIZABLE	0.04955215399968438	false	UNREALIZABLE	17
 B-cap17-epoch2	patrolling-alarm5.ltl	17	UNREALIZABLE	0.06364051598939113	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm6.ltl	17	UNREALIZABLE	0.06264773401198909	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm7.ltl	17	UNREALIZABLE	0.08885935597936623	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm8.ltl	17	UNREALIZABLE	0.10353444199427031	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling-alarm9.ltl	17	UNREALIZABLE	0.12170704800519161	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling0.ltl	17	UNREALIZABLE	0.024580004013841972	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling1.ltl	17	UNREALIZABLE	0.03677640302339569	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling10.ltl	17	UNREALIZABLE	0.1278819389990531	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling11.ltl	17	UNREALIZABLE	0.14252734600449912	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling12.ltl	17	UNREALIZABLE	0.1931936889886856	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling13.ltl	17	UNREALIZABLE	0.19958343502366915	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling14.ltl	17	UNREALIZABLE	0.2371769119927194	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling15.ltl	17	UNREALIZABLE	0.3650940669758711	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling16.ltl	17	UNREALIZABLE	0.3963437479978893	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling17.ltl	17	UNREALIZABLE	0.4478633800172247	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling18.ltl	17	UNREALIZABLE	0.5102372370020021	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling19.ltl	17	UNREALIZABLE	0.5296256020083092	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling2.ltl	17	UNREALIZABLE	0.06251066498225555	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling20.ltl	17	UNREALIZABLE	0.5635110880248249	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling21.ltl	17	UNREALIZABLE	0.648370059003355	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling22.ltl	17	UNREALIZABLE	0.6553198859910481	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling23.ltl	17	UNREALIZABLE	0.7510695669916458	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling24.ltl	17	UNREALIZABLE	0.7639733949908987	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling25.ltl	17	UNREALIZABLE	0.7530297549965326	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling3.ltl	17	UNREALIZABLE	0.0547052470210474	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling4.ltl	17	UNREALIZABLE	0.04259476900915615	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling5.ltl	17	UNREALIZABLE	0.06774335500085726	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling6.ltl	17	UNREALIZABLE	0.0627998209965881	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling7.ltl	17	UNREALIZABLE	0.08888907497748733	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling8.ltl	17	UNREALIZABLE	0.09986430100980215	false	UNREALIZABLE	17
+B-cap17-epoch2	patrolling9.ltl	17	UNREALIZABLE	0.1161519400193356	false	UNREALIZABLE	17
+B-cap17-epoch2	precise-reachability-real.ltl	17	REALIZABLE	0.12338989300769754	false	REALIZABLE	17
+B-cap17-epoch2	precise-reachability0.ltl	17	UNREALIZABLE	0.02519138000207022	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_pb_1_pe_.ltl	17	REALIZABLE	0.022082693001721054	false	REALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.026716508000390604	false	REALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_pb_3_pe_.ltl	17	REALIZABLE	0.03335005699773319	false	REALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_pb_4_pe_.ltl	17	REALIZABLE	0.04066680200048722	false	REALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.04625439899973571	false	REALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_pb_6_pe_.ltl	17	REALIZABLE	0.3915395429939963	false	REALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_10_pe_.ltl	17	UNREALIZABLE	0.015358457021648064	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_11_pe_.ltl	17	UNREALIZABLE	0.015272436023224145	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_12_pe_.ltl	17	UNREALIZABLE	0.018263701000250876	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_13_pe_.ltl	17	UNREALIZABLE	0.023848656011978164	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_14_pe_.ltl	17	UNREALIZABLE	0.022686648997478187	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	0.03541577799478546	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_16_pe_.ltl	17	UNREALIZABLE	0.02200268700835295	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_1_pe_.ltl	17	UNREALIZABLE	0.021734119014581665	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_2_pe_.ltl	17	UNREALIZABLE	0.02350895298877731	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_3_pe_.ltl	17	UNREALIZABLE	0.01863013399997726	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_4_pe_.ltl	17	UNREALIZABLE	0.01574524401803501	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_5_pe_.ltl	17	UNREALIZABLE	0.022322386997984722	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_6_pe_.ltl	17	UNREALIZABLE	0.01618332098587416	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_7_pe_.ltl	17	UNREALIZABLE	0.01723507500719279	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_8_pe_.ltl	17	UNREALIZABLE	0.025899731001118198	false	UNREALIZABLE	17
 B-cap17-epoch2	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	17	UNREALIZABLE	0.023745696002151817	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_10_pe_.ltl	17	UNREALIZABLE	0.03382786299334839	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_11_pe_.ltl	17	UNREALIZABLE	0.03494686400517821	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_12_pe_.ltl	17	UNREALIZABLE	0.026942074997350574	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_13_pe_.ltl	17	UNREALIZABLE	0.02756352099822834	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_14_pe_.ltl	17	UNREALIZABLE	0.01746066298801452	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_15_pe_.ltl	17	UNREALIZABLE	0.02622585601056926	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_16_pe_.ltl	17	UNREALIZABLE	0.024967585020931438	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_1_pe_.ltl	17	UNREALIZABLE	0.017425868019927293	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_2_pe_.ltl	17	UNREALIZABLE	0.03693540598032996	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_3_pe_.ltl	17	UNREALIZABLE	0.031164379994152114	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_4_pe_.ltl	17	UNREALIZABLE	0.024443848989903927	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_5_pe_.ltl	17	UNREALIZABLE	0.04016005899757147	false	UNREALIZABLE	17
 B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	0.03021543100476265	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	0.019176973000867292	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_8_pe_.ltl	17	UNREALIZABLE	0.019946654996601865	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_3_9_pe_.ltl	17	UNREALIZABLE	0.031827676022658125	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	17	UNREALIZABLE	0.029359564010519534	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	17	UNREALIZABLE	0.03698217301280238	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_12_pe_.ltl	17	UNREALIZABLE	0.0396427660016343	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_13_pe_.ltl	17	UNREALIZABLE	0.03832713802694343	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_14_pe_.ltl	17	UNREALIZABLE	0.01856428201426752	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_15_pe_.ltl	17	UNREALIZABLE	0.019488941004965454	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_16_pe_.ltl	17	UNREALIZABLE	0.025116535980487242	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_1_pe_.ltl	17	UNREALIZABLE	0.01964519202010706	false	UNREALIZABLE	17
 B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	17	UNREALIZABLE	0.03187007099040784	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_3_pe_.ltl	17	UNREALIZABLE	0.02166871601366438	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_4_pe_.ltl	17	UNREALIZABLE	0.030544187000487	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_5_pe_.ltl	17	UNREALIZABLE	0.033868995000375435	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	0.017752321989974007	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	0.030876700999215245	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_8_pe_.ltl	17	UNREALIZABLE	0.033906319993548095	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_4_9_pe_.ltl	17	UNREALIZABLE	0.021456257993122563	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_5_16_pe_.ltl	17	UNREALIZABLE	0.03657159299473278	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_5_2_pe_.ltl	17	UNREALIZABLE	0.03654090198688209	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_5_32_pe_.ltl	17	UNREALIZABLE	0.02145164299872704	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_5_4_pe_.ltl	17	UNREALIZABLE	0.033902822993695736	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_6_16_pe_.ltl	17	UNREALIZABLE	0.028133417014032602	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_6_2_pe_.ltl	17	UNREALIZABLE	0.04080907997558825	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_6_32_pe_.ltl	17	UNREALIZABLE	0.026283119019353762	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal1_pb_6_4_pe_.ltl	17	UNREALIZABLE	0.03493755299132317	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_10_pe_.ltl	17	UNREALIZABLE	0.033415790006984025	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_2_pe_.ltl	17	UNREALIZABLE	0.033540693984832615	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_3_pe_.ltl	17	UNREALIZABLE	0.017029591981554404	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.027546816010726616	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	0.0489288599928841	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_6_pe_.ltl	17	UNREALIZABLE	0.018734510987997055	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_7_pe_.ltl	17	UNREALIZABLE	0.03530814201803878	false	UNREALIZABLE	17
+B-cap17-epoch2	prioritized_arbiter_unreal2_pb_8_pe_.ltl	17	UNREALIZABLE	0.019369530986296013	false	UNREALIZABLE	17
+B-cap17-epoch2	reversible-lane-r-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	reversible-lane-u-unreal.ltl	17	UNREALIZABLE	0.10699448300874792	false	UNREALIZABLE	17
+B-cap17-epoch2	reversible-lane-u0.ltl	17	UNREALIZABLE	0.08724288799567148	false	UNREALIZABLE	17
+B-cap17-epoch2	reversible-lane-u1.ltl	17	UNREALIZABLE	0.09912811699905433	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-cat-real-1d-real.ltl	17	REALIZABLE	2.5914649879850913	false	REALIZABLE	17
+B-cap17-epoch2	robot-cat-real-2d-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-cat-unreal-1d-unreal.ltl	17	UNREALIZABLE	0.18146718898788095	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-grid-commute-1d-real.ltl	17	REALIZABLE	2.1237174999841955	false	REALIZABLE	17
+B-cap17-epoch2	robot-grid-commute-2d-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-grid-reach-1d-real.ltl	17	REALIZABLE	0.027342625020537525	false	REALIZABLE	17
 B-cap17-epoch2	robot-grid-reach-2d-real.ltl	17	REALIZABLE	3.166306983999675	false	REALIZABLE	17
+B-cap17-epoch2	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	17	REALIZABLE	0.03941193799255416	false	REALIZABLE	17
+B-cap17-epoch2	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	17	REALIZABLE	12.312474813021254	false	REALIZABLE	17
+B-cap17-epoch2	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-resource-1d-unreal.ltl	17	UNREALIZABLE	0.11194041898124851	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-1d0.ltl	17	UNREALIZABLE	0.02781428600428626	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-1d1.ltl	17	UNREALIZABLE	0.06189153902232647	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d0.ltl	17	UNREALIZABLE	0.05354859901126474	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d1.ltl	17	UNREALIZABLE	0.05882165499497205	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d10.ltl	17	UNREALIZABLE	1.6985116119903978	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d11.ltl	17	UNREALIZABLE	1.7012649649986997	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d12.ltl	17	UNREALIZABLE	1.99192583700642	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d13.ltl	17	UNREALIZABLE	2.091438167990418	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d14.ltl	17	UNREALIZABLE	2.1755993730039336	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d15.ltl	17	UNREALIZABLE	2.3397580449818633	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d16.ltl	17	UNREALIZABLE	7.305807308002841	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d17.ltl	17	UNREALIZABLE	7.212703249999322	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d18.ltl	17	UNREALIZABLE	7.697225288982736	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d19.ltl	17	UNREALIZABLE	8.64620948798256	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d2.ltl	17	UNREALIZABLE	0.11459851000108756	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d20.ltl	17	UNREALIZABLE	9.166754295991268	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d21.ltl	17	UNREALIZABLE	9.159815143997548	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d22.ltl	17	UNREALIZABLE	9.88329371099826	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d23.ltl	17	UNREALIZABLE	9.714393864996964	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d3.ltl	17	UNREALIZABLE	0.11438387000816874	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d4.ltl	17	UNREALIZABLE	0.3214190499857068	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d5.ltl	17	UNREALIZABLE	0.3475086590042338	false	UNREALIZABLE	17
 B-cap17-epoch2	robot-resource-2d6.ltl	17	UNREALIZABLE	0.4710491219884716	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d7.ltl	17	UNREALIZABLE	0.4714820389926899	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d8.ltl	17	UNREALIZABLE	1.3725922550074756	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-resource-2d9.ltl	17	UNREALIZABLE	1.5304580469965003	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-tasks-real.ltl	17	REALIZABLE	0.05496846800087951	false	REALIZABLE	17
+B-cap17-epoch2	robot-to-target-charging-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal0.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal1.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal2.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal3.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal4.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal5.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal6.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal7.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging-unreal8.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging0.ltl	17	UNREALIZABLE	0.9523856480082031	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-to-target-charging1.ltl	17	UNREALIZABLE	2.585393526009284	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-to-target-charging10.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging11.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging12.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging13.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging14.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging15.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging16.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging17.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging18.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging19.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging2.ltl	17	UNREALIZABLE	2.6202283079910558	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-to-target-charging20.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging21.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging22.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging23.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging24.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging25.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging3.ltl	17	UNREALIZABLE	6.101516523020109	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-to-target-charging4.ltl	17	UNREALIZABLE	6.702944002987351	false	UNREALIZABLE	17
 B-cap17-epoch2	robot-to-target-charging5.ltl	17	UNREALIZABLE	7.286401705991011	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-to-target-charging6.ltl	17	UNREALIZABLE	7.564291121001588	false	UNREALIZABLE	17
+B-cap17-epoch2	robot-to-target-charging7.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging8.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-charging9.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot-to-target-unreal0.ltl	17	REALIZABLE	8.336506604013266	false	REALIZABLE	17
+B-cap17-epoch2	robot-to-target0.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_analyze_samples_v1-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_collect_samples_v1-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_collect_samples_v2-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_collect_samples_v3-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_collect_samples_v4-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_deliver_products_1-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_deliver_products_20.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_deliver_products_30.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_deliver_products_40.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_deliver_products_50.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_grid_pb_2_2_pe_.ltl	17	REALIZABLE	0.04388819501036778	false	REALIZABLE	17
+B-cap17-epoch2	robot_grid_pb_3_3_pe_.ltl	17	REALIZABLE	0.16396843799157068	false	REALIZABLE	17
+B-cap17-epoch2	robot_grid_pb_4_4_pe_.ltl	17	REALIZABLE	1.2682556950021535	false	REALIZABLE	17
+B-cap17-epoch2	robot_grid_pb_5_1_pe_.ltl	17	REALIZABLE	0.053467722987988964	false	REALIZABLE	17
+B-cap17-epoch2	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_grid_pb_6_1_pe_.ltl	17	REALIZABLE	0.057428066997090355	false	REALIZABLE	17
+B-cap17-epoch2	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_grid_pb_7_7_pe_.ltl				true	MEMOUT	17
+B-cap17-epoch2	robot_grid_pb_8_8_pe_.ltl				true	MEMOUT	17
+B-cap17-epoch2	robot_repair0.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_repair1.ltl				true	TIMEOUT	17
 B-cap17-epoch2	robot_repair2.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_repair3.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_repair4.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_repair5.ltl				true	TIMEOUT	17
+B-cap17-epoch2	robot_running-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.018002136988798156	false	REALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_pb_3_pe_.ltl	17	REALIZABLE	0.03389451600378379	false	REALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_pb_4_pe_.ltl	17	REALIZABLE	0.12102667900035158	false	REALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_pb_5_pe_.ltl	17	REALIZABLE	13.123799828026677	false	REALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	17	UNREALIZABLE	0.057761044008657336	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	17	UNREALIZABLE	0.08243429800495505	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	17	UNREALIZABLE	0.1585326390049886	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	17	UNREALIZABLE	0.3020424699934665	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	17	UNREALIZABLE	0.6235529329860583	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	17	UNREALIZABLE	1.228293741995003	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	17	UNREALIZABLE	2.8185611669905484	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	17	UNREALIZABLE	0.02192096901126206	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	17	UNREALIZABLE	0.03396561398403719	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	17	UNREALIZABLE	0.03829260100610554	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	17	UNREALIZABLE	0.03390027699060738	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	17	UNREALIZABLE	0.045515721023548394	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	17	UNREALIZABLE	0.023734221991617233	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	17	UNREALIZABLE	0.035680230997968465	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	17	UNREALIZABLE	0.02956512599484995	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	17	UNREALIZABLE	0.047441091999644414	false	UNREALIZABLE	17
 B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	17	UNREALIZABLE	0.036746063007740304	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	17	UNREALIZABLE	0.04190822201780975	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	17	UNREALIZABLE	0.04247123500681482	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	17	UNREALIZABLE	0.05878256601863541	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	17	UNREALIZABLE	0.19740777698461898	false	UNREALIZABLE	17
 B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	1.0383874459948856	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	7.9914405309828	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT	17
 B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	17	UNREALIZABLE	0.03322563099209219	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	17	UNREALIZABLE	0.07702941499883309	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	17	UNREALIZABLE	0.16289167798822746	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	17	UNREALIZABLE	1.7528696190274786	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal2_pb_2_pe_.ltl	17	UNREALIZABLE	0.03305269600241445	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal2_pb_3_pe_.ltl	17	UNREALIZABLE	0.03231256900471635	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.5349994099815376	false	UNREALIZABLE	17
+B-cap17-epoch2	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	rw_arbiter_pb_1_pe_.ltl	17	REALIZABLE	0.018335836997721344	false	REALIZABLE	17
+B-cap17-epoch2	rw_arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.042289962992072105	false	REALIZABLE	17
+B-cap17-epoch2	rw_arbiter_pb_3_pe_.ltl	17	REALIZABLE	0.8019827230018564	false	REALIZABLE	17
+B-cap17-epoch2	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT	17
 B-cap17-epoch2	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	scheduler-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	shift_pb_100_pe_.ltl	17	REALIZABLE	0.03537683200556785	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_10_pe_.ltl	17	REALIZABLE	0.033833548019174486	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_125_pe_.ltl	17	REALIZABLE	0.023462500976165757	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_12_pe_.ltl	17	REALIZABLE	0.02613892499357462	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_132_pe_.ltl	17	REALIZABLE	0.04011226599686779	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_16_pe_.ltl	17	REALIZABLE	0.03478823698242195	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_250_pe_.ltl	17	REALIZABLE	0.03367228800198063	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_32_pe_.ltl	17	REALIZABLE	0.02543883101316169	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_500_pe_.ltl	17	REALIZABLE	0.051899545011110604	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_64_pe_.ltl	17	REALIZABLE	0.03159866499481723	false	REALIZABLE	17
+B-cap17-epoch2	shift_pb_8_pe_.ltl	17	REALIZABLE	0.03184039899497293	false	REALIZABLE	17
+B-cap17-epoch2	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	17
 B-cap17-epoch2	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_16_1_pe_.ltl	17	UNREALIZABLE	0.023277239000890404	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_16_2_pe_.ltl	17	UNREALIZABLE	0.018767325003864244	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_16_3_pe_.ltl	17	UNREALIZABLE	0.01702763300272636	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_16_4_pe_.ltl	17	UNREALIZABLE	0.038351363997207955	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_16_5_pe_.ltl	17	UNREALIZABLE	0.03425287298159674	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_10_pe_.ltl	17	UNREALIZABLE	0.030815481004538015	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_12_pe_.ltl	17	UNREALIZABLE	0.03061879298184067	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_1_pe_.ltl	17	UNREALIZABLE	0.033706153015373275	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_2_pe_.ltl	17	UNREALIZABLE	0.03423821899923496	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_3_pe_.ltl	17	UNREALIZABLE	0.018974268983583897	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_4_pe_.ltl	17	UNREALIZABLE	0.02212827099720016	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_5_pe_.ltl	17	UNREALIZABLE	0.0349883199960459	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_6_pe_.ltl	17	UNREALIZABLE	0.03661093700793572	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_7_pe_.ltl	17	UNREALIZABLE	0.0340269599983003	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_8_pe_.ltl	17	UNREALIZABLE	0.01568004401633516	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_2_9_pe_.ltl	17	UNREALIZABLE	0.034405562008032575	false	UNREALIZABLE	17
 B-cap17-epoch2	simple_arbiter_unreal1_pb_3_11_pe_.ltl	17	UNREALIZABLE	0.01680023001972586	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_1_pe_.ltl	17	UNREALIZABLE	0.018170310999266803	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_2_pe_.ltl	17	UNREALIZABLE	0.038538719003554434	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_3_pe_.ltl	17	UNREALIZABLE	0.022258417011471465	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_4_pe_.ltl	17	UNREALIZABLE	0.034678282972890884	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_5_pe_.ltl	17	UNREALIZABLE	0.02821963297901675	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	0.033426465990487486	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_7_pe_.ltl	17	UNREALIZABLE	0.03909860600833781	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_8_pe_.ltl	17	UNREALIZABLE	0.02937850699527189	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_3_9_pe_.ltl	17	UNREALIZABLE	0.014353765989653766	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_10_pe_.ltl	17	UNREALIZABLE	0.03416522502084263	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_12_pe_.ltl	17	UNREALIZABLE	0.03535580798052251	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_1_pe_.ltl	17	UNREALIZABLE	0.01504523801850155	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_2_pe_.ltl	17	UNREALIZABLE	0.023322836990701035	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_3_pe_.ltl	17	UNREALIZABLE	0.029253968998091295	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_4_pe_.ltl	17	UNREALIZABLE	0.035539753996999934	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_5_pe_.ltl	17	UNREALIZABLE	0.0252495720051229	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	0.030214152997359633	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_7_pe_.ltl	17	UNREALIZABLE	0.0280358360032551	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_8_pe_.ltl	17	UNREALIZABLE	0.03453515502042137	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_4_9_pe_.ltl	17	UNREALIZABLE	0.033564213023055345	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_10_pe_.ltl	17	UNREALIZABLE	0.01857580099022016	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_1_pe_.ltl	17	UNREALIZABLE	0.03320572801749222	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_2_pe_.ltl	17	UNREALIZABLE	0.033920369984116405	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_3_pe_.ltl	17	UNREALIZABLE	0.027314607024891302	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_4_pe_.ltl	17	UNREALIZABLE	0.032593374024145305	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_5_pe_.ltl	17	UNREALIZABLE	0.041621363023296	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_6_pe_.ltl	17	UNREALIZABLE	0.03328622499248013	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_7_pe_.ltl	17	UNREALIZABLE	0.030375278001884	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_8_pe_.ltl	17	UNREALIZABLE	0.030703991011250764	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_5_9_pe_.ltl	17	UNREALIZABLE	0.03261873300652951	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_6_1_pe_.ltl	17	UNREALIZABLE	0.014237697003409266	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_6_2_pe_.ltl	17	UNREALIZABLE	0.03618094601552002	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_6_3_pe_.ltl	17	UNREALIZABLE	0.032026133994804695	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_6_4_pe_.ltl	17	UNREALIZABLE	0.03713515499839559	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal1_pb_6_5_pe_.ltl	17	UNREALIZABLE	0.032652226014761254	false	UNREALIZABLE	17
 B-cap17-epoch2	simple_arbiter_unreal1_pb_8_8_pe_.ltl	17	UNREALIZABLE	0.016601319977780804	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_10_pe_.ltl	17	UNREALIZABLE	0.030854215001454577	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_25_pe_.ltl	17	UNREALIZABLE	0.039131681027356535	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_2_pe_.ltl	17	UNREALIZABLE	0.03308884799480438	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_3_pe_.ltl	17	UNREALIZABLE	0.03910479199839756	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.027842586976476014	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_50_pe_.ltl	17	UNREALIZABLE	0.027980029000900686	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	0.03082825697492808	false	UNREALIZABLE	17
 B-cap17-epoch2	simple_arbiter_unreal2_pb_60_pe_.ltl	17	UNREALIZABLE	0.03173384699039161	false	UNREALIZABLE	17
 B-cap17-epoch2	simple_arbiter_unreal2_pb_6_pe_.ltl	17	UNREALIZABLE	0.027285750984447077	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_75_pe_.ltl	17	UNREALIZABLE	0.05092212400631979	false	UNREALIZABLE	17
 B-cap17-epoch2	simple_arbiter_unreal2_pb_7_pe_.ltl	17	UNREALIZABLE	0.026033905014628544	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_unreal2_pb_8_pe_.ltl	17	UNREALIZABLE	0.035372399986954406	false	UNREALIZABLE	17
+B-cap17-epoch2	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	simple_arbiter_with_hints_pb_2_pe_.ltl	17	REALIZABLE	0.023872124002082273	false	REALIZABLE	17
+B-cap17-epoch2	simple_arbiter_with_hints_pb_4_pe_.ltl	17	REALIZABLE	0.022068992984713987	false	REALIZABLE	17
+B-cap17-epoch2	simple_arbiter_with_hints_pb_6_pe_.ltl	17	REALIZABLE	2.2080578799941577	false	REALIZABLE	17
+B-cap17-epoch2	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	solitary-real.ltl	17	REALIZABLE	0.024352972977794707	false	REALIZABLE	17
+B-cap17-epoch2	solitary0.ltl	17	UNREALIZABLE	0.03645684398361482	false	UNREALIZABLE	17
 B-cap17-epoch2	sort4-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	sort40.ltl	17	UNREALIZABLE	0.2105460909951944	false	UNREALIZABLE	17
+B-cap17-epoch2	sort41.ltl	17	UNREALIZABLE	0.6370651829929557	false	UNREALIZABLE	17
+B-cap17-epoch2	sort42.ltl	17	UNREALIZABLE	13.908172555995407	false	UNREALIZABLE	17
+B-cap17-epoch2	sort50.ltl	17	UNREALIZABLE	15.272345802979544	false	UNREALIZABLE	17
+B-cap17-epoch2	sort51.ltl				true	TIMEOUT	17
+B-cap17-epoch2	sort52.ltl				true	TIMEOUT	17
+B-cap17-epoch2	sort53.ltl				true	TIMEOUT	17
+B-cap17-epoch2	square5x5-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	square5x50.ltl	17	UNREALIZABLE	0.3062913110188674	false	UNREALIZABLE	17
+B-cap17-epoch2	square5x51.ltl	17	UNREALIZABLE	1.1484939740039408	false	UNREALIZABLE	17
+B-cap17-epoch2	square5x52.ltl	17	UNREALIZABLE	1.4713408540119417	false	UNREALIZABLE	17
+B-cap17-epoch2	square5x53.ltl	17	UNREALIZABLE	5.178829213022254	false	UNREALIZABLE	17
+B-cap17-epoch2	square5x54.ltl	17	UNREALIZABLE	6.987718032003613	false	UNREALIZABLE	17
+B-cap17-epoch2	storage-GF-64-real.ltl	17	REALIZABLE	0.028437726985430345	false	REALIZABLE	17
+B-cap17-epoch2	tasks-real.ltl	17	REALIZABLE	0.08334762800950557	false	REALIZABLE	17
+B-cap17-epoch2	tasks-unreal0.ltl				true	TIMEOUT	17
+B-cap17-epoch2	tasks-unreal1.ltl				true	TIMEOUT	17
+B-cap17-epoch2	tasks-unreal2.ltl				true	TIMEOUT	17
+B-cap17-epoch2	taxi-service-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	taxi-service-u-unreal.ltl	17	UNREALIZABLE	0.08927556799608283	false	UNREALIZABLE	17
+B-cap17-epoch2	test2_f2774e0b.ltl	17	REALIZABLE	0.03367503598565236	false	REALIZABLE	17
+B-cap17-epoch2	test3_efe2feaf.ltl	17	REALIZABLE	0.020518253004411235	false	REALIZABLE	17
+B-cap17-epoch2	test4_4b82b1f4.ltl	17	UNREALIZABLE	0.017884653992950916	false	UNREALIZABLE	17
+B-cap17-epoch2	test5_6cbc6174.ltl	17	REALIZABLE	0.01828750901040621	false	REALIZABLE	17
+B-cap17-epoch2	test6_0f5381e9.ltl	17	REALIZABLE	0.01862358901416883	false	REALIZABLE	17
+B-cap17-epoch2	test7_2c5b09da.ltl	17	REALIZABLE	0.040635353012476116	false	REALIZABLE	17
+B-cap17-epoch2	test8_88f351a6.ltl	17	UNREALIZABLE	0.036334806005470455	false	UNREALIZABLE	17
+B-cap17-epoch2	test9_dd3a27e1.ltl	17	UNREALIZABLE	0.032605893997242674	false	UNREALIZABLE	17
+B-cap17-epoch2	test_f3987563.ltl	17	REALIZABLE	0.020182089996524155	false	REALIZABLE	17
+B-cap17-epoch2	thermostat-F-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	thermostat-GF-real.ltl				true	TIMEOUT	17
+B-cap17-epoch2	thermostat-GF-unreal0.ltl	17	UNREALIZABLE	1.9564195699931588	false	UNREALIZABLE	17
+B-cap17-epoch2	thermostat-GF-unreal1.ltl				true	TIMEOUT	17
+B-cap17-epoch2	thermostat-GF-unreal2.ltl				true	TIMEOUT	17
+B-cap17-epoch2	tmp_13cfc6f2.ltl	17	REALIZABLE	0.711802809004439	false	REALIZABLE	17
+B-cap17-epoch2	unordered-visits-charging0.ltl				true	TIMEOUT	17
+B-cap17-epoch2	unordered-visits-real.ltl	17	REALIZABLE	9.019893914024578	false	REALIZABLE	17
+B-cap17-epoch2	workstation_resupply_pb_1_pe_.ltl	17	REALIZABLE	0.030513717007124797	false	REALIZABLE	17
+B-cap17-epoch2	workstation_resupply_pb_2_pe_.ltl	17	REALIZABLE	0.35978954800521024	false	REALIZABLE	17
+B-cap17-epoch2	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	17
+B-cap17-epoch2	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT	17

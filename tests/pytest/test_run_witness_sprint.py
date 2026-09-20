@@ -1,10 +1,10 @@
 """Unit tests for the W1 shard/order driver (benchmarking/run-witness-sprint.py).
 
-Runs no solver: `campaign`'s subprocess dispatch is only exercised via
---dry-run, which walks the exact same shard/candidate-order logic the real
-run uses without invoking run-syntcomp26-coverage.py.
+Runs no solver: `campaign`'s subprocess dispatch is exercised either via
+--dry-run or with subprocess.run mocked to write synthetic coverage rows.
 """
 
+import csv
 import importlib.util
 import subprocess
 import sys
@@ -241,3 +241,136 @@ def test_campaign_dry_run_never_invokes_a_subprocess(tmp_path, monkeypatch):
     rc, _ = run_campaign(tmp_path, 17, 1)
     assert rc == 0
     assert calls == []
+
+
+# ---------- complete-series summary regeneration ----------
+
+def test_regenerate_series_summary_uses_all_shard_instances(tmp_path):
+    shards_dir = tmp_path / "shards"
+    shards_dir.mkdir()
+    write_list(shards_dir / "shard_00.list", ["alpha.ltl", "beta.ltl"])
+    write_list(shards_dir / "shard_01.list", ["gamma.ltl"])
+    instances = driver.read_instance_union(sorted(shards_dir.glob("shard_*.list")))
+
+    coverage = driver.load_coverage_module()
+    output = tmp_path / "B-cap17-epoch1.tsv"
+    rows = []
+    for instance, result, seconds in (
+        ("alpha.ltl", "REALIZABLE", "0.25"),
+        ("beta.ltl", "TIMEOUT", "17.01"),
+        ("gamma.ltl", "UNREALIZABLE", "0.75"),
+    ):
+        row = dict.fromkeys(coverage.OUTPUT_COLUMNS, "")
+        row.update(
+            solver_label="B-cap17-epoch1",
+            instance=instance,
+            cap_s="17",
+            result=result,
+            seconds=seconds,
+            expectation_source="none",
+        )
+        rows.append(row)
+    coverage.atomic_write_tsv(output, coverage.OUTPUT_COLUMNS, rows)
+
+    summary_path = driver.regenerate_series_summary(
+        output, "B-cap17-epoch1", instances, 17
+    )
+    with summary_path.open(encoding="utf-8", newline="") as stream:
+        summary_rows = list(csv.DictReader(stream, delimiter="\t"))
+
+    assert [row["instance"] for row in summary_rows] == [
+        "alpha.ltl", "beta.ltl", "gamma.ltl",
+    ]
+    assert [row["failure_kind_at_max_cap"] for row in summary_rows] == [
+        "REALIZABLE", "TIMEOUT", "UNREALIZABLE",
+    ]
+
+
+@pytest.mark.parametrize(("cap", "epoch"), [(17, 1), (120, 2)])
+def test_campaign_regenerates_complete_summaries_after_all_shards(
+    tmp_path, monkeypatch, cap, epoch
+):
+    shards_dir = make_shards(tmp_path, n_shards=3, per_shard=2)
+    shard_paths = sorted(shards_dir.glob("shard_*.list"))
+    campaign_instances = driver.read_instance_union(shard_paths)
+    shard_instances = [driver.read_instance_ids(path) for path in shard_paths]
+    out_dir = tmp_path / f"out-{cap}-{epoch}"
+    coverage = driver.load_coverage_module()
+
+    subprocess_calls = []
+
+    def fake_run(cmd, **kwargs):
+        subprocess_calls.append((cmd, kwargs))
+        output = Path(cmd[cmd.index("--output") + 1])
+        solver_label = cmd[cmd.index("--solver-label") + 1]
+        instance_list = Path(cmd[cmd.index("--list") + 1])
+        rows = coverage.load_output(output) if output.exists() else []
+        for instance in driver.read_instance_ids(instance_list):
+            row = dict.fromkeys(coverage.OUTPUT_COLUMNS, "")
+            row.update(
+                solver_label=solver_label,
+                instance=instance,
+                cap_s=str(cap),
+                result="REALIZABLE",
+                seconds="0.01",
+                expectation_source="none",
+            )
+            rows.append(row)
+        coverage.atomic_write_tsv(output, coverage.OUTPUT_COLUMNS, rows)
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    regeneration_calls = []
+    real_regenerate = driver.regenerate_series_summary
+
+    def spy_regenerate(output, solver_label, instances, largest_cap):
+        regeneration_calls.append(
+            (output, solver_label, list(instances), largest_cap)
+        )
+        return real_regenerate(output, solver_label, instances, largest_cap)
+
+    monkeypatch.setattr(driver, "regenerate_series_summary", spy_regenerate)
+
+    rc = driver.main([
+        "campaign",
+        "--cap", str(cap),
+        "--epoch", str(epoch),
+        "--shards-dir", str(shards_dir),
+        "--candidates", "B=/bin/b,S=/bin/s",
+        "--tlsf-map", "unused.tsv",
+        "--tlsf-corpus", "unused-corpus",
+        "--preset", "test-preset",
+        "--acacia-sha", "deadbeef",
+        "--out-dir", str(out_dir),
+    ])
+
+    assert rc == 0
+    assert len(subprocess_calls) == 2 * len(shard_paths)
+    assert regeneration_calls == [
+        (
+            out_dir / f"B-cap{cap}-epoch{epoch}.tsv",
+            f"B-cap{cap}-epoch{epoch}",
+            campaign_instances,
+            cap,
+        ),
+        (
+            out_dir / f"S-cap{cap}-epoch{epoch}.tsv",
+            f"S-cap{cap}-epoch{epoch}",
+            campaign_instances,
+            cap,
+        ),
+    ]
+    assert all(campaign_instances != instances for instances in shard_instances)
+
+    for label in ("B", "S"):
+        solver_label = f"{label}-cap{cap}-epoch{epoch}"
+        summary = out_dir / f"{solver_label}-summary.tsv"
+        assert summary.is_file()
+        with summary.open(encoding="utf-8", newline="") as stream:
+            summary_rows = list(csv.DictReader(stream, delimiter="\t"))
+        assert [row["instance"] for row in summary_rows] == campaign_instances
+        assert {row["solver_label"] for row in summary_rows} == {solver_label}
+        assert {row["failure_kind_at_max_cap"] for row in summary_rows} == {
+            "REALIZABLE"
+        }
