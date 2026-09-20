@@ -1,184 +1,172 @@
-# Dual-frontier representation sprint
+# Dual-frontier sprint: delta retarget and closing decision
 
-**Disposition: research-only.** The exact representation, conversion, predecessor and fixed-K
-replay stages are implemented. No production solver path or default has been added. The real
-capture/campaign manifest is still empty, so the P3/P4 performance gates have not been evaluated
-and P5 is not admitted.
+**Disposition: negative research result; no production path.** The exact dual-frontier machinery
+remains useful research infrastructure, but the complete-complement census and exact CPre-delta
+campaign fail Gate C0. The lazy/subtractive prototype is therefore not admitted, and no solver,
+picker, portfolio, polarity, strategy-extraction or outer-`K` behavior is changed.
 
-## Hypothesis and boundary
+## Retargeted question
 
-The experiment asks whether some expensive rank downsets have a much smaller exact
-minimal-exclusion frontier and whether that advantage survives Acacia's input-conditioned
-predecessor and a complete fixed-K solve. It does not change the interpretation of forward/OTFUR
-losing knowledge, TLSF translation, synthesis, shields, Python export, the critical picker or
-bound lifting.
+The original sprint asked whether a rank downset should sometimes be stored by its complete
+minimal-exclusion frontier. Positive maxima can be operationally better even when a complement is
+smaller: `apply_backward()` maps one maximum to one upper corner, and the critical picker already
+enumerates maxima. The retarget instead asks whether one contracting update has a small boundary:
 
-The implementation has one authoritative representation at a time:
+```text
+F_after = F_before ∩ CPre_i(F_before)
+F_after = F_before ∖ ↑B_delta
+```
 
-- `MaxIncluded`: maximal generators of the represented downset;
-- `MinExcluded`: minimal generators of its complement inside the exact safe box.
+The exact reference construction is:
 
-Every conversion/update produces a complete replacement or a typed resource failure. Temporary
-frontiers are never published. Negative membership rejects points outside the box before consulting
-the exclusion frontier, and negative action preimages explicitly include counting and Boolean-tail
-overflow.
+```text
+B_before = Min(P ∖ F_before)
+B_after  = Min(P ∖ F_after)
+B_delta  = {b in B_after | b is in F_before}
+```
 
-## Frozen provenance
+Success is published only after reconstructing `Min(P ∖ F_after)` from `B_before ∪ B_delta` and
+checking exact equality. A budgeted or timed-out conversion is censored, never interpreted as a
+large complement or delta.
+
+## Implementation
+
+`src/research/dual_rank_delta.*` adds a transactional exact-delta kernel. It:
+
+- requires compatible canonical positive and complete-complement regions;
+- proves `F_after ⊆ F_before`;
+- reports both exact old-generator survival and old-maximum containment;
+- filters and minimizes the newly excluded boundary;
+- reconstructs the complete after-complement and certifies exact equality before success;
+- accounts work, retained storage, peak workspace and typed resource outcomes.
+
+`acacia-dual-frontier-replay --task delta` reports:
+
+```text
+loop, K, dimensions, actions,
+before_maxima, after_maxima,
+before_min_excluded, after_min_excluded, delta_min_excluded,
+positive_maxima_still_generators, positive_generator_survival_fraction,
+before_maxima_still_contained,
+delta_construction_status,
+conversion_work_before, conversion_work_after, delta_work, delta_peak_workspace
+```
+
+It also records conversion/delta time, exact certification and child peak RSS. `--loop` now selects
+the named event before parsing siblings, so a preserved truncated capture cannot contaminate an
+independent row.
+
+`benchmarking/dual-frontier-study.py` runs each event in an address-space- and timeout-bounded child,
+keeps incomplete and censored rows, reports by family and frontier-size bucket, and evaluates the
+predeclared Gate C0 without relaxing it. `benchmarking/freeze-dual-frontier-manifest.py` hashes each
+source, capture event, capture binary, replay binary and generated configuration before freezing the
+manifest.
+
+Snapshot instrumentation gained `ACACIA_ANTICHAIN_SNAPSHOT_CPRE_MIN_FRONTIER`, allowing the CPre cap
+to target large frontiers. An unrelated Spot HOA serialization refusal is now preserved as
+`automaton.hoa.skipped`; exact CPre capture continues because replay uses `meta.tsv` and rank actions,
+not the HOA. This changes diagnostics only.
+
+## Frozen campaign
 
 | item | value |
 |---|---|
-| source baseline | `50384cf69a733199fa17c9c571da1761d8451991` |
-| Posets gitlink | `139e14336b7a1f0bc064022e587ea4e1b9a81427` |
-| tlsf-tools gitlink | `b42d5ef4a680252e04820ac7f073f5d786a43f7c` |
-| SYNTCOMP gitlink | `4105caf1f1e5fd3b76657879bfce8021d130cbde` |
-| compiler | GCC 15.3.1, debugoptimized checked build |
-| CPU | Intel Core i3-8100T, 4 cores / 4 threads, x86-64 |
-| configuration group at start | `otf_sparse_formula`, `best_decomp_rank_bucketed_semantic_mona`, `best_four_arm_bboxtree`, `best_decomp_mona_any` |
-| checked generated-config SHA-256 | `4fe9f4753d73d87eccfafc2abefe30ce96994c2dae8c084df5e24d4d59b0dbd8` |
-| checked replay SHA-256 | `df6bfa8801dc6a59040933a2ccc9e91cf9a90b2dd955c1f0474e1071dbda0498` |
+| source base | `b9a33b32e50158975bcbd326f481639a316149e7` |
+| compiler | GCC 15.3.1, `debugoptimized` correctness/capture build |
+| automaton preprocessor | `aut_preprocessors::standard` |
+| game path | classic backward; equivariant pre-pass disabled in the capture build |
+| capture solver SHA-256 | `f8ec5bb7636ed98a45ffd184b0ea96d4ec6895d49d13d7a15ca3e813ec18f4a2` |
+| replay SHA-256 | `35157f1f946300e24f28b7efb9908daea89362e9785bbe1e3b033512539642ca` |
+| generated config SHA-256 | `35d123b0bb0ff5a0f465f673e9fd4641ad351a76bb1f7d5d9f661573dcc0fb64` |
+| exact event rows | 25 total: 24 complete, 1 preserved truncated |
+| large complete rows | 23 across 4 unrelated families |
 
-The checked replay binary is a scratch correctness artifact, not a frozen timing binary. A real
-campaign must record its own optimized binary hash in every manifest row.
+The large cohort contains `arbiter_on_inpchange`, `prioritized_arbiter`, `round_robin_arbiter` and
+`simple_arbiter_with_hints`, spanning 1,031 to 48,264 before-maxima. `06.ltl` is the small control.
+Capture runs are not timing evidence; one timed-out solver still left ten fully closed events, which
+are independently parseable and hashed. The approximately 508 MiB scratch captures are not checked
+in. Their per-event hashes and all raw replay outcomes are frozen in the manifest/results tables.
 
-## Implemented stages
-
-### P1: exact region and predecessor kernels
-
-`src/research/dual_rank_region.*` provides:
-
-- immutable domain identity, K/Boolean bounds and compatibility checks;
-- canonical positive/negative antichains and safe-box membership;
-- transactional, cooperatively budgeted conversion in both directions;
-- exact same-form union/intersection and charged cross-form equality;
-- separate work, deadline, live-generator and accounted-workspace outcomes.
-
-`src/research/dual_rank_predecessor.*` provides:
-
-- the existing positive backward-transform replay in the same interface;
-- exact threshold preimages with absent-rank handling;
-- explicit unsafe/overflow preimages even for an empty exclusion frontier;
-- whole-generator threshold intersections and controller-action failure intersections;
-- the exact contracting input update, including mathematical zero-action inputs.
-
-The shared CPre and all-input readers now reject unsupported versions, invalid K/splits and ranks,
-both invalid transition indices, non-Boolean increments, misordered/missing sections, malformed or
-trailing integers, declared-count mismatches and truncated after-regions. Existing schema-2 CPre and
-schema-1 all-input files remain the formats consumed.
-
-### P2/P3: conversion and same-event replay
-
-`acacia-dual-frontier-replay` supports:
+Every replay child used:
 
 ```text
---task convert --dir DIR
---task cpre --dir DIR
---max-work N --max-workspace-bytes N --max-frontier N --deadline-ms N
+process timeout       15 s
+address-space limit   1 GiB
+operation work limit  100,000,000
+accounted workspace   512 MiB
+live-generator limit  200,000
+operation deadline    5 s
 ```
 
-Conversion reports the complete alternate frontier and a separately budgeted round trip. CPre
-reports the positive baseline, entering conversion, resident negative update, return conversion,
-cold total, threshold/join counts, accounted peaks and exact comparison with the captured after
-region. `--loop N` isolates one event so the reported child high-water RSS is not contaminated by
-other cases. A censored conversion is reported by its resource reason, never as an alternate size.
+## Phase A: final whole-complement census
 
-### P4: persistent fixed-K research driver
+Raw rows are in `dual-frontier-conversion-results.tsv`; the outcome summary is
+`DUAL-FRONTIER-CENSUS.md`.
 
-The same executable supports:
+| cohort | rows | complete | work-limit censored | preserved incomplete |
+|---|---:|---:|---:|---:|
+| small control | 1 | 1 | 0 | 0 |
+| large frontiers | 23 | 0 | 23 | 0 |
+| incomplete capture | 1 | 0 | 0 | 1 |
 
-```text
---task solve --dir DIR --k K --mode positive|negative|auto
-```
+The control converted exactly (`positive_count=1`, `negative_count=0`, round trip exact). Every
+large whole-complement conversion exhausted the fixed 100M-work budget. This is conversion
+censorship, not evidence about the unobserved complement size. It is evidence that ordinary
+complete-frontier switching is not operationally available under a modest fixed budget.
 
-All modes use the complete recorded input order and require a whole unchanged sweep for `win_k`.
-They start from the whole safe box and stop early only if the recorded initial rank leaves the
-candidate region. Negative mode never calls the maxima-enumerating critical picker. Auto probes at
-committed boundaries with cooldown, growth checkpoints, a cumulative probe-work cap and at most
-eight conversions. Its deliberately simple structural estimate requires either a predicted 2x
-service gain or 4x storage gain without predicted slowdown, plus repayment of conversion work.
-Failed probes leave the region unchanged. A failed native auto update may retry through the other
-orientation within the original per-update work/deadline allowance.
+## Phase B/C: exact delta campaign
 
-The auto constants are experimental and logged through probe/update/conversion counters. They are
-not a trained policy and do not route on benchmark names, future regions or oracle verdicts.
+Raw rows are in `dual-frontier-results.tsv`; family/bucket summaries and the machine-evaluated gate
+are in `DUAL-FRONTIER-DELTA-CAMPAIGN.md`.
 
-`benchmarking/dual-frontier-study.py` runs manifest rows in timeout- and address-space-bounded child
-processes, preserves incomplete captures and failures, and emits raw TSV plus a Markdown outcome
-summary. It does not build Acacia or hide additional solver workers.
-
-## Correctness evidence run locally
-
-The focused checked targets compiled and passed:
-
-| check | result |
+| result | rows |
 |---|---:|
-| exhaustive downsets on the mixed `[-1,1] x [-1,0]` box, both forms, conversions and algebra | passed |
-| explicit membership, empty/full/bottom, zero dimension, K=127 and incompatible domains | passed |
-| independent-forbidden-pairs expansion and forced transactional frontier abort | passed |
-| 300 deterministic random mixed-domain action/input differentials against `apply_forward` | passed |
-| K=1 accepting overflow, absent state, zero actions and one transition-free action | passed |
-| complete-sweep quantifier regression and positive/negative final membership | passed |
-| predecessor-reversal `2^5` expansion and transactional work abort | passed |
-| strict parser valid/malformed/truncated/count/index/increment/rank cases | passed |
-| synthetic `convert`, `cpre`, and positive/negative/auto `solve` replay smoke | passed |
-| complete checked unit suite | 54/54 passed |
-| pinned Posets standalone suite | 18/18 passed |
-| focused Clang 21 ASan/UBSan kernels, parser and replay smoke | passed |
+| exactly certified delta | 0 |
+| work-limit censored | 24 |
+| preserved incomplete capture | 1 |
+| semantic mismatches | 0 |
 
-Commands:
+The small control's before-complement completed in Phase A, but its after-complement did not complete
+within the same fixed budget, so it correctly remains a censored delta row. Failed rows do not enter
+ratio or survival summaries.
 
-```sh
-PKG_CONFIG_PATH=/usr/local/lib/pkgconfig meson setup build-dual-checked \
-  --buildtype=debugoptimized -Dbuild_research_tools=true \
-  -Dacacia_enable_diagnostics=true
-meson compile -C build-dual-checked \
-  dual-rank-region-test dual-rank-predecessor-test dual-replay-parser-test \
-  acacia-dual-frontier-replay
-build-dual-checked/tests/dual-rank-region-test
-build-dual-checked/tests/dual-rank-predecessor-test
-build-dual-checked/tests/dual-replay-parser-test
-tests/check-dual-frontier-replay.sh \
-  build-dual-checked/src/acacia-dual-frontier-replay
-meson test -C build-dual-checked --no-rebuild --suite unit \
-  --print-errorlogs --num-processes 1
+Gate C0 fails:
+
+- 0/20 required complete large events;
+- 0/3 required represented families among complete large events;
+- no certified large-event delta-size or unchanged-maxima median is available;
+- exact row-level semantic mismatches: 0.
+
+The gate is not relaxed. Phase D and the same-schedule materialization comparison are not executed.
+
+## Correctness evidence
+
+The exhaustive tiny-domain test enumerates every pair `F_after ⊆ F_before` over a mixed `K=1`
+domain and verifies every point:
+
+```text
+contains(F_after, x)
+==
+contains(F_before, x) && !exists(b in B_delta: b <= x)
 ```
 
-The first build attempt exhausted the environment's `/tmp` quota. Re-running serially with compiler
-temporaries under the workspace completed the whole checked build, after which all 54 unit tests
-passed. A focused Clang 21 `address,undefined` sanitizer build also passed the three new test
-executables and replay smoke. LeakSanitizer was disabled because it cannot operate under the
-execution environment's ptrace supervision; ASan and UBSan remained enabled with abort-on-error.
-The parent-pinned Posets commit was also built in an isolated plain-debug directory and passed all
-18 standalone tests.
+Named cases cover empty delta, one removed maximum, incomparable replacement maxima, replacement of
+a redundant old complement generator, Boolean-tail coordinates, `-1` absence, a non-contracting
+input and transactional budget failure. The replay smoke covers exact delta output and isolation
+from a truncated sibling.
 
-## Campaign status
+The focused kernels, parser and smoke tests pass, as does the complete unit suite. The campaign has
+zero semantic mismatches; resource-censored rows are excluded from performance summaries.
 
-No real snapshot cohort or optimized timing campaign has been run in this implementation session.
-Accordingly:
+## Final decision
 
-| stage | measured rows | gate result |
-|---|---:|---|
-| static conversion census | 0 | unrun |
-| captured same-event CPre | 0 | unrun |
-| persistent fixed-K solves | 0 | unrun |
-| production campaign | 0 | not admitted |
+| Observation | Decision |
+|---|---|
+| Complete complements are not constructible on any large event under the fixed modest budget | close ordinary dual-frontier switching |
+| Exact delta construction depends on two such complements and yields no complete large rows | Gate C0 fails; do not infer delta size |
+| Gate C0 fails before a lazy representation is justified | do not build or productionize lazy subtraction |
 
-`dual-frontier-manifest.tsv` and `dual-frontier-results.tsv` intentionally contain headers only.
-They are not evidence of compression, speedup, memory savings or coverage. Populate the manifest
-from complete captured events, preserve `.skipped` cases, and replace the results file with the
-bounded runner's raw output.
-
-## Admission decision and deferred integration
-
-The experiment remains research-only until real P3/P4 rows show zero mismatches and the predeclared
-multi-family operation/end-to-end benefit. Production integration is therefore deferred in full:
-
-- the critical picker still consumes positive maxima;
-- raising K invalidates the dual domain and must start a fresh fixed-K region;
-- synthesis, strategy extraction, shields and Python winning-region export need positive interfaces;
-- forward/OTFUR losing antichains remain proof knowledge, not exact complements of candidate regions;
-- worker polarity and original-LTL verdict contracts are unchanged;
-- no compile-time option, preset, portfolio arm or backend dispatch was added.
-
-If the real gates fail, retain these exact tools, fixtures and negative measurements and do not add a
-dormant production path. If they pass, production integration belongs in a separate change with the
-repository's G0-G5 gates and matched frozen binaries.
+Retain the exact region, predecessor and delta machinery plus the negative census. Revisit this
+representation family only with a genuinely direct exact-delta construction justified by new
+multi-family evidence; do not tune automatic orientation or add a dormant production path from the
+present data.
