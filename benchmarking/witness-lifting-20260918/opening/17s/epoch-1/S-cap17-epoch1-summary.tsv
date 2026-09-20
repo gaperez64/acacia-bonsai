@@ -1,0 +1,63 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+S-cap17-epoch1	CheckShades_3461125b.ltl	17	UNREALIZABLE	0.01964165599201806	false	UNREALIZABLE	17
+S-cap17-epoch1	CheckWarnlight_54e1f7d2.ltl	17	UNREALIZABLE	0.0210962489945814	false	UNREALIZABLE	17
+S-cap17-epoch1	Demo1_63831f8c.ltl				true	TIMEOUT	17
+S-cap17-epoch1	KitchenTimerV8.ltl	17	REALIZABLE	0.08415547301410697	false	REALIZABLE	17
+S-cap17-epoch1	Light_aeb1d897.ltl	17	UNREALIZABLE	0.03510806997655891	false	UNREALIZABLE	17
+S-cap17-epoch1	LightsTotal_9cbf2546.ltl	17	REALIZABLE	0.41981952500646	false	REALIZABLE	17
+S-cap17-epoch1	MusicAppFeedback.ltl	17	REALIZABLE	0.024928566010203212	false	REALIZABLE	17
+S-cap17-epoch1	TwoCountersRefinedRefined.ltl	17	REALIZABLE	0.03555681699072011	false	REALIZABLE	17
+S-cap17-epoch1	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	arbiter_on_inpchange_pb_4_pe_.ltl	17	REALIZABLE	1.2606487990124151	false	REALIZABLE	17
+S-cap17-epoch1	arbiter_pb_2_pe_.ltl	17	REALIZABLE	0.02748229299322702	false	REALIZABLE	17
+S-cap17-epoch1	collector_v3_pb_10_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	collector_v3_pb_13_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	elevator-paper-real.ltl	17	REALIZABLE	0.07584196800598875	false	REALIZABLE	17
+S-cap17-epoch1	example10_pb_2_pe_.ltl	17	REALIZABLE	0.024123106995830312	false	REALIZABLE	17
+S-cap17-epoch1	example7a_pb_2_pe_.ltl	17	REALIZABLE	0.03295210999203846	false	REALIZABLE	17
+S-cap17-epoch1	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	g-unreal-10.ltl	17	UNREALIZABLE	0.03216665601939894	false	UNREALIZABLE	17
+S-cap17-epoch1	g-unreal-11.ltl	17	UNREALIZABLE	0.037509185989620164	false	UNREALIZABLE	17
+S-cap17-epoch1	g-unreal-21.ltl				true	TIMEOUT	17
+S-cap17-epoch1	g-unreal-312.ltl				true	TIMEOUT	17
+S-cap17-epoch1	g-unreal-32.ltl	17	UNREALIZABLE	0.19316266200621612	false	UNREALIZABLE	17
+S-cap17-epoch1	gf-unreal11.ltl	17	UNREALIZABLE	0.018700924003496766	false	UNREALIZABLE	17
+S-cap17-epoch1	gf-unreal18.ltl	17	UNREALIZABLE	0.027654280012939125	false	UNREALIZABLE	17
+S-cap17-epoch1	infinite-race-u0.ltl	17	UNREALIZABLE	0.03836130601121113	false	UNREALIZABLE	17
+S-cap17-epoch1	lift_gr1+_pb_3_pe_.ltl	17	REALIZABLE	1.2307753690110985	false	REALIZABLE	17
+S-cap17-epoch1	lilydemo13.ltl	17	REALIZABLE	0.017012914002407342	false	REALIZABLE	17
+S-cap17-epoch1	load_balancer_pb_8_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	load_balancer_unreal1_pb_4_6_pe_.ltl	17	UNREALIZABLE	1.0626821329933591	false	UNREALIZABLE	17
+S-cap17-epoch1	load_balancer_unreal1_pb_6_2_pe_.ltl	17	UNREALIZABLE	0.2174904519924894	false	UNREALIZABLE	17
+S-cap17-epoch1	ltl2dba_C2_unreal_pb_4_pe_.ltl	17	UNREALIZABLE	0.019160530006047338	false	UNREALIZABLE	17
+S-cap17-epoch1	ltl2dba_E_pb_9_pe_.ltl	17	REALIZABLE	0.018092610989697278	false	REALIZABLE	17
+S-cap17-epoch1	ltl2dba_U1_pb_18_pe_.ltl	17	REALIZABLE	0.022599018004257232	false	REALIZABLE	17
+S-cap17-epoch1	ltl2dba_U1_pb_4_pe_.ltl	17	REALIZABLE	0.016043442010413855	false	REALIZABLE	17
+S-cap17-epoch1	ltl2dba_alpha_pb_14_pe_.ltl	17	REALIZABLE	0.021902015985688195	false	REALIZABLE	17
+S-cap17-epoch1	ltl2dba_alpha_pb_20_pe_.ltl	17	REALIZABLE	0.02192890999140218	false	REALIZABLE	17
+S-cap17-epoch1	ltl2dba_beta_pb_100_pe_.ltl	17	REALIZABLE	0.015556550002656877	false	REALIZABLE	17
+S-cap17-epoch1	ltl2dba_beta_pb_6_pe_.ltl	17	REALIZABLE	0.01763539097737521	false	REALIZABLE	17
+S-cap17-epoch1	ltl2dpa03.ltl	17	REALIZABLE	0.03360912497737445	false	REALIZABLE	17
+S-cap17-epoch1	ltl2dpa22.ltl	17	REALIZABLE	0.10076236299937591	false	REALIZABLE	17
+S-cap17-epoch1	patrolling-alarm0.ltl	17	UNREALIZABLE	0.03733847601688467	false	UNREALIZABLE	17
+S-cap17-epoch1	patrolling-alarm5.ltl	17	UNREALIZABLE	0.06301612098468468	false	UNREALIZABLE	17
+S-cap17-epoch1	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	17	UNREALIZABLE	0.03112321300432086	false	UNREALIZABLE	17
+S-cap17-epoch1	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	0.044282032002229244	false	UNREALIZABLE	17
+S-cap17-epoch1	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	17	UNREALIZABLE	0.040542489994550124	false	UNREALIZABLE	17
+S-cap17-epoch1	robot-grid-reach-2d-real.ltl	17	REALIZABLE	2.8643100499757566	false	REALIZABLE	17
+S-cap17-epoch1	robot-resource-2d6.ltl	17	UNREALIZABLE	0.46321044000796974	false	UNREALIZABLE	17
+S-cap17-epoch1	robot-to-target-charging5.ltl	17	UNREALIZABLE	7.0855650159937795	false	UNREALIZABLE	17
+S-cap17-epoch1	robot_repair2.ltl				true	TIMEOUT	17
+S-cap17-epoch1	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	17	UNREALIZABLE	1.0225266329944134	false	UNREALIZABLE	17
+S-cap17-epoch1	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	17	UNREALIZABLE	0.034686922997934744	false	UNREALIZABLE	17
+S-cap17-epoch1	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	17
+S-cap17-epoch1	simple_arbiter_unreal1_pb_3_11_pe_.ltl	17	UNREALIZABLE	0.03488206199835986	false	UNREALIZABLE	17
+S-cap17-epoch1	simple_arbiter_unreal1_pb_8_8_pe_.ltl	17	UNREALIZABLE	0.034119418007321656	false	UNREALIZABLE	17
+S-cap17-epoch1	simple_arbiter_unreal2_pb_60_pe_.ltl	17	UNREALIZABLE	0.05523892701603472	false	UNREALIZABLE	17
+S-cap17-epoch1	simple_arbiter_unreal2_pb_6_pe_.ltl	17	UNREALIZABLE	0.03008047101320699	false	UNREALIZABLE	17
+S-cap17-epoch1	simple_arbiter_unreal2_pb_7_pe_.ltl	17	UNREALIZABLE	0.03284025800530799	false	UNREALIZABLE	17
+S-cap17-epoch1	sort4-real.ltl				true	TIMEOUT	17

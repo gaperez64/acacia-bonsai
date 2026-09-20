@@ -1,0 +1,63 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+S-cap120-epoch1	CheckShades_3461125b.ltl	120	UNREALIZABLE	0.020931335995555855	false	UNREALIZABLE	120
+S-cap120-epoch1	CheckWarnlight_54e1f7d2.ltl	120	UNREALIZABLE	0.018866341997636482	false	UNREALIZABLE	120
+S-cap120-epoch1	Demo1_63831f8c.ltl				true	TIMEOUT	120
+S-cap120-epoch1	KitchenTimerV8.ltl	120	REALIZABLE	0.09284433400898706	false	REALIZABLE	120
+S-cap120-epoch1	Light_aeb1d897.ltl	120	UNREALIZABLE	0.028785146001609974	false	UNREALIZABLE	120
+S-cap120-epoch1	LightsTotal_9cbf2546.ltl	120	REALIZABLE	0.4243920760054607	false	REALIZABLE	120
+S-cap120-epoch1	MusicAppFeedback.ltl	120	REALIZABLE	0.02665379901009146	false	REALIZABLE	120
+S-cap120-epoch1	TwoCountersRefinedRefined.ltl	120	REALIZABLE	0.027902922010980546	false	REALIZABLE	120
+S-cap120-epoch1	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	arbiter_on_inpchange_pb_4_pe_.ltl	120	REALIZABLE	1.20638585400593	false	REALIZABLE	120
+S-cap120-epoch1	arbiter_pb_2_pe_.ltl	120	REALIZABLE	0.024602575998869725	false	REALIZABLE	120
+S-cap120-epoch1	collector_v3_pb_10_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	collector_v3_pb_13_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	elevator-paper-real.ltl	120	REALIZABLE	0.0612743959936779	false	REALIZABLE	120
+S-cap120-epoch1	example10_pb_2_pe_.ltl	120	REALIZABLE	0.026344970989157446	false	REALIZABLE	120
+S-cap120-epoch1	example7a_pb_2_pe_.ltl	120	REALIZABLE	0.03246825499809347	false	REALIZABLE	120
+S-cap120-epoch1	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	g-unreal-10.ltl	120	UNREALIZABLE	0.028725073992973194	false	UNREALIZABLE	120
+S-cap120-epoch1	g-unreal-11.ltl	120	UNREALIZABLE	0.03240802200161852	false	UNREALIZABLE	120
+S-cap120-epoch1	g-unreal-21.ltl				true	TIMEOUT	120
+S-cap120-epoch1	g-unreal-312.ltl				true	MEMOUT	120
+S-cap120-epoch1	g-unreal-32.ltl	120	UNREALIZABLE	0.19550288798927795	false	UNREALIZABLE	120
+S-cap120-epoch1	gf-unreal11.ltl	120	UNREALIZABLE	0.019846383002004586	false	UNREALIZABLE	120
+S-cap120-epoch1	gf-unreal18.ltl	120	UNREALIZABLE	0.040159823998692445	false	UNREALIZABLE	120
+S-cap120-epoch1	infinite-race-u0.ltl	120	UNREALIZABLE	0.02306594600668177	false	UNREALIZABLE	120
+S-cap120-epoch1	lift_gr1+_pb_3_pe_.ltl	120	REALIZABLE	1.196575715992367	false	REALIZABLE	120
+S-cap120-epoch1	lilydemo13.ltl	120	REALIZABLE	0.023248665005667135	false	REALIZABLE	120
+S-cap120-epoch1	load_balancer_pb_8_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	load_balancer_unreal1_pb_4_6_pe_.ltl	120	UNREALIZABLE	1.049237216997426	false	UNREALIZABLE	120
+S-cap120-epoch1	load_balancer_unreal1_pb_6_2_pe_.ltl	120	UNREALIZABLE	0.21039879199815914	false	UNREALIZABLE	120
+S-cap120-epoch1	ltl2dba_C2_unreal_pb_4_pe_.ltl	120	UNREALIZABLE	0.02407524798763916	false	UNREALIZABLE	120
+S-cap120-epoch1	ltl2dba_E_pb_9_pe_.ltl	120	REALIZABLE	0.026797468002769165	false	REALIZABLE	120
+S-cap120-epoch1	ltl2dba_U1_pb_18_pe_.ltl	120	REALIZABLE	0.03273346599598881	false	REALIZABLE	120
+S-cap120-epoch1	ltl2dba_U1_pb_4_pe_.ltl	120	REALIZABLE	0.03437045999453403	false	REALIZABLE	120
+S-cap120-epoch1	ltl2dba_alpha_pb_14_pe_.ltl	120	REALIZABLE	0.0394114699884085	false	REALIZABLE	120
+S-cap120-epoch1	ltl2dba_alpha_pb_20_pe_.ltl	120	REALIZABLE	0.03266033199906815	false	REALIZABLE	120
+S-cap120-epoch1	ltl2dba_beta_pb_100_pe_.ltl	120	REALIZABLE	0.03622588000143878	false	REALIZABLE	120
+S-cap120-epoch1	ltl2dba_beta_pb_6_pe_.ltl	120	REALIZABLE	0.031566724996082485	false	REALIZABLE	120
+S-cap120-epoch1	ltl2dpa03.ltl	120	REALIZABLE	0.044095349992858246	false	REALIZABLE	120
+S-cap120-epoch1	ltl2dpa22.ltl	120	REALIZABLE	0.1017335729993647	false	REALIZABLE	120
+S-cap120-epoch1	patrolling-alarm0.ltl	120	UNREALIZABLE	0.030485141003737226	false	UNREALIZABLE	120
+S-cap120-epoch1	patrolling-alarm5.ltl	120	UNREALIZABLE	0.05887845599499997	false	UNREALIZABLE	120
+S-cap120-epoch1	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	120	UNREALIZABLE	0.020425719005288556	false	UNREALIZABLE	120
+S-cap120-epoch1	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	120	UNREALIZABLE	0.04070779899484478	false	UNREALIZABLE	120
+S-cap120-epoch1	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	120	UNREALIZABLE	0.042757443006848916	false	UNREALIZABLE	120
+S-cap120-epoch1	robot-grid-reach-2d-real.ltl	120	REALIZABLE	3.027290541009279	false	REALIZABLE	120
+S-cap120-epoch1	robot-resource-2d6.ltl	120	UNREALIZABLE	0.438647603004938	false	UNREALIZABLE	120
+S-cap120-epoch1	robot-to-target-charging5.ltl	120	UNREALIZABLE	7.260123102998477	false	UNREALIZABLE	120
+S-cap120-epoch1	robot_repair2.ltl				true	TIMEOUT	120
+S-cap120-epoch1	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	MEMOUT	120
+S-cap120-epoch1	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	120	UNREALIZABLE	1.0580578069930198	false	UNREALIZABLE	120
+S-cap120-epoch1	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	120	UNREALIZABLE	0.04175438500533346	false	UNREALIZABLE	120
+S-cap120-epoch1	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	120
+S-cap120-epoch1	simple_arbiter_unreal1_pb_3_11_pe_.ltl	120	UNREALIZABLE	0.029178500990383327	false	UNREALIZABLE	120
+S-cap120-epoch1	simple_arbiter_unreal1_pb_8_8_pe_.ltl	120	UNREALIZABLE	0.042117801000131294	false	UNREALIZABLE	120
+S-cap120-epoch1	simple_arbiter_unreal2_pb_60_pe_.ltl	120	UNREALIZABLE	0.05488934200548101	false	UNREALIZABLE	120
+S-cap120-epoch1	simple_arbiter_unreal2_pb_6_pe_.ltl	120	UNREALIZABLE	0.04074676099116914	false	UNREALIZABLE	120
+S-cap120-epoch1	simple_arbiter_unreal2_pb_7_pe_.ltl	120	UNREALIZABLE	0.030199481989257038	false	UNREALIZABLE	120
+S-cap120-epoch1	sort4-real.ltl				true	TIMEOUT	120
