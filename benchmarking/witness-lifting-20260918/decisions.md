@@ -132,10 +132,21 @@ release builds specifically is unlikely to apply here. Net: this stale binary is
 valid for a *mechanism/correctness* diagnostic (not a timing claim), but a fresh rebuild is cheap
 and removes the doubt entirely — do that first, once a quiet window opens, rather than debate reuse.
 
-## W2 — attribution (not started)
+## W2 — attribution (confirmation campaign running)
 
-Blocked on W1 producing paired rows for the previously-problematic workstation instance and other
-exposed cases. Nothing to attribute yet.
+Confirmation queue frozen (`opening/confirmations-queue.tsv`, 315 rows: 196 at 120s, 119 at 17s --
+see the dedicated commit for full column/reason semantics). Runner built, reviewed, and launched
+detached at 2026-09-20T23:32:44: `opening/confirmations/run-all-confirmations.sh` runs 5 alternating
+B/S pairs at 120s to completion, then 5 at 17s, against the frozen queue -- progress in
+`opening/confirmations/top-level.log`. Estimated 1-3 days based on the queue's mix of near-cap and
+fast instances (rough extrapolation from the opening campaign's own per-instance timing, not yet a
+measured rate for this specific leg).
+
+Once complete: evaluate via `paired-admission.py` (the 120s leg needs the `--research-protocol`
+extension added earlier this sprint; the 17s leg uses the historical path unchanged), and attribution
+proper (binary-attribution.md, comparing B against a preserved prior binary on the known-problematic
+workstation instance) follows from that. Not started yet -- blocked on this campaign the same way W1's
+report was blocked on the opening campaign.
 
 ## W3 — family provenance (partial)
 
