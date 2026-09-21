@@ -346,13 +346,50 @@ intercepting the check_unreal+synth_fname combination for this trivial formula. 
 would need direct tracing inside `run_one_ltl::operator ()` itself (not just its call sites in
 `run_ltl`/`solve_decomposed`) to find it.
 
-**Disposition**: blocked, not resolved this session. Both rounds' source edits were reverted
-(`git status` confirms a clean tree under `src/`) and `build_unreal_test` was removed after each
-round; no commit was made and no unsound export was ever produced or trusted. This is a stretch
-item beyond the plan's committed W3/W4 scope — W3's own bar (identify the safer path and the
+**Round 3** found and fixed a third gate by reading the rest of `run_one_ltl::operator ()`:
+`const bool want_controller_strategy = synth_fname.has_value () and not check_unreal.has_value ();`
+starves the *Spot NBA fast path*'s own strategy extraction whenever `check_unreal` is set, separate
+from `solve_game`'s strategy population further down (which was already correctly generic on
+`synth_fname` alone). Fixed to also allow `UNREAL_X_FORMULA`. Round 3's own validation run, however,
+used a corrupted formula string (`G(o <-> Xi)`, where `Xi` parses as one bareword atomic proposition,
+not `X` applied to `i`) — a test-construction bug, confirmed by its own trace (`Xi` appears verbatim,
+unshifted, through every stage) — so round 3's negative result did not actually test the fix.
+
+**Round 4** re-ran the identical three-gate fix with the corrected formula (`G(o <-> X(i))`, verified
+byte-exact and confirmed by its own trace to parse with a genuine unary `X` applied to `i`) and got
+the same negative result: exit 1, `UNREALIZABLE` printed correctly, no AAG file. The verbose trace
+shows the classification path directly: `Spot NBA fast path classification: deterministic` →
+`Spot NBA fast path returning 1`, i.e. `deterministic_forbidden_fast_path`
+(`src/solver/spot_nba_fastpath.hh`) resolved it, exactly the code this round's fix targeted. Reading
+that function's own logic (`if (p_out_wins and want_strategy) res.strategy = ...`), it should have
+populated a strategy given `p_out_wins=true` (matching the printed `1`) and `want_strategy=true`
+(post-fix) — and `run_one_ltl::synthesis ()`'s own `assert (strats.size () > 0);` should fire if it
+were entered with an empty `strats`, since this build's assertions are confirmed genuinely active
+(`meson.build`'s `-DNDEBUG`/`-DNO_VERBOSE` only attach under the `release`/`lowmem`
+`acacia_compiler_profile`, and this build's own verbose tracing printed successfully, ruling that
+out). Neither the file nor the assert appeared. This is a real, currently unresolved contradiction
+between a plain reading of the code and its observed behavior, not explainable by any test-harness
+issue found so far — settling it needs actual print-based instrumentation (e.g. at the top of
+`synthesis ()` and at its call site) rather than further code reading, a meaningfully different
+(and more open-ended) level of effort than the three targeted one-line/few-line gate fixes tried so
+far.
+
+Also worth recording precisely, since it cost real time this round: shelling out to `git apply
+<patchfile>` inside the `codex-task` sandbox hung indefinitely (its git-mutation PATH shim appears
+to drop the patch-file argument, leaving `git apply` blocked reading an empty stdin) — worked around
+by having codex make the same edits directly with its own file-editing tool instead, which behaved
+normally. Worth remembering for any future round that considers using `git apply` inside this
+sandbox.
+
+**Disposition**: blocked, not resolved this session, across four rounds (round 3's negative result
+invalidated by its own test bug, correctly redone in round 4). All source edits were reverted after
+each round (`git status` confirms a clean tree under `src/`) and every `build_unreal_test` directory
+was removed; no commit was made and no unsound export was ever produced or trusted. This is a
+stretch item beyond the plan's committed W3/W4 scope — W3's own bar (identify the safer path and the
 concrete near-miss risk) was already met on paper and by hand-decoding a real circuit; actually
-landing that safer path hit two further, previously-unanticipated gates in `solver_invoker.cc` and
-is left open. `round_robin_arbiter_unreal2`'s real seeds were never touched by either round.
+landing that safer path hit three real gates in `solver_invoker.cc`/`spot_nba_fastpath.hh`, the third
+of which remains unexplained even after a fix that reads correct on paper, and is left open.
+`round_robin_arbiter_unreal2`'s real seeds were never touched by any round.
 
 ## W5–W7 — not started
 
