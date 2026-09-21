@@ -132,21 +132,58 @@ release builds specifically is unlikely to apply here. Net: this stale binary is
 valid for a *mechanism/correctness* diagnostic (not a timing claim), but a fresh rebuild is cheap
 and removes the doubt entirely — do that first, once a quiet window opens, rather than debate reuse.
 
-## W2 — attribution (confirmation campaign running)
+## W2 — attribution (confirmation campaign complete: REJECT at both caps)
 
-Confirmation queue frozen (`opening/confirmations-queue.tsv`, 315 rows: 196 at 120s, 119 at 17s --
-see the dedicated commit for full column/reason semantics). Runner built, reviewed, and launched
-detached at 2026-09-20T23:32:44: `opening/confirmations/run-all-confirmations.sh` runs 5 alternating
-B/S pairs at 120s to completion, then 5 at 17s, against the frozen queue -- progress in
-`opening/confirmations/top-level.log`. Estimated 1-3 days based on the queue's mix of near-cap and
-fast instances (rough extrapolation from the opening campaign's own per-instance timing, not yet a
-measured rate for this specific leg).
+Confirmation queue frozen (`opening/confirmations-queue.tsv`, 315 rows: 196 at 120s, 119 at 17s).
+Runner built, reviewed, launched detached at 2026-09-20T23:32:44, completed 2026-09-21T18:43:14
+(120s: 18.2h; 17s: 1.24h -- much faster than the initial extrapolation, since the 17s queue's
+instances are mostly ones the discovery data already knew resolve quickly one way or the other).
+Zero conflicts across all 10 rounds at both caps.
 
-Once complete: evaluate via `paired-admission.py` (the 120s leg needs the `--research-protocol`
-extension added earlier this sprint; the 17s leg uses the historical path unchanged), and attribution
-proper (binary-attribution.md, comparing B against a preserved prior binary on the known-problematic
-workstation instance) follows from that. Not started yet -- blocked on this campaign the same way W1's
-report was blocked on the opening campaign.
+**Admission evaluation (plan section 8), run for real via `paired-admission.py` with a properly
+constructed `--benefit-targets` list** (the 5 P4 gain targets plus any instance the discovery data
+flagged `gain` -- explicitly excluding `workstation_resupply_pb_3_pe_` and other near-cap-control/
+memory-only/timing-only queue entries from benefit credit, since those are risk checks, not declared
+benefit claims):
+
+**REJECT at both caps** (correctness PASS, no_regression FAIL, improvement FAIL at 120s and 17s).
+
+This is a real, validated result, not a repeat of the single known workstation knife-edge:
+
+- **120s: a systematic TIMEOUT-to-MEMOUT transition under S**, confirmed across ~44+ instances
+  spanning multiple families -- `infinite-race-u15..25`, `lift_pb_{4,5,6}_pe_`,
+  `lift_unary_enc_pb_{4,5,6}_pe_`, `load_balancer_unreal1_pb_4_{10,11,12}_pe_`,
+  `round_robin_arbiter_unreal1_pb_{3,4}_*`, `arbiter_on_inpchange_pb_{5,6,7}_pe_`,
+  `robot_grid_pb_6_6_pe_`, `robot-to-target0/14`, `reversible-lane-r-real`, `square5x5-real`.
+  **Cross-checked against the opening campaign's own discovery data before trusting it**: the
+  identical TIMEOUT->MEMOUT pattern already appears in `gains-losses.tsv`, 88 rows across both
+  discovery epochs (44 each) -- this confirmation independently reconfirms it with 5 fresh rounds,
+  it is not new noise introduced by this run. **PAR-2 scores TIMEOUT and MEMOUT identically** (both
+  pay `2*cap`), so this cost was completely invisible in W1's headline PAR-2 numbers despite being a
+  real, different, and arguably worse failure mode -- hitting the 8 GiB memory ceiling rather than
+  gracefully exhausting the time budget. This is exactly the kind of loss the plan's PAR-2-alone
+  framing can hide and paired confirmation is designed to surface.
+
+- **17s: `workstation_resupply_pb_3_pe_` is still genuinely mixed/unresolved under 5 fresh rounds**
+  ("mixed paired verdict losses"). The full-corpus discovery data's single epoch-1 win does not
+  generalize under fresh repetition -- this confirms near-cap noise on this instance, it does not
+  clear it. Also surfaced a second, previously-unflagged near-cap knife-edge instance,
+  `GF-G-contradiction7.ltl`. Two clean, unambiguous coverage regressions: `lift_pb_4_pe_.ltl` and
+  `lift_unary_enc_pb_4_pe_.ltl` go from 5/5 solved under B to 0/5 under S.
+
+**Disposition (plan section 5.3, "broad benefit plus losses"): S is not admitted at either cap.**
+W1's broad PAR-2/coverage benefit stands as real and worth continuing research on -- this
+confirmation does not erase it -- but the losses are now concrete and validated rather than one
+disputed instance on a 10-target screen. The natural next step, not undertaken here, is diagnosing
+*why* S's backend choice produces a memory blowup on this specific cluster of instances instead of
+degrading gracefully to a timeout the way B does -- that diagnostic is the "at most one
+mechanism-supported repair/routing refinement" the plan allows before reconsidering admission.
+
+`binary-attribution.md` (the separate question of whether B_arch vs current B shows build drift on
+the workstation instance specifically) was not produced -- superseded by the more informative
+finding above; the workstation instance's own behavior is already fully characterized by the mixed
+5-round confirmation result, and chasing a separate binary-drift explanation for it adds nothing
+once the pattern generalizes to a whole cluster of other instances at 120s.
 
 ## W3 — family provenance (partial)
 
