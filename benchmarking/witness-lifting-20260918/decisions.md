@@ -307,6 +307,53 @@ of eagerly expanding the full antecedent automaton. Not implemented this session
 substantial, separately-justified subsystem); the exact reproducer (n and the antecedent formula)
 is preserved in `families/target-checks.tsv` for whoever picks this up.
 
+## Post-campaign follow-on: UNREAL-adapter build attempt (blocked, two negative results)
+
+W3 (above) identified the safer in-repo path for `round_robin_arbiter_unreal2` — extend Acacia's
+own frozen-graph solve path to accept `-u formula -s FILE` together, since `run_one_ltl::synthesis()`
+already operates generically on `strats`/`out_part` independent of `check_unreal` — rather than
+reconstruct the dualization externally, given the demonstrated real risk of getting the polarity
+wrong. This note records a follow-on attempt (via `codex-task`, two rounds) to actually build that
+path, on the tiny hand-verified game `G(o <-> X(i))` (`INPUTS{i} OUTPUTS{o}`, confirmed UNREALIZABLE
+via `-u formula`) before touching `round_robin_arbiter_unreal2`'s real seeds. Both rounds stopped on
+a clean negative result rather than proceeding on an ambiguous one; no unsound witness was produced
+or accepted at any point.
+
+**Round 1**: relaxed the single assert this note originally named
+(`solver_invoker.cc`, `assert (not synth_fname.has_value () or not check_unreal.has_value ());`,
+main frozen_graph solve path) to also permit `*check_unreal == UNREAL_X_FORMULA`, in a fresh
+`build_unreal_test` (debugoptimized, assertions enabled, isolated from `build_w1_B`/`build_w1_S`).
+`-f 'G(o <-> X(i))' -i i -o o -u formula -s /tmp/unreal_test.aag` completed cleanly (`UNREALIZABLE`,
+exit 1, no abort) but produced no AAG file. Root cause found by reading the surrounding code:
+`try_unreal_safety_core_witnesses` — a decision-only fast path invoked after the I/O swap, distinct
+from `try_degenerate_io`/`try_syntactic_bypass` — answers small unreal checks via a "safety core
+witness" search and returns immediately on a match, without ever populating `strats` or knowing
+`synth_fname` exists (its signature doesn't even take it). Its two siblings both already guard their
+own shortcuts with `if (not synth_fname.has_value ())` for exactly this reason; this one was missing
+that guard. This tiny formula was being answered entirely by that shortcut.
+
+**Round 2**: added the missing guard (`try_unreal_safety_core_witnesses` now takes `synth_fname` and
+returns `std::nullopt` immediately when it is set, falling through to the full runner path, matching
+its siblings byte-for-byte for the unset case), on top of the same assert relaxation, in a fresh
+rebuild. Same command still printed `UNREALIZABLE`/exit 1 correctly, but **still produced no AAG
+file — and, notably, `run_one_ltl::synthesis()`'s own `assert (strats.size () > 0);` did not fire
+either**, meaning `synthesis()` was never entered at all (not entered-with-empty-strats, which the
+assert would have caught). Since `try_degenerate_io`, `try_syntactic_bypass`, and now
+`try_unreal_safety_core_witnesses` are all confirmed not taken for this input (synth_fname set,
+input/output APs both non-empty), some further gate or early return between there and the
+`DECOMPOSE_SPEC`-dispatched `if (runner (...)) { ... runner.synthesis (...); }` call is still
+intercepting the check_unreal+synth_fname combination for this trivial formula. Not yet identified;
+would need direct tracing inside `run_one_ltl::operator ()` itself (not just its call sites in
+`run_ltl`/`solve_decomposed`) to find it.
+
+**Disposition**: blocked, not resolved this session. Both rounds' source edits were reverted
+(`git status` confirms a clean tree under `src/`) and `build_unreal_test` was removed after each
+round; no commit was made and no unsound export was ever produced or trusted. This is a stretch
+item beyond the plan's committed W3/W4 scope — W3's own bar (identify the safer path and the
+concrete near-miss risk) was already met on paper and by hand-decoding a real circuit; actually
+landing that safer path hit two further, previously-unanticipated gates in `solver_invoker.cc` and
+is left open. `round_robin_arbiter_unreal2`'s real seeds were never touched by either round.
+
 ## W5–W7 — not started
 
 W5 (bounded automatic proposer), W6 (candidate-restricted product construction), W7 (cold-cost
