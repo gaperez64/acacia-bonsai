@@ -1,0 +1,1 @@
+{"decision": "REJECT", "correctness": "PASS", "no_regression": "FAIL", "improvement": "FAIL", "confirmation_complete": true, "cap": 120.0, "protocol": "long-budget-120s", "rounds": 5}

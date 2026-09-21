@@ -1,0 +1,2258 @@
+[2026-09-20T23:32:44] SCREEN START 120s-confirm targets=196 rounds=5
+[2026-09-20T23:32:44] start r1 B
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-369570-8337ef4c599c.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-369570-a48aaabcdd20.scope
+run-syntcomp26-coverage exit: cleaned up 2 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=18.582
+cap=120s instance=07.ltl result=REALIZABLE seconds=18.669
+cap=120s instance=09.ltl result=REALIZABLE seconds=8.211
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.486
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.179
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.579
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.678
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=19.968
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.936
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.667
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.861
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.725
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=28.434
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=28.897
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.328
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.546
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=10.669
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=12.187
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=12.909
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.837
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.895
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.267
+cap=120s instance=Morning2_407db2cc.ltl result=TIMEOUT seconds=120.328
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.036
+cap=120s instance=SPIPureNext.ltl result=TIMEOUT seconds=120.273
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.652
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=31.961
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=MEMOUT seconds=119.556
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.178
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=1.000
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=TIMEOUT seconds=120.263
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=0.834
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=TIMEOUT seconds=120.167
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=TIMEOUT seconds=120.077
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=TIMEOUT seconds=120.075
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.859
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.215
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.197
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.265
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.953
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.349
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.760
+cap=120s instance=evasion-real.ltl result=TIMEOUT seconds=120.269
+cap=120s instance=f-real-real.ltl result=TIMEOUT seconds=120.216
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.375
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=4.156
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.442
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.050
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=6.809
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=11.528
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=17.770
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=47.246
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=66.304
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=97.200
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.222
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=2.105
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=24.660
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.545
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.902
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.147
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.157
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.970
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.219
+cap=120s instance=heim-double-x-real.ltl result=TIMEOUT seconds=120.190
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.212
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.481
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=1.000
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=1.971
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=10.122
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=12.996
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=40.484
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=41.658
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=50.002
+cap=120s instance=infinite-race-u15.ltl result=TIMEOUT seconds=120.376
+cap=120s instance=infinite-race-u16.ltl result=TIMEOUT seconds=120.328
+cap=120s instance=infinite-race-u17.ltl result=TIMEOUT seconds=120.244
+cap=120s instance=infinite-race-u18.ltl result=TIMEOUT seconds=120.328
+cap=120s instance=infinite-race-u19.ltl result=TIMEOUT seconds=120.289
+cap=120s instance=infinite-race-u20.ltl result=TIMEOUT seconds=120.254
+cap=120s instance=infinite-race-u21.ltl result=TIMEOUT seconds=120.350
+cap=120s instance=infinite-race-u22.ltl result=TIMEOUT seconds=120.375
+cap=120s instance=infinite-race-u23.ltl result=TIMEOUT seconds=120.371
+cap=120s instance=infinite-race-u24.ltl result=TIMEOUT seconds=120.379
+cap=120s instance=infinite-race-u25.ltl result=TIMEOUT seconds=120.277
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.369
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=9.752
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=59.908
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.331
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.043
+cap=120s instance=lift_pb_4_pe_.ltl result=REALIZABLE seconds=0.261
+cap=120s instance=lift_pb_5_pe_.ltl result=TIMEOUT seconds=120.180
+cap=120s instance=lift_pb_6_pe_.ltl result=TIMEOUT seconds=120.329
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.078
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=REALIZABLE seconds=10.431
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=TIMEOUT seconds=120.174
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=TIMEOUT seconds=120.277
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.232
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=5.621
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.740
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.524
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.193
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.181
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.223
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.037
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=7.670
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=83.337
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.715
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=13.875
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.645
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=22.537
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.101
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.582
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=84.125
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.371
+cap=120s instance=ordered-visits-choice-real.ltl result=UNKNOWN seconds=0.493
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.451
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.499
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.565
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.587
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.655
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.650
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.658
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.756
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.808
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.880
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.448
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.489
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.532
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.573
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.606
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.635
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.680
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.781
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.780
+cap=120s instance=reversible-lane-r-real.ltl result=TIMEOUT seconds=120.378
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.869
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=2.197
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=3.016
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=12.415
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.216
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.346
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.905
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=8.660
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=9.127
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.378
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.458
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.978
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=69.266
+cap=120s instance=robot-to-target-charging14.ltl result=MEMOUT seconds=101.528
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.663
+cap=120s instance=robot-to-target0.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=64.775
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.175
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.349
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=TIMEOUT seconds=120.223
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=TIMEOUT seconds=120.377
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.356
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.779
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=TIMEOUT seconds=120.122
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=TIMEOUT seconds=120.152
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=TIMEOUT seconds=120.179
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.079
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.573
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=63.629
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.230
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=TIMEOUT seconds=120.190
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=TIMEOUT seconds=120.228
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.778
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=39.027
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=TIMEOUT seconds=120.226
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=TIMEOUT seconds=120.225
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=2.153
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=14.784
+cap=120s instance=square5x5-real.ltl result=TIMEOUT seconds=120.377
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.456
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=5.346
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.322
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=22.213
+cap=120s instance=thermostat-F-real.ltl result=TIMEOUT seconds=120.311
+cap=120s instance=thermostat-GF-real.ltl result=TIMEOUT seconds=120.318
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=2.128
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.711
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.027
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.356
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=17.664
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.318
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r1-B.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r1-B-summary.tsv
+[2026-09-21T01:46:16] end r1 B rc=0
+[2026-09-21T01:46:16] start r1 S
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-07c724fdfa1e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-080472857cb5.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-1b0ce4f64d4a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-1c3f9bd80fc6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-1da62d42fa48.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-22c5c702a86a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-27730796dbb8.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-27ede7fd9daf.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-3113b207cf75.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-321194a13fba.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-33c2bb3fd7ba.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-431aa9406773.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-48b2912d1be6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-4ea452455d13.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-4fde23301fd3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-553641af7e88.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-5699b14fab8a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-594e29ddf9ca.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-5ef73566ed68.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-6ad9ce249c03.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-6d0a70806a36.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-6e1bbba5fffa.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-7079417ad2f9.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-7513d998edb3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-77800019e167.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-79bd2e5215a4.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-80d5f49efcdc.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-87ac40119a24.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-89d264d0b828.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-8e21c607f7f7.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-94485edc7fc8.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-94e25f459f00.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-9cf43c8eca9e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-a36bf5bdb668.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-adbc37c08046.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-b17bc88dca68.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-c34b43103a39.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-cc478a484b3b.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-df55385c9370.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-df99111d9d57.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-e1271a4c6ad3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-e247faa2d58a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-e92f866a1a54.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-ea47c0a73e67.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-f501cdad6a0a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-fbaf92bdc8f3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-fee5b7596744.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-376106-ff0d71586856.scope
+run-syntcomp26-coverage exit: cleaned up 48 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=18.449
+cap=120s instance=07.ltl result=REALIZABLE seconds=18.701
+cap=120s instance=09.ltl result=REALIZABLE seconds=8.229
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.588
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.450
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.633
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.761
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=19.820
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.896
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.613
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.781
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.761
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=29.362
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=30.347
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.352
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.421
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=10.324
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=12.352
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=13.692
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.724
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.678
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.323
+cap=120s instance=Morning2_407db2cc.ltl result=MEMOUT seconds=107.354
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.187
+cap=120s instance=SPIPureNext.ltl result=REALIZABLE seconds=0.533
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.605
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=32.364
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=TIMEOUT seconds=120.160
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.090
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.994
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=REALIZABLE seconds=58.887
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=1.206
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=MEMOUT seconds=95.755
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=MEMOUT seconds=90.918
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=MEMOUT seconds=76.171
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.887
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.120
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.069
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.132
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.897
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.341
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.790
+cap=120s instance=evasion-real.ltl result=REALIZABLE seconds=23.917
+cap=120s instance=f-real-real.ltl result=REALIZABLE seconds=33.403
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.531
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=2.786
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.516
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.285
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=6.699
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=11.072
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=16.884
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=44.187
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=64.199
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=93.688
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.098
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=1.996
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=25.135
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.591
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=1.021
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.142
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.136
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=2.043
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.090
+cap=120s instance=heim-double-x-real.ltl result=REALIZABLE seconds=0.414
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.450
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.674
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=1.120
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=2.197
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=11.556
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=13.877
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=40.975
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=43.692
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=52.528
+cap=120s instance=infinite-race-u15.ltl result=MEMOUT seconds=46.348
+cap=120s instance=infinite-race-u16.ltl result=MEMOUT seconds=49.021
+cap=120s instance=infinite-race-u17.ltl result=MEMOUT seconds=48.834
+cap=120s instance=infinite-race-u18.ltl result=MEMOUT seconds=49.658
+cap=120s instance=infinite-race-u19.ltl result=MEMOUT seconds=50.336
+cap=120s instance=infinite-race-u20.ltl result=MEMOUT seconds=48.025
+cap=120s instance=infinite-race-u21.ltl result=MEMOUT seconds=49.611
+cap=120s instance=infinite-race-u22.ltl result=MEMOUT seconds=44.405
+cap=120s instance=infinite-race-u23.ltl result=MEMOUT seconds=43.265
+cap=120s instance=infinite-race-u24.ltl result=MEMOUT seconds=43.350
+cap=120s instance=infinite-race-u25.ltl result=MEMOUT seconds=42.355
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.521
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=8.697
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=58.601
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.301
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.619
+cap=120s instance=lift_pb_4_pe_.ltl result=MEMOUT seconds=78.007
+cap=120s instance=lift_pb_5_pe_.ltl result=MEMOUT seconds=58.875
+cap=120s instance=lift_pb_6_pe_.ltl result=MEMOUT seconds=39.733
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.733
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=MEMOUT seconds=81.492
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=MEMOUT seconds=83.507
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=MEMOUT seconds=119.672
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.194
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=5.151
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.699
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.807
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=62.761
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=61.626
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=62.325
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.241
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=8.253
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=MEMOUT seconds=94.621
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.754
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=15.070
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.572
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=24.008
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.145
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.582
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=81.688
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.278
+cap=120s instance=ordered-visits-choice-real.ltl result=REALIZABLE seconds=0.022
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.436
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.537
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.495
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.553
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.625
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.585
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.679
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.720
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.749
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.804
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.434
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.525
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.556
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.557
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.618
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.640
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.699
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.717
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.752
+cap=120s instance=reversible-lane-r-real.ltl result=MEMOUT seconds=113.135
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.400
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=1.822
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=2.835
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=7.439
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.393
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.349
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.510
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=8.418
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=9.265
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.370
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.457
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.976
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=70.394
+cap=120s instance=robot-to-target-charging14.ltl result=UNREALIZABLE seconds=99.781
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.451
+cap=120s instance=robot-to-target0.ltl result=MEMOUT seconds=103.160
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=59.374
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.256
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.771
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=REALIZABLE seconds=9.374
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=MEMOUT seconds=21.884
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.392
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.739
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=MEMOUT seconds=63.238
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=MEMOUT seconds=58.614
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=MEMOUT seconds=52.212
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=MEMOUT seconds=47.630
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=MEMOUT seconds=48.213
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=MEMOUT seconds=47.400
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=MEMOUT seconds=46.242
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.040
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=8.164
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=64.293
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=MEMOUT seconds=72.722
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=50.894
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=50.045
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=49.292
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=MEMOUT seconds=48.762
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=MEMOUT seconds=50.179
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=MEMOUT seconds=48.344
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.774
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=42.182
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=MEMOUT seconds=69.202
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=MEMOUT seconds=65.171
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=MEMOUT seconds=58.534
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=MEMOUT seconds=53.600
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=2.079
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=14.153
+cap=120s instance=square5x5-real.ltl result=MEMOUT seconds=107.032
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.454
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=5.230
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.263
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=17.201
+cap=120s instance=thermostat-F-real.ltl result=REALIZABLE seconds=1.569
+cap=120s instance=thermostat-GF-real.ltl result=REALIZABLE seconds=46.094
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=1.998
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.744
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.026
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.336
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=18.006
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.376
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r1-S.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r1-S-summary.tsv
+[2026-09-21T03:05:55] end r1 S rc=0
+[2026-09-21T03:05:55] start r2 S
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-00fdcca33655.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-151afa567502.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-16f731abb766.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-1a192740ea4d.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-20b418a41814.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-25968ce5daf4.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-274ea0acb3d3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-295809211a62.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-2a6340318f81.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-2b51b74c3716.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-2d21e831b728.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-3048886a833e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-309ed38b754e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-3c6314849c17.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-479f999ad5f5.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-47b6d43c10d8.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-4eef61da6045.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-5090819e669a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-62d25be4c2ae.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-62db6b3b004e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-6ec7d3da3d1d.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-70a826f322f0.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-798a043fa28a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-79b33f495ebd.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-7ef9a86e654a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-859eaa1692f5.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-88a4cba668cf.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-90e56dfca086.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-969f32d83ddc.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-9fb0507eff3f.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-a3c9df9e91f1.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-a42bbce4bd93.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-a45c6b01c735.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-a5ef0792d095.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-b082cc095364.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-b109b75d9d0e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-b45cd806ffbf.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-c14601bae676.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-cb39846ceb71.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-d04049578383.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-d2021d06a173.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-dad84ca873ee.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-e148383b29b0.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-e62e67c97064.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-f9e6499f4f6d.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-380504-fca7637b1797.scope
+run-syntcomp26-coverage exit: cleaned up 46 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=19.557
+cap=120s instance=07.ltl result=REALIZABLE seconds=18.721
+cap=120s instance=09.ltl result=REALIZABLE seconds=7.549
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.645
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.553
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.694
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.750
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=20.463
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.997
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.665
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.787
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.679
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=30.947
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=29.387
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.327
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.949
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=10.475
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=12.664
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=12.737
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.786
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.823
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.280
+cap=120s instance=Morning2_407db2cc.ltl result=TIMEOUT seconds=120.319
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.008
+cap=120s instance=SPIPureNext.ltl result=REALIZABLE seconds=0.506
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.572
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=32.127
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=TIMEOUT seconds=120.269
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.151
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.958
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=REALIZABLE seconds=59.047
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=1.229
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=MEMOUT seconds=98.313
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=MEMOUT seconds=87.503
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=MEMOUT seconds=71.152
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.913
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.206
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.125
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.179
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.842
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.340
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.799
+cap=120s instance=evasion-real.ltl result=REALIZABLE seconds=23.775
+cap=120s instance=f-real-real.ltl result=REALIZABLE seconds=33.191
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.953
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=2.803
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.630
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=3.943
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=6.624
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=11.180
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=16.705
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=45.096
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=64.141
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=95.229
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.172
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=2.015
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=24.571
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.621
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.982
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.090
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.247
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.999
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.115
+cap=120s instance=heim-double-x-real.ltl result=REALIZABLE seconds=0.415
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.407
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.819
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=1.117
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=2.122
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=11.057
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=13.720
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=45.569
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=42.060
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=55.157
+cap=120s instance=infinite-race-u15.ltl result=MEMOUT seconds=48.007
+cap=120s instance=infinite-race-u16.ltl result=MEMOUT seconds=51.533
+cap=120s instance=infinite-race-u17.ltl result=MEMOUT seconds=51.365
+cap=120s instance=infinite-race-u18.ltl result=MEMOUT seconds=51.627
+cap=120s instance=infinite-race-u19.ltl result=MEMOUT seconds=50.103
+cap=120s instance=infinite-race-u20.ltl result=MEMOUT seconds=47.631
+cap=120s instance=infinite-race-u21.ltl result=MEMOUT seconds=48.564
+cap=120s instance=infinite-race-u22.ltl result=MEMOUT seconds=46.284
+cap=120s instance=infinite-race-u23.ltl result=MEMOUT seconds=46.001
+cap=120s instance=infinite-race-u24.ltl result=MEMOUT seconds=44.844
+cap=120s instance=infinite-race-u25.ltl result=MEMOUT seconds=45.848
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.264
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=9.546
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=58.423
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.289
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.653
+cap=120s instance=lift_pb_4_pe_.ltl result=MEMOUT seconds=78.771
+cap=120s instance=lift_pb_5_pe_.ltl result=MEMOUT seconds=57.815
+cap=120s instance=lift_pb_6_pe_.ltl result=MEMOUT seconds=41.005
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.687
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=MEMOUT seconds=81.601
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=MEMOUT seconds=81.492
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=MEMOUT seconds=118.228
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.152
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=5.375
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.745
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.689
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=62.581
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=63.296
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=65.944
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.046
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=8.085
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=94.310
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.744
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=14.438
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.589
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=24.105
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.199
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.610
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=82.796
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.325
+cap=120s instance=ordered-visits-choice-real.ltl result=REALIZABLE seconds=0.022
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.449
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.485
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.566
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.552
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.604
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.646
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.695
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.738
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.763
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.843
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.473
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.481
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.543
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.599
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.644
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.697
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.680
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.730
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.816
+cap=120s instance=reversible-lane-r-real.ltl result=MEMOUT seconds=115.002
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.333
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=1.648
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=3.005
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=8.064
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.167
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.387
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.506
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=8.622
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=9.072
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.317
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.521
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.945
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=68.194
+cap=120s instance=robot-to-target-charging14.ltl result=MEMOUT seconds=100.540
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.536
+cap=120s instance=robot-to-target0.ltl result=MEMOUT seconds=102.448
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=56.067
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.271
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.871
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=REALIZABLE seconds=9.370
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=MEMOUT seconds=21.210
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.394
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.798
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=MEMOUT seconds=63.194
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=MEMOUT seconds=60.339
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=MEMOUT seconds=49.584
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=MEMOUT seconds=48.303
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=MEMOUT seconds=47.150
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=MEMOUT seconds=46.831
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=MEMOUT seconds=45.322
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.088
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.515
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=62.751
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=MEMOUT seconds=71.090
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=49.812
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=49.772
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=49.385
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=MEMOUT seconds=48.112
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=MEMOUT seconds=48.667
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=MEMOUT seconds=49.416
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.849
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=40.133
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=MEMOUT seconds=70.099
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=MEMOUT seconds=64.994
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=MEMOUT seconds=56.619
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=MEMOUT seconds=54.109
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=2.012
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=14.039
+cap=120s instance=square5x5-real.ltl result=MEMOUT seconds=109.972
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.415
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=5.184
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.867
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=17.929
+cap=120s instance=thermostat-F-real.ltl result=REALIZABLE seconds=1.512
+cap=120s instance=thermostat-GF-real.ltl result=REALIZABLE seconds=47.117
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=2.005
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.772
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.027
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.348
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=17.495
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.346
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r2-S.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r2-S-summary.tsv
+[2026-09-21T04:25:59] end r2 S rc=0
+[2026-09-21T04:25:59] start r2 B
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-385067-8f5fe86ba192.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-385067-e18a57c18d8a.scope
+run-syntcomp26-coverage exit: cleaned up 2 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=19.326
+cap=120s instance=07.ltl result=REALIZABLE seconds=18.471
+cap=120s instance=09.ltl result=REALIZABLE seconds=7.683
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.353
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.539
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.709
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.729
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=20.513
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=1.006
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.673
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.837
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.607
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=29.649
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=28.004
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.372
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.264
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=11.007
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=11.819
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=12.541
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.636
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.915
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.313
+cap=120s instance=Morning2_407db2cc.ltl result=MEMOUT seconds=106.808
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.250
+cap=120s instance=SPIPureNext.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.553
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=30.906
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=MEMOUT seconds=119.878
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.247
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.968
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=TIMEOUT seconds=120.268
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=0.810
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=TIMEOUT seconds=120.168
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=TIMEOUT seconds=120.168
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=TIMEOUT seconds=120.169
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.910
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.196
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.163
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.280
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.922
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.348
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.751
+cap=120s instance=evasion-real.ltl result=TIMEOUT seconds=120.269
+cap=120s instance=f-real-real.ltl result=TIMEOUT seconds=120.198
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.618
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=4.411
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.604
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.185
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=6.625
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=13.235
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=17.644
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=46.325
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=66.450
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=96.704
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.256
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=2.218
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=26.740
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.592
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.914
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.034
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.198
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.978
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.296
+cap=120s instance=heim-double-x-real.ltl result=TIMEOUT seconds=120.221
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.180
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.561
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=0.976
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=1.946
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=10.271
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=13.070
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=39.018
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=40.989
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=51.471
+cap=120s instance=infinite-race-u15.ltl result=TIMEOUT seconds=120.428
+cap=120s instance=infinite-race-u16.ltl result=TIMEOUT seconds=120.276
+cap=120s instance=infinite-race-u17.ltl result=TIMEOUT seconds=120.373
+cap=120s instance=infinite-race-u18.ltl result=TIMEOUT seconds=120.322
+cap=120s instance=infinite-race-u19.ltl result=TIMEOUT seconds=120.276
+cap=120s instance=infinite-race-u20.ltl result=TIMEOUT seconds=120.375
+cap=120s instance=infinite-race-u21.ltl result=TIMEOUT seconds=120.371
+cap=120s instance=infinite-race-u22.ltl result=TIMEOUT seconds=120.429
+cap=120s instance=infinite-race-u23.ltl result=TIMEOUT seconds=120.427
+cap=120s instance=infinite-race-u24.ltl result=TIMEOUT seconds=120.369
+cap=120s instance=infinite-race-u25.ltl result=TIMEOUT seconds=120.370
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.291
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=8.823
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=60.409
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.244
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.042
+cap=120s instance=lift_pb_4_pe_.ltl result=REALIZABLE seconds=0.265
+cap=120s instance=lift_pb_5_pe_.ltl result=TIMEOUT seconds=120.262
+cap=120s instance=lift_pb_6_pe_.ltl result=TIMEOUT seconds=120.375
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.084
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=REALIZABLE seconds=10.169
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=TIMEOUT seconds=120.306
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.193
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=5.101
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.749
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.514
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.179
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.221
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.071
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=7.546
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=84.715
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.748
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=14.020
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.602
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=22.375
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.191
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.557
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=84.083
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.369
+cap=120s instance=ordered-visits-choice-real.ltl result=UNKNOWN seconds=0.481
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.453
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.471
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.564
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.553
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.599
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.653
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.704
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.728
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.761
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.818
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.456
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.487
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.495
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.600
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.628
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.690
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.710
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.782
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.770
+cap=120s instance=reversible-lane-r-real.ltl result=TIMEOUT seconds=120.369
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.540
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=2.111
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=3.000
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=12.279
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.300
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.390
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.513
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=8.075
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=9.110
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.261
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.553
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.967
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=68.951
+cap=120s instance=robot-to-target-charging14.ltl result=UNREALIZABLE seconds=102.513
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.341
+cap=120s instance=robot-to-target0.ltl result=TIMEOUT seconds=120.132
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=60.606
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.178
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.440
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=TIMEOUT seconds=120.196
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=TIMEOUT seconds=120.369
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.304
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.761
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=TIMEOUT seconds=120.181
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.048
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.640
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=63.422
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.223
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.145
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=TIMEOUT seconds=120.231
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=TIMEOUT seconds=120.210
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.764
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=39.103
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=TIMEOUT seconds=120.224
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=TIMEOUT seconds=120.226
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=TIMEOUT seconds=120.229
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=2.052
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=14.048
+cap=120s instance=square5x5-real.ltl result=TIMEOUT seconds=120.374
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.315
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=5.240
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.164
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=20.132
+cap=120s instance=thermostat-F-real.ltl result=TIMEOUT seconds=120.229
+cap=120s instance=thermostat-GF-real.ltl result=TIMEOUT seconds=120.376
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=2.028
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.749
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.028
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.344
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=17.014
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.378
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r2-B.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r2-B-summary.tsv
+[2026-09-21T06:39:11] end r2 B rc=0
+[2026-09-21T06:39:11] start r3 B
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-391548-d478c7147848.scope
+run-syntcomp26-coverage exit: cleaned up 1 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=20.211
+cap=120s instance=07.ltl result=REALIZABLE seconds=21.159
+cap=120s instance=09.ltl result=REALIZABLE seconds=8.247
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.510
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.454
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.548
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.705
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=19.910
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.872
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.640
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.724
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.782
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=29.482
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=28.657
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.330
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.479
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=10.608
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=12.254
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=12.384
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.775
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.837
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.344
+cap=120s instance=Morning2_407db2cc.ltl result=TIMEOUT seconds=120.319
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.193
+cap=120s instance=SPIPureNext.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.574
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=32.453
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.090
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.959
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=TIMEOUT seconds=120.276
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=0.834
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=TIMEOUT seconds=120.168
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=TIMEOUT seconds=120.093
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=TIMEOUT seconds=120.168
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.885
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.169
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.096
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.135
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.740
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.335
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.726
+cap=120s instance=evasion-real.ltl result=TIMEOUT seconds=120.269
+cap=120s instance=f-real-real.ltl result=TIMEOUT seconds=120.158
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.339
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=4.386
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.543
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.069
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=6.508
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=12.868
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=19.453
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=46.104
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=69.879
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=95.512
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.142
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=2.183
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=25.507
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.553
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.996
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.082
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.106
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.937
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.077
+cap=120s instance=heim-double-x-real.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.168
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.495
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=1.040
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=1.967
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=10.305
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=13.021
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=39.806
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=41.052
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=53.376
+cap=120s instance=infinite-race-u15.ltl result=TIMEOUT seconds=120.426
+cap=120s instance=infinite-race-u16.ltl result=TIMEOUT seconds=120.320
+cap=120s instance=infinite-race-u17.ltl result=TIMEOUT seconds=120.380
+cap=120s instance=infinite-race-u18.ltl result=TIMEOUT seconds=120.321
+cap=120s instance=infinite-race-u19.ltl result=TIMEOUT seconds=120.319
+cap=120s instance=infinite-race-u20.ltl result=TIMEOUT seconds=120.378
+cap=120s instance=infinite-race-u21.ltl result=TIMEOUT seconds=120.373
+cap=120s instance=infinite-race-u22.ltl result=TIMEOUT seconds=120.429
+cap=120s instance=infinite-race-u23.ltl result=TIMEOUT seconds=120.428
+cap=120s instance=infinite-race-u24.ltl result=TIMEOUT seconds=120.370
+cap=120s instance=infinite-race-u25.ltl result=TIMEOUT seconds=120.369
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.265
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=9.179
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=59.287
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.238
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.049
+cap=120s instance=lift_pb_4_pe_.ltl result=REALIZABLE seconds=0.253
+cap=120s instance=lift_pb_5_pe_.ltl result=TIMEOUT seconds=120.328
+cap=120s instance=lift_pb_6_pe_.ltl result=TIMEOUT seconds=120.477
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.090
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=REALIZABLE seconds=9.781
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=TIMEOUT seconds=120.221
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=TIMEOUT seconds=120.380
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.183
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=5.029
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.749
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.515
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.151
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.061
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=7.780
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=85.346
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.699
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=13.348
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.625
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=22.714
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.191
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.581
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=82.480
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.202
+cap=120s instance=ordered-visits-choice-real.ltl result=UNKNOWN seconds=0.466
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.454
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.507
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.543
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.636
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.588
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.681
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.729
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.732
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.776
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.788
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.407
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.516
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.548
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.550
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.620
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.640
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.669
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.757
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.785
+cap=120s instance=reversible-lane-r-real.ltl result=TIMEOUT seconds=120.396
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.669
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=2.039
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=2.953
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=12.506
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.143
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.241
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.350
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=8.293
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=9.029
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.260
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.521
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.889
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=69.889
+cap=120s instance=robot-to-target-charging14.ltl result=MEMOUT seconds=100.300
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.346
+cap=120s instance=robot-to-target0.ltl result=TIMEOUT seconds=120.224
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=62.308
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.170
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.204
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=TIMEOUT seconds=120.222
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=TIMEOUT seconds=120.368
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.283
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.916
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.075
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.660
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=60.702
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=TIMEOUT seconds=120.162
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.229
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=TIMEOUT seconds=120.228
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.737
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=38.712
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=TIMEOUT seconds=120.226
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=TIMEOUT seconds=120.228
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=2.046
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=13.823
+cap=120s instance=square5x5-real.ltl result=TIMEOUT seconds=120.371
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.387
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=5.005
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.460
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=20.802
+cap=120s instance=thermostat-F-real.ltl result=TIMEOUT seconds=120.262
+cap=120s instance=thermostat-GF-real.ltl result=TIMEOUT seconds=120.379
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=1.857
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.749
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.031
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.326
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=17.697
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.377
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r3-B.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r3-B-summary.tsv
+[2026-09-21T08:52:41] end r3 B rc=0
+[2026-09-21T08:52:41] start r3 S
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-06fbac8bbb1b.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-0d8212ab0ff3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-0de5342bb225.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-1898340f2388.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-1aef4a027ef3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-1bf382c32b89.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-1ef9cf91db54.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-2fbe7d5f16e3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-312c68d4386c.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-36a32751b88e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-3ac0336e0551.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-42c0bb4529c7.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-45205c2b260b.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-48e21388009c.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-52a4ee02c621.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-58ccec4abead.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-634c8fb2f619.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-6641bf193646.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-832d8eb273e6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-8429a51f9c98.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-8580442107f6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-8614cf54cb92.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-89a2279ab608.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-8b81d0b54d38.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-94c07cbf60c6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-a1ba30287c10.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-a5f11549e429.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-ab331aea2c86.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-aea7e56abea6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-b2e7947496b9.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-b8175d99b8c7.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-beb8d2f34c18.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-bf486b0d8854.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-c9fb4b083ed5.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-d677c24ec568.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-dfd054d2cbad.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-e5e2431ca513.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-eb8b49cdaac6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-edec56dcf65e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-f5040906a6ea.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-f5f460d1c71a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-f5ffded73014.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-f8e650eae8b4.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-f902eca122f4.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-f9ec5a8f614f.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-fe6206ee347d.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-398383-ff7dcb4b1f7f.scope
+run-syntcomp26-coverage exit: cleaned up 47 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=20.710
+cap=120s instance=07.ltl result=REALIZABLE seconds=18.943
+cap=120s instance=09.ltl result=REALIZABLE seconds=8.432
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.587
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.507
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.815
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.738
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=20.309
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.933
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.615
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.674
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.720
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=30.530
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=29.743
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.337
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.555
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=11.226
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=11.364
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=12.604
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.671
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.845
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.450
+cap=120s instance=Morning2_407db2cc.ltl result=MEMOUT seconds=106.931
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.201
+cap=120s instance=SPIPureNext.ltl result=REALIZABLE seconds=0.504
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.603
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=31.724
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=MEMOUT seconds=119.722
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.172
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.973
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=REALIZABLE seconds=59.644
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=1.262
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=MEMOUT seconds=94.136
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=MEMOUT seconds=93.137
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=MEMOUT seconds=71.762
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.928
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.153
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.113
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.083
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.793
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.309
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.754
+cap=120s instance=evasion-real.ltl result=REALIZABLE seconds=24.622
+cap=120s instance=f-real-real.ltl result=REALIZABLE seconds=31.935
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.525
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=2.641
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.556
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.297
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=7.346
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=10.895
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=18.765
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=47.403
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=63.797
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=94.511
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.163
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=1.983
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=25.580
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.572
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.988
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.078
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.240
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.960
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.107
+cap=120s instance=heim-double-x-real.ltl result=REALIZABLE seconds=0.411
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.507
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.757
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=1.087
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=2.103
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=10.634
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=14.367
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=43.632
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=42.681
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=51.188
+cap=120s instance=infinite-race-u15.ltl result=MEMOUT seconds=47.505
+cap=120s instance=infinite-race-u16.ltl result=MEMOUT seconds=49.445
+cap=120s instance=infinite-race-u17.ltl result=MEMOUT seconds=49.910
+cap=120s instance=infinite-race-u18.ltl result=MEMOUT seconds=51.093
+cap=120s instance=infinite-race-u19.ltl result=MEMOUT seconds=48.081
+cap=120s instance=infinite-race-u20.ltl result=MEMOUT seconds=48.259
+cap=120s instance=infinite-race-u21.ltl result=MEMOUT seconds=47.420
+cap=120s instance=infinite-race-u22.ltl result=MEMOUT seconds=46.254
+cap=120s instance=infinite-race-u23.ltl result=MEMOUT seconds=43.102
+cap=120s instance=infinite-race-u24.ltl result=MEMOUT seconds=43.936
+cap=120s instance=infinite-race-u25.ltl result=MEMOUT seconds=43.523
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.399
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=9.446
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=57.224
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.262
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.638
+cap=120s instance=lift_pb_4_pe_.ltl result=MEMOUT seconds=75.062
+cap=120s instance=lift_pb_5_pe_.ltl result=MEMOUT seconds=56.135
+cap=120s instance=lift_pb_6_pe_.ltl result=MEMOUT seconds=41.223
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.673
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=MEMOUT seconds=82.768
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=MEMOUT seconds=77.957
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=MEMOUT seconds=118.024
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.139
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=5.304
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.686
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.703
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=60.736
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=62.928
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=64.907
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.104
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=8.108
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=91.409
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.694
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=14.828
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.623
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=24.113
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.166
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.552
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=80.201
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.345
+cap=120s instance=ordered-visits-choice-real.ltl result=REALIZABLE seconds=0.029
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.443
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.491
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.521
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.594
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.619
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.615
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.683
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.670
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.703
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.816
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.443
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.480
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.486
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.591
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.627
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.644
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.680
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.735
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.722
+cap=120s instance=reversible-lane-r-real.ltl result=MEMOUT seconds=109.042
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.343
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=1.801
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=2.703
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=8.164
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.353
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.286
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.281
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=8.066
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=9.222
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.344
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.493
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.889
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=68.942
+cap=120s instance=robot-to-target-charging14.ltl result=UNREALIZABLE seconds=99.754
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.132
+cap=120s instance=robot-to-target0.ltl result=MEMOUT seconds=101.049
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=55.394
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.265
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.722
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=REALIZABLE seconds=9.793
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=MEMOUT seconds=21.056
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.300
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.799
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=MEMOUT seconds=62.306
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=MEMOUT seconds=57.900
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=MEMOUT seconds=50.661
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=MEMOUT seconds=48.031
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=MEMOUT seconds=49.635
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=MEMOUT seconds=45.244
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=MEMOUT seconds=44.031
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.068
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.687
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=61.786
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=MEMOUT seconds=70.108
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=51.410
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=48.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=47.119
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=MEMOUT seconds=48.408
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=MEMOUT seconds=48.458
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=MEMOUT seconds=48.098
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.700
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=39.058
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=MEMOUT seconds=71.256
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=MEMOUT seconds=62.758
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=MEMOUT seconds=58.823
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=MEMOUT seconds=52.448
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=2.064
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=14.068
+cap=120s instance=square5x5-real.ltl result=MEMOUT seconds=105.894
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.508
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=4.928
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.617
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=17.763
+cap=120s instance=thermostat-F-real.ltl result=REALIZABLE seconds=1.394
+cap=120s instance=thermostat-GF-real.ltl result=REALIZABLE seconds=45.911
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=2.037
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.773
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.029
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.329
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=16.896
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.370
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r3-S.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r3-S-summary.tsv
+[2026-09-21T10:11:37] end r3 S rc=0
+[2026-09-21T10:11:37] start r4 S
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-0587d6bc2404.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-06548aee8955.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-0f6e038f85ce.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-0fb34af324cb.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-10d877491562.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-12ec7765c65a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-1e2e32cd45fa.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-23bba4ff1f72.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-27a310fcf5a8.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-40829d840f45.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-4472869562d7.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-46692f347bc0.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-46d5b85c2179.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-4935b2744c2b.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-53a6c34f2f47.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-5d9d70ca19f3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-6386e0a7b86a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-68b17442d57a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-6d0c7a0b2689.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-7b829081ae20.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-7bf85fc374ba.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-7c1fda1cc505.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-7ce7f45e28bd.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-8ec7f22fbfaa.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-9057a8038972.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-9a95b53bdcc1.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-9c7ccfe5eded.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-9ecb1c4e13b0.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-a518a0aa6718.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-aa774f73c1ed.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-abaecd789200.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-b0c3f47cee12.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-b38737111b84.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-b6db4fd2d5c3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-b89effa7a17f.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-be4ac31a69b7.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-c18caa07f2a0.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-c6d1a547f4b8.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-d82b9997e9d1.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-d8b6a25ec345.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-deb24acd09e8.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-dfc20af6b4c7.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-e468cabc0ab7.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-eb2df57b50a3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-edaa9a02366c.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-fce3070fda70.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-405243-fe947b0db7b5.scope
+run-syntcomp26-coverage exit: cleaned up 47 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=18.555
+cap=120s instance=07.ltl result=REALIZABLE seconds=20.397
+cap=120s instance=09.ltl result=REALIZABLE seconds=8.144
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.560
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.385
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.742
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.686
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=20.146
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.872
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.556
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.486
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.834
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=27.265
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=27.888
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.367
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.471
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=9.672
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=12.138
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=12.743
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.639
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.820
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.466
+cap=120s instance=Morning2_407db2cc.ltl result=MEMOUT seconds=113.719
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.124
+cap=120s instance=SPIPureNext.ltl result=REALIZABLE seconds=0.515
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.584
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=30.703
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=TIMEOUT seconds=120.376
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.100
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.952
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=REALIZABLE seconds=56.290
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=1.270
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=MEMOUT seconds=93.824
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=MEMOUT seconds=88.934
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=MEMOUT seconds=70.027
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.859
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.153
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.127
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.008
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.795
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.317
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.786
+cap=120s instance=evasion-real.ltl result=REALIZABLE seconds=23.736
+cap=120s instance=f-real-real.ltl result=REALIZABLE seconds=32.813
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.692
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=2.750
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.472
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.242
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=6.339
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=11.139
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=16.424
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=43.999
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=61.925
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=93.843
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.097
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=1.963
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=23.871
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.571
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.958
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.068
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.058
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.879
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.057
+cap=120s instance=heim-double-x-real.ltl result=REALIZABLE seconds=0.394
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.404
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.557
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=1.062
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=2.082
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=9.852
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=14.255
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=41.166
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=40.915
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=50.975
+cap=120s instance=infinite-race-u15.ltl result=MEMOUT seconds=45.254
+cap=120s instance=infinite-race-u16.ltl result=MEMOUT seconds=50.968
+cap=120s instance=infinite-race-u17.ltl result=MEMOUT seconds=51.070
+cap=120s instance=infinite-race-u18.ltl result=MEMOUT seconds=48.855
+cap=120s instance=infinite-race-u19.ltl result=MEMOUT seconds=48.920
+cap=120s instance=infinite-race-u20.ltl result=MEMOUT seconds=47.377
+cap=120s instance=infinite-race-u21.ltl result=MEMOUT seconds=47.836
+cap=120s instance=infinite-race-u22.ltl result=MEMOUT seconds=44.541
+cap=120s instance=infinite-race-u23.ltl result=MEMOUT seconds=42.515
+cap=120s instance=infinite-race-u24.ltl result=MEMOUT seconds=44.695
+cap=120s instance=infinite-race-u25.ltl result=MEMOUT seconds=45.541
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.426
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=8.836
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=57.242
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.227
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.619
+cap=120s instance=lift_pb_4_pe_.ltl result=MEMOUT seconds=74.657
+cap=120s instance=lift_pb_5_pe_.ltl result=MEMOUT seconds=60.132
+cap=120s instance=lift_pb_6_pe_.ltl result=MEMOUT seconds=38.311
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.688
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=MEMOUT seconds=83.900
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=MEMOUT seconds=80.658
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=MEMOUT seconds=118.185
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.105
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=5.284
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.733
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.691
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=60.373
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=64.233
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=61.338
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.062
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=7.817
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=93.128
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.700
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=14.153
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.646
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=23.826
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.186
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.591
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=82.104
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.400
+cap=120s instance=ordered-visits-choice-real.ltl result=REALIZABLE seconds=0.028
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.425
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.491
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.513
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.548
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.572
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.606
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.678
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.693
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.744
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.716
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.421
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.497
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.513
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.586
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.585
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.607
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.607
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.704
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.781
+cap=120s instance=reversible-lane-r-real.ltl result=MEMOUT seconds=106.809
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.239
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=1.854
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=2.855
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=7.412
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.164
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.293
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.502
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=8.396
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=9.158
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.399
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.464
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.947
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=67.673
+cap=120s instance=robot-to-target-charging14.ltl result=MEMOUT seconds=100.050
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.276
+cap=120s instance=robot-to-target0.ltl result=MEMOUT seconds=102.100
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=53.680
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.278
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.866
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=REALIZABLE seconds=9.050
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=MEMOUT seconds=21.237
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.355
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.840
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=MEMOUT seconds=61.489
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=MEMOUT seconds=61.162
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=MEMOUT seconds=50.166
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=MEMOUT seconds=48.788
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=MEMOUT seconds=47.585
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=MEMOUT seconds=44.371
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=MEMOUT seconds=43.775
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.008
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.677
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=63.701
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=MEMOUT seconds=70.454
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=51.142
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=49.920
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=51.480
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=MEMOUT seconds=48.154
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=MEMOUT seconds=50.238
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=MEMOUT seconds=46.408
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.727
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=41.475
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=MEMOUT seconds=70.768
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=MEMOUT seconds=60.465
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=MEMOUT seconds=55.980
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=MEMOUT seconds=54.527
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=2.010
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=13.517
+cap=120s instance=square5x5-real.ltl result=MEMOUT seconds=107.635
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.411
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=5.073
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.362
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=17.710
+cap=120s instance=thermostat-F-real.ltl result=REALIZABLE seconds=1.376
+cap=120s instance=thermostat-GF-real.ltl result=REALIZABLE seconds=46.409
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=2.056
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.799
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.035
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.336
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=15.944
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.368
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r4-S.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r4-S-summary.tsv
+[2026-09-21T11:30:10] end r4 S rc=0
+[2026-09-21T11:30:10] start r4 B
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-409947-0aaa14037e8b.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-409947-1cd9aa03e743.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-409947-43a64cf23b61.scope
+run-syntcomp26-coverage exit: cleaned up 3 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=18.107
+cap=120s instance=07.ltl result=REALIZABLE seconds=18.970
+cap=120s instance=09.ltl result=REALIZABLE seconds=8.115
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.418
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.349
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.654
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.722
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=19.974
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.930
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.636
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.775
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.709
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=27.021
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=28.310
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.336
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=8.912
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=10.395
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=12.204
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=13.043
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.717
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.887
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.212
+cap=120s instance=Morning2_407db2cc.ltl result=MEMOUT seconds=103.188
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=2.988
+cap=120s instance=SPIPureNext.ltl result=TIMEOUT seconds=120.224
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.542
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=31.351
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=MEMOUT seconds=119.646
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.147
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.980
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=TIMEOUT seconds=120.179
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=0.827
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=TIMEOUT seconds=120.136
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=TIMEOUT seconds=120.069
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.887
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.137
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.047
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.057
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.727
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.308
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.751
+cap=120s instance=evasion-real.ltl result=TIMEOUT seconds=120.252
+cap=120s instance=f-real-real.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.350
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=4.435
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.738
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.375
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=7.299
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=11.913
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=16.966
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=45.243
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=66.939
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=95.478
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.075
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=2.069
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=24.189
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.534
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.947
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.034
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.044
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.789
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.128
+cap=120s instance=heim-double-x-real.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.173
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.527
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=0.999
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=1.871
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=9.998
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=14.257
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=40.768
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=40.641
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=51.222
+cap=120s instance=infinite-race-u15.ltl result=TIMEOUT seconds=120.424
+cap=120s instance=infinite-race-u16.ltl result=TIMEOUT seconds=120.296
+cap=120s instance=infinite-race-u17.ltl result=TIMEOUT seconds=120.366
+cap=120s instance=infinite-race-u18.ltl result=TIMEOUT seconds=120.281
+cap=120s instance=infinite-race-u19.ltl result=TIMEOUT seconds=120.344
+cap=120s instance=infinite-race-u20.ltl result=TIMEOUT seconds=120.372
+cap=120s instance=infinite-race-u21.ltl result=TIMEOUT seconds=120.318
+cap=120s instance=infinite-race-u22.ltl result=TIMEOUT seconds=120.429
+cap=120s instance=infinite-race-u23.ltl result=TIMEOUT seconds=120.349
+cap=120s instance=infinite-race-u24.ltl result=TIMEOUT seconds=120.342
+cap=120s instance=infinite-race-u25.ltl result=TIMEOUT seconds=120.372
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.214
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=8.497
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=56.048
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.282
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.041
+cap=120s instance=lift_pb_4_pe_.ltl result=REALIZABLE seconds=0.265
+cap=120s instance=lift_pb_5_pe_.ltl result=TIMEOUT seconds=120.326
+cap=120s instance=lift_pb_6_pe_.ltl result=TIMEOUT seconds=120.419
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.078
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=REALIZABLE seconds=9.941
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=MEMOUT seconds=118.794
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.115
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=4.986
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.677
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.514
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.184
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.176
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.046
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=7.312
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=83.443
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.680
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=13.366
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.606
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=22.261
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.131
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.565
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=82.103
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.101
+cap=120s instance=ordered-visits-choice-real.ltl result=UNKNOWN seconds=0.467
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.449
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.513
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.526
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.531
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.562
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.640
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.645
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.716
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.725
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.735
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.455
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.467
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.481
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.514
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.617
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.597
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.674
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.688
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.712
+cap=120s instance=reversible-lane-r-real.ltl result=TIMEOUT seconds=120.409
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.452
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=1.982
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=2.993
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=11.858
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.213
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.270
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.168
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=7.974
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=8.864
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.362
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.521
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.954
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=69.846
+cap=120s instance=robot-to-target-charging14.ltl result=UNREALIZABLE seconds=96.435
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.062
+cap=120s instance=robot-to-target0.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=59.405
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.152
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.261
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=TIMEOUT seconds=120.141
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=TIMEOUT seconds=120.369
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.331
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.543
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=TIMEOUT seconds=120.198
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=TIMEOUT seconds=120.205
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=TIMEOUT seconds=120.212
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=TIMEOUT seconds=120.196
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=0.988
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.339
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=59.409
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.228
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=TIMEOUT seconds=120.228
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=TIMEOUT seconds=120.229
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=TIMEOUT seconds=120.216
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.619
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=38.246
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=TIMEOUT seconds=120.214
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=TIMEOUT seconds=120.164
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=TIMEOUT seconds=120.170
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=TIMEOUT seconds=120.201
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=2.005
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=13.967
+cap=120s instance=square5x5-real.ltl result=TIMEOUT seconds=120.301
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.406
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=5.521
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.570
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=20.330
+cap=120s instance=thermostat-F-real.ltl result=TIMEOUT seconds=120.322
+cap=120s instance=thermostat-GF-real.ltl result=TIMEOUT seconds=120.315
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=1.948
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.758
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.024
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.319
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=17.538
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.378
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r4-B.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r4-B-summary.tsv
+[2026-09-21T13:42:44] end r4 B rc=0
+[2026-09-21T13:42:44] start r5 B
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-416232-0361c3d41b2e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-416232-05aabdd3b3b7.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-416232-85a2942e12ee.scope
+run-syntcomp26-coverage exit: cleaned up 3 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=17.953
+cap=120s instance=07.ltl result=REALIZABLE seconds=18.099
+cap=120s instance=09.ltl result=REALIZABLE seconds=7.870
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.242
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.501
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.766
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.655
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=20.546
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.851
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.595
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.674
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.761
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=28.041
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=29.266
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.329
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.567
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=9.942
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=12.212
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=12.129
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.680
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.808
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.237
+cap=120s instance=Morning2_407db2cc.ltl result=MEMOUT seconds=104.624
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.126
+cap=120s instance=SPIPureNext.ltl result=TIMEOUT seconds=120.218
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.550
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=31.218
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=MEMOUT seconds=115.747
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.142
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.988
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=TIMEOUT seconds=120.272
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=0.872
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=TIMEOUT seconds=120.177
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=TIMEOUT seconds=120.169
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=TIMEOUT seconds=120.168
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.886
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.159
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.014
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.133
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=2.702
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.293
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.739
+cap=120s instance=evasion-real.ltl result=TIMEOUT seconds=120.269
+cap=120s instance=f-real-real.ltl result=TIMEOUT seconds=120.202
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.313
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=4.571
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.547
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.026
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=7.614
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=11.338
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=17.561
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=46.768
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=64.316
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=95.219
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.070
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=2.040
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=24.728
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.566
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.895
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.009
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.162
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.922
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.066
+cap=120s instance=heim-double-x-real.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.224
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.525
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=1.029
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=1.998
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=10.302
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=13.738
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=38.745
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=40.222
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=49.642
+cap=120s instance=infinite-race-u15.ltl result=TIMEOUT seconds=120.357
+cap=120s instance=infinite-race-u16.ltl result=TIMEOUT seconds=120.321
+cap=120s instance=infinite-race-u17.ltl result=TIMEOUT seconds=120.281
+cap=120s instance=infinite-race-u18.ltl result=TIMEOUT seconds=120.322
+cap=120s instance=infinite-race-u19.ltl result=TIMEOUT seconds=120.319
+cap=120s instance=infinite-race-u20.ltl result=TIMEOUT seconds=120.377
+cap=120s instance=infinite-race-u21.ltl result=TIMEOUT seconds=120.371
+cap=120s instance=infinite-race-u22.ltl result=TIMEOUT seconds=120.428
+cap=120s instance=infinite-race-u23.ltl result=TIMEOUT seconds=120.357
+cap=120s instance=infinite-race-u24.ltl result=TIMEOUT seconds=120.369
+cap=120s instance=infinite-race-u25.ltl result=TIMEOUT seconds=120.420
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.425
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=9.021
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=57.157
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.230
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.038
+cap=120s instance=lift_pb_4_pe_.ltl result=REALIZABLE seconds=0.274
+cap=120s instance=lift_pb_5_pe_.ltl result=TIMEOUT seconds=120.327
+cap=120s instance=lift_pb_6_pe_.ltl result=TIMEOUT seconds=120.429
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.080
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=REALIZABLE seconds=10.232
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=TIMEOUT seconds=120.199
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=TIMEOUT seconds=120.377
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.137
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=4.849
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.684
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.502
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.021
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=7.523
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=83.901
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.687
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=13.491
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.582
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=22.139
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.207
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.555
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=81.372
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.290
+cap=120s instance=ordered-visits-choice-real.ltl result=UNKNOWN seconds=0.475
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.437
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.485
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.522
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.558
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.605
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.632
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.632
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.718
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.801
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.836
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.447
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.505
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.529
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.547
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.607
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.674
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.679
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.695
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.742
+cap=120s instance=reversible-lane-r-real.ltl result=TIMEOUT seconds=120.428
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.644
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=1.940
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=3.006
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=12.233
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.200
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.477
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.231
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=7.820
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=8.963
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.349
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.422
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.983
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=67.368
+cap=120s instance=robot-to-target-charging14.ltl result=MEMOUT seconds=101.364
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.306
+cap=120s instance=robot-to-target0.ltl result=TIMEOUT seconds=120.223
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=63.766
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.168
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.253
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=TIMEOUT seconds=120.221
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=TIMEOUT seconds=120.370
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.277
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.715
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=TIMEOUT seconds=120.136
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=TIMEOUT seconds=120.210
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=TIMEOUT seconds=120.220
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=TIMEOUT seconds=120.213
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=TIMEOUT seconds=120.124
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.037
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.650
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=60.392
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=TIMEOUT seconds=120.229
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=TIMEOUT seconds=120.230
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=TIMEOUT seconds=120.226
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=TIMEOUT seconds=120.229
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=TIMEOUT seconds=120.230
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=TIMEOUT seconds=120.228
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.701
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=38.593
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=TIMEOUT seconds=120.225
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=TIMEOUT seconds=120.219
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=TIMEOUT seconds=120.227
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=1.917
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=13.479
+cap=120s instance=square5x5-real.ltl result=TIMEOUT seconds=120.280
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.401
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=4.913
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.065
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=20.831
+cap=120s instance=thermostat-F-real.ltl result=TIMEOUT seconds=120.324
+cap=120s instance=thermostat-GF-real.ltl result=TIMEOUT seconds=120.379
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=2.024
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.747
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.024
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.345
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=16.587
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.384
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r5-B.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r5-B-summary.tsv
+[2026-09-21T15:55:24] end r5 B rc=0
+[2026-09-21T15:55:24] start r5 S
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-00fade28cedf.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-082723c04e4e.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-08a388293f46.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-139af6c661fd.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-16e09e7598f6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-2ae92b702fac.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-301d26616986.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-30ac8a8d1386.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-35646a837c2d.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-44cfe9cad423.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-4925c05473a3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-4a3d95aa1cf3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-4d14fdf73438.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-4d89d90ed642.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-58f605d5e450.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-5c0a71c27268.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-5fc37734e1ff.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-73e622c05fa6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-77bc23de02ec.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-78f8e3a5c701.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-8bd70e4438d9.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-8e0b6f9f8a99.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-9250ed9c9da6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-9376d93e5d5a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-94d8c9ca1411.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-98584cad62aa.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-9a12d4c76f90.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-a74c57d7d97f.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-b00cd7ed620a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-b130b85353ab.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-b61ad760c66c.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-b7b5544c054b.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-ba3ab40390e8.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-ba90554fe4e9.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-bc612366b638.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-bdeadfccf1cf.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-c19e86fde0d1.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-c747c9e9988a.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-ce3ce2b1d6d3.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-d3fc58c7718c.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-d5cfc01da962.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-d5e1d5c41bb6.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-d691cef92043.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-eaf109be3c28.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-ebf4b3801e36.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-f79977b47516.scope
+run-syntcomp26-coverage exit: resetting failed scope residue acacia-syntcomp26-coverage-422476-fdcd1518c568.scope
+run-syntcomp26-coverage exit: cleaned up 47 scope(s) that outlived this campaign
+cap=120s instance=06.ltl result=REALIZABLE seconds=17.688
+cap=120s instance=07.ltl result=REALIZABLE seconds=18.213
+cap=120s instance=09.ltl result=REALIZABLE seconds=8.338
+cap=120s instance=10.ltl result=REALIZABLE seconds=3.475
+cap=120s instance=11.ltl result=REALIZABLE seconds=3.387
+cap=120s instance=Alarm_06e9cad4.ltl result=REALIZABLE seconds=1.569
+cap=120s instance=Alarm_68c86764.ltl result=REALIZABLE seconds=1.727
+cap=120s instance=Alarm_a5f99bc6.ltl result=REALIZABLE seconds=20.114
+cap=120s instance=AllLights_2c5b09da.ltl result=UNREALIZABLE seconds=0.910
+cap=120s instance=AllLights_63831f8c.ltl result=UNREALIZABLE seconds=1.625
+cap=120s instance=AllLights_aeb1d897.ltl result=UNREALIZABLE seconds=2.566
+cap=120s instance=AllShades_66f450a4.ltl result=UNREALIZABLE seconds=1.590
+cap=120s instance=F-G-contradiction-110.ltl result=UNREALIZABLE seconds=28.792
+cap=120s instance=F-G-contradiction-111.ltl result=UNREALIZABLE seconds=30.019
+cap=120s instance=F-G-contradiction-15.ltl result=UNREALIZABLE seconds=0.319
+cap=120s instance=F-G-contradiction-16.ltl result=UNREALIZABLE seconds=9.213
+cap=120s instance=F-G-contradiction-17.ltl result=UNREALIZABLE seconds=10.597
+cap=120s instance=F-G-contradiction-18.ltl result=UNREALIZABLE seconds=11.809
+cap=120s instance=F-G-contradiction-19.ltl result=UNREALIZABLE seconds=12.827
+cap=120s instance=GF-G-contradiction3.ltl result=UNREALIZABLE seconds=1.655
+cap=120s instance=GF-G-contradiction4.ltl result=UNREALIZABLE seconds=1.826
+cap=120s instance=GF-G-contradiction5.ltl result=UNREALIZABLE seconds=2.230
+cap=120s instance=Morning2_407db2cc.ltl result=TIMEOUT seconds=120.319
+cap=120s instance=OneCounter.ltl result=REALIZABLE seconds=3.033
+cap=120s instance=SPIPureNext.ltl result=REALIZABLE seconds=0.509
+cap=120s instance=TwoCounters3.ltl result=REALIZABLE seconds=1.557
+cap=120s instance=abcg_arbiter_pb_3_pe_.ltl result=REALIZABLE seconds=31.516
+cap=120s instance=amba_case_study_pb_4_pe_.ltl result=MEMOUT seconds=119.659
+cap=120s instance=amba_decomposed_arbiter_pb_6_pe_.ltl result=REALIZABLE seconds=1.148
+cap=120s instance=amba_decomposed_encode_pb_16_pe_.ltl result=REALIZABLE seconds=0.994
+cap=120s instance=amba_gr_pb_2_pe_.ltl result=REALIZABLE seconds=58.396
+cap=120s instance=arbiter_on_inpchange_pb_4_pe_.ltl result=REALIZABLE seconds=1.181
+cap=120s instance=arbiter_on_inpchange_pb_5_pe_.ltl result=MEMOUT seconds=93.640
+cap=120s instance=arbiter_on_inpchange_pb_6_pe_.ltl result=MEMOUT seconds=89.688
+cap=120s instance=arbiter_on_inpchange_pb_7_pe_.ltl result=MEMOUT seconds=68.785
+cap=120s instance=arbiter_with_buffer_pb_5_pe_.ltl result=REALIZABLE seconds=0.890
+cap=120s instance=arbiter_with_cancel_pb_5_pe_.ltl result=REALIZABLE seconds=1.167
+cap=120s instance=chain-simple-70-real.ltl result=REALIZABLE seconds=1.143
+cap=120s instance=chain-simple-param-70-real.ltl result=REALIZABLE seconds=1.069
+cap=120s instance=collector_v1_pb_9_pe_.ltl result=REALIZABLE seconds=3.039
+cap=120s instance=collector_v2_pb_11_pe_.ltl result=REALIZABLE seconds=0.336
+cap=120s instance=collector_v2_pb_12_pe_.ltl result=REALIZABLE seconds=0.793
+cap=120s instance=evasion-real.ltl result=REALIZABLE seconds=24.945
+cap=120s instance=f-real-real.ltl result=REALIZABLE seconds=31.570
+cap=120s instance=finding_nemo_pb_2_pe_.ltl result=REALIZABLE seconds=4.625
+cap=120s instance=g-real-real.ltl result=REALIZABLE seconds=2.700
+cap=120s instance=g-unreal-110.ltl result=UNREALIZABLE seconds=2.346
+cap=120s instance=g-unreal-111.ltl result=UNREALIZABLE seconds=4.442
+cap=120s instance=g-unreal-112.ltl result=UNREALIZABLE seconds=7.242
+cap=120s instance=g-unreal-114.ltl result=UNREALIZABLE seconds=11.192
+cap=120s instance=g-unreal-115.ltl result=UNREALIZABLE seconds=17.177
+cap=120s instance=g-unreal-117.ltl result=UNREALIZABLE seconds=49.661
+cap=120s instance=g-unreal-118.ltl result=UNREALIZABLE seconds=61.402
+cap=120s instance=g-unreal-120.ltl result=UNREALIZABLE seconds=92.102
+cap=120s instance=g-unreal-18.ltl result=UNREALIZABLE seconds=1.078
+cap=120s instance=g-unreal-19.ltl result=UNREALIZABLE seconds=1.962
+cap=120s instance=g-unreal-310.ltl result=UNREALIZABLE seconds=24.924
+cap=120s instance=g-unreal-33.ltl result=UNREALIZABLE seconds=0.584
+cap=120s instance=g-unreal-34.ltl result=UNREALIZABLE seconds=0.934
+cap=120s instance=g-unreal-35.ltl result=UNREALIZABLE seconds=1.133
+cap=120s instance=g-unreal-36.ltl result=UNREALIZABLE seconds=1.096
+cap=120s instance=g-unreal-37.ltl result=UNREALIZABLE seconds=1.968
+cap=120s instance=heim-buechi-real.ltl result=REALIZABLE seconds=2.023
+cap=120s instance=heim-double-x-real.ltl result=REALIZABLE seconds=0.414
+cap=120s instance=heim-double-x10.ltl result=UNREALIZABLE seconds=2.306
+cap=120s instance=heim-double-x11.ltl result=UNREALIZABLE seconds=2.737
+cap=120s instance=heim-double-x8.ltl result=UNREALIZABLE seconds=1.070
+cap=120s instance=heim-double-x9.ltl result=UNREALIZABLE seconds=2.083
+cap=120s instance=infinite-race-u10.ltl result=UNREALIZABLE seconds=9.861
+cap=120s instance=infinite-race-u11.ltl result=UNREALIZABLE seconds=13.446
+cap=120s instance=infinite-race-u12.ltl result=UNREALIZABLE seconds=42.213
+cap=120s instance=infinite-race-u13.ltl result=UNREALIZABLE seconds=44.669
+cap=120s instance=infinite-race-u14.ltl result=UNREALIZABLE seconds=51.185
+cap=120s instance=infinite-race-u15.ltl result=MEMOUT seconds=47.021
+cap=120s instance=infinite-race-u16.ltl result=MEMOUT seconds=50.368
+cap=120s instance=infinite-race-u17.ltl result=MEMOUT seconds=49.468
+cap=120s instance=infinite-race-u18.ltl result=MEMOUT seconds=47.993
+cap=120s instance=infinite-race-u19.ltl result=MEMOUT seconds=47.947
+cap=120s instance=infinite-race-u20.ltl result=MEMOUT seconds=46.780
+cap=120s instance=infinite-race-u21.ltl result=MEMOUT seconds=45.985
+cap=120s instance=infinite-race-u22.ltl result=MEMOUT seconds=46.355
+cap=120s instance=infinite-race-u23.ltl result=MEMOUT seconds=44.648
+cap=120s instance=infinite-race-u24.ltl result=MEMOUT seconds=43.698
+cap=120s instance=infinite-race-u25.ltl result=MEMOUT seconds=46.061
+cap=120s instance=infinite-race-u8.ltl result=UNREALIZABLE seconds=2.359
+cap=120s instance=infinite-race-u9.ltl result=UNREALIZABLE seconds=9.060
+cap=120s instance=infinite-race-unequal-26.ltl result=UNREALIZABLE seconds=59.209
+cap=120s instance=lift_gr1+_pb_3_pe_.ltl result=REALIZABLE seconds=1.228
+cap=120s instance=lift_pb_3_pe_.ltl result=REALIZABLE seconds=0.670
+cap=120s instance=lift_pb_4_pe_.ltl result=MEMOUT seconds=78.372
+cap=120s instance=lift_pb_5_pe_.ltl result=MEMOUT seconds=55.036
+cap=120s instance=lift_pb_6_pe_.ltl result=MEMOUT seconds=41.947
+cap=120s instance=lift_unary_enc_pb_3_pe_.ltl result=REALIZABLE seconds=0.651
+cap=120s instance=lift_unary_enc_pb_4_pe_.ltl result=MEMOUT seconds=81.757
+cap=120s instance=lift_unary_enc_pb_5_pe_.ltl result=MEMOUT seconds=80.718
+cap=120s instance=lift_unary_enc_pb_6_pe_.ltl result=MEMOUT seconds=118.670
+cap=120s instance=lift_wrong_physics_unreal_pb_10_pe_.ltl result=UNREALIZABLE seconds=1.149
+cap=120s instance=load_balancer_pb_7_pe_.ltl result=REALIZABLE seconds=5.025
+cap=120s instance=load_balancer_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=0.748
+cap=120s instance=load_balancer_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=1.503
+cap=120s instance=load_balancer_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=60.486
+cap=120s instance=load_balancer_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=63.393
+cap=120s instance=load_balancer_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=62.701
+cap=120s instance=load_balancer_unreal1_pb_4_6_pe_.ltl result=UNREALIZABLE seconds=1.112
+cap=120s instance=load_balancer_unreal1_pb_4_7_pe_.ltl result=UNREALIZABLE seconds=8.089
+cap=120s instance=load_balancer_unreal1_pb_4_8_pe_.ltl result=UNREALIZABLE seconds=92.085
+cap=120s instance=load_balancer_unreal1_pb_5_4_pe_.ltl result=UNREALIZABLE seconds=0.678
+cap=120s instance=load_balancer_unreal1_pb_5_5_pe_.ltl result=UNREALIZABLE seconds=14.297
+cap=120s instance=load_balancer_unreal1_pb_6_3_pe_.ltl result=UNREALIZABLE seconds=0.627
+cap=120s instance=load_balancer_unreal1_pb_6_4_pe_.ltl result=UNREALIZABLE seconds=24.083
+cap=120s instance=ltl2dba_C2_unreal_pb_13_pe_.ltl result=UNREALIZABLE seconds=1.183
+cap=120s instance=ltl2dba_R_pb_6_pe_.ltl result=UNREALIZABLE seconds=0.572
+cap=120s instance=ltl2dba_R_pb_8_pe_.ltl result=UNREALIZABLE seconds=83.157
+cap=120s instance=ltl2dba_theta_pb_12_pe_.ltl result=UNREALIZABLE seconds=2.298
+cap=120s instance=ordered-visits-choice-real.ltl result=REALIZABLE seconds=0.033
+cap=120s instance=patrolling-alarm17.ltl result=UNREALIZABLE seconds=0.420
+cap=120s instance=patrolling-alarm18.ltl result=UNREALIZABLE seconds=0.510
+cap=120s instance=patrolling-alarm19.ltl result=UNREALIZABLE seconds=0.495
+cap=120s instance=patrolling-alarm20.ltl result=UNREALIZABLE seconds=0.578
+cap=120s instance=patrolling-alarm21.ltl result=UNREALIZABLE seconds=0.581
+cap=120s instance=patrolling-alarm22.ltl result=UNREALIZABLE seconds=0.569
+cap=120s instance=patrolling-alarm23.ltl result=UNREALIZABLE seconds=0.694
+cap=120s instance=patrolling-alarm24.ltl result=UNREALIZABLE seconds=0.721
+cap=120s instance=patrolling-alarm25.ltl result=UNREALIZABLE seconds=0.745
+cap=120s instance=patrolling-alarm26.ltl result=UNREALIZABLE seconds=0.823
+cap=120s instance=patrolling17.ltl result=UNREALIZABLE seconds=0.436
+cap=120s instance=patrolling18.ltl result=UNREALIZABLE seconds=0.505
+cap=120s instance=patrolling19.ltl result=UNREALIZABLE seconds=0.517
+cap=120s instance=patrolling20.ltl result=UNREALIZABLE seconds=0.551
+cap=120s instance=patrolling21.ltl result=UNREALIZABLE seconds=0.561
+cap=120s instance=patrolling22.ltl result=UNREALIZABLE seconds=0.626
+cap=120s instance=patrolling23.ltl result=UNREALIZABLE seconds=0.638
+cap=120s instance=patrolling24.ltl result=UNREALIZABLE seconds=0.717
+cap=120s instance=patrolling25.ltl result=UNREALIZABLE seconds=0.747
+cap=120s instance=reversible-lane-r-real.ltl result=MEMOUT seconds=104.696
+cap=120s instance=robot-cat-real-1d-real.ltl result=REALIZABLE seconds=2.332
+cap=120s instance=robot-grid-commute-1d-real.ltl result=REALIZABLE seconds=1.787
+cap=120s instance=robot-grid-reach-2d-real.ltl result=REALIZABLE seconds=2.893
+cap=120s instance=robot-grid-reach-repeated-with-obstacles-2d-real.ltl result=REALIZABLE seconds=7.868
+cap=120s instance=robot-resource-2d14.ltl result=UNREALIZABLE seconds=2.251
+cap=120s instance=robot-resource-2d15.ltl result=UNREALIZABLE seconds=2.430
+cap=120s instance=robot-resource-2d17.ltl result=UNREALIZABLE seconds=7.454
+cap=120s instance=robot-resource-2d19.ltl result=UNREALIZABLE seconds=8.287
+cap=120s instance=robot-resource-2d21.ltl result=UNREALIZABLE seconds=9.152
+cap=120s instance=robot-resource-2d8.ltl result=UNREALIZABLE seconds=1.360
+cap=120s instance=robot-resource-2d9.ltl result=UNREALIZABLE seconds=1.398
+cap=120s instance=robot-to-target-charging0.ltl result=UNREALIZABLE seconds=0.926
+cap=120s instance=robot-to-target-charging13.ltl result=UNREALIZABLE seconds=66.684
+cap=120s instance=robot-to-target-charging14.ltl result=MEMOUT seconds=99.252
+cap=120s instance=robot-to-target-charging5.ltl result=UNREALIZABLE seconds=7.366
+cap=120s instance=robot-to-target0.ltl result=MEMOUT seconds=100.661
+cap=120s instance=robot_collect_samples_v2-real.ltl result=REALIZABLE seconds=54.305
+cap=120s instance=robot_grid_pb_3_3_pe_.ltl result=REALIZABLE seconds=0.249
+cap=120s instance=robot_grid_pb_4_4_pe_.ltl result=REALIZABLE seconds=1.711
+cap=120s instance=robot_grid_pb_5_5_pe_.ltl result=REALIZABLE seconds=9.421
+cap=120s instance=robot_grid_pb_6_6_pe_.ltl result=MEMOUT seconds=20.568
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_15_pe_.ltl result=UNREALIZABLE seconds=1.350
+cap=120s instance=round_robin_arbiter_unreal1_pb_2_16_pe_.ltl result=UNREALIZABLE seconds=2.780
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_10_pe_.ltl result=MEMOUT seconds=61.016
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_11_pe_.ltl result=MEMOUT seconds=58.637
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_12_pe_.ltl result=MEMOUT seconds=48.895
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_13_pe_.ltl result=MEMOUT seconds=47.100
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_14_pe_.ltl result=MEMOUT seconds=45.456
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_15_pe_.ltl result=MEMOUT seconds=45.098
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_16_pe_.ltl result=MEMOUT seconds=44.028
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_6_pe_.ltl result=UNREALIZABLE seconds=1.057
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_7_pe_.ltl result=UNREALIZABLE seconds=7.514
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_8_pe_.ltl result=UNREALIZABLE seconds=62.837
+cap=120s instance=round_robin_arbiter_unreal1_pb_3_9_pe_.ltl result=MEMOUT seconds=71.400
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_10_pe_.ltl result=MEMOUT seconds=51.626
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_11_pe_.ltl result=MEMOUT seconds=49.347
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_12_pe_.ltl result=MEMOUT seconds=50.865
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_13_pe_.ltl result=MEMOUT seconds=48.063
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_14_pe_.ltl result=MEMOUT seconds=47.824
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_15_pe_.ltl result=MEMOUT seconds=48.002
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_4_pe_.ltl result=UNREALIZABLE seconds=1.745
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_5_pe_.ltl result=UNREALIZABLE seconds=39.370
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_6_pe_.ltl result=MEMOUT seconds=71.019
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_7_pe_.ltl result=MEMOUT seconds=64.404
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_8_pe_.ltl result=MEMOUT seconds=58.298
+cap=120s instance=round_robin_arbiter_unreal1_pb_4_9_pe_.ltl result=MEMOUT seconds=51.951
+cap=120s instance=simple_arbiter_with_hints_pb_6_pe_.ltl result=REALIZABLE seconds=1.988
+cap=120s instance=sort42.ltl result=UNREALIZABLE seconds=13.713
+cap=120s instance=square5x5-real.ltl result=MEMOUT seconds=105.605
+cap=120s instance=square5x52.ltl result=UNREALIZABLE seconds=1.432
+cap=120s instance=square5x53.ltl result=UNREALIZABLE seconds=5.041
+cap=120s instance=square5x54.ltl result=UNREALIZABLE seconds=7.106
+cap=120s instance=taxi-service-real.ltl result=REALIZABLE seconds=16.844
+cap=120s instance=thermostat-F-real.ltl result=REALIZABLE seconds=1.439
+cap=120s instance=thermostat-GF-real.ltl result=REALIZABLE seconds=44.999
+cap=120s instance=thermostat-GF-unreal0.ltl result=UNREALIZABLE seconds=1.963
+cap=120s instance=tmp_13cfc6f2.ltl result=REALIZABLE seconds=0.788
+cap=120s instance=workstation_resupply_pb_1_pe_.ltl result=REALIZABLE seconds=0.037
+cap=120s instance=workstation_resupply_pb_2_pe_.ltl result=REALIZABLE seconds=0.337
+cap=120s instance=workstation_resupply_pb_3_pe_.ltl result=REALIZABLE seconds=16.063
+cap=120s instance=workstation_resupply_pb_4_pe_.ltl result=TIMEOUT seconds=120.357
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r5-S.tsv
+wrote /home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/confirmations/120s/r5-S-summary.tsv
+[2026-09-21T17:14:03] end r5 S rc=0
+[2026-09-21T17:14:03] SCREEN DONE 120s-confirm

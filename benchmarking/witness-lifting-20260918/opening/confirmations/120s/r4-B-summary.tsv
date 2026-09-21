@@ -1,0 +1,197 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+120s-confirm-B-r4	06.ltl	120	REALIZABLE	18.106885674991645	false	REALIZABLE	120
+120s-confirm-B-r4	07.ltl	120	REALIZABLE	18.970129332970828	false	REALIZABLE	120
+120s-confirm-B-r4	09.ltl	120	REALIZABLE	8.115387136989739	false	REALIZABLE	120
+120s-confirm-B-r4	10.ltl	120	REALIZABLE	3.4178536100080237	false	REALIZABLE	120
+120s-confirm-B-r4	11.ltl	120	REALIZABLE	3.3488962320261635	false	REALIZABLE	120
+120s-confirm-B-r4	Alarm_06e9cad4.ltl	120	REALIZABLE	1.6538541099871509	false	REALIZABLE	120
+120s-confirm-B-r4	Alarm_68c86764.ltl	120	REALIZABLE	1.722115512995515	false	REALIZABLE	120
+120s-confirm-B-r4	Alarm_a5f99bc6.ltl	120	REALIZABLE	19.97387839498697	false	REALIZABLE	120
+120s-confirm-B-r4	AllLights_2c5b09da.ltl	120	UNREALIZABLE	0.9298629679833539	false	UNREALIZABLE	120
+120s-confirm-B-r4	AllLights_63831f8c.ltl	120	UNREALIZABLE	1.6362028250005096	false	UNREALIZABLE	120
+120s-confirm-B-r4	AllLights_aeb1d897.ltl	120	UNREALIZABLE	2.7745021649752744	false	UNREALIZABLE	120
+120s-confirm-B-r4	AllShades_66f450a4.ltl	120	UNREALIZABLE	1.7092235970194452	false	UNREALIZABLE	120
+120s-confirm-B-r4	F-G-contradiction-110.ltl	120	UNREALIZABLE	27.02071693597827	false	UNREALIZABLE	120
+120s-confirm-B-r4	F-G-contradiction-111.ltl	120	UNREALIZABLE	28.309913270990364	false	UNREALIZABLE	120
+120s-confirm-B-r4	F-G-contradiction-15.ltl	120	UNREALIZABLE	0.3357495390227996	false	UNREALIZABLE	120
+120s-confirm-B-r4	F-G-contradiction-16.ltl	120	UNREALIZABLE	8.911856157006696	false	UNREALIZABLE	120
+120s-confirm-B-r4	F-G-contradiction-17.ltl	120	UNREALIZABLE	10.395314171037171	false	UNREALIZABLE	120
+120s-confirm-B-r4	F-G-contradiction-18.ltl	120	UNREALIZABLE	12.204494926030748	false	UNREALIZABLE	120
+120s-confirm-B-r4	F-G-contradiction-19.ltl	120	UNREALIZABLE	13.043268734007142	false	UNREALIZABLE	120
+120s-confirm-B-r4	GF-G-contradiction3.ltl	120	UNREALIZABLE	1.717431642988231	false	UNREALIZABLE	120
+120s-confirm-B-r4	GF-G-contradiction4.ltl	120	UNREALIZABLE	1.8865715879946947	false	UNREALIZABLE	120
+120s-confirm-B-r4	GF-G-contradiction5.ltl	120	UNREALIZABLE	2.212198638007976	false	UNREALIZABLE	120
+120s-confirm-B-r4	Morning2_407db2cc.ltl				true	MEMOUT	120
+120s-confirm-B-r4	OneCounter.ltl	120	REALIZABLE	2.987857107014861	false	REALIZABLE	120
+120s-confirm-B-r4	SPIPureNext.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	TwoCounters3.ltl	120	REALIZABLE	1.5424237730330788	false	REALIZABLE	120
+120s-confirm-B-r4	abcg_arbiter_pb_3_pe_.ltl	120	REALIZABLE	31.350827858026605	false	REALIZABLE	120
+120s-confirm-B-r4	amba_case_study_pb_4_pe_.ltl				true	MEMOUT	120
+120s-confirm-B-r4	amba_decomposed_arbiter_pb_6_pe_.ltl	120	REALIZABLE	1.146678815013729	false	REALIZABLE	120
+120s-confirm-B-r4	amba_decomposed_encode_pb_16_pe_.ltl	120	REALIZABLE	0.9796037289779633	false	REALIZABLE	120
+120s-confirm-B-r4	amba_gr_pb_2_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	arbiter_on_inpchange_pb_4_pe_.ltl	120	REALIZABLE	0.827172270976007	false	REALIZABLE	120
+120s-confirm-B-r4	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	arbiter_with_buffer_pb_5_pe_.ltl	120	REALIZABLE	0.8867437220178545	false	REALIZABLE	120
+120s-confirm-B-r4	arbiter_with_cancel_pb_5_pe_.ltl	120	REALIZABLE	1.137401273008436	false	REALIZABLE	120
+120s-confirm-B-r4	chain-simple-70-real.ltl	120	REALIZABLE	1.04689519101521	false	REALIZABLE	120
+120s-confirm-B-r4	chain-simple-param-70-real.ltl	120	REALIZABLE	1.0574524580151774	false	REALIZABLE	120
+120s-confirm-B-r4	collector_v1_pb_9_pe_.ltl	120	REALIZABLE	2.7271807320066728	false	REALIZABLE	120
+120s-confirm-B-r4	collector_v2_pb_11_pe_.ltl	120	REALIZABLE	0.3078173969988711	false	REALIZABLE	120
+120s-confirm-B-r4	collector_v2_pb_12_pe_.ltl	120	REALIZABLE	0.750756241963245	false	REALIZABLE	120
+120s-confirm-B-r4	evasion-real.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	f-real-real.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	finding_nemo_pb_2_pe_.ltl	120	REALIZABLE	4.34974825498648	false	REALIZABLE	120
+120s-confirm-B-r4	g-real-real.ltl	120	REALIZABLE	4.4352347570238635	false	REALIZABLE	120
+120s-confirm-B-r4	g-unreal-110.ltl	120	UNREALIZABLE	2.7379778049653396	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-111.ltl	120	UNREALIZABLE	4.374518972996157	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-112.ltl	120	UNREALIZABLE	7.299471687991172	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-114.ltl	120	UNREALIZABLE	11.913042030006181	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-115.ltl	120	UNREALIZABLE	16.965967001975514	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-117.ltl	120	UNREALIZABLE	45.243178342003375	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-118.ltl	120	UNREALIZABLE	66.93878803797998	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-120.ltl	120	UNREALIZABLE	95.47774130199105	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-18.ltl	120	UNREALIZABLE	1.0745275000226684	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-19.ltl	120	UNREALIZABLE	2.068964633042924	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-310.ltl	120	UNREALIZABLE	24.18861851596739	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-33.ltl	120	UNREALIZABLE	0.5343879630090669	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-34.ltl	120	UNREALIZABLE	0.9471655079978518	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-35.ltl	120	UNREALIZABLE	1.0337751519982703	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-36.ltl	120	UNREALIZABLE	1.0443274630233645	false	UNREALIZABLE	120
+120s-confirm-B-r4	g-unreal-37.ltl	120	UNREALIZABLE	1.7889663529931568	false	UNREALIZABLE	120
+120s-confirm-B-r4	heim-buechi-real.ltl	120	REALIZABLE	2.127858037012629	false	REALIZABLE	120
+120s-confirm-B-r4	heim-double-x-real.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	heim-double-x10.ltl	120	UNREALIZABLE	2.1734760280232877	false	UNREALIZABLE	120
+120s-confirm-B-r4	heim-double-x11.ltl	120	UNREALIZABLE	2.5273986239917576	false	UNREALIZABLE	120
+120s-confirm-B-r4	heim-double-x8.ltl	120	UNREALIZABLE	0.9993546830373816	false	UNREALIZABLE	120
+120s-confirm-B-r4	heim-double-x9.ltl	120	UNREALIZABLE	1.8706613249960355	false	UNREALIZABLE	120
+120s-confirm-B-r4	infinite-race-u10.ltl	120	UNREALIZABLE	9.997777563985437	false	UNREALIZABLE	120
+120s-confirm-B-r4	infinite-race-u11.ltl	120	UNREALIZABLE	14.256765951984562	false	UNREALIZABLE	120
+120s-confirm-B-r4	infinite-race-u12.ltl	120	UNREALIZABLE	40.76818675198592	false	UNREALIZABLE	120
+120s-confirm-B-r4	infinite-race-u13.ltl	120	UNREALIZABLE	40.64125991502078	false	UNREALIZABLE	120
+120s-confirm-B-r4	infinite-race-u14.ltl	120	UNREALIZABLE	51.22192925901618	false	UNREALIZABLE	120
+120s-confirm-B-r4	infinite-race-u15.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u16.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u17.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u18.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u19.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u20.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u21.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u22.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u23.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u24.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u25.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	infinite-race-u8.ltl	120	UNREALIZABLE	2.2138428000034764	false	UNREALIZABLE	120
+120s-confirm-B-r4	infinite-race-u9.ltl	120	UNREALIZABLE	8.496550993993878	false	UNREALIZABLE	120
+120s-confirm-B-r4	infinite-race-unequal-26.ltl	120	UNREALIZABLE	56.04792139597703	false	UNREALIZABLE	120
+120s-confirm-B-r4	lift_gr1+_pb_3_pe_.ltl	120	REALIZABLE	1.28243147500325	false	REALIZABLE	120
+120s-confirm-B-r4	lift_pb_3_pe_.ltl	120	REALIZABLE	0.040926164016127586	false	REALIZABLE	120
+120s-confirm-B-r4	lift_pb_4_pe_.ltl	120	REALIZABLE	0.26473903795704246	false	REALIZABLE	120
+120s-confirm-B-r4	lift_pb_5_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	lift_pb_6_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	lift_unary_enc_pb_3_pe_.ltl	120	REALIZABLE	0.0779887440148741	false	REALIZABLE	120
+120s-confirm-B-r4	lift_unary_enc_pb_4_pe_.ltl	120	REALIZABLE	9.941414119966794	false	REALIZABLE	120
+120s-confirm-B-r4	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	lift_unary_enc_pb_6_pe_.ltl				true	MEMOUT	120
+120s-confirm-B-r4	lift_wrong_physics_unreal_pb_10_pe_.ltl	120	UNREALIZABLE	1.1145166759961285	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_pb_7_pe_.ltl	120	REALIZABLE	4.986379635054618	false	REALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_2_15_pe_.ltl	120	UNREALIZABLE	0.6768810520297848	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_2_16_pe_.ltl	120	UNREALIZABLE	1.5137476699892431	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_4_6_pe_.ltl	120	UNREALIZABLE	1.0464767019730061	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_4_7_pe_.ltl	120	UNREALIZABLE	7.312324768048711	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_4_8_pe_.ltl	120	UNREALIZABLE	83.44273760402575	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_5_4_pe_.ltl	120	UNREALIZABLE	0.6799036970478483	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_5_5_pe_.ltl	120	UNREALIZABLE	13.366056088008918	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_6_3_pe_.ltl	120	UNREALIZABLE	0.6061016340390779	false	UNREALIZABLE	120
+120s-confirm-B-r4	load_balancer_unreal1_pb_6_4_pe_.ltl	120	UNREALIZABLE	22.261061228986364	false	UNREALIZABLE	120
+120s-confirm-B-r4	ltl2dba_C2_unreal_pb_13_pe_.ltl	120	UNREALIZABLE	1.1309834839776158	false	UNREALIZABLE	120
+120s-confirm-B-r4	ltl2dba_R_pb_6_pe_.ltl	120	UNREALIZABLE	0.5653892509872094	false	UNREALIZABLE	120
+120s-confirm-B-r4	ltl2dba_R_pb_8_pe_.ltl	120	UNREALIZABLE	82.10269225703087	false	UNREALIZABLE	120
+120s-confirm-B-r4	ltl2dba_theta_pb_12_pe_.ltl	120	UNREALIZABLE	2.100746273994446	false	UNREALIZABLE	120
+120s-confirm-B-r4	ordered-visits-choice-real.ltl				true	UNKNOWN	120
+120s-confirm-B-r4	patrolling-alarm17.ltl	120	UNREALIZABLE	0.4486143420217559	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm18.ltl	120	UNREALIZABLE	0.5126642130198888	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm19.ltl	120	UNREALIZABLE	0.5257422120193951	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm20.ltl	120	UNREALIZABLE	0.5306267139967531	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm21.ltl	120	UNREALIZABLE	0.5624340150388889	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm22.ltl	120	UNREALIZABLE	0.6396788090351038	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm23.ltl	120	UNREALIZABLE	0.6445824070251547	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm24.ltl	120	UNREALIZABLE	0.7156324420357123	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm25.ltl	120	UNREALIZABLE	0.7249480300233699	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling-alarm26.ltl	120	UNREALIZABLE	0.7350225719856098	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling17.ltl	120	UNREALIZABLE	0.45451750501524657	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling18.ltl	120	UNREALIZABLE	0.46692911797435954	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling19.ltl	120	UNREALIZABLE	0.48068708000937477	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling20.ltl	120	UNREALIZABLE	0.5138735600048676	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling21.ltl	120	UNREALIZABLE	0.616541180992499	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling22.ltl	120	UNREALIZABLE	0.5972133009927347	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling23.ltl	120	UNREALIZABLE	0.6744630159810185	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling24.ltl	120	UNREALIZABLE	0.6883488229941577	false	UNREALIZABLE	120
+120s-confirm-B-r4	patrolling25.ltl	120	UNREALIZABLE	0.7115003290236928	false	UNREALIZABLE	120
+120s-confirm-B-r4	reversible-lane-r-real.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	robot-cat-real-1d-real.ltl	120	REALIZABLE	2.452149705030024	false	REALIZABLE	120
+120s-confirm-B-r4	robot-grid-commute-1d-real.ltl	120	REALIZABLE	1.982362192007713	false	REALIZABLE	120
+120s-confirm-B-r4	robot-grid-reach-2d-real.ltl	120	REALIZABLE	2.9934746340150014	false	REALIZABLE	120
+120s-confirm-B-r4	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	120	REALIZABLE	11.857593986031134	false	REALIZABLE	120
+120s-confirm-B-r4	robot-resource-2d14.ltl	120	UNREALIZABLE	2.2129657680052333	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-resource-2d15.ltl	120	UNREALIZABLE	2.269814800005406	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-resource-2d17.ltl	120	UNREALIZABLE	7.168468272022437	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-resource-2d19.ltl	120	UNREALIZABLE	7.973830613947939	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-resource-2d21.ltl	120	UNREALIZABLE	8.863766077964101	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-resource-2d8.ltl	120	UNREALIZABLE	1.3620097789680585	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-resource-2d9.ltl	120	UNREALIZABLE	1.5207296030130237	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-to-target-charging0.ltl	120	UNREALIZABLE	0.9540066890185699	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-to-target-charging13.ltl	120	UNREALIZABLE	69.8460098360083	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-to-target-charging14.ltl	120	UNREALIZABLE	96.43532474798849	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-to-target-charging5.ltl	120	UNREALIZABLE	7.061635262973141	false	UNREALIZABLE	120
+120s-confirm-B-r4	robot-to-target0.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	robot_collect_samples_v2-real.ltl	120	REALIZABLE	59.405377068032976	false	REALIZABLE	120
+120s-confirm-B-r4	robot_grid_pb_3_3_pe_.ltl	120	REALIZABLE	0.1524404709925875	false	REALIZABLE	120
+120s-confirm-B-r4	robot_grid_pb_4_4_pe_.ltl	120	REALIZABLE	1.2612765350495465	false	REALIZABLE	120
+120s-confirm-B-r4	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	120	UNREALIZABLE	1.3310524619882926	false	UNREALIZABLE	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	120	UNREALIZABLE	2.54342587798601	false	UNREALIZABLE	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	120	UNREALIZABLE	0.9879276240244508	false	UNREALIZABLE	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	120	UNREALIZABLE	7.3388669160194695	false	UNREALIZABLE	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl	120	UNREALIZABLE	59.409436082001776	false	UNREALIZABLE	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	120	UNREALIZABLE	1.6185074239620008	false	UNREALIZABLE	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl	120	UNREALIZABLE	38.24574651004514	false	UNREALIZABLE	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	simple_arbiter_with_hints_pb_6_pe_.ltl	120	REALIZABLE	2.004898884042632	false	REALIZABLE	120
+120s-confirm-B-r4	sort42.ltl	120	UNREALIZABLE	13.966677008953411	false	UNREALIZABLE	120
+120s-confirm-B-r4	square5x5-real.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	square5x52.ltl	120	UNREALIZABLE	1.4056647770339623	false	UNREALIZABLE	120
+120s-confirm-B-r4	square5x53.ltl	120	UNREALIZABLE	5.520539347024169	false	UNREALIZABLE	120
+120s-confirm-B-r4	square5x54.ltl	120	UNREALIZABLE	7.570377109979745	false	UNREALIZABLE	120
+120s-confirm-B-r4	taxi-service-real.ltl	120	REALIZABLE	20.32961872400483	false	REALIZABLE	120
+120s-confirm-B-r4	thermostat-F-real.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	thermostat-GF-real.ltl				true	TIMEOUT	120
+120s-confirm-B-r4	thermostat-GF-unreal0.ltl	120	UNREALIZABLE	1.9481485729920678	false	UNREALIZABLE	120
+120s-confirm-B-r4	tmp_13cfc6f2.ltl	120	REALIZABLE	0.7575302019831724	false	REALIZABLE	120
+120s-confirm-B-r4	workstation_resupply_pb_1_pe_.ltl	120	REALIZABLE	0.02393113699508831	false	REALIZABLE	120
+120s-confirm-B-r4	workstation_resupply_pb_2_pe_.ltl	120	REALIZABLE	0.3190874829888344	false	REALIZABLE	120
+120s-confirm-B-r4	workstation_resupply_pb_3_pe_.ltl	120	REALIZABLE	17.538458032999188	false	REALIZABLE	120
+120s-confirm-B-r4	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	120
