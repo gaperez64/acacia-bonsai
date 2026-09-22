@@ -253,3 +253,45 @@ disjunction of local predicates.
 Refuted. The residue is not per-client separable either, so `round_robin_arbiter`'s winning region
 is not a bounded-arity conjunction plus a simple existential over local predicates. That family
 needs a genuine strengthening search, and this closes off the cheap route to it.
+
+## 5. What the other seven families are blocked by, and it is not parameterization
+
+Seven of the 36 parametric families are not DBA-reducible and hold the other 25 of the 172 unsolved
+instances. They share one cause, visible in `m0-census.tsv`'s `non_recurrence_templates`: a conjunct
+on the guarantee side that is itself an implication between recurrence properties.
+
+| family | unsolved | blocking conjunct |
+|---|---|---|
+| `ltl2dba_C2_unreal` | 6 | `GFg <-> (GFr_i & GFr_i)` |
+| `ltl2dba_theta` | 5 | `GFacc <-> !(GFp_i -> G(q -> Fr))` |
+| `ltl2dba_R` | 4 | `GFp_i <-> GFacc` |
+| `lift_gr1`, `lift_gr1+` | 4 + 4 | one monolithic `G(...)` the splitter does not decompose |
+| `collector_v2` | 1 | `GFallfinished <-> (GFfinished_i & ...)` |
+| `generalized_buffer` | 1 | a per-index assume-guarantee pair inside one conjunct |
+
+`spot.mp_class` puts `GF a <-> GF b` — and even a bare `GF a -> GF b` — in the **reactivity** class,
+while `GF a` and `G(a -> F b)` are recurrence. That is the whole obstruction. GR(1) has exactly one
+assumption/guarantee split at the top, `(AND_i GF A_i) -> (AND_j GF G_j)`, and the PPS fixpoint
+solves that one Streett-like condition. An implication *nested inside* a conjunct is a second Streett
+pair, and a conjunction of `k` such pairs is a Streett condition of index `k`, which the tri-nested
+fixpoint does not solve.
+
+So these seven are out of reach of this route because of their **acceptance condition**, not because
+of anything about their parameter. No amount of index alignment or invariant generalization reaches
+them; they would need a Streett/Rabin solver. Worth stating explicitly, because "parametric family
+we cannot lift" and "objective the GR(1) fixpoint cannot express" are different failures and only
+the first is this sprint's subject.
+
+## Coverage accounting
+
+Of the **172** unsolved instances across the 36 parametric families:
+
+| | instances | share |
+|---|---|---|
+| M4 in scope — measured constant separability arity (10 families) | 42 | 24% |
+| blocked by the one-hot monitor encoding (`*_unreal1`, §3) | 28 | 16% |
+| acceptance condition needs Streett/Rabin (7 families, §5) | 25 | 15% |
+| needs an invariant strengthening search (`min_k = n`, 3 families) | 17 | 10% |
+| needs M5's dual certificate (`*_unreal2`) | 6 | 3% |
+| reducible but not yet classified | 54 | 31% |
+
