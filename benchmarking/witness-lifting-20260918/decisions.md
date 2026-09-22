@@ -607,12 +607,42 @@ not just sampled sequences), and one further real gap (the no-input shortcut) fo
 review and fixed in round 10. Every round through 9 reverted its own edits after a negative or
 ambiguous result (`git status` confirmed clean each time, round 5 verified the restored file's
 SHA-256); round 10's edit is the one that stayed, reviewed and tested, and is now committed.
-`round_robin_arbiter_unreal2`'s seed produces a plausible AAG through the same pipeline (run in
-round 9) but **its soundness has not been checked** — that needs the same per-sequence/game analysis
-as the tiny case, likely harder with more APs and a real family structure, and should not be assumed
-just because the mechanism is now proven on the trivial case. That remains open, as does applying
-this to the actual target (`round_robin_arbiter_unreal2_pb_7_pe_.ltl`, n=7) once the seed is
-verified.
+**Post-commit soundness verification, done properly (not by hand this time).** The landed debug
+assert (`aut->intersects (mealy_aig->as_automaton (false))` for the unreal case) is a real but
+*weaker* check than genuine soundness: it only proves nonempty intersection with `!phi` under the
+raw, undelayed Mealy reading of the circuit — i.e. that *some* system behavior gets defeated, not
+that *every* one does. Re-deriving the tiny game's own timing convention carefully (twice, catching
+my own confusion the first time) showed the raw/undelayed reading is exactly "Reading A", which the
+tiny game's own hand-simulation had already shown fails on an adversarial sequence — so the landed
+assert's pass is consistent with, but does not by itself establish, full soundness. The genuinely
+correct, complete criterion (matching plan section 7.1's own contract: `L(E_N) ∩ L(Phi_N) = empty`,
+every legal system response defeated) needs the circuit read through the one-cycle output delay —
+and that delay is *already implemented*, correctly, as `acacia::synthesis::mealy_to_moore()`
+(`src/solver/mealy_to_moore.cc`, existing code, used elsewhere for TLSF's own Moore-target case;
+read and confirmed by an independent codex session to do exactly the delay described, not just
+trusted from paraphrase).
+
+Built a temporary (added, used, removed) diagnostic check: `mealy_to_moore()` the produced circuit,
+then test *full containment* — `L(delayed circuit) ∩ L(phi) = ∅` — using Spot's own automaton
+machinery directly against the true, untransformed original formula. This is the mathematically
+complete statement, strictly stronger than the landed assert's nonempty-intersection check. Result:
+**`true` on all three tests run** — the tiny hand-verified game (cross-validating my own independent
+by-hand 2-case proof: agreement here is what gives confidence the new mechanized check itself is
+correctly built, not just that the witness is sound), and both `round_robin_arbiter_unreal2` seeds,
+`rru2_n2` and `rru2_n3`. A mechanical bug on the first attempt (`mealy_to_moore()`'s result uses a
+fresh, unrelated `bdd_dict`, fine for its existing file-only use, incompatible with intersecting
+against another automaton) was found and fixed with a serialize/reparse round-trip through the
+shared dict — a plumbing issue in the new diagnostic code, not a soundness question, and confirmed
+as such before concluding anything.
+
+This is the real completion of W4's verification contract for this family's seeds, at a rigor
+matching arbiter's own "VERIFIED" bar — not merely "a file appeared" or "an assert didn't fire," but
+a machine-checked full-containment proof against the true original specification. All instrumentation
+was temporary and has been reverted; the tree matches HEAD (`53a6bfc5`) after every round.
+
+Applying this to the actual target (`round_robin_arbiter_unreal2_pb_7_pe_.ltl`, n=7 — the largest
+in-corpus instantiation of this family, confirmed still `stable-unsolved`/TIMEOUT at both caps in
+the broad campaign) is in progress as this note is written.
 
 ## W5–W7 — not started
 
