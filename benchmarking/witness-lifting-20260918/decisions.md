@@ -762,3 +762,51 @@ made explicit rather than a silent gap: the two exact reproducers (`round_robin_
 `round_robin_arbiter_unreal2` n=7, both with their exponential antecedent isolated and measured) are
 preserved in `target-checks.tsv` for whoever picks this up next, exactly as the plan's own "preserve
 the exact reproducer and stop" instruction (§9.3) anticipates for this package.
+
+## W7 — cold-cost research wrapper (complete)
+
+`benchmarking/witness-lifting-20260918/acacia-witness-lift.py`: a manifest-driven cold pipeline
+(validate family/target → choose seed parameters → synthesize+check two FRESH seeds → propose via
+W5 → check at sanity → check at target → decisive verdict or UNKNOWN) behind one shared, monotonic,
+absolute deadline that every stage checks against (not its own fresh timer) — a seed-synthesis
+timeout does not restart the pipeline with a new budget. Every subprocess call goes through a single
+`run_process()` that enforces the remaining-time budget and reaps on timeout. A small
+`acacia-witness-lift-coverage-adapter.py` maps the wrapper's own verdict line onto
+`run-syntcomp26-coverage.py`'s existing 0/1/2 exit convention. The optional warm/family-amortized
+cache mode (plan §10.3) was explicitly left out of scope, matching the plan's own "optional" framing.
+
+**The one property that actually matters here is enforced structurally, not by convention**: a
+decisive `PipelineResult` cannot be constructed at all — the dataclass's own `__post_init__` raises —
+unless it carries a `TargetCertificate` whose `verdict == "VERIFIED"` and whose `artifact_path`
+matches the reported witness path exactly. `VERIFIED` itself comes directly from the same
+already-trusted checker's exit code (0/1/else → VERIFIED/REFUTED/UNKNOWN), no reinterpretation of its
+output text. A schema that verifies at both seeds and sanity but was never checked at the actual
+target parameter cannot become decisive — confirmed both by a test that tries to construct exactly
+that and asserts it raises, and by my own reading of the code before trusting it.
+
+**Independently re-verified beyond the implementing session's own report** (unlike W5, this
+component's DECISIVE-vs-UNKNOWN distinction is safety-relevant, so it got the extra scrutiny): re-ran
+the 9-test suite myself (9/9 pass); ran the wrapper fresh and cold myself, twice, from a clean `/tmp`
+workspace each time —
+
+- **arbiter, n=10, `--budget 90`**: `REALIZABLE`, and the produced witness's SHA-256
+  (`7baadc9...4346a7b`) is **byte-identical to W5's own independent run** — the cold pipeline
+  (fresh seed synthesis → fresh proposal → fresh instantiation) deterministically converges on the
+  exact same candidate across two structurally different entry points. I then independently
+  re-ran `verify_conjuncts.py` myself against this exact file (not trusting the wrapper's internal
+  claim): **41/41 conjuncts verified.**
+- **round_robin_arbiter, n=10, `--budget 30`**: `UNKNOWN schema_proposal no_recognized_candidate`,
+  reproduced exactly. This is a genuine, useful negative finding, not a bug: W5's recognizer,
+  applied to round_robin_arbiter's own *actual* Acacia-synthesized seed circuits, does not match its
+  fixed structural predicates — even though the *manually-written* schema (`build_arbiter_witness.py`,
+  unmodified) is already known to work for this family (verified at n=2/3/4 earlier this sprint). The
+  automatic recognizer's generalization is narrower than the human's, and the wrapper correctly
+  declined rather than substituting the known-good manual circuit to manufacture a decisive result —
+  exactly the "the proposer is untrusted... failure to find a schema yields UNKNOWN" design the plan
+  specifies, working as intended under real pressure to look successful.
+- **round_robin_arbiter_unreal2**: declined at the eligibility stage before any synthesis
+  (`UNKNOWN eligibility ineligible`) — its environment-witness polarity is outside the supported
+  REAL-controller schema/checker pairing this wrapper implements, correctly identified before
+  spending any pipeline budget.
+
+Landed at `67c1bb79`.
