@@ -109,7 +109,9 @@ int main (int argc, char** argv) {
                                   arg_values.opt_kmin, arg_values.opt_kinc, arg_values.formula,
                                   unreal_x, translation_pref, arg_values.spot_fast,
                                   backend,
-                                  unreal_x.has_value () ? std::nullopt : arg_values.synth_fname,
+                                  (unreal_x.has_value () and *unreal_x != UNREAL_X_FORMULA)
+                                      ? std::nullopt
+                                      : arg_values.synth_fname,
                                   arg_values.metadata, provider, arg_values.candidate);
         verb_do (1, vout << "returning " << res << "\n");
 
