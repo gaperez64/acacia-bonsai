@@ -1,0 +1,9 @@
+family	axis	fixed	values	verdict	detail
+chomp	M	N=2	2,3	replicated	mons=[12, 14] roles=[1, 1] local=0.77 tmpl_stable=True
+chomp	N	M=2	2,3	replicated	mons=[12, 14] roles=[1, 1] local=0.77 tmpl_stable=True
+load_balancer_unreal1	n	u=2	2,3,4,5	roles	mons=[11, 16, 22, 29] roles=[2, 2, 2, 2] local=0.83 tmpl_stable=True
+load_balancer_unreal1	u	n=2	1,2,3,4	roles	mons=[11, 11, 11, 11] roles=[2, 2, 2, 2] local=0.64 tmpl_stable=True
+robot_grid	xN	yN=1	5,6	weak	mons=[11, 11] roles=[0, 0] local=0.18 tmpl_stable=True
+robot_grid	yN	xN=5		no-data	
+round_robin_arbiter_unreal1	n	u=10		no-data	
+round_robin_arbiter_unreal1	u	n=3	1,2,3,4	replicated	mons=[16, 16, 16, 16] roles=[1, 1, 1, 1] local=0.94 tmpl_stable=True

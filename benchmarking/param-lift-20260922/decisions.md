@@ -302,3 +302,46 @@ My own verification, not the implementer's:
 
 `ruff` is not installed on this machine, so the Python lint the repo requires was not run locally;
 CI covers it.
+
+## M4 prerequisite — measuring what can be generalized (before building the generalizer)
+
+Full account and tables in `m4-structure.md`; data in `m4-spec-arity.tsv`, `m4-alignment.tsv`,
+`m4-alignment-2param.tsv`, `m4-invariant-separability.tsv`, `m4-move-separability.tsv`. Summary of
+the judgments that change the plan:
+
+- **Generalize the move relation, not the strategy.** Not one exported policy guard is local to its
+  own client: mean foreign clients read is exactly `n-1` for `arbiter`, `round_robin_arbiter`,
+  `prioritized_arbiter`, `load_balancer` and `arbiter_with_cancel` at every `n` measured. The
+  exported policy is one Skolemization with arbitrary tie-breaking, so generalizing it is W5's
+  mistake in a new guise. `move_j` — exported by M2 *before* Skolemization — has the same
+  separability arity as `inv`. Generalize `(inv, ranks, move_j)` and re-Skolemize at the target with
+  a canonical, `n`-independent rule.
+- **Per-family template arity is now measured, not guessed.** Smallest `k` such that `inv` equals
+  the conjunction of its projections onto every `k`-subset of clients: 1 for `prioritized_arbiter`
+  (n=3..6) and `collector_v1`; 2 for `arbiter` (n=3..7), `load_balancer` (n=2..5) and
+  `arbiter_with_cancel` (n=2..4). Those five are where a conjunctive generalizer can work.
+  `round_robin_arbiter`, `lift` and `amba_decomposed_arbiter` have `min_k = n` at every `n` — no
+  fixed-arity conjunctive template exists, and they need an invariant *strengthening* search, which
+  is a different technique and is scoped out of M4's first cut rather than folded in.
+- **Seeds must come from the stable regime.** `round_robin_arbiter_unreal2` has `C(n,2)` pairwise
+  conjuncts that *do not exist at n=2* (the single pair is absorbed into a bus-wide conjunct), so
+  n=2 is not a small instance of that family but a structurally different game — and it is where the
+  previous sprint seeded it. `stable_from` is recorded per family in `m4-alignment.tsv`.
+- **Bus-wide conjuncts need a semantic schema library.** Mutual exclusion is emitted as a balanced
+  tree whose shape changes with `n`, so syntactic anti-unification cannot recover it.
+- **The `*_unreal1` block is blocked by our own encoding.** Those families' second parameter `u` is
+  an X-depth; it adds no monitors, only depth. The monitor DBA needs `2^(u-1)+1` states (a `u`-bit
+  shift register, inherent), but `gr1_monitor_game.py` encodes states **one-hot**, spending `2^u`
+  latches on `u` bits: 419 latches at u=7 where ~40 would do. That is 28 unsolved instances — the
+  largest single block among the reducible families — held back by an encoding choice rather than by
+  the problem. M1b brief written; not yet run.
+
+Coverage of the 147 unsolved instances in the 29 DBA-reducible families: 24 (16%) in the five
+measured in-scope families, 35 (24%) in ten families that are index-alignable but whose arity is not
+yet measured, 17 (12%) measured out of scope, 71 (48%) weak/no-data — of which 28 are the
+`*_unreal1` encoding block above.
+
+One measurement was attempted and discarded rather than reported: substituting the projection
+conjunction for `inv` and re-checking is *not* an adequacy test, because projections only
+over-approximate, so the extra states have no rank by construction and the check fails for that
+reason alone. Recorded in `m4-structure.md` so it is not repeated.
