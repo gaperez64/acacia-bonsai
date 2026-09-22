@@ -694,14 +694,71 @@ matching arbiter's own "VERIFIED" bar — not merely "a file appeared" or "an as
 a machine-checked full-containment proof against the true original specification. All instrumentation
 was temporary and has been reverted; the tree matches HEAD (`53a6bfc5`) after every round.
 
-Applying this to the actual target (`round_robin_arbiter_unreal2_pb_7_pe_.ltl`, n=7 — the largest
-in-corpus instantiation of this family, confirmed still `stable-unsolved`/TIMEOUT at both caps in
-the broad campaign) is in progress as this note is written.
+Applied to the actual target (`round_robin_arbiter_unreal2_pb_7_pe_.ltl`, n=7 — the largest
+in-corpus instantiation of this family): timed out at 180s, UNKNOWN, no verdict. See
+`families/target-checks.tsv`'s n=7 row for the full record. W4 is complete for all three pilot
+families: arbiter reaches VERIFIED at its actual target (n=10); round_robin_arbiter and
+round_robin_arbiter_unreal2 each reach a concrete failed-stage-and-reproducer (exponential
+ASSUME-antecedent blowup, structurally shared between the two) rather than a fabricated success —
+exactly the plan's own "at least one feasibility pilot reaches exact target verification, or a
+concrete failed stage and reproducer explain why none did" bar.
 
-## W5–W7 — not started
+## W5 — bounded automatic proposer (complete)
 
-W5 (bounded automatic proposer), W6 (candidate-restricted product construction), W7 (cold-cost
-runner) are unstarted. W6 in particular is not currently motivated by any collected evidence: the
-one target-verification obstacle actually hit (arbiter's n=10 monolithic-formula cost) was resolved
-by conjunct decomposition alone, per plan section 7.3's own instruction not to reach for W6 until
-eager checking is shown to be the real obstacle on its own terms.
+Implemented `families/proposals/propose_schema.py`: given only the two actual Acacia-synthesized
+arbiter seed witnesses (n=2, n=3 AAGs — real solver output, not the manually-constructed
+cross-check circuits), it BFS-simulates each circuit's reachable state space, searches for a trace
+proving genuine memory (a request dropped before being granted still produces a later grant — ruling
+out a stateless strategy), and detects a cyclic-increment phase index over the all-requests-high run.
+It recognizes exactly one grammar class (`pending-flags+cyclic-index/v1`), matching the plan's own
+scope ("one REAL schema class"). The recognized schema is equivalent to what a human derived by hand
+earlier in this same sprint (`build_arbiter_witness.py`'s docstring) — but arrived at independently,
+from the raw circuits, not told the answer.
+
+The winning candidate was instantiated and checked at n=2, n=3, n=4 (sanity), and the actual n=10
+corpus target, reusing the existing checkers unmodified (tlsf-tools' `verify_aiger_ltl.py`,
+`verify_conjuncts.py`) — no new checker was written. I independently re-ran `verify_conjuncts.py`
+myself against the committed n=10 artifact (hash-confirmed against the reported SHA-256 first) before
+trusting the VERIFIED claim: **41/41 conjuncts pass**, matching arbiter's manual-schema result
+exactly. Also independently re-ran the new pytest suite myself (not just trusted codex's report):
+5/5 pass. Unlike the UNREAL-adapter C++ work, this component is untrusted by the plan's own design —
+its output is always independently checked by existing, already-trusted infrastructure — so it did
+not need the same multi-round, adversarial-verification discipline; one substantial implementation
+round plus a normal review and independent re-check was proportionate. Landed at `42879d3f`.
+
+## W6 — candidate-restricted product construction (evaluated, not attempted)
+
+W6 is now genuinely motivated by collected evidence, unlike earlier in this sprint: `round_robin_arbiter`'s
+n=10 target and `round_robin_arbiter_unreal2`'s n=7 target both hit the same confirmed exponential
+blowup in their shared ASSUME antecedent's eager translation (see W4 above and `target-checks.tsv`),
+exactly plan section 7.3's trigger condition for this package ("eager/unrestricted checking is the
+obstacle").
+
+Motivation is not the same as tractability. Read against what this package actually asks for (plan
+section 9): a symbolic candidate-cofactored product construction, a NEW `request_restricted_row(q,
+rho) -> CompleteRowForRegion` provider API whose contract must be proven equal to "the original
+transition relation of q intersected with rho" (not an approximation), on-the-fly Büchi emptiness
+over that restricted product, and a full battery of differential tests against the existing
+unrestricted checker on small complete cases (plan section 9.3) before it can be trusted at all. The
+plan's own file-ownership table places the new provider capability inside **tlsf-tools**, a separate
+repository/subproject, prototyped alongside its existing closure-provider tests — this is not a
+same-repo, same-language change.
+
+This is a different category of risk from W5. W5's output is checked by existing, trusted
+infrastructure before anything is believed, so ordinary engineering care was proportionate. W6 *is*
+verification infrastructure — a bug in the restricted-row contract or the emptiness check could
+produce a false VERIFIED on a target, which is exactly the "wrong answers... are different: quarantine
+immediately" case the plan's own §1.2 draws a hard line around. That is the same class of stake as
+the UNREAL-adapter C++ work, which took ten rounds, one independent review, and a from-scratch
+mechanized soundness proof to land safely — and W6 is a more novel algorithm, in an unfamiliar
+codebase, with no existing "raw circuit, hand-decode it" fallback the way the tiny adversary game had.
+
+Given the realistic scope (cross-repository, novel symbolic algorithm, correctness-critical,
+requiring its own differential-test suite before any output could be trusted), this is genuinely
+multi-day-to-multi-week engineering, not a package this session can responsibly execute at the pace
+that produced the UNREAL adapter or W5 in a single sitting without meaningfully increasing the risk of
+shipping a plausible-looking but unsound checker. **Not attempted this session** — a scoping decision
+made explicit rather than a silent gap: the two exact reproducers (`round_robin_arbiter` n=10,
+`round_robin_arbiter_unreal2` n=7, both with their exponential antecedent isolated and measured) are
+preserved in `target-checks.tsv` for whoever picks this up next, exactly as the plan's own "preserve
+the exact reproducer and stop" instruction (§9.3) anticipates for this package.
