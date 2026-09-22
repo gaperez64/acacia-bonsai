@@ -1,0 +1,153 @@
+family	instance	parameters	mode	claim_scope	build_status	monitor_count	latch_count	solver_status	verdict	seconds	known_verdict	agreement	verification	verification_reason
+abcg_arbiter	abcg_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	exact	exact lowered objective	ok	7	23	exit-0	REALIZABLE	0.014956	REALIZABLE	agree	VERIFIED	
+abcg_arbiter	abcg_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	7	23	exit-0	REALIZABLE	0.013677	REALIZABLE	agree	VERIFIED	
+abcg_arbiter	abcg_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	15	48	exit-0	REALIZABLE	0.079230	REALIZABLE	agree	VERIFIED	
+abcg_arbiter	abcg_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	15	48	exit-0	REALIZABLE	0.721877	REALIZABLE	agree	VERIFIED	
+abcg_arbiter	abcg_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	22	71	exit-0	REALIZABLE	1.921190	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+abcg_arbiter	abcg_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	22	71	timeout	timeout	60.070549	REALIZABLE	unknown	not-run	
+abcg_arbiter	abcg_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	29	94	exit-2	ERROR	32.912659		no-known-verdict	not-run	tlsfsolve: OxiDD solver failed
+abcg_arbiter	abcg_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	29	94	exit-2	ERROR	28.909844		no-known-verdict	not-run	tlsfsolve: OxiDD solver failed
+amba_case_study	amba_case_study_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	35	117	exit-2	ERROR	16.673862	REALIZABLE	unknown	not-run	tlsfsolve: OxiDD solver failed
+amba_case_study	amba_case_study_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	35	118	timeout	timeout	60.069438	REALIZABLE	unknown	not-run	
+amba_case_study	amba_case_study_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	46	156	timeout	timeout	60.030250		no-known-verdict	not-run	
+amba_case_study	amba_case_study_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	46	157	exit-2	ERROR	1.494287		no-known-verdict	not-run	tlsfsolve: OxiDD solver failed
+amba_case_study	amba_case_study_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	56	196	timeout	timeout	60.071091		no-known-verdict	not-run	
+amba_case_study	amba_case_study_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	56	197	exit-2	ERROR	1.997592		no-known-verdict	not-run	tlsfsolve: OxiDD solver failed
+amba_case_study_unreal	amba_case_study_unreal_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	34	114	exit-1	UNREALIZABLE	9.032407		no-known-verdict	not-applicable	
+amba_case_study_unreal	amba_case_study_unreal_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	34	115	timeout	timeout	60.068379		no-known-verdict	not-run	
+amba_case_study_unreal	amba_case_study_unreal_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	45	153	timeout	timeout	60.058064		no-known-verdict	not-run	
+amba_case_study_unreal	amba_case_study_unreal_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	45	154	exit-2	ERROR	49.959389		no-known-verdict	not-run	tlsfsolve: OxiDD solver failed
+amba_case_study_unreal	amba_case_study_unreal_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	55	193	timeout	timeout	60.071156		no-known-verdict	not-run	
+amba_case_study_unreal	amba_case_study_unreal_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	55	194	exit-2	ERROR	1.468219		no-known-verdict	not-run	tlsfsolve: OxiDD solver failed
+amba_decomposed_arbiter	amba_decomposed_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	15	46	exit-0	REALIZABLE	0.017548	REALIZABLE	agree	VERIFIED	
+amba_decomposed_arbiter	amba_decomposed_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	15	47	exit-0	REALIZABLE	0.048591	REALIZABLE	agree	VERIFIED	
+amba_decomposed_arbiter	amba_decomposed_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	18	62	exit-0	REALIZABLE	0.028697	REALIZABLE	agree	VERIFIED	
+amba_decomposed_arbiter	amba_decomposed_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	18	63	exit-0	REALIZABLE	1.024229	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+amba_decomposed_arbiter	amba_decomposed_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	21	86	exit-0	REALIZABLE	0.104818	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+amba_decomposed_arbiter	amba_decomposed_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	21	87	exit-2	ERROR	16.473398	REALIZABLE	unknown	not-run	tlsfsolve: OxiDD solver failed
+amba_decomposed_encode	amba_decomposed_encode_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	5	16	exit-0	REALIZABLE	0.011037	REALIZABLE	agree	VERIFIED	
+amba_decomposed_encode	amba_decomposed_encode_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	5	17	exit-0	REALIZABLE	0.010934	REALIZABLE	agree	VERIFIED	
+amba_decomposed_encode	amba_decomposed_encode_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	6	22	exit-0	REALIZABLE	0.013637	REALIZABLE	agree	VERIFIED	
+amba_decomposed_encode	amba_decomposed_encode_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	6	23	exit-0	REALIZABLE	0.012047	REALIZABLE	agree	VERIFIED	
+amba_decomposed_encode	amba_decomposed_encode_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	7	26	exit-0	REALIZABLE	0.013801	REALIZABLE	agree	VERIFIED	
+amba_decomposed_encode	amba_decomposed_encode_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	7	27	exit-0	REALIZABLE	0.012341	REALIZABLE	agree	VERIFIED	
+amba_decomposed_lock	amba_decomposed_lock_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	5	14	exit-0	REALIZABLE	0.011533	REALIZABLE	agree	VERIFIED	
+amba_decomposed_lock	amba_decomposed_lock_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	5	15	exit-0	REALIZABLE	0.011984	REALIZABLE	agree	VERIFIED	
+amba_decomposed_lock	amba_decomposed_lock_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	6	17	exit-0	REALIZABLE	0.011418	REALIZABLE	agree	VERIFIED	
+amba_decomposed_lock	amba_decomposed_lock_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	6	18	exit-0	REALIZABLE	0.011695	REALIZABLE	agree	VERIFIED	
+amba_decomposed_lock	amba_decomposed_lock_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	7	20	exit-0	REALIZABLE	0.011649	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+amba_decomposed_lock	amba_decomposed_lock_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	7	21	exit-0	REALIZABLE	0.013684	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter	arbiter_pb_1_pe_.ltl	"{""n"": 1}"	exact	exact lowered objective	ok	4	11	exit-0	REALIZABLE	0.010959	REALIZABLE	agree	VERIFIED	
+arbiter	arbiter_pb_1_pe_.ltl	"{""n"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	4	11	exit-0	REALIZABLE	0.006094	REALIZABLE	agree	VERIFIED	
+arbiter	arbiter_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	9	24	exit-0	REALIZABLE	0.013054	REALIZABLE	agree	VERIFIED	
+arbiter	arbiter_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	9	24	exit-0	REALIZABLE	0.013610	REALIZABLE	agree	VERIFIED	
+arbiter	arbiter_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	13	35	exit-0	REALIZABLE	0.018384	REALIZABLE	agree	VERIFIED	
+arbiter	arbiter_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	13	35	exit-0	REALIZABLE	0.019521	REALIZABLE	agree	VERIFIED	
+arbiter	arbiter_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	17	46	exit-0	REALIZABLE	0.038387	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter	arbiter_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	17	46	exit-0	REALIZABLE	0.046427	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter_on_inpchange	arbiter_on_inpchange_pb_1_pe_.ltl	"{""n"": 1}"	exact	exact lowered objective	ok	4	21	exit-0	REALIZABLE	0.011995	REALIZABLE	agree	VERIFIED	
+arbiter_on_inpchange	arbiter_on_inpchange_pb_1_pe_.ltl	"{""n"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	4	21	exit-0	REALIZABLE	0.011157	REALIZABLE	agree	VERIFIED	
+arbiter_on_inpchange	arbiter_on_inpchange_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	9	44	exit-0	REALIZABLE	0.024132	REALIZABLE	agree	VERIFIED	
+arbiter_on_inpchange	arbiter_on_inpchange_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	9	44	exit-0	REALIZABLE	0.021800	REALIZABLE	agree	VERIFIED	
+arbiter_on_inpchange	arbiter_on_inpchange_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	13	65	exit-0	REALIZABLE	0.080577	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter_on_inpchange	arbiter_on_inpchange_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	13	65	exit-0	REALIZABLE	0.083449	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter_on_inpchange	arbiter_on_inpchange_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	17	86	exit-0	REALIZABLE	0.309376	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter_on_inpchange	arbiter_on_inpchange_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	17	86	exit-0	REALIZABLE	0.352966	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter_with_buffer	arbiter_with_buffer_pb_1_pe_.ltl	"{""n"": 1}"	exact	exact lowered objective	ok	1	4	exit-0	REALIZABLE	0.001059	REALIZABLE	agree	VERIFIED	
+arbiter_with_buffer	arbiter_with_buffer_pb_1_pe_.ltl	"{""n"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	1	4	exit-0	REALIZABLE	0.001015	REALIZABLE	agree	VERIFIED	
+arbiter_with_buffer	arbiter_with_buffer_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	3	10	exit-0	REALIZABLE	0.011374	REALIZABLE	agree	VERIFIED	
+arbiter_with_buffer	arbiter_with_buffer_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	3	10	exit-0	REALIZABLE	0.010819	REALIZABLE	agree	VERIFIED	
+arbiter_with_buffer	arbiter_with_buffer_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	4	14	exit-0	REALIZABLE	0.011085	REALIZABLE	agree	VERIFIED	
+arbiter_with_buffer	arbiter_with_buffer_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	4	14	exit-0	REALIZABLE	0.011680	REALIZABLE	agree	VERIFIED	
+arbiter_with_buffer	arbiter_with_buffer_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	5	18	exit-0	REALIZABLE	0.011792	REALIZABLE	agree	VERIFIED	
+arbiter_with_buffer	arbiter_with_buffer_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	5	18	exit-0	REALIZABLE	0.013695	REALIZABLE	agree	VERIFIED	
+arbiter_with_cancel	arbiter_with_cancel_pb_1_pe_.ltl	"{""n"": 1}"	exact	exact lowered objective	ok	6	16	exit-0	REALIZABLE	0.011939	REALIZABLE	agree	VERIFIED	
+arbiter_with_cancel	arbiter_with_cancel_pb_1_pe_.ltl	"{""n"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	6	16	exit-0	REALIZABLE	0.011214	REALIZABLE	agree	VERIFIED	
+arbiter_with_cancel	arbiter_with_cancel_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	13	34	exit-0	REALIZABLE	0.014619	REALIZABLE	agree	VERIFIED	
+arbiter_with_cancel	arbiter_with_cancel_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	13	34	exit-0	REALIZABLE	0.015609	REALIZABLE	agree	VERIFIED	
+arbiter_with_cancel	arbiter_with_cancel_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	19	50	exit-0	REALIZABLE	0.034152	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter_with_cancel	arbiter_with_cancel_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	19	50	exit-0	REALIZABLE	0.052499	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter_with_cancel	arbiter_with_cancel_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	25	66	exit-0	REALIZABLE	0.167176	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+arbiter_with_cancel	arbiter_with_cancel_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	25	66	exit-0	REALIZABLE	0.387602	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+chomp	chomp_pb_2_2_pe_.ltl	"{""N"": 2, ""M"": 2}"	exact	exact lowered objective	ok	12	78	exit-0	REALIZABLE	0.204458	REALIZABLE	agree	VERIFIED	
+chomp	chomp_pb_2_2_pe_.ltl	"{""N"": 2, ""M"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	12	78	exit-0	REALIZABLE	0.227294	REALIZABLE	agree	VERIFIED	
+collector_v1	collector_v1_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	4	50	exit-0	REALIZABLE	0.029445	REALIZABLE	agree	VERIFIED	
+collector_v1	collector_v1_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	4	50	exit-0	REALIZABLE	0.028058	REALIZABLE	agree	VERIFIED	
+collector_v3	collector_v3_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	7	89	exit-0	REALIZABLE	0.038903	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+collector_v3	collector_v3_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	7	90	exit-0	REALIZABLE	0.026536	REALIZABLE	agree	VERIFIED	
+lift	lift_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	19	47	exit-0	REALIZABLE	0.037165	REALIZABLE	agree	VERIFIED	
+lift	lift_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	19	48	exit-0	REALIZABLE	0.163647	REALIZABLE	agree	VERIFIED	
+lift	lift_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	28	78	exit-0	REALIZABLE	0.336405	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+lift	lift_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	28	79	timeout	timeout	60.045236	REALIZABLE	unknown	not-run	
+lift	lift_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	36	102	exit-0	REALIZABLE	3.201127	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+lift	lift_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	36	103	timeout	timeout	60.068959	REALIZABLE	unknown	not-run	
+lift_unary_enc	lift_unary_enc_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	19	51	exit-0	REALIZABLE	0.050403	REALIZABLE	agree	VERIFIED	
+lift_unary_enc	lift_unary_enc_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	19	52	exit-0	REALIZABLE	0.329282	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+lift_unary_enc	lift_unary_enc_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	27	79	exit-0	REALIZABLE	0.490879	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+lift_unary_enc	lift_unary_enc_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	27	80	timeout	timeout	60.067803	REALIZABLE	unknown	not-run	
+lift_unary_enc	lift_unary_enc_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	35	115	exit-0	REALIZABLE	14.341796	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+lift_unary_enc	lift_unary_enc_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	35	116	timeout	timeout	60.070201	REALIZABLE	unknown	not-run	
+load_balancer	load_balancer_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	10	27	exit-0	REALIZABLE	0.017574	REALIZABLE	agree	VERIFIED	
+load_balancer	load_balancer_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	10	28	exit-1	UNREALIZABLE	0.019162	REALIZABLE	DISAGREE	not-applicable	
+load_balancer	load_balancer_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	13	34	exit-0	REALIZABLE	0.016272	REALIZABLE	agree	VERIFIED	
+load_balancer	load_balancer_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	13	35	exit-1	UNREALIZABLE	0.065046	REALIZABLE	DISAGREE	not-applicable	
+load_balancer	load_balancer_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	16	41	exit-0	REALIZABLE	0.021491	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+load_balancer	load_balancer_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	16	42	exit-1	UNREALIZABLE	0.388791	REALIZABLE	DISAGREE	not-applicable	
+load_balancer_unreal1	load_balancer_unreal1_pb_2_1_pe_.ltl	"{""n"": 2, ""u"": 1}"	exact	exact lowered objective	ok	11	30	exit-1	UNREALIZABLE	0.013611	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal1	load_balancer_unreal1_pb_2_1_pe_.ltl	"{""n"": 2, ""u"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	11	31	exit-1	UNREALIZABLE	0.028455	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal1	load_balancer_unreal1_pb_2_2_pe_.ltl	"{""n"": 2, ""u"": 2}"	exact	exact lowered objective	ok	11	32	exit-1	UNREALIZABLE	0.013371	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal1	load_balancer_unreal1_pb_2_2_pe_.ltl	"{""n"": 2, ""u"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	11	33	exit-1	UNREALIZABLE	0.038879	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal1	load_balancer_unreal1_pb_3_1_pe_.ltl	"{""n"": 3, ""u"": 1}"	exact	exact lowered objective	ok	16	43	exit-1	UNREALIZABLE	0.016460	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal1	load_balancer_unreal1_pb_3_1_pe_.ltl	"{""n"": 3, ""u"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	16	44	exit-1	UNREALIZABLE	0.242269	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal2	load_balancer_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	11	31	exit-0	REALIZABLE	0.014469	REALIZABLE	agree	VERIFIED	
+load_balancer_unreal2	load_balancer_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	11	32	exit-1	UNREALIZABLE	0.032730	REALIZABLE	DISAGREE	not-applicable	
+load_balancer_unreal2	load_balancer_unreal2_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	16	46	exit-1	UNREALIZABLE	0.019923	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal2	load_balancer_unreal2_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	16	47	exit-1	UNREALIZABLE	0.286770	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal2	load_balancer_unreal2_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	22	65	exit-1	UNREALIZABLE	0.034247	UNREALIZABLE	agree	not-applicable	
+load_balancer_unreal2	load_balancer_unreal2_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	22	66	exit-1	UNREALIZABLE	5.753252	UNREALIZABLE	agree	not-applicable	
+prioritized_arbiter	prioritized_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	exact	exact lowered objective	ok	4	10	exit-0	REALIZABLE	0.011147	REALIZABLE	agree	VERIFIED	
+prioritized_arbiter	prioritized_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	4	10	exit-0	REALIZABLE	0.011879	REALIZABLE	agree	VERIFIED	
+prioritized_arbiter	prioritized_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	7	16	exit-0	REALIZABLE	0.012832	REALIZABLE	agree	VERIFIED	
+prioritized_arbiter	prioritized_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	7	16	exit-0	REALIZABLE	0.011515	REALIZABLE	agree	VERIFIED	
+prioritized_arbiter	prioritized_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	9	20	exit-0	REALIZABLE	0.011706	REALIZABLE	agree	VERIFIED	
+prioritized_arbiter	prioritized_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	9	20	exit-0	REALIZABLE	0.013108	REALIZABLE	agree	VERIFIED	
+prioritized_arbiter	prioritized_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	11	24	exit-0	REALIZABLE	0.011631	REALIZABLE	agree	VERIFIED	
+prioritized_arbiter	prioritized_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	11	24	exit-0	REALIZABLE	0.017051	REALIZABLE	agree	VERIFIED	
+prioritized_arbiter_unreal2	prioritized_arbiter_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	8	20	exit-1	UNREALIZABLE	0.011431	UNREALIZABLE	agree	not-applicable	
+prioritized_arbiter_unreal2	prioritized_arbiter_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	8	20	exit-1	UNREALIZABLE	0.011772	UNREALIZABLE	agree	not-applicable	
+prioritized_arbiter_unreal2	prioritized_arbiter_unreal2_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	12	32	exit-1	UNREALIZABLE	0.011505	UNREALIZABLE	agree	not-applicable	
+prioritized_arbiter_unreal2	prioritized_arbiter_unreal2_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	12	32	exit-1	UNREALIZABLE	0.016046	UNREALIZABLE	agree	not-applicable	
+prioritized_arbiter_unreal2	prioritized_arbiter_unreal2_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	17	48	exit-1	UNREALIZABLE	0.013865	UNREALIZABLE	agree	not-applicable	
+prioritized_arbiter_unreal2	prioritized_arbiter_unreal2_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	17	48	exit-1	UNREALIZABLE	0.020442	UNREALIZABLE	agree	not-applicable	
+robot_grid	robot_grid_pb_2_2_pe_.ltl	"{""xN"": 2, ""yN"": 2}"	exact	exact lowered objective	ok	11	93	exit-0	REALIZABLE	0.112998	REALIZABLE	agree	VERIFIED	
+robot_grid	robot_grid_pb_2_2_pe_.ltl	"{""xN"": 2, ""yN"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	11	94	exit-0	REALIZABLE	0.062315	REALIZABLE	agree	VERIFIED	
+round_robin_arbiter	round_robin_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	9	22	exit-0	REALIZABLE	0.012584	REALIZABLE	agree	VERIFIED	
+round_robin_arbiter	round_robin_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	9	23	exit-0	REALIZABLE	0.012566	REALIZABLE	agree	VERIFIED	
+round_robin_arbiter	round_robin_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	13	32	exit-0	REALIZABLE	0.017852	REALIZABLE	agree	VERIFIED	
+round_robin_arbiter	round_robin_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	13	33	exit-0	REALIZABLE	0.019865	REALIZABLE	agree	VERIFIED	
+round_robin_arbiter	round_robin_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	17	42	exit-0	REALIZABLE	0.035858	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+round_robin_arbiter	round_robin_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	17	43	exit-0	REALIZABLE	0.048710	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+round_robin_arbiter_unreal1	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	"{""n"": 2, ""u"": 1}"	exact	exact lowered objective	ok	10	25	exit-1	UNREALIZABLE	0.014510	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal1	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	"{""n"": 2, ""u"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	10	26	exit-1	UNREALIZABLE	0.015482	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal1	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	"{""n"": 2, ""u"": 2}"	exact	exact lowered objective	ok	10	27	exit-1	UNREALIZABLE	0.014969	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal1	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	"{""n"": 2, ""u"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	10	28	exit-1	UNREALIZABLE	0.018341	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal1	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	"{""n"": 3, ""u"": 1}"	exact	exact lowered objective	ok	16	41	exit-1	UNREALIZABLE	0.025062	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal1	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	"{""n"": 3, ""u"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	16	42	exit-1	UNREALIZABLE	0.126608	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal2	round_robin_arbiter_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	10	26	exit-1	UNREALIZABLE	0.014530	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal2	round_robin_arbiter_unreal2_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	10	27	exit-1	UNREALIZABLE	0.014761	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal2	round_robin_arbiter_unreal2_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	16	44	exit-1	UNREALIZABLE	0.027631	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal2	round_robin_arbiter_unreal2_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	16	45	exit-1	UNREALIZABLE	0.033732	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal2	round_robin_arbiter_unreal2_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	23	66	exit-1	UNREALIZABLE	0.083080	UNREALIZABLE	agree	not-applicable	
+round_robin_arbiter_unreal2	round_robin_arbiter_unreal2_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	23	67	exit-1	UNREALIZABLE	0.127774	UNREALIZABLE	agree	not-applicable	
+rw_arbiter	rw_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	exact	exact lowered objective	ok	10	27	exit-0	REALIZABLE	0.012525	REALIZABLE	agree	VERIFIED	
+rw_arbiter	rw_arbiter_pb_1_pe_.ltl	"{""n"": 1}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	10	27	exit-0	REALIZABLE	0.012703	REALIZABLE	agree	VERIFIED	
+rw_arbiter	rw_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	20	54	exit-0	REALIZABLE	0.096967	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+rw_arbiter	rw_arbiter_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	20	54	exit-0	REALIZABLE	0.235355	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+rw_arbiter	rw_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	exact	exact lowered objective	ok	29	79	exit-0	REALIZABLE	5.842631	REALIZABLE	agree	UNKNOWN(timeout)	explicit checker exceeded 60 s
+rw_arbiter	rw_arbiter_pb_3_pe_.ltl	"{""n"": 3}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	29	79	exit-2	ERROR	21.980683	REALIZABLE	unknown	not-run	tlsfsolve: OxiDD solver failed
+rw_arbiter	rw_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	38	104	timeout	timeout	60.070371		no-known-verdict	not-run	
+rw_arbiter	rw_arbiter_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	38	104	timeout	timeout	60.069586		no-known-verdict	not-run	
+simple_arbiter_with_hints	simple_arbiter_with_hints_pb_2_pe_.ltl	"{""n"": 2}"	exact	exact lowered objective	ok	5	14	exit-0	REALIZABLE	0.011635	REALIZABLE	agree	VERIFIED	
+simple_arbiter_with_hints	simple_arbiter_with_hints_pb_2_pe_.ltl	"{""n"": 2}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	5	14	exit-0	REALIZABLE	0.011035	REALIZABLE	agree	VERIFIED	
+simple_arbiter_with_hints	simple_arbiter_with_hints_pb_4_pe_.ltl	"{""n"": 4}"	exact	exact lowered objective	ok	7	22	exit-0	REALIZABLE	0.020306	REALIZABLE	agree	VERIFIED	
+simple_arbiter_with_hints	simple_arbiter_with_hints_pb_4_pe_.ltl	"{""n"": 4}"	strict	REAL-sound only; UNREALIZABLE is not a sound plain-objective UNREAL claim	ok	7	22	exit-0	REALIZABLE	0.018158	REALIZABLE	agree	VERIFIED	

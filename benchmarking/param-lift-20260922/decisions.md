@@ -158,3 +158,73 @@ now on `param-lift-gr1`, so Acacia's `git status` shows the gitlink as modified 
 rebuild compiles tlsf-tools from the branch. The gitlink is deliberately not staged (bumping the
 pin needs explicit approval), and any Acacia measurement build must check out `b42d5ef` in the
 submodule first.
+
+## M1 — per-conjunct deterministic-Büchi GR(1) reduction (tlsf-tools `scripts/`)
+
+`scripts/gr1_monitor_game.py`: reuses M0's conjunct split, rejects P/T conjuncts and non-Mealy
+specs (exit 3), builds one complete deterministic state-based Büchi monitor per conjunct (Spot;
+when Spot's preferred BA is nondeterministic it goes BA → deterministic parity → Büchi, which
+turned three 60 s construction timeouts into 0.07–0.29 s), encodes each monitor one-hot, and emits
+the AbsSynthe game tlsfsolve now reads. `--semantics exact` makes every assumption acceptance a
+fairness record and every guarantee acceptance a justice record, no bad — exactly the lowered
+objective; `--semantics strict` follows `build_aig_gr1_game`'s convention (sticky assumption-safety
+violation, gated safety bad) and is REAL-sound only. `--provenance-out` records each signal's base
+name and index tuple and each monitor's index-abstracted template, for M4's cross-n alignment.
+`scripts/verify_strategy_explicit.py` checks a strategy AAG against the *original* lowered LTL by
+enumerating reachable latch valuations × all uncontrollable inputs and checking the closed-loop
+automaton against ¬φ with Spot — needed because Spot's own AIGER reader cannot load these
+strategies at all: it refuses ≥32 latches, rejects reset values (one-hot monitors reset to 1), and
+asserts on semantically duplicate AND gates (`aiger.cc:354`, the same assertion the previous sprint
+hit). I confirmed all three limitations directly on a `prioritized_arbiter` n=3 strategy. M3 will
+therefore read AIGER into its own BDDs.
+
+**Smoke** (`m1-smoke.tsv`): 29 reducible families, 76 instances with parameter sum ≤ 4 (the three
+`*_enc` families have none), both modes, 152 games — all built. Exact mode: 54 REAL, 15 UNREAL, 2
+OxiDD errors, 5 timeouts; **all 68 decisive verdicts with a known answer agree**; no emitted
+strategy was refuted; 37 REAL strategies verified against the original formula, 17 checks timed
+out (explicit enumeration >60 s, not the state cap). Strict mode agrees everywhere except
+`load_balancer` (3 instances) and `load_balancer_unreal2` n=2: strict UNREAL vs known REAL — the
+expected case where the controller must exploit a *liveness*-assumption violation, so REAL lifting
+on that family must use exact mode. On `round_robin_arbiter` n=2–6 the monitor games agree with
+`tlsfcompose`'s own GR(1) route (`m1-round-robin-compare.tsv`; 0.72 s vs 1.12 s at n=6). I
+re-ran two rows independently (`prioritized_arbiter` n=3 exact: REAL in 0.01 s, strategy VERIFIED;
+`round_robin_arbiter_unreal2` n=3 exact: UNREAL, sound because exact) — both match. Usability nit:
+the builder looks for `tlsf2tlsf`/`tlsf2ltl`/`tlsfinfo` on PATH unless given paths.
+tlsf-tools suite 269/269.
+
+**Independent review of M1: REQUEST CHANGES, core reduction sound.** The reviewer checked every
+monitor of the smallest instance of all 29 reducible families for language equivalence with its
+conjunct: 328/328 equivalent, including the 7 that took the parity fallback. Exact mode agreed
+with ltlsynt on the original formula on 5/5 targeted specs (two new adversarial specs mixing
+X-nesting, W and obligation-class conjuncts, plus `arbiter` n=3, `arbiter_on_inpchange` n=2,
+`rru2` n=3), with all REAL strategies verified. Strict mode's REAL-soundness argument was
+confirmed, and `load_balancer`'s strict UNREAL was independently reproduced as the expected
+liveness-assumption case (exact REAL = ltlsynt REAL). The checker is sound *for correctly
+partitioned* strategies (targeted corruptions on a single input valuation or after three steps
+are REFUTED; cap exhaustion is UNKNOWN). Findings, all being fixed before commit:
+
+1. **High:** the explicit checker trusts the AAG's input/output partition rather than the TLSF's.
+   A zero-input AAG driving `controllable_i` and `controllable_o` to 1 is VERIFIED for
+   `G i ∧ G o` with `i` an environment input (UNREALIZABLE per ltlsynt) — a false certificate.
+   Interfaces must be validated against the TLSF before any language check (the handoff's
+   contract says the same: validate interface and timing separately from the language check).
+2. Medium: provenance templates align local conjuncts across n but not bus-wide ones — mutual
+   exclusion expands to differently shaped formulas at n=2 and n=3. Adding support/arity metadata
+   and a permutation-symmetry signature (per-bus allowed counts) for bus-wide invariants.
+3. Medium: meson could register the test with a not-found interpreter.
+4. Low: the monitor test compared the encoding with the same Spot automaton instead of checking
+   equivalence with the conjunct.
+
+**Fixes landed; M1 committed on tlsf-tools `param-lift-gr1` as `25b2bd1`.** The checker now
+reads the expanded TLSF interface (`tlsf2tlsf --basic` + `tlsfinfo`) and requires the strategy's
+inputs and (prefix-stripped) outputs to equal the TLSF's exactly, returning INVALID (exit 4) for
+missing, extra, duplicate or overlapping signals before any model checking; I re-ran the
+reviewer's relabelling attack myself — INVALID. Provenance v2 adds per-monitor support and
+`local`/`bus_wide` arity, and for propositional bus-wide invariants a permutation-symmetry check
+(adjacent transpositions, Spot equivalence) with a per-bus count signature: mutual exclusion now
+carries `{g: [0,1]}` at n=2, 3 and 4 (and in `rru2` n=2, 3) while local conjuncts keep their index
+templates. tlsf-tools' SyFCo-style metadata exposes indexed signal families but no stable
+source-constraint origin for expanded conjuncts, so `source_origin` is recorded as unavailable.
+Meson now registers the test only with an interpreter that actually imports Spot; the monitor
+test checks `spot.are_equivalent` against the conjunct, including a parity-fallback case.
+tlsf-tools suite 269/269.
