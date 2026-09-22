@@ -91,3 +91,70 @@ it cannot represent), the standard per-fairness disjunction with matching strate
 committed differential test against an independent brute-force explicit-state GR(1) solver on
 random small games (with strategies checked independently), and before/after on the corpus
 families.
+
+### M1a results and independent review
+
+Fix (uncommitted in tlsf-tools at the time of writing): a strict game reader for `tlsfsolve` that
+retains justice/fairness/bad records (rejecting invariant constraints and unsupported resets), and
+the standard per-fairness disjunction in `src/gr1_oxidd.c` with strategy extraction over
+`X[k,i]`. Validated: `fair1.aag`/`fair2.aag` now UNREALIZABLE; committed differential test
+(`test/test_gr1_differential.py`, 320 games, fixed seed) — old binary wrong on 115, union formula
+alone wrong on 7, fixed solver wrong on 0, all 165 emitted strategies pass an independent SCC
+check. I re-ran it on three fresh seeds the implementer never saw (1,800 games): 0 wrong, 956
+strategies checked, 0 failures (the union formula would have been wrong on 35). 267/267 tlsf-tools
+tests pass. Corpus (`m1a-after-fix.tsv`): no verdict changed; completed instances are 1.5–3×
+slower with the correct fixpoint (`round_robin_arbiter` n=7 8.1 s vs 2.6 s; n=8 now exceeds 20 s);
+n=10 and `rru1` (4,8) now fail fast on OxiDD's node capacity. Spot's AIGER reader asserts fewer
+than 32 latches, so `verify_aiger_ltl.py` cannot check the n=6/7 controllers (33/38 latches) —
+recorded as unverified; M3 needs its own AIGER-to-BDD path.
+
+Independent review (codex, fresh session): the two original fixes are correct for state-based
+acceptance — 80/80 agreement with **ltlsynt** (an unrelated solver, via an LTL encoding of each
+game) on fresh random games, 43 REAL / 37 UNREAL, which closes the gap that the brute-force
+reference was written in the same session as the fix. It found three further issues:
+
+1. **High — input-dependent acceptance is unsound.** The fixpoint substitutes only latches, but
+   AIGER allows justice/fairness literals over inputs. Counterexample `m1a-repro/input_fairness.aag`
+   (fairness `GF(q ↔ u)`, justice `GF false`): UNREALIZABLE per ltlsynt, but `tlsfsolve` exits 0
+   (I reproduced it). `tlsfcompose`'s in-process games are not affected — its builder samples each
+   fairness assumption into a latch and uses pending latches for justice — so this hole was opened
+   only by letting `tlsfsolve` accept arbitrary file games. Fix in progress: sample every
+   input-dependent acceptance literal into a fresh latch at the solver entry (`GF ℓ ≡ GF Xℓ`), with
+   the differential test extended to transition-level acceptance and a second ltlsynt cross-check.
+2. Medium — the capacity-error path leaks the local `Y` reference (4,987 live nodes after cleanup
+   at n=10; `tlsfcompose` shares a manager across clusters).
+3. Low — `oxidd_bdd_ref` is taken before `bddvec_push`, leaking on realloc failure.
+
+The review also measured that the n=10 capacity failure is the corrected algorithm's genuine
+footprint, not the leak (1.31M live nodes at failure; disabling `X[k,i]` storage saves only 26).
+
+### M1a follow-up — committed on tlsf-tools `param-lift-gr1` as `3a9ec71`
+
+The review's three findings were fixed: input-dependent justice/fairness literals are sampled into
+reset-0 latches at solver entry (exact, since `GF ℓ ≡ GF Xℓ`; state-based literals untouched, and
+`tlsfcompose`'s artifacts on `round_robin_arbiter` n=2..5 are byte-identical before/after), the
+capacity-error path releases `Y`, and references are taken only after a successful push.
+`input_fairness.aag` is now UNREALIZABLE and registered as a test with the other two.
+
+Numbers on the committed differential test (`test/test_gr1_differential.py`, 320 games, fixed
+seed, 67 with input-dependent acceptance), measured by me with the archived original binary:
+**original pinned binary wrong on 116**, of which 22 are input-acceptance games; the union
+formula alone accounts for 6; **fixed solver wrong on 0**; 164 emitted strategies all pass the
+independent SCC check. (The commit message says 115 — that figure is from the first M1a version of
+the game set, before input-dependent games were added; 116 is the figure for the committed test.)
+
+External cross-check, run by me with the reviewer's own generator and LTL encoding (independent
+of the implementer): **ltlsynt agreed with the fixed `tlsfsolve` on 200 of 200 fresh games**
+(seed 0x20260922; 100 with input-dependent acceptance, 61 REAL / 39 UNREAL; 100 state-based,
+53 REAL / 47 UNREAL). tlsf-tools suite 268/268; the one CI clang-format issue (pinned 18.1.8, a
+line join in `src/aiger.c`) was fixed before committing. Corpus table re-run
+(`m1a-after-fix.tsv`): zero verdict changes; strategies for `round_robin_arbiter` n=2–5 verified
+against the original LTL; n=6/7 remain unverified (Spot's AIGER reader refuses ≥32 latches, and it
+also asserts on semantically duplicate AND nodes, which the implementer worked around with
+strashed throwaway copies).
+
+**Pin hazard.** tlsf-tools is a git submodule of Acacia pinned at `b42d5ef`. Its working tree is
+now on `param-lift-gr1`, so Acacia's `git status` shows the gitlink as modified and any Acacia
+rebuild compiles tlsf-tools from the branch. The gitlink is deliberately not staged (bumping the
+pin needs explicit approval), and any Acacia measurement build must check out `b42d5ef` in the
+submodule first.
