@@ -364,3 +364,26 @@ separable, at n=3, 4 and 5, so the winning region is not a bounded-arity conjunc
 existential over local predicates either. The cheap route to that family is closed; it needs a real
 strengthening search.
 
+**Two defects surfaced by the second seed round, both recorded and briefed, neither yet fixed.**
+
+`tlsfsolve` right-sizes its BDD manager but saturates the exponent at 22, so every game with 16 or
+more variables gets a `2^22` inner-node cap with no command-line or environment override —
+`oxidd_session_init` would allow more but is never called, and `tlsfcertcheck` already exposes
+`--node-cap` defaulting to `2^24`, so the solver is more constrained than its own checker. The
+effect is concrete: `abcg_arbiter` solves at n=2 and n=3 and fails at n=4 on a *small* game (20
+inputs, 94 latches, 420 gates) because all three share the same cap and n=4 simply needs more than
+4.2M nodes; `collector_v3` n=5 fails the same way. Both families are in M4's in-scope set, so this
+caps the seeds available to the generalizer.
+
+Worse than the cap is the reporting: every non-strategy outcome that is not flagged unrealizable
+prints `tlsfsolve: OxiDD solver failed` and exits 2. A capacity abort is UNKNOWN — it says nothing
+about the game — and must not share an exit code with a genuine solver error. Brief written for a
+`--node-cap` flag, removal of the saturation, and a distinct exit 3 for exhaustion, matching
+`tlsfcertcheck`'s UNKNOWN.
+
+**Soundness-bridge coverage, completed.** `arbiter_with_cancel` n=3 hit the explicit verifier's
+1800 s limit rather than returning a verdict, so the bridge stands at five VERIFIED (`arbiter` n=3
+and n=4, `round_robin_arbiter` n=3, `prioritized_arbiter` n=3, `load_balancer` n=3), one TIMEOUT and
+nothing refuted. The timeout is a limit of `verify_strategy_explicit.py`'s enumeration, not evidence
+about the controller, and should not be read as one.
+
