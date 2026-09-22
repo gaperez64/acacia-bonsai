@@ -307,6 +307,60 @@ of eagerly expanding the full antecedent automaton. Not implemented this session
 substantial, separately-justified subsystem); the exact reproducer (n and the antecedent formula)
 is preserved in `families/target-checks.tsv` for whoever picks this up.
 
+## W5 — bounded automatic proposer
+
+Implemented `families/proposals/propose_schema.py`, a research-layer, untrusted proposer for one
+fixed grammar class. It is intentionally not wired into the production solver. Its public
+`propose(family, checked_seed_1, checked_seed_2, limits)` path requires two distinct checked seeds,
+has one package-wide candidate ceiling (`MAX_CANDIDATES_PER_TARGET=32`), preserves deterministic
+candidate order, and returns the empty list (UNKNOWN/decline) for a missing seed, a role-alignment
+failure, an exhausted observation bound, or an unrecognized behavior. No all-parameter claim is
+made: successful checking certifies only the concrete parameters checked below.
+
+The proposer read only the two actual Acacia `-T -s` AAGs during discovery, not the manual
+cross-check circuits and not the n=4 Acacia AAG. Their symbol tables independently confirm the
+source-declared/index-role alignment: n=2 has inputs `r_0,r_1` and outputs `g_0,g_1`; n=3 extends
+the same roles contiguously through index 2. A bounded ASCII-AIGER evaluator then exhaustively
+enumerated all reachable seed edges: n=2 has 3 reachable states / 12 input-labelled edges; n=3 has
+17 / 136. On every such edge `sum(g)<=1`; each indexed output and the zero-output valuation occur.
+
+The observations that actually selected the schema were concrete state/edge predicates, not raw
+latch-number similarities. For every client in both seeds, bounded BFS found a trace in which its
+request was raised, remained unserved, went low, and was subsequently granted (2/2 at n=2, 3/3 at
+n=3), establishing indexed remembered-request behavior. With all requests held high, deterministic
+cycle detection found eventual output phases `(1,0)` at n=2 and `(1,2,0)` at n=3. Both cycles have
+period n, visit each output once, satisfy `i -> i+1 mod n`, and contain the parameter-boundary edge
+`n-1 -> 0`. `propose_schema.py` prints the supporting seed states and complete short request/grant
+traces, and attaches those observations from *both* actual strategies to the returned candidate.
+
+Those hints matched the sole supported skeleton: n local `pending` flags plus a phase index in
+`[0,n)`, with `pending[i] := (pending[i] or r[i]) and not g[i]`, mathematical (not register
+overflow) `phase := phase+1 mod n`, and `g[i] := pending[i] and phase==i`. This is equivalent to the
+manual schema W4 found, rather than a different controller design. It is not claimed to be
+functionally identical to either optimized Acacia strategy -- their initial/tie-breaking behavior
+differs, which is allowed. Instantiation imports W4's existing `AigerBuilder`/renderer, but does not
+call the already-certified manual `build()` path: it emits the recognized grammar independently.
+The resulting logical AIG happens to match the manual schema's logical AIG byte-for-byte; a
+provenance comment makes the automatic artifacts' hashes distinct. Thus the lifting evidence is
+the seed-driven recognition plus fresh checking, not reuse of a certified-template verdict.
+
+End-to-end result: **VERIFIED**. The automatic candidate passed tlsf-tools'
+`verify_aiger_ltl.py` at seed n=2 (0.054 s), seed n=3 (0.078 s), and the third-small-parameter n=4
+(0.126 s). It then passed `verify_conjuncts.py` on the actual n=10 target: all 41 exact conjuncts
+printed `verified`, followed by `verified (all conjuncts)`. The final n=10 artifact SHA-256 is
+`7baadc901b39a8a9f8c1659039e8d7d0f0e42cdd7a06e75730f1411ec4346a7b`. The checker's 41 printed
+per-conjunct timings sum to 5.146 s (range 0.052--0.265 s); full subprocess wall time was 50.662 s
+in this run because the work before those individual timers is not included in their sum. Both are
+recorded rather than comparing unlike timing scopes with W4's earlier sum-only 5.06 s figure.
+
+Focused pytest coverage exercises the real n=10 path, the 32-candidate hard ceiling, one-seed and
+unrecognizable-controller declines, and deterministic repeated discovery. Result under the
+working Python 3.13/Spot environment: 5 passed in 51.16 s (six SWIG deprecation warnings only).
+Ruff reports no findings on the new proposer and test. The optional sibling-family run was not
+performed: this tree contains its instantiated TLSF files but no actual Acacia controller seeds in
+`families/seeds/round_robin_arbiter/controllers/`, so substituting the manual circuits would have
+violated W5's seed-provenance requirement.
+
 ## Post-campaign follow-on: UNREAL-adapter build attempt (blocked, two negative results)
 
 W3 (above) identified the safer in-repo path for `round_robin_arbiter_unreal2` — extend Acacia's
