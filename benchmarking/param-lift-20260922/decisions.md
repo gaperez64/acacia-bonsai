@@ -228,3 +228,19 @@ source-constraint origin for expanded conjuncts, so `source_origin` is recorded 
 Meson now registers the test only with an interpreter that actually imports Spot; the monitor
 test checks `spot.are_equivalent` against the conjunct, including a parity-fallback case.
 tlsf-tools suite 269/269.
+
+## M2 — certificate export (tlsf-tools `60325bd`)
+
+`tlsfsolve --certificate FILE [--certificate-json FILE]` writes, as a combinational AIG, what the
+fixed fixpoint computes: `inv` (= W*), each `goal_j`, every final-iteration μ-level `y_j_k` and
+per-fairness `x_j_k_i`, and the most permissive move relation `move_j` before Skolemization; the
+sidecar maps every certificate input to its game latch/input, including solver-added sampling
+latches and the strategy's goal counter. Unrealizable games export `inv`, its complement and the
+rank layers, flagged as having no environment counter-strategy yet (M5). Validation by the
+implementer: exported predicates equal an explicit reference on 240 seeded random games (52,550
+evaluations), a one-step oracle accepts every genuine certificate and rejects three corruption
+kinds, and passes all 34 goals on five M1 games; default output SHA-identical; 270/270 tests. I
+re-checked the targeted tests and formatting and confirmed default output byte-identical on two
+games it did not use (`arbiter` n=4, `load_balancer` n=2). Size at n=3: 91 predicates for
+`arbiter`, 129 for `round_robin_arbiter`. No separate review: M3 re-checks every certificate
+independently, so an export bug could only cause spurious failures, never a false certificate.
