@@ -1,0 +1,18 @@
+family_id	target_logical_instance	stage	elapsed_s	verdict	notes
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	eligibility	0.008	ELIGIBLE	family-manifest-driven check before any synthesis
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	instantiate_seed_1_n2	0.001	OK	tlsf2tlsf --param n=2
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	instantiate_seed_2_n3	0.001	OK	tlsf2tlsf --param n=3
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	instantiate_sanity_n4	0.001	OK	tlsf2tlsf --param n=4
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	instantiate_target_n10	0.001	OK	tlsf2tlsf --param n=10
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	seed_synthesis_n2	0.007	REALIZABLE	fresh acacia-bonsai -T -s, cold (not reused from families/seeds/)
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	seed_synthesis_n3	0.009	REALIZABLE	fresh acacia-bonsai -T -s, cold
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	seed_verification_n2	0.045	VERIFIED	verify_aiger_ltl.py on the fresh n=2 seed
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	seed_verification_n3	0.068	VERIFIED	verify_aiger_ltl.py on the fresh n=3 seed
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	schema_proposal	0.025	1 candidate discovered	W5's propose_schema.py, bounded BFS observation + recognition, cap 32
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	candidate_1_check_n2	0.046	VERIFIED	fresh candidate instantiation checked against seed n=2
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	candidate_1_check_n3	0.070	VERIFIED	fresh candidate instantiation checked against seed n=3
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	candidate_1_check_n4	0.096	VERIFIED	third small check (sanity), per plan section 7.3 step 3
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	candidate_1_target_verification	42.634	VERIFIED	verify_conjuncts.py, exact conjunct decomposition, 41 top-level conjuncts, at the actual missed corpus target n=10
+param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	arbiter_pb_10_pe_.ltl	TOTAL	43.014	REALIZABLE	end-to-end cold wrapper invocation, --budget 90; target verification is 99.1% of total cost
+param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	round_robin_arbiter_pb_10_pe_.ltl	schema_proposal	n/a	UNKNOWN no_recognized_candidate	fresh seeds synthesized and verified, but W5's recognizer does not match round_robin_arbiter's own synthesized circuit shape; pipeline correctly declines rather than substitute the known-good manual schema (proposal_origin=manual, not automatic) -- see decisions.md's W7 section
+param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf	round_robin_arbiter_unreal2_pb_7_pe_.ltl	eligibility	n/a	UNKNOWN ineligible	environment-witness polarity is outside the supported REAL-controller schema/checker pairing; declined before any synthesis cost was spent
