@@ -419,7 +419,33 @@ when `synth_fname` is set (`backend = acacia::synthesis_backend (backend, true);
 backend-forcing in `acacia-bonsai.cc` (~line 142, guarded by `not arm.unreal`) is a duplicate of
 that and may not need touching.
 
-**Disposition**: root-caused, not yet landed. Five rounds: three real downstream gates found and
+**Round 6 landed the four-part fix and got past the block** — `synthesis ()` is genuinely reached
+for the unreal child for the first time — and failed with one precise, diagnostic error:
+
+```
+Exception caught: Atomic propositions appears in input and output propositions: o
+```
+
+(exit 3, no file). The real-side regression check in the same round passed: `G(i -> X(o))` still
+prints REALIZABLE, exits 0, and writes a correct 31-byte AAG with symbol table `i0 i / o0 o`, so the
+shared code path is not disturbed.
+
+The cause is a **fifth gate**, visible directly in the verbose trace (`with output set: o`). In the
+dualized frame the runner holds `input_aps={o}` and `output_aps={i}`, so the dual game's controllable
+AP is `i`. But `solve_decomposed ()` builds its partition from
+
+```cpp
+spot::split_independent_formulas (spot_formula, check_unreal.has_value () ? input_aps : output_aps);
+```
+
+— splitting over `input_aps` ({o}) for the unreal case. That is the right choice for decomposition
+bookkeeping, but the resulting `out_part` is then handed unchanged to `runner.synthesis ()`, where it
+is read as the controllable partition. Synthesis therefore sees inputs `{o}` and outputs `{{o}}`, and
+Spot rejects the overlap. The `DECOMPOSE_SPEC == 0` monolithic branch does not have this bug — it uses
+`out_part = {output_aps}`, correctly `{{i}}` — but this build compiles `DECOMPOSE_SPEC == 1` (round
+5's instrumentation printed `dispatch branch=1`), so `solve_decomposed` is the live path.
+
+**Disposition**: root-caused, not yet landed. Six rounds: four real downstream gates found and
 fixed, one invalidated test (round 3's corrupted formula), and finally the actual blocking line
 identified by instrumentation. All source edits from every round were reverted (`git status` confirms
 a clean tree under `src/`, and round 5 verified the restored file's SHA-256), every
