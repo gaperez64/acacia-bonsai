@@ -313,7 +313,7 @@ W3 (above) identified the safer in-repo path for `round_robin_arbiter_unreal2` �
 own frozen-graph solve path to accept `-u formula -s FILE` together, since `run_one_ltl::synthesis()`
 already operates generically on `strats`/`out_part` independent of `check_unreal` — rather than
 reconstruct the dualization externally, given the demonstrated real risk of getting the polarity
-wrong. This note records a follow-on attempt (via `codex-task`, seven rounds) to actually build that
+wrong. This note records a follow-on attempt (via `codex-task`, eight rounds so far) to actually build that
 path, on the tiny hand-verified game `G(o <-> X(i))` (`INPUTS{i} OUTPUTS{o}`, confirmed UNREALIZABLE
 via `-u formula`) before touching `round_robin_arbiter_unreal2`'s real seeds. Every round stopped on
 a clean result rather than proceeding on an ambiguous one, and reverted its own source edits; no
@@ -511,16 +511,42 @@ strategy is solved and understood — five gates, each precisely located and ind
 dual-frame partition. The strategy it produces has the right controllable AP. What remains is one
 well-posed question (the verification criterion and frame), not a search.
 
-**Disposition**: mechanically solved, conceptually open. Seven rounds: five real gates found and
-fixed, one invalidated test (round 3's corrupted formula), and finally the actual blocking line
-identified by instrumentation. All source edits from every round were reverted (`git status` confirms
-a clean tree under `src/`, and round 5 verified the restored file's SHA-256), every
-`build_unreal_test` directory was removed, no commit was made, and no unsound export was ever
-produced or trusted. `round_robin_arbiter_unreal2`'s real seeds were never touched by any round.
-What remains is to apply the four-part fix and run the polarity and soundness checks that were
-always the real bar — the near-miss recorded under W3 above means a produced circuit must still be
-decoded and simulated before it can be called a witness, never accepted merely because a file
-appeared.
+**The owner supplied the resolution directly** (2026-09-22): the criterion is a polarity flip, not a
+frame change — do not touch how `aut` (`= L(!phi)`, `phi` in the original, untransformed frame) is
+built; just require *nonempty* intersection instead of empty, since "the strategy of the adversary
+witnesses the nonempty intersection, that's it." The owner also flagged, as a separate, unresolved
+concern to verify empirically rather than assume: "the Mealy/Moore duality of the strategies for the
+adversary with respect to the semantics of the specification" — i.e. whether the produced machine's
+output at its own cycle `t` corresponds to the original game's environment move at round `t` or at
+round `t+1`, given Acacia's own internal "Mealy-to-Moore" transform on the worker formula (visible in
+the verbose trace) already does *something* to reconcile the dual solver's timing convention with the
+original one, and it is not safe to assume without checking which.
+
+**Round 8** applied the criterion flip literally as specified —
+`assert (not aut->intersects (...))` → `assert (aut->intersects (...))`, nothing else touched — and
+correctly ran the real-side regression *first*, per the discipline established every round. That
+regression (`G(i -> X(o))`, REALIZABLE) **failed**: the same assert on line ~407 fired for the real
+child too, because `run_one_ltl::synthesis ()` is one function shared by both real and unreal
+children, and the check at that line was unconditional. The owner's instruction was correct for the
+adversary case specifically; the brief that translated it into a literal, unconditional code edit
+was the gap — a planning error on this session's part, not a wrong instruction. Round 8 caught it
+exactly as designed (a well-evidenced negative result, not a wasted round) and reverted cleanly
+before touching the unreal case or the timing question at all.
+
+**Disposition**: mechanically solved (five gates), criterion fix known but must be made conditional
+on `check_unreal` rather than unconditional — round 8 correctly caught the unconditional version via
+its own real-side regression check, before it could reach the untested unreal path or the timing
+question at all. Eight rounds so far: five real structural gates found and fixed, one invalidated
+test (round 3's corrupted formula), the actual root blocker identified by instrumentation (round 5),
+and one criterion fix correctly identified as needing to be scoped to the unreal child (round 8).
+All source edits from every round were reverted (`git status` confirms a clean tree under `src/`,
+and round 5 verified the restored file's SHA-256), every `build_unreal_test` directory was removed,
+no commit was made, and no unsound export was ever produced or trusted.
+`round_robin_arbiter_unreal2`'s real seeds were never touched by any round. What remains: apply the
+criterion fix conditionally, then run the polarity check and the empirical dual-reading Mealy/Moore
+timing simulation that were always the real bar — the near-miss recorded under W3 above means a
+produced circuit must still be decoded and simulated before it can be called a witness, never
+accepted merely because a file appeared.
 
 ## W5–W7 — not started
 
