@@ -345,3 +345,22 @@ One measurement was attempted and discarded rather than reported: substituting t
 conjunction for `inv` and re-checking is *not* an adequacy test, because projections only
 over-approximate, so the extra states have no rank by construction and the check fails for that
 reason alone. Recorded in `m4-structure.md` so it is not repeated.
+
+**Second round of arity measurement.** Seeds for the ten families that were index-alignable but
+unmeasured were generated and measured (`m4-invariant-separability-round2.tsv`). Five more have a
+constant separability arity: `arbiter_with_buffer`, `simple_arbiter_with_hints` and
+`amba_decomposed_lock` at 1; `abcg_arbiter` and `arbiter_on_inpchange` at 2. That doubles M4's
+in-scope set to **ten families holding 42 of the 147 unsolved reducible instances (28.6%)**.
+`collector_v3` measured `min_k = 3` at n=3 but its n=5 seed does not solve, so with one data point
+it is recorded as unconfirmed rather than counted either way. The `*_unreal2` families came back
+UNREALIZABLE, which is correct for them — they need M5's dual certificate, not this measurement.
+
+**A tempting hypothesis, tested and refuted.** `AtMostOne` over a bus is a conjunction of pairwise
+constraints and so would have shown up as `min_k = 2`; an n-ary *disjunction* would not, and is
+exactly what a quantifier schema handles easily. So `min_k = n` might have meant
+`round_robin_arbiter` was generalizable by an existential rather than a conjunction. Tested: the
+residue between the (n-1)-subset projection conjunction and `inv` is itself not per-client
+separable, at n=3, 4 and 5, so the winning region is not a bounded-arity conjunction plus an
+existential over local predicates either. The cheap route to that family is closed; it needs a real
+strengthening search.
+

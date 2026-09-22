@@ -72,9 +72,19 @@ constant as `n` grows.
 |---|---|---|
 | `prioritized_arbiter` | 1 | n=3,4,5,6 |
 | `collector_v1` | 1 | n=3 |
+| `arbiter_with_buffer` | 1 | n=2,3,4 |
+| `simple_arbiter_with_hints` | 1 | n=2,4,6 |
+| `amba_decomposed_lock` | 1 | n=2,3,4 |
 | `arbiter` | 2 | n=3,4,5,6,7 |
 | `load_balancer` | 2 | n=2,3,4,5 |
 | `arbiter_with_cancel` | 2 | n=2,3,4 |
+| `abcg_arbiter` | 2 | n=2,3 |
+| `arbiter_on_inpchange` | 2 | n=2,3,4 |
+
+(The second round, `m4-invariant-separability-round2.tsv`, added the last five. `collector_v3` came
+out at `min_k = 3` with only n=3 measurable — its n=5 seed fails to solve — so it is recorded as
+unconfirmed rather than counted either way. The `*_unreal2` families are UNREALIZABLE by
+construction and need M5's dual certificate, not this measurement.)
 
 **Arity grows with `n` — no fixed-arity conjunctive schema:**
 
@@ -112,9 +122,9 @@ alone rather than because the candidate is not inductive. Reported here so it is
 - **Generalize `(inv, ranks, move_j)`, then re-Skolemize at `N`.** The exported strategy is global
   in every family measured; the relation it was Skolemized from is not (section 2b).
 - Generalize per-family against a declared template arity, taken from `min_k`, rather than one
-  hard-coded shape: arity 1 for `prioritized_arbiter`/`collector_v1`, arity 2 for
-  `arbiter`/`load_balancer`/`arbiter_with_cancel`. These five are where a conjunctive generalizer
-  is known to be able to succeed, so they are M4's first targets.
+  hard-coded shape. Ten families are measured to have a constant arity — five at 1 and five at 2 —
+  and they are where a conjunctive generalizer is known to be able to succeed, so they are M4's
+  targets. They hold **42 of the 147** unsolved instances in the reducible set (28.6%).
 - Draw seeds at or above the family's stable `n`, never below (`round_robin_arbiter_unreal2` n=2,
   and n=1 for every replicated family, are degenerate).
 - Treat bus-wide conjuncts through a semantic schema library, not syntactic anti-unification.
@@ -219,3 +229,27 @@ One caveat before acting on it: one-hot keeps each monitor's transition relation
 disjunction, which can keep BDDs small for irregular automata, so binary encoding is not
 automatically better everywhere. It is unambiguously better for these shift-register monitors. The
 change should be measured on the existing seeds, not assumed.
+
+
+## 4. One hypothesis tested and refuted
+
+`min_k = n` is suggestive: `AtMostOne` over a bus *is* a conjunction of pairwise constraints, so it
+would have surfaced as `min_k = 2`. An n-ary **disjunction** would not — it is exactly the shape no
+fixed-arity conjunctive template can express, while a quantifier schema `exists j. q(j)` expresses it
+easily. That suggested `round_robin_arbiter` might be generalizable after all, just not
+conjunctively.
+
+Tested directly (`disj.py`): take `P`, the conjunction of the `(n-1)`-subset projections, which
+strictly contains `inv`, and let `R = P and not inv`. If `R` were itself a conjunction of per-client
+predicates `AND_i b_i`, then `inv = P and (OR_i not b_i)` — a pairwise part plus one n-ary
+disjunction of local predicates.
+
+| seed | `R` nonempty | `R` per-client separable | `inv == P and (OR_i not b_i)` |
+|---|---|---|---|
+| `round_robin_arbiter` n=3 | yes | **no** | no |
+| `round_robin_arbiter` n=4 | yes | **no** | no |
+| `round_robin_arbiter` n=5 | yes | **no** | no |
+
+Refuted. The residue is not per-client separable either, so `round_robin_arbiter`'s winning region
+is not a bounded-arity conjunction plus a simple existential over local predicates. That family
+needs a genuine strengthening search, and this closes off the cheap route to it.

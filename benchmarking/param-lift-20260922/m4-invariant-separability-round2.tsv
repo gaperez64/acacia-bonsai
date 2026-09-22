@@ -1,0 +1,16 @@
+family	n	clients	min_k	min_k_is_n	overapprox_k1	per_k
+abcg_arbiter	2	2	2	true	1.0652	1:x1.0652 2:=1.0000
+abcg_arbiter	3	3	2	false	1.1837	1:x1.1837 2:=1.0000
+arbiter_on_inpchange	2	2	2	true	1.0038	1:x1.0038 2:=1.0000
+arbiter_on_inpchange	3	3	2	false	1.0111	1:x1.0111 2:=1.0000
+arbiter_on_inpchange	4	4	2	false	1.0214	1:x1.0214 2:=1.0000
+arbiter_with_buffer	2	2	1	false	1.0000	1:=1.0000
+arbiter_with_buffer	3	3	1	false	1.0000	1:=1.0000
+arbiter_with_buffer	4	4	1	false	1.0000	1:=1.0000
+collector_v3	3	3	3	true	1.3226	1:x1.3226 2:x1.3226 3:=1.0000
+simple_arbiter_with_hints	2	2	1	false	1.0000	1:=1.0000
+simple_arbiter_with_hints	4	4	1	false	1.0000	1:=1.0000
+simple_arbiter_with_hints	6	6	1	false	1.0000	1:=1.0000
+amba_decomposed_lock	2	2	1	false	1.0000	1:=1.0000
+amba_decomposed_lock	3	3	1	false	1.0000	1:=1.0000
+amba_decomposed_lock	4	4	1	false	1.0000	1:=1.0000
