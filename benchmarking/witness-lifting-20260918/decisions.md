@@ -381,15 +381,54 @@ by having codex make the same edits directly with its own file-editing tool inst
 normally. Worth remembering for any future round that considers using `git apply` inside this
 sandbox.
 
-**Disposition**: blocked, not resolved this session, across four rounds (round 3's negative result
-invalidated by its own test bug, correctly redone in round 4). All source edits were reverted after
-each round (`git status` confirms a clean tree under `src/`) and every `build_unreal_test` directory
-was removed; no commit was made and no unsound export was ever produced or trusted. This is a
-stretch item beyond the plan's committed W3/W4 scope — W3's own bar (identify the safer path and the
-concrete near-miss risk) was already met on paper and by hand-decoding a real circuit; actually
-landing that safer path hit three real gates in `solver_invoker.cc`/`spot_nba_fastpath.hh`, the third
-of which remains unexplained even after a fix that reads correct on paper, and is left open.
-`round_robin_arbiter_unreal2`'s real seeds were never touched by any round.
+**Round 5 (instrumentation) resolved the contradiction and found the actual root cause.** Temporary
+`[[INSTR]]` prints at `synthesis ()`'s entry, its two dispatch call sites, and inside the fast-path
+block (all reverted afterwards) produced, on the same tiny game with all three gate fixes applied:
+
+```
+[[INSTR]] fastpath conclusive wants_strategy=0 has_strategy=0 wins=1 strats_after=0
+[[INSTR]] dispatch branch=1 runner_result=1 synth_fname_set=0
+```
+
+`synth_fname_set=0` — inside the unreal child, `synth_fname` is **empty**, despite `-s FILE` being
+given on the command line. `synthesis ()` is therefore never called (no `synthesis() ENTERED` line,
+no "about to call synthesis()" line), which is why no file appeared and why its
+`assert (strats.size () > 0);` never fired. `want_controller_strategy` computes to 0 for the same
+reason, not because of the `check_unreal` term that round 3 fixed.
+
+The root cause is one line in `src/acacia-bonsai.cc` (~line 112), in the `start_proc` lambda's call
+into `run_ltl`:
+
+```cpp
+unreal_x.has_value () ? std::nullopt : arg_values.synth_fname,
+```
+
+The `-s` filename is explicitly discarded for **every** unreal child, before any of the
+`solver_invoker.cc` logic runs. This is the first gate in the chain, and it makes the other three
+unreachable rather than wrong: the assert (gate 1) could never trip because `synth_fname` was always
+empty there; `try_unreal_safety_core_witnesses`'s missing `synth_fname` guard (gate 2) was a genuine
+inconsistency with its two siblings but never observable; and `want_controller_strategy`'s
+`check_unreal` term (gate 3) was masked by `synth_fname.has_value ()` already being false. All three
+remain real prerequisites — they just sit downstream of the one that actually blocks everything.
+
+A complete fix is therefore four coordinated changes: pass `arg_values.synth_fname` through for
+`UNREAL_X_FORMULA` children at `acacia-bonsai.cc:112`, plus the three already-written
+`solver_invoker.cc` changes. Note `run_ltl` already forces the synthesis backend/provider itself
+when `synth_fname` is set (`backend = acacia::synthesis_backend (backend, true);`), independently of
+`check_unreal`, so the unreal child would pick that up without further changes; the separate
+backend-forcing in `acacia-bonsai.cc` (~line 142, guarded by `not arm.unreal`) is a duplicate of
+that and may not need touching.
+
+**Disposition**: root-caused, not yet landed. Five rounds: three real downstream gates found and
+fixed, one invalidated test (round 3's corrupted formula), and finally the actual blocking line
+identified by instrumentation. All source edits from every round were reverted (`git status` confirms
+a clean tree under `src/`, and round 5 verified the restored file's SHA-256), every
+`build_unreal_test` directory was removed, no commit was made, and no unsound export was ever
+produced or trusted. `round_robin_arbiter_unreal2`'s real seeds were never touched by any round.
+What remains is to apply the four-part fix and run the polarity and soundness checks that were
+always the real bar — the near-miss recorded under W3 above means a produced circuit must still be
+decoded and simulated before it can be called a witness, never accepted merely because a file
+appeared.
 
 ## W5–W7 — not started
 
