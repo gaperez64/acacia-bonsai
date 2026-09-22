@@ -23,7 +23,7 @@ def samples(times=(1,) * 5, status="REALIZABLE", memory=None, rss=None):
              "max_process_rss_bytes": "" if rss is None else str(rss)} for seconds in times]
 
 
-def write_screen(path, cases=None):
+def write_screen(path, cases=None, cap=17):
     cases = cases or {"a.ltl": (samples(), samples((0.8,) * 5))}
     (path / "targets.list").write_text("\n".join(cases) + "\n")
     rounds = len(next(iter(cases.values()))[0])
@@ -36,7 +36,7 @@ def write_screen(path, cases=None):
                 rows.append({
                     **dict.fromkeys(runner.OUTPUT_COLUMNS, ""), **sample,
                     "solver_label": f"test-{label}-r{number}", "instance": instance,
-                    "tlsf_file": instance + ".tlsf", "cap_s": "17",
+                    "tlsf_file": instance + ".tlsf", "cap_s": str(cap),
                     "exit_code": str(runner.TOOL_EXIT_CODES["acacia"].get(status, 124)),
                     "timed_out": str(status == "TIMEOUT").lower(), "expectation_source": "none",
                     "binary_sha256": label.lower() * 64, "acacia_sha": "frozen-" + label,
@@ -44,19 +44,20 @@ def write_screen(path, cases=None):
                     "memory_swap_max": "0", "run_index": str(len(rows)),
                 })
             raw = path / f"r{number}-{label}.tsv"
-            save_round(raw, rows)
+            save_round(raw, rows, cap)
             runner.atomic_write_tsv(raw.with_name(f"{raw.stem}-conflicts.tsv"), runner.CONFLICT_COLUMNS, [])
     return path
 
 
-def save_round(path, rows):
+def save_round(path, rows, cap=17):
     runner.atomic_write_tsv(path, runner.OUTPUT_COLUMNS, rows)
-    runner.write_summary(path, rows[0]["solver_label"], [row["instance"] for row in rows], rows, 17)
+    runner.write_summary(path, rows[0]["solver_label"], [row["instance"] for row in rows], rows, cap)
 
 
-def cli(path, *extra):
-    return admission.main(["--screen-dir", str(path), "--control", "A", "--treatment", "B",
-                           "--rounds", "5", "--cap", "17", *extra])
+def cli(path, *extra, cap=17):
+    args = ["--screen-dir", str(path), "--control", "A", "--treatment", "B",
+            "--rounds", "5", "--cap", str(cap), *extra]
+    return admission.main(args)
 
 
 def evaluate(path, decision, *extra):
@@ -413,3 +414,60 @@ def test_invalid_cli_options(tmp_path, option, value):
     with pytest.raises(SystemExit) as error:
         cli(tmp_path, option, value)
     assert error.value.code == 2
+
+
+def test_non_17s_cap_requires_research_protocol_label(tmp_path):
+    write_screen(tmp_path, cap=120)
+    with pytest.raises(SystemExit) as error:
+        cli(tmp_path, cap=120)
+    assert error.value.code == 2
+
+
+def test_research_protocol_label_forbidden_at_historical_cap(tmp_path):
+    write_screen(tmp_path)
+    with pytest.raises(SystemExit) as error:
+        cli(tmp_path, "--research-protocol", "long-budget-120s")
+    assert error.value.code == 2
+
+
+def test_nonpositive_or_infinite_cap_rejected(tmp_path):
+    write_screen(tmp_path, cap=120)
+    with pytest.raises(SystemExit) as error:
+        cli(tmp_path, "--research-protocol", "x", cap=0)
+    assert error.value.code == 2
+
+
+def test_long_budget_cap_admits_with_label_and_is_labelled(tmp_path):
+    write_screen(tmp_path, cap=120)
+    assert cli(tmp_path, "--research-protocol", "long-budget-120s", cap=120) == 0
+    report = (tmp_path / "admission.md").read_text()
+    assert "Decision: **ADMIT**" in report
+    assert "cap: 120 s; protocol: `long-budget-120s`" in report
+    result = json.loads((tmp_path / "admission-result.json").read_text())
+    assert result == {
+        "decision": "ADMIT", "correctness": "PASS", "no_regression": "PASS",
+        "improvement": "PASS", "confirmation_complete": True,
+        "cap": 120.0, "protocol": "long-budget-120s", "rounds": 5,
+    }
+
+
+def test_historical_cap_result_json_labelled_and_present_on_every_decision(tmp_path):
+    rows, report = evaluate(write_screen(tmp_path), "ADMIT")
+    result = json.loads((tmp_path / "admission-result.json").read_text())
+    assert result["protocol"] == "historical-17s"
+    assert result["cap"] == 17.0
+    assert result["decision"] == "ADMIT"
+    # Exit 0 alone is not ADMIT: a REJECT decision also exits 0 and still
+    # needs the machine-readable field, not a grep of the prose.
+    evaluate(write_screen(tmp_path, {"a": (samples(), samples())}), "REJECT")
+    result = json.loads((tmp_path / "admission-result.json").read_text())
+    assert result["decision"] == "REJECT"
+
+
+def test_120s_rows_rejected_under_17s_protocol(tmp_path):
+    # A screen recorded at 120s must not be silently accepted as a 17s
+    # confirmation just because no --cap was passed.
+    write_screen(tmp_path, cap=120)
+    with pytest.raises(SystemExit) as error:
+        cli(tmp_path)  # defaults to --cap 17
+    assert error.value.code != 0

@@ -1,0 +1,6 @@
+tag	120s-confirm
+list_sha256	3d73e39361342aebe1507ce72e4fa04b3aa25ffe4090265d7fde9a202cb1a292
+rounds	5
+B	B|/home/gperez/GIT-repos/acacia-bonsai/build_w1_B/src/acacia-bonsai|398a420bfa939a7c80c67a0357022ed6f09279a1c2878116c0602abd14392e4a||otf_sparse_formula
+S	S|/home/gperez/GIT-repos/acacia-bonsai/build_w1_S/src/acacia-bonsai|f80ff3f62daaa6e22a6753a3f30a127baab424d0320949bc9957a6ff62ea5ebe||otf_sparse_formula
+kernel	7.2.5-200.fc44.x86_64

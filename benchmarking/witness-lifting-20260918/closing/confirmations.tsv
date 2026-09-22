@@ -1,0 +1,3 @@
+candidate	cap_s	protocol	decision	correctness	no_regression	improvement	rounds	confirmation_complete	source
+S (structural real-backend selector)	120	long-budget-120s	REJECT	PASS	FAIL	FAIL	5	true	opening/confirmations/120s/admission-result.json
+S (structural real-backend selector)	17	historical-17s	REJECT	PASS	FAIL	FAIL	5	true	opening/confirmations/17s/admission-result.json

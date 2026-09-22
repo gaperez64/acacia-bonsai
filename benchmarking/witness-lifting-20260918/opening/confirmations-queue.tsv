@@ -1,0 +1,316 @@
+cap	instance	reason	epoch_1_kind	epoch_2_kind	b_max_rss_epoch1_bytes	s_max_rss_epoch1_bytes	rss_delta_bytes	rss_delta_pct
+120	06.ltl	timing		faster	438198272	438071296	-126976	-0.028976837
+120	07.ltl	timing|memory-increase		slower	437989376	761360384	323371008	73.830788078
+120	09.ltl	timing|memory-increase	slower		270155776	471138304	200982528	74.395051246
+120	10.ltl	timing|memory-increase		slower	142409728	207925248	65515520	46.004947078
+120	11.ltl	timing|memory-increase		faster	125165568	169627648	44462080	35.522612736
+120	Alarm_06e9cad4.ltl	timing	slower		167661568	166883328	-778240	-0.464173161
+120	Alarm_68c86764.ltl	timing	slower		167772160	169046016	1273856	0.759277344
+120	Alarm_a5f99bc6.ltl	timing	slower		1431166976	1410322432	-20844544	-1.456471841
+120	AllLights_2c5b09da.ltl	timing	faster		27873280	27934720	61440	0.220426157
+120	AllLights_63831f8c.ltl	timing		faster	45568000	45613056	45056	0.098876404
+120	AllLights_aeb1d897.ltl	timing	faster	faster	70823936	70627328	-196608	-0.277601064
+120	AllShades_66f450a4.ltl	timing	faster		55791616	55738368	-53248	-0.095440863
+120	F-G-contradiction-110.ltl	timing|memory-increase	slower	faster	1621377024	2078322688	456945664	28.18256687
+120	F-G-contradiction-111.ltl	timing	faster		1595277312	1634471936	39194624	2.45691603
+120	F-G-contradiction-15.ltl	timing	slower		55635968	58720256	3084288	5.543694324
+120	F-G-contradiction-16.ltl	memory-increase			659042304	773603328	114561024	17.382954524
+120	F-G-contradiction-17.ltl	timing|memory-increase		slower	696541184	901230592	204689408	29.386547802
+120	F-G-contradiction-18.ltl	memory-increase			767614976	935706624	168091648	21.897911486
+120	F-G-contradiction-19.ltl	timing|memory-increase	slower	faster	813658112	967241728	153583616	18.87569407
+120	GF-G-contradiction3.ltl	memory-increase			146636800	171495424	24858624	16.952513966
+120	GF-G-contradiction4.ltl	memory-increase			153448448	182882304	29433856	19.181592505
+120	GF-G-contradiction5.ltl	timing		faster	102522880	102244352	-278528	-0.271673991
+120	Morning2_407db2cc.ltl	changed-status		unsolved-kind-change				
+120	OneCounter.ltl	timing		slower	1093980160	1094004736	24576	0.002246476
+120	SPIPureNext.ltl	changed-status|declared-benefit	gain	gain		30412800		
+120	TwoCounters3.ltl	timing		faster	180445184	180310016	-135168	-0.074908067
+120	abcg_arbiter_pb_3_pe_.ltl	memory-increase			245673984	2452852736	2207178752	898.417779556
+120	amba_case_study_pb_4_pe_.ltl	changed-status	unsolved-kind-change					
+120	amba_decomposed_arbiter_pb_6_pe_.ltl	timing		faster	63606784	63688704	81920	0.128791294
+120	amba_decomposed_encode_pb_16_pe_.ltl	timing	slower		102252544	102064128	-188416	-0.184265342
+120	amba_gr_pb_2_pe_.ltl	changed-status	gain	gain		2583228416		
+120	arbiter_on_inpchange_pb_4_pe_.ltl	timing|memory-increase	slower	slower	55943168	140050432	84107264	150.344120662
+120	arbiter_on_inpchange_pb_5_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	arbiter_on_inpchange_pb_6_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	arbiter_on_inpchange_pb_7_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	arbiter_with_buffer_pb_5_pe_.ltl	timing	faster	faster	55570432	55590912	20480	0.036854131
+120	arbiter_with_cancel_pb_5_pe_.ltl	timing		faster	66187264	66187264	0	0
+120	chain-simple-70-real.ltl	timing	faster	faster	267083776	266981376	-102400	-0.03834003
+120	chain-simple-param-70-real.ltl	timing		faster	97222656	83496960	-13725696	-14.117795753
+120	collector_v1_pb_9_pe_.ltl	timing		faster	531845120	528699392	-3145728	-0.59147445
+120	collector_v2_pb_11_pe_.ltl	timing	slower		76603392	78028800	1425408	1.860763555
+120	collector_v2_pb_12_pe_.ltl	timing		faster	101380096	101363712	-16384	-0.016160963
+120	evasion-real.ltl	changed-status	gain	gain		721092608		
+120	f-real-real.ltl	changed-status	gain	gain		889643008		
+120	finding_nemo_pb_2_pe_.ltl	timing		slower	102879232	102289408	-589824	-0.573316877
+120	g-real-real.ltl	timing	faster	faster	245465088	245354496	-110592	-0.045054065
+120	g-unreal-110.ltl	timing	faster	faster	215851008	215920640	69632	0.032259289
+120	g-unreal-111.ltl	timing		faster	324595712	321060864	-3534848	-1.089000215
+120	g-unreal-112.ltl	timing	faster		476368896	412610560	-63758336	-13.384235733
+120	g-unreal-114.ltl	timing		faster	676564992	569868288	-106696704	-15.770355437
+120	g-unreal-115.ltl	timing	faster	faster	1419304960	1287172096	-132132864	-9.309688032
+120	g-unreal-117.ltl	timing		slower	1867116544	1867132928	16384	0.000877503
+120	g-unreal-118.ltl	timing	faster	faster	2460241920	2459906048	-335872	-0.013651991
+120	g-unreal-120.ltl	timing	faster	faster	3307728896	3307991040	262144	0.007925196
+120	g-unreal-18.ltl	timing	faster		123494400	123457536	-36864	-0.029850746
+120	g-unreal-19.ltl	timing	faster	faster	194568192	194502656	-65536	-0.033682792
+120	g-unreal-310.ltl	memory-increase			1481023488	1746214912	265191424	17.905956668
+120	g-unreal-33.ltl	memory-increase			48459776	70709248	22249472	45.913278675
+120	g-unreal-34.ltl	timing|memory-increase	faster		45248512	101019648	55771136	123.255182402
+120	g-unreal-35.ltl	timing|memory-increase	slower	faster	82698240	115671040	32972800	39.871223378
+120	g-unreal-36.ltl	timing|memory-increase	slower		104058880	129609728	25550848	24.55422161
+120	g-unreal-37.ltl	memory-increase			112590848	208142336	95551488	84.866123399
+120	heim-buechi-real.ltl	timing	faster	slower	192086016	183394304	-8691712	-4.524906175
+120	heim-double-x-real.ltl	changed-status|declared-benefit	gain	gain		47734784		
+120	heim-double-x10.ltl	timing	slower		122798080	122785792	-12288	-0.010006671
+120	heim-double-x11.ltl	timing	slower	slower	134832128	134635520	-196608	-0.145816878
+120	heim-double-x8.ltl	timing		slower	72560640	72413184	-147456	-0.203217612
+120	heim-double-x9.ltl	timing	slower		116404224	116207616	-196608	-0.168901087
+120	infinite-race-u10.ltl	timing|memory-increase	slower		555274240	1010937856	455663616	82.061003946
+120	infinite-race-u11.ltl	memory-increase			695435264	1385779200	690343936	99.267893323
+120	infinite-race-u12.ltl	timing|memory-increase	slower		2097397760	4243046400	2145648640	102.300511659
+120	infinite-race-u13.ltl	timing|memory-increase	slower		1703165952	4667621376	2964455424	174.055582811
+120	infinite-race-u14.ltl	timing|memory-increase		slower	2118975488	5127270400	3008294912	141.969311539
+120	infinite-race-u15.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u16.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u17.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u18.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u19.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u20.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u21.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u22.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u23.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u24.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u25.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	infinite-race-u8.ltl	timing	slower		163897344	163913728	16384	0.009996501
+120	infinite-race-u9.ltl	timing|memory-increase	slower		551198720	832516096	281317376	51.037378316
+120	infinite-race-unequal-26.ltl	timing		faster	2164916224	2164621312	-294912	-0.013622329
+120	lift_gr1+_pb_3_pe_.ltl	timing	faster	slower	118759424	111542272	-7217152	-6.077119404
+120	lift_pb_3_pe_.ltl	timing|memory-increase	slower	slower	21622784	83955712	62332928	288.274294374
+120	lift_pb_4_pe_.ltl	changed-status	loss	loss	51441664			
+120	lift_pb_5_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	lift_pb_6_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	lift_unary_enc_pb_3_pe_.ltl	timing|memory-increase	slower	slower	23781376	81555456	57774080	242.938339649
+120	lift_unary_enc_pb_4_pe_.ltl	changed-status	loss	loss	437575680			
+120	lift_unary_enc_pb_5_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	lift_unary_enc_pb_6_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	lift_wrong_physics_unreal_pb_10_pe_.ltl	timing		faster	66019328	65998848	-20480	-0.031021219
+120	load_balancer_pb_7_pe_.ltl	timing		slower	155090944	154906624	-184320	-0.118846398
+120	load_balancer_unreal1_pb_2_15_pe_.ltl	timing	slower	slower	66953216	66756608	-196608	-0.293649823
+120	load_balancer_unreal1_pb_2_16_pe_.ltl	timing	slower	slower	113565696	113627136	61440	0.054100844
+120	load_balancer_unreal1_pb_4_10_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	load_balancer_unreal1_pb_4_11_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	load_balancer_unreal1_pb_4_12_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	load_balancer_unreal1_pb_4_6_pe_.ltl	timing		slower	126963712	133025792	6062080	4.774655612
+120	load_balancer_unreal1_pb_4_7_pe_.ltl	timing|memory-increase	slower	slower	363278336	845389824	482111488	132.711323584
+120	load_balancer_unreal1_pb_4_8_pe_.ltl	timing|memory-increase	slower	slower	1307742208	5967593472	4659851264	356.327970107
+120	load_balancer_unreal1_pb_5_4_pe_.ltl	timing		faster	110792704	83865600	-26927104	-24.304040815
+120	load_balancer_unreal1_pb_5_5_pe_.ltl	timing|memory-increase	slower	slower	458055680	802230272	344174592	75.13815613
+120	load_balancer_unreal1_pb_6_3_pe_.ltl	timing		slower	60227584	60280832	53248	0.088411317
+120	load_balancer_unreal1_pb_6_4_pe_.ltl	timing|memory-increase	slower	slower	558735360	999710720	440975360	78.923832564
+120	ltl2dba_C2_unreal_pb_13_pe_.ltl	timing	slower	slower	97845248	98013184	167936	0.171634293
+120	ltl2dba_R_pb_6_pe_.ltl	timing	faster		25821184	24248320	-1572864	-6.091370558
+120	ltl2dba_R_pb_8_pe_.ltl	timing|memory-increase	faster		311480320	996868096	685387776	220.042080347
+120	ltl2dba_theta_pb_12_pe_.ltl	timing	slower		136511488	49180672	-87330816	-63.973235718
+120	ordered-visits-choice-real.ltl	changed-status|declared-benefit	gain	gain	22540288	20246528	-2293760	-10.17626749
+120	patrolling-alarm17.ltl	timing|memory-increase	faster		51462144	72458240	20996096	40.799108564
+120	patrolling-alarm18.ltl	memory-increase			53555200	92684288	39129088	73.063097514
+120	patrolling-alarm19.ltl	memory-increase			56139776	98664448	42524672	75.747847658
+120	patrolling-alarm20.ltl	memory-increase			60047360	101949440	41902080	69.781718963
+120	patrolling-alarm21.ltl	memory-increase			63574016	109051904	45477888	71.535339218
+120	patrolling-alarm22.ltl	timing|memory-increase		slower	66801664	115716096	48914432	73.223373597
+120	patrolling-alarm23.ltl	memory-increase			70615040	120934400	50319360	71.258700696
+120	patrolling-alarm24.ltl	memory-increase			75112448	128946176	53833728	71.670847421
+120	patrolling-alarm25.ltl	memory-increase			78761984	132009984	53248000	67.606219772
+120	patrolling-alarm26.ltl	timing|memory-increase	faster	slower	83062784	144035840	60973056	73.405986488
+120	patrolling17.ltl	timing|memory-increase		faster	51482624	72417280	20934656	40.663537274
+120	patrolling18.ltl	timing|memory-increase	slower		53473280	101081088	47607808	89.031022597
+120	patrolling19.ltl	memory-increase			56184832	93421568	37236736	66.275424656
+120	patrolling20.ltl	timing|memory-increase	faster		59744256	103268352	43524096	72.850678733
+120	patrolling21.ltl	memory-increase			63639552	107724800	44085248	69.273347493
+120	patrolling22.ltl	memory-increase			66998272	111312896	44314624	66.142935746
+120	patrolling23.ltl	timing|memory-increase	slower		70615040	124805120	54190080	76.740139211
+120	patrolling24.ltl	memory-increase			74674176	131330048	56655872	75.870769568
+120	patrolling25.ltl	timing|memory-increase	slower		78626816	136773632	58146816	73.952906856
+120	reversible-lane-r-real.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	robot-cat-real-1d-real.ltl	timing	faster	faster	118743040	118689792	-53248	-0.044843049
+120	robot-grid-commute-1d-real.ltl	timing	faster		172122112	172081152	-40960	-0.023797059
+120	robot-grid-reach-2d-real.ltl	timing		faster	164884480	164884480	0	0
+120	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	timing	faster	faster	946212864	757313536	-188899328	-19.963724357
+120	robot-resource-2d14.ltl	timing		faster	44552192	44535808	-16384	-0.036774846
+120	robot-resource-2d15.ltl	timing		slower	44716032	44781568	65536	0.14656041
+120	robot-resource-2d17.ltl	timing	slower		82153472	82046976	-106496	-0.129630553
+120	robot-resource-2d19.ltl	timing	faster	faster	82231296	82112512	-118784	-0.144451086
+120	robot-resource-2d21.ltl	timing		slower	82276352	82321408	45056	0.054761786
+120	robot-resource-2d8.ltl	timing		faster	44400640	44457984	57344	0.129151292
+120	robot-resource-2d9.ltl	timing	faster		44429312	44437504	8192	0.018438278
+120	robot-to-target-charging0.ltl	timing		faster	46178304	46239744	61440	0.133049494
+120	robot-to-target-charging13.ltl	timing	slower		1975447552	1975418880	-28672	-0.001451418
+120	robot-to-target-charging14.ltl	changed-status	loss		2954551296			
+120	robot-to-target-charging5.ltl	timing		slower	143781888	143863808	81920	0.056975187
+120	robot-to-target0.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	robot_collect_samples_v2-real.ltl	timing	faster	faster	1675149312	1517428736	-157720576	-9.415314496
+120	robot_grid_pb_3_3_pe_.ltl	timing	slower	slower	40886272	42172416	1286144	3.145662192
+120	robot_grid_pb_4_4_pe_.ltl	timing	slower	slower	218906624	220196864	1290240	0.589401991
+120	robot_grid_pb_5_5_pe_.ltl	changed-status|declared-benefit	gain	gain		1269067776		
+120	robot_grid_pb_6_6_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	memory-increase			154488832	180211712	25722880	16.650316833
+120	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	memory-increase			162119680	342478848	180359168	111.250631632
+120	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	memory-increase			96165888	171429888	75264000	78.264758497
+120	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	memory-increase			353390592	675966976	322576384	91.28041077
+120	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl	timing|memory-increase	slower		1153232896	5843734528	4690501632	406.726312462
+120	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	timing|memory-increase	faster	faster	128827392	207319040	78491648	60.92776294
+120	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl	memory-increase			660414464	3812634624	3152220160	477.309376434
+120	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	simple_arbiter_with_hints_pb_6_pe_.ltl	timing	faster		116244480	116195328	-49152	-0.042283298
+120	sort42.ltl	timing	faster		561209344	561430528	221184	0.039412031
+120	square5x5-real.ltl	changed-status	unsolved-kind-change	unsolved-kind-change				
+120	square5x52.ltl	timing	faster	slower	152408064	152424448	16384	0.010750087
+120	square5x53.ltl	timing	slower		330383360	330489856	106496	0.032234069
+120	square5x54.ltl	timing		faster	354951168	355016704	65536	0.018463385
+120	taxi-service-real.ltl	timing	faster	faster	1758023680	1609318400	-148705280	-8.458661945
+120	thermostat-F-real.ltl	changed-status|declared-benefit	gain	gain		138653696		
+120	thermostat-GF-real.ltl	changed-status	gain	gain		3048824832		
+120	thermostat-GF-unreal0.ltl	timing	slower	slower	71229440	70344704	-884736	-1.242093157
+120	tmp_13cfc6f2.ltl	timing	slower		61231104	61194240	-36864	-0.060204696
+120	workstation_resupply_pb_1_pe_.ltl	near-cap-control			20369408	20475904	106496	0.522823246
+120	workstation_resupply_pb_2_pe_.ltl	timing|near-cap-control		faster	47046656	47095808	49152	0.104475013
+120	workstation_resupply_pb_3_pe_.ltl	declared-benefit|near-cap-control			335351808	321069056	-14282752	-4.259035335
+120	workstation_resupply_pb_4_pe_.ltl	near-cap-control						
+17	03.ltl	timing	faster	slower	161394688	161378304	-16384	-0.010151511
+17	10.ltl	timing|memory-increase		faster	135307264	172380160	37072896	27.39904341
+17	11.ltl	timing		faster	205897728	168009728	-37888000	-18.401368664
+17	12.ltl	timing|memory-increase		slower	136900608	226824192	89923584	65.685306525
+17	13.ltl	timing		slower	209498112	228569088	19070976	9.103173207
+17	Alarm_70523fbe.ltl	timing		slower	103608320	103915520	307200	0.296501285
+17	F-G-contradiction-16.ltl	memory-increase			659136512	784101376	124964864	18.958874486
+17	F-G-contradiction-17.ltl	memory-increase			696573952	895475712	198901760	28.554291964
+17	F-G-contradiction-18.ltl	memory-increase			767700992	935632896	167931904	21.874649864
+17	F-G-contradiction-19.ltl	timing|memory-increase		faster	813580288	965070848	151490560	18.620234811
+17	GF-G-contradiction3.ltl	memory-increase			146513920	170504192	23990272	16.374056472
+17	GF-G-contradiction4.ltl	memory-increase			153501696	180486144	26984448	17.57925072
+17	GF-G-contradiction6.ltl	changed-status|timing	gain	slower		694988800		
+17	GF-G-contradiction7.ltl	changed-status	loss		758411264			
+17	Morning_f2774e0b.ltl	timing		slower	204713984	204759040	45056	0.022009244
+17	SPIPureNext.ltl	changed-status|declared-benefit	gain	gain		30425088		
+17	amba_decomposed_arbiter_pb_6_pe_.ltl	timing	faster		63787008	63516672	-270336	-0.423810441
+17	arbiter_on_inpchange_pb_4_pe_.ltl	timing|memory-increase	slower	slower	55959552	141668352	85708800	153.162055336
+17	arbiter_with_buffer_pb_5_pe_.ltl	timing	slower		55451648	55496704	45056	0.08125277
+17	buffer-storage-real.ltl	timing		faster	51970048	51970048	0	0
+17	chain-simple-40-real.ltl	timing		faster	106266624	106369024	102400	0.096361394
+17	collector_v2_pb_11_pe_.ltl	memory-increase			39858176	84373504	44515328	111.684307882
+17	finding_nemo_pb_2_pe_.ltl	timing		faster	102187008	103354368	1167360	1.142376142
+17	g-real-real.ltl	timing	faster	faster	245346304	245219328	-126976	-0.051753786
+17	g-unreal-112.ltl	timing	slower	slower	463409152	451772416	-11636736	-2.511114843
+17	g-unreal-113.ltl	timing	faster		514478080	479150080	-35328000	-6.866764858
+17	g-unreal-115.ltl	changed-status	gain			1310081024		
+17	g-unreal-18.ltl	timing		faster	123555840	123494400	-61440	-0.049726504
+17	g-unreal-19.ltl	timing	faster		194629632	194482176	-147456	-0.075762359
+17	g-unreal-33.ltl	memory-increase			48459776	70529024	22069248	45.541374356
+17	g-unreal-34.ltl	memory-increase			45281280	101416960	56135680	123.971053822
+17	g-unreal-36.ltl	memory-increase			104144896	132874240	28729344	27.585935656
+17	g-unreal-37.ltl	timing|memory-increase	faster		112672768	208093184	95420416	84.688090737
+17	g-unreal-38.ltl	timing	slower		979075072	979050496	-24576	-0.002510124
+17	heim-buechi-real.ltl	timing	faster	faster	189304832	191426560	2121728	1.120799706
+17	heim-double-x-real.ltl	changed-status|declared-benefit	gain	gain		48037888		
+17	heim-double-x10.ltl	timing		slower	122908672	122884096	-24576	-0.019995334
+17	heim-double-x13.ltl	timing		slower	228114432	227901440	-212992	-0.093370682
+17	heim-double-x9.ltl	timing		slower	116465664	116355072	-110592	-0.094956742
+17	infinite-race-u10.ltl	memory-increase			555274240	1014358016	459083776	82.676944639
+17	infinite-race-u11.ltl	memory-increase			695480320	1392021504	696541184	100.152536883
+17	infinite-race-u6.ltl	timing	faster	faster	102449152	102400000	-49152	-0.047976971
+17	infinite-race-u7.ltl	timing	faster		130457600	130433024	-24576	-0.018838305
+17	infinite-race-u9.ltl	memory-increase			551108608	832958464	281849856	51.142343253
+17	infinite-race-unequal-25.ltl	timing	slower		634580992	634429440	-151552	-0.023882215
+17	lift_pb_3_pe_.ltl	timing|memory-increase	slower	slower	21667840	83922944	62255104	287.315689981
+17	lift_pb_4_pe_.ltl	changed-status	loss	loss	51372032			
+17	lift_unary_enc_pb_3_pe_.ltl	timing|memory-increase	slower	slower	23867392	81539072	57671680	241.633773812
+17	lift_unary_enc_pb_4_pe_.ltl	changed-status	loss	loss	437653504			
+17	load_balancer_pb_7_pe_.ltl	timing		slower	154959872	154992640	32768	0.02114612
+17	load_balancer_unreal1_pb_2_15_pe_.ltl	timing	slower		67297280	67104768	-192512	-0.286062082
+17	load_balancer_unreal1_pb_3_12_pe_.ltl	timing		slower	65880064	73805824	7925760	12.030589406
+17	load_balancer_unreal1_pb_4_6_pe_.ltl	timing		slower	127000576	132878336	5877760	4.62813649
+17	load_balancer_unreal1_pb_4_7_pe_.ltl	timing|memory-increase	slower	slower	363397120	823697408	460300288	126.665915239
+17	load_balancer_unreal1_pb_5_4_pe_.ltl	timing		slower	110727168	83681280	-27045888	-24.42570192
+17	load_balancer_unreal1_pb_5_5_pe_.ltl	timing|memory-increase	slower	slower	458235904	802365440	344129536	75.098771833
+17	load_balancer_unreal2_pb_5_pe_.ltl	timing		slower	194899968	195100672	200704	0.102977954
+17	ltl2dba_C2_unreal_pb_13_pe_.ltl	timing		faster	97910784	97787904	-122880	-0.125502008
+17	ltl2dba_C2_unreal_pb_14_pe_.ltl	timing	faster		184549376	184459264	-90112	-0.048828125
+17	ltl2dba_R_pb_7_pe_.ltl	timing		slower	64643072	64512000	-131072	-0.202762641
+17	ltl2dba_theta_pb_14_pe_.ltl	timing	faster		125403136	125280256	-122880	-0.09798798
+17	ordered-visits-choice-real.ltl	changed-status|declared-benefit	gain	gain	22495232	20267008	-2228224	-9.905316824
+17	patrolling-alarm17.ltl	timing|memory-increase	faster		51613696	74928128	23314432	45.171018173
+17	patrolling-alarm18.ltl	memory-increase			53571584	91746304	38174720	71.259270586
+17	patrolling-alarm19.ltl	timing|memory-increase		faster	56037376	94212096	38174720	68.12367517
+17	patrolling-alarm20.ltl	memory-increase			59801600	102789120	42987520	71.883561644
+17	patrolling-alarm21.ltl	timing|memory-increase		faster	63504384	112189440	48685056	76.664086687
+17	patrolling-alarm22.ltl	timing|memory-increase	faster		66936832	109748224	42811392	63.95789989
+17	patrolling-alarm23.ltl	timing|memory-increase		slower	70729728	121942016	51212288	72.405605745
+17	patrolling-alarm24.ltl	memory-increase			74891264	129830912	54939648	73.359221177
+17	patrolling-alarm25.ltl	memory-increase			78389248	129851392	51462144	65.649493155
+17	patrolling-alarm26.ltl	timing|memory-increase	slower		82718720	148508672	65789952	79.534538252
+17	patrolling17.ltl	memory-increase			51552256	77045760	25493504	49.45177181
+17	patrolling18.ltl	memory-increase			53493760	95207424	41713664	77.97856049
+17	patrolling19.ltl	memory-increase			56610816	100069376	43458560	76.767238261
+17	patrolling20.ltl	memory-increase			60235776	99586048	39350272	65.327077383
+17	patrolling21.ltl	memory-increase			63598592	111001600	47403008	74.534681523
+17	patrolling22.ltl	timing|memory-increase	faster		66748416	111980544	45232128	67.765095729
+17	patrolling23.ltl	memory-increase			70701056	120500224	49799168	70.436243555
+17	patrolling24.ltl	memory-increase			74944512	134483968	59539456	79.444717713
+17	patrolling25.ltl	memory-increase			78348288	135249920	56901632	72.626516102
+17	robot-cat-real-1d-real.ltl	timing		faster	118853632	118853632	0	0
+17	robot-grid-commute-1d-real.ltl	timing	faster	faster	172019712	172212224	192512	0.111912756
+17	robot-grid-reach-2d-real.ltl	timing	faster		165007360	164929536	-77824	-0.047163957
+17	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	timing	faster	faster	946274304	774258688	-172015616	-18.178197936
+17	robot-resource-2d10.ltl	timing	faster		44519424	44544000	24576	0.055202871
+17	robot-resource-2d11.ltl	timing	slower		44388352	44544000	155648	0.350650549
+17	robot-resource-2d12.ltl	timing	slower		44351488	44523520	172032	0.387883266
+17	robot-resource-2d13.ltl	timing	faster		44679168	44707840	28672	0.064173084
+17	robot-resource-2d14.ltl	timing	slower		44761088	44630016	-131072	-0.292825769
+17	robot-resource-2d16.ltl	timing	slower		82214912	82386944	172032	0.209246712
+17	robot-resource-2d17.ltl	timing		slower	82038784	82173952	135168	0.164761096
+17	robot-resource-2d19.ltl	timing		faster	82190336	82436096	245760	0.299013256
+17	robot-resource-2d20.ltl	timing	slower	faster	82341888	82456576	114688	0.139282694
+17	robot-resource-2d23.ltl	timing	faster		90787840	90845184	57344	0.063162644
+17	robot-resource-2d8.ltl	timing	faster		44425216	44429312	4096	0.009219989
+17	robot-to-target-unreal0.ltl	timing	faster		211050496	211021824	-28672	-0.013585374
+17	robot_grid_pb_3_3_pe_.ltl	timing	slower	slower	40824832	42115072	1290240	3.160429417
+17	robot_grid_pb_4_4_pe_.ltl	timing	slower	slower	218841088	220569600	1728512	0.78984802
+17	robot_grid_pb_5_5_pe_.ltl	changed-status|declared-benefit	gain	gain		1272709120		
+17	round_robin_arbiter_pb_5_pe_.ltl	timing		slower	449998848	440012800	-9986048	-2.219127459
+17	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	memory-increase			154419200	180101120	25681920	16.631299735
+17	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	memory-increase			161984512	342286336	180301824	111.308063823
+17	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	memory-increase			96219136	175628288	79409152	82.529479375
+17	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	memory-increase			352796672	660606976	307810304	87.24864162
+17	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	memory-increase			128860160	209027072	80166912	62.212333121
+17	rw_arbiter_pb_3_pe_.ltl	timing		faster	62148608	62074880	-73728	-0.11863178
+17	simple_arbiter_with_hints_pb_6_pe_.ltl	timing	faster	faster	116277248	116350976	73728	0.063407073
+17	square5x51.ltl	timing	slower		149606400	149606400	0	0
+17	square5x52.ltl	timing		faster	152485888	152473600	-12288	-0.008058451
+17	square5x53.ltl	timing		slower	330412032	330391552	-20480	-0.006198321
+17	thermostat-F-real.ltl	changed-status|declared-benefit	gain	gain		140836864		
+17	thermostat-GF-unreal0.ltl	timing	slower		68984832	70926336	1941504	2.81439259
+17	tmp_13cfc6f2.ltl	timing		slower	61341696	61214720	-126976	-0.206997863
+17	unordered-visits-real.ltl	timing		faster	208658432	208568320	-90112	-0.043186369
+17	workstation_resupply_pb_1_pe_.ltl	near-cap-control			20467712	20455424	-12288	-0.060036022
+17	workstation_resupply_pb_2_pe_.ltl	near-cap-control			47075328	47079424	4096	0.008700948
+17	workstation_resupply_pb_3_pe_.ltl	changed-status|declared-benefit|near-cap-control	gain			321077248		
+17	workstation_resupply_pb_4_pe_.ltl	near-cap-control						

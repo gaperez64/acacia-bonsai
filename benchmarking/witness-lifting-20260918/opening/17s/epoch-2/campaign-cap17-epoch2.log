@@ -1,0 +1,98 @@
+[2026-09-20T15:22:53] START cap=17 epoch=2 shards=24 epoch_base=['S', 'B']
+[2026-09-20T15:22:53] shard=shard_00.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T15:24:53]   exit=0
+[2026-09-20T15:24:53] shard=shard_00.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T15:26:52]   exit=0
+[2026-09-20T15:26:52] shard=shard_01.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T15:32:42]   exit=0
+[2026-09-20T15:32:42] shard=shard_01.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T15:38:38]   exit=0
+[2026-09-20T15:38:38] shard=shard_02.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T15:43:24]   exit=0
+[2026-09-20T15:43:24] shard=shard_02.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T15:48:10]   exit=0
+[2026-09-20T15:48:10] shard=shard_03.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T15:52:01]   exit=0
+[2026-09-20T15:52:01] shard=shard_03.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T15:55:52]   exit=0
+[2026-09-20T15:55:52] shard=shard_04.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T16:00:56]   exit=0
+[2026-09-20T16:00:56] shard=shard_04.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T16:06:21]   exit=0
+[2026-09-20T16:06:21] shard=shard_05.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T16:11:53]   exit=0
+[2026-09-20T16:11:53] shard=shard_05.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T16:17:27]   exit=0
+[2026-09-20T16:17:27] shard=shard_06.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T16:22:52]   exit=0
+[2026-09-20T16:22:52] shard=shard_06.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T16:28:16]   exit=0
+[2026-09-20T16:28:16] shard=shard_07.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T16:32:49]   exit=0
+[2026-09-20T16:32:49] shard=shard_07.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T16:37:03]   exit=0
+[2026-09-20T16:37:03] shard=shard_08.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T16:40:49]   exit=0
+[2026-09-20T16:40:49] shard=shard_08.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T16:44:34]   exit=0
+[2026-09-20T16:44:34] shard=shard_09.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T16:48:55]   exit=0
+[2026-09-20T16:48:55] shard=shard_09.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T16:53:08]   exit=0
+[2026-09-20T16:53:08] shard=shard_10.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T16:56:45]   exit=0
+[2026-09-20T16:56:45] shard=shard_10.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T17:00:21]   exit=0
+[2026-09-20T17:00:21] shard=shard_11.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T17:07:18]   exit=0
+[2026-09-20T17:07:18] shard=shard_11.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T17:14:15]   exit=0
+[2026-09-20T17:14:15] shard=shard_12.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T17:19:34]   exit=0
+[2026-09-20T17:19:34] shard=shard_12.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T17:24:52]   exit=0
+[2026-09-20T17:24:52] shard=shard_13.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T17:30:15]   exit=0
+[2026-09-20T17:30:15] shard=shard_13.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T17:35:41]   exit=0
+[2026-09-20T17:35:41] shard=shard_14.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T17:40:23]   exit=0
+[2026-09-20T17:40:23] shard=shard_14.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T17:45:22]   exit=0
+[2026-09-20T17:45:22] shard=shard_15.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T17:49:40]   exit=0
+[2026-09-20T17:49:40] shard=shard_15.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T17:53:59]   exit=0
+[2026-09-20T17:53:59] shard=shard_16.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T17:58:59]   exit=0
+[2026-09-20T17:58:59] shard=shard_16.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T18:03:57]   exit=0
+[2026-09-20T18:03:57] shard=shard_17.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T18:07:57]   exit=0
+[2026-09-20T18:07:57] shard=shard_17.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T18:11:57]   exit=0
+[2026-09-20T18:11:57] shard=shard_18.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T18:17:09]   exit=0
+[2026-09-20T18:17:09] shard=shard_18.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T18:22:18]   exit=0
+[2026-09-20T18:22:18] shard=shard_19.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T18:26:34]   exit=0
+[2026-09-20T18:26:34] shard=shard_19.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T18:30:51]   exit=0
+[2026-09-20T18:30:51] shard=shard_20.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T18:37:45]   exit=0
+[2026-09-20T18:37:45] shard=shard_20.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T18:44:22]   exit=0
+[2026-09-20T18:44:22] shard=shard_21.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T18:49:29]   exit=0
+[2026-09-20T18:49:29] shard=shard_21.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T18:54:36]   exit=0
+[2026-09-20T18:54:36] shard=shard_22.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T18:56:25]   exit=0
+[2026-09-20T18:56:25] shard=shard_22.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T18:58:16]   exit=0
+[2026-09-20T18:58:16] shard=shard_23.list candidate=B -> B-cap17-epoch2.tsv
+[2026-09-20T19:02:51]   exit=0
+[2026-09-20T19:02:51] shard=shard_23.list candidate=S -> S-cap17-epoch2.tsv
+[2026-09-20T19:07:27]   exit=0
+[2026-09-20T19:07:27] DONE cap=17 epoch=2
