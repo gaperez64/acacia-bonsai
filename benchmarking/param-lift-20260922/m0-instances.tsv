@@ -1,0 +1,414 @@
+logical_instance	family_display	family_key	parameters	status_120s	tlsf
+amba_case_study_pb_2_pe_.ltl	amba_case_study	param:tlsf/amba/amba/parametric/amba_case_study.tlsf	{"n": 2}	solved	tlsf-corpus/amba_case_study_pb_2_pe_.tlsf
+amba_case_study_pb_3_pe_.ltl	amba_case_study	param:tlsf/amba/amba/parametric/amba_case_study.tlsf	{"n": 3}	unsolved	tlsf-corpus/amba_case_study_pb_3_pe_.tlsf
+amba_case_study_pb_4_pe_.ltl	amba_case_study	param:tlsf/amba/amba/parametric/amba_case_study.tlsf	{"n": 4}	unsolved	tlsf-corpus/amba_case_study_pb_4_pe_.tlsf
+amba_case_study_unreal_pb_2_pe_.ltl	amba_case_study_unreal	param:tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf	{"n": 2}	unsolved	tlsf-corpus/amba_case_study_unreal_pb_2_pe_.tlsf
+amba_case_study_unreal_pb_3_pe_.ltl	amba_case_study_unreal	param:tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf	{"n": 3}	unsolved	tlsf-corpus/amba_case_study_unreal_pb_3_pe_.tlsf
+amba_case_study_unreal_pb_4_pe_.ltl	amba_case_study_unreal	param:tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf	{"n": 4}	unsolved	tlsf-corpus/amba_case_study_unreal_pb_4_pe_.tlsf
+amba_case_study_unreal_pb_5_pe_.ltl	amba_case_study_unreal	param:tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf	{"n": 5}	unsolved	tlsf-corpus/amba_case_study_unreal_pb_5_pe_.tlsf
+amba_decomposed_arbiter_pb_10_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 10}	unsolved	tlsf-corpus/amba_decomposed_arbiter_pb_10_pe_.tlsf
+amba_decomposed_arbiter_pb_11_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 11}	unsolved	tlsf-corpus/amba_decomposed_arbiter_pb_11_pe_.tlsf
+amba_decomposed_arbiter_pb_12_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 12}	unsolved	tlsf-corpus/amba_decomposed_arbiter_pb_12_pe_.tlsf
+amba_decomposed_arbiter_pb_13_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 13}	unsolved	tlsf-corpus/amba_decomposed_arbiter_pb_13_pe_.tlsf
+amba_decomposed_arbiter_pb_2_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 2}	solved	tlsf-corpus/amba_decomposed_arbiter_pb_2_pe_.tlsf
+amba_decomposed_arbiter_pb_3_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 3}	solved	tlsf-corpus/amba_decomposed_arbiter_pb_3_pe_.tlsf
+amba_decomposed_arbiter_pb_4_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 4}	solved	tlsf-corpus/amba_decomposed_arbiter_pb_4_pe_.tlsf
+amba_decomposed_arbiter_pb_5_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 5}	solved	tlsf-corpus/amba_decomposed_arbiter_pb_5_pe_.tlsf
+amba_decomposed_arbiter_pb_6_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 6}	solved	tlsf-corpus/amba_decomposed_arbiter_pb_6_pe_.tlsf
+amba_decomposed_arbiter_pb_7_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 7}	unsolved	tlsf-corpus/amba_decomposed_arbiter_pb_7_pe_.tlsf
+amba_decomposed_arbiter_pb_8_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 8}	unsolved	tlsf-corpus/amba_decomposed_arbiter_pb_8_pe_.tlsf
+amba_decomposed_arbiter_pb_9_pe_.ltl	amba_decomposed_arbiter	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_arbiter.tlsf	{"n": 9}	unsolved	tlsf-corpus/amba_decomposed_arbiter_pb_9_pe_.tlsf
+amba_decomposed_encode_pb_10_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 10}	solved	tlsf-corpus/amba_decomposed_encode_pb_10_pe_.tlsf
+amba_decomposed_encode_pb_11_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 11}	solved	tlsf-corpus/amba_decomposed_encode_pb_11_pe_.tlsf
+amba_decomposed_encode_pb_12_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 12}	solved	tlsf-corpus/amba_decomposed_encode_pb_12_pe_.tlsf
+amba_decomposed_encode_pb_13_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 13}	solved	tlsf-corpus/amba_decomposed_encode_pb_13_pe_.tlsf
+amba_decomposed_encode_pb_14_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 14}	solved	tlsf-corpus/amba_decomposed_encode_pb_14_pe_.tlsf
+amba_decomposed_encode_pb_15_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 15}	solved	tlsf-corpus/amba_decomposed_encode_pb_15_pe_.tlsf
+amba_decomposed_encode_pb_16_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 16}	solved	tlsf-corpus/amba_decomposed_encode_pb_16_pe_.tlsf
+amba_decomposed_encode_pb_20_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 20}	unsolved	tlsf-corpus/amba_decomposed_encode_pb_20_pe_.tlsf
+amba_decomposed_encode_pb_25_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 25}	unsolved	tlsf-corpus/amba_decomposed_encode_pb_25_pe_.tlsf
+amba_decomposed_encode_pb_2_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 2}	solved	tlsf-corpus/amba_decomposed_encode_pb_2_pe_.tlsf
+amba_decomposed_encode_pb_3_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 3}	solved	tlsf-corpus/amba_decomposed_encode_pb_3_pe_.tlsf
+amba_decomposed_encode_pb_4_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 4}	solved	tlsf-corpus/amba_decomposed_encode_pb_4_pe_.tlsf
+amba_decomposed_encode_pb_5_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 5}	solved	tlsf-corpus/amba_decomposed_encode_pb_5_pe_.tlsf
+amba_decomposed_encode_pb_6_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 6}	solved	tlsf-corpus/amba_decomposed_encode_pb_6_pe_.tlsf
+amba_decomposed_encode_pb_7_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 7}	solved	tlsf-corpus/amba_decomposed_encode_pb_7_pe_.tlsf
+amba_decomposed_encode_pb_8_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 8}	solved	tlsf-corpus/amba_decomposed_encode_pb_8_pe_.tlsf
+amba_decomposed_encode_pb_9_pe_.ltl	amba_decomposed_encode	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_encode.tlsf	{"n": 9}	solved	tlsf-corpus/amba_decomposed_encode_pb_9_pe_.tlsf
+amba_decomposed_lock_pb_10_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 10}	solved	tlsf-corpus/amba_decomposed_lock_pb_10_pe_.tlsf
+amba_decomposed_lock_pb_11_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 11}	solved	tlsf-corpus/amba_decomposed_lock_pb_11_pe_.tlsf
+amba_decomposed_lock_pb_12_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 12}	solved	tlsf-corpus/amba_decomposed_lock_pb_12_pe_.tlsf
+amba_decomposed_lock_pb_13_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 13}	solved	tlsf-corpus/amba_decomposed_lock_pb_13_pe_.tlsf
+amba_decomposed_lock_pb_14_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 14}	solved	tlsf-corpus/amba_decomposed_lock_pb_14_pe_.tlsf
+amba_decomposed_lock_pb_15_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 15}	unsolved	tlsf-corpus/amba_decomposed_lock_pb_15_pe_.tlsf
+amba_decomposed_lock_pb_16_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 16}	unsolved	tlsf-corpus/amba_decomposed_lock_pb_16_pe_.tlsf
+amba_decomposed_lock_pb_2_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 2}	solved	tlsf-corpus/amba_decomposed_lock_pb_2_pe_.tlsf
+amba_decomposed_lock_pb_30_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 30}	unsolved	tlsf-corpus/amba_decomposed_lock_pb_30_pe_.tlsf
+amba_decomposed_lock_pb_3_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 3}	solved	tlsf-corpus/amba_decomposed_lock_pb_3_pe_.tlsf
+amba_decomposed_lock_pb_4_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 4}	solved	tlsf-corpus/amba_decomposed_lock_pb_4_pe_.tlsf
+amba_decomposed_lock_pb_5_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 5}	solved	tlsf-corpus/amba_decomposed_lock_pb_5_pe_.tlsf
+amba_decomposed_lock_pb_6_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 6}	solved	tlsf-corpus/amba_decomposed_lock_pb_6_pe_.tlsf
+amba_decomposed_lock_pb_7_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 7}	solved	tlsf-corpus/amba_decomposed_lock_pb_7_pe_.tlsf
+amba_decomposed_lock_pb_8_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 8}	solved	tlsf-corpus/amba_decomposed_lock_pb_8_pe_.tlsf
+amba_decomposed_lock_pb_9_pe_.ltl	amba_decomposed_lock	param:tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf	{"n": 9}	solved	tlsf-corpus/amba_decomposed_lock_pb_9_pe_.tlsf
+abcg_arbiter_pb_1_pe_.ltl	abcg_arbiter	param:tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf	{"n": 1}	solved	tlsf-corpus/abcg_arbiter_pb_1_pe_.tlsf
+abcg_arbiter_pb_2_pe_.ltl	abcg_arbiter	param:tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf	{"n": 2}	solved	tlsf-corpus/abcg_arbiter_pb_2_pe_.tlsf
+abcg_arbiter_pb_3_pe_.ltl	abcg_arbiter	param:tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf	{"n": 3}	solved	tlsf-corpus/abcg_arbiter_pb_3_pe_.tlsf
+abcg_arbiter_pb_4_pe_.ltl	abcg_arbiter	param:tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf	{"n": 4}	unsolved	tlsf-corpus/abcg_arbiter_pb_4_pe_.tlsf
+abcg_arbiter_pb_5_pe_.ltl	abcg_arbiter	param:tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf	{"n": 5}	unsolved	tlsf-corpus/abcg_arbiter_pb_5_pe_.tlsf
+abcg_arbiter_pb_6_pe_.ltl	abcg_arbiter	param:tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf	{"n": 6}	unsolved	tlsf-corpus/abcg_arbiter_pb_6_pe_.tlsf
+arbiter_pb_10_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 10}	unsolved	tlsf-corpus/arbiter_pb_10_pe_.tlsf
+arbiter_pb_1_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 1}	solved	tlsf-corpus/arbiter_pb_1_pe_.tlsf
+arbiter_pb_2_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 2}	solved	tlsf-corpus/arbiter_pb_2_pe_.tlsf
+arbiter_pb_3_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 3}	solved	tlsf-corpus/arbiter_pb_3_pe_.tlsf
+arbiter_pb_4_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 4}	solved	tlsf-corpus/arbiter_pb_4_pe_.tlsf
+arbiter_pb_5_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 5}	solved	tlsf-corpus/arbiter_pb_5_pe_.tlsf
+arbiter_pb_6_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 6}	unsolved	tlsf-corpus/arbiter_pb_6_pe_.tlsf
+arbiter_pb_7_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 7}	unsolved	tlsf-corpus/arbiter_pb_7_pe_.tlsf
+arbiter_pb_8_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 8}	unsolved	tlsf-corpus/arbiter_pb_8_pe_.tlsf
+arbiter_pb_9_pe_.ltl	arbiter	param:tlsf/arbiters_zoo/parametric/arbiter.tlsf	{"n": 9}	unsolved	tlsf-corpus/arbiter_pb_9_pe_.tlsf
+arbiter_on_inpchange_pb_1_pe_.ltl	arbiter_on_inpchange	param:tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf	{"n": 1}	solved	tlsf-corpus/arbiter_on_inpchange_pb_1_pe_.tlsf
+arbiter_on_inpchange_pb_2_pe_.ltl	arbiter_on_inpchange	param:tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf	{"n": 2}	solved	tlsf-corpus/arbiter_on_inpchange_pb_2_pe_.tlsf
+arbiter_on_inpchange_pb_3_pe_.ltl	arbiter_on_inpchange	param:tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf	{"n": 3}	solved	tlsf-corpus/arbiter_on_inpchange_pb_3_pe_.tlsf
+arbiter_on_inpchange_pb_4_pe_.ltl	arbiter_on_inpchange	param:tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf	{"n": 4}	solved	tlsf-corpus/arbiter_on_inpchange_pb_4_pe_.tlsf
+arbiter_on_inpchange_pb_5_pe_.ltl	arbiter_on_inpchange	param:tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf	{"n": 5}	unsolved	tlsf-corpus/arbiter_on_inpchange_pb_5_pe_.tlsf
+arbiter_on_inpchange_pb_6_pe_.ltl	arbiter_on_inpchange	param:tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf	{"n": 6}	unsolved	tlsf-corpus/arbiter_on_inpchange_pb_6_pe_.tlsf
+arbiter_on_inpchange_pb_7_pe_.ltl	arbiter_on_inpchange	param:tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf	{"n": 7}	unsolved	tlsf-corpus/arbiter_on_inpchange_pb_7_pe_.tlsf
+arbiter_with_buffer_pb_10_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 10}	unsolved	tlsf-corpus/arbiter_with_buffer_pb_10_pe_.tlsf
+arbiter_with_buffer_pb_1_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 1}	solved	tlsf-corpus/arbiter_with_buffer_pb_1_pe_.tlsf
+arbiter_with_buffer_pb_2_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 2}	solved	tlsf-corpus/arbiter_with_buffer_pb_2_pe_.tlsf
+arbiter_with_buffer_pb_3_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 3}	solved	tlsf-corpus/arbiter_with_buffer_pb_3_pe_.tlsf
+arbiter_with_buffer_pb_4_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 4}	solved	tlsf-corpus/arbiter_with_buffer_pb_4_pe_.tlsf
+arbiter_with_buffer_pb_5_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 5}	solved	tlsf-corpus/arbiter_with_buffer_pb_5_pe_.tlsf
+arbiter_with_buffer_pb_6_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 6}	unsolved	tlsf-corpus/arbiter_with_buffer_pb_6_pe_.tlsf
+arbiter_with_buffer_pb_7_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 7}	unsolved	tlsf-corpus/arbiter_with_buffer_pb_7_pe_.tlsf
+arbiter_with_buffer_pb_8_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 8}	unsolved	tlsf-corpus/arbiter_with_buffer_pb_8_pe_.tlsf
+arbiter_with_buffer_pb_9_pe_.ltl	arbiter_with_buffer	param:tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf	{"n": 9}	unsolved	tlsf-corpus/arbiter_with_buffer_pb_9_pe_.tlsf
+arbiter_with_cancel_pb_10_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 10}	unsolved	tlsf-corpus/arbiter_with_cancel_pb_10_pe_.tlsf
+arbiter_with_cancel_pb_1_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 1}	solved	tlsf-corpus/arbiter_with_cancel_pb_1_pe_.tlsf
+arbiter_with_cancel_pb_2_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 2}	solved	tlsf-corpus/arbiter_with_cancel_pb_2_pe_.tlsf
+arbiter_with_cancel_pb_3_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 3}	solved	tlsf-corpus/arbiter_with_cancel_pb_3_pe_.tlsf
+arbiter_with_cancel_pb_4_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 4}	solved	tlsf-corpus/arbiter_with_cancel_pb_4_pe_.tlsf
+arbiter_with_cancel_pb_5_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 5}	solved	tlsf-corpus/arbiter_with_cancel_pb_5_pe_.tlsf
+arbiter_with_cancel_pb_6_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 6}	unsolved	tlsf-corpus/arbiter_with_cancel_pb_6_pe_.tlsf
+arbiter_with_cancel_pb_7_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 7}	unsolved	tlsf-corpus/arbiter_with_cancel_pb_7_pe_.tlsf
+arbiter_with_cancel_pb_8_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 8}	unsolved	tlsf-corpus/arbiter_with_cancel_pb_8_pe_.tlsf
+arbiter_with_cancel_pb_9_pe_.ltl	arbiter_with_cancel	param:tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf	{"n": 9}	unsolved	tlsf-corpus/arbiter_with_cancel_pb_9_pe_.tlsf
+rw_arbiter_pb_1_pe_.ltl	rw_arbiter	param:tlsf/arbiters_zoo/parametric/rw_arbiter.tlsf	{"n": 1}	solved	tlsf-corpus/rw_arbiter_pb_1_pe_.tlsf
+rw_arbiter_pb_2_pe_.ltl	rw_arbiter	param:tlsf/arbiters_zoo/parametric/rw_arbiter.tlsf	{"n": 2}	solved	tlsf-corpus/rw_arbiter_pb_2_pe_.tlsf
+rw_arbiter_pb_3_pe_.ltl	rw_arbiter	param:tlsf/arbiters_zoo/parametric/rw_arbiter.tlsf	{"n": 3}	solved	tlsf-corpus/rw_arbiter_pb_3_pe_.tlsf
+rw_arbiter_pb_4_pe_.ltl	rw_arbiter	param:tlsf/arbiters_zoo/parametric/rw_arbiter.tlsf	{"n": 4}	unsolved	tlsf-corpus/rw_arbiter_pb_4_pe_.tlsf
+rw_arbiter_pb_5_pe_.ltl	rw_arbiter	param:tlsf/arbiters_zoo/parametric/rw_arbiter.tlsf	{"n": 5}	unsolved	tlsf-corpus/rw_arbiter_pb_5_pe_.tlsf
+chomp_pb_2_2_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 2, "M": 2}	solved	tlsf-corpus/chomp_pb_2_2_pe_.tlsf
+chomp_pb_2_3_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 2, "M": 3}	solved	tlsf-corpus/chomp_pb_2_3_pe_.tlsf
+chomp_pb_2_4_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 2, "M": 4}	unsolved	tlsf-corpus/chomp_pb_2_4_pe_.tlsf
+chomp_pb_2_5_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 2, "M": 5}	unsolved	tlsf-corpus/chomp_pb_2_5_pe_.tlsf
+chomp_pb_2_6_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 2, "M": 6}	unsolved	tlsf-corpus/chomp_pb_2_6_pe_.tlsf
+chomp_pb_3_2_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 3, "M": 2}	solved	tlsf-corpus/chomp_pb_3_2_pe_.tlsf
+chomp_pb_3_3_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 3, "M": 3}	unsolved	tlsf-corpus/chomp_pb_3_3_pe_.tlsf
+chomp_pb_3_4_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 3, "M": 4}	unsolved	tlsf-corpus/chomp_pb_3_4_pe_.tlsf
+chomp_pb_3_5_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 3, "M": 5}	unsolved	tlsf-corpus/chomp_pb_3_5_pe_.tlsf
+chomp_pb_3_6_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 3, "M": 6}	unsolved	tlsf-corpus/chomp_pb_3_6_pe_.tlsf
+chomp_pb_4_2_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 4, "M": 2}	unsolved	tlsf-corpus/chomp_pb_4_2_pe_.tlsf
+chomp_pb_4_3_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 4, "M": 3}	unsolved	tlsf-corpus/chomp_pb_4_3_pe_.tlsf
+chomp_pb_4_4_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 4, "M": 4}	unsolved	tlsf-corpus/chomp_pb_4_4_pe_.tlsf
+chomp_pb_4_5_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 4, "M": 5}	unsolved	tlsf-corpus/chomp_pb_4_5_pe_.tlsf
+chomp_pb_4_6_pe_.ltl	chomp	param:tlsf/chomp_game/parametric/chomp.tlsf	{"N": 4, "M": 6}	unsolved	tlsf-corpus/chomp_pb_4_6_pe_.tlsf
+collector_v1_pb_11_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 11}	unsolved	tlsf-corpus/collector_v1_pb_11_pe_.tlsf
+collector_v1_pb_12_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 12}	unsolved	tlsf-corpus/collector_v1_pb_12_pe_.tlsf
+collector_v1_pb_13_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 13}	unsolved	tlsf-corpus/collector_v1_pb_13_pe_.tlsf
+collector_v1_pb_14_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 14}	unsolved	tlsf-corpus/collector_v1_pb_14_pe_.tlsf
+collector_v1_pb_15_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 15}	unsolved	tlsf-corpus/collector_v1_pb_15_pe_.tlsf
+collector_v1_pb_3_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 3}	solved	tlsf-corpus/collector_v1_pb_3_pe_.tlsf
+collector_v1_pb_5_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 5}	solved	tlsf-corpus/collector_v1_pb_5_pe_.tlsf
+collector_v1_pb_7_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 7}	solved	tlsf-corpus/collector_v1_pb_7_pe_.tlsf
+collector_v1_pb_9_pe_.ltl	collector_v1	param:tlsf/collector/parametric/collector_v1.tlsf	{"n": 9}	solved	tlsf-corpus/collector_v1_pb_9_pe_.tlsf
+collector_v2_pb_10_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 10}	solved	tlsf-corpus/collector_v2_pb_10_pe_.tlsf
+collector_v2_pb_11_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 11}	solved	tlsf-corpus/collector_v2_pb_11_pe_.tlsf
+collector_v2_pb_12_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 12}	solved	tlsf-corpus/collector_v2_pb_12_pe_.tlsf
+collector_v2_pb_13_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 13}	solved	tlsf-corpus/collector_v2_pb_13_pe_.tlsf
+collector_v2_pb_15_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 15}	solved	tlsf-corpus/collector_v2_pb_15_pe_.tlsf
+collector_v2_pb_27_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 27}	unsolved	tlsf-corpus/collector_v2_pb_27_pe_.tlsf
+collector_v2_pb_3_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 3}	solved	tlsf-corpus/collector_v2_pb_3_pe_.tlsf
+collector_v2_pb_5_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 5}	solved	tlsf-corpus/collector_v2_pb_5_pe_.tlsf
+collector_v2_pb_7_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 7}	solved	tlsf-corpus/collector_v2_pb_7_pe_.tlsf
+collector_v2_pb_9_pe_.ltl	collector_v2	param:tlsf/collector/parametric/collector_v2.tlsf	{"n": 9}	solved	tlsf-corpus/collector_v2_pb_9_pe_.tlsf
+collector_v3_pb_10_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 10}	unsolved	tlsf-corpus/collector_v3_pb_10_pe_.tlsf
+collector_v3_pb_11_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 11}	unsolved	tlsf-corpus/collector_v3_pb_11_pe_.tlsf
+collector_v3_pb_12_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 12}	unsolved	tlsf-corpus/collector_v3_pb_12_pe_.tlsf
+collector_v3_pb_13_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 13}	unsolved	tlsf-corpus/collector_v3_pb_13_pe_.tlsf
+collector_v3_pb_15_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 15}	unsolved	tlsf-corpus/collector_v3_pb_15_pe_.tlsf
+collector_v3_pb_3_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 3}	solved	tlsf-corpus/collector_v3_pb_3_pe_.tlsf
+collector_v3_pb_5_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 5}	solved	tlsf-corpus/collector_v3_pb_5_pe_.tlsf
+collector_v3_pb_7_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 7}	solved	tlsf-corpus/collector_v3_pb_7_pe_.tlsf
+collector_v3_pb_9_pe_.ltl	collector_v3	param:tlsf/collector/parametric/collector_v3.tlsf	{"n": 9}	solved	tlsf-corpus/collector_v3_pb_9_pe_.tlsf
+full_arbiter_enc_pb_10_pe_.ltl	full_arbiter_enc	param:tlsf/full_arbiter_log/parametric/full_arbiter_enc.tlsf	{"n": 10}	unsolved	tlsf-corpus/full_arbiter_enc_pb_10_pe_.tlsf
+full_arbiter_enc_pb_12_pe_.ltl	full_arbiter_enc	param:tlsf/full_arbiter_log/parametric/full_arbiter_enc.tlsf	{"n": 12}	unsolved	tlsf-corpus/full_arbiter_enc_pb_12_pe_.tlsf
+full_arbiter_enc_pb_8_pe_.ltl	full_arbiter_enc	param:tlsf/full_arbiter_log/parametric/full_arbiter_enc.tlsf	{"n": 8}	unsolved	tlsf-corpus/full_arbiter_enc_pb_8_pe_.tlsf
+generalized_buffer_pb_2_pe_.ltl	generalized_buffer	param:tlsf/generalized_buffer/parametric/generalized_buffer.tlsf	{"n": 2}	solved	tlsf-corpus/generalized_buffer_pb_2_pe_.tlsf
+generalized_buffer_pb_3_pe_.ltl	generalized_buffer	param:tlsf/generalized_buffer/parametric/generalized_buffer.tlsf	{"n": 3}	solved	tlsf-corpus/generalized_buffer_pb_3_pe_.tlsf
+generalized_buffer_pb_4_pe_.ltl	generalized_buffer	param:tlsf/generalized_buffer/parametric/generalized_buffer.tlsf	{"n": 4}	solved	tlsf-corpus/generalized_buffer_pb_4_pe_.tlsf
+generalized_buffer_pb_5_pe_.ltl	generalized_buffer	param:tlsf/generalized_buffer/parametric/generalized_buffer.tlsf	{"n": 5}	solved	tlsf-corpus/generalized_buffer_pb_5_pe_.tlsf
+generalized_buffer_pb_6_pe_.ltl	generalized_buffer	param:tlsf/generalized_buffer/parametric/generalized_buffer.tlsf	{"n": 6}	unsolved	tlsf-corpus/generalized_buffer_pb_6_pe_.tlsf
+lift_pb_10_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 10}	unsolved	tlsf-corpus/lift_pb_10_pe_.tlsf
+lift_pb_2_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 2}	solved	tlsf-corpus/lift_pb_2_pe_.tlsf
+lift_pb_3_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 3}	solved	tlsf-corpus/lift_pb_3_pe_.tlsf
+lift_pb_4_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 4}	solved	tlsf-corpus/lift_pb_4_pe_.tlsf
+lift_pb_5_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 5}	unsolved	tlsf-corpus/lift_pb_5_pe_.tlsf
+lift_pb_6_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 6}	unsolved	tlsf-corpus/lift_pb_6_pe_.tlsf
+lift_pb_7_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 7}	unsolved	tlsf-corpus/lift_pb_7_pe_.tlsf
+lift_pb_8_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 8}	unsolved	tlsf-corpus/lift_pb_8_pe_.tlsf
+lift_pb_9_pe_.ltl	lift	param:tlsf/lift/parametric/lift.tlsf	{"n": 9}	unsolved	tlsf-corpus/lift_pb_9_pe_.tlsf
+lift_gr1+_pb_2_pe_.ltl	lift_gr1+	param:tlsf/lift/parametric/lift_gr1+.tlsf	{"n": 2}	solved	tlsf-corpus/lift_gr1+_pb_2_pe_.tlsf
+lift_gr1+_pb_3_pe_.ltl	lift_gr1+	param:tlsf/lift/parametric/lift_gr1+.tlsf	{"n": 3}	solved	tlsf-corpus/lift_gr1+_pb_3_pe_.tlsf
+lift_gr1+_pb_6_pe_.ltl	lift_gr1+	param:tlsf/lift/parametric/lift_gr1+.tlsf	{"n": 6}	unsolved	tlsf-corpus/lift_gr1+_pb_6_pe_.tlsf
+lift_gr1+_pb_7_pe_.ltl	lift_gr1+	param:tlsf/lift/parametric/lift_gr1+.tlsf	{"n": 7}	unsolved	tlsf-corpus/lift_gr1+_pb_7_pe_.tlsf
+lift_gr1+_pb_8_pe_.ltl	lift_gr1+	param:tlsf/lift/parametric/lift_gr1+.tlsf	{"n": 8}	unsolved	tlsf-corpus/lift_gr1+_pb_8_pe_.tlsf
+lift_gr1+_pb_9_pe_.ltl	lift_gr1+	param:tlsf/lift/parametric/lift_gr1+.tlsf	{"n": 9}	unsolved	tlsf-corpus/lift_gr1+_pb_9_pe_.tlsf
+lift_gr1_pb_10_pe_.ltl	lift_gr1	param:tlsf/lift/parametric/lift_gr1.tlsf	{"n": 10}	unsolved	tlsf-corpus/lift_gr1_pb_10_pe_.tlsf
+lift_gr1_pb_2_pe_.ltl	lift_gr1	param:tlsf/lift/parametric/lift_gr1.tlsf	{"n": 2}	solved	tlsf-corpus/lift_gr1_pb_2_pe_.tlsf
+lift_gr1_pb_3_pe_.ltl	lift_gr1	param:tlsf/lift/parametric/lift_gr1.tlsf	{"n": 3}	solved	tlsf-corpus/lift_gr1_pb_3_pe_.tlsf
+lift_gr1_pb_7_pe_.ltl	lift_gr1	param:tlsf/lift/parametric/lift_gr1.tlsf	{"n": 7}	unsolved	tlsf-corpus/lift_gr1_pb_7_pe_.tlsf
+lift_gr1_pb_8_pe_.ltl	lift_gr1	param:tlsf/lift/parametric/lift_gr1.tlsf	{"n": 8}	unsolved	tlsf-corpus/lift_gr1_pb_8_pe_.tlsf
+lift_gr1_pb_9_pe_.ltl	lift_gr1	param:tlsf/lift/parametric/lift_gr1.tlsf	{"n": 9}	unsolved	tlsf-corpus/lift_gr1_pb_9_pe_.tlsf
+lift_unary_enc_pb_2_pe_.ltl	lift_unary_enc	param:tlsf/lift/parametric/lift_unary_enc.tlsf	{"n": 2}	solved	tlsf-corpus/lift_unary_enc_pb_2_pe_.tlsf
+lift_unary_enc_pb_3_pe_.ltl	lift_unary_enc	param:tlsf/lift/parametric/lift_unary_enc.tlsf	{"n": 3}	solved	tlsf-corpus/lift_unary_enc_pb_3_pe_.tlsf
+lift_unary_enc_pb_4_pe_.ltl	lift_unary_enc	param:tlsf/lift/parametric/lift_unary_enc.tlsf	{"n": 4}	solved	tlsf-corpus/lift_unary_enc_pb_4_pe_.tlsf
+lift_unary_enc_pb_5_pe_.ltl	lift_unary_enc	param:tlsf/lift/parametric/lift_unary_enc.tlsf	{"n": 5}	unsolved	tlsf-corpus/lift_unary_enc_pb_5_pe_.tlsf
+lift_unary_enc_pb_6_pe_.ltl	lift_unary_enc	param:tlsf/lift/parametric/lift_unary_enc.tlsf	{"n": 6}	unsolved	tlsf-corpus/lift_unary_enc_pb_6_pe_.tlsf
+lift_unary_enc_pb_7_pe_.ltl	lift_unary_enc	param:tlsf/lift/parametric/lift_unary_enc.tlsf	{"n": 7}	unsolved	tlsf-corpus/lift_unary_enc_pb_7_pe_.tlsf
+load_balancer_pb_10_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 10}	unsolved	tlsf-corpus/load_balancer_pb_10_pe_.tlsf
+load_balancer_pb_11_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 11}	unsolved	tlsf-corpus/load_balancer_pb_11_pe_.tlsf
+load_balancer_pb_2_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 2}	solved	tlsf-corpus/load_balancer_pb_2_pe_.tlsf
+load_balancer_pb_3_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 3}	solved	tlsf-corpus/load_balancer_pb_3_pe_.tlsf
+load_balancer_pb_4_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 4}	solved	tlsf-corpus/load_balancer_pb_4_pe_.tlsf
+load_balancer_pb_5_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 5}	solved	tlsf-corpus/load_balancer_pb_5_pe_.tlsf
+load_balancer_pb_6_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 6}	solved	tlsf-corpus/load_balancer_pb_6_pe_.tlsf
+load_balancer_pb_7_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 7}	solved	tlsf-corpus/load_balancer_pb_7_pe_.tlsf
+load_balancer_pb_8_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 8}	unsolved	tlsf-corpus/load_balancer_pb_8_pe_.tlsf
+load_balancer_pb_9_pe_.ltl	load_balancer	param:tlsf/load_balancer/parametric/load_balancer.tlsf	{"n": 9}	unsolved	tlsf-corpus/load_balancer_pb_9_pe_.tlsf
+load_balancer_unreal1_pb_2_10_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 10}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_10_pe_.tlsf
+load_balancer_unreal1_pb_2_11_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 11}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_11_pe_.tlsf
+load_balancer_unreal1_pb_2_12_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 12}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_12_pe_.tlsf
+load_balancer_unreal1_pb_2_13_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 13}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_13_pe_.tlsf
+load_balancer_unreal1_pb_2_14_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 14}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_14_pe_.tlsf
+load_balancer_unreal1_pb_2_15_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 15}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_15_pe_.tlsf
+load_balancer_unreal1_pb_2_16_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 16}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_16_pe_.tlsf
+load_balancer_unreal1_pb_2_1_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 1}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_1_pe_.tlsf
+load_balancer_unreal1_pb_2_2_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 2}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_2_pe_.tlsf
+load_balancer_unreal1_pb_2_3_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 3}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_3_pe_.tlsf
+load_balancer_unreal1_pb_2_4_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 4}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_4_pe_.tlsf
+load_balancer_unreal1_pb_2_5_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 5}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_5_pe_.tlsf
+load_balancer_unreal1_pb_2_6_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 6}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_6_pe_.tlsf
+load_balancer_unreal1_pb_2_7_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 7}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_7_pe_.tlsf
+load_balancer_unreal1_pb_2_8_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 8}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_8_pe_.tlsf
+load_balancer_unreal1_pb_2_9_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 2, "u": 9}	solved	tlsf-corpus/load_balancer_unreal1_pb_2_9_pe_.tlsf
+load_balancer_unreal1_pb_3_10_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 10}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_10_pe_.tlsf
+load_balancer_unreal1_pb_3_11_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 11}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_11_pe_.tlsf
+load_balancer_unreal1_pb_3_12_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 12}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_12_pe_.tlsf
+load_balancer_unreal1_pb_3_1_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 1}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_1_pe_.tlsf
+load_balancer_unreal1_pb_3_2_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 2}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_2_pe_.tlsf
+load_balancer_unreal1_pb_3_3_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 3}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_3_pe_.tlsf
+load_balancer_unreal1_pb_3_4_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 4}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_4_pe_.tlsf
+load_balancer_unreal1_pb_3_5_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 5}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_5_pe_.tlsf
+load_balancer_unreal1_pb_3_6_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 6}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_6_pe_.tlsf
+load_balancer_unreal1_pb_3_7_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 7}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_7_pe_.tlsf
+load_balancer_unreal1_pb_3_8_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 8}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_8_pe_.tlsf
+load_balancer_unreal1_pb_3_9_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 3, "u": 9}	solved	tlsf-corpus/load_balancer_unreal1_pb_3_9_pe_.tlsf
+load_balancer_unreal1_pb_4_10_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 10}	unsolved	tlsf-corpus/load_balancer_unreal1_pb_4_10_pe_.tlsf
+load_balancer_unreal1_pb_4_11_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 11}	unsolved	tlsf-corpus/load_balancer_unreal1_pb_4_11_pe_.tlsf
+load_balancer_unreal1_pb_4_12_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 12}	unsolved	tlsf-corpus/load_balancer_unreal1_pb_4_12_pe_.tlsf
+load_balancer_unreal1_pb_4_1_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 1}	solved	tlsf-corpus/load_balancer_unreal1_pb_4_1_pe_.tlsf
+load_balancer_unreal1_pb_4_2_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 2}	solved	tlsf-corpus/load_balancer_unreal1_pb_4_2_pe_.tlsf
+load_balancer_unreal1_pb_4_3_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 3}	solved	tlsf-corpus/load_balancer_unreal1_pb_4_3_pe_.tlsf
+load_balancer_unreal1_pb_4_4_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 4}	solved	tlsf-corpus/load_balancer_unreal1_pb_4_4_pe_.tlsf
+load_balancer_unreal1_pb_4_5_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 5}	solved	tlsf-corpus/load_balancer_unreal1_pb_4_5_pe_.tlsf
+load_balancer_unreal1_pb_4_6_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 6}	solved	tlsf-corpus/load_balancer_unreal1_pb_4_6_pe_.tlsf
+load_balancer_unreal1_pb_4_7_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 7}	solved	tlsf-corpus/load_balancer_unreal1_pb_4_7_pe_.tlsf
+load_balancer_unreal1_pb_4_8_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 8}	solved	tlsf-corpus/load_balancer_unreal1_pb_4_8_pe_.tlsf
+load_balancer_unreal1_pb_4_9_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 4, "u": 9}	unsolved	tlsf-corpus/load_balancer_unreal1_pb_4_9_pe_.tlsf
+load_balancer_unreal1_pb_5_2_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 5, "u": 2}	solved	tlsf-corpus/load_balancer_unreal1_pb_5_2_pe_.tlsf
+load_balancer_unreal1_pb_5_3_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 5, "u": 3}	solved	tlsf-corpus/load_balancer_unreal1_pb_5_3_pe_.tlsf
+load_balancer_unreal1_pb_5_4_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 5, "u": 4}	solved	tlsf-corpus/load_balancer_unreal1_pb_5_4_pe_.tlsf
+load_balancer_unreal1_pb_5_5_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 5, "u": 5}	solved	tlsf-corpus/load_balancer_unreal1_pb_5_5_pe_.tlsf
+load_balancer_unreal1_pb_5_6_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 5, "u": 6}	unsolved	tlsf-corpus/load_balancer_unreal1_pb_5_6_pe_.tlsf
+load_balancer_unreal1_pb_5_7_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 5, "u": 7}	unsolved	tlsf-corpus/load_balancer_unreal1_pb_5_7_pe_.tlsf
+load_balancer_unreal1_pb_6_1_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 6, "u": 1}	solved	tlsf-corpus/load_balancer_unreal1_pb_6_1_pe_.tlsf
+load_balancer_unreal1_pb_6_2_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 6, "u": 2}	solved	tlsf-corpus/load_balancer_unreal1_pb_6_2_pe_.tlsf
+load_balancer_unreal1_pb_6_3_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 6, "u": 3}	solved	tlsf-corpus/load_balancer_unreal1_pb_6_3_pe_.tlsf
+load_balancer_unreal1_pb_6_4_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 6, "u": 4}	solved	tlsf-corpus/load_balancer_unreal1_pb_6_4_pe_.tlsf
+load_balancer_unreal1_pb_6_5_pe_.ltl	load_balancer_unreal1	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal1.tlsf	{"n": 6, "u": 5}	unsolved	tlsf-corpus/load_balancer_unreal1_pb_6_5_pe_.tlsf
+load_balancer_unreal2_pb_2_pe_.ltl	load_balancer_unreal2	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf	{"n": 2}	solved	tlsf-corpus/load_balancer_unreal2_pb_2_pe_.tlsf
+load_balancer_unreal2_pb_3_pe_.ltl	load_balancer_unreal2	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf	{"n": 3}	solved	tlsf-corpus/load_balancer_unreal2_pb_3_pe_.tlsf
+load_balancer_unreal2_pb_4_pe_.ltl	load_balancer_unreal2	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf	{"n": 4}	solved	tlsf-corpus/load_balancer_unreal2_pb_4_pe_.tlsf
+load_balancer_unreal2_pb_5_pe_.ltl	load_balancer_unreal2	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf	{"n": 5}	solved	tlsf-corpus/load_balancer_unreal2_pb_5_pe_.tlsf
+load_balancer_unreal2_pb_6_pe_.ltl	load_balancer_unreal2	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf	{"n": 6}	unsolved	tlsf-corpus/load_balancer_unreal2_pb_6_pe_.tlsf
+load_balancer_unreal2_pb_7_pe_.ltl	load_balancer_unreal2	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf	{"n": 7}	unsolved	tlsf-corpus/load_balancer_unreal2_pb_7_pe_.tlsf
+load_balancer_unreal2_pb_8_pe_.ltl	load_balancer_unreal2	param:tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf	{"n": 8}	unsolved	tlsf-corpus/load_balancer_unreal2_pb_8_pe_.tlsf
+ltl2dba_C2_unreal_pb_100_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 100}	unsolved	tlsf-corpus/ltl2dba_C2_unreal_pb_100_pe_.tlsf
+ltl2dba_C2_unreal_pb_10_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 10}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_10_pe_.tlsf
+ltl2dba_C2_unreal_pb_11_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 11}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_11_pe_.tlsf
+ltl2dba_C2_unreal_pb_12_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 12}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_12_pe_.tlsf
+ltl2dba_C2_unreal_pb_13_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 13}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_13_pe_.tlsf
+ltl2dba_C2_unreal_pb_14_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 14}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_14_pe_.tlsf
+ltl2dba_C2_unreal_pb_15_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 15}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_15_pe_.tlsf
+ltl2dba_C2_unreal_pb_16_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 16}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_16_pe_.tlsf
+ltl2dba_C2_unreal_pb_25_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 25}	unsolved	tlsf-corpus/ltl2dba_C2_unreal_pb_25_pe_.tlsf
+ltl2dba_C2_unreal_pb_2_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 2}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_2_pe_.tlsf
+ltl2dba_C2_unreal_pb_3_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 3}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_3_pe_.tlsf
+ltl2dba_C2_unreal_pb_4_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 4}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_4_pe_.tlsf
+ltl2dba_C2_unreal_pb_50_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 50}	unsolved	tlsf-corpus/ltl2dba_C2_unreal_pb_50_pe_.tlsf
+ltl2dba_C2_unreal_pb_5_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 5}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_5_pe_.tlsf
+ltl2dba_C2_unreal_pb_60_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 60}	unsolved	tlsf-corpus/ltl2dba_C2_unreal_pb_60_pe_.tlsf
+ltl2dba_C2_unreal_pb_6_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 6}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_6_pe_.tlsf
+ltl2dba_C2_unreal_pb_70_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 70}	unsolved	tlsf-corpus/ltl2dba_C2_unreal_pb_70_pe_.tlsf
+ltl2dba_C2_unreal_pb_7_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 7}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_7_pe_.tlsf
+ltl2dba_C2_unreal_pb_80_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 80}	unsolved	tlsf-corpus/ltl2dba_C2_unreal_pb_80_pe_.tlsf
+ltl2dba_C2_unreal_pb_8_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 8}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_8_pe_.tlsf
+ltl2dba_C2_unreal_pb_9_pe_.ltl	ltl2dba_C2_unreal	param:tlsf/ltl2dba/parametric/ltl2dba_C2_unreal.tlsf	{"n": 9}	solved	tlsf-corpus/ltl2dba_C2_unreal_pb_9_pe_.tlsf
+ltl2dba_R_pb_10_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 10}	unsolved	tlsf-corpus/ltl2dba_R_pb_10_pe_.tlsf
+ltl2dba_R_pb_11_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 11}	unsolved	tlsf-corpus/ltl2dba_R_pb_11_pe_.tlsf
+ltl2dba_R_pb_12_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 12}	unsolved	tlsf-corpus/ltl2dba_R_pb_12_pe_.tlsf
+ltl2dba_R_pb_14_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 14}	unsolved	tlsf-corpus/ltl2dba_R_pb_14_pe_.tlsf
+ltl2dba_R_pb_1_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 1}	solved	tlsf-corpus/ltl2dba_R_pb_1_pe_.tlsf
+ltl2dba_R_pb_2_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 2}	solved	tlsf-corpus/ltl2dba_R_pb_2_pe_.tlsf
+ltl2dba_R_pb_3_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 3}	solved	tlsf-corpus/ltl2dba_R_pb_3_pe_.tlsf
+ltl2dba_R_pb_4_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 4}	solved	tlsf-corpus/ltl2dba_R_pb_4_pe_.tlsf
+ltl2dba_R_pb_5_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 5}	solved	tlsf-corpus/ltl2dba_R_pb_5_pe_.tlsf
+ltl2dba_R_pb_6_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 6}	solved	tlsf-corpus/ltl2dba_R_pb_6_pe_.tlsf
+ltl2dba_R_pb_7_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 7}	solved	tlsf-corpus/ltl2dba_R_pb_7_pe_.tlsf
+ltl2dba_R_pb_8_pe_.ltl	ltl2dba_R	param:tlsf/ltl2dba/parametric/ltl2dba_R.tlsf	{"n": 8}	solved	tlsf-corpus/ltl2dba_R_pb_8_pe_.tlsf
+ltl2dba_theta_pb_100_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 100}	unsolved	tlsf-corpus/ltl2dba_theta_pb_100_pe_.tlsf
+ltl2dba_theta_pb_10_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 10}	solved	tlsf-corpus/ltl2dba_theta_pb_10_pe_.tlsf
+ltl2dba_theta_pb_12_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 12}	solved	tlsf-corpus/ltl2dba_theta_pb_12_pe_.tlsf
+ltl2dba_theta_pb_14_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 14}	solved	tlsf-corpus/ltl2dba_theta_pb_14_pe_.tlsf
+ltl2dba_theta_pb_16_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 16}	solved	tlsf-corpus/ltl2dba_theta_pb_16_pe_.tlsf
+ltl2dba_theta_pb_1_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 1}	solved	tlsf-corpus/ltl2dba_theta_pb_1_pe_.tlsf
+ltl2dba_theta_pb_25_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 25}	unsolved	tlsf-corpus/ltl2dba_theta_pb_25_pe_.tlsf
+ltl2dba_theta_pb_2_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 2}	solved	tlsf-corpus/ltl2dba_theta_pb_2_pe_.tlsf
+ltl2dba_theta_pb_300_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 300}	unsolved	tlsf-corpus/ltl2dba_theta_pb_300_pe_.tlsf
+ltl2dba_theta_pb_3_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 3}	solved	tlsf-corpus/ltl2dba_theta_pb_3_pe_.tlsf
+ltl2dba_theta_pb_4_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 4}	solved	tlsf-corpus/ltl2dba_theta_pb_4_pe_.tlsf
+ltl2dba_theta_pb_500_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 500}	unsolved	tlsf-corpus/ltl2dba_theta_pb_500_pe_.tlsf
+ltl2dba_theta_pb_50_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 50}	unsolved	tlsf-corpus/ltl2dba_theta_pb_50_pe_.tlsf
+ltl2dba_theta_pb_5_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 5}	solved	tlsf-corpus/ltl2dba_theta_pb_5_pe_.tlsf
+ltl2dba_theta_pb_6_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 6}	solved	tlsf-corpus/ltl2dba_theta_pb_6_pe_.tlsf
+ltl2dba_theta_pb_7_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 7}	solved	tlsf-corpus/ltl2dba_theta_pb_7_pe_.tlsf
+ltl2dba_theta_pb_8_pe_.ltl	ltl2dba_theta	param:tlsf/ltl2dba/parametric/ltl2dba_theta.tlsf	{"n": 8}	solved	tlsf-corpus/ltl2dba_theta_pb_8_pe_.tlsf
+simple_arbiter_with_hints_pb_10_pe_.ltl	simple_arbiter_with_hints	param:tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf	{"n": 10}	unsolved	tlsf-corpus/simple_arbiter_with_hints_pb_10_pe_.tlsf
+simple_arbiter_with_hints_pb_12_pe_.ltl	simple_arbiter_with_hints	param:tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf	{"n": 12}	unsolved	tlsf-corpus/simple_arbiter_with_hints_pb_12_pe_.tlsf
+simple_arbiter_with_hints_pb_15_pe_.ltl	simple_arbiter_with_hints	param:tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf	{"n": 15}	unsolved	tlsf-corpus/simple_arbiter_with_hints_pb_15_pe_.tlsf
+simple_arbiter_with_hints_pb_2_pe_.ltl	simple_arbiter_with_hints	param:tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf	{"n": 2}	solved	tlsf-corpus/simple_arbiter_with_hints_pb_2_pe_.tlsf
+simple_arbiter_with_hints_pb_4_pe_.ltl	simple_arbiter_with_hints	param:tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf	{"n": 4}	solved	tlsf-corpus/simple_arbiter_with_hints_pb_4_pe_.tlsf
+simple_arbiter_with_hints_pb_6_pe_.ltl	simple_arbiter_with_hints	param:tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf	{"n": 6}	solved	tlsf-corpus/simple_arbiter_with_hints_pb_6_pe_.tlsf
+simple_arbiter_with_hints_pb_8_pe_.ltl	simple_arbiter_with_hints	param:tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf	{"n": 8}	unsolved	tlsf-corpus/simple_arbiter_with_hints_pb_8_pe_.tlsf
+prioritized_arbiter_pb_10_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 10}	unsolved	tlsf-corpus/prioritized_arbiter_pb_10_pe_.tlsf
+prioritized_arbiter_pb_12_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 12}	unsolved	tlsf-corpus/prioritized_arbiter_pb_12_pe_.tlsf
+prioritized_arbiter_pb_1_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 1}	solved	tlsf-corpus/prioritized_arbiter_pb_1_pe_.tlsf
+prioritized_arbiter_pb_2_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 2}	solved	tlsf-corpus/prioritized_arbiter_pb_2_pe_.tlsf
+prioritized_arbiter_pb_3_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 3}	solved	tlsf-corpus/prioritized_arbiter_pb_3_pe_.tlsf
+prioritized_arbiter_pb_4_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 4}	solved	tlsf-corpus/prioritized_arbiter_pb_4_pe_.tlsf
+prioritized_arbiter_pb_5_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 5}	solved	tlsf-corpus/prioritized_arbiter_pb_5_pe_.tlsf
+prioritized_arbiter_pb_6_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 6}	solved	tlsf-corpus/prioritized_arbiter_pb_6_pe_.tlsf
+prioritized_arbiter_pb_7_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 7}	unsolved	tlsf-corpus/prioritized_arbiter_pb_7_pe_.tlsf
+prioritized_arbiter_pb_8_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 8}	unsolved	tlsf-corpus/prioritized_arbiter_pb_8_pe_.tlsf
+prioritized_arbiter_pb_9_pe_.ltl	prioritized_arbiter	param:tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf	{"n": 9}	unsolved	tlsf-corpus/prioritized_arbiter_pb_9_pe_.tlsf
+prioritized_arbiter_enc_pb_10_pe_.ltl	prioritized_arbiter_enc	param:tlsf/prioritized_arbiter_log/parametric/prioritized_arbiter_enc.tlsf	{"n": 10}	unsolved	tlsf-corpus/prioritized_arbiter_enc_pb_10_pe_.tlsf
+prioritized_arbiter_enc_pb_12_pe_.ltl	prioritized_arbiter_enc	param:tlsf/prioritized_arbiter_log/parametric/prioritized_arbiter_enc.tlsf	{"n": 12}	unsolved	tlsf-corpus/prioritized_arbiter_enc_pb_12_pe_.tlsf
+prioritized_arbiter_enc_pb_13_pe_.ltl	prioritized_arbiter_enc	param:tlsf/prioritized_arbiter_log/parametric/prioritized_arbiter_enc.tlsf	{"n": 13}	unsolved	tlsf-corpus/prioritized_arbiter_enc_pb_13_pe_.tlsf
+prioritized_arbiter_enc_pb_14_pe_.ltl	prioritized_arbiter_enc	param:tlsf/prioritized_arbiter_log/parametric/prioritized_arbiter_enc.tlsf	{"n": 14}	unsolved	tlsf-corpus/prioritized_arbiter_enc_pb_14_pe_.tlsf
+prioritized_arbiter_enc_pb_15_pe_.ltl	prioritized_arbiter_enc	param:tlsf/prioritized_arbiter_log/parametric/prioritized_arbiter_enc.tlsf	{"n": 15}	unsolved	tlsf-corpus/prioritized_arbiter_enc_pb_15_pe_.tlsf
+prioritized_arbiter_enc_pb_8_pe_.ltl	prioritized_arbiter_enc	param:tlsf/prioritized_arbiter_log/parametric/prioritized_arbiter_enc.tlsf	{"n": 8}	unsolved	tlsf-corpus/prioritized_arbiter_enc_pb_8_pe_.tlsf
+prioritized_arbiter_unreal2_pb_100_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 100}	unsolved	tlsf-corpus/prioritized_arbiter_unreal2_pb_100_pe_.tlsf
+prioritized_arbiter_unreal2_pb_10_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 10}	solved	tlsf-corpus/prioritized_arbiter_unreal2_pb_10_pe_.tlsf
+prioritized_arbiter_unreal2_pb_2_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 2}	solved	tlsf-corpus/prioritized_arbiter_unreal2_pb_2_pe_.tlsf
+prioritized_arbiter_unreal2_pb_30_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 30}	unsolved	tlsf-corpus/prioritized_arbiter_unreal2_pb_30_pe_.tlsf
+prioritized_arbiter_unreal2_pb_3_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 3}	solved	tlsf-corpus/prioritized_arbiter_unreal2_pb_3_pe_.tlsf
+prioritized_arbiter_unreal2_pb_4_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 4}	solved	tlsf-corpus/prioritized_arbiter_unreal2_pb_4_pe_.tlsf
+prioritized_arbiter_unreal2_pb_5_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 5}	solved	tlsf-corpus/prioritized_arbiter_unreal2_pb_5_pe_.tlsf
+prioritized_arbiter_unreal2_pb_60_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 60}	unsolved	tlsf-corpus/prioritized_arbiter_unreal2_pb_60_pe_.tlsf
+prioritized_arbiter_unreal2_pb_6_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 6}	solved	tlsf-corpus/prioritized_arbiter_unreal2_pb_6_pe_.tlsf
+prioritized_arbiter_unreal2_pb_7_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 7}	solved	tlsf-corpus/prioritized_arbiter_unreal2_pb_7_pe_.tlsf
+prioritized_arbiter_unreal2_pb_8_pe_.ltl	prioritized_arbiter_unreal2	param:tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf	{"n": 8}	solved	tlsf-corpus/prioritized_arbiter_unreal2_pb_8_pe_.tlsf
+robot_grid_pb_2_2_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 2, "yN": 2}	solved	tlsf-corpus/robot_grid_pb_2_2_pe_.tlsf
+robot_grid_pb_3_3_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 3, "yN": 3}	solved	tlsf-corpus/robot_grid_pb_3_3_pe_.tlsf
+robot_grid_pb_4_4_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 4, "yN": 4}	solved	tlsf-corpus/robot_grid_pb_4_4_pe_.tlsf
+robot_grid_pb_5_1_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 5, "yN": 1}	solved	tlsf-corpus/robot_grid_pb_5_1_pe_.tlsf
+robot_grid_pb_5_5_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 5, "yN": 5}	solved	tlsf-corpus/robot_grid_pb_5_5_pe_.tlsf
+robot_grid_pb_6_1_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 6, "yN": 1}	solved	tlsf-corpus/robot_grid_pb_6_1_pe_.tlsf
+robot_grid_pb_6_6_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 6, "yN": 6}	unsolved	tlsf-corpus/robot_grid_pb_6_6_pe_.tlsf
+robot_grid_pb_7_7_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 7, "yN": 7}	unsolved	tlsf-corpus/robot_grid_pb_7_7_pe_.tlsf
+robot_grid_pb_8_8_pe_.ltl	robot_grid	param:tlsf/robot_grid/parametric/robot_grid.tlsf	{"xN": 8, "yN": 8}	unsolved	tlsf-corpus/robot_grid_pb_8_8_pe_.tlsf
+round_robin_arbiter_pb_10_pe_.ltl	round_robin_arbiter	param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	{"n": 10}	unsolved	tlsf-corpus/round_robin_arbiter_pb_10_pe_.tlsf
+round_robin_arbiter_pb_2_pe_.ltl	round_robin_arbiter	param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	{"n": 2}	solved	tlsf-corpus/round_robin_arbiter_pb_2_pe_.tlsf
+round_robin_arbiter_pb_3_pe_.ltl	round_robin_arbiter	param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	{"n": 3}	solved	tlsf-corpus/round_robin_arbiter_pb_3_pe_.tlsf
+round_robin_arbiter_pb_4_pe_.ltl	round_robin_arbiter	param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	{"n": 4}	solved	tlsf-corpus/round_robin_arbiter_pb_4_pe_.tlsf
+round_robin_arbiter_pb_5_pe_.ltl	round_robin_arbiter	param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	{"n": 5}	solved	tlsf-corpus/round_robin_arbiter_pb_5_pe_.tlsf
+round_robin_arbiter_pb_6_pe_.ltl	round_robin_arbiter	param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	{"n": 6}	unsolved	tlsf-corpus/round_robin_arbiter_pb_6_pe_.tlsf
+round_robin_arbiter_pb_7_pe_.ltl	round_robin_arbiter	param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	{"n": 7}	unsolved	tlsf-corpus/round_robin_arbiter_pb_7_pe_.tlsf
+round_robin_arbiter_pb_8_pe_.ltl	round_robin_arbiter	param:tlsf/round_robin_arbiter/parametric/round_robin_arbiter.tlsf	{"n": 8}	unsolved	tlsf-corpus/round_robin_arbiter_pb_8_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 10}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_10_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 11}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_11_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 12}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_12_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 13}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_13_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 14}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_14_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 15}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_15_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 16}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_16_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 1}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_1_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 2}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_2_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 3}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_3_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 4}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_4_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 5}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_5_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 6}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_6_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 7}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_7_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 8}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_8_pe_.tlsf
+round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 2, "u": 9}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_2_9_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_10_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 10}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_10_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_11_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 11}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_11_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_12_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 12}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_12_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_13_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 13}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_13_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_14_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 14}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_14_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_15_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 15}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_15_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_16_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 16}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_16_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 1}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_1_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_20_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 20}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_20_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_22_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 22}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_22_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 2}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_2_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 3}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_3_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 4}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_4_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_50_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 50}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_50_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 5}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_5_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 6}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_6_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 7}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_7_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_8_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 8}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_8_pe_.tlsf
+round_robin_arbiter_unreal1_pb_3_9_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 3, "u": 9}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_3_9_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_10_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 10}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_10_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_11_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 11}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_11_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_12_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 12}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_12_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_13_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 13}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_13_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_14_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 14}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_14_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_15_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 15}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_15_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 1}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_1_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 2}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_2_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 3}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_3_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 4}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_4_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_5_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 5}	solved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_5_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_6_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 6}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_6_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_7_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 7}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_7_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_8_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 8}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_8_pe_.tlsf
+round_robin_arbiter_unreal1_pb_4_9_pe_.ltl	round_robin_arbiter_unreal1	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal1.tlsf	{"n": 4, "u": 9}	unsolved	tlsf-corpus/round_robin_arbiter_unreal1_pb_4_9_pe_.tlsf
+round_robin_arbiter_unreal2_pb_2_pe_.ltl	round_robin_arbiter_unreal2	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf	{"n": 2}	solved	tlsf-corpus/round_robin_arbiter_unreal2_pb_2_pe_.tlsf
+round_robin_arbiter_unreal2_pb_3_pe_.ltl	round_robin_arbiter_unreal2	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf	{"n": 3}	solved	tlsf-corpus/round_robin_arbiter_unreal2_pb_3_pe_.tlsf
+round_robin_arbiter_unreal2_pb_4_pe_.ltl	round_robin_arbiter_unreal2	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf	{"n": 4}	solved	tlsf-corpus/round_robin_arbiter_unreal2_pb_4_pe_.tlsf
+round_robin_arbiter_unreal2_pb_5_pe_.ltl	round_robin_arbiter_unreal2	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf	{"n": 5}	unsolved	tlsf-corpus/round_robin_arbiter_unreal2_pb_5_pe_.tlsf
+round_robin_arbiter_unreal2_pb_6_pe_.ltl	round_robin_arbiter_unreal2	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf	{"n": 6}	unsolved	tlsf-corpus/round_robin_arbiter_unreal2_pb_6_pe_.tlsf
+round_robin_arbiter_unreal2_pb_7_pe_.ltl	round_robin_arbiter_unreal2	param:tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf	{"n": 7}	unsolved	tlsf-corpus/round_robin_arbiter_unreal2_pb_7_pe_.tlsf
+simple_arbiter_enc_pb_10_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 10}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_10_pe_.tlsf
+simple_arbiter_enc_pb_11_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 11}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_11_pe_.tlsf
+simple_arbiter_enc_pb_12_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 12}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_12_pe_.tlsf
+simple_arbiter_enc_pb_13_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 13}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_13_pe_.tlsf
+simple_arbiter_enc_pb_14_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 14}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_14_pe_.tlsf
+simple_arbiter_enc_pb_15_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 15}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_15_pe_.tlsf
+simple_arbiter_enc_pb_16_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 16}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_16_pe_.tlsf
+simple_arbiter_enc_pb_32_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 32}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_32_pe_.tlsf
+simple_arbiter_enc_pb_8_pe_.ltl	simple_arbiter_enc	param:tlsf/simple_arbiter_log/parametric/simple_arbiter_enc.tlsf	{"n": 8}	unsolved	tlsf-corpus/simple_arbiter_enc_pb_8_pe_.tlsf
