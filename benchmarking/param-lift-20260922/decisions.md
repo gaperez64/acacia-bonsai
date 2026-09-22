@@ -51,3 +51,43 @@ mutual exclusion on some BFS-reachable states — reachable only through assumpt
 where plain `A → G` lets the controller do anything. W5 was mostly observing behavior on traces
 the specification does not constrain; the generalizable object is the controller restricted to the
 winning region under the assumptions, which is what Maderbacher–Bloem generalize.
+
+## M1a — two soundness bugs in tlsf-tools' GR(1) path (inserted before M1)
+
+Found while preparing M1, before building anything on the solver. M1's first launch was stopped
+before it wrote any code (both trees verified clean) so the solver could be fixed first.
+
+**Bug 1: `tlsfsolve` silently drops liveness.** `src/main_tlsfsolve.c` reads games with
+`aig_read_aag`, which deliberately skips the AIGER 1.9 bad/constraint/justice/fairness records
+("a synthesized controller only needs the circuit"). For any game read from a file,
+`aig_num_justice`/`aig_num_fairness` are 0, `is_gr1` is false, and the game is solved as a safety
+game with all liveness ignored — contrary to the README. Reproducer `m1a-repro/fair1.aag`: one
+fairness `GF la` (latch copying input `a`) and justice `{false}`; under GR(1) semantics it is
+UNREALIZABLE, but `tlsfsolve` exits 0 with a strategy.
+
+**Bug 2: the GR(1) fixpoint is unsound with two or more fairness assumptions.** `src/gr1_oxidd.c`
+uses `νX. cpre((Z∩goal_j) ∪ Y ∪ (X ∩ ⋃ᵢ ¬fairᵢ))` ("env breaks at least one"). Violating fairness
+means `FG ¬fairᵢ` for some *fixed* i; with the union, a play can violate some assumption at every
+step while satisfying every assumption infinitely often, so the winning region is
+over-approximated and a non-winning strategy can be emitted. The standard fixpoint takes a
+disjunction over separate inner νX, one per fairness assumption (Bloem–Jobstmann–Piterman–Pnueli–
+Sa'ar, JCSS 2012). Reproducer `m1a-repro/fair2.aag` (`GF la`, `GF ¬la`, justice `{false}`;
+correct answer UNREALIZABLE) — observable only once bug 1 is fixed.
+
+**Impact.** Acacia's shipping solver never calls tlsf-tools' GR(1)/safety solvers, `tlsfcompose`
+or `tlsfsolve`, so no SYNTCOMP verdict of Acacia's is affected. Affected: `tlsfsolve` on any file
+game with liveness, and `tlsfcompose`'s in-process GR(1) route whenever a game has ≥2 fairness
+records that cannot all hold in the same step. Measured before the fix
+(`m1a-baseline-before-fix.tsv`, 20 s cap): on the two corpus families that use the route,
+`round_robin_arbiter` and `round_robin_arbiter_unreal1`, every completed verdict matches the known
+answer — their fairness assumptions (`¬(rᵢ ∧ gᵢ)`) are simultaneously satisfiable, so the union
+happens not to matter there. It would matter for M1's per-conjunct monitors, whose accepting
+states need not coincide. Also noted: the route already reaches `round_robin_arbiter` n=6/7/8
+(0.3/2.6/15.5 s), which Acacia could not solve at 120 s; those strategies are unverified and came
+from the flawed fixpoint, so no claim is made about them until M1a's re-run verifies them.
+
+Fix delegated (codex, `param-lift-m1a`): a game-reading mode that keeps the records (rejecting any
+it cannot represent), the standard per-fairness disjunction with matching strategy extraction, a
+committed differential test against an independent brute-force explicit-state GR(1) solver on
+random small games (with strategies checked independently), and before/after on the corpus
+families.
