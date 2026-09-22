@@ -313,11 +313,13 @@ W3 (above) identified the safer in-repo path for `round_robin_arbiter_unreal2` �
 own frozen-graph solve path to accept `-u formula -s FILE` together, since `run_one_ltl::synthesis()`
 already operates generically on `strats`/`out_part` independent of `check_unreal` — rather than
 reconstruct the dualization externally, given the demonstrated real risk of getting the polarity
-wrong. This note records a follow-on attempt (via `codex-task`, two rounds) to actually build that
+wrong. This note records a follow-on attempt (via `codex-task`, seven rounds) to actually build that
 path, on the tiny hand-verified game `G(o <-> X(i))` (`INPUTS{i} OUTPUTS{o}`, confirmed UNREALIZABLE
-via `-u formula`) before touching `round_robin_arbiter_unreal2`'s real seeds. Both rounds stopped on
-a clean negative result rather than proceeding on an ambiguous one; no unsound witness was produced
-or accepted at any point.
+via `-u formula`) before touching `round_robin_arbiter_unreal2`'s real seeds. Every round stopped on
+a clean result rather than proceeding on an ambiguous one, and reverted its own source edits; no
+unsound witness was produced or accepted at any point, and `round_robin_arbiter_unreal2`'s real
+seeds were never reached. The rounds are recorded in order below because each one's negative result
+is what located the next gate.
 
 **Round 1**: relaxed the single assert this note originally named
 (`solver_invoker.cc`, `assert (not synth_fname.has_value () or not check_unreal.has_value ());`,
@@ -445,7 +447,71 @@ Spot rejects the overlap. The `DECOMPOSE_SPEC == 0` monolithic branch does not h
 `out_part = {output_aps}`, correctly `{{i}}` — but this build compiles `DECOMPOSE_SPEC == 1` (round
 5's instrumentation printed `dispatch branch=1`), so `solve_decomposed` is the live path.
 
-**Disposition**: root-caused, not yet landed. Six rounds: four real downstream gates found and
+**Round 7 completed the mechanical path and hit the genuine conceptual question.** With the fifth
+gate fixed (decline decomposition for the unreal+synthesis case and use `out_part = {output_aps}`,
+mirroring the already-correct monolithic branch), synthesis ran to completion for the first time: it
+solved the dual game, built a Mealy machine, and printed it —
+
+```
+HOA: v1
+States: 3
+AP: 2 "o" "i"
+controllable-AP: 1
+--BODY--
+State: 0
+[!1] 1
+State: 1
+[!0&1 | 0&!1] 2
+State: 2
+[!1] 2
+--END--
+```
+
+— i.e. a 3-state machine over `{o, i}` whose **controllable AP is `i`**, which is the correct
+polarity for an environment strategy (it reads `o`, it drives `i`). The real-side regression in the
+same round still passed unchanged.
+
+It then aborted inside `run_one_ltl::synthesis ()`'s own `#ifndef NDEBUG` model check:
+
+```
+Model checking result by checking intersection with !G(o <-> Xi)
+solver_invoker.cc:407: Assertion `not aut->intersects (mealy_aig->as_automaton (false))' failed.
+```
+
+(exit 2, `UNKNOWN`, and a 0-byte file — the `ofstream` truncates before `print_aiger` runs, so the
+abort leaves an empty artifact rather than a bad one.)
+
+**This assert firing is the correct and expected behaviour, not a new bug, and it is the safety net
+working.** That check encodes the *real-side* soundness criterion: for a controller `C` and spec
+`phi`, require `L(C) ⊆ L(phi)`, i.e. `L(C) ∩ L(!phi) = ∅` — exactly what line 407 asserts. An
+environment witness has the opposite obligation: every play consistent with it must *violate* the
+spec, i.e. `L(E) ⊆ L(!phi)`, i.e. `L(E) ∩ L(phi) = ∅`. So the existing check asks precisely the
+wrong question of a dualized strategy, and a dualized strategy that *passed* it would be the broken
+one.
+
+Two candidate readings of the failure remain, and they are not distinguishable without care:
+(a) the criterion is simply inverted, and the witness is fine; or
+(b) there is a frame mismatch — the machine lives in the X-shifted dual frame while the check
+    compares it against the *un-shifted* original `G(o <-> X(i))` (the trace confirms it negated the
+    original formula, not the transformed `G(Xi <-> Xo)`), so the comparison is not apples-to-apples
+    in either direction.
+
+Deciding between them, and fixing the check correctly, is exactly the conceptual question this
+sprint deliberately refused to answer by guesswork — see the W3 near-miss above, where the obvious
+reinterpretation of a dualized circuit produced a witness of the *wrong polarity* that looked
+entirely plausible. Making an assert stop firing is trivially achievable and proves nothing; the
+work here is to establish the correct soundness criterion *and frame* for a dualized witness, then
+implement that. **Not attempted this session** — deliberately, and this is the right stopping point
+rather than a failure to push further.
+
+**What is now settled**: the entire mechanical path from `-u formula -s FILE` through to a produced
+strategy is solved and understood — five gates, each precisely located and individually verified:
+`acacia-bonsai.cc`'s discarded `synth_fname`, the `solver_invoker.cc` assert, the
+`try_unreal_safety_core_witnesses` bypass, `want_controller_strategy`, and `solve_decomposed`'s
+dual-frame partition. The strategy it produces has the right controllable AP. What remains is one
+well-posed question (the verification criterion and frame), not a search.
+
+**Disposition**: mechanically solved, conceptually open. Seven rounds: five real gates found and
 fixed, one invalidated test (round 3's corrupted formula), and finally the actual blocking line
 identified by instrumentation. All source edits from every round were reverted (`git status` confirms
 a clean tree under `src/`, and round 5 verified the restored file's SHA-256), every
