@@ -313,7 +313,8 @@ W3 (above) identified the safer in-repo path for `round_robin_arbiter_unreal2` �
 own frozen-graph solve path to accept `-u formula -s FILE` together, since `run_one_ltl::synthesis()`
 already operates generically on `strats`/`out_part` independent of `check_unreal` — rather than
 reconstruct the dualization externally, given the demonstrated real risk of getting the polarity
-wrong. This note records a follow-on attempt (via `codex-task`, eight rounds so far) to actually build that
+wrong. This note records a follow-on attempt (via `codex-task`, nine rounds plus one independent
+review so far) to actually build that
 path, on the tiny hand-verified game `G(o <-> X(i))` (`INPUTS{i} OUTPUTS{o}`, confirmed UNREALIZABLE
 via `-u formula`) before touching `round_robin_arbiter_unreal2`'s real seeds. Every round stopped on
 a clean result rather than proceeding on an ambiguous one, and reverted its own source edits; no
@@ -533,20 +534,68 @@ was the gap — a planning error on this session's part, not a wrong instruction
 exactly as designed (a well-evidenced negative result, not a wasted round) and reverted cleanly
 before touching the unreal case or the timing question at all.
 
-**Disposition**: mechanically solved (five gates), criterion fix known but must be made conditional
-on `check_unreal` rather than unconditional — round 8 correctly caught the unconditional version via
-its own real-side regression check, before it could reach the untested unreal path or the timing
-question at all. Eight rounds so far: five real structural gates found and fixed, one invalidated
-test (round 3's corrupted formula), the actual root blocker identified by instrumentation (round 5),
-and one criterion fix correctly identified as needing to be scoped to the unreal child (round 8).
-All source edits from every round were reverted (`git status` confirms a clean tree under `src/`,
-and round 5 verified the restored file's SHA-256), every `build_unreal_test` directory was removed,
-no commit was made, and no unsound export was ever produced or trusted.
-`round_robin_arbiter_unreal2`'s real seeds were never touched by any round. What remains: apply the
-criterion fix conditionally, then run the polarity check and the empirical dual-reading Mealy/Moore
-timing simulation that were always the real bar — the near-miss recorded under W3 above means a
-produced circuit must still be decoded and simulated before it can be called a witness, never
-accepted merely because a file appeared.
+**Round 9 applied the corrected, `check_unreal`-conditional criterion** —
+`assert (check_unreal.has_value () ? aut->intersects (...) : not aut->intersects (...))` — and it
+worked cleanly through every check: the real-side regression still passes unchanged, and the unreal
+case on the tiny game produced a genuine AAG. Its symbol table declares `i0 o / o0 i` — the correct
+environment-strategy polarity.
+
+**The circuit was independently re-derived by hand from the raw AIGER file** (not just trusted from
+codex's report), and the gate-level equations check out exactly:
+`q0' = ¬q0∧¬q1`, `q1' = q0⊕q1`, `y = ¬q1∧¬o∧q0` (`y` is the exported `i`), with the state trajectory
+from `(q0,q1)=(0,0)` reaching a fixed point `(0,1)` at cycle 2 and staying there — **and critically,
+the transition function never references `o` at all**, only the output function does. That fact
+gives a short, general, non-empirical proof of soundness under the "one-step-delayed" reading
+(circuit's cycle-`t` output = environment's `i` at original round `t+1`, so the check is
+`o(t) != y(t)`): if `o₀=1`, `y₀=0` unconditionally, forcing a violation at `t=0`; if `o₀=0`, the state
+at `t=1` is forced to `(1,0)` regardless of `o₀`'s exact history, giving `y₁=¬o₁`, so `o₁≠y₁` is a
+tautology — every possible infinite `o`-sequence is covered by exactly these two cases. Also checked
+empirically against 5 chosen adversarial sequences (all-zero, all-one, both alternating phases, one
+irregular single-pulse) — all 5 confirm the general proof, and the same 5 sequences show the
+*same-round* reading (circuit cycle-`t` output = `i` at round `t`, no delay) fails on the irregular
+sequence, correctly distinguishing the two readings rather than leaving them both plausible.
+
+**This is a genuinely, provably sound environment witness for the tiny hand-verified game** — the
+first one this sprint has actually produced end-to-end via the adapter path, not hand-constructed.
+
+The `round_robin_arbiter_unreal2` seed (`rru2_n2.tlsf`, declared `SEMANTICS: Mealy; TARGET: Mealy;`)
+was then run through the same pipeline and produced a plausible-looking 59-byte AAG with 2 inputs
+(`g_1`, `g_0`) and 2 outputs (`r_0`, `r_1`) — **not validated for soundness**, deliberately out of
+scope for that step; a real family instance needs the same kind of careful per-sequence/game
+analysis as the tiny case, likely harder with more APs, and should not be trusted just because a file
+appeared, per every prior finding in this thread.
+
+**Independent review (a separate codex session, per the standing "codex writes, another subagent
+reviews" workflow) caught a real, distinct 7th gap before anything was committed**: `try_degenerate_io`
+has a *separate*, synthesis-capable shortcut (`run_no_input_ltl`, for specs whose *original* input
+alphabet is empty) that fires whenever `input_aps.empty () and synth_fname.has_value ()`, regardless
+of `check_unreal`. Confirmed by direct reading: `run_no_input_ltl` returns `not satisfiable` on the
+unreal path immediately, before ever reaching its own file-writing block a few lines later — so a
+spec with zero original input APs, combined with `-u formula -s FILE`, would report the correct
+verdict but silently leave the file unwritten. This does not affect the tiny game (`input_aps={i}`,
+non-empty) or `rru2_n2` (also non-empty), so it did not surface in rounds 6-9's own testing — exactly
+the kind of gap an exhaustive independent sweep is for, distinct from re-deriving the soundness proof
+above (which the review correctly did not re-litigate, deferring to the hand-verified derivation).
+Review verdict: 6 of 8 checked points PASS outright (the ternary dispatch, the debug-only guard's
+release-build inertness, `want_controller_strategy`'s three call sites, the untouched demand-provider
+assert, the safety-core-witness guard/call-site, and the decomposition bypass's scope), one style nit
+(`if (...) return ...;` on one line, against `.clang-format`'s `AllowShortIfStatementsOnASingleLine:
+Never`), and this one real functional gap. Not yet fixed or re-reviewed.
+
+**Disposition**: mechanically solved and the tiny-game witness is provably sound; not yet safe to
+commit — one real edge-case gap found by independent review (empty original input alphabet), plus a
+minor style nit, remain to be fixed and re-verified before landing. Nine rounds plus one independent
+review so far: five real structural gates found and fixed (rounds 6-7), one invalidated test (round
+3's corrupted formula), the actual root blocker identified by instrumentation (round 5), one
+criterion fix first tried unconditionally and correctly caught as too broad by round 8's own
+real-side regression check, then correctly scoped to the unreal child in round 9 and independently
+verified sound by hand, and one further real gap (the no-input shortcut) found by independent review
+and not yet fixed. All source edits from rounds 1-8 were reverted after each round (`git status`
+confirmed a clean tree under `src/` every time, and round 5 verified the restored file's SHA-256);
+round 9's edit is the first to be deliberately left uncommitted in the working tree, pending the
+no-input fix and re-review. No commit has been made, and no unsound export has been produced or
+trusted at any point. `round_robin_arbiter_unreal2`'s real seed was run once (round 9, producing a
+plausible but explicitly unvalidated AAG) and never had its soundness checked.
 
 ## W5–W7 — not started
 
