@@ -244,3 +244,61 @@ re-checked the targeted tests and formatting and confirmed default output byte-i
 games it did not use (`arbiter` n=4, `load_balancer` n=2). Size at n=3: 91 predicates for
 `arbiter`, 129 for `round_robin_arbiter`. No separate review: M3 re-checks every certificate
 independently, so an export bug could only cause spurious failures, never a false certificate.
+
+## M3 — target certificate checker (tlsf-tools `a029f8b`)
+
+`tlsfcertcheck GAME POLICY --certificate C.aag` answers "does this policy win?" at a size we
+cannot afford to synthesize, by two independent routes. The **certificate** route checks one-step
+implications only — every `inv` state has a least lexicographic rank, and while `goal_j` is false
+the policy reaches the goal, drops `k`, or stays in `x_j_k_i` with `fair_i` false at the successor
+— so an infinite goal-avoiding play stabilizes at some `(k,i)` and violates fairness `i`. The
+**closed-loop** route composes policy with game and searches the reachable product for a fair cycle
+missing a justice (Emerson–Lei). `tlsfsolve` grew `--policy` for the combinational policy.
+
+**Verdicts distinguish a failed proof from a losing policy.** The certificate route has no
+reachability analysis, so a failing condition may name an unreachable state; it returns
+`CERT_FAILED` (exit 6) and never `REFUTED`, keeping the counterexample as the CEGIS diagnostic.
+Only the closed loop may `REFUTE`. The only real contradiction — certificate VERIFIED against a
+refuting closed loop — is exit 5.
+
+That split was not in the first implementation: it returned `REFUTED` for every failing certificate
+condition. I found it by corrupting only the certificate over a byte-identical, provably winning
+policy: `certificate=REFUTED, closed-loop=VERIFIED, both=INTERNAL` on `arbiter` n=2 and
+`round_robin_arbiter` n=3. `REFUTED` there is unsound (the controller does win) and the internal
+error is wrong (the methods are not inconsistent, one proof did not go through) — and it is M4's
+*normal* case, where a generalized candidate invariant is slightly off while the candidate
+controller is right. Fixed in the same round, with `y = union(x)` reclassified from INVALID to a
+semantic `CERT_FAILED`.
+
+Second defect, also found by using it: `--policy FILE` defaulted its sidecar to `FILE.json` but
+`--certificate FILE` did not, while the checker *defaulted to reading* `FILE.json`. The obvious
+invocation produced a certificate the checker called INVALID — it cost a full seed sweep before I
+read the message. Now symmetric.
+
+My own verification, not the implementer's:
+
+- **Seeds, all four methods.** 11 exact-mode seeds (`arbiter` 2/3/4, `round_robin_arbiter` 2..5,
+  `prioritized_arbiter` 2/3, `load_balancer` 2, `lift` 2) × {certificate, closed-loop, both, auto}
+  = **44/44 VERIFIED**, through the now-default sidecar path. Certificate 0.05–0.75 s; closed loop
+  0.05–24.98 s, i.e. the certificate route is 10–100× faster, which is the whole point at a target.
+- **Mutations** on four seeds: certificate-only corruptions (`inv := true`, a zeroed rank
+  predicate) give `CERT_FAILED` + closed-loop `VERIFIED` + both/auto `VERIFIED`; genuinely losing
+  policies (a `controllable_*` output forced false) give `REFUTED` everywhere. No mutation ever
+  produced a false VERIFIED.
+- **One verdict flipped** relative to the first implementation and I checked it rather than
+  accepting it: `load_balancer` n=2 with `curr_next_1` forced false is now VERIFIED, because the
+  implementer removed a "counter protocol" shortcut and judges the actual objective instead. A
+  broken goal counter that still hits all 7 justices infinitely often *is* a winning controller.
+  Corroborated independently: emitted that controller and checked it against the original TLSF with
+  `verify_strategy_explicit.py` — VERIFIED.
+- **Soundness bridge to the original specification.** The chain only means something if a policy
+  accepted on the *monitor game* satisfies the *original TLSF*. Emitted controllers checked with
+  `verify_strategy_explicit.py`: `arbiter` n=3 VERIFIED, `arbiter` n=4 VERIFIED, `round_robin_arbiter`
+  n=3 VERIFIED, `prioritized_arbiter` n=3 VERIFIED, `load_balancer` n=3 VERIFIED. Nothing refuted.
+  (`arbiter` n=4 needs more than 300 s of explicit enumeration — the first run's exit 124 was the
+  cap, not a refutation, which is worth remembering before reading a cap as a negative result.)
+- **272/272** suite, pinned clang-format 18.1.8 clean, `git diff --check` clean, default `tlsfsolve`
+  output byte-identical to the pre-M3b binary on three games.
+
+`ruff` is not installed on this machine, so the Python lint the repo requires was not run locally;
+CI covers it.
