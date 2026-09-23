@@ -295,3 +295,40 @@ Of the **172** unsolved instances across the 36 parametric families:
 | needs M5's dual certificate (`*_unreal2`) | 6 | 3% |
 | reducible but not yet classified | 54 | 31% |
 
+## 6. Correction: what `min_k` does and does not measure
+
+`m4-invariant-separability.tsv` now carries `vars_per_client`, `shared_vars`, `shared_pct` and
+`dropped_by_k1`, because the `min_k` column on its own reads as more than it supports.
+
+The projection used to compute `min_k` keeps **every shared variable** — those belonging to scalar
+and bus-wide monitors — in every conjunct, and projects away only other clients' local variables. So
+the strength of the test depends entirely on how much of the state is local:
+
+| seed | vars/client | shared | shared % | a k=1 projection drops | min_k | generalizer |
+|---|---|---|---|---|---|---|
+| `arbiter` n=4 | 11 | 2 | 4% | 33 of 46 | 2 | succeeds at k=2 |
+| `round_robin_arbiter` n=4 | 10 | 2 | 5% | 30 of 42 | n | declines, correctly |
+| `prioritized_arbiter` n=3 | 4 | 8 | 40% | 8 of 20 | 1 | succeeds at k=1 |
+| `simple_arbiter_with_hints` n=4 | 2 | 14 | **64%** | **6 of 22** | 1 | **declines** |
+
+For `arbiter` a k=1 projection discards 33 of 46 variables, so "the conjunction still equals `inv`"
+is a strong statement, and it correctly fails there. For `simple_arbiter_with_hints` it discards 6 of
+22 and keeps the other 16 in every conjunct, so recovering `inv` is close to automatic: `min_k = 1`
+there means *almost nothing was projected away*, not that the invariant is per-client local.
+
+The generalizer needs the stronger property, because at the target `N` the shared and bus-wide
+monitors differ too and must themselves be generalized rather than carried along. When it tries,
+`inv` for that family reconstructs at no bounded arity, and it declines — which is the correct
+answer. There is no contradiction between the two results; `min_k` is simply the weaker test.
+
+So: **`min_k` is informative when `shared_pct` is low and close to vacuous when it is high.** It was
+never a sufficient condition for the generalizer to succeed, and §2's table should be read with the
+`shared_pct` column beside it. The families where it did predict correctly all have low shared
+fractions (`arbiter`, `arbiter_with_cancel`, `arbiter_on_inpchange`, `abcg_arbiter`,
+`round_robin_arbiter`, all at 2-6%); the one case where a low `min_k` did not predict success is
+`simple_arbiter_with_hints` at 60-71%.
+
+Note the correlation is not a law: `amba_decomposed_lock` sits at 40-57% shared with `min_k = 1` and
+the generalizer does succeed on it, closing n=15 and n=16. `shared_pct` says how much weight the
+measurement can bear, not what the answer will be.
+
