@@ -436,3 +436,37 @@ but not at `arbiter`'s target. A partitioned transition relation is the standard
 yet done. Until then the n=10 result has one sound proof and no second opinion, and should be quoted
 that way.
 
+## Coverage audit — four of M4's five demonstration targets were already solvable
+
+Checking M4's verified targets against `m0-instances.tsv`'s `status_120s`: only `arbiter` n=10 was
+an unsolved instance. `prioritized_arbiter` n=5, `load_balancer` n=5 and `arbiter_with_cancel` n=5
+already solve at 120 s, and `collector_v1` n=4 is not a benchmark instance at all. So the measured
+result at the end of M4 was **one** previously-unsolved instance closed, not five. The targets had
+been chosen as small demonstrations and I reported them without checking them against the unsolved
+set; that is corrected here and every target from now on is drawn from the unsolved set only.
+
+Re-running at genuinely unsolved targets closes four more, all in seconds:
+
+| instance | was | now | wall |
+|---|---|---|---|
+| `arbiter` n=6 | unsolved | VERIFIED | 2 s |
+| `arbiter_with_cancel` n=6 | unsolved | VERIFIED | 11 s |
+| `prioritized_arbiter` n=7 | unsolved | VERIFIED | 1 s |
+| `load_balancer` n=8 | unsolved | VERIFIED | 18 s |
+
+**Five previously-unsolved instances now closed**, against a 120 s budget they do not meet by
+solving.
+
+That sweep also found the real bottleneck, and it was neither the solver nor the method: five
+families declined with "family has no fixed-arity M4 measurement" because `FAMILIES` in
+`generalize_gr1.py` was a hardcoded table of the original five, and the round-2 measurements lived
+in a second TSV the driver never read. Merged into the canonical
+`m4-invariant-separability.tsv` and the table extended to all ten measured families. Those five
+carry 18 unsolved instances.
+
+`collector_v1` n=11 declined for a different and real reason — its n=5 *seed* fails with
+`tlsfsolve: OxiDD solver failed`, the 2^22 cap from the previous entry. So solver capacity does bite,
+on seeds rather than on targets.
+
+`remaining.md` records the ordered plan for the rest of the sprint against this audit.
+

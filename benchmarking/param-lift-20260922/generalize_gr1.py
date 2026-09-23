@@ -97,6 +97,24 @@ FAMILIES = {
     "collector_v1": FamilySpec(
         "tests/syntcomp-benchmarks/tlsf/collector/parametric/collector_v1.tlsf",
         1, (3,)),
+    # Second round of arity measurement (m4-invariant-separability.tsv, merged
+    # from the round-2 file).  Same footing as the five above: each arity below
+    # is measured and constant over every n that solves, not assumed.
+    "arbiter_with_buffer": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf",
+        1, (2, 3, 4)),
+    "simple_arbiter_with_hints": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf",
+        1, (2, 4, 6)),
+    "amba_decomposed_lock": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf",
+        1, (2, 3, 4)),
+    "abcg_arbiter": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf",
+        2, (2, 3)),
+    "arbiter_on_inpchange": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf",
+        2, (2, 3, 4)),
 }
 OUT_OF_SCOPE = frozenset(
     ("round_robin_arbiter", "lift", "amba_decomposed_arbiter"))
