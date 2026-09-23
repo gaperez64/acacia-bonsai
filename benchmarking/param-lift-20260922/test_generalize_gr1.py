@@ -153,8 +153,7 @@ class GeneralizeGr1Test(unittest.TestCase):
                 self.assertNotIn("VERIFIED", proc.stdout)
 
     def test_degenerate_seeds_are_refused(self) -> None:
-        cases = (("round_robin_arbiter_unreal2", 4, 2),
-                 ("arbiter", 3, 1))
+        cases = (("arbiter", 3, 1),)
         for family, target, seed in cases:
             with self.subTest(family=family):
                 proc = _run([
@@ -166,6 +165,23 @@ class GeneralizeGr1Test(unittest.TestCase):
                 self.assertIn("UNKNOWN", proc.stdout)
                 self.assertIn("stable_from", proc.stdout)
                 self.assertNotIn("VERIFIED", proc.stdout)
+
+    def test_unreal_direct_path_checks_environment_certificate(self) -> None:
+        out = self.root / "round-robin-unreal2-3"
+        proc = _run([
+            str(PYTHON), str(DRIVER), "--family", "round_robin_arbiter_unreal2",
+            "--target", "3", "--seeds", "", "--timeout", "120",
+            "--out", str(out),
+        ], self.env, 150)
+        self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+        self.assertIn("VERIFIED", proc.stdout)
+        certificate = out / "round_robin_arbiter_unreal2_3.certificate.aag.json"
+        metadata = json.loads(certificate.read_text(encoding="utf-8"))
+        self.assertEqual(metadata["status"], "unrealizable")
+        self.assertEqual(metadata["side"], "environment")
+        self.assertEqual(metadata["reduction_semantics"], "exact")
+        check = json.loads((out / "check-target-3.json").read_text(encoding="utf-8"))
+        self.assertEqual(check["verdict"], "VERIFIED")
 
     def _corrupt_check(self, family: str, mutate) -> subprocess.CompletedProcess[str]:
         _seeds, target = ROUND_TRIPS[family]

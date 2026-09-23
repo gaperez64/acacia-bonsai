@@ -148,6 +148,20 @@ FAMILIES = {
         "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf",
         2, (2, 3, 4)),
 }
+UNREAL_FAMILIES = {
+    "round_robin_arbiter_unreal2": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
+        0, ()),
+    "prioritized_arbiter_unreal2": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf",
+        0, ()),
+    "load_balancer_unreal2": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf",
+        0, ()),
+    "amba_case_study_unreal": FamilySpec(
+        "tests/syntcomp-benchmarks/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf",
+        0, ()),
+}
 OUT_OF_SCOPE = frozenset(
     ("round_robin_arbiter", "lift", "amba_decomposed_arbiter"))
 STRUCTURED_GRANT_FAMILIES = frozenset(
@@ -169,6 +183,25 @@ class Decline(RuntimeError):
 
 _LAST_STAGE_TIMES: dict[str, float] = {}
 _ACTIVE_STAGE: tuple[str, float] | None = None
+_COST_TIMES: Counter[str] = Counter()
+
+
+def _write_cost_progress() -> None:
+    """Persist partial cold-cost evidence for an outer absolute deadline."""
+    raw = os.environ.get("GENERALIZE_GR1_PROGRESS")
+    if not raw:
+        return
+    path = pathlib.Path(raw)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "cost_times": dict(_COST_TIMES),
+        "last_stage_times": dict(_LAST_STAGE_TIMES),
+        "active_stage": _ACTIVE_STAGE[0] if _ACTIVE_STAGE is not None else None,
+    }
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.replace(path)
 
 
 class StageTimes(dict[str, float]):
@@ -178,14 +211,17 @@ class StageTimes(dict[str, float]):
         global _ACTIVE_STAGE
         started = time.monotonic()
         _ACTIVE_STAGE = (key, started)
+        _write_cost_progress()
         return started
 
     def __setitem__(self, key: str, value: float) -> None:
         global _ACTIVE_STAGE
         super().__setitem__(key, value)
         _LAST_STAGE_TIMES[key] = value
+        _COST_TIMES[f"stage_{key}"] += value
         if _ACTIVE_STAGE is not None and _ACTIVE_STAGE[0] == key:
             _ACTIVE_STAGE = None
+        _write_cost_progress()
 
 
 @dataclasses.dataclass
@@ -363,7 +399,7 @@ def _run(command: list[str], timeout: float, cwd: pathlib.Path = ROOT) -> subpro
 
 def build_game(family: str, n: int, directory: pathlib.Path,
                timeout: float, stage: str = "seed") -> tuple[pathlib.Path, pathlib.Path]:
-    spec = FAMILIES[family]
+    spec = FAMILIES.get(family) or UNREAL_FAMILIES[family]
     game = directory / f"{family}_{n}.game.aag"
     prov = directory / f"{family}_{n}.prov.json"
     command = [str(BINDINGS_PYTHON), str(MONITOR), str(ROOT / spec.source),
@@ -372,12 +408,17 @@ def build_game(family: str, n: int, directory: pathlib.Path,
     env = dict(os.environ)
     site = "/usr/local/lib64/python3.13/site-packages"
     env["PYTHONPATH"] = site + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    started = time.monotonic()
     try:
         proc = subprocess.run(command, cwd=ROOT, env=env, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                               check=False, timeout=timeout)
     except subprocess.TimeoutExpired:
         raise Decline(stage, "monitor_game", n, f"timed out after {timeout:g}s")
+    finally:
+        key = "seed_monitor_game" if stage == "seed" else "target_monitor_game"
+        _COST_TIMES[key] += time.monotonic() - started
+        _write_cost_progress()
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout).strip()[-500:]
         raise Decline(stage, "monitor_game", n,
@@ -396,7 +437,12 @@ def solve_seed(family: str, n: int, directory: pathlib.Path,
                "--policy-json", str(policy) + ".json",
                "--oxidd-nodes", str(nodes), "--oxidd-cache", str(cache),
                str(game)]
-    proc = _run(command, limits.checker_timeout_s)
+    started = time.monotonic()
+    try:
+        proc = _run(command, limits.checker_timeout_s)
+    finally:
+        _COST_TIMES["seed_solve"] += time.monotonic() - started
+        _write_cost_progress()
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout).strip()[-500:]
         raise Decline("seed", "tlsfsolve", n,
@@ -2127,6 +2173,10 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
             break
     assert proc is not None
     elapsed = time.monotonic() - started
+    _COST_TIMES[
+        "target_check" if label.startswith("target-") else "probe_check"
+    ] += elapsed
+    _write_cost_progress()
     payload = None
     if json_out.exists():
         try:
@@ -2152,6 +2202,9 @@ def _write_result(row: dict[str, object]) -> None:
                "cegis_rounds", "verdict",
                "seed_s", "canonicalize_s", "anti_unify_s", "bus_schemas_s",
                "ranks_s", "instantiate_s", "cegis_s", "wall_s",
+               "seed_monitor_s", "seed_solve_s", "target_monitor_s",
+               "target_solve_s", "target_check_s", "probe_check_s",
+               "driver_overhead_s",
                "peak_rss_kib", "solver_nodes", "solver_cache",
                "checker_node_caps", "reason"]
     rows = []
@@ -2181,7 +2234,9 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
         limits: ProposerLimits, check_method: str = "auto") -> dict:
     global _ACTIVE_STAGE
     _LAST_STAGE_TIMES.clear()
+    _COST_TIMES.clear()
     _ACTIVE_STAGE = None
+    _write_cost_progress()
     started_all = time.monotonic()
     stable = stable_from(family)
     bad = [n for n in seeds if n < stable]
@@ -2278,6 +2333,30 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
     (out / "evidence.json").write_text(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     wall_s = time.monotonic() - started_all
+    charged_s = sum(
+        _COST_TIMES.get(key, 0.0)
+        for key in ("seed_monitor_game", "seed_solve", "target_monitor_game",
+                    "stage_anti_unify", "stage_bus_schemas", "stage_ranks",
+                    "stage_instantiate", "target_check", "probe_check")
+    )
+    driver_overhead_s = max(0.0, wall_s - charged_s)
+    cost_accounting = {
+        "seed_monitor_s": _COST_TIMES.get("seed_monitor_game", 0.0),
+        "seed_solve_s": _COST_TIMES.get("seed_solve", 0.0),
+        "target_monitor_s": _COST_TIMES.get("target_monitor_game", 0.0),
+        "generalization_s": sum(
+            _COST_TIMES.get(key, 0.0)
+            for key in ("stage_anti_unify", "stage_bus_schemas", "stage_ranks")
+        ),
+        "instantiate_s": _COST_TIMES.get("stage_instantiate", 0.0),
+        "target_check_s": _COST_TIMES.get("target_check", 0.0),
+        "probe_check_s": _COST_TIMES.get("probe_check", 0.0),
+        "driver_overhead_s": driver_overhead_s,
+        "wall_s": wall_s,
+    }
+    evidence["cost_accounting"] = cost_accounting
+    (out / "evidence.json").write_text(
+        json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     solver_capacities = [limits.seed_capacity(n) for n in current]
     checker_caps = [
         f"{n}:" + "/".join(map(str, check["node_caps"]))
@@ -2291,6 +2370,7 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
               "cegis_rounds": rounds, "verdict": verdict,
               "certificate": cert, "policy": policy, "checks": checks,
               "times": times, "wall_s": wall_s, "peak_rss_kib": peak_rss,
+              "cost_accounting": cost_accounting,
               "reason": "" if verdict == "VERIFIED" else
               ((final_check["stderr"] or final_check["stdout"]).strip()[-500:])}
     _write_result({"family": family, "target": target,
@@ -2309,12 +2389,171 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
                    "instantiate_s": f"{times.get('instantiate', 0):.6f}",
                    "cegis_s": f"{times.get('cegis', 0):.6f}",
                    "wall_s": f"{wall_s:.6f}",
+                   "seed_monitor_s": f"{cost_accounting['seed_monitor_s']:.6f}",
+                   "seed_solve_s": f"{cost_accounting['seed_solve_s']:.6f}",
+                   "target_monitor_s": f"{cost_accounting['target_monitor_s']:.6f}",
+                   "target_solve_s": "0.000000",
+                   "target_check_s": f"{cost_accounting['target_check_s']:.6f}",
+                   "probe_check_s": f"{cost_accounting['probe_check_s']:.6f}",
+                   "driver_overhead_s": f"{cost_accounting['driver_overhead_s']:.6f}",
                    "peak_rss_kib": peak_rss,
                    "solver_nodes": ",".join(str(nodes) for nodes, _ in solver_capacities),
                    "solver_cache": ",".join(str(cache) for _, cache in solver_capacities),
                    "checker_node_caps": ",".join(checker_caps),
                    "reason": result["reason"] or "-"})
     return result
+
+
+def run_unreal_direct(family: str, target: int, out: pathlib.Path,
+                      limits: ProposerLimits) -> dict:
+    """Build, solve, and check one exact target environment certificate.
+
+    M5 made the dual certificate checkable but did not measure a bounded-arity
+    cross-size environment generalizer.  Keeping this path in the same driver
+    gives every campaign row a standalone ``generalize_gr1.py`` reproducer
+    without mislabelling a direct target solve as lifting.
+    """
+    _LAST_STAGE_TIMES.clear()
+    _COST_TIMES.clear()
+    global _ACTIVE_STAGE
+    _ACTIVE_STAGE = None
+    _write_cost_progress()
+    out.mkdir(parents=True, exist_ok=True)
+    started_all = time.monotonic()
+    game, provenance = build_game(
+        family, target, out, limits.checker_timeout_s, stage="canonicalize")
+    certificate = out / f"{family}_{target}.certificate.aag"
+    policy = out / f"{family}_{target}.policy.aag"
+    nodes, cache = limits.seed_capacity(target)
+    solve_command = [
+        str(SOLVER), "--semantics", "exact",
+        "--certificate", str(certificate),
+        "--certificate-json", str(certificate) + ".json",
+        "--policy", str(policy), "--policy-json", str(policy) + ".json",
+        "--oxidd-nodes", str(nodes), "--oxidd-cache", str(cache), str(game),
+    ]
+    solve_started = time.monotonic()
+    solve = _run(solve_command, limits.checker_timeout_s)
+    _COST_TIMES["target_solve"] += time.monotonic() - solve_started
+    _write_cost_progress()
+    if solve.returncode != 1:
+        detail = (solve.stderr or solve.stdout).strip()[-500:]
+        raise Decline("target_solve", "tlsfsolve", target,
+                      f"exact target did not export UNREAL (exit {solve.returncode}): {detail}")
+    required = (certificate, policy, pathlib.Path(str(certificate) + ".json"),
+                pathlib.Path(str(policy) + ".json"))
+    if not all(path.is_file() for path in required):
+        raise Decline("target_solve", "environment artifacts", target,
+                      "UNREAL solver verdict omitted certificate or policy")
+    cert_meta = json.loads(pathlib.Path(str(certificate) + ".json").read_text(
+        encoding="utf-8"))
+    policy_meta = json.loads(pathlib.Path(str(policy) + ".json").read_text(
+        encoding="utf-8"))
+    if (cert_meta.get("status") != "unrealizable" or
+            cert_meta.get("side") != "environment" or
+            cert_meta.get("reduction_semantics") != "exact" or
+            cert_meta.get("environment_counter_strategy_exported") is not True or
+            policy_meta.get("side") != "environment" or
+            policy_meta.get("reduction_semantics") != "exact"):
+        raise Decline("target_solve", "environment metadata", target,
+                      "certificate is not an exact Moore environment witness")
+
+    json_out = out / f"check-target-{target}.json"
+    attempts = []
+    checker_started = time.monotonic()
+    check = None
+    # Environment certificates carry the dual outer/inner ranks and need a
+    # larger checker arena than the system side on the measured M5 families.
+    # The enclosing campaign cgroup remains the authoritative 8 GiB bound.
+    initial_checker_cap = limits.checker_nodes or max(
+        _scaled_checker_nodes(target), 1 << 26)
+    for node_cap in (initial_checker_cap, 2 * initial_checker_cap):
+        command = [
+            str(CHECKER), "--method", "certificate", "--timeout",
+            str(limits.checker_timeout_s), "--node-cap", str(node_cap),
+            "--json-out", str(json_out), "--certificate", str(certificate),
+            "--certificate-json", str(certificate) + ".json", str(game),
+            str(policy),
+        ]
+        check = _run(command, limits.checker_timeout_s + 10)
+        attempts.append({"node_cap": node_cap, "returncode": check.returncode})
+        if check.returncode != 3:
+            break
+    _COST_TIMES["target_check"] += time.monotonic() - checker_started
+    _write_cost_progress()
+    assert check is not None
+    verdict = VERDICTS.get(check.returncode, "ERROR")
+    payload = None
+    if json_out.is_file():
+        try:
+            payload = json.loads(json_out.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            payload = None
+    if (check.returncode != 0 or not isinstance(payload, dict) or
+            payload.get("verdict") != "VERIFIED" or
+            payload.get("methods", {}).get("certificate", {}).get("verdict") != "VERIFIED"):
+        detail = (check.stderr or check.stdout).strip()[-500:]
+        raise Decline("target_check", "tlsfcertcheck", target,
+                      f"environment certificate did not verify: {verdict}: {detail}")
+
+    wall_s = time.monotonic() - started_all
+    target_monitor = _COST_TIMES.get("target_monitor_game", 0.0)
+    target_solve = _COST_TIMES.get("target_solve", 0.0)
+    target_check = _COST_TIMES.get("target_check", 0.0)
+    driver_overhead = max(0.0, wall_s - target_monitor - target_solve - target_check)
+    evidence = {
+        "format": "acacia-param-lift-gr1-evidence-v1",
+        "family": family, "target": target, "seeds": [],
+        "path_kind": "direct-certified", "measured_arity": None,
+        "semantics": "exact", "certificate_side": "environment",
+        "stage_evidence": {
+            "target_monitor_game": {"game": game.name,
+                                    "provenance": provenance.name},
+            "target_solve": {"exit_code": solve.returncode,
+                             "certificate": certificate.name,
+                             "policy": policy.name},
+            "target_check": {"verdict": "VERIFIED", "attempts": attempts},
+        },
+        "cost_accounting": {
+            "seed_monitor_s": 0.0, "seed_solve_s": 0.0,
+            "generalization_s": 0.0, "instantiate_s": 0.0,
+            "target_monitor_s": target_monitor,
+            "target_solve_s": target_solve, "target_check_s": target_check,
+            "probe_check_s": 0.0, "driver_overhead_s": driver_overhead,
+            "wall_s": wall_s,
+        },
+        "final_verdict": "VERIFIED",
+    }
+    (out / "evidence.json").write_text(
+        json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    peak_rss = max(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+                   resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss)
+    _write_result({
+        "family": family, "target": target, "seeds": "", "arity": "",
+        "role_classes": "", "predicate_arities": "",
+        "stage_reached": "target_check",
+        "stages_passed": "target_monitor_game,target_solve,target_check",
+        "cegis_rounds": 0, "verdict": "VERIFIED", "seed_s": "0.000000",
+        "canonicalize_s": "0.000000", "anti_unify_s": "0.000000",
+        "bus_schemas_s": "0.000000", "ranks_s": "0.000000",
+        "instantiate_s": "0.000000", "cegis_s": "0.000000",
+        "wall_s": f"{wall_s:.6f}", "seed_monitor_s": "0.000000",
+        "seed_solve_s": "0.000000", "target_monitor_s": f"{target_monitor:.6f}",
+        "target_solve_s": f"{target_solve:.6f}",
+        "target_check_s": f"{target_check:.6f}", "probe_check_s": "0.000000",
+        "driver_overhead_s": f"{driver_overhead:.6f}",
+        "peak_rss_kib": peak_rss, "solver_nodes": nodes,
+        "solver_cache": cache,
+        "checker_node_caps": "/".join(str(item["node_cap"]) for item in attempts),
+        "reason": "-",
+    })
+    return {
+        "family": family, "target": target, "seeds": (), "arity": "",
+        "role_classes": (), "stages_passed": evidence["stage_evidence"].keys(),
+        "cegis_rounds": 0, "verdict": "VERIFIED",
+        "certificate": certificate, "policy": policy,
+        "wall_s": wall_s, "peak_rss_kib": peak_rss, "reason": "",
+    }
 
 
 def _decline_result(family: str, target: int, seeds: tuple[int, ...],
@@ -2327,6 +2566,13 @@ def _decline_result(family: str, target: int, seeds: tuple[int, ...],
     solver_capacities = [limits.seed_capacity(n) for n in seeds]
     peak_rss = max(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
                    resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss)
+    charged_s = sum(
+        _COST_TIMES.get(key, 0.0)
+        for key in ("seed_monitor_game", "seed_solve", "target_monitor_game",
+                    "stage_anti_unify", "stage_bus_schemas", "stage_ranks",
+                    "stage_instantiate", "target_check", "probe_check")
+    )
+    driver_overhead_s = max(0.0, wall_s - charged_s)
     result = {"family": family, "target": target, "seeds": seeds,
               "arity": FAMILIES[family].arity if family in FAMILIES else "",
               "role_classes": (), "stages_passed": (), "cegis_rounds": 0,
@@ -2346,6 +2592,13 @@ def _decline_result(family: str, target: int, seeds: tuple[int, ...],
                    "instantiate_s": f"{times.get('instantiate', 0):.6f}",
                    "cegis_s": f"{times.get('cegis', 0):.6f}",
                    "wall_s": f"{wall_s:.6f}", "peak_rss_kib": peak_rss,
+                   "seed_monitor_s": f"{_COST_TIMES.get('seed_monitor_game', 0):.6f}",
+                   "seed_solve_s": f"{_COST_TIMES.get('seed_solve', 0):.6f}",
+                   "target_monitor_s": f"{_COST_TIMES.get('target_monitor_game', 0):.6f}",
+                   "target_solve_s": f"{_COST_TIMES.get('target_solve', 0):.6f}",
+                   "target_check_s": f"{_COST_TIMES.get('target_check', 0):.6f}",
+                   "probe_check_s": f"{_COST_TIMES.get('probe_check', 0):.6f}",
+                   "driver_overhead_s": f"{driver_overhead_s:.6f}",
                    "solver_nodes": ",".join(str(nodes) for nodes, _ in solver_capacities),
                    "solver_cache": ",".join(str(cache) for _, cache in solver_capacities),
                    "checker_node_caps": "", "reason": str(decline)})
@@ -2377,7 +2630,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check-method", choices=("auto", "certificate", "both"),
                         default="auto", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
-    default = FAMILIES.get(args.family)
+    default = FAMILIES.get(args.family) or UNREAL_FAMILIES.get(args.family)
     seeds = (tuple(int(item) for item in args.seeds.split(",") if item)
              if args.seeds is not None else (default.default_seeds if default else ()))
     out = (args.out or ROOT / "build_scratch" / "param-lift-m4" /
@@ -2388,8 +2641,11 @@ def main(argv: list[str] | None = None) -> int:
                             checker_nodes=args.node_cap)
     started = time.monotonic()
     try:
-        result = run(args.family, args.target, seeds, out, limits,
-                     args.check_method)
+        if args.family in UNREAL_FAMILIES:
+            result = run_unreal_direct(args.family, args.target, out, limits)
+        else:
+            result = run(args.family, args.target, seeds, out, limits,
+                         args.check_method)
     except Decline as exc:
         result = _decline_result(args.family, args.target, seeds, exc, limits,
                                  time.monotonic() - started)
