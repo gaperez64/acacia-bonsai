@@ -134,6 +134,17 @@ Both were caught by checking rather than by review, and both are recorded rather
   generalizer correctly declines it. The table now carries `shared_pct` and `dropped_by_k1` so the
   number cannot be over-read.
 
+## Reproducibility caveat on the submodule pin
+
+The committed `subprojects/tlsf-tools` pin is `f213093`, the merge of PR #33. The M5 environment
+certificate work is **not** in that pin — it lives on `param-lift-m5` (PR #35) and was merged
+upstream only after these numbers were taken. So the REAL half of the campaign reproduces at the
+committed pin, but the four UNREAL closures do not: they need the M5 binaries.
+
+Bump the pin again once #35 merges, and re-run `m6-campaign.tsv` against it before quoting the
+UNREAL rows as reproducible from a clean checkout. The pin was deliberately left where it is rather
+than moved to an unmerged branch commit.
+
 ## What a future session should pick up
 
 1. **The monitor encoding** (`followup-monitor-encoding.md`; 28 instances). Binary-encode
