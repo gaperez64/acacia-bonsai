@@ -12,8 +12,11 @@ import os
 import pathlib
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -21,6 +24,8 @@ ROOT = HERE.parents[1]
 DRIVER = HERE / "generalize_gr1.py"
 CHECKER = ROOT / "subprojects" / "tlsf-tools" / "build-oxidd" / "tlsfcertcheck"
 PYTHON = pathlib.Path("/usr/bin/python3.13")
+sys.path.insert(0, str(HERE))
+import generalize_gr1 as generalizer  # noqa: E402  pylint: disable=wrong-import-position
 
 ROUND_TRIPS = {
     "arbiter": ((3, 4), 10),
@@ -251,6 +256,84 @@ class GeneralizeGr1Test(unittest.TestCase):
             with self.subTest(file=name):
                 self.assertEqual((outputs[0] / name).read_bytes(),
                                  (outputs[1] / name).read_bytes())
+
+class GeneralizerUnitTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._temporary = tempfile.TemporaryDirectory(prefix="generalize-gr1-unit-")
+        self.root = pathlib.Path(self._temporary.name)
+
+    def tearDown(self) -> None:
+        self._temporary.cleanup()
+
+    def test_per_predicate_arity_fallback_is_independent(self) -> None:
+        seeds = [SimpleNamespace(n=4), SimpleNamespace(n=5)]
+
+        def projection(_bdds, seed, name, arity, _goal=None):
+            needed = 1 if name == "inv" else 2
+            if arity < needed:
+                raise generalizer.Decline(
+                    "anti-unify", name, seed.n,
+                    f"declared arity k={arity} does not reconstruct predicate")
+            return {("role",): f"{name}-k{arity}-n{seed.n}"}
+
+        with mock.patch.object(generalizer, "projection_templates",
+                               side_effect=projection):
+            _inv, inv_arity = generalizer._predicate_templates(
+                None, seeds, "inv", 1)
+            harder, harder_arity = generalizer._predicate_templates(
+                None, seeds, "x_0_0_0", 1)
+        self.assertEqual(inv_arity, 1)
+        self.assertEqual(harder_arity, 2)
+        self.assertEqual(harder[("role",)], "x_0_0_0-k2-n5")
+
+    def test_full_bus_at_n2_pair_is_routed_by_actual_arity(self) -> None:
+        pair = {
+            "arity_kind": "bus_wide", "index_tuple": [0, 1],
+            "support": {"buses": {"g": [0, 1], "r": [0, 1]}},
+            "template": ("(r_i0 & r_i1) | (((g_i0 & r_i0) | "
+                         "(!g_i0 & !r_i0)) & X(true))"),
+        }
+        self.assertEqual(generalizer._route_arity_kind(pair, 2), "local")
+        symmetric_bus = dict(pair, symmetric=True)
+        self.assertEqual(generalizer._route_arity_kind(symmetric_bus, 2),
+                         "bus_wide")
+
+    def test_checker_resource_retry_preserves_cert_failed(self) -> None:
+        target = SimpleNamespace(n=5, game_path=self.root / "game.aag")
+        cert = self.root / "candidate.aag"
+        policy = self.root / "policy.aag"
+        limits = generalizer.ProposerLimits(checker_nodes=1024)
+        responses = [
+            subprocess.CompletedProcess([], 3, "", "capacity"),
+            subprocess.CompletedProcess([], 6, "", "proof failed"),
+        ]
+        with mock.patch.object(generalizer, "_run", side_effect=responses):
+            result = generalizer.check_candidate(
+                target, cert, policy, "auto", limits, "retry")
+        self.assertEqual(result["verdict"], "CERT_FAILED")
+        self.assertEqual(result["node_caps"], [1024, 2048])
+
+    def test_capacity_defaults_scale_and_explicit_values_win(self) -> None:
+        defaults = generalizer.ProposerLimits()
+        self.assertEqual(defaults.seed_capacity(4), (1 << 25, 1 << 23))
+        self.assertEqual(defaults.seed_capacity(5), (1 << 26, 1 << 24))
+        self.assertEqual(defaults.check_capacity(5), 1 << 24)
+        self.assertEqual(defaults.check_capacity(6), 1 << 25)
+
+        explicit = generalizer.ProposerLimits(
+            solver_nodes=12345, solver_cache=2345, checker_nodes=3456)
+        self.assertEqual(explicit.seed_capacity(30), (12345, 2345))
+        self.assertEqual(explicit.check_capacity(30), 3456)
+
+    def test_target_game_timeout_keeps_canonicalize_stage(self) -> None:
+        with mock.patch.object(
+                generalizer.subprocess, "run",
+                side_effect=subprocess.TimeoutExpired(["monitor"], 1)):
+            with self.assertRaises(generalizer.Decline) as raised:
+                generalizer.build_game(
+                    "arbiter", 30, self.root, 1, stage="canonicalize")
+        self.assertEqual(raised.exception.stage, "canonicalize")
+        self.assertEqual(raised.exception.predicate, "monitor_game")
 
 
 if __name__ == "__main__":

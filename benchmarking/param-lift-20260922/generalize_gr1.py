@@ -16,6 +16,7 @@ import json
 import os
 import pathlib
 import re
+import resource
 import subprocess
 import sys
 import time
@@ -39,8 +40,23 @@ RESULTS = pathlib.Path(os.environ.get(
     "GENERALIZE_GR1_RESULTS", HERE / "m4-results.tsv"))
 MAX_CANDIDATES_PER_TARGET = 32
 MAX_CEGIS_ROUNDS = 3
-VERDICTS = {0: "VERIFIED", 1: "REFUTED", 2: "UNKNOWN", 3: "UNKNOWN",
-            4: "INVALID", 5: "INVALID", 6: "UNKNOWN"}
+MAX_PREDICATE_ARITY = 4
+HINT_VALIDITY_GROUP = (("global-schema",), ("hint-one-hot",), ())
+VERDICTS = {0: "VERIFIED", 1: "REFUTED", 2: "ERROR",
+            3: "UNKNOWN", 4: "INVALID", 5: "INTERNAL_ERROR",
+            6: "CERT_FAILED"}
+
+
+def _scaled_solver_nodes(n: int) -> int:
+    """Use 32M entries through n=4, doubling every four clients to 128M."""
+    exponent = min(27, 25 + max(0, (n - 1) // 4))
+    return 1 << exponent
+
+
+def _scaled_checker_nodes(n: int) -> int:
+    """Use 16M entries through n=5, doubling every five clients to 64M."""
+    exponent = min(26, 24 + max(0, (n - 1) // 5))
+    return 1 << exponent
 
 
 def _trace(message: str) -> None:
@@ -53,6 +69,9 @@ class ProposerLimits:
     max_candidates: int = MAX_CANDIDATES_PER_TARGET
     checker_timeout_s: float = 120.0
     max_cegis_rounds: int = MAX_CEGIS_ROUNDS
+    solver_nodes: int | None = None
+    solver_cache: int | None = None
+    checker_nodes: int | None = None
 
     def __post_init__(self) -> None:
         if not 1 <= self.max_candidates <= MAX_CANDIDATES_PER_TARGET:
@@ -62,6 +81,18 @@ class ProposerLimits:
             raise ValueError("checker_timeout_s must be positive")
         if not 0 <= self.max_cegis_rounds <= MAX_CEGIS_ROUNDS:
             raise ValueError(f"max_cegis_rounds must be in [0, {MAX_CEGIS_ROUNDS}]")
+        for name in ("solver_nodes", "solver_cache", "checker_nodes"):
+            value = getattr(self, name)
+            if value is not None and value <= 0:
+                raise ValueError(f"{name} must be positive")
+
+    def seed_capacity(self, n: int) -> tuple[int, int]:
+        nodes = self.solver_nodes or _scaled_solver_nodes(n)
+        cache = self.solver_cache or max(1024, nodes // 4)
+        return nodes, cache
+
+    def check_capacity(self, n: int) -> int:
+        return self.checker_nodes or _scaled_checker_nodes(n)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -72,6 +103,7 @@ class CandidateSchema:
     role_classes: tuple[str, ...]
     bus_schemas: tuple[str, ...]
     template_counts: tuple[tuple[str, int], ...]
+    predicate_arities: tuple[tuple[str, int], ...] = ()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -118,6 +150,8 @@ FAMILIES = {
 }
 OUT_OF_SCOPE = frozenset(
     ("round_robin_arbiter", "lift", "amba_decomposed_arbiter"))
+STRUCTURED_GRANT_FAMILIES = frozenset(
+    ("arbiter", "arbiter_with_cancel", "arbiter_on_inpchange"))
 
 
 class Decline(RuntimeError):
@@ -128,8 +162,30 @@ class Decline(RuntimeError):
         self.predicate = predicate
         self.n = n
         self.reason = reason
+        self.times: dict[str, float] = {}
         where = "" if n is None else f" at n={n}"
         super().__init__(f"{stage}: predicate {predicate!r}{where}: {reason}")
+
+
+_LAST_STAGE_TIMES: dict[str, float] = {}
+_ACTIVE_STAGE: tuple[str, float] | None = None
+
+
+class StageTimes(dict[str, float]):
+    """Keep completed stage timings available when a later stage declines."""
+
+    def begin(self, key: str) -> float:
+        global _ACTIVE_STAGE
+        started = time.monotonic()
+        _ACTIVE_STAGE = (key, started)
+        return started
+
+    def __setitem__(self, key: str, value: float) -> None:
+        global _ACTIVE_STAGE
+        super().__setitem__(key, value)
+        _LAST_STAGE_TIMES[key] = value
+        if _ACTIVE_STAGE is not None and _ACTIVE_STAGE[0] == key:
+            _ACTIVE_STAGE = None
 
 
 @dataclasses.dataclass
@@ -290,7 +346,7 @@ def measured_role_class_count(family: str) -> int | None:
 def _provenance_role_class_count(instance: "Instance") -> int:
     inventories: dict[tuple[int, ...], Counter] = defaultdict(Counter)
     for monitor in instance.prov["monitors"]:
-        if monitor["arity_kind"] == "local":
+        if monitor["arity_kind"] == "local" and _hint_schema(monitor) is None:
             inventories[tuple(monitor["index_tuple"])][monitor["template"]] += 1
     return len({tuple(sorted(inventory.items()))
                 for inventory in inventories.values()})
@@ -306,7 +362,7 @@ def _run(command: list[str], timeout: float, cwd: pathlib.Path = ROOT) -> subpro
 
 
 def build_game(family: str, n: int, directory: pathlib.Path,
-               timeout: float) -> tuple[pathlib.Path, pathlib.Path]:
+               timeout: float, stage: str = "seed") -> tuple[pathlib.Path, pathlib.Path]:
     spec = FAMILIES[family]
     game = directory / f"{family}_{n}.game.aag"
     prov = directory / f"{family}_{n}.prov.json"
@@ -321,23 +377,26 @@ def build_game(family: str, n: int, directory: pathlib.Path,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                               check=False, timeout=timeout)
     except subprocess.TimeoutExpired:
-        raise Decline("seed", "monitor_game", n, f"timed out after {timeout:g}s")
+        raise Decline(stage, "monitor_game", n, f"timed out after {timeout:g}s")
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout).strip()[-500:]
-        raise Decline("seed", "monitor_game", n,
+        raise Decline(stage, "monitor_game", n,
                       f"construction failed with exit {proc.returncode}: {detail}")
     return game, prov
 
 
 def solve_seed(family: str, n: int, directory: pathlib.Path,
-               timeout: float) -> "Instance":
-    game, prov = build_game(family, n, directory, timeout)
+               limits: ProposerLimits) -> "Instance":
+    game, prov = build_game(family, n, directory, limits.checker_timeout_s)
     cert = directory / f"{family}_{n}.cert.aag"
     policy = directory / f"{family}_{n}.policy.aag"
+    nodes, cache = limits.seed_capacity(n)
     command = [str(SOLVER), "--certificate", str(cert),
                "--certificate-json", str(cert) + ".json", "--policy", str(policy),
-               "--policy-json", str(policy) + ".json", str(game)]
-    proc = _run(command, timeout)
+               "--policy-json", str(policy) + ".json",
+               "--oxidd-nodes", str(nodes), "--oxidd-cache", str(cache),
+               str(game)]
+    proc = _run(command, limits.checker_timeout_s)
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout).strip()[-500:]
         raise Decline("seed", "tlsfsolve", n,
@@ -352,6 +411,39 @@ def _monitor_state(name: str) -> tuple[int, int] | None:
 
 def _collapse_indices(text: str) -> str:
     return re.sub(r"_i\d+", "_I", text)
+
+
+def _route_arity_kind(record: dict, n: int) -> str:
+    """Correct whole-bus-at-small-n provenance using syntactic index arity.
+
+    A non-symmetric two-index conjunct is pairwise even when n=2 happens to
+    make its support equal the entire bus.  Larger genuinely bus-wide records
+    must actually cover every index of at least one support bus.
+    """
+    indices = frozenset(record.get("index_tuple", ()))
+    buses = record.get("support", {}).get("buses", {})
+    covers_bus = any(frozenset(members) == frozenset(range(n))
+                     for members in buses.values())
+    if record.get("arity_kind") == "local":
+        return "local"
+    if (len(indices) == 2 and not record.get("symmetric") and
+            _hint_schema(record) is not None):
+        return "local"
+    return "bus_wide" if covers_bus else "local"
+
+
+def _hint_schema(record: dict) -> str | None:
+    buses = set(record.get("support", {}).get("buses", {}))
+    template = record["template"]
+    if buses != {"g", "r"}:
+        return None
+    if (("<-> r_" in template or
+         ("(g_i0 & r_i0)" in template and "(!g_i0 & !r_i0)" in template)) and
+            "X(" in template):
+        return "HintAgreement(g,r)"
+    if re.search(r"!\(r_i0 .*\) \| \(g_i0 & X", template):
+        return "HintSequence(g,r)"
+    return None
 
 
 def bus_schema(record: dict, n: int) -> str:
@@ -387,6 +479,9 @@ def bus_schema(record: dict, n: int) -> str:
         return f"X(NoneOf({','.join(bus_names)}))"
     if "G(G!" in text and "FallFinished" in text:
         return f"W(AllSeen({','.join(bus_names)}),allFinished)"
+    hint = _hint_schema(record)
+    if hint is not None:
+        return hint
     raise Decline("bus-wide schemas", record["template"], n,
                   "unmatched bus-wide conjunct")
 
@@ -427,6 +522,9 @@ class Instance:
              prov_path: pathlib.Path, cert_path: pathlib.Path | None = None) -> "Instance":
         game = Aag.read(game_path)
         prov = json.loads(prov_path.read_text(encoding="utf-8"))
+        for record in prov["monitors"]:
+            record["reported_arity_kind"] = record["arity_kind"]
+            record["arity_kind"] = _route_arity_kind(record, n)
         cert = Aag.read(cert_path) if cert_path else None
         meta = json.loads(pathlib.Path(str(cert_path) + ".json").read_text(
             encoding="utf-8")) if cert_path else None
@@ -434,13 +532,36 @@ class Instance:
         schemas = {mid: bus_schema(record, n) for mid, record in monitors.items()
                    if record["arity_kind"] == "bus_wide"}
 
+        def state_key(record: dict, indices: tuple[int, ...], bit: int
+                      ) -> tuple[tuple, frozenset[int]]:
+            hint = _hint_schema(record)
+            if hint is not None:
+                # Both hint automata have two size-independent control states,
+                # followed by one countdown state per concrete bus index.
+                # Parameterize the latter by its owning index instead of
+                # treating the n+2 one-hot vector as an opaque bus state.
+                if bit < 2:
+                    return (("state", "bus", hint, bit, 2), frozenset())
+                owner = bit - 2
+                if owner >= n:
+                    raise Decline("canonicalize", hint, n,
+                                  "hint automaton has more than n+2 states")
+                return (("state", "monitor", f"{hint}:step", (owner,), 0),
+                        frozenset((owner,)))
+            if record["arity_kind"] == "bus_wide":
+                return (("state", "bus", schemas[record["monitor"]], bit,
+                         record["state_count"]), frozenset())
+            return (("state", "monitor", record["template"], indices, bit),
+                    frozenset(indices))
+
         # A role is the index-relative monitor-template inventory touching a
         # client.  This detects load_balancer's special client zero without
         # consulting AIG structure.
         raw_roles: dict[int, list[tuple]] = {i: [] for i in range(n)}
         for record in monitors.values():
             indices = tuple(record["index_tuple"])
-            if record["arity_kind"] != "local" or not indices:
+            if (record["arity_kind"] != "local" or not indices or
+                    _hint_schema(record) is not None):
                 continue
             for value in set(indices):
                 if value < n:
@@ -464,13 +585,7 @@ class Instance:
                     mid, bit = parsed
                     record = monitors[mid]
                     indices = tuple(record["index_tuple"])
-                    if record["arity_kind"] == "bus_wide":
-                        key = ("state", "bus", schemas[mid], bit,
-                               record["state_count"])
-                        owners = frozenset()
-                    else:
-                        key = ("state", "monitor", record["template"], indices, bit)
-                        owners = frozenset(indices)
+                    key, owners = state_key(record, indices, bit)
                 variables.append(VarInfo(item["certificate_input"], key, owners))
             signal_records = {
                 ("controllable_" if output else "") + item["name"]:
@@ -500,13 +615,9 @@ class Instance:
                 record = monitors.get(mid)
                 if record is None:
                     key, owners = ("state", "solver", name), frozenset()
-                elif record["arity_kind"] == "bus_wide":
-                    key = ("state", "bus", schemas[mid], bit, record["state_count"])
-                    owners = frozenset()
                 else:
                     indices = tuple(record["index_tuple"])
-                    key = ("state", "monitor", record["template"], indices, bit)
-                    owners = frozenset(indices)
+                    key, owners = state_key(record, indices, bit)
                 variables.append(VarInfo(index, key, owners))
             p = len(game.latches)
             prov_signals = {item["name"]: ("input", item["base_name"],
@@ -527,11 +638,16 @@ class Instance:
         goals = []
         for goal, record in enumerate(guarantees):
             indices = tuple(record["index_tuple"])
-            owner = indices[0] if record["arity_kind"] == "local" and indices else None
-            key = (("bus", schemas[record["monitor"]])
-                   if record["arity_kind"] == "bus_wide"
-                   else ("local", record["template"],
-                         tuple(0 if x == owner else 1 for x in indices)))
+            hint = _hint_schema(record)
+            owner = (indices[0] if record["arity_kind"] == "local" and indices and
+                     hint is None else None)
+            if hint is not None:
+                key = ("schema", hint)
+            elif record["arity_kind"] == "bus_wide":
+                key = ("bus", schemas[record["monitor"]])
+            else:
+                key = ("local", record["template"],
+                       tuple(0 if x == owner else 1 for x in indices))
             goals.append(GoalInfo(goal, record, owner, key))
         if len(goals) != len(game.justice):
             raise Decline("canonicalize", "goals", n,
@@ -810,9 +926,32 @@ def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
                    for item in instance.variables if item.index in keep}
         rebuilt &= bdds.relabel(normalized, reverse)
     if rebuilt != function:
+        hint_validity = _hint_one_hot_validity(bdds, instance)
+        false = bdds.buddy.bddfalse
+        if ((function & bdds.buddy.bdd_not(hint_validity)) == false and
+                (hint_validity & rebuilt) == function):
+            # The global exactly-one part is a parameterized schema, not a
+            # reason to call an otherwise k-local predicate arity n.
+            templates[HINT_VALIDITY_GROUP] = None
+            return templates
         raise Decline("anti-unify", name, instance.n,
                       f"declared arity k={arity} does not reconstruct predicate")
     return templates
+
+
+def _hint_one_hot_validity(bdds: Bdds, instance: Instance):
+    groups: dict[str, list[int]] = defaultdict(list)
+    for item in instance.variables:
+        if item.key[:2] == ("state", "bus") and str(item.key[2]).startswith("Hint"):
+            groups[str(item.key[2])].append(item.index)
+        elif (item.key[:2] == ("state", "monitor") and
+              str(item.key[2]).startswith("Hint") and
+              str(item.key[2]).endswith(":step")):
+            groups[str(item.key[2])[:-5]].append(item.index)
+    result = bdds.buddy.bddtrue
+    for variables in groups.values():
+        result &= _exactly_one(bdds, variables)
+    return result
 
 
 def _one_hot_validity(bdds: Bdds, instance: Instance):
@@ -839,6 +978,7 @@ def instantiate_templates(bdds: Bdds, target: Instance,
                           templates: dict[tuple, object], arity: int,
                           goal: GoalInfo | None = None):
     result = bdds.buddy.bddtrue
+    add_hint_validity = HINT_VALIDITY_GROUP in templates
     for subset0 in itertools.combinations(range(target.n), arity):
         subset = _ordered_subset(target, subset0, goal)
         roles = tuple(target.role_by_client[index] for index in subset)
@@ -863,6 +1003,8 @@ def instantiate_templates(bdds: Bdds, target: Instance,
                               f"canonical variable {key!r} is absent at target")
             mapping[variable] = concrete[key]
         result &= bdds.relabel(templates[group], mapping)
+    if add_hint_validity:
+        result &= _hint_one_hot_validity(bdds, target)
     return result
 
 
@@ -888,6 +1030,48 @@ def _merge_seed_templates(stage: str, predicate: str,
             # the instantiated candidate remains untrusted until checked.
             result[key] = function
     return result
+
+
+def _predicate_templates(bdds: Bdds, seeds: list["Instance"], name: str,
+                         base_arity: int,
+                         goals: list[GoalInfo | None] | None = None,
+                         seed_names: list[str] | None = None
+                         ) -> tuple[dict[tuple, object], int]:
+    """Measure one predicate, raising its arity without globalizing the family.
+
+    A fallback arity is learned only from a seed strictly larger than that
+    arity.  Thus a predicate whose only exact projection uses all n clients is
+    still declined as unbounded rather than being mislabeled fixed-arity.
+    """
+    goals = goals or [None] * len(seeds)
+    seed_names = seed_names or [name] * len(seeds)
+    first_failure: Decline | None = None
+    upper = min(MAX_PREDICATE_ARITY, max(seed.n for seed in seeds))
+    for arity in range(base_arity, upper + 1):
+        eligible = [(seed, goal, seed_name)
+                    for seed, goal, seed_name in zip(
+                        seeds, goals, seed_names, strict=True)
+                    if seed.n >= arity and
+                    (arity == base_arity or seed.n > arity)]
+        if not eligible:
+            continue
+        by_seed = []
+        failed = None
+        for seed, goal, seed_name in eligible:
+            try:
+                by_seed.append((seed.n, projection_templates(
+                    bdds, seed, seed_name, arity, goal)))
+            except Decline as exc:
+                failed = exc
+                if first_failure is None:
+                    first_failure = exc
+                break
+        if failed is None:
+            return _merge_seed_templates("anti-unify", name, by_seed), arity
+    failing_n = first_failure.n if first_failure is not None else max(seed.n for seed in seeds)
+    detail = (f"requires arity n={failing_n}; no bounded arity through "
+              f"k={upper} reconstructs it")
+    raise Decline("anti-unify", name, failing_n, detail)
 
 
 def _goal_match(goals: list[GoalInfo], key: tuple) -> GoalInfo:
@@ -1188,7 +1372,7 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
     cert_memo: dict[int, int] = {}
     structured_moves = (_structured_arbiter_certificate_moves(
         bdds, target, cert_builder, predicates, levels)
-                        if target.family == "arbiter" else {})
+                        if target.family in STRUCTURED_GRANT_FAMILIES else {})
     for name, function in predicates.items():
         if name in structured_moves:
             cert_outputs.append((name, structured_moves[name]))
@@ -1203,7 +1387,7 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
         json.dumps(cert_meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     _trace("certificate emitted")
 
-    if target.family == "arbiter":
+    if target.family in STRUCTURED_GRANT_FAMILIES:
         nstate = len(target.game.latches)
         ngoals = len(target.goals)
         uncontrollable = [name for name in target.game.input_names
@@ -1364,7 +1548,7 @@ def _collector_candidate(
     rank certificate for that policy.
     """
     predicate = "W(AllSeen(finished),allFinished)"
-    started = time.monotonic()
+    started = stage.begin("bus_schemas")
     if predicate not in target.bus_schemas:
         raise Decline("bus-wide schemas", predicate, target.n,
                       f"target schemas are {target.bus_schemas!r}")
@@ -1374,7 +1558,7 @@ def _collector_candidate(
                       "semantic schema differs across seeds")
     stage["bus_schemas"] = time.monotonic() - started
 
-    started = time.monotonic()
+    started = stage.begin("anti_unify")
     seed_depths = [tuple(seed.levels(goal.goal) for goal in seed.goals)
                    for seed in seeds]
     if len(set(seed_depths)) != 1:
@@ -1384,7 +1568,7 @@ def _collector_candidate(
                       f"rank depth differs across seeds: {seed_depths}")
     stage["anti_unify"] = time.monotonic() - started
 
-    started = time.monotonic()
+    started = stage.begin("canonicalize")
     monitors = {record["monitor"]: record for record in target.prov["monitors"]}
     bus_records = [record for record in monitors.values()
                    if record["arity_kind"] == "bus_wide"]
@@ -1419,9 +1603,10 @@ def _collector_candidate(
     except KeyError as exc:
         raise Decline("canonicalize", str(exc), target.n,
                       "collector letter is absent from game ABI") from exc
-    stage["canonicalize"] = time.monotonic() - started
+    stage["canonicalize"] = (stage.get("canonicalize", 0.0) +
+                             time.monotonic() - started)
 
-    started = time.monotonic()
+    started = stage.begin("ranks")
     valuation_count = 1 << target.n
     valuation_mask = (1 << valuation_count) - 1
     env_vectors = [sum(1 << valuation for valuation in range(valuation_count)
@@ -1541,7 +1726,7 @@ def _collector_candidate(
         rank_sets.append(levels)
     stage["ranks"] = time.monotonic() - started
 
-    started = time.monotonic()
+    started = stage.begin("instantiate")
     def state_set(members: set[int]):
         # Positive one-hot literals are sufficient because every obligation
         # intersects the invariant; keeping the formula positive also yields
@@ -1678,12 +1863,13 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                                                                        pathlib.Path, pathlib.Path,
                                                                        dict]:
     out.mkdir(parents=True, exist_ok=True)
-    stage = {}
-    started = time.monotonic()
-    seeds = [solve_seed(family, n, out, limits.checker_timeout_s) for n in seed_ns]
+    stage = StageTimes()
+    started = stage.begin("seed")
+    seeds = [solve_seed(family, n, out, limits) for n in seed_ns]
     stage["seed"] = time.monotonic() - started
-    target_game, target_prov = build_game(family, target_n, out,
-                                          limits.checker_timeout_s)
+    started = stage.begin("canonicalize")
+    target_game, target_prov = build_game(
+        family, target_n, out, limits.checker_timeout_s, stage="canonicalize")
     target = Instance.load(family, target_n, target_game, target_prov)
     role_counts = [_provenance_role_class_count(seed) for seed in seeds]
     role_counts.append(_provenance_role_class_count(target))
@@ -1696,19 +1882,19 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                       f"measured={measured_roles}")
 
     if family == "collector_v1":
+        stage["canonicalize"] = time.monotonic() - started
         bdds = Bdds()
         try:
             return _collector_candidate(bdds, seeds, target, out, stage)
         finally:
             bdds.close()
 
-    started = time.monotonic()
     bdds = Bdds()
     try:
         arity = FAMILIES[family].arity
         stage["canonicalize"] = time.monotonic() - started
 
-        started = time.monotonic()
+        started = stage.begin("bus_schemas")
         # Stable bus schemas must have the same state ABI.  Variable-count
         # changes are semantic, not a license to align by ordinal.
         seed_bus_shapes = [{item.key for item in seed.variables
@@ -1716,52 +1902,35 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                            for seed in seeds]
         target_bus_shapes = {item.key for item in target.variables
                              if item.key[:2] == ("state", "bus")}
-        if any(shape != seed_bus_shapes[0] for shape in seed_bus_shapes[1:]) or (
-                seed_bus_shapes and target_bus_shapes != seed_bus_shapes[0]):
+        # At the smallest seed an arity-2 formula can coincidentally span the
+        # whole bus.  It is routed pairwise above, so allow a seed to expose a
+        # subset of the stable bus ABI; collectively the seeds must still
+        # account for exactly the target schemas.
+        seed_bus_union = set().union(*seed_bus_shapes) if seed_bus_shapes else set()
+        if (any(not shape <= target_bus_shapes for shape in seed_bus_shapes) or
+                seed_bus_union != target_bus_shapes):
             raise Decline("bus-wide schemas", "state ABI", target_n,
                           "matched bus schema has a size-dependent monitor-state encoding")
         stage["bus_schemas"] = time.monotonic() - started
 
-        started = time.monotonic()
-        inv_templates = _merge_seed_templates(
-            "anti-unify", "inv",
-            [(seed.n, projection_templates(bdds, seed, "inv", arity))
-             for seed in seeds])
-        inv = instantiate_templates(bdds, target, inv_templates, arity)
+        started = stage.begin("anti_unify")
+        predicate_arities: dict[str, int] = {}
+        inv_templates, inv_arity = _predicate_templates(
+            bdds, seeds, "inv", arity)
+        predicate_arities["inv"] = inv_arity
+        inv = instantiate_templates(bdds, target, inv_templates, inv_arity)
         stage["anti_unify"] = time.monotonic() - started
 
         # Each target goal is matched by its monitor template.  Depth and all
         # X/move templates must agree across seeds of the same goal class.
-        started = time.monotonic()
+        started = stage.begin("ranks")
         predicates: dict[str, object] = {"inv": inv}
         levels: list[int] = []
         template_tally = Counter({"inv": len(inv_templates)})
         next_state, game_bad, exact_goals, exact_fairness = bdds.game_functions(
             target.game)
         nstate = len(target.game.latches)
-        structured_moves = family == "arbiter"
-        if not structured_moves:
-            # Move construction needs T[s:=next].  Use an interleaved internal
-            # order (s0,s0',s1,s1',...,letters) so substitution does not
-            # create a far-away-auxiliary intermediate.
-            internal_map = {i: 2 * i for i in range(nstate)}
-            internal_map.update({nstate + p: 2 * nstate + p
-                                 for p in range(len(target.game.inputs))})
-            public_map = {value: key for key, value in internal_map.items()}
-
-            def internal(function):
-                return bdds.relabel(
-                    function, {v: internal_map[v]
-                               for v in _support(bdds, function)})
-
-            internal_next = [internal(function) for function in next_state]
-            internal_inv = internal(inv)
-            internal_not_bad = bdds.buddy.bdd_not(internal(game_bad))
-            internal_state = [2 * i for i in range(nstate)]
-            internal_temp = [2 * i + 1 for i in range(nstate)]
-            internal_w_safe = internal_not_bad & bdds.substitute_variables(
-                internal_inv, internal_state, internal_next, internal_temp)
-            _trace("target invariant transition composed")
+        structured_moves = family in STRUCTURED_GRANT_FAMILIES
         for target_goal in target.goals:
             seed_goals = []
             for seed in seeds:
@@ -1799,16 +1968,15 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
             for level in range(depth):
                 row = []
                 for fair in range(max(1, target.fairness)):
-                    by_seed = []
-                    for seed, seed_goal in zip(seeds, seed_goals, strict=True):
-                        name = f"x_{seed_goal.goal}_{level}_{fair}"
-                        by_seed.append((seed.n, projection_templates(
-                            bdds, seed, name, arity, seed_goal)))
-                    templates = _merge_seed_templates(
-                        "ranks", f"x_{j}_{level}_{fair}", by_seed)
+                    predicate_name = f"x_{j}_{level}_{fair}"
+                    templates, predicate_arity = _predicate_templates(
+                        bdds, seeds, predicate_name, arity, seed_goals,
+                        [f"x_{seed_goal.goal}_{level}_{fair}"
+                         for seed_goal in seed_goals])
+                    predicate_arities[predicate_name] = predicate_arity
                     x = instantiate_templates(
-                        bdds, target, templates, arity, target_goal)
-                    predicates[f"x_{j}_{level}_{fair}"] = x
+                        bdds, target, templates, predicate_arity, target_goal)
+                    predicates[predicate_name] = x
                     row.append(x)
                     template_tally["rank"] += len(templates)
                 union = bdds.buddy.bddfalse
@@ -1816,14 +1984,42 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                     union |= x
                 predicates[f"y_{j}_{level}"] = union
 
-            # Reconstruct the target move relation from the generalized
-            # invariant/ranks.  This is the same pre-Skolem relation exported
-            # by M2 and avoids transferring any seed tie-breaking.
+            _trace(f"target goal {j + 1}/{len(target.goals)} ranks instantiated")
+
+        # Validate every rank predicate before spending time composing moves.
+        # This is the same pre-Skolem relation exported by M2 and avoids both
+        # transferring seed tie-breaking and doing irrelevant work before a
+        # later predicate-specific arity decline.
+        if not structured_moves:
+            # Move construction needs T[s:=next].  Use an interleaved internal
+            # order (s0,s0',s1,s1',...,letters) so substitution does not
+            # create a far-away-auxiliary intermediate.
+            internal_map = {i: 2 * i for i in range(nstate)}
+            internal_map.update({nstate + p: 2 * nstate + p
+                                 for p in range(len(target.game.inputs))})
+            public_map = {value: key for key, value in internal_map.items()}
+
+            def internal(function):
+                return bdds.relabel(
+                    function, {v: internal_map[v]
+                               for v in _support(bdds, function)})
+
+            internal_next = [internal(function) for function in next_state]
+            internal_inv = internal(inv)
+            internal_not_bad = bdds.buddy.bdd_not(internal(game_bad))
+            internal_state = [2 * i for i in range(nstate)]
+            internal_temp = [2 * i + 1 for i in range(nstate)]
+            internal_w_safe = internal_not_bad & bdds.substitute_variables(
+                internal_inv, internal_state, internal_next, internal_temp)
+            _trace("target invariant transition composed")
+        for target_goal, depth in zip(target.goals, levels, strict=True):
+            j = target_goal.goal
             if structured_moves:
                 # The exact relation is composed as an AIG in emit_candidate;
                 # retaining a placeholder here preserves output ordering.
                 predicates[f"move_{j}"] = bdds.buddy.bddfalse
             else:
+                goal_pred = predicates[f"goal_{j}"]
                 at_goal = internal_inv & internal(goal_pred)
                 move = at_goal & internal_w_safe
                 covered = at_goal
@@ -1845,7 +2041,7 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                 predicates[f"move_{j}"] = bdds.relabel(
                     move, {v: public_map[v] for v in _support(bdds, move)})
             template_tally["move_reconstructed"] += 1
-            _trace(f"target goal {j + 1}/{len(target.goals)} ranks and move instantiated")
+            _trace(f"target goal {j + 1}/{len(target.goals)} move instantiated")
         stage["ranks"] = time.monotonic() - started
 
         # Checker requires a stable output order.
@@ -1861,16 +2057,18 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                     ordered[f"x_{j}_{k}_{fair}"] = predicates[f"x_{j}_{k}_{fair}"]
         for j in range(len(target.goals)):
             ordered[f"move_{j}"] = predicates[f"move_{j}"]
-        started = time.monotonic()
+        started = stage.begin("instantiate")
         cert, policy = emit_candidate(bdds, target, out, ordered, levels)
         stage["instantiate"] = time.monotonic() - started
         candidate = CandidateSchema(
-            family, arity, seed_ns,
+            family, max(predicate_arities.values()), seed_ns,
             tuple(f"role_{index}" for index in range(measured_roles)),
-            target.bus_schemas, tuple(sorted(template_tally.items())))
+            target.bus_schemas, tuple(sorted(template_tally.items())),
+            tuple(sorted(predicate_arities.items())))
         evidence = {"format": "acacia-param-lift-gr1-evidence-v1",
                     "family": family, "target": target_n,
-                    "seeds": list(seed_ns), "arity": arity,
+                    "seeds": list(seed_ns), "arity": candidate.arity,
+                    "predicate_arities": dict(candidate.predicate_arities),
                     "role_classes": list(candidate.role_classes),
                     "bus_schemas": list(candidate.bus_schemas),
                     "template_counts": dict(candidate.template_counts),
@@ -1884,7 +2082,9 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                                              "provenance"]},
                         "canonicalize": {"variable_abi":
                                          "(template,index_tuple,state_bit)"},
-                        "anti-unify": {"arity": arity,
+                        "anti-unify": {"arity": candidate.arity,
+                                       "predicate_arities":
+                                           dict(candidate.predicate_arities),
                                        "template_counts":
                                            dict(candidate.template_counts),
                                        "role_classes":
@@ -1908,14 +2108,24 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
 
 
 def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
-                    method: str, timeout: float, label: str) -> dict:
+                    method: str, limits: ProposerLimits, label: str) -> dict:
     json_out = cert.parent / f"check-{label}.json"
-    command = [str(CHECKER), "--method", method, "--timeout", str(timeout),
-               "--json-out", str(json_out), "--certificate", str(cert),
-               "--certificate-json", str(cert) + ".json", str(target.game_path),
-               str(policy)]
+    initial_cap = limits.check_capacity(target.n)
     started = time.monotonic()
-    proc = _run(command, timeout + 10)
+    attempts = []
+    proc = None
+    command = []
+    for node_cap in (initial_cap, initial_cap * 2):
+        command = [str(CHECKER), "--method", method, "--timeout",
+                   str(limits.checker_timeout_s), "--node-cap", str(node_cap),
+                   "--json-out", str(json_out), "--certificate", str(cert),
+                   "--certificate-json", str(cert) + ".json",
+                   str(target.game_path), str(policy)]
+        proc = _run(command, limits.checker_timeout_s + 10)
+        attempts.append({"node_cap": node_cap, "returncode": proc.returncode})
+        if proc.returncode != 3:
+            break
+    assert proc is not None
     elapsed = time.monotonic() - started
     payload = None
     if json_out.exists():
@@ -1926,7 +2136,8 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
     return {"returncode": proc.returncode,
             "verdict": VERDICTS.get(proc.returncode, "UNKNOWN"),
             "elapsed_s": elapsed, "stdout": proc.stdout, "stderr": proc.stderr,
-            "json": payload, "command": command}
+            "json": payload, "command": command, "attempts": attempts,
+            "node_caps": [attempt["node_cap"] for attempt in attempts]}
 
 
 def _next_small(target: int, seeds: tuple[int, ...], stable: int) -> int:
@@ -1937,9 +2148,12 @@ def _next_small(target: int, seeds: tuple[int, ...], stable: int) -> int:
 
 def _write_result(row: dict[str, object]) -> None:
     columns = ["family", "target", "seeds", "arity", "role_classes",
-               "stages_passed", "cegis_rounds", "verdict",
+               "predicate_arities", "stage_reached", "stages_passed",
+               "cegis_rounds", "verdict",
                "seed_s", "canonicalize_s", "anti_unify_s", "bus_schemas_s",
-               "ranks_s", "instantiate_s", "cegis_s", "reason"]
+               "ranks_s", "instantiate_s", "cegis_s", "wall_s",
+               "peak_rss_kib", "solver_nodes", "solver_cache",
+               "checker_node_caps", "reason"]
     rows = []
     if RESULTS.exists():
         rows = _read_tsv(RESULTS)
@@ -1954,8 +2168,20 @@ def _write_result(row: dict[str, object]) -> None:
         writer.writerows(rows)
 
 
+def _format_predicate_arities(family: str,
+                              arities: tuple[tuple[str, int], ...]) -> str:
+    base = FAMILIES[family].arity
+    exceptions = [(name, arity) for name, arity in arities if arity != base]
+    summary = [f"default={base}"]
+    summary.extend(f"{name}={arity}" for name, arity in exceptions)
+    return ";".join(summary)
+
+
 def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
         limits: ProposerLimits, check_method: str = "auto") -> dict:
+    global _ACTIVE_STAGE
+    _LAST_STAGE_TIMES.clear()
+    _ACTIVE_STAGE = None
     started_all = time.monotonic()
     stable = stable_from(family)
     bad = [n for n in seeds if n < stable]
@@ -1999,16 +2225,16 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
                     family, probe, tuple(n for n in current if n < probe) or (current[0],),
                     probe_dir, limits)
                 check = check_candidate(probe_instance, pcert, ppolicy,
-                                        check_method, limits.checker_timeout_s,
+                                        check_method, limits,
                                         f"next-{probe}")
                 checks.append((probe, check))
             except Decline as exc:
-                check = {"returncode": 6, "verdict": "UNKNOWN",
+                check = {"returncode": 3, "verdict": "UNKNOWN",
                          "elapsed_s": 0.0, "stdout": "", "stderr": str(exc),
-                         "json": None}
+                         "json": None, "attempts": [], "node_caps": []}
                 checks.append((probe, check))
         target_check = check_candidate(target_instance, cert, policy,
-                                       check_method, limits.checker_timeout_s,
+                                       check_method, limits,
                                        f"target-{target}")
         checks.append((target, target_check))
         last = (candidate, target_instance, cert, policy, detail, checks)
@@ -2027,9 +2253,12 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
         rounds += 1
     assert last is not None
     candidate, target_instance, cert, policy, detail, checks = last
-    final_check = checks[-1][1]
-    verdict = "VERIFIED" if final_check["returncode"] == 0 else (
-        "INVALID" if final_check["returncode"] in (4, 5) else "UNKNOWN")
+    # Every check must verify.  In particular, do not let a passing target
+    # flatten an UNKNOWN/CERT_FAILED result from the smaller CEGIS probe just
+    # because the target check happens to be last in the list.
+    final_check = next((check for _n, check in checks
+                        if check["returncode"] != 0), checks[-1][1])
+    verdict = VERDICTS.get(final_check["returncode"], "ERROR")
     times = detail["times"]
     times["cegis"] = time.monotonic() - cegis_started
     evidence = detail["evidence"]
@@ -2038,6 +2267,7 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
         "checks": [
             {"n": n, "exit_code": check["returncode"],
              "verdict": check["verdict"],
+             "node_caps": check["node_caps"],
              "counterexample": bool(
                  isinstance(check.get("json"), dict) and
                  check["json"].get("counterexample"))}
@@ -2047,17 +2277,28 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
     })
     (out / "evidence.json").write_text(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    wall_s = time.monotonic() - started_all
+    solver_capacities = [limits.seed_capacity(n) for n in current]
+    checker_caps = [
+        f"{n}:" + "/".join(map(str, check["node_caps"]))
+        for n, check in checks if check["node_caps"]]
+    peak_rss = max(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+                   resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss)
     result = {"family": family, "target": target, "seeds": current,
               "arity": candidate.arity, "role_classes": candidate.role_classes,
+              "predicate_arities": candidate.predicate_arities,
               "stages_passed": detail["evidence"]["stages"],
               "cegis_rounds": rounds, "verdict": verdict,
               "certificate": cert, "policy": policy, "checks": checks,
-              "times": times, "wall_s": time.monotonic() - started_all,
+              "times": times, "wall_s": wall_s, "peak_rss_kib": peak_rss,
               "reason": "" if verdict == "VERIFIED" else
               ((final_check["stderr"] or final_check["stdout"]).strip()[-500:])}
     _write_result({"family": family, "target": target,
                    "seeds": ",".join(map(str, current)), "arity": candidate.arity,
                    "role_classes": ",".join(candidate.role_classes),
+                   "predicate_arities": _format_predicate_arities(
+                       family, candidate.predicate_arities),
+                   "stage_reached": "CEGIS",
                    "stages_passed": ",".join(result["stages_passed"]),
                    "cegis_rounds": rounds, "verdict": verdict,
                    "seed_s": f"{times.get('seed', 0):.6f}",
@@ -2067,21 +2308,47 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
                    "ranks_s": f"{times.get('ranks', 0):.6f}",
                    "instantiate_s": f"{times.get('instantiate', 0):.6f}",
                    "cegis_s": f"{times.get('cegis', 0):.6f}",
-                   "reason": result["reason"]})
+                   "wall_s": f"{wall_s:.6f}",
+                   "peak_rss_kib": peak_rss,
+                   "solver_nodes": ",".join(str(nodes) for nodes, _ in solver_capacities),
+                   "solver_cache": ",".join(str(cache) for _, cache in solver_capacities),
+                   "checker_node_caps": ",".join(checker_caps),
+                   "reason": result["reason"] or "-"})
     return result
 
 
 def _decline_result(family: str, target: int, seeds: tuple[int, ...],
-                    decline: Decline) -> dict:
+                    decline: Decline, limits: ProposerLimits,
+                    wall_s: float) -> dict:
+    times = dict(_LAST_STAGE_TIMES)
+    if _ACTIVE_STAGE is not None:
+        active_name, active_started = _ACTIVE_STAGE
+        times[active_name] = time.monotonic() - active_started
+    solver_capacities = [limits.seed_capacity(n) for n in seeds]
+    peak_rss = max(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+                   resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss)
     result = {"family": family, "target": target, "seeds": seeds,
               "arity": FAMILIES[family].arity if family in FAMILIES else "",
               "role_classes": (), "stages_passed": (), "cegis_rounds": 0,
-              "verdict": "UNKNOWN", "reason": str(decline)}
+              "verdict": "UNKNOWN", "reason": str(decline),
+              "times": times, "wall_s": wall_s, "peak_rss_kib": peak_rss}
     _write_result({"family": family, "target": target,
                    "seeds": ",".join(map(str, seeds)),
                    "arity": result["arity"], "role_classes": "",
-                   "stages_passed": "", "cegis_rounds": 0,
-                   "verdict": "UNKNOWN", "reason": str(decline)})
+                   "predicate_arities": "", "stage_reached": decline.stage,
+                   "stages_passed": ",".join(times), "cegis_rounds": 0,
+                   "verdict": "UNKNOWN",
+                   "seed_s": f"{times.get('seed', 0):.6f}",
+                   "canonicalize_s": f"{times.get('canonicalize', 0):.6f}",
+                   "anti_unify_s": f"{times.get('anti_unify', 0):.6f}",
+                   "bus_schemas_s": f"{times.get('bus_schemas', 0):.6f}",
+                   "ranks_s": f"{times.get('ranks', 0):.6f}",
+                   "instantiate_s": f"{times.get('instantiate', 0):.6f}",
+                   "cegis_s": f"{times.get('cegis', 0):.6f}",
+                   "wall_s": f"{wall_s:.6f}", "peak_rss_kib": peak_rss,
+                   "solver_nodes": ",".join(str(nodes) for nodes, _ in solver_capacities),
+                   "solver_cache": ",".join(str(cache) for _, cache in solver_capacities),
+                   "checker_node_caps": "", "reason": str(decline)})
     return result
 
 
@@ -2097,6 +2364,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--target", required=True, type=int)
     parser.add_argument("--seeds", help="comma-separated stable seed sizes")
     parser.add_argument("--timeout", type=float, default=120.0)
+    parser.add_argument(
+        "--node-cap", type=int,
+        help="checker node cap (default: 2^24, doubled every five clients to 2^26)")
+    parser.add_argument(
+        "--solver-nodes", type=int,
+        help="seed-solver node capacity (default: 2^25, doubled every four clients to 2^27)")
+    parser.add_argument(
+        "--solver-cache", type=int,
+        help="seed-solver cache capacity (default: one quarter of solver nodes)")
     parser.add_argument("--out", type=pathlib.Path)
     parser.add_argument("--check-method", choices=("auto", "certificate", "both"),
                         default="auto", help=argparse.SUPPRESS)
@@ -2106,12 +2382,17 @@ def main(argv: list[str] | None = None) -> int:
              if args.seeds is not None else (default.default_seeds if default else ()))
     out = (args.out or ROOT / "build_scratch" / "param-lift-m4" /
            f"{args.family}-n{args.target}").resolve()
-    limits = ProposerLimits(checker_timeout_s=args.timeout)
+    limits = ProposerLimits(checker_timeout_s=args.timeout,
+                            solver_nodes=args.solver_nodes,
+                            solver_cache=args.solver_cache,
+                            checker_nodes=args.node_cap)
+    started = time.monotonic()
     try:
         result = run(args.family, args.target, seeds, out, limits,
                      args.check_method)
     except Decline as exc:
-        result = _decline_result(args.family, args.target, seeds, exc)
+        result = _decline_result(args.family, args.target, seeds, exc, limits,
+                                 time.monotonic() - started)
         out.mkdir(parents=True, exist_ok=True)
         (out / "evidence.json").write_text(json.dumps({
             "format": "acacia-param-lift-gr1-evidence-v1",
@@ -2119,6 +2400,10 @@ def main(argv: list[str] | None = None) -> int:
             "seeds": list(seeds), "verdict": "UNKNOWN",
             "decline": {"stage": exc.stage, "predicate": exc.predicate,
                         "n": exc.n, "reason": exc.reason},
+            "capacities": {
+                "solver": [{"n": n, "nodes": limits.seed_capacity(n)[0],
+                            "cache": limits.seed_capacity(n)[1]} for n in seeds],
+                "checker_initial_node_cap": limits.check_capacity(args.target)},
         }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"{result['verdict']} family={args.family} target={args.target} "
           f"seeds={','.join(map(str, result['seeds'])) or '-'}")
