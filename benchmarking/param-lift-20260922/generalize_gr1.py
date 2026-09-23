@@ -17,6 +17,7 @@ import os
 import pathlib
 import re
 import resource
+import signal
 import subprocess
 import sys
 import time
@@ -24,6 +25,7 @@ from collections import Counter, defaultdict
 from collections.abc import Iterable
 
 from request import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL
+from s0_diagnostics import Diagnostics, sha256
 from tool_config import (
     ToolConfiguration,
     add_configuration_arguments,
@@ -56,6 +58,285 @@ HINT_VALIDITY_GROUP = (("global-schema",), ("hint-one-hot",), ())
 VERDICTS = {0: "VERIFIED", 1: "REFUTED", 2: "ERROR",
             3: "UNKNOWN", 4: "INVALID", 5: "INTERNAL_ERROR",
             6: "CERT_FAILED"}
+
+_DIAGNOSTICS_ENABLED = False
+_DIAGNOSTICS: Diagnostics | None = None
+_DIAGNOSTIC_STAGE_TOKENS: dict[str, int | None] = {}
+_DIAGNOSTIC_BUDDY: object | None = None
+_DIAGNOSTIC_BUDDY_SAMPLES: list[dict[str, object]] = []
+_DIAGNOSTIC_INSTANCES: set[str] = set()
+_DIAGNOSTIC_CLIENT_COUNTS: Counter[int] = Counter()
+_DIAGNOSTIC_OWNER_ARITIES: Counter[int] = Counter()
+_DIAGNOSTIC_SUBSETS: dict[tuple[int, tuple[int, ...]], Counter[str]] = {}
+_DIAGNOSTIC_SUPPORTS: list[dict[str, object]] = []
+_DIAGNOSTIC_AAG_CONES: list[dict[str, object]] = []
+_DIAGNOSTIC_MASK_WORDS: Counter[int] = Counter()
+_DIAGNOSTIC_MODES: Counter[int] = Counter()
+_CHECKER_STATS_MODE: str | None = None
+
+_DIAGNOSTIC_PHASES = (
+    "seed_monitor_construction",
+    "seed_solves",
+    "target_monitor_construction",
+    "target_solve",
+    "projection_metadata",
+    "bdd_projection_relabel",
+    "support_extraction",
+    "variable_cube_construction",
+    "substitute_variables",
+    "from_aag",
+    "instantiate_templates",
+    "mode_specialization",
+    "policy_construction_skolemization",
+    "export",
+    "target_check",
+)
+
+
+class DiagnosticCancelled(RuntimeError):
+    """A signal interrupted a diagnostic invocation."""
+
+
+def _diagnostic_begin(name: str, kind: str = "phase") -> int | None:
+    if _DIAGNOSTICS is None:
+        return None
+    try:
+        return _DIAGNOSTICS.begin(name, kind)
+    except Exception as error:
+        _DIAGNOSTICS.record_error(f"begin:{name}", error)
+        return None
+
+
+def _diagnostic_end(token: int | None) -> float:
+    if _DIAGNOSTICS is None or token is None:
+        return 0.0
+    try:
+        return _DIAGNOSTICS.end(token)
+    except Exception as error:
+        _DIAGNOSTICS.record_error("end", error)
+        return 0.0
+
+
+def _diagnostic_buddy_boundary(boundary: str) -> None:
+    if _DIAGNOSTIC_BUDDY is None:
+        return
+    buddy = _DIAGNOSTIC_BUDDY
+    try:
+        allocated = int(buddy.bdd_getallocnum())
+        used = int(buddy.bdd_getnodenum())
+        _DIAGNOSTIC_BUDDY_SAMPLES.append({
+            "boundary": boundary,
+            "allocated_nodes": allocated,
+            "used_nodes": used,
+            "gbc_count": None,
+            "gbc_count_exposed": False,
+        })
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.record_error(f"buddy_boundary:{boundary}", error)
+
+
+def _diagnostic_register_instance(instance: "Instance", role: str) -> None:
+    try:
+        key = str(instance.game_path.resolve())
+        if key in _DIAGNOSTIC_INSTANCES:
+            return
+        _DIAGNOSTIC_INSTANCES.add(key)
+        _DIAGNOSTIC_CLIENT_COUNTS[instance.n] += 1
+        for variable in instance.variables:
+            _DIAGNOSTIC_OWNER_ARITIES[len(variable.owners)] += 1
+        if _DIAGNOSTICS is None:
+            return
+        records = _DIAGNOSTICS.extra.setdefault("instances", [])
+        if not isinstance(records, list):
+            raise TypeError("diagnostic instances field is not a list")
+        records.append({
+            "role": role,
+            "family": instance.family,
+            "clients": instance.n,
+            "game": str(instance.game_path),
+        })
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.record_error("register_instance", error)
+
+
+def _diagnostic_record_checker_attempt(
+    instance: "Instance", side: str, label: str, node_cap: int
+) -> int:
+    """Record modes for one checker attempt, after its certificate side is known."""
+    try:
+        if side == "system":
+            modes = len(instance.goals) + 1
+        elif side == "environment":
+            modes = max(instance.fairness, 1) + 1
+        else:
+            raise ValueError(f"unsupported certificate side {side!r}")
+        _DIAGNOSTIC_MODES[modes] += 1
+        if _DIAGNOSTICS is not None:
+            attempts = _DIAGNOSTICS.extra.setdefault("checker_mode_attempts", [])
+            if not isinstance(attempts, list):
+                raise TypeError("checker_mode_attempts field is not a list")
+            attempts.append({
+                "label": label,
+                "side": side,
+                "node_cap": node_cap,
+                "mode_count": modes,
+            })
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.record_error("record_checker_mode", error)
+        return 0
+    return modes
+
+
+def _diagnostic_record_subset(
+    client_count: int, subset: tuple[int, ...], operation: str
+) -> None:
+    try:
+        key = (client_count, tuple(sorted(subset)))
+        uses = _DIAGNOSTIC_SUBSETS.setdefault(key, Counter())
+        uses[operation] += 1
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.record_error("record_subset", error)
+
+
+def _diagnostic_record_support(
+    predicate: str, client_count: int, subset: tuple[int, ...], support: set[int]
+) -> None:
+    try:
+        words = 0 if not support else (max(support) // 64) + 1
+        _DIAGNOSTIC_SUPPORTS.append({
+            "predicate": predicate,
+            "clients": client_count,
+            "subset": list(subset),
+            "width": len(support),
+            "uint64_words": words,
+            "uint64_mask_bytes": words * 8,
+        })
+        _DIAGNOSTIC_MASK_WORDS[words] += 1
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.record_error("record_support", error)
+
+
+def _probe_checker_stats() -> str | None:
+    try:
+        probe = subprocess.run(
+            [str(CHECKER), "--help"], cwd=ROOT, text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=False, timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    help_text = f"{probe.stdout}\n{probe.stderr}"
+    line = next((item for item in help_text.splitlines()
+                 if "--stats" in item), "")
+    if not line:
+        return None
+    if re.search(r"--stats=\S+", line):
+        return "file_equals"
+    if re.search(r"--stats\s+(FILE|PATH|JSON)\b", line, re.IGNORECASE):
+        return "file_separate"
+    return "stream"
+
+
+def _diagnostic_initialize(path: pathlib.Path) -> None:
+    global _DIAGNOSTICS_ENABLED, _DIAGNOSTICS, _CHECKER_STATS_MODE
+    global _DIAGNOSTIC_BUDDY
+    _DIAGNOSTICS_ENABLED = True
+    _DIAGNOSTICS = Diagnostics("generalize_gr1", path.resolve())
+    _DIAGNOSTIC_STAGE_TOKENS.clear()
+    _DIAGNOSTIC_BUDDY = None
+    _DIAGNOSTIC_BUDDY_SAMPLES.clear()
+    _DIAGNOSTIC_INSTANCES.clear()
+    _DIAGNOSTIC_CLIENT_COUNTS.clear()
+    _DIAGNOSTIC_OWNER_ARITIES.clear()
+    _DIAGNOSTIC_SUBSETS.clear()
+    _DIAGNOSTIC_SUPPORTS.clear()
+    _DIAGNOSTIC_AAG_CONES.clear()
+    _DIAGNOSTIC_MASK_WORDS.clear()
+    _DIAGNOSTIC_MODES.clear()
+    for name in _DIAGNOSTIC_PHASES:
+        _DIAGNOSTICS.phases[name] = {"calls": 0, "wall_s": 0.0}
+    try:
+        _CHECKER_STATS_MODE = _probe_checker_stats()
+        binaries = {}
+        for name, path0 in (("tlsfsolve", SOLVER), ("tlsfcertcheck", CHECKER)):
+            binaries[name] = {"path": str(path0), "sha256": sha256(path0)}
+        binding_modules = sorted(BINDINGS_SITE.glob("buddy.py"))
+        extension_modules = sorted(BINDINGS_SITE.glob("_buddy*.so"))
+        _DIAGNOSTICS.extra.update({
+            "environment": {
+                "interpreter": {"executable": sys.executable,
+                                "version": sys.version},
+                "bindings_site": str(BINDINGS_SITE),
+                "binding_module_candidates": [str(path0)
+                                              for path0 in binding_modules],
+                "extension_module_candidates": [str(path0)
+                                                for path0 in extension_modules],
+                "tlsf_tools_build": str(TOOL_CONFIG.tlsf_tools_build),
+                "binaries": binaries,
+            },
+            "checker_stats": {"supported": _CHECKER_STATS_MODE is not None,
+                              "mode": _CHECKER_STATS_MODE, "attempts": []},
+        })
+    except Exception as error:
+        _CHECKER_STATS_MODE = None
+        _DIAGNOSTICS.record_error("initialize", error)
+
+
+def _diagnostic_finish(status: str, result: dict | None = None) -> None:
+    if not _DIAGNOSTICS_ENABLED or _DIAGNOSTICS is None:
+        return
+    try:
+        subsets = []
+        for (clients, subset), uses in sorted(_DIAGNOSTIC_SUBSETS.items()):
+            subsets.append({
+                "clients": clients,
+                "subset": list(subset),
+                "uses": sum(uses.values()),
+                "uses_by_operation": dict(sorted(uses.items())),
+            })
+        _DIAGNOSTICS.extra.update({
+            "bdd_stats": {
+                "available": bool(_DIAGNOSTIC_BUDDY_SAMPLES),
+                "samples": _DIAGNOSTIC_BUDDY_SAMPLES,
+            },
+            "distributions": {
+                "projected_root_support_widths": _DIAGNOSTIC_SUPPORTS,
+                "selected_aig_cones": _DIAGNOSTIC_AAG_CONES,
+                "client_count_histogram": {
+                    str(key): value for key, value in sorted(
+                        _DIAGNOSTIC_CLIENT_COUNTS.items())
+                },
+                "ownership_tuple_arity_histogram": {
+                    str(key): value for key, value in sorted(
+                        _DIAGNOSTIC_OWNER_ARITIES.items())
+                },
+                "distinct_subset_count": len(subsets),
+                "subset_reuse": subsets,
+                "uint64_variable_mask_word_length_histogram": {
+                    str(key): value for key, value in sorted(
+                        _DIAGNOSTIC_MASK_WORDS.items())
+                },
+                "mode_count_basis": "actual_checker_attempts",
+                "mode_count_histogram": {
+                    str(key): value for key, value in sorted(
+                        _DIAGNOSTIC_MODES.items())
+                },
+            },
+        })
+        outcome = None
+        if result is not None:
+            outcome = {key: result.get(key) for key in (
+                "family", "target", "verdict", "answer", "reason")
+                if key in result}
+        _DIAGNOSTICS.write(status, outcome=outcome)
+    except Exception as error:
+        _DIAGNOSTICS.record_error("finish", error)
+        _DIAGNOSTICS.write(status)
 
 
 def _scaled_solver_nodes(n: int) -> int:
@@ -151,22 +432,50 @@ _ACTIVE_STAGE: tuple[str, float] | None = None
 _COST_TIMES: Counter[str] = Counter()
 
 
+def _set_active_progress_stage(name: str, started: float | None = None) -> None:
+    global _ACTIVE_STAGE
+    _ACTIVE_STAGE = (name, time.monotonic() if started is None else started)
+    _write_cost_progress()
+
+
+def _clear_active_progress_stage(name: str) -> None:
+    global _ACTIVE_STAGE
+    if _ACTIVE_STAGE is not None and _ACTIVE_STAGE[0] == name:
+        _ACTIVE_STAGE = None
+    _write_cost_progress()
+
+
 def _write_cost_progress() -> None:
     """Persist partial cold-cost evidence for an outer absolute deadline."""
     raw = os.environ.get("GENERALIZE_GR1_PROGRESS")
     if not raw:
         return
-    path = pathlib.Path(raw)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "cost_times": dict(_COST_TIMES),
-        "last_stage_times": dict(_LAST_STAGE_TIMES),
-        "active_stage": _ACTIVE_STAGE[0] if _ACTIVE_STAGE is not None else None,
-    }
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    temporary.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    try:
+        path = pathlib.Path(raw)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        now = time.monotonic()
+        payload = {
+            "sampled_monotonic_s": now,
+            "cost_times": dict(_COST_TIMES),
+            "last_stage_times": dict(_LAST_STAGE_TIMES),
+            "active_stage": (
+                _ACTIVE_STAGE[0] if _ACTIVE_STAGE is not None else None),
+            "active_stage_started_monotonic_s": (
+                _ACTIVE_STAGE[1] if _ACTIVE_STAGE is not None else None
+            ),
+            "active_stage_elapsed_s": (
+                max(0.0, now - _ACTIVE_STAGE[1])
+                if _ACTIVE_STAGE is not None else None
+            ),
+        }
+        temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+        temporary.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8")
+        temporary.replace(path)
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.record_error("write_cost_progress", error)
 
 
 class StageTimes(dict[str, float]):
@@ -176,6 +485,10 @@ class StageTimes(dict[str, float]):
         global _ACTIVE_STAGE
         started = time.monotonic()
         _ACTIVE_STAGE = (key, started)
+        if _DIAGNOSTICS_ENABLED:
+            _DIAGNOSTIC_STAGE_TOKENS[key] = _diagnostic_begin(
+                key, "stage")
+            _diagnostic_buddy_boundary(f"stage:{key}:begin")
         _write_cost_progress()
         return started
 
@@ -186,6 +499,11 @@ class StageTimes(dict[str, float]):
         _COST_TIMES[f"stage_{key}"] += value
         if _ACTIVE_STAGE is not None and _ACTIVE_STAGE[0] == key:
             _ACTIVE_STAGE = None
+        if _DIAGNOSTICS_ENABLED:
+            token = _DIAGNOSTIC_STAGE_TOKENS.pop(key, None)
+            if token is not None:
+                _diagnostic_end(token)
+            _diagnostic_buddy_boundary(f"stage:{key}:end")
         _write_cost_progress()
 
 
@@ -375,17 +693,31 @@ def build_game(family: str, n: int, directory: pathlib.Path,
                str(game), "--provenance-out", str(prov)]
     env = bindings_environment(TOOL_CONFIG)
     started = time.monotonic()
+    diagnostic_token = None
+    if _DIAGNOSTICS_ENABLED:
+        phase = ("seed_monitor_construction" if stage == "seed"
+                 else "target_monitor_construction")
+        diagnostic_token = _diagnostic_begin(phase)
     try:
         proc = subprocess.run(command, cwd=ROOT, env=env, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                               check=False, timeout=timeout)
     except subprocess.TimeoutExpired:
+        if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.censor_active("subprocess_timeout")
         raise Decline(stage, "monitor_game", n, f"timed out after {timeout:g}s")
     finally:
         key = "seed_monitor_game" if stage == "seed" else "target_monitor_game"
         _COST_TIMES[key] += time.monotonic() - started
+        if diagnostic_token is not None:
+            _diagnostic_end(diagnostic_token)
         _write_cost_progress()
     if proc.returncode != 0:
+        if (proc.returncode == 124 and _DIAGNOSTICS_ENABLED and
+                _DIAGNOSTICS is not None):
+            _DIAGNOSTICS.censor(
+                phase, time.monotonic() - started,
+                "subprocess_timeout")
         detail = (proc.stderr or proc.stdout).strip()[-500:]
         raise Decline(stage, "monitor_game", n,
                       f"construction failed with exit {proc.returncode}: {detail}")
@@ -406,16 +738,29 @@ def solve_seed(family: str, n: int, directory: pathlib.Path,
                "--oxidd-nodes", str(nodes), "--oxidd-cache", str(cache),
                str(game)]
     started = time.monotonic()
+    diagnostic_token = (
+        _diagnostic_begin("seed_solves") if _DIAGNOSTICS_ENABLED else None
+    )
     try:
         proc = _run(command, limits.checker_timeout_s)
     finally:
         _COST_TIMES["seed_solve"] += time.monotonic() - started
+        if diagnostic_token is not None:
+            _diagnostic_end(diagnostic_token)
         _write_cost_progress()
     if proc.returncode != 0:
+        if (proc.returncode == 124 and _DIAGNOSTICS_ENABLED and
+                _DIAGNOSTICS is not None):
+            _DIAGNOSTICS.censor(
+                "seed_solves", time.monotonic() - started,
+                "subprocess_timeout")
         detail = (proc.stderr or proc.stdout).strip()[-500:]
         raise Decline("seed", "tlsfsolve", n,
                       f"seed solve failed with exit {proc.returncode}: {detail}")
-    return Instance.load(family, n, game, prov, cert)
+    instance = Instance.load(family, n, game, prov, cert)
+    if _DIAGNOSTICS_ENABLED:
+        _diagnostic_register_instance(instance, "seed")
+    return instance
 
 
 def _monitor_state(name: str) -> tuple[int, int] | None:
@@ -683,7 +1028,8 @@ class Instance:
 
 class Bdds:
     def __init__(self, var_count: int = 8192):
-        buddy, _extension, _binding_path, _extension_path = load_buddy_bindings(
+        global _DIAGNOSTIC_BUDDY
+        buddy, _extension, binding_path, extension_path = load_buddy_bindings(
             BINDINGS_SITE
         )
         self.buddy = buddy
@@ -698,18 +1044,57 @@ class Bdds:
         self.next_base = var_count // 4
         self.normal_base = var_count // 2
         self.normal: dict[tuple, int] = {}
+        if _DIAGNOSTICS_ENABLED:
+            try:
+                _DIAGNOSTIC_BUDDY = buddy
+                if _DIAGNOSTICS is None:
+                    raise RuntimeError("diagnostics enabled without collector")
+                environment = _DIAGNOSTICS.extra.setdefault("environment", {})
+                if not isinstance(environment, dict):
+                    raise TypeError("diagnostic environment field is not an object")
+                loaded = []
+                maps = pathlib.Path("/proc/self/maps")
+                if maps.is_file():
+                    loaded = sorted({
+                        fields[-1]
+                        for line in maps.read_text(encoding="utf-8").splitlines()
+                        if (fields := line.split()) and fields[-1].startswith("/")
+                        and "bdd" in fields[-1].lower()
+                    })
+                environment["buddy_binding"] = {
+                    "module": str(binding_path),
+                    "extension": str(extension_path),
+                    "loaded_shared_objects": loaded,
+                    "version_number": buddy.bdd_versionnum(),
+                    "version_string": buddy.bdd_versionstr(),
+                }
+                _diagnostic_buddy_boundary("bdd_manager:ready")
+            except Exception as error:
+                if _DIAGNOSTICS is not None:
+                    _DIAGNOSTICS.record_error("record_buddy_environment", error)
 
     def close(self) -> None:
         # The manager is intentionally process-wide; see __init__.
         pass
 
     def cube(self, variables: Iterable[int]):
+        diagnostic_token = (
+            _diagnostic_begin("variable_cube_construction")
+            if _DIAGNOSTICS_ENABLED else None
+        )
         result = self.buddy.bddtrue
-        for variable in sorted(set(variables)):
-            result &= self.buddy.bdd_ithvar(variable)
-        return result
+        try:
+            for variable in sorted(set(variables)):
+                result &= self.buddy.bdd_ithvar(variable)
+            return result
+        finally:
+            if diagnostic_token is not None:
+                _diagnostic_end(diagnostic_token)
 
     def from_aag(self, aag: Aag, literal: int):
+        diagnostic_token = (
+            _diagnostic_begin("from_aag") if _DIAGNOSTICS_ENABLED else None
+        )
         gate = {lhs // 2: (left, right) for lhs, left, right in aag.gates}
         input_var = {lit // 2: i for i, lit in enumerate(aag.inputs)}
         memo = {}
@@ -731,7 +1116,27 @@ class Bdds:
             memo[lit] = result
             return result
 
-        return visit(literal)
+        try:
+            return visit(literal)
+        finally:
+            if diagnostic_token is not None:
+                try:
+                    if _DIAGNOSTICS is None:
+                        raise RuntimeError("diagnostics enabled without collector")
+                    gates_traversed = sum(
+                        not (lit & 1) and lit // 2 in gate for lit in memo)
+                    _DIAGNOSTICS.counters["from_aag_calls"] += 1
+                    _DIAGNOSTICS.counters[
+                        "from_aag_gates_traversed"] += gates_traversed
+                    _DIAGNOSTIC_AAG_CONES.append({
+                        "aag": str(aag.path),
+                        "root_literal": literal,
+                        "gates_traversed": gates_traversed,
+                    })
+                except Exception as error:
+                    if _DIAGNOSTICS is not None:
+                        _DIAGNOSTICS.record_error("record_from_aag", error)
+                _diagnostic_end(diagnostic_token)
 
     def game_functions(self, game: Aag):
         """Compile game literals over public certificate variable indices."""
@@ -789,14 +1194,40 @@ class Bdds:
                              temporaries: list[int]):
         if not (len(variables) == len(replacements) == len(temporaries)):
             raise ValueError("substitution vectors have different lengths")
-        result = function
-        for variable, temporary in zip(variables, temporaries, strict=True):
-            result = self.buddy.bdd_compose(
-                result, self.buddy.bdd_ithvar(temporary), variable)
-        for temporary, replacement in zip(
-                temporaries, replacements, strict=True):
-            result = self.buddy.bdd_compose(result, replacement, temporary)
-        return result
+        if not _DIAGNOSTICS_ENABLED:
+            result = function
+            for variable, temporary in zip(variables, temporaries, strict=True):
+                result = self.buddy.bdd_compose(
+                    result, self.buddy.bdd_ithvar(temporary), variable)
+            for temporary, replacement in zip(
+                    temporaries, replacements, strict=True):
+                result = self.buddy.bdd_compose(result, replacement, temporary)
+            return result
+        diagnostic_token = _diagnostic_begin("substitute_variables")
+        compose_calls = 0
+        try:
+            result = function
+            for variable, temporary in zip(variables, temporaries, strict=True):
+                result = self.buddy.bdd_compose(
+                    result, self.buddy.bdd_ithvar(temporary), variable)
+                compose_calls += 1
+            for temporary, replacement in zip(
+                    temporaries, replacements, strict=True):
+                result = self.buddy.bdd_compose(result, replacement, temporary)
+                compose_calls += 1
+            return result
+        finally:
+            if diagnostic_token is not None:
+                try:
+                    if _DIAGNOSTICS is None:
+                        raise RuntimeError("diagnostics enabled without collector")
+                    _DIAGNOSTICS.counters["substitute_variables_calls"] += 1
+                    _DIAGNOSTICS.counters["bdd_compose_calls"] += compose_calls
+                except Exception as error:
+                    if _DIAGNOSTICS is not None:
+                        _DIAGNOSTICS.record_error(
+                            "record_substitute_variables", error)
+                _diagnostic_end(diagnostic_token)
 
     def cpre(self, target, next_state: list[object], bad,
              controls: list[int], uncontrollable: list[int]):
@@ -808,6 +1239,10 @@ class Bdds:
         return step
 
     def relabel(self, function, mapping: dict[int, int]):
+        diagnostic_token = (
+            _diagnostic_begin("bdd_projection_relabel")
+            if _DIAGNOSTICS_ENABLED else None
+        )
         memo = {}
 
         def visit(node):
@@ -826,7 +1261,11 @@ class Bdds:
             memo[key] = result
             return result
 
-        return visit(function)
+        try:
+            return visit(function)
+        finally:
+            if diagnostic_token is not None:
+                _diagnostic_end(diagnostic_token)
 
     def normal_var(self, key: tuple) -> int:
         if key not in self.normal:
@@ -852,6 +1291,10 @@ class Bdds:
         """Emit a BDD with variables mapped to arbitrary AIG literals."""
         if memo is None:
             memo = {}
+        memo_size = len(memo) if _DIAGNOSTICS_ENABLED else 0
+        diagnostic_token = (
+            _diagnostic_begin("export") if _DIAGNOSTICS_ENABLED else None
+        )
 
         def visit(node):
             if node == self.buddy.bddfalse:
@@ -873,7 +1316,21 @@ class Bdds:
             memo[key] = result
             return result
 
-        return visit(function)
+        try:
+            return visit(function)
+        finally:
+            if diagnostic_token is not None:
+                try:
+                    if _DIAGNOSTICS is None:
+                        raise RuntimeError("diagnostics enabled without collector")
+                    nodes_visited = max(0, len(memo) - memo_size)
+                    _DIAGNOSTICS.counters["bdd_to_aig_walks"] += 1
+                    _DIAGNOSTICS.counters[
+                        "bdd_to_aig_nodes_visited"] += nodes_visited
+                except Exception as error:
+                    if _DIAGNOSTICS is not None:
+                        _DIAGNOSTICS.record_error("record_export", error)
+                _diagnostic_end(diagnostic_token)
 
 
 def _normal_key(key: tuple, slots: dict[int, int]) -> tuple:
@@ -901,42 +1358,90 @@ def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
                          goal: GoalInfo | None = None) -> dict[tuple, object]:
     assert instance.cert is not None
     function = bdds.from_aag(instance.cert, instance.cert.output(name))
-    all_vars = {item.index for item in instance.variables}
-    templates: dict[tuple, object] = {}
-    rebuilt = bdds.buddy.bddtrue
+    metadata_token = (
+        _diagnostic_begin("projection_metadata")
+        if _DIAGNOSTICS_ENABLED else None
+    )
+    try:
+        all_vars = {item.index for item in instance.variables}
+        templates: dict[tuple, object] = {}
+        rebuilt = bdds.buddy.bddtrue
+    finally:
+        if metadata_token is not None:
+            _diagnostic_end(metadata_token)
     for subset0 in itertools.combinations(range(instance.n), arity):
-        subset = _ordered_subset(instance, subset0, goal)
-        selected = frozenset(subset)
-        keep = {item.index for item in instance.variables
-                if not item.owners or item.owners <= selected}
-        drop = all_vars - keep
-        projected = (bdds.buddy.bdd_exist(function, bdds.cube(drop))
-                     if drop else function)
-        slots = {client: pos for pos, client in enumerate(subset)}
-        mapping = {item.index: bdds.normal_var(_normal_key(item.key, slots))
-                   for item in instance.variables if item.index in keep}
+        metadata_token = (
+            _diagnostic_begin("projection_metadata")
+            if _DIAGNOSTICS_ENABLED else None
+        )
+        try:
+            subset = _ordered_subset(instance, subset0, goal)
+            selected = frozenset(subset)
+            keep = {item.index for item in instance.variables
+                    if not item.owners or item.owners <= selected}
+            drop = all_vars - keep
+            slots = {client: pos for pos, client in enumerate(subset)}
+            mapping = {
+                item.index: bdds.normal_var(_normal_key(item.key, slots))
+                for item in instance.variables if item.index in keep
+            }
+            if _DIAGNOSTICS_ENABLED:
+                _diagnostic_record_subset(instance.n, subset, "projection")
+        finally:
+            if metadata_token is not None:
+                _diagnostic_end(metadata_token)
+        if drop:
+            drop_cube = bdds.cube(drop)
+            project_token = (
+                _diagnostic_begin("bdd_projection_relabel")
+                if _DIAGNOSTICS_ENABLED else None
+            )
+            try:
+                projected = bdds.buddy.bdd_exist(function, drop_cube)
+            finally:
+                if project_token is not None:
+                    _diagnostic_end(project_token)
+        else:
+            projected = function
+        if _DIAGNOSTICS_ENABLED:
+            try:
+                projected_support = _support(bdds, projected)
+                _diagnostic_record_support(
+                    name, instance.n, subset, projected_support)
+            except Exception as error:
+                if _DIAGNOSTICS is not None:
+                    _DIAGNOSTICS.record_error(
+                        "measure_projected_support", error)
         normalized = bdds.relabel(projected, mapping)
-        roles = tuple(instance.role_by_client[index] for index in subset)
-        relation = tuple("goal" if goal and index == goal.owner else "other"
-                         for index in subset)
-        # The GR(1) fixed point enumerates justice records in source order.
-        # Its exact rank predicates (and, on invalid multi-hot monitor states,
-        # even W*) may retain the stable lowest-index anchor although clients
-        # share one specification role.  Record that index-relative anchor
-        # explicitly; it is not inferred from AIG topology.
-        anchor = tuple(index == 0 for index in subset)
-        group = (roles, relation, anchor)
-        previous = templates.get(group)
-        if previous is not None and previous != normalized:
-            raise Decline("anti-unify", name, instance.n,
-                          f"projections disagree within role class {group}")
-        templates[group] = normalized
+        metadata_token = (
+            _diagnostic_begin("projection_metadata")
+            if _DIAGNOSTICS_ENABLED else None
+        )
+        try:
+            roles = tuple(instance.role_by_client[index] for index in subset)
+            relation = tuple(
+                "goal" if goal and index == goal.owner else "other"
+                for index in subset)
+            # The GR(1) fixed point enumerates justice records in source order.
+            # Its exact rank predicates (and, on invalid multi-hot monitor
+            # states, even W*) may retain the stable lowest-index anchor.
+            anchor = tuple(index == 0 for index in subset)
+            group = (roles, relation, anchor)
+            previous = templates.get(group)
+            if previous is not None and previous != normalized:
+                raise Decline("anti-unify", name, instance.n,
+                              f"projections disagree within role class {group}")
+            templates[group] = normalized
 
-        # Rebuild in the seed's concrete variable space for the exact
-        # separability check.  Each projection, not one representative per
-        # role, is a conjunct.
-        reverse = {bdds.normal_var(_normal_key(item.key, slots)): item.index
-                   for item in instance.variables if item.index in keep}
+            # Rebuild in the seed's concrete variable space for the exact
+            # separability check.  Each projection is a conjunct.
+            reverse = {
+                bdds.normal_var(_normal_key(item.key, slots)): item.index
+                for item in instance.variables if item.index in keep
+            }
+        finally:
+            if metadata_token is not None:
+                _diagnostic_end(metadata_token)
         rebuilt &= bdds.relabel(normalized, reverse)
     if rebuilt != function:
         hint_validity = _hint_one_hot_validity(bdds, instance)
@@ -987,13 +1492,15 @@ def _one_hot_validity(bdds: Bdds, instance: Instance):
     return result
 
 
-def instantiate_templates(bdds: Bdds, target: Instance,
-                          templates: dict[tuple, object], arity: int,
-                          goal: GoalInfo | None = None):
+def _instantiate_templates_impl(bdds: Bdds, target: Instance,
+                                templates: dict[tuple, object], arity: int,
+                                goal: GoalInfo | None = None):
     result = bdds.buddy.bddtrue
     add_hint_validity = HINT_VALIDITY_GROUP in templates
     for subset0 in itertools.combinations(range(target.n), arity):
         subset = _ordered_subset(target, subset0, goal)
+        if _DIAGNOSTICS_ENABLED:
+            _diagnostic_record_subset(target.n, subset, "instantiation")
         roles = tuple(target.role_by_client[index] for index in subset)
         relation = tuple("goal" if goal and index == goal.owner else "other"
                          for index in subset)
@@ -1021,13 +1528,35 @@ def instantiate_templates(bdds: Bdds, target: Instance,
     return result
 
 
+def instantiate_templates(bdds: Bdds, target: Instance,
+                          templates: dict[tuple, object], arity: int,
+                          goal: GoalInfo | None = None):
+    if not _DIAGNOSTICS_ENABLED:
+        return _instantiate_templates_impl(
+            bdds, target, templates, arity, goal)
+    token = _diagnostic_begin("instantiate_templates")
+    try:
+        return _instantiate_templates_impl(
+            bdds, target, templates, arity, goal)
+    finally:
+        _diagnostic_end(token)
+
+
 def _support(bdds: Bdds, function) -> set[int]:
-    node = bdds.buddy.bdd_support(function)
-    result = set()
-    while node != bdds.buddy.bddtrue and node != bdds.buddy.bddfalse:
-        result.add(bdds.buddy.bdd_var(node))
-        node = bdds.buddy.bdd_high(node)
-    return result
+    diagnostic_token = (
+        _diagnostic_begin("support_extraction")
+        if _DIAGNOSTICS_ENABLED else None
+    )
+    try:
+        node = bdds.buddy.bdd_support(function)
+        result = set()
+        while node != bdds.buddy.bddtrue and node != bdds.buddy.bddfalse:
+            result.add(bdds.buddy.bdd_var(node))
+            node = bdds.buddy.bdd_high(node)
+        return result
+    finally:
+        if diagnostic_token is not None:
+            _diagnostic_end(diagnostic_token)
 
 
 def _merge_seed_templates(stage: str, predicate: str,
@@ -1399,6 +1928,10 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
     pathlib.Path(str(cert_path) + ".json").write_text(
         json.dumps(cert_meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     _trace("certificate emitted")
+    policy_token = (
+        _diagnostic_begin("policy_construction_skolemization")
+        if _DIAGNOSTICS_ENABLED else None
+    )
 
     if target.family in STRUCTURED_GRANT_FAMILIES:
         nstate = len(target.game.latches)
@@ -1424,6 +1957,8 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
             json.dumps(policy_meta, indent=2, sort_keys=True) + "\n",
             encoding="utf-8")
         _trace("structured arbiter policy emitted")
+        if policy_token is not None:
+            _diagnostic_end(policy_token)
         return cert_path, policy_path
 
     # Build the relation selected by the effective goal counter.
@@ -1512,6 +2047,8 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
     policy_meta = _policy_sidecar(target, policy_path, len(policy_builder.gates))
     pathlib.Path(str(policy_path) + ".json").write_text(
         json.dumps(policy_meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if policy_token is not None:
+        _diagnostic_end(policy_token)
     return cert_path, policy_path
 
 
@@ -1892,6 +2429,8 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
         source=target_source or family_source,
         reduction_semantics=reduction_semantics)
     target = Instance.load(family, target_n, target_game, target_prov)
+    if _DIAGNOSTICS_ENABLED:
+        _diagnostic_register_instance(target, "target")
     role_counts = [_provenance_role_class_count(seed) for seed in seeds]
     role_counts.append(_provenance_role_class_count(target))
     measured_roles = measured_role_class_count(family)
@@ -2128,6 +2667,97 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
         bdds.close()
 
 
+def _checker_stats_options(path: pathlib.Path) -> list[str]:
+    if _CHECKER_STATS_MODE == "file_equals":
+        return [f"--stats={path}"]
+    if _CHECKER_STATS_MODE == "file_separate":
+        return ["--stats", str(path)]
+    if _CHECKER_STATS_MODE == "stream":
+        return ["--stats"]
+    return []
+
+
+def _parse_stream_json(text: str) -> dict | None:
+    candidates = [text.strip(), *reversed(text.splitlines())]
+    for candidate in candidates:
+        try:
+            value = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            return value
+    line = next((item for item in text.splitlines()
+                 if item.startswith("TLSFCERTCHECK_STATS ")), "")
+    if line:
+        result: dict[str, object] = {}
+        for field in line.split()[1:]:
+            if "=" not in field:
+                continue
+            key, raw = field.split("=", 1)
+            try:
+                value: object = int(raw)
+            except ValueError:
+                try:
+                    value = float(raw)
+                except ValueError:
+                    value = raw
+            result[key] = value
+        if result:
+            return result
+    return None
+
+
+def _record_checker_stats(
+    stats_path: pathlib.Path, proc: subprocess.CompletedProcess, label: str,
+    node_cap: int, side: str, mode_count: int,
+) -> None:
+    if not _DIAGNOSTICS_ENABLED or _DIAGNOSTICS is None:
+        return
+    try:
+        payload = None
+        error = None
+        if _CHECKER_STATS_MODE in ("file_equals", "file_separate"):
+            if stats_path.is_file():
+                try:
+                    value = json.loads(stats_path.read_text(encoding="utf-8"))
+                    payload = value if isinstance(value, dict) else None
+                    if payload is None:
+                        error = "stats JSON is not an object"
+                except (OSError, json.JSONDecodeError) as exc:
+                    error = f"{type(exc).__name__}: {exc}"
+                finally:
+                    try:
+                        stats_path.unlink(missing_ok=True)
+                    except OSError:
+                        pass
+            else:
+                error = "checker did not create the advertised stats file"
+        elif _CHECKER_STATS_MODE == "stream":
+            payload = _parse_stream_json(proc.stderr) or _parse_stream_json(proc.stdout)
+            if payload is None:
+                error = "checker stats stream contained no JSON object"
+        checker_stats = _DIAGNOSTICS.extra.setdefault(
+            "checker_stats",
+            {"supported": False, "mode": None, "attempts": []},
+        )
+        if not isinstance(checker_stats, dict):
+            raise TypeError("checker_stats field is not an object")
+        attempts = checker_stats.setdefault("attempts", [])
+        if not isinstance(attempts, list):
+            raise TypeError("checker_stats attempts field is not a list")
+        attempts.append({
+            "label": label,
+            "certificate_side": side,
+            "mode_count": mode_count,
+            "node_cap": node_cap,
+            "returncode": proc.returncode,
+            "stats": payload,
+            "error": error,
+        })
+    except Exception as error:
+        _DIAGNOSTICS.record_error("record_checker_stats", error)
+
+
 def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
                     method: str, limits: ProposerLimits, label: str) -> dict:
     json_out = cert.parent / f"check-{label}.json"
@@ -2136,22 +2766,42 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
     attempts = []
     proc = None
     command = []
+    progress_stage = (
+        "target_check" if label.startswith("target-") else "probe_check")
+    _set_active_progress_stage(progress_stage, started)
+    diagnostic_token = (
+        _diagnostic_begin("target_check")
+        if _DIAGNOSTICS_ENABLED and label.startswith("target-") else None
+    )
     for node_cap in (initial_cap, initial_cap * 2):
         command = [str(CHECKER), "--method", method, "--timeout",
                    str(limits.checker_timeout_s), "--node-cap", str(node_cap),
                    "--json-out", str(json_out), "--certificate", str(cert),
-                   "--certificate-json", str(cert) + ".json",
-                   str(target.game_path), str(policy)]
+                   "--certificate-json", str(cert) + ".json"]
+        if _DIAGNOSTICS_ENABLED:
+            stats_path = cert.parent / f".s0-checker-stats-{label}-{node_cap}.json"
+            command.extend(_checker_stats_options(stats_path))
+            mode_count = _diagnostic_record_checker_attempt(
+                target, "system", label, node_cap)
+        command.extend([str(target.game_path), str(policy)])
         proc = _run(command, limits.checker_timeout_s + 10)
+        if _DIAGNOSTICS_ENABLED:
+            _record_checker_stats(
+                stats_path, proc, label, node_cap, "system", mode_count)
         attempts.append({"node_cap": node_cap, "returncode": proc.returncode})
         if proc.returncode != 3:
             break
+    if (proc is not None and proc.returncode == 124 and
+            _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None):
+        _DIAGNOSTICS.censor_active("subprocess_timeout")
     assert proc is not None
     elapsed = time.monotonic() - started
     _COST_TIMES[
-        "target_check" if label.startswith("target-") else "probe_check"
+        progress_stage
     ] += elapsed
-    _write_cost_progress()
+    if diagnostic_token is not None:
+        _diagnostic_end(diagnostic_token)
+    _clear_active_progress_stage(progress_stage)
     payload = None
     if json_out.exists():
         try:
@@ -2406,6 +3056,16 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
     game, provenance = build_game(
         family, target, out, limits.checker_timeout_s, stage="canonicalize",
         source=target_source, reduction_semantics="exact")
+    diagnostic_instance = None
+    if _DIAGNOSTICS_ENABLED:
+        try:
+            diagnostic_instance = Instance.load(
+                family, target, game, provenance)
+            _diagnostic_register_instance(diagnostic_instance, "target")
+        except Exception as error:
+            if _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.record_error(
+                    "load_exact_diagnostic_instance", error)
     certificate = out / f"{family}_{target}.certificate.aag"
     policy = out / f"{family}_{target}.policy.aag"
     nodes, cache = limits.seed_capacity(target)
@@ -2417,10 +3077,23 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
         "--oxidd-nodes", str(nodes), "--oxidd-cache", str(cache), str(game),
     ]
     solve_started = time.monotonic()
-    solve = _run(solve_command, limits.checker_timeout_s)
-    _COST_TIMES["target_solve"] += time.monotonic() - solve_started
-    _write_cost_progress()
+    _set_active_progress_stage("target_solve", solve_started)
+    solve_token = (
+        _diagnostic_begin("target_solve") if _DIAGNOSTICS_ENABLED else None
+    )
+    try:
+        solve = _run(solve_command, limits.checker_timeout_s)
+    finally:
+        _COST_TIMES["target_solve"] += time.monotonic() - solve_started
+        if solve_token is not None:
+            _diagnostic_end(solve_token)
+        _clear_active_progress_stage("target_solve")
     if solve.returncode not in (0, 1):
+        if (solve.returncode == 124 and _DIAGNOSTICS_ENABLED and
+                _DIAGNOSTICS is not None):
+            _DIAGNOSTICS.censor(
+                "target_solve", time.monotonic() - solve_started,
+                "subprocess_timeout")
         detail = (solve.stderr or solve.stdout).strip()[-500:]
         raise Decline("target_solve", "tlsfsolve", target,
                       f"exact target had no decisive export (exit {solve.returncode}): {detail}")
@@ -2458,7 +3131,11 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
     json_out = out / f"check-target-{target}.json"
     attempts = []
     checker_started = time.monotonic()
+    _set_active_progress_stage("target_check", checker_started)
     check = None
+    check_token = (
+        _diagnostic_begin("target_check") if _DIAGNOSTICS_ENABLED else None
+    )
     # Environment certificates carry the dual outer/inner ranks and need a
     # larger checker arena than the system side on the measured M5 families.
     # The enclosing campaign cgroup remains the authoritative 8 GiB bound.
@@ -2470,15 +3147,31 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
             str(CHECKER), "--method", "certificate", "--timeout",
             str(limits.checker_timeout_s), "--node-cap", str(node_cap),
             "--json-out", str(json_out), "--certificate", str(certificate),
-            "--certificate-json", str(certificate) + ".json", str(game),
-            str(policy),
+            "--certificate-json", str(certificate) + ".json",
         ]
+        if _DIAGNOSTICS_ENABLED:
+            stats_path = out / f".s0-checker-stats-target-{target}-{node_cap}.json"
+            command.extend(_checker_stats_options(stats_path))
+            mode_count = 0
+            if diagnostic_instance is not None:
+                mode_count = _diagnostic_record_checker_attempt(
+                    diagnostic_instance, side, f"target-{target}", node_cap)
+        command.extend([str(game), str(policy)])
         check = _run(command, limits.checker_timeout_s + 10)
+        if _DIAGNOSTICS_ENABLED:
+            _record_checker_stats(
+                stats_path, check, f"target-{target}", node_cap, side,
+                mode_count)
         attempts.append({"node_cap": node_cap, "returncode": check.returncode})
         if check.returncode != 3:
             break
+    if (check is not None and check.returncode == 124 and
+            _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None):
+        _DIAGNOSTICS.censor_active("subprocess_timeout")
     _COST_TIMES["target_check"] += time.monotonic() - checker_started
-    _write_cost_progress()
+    if check_token is not None:
+        _diagnostic_end(check_token)
+    _clear_active_progress_stage("target_check")
     assert check is not None
     verdict = VERDICTS.get(check.returncode, "ERROR")
     payload = None
@@ -2627,6 +3320,10 @@ def _parser() -> argparse.ArgumentParser:
         "--solver-cache", type=int,
         help="seed-solver cache capacity (default: one quarter of solver nodes)")
     parser.add_argument("--out", type=pathlib.Path)
+    parser.add_argument(
+        "--diagnostics", type=pathlib.Path, metavar="PATH",
+        help="write one opt-in S0 diagnostic JSON document",
+    )
     parser.add_argument("--check-method", choices=("auto", "certificate", "both"),
                         default="auto", help=argparse.SUPPRESS)
     parser.add_argument("--monitor", type=pathlib.Path, help=argparse.SUPPRESS)
@@ -2670,9 +3367,18 @@ def main(argv: list[str] | None = None) -> int:
     solver = (args.solver or config.solver).resolve()
     checker = (args.checker or config.checker).resolve()
     if args.probe:
-        return print_probe(
+        if args.diagnostics is not None:
+            _apply_tool_configuration(config, args)
+            _diagnostic_initialize(args.diagnostics)
+        probe_result = print_probe(
             config, monitor=monitor, solver=solver, checker=checker
         )
+        if _DIAGNOSTICS_ENABLED:
+            _diagnostic_finish(
+                "completed" if probe_result == 0 else "unknown",
+                {"verdict": "PROBE", "reason": f"exit_{probe_result}"},
+            )
+        return probe_result
     if args.family is None or args.target is None:
         parser.error("--family and --target are required unless --probe is used")
     # Spot and BuDDy are native modules tied to the configured CPython ABI.
@@ -2682,6 +3388,8 @@ def main(argv: list[str] | None = None) -> int:
             [str(config.bindings_python), __file__, *arguments],
         )
     _apply_tool_configuration(config, args)
+    if args.diagnostics is not None:
+        _diagnostic_initialize(args.diagnostics)
     default = REAL_FAMILIES.get(args.family) or EXACT_FAMILIES.get(args.family)
     seeds = (tuple(int(item) for item in args.seeds.split(",") if item)
              if args.seeds is not None else (default.default_seeds if default else ()))
@@ -2692,6 +3400,23 @@ def main(argv: list[str] | None = None) -> int:
                             solver_cache=args.solver_cache,
                             checker_nodes=args.node_cap)
     started = time.monotonic()
+    previous_handlers: dict[int, object] = {}
+    was_cancelled = False
+
+    def diagnostic_cancel(signum: int, _frame: object) -> None:
+        nonlocal was_cancelled
+        was_cancelled = True
+        if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None:
+            reason = signal.Signals(signum).name.lower()
+            _write_cost_progress()
+            _DIAGNOSTICS.censor_active(reason)
+            _diagnostic_finish("cancelled")
+        raise DiagnosticCancelled(signal.Signals(signum).name)
+
+    if _DIAGNOSTICS_ENABLED:
+        for handled in (signal.SIGINT, signal.SIGTERM):
+            previous_handlers[handled] = signal.getsignal(handled)
+            signal.signal(handled, diagnostic_cancel)
     try:
         if args.family in EXACT_FAMILIES:
             if args.reduction_semantics != "exact":
@@ -2723,6 +3448,31 @@ def main(argv: list[str] | None = None) -> int:
                             "cache": limits.seed_capacity(n)[1]} for n in seeds],
                 "checker_initial_node_cap": limits.check_capacity(args.target)},
         }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    except DiagnosticCancelled as exc:
+        result = {
+            "family": args.family, "target": args.target, "seeds": seeds,
+            "verdict": "UNKNOWN", "reason": f"cancelled: {exc}",
+        }
+    except Exception as exc:
+        if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.censor_active(type(exc).__name__)
+            _diagnostic_finish("unknown", {
+                "family": args.family,
+                "target": args.target,
+                "verdict": "ERROR",
+                "reason": f"{type(exc).__name__}: {exc}",
+            })
+        raise
+    finally:
+        for handled, previous in previous_handlers.items():
+            signal.signal(handled, previous)
+    diagnostic_status = ("cancelled" if was_cancelled else
+                         "completed" if result.get("verdict") == "VERIFIED"
+                         else "unknown")
+    if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None:
+        if _DIAGNOSTICS.active:
+            _DIAGNOSTICS.censor_active(diagnostic_status)
+        _diagnostic_finish(diagnostic_status, result)
     print(f"{result['verdict']} family={args.family} target={args.target} "
           f"seeds={','.join(map(str, result['seeds'])) or '-'}")
     if result.get("reason"):

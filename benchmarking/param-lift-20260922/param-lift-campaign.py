@@ -53,6 +53,7 @@ from request import (
     SourceRequest,
     bind_source_request,
 )
+from s0_diagnostics import Diagnostics, cgroup_memory_peak
 from tool_config import (
     add_configuration_arguments,
     configuration_from_args,
@@ -69,6 +70,9 @@ M0_CENSUS = HERE / "m0-census.tsv"
 EXIT_CODES = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2}
 SOLVED = frozenset(("REALIZABLE", "UNREALIZABLE"))
 TOKEN = re.compile(r"[^A-Za-z0-9_.-]+")
+
+_DIAGNOSTICS_ENABLED = False
+_DIAGNOSTICS: Diagnostics | None = None
 
 
 class InvocationCancelled(RuntimeError):
@@ -336,6 +340,34 @@ def _load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
+def _record_diagnostic_error(
+    operation: str, error: BaseException, evidence: dict[str, Any] | None = None
+) -> None:
+    """Contain S0 instrumentation failures outside the proof/control path."""
+    item = {
+        "operation": operation,
+        "type": type(error).__name__,
+        "message": str(error),
+    }
+    if evidence is not None:
+        try:
+            evidence.setdefault("diagnostic_errors", []).append(item)
+        except Exception:
+            pass
+    if _DIAGNOSTICS is not None:
+        _DIAGNOSTICS.record_error(operation, error)
+
+
+def _best_effort_diagnostic_json(
+    path: Path, operation: str, evidence: dict[str, Any]
+) -> dict[str, Any] | None:
+    try:
+        return _load_json(path)
+    except Exception as error:
+        _record_diagnostic_error(operation, error, evidence)
+        return None
+
+
 def _progress_stage(evidence: dict[str, Any], fallback: str) -> str:
     progress = evidence.get("generalizer_progress") or {}
     if progress.get("active_stage"):
@@ -352,6 +384,56 @@ def _progress_stage(evidence: dict[str, Any], fallback: str) -> str:
     if costs.get("stage_anti_unify"):
         return "ranks"
     return fallback
+
+
+def _active_stage_elapsed_lower_bound(evidence: dict[str, Any]) -> float:
+    """Return only the active stage's elapsed time, never invocation time."""
+    progress = evidence.get("generalizer_progress") or {}
+    values: list[float] = []
+    try:
+        elapsed = float(progress.get("active_stage_elapsed_s"))
+        if math.isfinite(elapsed) and elapsed >= 0:
+            values.append(elapsed)
+    except (TypeError, ValueError):
+        pass
+    try:
+        started = float(progress.get("active_stage_started_monotonic_s"))
+        sampled = float(progress.get("sampled_monotonic_s"))
+        elapsed = sampled - started
+        if math.isfinite(elapsed) and elapsed >= 0:
+            values.append(elapsed)
+    except (TypeError, ValueError):
+        pass
+    stage = _progress_stage(evidence, "generalize_gr1")
+    child = (_DIAGNOSTICS.extra.get("generalizer", {})
+             if _DIAGNOSTICS is not None else {})
+    records = child.get("censored", []) if isinstance(child, dict) else []
+    if isinstance(records, list):
+        for record in records:
+            if not isinstance(record, dict) or record.get("stage") != stage:
+                continue
+            value = record.get("elapsed_lower_bound_s")
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                elapsed = float(value)
+                if math.isfinite(elapsed) and elapsed >= 0:
+                    values.append(elapsed)
+    return max(values, default=0.0)
+
+
+def _diagnostic_censor_generalizer_timeout(evidence: dict[str, Any]) -> None:
+    """Record a valid stage-local bound for an outer absolute timeout."""
+    if _DIAGNOSTICS is None:
+        return
+    stage = _progress_stage(evidence, "generalize_gr1")
+    try:
+        _DIAGNOSTICS.censor(
+            stage,
+            _active_stage_elapsed_lower_bound(evidence),
+            "absolute_deadline_exhausted",
+            "stage",
+        )
+    except Exception as error:
+        _record_diagnostic_error("censor_generalizer_timeout", error, evidence)
 
 
 def _scaled_solver_nodes(n: int) -> int:
@@ -403,6 +485,10 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
                           evidence: dict[str, Any], args: argparse.Namespace) -> PipelineResult:
     result_tsv = workspace / "generalizer-result.tsv"
     progress_json = workspace / "generalizer-progress.json"
+    child_diagnostics = (
+        workspace / "generalizer-diagnostics.json"
+        if _DIAGNOSTICS_ENABLED else None
+    )
     output = workspace / "generalizer"
     internal_timeout = max(0.1, deadline.remaining_s() - 0.5)
     command = [
@@ -418,6 +504,8 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         "--solver", str(args.solver.resolve()),
         "--checker", str(args.checker.resolve()),
     ]
+    if child_diagnostics is not None:
+        command.extend(("--diagnostics", str(child_diagnostics)))
     if request.source_request is not None:
         try:
             request.source_request.validate_current()
@@ -437,6 +525,11 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
     env["GENERALIZE_GR1_RESULTS"] = str(result_tsv)
     env["GENERALIZE_GR1_PROGRESS"] = str(progress_json)
     env["GENERALIZE_GR1_TRACE"] = "1"
+    diagnostic_token = (
+        _DIAGNOSTICS.begin("generalize_gr1")
+        if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None else None
+    )
+    outcome = None
     try:
         outcome = run_process(command, deadline, env)
     finally:
@@ -444,11 +537,36 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         # active.  Preserve the child's last atomic progress record before
         # propagating that cancellation.
         if progress_json.is_file():
-            evidence["generalizer_progress"] = _load_json(progress_json)
+            progress_payload = _best_effort_diagnostic_json(
+                progress_json, "read_generalizer_progress", evidence)
+            if progress_payload is not None:
+                evidence["generalizer_progress"] = progress_payload
+        if child_diagnostics is not None and child_diagnostics.is_file():
+            child_payload = _best_effort_diagnostic_json(
+                child_diagnostics, "read_generalizer_diagnostics", evidence)
+            if child_payload is not None and _DIAGNOSTICS is not None:
+                try:
+                    _DIAGNOSTICS.extra["generalizer"] = child_payload
+                except Exception as error:
+                    _record_diagnostic_error(
+                        "embed_generalizer_diagnostics", error, evidence)
+            try:
+                child_diagnostics.unlink()
+            except OSError:
+                pass
+        if diagnostic_token is not None and outcome is not None:
+            try:
+                assert _DIAGNOSTICS is not None
+                _DIAGNOSTICS.end(diagnostic_token)
+            except Exception as error:
+                _record_diagnostic_error(
+                    "end_generalizer_diagnostic_phase", error, evidence)
+    assert outcome is not None
     _record_process(evidence, "generalize_gr1", outcome)
     if outcome.timed_out:
         stage = _progress_stage(evidence, "generalize_gr1")
         evidence["target_check_ran"] = stage == "target_check"
+        _diagnostic_censor_generalizer_timeout(evidence)
         raise PipelineFailure(stage, "absolute_deadline_exhausted")
     rows = _read_tsv(result_tsv) if result_tsv.is_file() else []
     evidence["generalizer_result"] = rows[0] if len(rows) == 1 else None
@@ -567,6 +685,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--budget", type=float, default=120.0)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--evidence-out", type=Path)
+    parser.add_argument(
+        "--diagnostics", type=Path, metavar="PATH",
+        help="write one opt-in S0 diagnostic JSON document",
+    )
     parser.add_argument("--instances", type=Path, default=M0_INSTANCES)
     parser.add_argument("--census", type=Path, default=M0_CENSUS)
     parser.add_argument("--generalizer", type=Path, default=GENERALIZER)
@@ -578,6 +700,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    global _DIAGNOSTICS_ENABLED, _DIAGNOSTICS
     invocation_started = time.monotonic()
     parser = _parser()
     args = parser.parse_args(argv)
@@ -585,16 +708,57 @@ def main(argv: list[str] | None = None) -> int:
     args.monitor = (args.monitor or config.monitor).resolve()
     args.solver = (args.solver or config.solver).resolve()
     args.checker = (args.checker or config.checker).resolve()
+    if args.diagnostics is not None:
+        _DIAGNOSTICS_ENABLED = True
+        _DIAGNOSTICS = Diagnostics(
+            "param-lift-campaign", args.diagnostics.resolve())
+        try:
+            _DIAGNOSTICS.extra["environment"] = {
+                "interpreter": {"executable": sys.executable,
+                                "version": sys.version},
+                "bindings_python": str(args.bindings_python.resolve()),
+                "bindings_site": str(args.bindings_site.resolve()),
+                "tlsf_tools_build": str(args.tlsf_tools_build.resolve()),
+                "binaries": {
+                    "tlsfsolve": {"path": str(args.solver),
+                                  "sha256": (_sha256(args.solver)
+                                             if args.solver.is_file() else None)},
+                    "tlsfcertcheck": {"path": str(args.checker),
+                                      "sha256": (_sha256(args.checker)
+                                                 if args.checker.is_file() else None)},
+                },
+            }
+        except Exception as error:
+            _record_diagnostic_error("initialize", error)
     if args.probe:
-        return print_probe(
+        probe_result = print_probe(
             config,
             monitor=args.monitor,
             solver=args.solver,
             checker=args.checker,
         )
+        if _DIAGNOSTICS is not None:
+            try:
+                peak = cgroup_memory_peak()
+                _DIAGNOSTICS.extra["cgroup_memory_peak"] = peak
+                _DIAGNOSTICS.write(
+                    "completed" if probe_result == 0 else "unknown",
+                    outcome={"probe_exit_code": probe_result},
+                )
+            except Exception as error:
+                _record_diagnostic_error("finalize_probe", error)
+        return probe_result
     try:
         deadline = Deadline.start(args.budget, invocation_started)
     except ValueError:
+        if _DIAGNOSTICS is not None:
+            try:
+                _DIAGNOSTICS.extra["cgroup_memory_peak"] = cgroup_memory_peak()
+                _DIAGNOSTICS.write(
+                    "unknown", outcome={"stage": "configuration",
+                                        "reason": "invalid_budget"})
+            except Exception as error:
+                _record_diagnostic_error("finalize_invalid_budget", error)
         print("UNKNOWN configuration invalid_budget")
         return EXIT_CODES["UNKNOWN"]
     output_root = (args.output_dir or Path(tempfile.mkdtemp(prefix="param-lift-campaign-"))).resolve()
@@ -611,8 +775,18 @@ def main(argv: list[str] | None = None) -> int:
     }
     result = PipelineResult.unknown("configuration", "uninitialized")
     previous: dict[int, Any] = {}
+    was_cancelled = False
 
     def cancel(signum: int, _frame: Any) -> None:
+        nonlocal was_cancelled
+        was_cancelled = True
+        if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None:
+            try:
+                reason = signal.Signals(signum).name.lower()
+                _DIAGNOSTICS.censor_active(reason)
+                _DIAGNOSTICS.write("cancelled")
+            except Exception as error:
+                _record_diagnostic_error("cancel", error, evidence)
         raise InvocationCancelled(signal.Signals(signum).name)
 
     for handled in (signal.SIGINT, signal.SIGTERM):
@@ -694,6 +868,19 @@ def main(argv: list[str] | None = None) -> int:
         evidence["error"] = {"type": type(error).__name__, "message": str(error),
                              "traceback": traceback.format_exc()}
         result = PipelineResult.unknown("internal_error", type(error).__name__.lower())
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            try:
+                _DIAGNOSTICS.censor_active(type(error).__name__)
+                _DIAGNOSTICS.extra["cgroup_memory_peak"] = cgroup_memory_peak()
+                _DIAGNOSTICS.write("unknown", outcome={
+                    "stage": "internal_error",
+                    "reason": f"{type(error).__name__}: {error}",
+                })
+            except Exception as diagnostic_error:
+                _record_diagnostic_error(
+                    "finalize_original_exception", diagnostic_error, evidence)
+        raise
     finally:
         for handled, handler in previous.items():
             signal.signal(handled, handler)
@@ -705,6 +892,7 @@ def main(argv: list[str] | None = None) -> int:
     children = resource.getrusage(resource.RUSAGE_CHILDREN)
     evidence["elapsed_s"] = elapsed
     evidence["peak_rss_kib"] = max(usage.ru_maxrss, children.ru_maxrss)
+    evidence["cgroup_memory_peak"] = cgroup_memory_peak()
     evidence["cost_accounting"] = _cost_accounting(evidence, elapsed)
     evidence["result"] = {
         "verdict": result.verdict, "stage": result.stage, "reason": result.reason,
@@ -721,6 +909,17 @@ def main(argv: list[str] | None = None) -> int:
     except OSError as error:
         print(f"evidence write failed: {error}", file=sys.stderr)
         result = PipelineResult.unknown("evidence", "evidence_write_failed")
+    if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None:
+        try:
+            status = ("cancelled" if was_cancelled else
+                      "completed" if result.verdict in SOLVED else "unknown")
+            if _DIAGNOSTICS.active:
+                _DIAGNOSTICS.censor_active(status)
+            _DIAGNOSTICS.extra["cgroup_memory_peak"] = evidence[
+                "cgroup_memory_peak"]
+            _DIAGNOSTICS.write(status, outcome=evidence["result"])
+        except Exception as error:
+            _record_diagnostic_error("finalize", error, evidence)
     print(result.stdout_line())
     return EXIT_CODES[result.verdict]
 

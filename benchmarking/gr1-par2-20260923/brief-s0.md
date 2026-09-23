@@ -34,3 +34,8 @@ n=8,9; amba_decomposed_lock n=15; arbiter_with_buffer n=8,9; arbiter_on_inpchang
 round_robin_arbiter_unreal2 n=5,6,7; collector_v1 n=11; plus controls arbiter n=6 and
 prioritized_arbiter n=7. Output under benchmarking/gr1-par2-20260923/s0/raw/.
 Finish with a VERDICT.
+
+Extra item: fill the `replay` section of benchmarking/gr1-par2-20260923/p0-dependency-manifest.json
+from benchmarking/gr1-par2-20260923/p0-replay/replay-L0.tsv and the evidence JSONs (Acacia head
+b970cbf1, 26/26 + 4/4 verified, per-row wall and verdict, run artifacts relocated to the frozen
+_bm-logs.gr1-par2-p0-replay-L0/). Do not modify the evidence or TSV.
