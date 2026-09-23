@@ -1,0 +1,4 @@
+family	arity	obligations_attempted	obligations_proved	summaries_discharged	verdict	seconds
+prioritized_arbiter	1	10	0	14	UNKNOWN	0.028668
+arbiter_with_buffer	1	10	0	8	UNKNOWN	0.018932
+amba_decomposed_lock	1	10	0	14	UNKNOWN	0.028833
