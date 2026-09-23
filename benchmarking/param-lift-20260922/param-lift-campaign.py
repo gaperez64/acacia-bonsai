@@ -14,6 +14,11 @@ and reaped on timeout or cancellation.  Every invocation has a new workspace
 and no cross-invocation cache.  A decisive result is possible only after the
 requested target's certificate checker says VERIFIED.  Exit codes match the
 coverage runner's Acacia convention: REALIZABLE=0, UNREALIZABLE=1, UNKNOWN=2.
+
+The default ``reproducer`` request mode retains the historical M0
+basename-to-row lookup.  Production ``source`` mode instead binds the actual
+TLSF bytes to a pinned capability through the existing SYFCO lowering and
+never reads experiment outcome or census columns.
 """
 
 from __future__ import annotations
@@ -37,6 +42,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from request import (
+    CAPABILITIES,
+    EXACT_GAME,
+    REAL_PROPOSAL,
+    SOUND_ONE_SIDED,
+    BindingDeclined,
+    Capability,
+    LoweringTools,
+    SourceRequest,
+    bind_source_request,
+)
 from tool_config import (
     add_configuration_arguments,
     configuration_from_args,
@@ -53,34 +69,6 @@ M0_CENSUS = HERE / "m0-census.tsv"
 EXIT_CODES = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2}
 SOLVED = frozenset(("REALIZABLE", "UNREALIZABLE"))
 TOKEN = re.compile(r"[^A-Za-z0-9_.-]+")
-
-
-@dataclass(frozen=True)
-class FamilySpec:
-    source: str
-    seeds: tuple[int, ...]
-    measured_arity: int | None
-    designated_verdict: str
-
-
-FAMILIES: dict[str, FamilySpec] = {
-    "arbiter": FamilySpec("tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter.tlsf", (3, 4), 2, "REALIZABLE"),
-    "prioritized_arbiter": FamilySpec("tests/syntcomp-benchmarks/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf", (3, 4), 1, "REALIZABLE"),
-    "load_balancer": FamilySpec("tests/syntcomp-benchmarks/tlsf/load_balancer/parametric/load_balancer.tlsf", (2, 3, 4), 2, "REALIZABLE"),
-    "arbiter_with_cancel": FamilySpec("tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf", (2, 3, 4), 2, "REALIZABLE"),
-    "collector_v1": FamilySpec("tests/syntcomp-benchmarks/tlsf/collector/parametric/collector_v1.tlsf", (3,), 1, "REALIZABLE"),
-    "arbiter_with_buffer": FamilySpec("tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf", (2, 3, 4), 1, "REALIZABLE"),
-    "simple_arbiter_with_hints": FamilySpec("tests/syntcomp-benchmarks/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf", (2, 4, 6), 1, "REALIZABLE"),
-    "amba_decomposed_lock": FamilySpec("tests/syntcomp-benchmarks/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf", (2, 3, 4), 1, "REALIZABLE"),
-    "abcg_arbiter": FamilySpec("tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf", (2, 3), 2, "REALIZABLE"),
-    "arbiter_on_inpchange": FamilySpec("tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf", (2, 3, 4), 2, "REALIZABLE"),
-    # M5 exports/checks dual certificates, but no fixed-arity environment
-    # generalizer has been measured.  Keep these rows explicit and separate.
-    "round_robin_arbiter_unreal2": FamilySpec("tests/syntcomp-benchmarks/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf", (), None, "UNREALIZABLE"),
-    "prioritized_arbiter_unreal2": FamilySpec("tests/syntcomp-benchmarks/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf", (), None, "UNREALIZABLE"),
-    "load_balancer_unreal2": FamilySpec("tests/syntcomp-benchmarks/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf", (), None, "UNREALIZABLE"),
-    "amba_case_study_unreal": FamilySpec("tests/syntcomp-benchmarks/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf", (), None, "UNREALIZABLE"),
-}
 
 
 class InvocationCancelled(RuntimeError):
@@ -128,11 +116,13 @@ class ProcessOutcome:
 class Request:
     family: str
     target: int
-    logical_instance: str
-    status_120s: str
-    census_class: str
-    spec: FamilySpec
+    logical_instance: str | None
+    status_120s: str | None
+    census_class: str | None
+    spec: Capability
     seeds: tuple[int, ...]
+    request_mode: str
+    source_request: SourceRequest | None = None
 
 
 @dataclass(frozen=True)
@@ -235,7 +225,27 @@ def _record_process(evidence: dict[str, Any], stage: str, outcome: ProcessOutcom
     })
 
 
-def _resolve_request(args: argparse.Namespace) -> Request:
+def _seeds(args: argparse.Namespace, spec: Capability) -> tuple[int, ...]:
+    return (
+        tuple(int(item) for item in args.seeds.split(",") if item)
+        if args.seeds is not None
+        else spec.default_seeds
+    )
+
+
+def _validate_route(
+    spec: Capability, target: int, seeds: tuple[int, ...], semantics: str
+) -> None:
+    if spec.route_kind in (REAL_PROPOSAL, SOUND_ONE_SIDED) and (
+        not seeds or target <= max(seeds)
+    ):
+        raise PipelineFailure("eligibility", "target_must_exceed_every_seed")
+    if spec.route_kind == EXACT_GAME and semantics != "exact":
+        raise PipelineFailure("eligibility", "exact_game_requires_exact_reduction")
+
+
+def _resolve_reproducer_request(args: argparse.Namespace) -> Request:
+    """Historical dataset reproducer: basename/row lookup is intentional here."""
     instance_rows = _read_tsv(args.instances.resolve())
     selected: list[dict[str, str]] = []
     tlsf_name = args.tlsf.name if args.tlsf else None
@@ -254,22 +264,60 @@ def _resolve_request(args: argparse.Namespace) -> Request:
         raise PipelineFailure("eligibility", "target_not_unique_in_m0_instances")
     row = selected[0]
     family = row["family_display"]
-    spec = FAMILIES.get(family)
+    spec = CAPABILITIES.get(family)
     if spec is None:
         raise PipelineFailure("eligibility", "family_outside_measured_or_m5_scope")
     target = int(json.loads(row["parameters"])["n"])
-    seeds = (tuple(int(item) for item in args.seeds.split(",") if item)
-             if args.seeds is not None else spec.seeds)
-    if spec.designated_verdict == "REALIZABLE" and (not seeds or target <= max(seeds)):
-        raise PipelineFailure("eligibility", "target_must_exceed_every_seed")
-    if spec.designated_verdict == "UNREALIZABLE" and args.semantics != "exact":
-        raise PipelineFailure("eligibility", "strict_semantics_cannot_produce_unreal")
+    seeds = _seeds(args, spec)
+    _validate_route(spec, target, seeds, args.semantics)
     census = {item["family"]: item for item in _read_tsv(args.census.resolve())}
     if family not in census:
         raise PipelineFailure("eligibility", "census_family_missing")
     census_class = f"{census[family]['max_assume']}/{census[family]['max_guarantee']}"
-    return Request(family, target, row["logical_instance"], row["status_120s"],
-                   census_class, spec, seeds)
+    return Request(
+        family, target, row["logical_instance"], row["status_120s"],
+        census_class, spec, seeds, "reproducer",
+    )
+
+
+def _resolve_source_request(
+    args: argparse.Namespace, config: Any
+) -> Request:
+    if args.tlsf is None:
+        raise PipelineFailure("source_binding", "source_mode_requires_tlsf")
+    tools = LoweringTools(config.tlsf2tlsf, config.tlsf2ltl, config.tlsfinfo)
+    try:
+        source = bind_source_request(
+            args.tlsf,
+            tools,
+            args.semantics,
+            family_hint=args.family,
+            target_hint=args.target,
+        )
+    except BindingDeclined as error:
+        raise PipelineFailure("source_binding", error.code) from error
+    target = source.target_size
+    seeds = _seeds(args, source.capability)
+    _validate_route(source.capability, target, seeds, args.semantics)
+    return Request(
+        source.family,
+        target,
+        None,
+        None,
+        None,
+        source.capability,
+        seeds,
+        "source",
+        source,
+    )
+
+
+def _resolve_request(args: argparse.Namespace, config: Any | None = None) -> Request:
+    if getattr(args, "request_mode", "reproducer") == "source":
+        if config is None:
+            config = configuration_from_args(args)
+        return _resolve_source_request(args, config)
+    return _resolve_reproducer_request(args)
 
 
 def _create_workspace(output_root: Path, family: str, target: int) -> tuple[str, Path]:
@@ -314,6 +362,43 @@ def _scaled_checker_nodes(n: int) -> int:
     return 1 << min(26, 24 + max(0, (n - 1) // 5))
 
 
+def _certified_answer(
+    capability: Capability,
+    cert_meta: dict[str, Any],
+    policy_meta: dict[str, Any],
+) -> tuple[str, str]:
+    """Derive an answer from checked artifacts, never from the capability."""
+    answers = {
+        "realizable": ("REALIZABLE", "system"),
+        "unrealizable": ("UNREALIZABLE", "environment"),
+    }
+    answer_side = answers.get(cert_meta.get("status"))
+    if answer_side is None:
+        raise PipelineFailure("target_check", "certificate_status_invalid")
+    answer, side = answer_side
+    if capability.route_kind in (REAL_PROPOSAL, SOUND_ONE_SIDED) and (
+        answer != "REALIZABLE"
+    ):
+        raise PipelineFailure("target_check", "one_sided_route_returned_unreal")
+
+    if side == "system":
+        metadata_ok = (
+            cert_meta.get("side") in (None, side)
+            and policy_meta.get("side") in (None, side)
+        )
+    else:
+        metadata_ok = (
+            cert_meta.get("side") == side
+            and cert_meta.get("reduction_semantics") == "exact"
+            and cert_meta.get("environment_counter_strategy_exported") is True
+            and policy_meta.get("side") == side
+            and policy_meta.get("reduction_semantics") == "exact"
+        )
+    if not metadata_ok:
+        raise PipelineFailure("target_check", f"{side}_certificate_metadata_invalid")
+    return answer, side
+
+
 def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
                           evidence: dict[str, Any], args: argparse.Namespace) -> PipelineResult:
     result_tsv = workspace / "generalizer-result.tsv"
@@ -324,6 +409,7 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         str(args.generalizer.resolve()), "--family", request.family,
         "--target", str(request.target), "--seeds", ",".join(map(str, request.seeds)),
         "--timeout", f"{internal_timeout:.6f}", "--check-method", "auto",
+        "--reduction-semantics", args.semantics,
         "--out", str(output),
         "--tlsf-tools-build", str(args.tlsf_tools_build.resolve()),
         "--bindings-python", str(args.bindings_python.resolve()),
@@ -332,6 +418,21 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         "--solver", str(args.solver.resolve()),
         "--checker", str(args.checker.resolve()),
     ]
+    if request.source_request is not None:
+        try:
+            request.source_request.validate_current()
+            bound_source = request.source_request.materialize(
+                workspace / "requested-source.tlsf"
+            )
+            bound_template = request.source_request.materialize_template(
+                workspace / "capability-template.tlsf"
+            )
+        except BindingDeclined as error:
+            raise PipelineFailure("source_binding", error.code) from error
+        command.extend((
+            "--target-source", str(bound_source),
+            "--family-source", str(bound_template),
+        ))
     env = dict(os.environ)
     env["GENERALIZE_GR1_RESULTS"] = str(result_tsv)
     env["GENERALIZE_GR1_PROGRESS"] = str(progress_json)
@@ -380,36 +481,19 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
     if (check.get("verdict") != "VERIFIED" or check.get("exit_code") != 0 or
             certificate_method.get("verdict") != "VERIFIED"):
         raise PipelineFailure("target_check", "tlsfcertcheck_not_verified")
-    expected_side = ("system" if request.spec.designated_verdict == "REALIZABLE"
-                     else "environment")
-    expected_status = ("realizable" if expected_side == "system"
-                       else "unrealizable")
-    # Generalized M4 system artifacts predate M5's explicit ``side`` field.
-    # Their fixed system ABI is what the checker has just validated.  M5
-    # environment artifacts must carry all of the explicit dual metadata.
-    if expected_side == "system":
-        metadata_ok = (
-            cert_meta.get("status") == expected_status and
-            cert_meta.get("side") in (None, expected_side) and
-            policy_meta.get("side") in (None, expected_side)
-        )
-    else:
-        metadata_ok = (
-            cert_meta.get("status") == expected_status and
-            cert_meta.get("side") == expected_side and
-            cert_meta.get("reduction_semantics") == "exact" and
-            cert_meta.get("environment_counter_strategy_exported") is True and
-            policy_meta.get("side") == expected_side and
-            policy_meta.get("reduction_semantics") == "exact"
-        )
-    if not metadata_ok:
-        raise PipelineFailure("target_check", f"{expected_side}_certificate_metadata_invalid")
+    # Generalized M4 system artifacts predate M5's explicit ``side`` field;
+    # environment artifacts must carry the complete exact-reduction metadata.
+    answer, expected_side = _certified_answer(request.spec, cert_meta, policy_meta)
     evidence["target_check"] = check
     evidence["target_certificate"] = {
         "path": str(certificate), "sha256": _sha256(certificate),
         "side": expected_side, "verdict": "VERIFIED", "checker": str(args.checker),
     }
-    return PipelineResult(request.spec.designated_verdict, "target_check",
+    if request.source_request is not None:
+        evidence["target_certificate"]["source_binding"] = (
+            request.source_request.artifact_binding()
+        )
+    return PipelineResult(answer, "target_check",
                           "target_verified", certificate, policy)
 
 
@@ -470,6 +554,11 @@ def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "--request-mode", choices=("reproducer", "source"), default="reproducer",
+        help=("reproducer uses historical M0 row lookup; source content-binds "
+              "the actual -T input without experiment tables"),
+    )
     parser.add_argument("--family")
     parser.add_argument("--target", type=int)
     parser.add_argument("-T", "--tlsf", type=Path)
@@ -517,6 +606,7 @@ def main(argv: list[str] | None = None) -> int:
         "invocation_id": provisional, "cache_mode": "cold",
         "warm_cache_supported": False, "budget_s": args.budget,
         "semantics": args.semantics, "stages": [],
+        "request_mode": args.request_mode,
         "target_check_ran": False, "target_verified": False,
     }
     result = PipelineResult.unknown("configuration", "uninitialized")
@@ -529,24 +619,37 @@ def main(argv: list[str] | None = None) -> int:
         previous[handled] = signal.getsignal(handled)
         signal.signal(handled, cancel)
     try:
-        request = _resolve_request(args)
+        request = _resolve_request(args, config)
         invocation, workspace = _create_workspace(output_root, request.family, request.target)
         evidence["invocation_id"] = invocation
         evidence["workspace"] = str(workspace)
         evidence_path = evidence_path or workspace / "evidence.json"
         evidence["request"] = {
             "family": request.family, "target": request.target,
-            "logical_instance": request.logical_instance,
-            "status_120s": request.status_120s,
-            "census_class": request.census_class,
-            "measured_arity": request.spec.measured_arity,
+            "measured_arity": request.spec.arity,
             "seeds": list(request.seeds),
-            "designated_verdict": request.spec.designated_verdict,
+            "route_kind": request.spec.route_kind,
+            "request_mode": request.request_mode,
         }
+        if request.source_request is not None:
+            evidence["source_binding"] = request.source_request.evidence()
+        else:
+            evidence["request"].update({
+                "logical_instance": request.logical_instance,
+                "status_120s": request.status_120s,
+                "census_class": request.census_class,
+            })
+            evidence["source_binding"] = {
+                "kind": "historical-dataset-reproducer",
+                "match": "basename-to-m0-instances-row",
+                "instances": str(args.instances.resolve()),
+                "census": str(args.census.resolve()),
+            }
         required = [args.checker, args.generalizer]
         evidence["standalone_command"] = [
             str(args.generalizer.resolve()), "--family", request.family,
             "--target", str(request.target), "--seeds", ",".join(map(str, request.seeds)),
+            "--reduction-semantics", args.semantics,
             "--timeout", str(args.budget), "--out", "FRESH_OUTPUT_DIRECTORY",
             "--tlsf-tools-build", str(args.tlsf_tools_build.resolve()),
             "--bindings-python", str(args.bindings_python.resolve()),
@@ -554,6 +657,13 @@ def main(argv: list[str] | None = None) -> int:
             "--monitor", str(args.monitor), "--solver", str(args.solver),
             "--checker", str(args.checker),
         ]
+        if request.source_request is not None:
+            evidence["standalone_command"].extend(
+                (
+                    "--target-source", "CONTENT_BOUND_REQUEST_SOURCE.tlsf",
+                    "--family-source", "CONTENT_BOUND_CAPABILITY_TEMPLATE.tlsf",
+                )
+            )
         evidence["tool_configuration"] = {
             "tlsf_tools_build": str(args.tlsf_tools_build.resolve()),
             "bindings_python": str(args.bindings_python.resolve()),
@@ -561,10 +671,12 @@ def main(argv: list[str] | None = None) -> int:
             "monitor": str(args.monitor), "solver": str(args.solver),
             "checker": str(args.checker),
         }
-        if request.spec.designated_verdict == "REALIZABLE":
+        if request.spec.route_kind == REAL_PROPOSAL:
             evidence["path_kind"] = "lifted"
-        else:
+        elif request.spec.route_kind == EXACT_GAME:
             evidence["path_kind"] = "direct-certified"
+        else:
+            evidence["path_kind"] = "sound-one-sided"
         missing = [str(path) for path in required if not path.resolve().is_file()]
         if missing:
             raise PipelineFailure("configuration", "missing_tool_" + "_".join(map(_token, missing)))

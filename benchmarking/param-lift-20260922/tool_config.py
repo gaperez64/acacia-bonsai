@@ -77,6 +77,18 @@ class ToolConfiguration:
     def checker(self) -> pathlib.Path:
         return self.tlsf_tools_build / "tlsfcertcheck"
 
+    @property
+    def tlsf2tlsf(self) -> pathlib.Path:
+        return self.tlsf_tools_build / "tlsf2tlsf"
+
+    @property
+    def tlsf2ltl(self) -> pathlib.Path:
+        return self.tlsf_tools_build / "tlsf2ltl"
+
+    @property
+    def tlsfinfo(self) -> pathlib.Path:
+        return self.tlsf_tools_build / "tlsfinfo"
+
 
 def configuration_defaults(
     environ: Mapping[str, str] | None = None,

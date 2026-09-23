@@ -23,6 +23,7 @@ import time
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 
+from request import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL
 from tool_config import (
     ToolConfiguration,
     add_configuration_arguments,
@@ -116,61 +117,15 @@ class CandidateSchema:
     predicate_arities: tuple[tuple[str, int], ...] = ()
 
 
-@dataclasses.dataclass(frozen=True)
-class FamilySpec:
-    source: str
-    arity: int
-    default_seeds: tuple[int, ...]
-
-
-FAMILIES = {
-    "arbiter": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter.tlsf",
-        2, (3, 4)),
-    "prioritized_arbiter": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf",
-        1, (3, 4)),
-    "load_balancer": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/load_balancer/parametric/load_balancer.tlsf",
-        2, (2, 3, 4)),
-    "arbiter_with_cancel": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf",
-        2, (2, 3, 4)),
-    "collector_v1": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/collector/parametric/collector_v1.tlsf",
-        1, (3,)),
-    # Second round of arity measurement (m4-invariant-separability.tsv, merged
-    # from the round-2 file).  Same footing as the five above: each arity below
-    # is measured and constant over every n that solves, not assumed.
-    "arbiter_with_buffer": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf",
-        1, (2, 3, 4)),
-    "simple_arbiter_with_hints": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf",
-        1, (2, 4, 6)),
-    "amba_decomposed_lock": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf",
-        1, (2, 3, 4)),
-    "abcg_arbiter": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf",
-        2, (2, 3)),
-    "arbiter_on_inpchange": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf",
-        2, (2, 3, 4)),
+REAL_FAMILIES = {
+    family: capability
+    for family, capability in CAPABILITIES.items()
+    if capability.route_kind == REAL_PROPOSAL
 }
-UNREAL_FAMILIES = {
-    "round_robin_arbiter_unreal2": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
-        0, ()),
-    "prioritized_arbiter_unreal2": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf",
-        0, ()),
-    "load_balancer_unreal2": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf",
-        0, ()),
-    "amba_case_study_unreal": FamilySpec(
-        "tests/syntcomp-benchmarks/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf",
-        0, ()),
+EXACT_FAMILIES = {
+    family: capability
+    for family, capability in CAPABILITIES.items()
+    if capability.route_kind == EXACT_GAME
 }
 OUT_OF_SCOPE = frozenset(
     ("round_robin_arbiter", "lift", "amba_decomposed_arbiter"))
@@ -408,12 +363,15 @@ def _run(command: list[str], timeout: float, cwd: pathlib.Path = ROOT) -> subpro
 
 
 def build_game(family: str, n: int, directory: pathlib.Path,
-               timeout: float, stage: str = "seed") -> tuple[pathlib.Path, pathlib.Path]:
-    spec = FAMILIES.get(family) or UNREAL_FAMILIES[family]
+               timeout: float, stage: str = "seed", *,
+               source: pathlib.Path | None = None,
+               reduction_semantics: str = "exact") -> tuple[pathlib.Path, pathlib.Path]:
+    spec = REAL_FAMILIES.get(family) or EXACT_FAMILIES[family]
     game = directory / f"{family}_{n}.game.aag"
     prov = directory / f"{family}_{n}.prov.json"
-    command = [str(BINDINGS_PYTHON), str(MONITOR), str(ROOT / spec.source),
-               "--param", f"n={n}", "--semantics", "exact", "--output",
+    tlsf = source.resolve() if source is not None else ROOT / spec.source
+    command = [str(BINDINGS_PYTHON), str(MONITOR), str(tlsf),
+               "--param", f"n={n}", "--semantics", reduction_semantics, "--output",
                str(game), "--provenance-out", str(prov)]
     env = bindings_environment(TOOL_CONFIG)
     started = time.monotonic()
@@ -435,8 +393,10 @@ def build_game(family: str, n: int, directory: pathlib.Path,
 
 
 def solve_seed(family: str, n: int, directory: pathlib.Path,
-               limits: ProposerLimits) -> "Instance":
-    game, prov = build_game(family, n, directory, limits.checker_timeout_s)
+               limits: ProposerLimits, *,
+               family_source: pathlib.Path | None = None) -> "Instance":
+    game, prov = build_game(
+        family, n, directory, limits.checker_timeout_s, source=family_source)
     cert = directory / f"{family}_{n}.cert.aag"
     policy = directory / f"{family}_{n}.policy.aag"
     nodes, cache = limits.seed_capacity(n)
@@ -1865,7 +1825,7 @@ def _collector_candidate(
     cert, policy_path = emit_candidate(bdds, target, out, ordered, levels)
     stage["instantiate"] = time.monotonic() - started
     candidate = CandidateSchema(
-        target.family, FAMILIES[target.family].arity,
+        target.family, REAL_FAMILIES[target.family].arity,
         tuple(seed.n for seed in seeds),
         tuple(f"role_{index}" for index in range(
             measured_role_class_count(target.family) or 0)),
@@ -1912,17 +1872,25 @@ def _collector_candidate(
 
 
 def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
-                    out: pathlib.Path, limits: ProposerLimits) -> tuple[CandidateSchema, Instance,
-                                                                       pathlib.Path, pathlib.Path,
-                                                                       dict]:
+                    out: pathlib.Path, limits: ProposerLimits, *,
+                    family_source: pathlib.Path | None = None,
+                    target_source: pathlib.Path | None = None,
+                    reduction_semantics: str = "exact") -> tuple[CandidateSchema, Instance,
+                                                                  pathlib.Path, pathlib.Path,
+                                                                  dict]:
     out.mkdir(parents=True, exist_ok=True)
     stage = StageTimes()
     started = stage.begin("seed")
-    seeds = [solve_seed(family, n, out, limits) for n in seed_ns]
+    seeds = [
+        solve_seed(family, n, out, limits, family_source=family_source)
+        for n in seed_ns
+    ]
     stage["seed"] = time.monotonic() - started
     started = stage.begin("canonicalize")
     target_game, target_prov = build_game(
-        family, target_n, out, limits.checker_timeout_s, stage="canonicalize")
+        family, target_n, out, limits.checker_timeout_s, stage="canonicalize",
+        source=target_source or family_source,
+        reduction_semantics=reduction_semantics)
     target = Instance.load(family, target_n, target_game, target_prov)
     role_counts = [_provenance_role_class_count(seed) for seed in seeds]
     role_counts.append(_provenance_role_class_count(target))
@@ -1944,7 +1912,7 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
 
     bdds = Bdds()
     try:
-        arity = FAMILIES[family].arity
+        arity = REAL_FAMILIES[family].arity
         stage["canonicalize"] = time.monotonic() - started
 
         started = stage.begin("bus_schemas")
@@ -2230,7 +2198,7 @@ def _write_result(row: dict[str, object]) -> None:
 
 def _format_predicate_arities(family: str,
                               arities: tuple[tuple[str, int], ...]) -> str:
-    base = FAMILIES[family].arity
+    base = REAL_FAMILIES[family].arity
     exceptions = [(name, arity) for name, arity in arities if arity != base]
     summary = [f"default={base}"]
     summary.extend(f"{name}={arity}" for name, arity in exceptions)
@@ -2238,7 +2206,10 @@ def _format_predicate_arities(family: str,
 
 
 def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
-        limits: ProposerLimits, check_method: str = "auto") -> dict:
+        limits: ProposerLimits, check_method: str = "auto", *,
+        family_source: pathlib.Path | None = None,
+        target_source: pathlib.Path | None = None,
+        reduction_semantics: str = "exact") -> dict:
     global _ACTIVE_STAGE
     _LAST_STAGE_TIMES.clear()
     _COST_TIMES.clear()
@@ -2256,13 +2227,13 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
     if family in OUT_OF_SCOPE:
         raise Decline("scope", "arity measurement", None,
                       "measured min_k = n; invariant strengthening search is required")
-    if family not in FAMILIES:
+    if family not in REAL_FAMILIES:
         raise Decline("scope", "arity measurement", None,
                       "family has no fixed-arity M4 measurement")
     measured = measured_arity(family)
-    if measured != FAMILIES[family].arity:
+    if measured != REAL_FAMILIES[family].arity:
         raise Decline("scope", "arity measurement", None,
-                      f"expected k={FAMILIES[family].arity}, measured {measured}")
+                      f"expected k={REAL_FAMILIES[family].arity}, measured {measured}")
     if not seeds:
         raise Decline("seed", "seed set", None, "at least one stable seed is required")
     if target <= max(seeds):
@@ -2275,7 +2246,9 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
     last = None
     while True:
         candidate, target_instance, cert, policy, detail = generalize_once(
-            family, target, current, out, limits)
+            family, target, current, out, limits, family_source=family_source,
+            target_source=target_source,
+            reduction_semantics=reduction_semantics)
         probe = _next_small(target, current, stable)
         checks = []
         # A target-size checker is meaningful only for the target artefacts;
@@ -2285,7 +2258,7 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
                 probe_dir = out / f"probe-{probe}"
                 _candidate2, probe_instance, pcert, ppolicy, _detail2 = generalize_once(
                     family, probe, tuple(n for n in current if n < probe) or (current[0],),
-                    probe_dir, limits)
+                    probe_dir, limits, family_source=family_source)
                 check = check_candidate(probe_instance, pcert, ppolicy,
                                         check_method, limits,
                                         f"next-{probe}")
@@ -2411,14 +2384,17 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
     return result
 
 
-def run_unreal_direct(family: str, target: int, out: pathlib.Path,
-                      limits: ProposerLimits) -> dict:
-    """Build, solve, and check one exact target environment certificate.
+def run_exact_direct(family: str, target: int, out: pathlib.Path,
+                     limits: ProposerLimits, *,
+                     target_source: pathlib.Path | None = None) -> dict:
+    """Build, solve, and check either side of one exact target game.
 
     M5 made the dual certificate checkable but did not measure a bounded-arity
     cross-size environment generalizer.  Keeping this path in the same driver
     gives every campaign row a standalone ``generalize_gr1.py`` reproducer
-    without mislabelling a direct target solve as lifting.
+    without mislabelling a direct target solve as lifting.  The capability
+    selects this exact route; the solver and independent checker discover the
+    answer rather than the family registry predicting it.
     """
     _LAST_STAGE_TIMES.clear()
     _COST_TIMES.clear()
@@ -2428,7 +2404,8 @@ def run_unreal_direct(family: str, target: int, out: pathlib.Path,
     out.mkdir(parents=True, exist_ok=True)
     started_all = time.monotonic()
     game, provenance = build_game(
-        family, target, out, limits.checker_timeout_s, stage="canonicalize")
+        family, target, out, limits.checker_timeout_s, stage="canonicalize",
+        source=target_source, reduction_semantics="exact")
     certificate = out / f"{family}_{target}.certificate.aag"
     policy = out / f"{family}_{target}.policy.aag"
     nodes, cache = limits.seed_capacity(target)
@@ -2443,27 +2420,40 @@ def run_unreal_direct(family: str, target: int, out: pathlib.Path,
     solve = _run(solve_command, limits.checker_timeout_s)
     _COST_TIMES["target_solve"] += time.monotonic() - solve_started
     _write_cost_progress()
-    if solve.returncode != 1:
+    if solve.returncode not in (0, 1):
         detail = (solve.stderr or solve.stdout).strip()[-500:]
         raise Decline("target_solve", "tlsfsolve", target,
-                      f"exact target did not export UNREAL (exit {solve.returncode}): {detail}")
+                      f"exact target had no decisive export (exit {solve.returncode}): {detail}")
+    answer = "REALIZABLE" if solve.returncode == 0 else "UNREALIZABLE"
+    side = "system" if solve.returncode == 0 else "environment"
+    status = "realizable" if answer == "REALIZABLE" else "unrealizable"
     required = (certificate, policy, pathlib.Path(str(certificate) + ".json"),
                 pathlib.Path(str(policy) + ".json"))
     if not all(path.is_file() for path in required):
         raise Decline("target_solve", "environment artifacts", target,
-                      "UNREAL solver verdict omitted certificate or policy")
+                      "decisive solver verdict omitted certificate or policy")
     cert_meta = json.loads(pathlib.Path(str(certificate) + ".json").read_text(
         encoding="utf-8"))
     policy_meta = json.loads(pathlib.Path(str(policy) + ".json").read_text(
         encoding="utf-8"))
-    if (cert_meta.get("status") != "unrealizable" or
-            cert_meta.get("side") != "environment" or
-            cert_meta.get("reduction_semantics") != "exact" or
-            cert_meta.get("environment_counter_strategy_exported") is not True or
-            policy_meta.get("side") != "environment" or
-            policy_meta.get("reduction_semantics") != "exact"):
-        raise Decline("target_solve", "environment metadata", target,
-                      "certificate is not an exact Moore environment witness")
+    common_metadata_ok = (
+        cert_meta.get("status") == status
+        and cert_meta.get("side") in (None, side)
+        and policy_meta.get("side") in (None, side)
+    )
+    environment_metadata_ok = (
+        side != "environment"
+        or (
+            cert_meta.get("side") == "environment"
+            and cert_meta.get("reduction_semantics") == "exact"
+            and cert_meta.get("environment_counter_strategy_exported") is True
+            and policy_meta.get("side") == "environment"
+            and policy_meta.get("reduction_semantics") == "exact"
+        )
+    )
+    if not common_metadata_ok or not environment_metadata_ok:
+        raise Decline("target_solve", f"{side} metadata", target,
+                      f"certificate is not a valid exact {side} witness")
 
     json_out = out / f"check-target-{target}.json"
     attempts = []
@@ -2472,8 +2462,9 @@ def run_unreal_direct(family: str, target: int, out: pathlib.Path,
     # Environment certificates carry the dual outer/inner ranks and need a
     # larger checker arena than the system side on the measured M5 families.
     # The enclosing campaign cgroup remains the authoritative 8 GiB bound.
-    initial_checker_cap = limits.checker_nodes or max(
-        _scaled_checker_nodes(target), 1 << 26)
+    initial_checker_cap = limits.checker_nodes or _scaled_checker_nodes(target)
+    if side == "environment":
+        initial_checker_cap = max(initial_checker_cap, 1 << 26)
     for node_cap in (initial_checker_cap, 2 * initial_checker_cap):
         command = [
             str(CHECKER), "--method", "certificate", "--timeout",
@@ -2501,7 +2492,7 @@ def run_unreal_direct(family: str, target: int, out: pathlib.Path,
             payload.get("methods", {}).get("certificate", {}).get("verdict") != "VERIFIED"):
         detail = (check.stderr or check.stdout).strip()[-500:]
         raise Decline("target_check", "tlsfcertcheck", target,
-                      f"environment certificate did not verify: {verdict}: {detail}")
+                      f"{side} certificate did not verify: {verdict}: {detail}")
 
     wall_s = time.monotonic() - started_all
     target_monitor = _COST_TIMES.get("target_monitor_game", 0.0)
@@ -2512,7 +2503,7 @@ def run_unreal_direct(family: str, target: int, out: pathlib.Path,
         "format": "acacia-param-lift-gr1-evidence-v1",
         "family": family, "target": target, "seeds": [],
         "path_kind": "direct-certified", "measured_arity": None,
-        "semantics": "exact", "certificate_side": "environment",
+        "semantics": "exact", "certificate_side": side,
         "stage_evidence": {
             "target_monitor_game": {"game": game.name,
                                     "provenance": provenance.name},
@@ -2530,6 +2521,7 @@ def run_unreal_direct(family: str, target: int, out: pathlib.Path,
             "wall_s": wall_s,
         },
         "final_verdict": "VERIFIED",
+        "answer": answer,
     }
     (out / "evidence.json").write_text(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -2558,9 +2550,16 @@ def run_unreal_direct(family: str, target: int, out: pathlib.Path,
         "family": family, "target": target, "seeds": (), "arity": "",
         "role_classes": (), "stages_passed": evidence["stage_evidence"].keys(),
         "cegis_rounds": 0, "verdict": "VERIFIED",
+        "answer": answer,
         "certificate": certificate, "policy": policy,
         "wall_s": wall_s, "peak_rss_kib": peak_rss, "reason": "",
     }
+
+
+def run_unreal_direct(family: str, target: int, out: pathlib.Path,
+                      limits: ProposerLimits) -> dict:
+    """Compatibility alias for historical callers of the former M5 route."""
+    return run_exact_direct(family, target, out, limits)
 
 
 def _decline_result(family: str, target: int, seeds: tuple[int, ...],
@@ -2581,7 +2580,7 @@ def _decline_result(family: str, target: int, seeds: tuple[int, ...],
     )
     driver_overhead_s = max(0.0, wall_s - charged_s)
     result = {"family": family, "target": target, "seeds": seeds,
-              "arity": FAMILIES[family].arity if family in FAMILIES else "",
+              "arity": REAL_FAMILIES[family].arity if family in REAL_FAMILIES else "",
               "role_classes": (), "stages_passed": (), "cegis_rounds": 0,
               "verdict": "UNKNOWN", "reason": str(decline),
               "times": times, "wall_s": wall_s, "peak_rss_kib": peak_rss}
@@ -2633,6 +2632,18 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--monitor", type=pathlib.Path, help=argparse.SUPPRESS)
     parser.add_argument("--solver", type=pathlib.Path, help=argparse.SUPPRESS)
     parser.add_argument("--checker", type=pathlib.Path, help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--target-source", type=pathlib.Path,
+        help="source-bound target TLSF; seed instances still use the pinned template",
+    )
+    parser.add_argument(
+        "--family-source", type=pathlib.Path,
+        help="frozen, content-verified family template for seed instances",
+    )
+    parser.add_argument(
+        "--reduction-semantics", choices=("exact", "strict"), default="exact",
+        help=argparse.SUPPRESS,
+    )
     add_configuration_arguments(parser)
     return parser
 
@@ -2671,7 +2682,7 @@ def main(argv: list[str] | None = None) -> int:
             [str(config.bindings_python), __file__, *arguments],
         )
     _apply_tool_configuration(config, args)
-    default = FAMILIES.get(args.family) or UNREAL_FAMILIES.get(args.family)
+    default = REAL_FAMILIES.get(args.family) or EXACT_FAMILIES.get(args.family)
     seeds = (tuple(int(item) for item in args.seeds.split(",") if item)
              if args.seeds is not None else (default.default_seeds if default else ()))
     out = (args.out or ROOT / "build_scratch" / "param-lift-m4" /
@@ -2682,11 +2693,21 @@ def main(argv: list[str] | None = None) -> int:
                             checker_nodes=args.node_cap)
     started = time.monotonic()
     try:
-        if args.family in UNREAL_FAMILIES:
-            result = run_unreal_direct(args.family, args.target, out, limits)
+        if args.family in EXACT_FAMILIES:
+            if args.reduction_semantics != "exact":
+                raise Decline(
+                    "scope", "reduction semantics", args.target,
+                    "exact-game capability requires exact semantics",
+                )
+            result = run_exact_direct(
+                args.family, args.target, out, limits,
+                target_source=args.target_source,
+            )
         else:
             result = run(args.family, args.target, seeds, out, limits,
-                         args.check_method)
+                         args.check_method, family_source=args.family_source,
+                         target_source=args.target_source,
+                         reduction_semantics=args.reduction_semantics)
     except Decline as exc:
         result = _decline_result(args.family, args.target, seeds, exc, limits,
                                  time.monotonic() - started)
