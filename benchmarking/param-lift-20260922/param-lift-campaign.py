@@ -33,9 +33,15 @@ import tempfile
 import time
 import traceback
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from tool_config import (
+    add_configuration_arguments,
+    configuration_from_args,
+    print_probe,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -43,10 +49,6 @@ HERE = Path(__file__).resolve().parent
 GENERALIZER = HERE / "generalize_gr1.py"
 M0_INSTANCES = HERE / "m0-instances.tsv"
 M0_CENSUS = HERE / "m0-census.tsv"
-MONITOR = ROOT / "subprojects" / "tlsf-tools" / "scripts" / "gr1_monitor_game.py"
-SOLVER = ROOT / "subprojects" / "tlsf-tools" / "build-oxidd" / "tlsfsolve"
-CHECKER = ROOT / "subprojects" / "tlsf-tools" / "build-oxidd" / "tlsfcertcheck"
-BINDINGS_PYTHON = Path("/usr/bin/python3.13") if Path("/usr/bin/python3.13").exists() else Path(sys.executable)
 
 EXIT_CODES = {"REALIZABLE": 0, "UNREALIZABLE": 1, "UNKNOWN": 2}
 SOLVED = frozenset(("REALIZABLE", "UNREALIZABLE"))
@@ -323,6 +325,12 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         "--target", str(request.target), "--seeds", ",".join(map(str, request.seeds)),
         "--timeout", f"{internal_timeout:.6f}", "--check-method", "auto",
         "--out", str(output),
+        "--tlsf-tools-build", str(args.tlsf_tools_build.resolve()),
+        "--bindings-python", str(args.bindings_python.resolve()),
+        "--bindings-site", str(args.bindings_site.resolve()),
+        "--monitor", str(args.monitor.resolve()),
+        "--solver", str(args.solver.resolve()),
+        "--checker", str(args.checker.resolve()),
     ]
     env = dict(os.environ)
     env["GENERALIZE_GR1_RESULTS"] = str(result_tsv)
@@ -473,16 +481,28 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--instances", type=Path, default=M0_INSTANCES)
     parser.add_argument("--census", type=Path, default=M0_CENSUS)
     parser.add_argument("--generalizer", type=Path, default=GENERALIZER)
-    parser.add_argument("--monitor", type=Path, default=MONITOR)
-    parser.add_argument("--solver", type=Path, default=SOLVER)
-    parser.add_argument("--checker", type=Path, default=CHECKER)
-    parser.add_argument("--bindings-python", type=Path, default=BINDINGS_PYTHON)
+    parser.add_argument("--monitor", type=Path)
+    parser.add_argument("--solver", type=Path)
+    parser.add_argument("--checker", type=Path)
+    add_configuration_arguments(parser)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     invocation_started = time.monotonic()
-    args = _parser().parse_args(argv)
+    parser = _parser()
+    args = parser.parse_args(argv)
+    config = configuration_from_args(args)
+    args.monitor = (args.monitor or config.monitor).resolve()
+    args.solver = (args.solver or config.solver).resolve()
+    args.checker = (args.checker or config.checker).resolve()
+    if args.probe:
+        return print_probe(
+            config,
+            monitor=args.monitor,
+            solver=args.solver,
+            checker=args.checker,
+        )
     try:
         deadline = Deadline.start(args.budget, invocation_started)
     except ValueError:
@@ -528,7 +548,19 @@ def main(argv: list[str] | None = None) -> int:
             str(args.generalizer.resolve()), "--family", request.family,
             "--target", str(request.target), "--seeds", ",".join(map(str, request.seeds)),
             "--timeout", str(args.budget), "--out", "FRESH_OUTPUT_DIRECTORY",
+            "--tlsf-tools-build", str(args.tlsf_tools_build.resolve()),
+            "--bindings-python", str(args.bindings_python.resolve()),
+            "--bindings-site", str(args.bindings_site.resolve()),
+            "--monitor", str(args.monitor), "--solver", str(args.solver),
+            "--checker", str(args.checker),
         ]
+        evidence["tool_configuration"] = {
+            "tlsf_tools_build": str(args.tlsf_tools_build.resolve()),
+            "bindings_python": str(args.bindings_python.resolve()),
+            "bindings_site": str(args.bindings_site.resolve()),
+            "monitor": str(args.monitor), "solver": str(args.solver),
+            "checker": str(args.checker),
+        }
         if request.spec.designated_verdict == "REALIZABLE":
             evidence["path_kind"] = "lifted"
         else:

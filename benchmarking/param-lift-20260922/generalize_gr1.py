@@ -23,16 +23,26 @@ import time
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 
+from tool_config import (
+    ToolConfiguration,
+    add_configuration_arguments,
+    bindings_environment,
+    configuration_defaults,
+    configuration_from_args,
+    load_buddy_bindings,
+    print_probe,
+)
+
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-TT = ROOT / "subprojects" / "tlsf-tools"
-MONITOR = TT / "scripts" / "gr1_monitor_game.py"
-SOLVER = TT / "build-oxidd" / "tlsfsolve"
-CHECKER = TT / "build-oxidd" / "tlsfcertcheck"
-BINDINGS_PYTHON = (pathlib.Path("/usr/bin/python3.13")
-                   if pathlib.Path("/usr/bin/python3.13").exists()
-                   else pathlib.Path(sys.executable))
+TOOL_CONFIG = configuration_defaults()
+TT = TOOL_CONFIG.tlsf_tools_root
+MONITOR = TOOL_CONFIG.monitor
+SOLVER = TOOL_CONFIG.solver
+CHECKER = TOOL_CONFIG.checker
+BINDINGS_PYTHON = TOOL_CONFIG.bindings_python
+BINDINGS_SITE = TOOL_CONFIG.bindings_site
 ALIGNMENT = HERE / "m4-alignment.tsv"
 SEPARABILITY = HERE / "m4-invariant-separability.tsv"
 MOVE_SEPARABILITY = HERE / "m4-move-separability.tsv"
@@ -405,9 +415,7 @@ def build_game(family: str, n: int, directory: pathlib.Path,
     command = [str(BINDINGS_PYTHON), str(MONITOR), str(ROOT / spec.source),
                "--param", f"n={n}", "--semantics", "exact", "--output",
                str(game), "--provenance-out", str(prov)]
-    env = dict(os.environ)
-    site = "/usr/local/lib64/python3.13/site-packages"
-    env["PYTHONPATH"] = site + (":" + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env = bindings_environment(TOOL_CONFIG)
     started = time.monotonic()
     try:
         proc = subprocess.run(command, cwd=ROOT, env=env, text=True,
@@ -715,10 +723,9 @@ class Instance:
 
 class Bdds:
     def __init__(self, var_count: int = 8192):
-        site = "/usr/local/lib64/python3.13/site-packages"
-        if site not in sys.path:
-            sys.path.insert(0, site)
-        import buddy  # pylint: disable=import-outside-toplevel
+        buddy, _extension, _binding_path, _extension_path = load_buddy_bindings(
+            BINDINGS_SITE
+        )
         self.buddy = buddy
         if not buddy.bdd_isrunning():
             buddy.bdd_init(8_000_000, 800_000)
@@ -2605,16 +2612,10 @@ def _decline_result(family: str, target: int, seeds: tuple[int, ...],
     return result
 
 
-def main(argv: list[str] | None = None) -> int:
-    # Spot and BuDDy are native CPython 3.13 modules in the research image.
-    # Keep the driver runnable through the system's moving ``python3`` alias.
-    if (sys.version_info[:2] != (3, 13) and
-            pathlib.Path(sys.executable).resolve() != BINDINGS_PYTHON.resolve()):
-        os.execv(str(BINDINGS_PYTHON), [str(BINDINGS_PYTHON), __file__,
-                                       *(argv if argv is not None else sys.argv[1:])])
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--family", required=True)
-    parser.add_argument("--target", required=True, type=int)
+    parser.add_argument("--family")
+    parser.add_argument("--target", type=int)
     parser.add_argument("--seeds", help="comma-separated stable seed sizes")
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument(
@@ -2629,7 +2630,47 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=pathlib.Path)
     parser.add_argument("--check-method", choices=("auto", "certificate", "both"),
                         default="auto", help=argparse.SUPPRESS)
-    args = parser.parse_args(argv)
+    parser.add_argument("--monitor", type=pathlib.Path, help=argparse.SUPPRESS)
+    parser.add_argument("--solver", type=pathlib.Path, help=argparse.SUPPRESS)
+    parser.add_argument("--checker", type=pathlib.Path, help=argparse.SUPPRESS)
+    add_configuration_arguments(parser)
+    return parser
+
+
+def _apply_tool_configuration(
+    config: ToolConfiguration, args: argparse.Namespace
+) -> None:
+    global TOOL_CONFIG, TT, MONITOR, SOLVER, CHECKER, BINDINGS_PYTHON, BINDINGS_SITE
+    TOOL_CONFIG = config
+    TT = config.tlsf_tools_root
+    MONITOR = (args.monitor or config.monitor).resolve()
+    SOLVER = (args.solver or config.solver).resolve()
+    CHECKER = (args.checker or config.checker).resolve()
+    BINDINGS_PYTHON = config.bindings_python
+    BINDINGS_SITE = config.bindings_site
+
+
+def main(argv: list[str] | None = None) -> int:
+    arguments = argv if argv is not None else sys.argv[1:]
+    parser = _parser()
+    args = parser.parse_args(arguments)
+    config = configuration_from_args(args)
+    monitor = (args.monitor or config.monitor).resolve()
+    solver = (args.solver or config.solver).resolve()
+    checker = (args.checker or config.checker).resolve()
+    if args.probe:
+        return print_probe(
+            config, monitor=monitor, solver=solver, checker=checker
+        )
+    if args.family is None or args.target is None:
+        parser.error("--family and --target are required unless --probe is used")
+    # Spot and BuDDy are native modules tied to the configured CPython ABI.
+    if pathlib.Path(sys.executable).resolve() != config.bindings_python:
+        os.execv(
+            str(config.bindings_python),
+            [str(config.bindings_python), __file__, *arguments],
+        )
+    _apply_tool_configuration(config, args)
     default = FAMILIES.get(args.family) or UNREAL_FAMILIES.get(args.family)
     seeds = (tuple(int(item) for item in args.seeds.split(",") if item)
              if args.seeds is not None else (default.default_seeds if default else ()))

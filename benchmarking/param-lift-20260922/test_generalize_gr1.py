@@ -22,8 +22,12 @@ from unittest import mock
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DRIVER = HERE / "generalize_gr1.py"
-CHECKER = ROOT / "subprojects" / "tlsf-tools" / "build-oxidd" / "tlsfcertcheck"
-PYTHON = pathlib.Path("/usr/bin/python3.13")
+TLSF_TOOLS_BUILD = pathlib.Path(os.environ.get(
+    "ACACIA_TLSF_TOOLS_BUILD",
+    ROOT / "subprojects" / "tlsf-tools" / "build-oxidd",
+))
+CHECKER = TLSF_TOOLS_BUILD / "tlsfcertcheck"
+PYTHON = pathlib.Path(os.environ.get("ACACIA_BINDINGS_PYTHON", "/usr/bin/python3.13"))
 sys.path.insert(0, str(HERE))
 import generalize_gr1 as generalizer  # noqa: E402  pylint: disable=wrong-import-position
 
@@ -266,12 +270,18 @@ class GeneralizeGr1Test(unittest.TestCase):
             self.assertIn("VERIFIED", proc.stdout)
             outputs.append(out)
         names = ("arbiter_5.certificate.aag", "arbiter_5.certificate.aag.json",
-                 "arbiter_5.policy.aag", "arbiter_5.policy.aag.json",
-                 "evidence.json")
+                 "arbiter_5.policy.aag", "arbiter_5.policy.aag.json")
         for name in names:
             with self.subTest(file=name):
                 self.assertEqual((outputs[0] / name).read_bytes(),
                                  (outputs[1] / name).read_bytes())
+        evidence = []
+        for output in outputs:
+            payload = json.loads((output / "evidence.json").read_text(encoding="utf-8"))
+            self.assertIn("cost_accounting", payload)
+            del payload["cost_accounting"]
+            evidence.append(payload)
+        self.assertEqual(evidence[0], evidence[1])
 
 class GeneralizerUnitTest(unittest.TestCase):
     def setUp(self) -> None:
