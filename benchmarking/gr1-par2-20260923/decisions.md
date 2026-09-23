@@ -42,3 +42,42 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Near-cap rows for later recovery targets (L0 wall): `arbiter_with_cancel` n=9 55.2 s,
   `load_balancer` n=9 55.9 s, `arbiter_on_inpchange` n=6 51.5 s, `amba_decomposed_lock` n=15
   40.3 s, `round_robin_arbiter_unreal2` n=7 33.7 s.
+
+## 2026-09-23 — P1 landed on tlsf-tools `gr1-par2-checker`
+
+- Commits `7136067` (selected roots via `oxidd_build_roots`), `079e4aa` (per-mode constant
+  specialisation before compiling the policy), `0660e72` (per-mode substitution and successor-image
+  reuse), `0435385` (review nits: skip unused environment `system_winning`; cache-free rebuild
+  oracle). Codex review: ACCEPT-WITH-NITS on steps 1 and 3, ACCEPT on step 2; nits fixed. The
+  reviewer's differential against the L0 checker found no status disagreement on any fixture or
+  mutation.
+- Frozen treatment build `tlsf-tools/build-P1-0435385/` (read-only): same Meson command line as
+  `build-L0` (`buildtype=release oxidd=enabled research_tools=true`), only `tlsfcertcheck` and
+  `tlsfsolve` compiled, one job. sha256 tlsfcertcheck `b43dcec2…63c3`, tlsfsolve `f30cc2e6…a8`.
+  Version string reads `0435385-dirty` because of an unrelated untracked note in the sibling
+  checkout; `simd=scalar` (no ISA tier enabled in this profile — S0 inventory item).
+- tlsf-tools suite: 284/285 in the sibling clone; the one failure is environmental
+  (`gr1_monitor_game` resolves Acacia's `m0-census.py` through a relative path that only exists in
+  the submodule layout).
+
+## 2026-09-24 — P1 checker attribution on frozen target artifacts
+
+- Harness `p1-attribution/run.py`; 33 deduplicated target triples from the frozen P0 replay and S0
+  run 1; L0 (`build-L0`) vs P1 (`build-P1-0435385`) `tlsfcertcheck`, exact generalizer argv, cold,
+  one cgroup scope each (8 GiB, no swap), 300 s timeout, 2 rounds ABBA, serial, quiet machine.
+  Raw rows `p1-attribution/l0-vs-p1-20260924.tsv`, summary `.json`.
+- **No status disagreement where both decide.** Three L0 capacity UNKNOWNs now VERIFY:
+  `load_balancer_unreal2` n=7 (28.69 s UNKNOWN → 1.36 s; peak 3.26 → 1.38 GiB),
+  `arbiter_with_cancel` n=10 (10.68 s UNKNOWN → 51.68 s), `arbiter_on_inpchange` n=7
+  (13.12 s UNKNOWN → 124.29 s, check alone exceeds the 120 s invocation budget).
+- Medians where the checker dominated: cancel n=9 50.20 → 6.77 s; cancel n=8 12.52 → 2.62 s;
+  inpchange n=6 36.11 → 12.35 s; lbu2 n=6 3.49 → 0.44 s (peak 1.80 → 1.28 GiB).
+- Regressions: `round_robin_arbiter_unreal2` n=7 17.99 → 19.97 s (+11%), `amba_decomposed_lock` n=15
+  7.75 → 8.84 s (+14%), `prioritized_arbiter` n=12 0.46 → 0.77 s (+70%). Two rounds only; LTO
+  placement noise is ~1-4%, so these look real. Hypothesis: per-mode compilation rebuilds
+  counter-independent cones once per mode. Sent to a P1.4 follow-up rather than accepted.
+- S0 run 1 (instrument before review fixes) breakdown: target check dominates cancel, inpchange,
+  lbu2, rru2 (P1); `substitute_variables` dominates load_balancer (61.6% at n=9) with projection/
+  relabel second (P2 §5.1, S1); Skolemization dominates arbiter_with_buffer; monitor construction
+  dominates collector_v1 (P4, conditional). Run 1 is frozen at `_bm-logs.gr1-par2-s0-run1/` with its
+  known flaws (mode count; censored bounds) and is not committed as evidence.
