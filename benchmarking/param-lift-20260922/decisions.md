@@ -470,3 +470,65 @@ on seeds rather than on targets.
 
 `remaining.md` records the ordered plan for the rest of the sprint against this audit.
 
+## tlsf-tools rebased onto current main, and what that changed
+
+The four solver-side commits were developed against the pinned `b42d5ef` while `main` moved 20
+commits. Rebasing (PR #33, now five commits, CI green) surfaced real interaction in both directions,
+which is the argument for not deferring a rebase behind a pin.
+
+- **`main` had the same diagnosis; this branch has the repair.** `55c180d` "Fail closed on unsound
+  multiple-fairness GR1 games" found the same pointwise-fairness unsoundness recorded in M1a and
+  refused such games, documenting that the restriction holds *"until a separately validated
+  algorithm repair lands"*. Our soundness commit is that repair, so the guard is removed and
+  `main`'s own counterexample game is now **decided UNREALIZABLE** instead of refused. Checked by
+  hand: the alternating run satisfies both `GF s` and `GF !s` while the goal `GF false` cannot, and
+  it stays UNREALIZABLE even at a 4096-node budget. Without the rebase the two lines of work
+  actively contradicted each other — `main`'s `tlsfsolve` refuses most families this sprint needs
+  (`round_robin_arbiter` alone has 9 fairness assumptions at n=3).
+- **`main` had the convention; we were the outlier.** Its game-profile resolver reads a GR(1) game's
+  safety condition from one plain output (`O==1, B==0`) and accepts typed AIGER 1.9 `bad` records
+  only for pure-safety games. Our reduction emitted `O=0` with a typed `bad`, matching no profile.
+  Changed our encoding rather than forking the convention. **Open gap worth a decision:** typed
+  `bad` together with `justice` matches no profile even explicitly, though 1.9 permits it; widening
+  `PROFILE_GR1` would be the more faithful fix.
+- **One of our fixes was unnecessary.** `main`'s parser now preserves typed properties itself, so
+  the game-reader half of the soundness commit was dropped as subsumed.
+- **B4 is largely obsolete.** `tlsfsolve` already takes `--oxidd-nodes`/`--oxidd-cache` with
+  capacity scaled by variable count, and failures now name a phase and operation
+  (`kind=1 phase=skolem operation=substitute`) instead of one generic message. The M2b brief is
+  withdrawn. `collector_v3` n=5 now solves where it previously did not, and `abcg_arbiter` n=4
+  solves at `--oxidd-nodes=33554432`.
+- **CI caught one thing local runs could not.** `test/oxidd_memory.c` wrapped libc `realloc` and
+  failed "the next allocation anywhere"; the per-fairness change shifted the sequence so the
+  injected failure reached OxiDD's Rust allocator, which aborts by design. Fixed by wrapping a
+  project-owned `oxidd_host_realloc` boundary, and the assertion strengthened to require
+  `OXIDD_FAILURE_HOST` with operation `realloc` so a wrap that stops taking effect fails loudly
+  rather than passing vacuously.
+
+Everything resting on the old solver was re-verified afterwards: 44/44 seeds across four methods,
+the mutation sweeps, and all previously-closed instances.
+
+## Seven previously-unsolved instances closed
+
+All VERIFIED at a target strictly larger than every seed used, all against a 120 s budget they do
+not meet by solving:
+
+| instance | seeds | wall |
+|---|---|---|
+| `arbiter` n=6 | 3,4 | 2 s |
+| `arbiter` n=10 | 3,4 | 5 s |
+| `arbiter_with_cancel` n=6 | 2,3,4 | 12 s |
+| `prioritized_arbiter` n=7 | 3,4,5 | 2 s |
+| `load_balancer` n=8 | 2,3,4 | 18 s |
+| `arbiter_with_buffer` n=6 | 2,3,4 | 2 s |
+| `amba_decomposed_lock` n=15 | 2,3,4 | 54 s |
+
+Two declines from that round are findings rather than failures, and both are now briefed:
+
+- `abcg_arbiter` n=4: `declared arity k=2 does not reconstruct predicate 'x_4_2_0' at n=3`. The
+  separability arity was measured on `inv` and `move_0`; it does **not** automatically carry to
+  every rank predicate. Arity must be per predicate, not per family.
+- `simple_arbiter_with_hints` n=8: `unmatched bus-wide conjunct` on a conjunct that is actually
+  **arity 2** over `(i0, i1)` and was mis-routed to the bus-schema matcher. Conjuncts must be routed
+  by their real index arity before the schema library sees them.
+
