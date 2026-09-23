@@ -387,3 +387,52 @@ and n=4, `round_robin_arbiter` n=3, `prioritized_arbiter` n=3, `load_balancer` n
 nothing refuted. The timeout is a limit of `verify_strategy_explicit.py`'s enumeration, not evidence
 about the controller, and should not be read as one.
 
+## M4 — index-aware generalizer (`generalize_gr1.py`)
+
+Generalizes `(inv, ranks, move_j)` from small seeds and re-Skolemizes at the target with a canonical
+lowest-index rule, as §2b of `m4-structure.md` requires. Results in `m4-results.tsv`.
+
+**Five families verified at a target larger than every seed used**, each reproduced by me from
+scratch rather than taken on report:
+
+| family | seeds | target | arity | verdict |
+|---|---|---|---|---|
+| `arbiter` | 3,4 | **10** | 2 | VERIFIED |
+| `prioritized_arbiter` | 3,4 | 5 | 1 | VERIFIED |
+| `load_balancer` | 2,3,4 | 5 | 2 | VERIFIED |
+| `arbiter_with_cancel` | 2,3,4 | 5 | 2 | VERIFIED |
+| `collector_v1` | 3 | 4 | 1 | VERIFIED |
+
+`arbiter` n=10 is W4's regression bar, reached here by an automatic generalizer instead of a
+hand-written schema. The artifacts are genuinely n=10 (10 grants, 10 requests, 112 state variables,
+41 goals) and re-check in 7.9 s. Declines all reproduce with a named predicate and reason —
+`round_robin_arbiter`, `lift`, `amba_decomposed_arbiter` on the measured `min_k = n`; degenerate
+seeds on `stable_from` — which is the point of replacing W5's bare `no_recognized_candidate`.
+Corrupting the n=10 certificate or policy never verifies. Suite 5/5.
+
+**A hazard I fixed before committing.** The driver returned exit 0 for both VERIFIED and UNKNOWN,
+with the rationale that "UNKNOWN is a scientific verdict, not a driver crash" — fair, but it leaves
+the exit status unable to separate a decline from a success, and M6 will consume exactly that. Now
+mirrors `tlsfcertcheck`: 0 VERIFIED, 3 UNKNOWN, 4 otherwise; tests updated, suite still green.
+
+**The limitation on the n=10 claim, stated plainly.** It rests on the certificate rule alone. The
+independent closed-loop route cannot corroborate it, and the reason is a defect rather than a real
+resource wall:
+
+- It stops deciding for `arbiter` from n=5 upward, at only ~460 k BDD nodes.
+- Peak nodes are **identical** (1,900,545 at n=8) under node caps of 4 M, 16 M and 67 M; only the
+  time wasted before giving up scales (5 s, 33 s, 174 s). So it is not hitting the cap.
+- Solver-produced and generalized policies behave identically, so it is not about generalized
+  artifacts — a hypothesis I formed and then refuted by testing both against the same game.
+- `round_robin_arbiter` n=5 verifies fine, so it is not size either. The driver is the justice-goal
+  count: `check_closed_loop_mode` builds a **monolithic** transition relation over all
+  `nstate + ngoals` variables, and `arbiter` has ~4n+1 goals (21 at n=5, 41 at n=10) where
+  `round_robin_arbiter` has n.
+- The failure surfaces as a bare `UNKNOWN` with no reason, so none of the above is visible to a
+  caller.
+
+Cross-method agreement therefore holds at the seeds (44/44 in M3) and for low-goal-count families,
+but not at `arbiter`'s target. A partitioned transition relation is the standard fix; briefed, not
+yet done. Until then the n=10 result has one sound proof and no second opinion, and should be quoted
+that way.
+

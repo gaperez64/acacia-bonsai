@@ -1,0 +1,18 @@
+family	target	seeds	arity	role_classes	stages_passed	cegis_rounds	verdict	seed_s	canonicalize_s	anti_unify_s	bus_schemas_s	ranks_s	instantiate_s	cegis_s	reason
+amba_decomposed_arbiter	5	3,4				0	UNKNOWN								scope: predicate 'arity measurement': measured min_k = n; invariant strengthening search is required
+amba_decomposed_arbiter	6					0	UNKNOWN								scope: predicate 'arity measurement': measured min_k = n; invariant strengthening search is required
+arbiter	3	1	2			0	UNKNOWN								seed: predicate 'stable_from' at n=1: seed is below measured stable_from=2
+arbiter	5	3,4	2	role_0	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.205211	0.074225	0.005593	0.000032	0.276155	0.108704	0.846733	
+arbiter	6	3,4	2	role_0	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.206444	0.075216	0.007139	0.000032	0.367400	0.179132	1.847433	
+arbiter	7	3,4	2	role_0	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.204698	0.075399	0.007663	0.000033	0.523947	0.292670	2.262504	
+arbiter	8	3,4	2	role_0	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.206033	0.075996	0.008794	0.000032	0.679431	0.427876	2.819464	
+arbiter	10	3,4	2	role_0	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.207330	0.075753	0.012312	0.000036	1.119836	0.807470	5.526570	
+arbiter_with_cancel	5	2,3,4	2	role_0	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.464354	0.073326	0.008227	0.000045	1.172908	0.396481	2.911519	
+collector_v1	4	3	1	role_0	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.111108	0.000168	0.000012	0.000006	4.238814	3.451190	10.998169	
+lift	4	2,3				0	UNKNOWN								seed: predicate 'stable_from' at n=2: seed is below measured stable_from=3
+lift	6					0	UNKNOWN								scope: predicate 'arity measurement': measured min_k = n; invariant strengthening search is required
+load_balancer	5	2,3,4	2	role_0,role_1,role_2,role_3	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.263767	0.074303	0.003180	0.000038	0.674772	0.196596	1.356226	
+prioritized_arbiter	5	3,4	1	role_0,role_1	seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS	0	VERIFIED	0.157678	0.074377	0.003198	0.000035	0.035664	0.005981	0.389535	
+round_robin_arbiter	5	3,4				0	UNKNOWN								scope: predicate 'arity measurement': measured min_k = n; invariant strengthening search is required
+round_robin_arbiter	6					0	UNKNOWN								scope: predicate 'arity measurement': measured min_k = n; invariant strengthening search is required
+round_robin_arbiter_unreal2	4	2				0	UNKNOWN								seed: predicate 'stable_from' at n=2: seed is below measured stable_from=3
