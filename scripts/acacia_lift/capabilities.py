@@ -117,9 +117,9 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
     result: dict[str, Capability] = {}
     required = {"family", "source", "template_sha256", "parameters", "route_kind",
                 "arity", "default_seeds", "stable_from", "role_class_count",
-                "invariant_arities", "move_arities"}
+                "invariant_arities", "move_arities", "real_check"}
     for row in payload["capabilities"]:
-        if not isinstance(row, dict) or set(row) not in (required, required | {"real_check"}):
+        if not isinstance(row, dict) or set(row) != required:
             raise ValueError("invalid capability fields")
         family, source, digest = row["family"], row["source"], row["template_sha256"]
         if not isinstance(family, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", family):
@@ -158,7 +158,7 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
             if values != sorted(set(values)):
                 raise ValueError(f"invalid {field} order for {family}")
             measured.append(tuple(values))
-        real_check = row.get("real_check", "policy")
+        real_check = row["real_check"]
         if real_check not in ("policy", "region"):
             raise ValueError(f"invalid real_check for {family}")
         result[family] = Capability(family, source, digest, tuple(parameters),

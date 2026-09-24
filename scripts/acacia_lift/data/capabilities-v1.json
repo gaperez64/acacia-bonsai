@@ -34,7 +34,8 @@
       ],
       "move_arities": [
         2
-      ]
+      ],
+      "real_check": "policy"
     },
     {
       "family": "prioritized_arbiter",
@@ -56,7 +57,8 @@
       ],
       "move_arities": [
         1
-      ]
+      ],
+      "real_check": "policy"
     },
     {
       "family": "load_balancer",
@@ -79,7 +81,8 @@
       ],
       "move_arities": [
         2
-      ]
+      ],
+      "real_check": "policy"
     },
     {
       "family": "arbiter_with_cancel",
@@ -102,7 +105,8 @@
       ],
       "move_arities": [
         2
-      ]
+      ],
+      "real_check": "policy"
     },
     {
       "family": "collector_v1",
@@ -121,7 +125,8 @@
       "invariant_arities": [
         1
       ],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "policy"
     },
     {
       "family": "arbiter_with_buffer",
@@ -142,7 +147,8 @@
       "invariant_arities": [
         1
       ],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "region"
     },
     {
       "family": "simple_arbiter_with_hints",
@@ -163,7 +169,8 @@
       "invariant_arities": [
         1
       ],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "policy"
     },
     {
       "family": "amba_decomposed_lock",
@@ -184,7 +191,8 @@
       "invariant_arities": [
         1
       ],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "region"
     },
     {
       "family": "abcg_arbiter",
@@ -204,7 +212,8 @@
       "invariant_arities": [
         2
       ],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "policy"
     },
     {
       "family": "arbiter_on_inpchange",
@@ -225,7 +234,8 @@
       "invariant_arities": [
         2
       ],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "policy"
     },
     {
       "family": "round_robin_arbiter_unreal2",
@@ -240,7 +250,8 @@
       "stable_from": 3,
       "role_class_count": 2,
       "invariant_arities": [],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "policy"
     },
     {
       "family": "prioritized_arbiter_unreal2",
@@ -255,7 +266,8 @@
       "stable_from": 3,
       "role_class_count": 3,
       "invariant_arities": [],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "policy"
     },
     {
       "family": "load_balancer_unreal2",
@@ -270,7 +282,8 @@
       "stable_from": 3,
       "role_class_count": 5,
       "invariant_arities": [],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "policy"
     },
     {
       "family": "amba_case_study_unreal",
@@ -285,7 +298,8 @@
       "stable_from": 3,
       "role_class_count": 4,
       "invariant_arities": [],
-      "move_arities": []
+      "move_arities": [],
+      "real_check": "policy"
     }
   ]
 }

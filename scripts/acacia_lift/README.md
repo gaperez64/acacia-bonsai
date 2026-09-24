@@ -17,7 +17,12 @@ PYTHONPATH=scripts python3 -m acacia_lift.runner --request-mode source \
 `data/capabilities-v1.json` is the validated source capability registry. Every
 template is bound by SHA-256. Schema decisions come from its stable regime,
 role class, invariant arity, and move arity fields. The dated `m4-*.tsv` files
-remain experiment evidence and are never runtime inputs. 
+remain experiment evidence and are never runtime inputs. The decline-only
+stable regimes preserve the dated CLI's rejection order. For a source-verified
+capability, `real_check` selects the REAL proof method; an explicit
+`--real-check` overrides it. The route evidence records the selected method
+and reason. Reproducer mode retains its policy default.
+
 `generalizer.py --results-out PATH` writes the current invocation's result
 table. It never reads an existing results table. The historical
 `GENERALIZE_GR1_RESULTS` environment variable remains an output-only alias.

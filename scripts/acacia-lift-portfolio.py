@@ -96,7 +96,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--bindings-python", type=pathlib.Path)
     parser.add_argument("--bindings-site", type=pathlib.Path)
     parser.add_argument("--buddy-adapter", type=pathlib.Path)
-    parser.add_argument("--real-check", choices=("policy", "region"), default="policy")
+    parser.add_argument("--real-check", choices=("policy", "region"))
     parser.add_argument(
         "--route-record",
         type=pathlib.Path,
@@ -225,9 +225,9 @@ def lift_command(
         str(output),
         "--evidence-out",
         str(evidence),
-        "--real-check",
-        args.real_check,
     ]
+    if args.real_check is not None:
+        command.extend(("--real-check", args.real_check))
     for option, value in (
         ("--tlsf-tools-build", args.tlsf_tools_build),
         ("--bindings-python", args.bindings_python),
@@ -545,6 +545,9 @@ def run(argv: list[str], started: float) -> int:
             "input_sha256": input_hash,
             "capability": capability,
             "binding_reason": reason,
+            "real_check": evidence.get("real_check") if evidence else None,
+            "real_check_selection": (evidence.get("real_check_selection")
+                                     if evidence else None),
             "lift_argv": command,
             "lift_exit": outcome.returncode,
             "lift_elapsed": outcome.elapsed,

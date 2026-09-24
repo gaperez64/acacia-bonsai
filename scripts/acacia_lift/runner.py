@@ -20,10 +20,10 @@ basename-to-row lookup.  Production ``source`` mode instead binds the actual
 TLSF bytes to a pinned capability through the configured tlsf-tools lowering and
 never reads experiment outcome or census columns.
 
-The default lifted-REAL proof exports and checks a policy.  The opt-in
-``--real-check region`` route is decision-only and returns REALIZABLE only
-after the actual target certificate receives the versioned REGION_VERIFIED
-result; it cannot produce UNREALIZABLE.
+Source-bound REAL requests use the proof method in their verified capability;
+``--real-check`` explicitly overrides it. The region route is decision-only
+and returns REALIZABLE only after the actual target certificate receives the
+versioned REGION_VERIFIED result; it cannot produce UNREALIZABLE.
 """
 
 from __future__ import annotations
@@ -358,6 +358,15 @@ def _resolve_request(
             raise PipelineFailure("source_binding", "absolute_deadline_missing")
         return _resolve_source_request(args, config, deadline)
     return _resolve_reproducer_request(args)
+
+
+def select_real_check(args: argparse.Namespace, request: Request) -> tuple[str, str]:
+    """Choose a proof method after source binding, preserving explicit overrides."""
+    if args.real_check is not None:
+        return args.real_check, "explicit --real-check"
+    if request.request_mode == "source":
+        return request.spec.real_check, f"source-verified capability {request.family}"
+    return "policy", "historical reproducer default"
 
 
 def _request_uses_region(args: argparse.Namespace, request: Request) -> bool:
@@ -769,9 +778,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--seeds", help="comma-separated seed sizes (REAL path only)")
     parser.add_argument("--semantics", choices=("exact", "strict"), default="exact")
     parser.add_argument(
-        "--real-check", choices=("policy", "region"), default="policy",
-        help=("proof route for lifted REAL decisions; policy remains the "
-              "synthesis-capable default"),
+        "--real-check", choices=("policy", "region"),
+        help="explicitly override the source capability's REAL proof method",
     )
     parser.add_argument("--budget", type=float, default=120.0)
     parser.add_argument("--output-dir", type=Path)
@@ -866,7 +874,7 @@ def main(argv: list[str] | None = None) -> int:
         "invocation_id": provisional, "cache_mode": "cold",
         "warm_cache_supported": False, "budget_s": args.budget,
         "semantics": args.semantics, "stages": [],
-        "real_check": args.real_check,
+        "real_check": args.real_check or "policy",
         "request_mode": args.request_mode,
         "target_check_ran": False, "target_verified": False,
         "compose_route": _compose_route(args),
@@ -892,6 +900,13 @@ def main(argv: list[str] | None = None) -> int:
         signal.signal(handled, cancel)
     try:
         request = _resolve_request(args, config, deadline)
+        args.real_check, check_reason = select_real_check(args, request)
+        evidence["real_check"] = args.real_check
+        evidence["real_check_selection"] = {
+            "value": args.real_check,
+            "reason": check_reason,
+            "capability": request.family,
+        }
         if _request_uses_region(args, request):
             try:
                 require_checker_method(args.checker, "region")
