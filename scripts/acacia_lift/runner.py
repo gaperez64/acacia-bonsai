@@ -99,10 +99,12 @@ class InvocationCancelled(RuntimeError):
 
 
 class PipelineFailure(RuntimeError):
-    def __init__(self, stage: str, reason: str):
+    def __init__(self, stage: str, reason: str, *,
+                 source_binding: dict[str, object] | None = None):
         super().__init__(f"{stage}: {reason}")
         self.stage = stage
         self.reason = reason
+        self.source_binding = source_binding
 
 
 @dataclass(frozen=True)
@@ -330,7 +332,8 @@ def _resolve_source_request(
             eligibility_budget_seconds=getattr(args, "eligibility_budget_seconds", 1.0),
         )
     except BindingDeclined as error:
-        raise PipelineFailure("source_binding", error.code) from error
+        raise PipelineFailure("source_binding", error.code,
+                              source_binding=error.source_binding) from error
     target = source.target_size
     seeds = _seeds(args, source.capability)
     _validate_route(source.capability, target, seeds, args.semantics)
@@ -990,6 +993,8 @@ def main(argv: list[str] | None = None) -> int:
         evidence["target_check_ran"] = True
         evidence["target_verified"] = True
     except PipelineFailure as error:
+        if error.source_binding is not None:
+            evidence["source_binding"] = error.source_binding
         result = PipelineResult.unknown(error.stage, error.reason)
     except InvocationCancelled as error:
         evidence["cancellation"] = str(error)

@@ -329,3 +329,8 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   the eligible subset. No per-cap or per-family fraction; no combination of the two variants.
 - Selection evidence (raw coverage rows, route records, comparison tables, driver) is under
   `campaign/selection/`.
+- `route_enabled` implemented; census v3 (`campaign/eligibility-v3.*`) has **72 route-eligible
+  IDs** = 91 − (8 + 3 + 4 + 4). Codex review ACCEPT-WITH-NITS: 13 structural lookalikes that were
+  already declines now carry the disabled family's name with reason `capability_route_disabled`
+  before exact membership is proven — fail-closed, but reporting treats their family as a
+  structural candidate, not a verified member.

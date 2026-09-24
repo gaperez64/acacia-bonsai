@@ -40,9 +40,11 @@ ROUTE_KINDS = frozenset((REAL_PROPOSAL, EXACT_GAME, SOUND_ONE_SIDED))
 class BindingDeclined(RuntimeError):
     """A fail-closed source-binding decision with a stable reason code."""
 
-    def __init__(self, code: str, detail: str = ""):
+    def __init__(self, code: str, detail: str = "", *,
+                 source_binding: dict[str, object] | None = None):
         self.code = code
         self.detail = detail
+        self.source_binding = source_binding
         super().__init__(f"{code}: {detail}" if detail else code)
 
 
@@ -60,6 +62,7 @@ class Capability:
     invariant_arities: tuple[int, ...] = ()
     move_arities: tuple[int, ...] = ()
     real_check: str = "policy"
+    route_enabled: bool = True
     corpus_source: str = ""
     signature: tuple[str, str, tuple[tuple[str, str | None], ...],
                      tuple[tuple[str, str | None], ...]] | None = None
@@ -201,7 +204,7 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
     result: dict[str, Capability] = {}
     required = {"family", "source", "corpus_source", "template_sha256", "parameters", "route_kind",
                 "arity", "default_seeds", "stable_from", "role_class_count",
-                "invariant_arities", "move_arities", "real_check", "signature"}
+                "invariant_arities", "move_arities", "real_check", "route_enabled", "signature"}
     for row in payload["capabilities"]:
         if not isinstance(row, dict) or set(row) != required:
             raise ValueError("invalid capability fields")
@@ -265,9 +268,13 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
         real_check = row["real_check"]
         if real_check not in ("policy", "region"):
             raise ValueError(f"invalid real_check for {family}")
+        route_enabled = row["route_enabled"]
+        if type(route_enabled) is not bool:
+            raise ValueError(f"invalid route_enabled for {family}")
         result[family] = Capability(family, source, digest, tuple(parameters),
                                     row["route_kind"], arity, tuple(seeds), stable,
                                     roles, measured[0], measured[1], real_check,
+                                    route_enabled,
                                     corpus_source, signature)
     if result.keys() & declined.keys():
         raise ValueError("declined-family stable regime overlaps a capability")
@@ -388,6 +395,7 @@ class SourceRequest:
             "capability": {
                 "family": self.family,
                 "route_kind": self.capability.route_kind,
+                "route_enabled": self.capability.route_enabled,
                 "template": self.capability.source,
                 "template_sha256": self.template_sha256,
                 "parameters": list(self.capability.parameters),
@@ -396,7 +404,7 @@ class SourceRequest:
             "match": {
                 "how": self.match_method,
                 "check": (
-                    "SYFCO basic-TLSF and normalized lowered-LTL equality, "
+                    "tlsf-tools basic-TLSF and normalized lowered-LTL equality, "
                     "plus exact semantics/target and ordered I/O equality"
                 ),
             },
@@ -411,6 +419,18 @@ class SourceRequest:
 
 def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def _disabled_binding(capability: Capability, path: pathlib.Path,
+                      source_bytes: bytes, how: str) -> dict[str, object]:
+    return {
+        "input": {"path": str(path), "sha256": _sha256(source_bytes),
+                  "size_bytes": len(source_bytes)},
+        "capability": {"family": capability.family,
+                       "route_kind": capability.route_kind,
+                       "route_enabled": False},
+        "match": {"how": how},
+    }
 
 
 def _kill_tool_group(proc: subprocess.Popen[str]) -> None:
@@ -658,6 +678,12 @@ def _bind_source_request_unchecked(
         )
         if not candidates:
             raise BindingDeclined("source_not_content_verified_for_capability")
+        if len(candidates) == 1 and not candidates[0].route_enabled:
+            raise BindingDeclined(
+                "capability_route_disabled",
+                source_binding=_disabled_binding(
+                    candidates[0], path, source_bytes, "structural-prefilter"),
+            )
 
     # Only a structurally possible source is normalized to discover its
     # concrete assignment. Route compatibility and cheap target constraints
@@ -771,4 +797,9 @@ def bind_source_request(
                 budget_deadline <= (absolute_deadline_monotonic or float("inf"))
                 else "absolute_deadline_exhausted")
         raise BindingDeclined(code)
+    if not result.capability.route_enabled:
+        source_binding = result.evidence()
+        source_binding["capability"]["route_enabled"] = False
+        raise BindingDeclined("capability_route_disabled",
+                              source_binding=source_binding)
     return result

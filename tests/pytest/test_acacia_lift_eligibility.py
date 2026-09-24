@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from acacia_lift import runner  # noqa: E402
 from acacia_lift.capabilities import (  # noqa: E402
-    BindingDeclined, LoweringTools, _inferred_n, bind_source_request,
+    CAPABILITIES, BindingDeclined, LoweringTools, _inferred_n, bind_source_request,
 )
 
 
@@ -50,7 +50,15 @@ def test_all_verified_and_guarded_members_keep_their_decisions() -> None:
                                  tlsf2ltl=tools.tlsf2ltl, tlsfinfo=tools.tlsfinfo)
         args = SimpleNamespace(tlsf=source, semantics="exact", family=None,
                                target=None, seeds=None, eligibility_budget_seconds=1.0)
-        if row["decision"] == "eligible":
+        disabled = any(
+            row["id"].startswith(f"{family}_pb_")
+            for family, capability in CAPABILITIES.items() if not capability.route_enabled
+        )
+        if disabled:
+            with pytest.raises(runner.PipelineFailure) as error:
+                runner._resolve_source_request(args, config, runner.Deadline.start(10))
+            assert error.value.reason == "capability_route_disabled", row["id"]
+        elif row["decision"] == "eligible":
             request = runner._resolve_source_request(args, config, runner.Deadline.start(10))
             assert request.family == row["capability"], row["id"]
         else:

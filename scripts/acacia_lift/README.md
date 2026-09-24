@@ -22,6 +22,9 @@ stable regimes preserve the dated CLI's rejection order. For a source-verified
 capability, `real_check` selects the REAL proof method; an explicit
 `--real-check` overrides it. The route evidence records the selected method
 and reason. Reproducer mode retains its policy default.
+`route_enabled` controls source-mode admission per capability. A disabled
+capability declines with `capability_route_disabled` and the wrapper executes
+the Acacia fallback; historical reproducer commands ignore this switch.
 
 `generalizer.py --results-out PATH` writes the current invocation's result
 table. It never reads an existing results table. The historical

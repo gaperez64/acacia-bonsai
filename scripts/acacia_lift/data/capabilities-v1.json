@@ -52,7 +52,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "prioritized_arbiter",
@@ -100,7 +101,8 @@
             null
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "load_balancer",
@@ -145,7 +147,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "arbiter_with_cancel",
@@ -190,7 +193,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "collector_v1",
@@ -227,7 +231,8 @@
             null
           ]
         ]
-      }
+      },
+      "route_enabled": false
     },
     {
       "family": "arbiter_with_buffer",
@@ -274,7 +279,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "simple_arbiter_with_hints",
@@ -313,7 +319,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": false
     },
     {
       "family": "amba_decomposed_lock",
@@ -360,7 +367,8 @@
             null
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "abcg_arbiter",
@@ -410,7 +418,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": false
     },
     {
       "family": "arbiter_on_inpchange",
@@ -449,7 +458,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "round_robin_arbiter_unreal2",
@@ -482,7 +492,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "prioritized_arbiter_unreal2",
@@ -523,7 +534,8 @@
             null
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "load_balancer_unreal2",
@@ -560,7 +572,8 @@
             "n"
           ]
         ]
-      }
+      },
+      "route_enabled": true
     },
     {
       "family": "amba_case_study_unreal",
@@ -629,7 +642,8 @@
             null
           ]
         ]
-      }
+      },
+      "route_enabled": false
     }
   ]
 }

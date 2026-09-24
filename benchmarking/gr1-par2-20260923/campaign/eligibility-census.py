@@ -57,7 +57,8 @@ def main() -> None:
             raise FileNotFoundError(tool)
 
     fields = ("id", "source_sha256", "decision", "capability", "parameters",
-              "route_kind", "real_check", "decline_reason", "tool_calls", "elapsed_s")
+              "route_kind", "real_check", "route_enabled", "decline_reason",
+              "tool_calls", "elapsed_s")
     temporary = args.output.with_name(args.output.name + ".tmp")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     original = binding._run_tool
@@ -83,7 +84,14 @@ def main() -> None:
                 )
             except runner.PipelineFailure as error:
                 decision = "decline"
-                capability = parameters = route_kind = real_check = ""
+                capability = parameters = route_kind = real_check = route_enabled = ""
+                source_binding = error.source_binding or {}
+                bound_capability = source_binding.get("capability", {})
+                if isinstance(bound_capability, dict):
+                    capability = bound_capability.get("family", "")
+                    route_kind = bound_capability.get("route_kind", "")
+                    if bound_capability.get("route_enabled") is False:
+                        route_enabled = "false"
                 reason = error.reason
             else:
                 decision = "eligible"
@@ -93,6 +101,7 @@ def main() -> None:
                                       request.source_request.identity.parameters)
                 route_kind = request.spec.route_kind
                 real_check = request.spec.real_check
+                route_enabled = "true"
                 reason = ""
             finally:
                 binding._run_tool = original
@@ -100,7 +109,8 @@ def main() -> None:
                                  source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
                                  decision=decision, capability=capability,
                                  parameters=parameters, route_kind=route_kind,
-                                 real_check=real_check, decline_reason=reason,
+                                 real_check=real_check, route_enabled=route_enabled,
+                                 decline_reason=reason,
                                  tool_calls=calls, elapsed_s=f"{time.monotonic() - start:.6f}"))
             stream.flush()
             if index % 100 == 0:
