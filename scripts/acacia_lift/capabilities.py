@@ -60,6 +60,7 @@ class Capability:
     invariant_arities: tuple[int, ...] = ()
     move_arities: tuple[int, ...] = ()
     real_check: str = "policy"
+    corpus_source: str = ""
 
     def __post_init__(self) -> None:
         if self.route_kind not in ROUTE_KINDS:
@@ -115,23 +116,35 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
     ):
         raise ValueError("invalid declined-family stable regimes")
     result: dict[str, Capability] = {}
-    required = {"family", "source", "template_sha256", "parameters", "route_kind",
+    required = {"family", "source", "corpus_source", "template_sha256", "parameters", "route_kind",
                 "arity", "default_seeds", "stable_from", "role_class_count",
                 "invariant_arities", "move_arities", "real_check"}
     for row in payload["capabilities"]:
         if not isinstance(row, dict) or set(row) != required:
             raise ValueError("invalid capability fields")
-        family, source, digest = row["family"], row["source"], row["template_sha256"]
+        family, source, corpus_source, digest = (
+            row["family"], row["source"], row["corpus_source"], row["template_sha256"]
+        )
         if not isinstance(family, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", family):
             raise ValueError("invalid capability family")
         if family in result:
             raise ValueError(f"duplicate capability {family}")
         if not isinstance(source, str) or pathlib.PurePath(source).is_absolute() or ".." in pathlib.PurePath(source).parts:
             raise ValueError(f"invalid source path for {family}")
+        if (not isinstance(corpus_source, str) or
+                not corpus_source.startswith("tests/syntcomp-benchmarks/tlsf/") or
+                pathlib.PurePath(corpus_source).is_absolute() or
+                ".." in pathlib.PurePath(corpus_source).parts or
+                not corpus_source.endswith(".tlsf")):
+            raise ValueError(f"invalid corpus source path for {family}")
         if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
             raise ValueError(f"invalid template hash for {family}")
         template = ROOT / source
-        if not template.is_file() or hashlib.sha256(template.read_bytes()).hexdigest() != digest:
+        try:
+            template_bytes = template.read_bytes()
+        except FileNotFoundError as error:
+            raise ValueError(f"missing capability template for {family}: {source}") from error
+        if hashlib.sha256(template_bytes).hexdigest() != digest:
             raise ValueError(f"stale capability template for {family}")
         parameters = row["parameters"]
         if parameters != ["n"]:
@@ -163,7 +176,8 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
             raise ValueError(f"invalid real_check for {family}")
         result[family] = Capability(family, source, digest, tuple(parameters),
                                     row["route_kind"], arity, tuple(seeds), stable,
-                                    roles, measured[0], measured[1], real_check)
+                                    roles, measured[0], measured[1], real_check,
+                                    corpus_source)
     if result.keys() & declined.keys():
         raise ValueError("declined-family stable regime overlaps a capability")
     return result

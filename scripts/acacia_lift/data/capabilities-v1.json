@@ -16,7 +16,7 @@
   "capabilities": [
     {
       "family": "arbiter",
-      "source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/arbiter.tlsf",
       "template_sha256": "a9839c448b1b56bb43ac2073afc07f2dde8af8af408a13f553e78b97ef280420",
       "parameters": [
         "n"
@@ -35,11 +35,12 @@
       "move_arities": [
         2
       ],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter.tlsf"
     },
     {
       "family": "prioritized_arbiter",
-      "source": "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf",
       "template_sha256": "026c8fd27461aa313f60c66b9c46d23b03bbf1150ebf0b4575b81b65c59074fd",
       "parameters": [
         "n"
@@ -58,11 +59,12 @@
       "move_arities": [
         1
       ],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf"
     },
     {
       "family": "load_balancer",
-      "source": "tests/syntcomp-benchmarks/tlsf/load_balancer/parametric/load_balancer.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/load_balancer/parametric/load_balancer.tlsf",
       "template_sha256": "7d99413d91924379be7d1701b9803267ce1d8b2afccfbe8ff3538e7d4295bef4",
       "parameters": [
         "n"
@@ -82,11 +84,12 @@
       "move_arities": [
         2
       ],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/load_balancer/parametric/load_balancer.tlsf"
     },
     {
       "family": "arbiter_with_cancel",
-      "source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf",
       "template_sha256": "faa4ddb14e7a0caaa4214af55f6f9c33bf709c242cdff7e88fc99b4ef41684a3",
       "parameters": [
         "n"
@@ -106,11 +109,12 @@
       "move_arities": [
         2
       ],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf"
     },
     {
       "family": "collector_v1",
-      "source": "tests/syntcomp-benchmarks/tlsf/collector/parametric/collector_v1.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/collector/parametric/collector_v1.tlsf",
       "template_sha256": "ec5e47ec5ab0c8e8db0a36810268a7bb4e7e566e067e0114aa2d43597d3c7518",
       "parameters": [
         "n"
@@ -126,11 +130,12 @@
         1
       ],
       "move_arities": [],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/collector/parametric/collector_v1.tlsf"
     },
     {
       "family": "arbiter_with_buffer",
-      "source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf",
       "template_sha256": "9377a68b62951eaac73a3c0c55c841113e97bd17855506fefc50d1f9f891bf9e",
       "parameters": [
         "n"
@@ -148,11 +153,12 @@
         1
       ],
       "move_arities": [],
-      "real_check": "region"
+      "real_check": "region",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf"
     },
     {
       "family": "simple_arbiter_with_hints",
-      "source": "tests/syntcomp-benchmarks/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf",
       "template_sha256": "5a107f96609e84c73b5ffc59a24f3cd285422419efb7af92f477d75bb89154cf",
       "parameters": [
         "n"
@@ -170,11 +176,12 @@
         1
       ],
       "move_arities": [],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf"
     },
     {
       "family": "amba_decomposed_lock",
-      "source": "tests/syntcomp-benchmarks/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf",
       "template_sha256": "ce9497a013a4d93d94c330a8ec7322ce0efe4dafca6c9bf5237ca265beb7843b",
       "parameters": [
         "n"
@@ -192,11 +199,12 @@
         1
       ],
       "move_arities": [],
-      "real_check": "region"
+      "real_check": "region",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf"
     },
     {
       "family": "abcg_arbiter",
-      "source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf",
       "template_sha256": "c6d71e54800c141404de00a9ac52bdbaa61e459f614d97afdda196ab0455dfef",
       "parameters": [
         "n"
@@ -213,11 +221,12 @@
         2
       ],
       "move_arities": [],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf"
     },
     {
       "family": "arbiter_on_inpchange",
-      "source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf",
       "template_sha256": "fb63b0d2e20ab1d3eeb6fc763009926229006f07ae9405247d29d215fd23af93",
       "parameters": [
         "n"
@@ -235,11 +244,12 @@
         2
       ],
       "move_arities": [],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf"
     },
     {
       "family": "round_robin_arbiter_unreal2",
-      "source": "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
       "template_sha256": "c479b842361509f6877bab34307d6d1de6e60284b5506e121ddd9ffc1df01db0",
       "parameters": [
         "n"
@@ -251,11 +261,12 @@
       "role_class_count": 2,
       "invariant_arities": [],
       "move_arities": [],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf"
     },
     {
       "family": "prioritized_arbiter_unreal2",
-      "source": "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf",
       "template_sha256": "7134e5f7e62c30e71a5b65640038840d24f418a78a3df7228731288105d2ebe6",
       "parameters": [
         "n"
@@ -267,11 +278,12 @@
       "role_class_count": 3,
       "invariant_arities": [],
       "move_arities": [],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf"
     },
     {
       "family": "load_balancer_unreal2",
-      "source": "tests/syntcomp-benchmarks/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf",
       "template_sha256": "42667ce7756e1e62d457f884ff8702be95f1cf3c000d3b8b2037bb635cef6f93",
       "parameters": [
         "n"
@@ -283,11 +295,12 @@
       "role_class_count": 5,
       "invariant_arities": [],
       "move_arities": [],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf"
     },
     {
       "family": "amba_case_study_unreal",
-      "source": "tests/syntcomp-benchmarks/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf",
+      "source": "scripts/acacia_lift/data/templates/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf",
       "template_sha256": "4eb061890a918d6c0114965d00bbf0ee661dc63a4b050c4dd9314d87e1d1d83d",
       "parameters": [
         "n"
@@ -299,7 +312,8 @@
       "role_class_count": 4,
       "invariant_arities": [],
       "move_arities": [],
-      "real_check": "policy"
+      "real_check": "policy",
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf"
     }
   ]
 }

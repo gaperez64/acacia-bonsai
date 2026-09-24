@@ -577,6 +577,8 @@ os.execv(real, [real, *sys.argv[1:]])
         seeds, target = ROUND_TRIPS[family]
         out = self.artifacts[family]
         other_source = ROOT / "tlsf-corpus" / f"arbiter_pb_{target}_pe_.tlsf"
+        if not other_source.is_file():
+            self.skipTest(f"real SYNTCOMP TLSF corpus unavailable: {other_source}")
         expected = generalizer._candidate_request_identity(
             family, target, seeds, out,
             family_source=None, target_source=other_source,

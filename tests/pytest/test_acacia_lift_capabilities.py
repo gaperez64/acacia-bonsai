@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import pathlib
 import sys
@@ -96,6 +97,50 @@ def test_capability_schema_rejects_stale_template_and_invalid_fields(tmp_path: p
     payload["capabilities"][0]["stable_from"] = "2"
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError, match="stable_from"):
+        load_capabilities(path)
+
+
+def test_vendored_templates_match_pins_and_corpus_provenance() -> None:
+    payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+    assert len(payload["capabilities"]) == 14
+    for row in payload["capabilities"]:
+        source = ROOT / row["source"]
+        assert source.is_file()
+        assert row["source"] == row["corpus_source"].replace(
+            "tests/syntcomp-benchmarks/", "scripts/acacia_lift/data/templates/", 1
+        )
+        assert hashlib.sha256(source.read_bytes()).hexdigest() == row["template_sha256"]
+        assert CAPABILITIES[row["family"]].corpus_source == row["corpus_source"]
+
+
+def test_missing_template_is_distinct_from_hash_mismatch(tmp_path: pathlib.Path) -> None:
+    payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+    payload["capabilities"][0]["source"] = "scripts/acacia_lift/data/templates/missing.tlsf"
+    path = tmp_path / "capabilities.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="missing capability template for arbiter"):
+        load_capabilities(path)
+
+
+def test_corpus_provenance_is_validated_without_reading_it(tmp_path: pathlib.Path) -> None:
+    payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+    path = tmp_path / "capabilities.json"
+    source = ROOT / payload["capabilities"][0]["corpus_source"]
+    original_read_bytes = pathlib.Path.read_bytes
+
+    def no_corpus_read(self: pathlib.Path) -> bytes:
+        if self == source:
+            raise AssertionError("corpus provenance was read")
+        return original_read_bytes(self)
+
+    with mock.patch.object(pathlib.Path, "read_bytes", no_corpus_read):
+        assert load_capabilities(path=DATA_FILE)["arbiter"].corpus_source == str(
+            source.relative_to(ROOT)
+        )
+
+    payload["capabilities"][0]["corpus_source"] = "../outside.tlsf"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid corpus source path"):
         load_capabilities(path)
 
 

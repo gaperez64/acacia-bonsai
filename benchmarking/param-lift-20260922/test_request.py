@@ -46,6 +46,10 @@ class SourceRequestTest(unittest.TestCase):
     def tearDown(self) -> None:
         self._temporary.cleanup()
 
+    def require_corpus(self, path: pathlib.Path) -> None:
+        if not path.is_file():
+            self.skipTest(f"real SYNTCOMP TLSF corpus unavailable: {path}")
+
     def bind(
         self,
         path: pathlib.Path,
@@ -53,6 +57,8 @@ class SourceRequestTest(unittest.TestCase):
         target: int | None = None,
         capabilities=None,
     ):
+        if path.parent == ROOT / "tlsf-corpus":
+            self.require_corpus(path)
         kwargs = {}
         if capabilities is not None:
             kwargs["capabilities"] = capabilities
@@ -66,6 +72,7 @@ class SourceRequestTest(unittest.TestCase):
         )
 
     def mutated(self, old: str, new: str) -> pathlib.Path:
+        self.require_corpus(self.arbiter)
         path = self.root / self.arbiter.name
         source = self.arbiter.read_text(encoding="utf-8")
         self.assertIn(old, source)
@@ -213,6 +220,7 @@ class SourceRequestTest(unittest.TestCase):
             self.bind(self.arbiter, capabilities={"arbiter": stale})
 
     def test_mutation_invalidates_bound_request(self) -> None:
+        self.require_corpus(self.arbiter)
         path = self.root / self.arbiter.name
         path.write_bytes(self.arbiter.read_bytes())
         request = self.bind(path)
@@ -291,6 +299,7 @@ class SourceRequestTest(unittest.TestCase):
             )
 
     def test_source_mode_never_opens_experiment_tables(self) -> None:
+        self.require_corpus(self.arbiter)
         evidence = self.root / "evidence.json"
         missing_generalizer = self.root / "missing-generalizer"
         proc = subprocess.run(
@@ -325,6 +334,7 @@ class SourceRequestTest(unittest.TestCase):
         )
 
     def test_source_mode_deadline_covers_lowering_and_reaps_descendants(self) -> None:
+        self.require_corpus(self.arbiter)
         real_build = self.tools.tlsfinfo.parent
         fake_build = self.root / "slow-lowering-build"
         fake_build.mkdir()
