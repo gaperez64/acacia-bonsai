@@ -1,0 +1,1525 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+B-cap60-epoch2-derived	01.ltl	60	REALIZABLE	0.022153745987452567	false	REALIZABLE	60
+B-cap60-epoch2-derived	02.ltl	60	REALIZABLE	0.06202785999630578	false	REALIZABLE	60
+B-cap60-epoch2-derived	03.ltl	60	REALIZABLE	3.314026288993773	false	REALIZABLE	60
+B-cap60-epoch2-derived	05.ltl	60	REALIZABLE	13.52723313999013	false	REALIZABLE	60
+B-cap60-epoch2-derived	06.ltl	60	REALIZABLE	19.994777754996903	false	REALIZABLE	60
+B-cap60-epoch2-derived	07.ltl	60	REALIZABLE	19.065307344004395	false	REALIZABLE	60
+B-cap60-epoch2-derived	08.ltl	60	REALIZABLE	31.345181363009033	false	REALIZABLE	60
+B-cap60-epoch2-derived	09.ltl	60	REALIZABLE	7.996674492998864	false	REALIZABLE	60
+B-cap60-epoch2-derived	10.ltl	60	REALIZABLE	3.469715664992691	false	REALIZABLE	60
+B-cap60-epoch2-derived	11.ltl	60	REALIZABLE	3.5247909460013034	false	REALIZABLE	60
+B-cap60-epoch2-derived	12.ltl	60	REALIZABLE	5.4314838540012715	false	REALIZABLE	60
+B-cap60-epoch2-derived	13.ltl	60	REALIZABLE	5.877649334986927	false	REALIZABLE	60
+B-cap60-epoch2-derived	ActionConverter.ltl	60	REALIZABLE	0.02789248300541658	false	REALIZABLE	60
+B-cap60-epoch2-derived	AlarmMin_efe2feaf.ltl	60	REALIZABLE	0.022744186004274525	false	REALIZABLE	60
+B-cap60-epoch2-derived	Alarm_06e9cad4.ltl	60	REALIZABLE	1.5981724099983694	false	REALIZABLE	60
+B-cap60-epoch2-derived	Alarm_2d1010f8.ltl	60	REALIZABLE	0.018753778000245802	false	REALIZABLE	60
+B-cap60-epoch2-derived	Alarm_68c86764.ltl	60	REALIZABLE	1.7549386789905839	false	REALIZABLE	60
+B-cap60-epoch2-derived	Alarm_70523fbe.ltl	60	REALIZABLE	0.9331195040140301	false	REALIZABLE	60
+B-cap60-epoch2-derived	Alarm_88c5c1c3.ltl	60	REALIZABLE	0.0187788309995085	false	REALIZABLE	60
+B-cap60-epoch2-derived	Alarm_9cac58d3.ltl	60	REALIZABLE	0.019349119000253268	false	REALIZABLE	60
+B-cap60-epoch2-derived	Alarm_a5f99bc6.ltl	60	REALIZABLE	20.202102903000196	false	REALIZABLE	60
+B-cap60-epoch2-derived	Alarm_f2774e0b.ltl	60	REALIZABLE	0.9318131339969113	false	REALIZABLE	60
+B-cap60-epoch2-derived	AllHeating_d6376bf9.ltl	60	REALIZABLE	0.03859418202773668	false	REALIZABLE	60
+B-cap60-epoch2-derived	AllLights_06e9cad4.ltl	60	UNREALIZABLE	1.6599755260103848	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	AllLights_2c5b09da.ltl	60	UNREALIZABLE	0.9049953439971432	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	AllLights_63831f8c.ltl	60	UNREALIZABLE	1.7262686419999227	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	AllLights_aeb1d897.ltl	60	UNREALIZABLE	2.6962223739974434	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	AllLights_b209ff21.ltl	60	UNREALIZABLE	2.491669290000573	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	AllLights_d6c5ac79.ltl	60	UNREALIZABLE	2.6752974720002385	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	AllShades_66f450a4.ltl	60	UNREALIZABLE	1.7486154490034096	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Assumptions_a50cadd7.ltl	60	UNREALIZABLE	0.022640341994701885	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Automata.ltl	60	REALIZABLE	0.04672708999714814	false	REALIZABLE	60
+B-cap60-epoch2-derived	Automata16S.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Automata32S.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Button.ltl	60	REALIZABLE	0.033785873994929716	false	REALIZABLE	60
+B-cap60-epoch2-derived	CheckAlarmBroken1_1a2942e3.ltl	60	REALIZABLE	0.02265778000582941	false	REALIZABLE	60
+B-cap60-epoch2-derived	CheckAlarm_6bea956e.ltl	60	UNREALIZABLE	0.016850232001161203	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckCoffeMachineBroken1_a5f99bc6.ltl	60	REALIZABLE	0.02112728200154379	false	REALIZABLE	60
+B-cap60-epoch2-derived	CheckCoffeMachine_3461125b.ltl	60	UNREALIZABLE	0.02602039001067169	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckCoffeMachine_f3987563.ltl	60	UNREALIZABLE	0.0217139330052305	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckDoor_c2b9e44d.ltl	60	UNREALIZABLE	0.020320619994890876	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckHeating_2418b67e.ltl	60	UNREALIZABLE	0.020431821001693606	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckHeating_3461125b.ltl	60	UNREALIZABLE	0.01666179101448506	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckLight_007df645.ltl	60	UNREALIZABLE	0.02015305298846215	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckLight_aeb1d897.ltl	60	UNREALIZABLE	0.030289356000139378	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckRoom_06e9cad4.ltl	60	UNREALIZABLE	0.017608471011044458	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckRoom_2c5b09da.ltl	60	UNREALIZABLE	0.015491133992327377	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckRoom_3916ec59.ltl	60	UNREALIZABLE	0.021312960001523606	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckRoom_70523fbe.ltl	60	UNREALIZABLE	0.029961460997583345	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckShades_1a2942e3.ltl	60	UNREALIZABLE	0.019136789996991865	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckShades_3461125b.ltl	60	UNREALIZABLE	0.021917887002928182	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckShades_4d4ca5c4.ltl	60	UNREALIZABLE	0.023563540991744958	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckShades_aeb1d897.ltl	60	UNREALIZABLE	0.017022888001520187	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckTime_3916ec59.ltl	60	UNREALIZABLE	0.017842469998868182	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckTime_4b5e6eaa.ltl	60	UNREALIZABLE	0.01807682499929797	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckTime_54e1f7d2.ltl	60	UNREALIZABLE	0.022187663009390235	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckTimer_54e1f7d2.ltl	60	UNREALIZABLE	0.017864973982796073	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckTimer_fa8592c8.ltl	60	UNREALIZABLE	0.020341633004136384	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckWarnlightBroken1_70523fbe.ltl	60	REALIZABLE	0.02188957601902075	false	REALIZABLE	60
+B-cap60-epoch2-derived	CheckWarnlight_1cf58fc1.ltl	60	UNREALIZABLE	0.03612676198827103	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckWarnlight_4b5a2bad.ltl	60	UNREALIZABLE	0.017914203999680467	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckWarnlight_54e1f7d2.ltl	60	UNREALIZABLE	0.01786615399760194	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckWarnlight_6bea956e.ltl	60	UNREALIZABLE	0.024496270008967258	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CheckWindows_54e1f7d2.ltl	60	UNREALIZABLE	0.01676358400436584	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Cockpitboard.ltl	60	REALIZABLE	0.021334975986974314	false	REALIZABLE	60
+B-cap60-epoch2-derived	Cockpitboard_efe2feaf.ltl	60	REALIZABLE	0.0319978069892386	false	REALIZABLE	60
+B-cap60-epoch2-derived	CoffeMachine_974f4a68.ltl	60	REALIZABLE	0.01787129598960746	false	REALIZABLE	60
+B-cap60-epoch2-derived	CoffeMachine_a50cadd7.ltl	60	UNREALIZABLE	0.023656445991946384	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	CoffeeMin_88f351a6.ltl	60	REALIZABLE	0.023256572996615432	false	REALIZABLE	60
+B-cap60-epoch2-derived	Coffee_06e9cad4.ltl	60	REALIZABLE	0.02746782598842401	false	REALIZABLE	60
+B-cap60-epoch2-derived	Coffee_235467da.ltl	60	REALIZABLE	0.022067062003770843	false	REALIZABLE	60
+B-cap60-epoch2-derived	Coffee_2c5b09da.ltl	60	REALIZABLE	0.034428116006893106	false	REALIZABLE	60
+B-cap60-epoch2-derived	Coffee_6479ef9a.ltl	60	REALIZABLE	0.03282172599574551	false	REALIZABLE	60
+B-cap60-epoch2-derived	Coffee_d6376bf9.ltl	60	REALIZABLE	0.03194617200642824	false	REALIZABLE	60
+B-cap60-epoch2-derived	Coffee_efe2feaf.ltl	60	REALIZABLE	0.02058886000304483	false	REALIZABLE	60
+B-cap60-epoch2-derived	Coffee_f1477cc5.ltl	60	UNREALIZABLE	0.020476631994824857	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Core_4b5a2bad.ltl	60	UNREALIZABLE	0.04622651799581945	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Core_66f450a4.ltl	60	UNREALIZABLE	0.019609478011261672	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Core_fa4d4ce3.ltl	60	UNREALIZABLE	0.023342489992501214	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Core_solved_974f4a68.ltl	60	REALIZABLE	0.0250505959847942	false	REALIZABLE	60
+B-cap60-epoch2-derived	Demo1_06e9cad4.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Demo1_2c5b09da.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Demo1_63831f8c.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Demo1_c2b9e44d.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Demo1_d65ed84e.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	DeviceBehaviorChec_fa8592c8.ltl	60	UNREALIZABLE	0.02689571499649901	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Door_2d1010f8.ltl	60	REALIZABLE	0.029919622000306845	false	REALIZABLE	60
+B-cap60-epoch2-derived	EnemeyModule.ltl	60	REALIZABLE	0.016226993000600487	false	REALIZABLE	60
+B-cap60-epoch2-derived	EscalatorBidirectional.ltl	60	REALIZABLE	0.03709183000319172	false	REALIZABLE	60
+B-cap60-epoch2-derived	EscalatorBidirectionalInit.ltl	60	REALIZABLE	0.039153461999376304	false	REALIZABLE	60
+B-cap60-epoch2-derived	EscalatorCounting.ltl	60	REALIZABLE	0.020986623989301734	false	REALIZABLE	60
+B-cap60-epoch2-derived	EscalatorCountingInit.ltl	60	REALIZABLE	0.01940550199651625	false	REALIZABLE	60
+B-cap60-epoch2-derived	EscalatorNonCounting.ltl	60	REALIZABLE	0.03251638700021431	false	REALIZABLE	60
+B-cap60-epoch2-derived	EscalatorNonReactive.ltl	60	REALIZABLE	0.014651648001745343	false	REALIZABLE	60
+B-cap60-epoch2-derived	EscalatorSmart.ltl	60	REALIZABLE	0.04876608100312296	false	REALIZABLE	60
+B-cap60-epoch2-derived	Example1_d6376bf9.ltl	60	REALIZABLE	0.016079068009275943	false	REALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-10.ltl	60	UNREALIZABLE	0.04523684098967351	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-11.ltl	60	UNREALIZABLE	0.05370414299250115	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-110.ltl	60	UNREALIZABLE	30.207673541997792	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-111.ltl	60	UNREALIZABLE	29.11159102199599	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-112.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	F-G-contradiction-113.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	F-G-contradiction-114.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	F-G-contradiction-12.ltl	60	UNREALIZABLE	0.06534605899651069	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-13.ltl	60	UNREALIZABLE	0.1493069429998286	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-14.ltl	60	UNREALIZABLE	0.31769117299700156	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-15.ltl	60	UNREALIZABLE	0.34166392000042833	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-16.ltl	60	UNREALIZABLE	9.308988605000195	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-17.ltl	60	UNREALIZABLE	9.869331098001567	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-18.ltl	60	UNREALIZABLE	11.893405847993563	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-19.ltl	60	UNREALIZABLE	13.34682501599309	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	F-G-contradiction-2-unreal.ltl	60	UNREALIZABLE	0.021697007992770523	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	FelixSpecFixed2.2.core_fa8592c8.ltl	60	UNREALIZABLE	0.019502423994708806	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	FelixSpecFixed3.core_b209ff21.ltl	60	UNREALIZABLE	0.049997952999547124	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	FelixSpecFixed4GuaranteesOnly_88f351a6.ltl	60	UNREALIZABLE	0.021125853003468364	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Full_f1477cc5.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	GF-G-contradiction0.ltl	60	UNREALIZABLE	0.03955975999997463	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	GF-G-contradiction1.ltl	60	UNREALIZABLE	0.06375266700342763	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	GF-G-contradiction2.ltl	60	UNREALIZABLE	0.24351109398412518	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	GF-G-contradiction3.ltl	60	UNREALIZABLE	1.6866302639828064	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	GF-G-contradiction4.ltl	60	UNREALIZABLE	1.7897765200177673	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	GF-G-contradiction5.ltl	60	UNREALIZABLE	2.3721033809997607	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	GF-G-contradiction6.ltl	60	UNREALIZABLE	16.38318877699203	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	GF-G-contradiction7.ltl	60	UNREALIZABLE	17.190631989011308	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Gamelogic.ltl	60	REALIZABLE	0.01767458999529481	false	REALIZABLE	60
+B-cap60-epoch2-derived	GamemodeChooser.ltl	60	REALIZABLE	0.017154016997665167	false	REALIZABLE	60
+B-cap60-epoch2-derived	Gamemodule.ltl	60	REALIZABLE	0.021268441021675244	false	REALIZABLE	60
+B-cap60-epoch2-derived	HeatingMin_d6c5ac79.ltl	60	REALIZABLE	0.02541819799807854	false	REALIZABLE	60
+B-cap60-epoch2-derived	Heating_235467da.ltl	60	REALIZABLE	0.03626998999970965	false	REALIZABLE	60
+B-cap60-epoch2-derived	Heating_974f4a68.ltl	60	REALIZABLE	0.026712349004810676	false	REALIZABLE	60
+B-cap60-epoch2-derived	Heating_b02056d6.ltl	60	REALIZABLE	0.026601596997352317	false	REALIZABLE	60
+B-cap60-epoch2-derived	Heating_b209ff21.ltl	60	REALIZABLE	0.0346215400059009	false	REALIZABLE	60
+B-cap60-epoch2-derived	Increment.ltl	60	REALIZABLE	0.015906729007838294	false	REALIZABLE	60
+B-cap60-epoch2-derived	IntendDemo_42dc4fff.ltl	60	UNREALIZABLE	0.06168196200451348	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV0.ltl	60	REALIZABLE	0.022914101005881093	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV1.ltl	60	REALIZABLE	0.019536576000973582	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV10.ltl	60	REALIZABLE	0.08343638999212999	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV2.ltl	60	REALIZABLE	0.02012321600341238	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV3.ltl	60	REALIZABLE	0.03245844299090095	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV4.ltl	60	REALIZABLE	0.04229547000431921	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV5.ltl	60	REALIZABLE	0.052490147994831204	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV6.ltl	60	REALIZABLE	0.05693319899728522	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV7.ltl	60	REALIZABLE	0.06414679301087745	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV8.ltl	60	REALIZABLE	0.07608590999734588	false	REALIZABLE	60
+B-cap60-epoch2-derived	KitchenTimerV9.ltl	60	REALIZABLE	0.1358975309995003	false	REALIZABLE	60
+B-cap60-epoch2-derived	LampController_974f4a68.ltl	60	REALIZABLE	0.03217136798775755	false	REALIZABLE	60
+B-cap60-epoch2-derived	LedMatrix.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Light_a50cadd7.ltl	60	UNREALIZABLE	0.03285337801207788	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Light_aeb1d897.ltl	60	UNREALIZABLE	0.03785345400683582	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Light_d65ed84e.ltl	60	REALIZABLE	0.027106795998406596	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights2Min_9cbf2546.ltl	60	REALIZABLE	0.024750493001192808	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights2_06e9cad4.ltl	60	REALIZABLE	0.18943064399354625	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights2_0f5381e9.ltl	60	REALIZABLE	0.1975732830032939	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights2_2c5b09da.ltl	60	REALIZABLE	0.047268703987356275	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights2_9cac58d3.ltl	60	REALIZABLE	0.18928389699431136	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights2_b02056d6.ltl	60	REALIZABLE	0.20215491100680083	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights2_f1477cc5.ltl	60	UNREALIZABLE	0.048858380992896855	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Lights2_f3987563.ltl	60	REALIZABLE	0.18204659399634693	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights3Min_6479ef9a.ltl	60	REALIZABLE	0.035182646999601275	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights3_06e9cad4.ltl	60	REALIZABLE	0.0334193130111089	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights3_235467da.ltl	60	REALIZABLE	0.033221128993318416	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights3_2c5b09da.ltl	60	REALIZABLE	0.023809644000721164	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights3_3916ec59.ltl	60	REALIZABLE	0.03954493399942294	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights3_6bea956e.ltl	60	REALIZABLE	0.03699601799598895	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights3_f1477cc5.ltl	60	REALIZABLE	0.04348449598182924	false	REALIZABLE	60
+B-cap60-epoch2-derived	LightsMin_6bea956e.ltl	60	REALIZABLE	0.03397590800886974	false	REALIZABLE	60
+B-cap60-epoch2-derived	LightsTotal_06e9cad4.ltl	60	REALIZABLE	0.382011825000518	false	REALIZABLE	60
+B-cap60-epoch2-derived	LightsTotal_2c5b09da.ltl	60	UNREALIZABLE	0.06100444101321045	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	LightsTotal_9cbf2546.ltl	60	REALIZABLE	0.4033484010142274	false	REALIZABLE	60
+B-cap60-epoch2-derived	LightsTotal_d65ed84e.ltl	60	REALIZABLE	0.3977789120108355	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights_06e9cad4.ltl	60	REALIZABLE	0.04218006899463944	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights_2c5b09da.ltl	60	REALIZABLE	0.021052388998214155	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights_3461125b.ltl	60	REALIZABLE	0.04150034100166522	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights_9cac58d3.ltl	60	REALIZABLE	0.05172642000252381	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights_b0840146.ltl	60	REALIZABLE	0.03063640001346357	false	REALIZABLE	60
+B-cap60-epoch2-derived	Lights_f3987563.ltl	60	REALIZABLE	0.04857280899886973	false	REALIZABLE	60
+B-cap60-epoch2-derived	ModdifiedLedMatrix4X.ltl	60	UNREALIZABLE	0.5538649639929645	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ModdifiedLedMatrix5X.ltl	60	REALIZABLE	0.12049917299009394	false	REALIZABLE	60
+B-cap60-epoch2-derived	Morning2Min_6cbc6174.ltl	60	REALIZABLE	0.015968103994964622	false	REALIZABLE	60
+B-cap60-epoch2-derived	Morning2_06e9cad4.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2_1cf58fc1.ltl	60	UNREALIZABLE	0.08232750400202349	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Morning2_2c5b09da.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2_407db2cc.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2_4d4ca5c4.ltl	60	REALIZABLE	0.020181807019980624	false	REALIZABLE	60
+B-cap60-epoch2-derived	Morning2_63831f8c.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2_68c86764.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2_9cac58d3.ltl	60	REALIZABLE	0.020362215000204742	false	REALIZABLE	60
+B-cap60-epoch2-derived	Morning2_d65ed84e.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2s_06cf2373.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2s_06e9cad4.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2s_2c5b09da.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2s_42dc4fff.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2s_9cbf2546.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning2s_d6c5ac79.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	MorningMin_d6c5ac79.ltl	60	REALIZABLE	0.041700357003719546	false	REALIZABLE	60
+B-cap60-epoch2-derived	Morning_14a3b3a2.ltl	60	UNREALIZABLE	3.8255961990071228	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Morning_4b5e6eaa.ltl	60	UNREALIZABLE	4.137724850996165	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Morning_88c5c1c3.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning_9cac58d3.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	Morning_c92eb242.ltl	60	UNREALIZABLE	3.642722093005432	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Morning_f1477cc5.ltl	60	UNREALIZABLE	3.786259473010432	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Morning_f2774e0b.ltl	60	UNREALIZABLE	3.5069730810064357	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	MusicAppFeedback.ltl	60	REALIZABLE	0.0260810760082677	false	REALIZABLE	60
+B-cap60-epoch2-derived	MusicAppMotivating.ltl	60	REALIZABLE	0.024348220991669223	false	REALIZABLE	60
+B-cap60-epoch2-derived	MusicAppSimple.ltl	60	REALIZABLE	0.025577636988600716	false	REALIZABLE	60
+B-cap60-epoch2-derived	OneCounter.ltl	60	REALIZABLE	2.9716809520032257	false	REALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGui.ltl	60	UNREALIZABLE	0.03745220598648302	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGuiA1.ltl	60	UNREALIZABLE	0.03939779401116539	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGuiA2.ltl	60	UNREALIZABLE	0.049958532996242866	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGuiA3.ltl	60	UNREALIZABLE	0.04936636297497898	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGuiA4.ltl	60	UNREALIZABLE	0.05374402701272629	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGuiA5.ltl	60	UNREALIZABLE	0.11954881501151249	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGuiA6.ltl	60	UNREALIZABLE	0.34027536600478925	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGuiA7.ltl	60	UNREALIZABLE	0.8661061339953449	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterGuiA8.ltl	60	UNREALIZABLE	3.3642730619903887	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterInRange.ltl	60	UNREALIZABLE	0.03181608200247865	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterInRangeA1.ltl	60	UNREALIZABLE	0.03465953598788474	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterInRangeA2.ltl	60	UNREALIZABLE	0.01992660399992019	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	OneCounterInRangeA3.ltl	60	REALIZABLE	0.019292103010229766	false	REALIZABLE	60
+B-cap60-epoch2-derived	PlugController_fa4d4ce3.ltl	60	REALIZABLE	0.03163884300738573	false	REALIZABLE	60
+B-cap60-epoch2-derived	Radarboard.ltl	60	REALIZABLE	0.03909731599560473	false	REALIZABLE	60
+B-cap60-epoch2-derived	RegManager.ltl	60	REALIZABLE	0.015571660987916403	false	REALIZABLE	60
+B-cap60-epoch2-derived	Room_a50cadd7.ltl	60	UNREALIZABLE	0.035172123985830694	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	RotationCalculator.ltl	60	REALIZABLE	0.021659114994690754	false	REALIZABLE	60
+B-cap60-epoch2-derived	SPI.ltl	60	REALIZABLE	0.2913560069864616	false	REALIZABLE	60
+B-cap60-epoch2-derived	SPIPureNext.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	SPIReadClk.ltl	60	REALIZABLE	0.01539038002374582	false	REALIZABLE	60
+B-cap60-epoch2-derived	SPIReadManag.ltl	60	REALIZABLE	0.041253830000641756	false	REALIZABLE	60
+B-cap60-epoch2-derived	SPIReadSdi.ltl	60	REALIZABLE	0.016973637000774033	false	REALIZABLE	60
+B-cap60-epoch2-derived	SPIWriteClk.ltl	60	REALIZABLE	0.023511949999374337	false	REALIZABLE	60
+B-cap60-epoch2-derived	SPIWriteManag.ltl	60	REALIZABLE	0.025934698001947254	false	REALIZABLE	60
+B-cap60-epoch2-derived	SPIWriteSdi.ltl	60	REALIZABLE	0.03630151199467946	false	REALIZABLE	60
+B-cap60-epoch2-derived	Scoreboard.ltl	60	REALIZABLE	0.018587716011097655	false	REALIZABLE	60
+B-cap60-epoch2-derived	Sensor.ltl	60	REALIZABLE	0.13299923200975172	false	REALIZABLE	60
+B-cap60-epoch2-derived	SensorInit.ltl	60	REALIZABLE	0.13600454799598083	false	REALIZABLE	60
+B-cap60-epoch2-derived	SensorPart.ltl	60	REALIZABLE	0.04252371299662627	false	REALIZABLE	60
+B-cap60-epoch2-derived	SensorRegister.ltl	60	REALIZABLE	0.016956358012976125	false	REALIZABLE	60
+B-cap60-epoch2-derived	SensorSelector.ltl	60	REALIZABLE	0.038849092001328245	false	REALIZABLE	60
+B-cap60-epoch2-derived	SensorSubmodulChooser.ltl	60	REALIZABLE	0.03930931899230927	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades2Min_63831f8c.ltl	60	REALIZABLE	0.01753990599536337	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades2_235467da.ltl	60	REALIZABLE	0.0449170089996187	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades2_42dc4fff.ltl	60	REALIZABLE	0.02728973198099993	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades2_70523fbe.ltl	60	REALIZABLE	0.020776899997144938	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades2_a5f99bc6.ltl	60	REALIZABLE	0.01851624101982452	false	REALIZABLE	60
+B-cap60-epoch2-derived	ShadesMin_aeb1d897.ltl	60	REALIZABLE	0.028002435006783344	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades_6479ef9a.ltl	60	REALIZABLE	0.03209730199887417	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades_974f4a68.ltl	60	REALIZABLE	0.031709920993307605	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades_9cac58d3.ltl	60	REALIZABLE	0.04085857199970633	false	REALIZABLE	60
+B-cap60-epoch2-derived	Shades_a02758ea.ltl	60	REALIZABLE	0.01909171201987192	false	REALIZABLE	60
+B-cap60-epoch2-derived	SingleContoller_d65ed84e.ltl	60	UNREALIZABLE	0.0264041320187971	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	SliderDefault.ltl	60	REALIZABLE	0.03523120700265281	false	REALIZABLE	60
+B-cap60-epoch2-derived	SliderDelayed.ltl	60	REALIZABLE	0.0533268750004936	false	REALIZABLE	60
+B-cap60-epoch2-derived	SliderScored.ltl	60	REALIZABLE	0.03735034698911477	false	REALIZABLE	60
+B-cap60-epoch2-derived	System_b0840146.ltl	60	UNREALIZABLE	0.025918006998836063	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Time_a50cadd7.ltl	60	UNREALIZABLE	0.022957768000196666	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Timer_a50cadd7.ltl	60	REALIZABLE	0.03142404400568921	false	REALIZABLE	60
+B-cap60-epoch2-derived	TorcsAccelerating.ltl	60	REALIZABLE	0.03285167099966202	false	REALIZABLE	60
+B-cap60-epoch2-derived	TorcsGearing.ltl	60	REALIZABLE	0.0356085559760686	false	REALIZABLE	60
+B-cap60-epoch2-derived	TorcsSimple.ltl	60	REALIZABLE	0.039422376998118125	false	REALIZABLE	60
+B-cap60-epoch2-derived	TorcsSteeringImproved.ltl	60	REALIZABLE	0.03970463800942525	false	REALIZABLE	60
+B-cap60-epoch2-derived	TorcsSteeringSimple.ltl	60	REALIZABLE	0.03904935499303974	false	REALIZABLE	60
+B-cap60-epoch2-derived	TorcsSteeringSmart.ltl	60	REALIZABLE	0.021692114998586476	false	REALIZABLE	60
+B-cap60-epoch2-derived	TwoCounters.ltl	60	UNREALIZABLE	0.030383613004232757	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCounters2.ltl	60	UNREALIZABLE	0.05049958801828325	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCounters3.ltl	60	REALIZABLE	1.6602082550089108	false	REALIZABLE	60
+B-cap60-epoch2-derived	TwoCounters4.ltl	60	REALIZABLE	0.03081434001796879	false	REALIZABLE	60
+B-cap60-epoch2-derived	TwoCounters5.ltl	60	UNREALIZABLE	0.12152150200563483	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA0.ltl	60	UNREALIZABLE	0.036767300000065006	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA1.ltl	60	UNREALIZABLE	0.05387130699818954	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA2.ltl	60	UNREALIZABLE	0.06694316599168815	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA3.ltl	60	UNREALIZABLE	0.12385426100809127	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA4.ltl	60	UNREALIZABLE	0.11361756100086495	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA5.ltl	60	UNREALIZABLE	0.12656458499259315	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA6.ltl	60	UNREALIZABLE	0.13518416600709315	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA7.ltl	60	UNREALIZABLE	0.15578336598991882	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA8.ltl	60	UNREALIZABLE	0.1434655219927663	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButA9.ltl	60	UNREALIZABLE	0.19256190399755724	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersDisButAC.ltl	60	UNREALIZABLE	0.2004151839937549	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersGui.ltl	60	UNREALIZABLE	0.04848289699293673	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRange.ltl	60	UNREALIZABLE	0.044979300000704825	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeA1.ltl	60	UNREALIZABLE	0.029312096012290567	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeA2.ltl	60	UNREALIZABLE	0.04571851600485388	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeA3.ltl	60	UNREALIZABLE	0.021821786009240896	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeA4.ltl	60	UNREALIZABLE	0.04641131999960635	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeA5.ltl	60	UNREALIZABLE	0.04188731699832715	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeM0.ltl	60	UNREALIZABLE	0.042094584001461044	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeM1.ltl	60	UNREALIZABLE	0.030705758996191435	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeM2.ltl	60	UNREALIZABLE	0.027595243009272963	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeM3.ltl	60	UNREALIZABLE	0.04193400399526581	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersInRangeM4.ltl	60	UNREALIZABLE	0.025589413999114186	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersRefined.ltl	60	UNREALIZABLE	0.02603944399743341	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	TwoCountersRefinedRefined.ltl	60	REALIZABLE	0.03176076401723549	false	REALIZABLE	60
+B-cap60-epoch2-derived	UnderapproxDemo2.ltl	60	UNREALIZABLE	0.028699469985440373	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	UnderapproxStrengthenedDemo.ltl	60	REALIZABLE	0.022863626989419572	false	REALIZABLE	60
+B-cap60-epoch2-derived	Warnlight_2d1010f8.ltl	60	REALIZABLE	0.024154887010809034	false	REALIZABLE	60
+B-cap60-epoch2-derived	Warnlight_a50cadd7.ltl	60	UNREALIZABLE	0.03299484500894323	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	Window2Min_88c5c1c3.ltl	60	REALIZABLE	0.029502149991458282	false	REALIZABLE	60
+B-cap60-epoch2-derived	Window2_54e1f7d2.ltl	60	REALIZABLE	0.036722588003613055	false	REALIZABLE	60
+B-cap60-epoch2-derived	Window2_6479ef9a.ltl	60	REALIZABLE	0.02385867599514313	false	REALIZABLE	60
+B-cap60-epoch2-derived	Window2_9cac58d3.ltl	60	REALIZABLE	0.021077418001368642	false	REALIZABLE	60
+B-cap60-epoch2-derived	Window2_aeb1d897.ltl	60	REALIZABLE	0.027185925006051548	false	REALIZABLE	60
+B-cap60-epoch2-derived	Window2_f1477cc5.ltl	60	UNREALIZABLE	0.020879280011286028	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	WindowMin_a5f99bc6.ltl	60	REALIZABLE	0.02835286500339862	false	REALIZABLE	60
+B-cap60-epoch2-derived	Window_235467da.ltl	60	REALIZABLE	0.025792863016249612	false	REALIZABLE	60
+B-cap60-epoch2-derived	Window_42dc4fff.ltl	60	REALIZABLE	0.03059507098805625	false	REALIZABLE	60
+B-cap60-epoch2-derived	Window_54e1f7d2.ltl	60	REALIZABLE	0.019943876002798788	false	REALIZABLE	60
+B-cap60-epoch2-derived	Zoo0.ltl	60	REALIZABLE	0.03314519999548793	false	REALIZABLE	60
+B-cap60-epoch2-derived	Zoo10.ltl	60	REALIZABLE	0.022719091008184478	false	REALIZABLE	60
+B-cap60-epoch2-derived	Zoo5.ltl	60	REALIZABLE	0.03146931598894298	false	REALIZABLE	60
+B-cap60-epoch2-derived	abcg_arbiter_pb_1_pe_.ltl	60	REALIZABLE	0.023076651996234432	false	REALIZABLE	60
+B-cap60-epoch2-derived	abcg_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.09198202801053412	false	REALIZABLE	60
+B-cap60-epoch2-derived	abcg_arbiter_pb_3_pe_.ltl	60	REALIZABLE	31.631774679000955	false	REALIZABLE	60
+B-cap60-epoch2-derived	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_case_study_pb_2_pe_.ltl	60	REALIZABLE	1.0063238180009648	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.027932451994274743	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.03893552099179942	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_4_pe_.ltl	60	REALIZABLE	0.0455796879978152	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_5_pe_.ltl	60	REALIZABLE	0.1106818960106466	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_6_pe_.ltl	60	REALIZABLE	1.2314654549991246	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_decode.ltl	60	REALIZABLE	0.020511146998615004	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_10_pe_.ltl	60	REALIZABLE	0.057695164025062695	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_11_pe_.ltl	60	REALIZABLE	0.05210230901138857	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_12_pe_.ltl	60	REALIZABLE	0.07347004799521528	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_13_pe_.ltl	60	REALIZABLE	0.08488575700903311	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_14_pe_.ltl	60	REALIZABLE	0.14466307099792175	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_15_pe_.ltl	60	REALIZABLE	0.3200277610012563	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_16_pe_.ltl	60	REALIZABLE	1.023911597992992	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_2_pe_.ltl	60	REALIZABLE	0.04703889900702052	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_3_pe_.ltl	60	REALIZABLE	0.028107560996431857	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_4_pe_.ltl	60	REALIZABLE	0.03398652400937863	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_5_pe_.ltl	60	REALIZABLE	0.041503025000565685	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_6_pe_.ltl	60	REALIZABLE	0.04422433199943043	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_7_pe_.ltl	60	REALIZABLE	0.025925419991835952	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_8_pe_.ltl	60	REALIZABLE	0.0477853289921768	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_encode_pb_9_pe_.ltl	60	REALIZABLE	0.05796944499888923	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_10_pe_.ltl	60	REALIZABLE	0.4776400809932966	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_11_pe_.ltl	60	REALIZABLE	1.8466349630034529	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_12_pe_.ltl	60	REALIZABLE	7.236327463993803	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_13_pe_.ltl	60	REALIZABLE	23.597639886997058	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_14_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_2_pe_.ltl	60	REALIZABLE	0.02527116700366605	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_3_pe_.ltl	60	REALIZABLE	0.023141081997891888	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_4_pe_.ltl	60	REALIZABLE	0.021464057004777715	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_5_pe_.ltl	60	REALIZABLE	0.023189369007013738	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_6_pe_.ltl	60	REALIZABLE	0.02255314600188285	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_7_pe_.ltl	60	REALIZABLE	0.048264188997563906	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_8_pe_.ltl	60	REALIZABLE	0.062104301003273576	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_lock_pb_9_pe_.ltl	60	REALIZABLE	0.15309313999023288	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_shift.ltl	60	REALIZABLE	0.021825288000400178	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_tburst4.ltl	60	REALIZABLE	0.03335327497916296	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_tincr.ltl	60	REALIZABLE	0.027354363992344588	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_decomposed_tsingle.ltl	60	REALIZABLE	0.016683425987139344	false	REALIZABLE	60
+B-cap60-epoch2-derived	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_gr_pb_2_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_gr_pb_3_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	amba_gr_pb_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter-paper-unreal-unreal.ltl	60	UNREALIZABLE	0.025199607014656067	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	arbiter-with-failure-real.ltl	60	REALIZABLE	0.031983759996364824	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_on_inpchange_pb_1_pe_.ltl	60	REALIZABLE	0.01769611402414739	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_on_inpchange_pb_2_pe_.ltl	60	REALIZABLE	0.01928356400458142	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_on_inpchange_pb_3_pe_.ltl	60	REALIZABLE	0.04060330399079248	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_on_inpchange_pb_4_pe_.ltl	60	REALIZABLE	0.7711870249768253	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_pb_1_pe_.ltl	60	REALIZABLE	0.028732464998029172	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.019654390023788437	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.03602555999532342	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_pb_4_pe_.ltl	60	REALIZABLE	0.03422704299737234	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_pb_5_pe_.ltl	60	REALIZABLE	0.3935468639974715	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_1_pe_.ltl	60	REALIZABLE	0.018110978009644896	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_2_pe_.ltl	60	REALIZABLE	0.03471090299717616	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_3_pe_.ltl	60	REALIZABLE	0.03149981499882415	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_4_pe_.ltl	60	REALIZABLE	0.0642466409917688	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_5_pe_.ltl	60	REALIZABLE	0.9445107460196596	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_1_pe_.ltl	60	REALIZABLE	0.023520855989772826	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_2_pe_.ltl	60	REALIZABLE	0.02384932698623743	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_3_pe_.ltl	60	REALIZABLE	0.03941480300272815	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_4_pe_.ltl	60	REALIZABLE	0.08743766500265338	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_5_pe_.ltl	60	REALIZABLE	1.2049452219798695	false	REALIZABLE	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	batch-arbiter-real.ltl	60	REALIZABLE	0.045015578012680635	false	REALIZABLE	60
+B-cap60-epoch2-derived	box-limited-real.ltl	60	REALIZABLE	0.04453945401473902	false	REALIZABLE	60
+B-cap60-epoch2-derived	box-real.ltl	60	REALIZABLE	0.0667483639990678	false	REALIZABLE	60
+B-cap60-epoch2-derived	box0.ltl	60	UNREALIZABLE	0.0326943330001086	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	box1.ltl	60	UNREALIZABLE	0.030469724006252363	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	buffer-storage-real.ltl	60	REALIZABLE	0.6381795479974244	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-4-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chain-5-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chain-60.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chain-70.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chain-simple-10-real.ltl	60	REALIZABLE	0.1334608540055342	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-simple-20-real.ltl	60	REALIZABLE	0.27248514801613055	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-simple-30-real.ltl	60	REALIZABLE	0.3991805209952872	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-simple-40-real.ltl	60	REALIZABLE	0.5815643660025671	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-simple-5-real.ltl	60	REALIZABLE	0.07117435599502642	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-simple-50-real.ltl	60	REALIZABLE	0.7358584049943602	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-simple-60-real.ltl	60	REALIZABLE	0.9035936040017987	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-simple-70-real.ltl	60	REALIZABLE	1.1755751479940955	false	REALIZABLE	60
+B-cap60-epoch2-derived	chain-simple-param-70-real.ltl	60	REALIZABLE	1.258588646989665	false	REALIZABLE	60
+B-cap60-epoch2-derived	chomp_pb_2_2_pe_.ltl	60	REALIZABLE	0.09362313999736216	false	REALIZABLE	60
+B-cap60-epoch2-derived	chomp_pb_2_3_pe_.ltl	60	REALIZABLE	3.740836280005169	false	REALIZABLE	60
+B-cap60-epoch2-derived	chomp_pb_2_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_2_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_3_2_pe_.ltl	60	REALIZABLE	3.683540168000036	false	REALIZABLE	60
+B-cap60-epoch2-derived	chomp_pb_3_3_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_3_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_3_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_3_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_4_2_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_4_3_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_4_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_4_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v1_pb_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v1_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v1_pb_13_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v1_pb_14_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v1_pb_15_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v1_pb_3_pe_.ltl	60	REALIZABLE	0.015962650999426842	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v1_pb_5_pe_.ltl	60	REALIZABLE	0.03395411498786416	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v1_pb_7_pe_.ltl	60	REALIZABLE	0.08990480600914452	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v1_pb_9_pe_.ltl	60	REALIZABLE	2.914912706997711	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_10_pe_.ltl	60	REALIZABLE	0.16158837600960396	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_11_pe_.ltl	60	REALIZABLE	0.3373007689951919	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_12_pe_.ltl	60	REALIZABLE	0.8425526330102002	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_13_pe_.ltl	60	REALIZABLE	2.11520253100025	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_15_pe_.ltl	60	REALIZABLE	14.485626402005437	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_27_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v2_pb_3_pe_.ltl	60	REALIZABLE	0.03047463700931985	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_5_pe_.ltl	60	REALIZABLE	0.024555269003030844	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_7_pe_.ltl	60	REALIZABLE	0.034839266998460516	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v2_pb_9_pe_.ltl	60	REALIZABLE	0.08248480600013863	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v3_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v3_pb_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v3_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v3_pb_13_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v3_pb_15_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	collector_v3_pb_3_pe_.ltl	60	REALIZABLE	0.04233179301081691	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v3_pb_5_pe_.ltl	60	REALIZABLE	0.055880415995488875	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v3_pb_7_pe_.ltl	60	REALIZABLE	1.0955682919884566	false	REALIZABLE	60
+B-cap60-epoch2-derived	collector_v3_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	diagonal-real.ltl	60	REALIZABLE	0.05807884300884325	false	REALIZABLE	60
+B-cap60-epoch2-derived	door_locking_problem_d6c5ac79.ltl	60	REALIZABLE	0.019670559995574877	false	REALIZABLE	60
+B-cap60-epoch2-derived	elevator-paper-real.ltl	60	REALIZABLE	0.07540541799971834	false	REALIZABLE	60
+B-cap60-epoch2-derived	evasion-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	evasion0.ltl	60	UNREALIZABLE	0.5347836940054549	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	example10_pb_1_pe_.ltl	60	REALIZABLE	0.016546747996471822	false	REALIZABLE	60
+B-cap60-epoch2-derived	example10_pb_2_pe_.ltl	60	REALIZABLE	0.025178645009873435	false	REALIZABLE	60
+B-cap60-epoch2-derived	example10a_pb_1_pe_.ltl	60	REALIZABLE	0.03570301501895301	false	REALIZABLE	60
+B-cap60-epoch2-derived	example10a_pb_2_pe_.ltl	60	REALIZABLE	0.039909489001729526	false	REALIZABLE	60
+B-cap60-epoch2-derived	example7_pb_1_pe_.ltl	60	REALIZABLE	0.013397375994827598	false	REALIZABLE	60
+B-cap60-epoch2-derived	example7_pb_2_pe_.ltl	60	REALIZABLE	0.03349857799184974	false	REALIZABLE	60
+B-cap60-epoch2-derived	example7a_pb_1_pe_.ltl	60	REALIZABLE	0.029860931012080982	false	REALIZABLE	60
+B-cap60-epoch2-derived	example7a_pb_2_pe_.ltl	60	REALIZABLE	0.034661133016925305	false	REALIZABLE	60
+B-cap60-epoch2-derived	example8_pb_1_pe_.ltl	60	REALIZABLE	0.01586249499814585	false	REALIZABLE	60
+B-cap60-epoch2-derived	example8_pb_2_pe_.ltl	60	REALIZABLE	0.037257379008224234	false	REALIZABLE	60
+B-cap60-epoch2-derived	example9_pb_1_pe_.ltl	60	REALIZABLE	0.02946857499773614	false	REALIZABLE	60
+B-cap60-epoch2-derived	example9_pb_2_pe_.ltl	60	REALIZABLE	0.030390329993679188	false	REALIZABLE	60
+B-cap60-epoch2-derived	f-real-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	f-unreal-unreal.ltl	60	UNREALIZABLE	0.033298976995865814	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	finding_nemo_pb_1_pe_.ltl	60	REALIZABLE	0.12852962600300089	false	REALIZABLE	60
+B-cap60-epoch2-derived	finding_nemo_pb_2_pe_.ltl	60	REALIZABLE	4.570376731979195	false	REALIZABLE	60
+B-cap60-epoch2-derived	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	follow0.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	follow1.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	follow2.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	follow3.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_10_pe_.ltl	60	UNREALIZABLE	0.014761740021640435	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_11_pe_.ltl	60	UNREALIZABLE	0.030143420008243993	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_12_pe_.ltl	60	UNREALIZABLE	0.017650435998803005	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_13_pe_.ltl	60	UNREALIZABLE	0.01542647898895666	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_14_pe_.ltl	60	UNREALIZABLE	0.03351750900037587	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_15_pe_.ltl	60	UNREALIZABLE	0.03396909500588663	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_16_pe_.ltl	60	UNREALIZABLE	0.021157295996090397	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_18_pe_.ltl	60	UNREALIZABLE	0.02514725200308021	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_1_pe_.ltl	60	UNREALIZABLE	0.0330491179774981	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_20_pe_.ltl	60	UNREALIZABLE	0.03182420499797445	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_21_pe_.ltl	60	UNREALIZABLE	0.03136772700236179	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_22_pe_.ltl	60	UNREALIZABLE	0.028041407000273466	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_24_pe_.ltl	60	UNREALIZABLE	0.019357074997969903	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_26_pe_.ltl	60	UNREALIZABLE	0.021599027997581288	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_2_pe_.ltl	60	UNREALIZABLE	0.024005680999835022	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_3_pe_.ltl	60	UNREALIZABLE	0.028538716011098586	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_4_pe_.ltl	60	UNREALIZABLE	0.01838394600781612	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_5_pe_.ltl	60	UNREALIZABLE	0.033373026992194355	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_6_pe_.ltl	60	UNREALIZABLE	0.016523071986739524	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_7_pe_.ltl	60	UNREALIZABLE	0.030730212994967587	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_8_pe_.ltl	60	UNREALIZABLE	0.02608662997954525	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_2_9_pe_.ltl	60	UNREALIZABLE	0.033302712021395564	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_10_pe_.ltl	60	UNREALIZABLE	0.031273325002985075	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_11_pe_.ltl	60	UNREALIZABLE	0.025804132004850544	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_12_pe_.ltl	60	UNREALIZABLE	0.02813439699821174	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_13_pe_.ltl	60	UNREALIZABLE	0.033416706006391905	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_14_pe_.ltl	60	UNREALIZABLE	0.028096529000322334	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_15_pe_.ltl	60	UNREALIZABLE	0.03441415500128642	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_1_pe_.ltl	60	UNREALIZABLE	0.025394599011633545	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_2_pe_.ltl	60	UNREALIZABLE	0.01741600700188428	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_3_pe_.ltl	60	UNREALIZABLE	0.02942897799948696	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_4_pe_.ltl	60	UNREALIZABLE	0.015490623001824133	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_5_pe_.ltl	60	UNREALIZABLE	0.016978978004772216	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_6_pe_.ltl	60	UNREALIZABLE	0.03987943999527488	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_7_pe_.ltl	60	UNREALIZABLE	0.03564549100701697	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_8_pe_.ltl	60	UNREALIZABLE	0.030561698993551545	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_3_9_pe_.ltl	60	UNREALIZABLE	0.032472744991537184	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_4_1_pe_.ltl	60	UNREALIZABLE	0.028346210994641297	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_4_2_pe_.ltl	60	UNREALIZABLE	0.029292645005625673	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_4_3_pe_.ltl	60	UNREALIZABLE	0.015824599002371542	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_4_4_pe_.ltl	60	UNREALIZABLE	0.03524922099313699	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_4_5_pe_.ltl	60	UNREALIZABLE	0.03255334799177945	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_4_6_pe_.ltl	60	UNREALIZABLE	0.01613590600027237	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_4_7_pe_.ltl	60	UNREALIZABLE	0.022553716989932582	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_4_8_pe_.ltl	60	UNREALIZABLE	0.03691087100014556	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal1_pb_6_8_pe_.ltl	60	UNREALIZABLE	0.02595201099757105	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal2_pb_2_pe_.ltl	60	UNREALIZABLE	0.018809815010172315	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal2_pb_3_pe_.ltl	60	UNREALIZABLE	0.021367132998420857	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal2_pb_4_pe_.ltl	60	UNREALIZABLE	0.014570109007763676	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal2_pb_5_pe_.ltl	60	UNREALIZABLE	0.03288100801000837	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal2_pb_6_pe_.ltl	60	UNREALIZABLE	0.01388627699634526	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	full_arbiter_unreal2_pb_7_pe_.ltl	60	UNREALIZABLE	0.027045875001931563	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-real-real.ltl	60	REALIZABLE	4.103585780001595	false	REALIZABLE	60
+B-cap60-epoch2-derived	g-real0.ltl	60	UNREALIZABLE	0.06607668100332376	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-1-unreal.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-10.ltl	60	UNREALIZABLE	0.0413585499918554	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-11.ltl	60	UNREALIZABLE	0.038974575989414006	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-110.ltl	60	UNREALIZABLE	2.6903995519969612	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-111.ltl	60	UNREALIZABLE	4.352605267995386	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-112.ltl	60	UNREALIZABLE	6.750211742997635	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-113.ltl	60	UNREALIZABLE	8.19733881400316	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-114.ltl	60	UNREALIZABLE	11.755333821987733	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-115.ltl	60	UNREALIZABLE	18.956369090010412	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-116.ltl	60	UNREALIZABLE	33.16097669900046	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-117.ltl	60	UNREALIZABLE	46.261355342008756	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-118.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-119.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-12.ltl	60	UNREALIZABLE	0.05065220899996348	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-120.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-13.ltl	60	UNREALIZABLE	0.04477238499384839	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-14.ltl	60	UNREALIZABLE	0.08688113400421571	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-15.ltl	60	UNREALIZABLE	0.15040099099860527	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-16.ltl	60	UNREALIZABLE	0.2890559710212983	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-17.ltl	60	UNREALIZABLE	0.3741677429934498	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-18.ltl	60	UNREALIZABLE	1.1693803629896138	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-19.ltl	60	UNREALIZABLE	2.137952616001712	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-20.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-21.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-30.ltl	60	UNREALIZABLE	0.062394937995122746	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-31.ltl	60	UNREALIZABLE	0.05228267300117295	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-310.ltl	60	UNREALIZABLE	25.88708237199171	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-311.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-312.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-313.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-314.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	g-unreal-32.ltl	60	UNREALIZABLE	0.21035121698514558	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-33.ltl	60	UNREALIZABLE	0.5626956930209417	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-34.ltl	60	UNREALIZABLE	0.9484594920068048	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-35.ltl	60	UNREALIZABLE	1.076131384994369	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-36.ltl	60	UNREALIZABLE	1.1713267299928702	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-37.ltl	60	UNREALIZABLE	1.855364078990533	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-38.ltl	60	UNREALIZABLE	9.555809575977037	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	g-unreal-39.ltl	60	UNREALIZABLE	11.069515907001914	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	generalized_buffer_pb_2_pe_.ltl	60	REALIZABLE	0.032285341003444046	false	REALIZABLE	60
+B-cap60-epoch2-derived	generalized_buffer_pb_3_pe_.ltl	60	REALIZABLE	0.03433929099992383	false	REALIZABLE	60
+B-cap60-epoch2-derived	generalized_buffer_pb_4_pe_.ltl	60	REALIZABLE	0.09037969799828716	false	REALIZABLE	60
+B-cap60-epoch2-derived	generalized_buffer_pb_5_pe_.ltl	60	REALIZABLE	1.760386476002168	false	REALIZABLE	60
+B-cap60-epoch2-derived	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	gf-real-real.ltl	60	REALIZABLE	0.030314021001686342	false	REALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal0.ltl	60	UNREALIZABLE	0.041043030010769144	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal1.ltl	60	UNREALIZABLE	0.020388410994200967	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal10.ltl	60	UNREALIZABLE	0.01759299599507358	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal11.ltl	60	UNREALIZABLE	0.01975239600869827	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal12.ltl	60	UNREALIZABLE	0.03384629200445488	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal13.ltl	60	UNREALIZABLE	0.027862028990057297	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal14.ltl	60	UNREALIZABLE	0.01910848799161613	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal15.ltl	60	UNREALIZABLE	0.021318885002983734	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal16.ltl	60	UNREALIZABLE	0.02912681200541556	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal17.ltl	60	UNREALIZABLE	0.033548575011081994	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal18.ltl	60	UNREALIZABLE	0.028830629016738385	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal19.ltl	60	UNREALIZABLE	0.0215267320163548	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal2.ltl	60	UNREALIZABLE	0.02385486601269804	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal20.ltl	60	UNREALIZABLE	0.028207489987835288	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal21.ltl	60	UNREALIZABLE	0.0264592659950722	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal22.ltl	60	UNREALIZABLE	0.03791074099717662	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal23.ltl	60	UNREALIZABLE	0.031611297992640175	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal24.ltl	60	UNREALIZABLE	0.03837172299972735	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal25.ltl	60	UNREALIZABLE	0.045227349997730926	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal26.ltl	60	UNREALIZABLE	0.031168084009550512	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal27.ltl	60	UNREALIZABLE	0.033089456002926454	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal28.ltl	60	UNREALIZABLE	0.023638673999812454	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal29.ltl	60	UNREALIZABLE	0.0465275599854067	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal3.ltl	60	UNREALIZABLE	0.03498186900105793	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal30.ltl	60	UNREALIZABLE	0.03908279200550169	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal31.ltl	60	UNREALIZABLE	0.048989504008204676	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal32.ltl	60	UNREALIZABLE	0.025911398988682777	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal33.ltl	60	UNREALIZABLE	0.02626809899811633	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal34.ltl	60	UNREALIZABLE	0.047330303001217544	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal35.ltl	60	UNREALIZABLE	0.048573744992609136	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal36.ltl	60	UNREALIZABLE	0.05154548599966802	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal37.ltl	60	UNREALIZABLE	0.028237446007551625	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal38.ltl	60	UNREALIZABLE	0.05036651500267908	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal39.ltl	60	UNREALIZABLE	0.04497151500254404	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal4.ltl	60	UNREALIZABLE	0.033845475991256535	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal40.ltl	60	UNREALIZABLE	0.04081294599745888	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal41.ltl	60	UNREALIZABLE	0.0345281689951662	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal42.ltl	60	UNREALIZABLE	0.04530088300816715	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal43.ltl	60	UNREALIZABLE	0.04592116302228533	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal44.ltl	60	UNREALIZABLE	0.046413161006057635	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal45.ltl	60	UNREALIZABLE	0.03530812601093203	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal46.ltl	60	UNREALIZABLE	0.03898207299062051	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal47.ltl	60	UNREALIZABLE	0.031081856999662705	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal5.ltl	60	UNREALIZABLE	0.02523059600207489	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal6.ltl	60	UNREALIZABLE	0.03165760800766293	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal7.ltl	60	UNREALIZABLE	0.04475850200105924	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal8.ltl	60	UNREALIZABLE	0.018555929011199623	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	gf-unreal9.ltl	60	UNREALIZABLE	0.03551306699228007	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-buechi-real.ltl	60	REALIZABLE	2.0164711070101475	false	REALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	heim-double-x0.ltl	60	UNREALIZABLE	0.03390857100021094	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x1.ltl	60	UNREALIZABLE	0.051704595010960475	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x10.ltl	60	UNREALIZABLE	2.3944500670040725	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x11.ltl	60	UNREALIZABLE	2.560848036999232	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x12.ltl	60	UNREALIZABLE	4.497688970004674	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x13.ltl	60	UNREALIZABLE	5.35268538800301	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x2.ltl	60	UNREALIZABLE	0.07655412898748182	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x3.ltl	60	UNREALIZABLE	0.11939697100024205	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x4.ltl	60	UNREALIZABLE	0.24728565799887292	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x5.ltl	60	UNREALIZABLE	0.26737473500543274	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x6.ltl	60	UNREALIZABLE	0.36401560199738014	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x7.ltl	60	UNREALIZABLE	0.41271992200927343	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x8.ltl	60	UNREALIZABLE	0.9911842249857727	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-double-x9.ltl	60	UNREALIZABLE	2.1052137430087896	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	heim-fig7-unreal.ltl	60	UNREALIZABLE	0.03752458799863234	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	helipad-contradict0.ltl	60	UNREALIZABLE	43.72938785297447	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	helipad-contradict1.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	helipad-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-real.ltl	60	REALIZABLE	0.04341897999984212	false	REALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u0.ltl	60	UNREALIZABLE	0.027925271017011255	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u1.ltl	60	UNREALIZABLE	0.03966359799960628	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u10.ltl	60	UNREALIZABLE	10.731320510996738	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u11.ltl	60	UNREALIZABLE	13.920048967993353	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u12.ltl	60	UNREALIZABLE	39.59329363700817	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u13.ltl	60	UNREALIZABLE	40.980777747987304	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u14.ltl	60	UNREALIZABLE	49.63153797799896	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u15.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u16.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u17.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u18.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u19.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u2.ltl	60	UNREALIZABLE	0.07984269100415986	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u20.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u21.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u22.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u23.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u24.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u25.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	infinite-race-u3.ltl	60	UNREALIZABLE	0.07508811698062345	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u4.ltl	60	UNREALIZABLE	0.09761915600392967	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u5.ltl	60	UNREALIZABLE	0.16020940500311553	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u6.ltl	60	UNREALIZABLE	1.1217768840142526	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u7.ltl	60	UNREALIZABLE	1.4993448679888388	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u8.ltl	60	UNREALIZABLE	2.5353242120036157	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-u9.ltl	60	UNREALIZABLE	9.230515705014113	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-1-real.ltl	60	REALIZABLE	0.14984537399141118	false	REALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-10.ltl	60	UNREALIZABLE	0.03922134099411778	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-20.ltl	60	UNREALIZABLE	0.03968488400278147	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-21.ltl	60	UNREALIZABLE	0.04792981699574739	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-22.ltl	60	UNREALIZABLE	0.07813921199704055	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-23.ltl	60	UNREALIZABLE	0.11894844201742671	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-24.ltl	60	UNREALIZABLE	1.1155398120172322	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-25.ltl	60	UNREALIZABLE	12.873440987998038	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	infinite-race-unequal-26.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	items_processing-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	jarvis_gideon_a02758ea.ltl	60	UNREALIZABLE	0.023554291008622386	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	jarvis_philippe_484face8.ltl	60	UNREALIZABLE	0.042576663006911986	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lazy_shades_problem_d6376bf9.ltl	60	REALIZABLE	0.05244675099675078	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_gr1+_pb_2_pe_.ltl	60	REALIZABLE	0.03432445500220638	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_gr1+_pb_3_pe_.ltl	60	REALIZABLE	1.1946403959882446	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_gr1_pb_2_pe_.ltl	60	REALIZABLE	0.03871898200304713	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_gr1_pb_3_pe_.ltl	60	REALIZABLE	0.2266274880093988	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_pb_2_pe_.ltl	60	REALIZABLE	0.0350496570172254	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_pb_3_pe_.ltl	60	REALIZABLE	0.05328877099964302	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_pb_4_pe_.ltl	60	REALIZABLE	0.2759783359942958	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_unary_enc_pb_2_pe_.ltl	60	REALIZABLE	0.03994051800691523	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_unary_enc_pb_3_pe_.ltl	60	REALIZABLE	0.07313938299193978	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_unary_enc_pb_4_pe_.ltl	60	REALIZABLE	9.830727559994557	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_10_pe_.ltl	60	UNREALIZABLE	1.2281719089951366	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_2_pe_.ltl	60	REALIZABLE	0.022374866995960474	false	REALIZABLE	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_3_pe_.ltl	60	UNREALIZABLE	0.025057220991584472	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_4_pe_.ltl	60	UNREALIZABLE	0.03289799299091101	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_5_pe_.ltl	60	UNREALIZABLE	0.04791195999132469	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_6_pe_.ltl	60	UNREALIZABLE	0.05325667900615372	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_7_pe_.ltl	60	UNREALIZABLE	0.0751166900008684	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_8_pe_.ltl	60	UNREALIZABLE	0.13887052300560754	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lift_wrong_physics_unreal_pb_9_pe_.ltl	60	UNREALIZABLE	0.42363633499189746	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lilydemo01.ltl	60	UNREALIZABLE	0.028882333004730754	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lilydemo02.ltl	60	UNREALIZABLE	0.017562231994816102	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lilydemo03.ltl	60	REALIZABLE	0.02627681300509721	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo04.ltl	60	REALIZABLE	0.02172824899025727	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo04_modified.ltl	60	UNREALIZABLE	0.03141081999638118	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lilydemo05.ltl	60	REALIZABLE	0.032045325002400205	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo06.ltl	60	REALIZABLE	0.01803701600874774	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo07.ltl	60	REALIZABLE	0.030900541998562403	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo08.ltl	60	REALIZABLE	0.01593297501676716	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo09.ltl	60	REALIZABLE	0.03150002600159496	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo10.ltl	60	REALIZABLE	0.02969974400184583	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo11.ltl	60	UNREALIZABLE	0.03157900100632105	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	lilydemo12.ltl	60	REALIZABLE	0.030597634002333507	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo13.ltl	60	REALIZABLE	0.014085203991271555	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo14.ltl	60	REALIZABLE	0.026469511998584494	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo15.ltl	60	REALIZABLE	0.03502225299598649	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo16.ltl	60	REALIZABLE	0.02472862700233236	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo17.ltl	60	REALIZABLE	0.018466936991899274	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo18.ltl	60	REALIZABLE	0.032996030000504106	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo19.ltl	60	REALIZABLE	0.03007591000641696	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo20.ltl	60	REALIZABLE	0.03833831399970222	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo21.ltl	60	REALIZABLE	0.038798223991761915	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo22.ltl	60	REALIZABLE	0.02261191900470294	false	REALIZABLE	60
+B-cap60-epoch2-derived	lilydemo23.ltl	60	REALIZABLE	0.021034115983638912	false	REALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_pb_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_pb_2_pe_.ltl	60	REALIZABLE	0.018492228991817683	false	REALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_pb_3_pe_.ltl	60	REALIZABLE	0.044770902997697704	false	REALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_pb_4_pe_.ltl	60	REALIZABLE	0.06004613499681	false	REALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_pb_5_pe_.ltl	60	REALIZABLE	0.1408606030017836	false	REALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_pb_6_pe_.ltl	60	REALIZABLE	0.5345041870023124	false	REALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_pb_7_pe_.ltl	60	REALIZABLE	4.863846884996747	false	REALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_10_pe_.ltl	60	UNREALIZABLE	0.042012578996946104	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_11_pe_.ltl	60	UNREALIZABLE	0.06624963799549732	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_12_pe_.ltl	60	UNREALIZABLE	0.09563132299808785	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_13_pe_.ltl	60	UNREALIZABLE	0.15813243099546526	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_14_pe_.ltl	60	UNREALIZABLE	0.340916090994142	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_15_pe_.ltl	60	UNREALIZABLE	0.6911503289884422	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_16_pe_.ltl	60	UNREALIZABLE	1.5443412930180784	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_1_pe_.ltl	60	UNREALIZABLE	0.03082618399639614	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_2_pe_.ltl	60	UNREALIZABLE	0.02202761499211192	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_3_pe_.ltl	60	UNREALIZABLE	0.02456746199459303	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_4_pe_.ltl	60	UNREALIZABLE	0.03205758798867464	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_5_pe_.ltl	60	UNREALIZABLE	0.03623877899372019	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_6_pe_.ltl	60	UNREALIZABLE	0.021049871982540935	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_7_pe_.ltl	60	UNREALIZABLE	0.047130462000495754	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_8_pe_.ltl	60	UNREALIZABLE	0.04557746299542487	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_2_9_pe_.ltl	60	UNREALIZABLE	0.027591113990638405	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_10_pe_.ltl	60	UNREALIZABLE	0.16260269898339175	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_11_pe_.ltl	60	UNREALIZABLE	0.31465248999302275	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_12_pe_.ltl	60	UNREALIZABLE	0.624196700999164	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_1_pe_.ltl	60	UNREALIZABLE	0.03005509899230674	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_2_pe_.ltl	60	UNREALIZABLE	0.04248240600281861	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_3_pe_.ltl	60	UNREALIZABLE	0.027521320997038856	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_4_pe_.ltl	60	UNREALIZABLE	0.022206870024092495	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_5_pe_.ltl	60	UNREALIZABLE	0.034756468987325206	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_6_pe_.ltl	60	UNREALIZABLE	0.048325695999665186	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_7_pe_.ltl	60	UNREALIZABLE	0.034332636001636274	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_8_pe_.ltl	60	UNREALIZABLE	0.053032659998279996	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_3_9_pe_.ltl	60	UNREALIZABLE	0.08067754800140392	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_1_pe_.ltl	60	UNREALIZABLE	0.043953300002613105	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_2_pe_.ltl	60	UNREALIZABLE	0.049794111007940955	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_3_pe_.ltl	60	UNREALIZABLE	0.050862208008766174	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_4_pe_.ltl	60	UNREALIZABLE	0.06202243400912266	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_5_pe_.ltl	60	UNREALIZABLE	0.16549976899113972	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_6_pe_.ltl	60	UNREALIZABLE	1.0538127280015033	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_7_pe_.ltl	60	UNREALIZABLE	7.683869024011074	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_5_2_pe_.ltl	60	UNREALIZABLE	0.06874482000421267	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_5_3_pe_.ltl	60	UNREALIZABLE	0.08804269900429063	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_5_4_pe_.ltl	60	UNREALIZABLE	0.7205625920032617	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_5_5_pe_.ltl	60	UNREALIZABLE	14.00284879800165	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_5_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_6_1_pe_.ltl	60	UNREALIZABLE	0.16132097500667442	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_6_2_pe_.ltl	60	UNREALIZABLE	0.20663032800075598	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_6_3_pe_.ltl	60	UNREALIZABLE	0.5919889840006363	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_6_4_pe_.ltl	60	UNREALIZABLE	22.562646426988067	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal1_pb_6_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal2_pb_2_pe_.ltl	60	REALIZABLE	0.026346782004111446	false	REALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal2_pb_3_pe_.ltl	60	UNREALIZABLE	0.03781776299001649	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal2_pb_4_pe_.ltl	60	UNREALIZABLE	0.13274793099844828	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal2_pb_5_pe_.ltl	60	UNREALIZABLE	12.245557172020199	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba01.ltl	60	REALIZABLE	0.021181623000302352	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba02.ltl	60	REALIZABLE	0.01746313800686039	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba03.ltl	60	REALIZABLE	0.023571223006001674	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba04.ltl	60	REALIZABLE	0.03228996999678202	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba05.ltl	60	REALIZABLE	0.031326515003456734	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba06.ltl	60	REALIZABLE	0.024397658999077976	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba07.ltl	60	REALIZABLE	0.014603589006583206	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba08.ltl	60	REALIZABLE	0.028934465008205734	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba09.ltl	60	REALIZABLE	0.028245469002285972	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba10.ltl	60	REALIZABLE	0.01533579800161533	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba11.ltl	60	REALIZABLE	0.028641684009926394	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba12.ltl	60	REALIZABLE	0.028516446007415652	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba13.ltl	60	REALIZABLE	0.02985421499761287	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba14.ltl	60	REALIZABLE	0.023359086000709794	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba15.ltl	60	REALIZABLE	0.028708142999676056	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba16.ltl	60	REALIZABLE	0.028115936991525814	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba17.ltl	60	REALIZABLE	0.03805632400326431	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba18.ltl	60	REALIZABLE	0.031853966997005045	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba19.ltl	60	REALIZABLE	0.031732589995954186	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba20.ltl	60	REALIZABLE	0.03526146100193728	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba21.ltl	60	REALIZABLE	0.02557169401552528	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba22.ltl	60	REALIZABLE	0.01998886100773234	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba23.ltl	60	REALIZABLE	0.029690164999919944	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba25.ltl	60	REALIZABLE	0.02601044600305613	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba26.ltl	60	REALIZABLE	0.03478670799813699	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba27.ltl	60	UNREALIZABLE	0.029436415992677212	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_100_pe_.ltl	60	REALIZABLE	0.03449767400161363	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_10_pe_.ltl	60	REALIZABLE	0.016742996987886727	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_12_pe_.ltl	60	REALIZABLE	0.030728359997738153	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_14_pe_.ltl	60	REALIZABLE	0.02801485700183548	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_16_pe_.ltl	60	REALIZABLE	0.03421434998745099	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_1_pe_.ltl	60	REALIZABLE	0.0321882429998368	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_25_pe_.ltl	60	REALIZABLE	0.03564712600200437	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_2_pe_.ltl	60	REALIZABLE	0.03183084601187147	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_3_pe_.ltl	60	REALIZABLE	0.014739302001544274	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_4_pe_.ltl	60	REALIZABLE	0.01486147299874574	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_50_pe_.ltl	60	REALIZABLE	0.03248159900249448	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_5_pe_.ltl	60	REALIZABLE	0.031121931999223307	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_60_pe_.ltl	60	REALIZABLE	0.029715845012106	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_6_pe_.ltl	60	REALIZABLE	0.038252714002737775	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_70_pe_.ltl	60	REALIZABLE	0.03048617800232023	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_7_pe_.ltl	60	REALIZABLE	0.027603032009210438	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_80_pe_.ltl	60	REALIZABLE	0.03509309400396887	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_8_pe_.ltl	60	REALIZABLE	0.03127951700298581	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_pb_9_pe_.ltl	60	REALIZABLE	0.015685522987041622	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_10_pe_.ltl	60	UNREALIZABLE	0.11948137800209224	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_11_pe_.ltl	60	UNREALIZABLE	0.2371742079849355	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_12_pe_.ltl	60	UNREALIZABLE	0.4979296620003879	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_13_pe_.ltl	60	UNREALIZABLE	1.2208086129976436	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_14_pe_.ltl	60	UNREALIZABLE	3.2012728709960356	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_15_pe_.ltl	60	UNREALIZABLE	7.675828384002671	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_16_pe_.ltl	60	UNREALIZABLE	19.887401093001245	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_2_pe_.ltl	60	UNREALIZABLE	0.01675670698750764	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_3_pe_.ltl	60	UNREALIZABLE	0.022783752996474504	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_4_pe_.ltl	60	UNREALIZABLE	0.020379560999572277	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_5_pe_.ltl	60	UNREALIZABLE	0.03587802800757345	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_6_pe_.ltl	60	UNREALIZABLE	0.04341236999607645	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_7_pe_.ltl	60	UNREALIZABLE	0.04453886899864301	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_8_pe_.ltl	60	UNREALIZABLE	0.03843953899922781	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_C2_unreal_pb_9_pe_.ltl	60	UNREALIZABLE	0.06427434299257584	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_10_pe_.ltl	60	REALIZABLE	0.02981243099202402	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_12_pe_.ltl	60	REALIZABLE	0.03238443699956406	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_14_pe_.ltl	60	REALIZABLE	0.031674017998739146	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_15_pe_.ltl	60	REALIZABLE	0.028598228003829718	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_16_pe_.ltl	60	REALIZABLE	0.03473974499502219	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_1_pe_.ltl	60	REALIZABLE	0.03094950399827212	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_2_pe_.ltl	60	REALIZABLE	0.019945552994613536	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_3_pe_.ltl	60	REALIZABLE	0.0317343840142712	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_4_pe_.ltl	60	REALIZABLE	0.028254128992557526	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_5_pe_.ltl	60	REALIZABLE	0.026712935999967158	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_6_pe_.ltl	60	REALIZABLE	0.026682341005653143	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_7_pe_.ltl	60	REALIZABLE	0.020954930019797757	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_8_pe_.ltl	60	REALIZABLE	0.03244632499990985	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_E_pb_9_pe_.ltl	60	REALIZABLE	0.01854677201481536	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_100_pe_.ltl	60	REALIZABLE	0.030096072005108	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_10_pe_.ltl	60	REALIZABLE	0.02550633900682442	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_12_pe_.ltl	60	REALIZABLE	0.018879411989473738	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_15_pe_.ltl	60	REALIZABLE	0.03323374400497414	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_18_pe_.ltl	60	REALIZABLE	0.0317326630174648	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_1_pe_.ltl	60	REALIZABLE	0.017094572001951747	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_25_pe_.ltl	60	REALIZABLE	0.03254349700000603	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_2_pe_.ltl	60	REALIZABLE	0.01838920199952554	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_3_pe_.ltl	60	REALIZABLE	0.028930088999914005	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_4_pe_.ltl	60	REALIZABLE	0.03222806300618686	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_50_pe_.ltl	60	REALIZABLE	0.03151389700360596	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_5_pe_.ltl	60	REALIZABLE	0.028659909003181383	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_6_pe_.ltl	60	REALIZABLE	0.01750969899876509	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_7_pe_.ltl	60	REALIZABLE	0.031080669024959207	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_Q_pb_8_pe_.ltl	60	REALIZABLE	0.018308024998987094	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_1_pe_.ltl	60	REALIZABLE	0.03189192799618468	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_2_pe_.ltl	60	UNREALIZABLE	0.027098352002212778	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_3_pe_.ltl	60	UNREALIZABLE	0.034248217998538166	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_4_pe_.ltl	60	UNREALIZABLE	0.04003690599347465	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_5_pe_.ltl	60	UNREALIZABLE	0.09600026099360548	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_6_pe_.ltl	60	UNREALIZABLE	0.5747621420014184	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_7_pe_.ltl	60	UNREALIZABLE	6.485072724011843	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_100_pe_.ltl	60	REALIZABLE	0.03486558099393733	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_10_pe_.ltl	60	REALIZABLE	0.03103296698827762	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_12_pe_.ltl	60	REALIZABLE	0.0331260920065688	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_15_pe_.ltl	60	REALIZABLE	0.032124930003192276	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_18_pe_.ltl	60	REALIZABLE	0.029270743019878864	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_1_pe_.ltl	60	REALIZABLE	0.02389616299478803	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_25_pe_.ltl	60	REALIZABLE	0.03860825899755582	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_2_pe_.ltl	60	REALIZABLE	0.017542650995892473	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_3_pe_.ltl	60	REALIZABLE	0.032653721995302476	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_4_pe_.ltl	60	REALIZABLE	0.0367444519943092	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_50_pe_.ltl	60	REALIZABLE	0.03420760600420181	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_5_pe_.ltl	60	REALIZABLE	0.03238256099575665	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_6_pe_.ltl	60	REALIZABLE	0.030474540995783173	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_7_pe_.ltl	60	REALIZABLE	0.03325859599863179	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_8_pe_.ltl	60	REALIZABLE	0.032424215998617	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_U1_pb_9_pe_.ltl	60	REALIZABLE	0.03375404799589887	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_100_pe_.ltl	60	REALIZABLE	0.02648784499615431	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_10_pe_.ltl	60	REALIZABLE	0.034358506003627554	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_12_pe_.ltl	60	REALIZABLE	0.02651133600738831	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_14_pe_.ltl	60	REALIZABLE	0.037329208018491045	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_16_pe_.ltl	60	REALIZABLE	0.024307018000399694	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_17_pe_.ltl	60	REALIZABLE	0.015195807995041832	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_18_pe_.ltl	60	REALIZABLE	0.03287963700131513	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_1_pe_.ltl	60	REALIZABLE	0.032133793996763416	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_20_pe_.ltl	60	REALIZABLE	0.031855813023867086	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_25_pe_.ltl	60	REALIZABLE	0.03671393101103604	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_2_pe_.ltl	60	REALIZABLE	0.025853972998447716	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_3_pe_.ltl	60	REALIZABLE	0.03684046601119917	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_4_pe_.ltl	60	REALIZABLE	0.03404054600105155	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_50_pe_.ltl	60	REALIZABLE	0.035545336999348365	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_5_pe_.ltl	60	REALIZABLE	0.031141913001192734	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_6_pe_.ltl	60	REALIZABLE	0.029760851990431547	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_7_pe_.ltl	60	REALIZABLE	0.03607758099678904	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_alpha_pb_8_pe_.ltl	60	REALIZABLE	0.03134750100434758	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_100_pe_.ltl	60	REALIZABLE	0.03241397300735116	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_10_pe_.ltl	60	REALIZABLE	0.016206281987251714	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_15_pe_.ltl	60	REALIZABLE	0.026619181997375563	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_18_pe_.ltl	60	REALIZABLE	0.03612062201136723	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_1_pe_.ltl	60	REALIZABLE	0.026025645987829193	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_20_pe_.ltl	60	REALIZABLE	0.03017520799767226	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_25_pe_.ltl	60	REALIZABLE	0.03261198700056411	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_2_pe_.ltl	60	REALIZABLE	0.03843883999797981	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_30_pe_.ltl	60	REALIZABLE	0.029349869000725448	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_3_pe_.ltl	60	REALIZABLE	0.034639869001694024	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_4_pe_.ltl	60	REALIZABLE	0.03522022800461855	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_5_pe_.ltl	60	REALIZABLE	0.03486832599446643	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_6_pe_.ltl	60	REALIZABLE	0.038604989007581025	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_7_pe_.ltl	60	REALIZABLE	0.014110296993749216	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_beta_pb_8_pe_.ltl	60	REALIZABLE	0.033727688001818024	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_10_pe_.ltl	60	UNREALIZABLE	0.406636523999623	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_12_pe_.ltl	60	UNREALIZABLE	2.339948260007077	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_14_pe_.ltl	60	UNREALIZABLE	13.346830645998125	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_1_pe_.ltl	60	UNREALIZABLE	0.03411646399763413	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_2_pe_.ltl	60	UNREALIZABLE	0.038290340002276935	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_3_pe_.ltl	60	UNREALIZABLE	0.020584939993568696	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_4_pe_.ltl	60	UNREALIZABLE	0.037164658002438955	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_5_pe_.ltl	60	UNREALIZABLE	0.029417554003885016	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_6_pe_.ltl	60	UNREALIZABLE	0.057662463004817255	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_7_pe_.ltl	60	UNREALIZABLE	0.06549702299525961	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dba_theta_pb_8_pe_.ltl	60	UNREALIZABLE	0.11415807000594214	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa01.ltl	60	REALIZABLE	0.01895327899546828	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa02.ltl	60	REALIZABLE	0.03372946100716945	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa03.ltl	60	REALIZABLE	0.04777848700177856	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa04.ltl	60	REALIZABLE	0.018583911005407572	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa05.ltl	60	REALIZABLE	0.02341463600168936	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa06.ltl	60	REALIZABLE	0.02454697400389705	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa07.ltl	60	REALIZABLE	0.030813966994173825	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa08.ltl	60	REALIZABLE	0.032423636002931744	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa09.ltl	60	REALIZABLE	0.029847443001926877	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa10.ltl	60	REALIZABLE	0.0424363570054993	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa11.ltl	60	REALIZABLE	0.015764484007377177	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa12.ltl	60	REALIZABLE	0.018646870012162253	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa13.ltl	60	REALIZABLE	0.0500524060043972	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa14.ltl	60	REALIZABLE	0.03681351199338678	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa15.ltl	60	REALIZABLE	0.033581473006051965	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa16.ltl	60	REALIZABLE	0.03511821400024928	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa17.ltl	60	REALIZABLE	0.01774719700915739	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa18.ltl	60	REALIZABLE	0.03287820899276994	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa19.ltl	60	REALIZABLE	0.05330087000038475	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa20.ltl	60	REALIZABLE	0.04268870101077482	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa22.ltl	60	REALIZABLE	0.09686420200159773	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa23.ltl	60	REALIZABLE	0.029279618000146	false	REALIZABLE	60
+B-cap60-epoch2-derived	ltl2dpa24.ltl	60	REALIZABLE	0.018714869001996703	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_100_pe_.ltl	60	REALIZABLE	0.03901926300022751	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_10_pe_.ltl	60	REALIZABLE	0.020988681993912905	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_125_pe_.ltl	60	REALIZABLE	0.04690611199475825	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_12_pe_.ltl	60	REALIZABLE	0.030421775998547673	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_132_pe_.ltl	60	REALIZABLE	0.05095672799507156	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_150_pe_.ltl	60	REALIZABLE	0.04018164600711316	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_16_pe_.ltl	60	REALIZABLE	0.02948790098889731	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_175_pe_.ltl	60	REALIZABLE	0.05580289500358049	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_200_pe_.ltl	60	REALIZABLE	0.039594164001755416	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_32_pe_.ltl	60	REALIZABLE	0.03608611301751807	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_64_pe_.ltl	60	REALIZABLE	0.023634151002625003	false	REALIZABLE	60
+B-cap60-epoch2-derived	mux_pb_8_pe_.ltl	60	REALIZABLE	0.016657488013152033	false	REALIZABLE	60
+B-cap60-epoch2-derived	narylatch_pb_10_pe_.ltl	60	REALIZABLE	0.03927527499035932	false	REALIZABLE	60
+B-cap60-epoch2-derived	narylatch_pb_11_pe_.ltl	60	REALIZABLE	0.023464910991606303	false	REALIZABLE	60
+B-cap60-epoch2-derived	narylatch_pb_12_pe_.ltl	60	REALIZABLE	0.039611853993847035	false	REALIZABLE	60
+B-cap60-epoch2-derived	narylatch_pb_16_pe_.ltl	60	REALIZABLE	0.037992755009327084	false	REALIZABLE	60
+B-cap60-epoch2-derived	narylatch_pb_32_pe_.ltl	60	REALIZABLE	0.049513460995513014	false	REALIZABLE	60
+B-cap60-epoch2-derived	narylatch_pb_64_pe_.ltl	60	REALIZABLE	0.05214831199555192	false	REALIZABLE	60
+B-cap60-epoch2-derived	narylatch_pb_8_pe_.ltl	60	REALIZABLE	0.036108519008848816	false	REALIZABLE	60
+B-cap60-epoch2-derived	ordered-visits-choice-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	ordered-visits-real.ltl	60	REALIZABLE	0.04840533999959007	false	REALIZABLE	60
+B-cap60-epoch2-derived	package-delivery-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	patrolling-alarm0.ltl	60	UNREALIZABLE	0.03326584500609897	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm1.ltl	60	UNREALIZABLE	0.04166160499153193	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm10.ltl	60	UNREALIZABLE	0.1521897530037677	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm11.ltl	60	UNREALIZABLE	0.17752579200896434	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm12.ltl	60	UNREALIZABLE	0.19917634699959308	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm13.ltl	60	UNREALIZABLE	0.21327559699420817	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm14.ltl	60	UNREALIZABLE	0.2177726950030774	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm15.ltl	60	UNREALIZABLE	0.3599111830117181	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm16.ltl	60	UNREALIZABLE	0.35061684099491686	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm17.ltl	60	UNREALIZABLE	0.4348355560214259	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm18.ltl	60	UNREALIZABLE	0.4998006000096211	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm19.ltl	60	UNREALIZABLE	0.5289579999807756	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm2.ltl	60	UNREALIZABLE	0.05513887701090425	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm20.ltl	60	UNREALIZABLE	0.5490773650089977	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm21.ltl	60	UNREALIZABLE	0.623241761000827	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm22.ltl	60	UNREALIZABLE	0.5960712090018205	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm23.ltl	60	UNREALIZABLE	0.6541666919947602	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm24.ltl	60	UNREALIZABLE	0.739645848996588	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm25.ltl	60	UNREALIZABLE	0.7673255529953167	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm26.ltl	60	UNREALIZABLE	0.7726921839930583	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm3.ltl	60	UNREALIZABLE	0.04187380202347413	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm4.ltl	60	UNREALIZABLE	0.06509263202315196	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm5.ltl	60	UNREALIZABLE	0.06376243600971065	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm6.ltl	60	UNREALIZABLE	0.06158136700105388	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm7.ltl	60	UNREALIZABLE	0.0798183790029725	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm8.ltl	60	UNREALIZABLE	0.09168583599966951	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling-alarm9.ltl	60	UNREALIZABLE	0.12301008601207286	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling0.ltl	60	UNREALIZABLE	0.04435110601480119	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling1.ltl	60	UNREALIZABLE	0.03363462300330866	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling10.ltl	60	UNREALIZABLE	0.12945593999756966	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling11.ltl	60	UNREALIZABLE	0.15566283899534028	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling12.ltl	60	UNREALIZABLE	0.18710916399140842	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling13.ltl	60	UNREALIZABLE	0.20824773199274205	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling14.ltl	60	UNREALIZABLE	0.23674479199689813	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling15.ltl	60	UNREALIZABLE	0.3655947719962569	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling16.ltl	60	UNREALIZABLE	0.37211001399555244	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling17.ltl	60	UNREALIZABLE	0.49153516998921987	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling18.ltl	60	UNREALIZABLE	0.5138457890134305	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling19.ltl	60	UNREALIZABLE	0.5300688479910605	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling2.ltl	60	UNREALIZABLE	0.060357037000358105	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling20.ltl	60	UNREALIZABLE	0.546312755002873	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling21.ltl	60	UNREALIZABLE	0.6208123450051062	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling22.ltl	60	UNREALIZABLE	0.6368473379989155	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling23.ltl	60	UNREALIZABLE	0.6765385750040878	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling24.ltl	60	UNREALIZABLE	0.7252381489961408	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling25.ltl	60	UNREALIZABLE	0.7666086300014285	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling3.ltl	60	UNREALIZABLE	0.05359192499599885	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling4.ltl	60	UNREALIZABLE	0.0555934919975698	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling5.ltl	60	UNREALIZABLE	0.06980712700169533	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling6.ltl	60	UNREALIZABLE	0.07657004999055061	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling7.ltl	60	UNREALIZABLE	0.08009815900004469	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling8.ltl	60	UNREALIZABLE	0.10439251500065438	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	patrolling9.ltl	60	UNREALIZABLE	0.11522573998081498	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	precise-reachability-real.ltl	60	REALIZABLE	0.12485823201132007	false	REALIZABLE	60
+B-cap60-epoch2-derived	precise-reachability0.ltl	60	UNREALIZABLE	0.028251462994376197	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_1_pe_.ltl	60	REALIZABLE	0.028693585001747124	false	REALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.025869164004689083	false	REALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.03141326500917785	false	REALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_4_pe_.ltl	60	REALIZABLE	0.04002449900144711	false	REALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_5_pe_.ltl	60	REALIZABLE	0.04639033599232789	false	REALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_6_pe_.ltl	60	REALIZABLE	0.3695996859896695	false	REALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_10_pe_.ltl	60	UNREALIZABLE	0.026615214010234922	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_11_pe_.ltl	60	UNREALIZABLE	0.025111933005973697	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_12_pe_.ltl	60	UNREALIZABLE	0.02262556998175569	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_13_pe_.ltl	60	UNREALIZABLE	0.0336607159988489	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_14_pe_.ltl	60	UNREALIZABLE	0.030935491988202557	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	60	UNREALIZABLE	0.020230681024258956	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_16_pe_.ltl	60	UNREALIZABLE	0.031583521005813964	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_1_pe_.ltl	60	UNREALIZABLE	0.029975875004311092	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_2_pe_.ltl	60	UNREALIZABLE	0.019159351009875536	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_3_pe_.ltl	60	UNREALIZABLE	0.019311923009809107	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_4_pe_.ltl	60	UNREALIZABLE	0.03688040599809028	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_5_pe_.ltl	60	UNREALIZABLE	0.019133341003907844	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_6_pe_.ltl	60	UNREALIZABLE	0.0369421439972939	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_7_pe_.ltl	60	UNREALIZABLE	0.02153584500774741	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_8_pe_.ltl	60	UNREALIZABLE	0.019038647995330393	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	60	UNREALIZABLE	0.021634156990330666	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_10_pe_.ltl	60	UNREALIZABLE	0.02532463399984408	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_11_pe_.ltl	60	UNREALIZABLE	0.02549142698990181	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_12_pe_.ltl	60	UNREALIZABLE	0.014812139008427039	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_13_pe_.ltl	60	UNREALIZABLE	0.034049267997033894	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_14_pe_.ltl	60	UNREALIZABLE	0.0224119780032197	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_15_pe_.ltl	60	UNREALIZABLE	0.020584607002092525	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_16_pe_.ltl	60	UNREALIZABLE	0.029672835997189395	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_1_pe_.ltl	60	UNREALIZABLE	0.034073503004037775	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_2_pe_.ltl	60	UNREALIZABLE	0.015365719998953864	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_3_pe_.ltl	60	UNREALIZABLE	0.026321778990677558	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_4_pe_.ltl	60	UNREALIZABLE	0.03517265900154598	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_5_pe_.ltl	60	UNREALIZABLE	0.019004453992238268	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	60	UNREALIZABLE	0.033955588995013386	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_7_pe_.ltl	60	UNREALIZABLE	0.021793627995066345	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_8_pe_.ltl	60	UNREALIZABLE	0.03490738199616317	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_3_9_pe_.ltl	60	UNREALIZABLE	0.03276562099927105	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	60	UNREALIZABLE	0.0374867450009333	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	60	UNREALIZABLE	0.041099174006376415	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_12_pe_.ltl	60	UNREALIZABLE	0.042166715997154824	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_13_pe_.ltl	60	UNREALIZABLE	0.034919415003969334	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_14_pe_.ltl	60	UNREALIZABLE	0.03924132100655697	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_15_pe_.ltl	60	UNREALIZABLE	0.03492626499792095	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_16_pe_.ltl	60	UNREALIZABLE	0.0411401349992957	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_1_pe_.ltl	60	UNREALIZABLE	0.036969100998248905	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	60	UNREALIZABLE	0.030911806999938563	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_3_pe_.ltl	60	UNREALIZABLE	0.032213589001912624	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_4_pe_.ltl	60	UNREALIZABLE	0.03370383699075319	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_5_pe_.ltl	60	UNREALIZABLE	0.0417867980140727	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_6_pe_.ltl	60	UNREALIZABLE	0.03383616000064649	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_7_pe_.ltl	60	UNREALIZABLE	0.04064255699631758	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_8_pe_.ltl	60	UNREALIZABLE	0.033532138986629434	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_4_9_pe_.ltl	60	UNREALIZABLE	0.030762005015276372	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_5_16_pe_.ltl	60	UNREALIZABLE	0.03949859400745481	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_5_2_pe_.ltl	60	UNREALIZABLE	0.03660479499376379	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_5_32_pe_.ltl	60	UNREALIZABLE	0.0402210079919314	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_5_4_pe_.ltl	60	UNREALIZABLE	0.025518085996736772	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_6_16_pe_.ltl	60	UNREALIZABLE	0.02819326799362898	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_6_2_pe_.ltl	60	UNREALIZABLE	0.02172198100015521	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_6_32_pe_.ltl	60	UNREALIZABLE	0.025366904999827966	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal1_pb_6_4_pe_.ltl	60	UNREALIZABLE	0.03523341901018284	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_10_pe_.ltl	60	UNREALIZABLE	0.049526349001098424	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_2_pe_.ltl	60	UNREALIZABLE	0.03483610300463624	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_3_pe_.ltl	60	UNREALIZABLE	0.035156691999873146	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_4_pe_.ltl	60	UNREALIZABLE	0.021651083006872796	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_5_pe_.ltl	60	UNREALIZABLE	0.017618395009776577	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_6_pe_.ltl	60	UNREALIZABLE	0.044588294986169785	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_7_pe_.ltl	60	UNREALIZABLE	0.04184213299595285	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	prioritized_arbiter_unreal2_pb_8_pe_.ltl	60	UNREALIZABLE	0.04103290499188006	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	reversible-lane-r-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	reversible-lane-u-unreal.ltl	60	UNREALIZABLE	0.10248887600027956	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	reversible-lane-u0.ltl	60	UNREALIZABLE	0.08778407699719537	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	reversible-lane-u1.ltl	60	UNREALIZABLE	0.08929642199655063	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-cat-real-1d-real.ltl	60	REALIZABLE	2.552877123001963	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot-cat-real-2d-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-cat-unreal-1d-unreal.ltl	60	UNREALIZABLE	0.1927232229936635	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-grid-commute-1d-real.ltl	60	REALIZABLE	2.085201955997036	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot-grid-commute-2d-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-grid-reach-1d-real.ltl	60	REALIZABLE	0.045359848998486996	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot-grid-reach-2d-real.ltl	60	REALIZABLE	2.9451029560004827	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	60	REALIZABLE	0.047167224998702295	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	60	REALIZABLE	12.562290244008182	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-resource-1d-unreal.ltl	60	UNREALIZABLE	0.11615118700137828	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-1d0.ltl	60	UNREALIZABLE	0.031114853991311975	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-1d1.ltl	60	UNREALIZABLE	0.046960292995208874	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d0.ltl	60	UNREALIZABLE	0.0510293989937054	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d1.ltl	60	UNREALIZABLE	0.06175217799318489	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d10.ltl	60	UNREALIZABLE	1.6987177339906339	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d11.ltl	60	UNREALIZABLE	1.7505513240175787	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d12.ltl	60	UNREALIZABLE	2.0331177200132515	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d13.ltl	60	UNREALIZABLE	2.1082616149942623	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d14.ltl	60	UNREALIZABLE	2.290894338992075	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d15.ltl	60	UNREALIZABLE	2.2451058020233177	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d16.ltl	60	UNREALIZABLE	6.964559098996688	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d17.ltl	60	UNREALIZABLE	7.238896378999925	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d18.ltl	60	UNREALIZABLE	7.566959629999474	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d19.ltl	60	UNREALIZABLE	8.32123720299569	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d2.ltl	60	UNREALIZABLE	0.10175024300406221	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d20.ltl	60	UNREALIZABLE	9.152288813013001	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d21.ltl	60	UNREALIZABLE	9.021056572993984	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d22.ltl	60	UNREALIZABLE	9.55291569099063	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d23.ltl	60	UNREALIZABLE	9.545198371983133	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d3.ltl	60	UNREALIZABLE	0.12505316600436345	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d4.ltl	60	UNREALIZABLE	0.29327355600253213	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d5.ltl	60	UNREALIZABLE	0.3908874460030347	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d6.ltl	60	UNREALIZABLE	0.4553855659905821	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d7.ltl	60	UNREALIZABLE	0.4464283810084453	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d8.ltl	60	UNREALIZABLE	1.351047149990336	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-resource-2d9.ltl	60	UNREALIZABLE	1.4376691359793767	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-tasks-real.ltl	60	REALIZABLE	0.05502049300412182	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal0.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal1.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal2.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal3.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal4.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal5.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal6.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal7.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging-unreal8.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging0.ltl	60	UNREALIZABLE	0.9665929020266049	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging1.ltl	60	UNREALIZABLE	2.499300099996617	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging10.ltl	60	UNREALIZABLE	32.285864388002665	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging11.ltl	60	UNREALIZABLE	45.10551131000102	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging12.ltl	60	UNREALIZABLE	47.71248113201	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging13.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging14.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging15.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging16.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging17.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging18.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging19.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging2.ltl	60	UNREALIZABLE	2.55174601500039	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging20.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging21.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging22.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging23.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging24.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging25.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot-to-target-charging3.ltl	60	UNREALIZABLE	6.402722383994842	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging4.ltl	60	UNREALIZABLE	6.849314087012317	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging5.ltl	60	UNREALIZABLE	7.150029488984728	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging6.ltl	60	UNREALIZABLE	7.667970537004294	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging7.ltl	60	UNREALIZABLE	18.911347808985738	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging8.ltl	60	UNREALIZABLE	21.402012110993383	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-charging9.ltl	60	UNREALIZABLE	23.207940335996682	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target-unreal0.ltl	60	REALIZABLE	8.479710202998831	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot-to-target0.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_analyze_samples_v1-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_collect_samples_v1-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_collect_samples_v2-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_collect_samples_v3-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_collect_samples_v4-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_deliver_products_1-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_deliver_products_20.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_deliver_products_30.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_deliver_products_40.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_deliver_products_50.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_grid_pb_2_2_pe_.ltl	60	REALIZABLE	0.04395426099654287	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot_grid_pb_3_3_pe_.ltl	60	REALIZABLE	0.1525515849934891	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot_grid_pb_4_4_pe_.ltl	60	REALIZABLE	1.3089703480072785	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot_grid_pb_5_1_pe_.ltl	60	REALIZABLE	0.054287802980979905	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_grid_pb_6_1_pe_.ltl	60	REALIZABLE	0.05404381299740635	false	REALIZABLE	60
+B-cap60-epoch2-derived	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_grid_pb_7_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_grid_pb_8_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_repair0.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_repair1.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_repair2.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_repair3.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_repair4.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_repair5.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	robot_running-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.02546693300246261	false	REALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.03209246799815446	false	REALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_pb_4_pe_.ltl	60	REALIZABLE	0.1183272299967939	false	REALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_pb_5_pe_.ltl	60	REALIZABLE	14.409454441003618	false	REALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	60	UNREALIZABLE	0.05225090999738313	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	60	UNREALIZABLE	0.09137379500316456	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	60	UNREALIZABLE	0.14476852500229143	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	60	UNREALIZABLE	0.2953468219930073	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	60	UNREALIZABLE	0.6394466409983579	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	60	UNREALIZABLE	1.317077646002872	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	60	UNREALIZABLE	2.7372596149944	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	60	UNREALIZABLE	0.031186477994197048	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	60	UNREALIZABLE	0.029949159012176096	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	60	UNREALIZABLE	0.033780393001507036	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	60	UNREALIZABLE	0.034352774993749335	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	60	UNREALIZABLE	0.03019390099507291	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	60	UNREALIZABLE	0.025022938003530726	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	60	UNREALIZABLE	0.036433271001442336	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	60	UNREALIZABLE	0.05003077599394601	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	60	UNREALIZABLE	0.036673910974059254	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	60	UNREALIZABLE	0.03691855899523944	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	60	UNREALIZABLE	0.039352559004328214	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	60	UNREALIZABLE	0.04346860499936156	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	60	UNREALIZABLE	0.05729827200411819	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	60	UNREALIZABLE	0.198771506009507	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	60	UNREALIZABLE	1.051553111989051	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	60	UNREALIZABLE	7.777315946004819	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	60	UNREALIZABLE	0.03449788998113945	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	60	UNREALIZABLE	0.08208681899122894	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	60	UNREALIZABLE	0.16551977400376927	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	60	UNREALIZABLE	1.7680922669969732	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl	60	UNREALIZABLE	40.31793746900803	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal2_pb_2_pe_.ltl	60	UNREALIZABLE	0.01852324999345001	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal2_pb_3_pe_.ltl	60	UNREALIZABLE	0.03393541800323874	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal2_pb_4_pe_.ltl	60	UNREALIZABLE	0.5265735420107376	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	rw_arbiter_pb_1_pe_.ltl	60	REALIZABLE	0.03662469300616067	false	REALIZABLE	60
+B-cap60-epoch2-derived	rw_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.028429035999579355	false	REALIZABLE	60
+B-cap60-epoch2-derived	rw_arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.7594945250020828	false	REALIZABLE	60
+B-cap60-epoch2-derived	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	scheduler-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	shift_pb_100_pe_.ltl	60	REALIZABLE	0.02502654099953361	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_10_pe_.ltl	60	REALIZABLE	0.01681617202120833	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_125_pe_.ltl	60	REALIZABLE	0.018945476011140272	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_12_pe_.ltl	60	REALIZABLE	0.031579622998833656	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_132_pe_.ltl	60	REALIZABLE	0.023691854992648587	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_16_pe_.ltl	60	REALIZABLE	0.017703738005366176	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_250_pe_.ltl	60	REALIZABLE	0.027063189991167746	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_32_pe_.ltl	60	REALIZABLE	0.03226612397702411	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_500_pe_.ltl	60	REALIZABLE	0.03489973599789664	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_64_pe_.ltl	60	REALIZABLE	0.020499082005699165	false	REALIZABLE	60
+B-cap60-epoch2-derived	shift_pb_8_pe_.ltl	60	REALIZABLE	0.020339643000625074	false	REALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_16_1_pe_.ltl	60	UNREALIZABLE	0.021519752001040615	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_16_2_pe_.ltl	60	UNREALIZABLE	0.019864553003571928	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_16_3_pe_.ltl	60	UNREALIZABLE	0.02373699299641885	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_16_4_pe_.ltl	60	UNREALIZABLE	0.0337369290064089	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_16_5_pe_.ltl	60	UNREALIZABLE	0.031850220999331214	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_10_pe_.ltl	60	UNREALIZABLE	0.018452190997777507	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_12_pe_.ltl	60	UNREALIZABLE	0.019548794007278048	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_1_pe_.ltl	60	UNREALIZABLE	0.03277006199641619	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_2_pe_.ltl	60	UNREALIZABLE	0.016357935994165018	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_3_pe_.ltl	60	UNREALIZABLE	0.021243805007543415	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_4_pe_.ltl	60	UNREALIZABLE	0.039174083998659626	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_5_pe_.ltl	60	UNREALIZABLE	0.015158346010139212	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_6_pe_.ltl	60	UNREALIZABLE	0.017311175004579127	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_7_pe_.ltl	60	UNREALIZABLE	0.014266821992350742	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_8_pe_.ltl	60	UNREALIZABLE	0.01801941799931228	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_2_9_pe_.ltl	60	UNREALIZABLE	0.016085673007182777	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_11_pe_.ltl	60	UNREALIZABLE	0.01773903300636448	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_1_pe_.ltl	60	UNREALIZABLE	0.016852251006639563	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_2_pe_.ltl	60	UNREALIZABLE	0.034026292007183656	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_3_pe_.ltl	60	UNREALIZABLE	0.014573830005247146	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_4_pe_.ltl	60	UNREALIZABLE	0.03297366001061164	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_5_pe_.ltl	60	UNREALIZABLE	0.017167098994832486	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_6_pe_.ltl	60	UNREALIZABLE	0.016201259990339167	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_7_pe_.ltl	60	UNREALIZABLE	0.041763118002563715	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_8_pe_.ltl	60	UNREALIZABLE	0.034401608994812705	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_3_9_pe_.ltl	60	UNREALIZABLE	0.01800480998645071	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_10_pe_.ltl	60	UNREALIZABLE	0.016747175992350094	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_12_pe_.ltl	60	UNREALIZABLE	0.023714681999990717	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_1_pe_.ltl	60	UNREALIZABLE	0.02842323700315319	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_2_pe_.ltl	60	UNREALIZABLE	0.018058389992802404	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_3_pe_.ltl	60	UNREALIZABLE	0.03049179598747287	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_4_pe_.ltl	60	UNREALIZABLE	0.030253140997956507	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_5_pe_.ltl	60	UNREALIZABLE	0.02640338899800554	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_6_pe_.ltl	60	UNREALIZABLE	0.01625245201284997	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_7_pe_.ltl	60	UNREALIZABLE	0.031771405003382824	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_8_pe_.ltl	60	UNREALIZABLE	0.02787234900461044	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_4_9_pe_.ltl	60	UNREALIZABLE	0.03246163300354965	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_10_pe_.ltl	60	UNREALIZABLE	0.03293440298875794	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_1_pe_.ltl	60	UNREALIZABLE	0.03199986499384977	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_2_pe_.ltl	60	UNREALIZABLE	0.037227666995022446	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_3_pe_.ltl	60	UNREALIZABLE	0.03073668100114446	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_4_pe_.ltl	60	UNREALIZABLE	0.016685841997968964	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_5_pe_.ltl	60	UNREALIZABLE	0.022354243992595002	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_6_pe_.ltl	60	UNREALIZABLE	0.03069870301987976	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_7_pe_.ltl	60	UNREALIZABLE	0.019844747002935037	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_8_pe_.ltl	60	UNREALIZABLE	0.019115514995064586	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_5_9_pe_.ltl	60	UNREALIZABLE	0.015769175020977855	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_6_1_pe_.ltl	60	UNREALIZABLE	0.02877509599784389	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_6_2_pe_.ltl	60	UNREALIZABLE	0.03166251200309489	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_6_3_pe_.ltl	60	UNREALIZABLE	0.019257370004197583	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_6_4_pe_.ltl	60	UNREALIZABLE	0.03048131700779777	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_6_5_pe_.ltl	60	UNREALIZABLE	0.03367235901532695	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal1_pb_8_8_pe_.ltl	60	UNREALIZABLE	0.024621328979264945	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_10_pe_.ltl	60	UNREALIZABLE	0.019874962003086694	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_25_pe_.ltl	60	UNREALIZABLE	0.021586338989436626	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_2_pe_.ltl	60	UNREALIZABLE	0.029938977007986978	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_3_pe_.ltl	60	UNREALIZABLE	0.03573005799262319	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_4_pe_.ltl	60	UNREALIZABLE	0.01770743800443597	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_50_pe_.ltl	60	UNREALIZABLE	0.05099740598234348	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_5_pe_.ltl	60	UNREALIZABLE	0.02084029800607823	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_60_pe_.ltl	60	UNREALIZABLE	0.03662215601070784	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_6_pe_.ltl	60	UNREALIZABLE	0.03041995901730843	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_75_pe_.ltl	60	UNREALIZABLE	0.03668732801452279	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_7_pe_.ltl	60	UNREALIZABLE	0.03668346698395908	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_unreal2_pb_8_pe_.ltl	60	UNREALIZABLE	0.0352180909976596	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	simple_arbiter_with_hints_pb_2_pe_.ltl	60	REALIZABLE	0.020656366003095172	false	REALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_with_hints_pb_4_pe_.ltl	60	REALIZABLE	0.03023594300611876	false	REALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_with_hints_pb_6_pe_.ltl	60	REALIZABLE	2.0298867169913137	false	REALIZABLE	60
+B-cap60-epoch2-derived	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	solitary-real.ltl	60	REALIZABLE	0.03961431900097523	false	REALIZABLE	60
+B-cap60-epoch2-derived	solitary0.ltl	60	UNREALIZABLE	0.0198611689847894	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	sort4-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	sort40.ltl	60	UNREALIZABLE	0.2139856919820886	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	sort41.ltl	60	UNREALIZABLE	0.6137066109949956	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	sort42.ltl	60	UNREALIZABLE	13.773384761996567	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	sort50.ltl	60	UNREALIZABLE	14.50937798099767	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	sort51.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	sort52.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	sort53.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	square5x5-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	square5x50.ltl	60	UNREALIZABLE	0.3160709079966182	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	square5x51.ltl	60	UNREALIZABLE	1.225631526001962	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	square5x52.ltl	60	UNREALIZABLE	1.324914943004842	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	square5x53.ltl	60	UNREALIZABLE	5.011880756996106	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	square5x54.ltl	60	UNREALIZABLE	7.459100964013487	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	storage-GF-64-real.ltl	60	REALIZABLE	0.029817137008649297	false	REALIZABLE	60
+B-cap60-epoch2-derived	tasks-real.ltl	60	REALIZABLE	0.08145875201444142	false	REALIZABLE	60
+B-cap60-epoch2-derived	tasks-unreal0.ltl	60	UNREALIZABLE	46.70624268100073	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	tasks-unreal1.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	tasks-unreal2.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	taxi-service-real.ltl	60	REALIZABLE	20.50661337900965	false	REALIZABLE	60
+B-cap60-epoch2-derived	taxi-service-u-unreal.ltl	60	UNREALIZABLE	0.0930837179912487	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	test2_f2774e0b.ltl	60	REALIZABLE	0.03064227600407321	false	REALIZABLE	60
+B-cap60-epoch2-derived	test3_efe2feaf.ltl	60	REALIZABLE	0.028034253991791047	false	REALIZABLE	60
+B-cap60-epoch2-derived	test4_4b82b1f4.ltl	60	UNREALIZABLE	0.017280528001720086	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	test5_6cbc6174.ltl	60	REALIZABLE	0.02294518199050799	false	REALIZABLE	60
+B-cap60-epoch2-derived	test6_0f5381e9.ltl	60	REALIZABLE	0.01925014100561384	false	REALIZABLE	60
+B-cap60-epoch2-derived	test7_2c5b09da.ltl	60	REALIZABLE	0.028810286996304058	false	REALIZABLE	60
+B-cap60-epoch2-derived	test8_88f351a6.ltl	60	UNREALIZABLE	0.03137402402353473	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	test9_dd3a27e1.ltl	60	UNREALIZABLE	0.03758869900775608	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	test_f3987563.ltl	60	REALIZABLE	0.021487498001079075	false	REALIZABLE	60
+B-cap60-epoch2-derived	thermostat-F-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	thermostat-GF-real.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	thermostat-GF-unreal0.ltl	60	UNREALIZABLE	2.031643702997826	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	thermostat-GF-unreal1.ltl	60	UNREALIZABLE	31.05480182998872	false	UNREALIZABLE	60
+B-cap60-epoch2-derived	thermostat-GF-unreal2.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	tmp_13cfc6f2.ltl	60	REALIZABLE	0.7809115249983734	false	REALIZABLE	60
+B-cap60-epoch2-derived	unordered-visits-charging0.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	unordered-visits-real.ltl	60	REALIZABLE	8.613816352008143	false	REALIZABLE	60
+B-cap60-epoch2-derived	workstation_resupply_pb_1_pe_.ltl	60	REALIZABLE	0.03657202300382778	false	REALIZABLE	60
+B-cap60-epoch2-derived	workstation_resupply_pb_2_pe_.ltl	60	REALIZABLE	0.35455412000010256	false	REALIZABLE	60
+B-cap60-epoch2-derived	workstation_resupply_pb_3_pe_.ltl	60	REALIZABLE	17.686932753000292	false	REALIZABLE	60
+B-cap60-epoch2-derived	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	60
+B-cap60-epoch2-derived	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT	60

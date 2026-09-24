@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import importlib.util
 import json
 import pathlib
@@ -70,7 +71,7 @@ def write_tsv(path: pathlib.Path, rows: list[dict[str, object]]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cap", required=True, type=int, choices=(17, 120))
+    parser.add_argument("--cap", required=True, type=int, choices=(17, 60))
     parser.add_argument("--variant", required=True, choices=("N-a", "N-b"))
     parser.add_argument("--selection", type=pathlib.Path,
                         default=CAMPAIGN / "eligible.list")
@@ -95,8 +96,23 @@ def main() -> None:
         raise ValueError("N selection needs 8G, zero swap, and route-record columns")
     b = {}
     for epoch in (1, 2):
-        path = (ROOT / "benchmarking/witness-lifting-20260918/opening" /
-                f"{args.cap}s/epoch-{epoch}/B-cap{args.cap}-epoch{epoch}.tsv")
+        if args.cap == 60:
+            path = (CAMPAIGN / "derived-60s" / f"epoch-{epoch}" /
+                    f"B-cap60-epoch{epoch}.tsv")
+            source = (ROOT / "benchmarking/witness-lifting-20260918/opening/120s" /
+                      f"epoch-{epoch}/B-cap120-epoch{epoch}.tsv")
+            provenance = json.loads(path.with_name(
+                f"{path.stem}-provenance.json").read_text(encoding="utf-8"))
+            if (provenance.get("statement") !=
+                "derived by censoring a C_high s observation; not a C_low s run"
+                    or provenance.get("C_high_s") != 120
+                    or provenance.get("C_low_s") != 60
+                    or provenance.get("source_file_sha256") !=
+                    hashlib.sha256(source.read_bytes()).hexdigest()):
+                raise ValueError(f"B epoch {epoch} lacks 120-to-60 s censoring provenance")
+        else:
+            path = (ROOT / "benchmarking/witness-lifting-20260918/opening" /
+                    f"17s/epoch-{epoch}/B-cap17-epoch{epoch}.tsv")
         b[epoch] = coverage.load_uniform_observations(
             path.with_name(f"{path.stem}-summary.tsv"), path, full_list, args.cap
         )
@@ -105,7 +121,6 @@ def main() -> None:
                for row in b[epoch].values()):
             raise ValueError(f"B epoch {epoch} does not match the frozen baseline")
 
-    import hashlib
     source_map = coverage.resolve_targets(
         ids, coverage.read_tlsf_map(ROOT / "tests/suites/benchmarks/syntcomp26/tlsf-sources.tsv"),
         ROOT / "tlsf-corpus"
@@ -150,7 +165,9 @@ def main() -> None:
     lines = [f"# {args.variant} at {args.cap} s, eligible subset ({len(ids)} IDs)", "",
              "| Series | Solved | PAR-2 total (s) | PAR-2 mean (s) |",
              "|---|---:|---:|---:|"]
-    for name, data in ((args.variant, n), ("B epoch 1", b[1]), ("B epoch 2", b[2])):
+    b_suffix = " (derived from 120 s)" if args.cap == 60 else ""
+    for name, data in ((args.variant, n), (f"B epoch 1{b_suffix}", b[1]),
+                       (f"B epoch 2{b_suffix}", b[2])):
         solved, total = score(data, ids, args.cap)
         lines.append(f"| {name} | {solved} | {total:.6f} | {total/len(ids):.6f} |")
     b_repeatability = Counter(row["b_epoch2_vs_epoch1"] for row in rows)
@@ -163,6 +180,9 @@ def main() -> None:
             f"{name}={route_counts[name]}" for name in
             ("lifting", "B", "fallback-nonanswer", "missing-record")), "",
         "Per-ID results and gains/losses: `comparison.tsv`. Missing records can occur when the outer scope kills the wrapper before its atomic write.", ""]
+    if args.cap == 60:
+        lines += ["B 60 s rows are derived by censoring the archived uniform 120 s epochs; "
+                  "they are not 60 s solver runs.", ""]
     (outdir / "comparison.md").write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))
 
