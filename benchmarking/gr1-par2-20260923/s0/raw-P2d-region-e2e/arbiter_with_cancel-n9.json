@@ -1,0 +1,88 @@
+{
+  "censored": [
+    {
+      "elapsed_lower_bound_s": 0.0,
+      "kind": "stage",
+      "reason": "absolute_deadline_exhausted",
+      "stage": "target_check"
+    }
+  ],
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1963978752,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_cancel-n9.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_cancel-n9.scope/memory.peak"
+  },
+  "counters": {},
+  "diagnostic_errors": [],
+  "elapsed_s": 120.09108919097343,
+  "environment": {
+    "binaries": {
+      "tlsfcertcheck": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "sha256": "65fd3dd9fc9ad3c1a203662fa4c4def3cce68fce5504f6033dd850077d416f84"
+      },
+      "tlsfsolve": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "sha256": "80892fef82fc5a1297c785e5a16c52e88ed849fa13f5cdbcf5ec30bc1f4d210e"
+      }
+    },
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so",
+    "compose_route": "native_veccompose",
+    "interpreter": {
+      "executable": "/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python",
+      "version": "3.14.7 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+    },
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "generalizer": {
+    "censored": [],
+    "counters": {},
+    "diagnostic_errors": [
+      {
+        "message": "startswith first arg must be bytes or a tuple of bytes, not str",
+        "operation": "record_checker_stats",
+        "type": "TypeError"
+      },
+      {
+        "message": "Object of type bytes is not JSON serializable",
+        "operation": "write",
+        "type": "TypeError"
+      }
+    ],
+    "elapsed_s": 119.90493517601863,
+    "environment": {
+      "interpreter": {
+        "executable": "/usr/bin/python3.13",
+        "version": "3.13.15 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+      }
+    },
+    "phases": {},
+    "schema": "acacia-gr1-s0-diagnostics-v1",
+    "schema_version": 1,
+    "status": "unknown",
+    "tool": "generalize_gr1"
+  },
+  "outcome": {
+    "certificate": null,
+    "policy": null,
+    "proof_method": "none",
+    "reason": "absolute_deadline_exhausted",
+    "stage": "target_check",
+    "stdout_line": "UNKNOWN target_check absolute_deadline_exhausted",
+    "verdict": "UNKNOWN"
+  },
+  "phases": {
+    "generalize_gr1": {
+      "calls": 1,
+      "wall_s": 120.0701487470069
+    }
+  },
+  "schema": "acacia-gr1-s0-diagnostics-v1",
+  "schema_version": 1,
+  "status": "unknown",
+  "tool": "param-lift-campaign"
+}

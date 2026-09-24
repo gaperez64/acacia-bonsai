@@ -222,3 +222,25 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   (`benchmarking/param-lift-20260922/request.py`). No SyFCo binary is on the lifting route or in the
   wrapper. SyFCo appears only in the benchmark harness's external legs (TACAS23 and ltlsynt read
   SyFCo-converted `.ltl/.part` pairs). Earlier text is left as written; this entry supersedes it.
+
+## 2026-09-24 — P2d end to end; the per-capability method choice stands
+
+- `17b2b209` (pair replace for injective relabels over actual support; fused and-exist in
+  Skolemization) + `build-P5-9212e2b` + adapter `d5ccf8f9…`, policy and region, same protocol
+  (`s0/raw-P2d-{policy,region}-e2e/`, summaries; runs in `_bm-logs.gr1-par2-e2e-P2d-*`).
+- Policy route vs P5 policy: load_balancer n=8 9.27 → 4.58 s, n=9 23.26 → 10.20 s; amba n=15
+  36.61 → 14.47 s; buffer n=8 15.21 → 9.80 s, n=9 116.30 → 97.10 s. Checker-bound rows unchanged.
+- Region route: buffer n=8 2.95 s, n=9 9.12 s; amba n=15 12.85 s; still worse than policy on
+  load_balancer (7.26 / 17.79 s) and still loses cancel n=9/10 and inpchange n=6.
+- The frozen choice is unchanged by the new code: region for arbiter_with_buffer and
+  amba_decomposed_lock, policy elsewhere.
+- Lifting-route-only times now under 17 s (one observation each, route only, no wrapper or
+  fallback): cancel n=8/9, load_balancer n=8/9, amba n=15, buffer n=8/9, lbu2 n=6/7, rru2 n=5/6,
+  and inpchange n=6 at 16.45 s (too close to call). Over 17 s: cancel n=10 (24.6 s), rru2 n=7
+  (30.9 s). Still open: inpchange n=7 (check alone ~126 s) and collector_v1 (monitor
+  construction; P4, not pursued in this sprint — see below).
+- **Not pursued, with reasons:** S2 (mode-parallel constant propagation) — after P1.4 no target is
+  dominated by repeated per-mode AIG interpretation; S3 (AVX2 popcount) — no path counts long
+  masks (S1 chose sorted sparse lists; supports are 4–39 variables); P4 (monitor encoding) —
+  conditional second workstream per plan §7, the only affected target in the cohort is
+  collector_v1, and it would not change the first PAR-2 campaign.
