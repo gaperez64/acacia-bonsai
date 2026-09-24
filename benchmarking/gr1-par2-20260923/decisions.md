@@ -127,3 +127,34 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   load/validation?) would be charged on every routed input in the full corpus; investigate.
 - The adapter sidecar binds the absolute source path, so an adapter built in one checkout fails
   validation in another even with identical bytes. Should bind content hashes only (cleanup item).
+
+## 2026-09-24 — Integration design decided (from `integration-survey.md`)
+
+- **Wrapper, not harness logic, not C++.** N is `scripts/acacia-lift-portfolio.py`, an
+  Acacia-compatible executable the existing coverage runner invokes as its single scoped argv
+  (`-T source`). It does source-bound eligibility, runs the lifting route under a sub-budget in
+  killable process groups (no nested cgroup), and on anything but a verified decisive answer
+  `exec`s the unchanged frozen B (`build_w1_B`, sha256 `398a420b…e4a`, `otf_sparse_formula`) with
+  the remaining absolute deadline. Whole-tree wall/`MemoryPeak` accounting is reused unchanged;
+  a route sidecar JSON records per-stage attribution. The only campaign change is passing the
+  outer absolute deadline and a sidecar path.
+- **No cheap pre-probe stage in the first N** (plan §9.2: integrate lifting with unchanged B
+  fallback first). A sparse/selector combination is out of scope until this is measured.
+- **Eligibility becomes fail-closed and cheap:** `tlsfinfo --parameters` first; bucket capabilities
+  by exact parameter-name tuple; non-parametric input declines after one tool call (today 8; an
+  unrelated `n`-parametric input can cost up to 92). Final equality check unchanged.
+- **Preregistered sub-budget variants (two, not a sweep):** lift gets `cap/3` (N-a: 40 s at 120,
+  5.67 s at 17) or `2·cap/3` (N-b: 80 s / 11.33 s); B gets the rest of the absolute deadline.
+  Selection on all SYNTCOMP26 instances of the capability families (including those B already
+  solves) at both caps; the full corpus is then run for the chosen variant only. No virtual score
+  is ever synthesized from L0 wins plus B rows.
+- **Order of remaining work:** generalizer items (P2b; P2c orchestration/retry; P3 lifetimes and
+  the open warts: censored bound inside native calls, adapter sidecar binding by content hash,
+  ~0.15 s per-invocation overhead) → package extraction to `scripts/acacia_lift/` with
+  `data/capabilities-v1.json` replacing the runtime reads of `m4-alignment.tsv`,
+  `m4-invariant-separability.tsv`, `m4-move-separability.tsv` → wrapper and campaign hook →
+  campaigns.
+- **Campaign reuse:** B's 120 s and 17 s full-corpus legs (witness-lifting opening, two epochs each,
+  same host regime) are reusable as B; ltlsynt's 120/17 legs are reusable only after re-hashing
+  `/usr/local/sbin/ltlsynt` against the committed pin; TACAS23 has only a 17 s leg, so a fresh 120 s
+  leg is required; N needs both caps.
