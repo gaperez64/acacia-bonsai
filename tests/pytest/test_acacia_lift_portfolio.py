@@ -107,6 +107,7 @@ if mode != "lying":
         },
         "result": {
             "verdict": verdict,
+            "proof_method": "certificate",
             "stage": "target_check" if verified else "source_binding",
             "reason": "target_verified" if verified else (
                 "eligibility_budget_exhausted" if mode == "eligibility_budget" else "declined"

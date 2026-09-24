@@ -30,7 +30,8 @@ INPUT_NAMES = {"source", "tlsf", "input_path", "input_file", "lift_source",
                "source_argument"}
 FORBIDDEN_PATHS = ("syntcomp-benchmarks", "tests/suites/benchmarks", "tlsf-corpus",
                    "param-lift-20260922", "legacy_lift", "capabilities-v1",
-                   "generic-census.tsv")
+                   "generic-census.tsv", "m4-analysis",
+                   "eligibility-v3.tsv")
 VERDICTS = {"REALIZABLE", "UNREALIZABLE", "UNKNOWN"}
 
 
