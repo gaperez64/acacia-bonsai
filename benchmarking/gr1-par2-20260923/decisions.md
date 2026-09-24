@@ -387,3 +387,13 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   instances) and runtime file-open tracing. P2: the census used an 11.33 s lowering bound while
   admission is capped at the 0.85 s eligibility gate at 17 s (45 of the 572 would decline).
 - No Stage A measurement until P0 is fixed.
+
+## 2026-09-24 — Stage B landed in tlsf-tools (PR #38)
+
+- `98a10b8` frontend provenance (structural ids, one input snapshot, fail-closed ambiguity);
+  `7e62cef` disjoint game-symbol namespaces (fixes the pre-existing ownership-by-name bug);
+  `8b158d7` canonical signal names by role and declaration order (identifiers such as `@` or `a'`
+  no longer break Spot; renamed twins give byte-identical games on 40 generated pairs). Two review
+  rounds on provenance and one on naming; 287/287 serial.
+- Frozen build `tlsf-tools/build-SB-8b158d7/` (tlsfcertcheck `e70c3432…`, tlsfsolve `6b10c326…`,
+  tlsf2tlsf `9b122d8b…`). Acacia's submodule now pins `8b158d7`.
