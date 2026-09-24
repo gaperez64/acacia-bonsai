@@ -470,3 +470,17 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   leg, the 4-5-arm portfolio choice, its real run, and the three-way. Per-arm legs follow the owner's
   plan (60 s, SYNTCOMP26), not the design's 28-leg matrix.
 - Step 1 started on tlsf-tools branch `native-api` (stacked on `generic-provenance`, PR #38).
+
+## 2026-09-25 — Native step 1 landed; step 2 started
+
+- tlsf-tools `native-api` `634ea99`: the GR(1) path as library functions behind the existing
+  public API (pipeline.h byte loading and overrides; versioned solve options with deadline,
+  cancellation, memory and artifact caps; checker library `gr1_check.h`, independent of the
+  solver). Two review rounds: the first rejected an in-place change to public structs (old clients
+  crashed), partial-artifact publication, library stdout printing, missing cancellation in checker
+  BDD construction, an ungated build and missing CI oracle tests — all fixed and re-verified. 293/293
+  serial; old-header clients clean under Valgrind; oracle vs `8b158d7` and checker link-independence
+  run in CI.
+- Owner correction applied: tlsf-tools already had a public parse/AST/decompose/solve API, so step 1
+  extends it rather than adding a parallel layer.
+- Step 2 (C++ port of the GR(1) reduction) started.
