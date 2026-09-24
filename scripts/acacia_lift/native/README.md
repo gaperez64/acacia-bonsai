@@ -3,7 +3,7 @@
 Build the optional adapter explicitly, before a benchmark run:
 
 ```sh
-/usr/bin/python3.13 benchmarking/param-lift-20260922/native/build.py
+python3 scripts/acacia_lift/native/build.py
 ```
 
 The serial build performs exactly one compiler invocation and writes
