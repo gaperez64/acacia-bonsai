@@ -368,3 +368,6 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Owner confirmed competition input is TLSF, so the input's own `PARAMETERS` can serve as its
   lifting template in Stage C (and 790 corpus inputs without parameters can only use the direct
   route).
+- Owner rule: **a TLSF input without parameters never enters parametric lifting** (Stage C gates on
+  the input's own `PARAMETERS` block and nothing else); such inputs can only take the direct
+  exact route or go straight to B.
