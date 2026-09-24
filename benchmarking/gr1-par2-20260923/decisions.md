@@ -423,3 +423,17 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   split) is deferred to a future sprint.
 - Campaign: dev check of the concurrent N on original names at 17 s over the full corpus (losses
   vs B), then the final run on the obfuscated corpus at 60 s and 17 s, TACAS23 at 60 s, three-way.
+
+## 2026-09-24 — Owner decision: acacia-bonsai is the entry point; no Python on the solver path
+
+- The Python wrapper and the Python lifting package driving tlsf-tools CLIs are withdrawn from the
+  solver path. **New architecture:** tlsf-tools exposes a C API for what is needed (TLSF parse/
+  expansion with provenance, exact/strict GR(1) reduction, GR(1) solve, certificate export and
+  independent check, and generic parametric lifting); `acacia-bonsai` calls it in-process from new
+  portfolio arms named in the existing `--arms` style that states the realizability or
+  unrealizability side — a `gr1` arm (direct exact GR(1)) and a `param-lift` arm. Each arm is
+  measured alone via `--arms` before the full portfolio.
+- The concurrent Python wrapper task was stopped mid-way; its partial diff is saved in
+  `build_scratch/concurrent/abandoned-python-concurrent-wrapper.patch`, and the tree was restored.
+- The committed Python route (Stages A/C) becomes a reference oracle for differential testing of
+  the C/C++ port and is removed from the shipped path once the arms land.
