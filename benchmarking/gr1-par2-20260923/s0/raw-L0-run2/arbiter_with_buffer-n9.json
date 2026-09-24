@@ -1,0 +1,57 @@
+{
+  "censored": [
+    {
+      "elapsed_lower_bound_s": 4.323502071201801e-05,
+      "kind": "stage",
+      "reason": "absolute_deadline_exhausted",
+      "stage": "instantiate"
+    }
+  ],
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1915179008,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_buffer-n9.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_buffer-n9.scope/memory.peak"
+  },
+  "counters": {},
+  "diagnostic_errors": [],
+  "elapsed_s": 120.60941686097067,
+  "environment": {
+    "binaries": {
+      "tlsfcertcheck": {
+        "path": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck",
+        "sha256": "a7fffaa32b77cb5a13938ccfb02f7d93b6a31ec350d5f2da3e838a1574630d9d"
+      },
+      "tlsfsolve": {
+        "path": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfsolve",
+        "sha256": "afa00abda2afde0a157dd242c080125bcbc222929dcc08d346c088c9c8812bde"
+      }
+    },
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "interpreter": {
+      "executable": "/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python",
+      "version": "3.14.7 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+    },
+    "tlsf_tools_build": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0"
+  },
+  "outcome": {
+    "certificate": null,
+    "policy": null,
+    "reason": "absolute_deadline_exhausted",
+    "stage": "instantiate",
+    "stdout_line": "UNKNOWN instantiate absolute_deadline_exhausted",
+    "verdict": "UNKNOWN"
+  },
+  "phases": {
+    "generalize_gr1": {
+      "calls": 1,
+      "wall_s": 120.5886466029915
+    }
+  },
+  "schema": "acacia-gr1-s0-diagnostics-v1",
+  "schema_version": 1,
+  "status": "unknown",
+  "tool": "param-lift-campaign"
+}
