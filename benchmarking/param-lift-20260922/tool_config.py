@@ -32,6 +32,7 @@ ENV_BUDDY_ADAPTER = "ACACIA_BUDDY_ADAPTER"
 
 REQUIRED_BINDING_FUNCTIONS = (
     "bdd_compose",
+    "bdd_extvarnum",
     "bdd_exist",
     "bdd_forall",
     "bdd_high",

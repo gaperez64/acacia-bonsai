@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 import dataclasses
+import hashlib
 import itertools
 import json
 import os
@@ -24,7 +25,11 @@ import time
 from collections import Counter, OrderedDict, defaultdict
 from collections.abc import Iterable
 
-from buddy_veccompose import BuddyVeccomposeAdapter
+from buddy_veccompose import (
+    BUDDY_MAX_VARIABLE_COUNT,
+    BuddyVariableAdapter,
+    BuddyVeccomposeAdapter,
+)
 from request import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL
 from s0_diagnostics import Diagnostics, sha256
 from tool_config import (
@@ -57,6 +62,17 @@ MAX_CEGIS_ROUNDS = 3
 MAX_PREDICATE_ARITY = 4
 TEMPLATE_CACHE_MAX_ENTRIES = 64
 SUBSET_METADATA_MAX_ENTRIES = 256
+SUPPORT_CACHE_MAX_ENTRIES = 256
+SUPPORT_CACHE_MAX_BYTES = 64 << 20
+PROJECTION_METADATA_MAX_BYTES = 64 << 20
+CUBE_CACHE_MAX_BYTES = 8 << 20
+# sizeof(BddNode) for the identity-validated pinned x86-64 libbddx.  Cache
+# accounting is deliberately conservative across roots that share nodes.
+BUDDY_NODE_ACCOUNTING_BYTES = 16
+# Maximum variable count for the exact pinned libbddx image, validated by the
+# binding/native adapter before the manager is initialized.  Valid semantic
+# coordinates are therefore [0, BDD_COORDINATE_LIMIT).
+BDD_COORDINATE_LIMIT = BUDDY_MAX_VARIABLE_COUNT
 HINT_VALIDITY_GROUP = (("global-schema",), ("hint-one-hot",), ())
 VERDICTS = {0: "VERIFIED", 1: "REFUTED", 2: "ERROR",
             3: "UNKNOWN", 4: "INVALID", 5: "INTERNAL_ERROR",
@@ -77,6 +93,7 @@ _DIAGNOSTIC_MASK_WORDS: Counter[int] = Counter()
 _DIAGNOSTIC_MODES: Counter[int] = Counter()
 _CHECKER_STATS_MODE: str | None = None
 _BUDDY_MANAGER_LIFETIME: object | None = None
+_BUDDY_VARIABLE_COUNT: int | None = None
 
 _DIAGNOSTIC_PHASES = (
     "seed_monitor_construction",
@@ -873,6 +890,251 @@ class VarInfo:
     key: tuple
     owners: frozenset[int]
 
+    @property
+    def canonical_owners(self) -> tuple[int, ...]:
+        """Return provenance client IDs in the owner-index key format."""
+        return tuple(sorted(self.owners))
+
+
+class OwnerIndex:
+    """Attempt-local owner tuple to sorted public-variable index."""
+
+    def __init__(self, variables: Iterable[VarInfo]):
+        grouped: dict[tuple[int, ...], list[int]] = defaultdict(list)
+        self.variables_by_id: dict[int, VarInfo] = {}
+        for item in variables:
+            if item.index < 0:
+                raise ValueError("public variable IDs must be non-negative")
+            if item.index in self.variables_by_id:
+                raise ValueError(f"duplicate public variable ID {item.index}")
+            self.variables_by_id[item.index] = item
+            grouped[item.canonical_owners].append(item.index)
+        self.owner_groups = {
+            owners: tuple(sorted(public_ids))
+            for owners, public_ids in grouped.items()
+        }
+        self.shared_variables = self.owner_groups.get((), ())
+
+    def keep_ids(self, subset: Iterable[int]) -> tuple[int, ...]:
+        """Assemble keep(S) with 2^|S| indexed lookups, in public-ID order."""
+        selected = tuple(sorted(set(subset)))
+        public_ids = []
+        for arity in range(len(selected) + 1):
+            for owners in itertools.combinations(selected, arity):
+                public_ids.extend(self.owner_groups.get(owners, ()))
+        return tuple(sorted(public_ids))
+
+    def keep_items(self, subset: Iterable[int]) -> tuple[VarInfo, ...]:
+        return tuple(
+            self.variables_by_id[public_id]
+            for public_id in self.keep_ids(subset)
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class VariableBlock:
+    """A checked half-open interval of semantic BDD coordinates."""
+
+    name: str
+    start: int
+    size: int
+
+    def __post_init__(self) -> None:
+        if self.start < 0 or self.size < 0:
+            raise ValueError(f"negative BDD variable block {self.name}")
+        if self.end > BDD_COORDINATE_LIMIT:
+            raise OverflowError(f"BDD variable block {self.name} overflows")
+
+    @property
+    def end(self) -> int:
+        return self.start + self.size
+
+    def coordinate(self, offset: int) -> int:
+        if not 0 <= offset < self.size:
+            raise IndexError(f"{self.name} offset {offset} is outside [0, {self.size})")
+        return self.start + offset
+
+
+@dataclasses.dataclass(frozen=True)
+class VariableLayout:
+    """All manager coordinates owned by one generalization attempt."""
+
+    public: VariableBlock
+    composition: VariableBlock
+    policy_counter: VariableBlock
+    policy_game: VariableBlock
+    canonical_templates: VariableBlock
+    public_state_count: int
+    public_letter_count: int
+    composition_state_count: int
+    composition_letter_count: int
+    variable_limit: int | None = None
+
+    def __post_init__(self) -> None:
+        blocks = (
+            self.public,
+            self.composition,
+            self.policy_counter,
+            self.policy_game,
+            self.canonical_templates,
+        )
+        for previous, current in itertools.pairwise(sorted(
+                blocks, key=lambda block: (block.start, block.end, block.name))):
+            if current.start < previous.end:
+                raise ValueError(
+                    f"BDD variable blocks overlap: {previous.name} and {current.name}"
+                )
+        if self.public_state_count < 0 or self.public_letter_count < 0:
+            raise ValueError("public state/letter counts must be non-negative")
+        if self.public_state_count + self.public_letter_count > self.public.size:
+            raise ValueError("public state/letter coordinates exceed their block")
+        if self.composition_state_count < 0 or self.composition_letter_count < 0:
+            raise ValueError("composition counts must be non-negative")
+        expected_composition = (
+            2 * self.composition_state_count + self.composition_letter_count
+        )
+        if expected_composition != self.composition.size:
+            raise ValueError("composition block does not match state/letter counts")
+        if self.policy_game.size != self.public_state_count + self.public_letter_count:
+            raise ValueError("policy game block does not match the public target ABI")
+        if self.variable_limit is not None:
+            if self.variable_limit < 0:
+                raise ValueError("BDD variable limit must be non-negative")
+            if self.required_variables > self.variable_limit:
+                raise OverflowError(
+                    "attempt variable layout requires "
+                    f"{self.required_variables} variables, limit is {self.variable_limit}"
+                )
+
+    @classmethod
+    def plan(cls, *, public_variables: int, public_states: int,
+             public_letters: int, composition_states: int,
+             composition_letters: int, policy_counters: int,
+             canonical_templates: int,
+             variable_limit: int | None = None) -> "VariableLayout":
+        counts = {
+            "public_variables": public_variables,
+            "public_states": public_states,
+            "public_letters": public_letters,
+            "composition_states": composition_states,
+            "composition_letters": composition_letters,
+            "policy_counters": policy_counters,
+            "canonical_templates": canonical_templates,
+        }
+        if any(value < 0 for value in counts.values()):
+            raise ValueError(f"negative variable-layout count: {counts}")
+        composition_size = cls._checked_add(
+            2 * composition_states, composition_letters)
+        policy_game_size = cls._checked_add(public_states, public_letters)
+        cursor = 0
+
+        def allocate(name: str, size: int) -> VariableBlock:
+            nonlocal cursor
+            block = VariableBlock(name, cursor, size)
+            cursor = cls._checked_add(cursor, size)
+            return block
+
+        return cls(
+            public=allocate("public", public_variables),
+            composition=allocate("composition", composition_size),
+            # Counter variables deliberately precede the policy game variables:
+            # the goal mux should branch before the larger game relation.
+            policy_counter=allocate("policy_counter", policy_counters),
+            policy_game=allocate("policy_game", policy_game_size),
+            canonical_templates=allocate(
+                "canonical_templates", canonical_templates),
+            public_state_count=public_states,
+            public_letter_count=public_letters,
+            composition_state_count=composition_states,
+            composition_letter_count=composition_letters,
+            variable_limit=variable_limit,
+        )
+
+    @staticmethod
+    def _checked_add(left: int, right: int) -> int:
+        result = left + right
+        if result > BDD_COORDINATE_LIMIT:
+            raise OverflowError("BDD variable coordinate arithmetic overflow")
+        return result
+
+    @property
+    def required_variables(self) -> int:
+        return max(
+            block.end for block in (
+                self.public,
+                self.composition,
+                self.policy_counter,
+                self.policy_game,
+                self.canonical_templates,
+            )
+        )
+
+    @property
+    def identity(self) -> tuple:
+        return (
+            tuple((block.name, block.start, block.size) for block in (
+                self.public,
+                self.composition,
+                self.policy_counter,
+                self.policy_game,
+                self.canonical_templates,
+            )),
+            self.public_state_count,
+            self.public_letter_count,
+            self.composition_state_count,
+            self.composition_letter_count,
+        )
+
+    @property
+    def digest(self) -> str:
+        payload = json.dumps(self.identity, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    def description(self) -> dict[str, object]:
+        return {
+            "sha256": self.digest,
+            "required_variables": self.required_variables,
+            "variable_limit": self.variable_limit,
+            "blocks": {
+                block.name: {"start": block.start, "size": block.size}
+                for block in (
+                    self.public,
+                    self.composition,
+                    self.policy_counter,
+                    self.policy_game,
+                    self.canonical_templates,
+                )
+            },
+            "public_state_count": self.public_state_count,
+            "public_letter_count": self.public_letter_count,
+        }
+
+    def composition_current(self, state: int) -> int:
+        if not 0 <= state < self.composition_state_count:
+            raise IndexError(state)
+        return self.composition.coordinate(2 * state)
+
+    def composition_temporary(self, state: int) -> int:
+        if not 0 <= state < self.composition_state_count:
+            raise IndexError(state)
+        return self.composition.coordinate(2 * state + 1)
+
+    def composition_letter(self, letter: int) -> int:
+        if not 0 <= letter < self.composition_letter_count:
+            raise IndexError(letter)
+        return self.composition.coordinate(
+            2 * self.composition_state_count + letter)
+
+    def public_state(self, state: int) -> int:
+        if not 0 <= state < self.public_state_count:
+            raise IndexError(state)
+        return self.public.coordinate(state)
+
+    def public_letter(self, letter: int) -> int:
+        if not 0 <= letter < self.public_letter_count:
+            raise IndexError(letter)
+        return self.public.coordinate(self.public_state_count + letter)
+
 
 @dataclasses.dataclass
 class GoalInfo:
@@ -1069,6 +1331,7 @@ class CompiledAagContext:
     def __init__(self, bdds: "Bdds", aag: Aag, source_identity: tuple,
                  variable_abi: tuple[tuple[str, int, str], ...],
                  variable_map: dict[int, int],
+                 public_to_bdd: dict[int, int],
                  selected_roots: Iterable[int] = ()):
         self.bdds = bdds
         self.manager_lifetime = bdds.manager_lifetime
@@ -1079,6 +1342,9 @@ class CompiledAagContext:
             lhs // 2: (left, right) for lhs, left, right in aag.gates
         }
         self.variable_map = dict(variable_map)
+        self.public_to_bdd = dict(public_to_bdd)
+        if len(set(self.public_to_bdd.values())) != len(self.public_to_bdd):
+            raise ValueError("public-to-BDD variable mapping must be injective")
         self.selected_roots = tuple(dict.fromkeys(selected_roots))
         self.memo: dict[int, object] = {}
         self.roots: dict[int, object] = {}
@@ -1192,6 +1458,7 @@ class CompiledAagContext:
         self.memo.clear()
         self.gates.clear()
         self.variable_map.clear()
+        self.public_to_bdd.clear()
         self._released = True
 
 
@@ -1203,6 +1470,38 @@ class TemplateSet(dict[tuple, object]):
         super().__init__(*args, **kwargs)
         self.supports = supports or {}
         self.cache_key = cache_key
+
+
+@dataclasses.dataclass
+class SupportCacheEntry:
+    """Exact support whose root reference prevents BuDDy handle reuse."""
+
+    root: object
+    mapping: tuple[tuple[int, int], ...]
+    bdd_variables: frozenset[int]
+    public_variables: frozenset[int]
+    root_payload_bytes: int
+
+
+def _retained_python_bytes(*values: object) -> int:
+    """Count retained Python container payload without following BDD proxies."""
+    seen: set[int] = set()
+
+    def visit(value: object) -> int:
+        identity = id(value)
+        if identity in seen:
+            return 0
+        seen.add(identity)
+        size = sys.getsizeof(value)
+        if isinstance(value, dict):
+            return size + sum(
+                visit(key) + visit(item) for key, item in value.items()
+            )
+        if isinstance(value, (tuple, list, set, frozenset)):
+            return size + sum(visit(item) for item in value)
+        return size
+
+    return sum(visit(value) for value in values)
 
 
 class GeneralizationAttemptContext:
@@ -1220,15 +1519,59 @@ class GeneralizationAttemptContext:
             tuple, tuple[TemplateSet, int]
         ] = OrderedDict()
         self.template_cache_limit = TEMPLATE_CACHE_MAX_ENTRIES
-        self._owner_groups: dict[tuple, dict[frozenset[int], tuple[VarInfo, ...]]] = {}
+        self._owner_groups: dict[tuple, OwnerIndex] = {}
         self._subset_metadata: OrderedDict[
             tuple, dict[str, object]
         ] = OrderedDict()
         self.subset_metadata_limit = SUBSET_METADATA_MAX_ENTRIES
+        self._support_cache: OrderedDict[tuple, SupportCacheEntry] = OrderedDict()
+        self.support_cache_limit = SUPPORT_CACHE_MAX_ENTRIES
+        self.support_cache_byte_limit = SUPPORT_CACHE_MAX_BYTES
+        self._support_cache_weights: dict[tuple, int] = {}
+        self._support_cache_bytes = 0
+        self._projection_metadata: OrderedDict[
+            tuple, tuple[object, frozenset[int], object | None]
+        ] = OrderedDict()
+        self.projection_metadata_limit = SUBSET_METADATA_MAX_ENTRIES
+        self.projection_metadata_byte_limit = PROJECTION_METADATA_MAX_BYTES
+        self._projection_metadata_weights: dict[tuple, int] = {}
+        self._projection_metadata_bytes = 0
+        self._cube_cache: OrderedDict[tuple[int, ...], object] = OrderedDict()
+        self.cube_cache_limit = SUBSET_METADATA_MAX_ENTRIES
+        self.cube_cache_byte_limit = CUBE_CACHE_MAX_BYTES
+        self._cube_cache_weights: dict[tuple[int, ...], int] = {}
+        self._cube_cache_bytes = 0
         self.inverse_normal: dict[int, tuple] = {}
         self.normalization_mapping: tuple[tuple[str, int], ...] = ()
+        normalization_keys = self._normalization_keys()
+        instances = (*self.seeds, self.target)
+        public_variables = max(
+            (max((item.index for item in instance.variables), default=-1) + 1
+             for instance in instances),
+            default=0,
+        )
+        public_states = len(target.game.latches)
+        public_letters = len(target.game.inputs)
+        public_variables = max(
+            public_variables, public_states + public_letters,
+            *(len(instance.cert.inputs) for instance in self.seeds
+              if instance.cert is not None),
+        )
+        self.layout = VariableLayout.plan(
+            public_variables=public_variables,
+            public_states=public_states,
+            public_letters=public_letters,
+            composition_states=public_states,
+            composition_letters=public_letters,
+            policy_counters=len(target.goals),
+            canonical_templates=len(normalization_keys),
+            variable_limit=bdds.variable_limit,
+        )
+        bdds._activate_layout(self.layout, normalization_keys)
+        self._freeze_normalization(normalization_keys)
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.extra["variable_layout"] = self.layout.description()
         if self.enabled:
-            self._freeze_normalization()
             for seed in self.seeds:
                 if seed.cert is not None:
                     self.certificate_context(seed)
@@ -1239,7 +1582,7 @@ class GeneralizationAttemptContext:
         if self.manager_lifetime is not self.bdds.manager_lifetime:
             raise RuntimeError("generalization context belongs to another BDD manager")
 
-    def _freeze_normalization(self) -> None:
+    def _normalization_keys(self) -> tuple[tuple, ...]:
         keys = set()
         for seed in self.seeds:
             upper = min(MAX_PREDICATE_ARITY, seed.n)
@@ -1251,17 +1594,18 @@ class GeneralizationAttemptContext:
                         for goal in seed.goals if goal.owner in subset0
                     )
                     for subset in orderings:
-                        selected = frozenset(subset)
                         slots = {
                             client: position
                             for position, client in enumerate(subset)
                         }
                         keys.update(
                             _normal_key(item.key, slots)
-                            for item in seed.variables
-                            if not item.owners or item.owners <= selected
+                            for item in self._groups(seed).keep_items(subset)
                         )
-        for key in sorted(keys, key=repr):
+        return tuple(sorted(keys, key=repr))
+
+    def _freeze_normalization(self, keys: tuple[tuple, ...]) -> None:
+        for key in keys:
             self.bdds.normal_var(key)
         self.inverse_normal = {
             value: key for key, value in self.bdds.normal.items()
@@ -1300,6 +1644,8 @@ class GeneralizationAttemptContext:
             ]
             self._compiled[identity] = CompiledAagContext(
                 self.bdds, instance.cert, identity, abi, variable_map,
+                {index: variable_map[literal // 2]
+                 for index, literal in enumerate(instance.cert.inputs)},
                 required_roots,
             )
         return self._compiled[identity]
@@ -1313,11 +1659,15 @@ class GeneralizationAttemptContext:
         )
         if identity not in self._compiled:
             nstate = len(game.latches)
+            if (nstate != self.layout.public_state_count or
+                    len(game.inputs) != self.layout.public_letter_count):
+                raise ValueError("game ABI does not match the attempt variable layout")
             variable_map = {
-                row[0] // 2: index for index, row in enumerate(game.latches)
+                row[0] // 2: self.layout.public_state(index)
+                for index, row in enumerate(game.latches)
             }
             variable_map.update({
-                literal // 2: nstate + index
+                literal // 2: self.layout.public_letter(index)
                 for index, literal in enumerate(game.inputs)
             })
             abi = tuple(
@@ -1327,7 +1677,11 @@ class GeneralizationAttemptContext:
                    for index, name in enumerate(game.input_names)]
             )
             self._compiled[identity] = CompiledAagContext(
-                self.bdds, game, identity, abi, variable_map)
+                self.bdds, game, identity, abi, variable_map,
+                ({index: self.layout.public_state(index)
+                  for index in range(nstate)} |
+                 {nstate + index: self.layout.public_letter(index)
+                  for index in range(len(game.inputs))}))
         return self._compiled[identity]
 
     def predicate_cache_key(
@@ -1375,38 +1729,56 @@ class GeneralizationAttemptContext:
         while len(self._subset_metadata) > self.subset_metadata_limit:
             self._subset_metadata.popitem(last=False)
 
-    def _groups(self, instance: Instance) -> dict[
-            frozenset[int], tuple[VarInfo, ...]]:
+    @staticmethod
+    def _cache_get_lru(cache: OrderedDict, key: object) -> object:
+        value = cache.pop(key)
+        cache[key] = value
+        return value
+
+    @staticmethod
+    def _cache_put_bounded(
+            cache: OrderedDict, weights: dict, key: object, value: object,
+            weight: int, current_bytes: int, entry_limit: int,
+            byte_limit: int) -> int:
+        if entry_limit < 0 or byte_limit < 0:
+            raise ValueError("cache limits must be non-negative")
+        if key in cache:
+            cache.pop(key)
+            current_bytes -= weights.pop(key)
+        cache[key] = value
+        weights[key] = weight
+        current_bytes += weight
+        while cache and (
+                len(cache) > entry_limit or current_bytes > byte_limit):
+            evicted_key, _evicted = cache.popitem(last=False)
+            current_bytes -= weights.pop(evicted_key)
+        return current_bytes
+
+    def _bdd_payload_bytes(self, root: object) -> int:
+        nodes = int(self.bdds.buddy.bdd_nodecount(root))
+        if nodes < 0:
+            raise RuntimeError(f"bdd_nodecount failed with status {nodes}")
+        return sys.getsizeof(root) + nodes * BUDDY_NODE_ACCOUNTING_BYTES
+
+    def _groups(self, instance: Instance) -> OwnerIndex:
         identity = _instance_identity(instance)
         if identity not in self._owner_groups:
-            grouped: dict[frozenset[int], list[VarInfo]] = defaultdict(list)
-            for item in instance.variables:
-                grouped[item.owners].append(item)
-            self._owner_groups[identity] = {
-                owners: tuple(items) for owners, items in grouped.items()
-            }
+            self._owner_groups[identity] = OwnerIndex(instance.variables)
         return self._owner_groups[identity]
 
     def subset_metadata(self, instance: Instance,
                         subset: tuple[int, ...]) -> dict[str, object]:
         self._check_live()
-        key = (_instance_identity(instance), subset, self.normalization_mapping)
+        key = (_instance_identity(instance), subset, self.normalization_mapping,
+               self.layout.identity)
         try:
             metadata = self._subset_metadata.pop(key)
         except KeyError:
             if _DIAGNOSTICS is not None:
                 _DIAGNOSTICS.counters["subset_metadata_cache_misses"] += 1
-            selected = frozenset(subset)
             slots = {client: position for position, client in enumerate(subset)}
-            keep_items = tuple(
-                item
-                for owners, items in self._groups(instance).items()
-                if not owners or owners <= selected
-                for item in items
-            )
-            keep = {item.index for item in keep_items}
-            all_variables = {item.index for item in instance.variables}
-            drop = all_variables - keep
+            keep_items = self._groups(instance).keep_items(subset)
+            keep = frozenset(item.index for item in keep_items)
             mapping = {
                 item.index: self.bdds.normal_var(_normal_key(item.key, slots))
                 for item in keep_items
@@ -1417,8 +1789,6 @@ class GeneralizationAttemptContext:
             }
             metadata = {
                 "keep": keep,
-                "drop": drop,
-                "drop_cube": self.bdds.cube(drop) if drop else None,
                 "mapping": mapping,
                 "reverse": reverse,
                 "concrete": concrete,
@@ -1429,6 +1799,113 @@ class GeneralizationAttemptContext:
         self._subset_cache_put(key, metadata)
         return metadata
 
+    def exact_public_support(
+            self, function: object,
+            public_to_bdd: dict[int, int]) -> SupportCacheEntry:
+        """Return exact semantic support for one owned root and ABI mapping."""
+        self._check_live()
+        mapping = tuple(sorted(public_to_bdd.items()))
+        if len({bdd_variable for _public, bdd_variable in mapping}) != len(mapping):
+            raise ValueError("public-to-BDD variable mapping must be injective")
+        # Python object identity is used only to find this owned root; this is
+        # never a collectable/reusable BuDDy node ID.
+        key = (id(function), mapping)
+        try:
+            entry = self._cache_get_lru(self._support_cache, key)
+        except KeyError:
+            if _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.counters["support_cache_misses"] += 1
+            bdd_variables = frozenset(_support(self.bdds, function))
+            bdd_to_public = {
+                bdd_variable: public
+                for public, bdd_variable in mapping
+            }
+            missing = bdd_variables - bdd_to_public.keys()
+            if missing:
+                raise KeyError(
+                    f"root support has unregistered BDD variables {sorted(missing)}"
+                )
+            entry = SupportCacheEntry(
+                function,
+                mapping,
+                bdd_variables,
+                frozenset(bdd_to_public[variable] for variable in bdd_variables),
+                self._bdd_payload_bytes(function),
+            )
+        else:
+            if entry.root is not function:
+                raise RuntimeError("support-cache Python identity was unexpectedly reused")
+            if _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.counters["support_cache_hits"] += 1
+            return entry
+        weight = sys.getsizeof(entry) + entry.root_payload_bytes + _retained_python_bytes(
+            key, entry.mapping, entry.bdd_variables, entry.public_variables)
+        self._support_cache_bytes = self._cache_put_bounded(
+            self._support_cache, self._support_cache_weights, key, entry,
+            weight, self._support_cache_bytes, self.support_cache_limit,
+            self.support_cache_byte_limit,
+        )
+        return entry
+
+    def projection_drop(
+            self, instance: Instance, subset: tuple[int, ...], function: object,
+            public_to_bdd: dict[int, int], keep: frozenset[int],
+            support: SupportCacheEntry | None = None,
+    ) -> tuple[frozenset[int], object | None]:
+        """Cache the support-restricted public drop set and its BDD cube."""
+        self._check_live()
+        entry = support or self.exact_public_support(function, public_to_bdd)
+        key = (
+            id(function), entry.mapping, _instance_identity(instance), subset,
+            self.layout.identity,
+        )
+        try:
+            owned_root, drop, drop_cube = self._cache_get_lru(
+                self._projection_metadata, key)
+        except KeyError:
+            drop = entry.public_variables - keep
+            mapping = dict(entry.mapping)
+            cube_variables = tuple(sorted(mapping[public] for public in drop))
+            if cube_variables:
+                try:
+                    drop_cube = self._cache_get_lru(
+                        self._cube_cache, cube_variables)
+                except KeyError:
+                    drop_cube = self.bdds.cube(cube_variables)
+                    cube_weight = (
+                        self._bdd_payload_bytes(drop_cube)
+                        + _retained_python_bytes(cube_variables)
+                    )
+                    self._cube_cache_bytes = self._cache_put_bounded(
+                        self._cube_cache, self._cube_cache_weights,
+                        cube_variables, drop_cube, cube_weight,
+                        self._cube_cache_bytes, self.cube_cache_limit,
+                        self.cube_cache_byte_limit,
+                    )
+            else:
+                drop_cube = None
+            owned_root = function
+        else:
+            if owned_root is not function:
+                raise RuntimeError("projection-cache Python identity was unexpectedly reused")
+            return drop, drop_cube
+        projection_value = (owned_root, drop, drop_cube)
+        projection_weight = (
+            sys.getsizeof(projection_value)
+            + entry.root_payload_bytes
+            + _retained_python_bytes(key, drop)
+        )
+        if drop_cube is not None:
+            projection_weight += self._bdd_payload_bytes(drop_cube)
+        self._projection_metadata_bytes = self._cache_put_bounded(
+            self._projection_metadata, self._projection_metadata_weights,
+            key, projection_value, projection_weight,
+            self._projection_metadata_bytes,
+            self.projection_metadata_limit,
+            self.projection_metadata_byte_limit,
+        )
+        return drop, drop_cube
+
     def release(self) -> None:
         if self._released:
             return
@@ -1438,43 +1915,68 @@ class GeneralizationAttemptContext:
         self.template_cache.clear()
         self._owner_groups.clear()
         self._subset_metadata.clear()
+        self._support_cache.clear()
+        self._support_cache_weights.clear()
+        self._support_cache_bytes = 0
+        self._projection_metadata.clear()
+        self._projection_metadata_weights.clear()
+        self._projection_metadata_bytes = 0
+        self._cube_cache.clear()
+        self._cube_cache_weights.clear()
+        self._cube_cache_bytes = 0
         self.inverse_normal.clear()
         self.normalization_mapping = ()
+        self.bdds._deactivate_layout(self.layout)
         self._released = True
         if self.bdds.attempt_context is self:
             self.bdds.attempt_context = None
 
 
 class Bdds:
-    def __init__(self, var_count: int = 8192):
-        global _BUDDY_MANAGER_LIFETIME, _DIAGNOSTIC_BUDDY
+    def __init__(self, var_count: int | None = None):
+        global _BUDDY_MANAGER_LIFETIME, _BUDDY_VARIABLE_COUNT, _DIAGNOSTIC_BUDDY
         buddy, _extension, binding_path, extension_path = load_buddy_bindings(
             BINDINGS_SITE
         )
         self.buddy = buddy
-        if not buddy.bdd_isrunning():
-            buddy.bdd_init(8_000_000, 800_000)
-            # BuDDy cannot lower this later; set it once for every seed and
-            # target.  Do not bdd_done() between instances: Python proxy
-            # destructors may still hold references and crash after teardown.
-            buddy.bdd_setvarnum(var_count)
-            buddy.bdd_setmaxincrease(2_000_000)
-            _BUDDY_MANAGER_LIFETIME = object()
-        elif _BUDDY_MANAGER_LIFETIME is None:
-            _BUDDY_MANAGER_LIFETIME = object()
-        self.manager_lifetime = _BUDDY_MANAGER_LIFETIME
-        self.var_count = var_count
-        self.next_base = var_count // 4
-        self.normal_base = var_count // 2
-        self.normal: dict[tuple, int] = {}
-        # Select the fallback before constructing any adapter.  Runtime code
-        # never builds an adapter and leaves this as None on the two-pass path.
+        # Validate the backend identity and select every potentially failing
+        # variable-growth call before initializing or touching the manager.
         self.compose_route = _compose_route()
         self._veccompose = None
         if self.compose_route == "native_veccompose":
             assert TOOL_CONFIG.buddy_adapter is not None
             self._veccompose = BuddyVeccomposeAdapter(
                 buddy, extension_path, TOOL_CONFIG.buddy_adapter)
+            self._variables = self._veccompose
+        else:
+            self._variables = BuddyVariableAdapter(buddy, extension_path)
+        if self._variables.max_variable_count != BDD_COORDINATE_LIMIT:
+            raise RuntimeError(
+                "validated BuDDy variable ceiling does not match the layout "
+                f"ceiling: {self._variables.max_variable_count} != "
+                f"{BDD_COORDINATE_LIMIT}"
+            )
+        if var_count is not None and not 0 <= var_count <= BDD_COORDINATE_LIMIT:
+            raise OverflowError(
+                f"BDD variable requirement {var_count} exceeds backend maximum "
+                f"{BDD_COORDINATE_LIMIT}"
+            )
+        if not buddy.bdd_isrunning():
+            buddy.bdd_init(8_000_000, 800_000)
+            buddy.bdd_setmaxincrease(2_000_000)
+            _BUDDY_MANAGER_LIFETIME = object()
+            _BUDDY_VARIABLE_COUNT = 0
+        elif _BUDDY_MANAGER_LIFETIME is None:
+            _BUDDY_MANAGER_LIFETIME = object()
+            _BUDDY_VARIABLE_COUNT = self._variables.variable_count()
+        self.manager_lifetime = _BUDDY_MANAGER_LIFETIME
+        self.variable_limit = var_count
+        assert _BUDDY_VARIABLE_COUNT is not None
+        self.var_count = _BUDDY_VARIABLE_COUNT
+        self.layout: VariableLayout | None = None
+        self.normal: dict[tuple, int] = {}
+        if var_count is not None:
+            self._ensure_variables(var_count)
         self.attempt_context: GeneralizationAttemptContext | None = None
         if _DIAGNOSTICS_ENABLED:
             try:
@@ -1519,8 +2021,55 @@ class Bdds:
                       target: Instance) -> GeneralizationAttemptContext:
         if self.attempt_context is not None:
             raise RuntimeError("a generalization attempt context is already active")
-        self.attempt_context = GeneralizationAttemptContext(self, seeds, target)
+        try:
+            self.attempt_context = GeneralizationAttemptContext(self, seeds, target)
+        except Exception:
+            self.layout = None
+            self.normal.clear()
+            raise
         return self.attempt_context
+
+    def _ensure_variables(self, required: int) -> None:
+        global _BUDDY_VARIABLE_COUNT
+        if required < 0 or required > BDD_COORDINATE_LIMIT:
+            raise OverflowError(f"invalid BDD variable requirement {required}")
+        if self.variable_limit is not None and required > self.variable_limit:
+            raise OverflowError(
+                f"BDD variable requirement {required} exceeds limit "
+                f"{self.variable_limit}"
+            )
+        assert _BUDDY_VARIABLE_COUNT is not None
+        current = _BUDDY_VARIABLE_COUNT
+        if required > current:
+            self._variables.set_variable_count(required)
+            current = self._variables.variable_count()
+            if current < required:
+                raise RuntimeError(
+                    "checked BDD variable growth returned fewer variables than "
+                    f"requested: {current} < {required}"
+                )
+            _BUDDY_VARIABLE_COUNT = current
+        self.var_count = current
+
+    def _activate_layout(
+            self, layout: VariableLayout,
+            normalization_keys: tuple[tuple, ...]) -> None:
+        if self.layout is not None:
+            raise RuntimeError("a BDD variable layout is already active")
+        if layout.canonical_templates.size != len(normalization_keys):
+            raise ValueError("canonical key count does not match its BDD block")
+        self._ensure_variables(layout.required_variables)
+        self.layout = layout
+        self.normal = {
+            key: layout.canonical_templates.coordinate(index)
+            for index, key in enumerate(normalization_keys)
+        }
+
+    def _deactivate_layout(self, layout: VariableLayout) -> None:
+        if self.layout is not layout:
+            raise RuntimeError("attempt released a different BDD variable layout")
+        self.normal.clear()
+        self.layout = None
 
     def cube(self, variables: Iterable[int]):
         diagnostic_token = (
@@ -1529,7 +2078,10 @@ class Bdds:
         )
         result = self.buddy.bddtrue
         try:
-            for variable in sorted(set(variables)):
+            ordered = sorted(set(variables))
+            if ordered:
+                self._ensure_variables(ordered[-1] + 1)
+            for variable in ordered:
                 result &= self.buddy.bdd_ithvar(variable)
             return result
         finally:
@@ -1538,6 +2090,7 @@ class Bdds:
 
     def from_aag_uncached(self, aag: Aag, literal: int):
         """HEAD-compatible single-root importer retained as a test oracle."""
+        self._ensure_variables(len(aag.inputs))
         diagnostic_token = (
             _diagnostic_begin("from_aag") if _DIAGNOSTICS_ENABLED else None
         )
@@ -1601,7 +2154,8 @@ class Bdds:
             self.manager_lifetime,
         )
         context = CompiledAagContext(
-            self, aag, identity, abi, variable_map, (literal,))
+            self, aag, identity, abi, variable_map,
+            {index: index for index in range(len(aag.inputs))}, (literal,))
         try:
             return context.root(literal)
         finally:
@@ -1609,6 +2163,7 @@ class Bdds:
 
     def game_functions(self, game: Aag):
         """Compile game literals over public certificate variable indices."""
+        self._ensure_variables(len(game.latches) + len(game.inputs))
         if self.attempt_context is not None and self.attempt_context.enabled:
             return self.attempt_context.game_context(game).game_functions()
         if not _reference_aag_context_enabled():
@@ -1631,7 +2186,8 @@ class Bdds:
                 abi, self.manager_lifetime,
             )
             context = CompiledAagContext(
-                self, game, identity, abi, variable_map)
+                self, game, identity, abi, variable_map,
+                {index: index for index in range(nstate + len(game.inputs))})
             try:
                 return context.game_functions()
             finally:
@@ -1673,10 +2229,15 @@ class Bdds:
         The native adapter uses ``bdd_veccompose``.  The temporary block stays
         in this API only for the retained two-pass test/reference oracle.
         """
-        if self.next_base + len(next_state) >= self.normal_base:
-            raise OverflowError("next-state auxiliary BDD budget exhausted")
+        if self.layout is None:
+            raise RuntimeError("state substitution requires an active variable layout")
+        if len(next_state) > self.layout.composition_state_count:
+            raise OverflowError("next-state functions exceed the composition layout")
         variables = list(range(len(next_state)))
-        temporaries = [self.next_base + variable for variable in variables]
+        temporaries = [
+            self.layout.composition_temporary(variable)
+            for variable in variables
+        ]
         return self.substitute_variables(
             function, variables, next_state, temporaries)
 
@@ -1776,12 +2337,14 @@ class Bdds:
                 _diagnostic_end(diagnostic_token)
 
     def normal_var(self, key: tuple) -> int:
-        if key not in self.normal:
-            index = self.normal_base + len(self.normal)
-            if index >= self.var_count:
-                raise OverflowError("canonical BDD variable budget exhausted")
-            self.normal[key] = index
-        return self.normal[key]
+        if self.layout is None:
+            raise RuntimeError("canonical variables require an active variable layout")
+        try:
+            return self.normal[key]
+        except KeyError as error:
+            raise OverflowError(
+                f"canonical variable {key!r} was not reserved before BDD work"
+            ) from error
 
     def to_aag(self, builder: AagBuilder, function, variable_map: dict[int, int],
                memo: dict[int, int] | None = None) -> int:
@@ -1868,17 +2431,29 @@ def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
                          cache_key: tuple | None = None) -> TemplateSet:
     assert instance.cert is not None
     if context is not None and context.enabled:
-        function = context.certificate_context(instance).root(
-            instance.cert.output(name))
+        certificate_context = context.certificate_context(instance)
+        function = certificate_context.root(instance.cert.output(name))
+        public_to_bdd = certificate_context.public_to_bdd
+        function_support = context.exact_public_support(
+            function, public_to_bdd)
     else:
         function = bdds.from_aag_uncached(
             instance.cert, instance.cert.output(name))
+        public_to_bdd = {
+            public: public for public in range(len(instance.cert.inputs))
+        }
+        bdd_to_public = {
+            bdd_variable: public
+            for public, bdd_variable in public_to_bdd.items()
+        }
+        function_support = frozenset(
+            bdd_to_public[variable] for variable in _support(bdds, function)
+        )
     metadata_token = (
         _diagnostic_begin("projection_metadata")
         if _DIAGNOSTICS_ENABLED else None
     )
     try:
-        all_vars = {item.index for item in instance.variables}
         templates = TemplateSet(cache_key=cache_key)
         rebuilt = bdds.buddy.bddtrue
     finally:
@@ -1894,25 +2469,31 @@ def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
             if context is not None and context.enabled:
                 metadata = context.subset_metadata(instance, subset)
                 keep = metadata["keep"]
-                drop = metadata["drop"]
-                drop_cube = metadata["drop_cube"]
                 mapping = metadata["mapping"]
                 reverse = metadata["reverse"]
+                drop, drop_cube = context.projection_drop(
+                    instance, subset, function, public_to_bdd, keep,
+                    function_support)
             else:
                 selected = frozenset(subset)
-                keep = {item.index for item in instance.variables
-                        if not item.owners or item.owners <= selected}
-                drop = all_vars - keep
+                keep_items = tuple(sorted(
+                    (item for item in instance.variables
+                     if not item.owners or item.owners <= selected),
+                    key=lambda item: item.index,
+                ))
+                keep = frozenset(item.index for item in keep_items)
+                drop = function_support - keep
                 slots = {client: pos for pos, client in enumerate(subset)}
                 mapping = {
                     item.index: bdds.normal_var(_normal_key(item.key, slots))
-                    for item in instance.variables if item.index in keep
+                    for item in keep_items
                 }
                 reverse = {
                     bdds.normal_var(_normal_key(item.key, slots)): item.index
-                    for item in instance.variables if item.index in keep
+                    for item in keep_items
                 }
-                drop_cube = bdds.cube(drop) if drop else None
+                drop_cube = bdds.cube(
+                    public_to_bdd[public] for public in drop) if drop else None
             if _DIAGNOSTICS_ENABLED:
                 _diagnostic_record_subset(instance.n, subset, "projection")
         finally:
@@ -2522,15 +3103,18 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
     # Build the relation selected by the effective goal counter.
     nstate = len(target.game.latches)
     ngoals = len(target.goals)
+    if bdds.layout is None:
+        raise RuntimeError("policy construction requires an active variable layout")
+    layout = bdds.layout
+    if ngoals != layout.policy_counter.size:
+        raise ValueError("policy counter does not match the attempt variable layout")
     # Use a policy-only variable order with the counter before the game.  In
     # the certificate ABI state necessarily comes first, but using that order
     # for the goal mux expands every move relation before inspecting curr.
-    curr_base = 512
-    policy_game_base = 1024
     public_game_vars = nstate + len(target.game.inputs)
-    if policy_game_base + public_game_vars >= bdds.next_base:
-        raise OverflowError("policy BDD variable block exhausted")
-    policy_game_map = {i: policy_game_base + i
+    if public_game_vars != layout.policy_game.size:
+        raise ValueError("policy game ABI does not match the attempt variable layout")
+    policy_game_map = {i: layout.policy_game.coordinate(i)
                        for i in range(public_game_vars)}
     policy_moves = []
     policy_goals = []
@@ -2547,7 +3131,7 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
     any_curr = bdds.buddy.bddfalse
     curr = []
     for j in range(ngoals):
-        bit = bdds.buddy.bdd_ithvar(curr_base + j)
+        bit = bdds.buddy.bdd_ithvar(layout.policy_counter.coordinate(j))
         curr.append(bit)
         any_curr |= bit
     effective = [curr[0] | bdds.buddy.bdd_not(any_curr), *curr[1:]]
@@ -2556,7 +3140,7 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
         relation |= effective[j] & policy_moves[j]
     _trace("policy goal relation muxed")
 
-    controls = [policy_game_base + nstate + p
+    controls = [layout.policy_game.coordinate(nstate + p)
                 for p, name in enumerate(target.game.input_names)
                 if name.startswith("controllable_")]
     functions = []
@@ -2585,9 +3169,10 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
     policy_inputs = [*target.game.latch_names,
                      *(f"curr_{j}" for j in range(ngoals)),
                      *(name for _p, name in uncontrollable)]
-    remap = {policy_game_base + i: i for i in range(nstate)}
-    remap.update({curr_base + j: nstate + j for j in range(ngoals)})
-    remap.update({policy_game_base + nstate + p: nstate + ngoals + j
+    remap = {layout.policy_game.coordinate(i): i for i in range(nstate)}
+    remap.update({layout.policy_counter.coordinate(j): nstate + j
+                  for j in range(ngoals)})
+    remap.update({layout.policy_game.coordinate(nstate + p): nstate + ngoals + j
                   for j, (p, _name) in enumerate(uncontrollable)})
     policy_builder = AagBuilder(policy_inputs)
     policy_outputs = []
@@ -2938,6 +3523,8 @@ def _collector_candidate(
         "compose_route": _compose_route(),
         "family": target.family, "target": target.n,
         "seeds": [seed.n for seed in seeds], "arity": candidate.arity,
+        "variable_layout": (
+            bdds.layout.description() if bdds.layout is not None else None),
         "role_classes": list(candidate.role_classes),
         "bus_schemas": list(candidate.bus_schemas),
         "template_counts": dict(candidate.template_counts),
@@ -3118,11 +3705,16 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
         # transferring seed tie-breaking and doing irrelevant work before a
         # later predicate-specific arity decline.
         if not structured_moves:
+            if bdds.layout is None:
+                raise RuntimeError("move construction requires an active variable layout")
+            layout = bdds.layout
             # Move construction needs T[s:=next].  Use an interleaved internal
             # order (s0,s0',s1,s1',...,letters) so substitution does not
             # create a far-away-auxiliary intermediate.
-            internal_map = {i: 2 * i for i in range(nstate)}
-            internal_map.update({nstate + p: 2 * nstate + p
+            internal_map = {
+                i: layout.composition_current(i) for i in range(nstate)
+            }
+            internal_map.update({nstate + p: layout.composition_letter(p)
                                  for p in range(len(target.game.inputs))})
             public_map = {value: key for key, value in internal_map.items()}
 
@@ -3134,8 +3726,12 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
             internal_next = [internal(function) for function in next_state]
             internal_inv = internal(inv)
             internal_not_bad = bdds.buddy.bdd_not(internal(game_bad))
-            internal_state = [2 * i for i in range(nstate)]
-            internal_temp = [2 * i + 1 for i in range(nstate)]
+            internal_state = [
+                layout.composition_current(i) for i in range(nstate)
+            ]
+            internal_temp = [
+                layout.composition_temporary(i) for i in range(nstate)
+            ]
             internal_w_safe = internal_not_bad & bdds.substitute_variables(
                 internal_inv, internal_state, internal_next, internal_temp)
             _trace("target invariant transition composed")
@@ -3197,6 +3793,7 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                     "family": family, "target": target_n,
                     "seeds": list(seed_ns), "arity": candidate.arity,
                     "predicate_arities": dict(candidate.predicate_arities),
+                    "variable_layout": context.layout.description(),
                     "role_classes": list(candidate.role_classes),
                     "bus_schemas": list(candidate.bus_schemas),
                     "template_counts": dict(candidate.template_counts),

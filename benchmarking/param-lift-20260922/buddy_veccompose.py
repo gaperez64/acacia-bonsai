@@ -13,6 +13,14 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 SOURCE = HERE / "native" / "buddy_veccompose_adapter.cc"
 SIDECAR_SCHEMA = "acacia-buddy-veccompose-adapter-v1"
+BUDDY_MAX_VARIABLE_COUNT = 2_097_150
+# BuDDy does not publish its variable ceiling through the C API or installed
+# header.  Keep the measured ceiling tied to the exact library image that was
+# validated when this adapter was introduced; unknown builds fail closed.
+PINNED_BDDX_MAX_VARIABLE_COUNTS = {
+    "a991f2049c44e3f3cf9102b7d40d9efc2c5bb2b8a3a1af7d120f7c23c9caf44d":
+        BUDDY_MAX_VARIABLE_COUNT,
+}
 
 
 class BuddyAdapterError(RuntimeError):
@@ -53,6 +61,17 @@ def _one_loaded_bddx() -> pathlib.Path:
             + (", ".join(map(str, paths)) if paths else "none")
         )
     return paths[0]
+
+
+def _max_variable_count(bddx: pathlib.Path) -> int:
+    digest = _sha256(bddx)
+    try:
+        return PINNED_BDDX_MAX_VARIABLE_COUNTS[digest]
+    except KeyError as error:
+        raise BuddyAdapterError(
+            "no validated variable ceiling for loaded libbddx "
+            f"{bddx} (sha256 {digest})"
+        ) from error
 
 
 def _linked_bddx(adapter: pathlib.Path) -> pathlib.Path:
@@ -151,6 +170,80 @@ def _validate_sidecar(
     return payload
 
 
+class BuddyVariableAdapter:
+    """Checked variable-count access for the no-native-compose route."""
+
+    _error_callback_type = ctypes.CFUNCTYPE(None, ctypes.c_int)
+
+    def __init__(self, buddy: object, extension_path: pathlib.Path):
+        bddx = _one_loaded_bddx()
+        library = ctypes.CDLL(str(bddx))
+        library.bdd_varnum.argtypes = []
+        library.bdd_varnum.restype = ctypes.c_int
+        library.bdd_setvarnum.argtypes = [ctypes.c_int]
+        library.bdd_setvarnum.restype = ctypes.c_int
+        library.bdd_error_hook.argtypes = [ctypes.c_void_p]
+        library.bdd_error_hook.restype = ctypes.c_void_p
+        library.bdd_clear_error.argtypes = []
+        library.bdd_clear_error.restype = None
+
+        binding_library = ctypes.CDLL(str(extension_path))
+        binding_address = ctypes.cast(
+            binding_library.bdd_versionnum, ctypes.c_void_p
+        ).value
+        library_address = ctypes.cast(
+            library.bdd_versionnum, ctypes.c_void_p
+        ).value
+        if binding_address != library_address:
+            raise BuddyAdapterError(
+                "buddy extension and checked variable adapter use different "
+                "libbddx symbols"
+            )
+        self._buddy = buddy
+        self._library = library
+        self.bddx_path = bddx
+        self.max_variable_count = _max_variable_count(bddx)
+
+    def variable_count(self) -> int:
+        count = int(self._library.bdd_varnum())
+        if count < 0:
+            raise BuddyAdapterError(f"bdd_varnum failed with status {count}")
+        return count
+
+    def set_variable_count(self, required: int) -> None:
+        if not 0 <= required <= self.max_variable_count:
+            raise OverflowError(
+                f"BDD variable requirement {required} exceeds backend maximum "
+                f"{self.max_variable_count}"
+            )
+        buddy_error = 0
+
+        def record_error(status: int) -> None:
+            nonlocal buddy_error
+            if buddy_error == 0:
+                buddy_error = status
+
+        callback = self._error_callback_type(record_error)
+        previous = self._library.bdd_error_hook(
+            ctypes.cast(callback, ctypes.c_void_p)
+        )
+        try:
+            status = int(self._library.bdd_setvarnum(required))
+        finally:
+            self._library.bdd_error_hook(previous)
+        if buddy_error != 0 or status < 0:
+            error_status = buddy_error or status
+            self._library.bdd_clear_error()
+            try:
+                detail = self._buddy.bdd_errstring(error_status)
+            except (AttributeError, TypeError):
+                detail = ""
+            raise BuddyAdapterError(
+                "bdd_setvarnum failed "
+                f"({error_status}): {detail or 'unknown BuDDy error'}"
+            )
+
+
 class BuddyVeccomposeAdapter:
     """A checked bridge from SWIG-owned ``bdd *`` proxies to bdd_veccompose."""
 
@@ -181,8 +274,16 @@ class BuddyVeccomposeAdapter:
         library.p2a_bdd_veccompose.restype = ctypes.c_int
         library.p2a_bdd_gbc.argtypes = []
         library.p2a_bdd_gbc.restype = ctypes.c_int
+        library.p2a_bdd_setvarorder_for_testing.argtypes = [
+            ctypes.POINTER(ctypes.c_int), ctypes.c_size_t,
+        ]
+        library.p2a_bdd_setvarorder_for_testing.restype = ctypes.c_int
         library.p2a_bdd_varnum.argtypes = []
         library.p2a_bdd_varnum.restype = ctypes.c_int
+        library.p2a_bdd_max_variable_count.argtypes = []
+        library.p2a_bdd_max_variable_count.restype = ctypes.c_int
+        library.p2a_bdd_setvarnum_checked.argtypes = [ctypes.c_int]
+        library.p2a_bdd_setvarnum_checked.restype = ctypes.c_int
         library.p2a_bdd_last_error.argtypes = []
         library.p2a_bdd_last_error.restype = ctypes.c_char_p
         library.p2a_bdd_versionnum_address.argtypes = []
@@ -209,6 +310,13 @@ class BuddyVeccomposeAdapter:
         self.sidecar = sidecar
         self.bddx_path = loaded_before
         self.symbol_address = adapter_address
+        self.max_variable_count = _max_variable_count(loaded_before)
+        native_maximum = int(library.p2a_bdd_max_variable_count())
+        if native_maximum != self.max_variable_count:
+            raise BuddyAdapterError(
+                "native adapter variable ceiling does not match its validated "
+                f"libbddx identity: {native_maximum} != {self.max_variable_count}"
+            )
 
     def description(self) -> dict[str, object]:
         return {
@@ -217,6 +325,7 @@ class BuddyVeccomposeAdapter:
             "libbddx": str(self.bddx_path),
             "symbol_address": self.symbol_address,
             "sidecar_schema": self.sidecar["schema"],
+            "max_variable_count": self.max_variable_count,
         }
 
     def _raise_status(self, operation: str, status: int) -> None:
@@ -259,10 +368,31 @@ class BuddyVeccomposeAdapter:
             self._raise_status("bdd_varnum", count)
         return count
 
+    def set_variable_count(self, required: int) -> None:
+        if not 0 <= required <= self.max_variable_count:
+            raise OverflowError(
+                f"BDD variable requirement {required} exceeds backend maximum "
+                f"{self.max_variable_count}"
+            )
+        status = self._library.p2a_bdd_setvarnum_checked(required)
+        if status != 0:
+            self._raise_status("bdd_setvarnum", status)
+
     def collect_garbage(self) -> None:
         status = self._library.p2a_bdd_gbc()
         if status != 0:
             self._raise_status("bdd_gbc", status)
+
+    def set_variable_order_for_testing(self, variables: list[int]) -> None:
+        """Install a complete semantic-variable order for regression tests."""
+        count = self.variable_count()
+        if len(variables) != count or set(variables) != set(range(count)):
+            raise ValueError("variable order must be a complete permutation")
+        native_variables = (ctypes.c_int * count)(*variables)
+        status = self._library.p2a_bdd_setvarorder_for_testing(
+            native_variables, count)
+        if status != 0:
+            self._raise_status("bdd_setvarorder", status)
 
     def force_failure_for_testing(self, status: int = -11) -> None:
         self._library.p2a_bdd_force_failure_for_testing(status)

@@ -33,3 +33,7 @@ Semantic equivalence: certificates/policies BDD-equivalent to HEAD on the genera
 instances. Each step a separate patch in build_scratch/p2b/stepN.patch + note. Full
 test_generalize_gr1.py and the other suites green; ruff clean on touched files. Use --diagnostics
 on tiny instances to show projection/support time and counts before/after. VERDICT at the end.
+
+MACHINE MAY BE RUNNING TIMED MEASUREMENTS: before compiling anything or running test_generalize_gr1.py
+or any other heavy work, wait until build_scratch/seq2/progress.txt contains a line starting with
+"SEQ2 DONE" (poll every 60 s with sleep). Reading code, editing, and fast unit tests are fine meanwhile.

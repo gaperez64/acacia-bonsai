@@ -8,8 +8,10 @@ takes a few minutes.  Run it directly; no pytest-only fixtures are required.
 from __future__ import annotations
 
 import json
+import itertools
 import os
 import pathlib
+import random
 import shutil
 import subprocess
 import sys
@@ -346,13 +348,18 @@ class GeneralizerUnitTest(unittest.TestCase):
     def _native_adapter(self) -> pathlib.Path:
         cls = type(self)
         if cls._adapter_path is None:
-            build = _run(
-                [str(PYTHON), str(ADAPTER_BUILD)], dict(os.environ), 120
-            )
-            self.assertEqual(build.returncode, 0, build.stderr + build.stdout)
-            cls._adapter_path = pathlib.Path(
-                build.stdout.strip().splitlines()[-1]
-            ).resolve()
+            configured = os.environ.get("ACACIA_BUDDY_ADAPTER")
+            if configured:
+                cls._adapter_path = pathlib.Path(configured).resolve()
+                self.assertTrue(cls._adapter_path.is_file())
+            else:
+                build = _run(
+                    [str(PYTHON), str(ADAPTER_BUILD)], dict(os.environ), 120
+                )
+                self.assertEqual(build.returncode, 0, build.stderr + build.stdout)
+                cls._adapter_path = pathlib.Path(
+                    build.stdout.strip().splitlines()[-1]
+                ).resolve()
         return cls._adapter_path
 
     def test_per_predicate_arity_fallback_is_independent(self) -> None:
@@ -472,6 +479,15 @@ else:
 assert bdds._veccompose.prior_handler_restored_for_testing()
 assert bdds.substitute_variables(
     function, variables, replacements, temporaries) == expected
+assert bdds._veccompose.max_variable_count == 2_097_150
+assert bdds._veccompose._library.p2a_bdd_max_variable_count() == 2_097_150
+assert bdds._veccompose._library.p2a_bdd_setvarnum_checked(2_097_151) != 0
+try:
+    bdds._ensure_variables(2_097_151)
+except OverflowError as error:
+    assert "invalid BDD variable requirement" in str(error)
+else:
+    raise AssertionError("backend-max plus one reached BuDDy")
 print("native substitution checks passed")
 """
         env = dict(os.environ)
@@ -480,6 +496,252 @@ print("native substitution checks passed")
             [str(PYTHON), "-s", "-c", script, str(HERE)], env, 120)
         self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
         self.assertIn("native substitution checks passed", proc.stdout)
+
+    def test_owner_index_matches_reference_at_client_boundaries(self) -> None:
+        rng = random.Random(20260923)
+        for client_count in (0, 1, 63, 64, 65):
+            clients = list(range(client_count))
+            chosen = tuple(clients[index] for index in range(
+                min(4, client_count)))
+            variables = [
+                generalizer.VarInfo(1000, ("shared",), frozenset()),
+            ]
+            if clients:
+                variables.extend((
+                    generalizer.VarInfo(7, ("single",), frozenset((clients[0],))),
+                    generalizer.VarInfo(
+                        1_000_003, ("last",), frozenset((clients[-1],))),
+                ))
+            if client_count >= 2:
+                variables.append(generalizer.VarInfo(
+                    91, ("multi",), frozenset((clients[0], clients[-1]))))
+            rng.shuffle(variables)
+            index = generalizer.OwnerIndex(variables)
+            self.assertTrue(all(isinstance(key, tuple)
+                                for key in index.owner_groups))
+            self.assertTrue(all(
+                list(public_ids) == sorted(public_ids)
+                for public_ids in index.owner_groups.values()
+            ))
+            for subset in ((), chosen, tuple(reversed(chosen))):
+                selected = frozenset(subset)
+                reference = tuple(sorted(
+                    (item for item in variables
+                     if not item.owners or item.owners <= selected),
+                    key=lambda item: item.index,
+                ))
+                self.assertEqual(index.keep_items(subset), reference)
+
+            # Rename every semantic client ID. Owner tuples remain provenance
+            # IDs, while sparse public variable IDs and emitted order do not.
+            permutation = clients[:]
+            rng.shuffle(permutation)
+            rename = dict(zip(clients, permutation, strict=True))
+            renamed = [
+                generalizer.VarInfo(
+                    item.index, item.key,
+                    frozenset(rename[owner] for owner in item.owners),
+                )
+                for item in variables
+            ]
+            renamed_subset = tuple(rename[client] for client in chosen)
+            self.assertEqual(
+                [item.index for item in generalizer.OwnerIndex(
+                    renamed).keep_items(renamed_subset)],
+                [item.index for item in index.keep_items(chosen)],
+            )
+
+    def test_support_restricted_projection_is_mapping_order_and_gc_safe(self) -> None:
+        script = r"""
+import gc
+import pathlib
+import sys
+import tempfile
+from types import SimpleNamespace
+sys.path.insert(0, sys.argv[1])
+import generalize_gr1 as generalizer
+
+def target(root, name, variables):
+    game_path = root / f"{name}.game"
+    prov_path = root / f"{name}.prov"
+    game_path.write_text(name, encoding="utf-8")
+    prov_path.write_text(name, encoding="utf-8")
+    return SimpleNamespace(
+        family=name, n=2, game_path=game_path, prov_path=prov_path,
+        cert_path=None, cert=None, variables=variables, goals=[],
+        game=SimpleNamespace(latches=[], inputs=[]),
+        role_by_client={0: "role", 1: "role"},
+    )
+
+bdds = generalizer.Bdds(var_count=128)
+buddy = bdds.buddy
+variables = [
+    generalizer.VarInfo(7, ("shared",), frozenset()),
+    generalizer.VarInfo(91, ("owned-0",), frozenset((0,))),
+    generalizer.VarInfo(1_000_003, ("owned-both",), frozenset((0, 1))),
+]
+with tempfile.TemporaryDirectory(prefix="p2b-support-") as temporary:
+    root_path = pathlib.Path(temporary)
+    instance = target(root_path, "first", variables)
+    # Reserve the same canonical keys with a compact real attempt ABI.  The
+    # projection fixture then supplies intentionally sparse semantic IDs,
+    # which are independent of the BDD coordinate layout under test here.
+    layout_instance = target(root_path, "layout", [
+        generalizer.VarInfo(0, ("shared",), frozenset()),
+        generalizer.VarInfo(1, ("owned-0",), frozenset((0,))),
+        generalizer.VarInfo(2, ("owned-both",), frozenset((0, 1))),
+    ])
+    context = bdds.begin_attempt([layout_instance], layout_instance)
+    # Sparse public IDs deliberately map non-monotonically to semantic BDD
+    # variables.  Sorted/positional mapping bugs cannot preserve this formula.
+    public_to_bdd = {7: 12, 91: 5, 1_000_003: 9}
+    rebuilt_root = (
+        buddy.bdd_ithvar(public_to_bdd[7])
+        & buddy.bdd_ithvar(public_to_bdd[91])
+    ) | buddy.bdd_ithvar(public_to_bdd[1_000_003])
+    root = rebuilt_root
+
+    # Reorder levels before support extraction. Public IDs continue to map to
+    # semantic BDD variables, never to the changing levels.
+    bdds._veccompose.set_variable_order_for_testing(
+        list(reversed(range(bdds._veccompose.variable_count()))))
+    support = context.exact_public_support(root, public_to_bdd)
+    assert support.public_variables == frozenset((7, 91, 1_000_003))
+
+    for subset in ((), (0,), (1,), (1, 0)):
+        metadata = context.subset_metadata(instance, subset)
+        drop, cube = context.projection_drop(
+            instance, subset, root, public_to_bdd, metadata["keep"], support)
+        reference_keep = frozenset(
+            item.index for item in variables
+            if not item.owners or item.owners <= frozenset(subset))
+        reference_drop = support.public_variables - reference_keep
+        # Rebuild the reference cube independently instead of reusing the
+        # production cube helper exercised by projection_drop.
+        reference_cube = buddy.bddtrue
+        for public in sorted(reference_drop):
+            reference_cube &= buddy.bdd_ithvar(public_to_bdd[public])
+        projected = buddy.bdd_exist(root, cube) if drop else root
+        reference = (
+            buddy.bdd_exist(rebuilt_root, reference_cube)
+            if reference_drop else rebuilt_root
+        )
+        assert drop == reference_drop
+        assert projected == reference
+
+        projected_support = generalizer._support(bdds, projected)
+        normalized_variables = {
+            variable: 80 + position
+            for position, variable in enumerate(sorted(projected_support))
+        }
+        normalized = bdds.relabel(projected, normalized_variables)
+        rebuilt = bdds.relabel(
+            normalized,
+            {normal: concrete for concrete, normal in normalized_variables.items()})
+        assert rebuilt == projected
+
+    # Isolate the support cache as the sole owner before collection: remove
+    # projection-owned roots and every caller-owned BDD proxy, then recover the
+    # root from the cache only after Python and BuDDy GC have both run.
+    support_key = next(
+        key for key, value in context._support_cache.items()
+        if value is support
+    )
+    context._projection_metadata.clear()
+    context._projection_metadata_weights.clear()
+    context._projection_metadata_bytes = 0
+    del root, rebuilt_root, support, cube, projected, reference
+    del reference_cube, normalized, rebuilt
+    gc.collect()
+    bdds.collect_garbage_for_testing()
+    cached_support = context._support_cache[support_key]
+    cached_root = cached_support.root
+    assert context.exact_public_support(
+        cached_root, public_to_bdd) is cached_support
+    assert generalizer._support(bdds, cached_root) == {5, 9, 12}
+
+    # The same root under a different registered semantic mapping must not
+    # alias the first cache entry.
+    other_mapping = {107: 12, 191: 5, 2_000_003: 9}
+    other = context.exact_public_support(cached_root, other_mapping)
+    assert other.public_variables == frozenset((107, 191, 2_000_003))
+    assert other is not cached_support
+    context.release()
+
+    # A second attempt in the same process-wide manager gets an independent
+    # layout/cache and may use a different public ABI.
+    second = target(root_path, "second", [
+        generalizer.VarInfo(2, ("second",), frozenset()),
+    ])
+    other_context = bdds.begin_attempt([second], second)
+    assert other_context.layout is not context.layout
+    assert other_context.subset_metadata(second, ())["keep"] == frozenset((2,))
+    other_context.release()
+print("support projection checks passed")
+"""
+        env = dict(os.environ)
+        env["ACACIA_BUDDY_ADAPTER"] = str(self._native_adapter())
+        proc = _run(
+            [str(PYTHON), "-s", "-c", script, str(HERE)], env, 120)
+        self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+        self.assertIn("support projection checks passed", proc.stdout)
+
+    def test_variable_layout_checks_limits_overlap_and_large_counters(self) -> None:
+        backend_maximum = generalizer.BDD_COORDINATE_LIMIT
+        for required in (backend_maximum - 1, backend_maximum):
+            layout = generalizer.VariableLayout.plan(
+                public_variables=required,
+                public_states=0, public_letters=0,
+                composition_states=0, composition_letters=0,
+                policy_counters=0, canonical_templates=0,
+            )
+            self.assertEqual(layout.required_variables, required)
+            self.assertEqual(layout.public.end, required)
+        with self.assertRaises(OverflowError):
+            generalizer.VariableLayout.plan(
+                public_variables=backend_maximum + 1,
+                public_states=0, public_letters=0,
+                composition_states=0, composition_letters=0,
+                policy_counters=0, canonical_templates=0,
+            )
+        with self.assertRaises(OverflowError):
+            generalizer.VariableLayout.plan(
+                public_variables=8, public_states=5, public_letters=3,
+                composition_states=5, composition_letters=3,
+                policy_counters=4, canonical_templates=6, variable_limit=20,
+            )
+        with self.assertRaises(OverflowError):
+            generalizer.VariableLayout.plan(
+                public_variables=generalizer.BDD_COORDINATE_LIMIT,
+                public_states=0, public_letters=0,
+                composition_states=1, composition_letters=0,
+                policy_counters=0, canonical_templates=0,
+            )
+        with self.assertRaises(ValueError):
+            generalizer.VariableLayout(
+                public=generalizer.VariableBlock("public", 0, 4),
+                composition=generalizer.VariableBlock("composition", 3, 2),
+                policy_counter=generalizer.VariableBlock("policy_counter", 5, 1),
+                policy_game=generalizer.VariableBlock("policy_game", 6, 4),
+                canonical_templates=generalizer.VariableBlock("canonical", 10, 1),
+                public_state_count=2, public_letter_count=2,
+                composition_state_count=1, composition_letter_count=0,
+            )
+
+        layout = generalizer.VariableLayout.plan(
+            public_variables=8, public_states=5, public_letters=3,
+            composition_states=5, composition_letters=3,
+            policy_counters=600, canonical_templates=20, variable_limit=2048,
+        )
+        self.assertEqual(layout.policy_counter.size, 600)
+        self.assertGreater(layout.policy_counter.coordinate(599), 512)
+        blocks = (layout.public, layout.composition, layout.policy_counter,
+                  layout.policy_game, layout.canonical_templates)
+        coordinates = [
+            set(range(block.start, block.end)) for block in blocks
+        ]
+        for left, right in itertools.combinations(coordinates, 2):
+            self.assertFalse(left & right)
 
     def test_attempt_caches_are_bounded_source_and_manager_local(self) -> None:
         script = r"""
@@ -555,25 +817,55 @@ with tempfile.TemporaryDirectory(prefix="attempt-cache-") as temporary:
 
     context.subset_metadata_limit = 2
     first = context.subset_metadata(source_a, (0,))
-    first_values = {
-        key: value for key, value in first.items() if key != "drop_cube"
-    }
+    first_values = dict(first)
     context.subset_metadata(source_a, (1,))
     context.subset_metadata(source_a, (2,))
     first_again = context.subset_metadata(source_a, (0,))
-    assert {
-        key: value for key, value in first_again.items() if key != "drop_cube"
-    } == first_values
-    assert first_again["drop_cube"] == first["drop_cube"]
+    assert dict(first_again) == first_values
 
     marker = Payload()
     marker_reference = weakref.ref(marker)
     context.subset_metadata_limit = 1
-    context._subset_cache_put(("marker",), {"drop_cube": marker})
+    context._subset_cache_put(("marker",), {"owned": marker})
     del marker
-    context._subset_cache_put(("replacement",), {"drop_cube": None})
+    context._subset_cache_put(("replacement",), {"owned": None})
     gc.collect()
     assert marker_reference() is None
+
+    # Each BDD-owning cache evicts on retained payload bytes while its entry
+    # ceiling is still 256.  The roots have equal-shaped but distinct cache
+    # keys so the second insertion must cross the one-entry byte budget.
+    buddy = bdds.buddy
+    bdd_root = (
+        buddy.bdd_ithvar(0) & buddy.bdd_ithvar(1)
+        & buddy.bdd_ithvar(2)
+    )
+    public_to_bdd = {0: 0, 1: 1, 2: 2}
+    support = context.exact_public_support(bdd_root, public_to_bdd)
+    support_first_key = next(reversed(context._support_cache))
+    context.support_cache_byte_limit = context._support_cache_bytes
+    context.exact_public_support(bdd_root, {10: 0, 11: 1, 12: 2})
+    assert len(context._support_cache) < 2
+    assert support_first_key not in context._support_cache
+    assert context._support_cache_bytes <= context.support_cache_byte_limit
+
+    context.projection_drop(
+        source_a, (0,), bdd_root, public_to_bdd, frozenset((0,)), support)
+    projection_first_key = next(reversed(context._projection_metadata))
+    cube_first_key = next(reversed(context._cube_cache))
+    context.projection_metadata_byte_limit = context._projection_metadata_bytes
+    context.cube_cache_byte_limit = context._cube_cache_bytes
+    context.projection_drop(
+        source_a, (1,), bdd_root, public_to_bdd, frozenset((1,)), support)
+    assert len(context._projection_metadata) < 2
+    assert projection_first_key not in context._projection_metadata
+    assert (
+        context._projection_metadata_bytes
+        <= context.projection_metadata_byte_limit
+    )
+    assert len(context._cube_cache) < 2
+    assert cube_first_key not in context._cube_cache
+    assert context._cube_cache_bytes <= context.cube_cache_byte_limit
 
     first_manager_key = key_a
     context.release()

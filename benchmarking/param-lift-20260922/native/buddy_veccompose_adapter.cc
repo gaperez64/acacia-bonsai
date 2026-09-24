@@ -5,6 +5,7 @@
 #include <exception>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #if defined(__GNUC__)
 #define P2A_EXPORT __attribute__((visibility("default")))
@@ -13,6 +14,10 @@
 #endif
 
 namespace {
+
+// The installed BuDDy header exposes no ceiling query.  This value is paired
+// with the exact libbddx hash in buddy_veccompose.py and its build sidecar.
+constexpr int kPinnedMaxVariableCount = 2097150;
 
 thread_local char last_error[256] = {};
 thread_local int forced_failure = 0;
@@ -162,6 +167,41 @@ P2A_EXPORT int p2a_bdd_gbc() noexcept {
   }
 }
 
+P2A_EXPORT int p2a_bdd_setvarorder_for_testing(
+    const int* variables, std::size_t count) noexcept {
+  last_error[0] = '\0';
+  ErrorHookScope errors;
+  if (variables == nullptr && count != 0) {
+    return fail(-1000, "null variable-order array");
+  }
+  try {
+    const int variable_count = bdd_varnum();
+    if (errors.status() != 0) {
+      return fail_buddy(errors.status(), "bdd_varnum");
+    }
+    if (count != static_cast<std::size_t>(variable_count)) {
+      return fail(-1002, "variable order must contain every BDD variable");
+    }
+    std::vector<unsigned char> seen(count, 0);
+    for (std::size_t index = 0; index < count; ++index) {
+      const int variable = variables[index];
+      if (variable < 0 || variable >= variable_count || seen[variable] != 0) {
+        return fail(-1002, "variable order must be a permutation");
+      }
+      seen[variable] = 1;
+    }
+    bdd_setvarorder(const_cast<int*>(variables));
+    if (errors.status() != 0) {
+      return fail_buddy(errors.status(), "bdd_setvarorder");
+    }
+    return 0;
+  } catch (const std::exception& error) {
+    return fail(-1001, error.what());
+  } catch (...) {
+    return fail(-1001, "unknown variable-order failure");
+  }
+}
+
 P2A_EXPORT int p2a_bdd_varnum() noexcept {
   last_error[0] = '\0';
   ErrorHookScope errors;
@@ -170,6 +210,34 @@ P2A_EXPORT int p2a_bdd_varnum() noexcept {
     return fail_buddy(errors.status(), "bdd_varnum");
   }
   return result;
+}
+
+P2A_EXPORT int p2a_bdd_max_variable_count() noexcept {
+  return kPinnedMaxVariableCount;
+}
+
+P2A_EXPORT int p2a_bdd_setvarnum_checked(int required) noexcept {
+  last_error[0] = '\0';
+  if (required < 0 || required > kPinnedMaxVariableCount) {
+    return fail(-1002, "variable count is outside the pinned libbddx range");
+  }
+  ErrorHookScope errors;
+  try {
+    const int status = bdd_setvarnum(required);
+    if (errors.status() != 0) {
+      bdd_clear_error();
+      return fail_buddy(errors.status(), "bdd_setvarnum");
+    }
+    if (status < 0) {
+      bdd_clear_error();
+      return fail(status, "bdd_setvarnum failed without an error hook call");
+    }
+    return 0;
+  } catch (const std::exception& error) {
+    return fail(-1001, error.what());
+  } catch (...) {
+    return fail(-1001, "unknown variable-count failure");
+  }
 }
 
 P2A_EXPORT const char* p2a_bdd_last_error() noexcept {
