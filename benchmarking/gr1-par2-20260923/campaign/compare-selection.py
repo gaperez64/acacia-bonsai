@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare one measured N selection leg with both frozen B epochs."""
+"""Compare one generic-route N selection leg with both frozen B epochs."""
 
 from __future__ import annotations
 
@@ -73,11 +73,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cap", required=True, type=int, choices=(17, 60))
     parser.add_argument("--variant", required=True, choices=("N-a", "N-b"))
-    parser.add_argument("--selection", type=pathlib.Path,
-                        default=CAMPAIGN / "eligible.list")
+    parser.add_argument("--selection", type=pathlib.Path)
     parser.add_argument("--campaign-root", type=pathlib.Path,
-                        default=CAMPAIGN / "selection")
+                        default=CAMPAIGN / "generic-selection" / "selection")
     args = parser.parse_args()
+    if args.selection is None:
+        args.selection = CAMPAIGN / "generic-selection" / f"admitted-{args.cap}.list"
     coverage = coverage_module()
     ids = coverage.read_instance_list(args.selection)
     if not ids or len(ids) != len(set(ids)):
@@ -135,16 +136,18 @@ def main() -> None:
         digest = hashlib.sha256(source_map[instance][1].read_bytes()).hexdigest()
         route = route_record(route_dir, instance, digest)
         if route is None:
-            winner = "missing-record"
+            route_label = "missing-record"
         elif route.get("winner") == "lifting":
-            if not n_yes:
-                raise ValueError(f"lifting winner has no decisive outer result: {instance}")
-            winner = "lifting"
+            route_label = route.get("route")
+            if route_label not in {"direct-certified", "lifted-certified"} or not n_yes:
+                raise ValueError(f"invalid certified route for {instance}: {route_label}")
         elif route.get("winner") == "fallback-pending":
-            winner = "B" if n_yes else "fallback-nonanswer"
+            if route.get("route") != "attempted-declined":
+                raise ValueError(f"fallback has unexpected route for {instance}")
+            route_label = "attempted-declined"
         else:
             raise ValueError(f"unknown route winner for {instance}: {route.get('winner')!r}")
-        route_counts[winner] += 1
+        route_counts[route_label] += 1
         rows.append(dict(instance=instance, n_result=nr["result"],
                          n_seconds=nr["seconds"], b_epoch1_result=b1["result"],
                          b_epoch1_seconds=b1["seconds"], b_epoch2_result=b2["result"],
@@ -158,11 +161,13 @@ def main() -> None:
                              int(nr["scope_memory_peak_bytes"]) - int(b1["scope_memory_peak_bytes"])
                              if nr["scope_memory_peak_bytes"] and b1["scope_memory_peak_bytes"]
                              else ""),
-                         winner=winner))
+                         route=route_label,
+                         winner=("B" if route_label == "attempted-declined" and n_yes
+                                 else route_label)))
 
     write_tsv(outdir / "comparison.tsv", rows)
     counts = Counter(row["change_vs_b_epoch1"] for row in rows)
-    lines = [f"# {args.variant} at {args.cap} s, eligible subset ({len(ids)} IDs)", "",
+    lines = [f"# Generic {args.variant} at {args.cap} s, admitted subset ({len(ids)} IDs)", "",
              "| Series | Solved | PAR-2 total (s) | PAR-2 mean (s) |",
              "|---|---:|---:|---:|"]
     b_suffix = " (derived from 120 s)" if args.cap == 60 else ""
@@ -176,9 +181,9 @@ def main() -> None:
         "B epoch 2 versus epoch 1: " + ", ".join(
             f"{name}={b_repeatability[name]}" for name in
             ("gain", "loss", "same", "verdict-conflict")),
-        "", "Route winners: " + ", ".join(
+        "", "Route records: " + ", ".join(
             f"{name}={route_counts[name]}" for name in
-            ("lifting", "B", "fallback-nonanswer", "missing-record")), "",
+            ("lifted-certified", "direct-certified", "attempted-declined", "missing-record")), "",
         "Per-ID results and gains/losses: `comparison.tsv`. Missing records can occur when the outer scope kills the wrapper before its atomic write.", ""]
     if args.cap == 60:
         lines += ["B 60 s rows are derived by censoring the archived uniform 120 s epochs; "
