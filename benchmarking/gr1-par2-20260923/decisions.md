@@ -365,3 +365,6 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   the renaming. No separate family holdout.
 - Until Stage C lands, the production route makes no REAL lifting attempt at all; REAL answers come
   only from the direct exact route or B.
+- Owner confirmed competition input is TLSF, so the input's own `PARAMETERS` can serve as its
+  lifting template in Stage C (and 790 corpus inputs without parameters can only use the direct
+  route).
