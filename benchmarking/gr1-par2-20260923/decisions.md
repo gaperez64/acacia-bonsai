@@ -295,3 +295,22 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Kept: 10 evidence-bearing trees; deferred: 4 over an unclassified `.pytest_cache` and the two
   stale `/tmp` metadata entries (dry-run prune only, not executed). The retained timing worktree
   `/home/gperez/GIT-repos/acacia-gr1-par2-timing` was never a candidate.
+
+## 2026-09-24 — Selection at 60 s; four capabilities are switched off
+
+- Selection legs at 60 s on the 91 eligible IDs (frozen code `ee37c727`, `build-P5-9212e2b`, adapter
+  `d5ccf8f9…`, B `398a420b…`; timing worktree; serial; 8 GiB, no swap; raw rows, route records and
+  comparisons under `campaign/selection/60s/`). B at 60 s is the censored 120 s leg.
+  - N-a (lift 20 s): **63/91 solved**, PAR-2 3,585.07 s; +28 / −0 vs B epoch 1 (35/91, 6,778.13 s).
+  - N-b (lift 40 s): **67/91 solved**, PAR-2 3,285.66 s; +32 / −0 vs B epoch 1.
+  - B epoch 2 agrees with epoch 1 on all 91 rows. No verdict conflicts anywhere.
+  - N-b's extra closures: arbiter_with_buffer n=10 (36.5 s), arbiter_with_cancel n=10 (23.4 s),
+    load_balancer n=10 (31.0 s), round_robin_arbiter_unreal2 n=7 (30.9 s).
+- Cost on B-solved rows: collector_v1 n=5/7/9 (B 0.02–2.7 s) take the whole lift budget first
+  (20 s under N-a, 40 s under N-b). prioritized_arbiter_unreal2 n=10 takes 5.5 s by lifting where
+  B needs 0.01 s.
+- **Decision (learned development choice, frozen before the full-corpus runs):** capabilities whose
+  lifting route produced no decision in any development observation — the M6 cold campaign and
+  this selection — get `route_enabled: false` and decline immediately to B: `collector_v1`,
+  `abcg_arbiter`, `simple_arbiter_with_hints`, `amba_case_study_unreal`. Keyed to the verified
+  capability, disclosed in the final report. The variant choice waits for the 17 s legs.
