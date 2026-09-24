@@ -194,3 +194,21 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   every method in `4af7bf4`; games from `gr1_monitor_game.py` always have constant resets, so no
   sprint result is affected. Region method `9212e2b`; frozen build `build-P5-9212e2b`
   (tlsfcertcheck `65fd3dd9…`).
+
+## 2026-09-24 — Policy vs region checking end to end; the proof method becomes a capability attribute
+
+- `ba98fb39` + `build-P5-9212e2b` (tlsfcertcheck `65fd3dd9…`, includes the reset fix) + adapter
+  `0043e97b…`, 18 targets, `--real-check policy` then `region`, serial, same protocol
+  (`s0/raw-P5-{policy,region}-e2e/`, summaries alongside; runs in `_bm-logs.gr1-par2-e2e-P5-*`).
+  Policy on the P5 build reproduces P2c within noise (the reset fix costs nothing).
+- Region wins where Skolemization dominated: buffer n=9 116.30 → 18.59 s (peak 1.81 → 1.23 GiB),
+  buffer n=8 15.21 → 5.37 s, amba n=15 36.61 → 23.62 s. Region loses where the policy check is
+  cheap and the joint existential is not: cancel n=8 5.12 → 21.23 s, cancel n=9/n=10 REALIZABLE →
+  UNKNOWN, inpchange n=6 17.47 s → UNKNOWN. load_balancer neutral in time, more memory under
+  region. UNREAL rows unaffected by construction.
+- **Decision (learned development choice, frozen now):** the REAL proof method is an attribute of
+  the source-verified capability in the capability data: `region` for `arbiter_with_buffer` and
+  `amba_decomposed_lock`, `policy` for every other capability, including all not measured here.
+  It is keyed to the verified capability, never to a filename or to a known answer. It was chosen
+  on these development observations; the confirmation and closing campaigns are fresh runs and the
+  final report discloses this choice as learned. No per-instance or per-n thresholds.
