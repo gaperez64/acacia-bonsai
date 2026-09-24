@@ -28,9 +28,7 @@ from typing import Any
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-DEFAULT_LIFT_ENTRY = (
-    ROOT / "benchmarking" / "param-lift-20260922" / "param-lift-campaign.py"
-)
+DEFAULT_LIFT_ENTRY = "python -m acacia_lift.runner"
 DEADLINE_ENV = "ACACIA_OUTER_DEADLINE_MONOTONIC"
 ROUTE_RECORD_ENV = "ACACIA_ROUTE_RECORD"
 DECISIVE_EXITS = {"REALIZABLE": 0, "UNREALIZABLE": 1}
@@ -92,7 +90,8 @@ def build_parser() -> argparse.ArgumentParser:
         type=positive_finite,
         help=f"outer cap used only when {DEADLINE_ENV} is absent",
     )
-    parser.add_argument("--lift-entry", type=pathlib.Path, default=DEFAULT_LIFT_ENTRY)
+    parser.add_argument("--lift-entry", default=DEFAULT_LIFT_ENTRY,
+                        help="lifting CLI (default: python -m acacia_lift.runner)")
     parser.add_argument("--tlsf-tools-build", type=pathlib.Path)
     parser.add_argument("--bindings-python", type=pathlib.Path)
     parser.add_argument("--bindings-site", type=pathlib.Path)
@@ -212,8 +211,10 @@ def lift_command(
     output: pathlib.Path,
     timeout: float,
 ) -> list[str]:
+    entry = ([sys.executable, "-m", "acacia_lift.runner"]
+             if args.lift_entry == DEFAULT_LIFT_ENTRY else [str(args.lift_entry)])
     command = [
-        str(args.lift_entry),
+        *entry,
         "--request-mode",
         "source",
         "-T",
@@ -334,6 +335,9 @@ def run_lift(command: list[str], timeout: float) -> LiftOutcome:
         try:
             proc = subprocess.Popen(
                 command,
+                env={**os.environ, "PYTHONPATH": str(ROOT / "scripts") +
+                     (os.pathsep + os.environ["PYTHONPATH"]
+                      if os.environ.get("PYTHONPATH") else "")},
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=True,
