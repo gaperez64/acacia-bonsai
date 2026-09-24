@@ -1,0 +1,57 @@
+{
+  "censored": [
+    {
+      "elapsed_lower_bound_s": 3.8277998100966215e-05,
+      "kind": "stage",
+      "reason": "absolute_deadline_exhausted",
+      "stage": "instantiate"
+    }
+  ],
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1897107456,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_buffer-n9.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_buffer-n9.scope/memory.peak"
+  },
+  "counters": {},
+  "diagnostic_errors": [],
+  "elapsed_s": 120.59770713798935,
+  "environment": {
+    "binaries": {
+      "tlsfcertcheck": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+        "sha256": "2b2464a2f87537a0c7b159e11c134c23ce190da9345139b9e7b98455777437a6"
+      },
+      "tlsfsolve": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+        "sha256": "512a05213eab72c4d5a0cf8e3c43ac43b6a9ce9bf8d7a0a89452be44bfe15502"
+      }
+    },
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "interpreter": {
+      "executable": "/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python",
+      "version": "3.14.7 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+    },
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b"
+  },
+  "outcome": {
+    "certificate": null,
+    "policy": null,
+    "reason": "absolute_deadline_exhausted",
+    "stage": "instantiate",
+    "stdout_line": "UNKNOWN instantiate absolute_deadline_exhausted",
+    "verdict": "UNKNOWN"
+  },
+  "phases": {
+    "generalize_gr1": {
+      "calls": 1,
+      "wall_s": 120.57746395200957
+    }
+  },
+  "schema": "acacia-gr1-s0-diagnostics-v1",
+  "schema_version": 1,
+  "status": "unknown",
+  "tool": "param-lift-campaign"
+}

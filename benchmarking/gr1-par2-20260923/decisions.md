@@ -100,3 +100,16 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   `s0/s0-summary-L0-run2.md`; run directories frozen in `_bm-logs.gr1-par2-s0-run2-L0/`.
   Known wart: a stage censored inside one long native call (buffer n=9 Skolemization) reports
   `≥ 0.000 s` because its persisted elapsed only updates between calls; valid but uninformative.
+
+## 2026-09-24 — First end-to-end measurement: P1.4 tools under the L0 generalizer
+
+- Same 18 targets, same protocol as S0 run 2, tools swapped to `build-P14-dbe8c2b`
+  (`s0/raw-P14-e2e/`, `s0/s0-summary-P14-e2e.md`; runs frozen in `_bm-logs.gr1-par2-e2e-P14/`).
+  One observation per target; S0 runs 1 and 2 bound L0 repeatability at ~1-2%.
+- **Two new 120 s closures:** `arbiter_with_cancel` n=10 UNKNOWN → REALIZABLE 26.48 s (peak 3.58 →
+  1.94 GiB); `load_balancer_unreal2` n=7 UNKNOWN → UNREALIZABLE 11.24 s (peak 6.60 → 1.58 GiB).
+- **Near-17 s objectives met:** cancel n=8 17.20 → 6.66 s; cancel n=9 55.60 → 11.10 s. Also
+  inpchange n=6 52.15 → 24.19 s; lbu2 n=6 5.21 → 2.14 s.
+- Unchanged where the generalizer dominates (load_balancer, amba_lock, buffer) — P2's targets —
+  and collector_v1 (monitor construction, P4). inpchange n=7 remains UNKNOWN: its check alone
+  needs ~126 s.
