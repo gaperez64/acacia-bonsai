@@ -437,3 +437,20 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   `build_scratch/concurrent/abandoned-python-concurrent-wrapper.patch`, and the tree was restored.
 - The committed Python route (Stages A/C) becomes a reference oracle for differential testing of
   the C/C++ port and is removed from the shipped path once the arms land.
+
+## 2026-09-24 — Owner plan for the experiments after the native port
+
+1. **Per-arm legs:** each of Acacia's current default portfolio arms, plus the new `gr1` (direct)
+   and `param-lift` arms, run **alone** (`--arms <one arm>`) over the full SYNTCOMP26 corpus at a
+   uniform **60 s** cap, serially on the quiet host, 8 GiB, no swap.
+2. **Portfolio choice:** from those legs, choose the best **4- or 5-arm** portfolio. The choice rule
+   is fixed before looking at the per-arm results beyond what the selection needs (e.g. maximise
+   solved count, then PAR-2, of the arm-subset virtual best), and the chosen portfolio is then
+   **run for real** at 60 s — the virtual best is only a selection aid, never a reported score,
+   because concurrent arms contend for cores and memory.
+3. **Close** with the planned three-way evaluation — ltlsynt / TACAS23 / new Acacia (the chosen
+   portfolio) — at 60 s and 17 s on the obfuscated corpus, with B and the per-arm legs as internal
+   attribution.
+- Cost note: each standalone 60 s leg is roughly (unsolved inputs × 60 s), about 6-12 h per arm; the
+  per-arm stage alone is on the order of 2-3 days of serial compute. Existing per-arm data from
+  earlier sprints may be reused only where binary, flags, corpus and host regime match exactly.
