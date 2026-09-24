@@ -1,0 +1,14 @@
+instance,result,seconds,exit
+amba_case_study_unreal_pb_2_pe_.ltl,UNKNOWN,120,2
+amba_case_study_unreal_pb_3_pe_.ltl,UNKNOWN,120,2
+amba_case_study_unreal_pb_4_pe_.ltl,UNKNOWN,120,2
+amba_case_study_unreal_pb_5_pe_.ltl,UNKNOWN,120,2
+load_balancer_unreal2_pb_6_pe_.ltl,UNREALIZABLE,5.062291,1
+load_balancer_unreal2_pb_7_pe_.ltl,UNKNOWN,120,2
+load_balancer_unreal2_pb_8_pe_.ltl,UNKNOWN,120,2
+prioritized_arbiter_unreal2_pb_30_pe_.ltl,UNKNOWN,120,2
+prioritized_arbiter_unreal2_pb_60_pe_.ltl,UNKNOWN,120,2
+prioritized_arbiter_unreal2_pb_100_pe_.ltl,UNKNOWN,120,2
+round_robin_arbiter_unreal2_pb_5_pe_.ltl,UNREALIZABLE,1.909191,1
+round_robin_arbiter_unreal2_pb_6_pe_.ltl,UNREALIZABLE,7.493127,1
+round_robin_arbiter_unreal2_pb_7_pe_.ltl,UNREALIZABLE,37.554385,1

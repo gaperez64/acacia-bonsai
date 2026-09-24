@@ -1,0 +1,12 @@
+family	n	clients	min_k	min_k_is_n	overapprox_k1	per_k
+arbiter	3	3	2	false	1.0071	1:x1.0071 2:=1.0000
+arbiter	4	4	2	false	1.0128	1:x1.0128 2:=1.0000
+arbiter	5	5	2	false	1.0197	1:x1.0197 2:=1.0000
+round_robin_arbiter	3	3	3	true	1.0460	1:x1.0460 2:x1.0460 3:=1.0000
+round_robin_arbiter	4	4	4	true	1.0176	1:x1.0176 2:x1.0176 3:x1.0176 4:=1.0000
+prioritized_arbiter	3	3	1	false	1.0000	1:=1.0000
+prioritized_arbiter	4	4	1	false	1.0000	1:=1.0000
+load_balancer	3	3	2	false	1.0233	1:x1.0233 2:=1.0000
+load_balancer	4	4	2	false	1.0124	1:x1.0124 2:=1.0000
+arbiter_with_cancel	3	3	2	false	1.0061	1:x1.0061 2:=1.0000
+lift	3	3	3	true	1.0423	1:x1.0423 2:x1.0423 3:=1.0000

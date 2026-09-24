@@ -1,0 +1,30 @@
+family	unsolved_120s	ns_probed	monitors_by_n	latches_by_n	local_frac	role_classes	role_classes_grow	stable_from	wide_frac	alignment	note
+round_robin_arbiter_unreal1	21	0								no-data	
+chomp	12	0								no-data	
+simple_arbiter_enc	9	4	8:9,10:11,11:12,12:13,13:14	8:25,10:37,11:39,12:41,13:43	0.00	0,0,0,0	false	10	1.00	weak	
+amba_decomposed_arbiter	7	5	2:15,3:18,4:21,5:24,6:27	2:46,3:62,4:86,5:126,6:198	0.81	3,3,3,3,3	false	2	0.19	roles	
+load_balancer_unreal1	7	0								no-data	
+lift	6	4	2:19,3:28,4:36,5:45,6:53	2:47,3:78,4:102,5:129,6:153	0.20	3,3,3,3	false	3	0.80	weak	
+prioritized_arbiter_enc	6	4	8:10,10:12,12:14,13:15,14:16	8:29,10:41,12:45,13:47,14:49	0.00	0,0,0,0	false	10	1.00	weak	
+arbiter	5	4	1:4,2:9,3:13,4:17,5:21	1:11,2:24,3:35,4:46,5:57	0.93	1,1,1,1	false	2	0.07	replicated	
+arbiter_with_buffer	5	4	1:1,2:3,3:4,4:5,5:6	1:4,2:10,3:14,4:18,5:22	0.78	1,1,1,1	false	2	0.22	replicated	
+arbiter_with_cancel	5	4	1:6,2:13,3:19,4:25,5:31	1:16,2:34,3:50,4:66,5:82	0.95	1,1,1,1	false	2	0.05	replicated	
+collector_v1	5	2	3:4,5:6	3:50,5:872	0.80	1,1	false	3	0.20	replicated	n=7: gr1-monitor-game: maximum recursion depth exceeded; n=9: oom/killed rc=-9 ; n=11: oom/killed rc=-9 
+collector_v3	5	2	3:7,5:11	3:89,5:935	0.89	1,1	false	3	0.11	replicated	n=7: oom/killed rc=-9 ; n=9: oom/killed rc=-9 ; n=10: oom/killed rc=-9 
+prioritized_arbiter	5	4	1:4,2:7,3:9,4:11,5:13	1:10,2:16,3:20,4:24,5:28	0.80	2,2,2,2	false	2	0.20	roles	
+amba_case_study_unreal	4	3	2:34,3:45,4:55,5:66	2:114,3:153,4:193,5:244	0.60	4,4,4	false	3	0.40	roles	
+load_balancer	4	5	2:10,3:13,4:16,5:19,6:22	2:27,3:34,4:41,5:48,6:55	0.81	4,4,4,4,4	false	2	0.19	roles	
+round_robin_arbiter	4	5	2:9,3:13,4:17,5:21,6:25	2:22,3:32,4:42,5:52,6:62	0.94	1,1,1,1,1	false	2	0.06	replicated	
+simple_arbiter_with_hints	4	5	2:5,4:7,6:9,8:11,10:13	2:14,4:22,6:30,8:38,10:46	0.67	1,1,1,1,1	false	2	0.33	replicated	
+abcg_arbiter	3	4	1:7,2:15,3:22,4:29,5:36	1:23,2:48,3:71,4:94,5:117	0.96	1,1,1,1	false	2	0.04	replicated	
+amba_decomposed_lock	3	5	2:5,3:6,4:7,5:8,6:9	2:14,3:17,4:20,5:23,6:26	0.71	2,2,2,2,2	false	2	0.29	roles	
+arbiter_on_inpchange	3	4	1:4,2:9,3:13,4:17,5:21	1:21,2:44,3:65,4:86,5:107	0.93	1,1,1,1	false	2	0.07	replicated	
+full_arbiter_enc	3	2	8:33,10:41,12:49	8:97,10:127,12:149	0.00	0,0	false	10	1.00	weak	
+lift_unary_enc	3	1	2:19,3:27,4:35,5:43,6:51	2:51,3:79,4:115,5:167,6:251	0.84	10	false	6	0.16	unstable	
+load_balancer_unreal2	3	4	2:11,3:16,4:22,5:29,6:37	2:31,3:46,4:65,5:88,6:115	0.88	5,5,5,5	false	3	0.12	weak	
+prioritized_arbiter_unreal2	3	4	2:8,3:12,4:17,5:23,6:30	2:20,3:32,4:48,5:68,6:92	0.90	3,3,3,3	false	3	0.10	roles	
+robot_grid	3	0								no-data	
+round_robin_arbiter_unreal2	3	4	2:10,3:16,4:23,5:31,6:40	2:26,3:44,4:66,5:92,6:122	0.96	2,2,2,2	false	3	0.04	roles	
+amba_case_study	2	2	2:35,3:46,4:56	2:117,3:156,4:196	0.59	4,4	false	3	0.41	roles	
+amba_decomposed_encode	2	5	2:5,3:6,4:7,5:8,6:9	2:16,3:22,4:26,5:34,6:38	0.00	0,0,0,0,0	false	2	1.00	weak	
+rw_arbiter	2	1	1:10,2:20,3:29,4:38,5:47	1:27,2:54,3:79,4:104,5:129	0.94	5	false	5	0.06	unstable	

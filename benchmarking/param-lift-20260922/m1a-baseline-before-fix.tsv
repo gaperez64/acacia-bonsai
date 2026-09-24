@@ -1,0 +1,36 @@
+logical_instance	parameters	known_verdict	tlsfcompose_gr1_route_before_fix	seconds
+round_robin_arbiter_pb_10_pe_.ltl	{"n": 10}	unknown	TIMEOUT	20.0
+round_robin_arbiter_pb_2_pe_.ltl	{"n": 2}	REALIZABLE	REALIZABLE	0.0
+round_robin_arbiter_pb_3_pe_.ltl	{"n": 3}	REALIZABLE	REALIZABLE	0.0
+round_robin_arbiter_pb_4_pe_.ltl	{"n": 4}	REALIZABLE	REALIZABLE	0.1
+round_robin_arbiter_pb_5_pe_.ltl	{"n": 5}	REALIZABLE	REALIZABLE	0.1
+round_robin_arbiter_pb_6_pe_.ltl	{"n": 6}	unknown	REALIZABLE	0.3
+round_robin_arbiter_pb_7_pe_.ltl	{"n": 7}	unknown	REALIZABLE	2.6
+round_robin_arbiter_pb_8_pe_.ltl	{"n": 8}	unknown	REALIZABLE	15.5
+round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	{"n": 2, "u": 10}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	{"n": 2, "u": 1}	UNREALIZABLE	UNREALIZABLE	0.0
+round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	{"n": 2, "u": 2}	UNREALIZABLE	UNREALIZABLE	0.0
+round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	{"n": 2, "u": 3}	UNREALIZABLE	UNREALIZABLE	0.1
+round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	{"n": 2, "u": 4}	UNREALIZABLE	UNREALIZABLE	0.5
+round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	{"n": 2, "u": 5}	UNREALIZABLE	UNREALIZABLE	4.4
+round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	{"n": 2, "u": 6}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	{"n": 2, "u": 7}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	{"n": 2, "u": 8}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	{"n": 2, "u": 9}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	{"n": 3, "u": 1}	UNREALIZABLE	UNREALIZABLE	0.0
+round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	{"n": 3, "u": 2}	UNREALIZABLE	UNREALIZABLE	0.1
+round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	{"n": 3, "u": 3}	UNREALIZABLE	UNREALIZABLE	2.4
+round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	{"n": 3, "u": 4}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	{"n": 3, "u": 5}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	{"n": 3, "u": 6}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	{"n": 3, "u": 7}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_3_8_pe_.ltl	{"n": 3, "u": 8}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_3_9_pe_.ltl	{"n": 3, "u": 9}	unknown	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	{"n": 4, "u": 1}	UNREALIZABLE	UNREALIZABLE	0.1
+round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	{"n": 4, "u": 2}	UNREALIZABLE	UNREALIZABLE	1.9
+round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	{"n": 4, "u": 3}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	{"n": 4, "u": 4}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_4_5_pe_.ltl	{"n": 4, "u": 5}	UNREALIZABLE	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_4_6_pe_.ltl	{"n": 4, "u": 6}	unknown	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_4_7_pe_.ltl	{"n": 4, "u": 7}	unknown	TIMEOUT	20.0
+round_robin_arbiter_unreal1_pb_4_8_pe_.ltl	{"n": 4, "u": 8}	unknown	TIMEOUT	20.0

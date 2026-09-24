@@ -1,0 +1,14 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+B-cap120-epoch1	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT	120
+B-cap120-epoch1	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT	120

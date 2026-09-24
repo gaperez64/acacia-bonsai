@@ -1,0 +1,14 @@
+instance	result	exit_code	seconds	cap_s
+amba_case_study_unreal_pb_2_pe_.ltl	TIMEOUT	124	120.11979277499995	120
+amba_case_study_unreal_pb_3_pe_.ltl	TIMEOUT	124	120.17229247799696	120
+amba_case_study_unreal_pb_4_pe_.ltl	TIMEOUT	124	120.22075002400379	120
+amba_case_study_unreal_pb_5_pe_.ltl	TIMEOUT	124	120.13365754499864	120
+load_balancer_unreal2_pb_6_pe_.ltl	TIMEOUT	124	120.2288512640007	120
+load_balancer_unreal2_pb_7_pe_.ltl	TIMEOUT	124	120.21883552600048	120
+load_balancer_unreal2_pb_8_pe_.ltl	TIMEOUT	124	120.21883124600572	120
+prioritized_arbiter_unreal2_pb_100_pe_.ltl	TIMEOUT	124	120.22738049000327	120
+prioritized_arbiter_unreal2_pb_30_pe_.ltl	TIMEOUT	124	120.22740679800336	120
+prioritized_arbiter_unreal2_pb_60_pe_.ltl	TIMEOUT	124	120.15653505999944	120
+round_robin_arbiter_unreal2_pb_5_pe_.ltl	TIMEOUT	124	120.12522034099675	120
+round_robin_arbiter_unreal2_pb_6_pe_.ltl	TIMEOUT	124	120.2179500179991	120
+round_robin_arbiter_unreal2_pb_7_pe_.ltl	TIMEOUT	124	120.3210218460008	120

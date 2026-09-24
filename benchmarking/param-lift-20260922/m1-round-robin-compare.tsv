@@ -1,0 +1,6 @@
+n	strict_build_seconds	strict_solve_seconds	strict_verdict	strict_monitors	strict_latches	tlsfcompose_seconds	tlsfcompose_verdict	agreement
+2	0.062094	0.012313	REALIZABLE	9	23	0.023092	REALIZABLE	agree
+3	0.065267	0.020307	REALIZABLE	13	33	0.027275	REALIZABLE	agree
+4	0.065744	0.047969	REALIZABLE	17	43	0.049959	REALIZABLE	agree
+5	0.065685	0.161767	REALIZABLE	21	53	0.176327	REALIZABLE	agree
+6	0.068013	0.652184	REALIZABLE	25	63	1.124297	REALIZABLE	agree
