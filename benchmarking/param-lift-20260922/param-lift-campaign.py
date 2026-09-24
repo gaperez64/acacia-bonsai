@@ -19,6 +19,11 @@ The default ``reproducer`` request mode retains the historical M0
 basename-to-row lookup.  Production ``source`` mode instead binds the actual
 TLSF bytes to a pinned capability through the existing SYFCO lowering and
 never reads experiment outcome or census columns.
+
+The default lifted-REAL proof exports and checks a policy.  The opt-in
+``--real-check region`` route is decision-only and returns REALIZABLE only
+after the actual target certificate receives the versioned REGION_VERIFIED
+result; it cannot produce UNREALIZABLE.
 """
 
 from __future__ import annotations
@@ -55,9 +60,11 @@ from request import (
 )
 from s0_diagnostics import Diagnostics, cgroup_memory_peak
 from tool_config import (
+    ProbeError,
     add_configuration_arguments,
     configuration_from_args,
     print_probe,
+    require_checker_method,
 )
 
 
@@ -143,12 +150,22 @@ class PipelineResult:
     reason: str
     certificate: Path | None = None
     policy: Path | None = None
+    proof_method: str = "none"
 
     def __post_init__(self) -> None:
         if self.verdict not in EXIT_CODES:
             raise ValueError(f"unsupported verdict {self.verdict}")
-        if self.verdict in SOLVED and (self.certificate is None or self.policy is None):
+        if self.verdict in SOLVED and self.certificate is None:
             raise ValueError("a decisive result requires checked target artifacts")
+        if self.verdict in SOLVED and self.proof_method not in (
+            "policy", "gr1-region-v1"
+        ):
+            raise ValueError("a decisive result requires a recognized proof method")
+        if (self.verdict in SOLVED and self.proof_method == "policy"
+                and self.policy is None):
+            raise ValueError("a policy-checked result requires a policy artifact")
+        if self.proof_method == "gr1-region-v1" and self.verdict != "REALIZABLE":
+            raise ValueError("region checking can only establish REALIZABLE")
 
     @classmethod
     def unknown(cls, stage: str, reason: str) -> "PipelineResult":
@@ -338,6 +355,14 @@ def _resolve_request(
     return _resolve_reproducer_request(args)
 
 
+def _request_uses_region(args: argparse.Namespace, request: Request) -> bool:
+    """Whether the resolved route will actually invoke region-v1 checking."""
+    return (
+        args.real_check == "region"
+        and request.spec.route_kind in (REAL_PROPOSAL, SOUND_ONE_SIDED)
+    )
+
+
 def _create_workspace(output_root: Path, family: str, target: int) -> tuple[str, Path]:
     output_root.mkdir(parents=True, exist_ok=True)
     invocation = uuid.uuid4().hex
@@ -469,7 +494,7 @@ def _scaled_checker_nodes(n: int) -> int:
 def _certified_answer(
     capability: Capability,
     cert_meta: dict[str, Any],
-    policy_meta: dict[str, Any],
+    policy_meta: dict[str, Any] | None,
 ) -> tuple[str, str]:
     """Derive an answer from checked artifacts, never from the capability."""
     answers = {
@@ -488,10 +513,13 @@ def _certified_answer(
     if side == "system":
         metadata_ok = (
             cert_meta.get("side") in (None, side)
-            and policy_meta.get("side") in (None, side)
+            and (policy_meta is None
+                 or policy_meta.get("side") in (None, side))
         )
     else:
         metadata_ok = (
+            policy_meta is not None
+            and
             cert_meta.get("side") == side
             and cert_meta.get("reduction_semantics") == "exact"
             and cert_meta.get("environment_counter_strategy_exported") is True
@@ -517,6 +545,7 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         str(args.generalizer.resolve()), "--family", request.family,
         "--target", str(request.target), "--seeds", ",".join(map(str, request.seeds)),
         "--timeout", f"{internal_timeout:.6f}", "--check-method", "auto",
+        "--real-check", args.real_check,
         "--absolute-deadline-monotonic", repr(deadline.expires),
         "--reduction-semantics", args.semantics,
         "--out", str(output),
@@ -606,38 +635,64 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         evidence["target_check_ran"] = stage == "target_check"
         raise PipelineFailure(stage, reason)
 
+    region_route = _request_uses_region(args, request)
     match_cert = re.search(r"^certificate:\s*(.+)$", outcome.stdout, re.MULTILINE)
     match_policy = re.search(r"^policy:\s*(.+)$", outcome.stdout, re.MULTILINE)
-    if match_cert is None or match_policy is None:
+    if match_cert is None or (not region_route and match_policy is None):
         raise PipelineFailure("target_check", "verified_output_missing_artifacts")
     certificate = Path(match_cert.group(1)).resolve()
-    policy = Path(match_policy.group(1)).resolve()
+    policy = Path(match_policy.group(1)).resolve() if match_policy else None
     check_path = output / f"check-target-{request.target}.json"
-    if not all(path.is_file() for path in (certificate, policy, check_path,
-                                           Path(str(certificate) + ".json"),
-                                           Path(str(policy) + ".json"))):
+    required_artifacts = [
+        certificate, check_path, Path(str(certificate) + ".json")
+    ]
+    if policy is not None:
+        required_artifacts.extend((policy, Path(str(policy) + ".json")))
+    if not all(path.is_file() for path in required_artifacts):
         raise PipelineFailure("target_check", "verified_artifact_missing")
     check = _load_json(check_path)
     cert_meta = _load_json(Path(str(certificate) + ".json"))
-    policy_meta = _load_json(Path(str(policy) + ".json"))
-    certificate_method = check.get("methods", {}).get("certificate", {})
-    if (check.get("verdict") != "VERIFIED" or check.get("exit_code") != 0 or
-            certificate_method.get("verdict") != "VERIFIED"):
-        raise PipelineFailure("target_check", "tlsfcertcheck_not_verified")
+    policy_meta = (
+        _load_json(Path(str(policy) + ".json")) if policy is not None else None
+    )
+    if region_route:
+        if policy is not None:
+            raise PipelineFailure(
+                "target_check", "region_route_exported_policy")
+        if (check.get("format") != "tlsf-gr1-region-checkresult-v1"
+                or check.get("method") != "gr1-region-v1"
+                or check.get("verdict") != "REGION_VERIFIED"
+                or check.get("exit_code") != 0):
+            raise PipelineFailure(
+                "target_check", "tlsfcertcheck_not_region_verified")
+        proof_method = "gr1-region-v1"
+        result_string = "REGION_VERIFIED"
+    else:
+        certificate_method = check.get("methods", {}).get("certificate", {})
+        if (check.get("verdict") != "VERIFIED" or check.get("exit_code") != 0 or
+                certificate_method.get("verdict") != "VERIFIED"):
+            raise PipelineFailure("target_check", "tlsfcertcheck_not_verified")
+        proof_method = "policy"
+        result_string = "VERIFIED"
     # Generalized M4 system artifacts predate M5's explicit ``side`` field;
     # environment artifacts must carry the complete exact-reduction metadata.
     answer, expected_side = _certified_answer(request.spec, cert_meta, policy_meta)
     evidence["target_check"] = check
+    evidence["target_check_method"] = proof_method
+    evidence["target_check_result"] = result_string
     evidence["target_certificate"] = {
         "path": str(certificate), "sha256": _sha256(certificate),
-        "side": expected_side, "verdict": "VERIFIED", "checker": str(args.checker),
+        "side": expected_side, "verdict": result_string,
+        "method": proof_method, "checker": str(args.checker),
     }
     if request.source_request is not None:
         evidence["target_certificate"]["source_binding"] = (
             request.source_request.artifact_binding()
         )
-    return PipelineResult(answer, "target_check",
-                          "target_verified", certificate, policy)
+    return PipelineResult(
+        answer, "target_check", "target_verified", certificate, policy,
+        proof_method,
+    )
 
 
 def _cost_accounting(evidence: dict[str, Any], elapsed_s: float) -> dict[str, float]:
@@ -707,6 +762,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("-T", "--tlsf", type=Path)
     parser.add_argument("--seeds", help="comma-separated seed sizes (REAL path only)")
     parser.add_argument("--semantics", choices=("exact", "strict"), default="exact")
+    parser.add_argument(
+        "--real-check", choices=("policy", "region"), default="policy",
+        help=("proof route for lifted REAL decisions; policy remains the "
+              "synthesis-capable default"),
+    )
     parser.add_argument("--budget", type=float, default=120.0)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--evidence-out", type=Path)
@@ -764,6 +824,8 @@ def main(argv: list[str] | None = None) -> int:
             monitor=args.monitor,
             solver=args.solver,
             checker=args.checker,
+            required_checker_method=(
+                "region" if args.real_check == "region" else None),
         )
         if _DIAGNOSTICS is not None:
             try:
@@ -798,6 +860,7 @@ def main(argv: list[str] | None = None) -> int:
         "invocation_id": provisional, "cache_mode": "cold",
         "warm_cache_supported": False, "budget_s": args.budget,
         "semantics": args.semantics, "stages": [],
+        "real_check": args.real_check,
         "request_mode": args.request_mode,
         "target_check_ran": False, "target_verified": False,
         "compose_route": _compose_route(args),
@@ -823,6 +886,13 @@ def main(argv: list[str] | None = None) -> int:
         signal.signal(handled, cancel)
     try:
         request = _resolve_request(args, config, deadline)
+        if _request_uses_region(args, request):
+            try:
+                require_checker_method(args.checker, "region")
+            except ProbeError as error:
+                raise PipelineFailure(
+                    "configuration", "checker_missing_method_region"
+                ) from error
         invocation, workspace = _create_workspace(output_root, request.family, request.target)
         evidence["invocation_id"] = invocation
         evidence["workspace"] = str(workspace)
@@ -853,6 +923,7 @@ def main(argv: list[str] | None = None) -> int:
             str(args.generalizer.resolve()), "--family", request.family,
             "--target", str(request.target), "--seeds", ",".join(map(str, request.seeds)),
             "--reduction-semantics", args.semantics,
+            "--real-check", args.real_check,
             "--timeout", str(args.budget), "--out", "FRESH_OUTPUT_DIRECTORY",
             "--tlsf-tools-build", str(args.tlsf_tools_build.resolve()),
             "--bindings-python", str(args.bindings_python.resolve()),
@@ -878,6 +949,7 @@ def main(argv: list[str] | None = None) -> int:
             "buddy_adapter": (str(args.buddy_adapter.resolve())
                               if args.buddy_adapter is not None else None),
             "compose_route": evidence["compose_route"],
+            "real_check": args.real_check,
             "monitor": str(args.monitor), "solver": str(args.solver),
             "checker": str(args.checker),
         }
@@ -934,6 +1006,7 @@ def main(argv: list[str] | None = None) -> int:
         "verdict": result.verdict, "stage": result.stage, "reason": result.reason,
         "certificate": str(result.certificate) if result.certificate else None,
         "policy": str(result.policy) if result.policy else None,
+        "proof_method": result.proof_method,
         "stdout_line": result.stdout_line(),
     }
     if evidence_path is None:

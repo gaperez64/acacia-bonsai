@@ -104,6 +104,12 @@ class ToolConfigurationTest(unittest.TestCase):
 
             with (
                 mock.patch.object(tool_config, "_binary_version", side_effect=version),
+                mock.patch.object(
+                    tool_config, "checker_method_contract",
+                    return_value=tool_config.CheckerMethodContract(
+                        ("auto", "certificate", "region"), "gr1-region-v1"
+                    ),
+                ),
                 mock.patch.object(tool_config, "_probe_bindings", return_value={"api": "ok"}),
                 mock.patch.object(pathlib.Path, "is_file", return_value=True),
                 mock.patch.object(os, "access", return_value=True),
@@ -115,6 +121,11 @@ class ToolConfigurationTest(unittest.TestCase):
             )
             self.assertEqual(result["bindings"], {"api": "ok"})
             self.assertIsNone(result["buddy_adapter"])
+            self.assertTrue(result["tools"]["tlsfcertcheck"]["supports_region"])
+            self.assertEqual(
+                result["tools"]["tlsfcertcheck"]["region_contract"],
+                "gr1-region-v1",
+            )
 
     def test_probe_passes_configured_adapter_to_binding_probe(self) -> None:
         with tempfile.TemporaryDirectory(prefix="tool-config-adapter-") as temporary:
@@ -132,6 +143,12 @@ class ToolConfigurationTest(unittest.TestCase):
             with (
                 mock.patch.object(tool_config, "_binary_version", return_value="v1"),
                 mock.patch.object(
+                    tool_config, "checker_method_contract",
+                    return_value=tool_config.CheckerMethodContract(
+                        ("auto", "certificate"), None
+                    ),
+                ),
+                mock.patch.object(
                     tool_config,
                     "_probe_bindings",
                     return_value={"adapter": {"path": str(adapter)}},
@@ -143,6 +160,42 @@ class ToolConfigurationTest(unittest.TestCase):
             probe.assert_called_once_with(config)
             self.assertEqual(result["buddy_adapter"], str(adapter))
             self.assertEqual(result["bindings"]["adapter"]["path"], str(adapter))
+
+    def test_region_requirement_is_a_configuration_error(self) -> None:
+        checker = pathlib.Path("/configured/tlsfcertcheck")
+        with (
+            mock.patch.object(
+                tool_config, "checker_method_contract",
+                return_value=tool_config.CheckerMethodContract(
+                    ("auto", "certificate", "both"), None
+                ),
+            ),
+            self.assertRaisesRegex(
+                tool_config.ProbeError,
+                r"does not support --method region",
+            ),
+        ):
+            tool_config.require_checker_method(checker, "region")
+
+    def test_region_token_without_versioned_contract_is_rejected(self) -> None:
+        checker = pathlib.Path("/configured/tlsfcertcheck")
+        advertised_only = subprocess.CompletedProcess(
+            [str(checker), "--help"],
+            0,
+            "--method NAME  auto|certificate|closed-loop|both|region\n",
+            "",
+        )
+        with (
+            mock.patch.object(
+                tool_config.subprocess, "run", return_value=advertised_only
+            ),
+            self.assertRaisesRegex(
+                tool_config.ProbeError,
+                r"advertises --method region without the required "
+                r"gr1-region-v1 contract",
+            ),
+        ):
+            tool_config.require_checker_method(checker, "region")
 
     def test_probe_rejects_bindings_outside_configured_site(self) -> None:
         with tempfile.TemporaryDirectory(prefix="tool-config-bindings-") as temporary:

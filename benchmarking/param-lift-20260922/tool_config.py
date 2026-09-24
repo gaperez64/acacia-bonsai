@@ -7,6 +7,7 @@ import importlib
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import textwrap
@@ -91,6 +92,12 @@ class ToolConfiguration:
     @property
     def tlsfinfo(self) -> pathlib.Path:
         return self.tlsf_tools_build / "tlsfinfo"
+
+
+@dataclass(frozen=True)
+class CheckerMethodContract:
+    methods: tuple[str, ...]
+    region_identifier: str | None
 
 
 def configuration_defaults(
@@ -261,6 +268,71 @@ def _binary_version(path: pathlib.Path, description: str) -> str:
     return output
 
 
+def checker_method_contract(path: pathlib.Path) -> CheckerMethodContract:
+    """Return advertised methods plus the versioned region contract."""
+    try:
+        result = subprocess.run(
+            [str(path), "--help"],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise ProbeError(f"tlsfcertcheck method probe failed: {error}") from error
+    output = f"{result.stdout}\n{result.stderr}"
+    if result.returncode != 0:
+        detail = output.strip() or "no diagnostic"
+        raise ProbeError(
+            f"tlsfcertcheck --help exited {result.returncode}: {detail}"
+        )
+    match = re.search(r"--method\s+NAME\s+([^\n]+)", output)
+    if match is None:
+        raise ProbeError("tlsfcertcheck --help does not advertise --method choices")
+    methods = tuple(
+        item
+        for item in re.findall(r"[a-z][a-z-]*", match.group(1).lower())
+        if item not in {"is", "policy", "free"}
+    )
+    if not methods:
+        raise ProbeError("tlsfcertcheck --help advertises no checker methods")
+    methods = tuple(dict.fromkeys(methods))
+    region_identifier = (
+        "gr1-region-v1"
+        if re.search(r"\bgr1-region-v1\b", output) is not None
+        else None
+    )
+    return CheckerMethodContract(methods, region_identifier)
+
+
+def checker_methods(path: pathlib.Path) -> tuple[str, ...]:
+    """Return the methods advertised by one configured checker binary."""
+    return checker_method_contract(path).methods
+
+
+def _require_checker_contract(
+    path: pathlib.Path,
+    method: str,
+    contract: CheckerMethodContract,
+) -> None:
+    if method not in contract.methods:
+        raise ProbeError(
+            f"configured tlsfcertcheck does not support --method {method}: {path}"
+        )
+    if method == "region" and contract.region_identifier != "gr1-region-v1":
+        raise ProbeError(
+            "configured tlsfcertcheck advertises --method region without "
+            f"the required gr1-region-v1 contract: {path}"
+        )
+
+
+def require_checker_method(path: pathlib.Path, method: str) -> tuple[str, ...]:
+    contract = checker_method_contract(path)
+    _require_checker_contract(path, method, contract)
+    return contract.methods
+
+
 def _probe_bindings(config: ToolConfiguration) -> dict[str, object]:
     script = textwrap.dedent(
         """
@@ -331,6 +403,7 @@ def probe_configuration(
     monitor: pathlib.Path | None = None,
     solver: pathlib.Path | None = None,
     checker: pathlib.Path | None = None,
+    required_checker_method: str | None = None,
 ) -> dict[str, object]:
     effective_monitor = (monitor or config.monitor).expanduser().resolve()
     effective_solver = (solver or config.solver).expanduser().resolve()
@@ -341,6 +414,11 @@ def probe_configuration(
     _require_file(config.bindings_python, "bindings Python", executable=True)
     if not config.bindings_site.is_dir():
         raise ProbeError(f"bindings site directory not found: {config.bindings_site}")
+    checker_contract = checker_method_contract(effective_checker)
+    if required_checker_method is not None:
+        _require_checker_contract(
+            effective_checker, required_checker_method, checker_contract
+        )
     return {
         "tlsf_tools_build": str(config.tlsf_tools_build),
         "tools": {
@@ -352,6 +430,12 @@ def probe_configuration(
             "tlsfcertcheck": {
                 "path": str(effective_checker),
                 "version": _binary_version(effective_checker, "tlsfcertcheck"),
+                "supported_methods": checker_contract.methods,
+                "region_contract": checker_contract.region_identifier,
+                "supports_region": (
+                    "region" in checker_contract.methods
+                    and checker_contract.region_identifier == "gr1-region-v1"
+                ),
             },
         },
         "bindings_site": str(config.bindings_site),
@@ -367,10 +451,12 @@ def print_probe(
     monitor: pathlib.Path | None = None,
     solver: pathlib.Path | None = None,
     checker: pathlib.Path | None = None,
+    required_checker_method: str | None = None,
 ) -> int:
     try:
         result = probe_configuration(
-            config, monitor=monitor, solver=solver, checker=checker
+            config, monitor=monitor, solver=solver, checker=checker,
+            required_checker_method=required_checker_method,
         )
     except ProbeError as error:
         print(f"probe: {error}", file=os.sys.stderr)

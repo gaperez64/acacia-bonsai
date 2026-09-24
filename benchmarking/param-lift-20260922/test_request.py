@@ -250,6 +250,22 @@ class SourceRequestTest(unittest.TestCase):
         )
         self.assertEqual((answer, side), ("REALIZABLE", "system"))
         answer, side = campaign._certified_answer(
+            CAPABILITIES["arbiter"],
+            {"status": "realizable", "side": "system"},
+            None,
+        )
+        self.assertEqual((answer, side), ("REALIZABLE", "system"))
+        region_result = campaign.PipelineResult(
+            "REALIZABLE", "target_check", "target_verified",
+            self.root / "certificate.aag", None, "gr1-region-v1",
+        )
+        self.assertIsNone(region_result.policy)
+        with self.assertRaisesRegex(ValueError, "only establish REALIZABLE"):
+            campaign.PipelineResult(
+                "UNREALIZABLE", "target_check", "target_verified",
+                self.root / "certificate.aag", None, "gr1-region-v1",
+            )
+        answer, side = campaign._certified_answer(
             capability,
             {
                 "status": "unrealizable",

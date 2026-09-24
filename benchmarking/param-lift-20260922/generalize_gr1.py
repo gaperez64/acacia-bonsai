@@ -4,6 +4,10 @@
 This is a research driver, not part of tlsf-tools.  It deliberately treats the
 monitor provenance as the cross-instance ABI: AIG variable numbers are never
 used to align two sizes.
+
+Lifted REAL targets use the synthesis-capable policy proof route by default.
+``--real-check region`` is decision-only: it emits the complete target
+certificate but no target policy and accepts only a ``REGION_VERIFIED`` proof.
 """
 
 from __future__ import annotations
@@ -34,6 +38,7 @@ from buddy_veccompose import (
 from request import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL
 from s0_diagnostics import Diagnostics, sha256
 from tool_config import (
+    ProbeError,
     ToolConfiguration,
     add_configuration_arguments,
     bindings_environment,
@@ -41,6 +46,7 @@ from tool_config import (
     configuration_from_args,
     load_buddy_bindings,
     print_probe,
+    require_checker_method,
 )
 
 
@@ -60,8 +66,12 @@ RESULTS = pathlib.Path(os.environ.get(
     "GENERALIZE_GR1_RESULTS", HERE / "m4-results.tsv"))
 MAX_CANDIDATES_PER_TARGET = 32
 MAX_CEGIS_ROUNDS = 3
-CANDIDATE_BUNDLE_SCHEMA = "acacia-gr1-candidate-bundle-v2"
-CANDIDATE_REQUEST_SCHEMA = "acacia-gr1-candidate-request-v1"
+# These schemas are an in-invocation parent/child handoff, not a persisted
+# public interface.  They were deliberately bumped for the region route:
+# request identity now binds the REAL check route, and a region bundle omits
+# the policy records that remain mandatory in a default policy bundle.
+CANDIDATE_BUNDLE_SCHEMA = "acacia-gr1-candidate-bundle-v3"
+CANDIDATE_REQUEST_SCHEMA = "acacia-gr1-candidate-request-v2"
 PROVENANCE_SCHEMA = "tlsf-tools.gr1-monitor-game.provenance.v2"
 MAX_PREDICATE_ARITY = 4
 TEMPLATE_CACHE_MAX_ENTRIES = 64
@@ -533,7 +543,7 @@ class CandidateBundle:
     schema: CandidateSchema
     target: "Instance"
     certificate: pathlib.Path
-    policy: pathlib.Path
+    policy: pathlib.Path | None
     detail: dict
 
 
@@ -549,6 +559,7 @@ class CandidateRequestIdentity:
     expected_arity: int
     game_path: pathlib.Path
     provenance_path: pathlib.Path
+    real_check: str = "policy"
 
     def payload(self) -> dict[str, object]:
         return {
@@ -562,6 +573,7 @@ class CandidateRequestIdentity:
             "game_path": str(self.game_path),
             "provenance_path": str(self.provenance_path),
             "provenance_schema": PROVENANCE_SCHEMA,
+            "real_check": self.real_check,
         }
 
 
@@ -3191,7 +3203,10 @@ def _structured_arbiter_certificate_moves(
 
 
 def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
-                   predicates: dict[str, object], levels: list[int]) -> tuple[pathlib.Path, pathlib.Path]:
+                   predicates: dict[str, object], levels: list[int], *,
+                   real_check: str = "policy") -> tuple[pathlib.Path, pathlib.Path | None]:
+    if real_check not in ("policy", "region"):
+        raise ValueError(f"unsupported REAL check route {real_check!r}")
     cert_path = out / f"{target.family}_{target.n}.certificate.aag"
     policy_path = out / f"{target.family}_{target.n}.policy.aag"
     cert_inputs = [*target.game.latch_names, *target.game.input_names]
@@ -3212,9 +3227,17 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
         cert_outputs, "index-aware GR(1) generalized certificate"), encoding="utf-8")
     cert_meta = _certificate_sidecar(target, cert_path, levels,
                                      len(cert_outputs), len(cert_builder.gates))
+    if real_check == "region":
+        # The policy checker historically inferred the system side from an
+        # absent field.  Region-v1 is policy-free and therefore requires the
+        # certificate to state its side explicitly.
+        cert_meta["side"] = "system"
     pathlib.Path(str(cert_path) + ".json").write_text(
         json.dumps(cert_meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     _trace("certificate emitted")
+    if real_check == "region":
+        _trace("target policy construction omitted for region checking")
+        return cert_path, None
     policy_token = (
         _diagnostic_begin("policy_construction_skolemization")
         if _DIAGNOSTICS_ENABLED else None
@@ -3380,8 +3403,9 @@ def _exactly_one(bdds: Bdds, variables: list[int]):
 
 def _collector_candidate(
         bdds: Bdds, seeds: list[Instance], target: Instance,
-        out: pathlib.Path, stage: dict[str, float]
-) -> tuple[CandidateSchema, Instance, pathlib.Path, pathlib.Path, dict]:
+        out: pathlib.Path, stage: dict[str, float], *,
+        real_check: str = "policy"
+) -> tuple[CandidateSchema, Instance, pathlib.Path, pathlib.Path | None, dict]:
     """Instantiate the collector's bus-wide W schema on semantic states.
 
     The generated monitor uses one-hot state encodings whose width grows with
@@ -3653,7 +3677,8 @@ def _collector_candidate(
             ordered[f"x_{j}_{k}_0"] = predicates[f"x_{j}_{k}_0"]
     for j in range(len(target.goals)):
         ordered[f"move_{j}"] = predicates[f"move_{j}"]
-    cert, policy_path = emit_candidate(bdds, target, out, ordered, levels)
+    cert, policy_path = emit_candidate(
+        bdds, target, out, ordered, levels, real_check=real_check)
     stage["instantiate"] = time.monotonic() - started
     candidate = CandidateSchema(
         target.family, REAL_FAMILIES[target.family].arity,
@@ -3669,6 +3694,7 @@ def _collector_candidate(
     evidence = {
         "format": "acacia-param-lift-gr1-evidence-v1",
         "compose_route": _compose_route(),
+        "real_check": real_check,
         "family": target.family, "target": target.n,
         "seeds": [seed.n for seed in seeds], "arity": candidate.arity,
         "variable_layout": (
@@ -3689,16 +3715,23 @@ def _collector_candidate(
             "bus-wide schemas": {"matched": list(candidate.bus_schemas)},
             "ranks": {"depths": levels,
                       "construction": "universal semantic attractor"},
-            "instantiate": {"certificate": cert.name,
-                            "policy": policy_path.name},
+            "instantiate": {
+                "certificate": cert.name,
+                "policy": policy_path.name if policy_path is not None else None,
+                "exports": (["certificate", "policy"]
+                            if policy_path is not None else ["certificate"]),
+                "policy_omitted": policy_path is None,
+            },
             "CEGIS": {"round_cap": MAX_CEGIS_ROUNDS},
         },
         "canonical_variable": "(template,index_tuple,state_bit)",
         "bus_instantiation": (
             "semantic one-hot W automaton under the canonical allFinished rule"),
         "y_reconstruction": "union_i x_j_k_i",
-        "skolem_rule": "allFinished iff every local W monitor is in state 0",
     }
+    if policy_path is not None:
+        evidence["skolem_rule"] = (
+            "allFinished iff every local W monitor is in state 0")
     (out / "evidence.json").write_text(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return candidate, target, cert, policy_path, {"times": stage,
@@ -3795,9 +3828,11 @@ def instantiate(
                     deadline: AbsoluteDeadline, *,
                     family_source: pathlib.Path | None = None,
                     target_source: pathlib.Path | None = None,
-                    reduction_semantics: str = "exact") -> tuple[CandidateSchema, Instance,
-                                                                  pathlib.Path, pathlib.Path,
-                                                                  dict]:
+                    reduction_semantics: str = "exact",
+                    real_check: str = "policy") -> tuple[CandidateSchema, Instance,
+                                                          pathlib.Path,
+                                                          pathlib.Path | None,
+                                                          dict]:
     family = schema.family
     seeds = schema.seed_bundle.seeds
     seed_ns = tuple(seed.n for seed in seeds)
@@ -3834,7 +3869,8 @@ def instantiate(
         bdds = Bdds()
         context = bdds.begin_attempt([], target)
         try:
-            return _collector_candidate(bdds, seeds, target, out, stage)
+            return _collector_candidate(
+                bdds, seeds, target, out, stage, real_check=real_check)
         finally:
             context.release()
             bdds.close()
@@ -4018,7 +4054,8 @@ def instantiate(
         for j in range(len(target.goals)):
             ordered[f"move_{j}"] = predicates[f"move_{j}"]
         started = stage.begin("instantiate")
-        cert, policy = emit_candidate(bdds, target, out, ordered, levels)
+        cert, policy = emit_candidate(
+            bdds, target, out, ordered, levels, real_check=real_check)
         stage["instantiate"] = time.monotonic() - started
         candidate = CandidateSchema(
             family, max(predicate_arities.values()), seed_ns,
@@ -4027,6 +4064,7 @@ def instantiate(
             tuple(sorted(predicate_arities.items())))
         evidence = {"format": "acacia-param-lift-gr1-evidence-v1",
                     "compose_route": _compose_route(),
+                    "real_check": real_check,
                     "family": family, "target": target_n,
                     "seeds": list(seed_ns), "arity": candidate.arity,
                     "predicate_arities": dict(candidate.predicate_arities),
@@ -4055,13 +4093,21 @@ def instantiate(
                             "matched": list(candidate.bus_schemas)},
                         "ranks": {"depths": levels,
                                   "y": "union_i x_j_k_i"},
-                        "instantiate": {"certificate": cert.name,
-                                        "policy": policy.name},
+                        "instantiate": {
+                            "certificate": cert.name,
+                            "policy": policy.name if policy is not None else None,
+                            "exports": (["certificate", "policy"]
+                                        if policy is not None
+                                        else ["certificate"]),
+                            "policy_omitted": policy is None,
+                        },
                         "CEGIS": {"round_cap": MAX_CEGIS_ROUNDS},
                     },
                     "canonical_variable": "(template,index_tuple,state_bit)",
-                    "y_reconstruction": "union_i x_j_k_i",
-                    "skolem_rule": "game controllable order; true/lowest index first"}
+                    "y_reconstruction": "union_i x_j_k_i"}
+        if policy is not None:
+            evidence["skolem_rule"] = (
+                "game controllable order; true/lowest index first")
         (out / "evidence.json").write_text(
             json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return candidate, target, cert, policy, {"times": stage, "evidence": evidence}
@@ -4082,7 +4128,8 @@ def generalize_once(
     reduction_semantics: str = "exact",
     deadline: AbsoluteDeadline | None = None,
     seed_bundle: SeedBundle | None = None,
-) -> tuple[CandidateSchema, Instance, pathlib.Path, pathlib.Path, dict]:
+    real_check: str = "policy",
+) -> tuple[CandidateSchema, Instance, pathlib.Path, pathlib.Path | None, dict]:
     """Compatibility composition of the four explicit orchestration stages."""
     absolute = deadline or AbsoluteDeadline.after(limits.checker_timeout_s)
     acquired = acquire_small_instances(
@@ -4094,6 +4141,7 @@ def generalize_once(
         schema, target_n, out, limits, absolute,
         family_source=family_source, target_source=target_source,
         reduction_semantics=reduction_semantics,
+        real_check=real_check,
     )
 
 
@@ -4191,10 +4239,31 @@ def _record_checker_stats(
 def _recoverable_checker_capacity_failure(
     proc: subprocess.CompletedProcess,
     stats: dict | None = None,
+    *,
+    method: str | None = None,
+    requested_node_cap: int | None = None,
 ) -> bool:
     """Recognize only explicit capacity exhaustion, never generic UNKNOWN."""
     if proc.returncode != 3:
         return False
+    if (
+        method == "region"
+        and isinstance(stats, dict)
+        and stats.get("format") == "tlsf-gr1-region-checkresult-v1"
+        and stats.get("method") == "gr1-region-v1"
+        and stats.get("verdict") == "UNKNOWN"
+        and stats.get("exit_code") == 3
+        and isinstance(stats.get("peak_bdd_nodes"), int)
+        and isinstance(requested_node_cap, int)
+        and requested_node_cap > 0
+        and stats["peak_bdd_nodes"] >= requested_node_cap
+    ):
+        # Region-v1 currently has no separate JSON failure-reason field.  Its
+        # peak is sampled from the same OxiDD manager governed by --node-cap,
+        # so reaching the requested cap is the method-specific capacity
+        # signal.  Requiring the exact versioned UNKNOWN envelope prevents a
+        # generic checker failure from entering the retry path.
+        return True
     if isinstance(stats, dict):
         reason = " ".join(
             str(stats.get(key, ""))
@@ -4260,9 +4329,12 @@ def _checker_retry_allowed(
     return True, "diagnosed_capacity_with_time_and_memory_headroom"
 
 
-def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
+def check_candidate(target: Instance, cert: pathlib.Path,
+                    policy: pathlib.Path | None,
                     method: str, limits: ProposerLimits, label: str,
                     deadline: AbsoluteDeadline | None = None) -> dict:
+    if method != "region" and policy is None:
+        raise ValueError(f"checker method {method!r} requires a policy artifact")
     absolute = deadline or AbsoluteDeadline.after(limits.checker_timeout_s)
     json_out = cert.parent / f"check-{label}.json"
     initial_cap = limits.check_capacity(target.n)
@@ -4292,7 +4364,10 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
             command.extend(_checker_stats_options(stats_path))
             mode_count = _diagnostic_record_checker_attempt(
                 target, "system", label, node_cap)
-        command.extend([str(target.game_path), str(policy)])
+        command.append(str(target.game_path))
+        if method != "region":
+            assert policy is not None
+            command.append(str(policy))
         proc = _run(command, absolute.timeout_s(
             checker_timeout + 10, progress_stage))
         if _DIAGNOSTICS_ENABLED:
@@ -4309,7 +4384,8 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
             except json.JSONDecodeError:
                 pass
         if attempt_index or not _recoverable_checker_capacity_failure(
-                proc, attempt_payload):
+                proc, attempt_payload, method=method,
+                requested_node_cap=node_cap):
             break
         allowed, reason = _checker_retry_allowed(
             absolute, time.monotonic() - attempt_started)
@@ -4335,8 +4411,25 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
             payload = json.loads(json_out.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             payload = None
+    output_lines = [line for line in proc.stdout.splitlines() if line.strip()]
+    result_string = output_lines[-1].strip() if output_lines else None
+    region_verified = (
+        method == "region"
+        and proc.returncode == 0
+        and result_string == "REGION_VERIFIED"
+        and isinstance(payload, dict)
+        and payload.get("format") == "tlsf-gr1-region-checkresult-v1"
+        and payload.get("method") == "gr1-region-v1"
+        and payload.get("verdict") == "REGION_VERIFIED"
+        and payload.get("exit_code") == 0
+    )
+    proof_verified = region_verified if method == "region" else proc.returncode == 0
     return {"returncode": proc.returncode,
             "verdict": VERDICTS.get(proc.returncode, "UNKNOWN"),
+            "requested_method": method,
+            "proof_method": ("gr1-region-v1" if method == "region" else method),
+            "result_string": result_string,
+            "proof_verified": proof_verified,
             "started_monotonic_s": started,
             "elapsed_s": elapsed, "stdout": proc.stdout, "stderr": proc.stderr,
             "json": payload, "command": command, "attempts": attempts,
@@ -4349,18 +4442,20 @@ def check_target(
     deadline: AbsoluteDeadline,
     limits: ProposerLimits,
     method: str = "auto",
+    real_check: str = "policy",
 ) -> TargetCheckResult:
+    checker_method = "region" if real_check == "region" else method
     check = check_candidate(
         actual_spec,
         candidate_bundle.certificate,
         candidate_bundle.policy,
-        method,
+        checker_method,
         limits,
         f"target-{actual_spec.n}",
         deadline,
     )
     return TargetCheckResult(
-        target_verified=check["returncode"] == 0,
+        target_verified=bool(check["proof_verified"]),
         schema_validated_on_probes=False,
         check=check,
     )
@@ -4447,6 +4542,7 @@ def _build_lifted_candidate(
     family_source: pathlib.Path | None,
     target_source: pathlib.Path | None,
     reduction_semantics: str,
+    real_check: str = "policy",
 ) -> CandidateBundle:
     _validate_lift_parameters(family, target, seeds)
     acquired = acquire_small_instances(
@@ -4458,6 +4554,7 @@ def _build_lifted_candidate(
         schema, target, out, limits, deadline,
         family_source=family_source, target_source=target_source,
         reduction_semantics=reduction_semantics,
+        real_check=real_check,
     )
     return CandidateBundle(candidate, target_instance, cert, policy, detail)
 
@@ -4476,6 +4573,7 @@ def _candidate_request_identity(
     family_source: pathlib.Path | None,
     target_source: pathlib.Path | None,
     reduction_semantics: str,
+    real_check: str = "policy",
 ) -> CandidateRequestIdentity:
     source = (
         target_source or family_source or ROOT / REAL_FAMILIES[family].source
@@ -4489,6 +4587,7 @@ def _candidate_request_identity(
         expected_arity=int(REAL_FAMILIES[family].arity),
         game_path=(out / f"{family}_{target}.game.aag").resolve(),
         provenance_path=(out / f"{family}_{target}.prov.json").resolve(),
+        real_check=real_check,
     )
 
 
@@ -4504,11 +4603,14 @@ def _write_candidate_bundle(
         "certificate": _artifact_record(bundle.certificate),
         "certificate_metadata": _artifact_record(
             pathlib.Path(str(bundle.certificate) + ".json")),
-        "policy": _artifact_record(bundle.policy),
-        "policy_metadata": _artifact_record(
-            pathlib.Path(str(bundle.policy) + ".json")),
         "evidence": _artifact_record(out / "evidence.json"),
     }
+    if bundle.policy is not None:
+        artifacts.update({
+            "policy": _artifact_record(bundle.policy),
+            "policy_metadata": _artifact_record(
+                pathlib.Path(str(bundle.policy) + ".json")),
+        })
     provenance_payload = json.loads(
         bundle.target.prov_path.read_text(encoding="utf-8"))
     payload = {
@@ -4593,8 +4695,10 @@ def _read_candidate_bundle(
                       "candidate bundle has no artifact map")
     required_artifacts = {
         "game", "provenance", "certificate", "certificate_metadata",
-        "policy", "policy_metadata", "evidence",
+        "evidence",
     }
+    if expected.real_check == "policy":
+        required_artifacts.update(("policy", "policy_metadata"))
     if not required_artifacts <= records.keys():
         raise Decline(
             "candidate_builder", "artifact bundle", expected.target,
@@ -4663,9 +4767,16 @@ def _read_candidate_bundle(
             "manager_owner": payload.get("manager_owner"),
         },
     }
+    policy = checked.get("policy")
+    if expected.real_check == "region" and (
+        "policy" in checked or "policy_metadata" in checked
+    ):
+        raise Decline(
+            "candidate_builder", "artifact bundle", expected.target,
+            "region candidate bundle unexpectedly contains a policy",
+        )
     return CandidateBundle(
-        schema, target_instance, checked["certificate"], checked["policy"],
-        detail,
+        schema, target_instance, checked["certificate"], policy, detail,
     ), payload
 
 
@@ -4680,6 +4791,7 @@ def _candidate_builder_command(
     family_source: pathlib.Path | None,
     target_source: pathlib.Path | None,
     reduction_semantics: str,
+    real_check: str = "policy",
 ) -> list[str]:
     command = [
         sys.executable, str(pathlib.Path(__file__).resolve()),
@@ -4689,6 +4801,7 @@ def _candidate_builder_command(
         "--absolute-deadline-monotonic",
         repr(deadline.expires_monotonic_s),
         "--check-method", check_method,
+        "--real-check", real_check,
         "--reduction-semantics", reduction_semantics,
         "--out", str(out),
         "--candidate-bundle-out", str(out / "candidate-bundle.json"),
@@ -4755,7 +4868,8 @@ def _launch_candidate_builder(
 
 
 def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
-        limits: ProposerLimits, check_method: str = "auto", *,
+        limits: ProposerLimits, check_method: str = "auto",
+        real_check: str = "policy", *,
         family_source: pathlib.Path | None = None,
         target_source: pathlib.Path | None = None,
         reduction_semantics: str = "exact",
@@ -4783,6 +4897,7 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
         family, target, current, out, limits, absolute,
         family_source=family_source, target_source=target_source,
         reduction_semantics=reduction_semantics,
+        real_check=real_check,
     )
     if builder_evidence is not None:
         _COST_TIMES.update(builder_evidence.get("cost_times", {}))
@@ -4792,10 +4907,14 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
     policy = bundle.policy
     detail = bundle.detail
     target_result = check_target(
-        target_instance, bundle, absolute, limits, check_method)
+        target_instance, bundle, absolute, limits, check_method, real_check)
     final_check = target_result.check
     checks = [(target, final_check)]
-    verdict = VERDICTS.get(final_check["returncode"], "ERROR")
+    verdict = (
+        "VERIFIED" if target_result.target_verified
+        else ("ERROR" if final_check["returncode"] == 0
+              else VERDICTS.get(final_check["returncode"], "ERROR"))
+    )
     times = detail["times"]
     times["cegis"] = time.monotonic() - cegis_started
     evidence = detail["evidence"]
@@ -4804,6 +4923,8 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
         "checks": [
             {"n": n, "exit_code": check["returncode"],
              "verdict": check["verdict"],
+             "method": check["proof_method"],
+             "result": check["result_string"],
              "node_caps": check["node_caps"],
              "counterexample": bool(
                  isinstance(check.get("json"), dict) and
@@ -4820,6 +4941,16 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
     evidence["schema_validated_on_probes"] = (
         target_result.schema_validated_on_probes)
     evidence["claim_scope"] = "requested_target_only"
+    evidence["real_check"] = real_check
+    evidence["target_check_method"] = final_check["proof_method"]
+    evidence["target_check_result"] = final_check["result_string"]
+    evidence["stage_evidence"]["target_check"] = {
+        "method": final_check["proof_method"],
+        "result": final_check["result_string"],
+        "game": target_instance.game_path.name,
+        "certificate": cert.name,
+        "policy": policy.name if policy is not None else None,
+    }
     if builder_evidence is not None:
         checker_started = final_check.get("started_monotonic_s")
         builder_process = builder_evidence.get("builder_process", {})
@@ -4876,6 +5007,9 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
               "stages_passed": detail["evidence"]["stages"],
               "cegis_rounds": rounds, "verdict": verdict,
               "certificate": cert, "policy": policy, "checks": checks,
+              "real_check": real_check,
+              "target_check_method": final_check["proof_method"],
+              "target_check_result": final_check["result_string"],
               "times": times, "wall_s": wall_s, "peak_rss_kib": peak_rss,
               "cost_accounting": cost_accounting,
               "reason": "" if verdict == "VERIFIED" else
@@ -5053,7 +5187,8 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
         attempt = {"node_cap": node_cap, "returncode": check.returncode,
                    "retry": False, "retry_reason": None}
         attempts.append(attempt)
-        if attempt_index or not _recoverable_checker_capacity_failure(check):
+        if attempt_index or not _recoverable_checker_capacity_failure(
+                check, method="certificate", requested_node_cap=node_cap):
             break
         allowed, reason = _checker_retry_allowed(
             absolute, time.monotonic() - attempt_started)
@@ -5092,6 +5227,9 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
     evidence = {
         "format": "acacia-param-lift-gr1-evidence-v1",
         "compose_route": _compose_route(),
+        "real_check": "policy",
+        "target_check_method": "certificate",
+        "target_check_result": "VERIFIED",
         "family": family, "target": target, "seeds": [],
         "path_kind": "direct-certified", "measured_arity": None,
         "semantics": "exact", "certificate_side": side,
@@ -5232,6 +5370,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--check-method", choices=("auto", "certificate", "both"),
                         default="auto", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--real-check", choices=("policy", "region"), default="policy",
+        help=("proof route for lifted REAL requests: policy exports a "
+              "synthesis artifact; region is decision-only and omits it"),
+    )
     parser.add_argument("--monitor", type=pathlib.Path, help=argparse.SUPPRESS)
     parser.add_argument("--solver", type=pathlib.Path, help=argparse.SUPPRESS)
     parser.add_argument("--checker", type=pathlib.Path, help=argparse.SUPPRESS)
@@ -5283,7 +5426,9 @@ def main(argv: list[str] | None = None) -> int:
             _apply_tool_configuration(config, args)
             _diagnostic_initialize(args.diagnostics, deadline)
         probe_result = print_probe(
-            config, monitor=monitor, solver=solver, checker=checker
+            config, monitor=monitor, solver=solver, checker=checker,
+            required_checker_method=(
+                "region" if args.real_check == "region" else None),
         )
         if _DIAGNOSTICS_ENABLED:
             _diagnostic_finish(
@@ -5293,6 +5438,12 @@ def main(argv: list[str] | None = None) -> int:
         return probe_result
     if args.family is None or args.target is None:
         parser.error("--family and --target are required unless --probe is used")
+    if args.real_check == "region" and args.family in REAL_FAMILIES:
+        try:
+            require_checker_method(checker, "region")
+        except ProbeError as error:
+            print(f"configuration: {error}", file=sys.stderr)
+            return 4
     # Spot and BuDDy are native modules tied to the configured CPython ABI.
     if pathlib.Path(sys.executable).resolve() != config.bindings_python:
         os.execv(
@@ -5342,12 +5493,14 @@ def main(argv: list[str] | None = None) -> int:
                 family_source=args.family_source,
                 target_source=args.target_source,
                 reduction_semantics=args.reduction_semantics,
+                real_check=args.real_check,
             )
             bundle = _build_lifted_candidate(
                 args.family, args.target, seeds, out, limits, deadline,
                 family_source=args.family_source,
                 target_source=args.target_source,
                 reduction_semantics=args.reduction_semantics,
+                real_check=args.real_check,
             )
             bundle_out = (
                 args.candidate_bundle_out or out / "candidate-bundle.json"
@@ -5377,13 +5530,14 @@ def main(argv: list[str] | None = None) -> int:
             command = _candidate_builder_command(
                 args.family, args.target, seeds, out, limits, deadline,
                 args.check_method, args.family_source, args.target_source,
-                args.reduction_semantics,
+                args.reduction_semantics, args.real_check,
             )
             expected_identity = _candidate_request_identity(
                 args.family, args.target, seeds, out,
                 family_source=args.family_source,
                 target_source=args.target_source,
                 reduction_semantics=args.reduction_semantics,
+                real_check=args.real_check,
             )
             child_diagnostics = None
             if args.diagnostics is not None:
@@ -5410,7 +5564,8 @@ def main(argv: list[str] | None = None) -> int:
                     child_diagnostics.unlink(missing_ok=True)
             result = run(
                 args.family, args.target, seeds, out, limits,
-                args.check_method, family_source=args.family_source,
+                args.check_method, args.real_check,
+                family_source=args.family_source,
                 target_source=args.target_source,
                 reduction_semantics=args.reduction_semantics,
                 deadline=deadline, prepared_bundle=bundle,
@@ -5424,6 +5579,7 @@ def main(argv: list[str] | None = None) -> int:
         (out / "evidence.json").write_text(json.dumps({
             "format": "acacia-param-lift-gr1-evidence-v1",
             "compose_route": _compose_route(),
+            "real_check": args.real_check,
             "family": args.family, "target": args.target,
             "seeds": list(seeds), "verdict": "UNKNOWN",
             "decline": {"stage": exc.stage, "predicate": exc.predicate,
@@ -5464,7 +5620,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"reason: {result['reason']}")
     if result.get("certificate"):
         print(f"certificate: {result['certificate']}")
-        print(f"policy: {result['policy']}")
+        if result.get("policy") is not None:
+            print(f"policy: {result['policy']}")
     # UNKNOWN is a scientific verdict rather than a driver crash, but it must
     # not share an exit code with VERIFIED: only VERIFIED is decisive, and a
     # caller that tests the exit status would otherwise read a decline as a

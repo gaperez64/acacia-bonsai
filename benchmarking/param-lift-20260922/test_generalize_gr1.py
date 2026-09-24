@@ -13,6 +13,7 @@ import itertools
 import os
 import pathlib
 import random
+import re
 import shutil
 import subprocess
 import sys
@@ -26,6 +27,7 @@ from unittest import mock
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DRIVER = HERE / "generalize_gr1.py"
+CAMPAIGN = HERE / "param-lift-campaign.py"
 ADAPTER_BUILD = HERE / "native" / "build.py"
 TLSF_TOOLS_BUILD = pathlib.Path(os.environ.get(
     "ACACIA_TLSF_TOOLS_BUILD",
@@ -43,6 +45,13 @@ ROUND_TRIPS = {
     "load_balancer": ((2, 3, 4), 5),
     "arbiter_with_cancel": ((2, 3, 4), 5),
     "collector_v1": ((3,), 4),
+}
+REGION_ROUND_TRIPS = {
+    **ROUND_TRIPS,
+    # n=10 is a useful performance target, but region checking its eleven
+    # scheduler modes exceeds this correctness suite's 180-second cap.  The
+    # existing deterministic-output test already makes n=5 a suite fixture.
+    "arbiter": ((3, 4), 5),
 }
 
 
@@ -112,6 +121,15 @@ def _swap_inputs(path: pathlib.Path, pairs: list[tuple[int, int]]) -> None:
     path.write_text("\n".join(rows) + "\n", encoding="utf-8")
 
 
+def _output_symbols(path: pathlib.Path) -> dict[str, int]:
+    symbols: dict[str, int] = {}
+    for row in path.read_text(encoding="utf-8").splitlines():
+        match = re.fullmatch(r"o(\d+) (.+)", row)
+        if match is not None:
+            symbols[match.group(2)] = int(match.group(1))
+    return symbols
+
+
 class GeneralizeGr1Test(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -121,6 +139,10 @@ class GeneralizeGr1Test(unittest.TestCase):
         cls.env["GENERALIZE_GR1_RESULTS"] = str(cls.root / "m4-results.tsv")
         cls.artifacts: dict[str, pathlib.Path] = {}
         cls.runs: dict[str, subprocess.CompletedProcess[str]] = {}
+        cls.region_artifacts: dict[str, pathlib.Path] = {}
+        cls.region_runs: dict[str, subprocess.CompletedProcess[str]] = {}
+        help_result = _run([str(CHECKER), "--help"], cls.env, 10)
+        cls.region_supported = "|region" in (help_result.stdout + help_result.stderr)
         for family, (seeds, target) in ROUND_TRIPS.items():
             out = cls.root / f"{family}-{target}"
             proc = _run([
@@ -131,6 +153,23 @@ class GeneralizeGr1Test(unittest.TestCase):
             ], cls.env)
             cls.artifacts[family] = out
             cls.runs[family] = proc
+            if cls.region_supported:
+                region_seeds, region_target = REGION_ROUND_TRIPS[family]
+                region_out = cls.root / f"region-{family}-{region_target}"
+                command = [
+                    str(PYTHON), str(DRIVER), "--family", family,
+                    "--target", str(region_target),
+                    "--seeds", ",".join(map(str, region_seeds)),
+                    "--timeout", "180", "--real-check", "region",
+                    "--out", str(region_out),
+                ]
+                if family == "arbiter":
+                    command.extend((
+                        "--diagnostics", str(cls.root / "region-diagnostics.json")
+                    ))
+                region_proc = _run(command, cls.env)
+                cls.region_artifacts[family] = region_out
+                cls.region_runs[family] = region_proc
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -161,6 +200,50 @@ class GeneralizeGr1Test(unittest.TestCase):
                 self.assertTrue(evidence["target_verified"])
                 self.assertFalse(evidence["schema_validated_on_probes"])
                 self.assertEqual(evidence["claim_scope"], "requested_target_only")
+
+    def test_region_round_trip_omits_only_target_policy(self) -> None:
+        if not self.region_supported:
+            self.skipTest("configured checker has no region method")
+        for family, (seeds, target) in REGION_ROUND_TRIPS.items():
+            with self.subTest(family=family):
+                proc = self.region_runs[family]
+                self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+                self.assertIn("VERIFIED", proc.stdout)
+                self.assertNotIn("\npolicy:", "\n" + proc.stdout)
+                out = self.region_artifacts[family]
+                stem = f"{family}_{target}"
+                self.assertTrue((out / f"{stem}.certificate.aag").is_file())
+                self.assertFalse((out / f"{stem}.policy.aag").exists())
+                check = json.loads(
+                    (out / f"check-target-{target}.json").read_text(
+                        encoding="utf-8"))
+                self.assertEqual(check["format"], "tlsf-gr1-region-checkresult-v1")
+                self.assertEqual(check["method"], "gr1-region-v1")
+                self.assertEqual(check["verdict"], "REGION_VERIFIED")
+                evidence = json.loads(
+                    (out / "evidence.json").read_text(encoding="utf-8"))
+                self.assertEqual(evidence["real_check"], "region")
+                self.assertEqual(evidence["target_check_method"], "gr1-region-v1")
+                self.assertEqual(evidence["target_check_result"], "REGION_VERIFIED")
+                self.assertEqual(
+                    evidence["stage_evidence"]["instantiate"]["exports"],
+                    ["certificate"],
+                )
+                bundle = json.loads(
+                    (out / "candidate-bundle.json").read_text(encoding="utf-8"))
+                self.assertEqual(bundle["request_identity"]["real_check"], "region")
+                self.assertNotIn("policy", bundle["artifacts"])
+                self.assertNotIn("policy_metadata", bundle["artifacts"])
+
+    def test_region_diagnostics_never_invoke_target_skolemization(self) -> None:
+        if not self.region_supported:
+            self.skipTest("configured checker has no region method")
+        diagnostics = json.loads(
+            (self.root / "region-diagnostics.json").read_text(encoding="utf-8"))
+        phase = diagnostics["phases"].get(
+            "policy_construction_skolemization", {"calls": 0}
+        )
+        self.assertEqual(phase["calls"], 0)
 
     def test_out_of_scope_declines_name_arity_measurement(self) -> None:
         for family in ("round_robin_arbiter", "lift",
@@ -194,6 +277,7 @@ class GeneralizeGr1Test(unittest.TestCase):
         proc = _run([
             str(PYTHON), str(DRIVER), "--family", "round_robin_arbiter_unreal2",
             "--target", "3", "--seeds", "", "--timeout", "120",
+            "--real-check", "region",
             "--out", str(out),
         ], self.env, 150)
         self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
@@ -205,6 +289,52 @@ class GeneralizeGr1Test(unittest.TestCase):
         self.assertEqual(metadata["reduction_semantics"], "exact")
         check = json.loads((out / "check-target-3.json").read_text(encoding="utf-8"))
         self.assertEqual(check["verdict"], "VERIFIED")
+        self.assertEqual(check["requested_method"], "certificate")
+        self.assertTrue(
+            (out / "round_robin_arbiter_unreal2_3.policy.aag").is_file())
+
+    def test_campaign_exact_unreal_does_not_require_region_checker(self) -> None:
+        checker = self.root / "tlsfcertcheck-without-region-contract"
+        checker.write_text(
+            """#!/usr/bin/env python3
+import os
+import sys
+
+if "--help" in sys.argv[1:]:
+    print("--method NAME  auto|certificate|closed-loop|both")
+    raise SystemExit(0)
+real = os.environ["REAL_TLSFCERTCHECK"]
+os.execv(real, [real, *sys.argv[1:]])
+""",
+            encoding="utf-8",
+        )
+        checker.chmod(0o755)
+        environment = dict(self.env)
+        environment["REAL_TLSFCERTCHECK"] = str(CHECKER)
+        help_result = _run([str(checker), "--help"], environment, 10)
+        self.assertNotIn("region", help_result.stdout + help_result.stderr)
+
+        evidence = self.root / "campaign-exact-no-region-evidence.json"
+        proc = _run([
+            str(PYTHON), str(CAMPAIGN),
+            "--family", "round_robin_arbiter_unreal2",
+            "--target", "2", "--seeds", "",
+            "--real-check", "region", "--budget", "120",
+            "--output-dir", str(self.root / "campaign-exact-no-region"),
+            "--evidence-out", str(evidence),
+            "--tlsf-tools-build", str(TLSF_TOOLS_BUILD),
+            "--checker", str(checker),
+        ], environment, 150)
+        self.assertEqual(proc.returncode, 1, proc.stderr + proc.stdout)
+        self.assertIn("UNREALIZABLE", proc.stdout)
+        payload = json.loads(evidence.read_text(encoding="utf-8"))
+        self.assertEqual(
+            payload["request"]["route_kind"], "exact-game-both-sides"
+        )
+        self.assertEqual(payload["result"]["proof_method"], "policy")
+        self.assertNotEqual(
+            payload["result"]["reason"], "checker_missing_method_region"
+        )
 
     def _corrupt_check(self, family: str, mutate) -> subprocess.CompletedProcess[str]:
         _seeds, target = ROUND_TRIPS[family]
@@ -276,6 +406,52 @@ class GeneralizeGr1Test(unittest.TestCase):
                 self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
                 self.assertNotIn("\nVERIFIED\n", "\n" + proc.stdout + "\n")
 
+    def test_region_mutations_never_establish_realizability(self) -> None:
+        if not self.region_supported:
+            self.skipTest("configured checker has no region method")
+        family = "arbiter"
+        _seeds, target = REGION_ROUND_TRIPS[family]
+        source = self.region_artifacts[family]
+        stem = f"{family}_{target}"
+
+        def corrupt_region(path: pathlib.Path) -> None:
+            symbols = _output_symbols(path)
+            _rewrite_outputs(path, {symbols["inv"]: 0})
+
+        def drop_rank_layer(path: pathlib.Path) -> None:
+            symbols = _output_symbols(path)
+            rank_names = [name for name in symbols if name.startswith("x_")]
+            self.assertTrue(rank_names)
+            last_level = max(int(name.split("_")[2]) for name in rank_names)
+            dropped = {
+                index: 0 for name, index in symbols.items()
+                if (name.startswith("x_") or name.startswith("y_"))
+                and int(name.split("_")[2]) == last_level
+            }
+            self.assertTrue(dropped)
+            _rewrite_outputs(path, dropped)
+
+        for mutation in (drop_rank_layer, corrupt_region):
+            with self.subTest(mutation=mutation.__name__):
+                corrupt = self.root / f"region-mutation-{mutation.__name__}"
+                corrupt.mkdir()
+                for suffix in (
+                    ".certificate.aag", ".certificate.aag.json", ".game.aag"
+                ):
+                    shutil.copy2(
+                        source / f"{stem}{suffix}", corrupt / f"{stem}{suffix}")
+                certificate = corrupt / f"{stem}.certificate.aag"
+                mutation(certificate)
+                checked = _run([
+                    str(CHECKER), "--method", "region", "--timeout", "120",
+                    "--certificate", str(certificate),
+                    "--certificate-json", str(certificate) + ".json",
+                    str(corrupt / f"{stem}.game.aag"),
+                ], self.env, 150)
+                self.assertNotEqual(
+                    checked.returncode, 0, checked.stdout + checked.stderr)
+                self.assertNotIn("REGION_VERIFIED", checked.stdout)
+
     def test_deterministic_outputs(self) -> None:
         outputs = []
         for run in range(2):
@@ -302,6 +478,74 @@ class GeneralizeGr1Test(unittest.TestCase):
             del payload["manager_lifetime"]
             evidence.append(payload)
         self.assertEqual(evidence[0], evidence[1])
+
+    def test_default_policy_proof_artifacts_are_byte_identical_to_head(self) -> None:
+        head_source = subprocess.run(
+            [
+                "git", "show",
+                "HEAD:benchmarking/param-lift-20260922/generalize_gr1.py",
+            ],
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=30,
+        )
+        self.assertEqual(
+            head_source.returncode, 0, head_source.stderr + head_source.stdout
+        )
+        head_out = self.root / "head-default-policy"
+        head_env = dict(self.env)
+        head_env["GENERALIZE_GR1_RESULTS"] = str(
+            self.root / "head-default-policy-results.tsv"
+        )
+        # Keep the temporary HEAD driver beside the worktree driver so its
+        # __file__-relative repository paths and its parent/child self-launch
+        # are both authentic.  The file is removed even when the run fails.
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=HERE,
+            prefix=".head-generalize-gr1-",
+            suffix=".py",
+            delete=False,
+        ) as stream:
+            stream.write(head_source.stdout)
+            head_driver = pathlib.Path(stream.name)
+        try:
+            head_run = _run([
+                str(PYTHON), str(head_driver),
+                "--family", "arbiter", "--target", "5", "--seeds", "3,4",
+                "--timeout", "120", "--check-method", "both",
+                "--out", str(head_out),
+            ], head_env, 180)
+        finally:
+            head_driver.unlink(missing_ok=True)
+        self.assertEqual(
+            head_run.returncode, 0, head_run.stderr + head_run.stdout
+        )
+
+        current_out = self.root / "current-default-policy"
+        current_run = _run([
+            str(PYTHON), str(DRIVER),
+            "--family", "arbiter", "--target", "5", "--seeds", "3,4",
+            "--timeout", "120", "--check-method", "both",
+            "--out", str(current_out),
+        ], self.env, 180)
+        self.assertEqual(
+            current_run.returncode, 0, current_run.stderr + current_run.stdout
+        )
+        for name in (
+            "arbiter_5.game.aag",
+            "arbiter_5.certificate.aag",
+            "arbiter_5.policy.aag",
+        ):
+            with self.subTest(file=name):
+                self.assertEqual(
+                    (current_out / name).read_bytes(),
+                    (head_out / name).read_bytes(),
+                )
 
     def test_candidate_bundle_for_other_target_declines_before_checker(self) -> None:
         family = "arbiter"
@@ -512,6 +756,147 @@ class GeneralizerUnitTest(unittest.TestCase):
                     )
                 self.assertEqual(run.call_count, 1)
                 self.assertEqual(result["node_caps"], [1024])
+
+    def test_region_checker_is_policy_free_and_requires_versioned_result(self) -> None:
+        target = SimpleNamespace(n=5, game_path=self.root / "game.aag")
+        cert = self.root / "candidate.aag"
+        limits = generalizer.ProposerLimits(checker_nodes=1024)
+
+        def region_verified(command, _timeout):
+            json_out = pathlib.Path(command[command.index("--json-out") + 1])
+            json_out.write_text(json.dumps({
+                "format": "tlsf-gr1-region-checkresult-v1",
+                "method": "gr1-region-v1",
+                "verdict": "REGION_VERIFIED",
+                "exit_code": 0,
+            }), encoding="utf-8")
+            return subprocess.CompletedProcess(
+                command, 0,
+                "METHOD region REGION_VERIFIED version=gr1-region-v1\n"
+                "REGION_VERIFIED\n",
+                "",
+            )
+
+        with mock.patch.object(
+            generalizer, "_run", side_effect=region_verified
+        ) as run:
+            result = generalizer.check_candidate(
+                target, cert, None, "region", limits, "target-region")
+        command = run.call_args.args[0]
+        self.assertEqual(command[-1], str(target.game_path))
+        self.assertNotIn("policy.aag", command)
+        self.assertTrue(result["proof_verified"])
+        self.assertEqual(result["proof_method"], "gr1-region-v1")
+        self.assertEqual(result["result_string"], "REGION_VERIFIED")
+
+        with mock.patch.object(
+            generalizer, "_run",
+            return_value=subprocess.CompletedProcess(
+                [], 0, "REGION_VERIFIED\n", ""),
+        ):
+            malformed = generalizer.check_candidate(
+                target, cert, None, "region", limits, "target-malformed")
+        self.assertFalse(malformed["proof_verified"])
+
+    def test_region_retry_is_capacity_only_and_obeys_resource_gates(self) -> None:
+        target = SimpleNamespace(n=5, game_path=self.root / "game.aag")
+        cert = self.root / "region-retry-candidate.aag"
+        limits = generalizer.ProposerLimits(checker_nodes=1024)
+
+        def response(verdict: str, returncode: int, peak_delta: int = 0):
+            def run(command, _timeout):
+                node_cap = int(command[command.index("--node-cap") + 1])
+                json_out = pathlib.Path(command[command.index("--json-out") + 1])
+                json_out.write_text(json.dumps({
+                    "format": "tlsf-gr1-region-checkresult-v1",
+                    "method": "gr1-region-v1",
+                    "verdict": verdict,
+                    "exit_code": returncode,
+                    "peak_bdd_nodes": node_cap + peak_delta,
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(
+                    command, returncode, f"{verdict}\n", ""
+                )
+
+            return run
+
+        capacity_then_failed = [
+            response("UNKNOWN", 3),
+            response("REGION_FAILED", 6),
+        ]
+        with (
+            mock.patch.object(
+                generalizer, "_run",
+                side_effect=lambda command, timeout: capacity_then_failed.pop(0)(
+                    command, timeout
+                ),
+            ) as run,
+            mock.patch.object(
+                generalizer, "_memory_headroom_bytes", return_value=2 << 30
+            ),
+        ):
+            retried = generalizer.check_candidate(
+                target, cert, None, "region", limits, "region-capacity",
+                generalizer.AbsoluteDeadline.after(30),
+            )
+        self.assertEqual(run.call_count, 2)
+        self.assertEqual(retried["node_caps"], [1024, 2048])
+        self.assertTrue(retried["attempts"][0]["retry"])
+
+        non_capacity = (
+            ("REGION_FAILED", 6, 0),
+            ("UNKNOWN", 3, -1),
+            ("UNKNOWN", 124, 0),
+        )
+        for verdict, returncode, peak_delta in non_capacity:
+            with self.subTest(verdict=verdict, returncode=returncode):
+                with mock.patch.object(
+                    generalizer, "_run",
+                    side_effect=response(verdict, returncode, peak_delta),
+                ) as run:
+                    result = generalizer.check_candidate(
+                        target, cert, None, "region", limits,
+                        f"region-no-retry-{returncode}",
+                        generalizer.AbsoluteDeadline.after(30),
+                    )
+                self.assertEqual(run.call_count, 1)
+                self.assertEqual(result["node_caps"], [1024])
+
+        gate_cases = (
+            (
+                "deadline",
+                generalizer.AbsoluteDeadline.after(0.5),
+                2 << 30,
+                "insufficient_absolute_deadline",
+            ),
+            (
+                "memory",
+                generalizer.AbsoluteDeadline.after(30),
+                (1 << 30) - 1,
+                "insufficient_memory_headroom",
+            ),
+        )
+        for label, deadline, headroom, expected_reason in gate_cases:
+            with self.subTest(gate=label):
+                with (
+                    mock.patch.object(
+                        generalizer, "_run",
+                        side_effect=response("UNKNOWN", 3),
+                    ) as run,
+                    mock.patch.object(
+                        generalizer, "_memory_headroom_bytes",
+                        return_value=headroom,
+                    ),
+                ):
+                    result = generalizer.check_candidate(
+                        target, cert, None, "region", limits,
+                        f"region-{label}-gate", deadline,
+                    )
+                self.assertEqual(run.call_count, 1)
+                self.assertFalse(result["attempts"][0]["retry"])
+                self.assertEqual(
+                    result["attempts"][0]["retry_reason"], expected_reason
+                )
 
     def test_checker_capacity_retry_requires_deadline_and_memory(self) -> None:
         deadline = generalizer.AbsoluteDeadline.after(30)
