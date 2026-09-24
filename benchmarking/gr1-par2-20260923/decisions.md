@@ -244,3 +244,20 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   masks (S1 chose sorted sparse lists; supports are 4–39 variables); P4 (monitor encoding) —
   conditional second workstream per plan §7, the only affected target in the cohort is
   collector_v1, and it would not change the first PAR-2 campaign.
+
+## 2026-09-24 — Owner decision: the long cap is 60 s, not 120 s
+
+- The owner moved the primary long cap from the plan's 120 s to **60 s** (closer to the TACAS23
+  paper's regime and about half the campaign time); **17 s stays** for continuity. This supersedes
+  plan §11.2's 120 s wherever it appears below, and the preregistered lift budgets become
+  cap/3 = 20 s and 2·cap/3 = 40 s at 60 s (5.67 s / 11.33 s at 17 s).
+- **N and TACAS23** are run fresh at 60 s (N is cap-aware through its lift budget; TACAS23 has no
+  long-cap leg).
+- **B and ltlsynt at 60 s** are derived from their archived 120 s uniform-cap legs
+  (witness-lifting opening, epochs 1-2 for B) by censoring: a row counts as solved at 60 s iff it
+  was decisive within 60 s in the 120 s run; everything else scores 2 × 60 s. Owner-approved
+  (option (a)). This is exact for these tools because neither receives the cap or adapts to it —
+  the harness only kills them at the deadline — but it is a derivation, not a 60 s observation, and
+  every report that uses these series says so.
+- The 120 s evidence already committed (M6, P0 replay, S0/e2e runs) stays as recorded; those runs
+  used the 120 s budget and are development observations.
