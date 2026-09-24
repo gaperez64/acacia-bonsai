@@ -1,0 +1,187 @@
+{
+  "censored": [
+    {
+      "elapsed_lower_bound_s": 119.64679449499818,
+      "kind": "stage",
+      "reason": "absolute_deadline_exhausted",
+      "stage": "canonicalize"
+    }
+  ],
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 2281484288,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-collector_v1-n11.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-collector_v1-n11.scope/memory.peak"
+  },
+  "counters": {},
+  "diagnostic_errors": [],
+  "elapsed_s": 120.0567022759933,
+  "environment": {
+    "binaries": {
+      "tlsfcertcheck": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+        "sha256": "2b2464a2f87537a0c7b159e11c134c23ce190da9345139b9e7b98455777437a6"
+      },
+      "tlsfsolve": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+        "sha256": "512a05213eab72c4d5a0cf8e3c43ac43b6a9ce9bf8d7a0a89452be44bfe15502"
+      }
+    },
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-b123e090/libbuddy_veccompose_adapter.so",
+    "compose_route": "native_veccompose",
+    "interpreter": {
+      "executable": "/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python",
+      "version": "3.14.7 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+    },
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b"
+  },
+  "generalizer": {
+    "bdd_stats": {
+      "available": false,
+      "samples": []
+    },
+    "censored": [],
+    "checker_stats": {
+      "attempts": [],
+      "mode": "stream",
+      "supported": true
+    },
+    "counters": {},
+    "diagnostic_errors": [],
+    "distributions": {
+      "client_count_histogram": {},
+      "distinct_subset_count": 0,
+      "mode_count_basis": "actual_checker_attempts",
+      "mode_count_histogram": {},
+      "ownership_tuple_arity_histogram": {},
+      "projected_root_support_widths": [],
+      "selected_aig_cones": [],
+      "subset_reuse": [],
+      "uint64_variable_mask_word_length_histogram": {}
+    },
+    "elapsed_s": 119.8768932709936,
+    "environment": {
+      "binaries": {
+        "tlsfcertcheck": {
+          "path": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+          "sha256": "2b2464a2f87537a0c7b159e11c134c23ce190da9345139b9e7b98455777437a6"
+        },
+        "tlsfsolve": {
+          "path": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+          "sha256": "512a05213eab72c4d5a0cf8e3c43ac43b6a9ce9bf8d7a0a89452be44bfe15502"
+        }
+      },
+      "binding_module_candidates": [
+        "/usr/local/lib64/python3.13/site-packages/buddy.py"
+      ],
+      "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+      "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-b123e090/libbuddy_veccompose_adapter.so",
+      "compose_route": "native_veccompose",
+      "extension_module_candidates": [
+        "/usr/local/lib64/python3.13/site-packages/_buddy.cpython-313-x86_64-linux-gnu.so"
+      ],
+      "interpreter": {
+        "executable": "/usr/bin/python3.13",
+        "version": "3.13.15 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+      },
+      "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b"
+    },
+    "outcome": {
+      "family": "collector_v1",
+      "reason": "candidate_builder: predicate 'absolute deadline': candidate builder timed out and was reaped",
+      "target": 11,
+      "verdict": "UNKNOWN"
+    },
+    "phases": {
+      "bdd_projection_relabel": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "candidate_builder": {
+        "calls": 1,
+        "wall_s": 119.85699670802569
+      },
+      "export": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "from_aag": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "instantiate_templates": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "mode_specialization": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "policy_construction_skolemization": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "projection_metadata": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "seed_monitor_construction": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "seed_solves": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "substitute_variables": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "support_extraction": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "target_check": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "target_monitor_construction": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "target_solve": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "variable_cube_construction": {
+        "calls": 0,
+        "wall_s": 0.0
+      }
+    },
+    "schema": "acacia-gr1-s0-diagnostics-v1",
+    "schema_version": 1,
+    "status": "unknown",
+    "tool": "generalize_gr1"
+  },
+  "outcome": {
+    "certificate": null,
+    "policy": null,
+    "reason": "absolute_deadline_exhausted",
+    "stage": "canonicalize",
+    "stdout_line": "UNKNOWN canonicalize absolute_deadline_exhausted",
+    "verdict": "UNKNOWN"
+  },
+  "phases": {
+    "generalize_gr1": {
+      "calls": 1,
+      "wall_s": 120.03630875295494
+    }
+  },
+  "schema": "acacia-gr1-s0-diagnostics-v1",
+  "schema_version": 1,
+  "status": "unknown",
+  "tool": "param-lift-campaign"
+}

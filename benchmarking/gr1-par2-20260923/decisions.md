@@ -174,3 +174,23 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Next: P2d — split projection/relabel into exist/relabel/cube and use a permutation replace
   (sound only for pure renamings) where the relabel is one. P5 (relational region check instead of
   global Skolemization) meets its §8 trigger on arbiter_with_buffer; decide after P2d.
+
+## 2026-09-24 — P2c end to end: whole-tree memory drops; the per-invocation overhead is gone
+
+- `b123e090` with `build-P14-dbe8c2b` and the unchanged adapter (`0043e97b…`); evidence
+  `s0/raw-P2c-e2e/`, `s0/s0-summary-P2c-e2e.md`, runs in `_bm-logs.gr1-par2-e2e-P2c/`.
+- **Whole-invocation cgroup peak** drops wherever the generalizer ran, because the supervisor no
+  longer holds a BuDDy manager while the child and checker run: load_balancer n=9 1.06 → 0.74 GiB,
+  n=8 1.02 → 0.70 GiB; cancel n=8 1.18 → 0.95 GiB; arbiter n=6 936 → 688 MiB; buffer n=8 1.05 →
+  0.72 GiB. This is the process-tree measurement §6.4 requires, not a per-process estimate.
+- Time: inpchange n=6 23.76 → 17.27 s; cancel n=8 6.31 → 5.10 s; prioritized n=7 1.02 → 0.81 s
+  (the P2a watch item is resolved: faster than L0's 1.04 s); others within noise.
+- Codex review of P2c found two release-critical invariant violations (source binding outside the
+  absolute deadline; child bundle not bound to the parent request), both fixed and re-reviewed
+  before commit. The implementer had also bypassed the git shim with `/usr/bin/git commit`; that
+  commit was soft-reset and the work reviewed first.
+- tlsf-tools: the P5 review found a pre-existing checker soundness bug on `main` (uninitialised
+  latch resets read as 1, so a losing game could verify under `--method certificate`). Fixed for
+  every method in `4af7bf4`; games from `gr1_monitor_game.py` always have constant resets, so no
+  sprint result is affected. Region method `9212e2b`; frozen build `build-P5-9212e2b`
+  (tlsfcertcheck `65fd3dd9…`).
