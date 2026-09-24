@@ -10,7 +10,7 @@ from acacia_lift.artifact import Aag, AagBuilder, _certificate_sidecar, _policy_
 from acacia_lift.direct import Decline, run_command, sha256_file
 from acacia_lift.tools import ToolConfiguration
 from .schema import Bdds, GameInstance
-from .settings import CHECKER_NODE_CAP
+from .settings import CHECKER_NODE_CAP, POLICY_PROOF_FRACTION
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class LiftedResult:
     policy: pathlib.Path | None
     policy_sha256: str | None
     proof_method: str
+    reduction_semantics: str
     checker: dict
     stages: dict
 
@@ -94,14 +95,14 @@ def emit_certificate(bdds: Bdds, target: GameInstance, predicates: dict,
     order.extend(f"x_{j}_{k}_{i}" for j, depth in enumerate(depths)
                  for k in range(depth) for i in range(max(1, target.fairness)))
     order.extend(f"move_{j}" for j in range(len(target.goals)))
-    outputs = [(name, moves[name] if name in moves else
-                bdds.to_aag_literals(builder, predicates[name], current, memo))
+    outputs = [(name, bdds.to_aag_literals(builder, predicates[name], current, memo)
+                if name in predicates else moves[name])
                for name in order]
     path.write_text(builder.render(outputs, "frontend-provenance lifted certificate"),
                     encoding="utf-8")
     metadata = _certificate_sidecar(target, path, depths, len(outputs), len(builder.gates))
     metadata["side"] = "system"
-    metadata["reduction_semantics"] = "exact"
+    metadata["reduction_semantics"] = target.files.data["semantics"]
     pathlib.Path(str(path) + ".json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
@@ -173,7 +174,7 @@ def emit_policy(bdds: Bdds, target: GameInstance, certificate: pathlib.Path,
                     encoding="utf-8")
     meta = _policy_sidecar(target, path, len(builder.gates))
     meta["side"] = "system"
-    meta["reduction_semantics"] = "exact"
+    meta["reduction_semantics"] = target.files.data["semantics"]
     pathlib.Path(str(path) + ".json").write_text(
         json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
@@ -190,7 +191,12 @@ def _check(config: ToolConfiguration, method: str, target: GameInstance,
                str(certificate) + ".json", str(target.files.game)]
     if policy is not None:
         command.append(str(policy))
-    result = run_command(command, deadline, f"check_{method}")
+    try:
+        result = run_command(command, deadline, f"check_{method}")
+    except Decline as error:
+        if error.reason == "budget_exhausted":
+            return False, {"reason": "deadline"}, 124
+        raise
     payload = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
     if method == "certificate":
         verified = (result.returncode == 0 and
@@ -206,6 +212,14 @@ def _check(config: ToolConfiguration, method: str, target: GameInstance,
     return verified, payload, result.returncode
 
 
+def _capacity_or_deadline(code: int, payload: dict) -> bool:
+    if code == 124:
+        return True
+    text = json.dumps(payload, sort_keys=True).lower()
+    return any(word in text for word in ("capacity", "node cap", "node_cap",
+                                         "out of memory", "timeout", "deadline"))
+
+
 def prove(bdds: Bdds, target: GameInstance, predicates: dict,
           depths: list[int], output: pathlib.Path, config: ToolConfiguration,
           deadline: float) -> LiftedResult:
@@ -213,31 +227,42 @@ def prove(bdds: Bdds, target: GameInstance, predicates: dict,
     started = time.monotonic()
     game_hash = sha256_file(target.files.game)
     certificate = emit_certificate(bdds, target, predicates, depths, output)
+    certificate_hash = sha256_file(certificate)
     stages["certificate_export"] = {"elapsed_s": time.monotonic() - started}
     policy = None
-    policy_failure = None
+    policy_deadline = time.monotonic() + max(
+        0.0, deadline - time.monotonic()) * POLICY_PROOF_FRACTION
     try:
         started = time.monotonic()
-        policy = emit_policy(bdds, target, certificate, output, deadline)
+        policy = emit_policy(bdds, target, certificate, output, policy_deadline)
         stages["policy_export"] = {"elapsed_s": time.monotonic() - started}
-    except (Decline, RuntimeError, MemoryError) as error:
-        policy_failure = type(error).__name__
+    except (Decline, RuntimeError, MemoryError, OverflowError) as error:
+        recoverable = (isinstance(error, (MemoryError, OverflowError)) or
+                       isinstance(error, Decline) and error.reason == "budget_exhausted" or
+                       any(word in str(error).lower() for word in
+                           ("capacity", "memory", "allocation", "node cap")))
+        if not recoverable:
+            raise
         stages["policy_export"] = {"elapsed_s": time.monotonic() - started,
-                                   "failure": policy_failure}
+                                   "failure": type(error).__name__}
     if policy is not None:
+        policy_hash = sha256_file(policy)
         started = time.monotonic()
         verified, payload, code = _check(config, "certificate", target,
-                                         certificate, policy, output, deadline)
+                                         certificate, policy, output, policy_deadline)
         stages["policy_check"] = {"elapsed_s": time.monotonic() - started,
                                   "exit_code": code}
         if verified:
-            if sha256_file(target.files.game) != game_hash:
-                raise Decline("target_check", "game_changed")
-            return LiftedResult(game_hash, certificate, sha256_file(certificate),
-                                policy, sha256_file(policy), "certificate", payload, stages)
+            if (sha256_file(target.files.game) != game_hash or
+                    sha256_file(certificate) != certificate_hash or
+                    sha256_file(policy) != policy_hash):
+                raise Decline("target_check", "artifact_changed")
+            return LiftedResult(game_hash, certificate, certificate_hash,
+                                policy, policy_hash, "certificate",
+                                target.files.data["semantics"], payload, stages)
         # A refuted candidate is not rescued by a weaker check. Region is a
         # capacity fallback for this same candidate only.
-        if code not in (2, 3, 124):
+        if not _capacity_or_deadline(code, payload):
             raise Decline("target_check", "certificate_not_verified")
     if time.monotonic() >= deadline:
         raise Decline("target_check", "budget_exhausted")
@@ -246,7 +271,9 @@ def prove(bdds: Bdds, target: GameInstance, predicates: dict,
                                      None, output, deadline)
     stages["region_check"] = {"elapsed_s": time.monotonic() - started,
                               "exit_code": code}
-    if not verified or sha256_file(target.files.game) != game_hash:
+    if (not verified or sha256_file(target.files.game) != game_hash or
+            sha256_file(certificate) != certificate_hash):
         raise Decline("target_check", "region_not_verified")
-    return LiftedResult(game_hash, certificate, sha256_file(certificate),
-                        None, None, "gr1-region-v1", payload, stages)
+    return LiftedResult(game_hash, certificate, certificate_hash,
+                        None, None, "gr1-region-v1",
+                        target.files.data["semantics"], payload, stages)

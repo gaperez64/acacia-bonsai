@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the checked direct GR(1) route before an unchanged Acacia fallback.
+"""Run checked online GR(1) lifting and direct solving before Acacia fallback.
 
 Wrapper options precede ``--``.  Everything after it is the fallback argv and
 is passed to :func:`os.execv` unchanged.  An outer runner should provide
@@ -404,7 +404,10 @@ def verified_verdict(
     if verdict not in DECISIVE_EXITS or returncode != DECISIVE_EXITS[verdict]:
         return None
 
-    if evidence.get("route") != "direct-certified":
+    route = evidence.get("route")
+    if route not in {"direct-certified", "lifted-certified"}:
+        return None
+    if route == "lifted-certified" and verdict != "REALIZABLE":
         return None
     source_binding = evidence.get("source_binding")
     target_certificate = evidence.get("target_certificate")
@@ -415,12 +418,23 @@ def verified_verdict(
     if any(value != input_hash for value in hashes):
         return None
     expected_side = "system" if verdict == "REALIZABLE" else "environment"
-    if (target_certificate.get("certificate_side") != expected_side or
-            target_certificate.get("reduction_semantics") != "exact" or
-            target_certificate.get("checker_verdict") != "VERIFIED" or
+    proof_method = result.get("proof_method")
+    checker_verdict = ("REGION_VERIFIED" if proof_method == "gr1-region-v1"
+                       else "VERIFIED")
+    semantics = target_certificate.get("reduction_semantics")
+    if (proof_method not in {"certificate", "gr1-region-v1"} or
+            semantics not in {"exact", "strict"} or
+            (semantics == "strict" and route != "lifted-certified") or
+            target_certificate.get("certificate_side") != expected_side or
+            target_certificate.get("checker_verdict") != checker_verdict or
             not all(isinstance(target_certificate.get(key), str) and
                     len(target_certificate[key]) == 64 for key in
-                    ("game_sha256", "certificate_sha256", "policy_sha256"))):
+                    ("game_sha256", "certificate_sha256"))):
+        return None
+    policy_hash = target_certificate.get("policy_sha256")
+    if ((proof_method == "certificate" and
+         (not isinstance(policy_hash, str) or len(policy_hash) != 64)) or
+            (proof_method == "gr1-region-v1" and policy_hash is not None)):
         return None
     return verdict
 
@@ -541,7 +555,8 @@ def run(argv: list[str], started: float) -> int:
             "input_sha256": input_hash,
             "binding_reason": reason,
             "eligibility_budget_s": args.eligibility_budget_seconds,
-            "route": "direct-certified",
+            "route": (evidence.get("route") if verdict is not None
+                      else "direct-certified"),
             "lift_argv": command,
             "lift_exit": outcome.returncode,
             "lift_elapsed": outcome.elapsed,

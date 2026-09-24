@@ -31,12 +31,15 @@ def snapshot(source: pathlib.Path, output: pathlib.Path) -> tuple[pathlib.Path, 
 
 
 def lower(source: pathlib.Path, output: pathlib.Path, config: ToolConfiguration,
-          deadline: float, overrides: tuple[tuple[str, int], ...] = ()) -> InstanceFiles:
+          deadline: float, overrides: tuple[tuple[str, int], ...] = (),
+          semantics: str = "exact") -> InstanceFiles:
+    if semantics not in {"exact", "strict"}:
+        raise ValueError("unsupported reduction semantics")
     output.mkdir(parents=True, exist_ok=True)
     game = output / "game.aag"
     provenance = output / "provenance.json"
     command = [str(config.bindings_python), str(config.monitor), str(source),
-               "--semantics", "exact", "--output", str(game),
+               "--semantics", semantics, "--output", str(game),
                "--provenance-out", str(provenance),
                "--tlsf2ltl", str(config.tlsf2ltl),
                "--tlsf2tlsf", str(config.tlsf2tlsf),
@@ -48,7 +51,7 @@ def lower(source: pathlib.Path, output: pathlib.Path, config: ToolConfiguration,
     if result.returncode != 0 or not game.is_file() or not provenance.is_file():
         raise Decline("exact_reduction", "unsupported_or_failed")
     data = json.loads(provenance.read_text(encoding="utf-8"))
-    if data.get("schema") != MONITOR_SCHEMA or data.get("semantics") != "exact":
+    if data.get("schema") != MONITOR_SCHEMA or data.get("semantics") != semantics:
         raise Decline("exact_reduction", "provenance_schema_or_semantics")
     if data.get("source_origin_metadata", {}).get("source_sha256") != sha256_file(source):
         raise Decline("source_binding", "provenance_source_hash_mismatch")
@@ -95,7 +98,8 @@ def solve_seed(instance: InstanceFiles, output: pathlib.Path,
     output.mkdir(parents=True, exist_ok=True)
     cert = output / "certificate.aag"
     proc = run_command([
-        str(config.solver), "--semantics", "exact", "--game-profile", "gr1",
+        str(config.solver), "--semantics", instance.data["semantics"],
+        "--game-profile", "gr1",
         "--certificate", str(cert), "--certificate-json", str(cert) + ".json",
         "--oxidd-nodes", str(SOLVER_NODE_CAP),
         "--oxidd-cache", str(SOLVER_NODE_CAP // 4), str(instance.game),
@@ -104,6 +108,6 @@ def solve_seed(instance: InstanceFiles, output: pathlib.Path,
         raise Decline("seed_solve", "no_system_certificate")
     meta = json.loads(pathlib.Path(str(cert) + ".json").read_text(encoding="utf-8"))
     if (meta.get("status") != "realizable" or meta.get("side") != "system" or
-            meta.get("reduction_semantics") != "exact"):
+            meta.get("reduction_semantics") != instance.data["semantics"]):
         raise Decline("seed_solve", "metadata_mismatch")
     return cert

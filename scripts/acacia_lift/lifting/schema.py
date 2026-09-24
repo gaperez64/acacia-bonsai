@@ -5,15 +5,19 @@ import itertools
 import json
 import pathlib
 import re
+import time
 from dataclasses import dataclass
+from math import comb
 
 from acacia_lift.artifact import Aag, AagBuilder
 from acacia_lift.bdd_kernel import VarInfo
 from acacia_lift.buddy_veccompose import BuddyVariableAdapter
 from acacia_lift.direct import Decline
 from acacia_lift.tools import ToolConfiguration, load_buddy_bindings
-from .provenance import SeedWindow, axis_members, monitor_key, role_signatures
-from .settings import MAX_PREDICATE_ARITY
+from .provenance import (SeedWindow, axis_members, monitor_indices, monitor_key,
+                         role_signatures)
+from .settings import (MAX_PREDICATE_ARITY, MAX_SUBSETS_PER_PREDICATE,
+                       MOVE_SCHEMA_SECONDS)
 from .source import InstanceFiles
 
 _STATE_RE = re.compile(r"monitor_(\d+)_state_(\d+)\Z")
@@ -54,13 +58,19 @@ class GameInstance:
         roles = role_signatures(files, members)
         variables = []
         for position, name in enumerate(game.latch_names):
+            if files.data["semantics"] == "strict" and name == "assumption_safety_violated":
+                variables.append(VarInfo(position, ("state", "strict_release"),
+                                         frozenset()))
+                continue
             match = _STATE_RE.fullmatch(name)
             if match is None or int(match[1]) not in monitors:
                 raise Decline("schema_abi", "unsupported_latch")
             record = monitors[int(match[1])]
-            indices = tuple(record["source_origin"]["index_tuple"])
+            structural_key = monitor_key(record, data)
+            indices = (() if structural_key[5] == "symmetric" else
+                       monitor_indices(record, data))
             owners = frozenset(index for index in indices if index in roles)
-            key = ("state", monitor_key(record, data), indices, int(match[2]))
+            key = ("state", structural_key, indices, int(match[2]))
             variables.append(VarInfo(position, key, owners))
         signals = {row["game_symbol"]: row for row in
                    [*data["inputs"], *data["outputs"]]}
@@ -84,6 +94,10 @@ class GameInstance:
                 raise Decline("schema_abi", "certificate_input_mismatch")
         justice = [record for record in data["monitors"]
                    if record["role"] == "justice"]
+        if (files.data["semantics"] == "strict" and not justice and
+                len(game.justice) == 1):
+            goals = [Goal(0, ("implicit_true_justice",), None)]
+            return cls(files, members, game, cert, meta, variables, goals, roles)
         if len(justice) != len(game.justice):
             raise Decline("schema_abi", "justice_inventory")
         goals = []
@@ -264,11 +278,15 @@ def _template_group(instance: GameInstance, subset: tuple[int, ...],
 
 
 def projection(bdds: Bdds, instance: GameInstance, function,
-               arity: int, goal: Goal | None) -> dict[tuple, object]:
+               arity: int, goal: Goal | None, deadline: float) -> dict[tuple, object]:
+    if comb(len(instance.members), arity) > MAX_SUBSETS_PER_PREDICATE:
+        raise Decline("schema_capacity", "subset_count_limit")
     result = {}
     rebuilt = bdds.buddy.bddtrue
     support = bdds.support(function)
     for selected in itertools.combinations(instance.members, arity):
+        if time.monotonic() >= deadline:
+            raise Decline("schema", "discovery_budget_exhausted")
         subset = _ordered(instance, selected, goal)
         slots = {index: position for position, index in enumerate(subset)}
         keep = [row for row in instance.variables if row.owners <= set(subset)]
@@ -291,10 +309,13 @@ def projection(bdds: Bdds, instance: GameInstance, function,
 
 
 def learn_predicate(bdds: Bdds, seeds: list[GameInstance],
-                    names: list[str], goals: list[Goal | None]) -> tuple[dict, int]:
+                    names: list[str], goals: list[Goal | None],
+                    deadline: float) -> tuple[dict, int]:
     if len(seeds) != len(names) or len(seeds) != len(goals):
         raise ValueError("seed predicate vectors differ")
     for arity in range(min(MAX_PREDICATE_ARITY, min(len(seed.members) for seed in seeds)) + 1):
+        if time.monotonic() >= deadline:
+            raise Decline("schema", "discovery_budget_exhausted")
         if not any(len(seed.members) > arity for seed in seeds):
             continue
         observations = []
@@ -304,7 +325,8 @@ def learn_predicate(bdds: Bdds, seeds: list[GameInstance],
                     raise Decline("schema", "missing_seed_certificate")
                 function = bdds.from_aag(seed.certificate,
                                          seed.certificate.output(name))
-                observations.append(projection(bdds, seed, function, arity, goal))
+                observations.append(projection(bdds, seed, function, arity, goal,
+                                               deadline))
         except Decline:
             continue
         first = observations[0]
@@ -316,10 +338,14 @@ def learn_predicate(bdds: Bdds, seeds: list[GameInstance],
 
 
 def instantiate(bdds: Bdds, target: GameInstance, templates: dict,
-                arity: int, goal: Goal | None):
+                arity: int, goal: Goal | None, deadline: float):
+    if comb(len(target.members), arity) > MAX_SUBSETS_PER_PREDICATE:
+        raise Decline("schema_capacity", "target_subset_count_limit")
     result = bdds.buddy.bddtrue
     inverse = {value: key for key, value in bdds.normal.items()}
     for selected in itertools.combinations(target.members, arity):
+        if time.monotonic() >= deadline:
+            raise Decline("schema", "discovery_budget_exhausted")
         subset = _ordered(target, selected, goal)
         group = _template_group(target, subset, goal)
         if group not in templates:
@@ -357,12 +383,12 @@ def prepare(window: SeedWindow, target_files: InstanceFiles,
 
 
 def learn_certificate(bdds: Bdds, seeds: list[GameInstance],
-                      target: GameInstance) -> tuple[dict[str, object], list[int], dict[str, int]]:
+                      target: GameInstance, deadline: float) -> tuple[dict[str, object], list[int], dict[str, int | str]]:
     predicates = {}
     arities = {}
     templates, arity = learn_predicate(bdds, seeds, ["inv"] * len(seeds),
-                                        [None] * len(seeds))
-    predicates["inv"] = instantiate(bdds, target, templates, arity, None)
+                                        [None] * len(seeds), deadline)
+    predicates["inv"] = instantiate(bdds, target, templates, arity, None, deadline)
     arities["inv"] = arity
     depths = []
     for goal in target.goals:
@@ -385,10 +411,25 @@ def learn_certificate(bdds: Bdds, seeds: list[GameInstance],
             union = bdds.buddy.bddfalse
             for fair in range(max(1, target.fairness)):
                 names = [f"x_{item.number}_{level}_{fair}" for item in aligned]
-                templates, arity = learn_predicate(bdds, seeds, names, aligned)
+                templates, arity = learn_predicate(bdds, seeds, names, aligned,
+                                                   deadline)
                 name = f"x_{goal.number}_{level}_{fair}"
-                predicates[name] = instantiate(bdds, target, templates, arity, goal)
+                predicates[name] = instantiate(bdds, target, templates, arity,
+                                               goal, deadline)
                 arities[name] = arity
                 union |= predicates[name]
             predicates[f"y_{goal.number}_{level}"] = union
+        move_name = f"move_{goal.number}"
+        try:
+            move_templates, move_arity = learn_predicate(
+                bdds, seeds, [f"move_{item.number}" for item in aligned],
+                aligned, min(deadline, time.monotonic() + MOVE_SCHEMA_SECONDS))
+            predicates[move_name] = instantiate(bdds, target, move_templates,
+                                                move_arity, goal, deadline)
+            arities[move_name] = move_arity
+        except Decline:
+            # The exact target transition relation gives a semantic move
+            # construction when a bounded seed move has no stable template.
+            # The target checker must still verify the whole certificate.
+            arities[move_name] = "exact_target_transition"
     return predicates, depths, arities
