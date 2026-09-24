@@ -14,6 +14,7 @@ import dataclasses
 import hashlib
 import itertools
 import json
+import math
 import os
 import pathlib
 import re
@@ -59,6 +60,9 @@ RESULTS = pathlib.Path(os.environ.get(
     "GENERALIZE_GR1_RESULTS", HERE / "m4-results.tsv"))
 MAX_CANDIDATES_PER_TARGET = 32
 MAX_CEGIS_ROUNDS = 3
+CANDIDATE_BUNDLE_SCHEMA = "acacia-gr1-candidate-bundle-v2"
+CANDIDATE_REQUEST_SCHEMA = "acacia-gr1-candidate-request-v1"
+PROVENANCE_SCHEMA = "tlsf-tools.gr1-monitor-game.provenance.v2"
 MAX_PREDICATE_ARITY = 4
 TEMPLATE_CACHE_MAX_ENTRIES = 64
 SUBSET_METADATA_MAX_ENTRIES = 256
@@ -256,12 +260,19 @@ def _diagnostic_record_support(
             _DIAGNOSTICS.record_error("record_support", error)
 
 
-def _probe_checker_stats() -> str | None:
+def _probe_checker_stats(
+    deadline: "AbsoluteDeadline | None" = None,
+) -> str | None:
+    timeout = 10.0
+    if deadline is not None:
+        timeout = min(timeout, deadline.remaining_s())
+        if timeout <= 0:
+            return None
     try:
         probe = subprocess.run(
             [str(CHECKER), "--help"], cwd=ROOT, text=True,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            check=False, timeout=10,
+            check=False, timeout=timeout,
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
@@ -277,7 +288,10 @@ def _probe_checker_stats() -> str | None:
     return "stream"
 
 
-def _diagnostic_initialize(path: pathlib.Path) -> None:
+def _diagnostic_initialize(
+    path: pathlib.Path,
+    deadline: "AbsoluteDeadline | None" = None,
+) -> None:
     global _DIAGNOSTICS_ENABLED, _DIAGNOSTICS, _CHECKER_STATS_MODE
     global _DIAGNOSTIC_BUDDY
     _DIAGNOSTICS_ENABLED = True
@@ -296,7 +310,7 @@ def _diagnostic_initialize(path: pathlib.Path) -> None:
     for name in _DIAGNOSTIC_PHASES:
         _DIAGNOSTICS.phases[name] = {"calls": 0, "wall_s": 0.0}
     try:
-        _CHECKER_STATS_MODE = _probe_checker_stats()
+        _CHECKER_STATS_MODE = _probe_checker_stats(deadline)
         binaries = {}
         for name, path0 in (("tlsfsolve", SOLVER), ("tlsfcertcheck", CHECKER)):
             binaries[name] = {"path": str(path0), "sha256": sha256(path0)}
@@ -378,6 +392,35 @@ def _diagnostic_finish(status: str, result: dict | None = None) -> None:
         _DIAGNOSTICS.write(status)
 
 
+def _diagnostic_merge_candidate_builder(payload: dict[str, object]) -> None:
+    """Merge child-owned measurements without importing any live BDD state."""
+    if _DIAGNOSTICS is None:
+        return
+    try:
+        phases = payload.get("phases", {})
+        if isinstance(phases, dict):
+            for name, record in phases.items():
+                if not isinstance(record, dict):
+                    continue
+                _DIAGNOSTICS.add_phase(
+                    str(name), float(record.get("wall_s", 0.0)),
+                    int(record.get("calls", 0)),
+                )
+        counters = payload.get("counters", {})
+        if isinstance(counters, dict):
+            _DIAGNOSTICS.counters.update({
+                str(name): int(value) for name, value in counters.items()
+            })
+        censored = payload.get("censored", [])
+        if isinstance(censored, list):
+            _DIAGNOSTICS.censored.extend(
+                item for item in censored if isinstance(item, dict)
+            )
+        _DIAGNOSTICS.extra["candidate_builder"] = payload
+    except Exception as error:
+        _DIAGNOSTICS.record_error("merge_candidate_builder", error)
+
+
 def _scaled_solver_nodes(n: int) -> int:
     """Use 32M entries through n=4, doubling every four clients to 128M."""
     exponent = min(27, 25 + max(0, (n - 1) // 4))
@@ -427,6 +470,33 @@ class ProposerLimits:
 
 
 @dataclasses.dataclass(frozen=True)
+class AbsoluteDeadline:
+    """One monotonic deadline shared by every orchestration stage."""
+
+    expires_monotonic_s: float
+
+    @classmethod
+    def after(cls, seconds: float) -> "AbsoluteDeadline":
+        if not math.isfinite(seconds) or seconds <= 0:
+            raise ValueError("deadline duration must be finite and positive")
+        return cls(time.monotonic() + seconds)
+
+    def remaining_s(self) -> float:
+        return max(0.0, self.expires_monotonic_s - time.monotonic())
+
+    def timeout_s(
+        self, cap_s: float, stage: str, *, reserve_s: float = 0.0
+    ) -> float:
+        remaining = min(cap_s, self.remaining_s() - reserve_s)
+        if remaining <= 0:
+            raise Decline(
+                stage, "absolute deadline", None,
+                "budget exhausted before stage",
+            )
+        return remaining
+
+
+@dataclasses.dataclass(frozen=True)
 class CandidateSchema:
     family: str
     arity: int
@@ -435,6 +505,71 @@ class CandidateSchema:
     bus_schemas: tuple[str, ...]
     template_counts: tuple[tuple[str, int], ...]
     predicate_arities: tuple[tuple[str, int], ...] = ()
+
+
+@dataclasses.dataclass
+class SeedBundle:
+    family: str
+    instances: dict[int, "Instance"]
+    newly_solved: tuple[int, ...]
+    elapsed_s: float
+
+    @property
+    def seeds(self) -> list["Instance"]:
+        return [self.instances[n] for n in sorted(self.instances)]
+
+
+@dataclasses.dataclass(frozen=True)
+class SchemaBundle:
+    family: str
+    seed_bundle: SeedBundle
+    arity: int
+    measured_roles: int
+    seed_bus_shapes: tuple[frozenset[tuple], ...]
+
+
+@dataclasses.dataclass(frozen=True)
+class CandidateBundle:
+    schema: CandidateSchema
+    target: "Instance"
+    certificate: pathlib.Path
+    policy: pathlib.Path
+    detail: dict
+
+
+@dataclasses.dataclass(frozen=True)
+class CandidateRequestIdentity:
+    """Parent-owned identity that a candidate child must reproduce exactly."""
+
+    family: str
+    target: int
+    seeds: tuple[int, ...]
+    reduction_semantics: str
+    target_source_sha256: str
+    expected_arity: int
+    game_path: pathlib.Path
+    provenance_path: pathlib.Path
+
+    def payload(self) -> dict[str, object]:
+        return {
+            "schema": CANDIDATE_REQUEST_SCHEMA,
+            "family": self.family,
+            "target": self.target,
+            "seeds": list(self.seeds),
+            "reduction_semantics": self.reduction_semantics,
+            "target_source_sha256": self.target_source_sha256,
+            "expected_arity": self.expected_arity,
+            "game_path": str(self.game_path),
+            "provenance_path": str(self.provenance_path),
+            "provenance_schema": PROVENANCE_SCHEMA,
+        }
+
+
+@dataclasses.dataclass(frozen=True)
+class TargetCheckResult:
+    target_verified: bool
+    schema_validated_on_probes: bool
+    check: dict
 
 
 REAL_FAMILIES = {
@@ -722,7 +857,8 @@ def _run(command: list[str], timeout: float, cwd: pathlib.Path = ROOT) -> subpro
 def build_game(family: str, n: int, directory: pathlib.Path,
                timeout: float, stage: str = "seed", *,
                source: pathlib.Path | None = None,
-               reduction_semantics: str = "exact") -> tuple[pathlib.Path, pathlib.Path]:
+               reduction_semantics: str = "exact",
+               deadline: AbsoluteDeadline | None = None) -> tuple[pathlib.Path, pathlib.Path]:
     spec = REAL_FAMILIES.get(family) or EXACT_FAMILIES[family]
     game = directory / f"{family}_{n}.game.aag"
     prov = directory / f"{family}_{n}.prov.json"
@@ -731,6 +867,9 @@ def build_game(family: str, n: int, directory: pathlib.Path,
                "--param", f"n={n}", "--semantics", reduction_semantics, "--output",
                str(game), "--provenance-out", str(prov)]
     env = bindings_environment(TOOL_CONFIG)
+    effective_timeout = (
+        deadline.timeout_s(timeout, stage) if deadline is not None else timeout
+    )
     started = time.monotonic()
     diagnostic_token = None
     if _DIAGNOSTICS_ENABLED:
@@ -740,11 +879,14 @@ def build_game(family: str, n: int, directory: pathlib.Path,
     try:
         proc = subprocess.run(command, cwd=ROOT, env=env, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              check=False, timeout=timeout)
+                              check=False, timeout=effective_timeout)
     except subprocess.TimeoutExpired:
         if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None:
             _DIAGNOSTICS.censor_active("subprocess_timeout")
-        raise Decline(stage, "monitor_game", n, f"timed out after {timeout:g}s")
+        raise Decline(
+            stage, "monitor_game", n,
+            f"timed out after {effective_timeout:g}s",
+        )
     finally:
         key = "seed_monitor_game" if stage == "seed" else "target_monitor_game"
         _COST_TIMES[key] += time.monotonic() - started
@@ -765,9 +907,11 @@ def build_game(family: str, n: int, directory: pathlib.Path,
 
 def solve_seed(family: str, n: int, directory: pathlib.Path,
                limits: ProposerLimits, *,
-               family_source: pathlib.Path | None = None) -> "Instance":
+               family_source: pathlib.Path | None = None,
+               deadline: AbsoluteDeadline | None = None) -> "Instance":
     game, prov = build_game(
-        family, n, directory, limits.checker_timeout_s, source=family_source)
+        family, n, directory, limits.checker_timeout_s, source=family_source,
+        deadline=deadline)
     cert = directory / f"{family}_{n}.cert.aag"
     policy = directory / f"{family}_{n}.policy.aag"
     nodes, cache = limits.seed_capacity(n)
@@ -781,7 +925,11 @@ def solve_seed(family: str, n: int, directory: pathlib.Path,
         _diagnostic_begin("seed_solves") if _DIAGNOSTICS_ENABLED else None
     )
     try:
-        proc = _run(command, limits.checker_timeout_s)
+        timeout = (
+            deadline.timeout_s(limits.checker_timeout_s, "seed")
+            if deadline is not None else limits.checker_timeout_s
+        )
+        proc = _run(command, timeout)
     finally:
         _COST_TIMES["seed_solve"] += time.monotonic() - started
         if diagnostic_token is not None:
@@ -3557,34 +3705,125 @@ def _collector_candidate(
                                                    "evidence": evidence}
 
 
-def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
-                    out: pathlib.Path, limits: ProposerLimits, *,
+def acquire_small_instances(
+    family: str,
+    seed_ns: tuple[int, ...],
+    out: pathlib.Path,
+    limits: ProposerLimits,
+    deadline: AbsoluteDeadline,
+    *,
+    family_source: pathlib.Path | None = None,
+    existing: SeedBundle | None = None,
+) -> SeedBundle:
+    """Solve only seed sizes absent from an invocation-local artifact bundle."""
+    out.mkdir(parents=True, exist_ok=True)
+    if existing is not None and existing.family != family:
+        raise ValueError("cannot reuse a seed bundle from another family")
+    instances = dict(existing.instances) if existing is not None else {}
+    requested = tuple(sorted(set(seed_ns)))
+    started = time.monotonic()
+    _set_active_progress_stage("seed", started)
+    solved: list[int] = []
+    try:
+        for n in requested:
+            if n in instances:
+                continue
+            deadline.timeout_s(limits.checker_timeout_s, "seed")
+            instances[n] = solve_seed(
+                family, n, out, limits, family_source=family_source,
+                deadline=deadline,
+            )
+            solved.append(n)
+    finally:
+        _clear_active_progress_stage("seed")
+    elapsed = (existing.elapsed_s if existing is not None else 0.0)
+    elapsed += time.monotonic() - started
+    return SeedBundle(family, instances, tuple(solved), elapsed)
+
+
+def learn_schema(
+    seed_bundle: SeedBundle,
+    limits: ProposerLimits,
+    deadline: AbsoluteDeadline,
+) -> SchemaBundle:
+    """Run target-independent eligibility, arity, role, and seed-ABI checks."""
+    del limits
+    family = seed_bundle.family
+    deadline.timeout_s(1.0, "learn_schema")
+    seeds = seed_bundle.seeds
+    if not seeds:
+        raise Decline("seed", "seed set", None,
+                      "at least one stable seed is required")
+    stable = stable_from(family)
+    below = [seed.n for seed in seeds if seed.n < stable]
+    if below:
+        raise Decline("seed", "stable_from", below[0],
+                      f"seed is below measured stable_from={stable}")
+    if family == "round_robin_arbiter_unreal2" or family in OUT_OF_SCOPE:
+        raise Decline("scope", "arity measurement", None,
+                      "family has no fixed-arity lifting schema")
+    if family not in REAL_FAMILIES:
+        raise Decline("scope", "arity measurement", None,
+                      "family has no fixed-arity M4 measurement")
+    arity = REAL_FAMILIES[family].arity
+    measured = measured_arity(family)
+    if measured != arity:
+        raise Decline("scope", "arity measurement", None,
+                      f"expected k={arity}, measured {measured}")
+    measured_roles = measured_role_class_count(family)
+    role_counts = [_provenance_role_class_count(seed) for seed in seeds]
+    if measured_roles is None or len(set(role_counts)) != 1 or (
+            role_counts[0] != measured_roles):
+        raise Decline(
+            "anti-unify", "role classes", None,
+            "role-class count is not constant across seeds and equal to the "
+            f"measurement: observed={role_counts}, measured={measured_roles}",
+        )
+    seed_bus_shapes = tuple(
+        frozenset(item.key for item in seed.variables
+                  if item.key[:2] == ("state", "bus"))
+        for seed in seeds
+    )
+    return SchemaBundle(
+        family, seed_bundle, arity, measured_roles, seed_bus_shapes,
+    )
+
+
+def instantiate(
+                    schema: SchemaBundle, target_n: int,
+                    out: pathlib.Path, limits: ProposerLimits,
+                    deadline: AbsoluteDeadline, *,
                     family_source: pathlib.Path | None = None,
                     target_source: pathlib.Path | None = None,
                     reduction_semantics: str = "exact") -> tuple[CandidateSchema, Instance,
                                                                   pathlib.Path, pathlib.Path,
                                                                   dict]:
+    family = schema.family
+    seeds = schema.seed_bundle.seeds
+    seed_ns = tuple(seed.n for seed in seeds)
+    if target_n in schema.seed_bundle.instances:
+        raise Decline("seed", "target", target_n,
+                      "the requested target must never be used as a seed")
+    if target_n <= max(seed_ns):
+        raise Decline("seed", "target", target_n,
+                      "target must be strictly larger than every seed")
     out.mkdir(parents=True, exist_ok=True)
     stage = StageTimes()
-    started = stage.begin("seed")
-    seeds = [
-        solve_seed(family, n, out, limits, family_source=family_source)
-        for n in seed_ns
-    ]
-    stage["seed"] = time.monotonic() - started
+    stage["seed"] = schema.seed_bundle.elapsed_s
     started = stage.begin("canonicalize")
     target_game, target_prov = build_game(
         family, target_n, out, limits.checker_timeout_s, stage="canonicalize",
         source=target_source or family_source,
-        reduction_semantics=reduction_semantics)
+        reduction_semantics=reduction_semantics, deadline=deadline)
     target = Instance.load(family, target_n, target_game, target_prov)
     if _DIAGNOSTICS_ENABLED:
         _diagnostic_register_instance(target, "target")
-    role_counts = [_provenance_role_class_count(seed) for seed in seeds]
-    role_counts.append(_provenance_role_class_count(target))
-    measured_roles = measured_role_class_count(family)
-    if len(set(role_counts)) != 1 or measured_roles is None or (
-            role_counts[0] != measured_roles):
+    role_counts = [
+        *(_provenance_role_class_count(seed) for seed in seeds),
+        _provenance_role_class_count(target),
+    ]
+    measured_roles = schema.measured_roles
+    if len(set(role_counts)) != 1 or role_counts[0] != measured_roles:
         raise Decline("anti-unify", "role classes", target_n,
                       "role-class count is not constant across seeds/target "
                       f"and equal to the measurement: observed={role_counts}, "
@@ -3603,15 +3842,13 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
     bdds = Bdds()
     context = bdds.begin_attempt(seeds, target)
     try:
-        arity = REAL_FAMILIES[family].arity
+        arity = schema.arity
         stage["canonicalize"] = time.monotonic() - started
 
         started = stage.begin("bus_schemas")
         # Stable bus schemas must have the same state ABI.  Variable-count
         # changes are semantic, not a license to align by ordinal.
-        seed_bus_shapes = [{item.key for item in seed.variables
-                            if item.key[:2] == ("state", "bus")}
-                           for seed in seeds]
+        seed_bus_shapes = [set(shape) for shape in schema.seed_bus_shapes]
         target_bus_shapes = {item.key for item in target.variables
                              if item.key[:2] == ("state", "bus")}
         # At the smallest seed an arity-2 formula can coincidentally span the
@@ -3833,6 +4070,33 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
         bdds.close()
 
 
+def generalize_once(
+    family: str,
+    target_n: int,
+    seed_ns: tuple[int, ...],
+    out: pathlib.Path,
+    limits: ProposerLimits,
+    *,
+    family_source: pathlib.Path | None = None,
+    target_source: pathlib.Path | None = None,
+    reduction_semantics: str = "exact",
+    deadline: AbsoluteDeadline | None = None,
+    seed_bundle: SeedBundle | None = None,
+) -> tuple[CandidateSchema, Instance, pathlib.Path, pathlib.Path, dict]:
+    """Compatibility composition of the four explicit orchestration stages."""
+    absolute = deadline or AbsoluteDeadline.after(limits.checker_timeout_s)
+    acquired = acquire_small_instances(
+        family, seed_ns, out, limits, absolute,
+        family_source=family_source, existing=seed_bundle,
+    )
+    schema = learn_schema(acquired, limits, absolute)
+    return instantiate(
+        schema, target_n, out, limits, absolute,
+        family_source=family_source, target_source=target_source,
+        reduction_semantics=reduction_semantics,
+    )
+
+
 def _checker_stats_options(path: pathlib.Path) -> list[str]:
     if _CHECKER_STATS_MODE == "file_equals":
         return [f"--stats={path}"]
@@ -3924,8 +4188,82 @@ def _record_checker_stats(
         _DIAGNOSTICS.record_error("record_checker_stats", error)
 
 
+def _recoverable_checker_capacity_failure(
+    proc: subprocess.CompletedProcess,
+    stats: dict | None = None,
+) -> bool:
+    """Recognize only explicit capacity exhaustion, never generic UNKNOWN."""
+    if proc.returncode != 3:
+        return False
+    if isinstance(stats, dict):
+        reason = " ".join(
+            str(stats.get(key, ""))
+            for key in ("reason", "failure", "status", "error")
+        )
+    else:
+        reason = ""
+    detail = f"{reason}\n{proc.stderr}\n{proc.stdout}".lower()
+    if "timeout" in detail or "deadline" in detail:
+        return False
+    return bool(re.search(
+        r"(?:oxidd\s+capacity|node(?:-cap| cap| capacity)|out of nodes|"
+        r"unique table (?:full|capacity)|capacity while compiling)",
+        detail,
+    ))
+
+
+def _memory_headroom_bytes() -> int | None:
+    """Return conservative live cgroup/host headroom when it is observable."""
+    candidates: list[int] = []
+    try:
+        relative = ""
+        for line in pathlib.Path("/proc/self/cgroup").read_text(
+                encoding="utf-8").splitlines():
+            fields = line.split(":", 2)
+            if len(fields) == 3 and fields[0] == "0":
+                relative = fields[2].lstrip("/")
+                break
+        cgroup = pathlib.Path("/sys/fs/cgroup") / relative
+        maximum_raw = (cgroup / "memory.max").read_text(encoding="utf-8").strip()
+        current = int((cgroup / "memory.current").read_text(
+            encoding="utf-8").strip())
+        if maximum_raw != "max":
+            candidates.append(max(0, int(maximum_raw) - current))
+    except (OSError, ValueError):
+        pass
+    try:
+        available_kib = next(
+            int(line.split()[1])
+            for line in pathlib.Path("/proc/meminfo").read_text(
+                encoding="utf-8").splitlines()
+            if line.startswith("MemAvailable:")
+        )
+        candidates.append(available_kib * 1024)
+    except (OSError, ValueError, StopIteration):
+        pass
+    return min(candidates) if candidates else None
+
+
+def _checker_retry_allowed(
+    deadline: AbsoluteDeadline,
+    first_elapsed_s: float,
+) -> tuple[bool, str]:
+    needed_time = max(1.0, first_elapsed_s * 1.25)
+    if deadline.remaining_s() < needed_time:
+        return False, "insufficient_absolute_deadline"
+    headroom = _memory_headroom_bytes()
+    if headroom is None:
+        return False, "memory_headroom_unknown"
+    # This is a policy floor, not a conversion from OxiDD nodes to bytes.
+    if headroom < (1 << 30):
+        return False, "insufficient_memory_headroom"
+    return True, "diagnosed_capacity_with_time_and_memory_headroom"
+
+
 def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
-                    method: str, limits: ProposerLimits, label: str) -> dict:
+                    method: str, limits: ProposerLimits, label: str,
+                    deadline: AbsoluteDeadline | None = None) -> dict:
+    absolute = deadline or AbsoluteDeadline.after(limits.checker_timeout_s)
     json_out = cert.parent / f"check-{label}.json"
     initial_cap = limits.check_capacity(target.n)
     started = time.monotonic()
@@ -3939,9 +4277,14 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
         _diagnostic_begin("target_check")
         if _DIAGNOSTICS_ENABLED and label.startswith("target-") else None
     )
-    for node_cap in (initial_cap, initial_cap * 2):
+    node_cap = initial_cap
+    for attempt_index in range(2):
+        attempt_started = time.monotonic()
+        json_out.unlink(missing_ok=True)
+        checker_timeout = absolute.timeout_s(
+            limits.checker_timeout_s, progress_stage, reserve_s=0.05)
         command = [str(CHECKER), "--method", method, "--timeout",
-                   str(limits.checker_timeout_s), "--node-cap", str(node_cap),
+                   str(checker_timeout), "--node-cap", str(node_cap),
                    "--json-out", str(json_out), "--certificate", str(cert),
                    "--certificate-json", str(cert) + ".json"]
         if _DIAGNOSTICS_ENABLED:
@@ -3950,13 +4293,31 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
             mode_count = _diagnostic_record_checker_attempt(
                 target, "system", label, node_cap)
         command.extend([str(target.game_path), str(policy)])
-        proc = _run(command, limits.checker_timeout_s + 10)
+        proc = _run(command, absolute.timeout_s(
+            checker_timeout + 10, progress_stage))
         if _DIAGNOSTICS_ENABLED:
             _record_checker_stats(
                 stats_path, proc, label, node_cap, "system", mode_count)
-        attempts.append({"node_cap": node_cap, "returncode": proc.returncode})
-        if proc.returncode != 3:
+        attempt = {"node_cap": node_cap, "returncode": proc.returncode,
+                   "retry": False, "retry_reason": None}
+        attempts.append(attempt)
+        attempt_payload = None
+        if json_out.is_file():
+            try:
+                value = json.loads(json_out.read_text(encoding="utf-8"))
+                attempt_payload = value if isinstance(value, dict) else None
+            except json.JSONDecodeError:
+                pass
+        if attempt_index or not _recoverable_checker_capacity_failure(
+                proc, attempt_payload):
             break
+        allowed, reason = _checker_retry_allowed(
+            absolute, time.monotonic() - attempt_started)
+        attempt["retry"] = allowed
+        attempt["retry_reason"] = reason
+        if not allowed:
+            break
+        node_cap *= 2
     if (proc is not None and proc.returncode == 124 and
             _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None):
         _DIAGNOSTICS.censor_active("subprocess_timeout")
@@ -3976,9 +4337,33 @@ def check_candidate(target: Instance, cert: pathlib.Path, policy: pathlib.Path,
             payload = None
     return {"returncode": proc.returncode,
             "verdict": VERDICTS.get(proc.returncode, "UNKNOWN"),
+            "started_monotonic_s": started,
             "elapsed_s": elapsed, "stdout": proc.stdout, "stderr": proc.stderr,
             "json": payload, "command": command, "attempts": attempts,
             "node_caps": [attempt["node_cap"] for attempt in attempts]}
+
+
+def check_target(
+    actual_spec: Instance,
+    candidate_bundle: CandidateBundle,
+    deadline: AbsoluteDeadline,
+    limits: ProposerLimits,
+    method: str = "auto",
+) -> TargetCheckResult:
+    check = check_candidate(
+        actual_spec,
+        candidate_bundle.certificate,
+        candidate_bundle.policy,
+        method,
+        limits,
+        f"target-{actual_spec.n}",
+        deadline,
+    )
+    return TargetCheckResult(
+        target_verified=check["returncode"] == 0,
+        schema_validated_on_probes=False,
+        check=check,
+    )
 
 
 def _next_small(target: int, seeds: tuple[int, ...], stable: int) -> int:
@@ -4021,17 +4406,10 @@ def _format_predicate_arities(family: str,
     return ";".join(summary)
 
 
-def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
-        limits: ProposerLimits, check_method: str = "auto", *,
-        family_source: pathlib.Path | None = None,
-        target_source: pathlib.Path | None = None,
-        reduction_semantics: str = "exact") -> dict:
-    global _ACTIVE_STAGE
-    _LAST_STAGE_TIMES.clear()
-    _COST_TIMES.clear()
-    _ACTIVE_STAGE = None
-    _write_cost_progress()
-    started_all = time.monotonic()
+def _validate_lift_parameters(
+    family: str, target: int, seeds: tuple[int, ...]
+) -> None:
+    """Perform table-only fail-closed checks before any child or solver work."""
     stable = stable_from(family)
     bad = [n for n in seeds if n < stable]
     if bad:
@@ -4051,64 +4429,372 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
         raise Decline("scope", "arity measurement", None,
                       f"expected k={REAL_FAMILIES[family].arity}, measured {measured}")
     if not seeds:
-        raise Decline("seed", "seed set", None, "at least one stable seed is required")
+        raise Decline("seed", "seed set", None,
+                      "at least one stable seed is required")
     if target <= max(seeds):
         raise Decline("seed", "target", target,
                       "target must be strictly larger than every seed")
 
+
+def _build_lifted_candidate(
+    family: str,
+    target: int,
+    seeds: tuple[int, ...],
+    out: pathlib.Path,
+    limits: ProposerLimits,
+    deadline: AbsoluteDeadline,
+    *,
+    family_source: pathlib.Path | None,
+    target_source: pathlib.Path | None,
+    reduction_semantics: str,
+) -> CandidateBundle:
+    _validate_lift_parameters(family, target, seeds)
+    acquired = acquire_small_instances(
+        family, seeds, out, limits, deadline,
+        family_source=family_source,
+    )
+    schema = learn_schema(acquired, limits, deadline)
+    candidate, target_instance, cert, policy, detail = instantiate(
+        schema, target, out, limits, deadline,
+        family_source=family_source, target_source=target_source,
+        reduction_semantics=reduction_semantics,
+    )
+    return CandidateBundle(candidate, target_instance, cert, policy, detail)
+
+
+def _artifact_record(path: pathlib.Path) -> dict[str, object]:
+    resolved = path.resolve()
+    return {"path": str(resolved), "sha256": sha256(resolved)}
+
+
+def _candidate_request_identity(
+    family: str,
+    target: int,
+    seeds: tuple[int, ...],
+    out: pathlib.Path,
+    *,
+    family_source: pathlib.Path | None,
+    target_source: pathlib.Path | None,
+    reduction_semantics: str,
+) -> CandidateRequestIdentity:
+    source = (
+        target_source or family_source or ROOT / REAL_FAMILIES[family].source
+    ).resolve()
+    return CandidateRequestIdentity(
+        family=family,
+        target=target,
+        seeds=tuple(sorted(set(seeds))),
+        reduction_semantics=reduction_semantics,
+        target_source_sha256=sha256(source),
+        expected_arity=int(REAL_FAMILIES[family].arity),
+        game_path=(out / f"{family}_{target}.game.aag").resolve(),
+        provenance_path=(out / f"{family}_{target}.prov.json").resolve(),
+    )
+
+
+def _write_candidate_bundle(
+    path: pathlib.Path,
+    bundle: CandidateBundle,
+    out: pathlib.Path,
+    request_identity: CandidateRequestIdentity,
+) -> None:
+    artifacts = {
+        "game": _artifact_record(bundle.target.game_path),
+        "provenance": _artifact_record(bundle.target.prov_path),
+        "certificate": _artifact_record(bundle.certificate),
+        "certificate_metadata": _artifact_record(
+            pathlib.Path(str(bundle.certificate) + ".json")),
+        "policy": _artifact_record(bundle.policy),
+        "policy_metadata": _artifact_record(
+            pathlib.Path(str(bundle.policy) + ".json")),
+        "evidence": _artifact_record(out / "evidence.json"),
+    }
+    provenance_payload = json.loads(
+        bundle.target.prov_path.read_text(encoding="utf-8"))
+    payload = {
+        "schema": CANDIDATE_BUNDLE_SCHEMA,
+        "builder_pid": os.getpid(),
+        "family": bundle.schema.family,
+        "target": bundle.target.n,
+        "request_identity": request_identity.payload(),
+        "target_artifact_identity": {
+            "game_sha256": artifacts["game"]["sha256"],
+            "provenance_sha256": artifacts["provenance"]["sha256"],
+            "provenance_schema": provenance_payload.get("schema"),
+            "provenance_semantics": provenance_payload.get("semantics"),
+        },
+        "schema_bundle": {
+            "arity": bundle.schema.arity,
+            "seeds": list(bundle.schema.seeds),
+            "role_classes": list(bundle.schema.role_classes),
+            "bus_schemas": list(bundle.schema.bus_schemas),
+            "template_counts": [list(item)
+                                for item in bundle.schema.template_counts],
+            "predicate_arities": [list(item)
+                                  for item in bundle.schema.predicate_arities],
+        },
+        "artifacts": artifacts,
+        "cost_times": dict(_COST_TIMES),
+        "last_stage_times": dict(_LAST_STAGE_TIMES),
+        "manager_owner": "candidate_builder_child",
+        "checker_started": False,
+    }
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+
+
+def _read_candidate_bundle(
+    path: pathlib.Path,
+    out: pathlib.Path,
+    expected: CandidateRequestIdentity,
+) -> tuple[CandidateBundle, dict[str, object]]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if (not isinstance(payload, dict) or
+            payload.get("schema") != CANDIDATE_BUNDLE_SCHEMA):
+        raise Decline("candidate_builder", "artifact bundle", None,
+                      "invalid candidate bundle schema")
+    identity = payload.get("request_identity")
+    if identity != expected.payload():
+        raise Decline(
+            "candidate_builder", "request identity", expected.target,
+            "candidate bundle does not match the parent request",
+        )
+    if (payload.get("family") != expected.family or
+            payload.get("target") != expected.target):
+        raise Decline(
+            "candidate_builder", "request identity", expected.target,
+            "candidate bundle family or target does not match the parent request",
+        )
+    schema_payload = payload.get("schema_bundle")
+    if not isinstance(schema_payload, dict):
+        raise Decline("candidate_builder", "schema bundle", None,
+                      "schema representation is missing")
+    try:
+        schema_seeds = tuple(int(item) for item in schema_payload["seeds"])
+        schema_arity = int(schema_payload["arity"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise Decline(
+            "candidate_builder", "schema bundle", expected.target,
+            "schema request identity is malformed",
+        ) from error
+    if (schema_seeds != expected.seeds or
+            schema_arity != expected.expected_arity):
+        raise Decline(
+            "candidate_builder", "schema bundle", expected.target,
+            "schema seeds or arity do not match the parent request",
+        )
+    records = payload.get("artifacts")
+    if not isinstance(records, dict):
+        raise Decline("candidate_builder", "artifact bundle", None,
+                      "candidate bundle has no artifact map")
+    required_artifacts = {
+        "game", "provenance", "certificate", "certificate_metadata",
+        "policy", "policy_metadata", "evidence",
+    }
+    if not required_artifacts <= records.keys():
+        raise Decline(
+            "candidate_builder", "artifact bundle", expected.target,
+            "candidate bundle is missing required artifacts",
+        )
+    resolved_out = out.resolve()
+    checked: dict[str, pathlib.Path] = {}
+    for name, record in records.items():
+        if not isinstance(record, dict):
+            raise Decline("candidate_builder", name, None,
+                          "invalid artifact record")
+        artifact = pathlib.Path(str(record.get("path", ""))).resolve()
+        try:
+            artifact.relative_to(resolved_out)
+        except ValueError as error:
+            raise Decline("candidate_builder", name, None,
+                          "artifact escaped the invocation workspace") from error
+        if not artifact.is_file() or sha256(artifact) != record.get("sha256"):
+            raise Decline("candidate_builder", name, None,
+                          "artifact is missing or hash-mismatched")
+        checked[name] = artifact
+    if (checked["game"] != expected.game_path or
+            checked["provenance"] != expected.provenance_path):
+        raise Decline(
+            "candidate_builder", "target artifact identity", expected.target,
+            "game or provenance path does not match the parent request",
+        )
+    target_artifact_identity = payload.get("target_artifact_identity")
+    provenance_payload = json.loads(
+        checked["provenance"].read_text(encoding="utf-8"))
+    expected_artifact_identity = {
+        "game_sha256": records["game"].get("sha256"),
+        "provenance_sha256": records["provenance"].get("sha256"),
+        "provenance_schema": PROVENANCE_SCHEMA,
+        "provenance_semantics": expected.reduction_semantics,
+    }
+    if (target_artifact_identity != expected_artifact_identity or
+            provenance_payload.get("schema") != PROVENANCE_SCHEMA or
+            provenance_payload.get("semantics") != expected.reduction_semantics):
+        raise Decline(
+            "candidate_builder", "target artifact identity", expected.target,
+            "game or provenance identity does not match the parent request",
+        )
+    target_instance = Instance.load(
+        expected.family, expected.target, checked["game"], checked["provenance"])
+    schema = CandidateSchema(
+        family=expected.family,
+        arity=schema_arity,
+        seeds=schema_seeds,
+        role_classes=tuple(str(item) for item in schema_payload["role_classes"]),
+        bus_schemas=tuple(str(item) for item in schema_payload["bus_schemas"]),
+        template_counts=tuple(
+            (str(name), int(count))
+            for name, count in schema_payload["template_counts"]
+        ),
+        predicate_arities=tuple(
+            (str(name), int(arity))
+            for name, arity in schema_payload["predicate_arities"]
+        ),
+    )
+    detail = {
+        "times": dict(payload.get("last_stage_times", {})),
+        "evidence": json.loads(checked["evidence"].read_text(encoding="utf-8")),
+        "manager_lifetime": {
+            "builder_pid": int(payload["builder_pid"]),
+            "manager_owner": payload.get("manager_owner"),
+        },
+    }
+    return CandidateBundle(
+        schema, target_instance, checked["certificate"], checked["policy"],
+        detail,
+    ), payload
+
+
+def _candidate_builder_command(
+    family: str,
+    target: int,
+    seeds: tuple[int, ...],
+    out: pathlib.Path,
+    limits: ProposerLimits,
+    deadline: AbsoluteDeadline,
+    check_method: str,
+    family_source: pathlib.Path | None,
+    target_source: pathlib.Path | None,
+    reduction_semantics: str,
+) -> list[str]:
+    command = [
+        sys.executable, str(pathlib.Path(__file__).resolve()),
+        "--candidate-builder", "--family", family, "--target", str(target),
+        "--seeds", ",".join(map(str, seeds)),
+        "--timeout", str(limits.checker_timeout_s),
+        "--absolute-deadline-monotonic",
+        repr(deadline.expires_monotonic_s),
+        "--check-method", check_method,
+        "--reduction-semantics", reduction_semantics,
+        "--out", str(out),
+        "--candidate-bundle-out", str(out / "candidate-bundle.json"),
+        "--tlsf-tools-build", str(TOOL_CONFIG.tlsf_tools_build),
+        "--bindings-python", str(BINDINGS_PYTHON),
+        "--bindings-site", str(BINDINGS_SITE),
+        "--monitor", str(MONITOR), "--solver", str(SOLVER),
+        "--checker", str(CHECKER),
+    ]
+    if TOOL_CONFIG.buddy_adapter is not None:
+        command.extend(("--buddy-adapter", str(TOOL_CONFIG.buddy_adapter)))
+    if limits.solver_nodes is not None:
+        command.extend(("--solver-nodes", str(limits.solver_nodes)))
+    if limits.solver_cache is not None:
+        command.extend(("--solver-cache", str(limits.solver_cache)))
+    if limits.checker_nodes is not None:
+        command.extend(("--node-cap", str(limits.checker_nodes)))
+    if family_source is not None:
+        command.extend(("--family-source", str(family_source)))
+    if target_source is not None:
+        command.extend(("--target-source", str(target_source)))
+    return command
+
+
+def _launch_candidate_builder(
+    command: list[str],
+    bundle_path: pathlib.Path,
+    out: pathlib.Path,
+    deadline: AbsoluteDeadline,
+    expected_identity: CandidateRequestIdentity,
+) -> tuple[CandidateBundle, dict[str, object]]:
+    started = time.monotonic()
+    proc = subprocess.Popen(
+        command, cwd=ROOT, text=True, stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE, start_new_session=True,
+    )
+    try:
+        stdout, stderr = proc.communicate(
+            timeout=deadline.timeout_s(
+                deadline.remaining_s(), "candidate_builder", reserve_s=0.05))
+    except subprocess.TimeoutExpired as error:
+        os.killpg(proc.pid, signal.SIGKILL)
+        proc.communicate()
+        raise Decline("candidate_builder", "absolute deadline", None,
+                      "candidate builder timed out and was reaped") from error
+    except BaseException:
+        if proc.poll() is None:
+            os.killpg(proc.pid, signal.SIGKILL)
+            proc.communicate()
+        raise
+    if proc.returncode != 0:
+        detail = (stderr or stdout).strip()[-500:]
+        raise Decline("candidate_builder", "child process", None,
+                      f"builder exited {proc.returncode}: {detail}")
+    bundle, payload = _read_candidate_bundle(
+        bundle_path, out, expected_identity)
+    payload["builder_process"] = {
+        "pid": proc.pid,
+        "elapsed_s": time.monotonic() - started,
+        "exited_monotonic_s": time.monotonic(),
+        "returncode": proc.returncode,
+    }
+    return bundle, payload
+
+
+def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
+        limits: ProposerLimits, check_method: str = "auto", *,
+        family_source: pathlib.Path | None = None,
+        target_source: pathlib.Path | None = None,
+        reduction_semantics: str = "exact",
+        deadline: AbsoluteDeadline | None = None,
+        prepared_bundle: CandidateBundle | None = None,
+        builder_evidence: dict[str, object] | None = None,
+        orchestration_started: float | None = None) -> dict:
+    global _ACTIVE_STAGE
+    _LAST_STAGE_TIMES.clear()
+    _COST_TIMES.clear()
+    _ACTIVE_STAGE = None
+    _write_cost_progress()
+    started_all = (time.monotonic() if orchestration_started is None
+                   else orchestration_started)
+    absolute = deadline or AbsoluteDeadline.after(limits.checker_timeout_s)
+    _validate_lift_parameters(family, target, seeds)
+
     current = tuple(sorted(set(seeds)))
     rounds = 0
     cegis_started = time.monotonic()
-    last = None
-    while True:
-        candidate, target_instance, cert, policy, detail = generalize_once(
-            family, target, current, out, limits, family_source=family_source,
-            target_source=target_source,
-            reduction_semantics=reduction_semantics)
-        probe = _next_small(target, current, stable)
-        checks = []
-        # A target-size checker is meaningful only for the target artefacts;
-        # the small probe is materialized as a full CEGIS seed if needed.
-        if probe < target and probe not in current:
-            try:
-                probe_dir = out / f"probe-{probe}"
-                _candidate2, probe_instance, pcert, ppolicy, _detail2 = generalize_once(
-                    family, probe, tuple(n for n in current if n < probe) or (current[0],),
-                    probe_dir, limits, family_source=family_source)
-                check = check_candidate(probe_instance, pcert, ppolicy,
-                                        check_method, limits,
-                                        f"next-{probe}")
-                checks.append((probe, check))
-            except Decline as exc:
-                check = {"returncode": 3, "verdict": "UNKNOWN",
-                         "elapsed_s": 0.0, "stdout": "", "stderr": str(exc),
-                         "json": None, "attempts": [], "node_caps": []}
-                checks.append((probe, check))
-        target_check = check_candidate(target_instance, cert, policy,
-                                       check_method, limits,
-                                       f"target-{target}")
-        checks.append((target, target_check))
-        last = (candidate, target_instance, cert, policy, detail, checks)
-        failing = next(((n, check) for n, check in checks
-                        if check["returncode"] != 0), None)
-        if failing is None:
-            break
-        n, check = failing
-        if check["returncode"] != 6 or rounds >= limits.max_cegis_rounds:
-            break
-        # The structured counterexample is evidence for the failed proof.  A
-        # failed n is the next seed; never infer a losing controller from it.
-        if n == target or n in current:
-            break
-        current = tuple(sorted((*current, n)))
-        rounds += 1
-    assert last is not None
-    candidate, target_instance, cert, policy, detail, checks = last
-    # Every check must verify.  In particular, do not let a passing target
-    # flatten an UNKNOWN/CERT_FAILED result from the smaller CEGIS probe just
-    # because the target check happens to be last in the list.
-    final_check = next((check for _n, check in checks
-                        if check["returncode"] != 0), checks[-1][1])
+    # The integration decision deliberately omits an exploratory probe.  Seed
+    # acquisition and feasibility happen once, before the expensive target
+    # monitor; the exact target certificate alone decides this invocation.
+    bundle = prepared_bundle or _build_lifted_candidate(
+        family, target, current, out, limits, absolute,
+        family_source=family_source, target_source=target_source,
+        reduction_semantics=reduction_semantics,
+    )
+    if builder_evidence is not None:
+        _COST_TIMES.update(builder_evidence.get("cost_times", {}))
+    candidate = bundle.schema
+    target_instance = bundle.target
+    cert = bundle.certificate
+    policy = bundle.policy
+    detail = bundle.detail
+    target_result = check_target(
+        target_instance, bundle, absolute, limits, check_method)
+    final_check = target_result.check
+    checks = [(target, final_check)]
     verdict = VERDICTS.get(final_check["returncode"], "ERROR")
     times = detail["times"]
     times["cegis"] = time.monotonic() - cegis_started
@@ -4125,7 +4811,32 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
             for n, check in checks
         ],
         "final_verdict": verdict,
+        "target_verified": target_result.target_verified,
+        "schema_validated_on_probes": (
+            target_result.schema_validated_on_probes),
+        "claim_scope": "requested_target_only",
     })
+    evidence["target_verified"] = target_result.target_verified
+    evidence["schema_validated_on_probes"] = (
+        target_result.schema_validated_on_probes)
+    evidence["claim_scope"] = "requested_target_only"
+    if builder_evidence is not None:
+        checker_started = final_check.get("started_monotonic_s")
+        builder_process = builder_evidence.get("builder_process", {})
+        builder_exit = (builder_process.get("exited_monotonic_s")
+                        if isinstance(builder_process, dict) else None)
+        evidence["manager_lifetime"] = {
+            "supervisor_holds_bdd_manager": False,
+            "candidate_builder_pid": builder_evidence.get("builder_pid"),
+            "candidate_builder_exit_monotonic_s": builder_exit,
+            "checker_started_monotonic_s": checker_started,
+            "builder_exited_before_checker": bool(
+                isinstance(builder_exit, (int, float)) and
+                isinstance(checker_started, (int, float)) and
+                builder_exit <= checker_started
+            ),
+            "handoff": "validated_paths_hashes_and_schema_bundle",
+        }
     (out / "evidence.json").write_text(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     wall_s = time.monotonic() - started_all
@@ -4202,7 +4913,8 @@ def run(family: str, target: int, seeds: tuple[int, ...], out: pathlib.Path,
 
 def run_exact_direct(family: str, target: int, out: pathlib.Path,
                      limits: ProposerLimits, *,
-                     target_source: pathlib.Path | None = None) -> dict:
+                     target_source: pathlib.Path | None = None,
+                     deadline: AbsoluteDeadline | None = None) -> dict:
     """Build, solve, and check either side of one exact target game.
 
     M5 made the dual certificate checkable but did not measure a bounded-arity
@@ -4219,9 +4931,10 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
     _write_cost_progress()
     out.mkdir(parents=True, exist_ok=True)
     started_all = time.monotonic()
+    absolute = deadline or AbsoluteDeadline.after(limits.checker_timeout_s)
     game, provenance = build_game(
         family, target, out, limits.checker_timeout_s, stage="canonicalize",
-        source=target_source, reduction_semantics="exact")
+        source=target_source, reduction_semantics="exact", deadline=absolute)
     diagnostic_instance = None
     if _DIAGNOSTICS_ENABLED:
         try:
@@ -4248,7 +4961,10 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
         _diagnostic_begin("target_solve") if _DIAGNOSTICS_ENABLED else None
     )
     try:
-        solve = _run(solve_command, limits.checker_timeout_s)
+        solve = _run(
+            solve_command,
+            absolute.timeout_s(limits.checker_timeout_s, "target_solve"),
+        )
     finally:
         _COST_TIMES["target_solve"] += time.monotonic() - solve_started
         if solve_token is not None:
@@ -4308,10 +5024,15 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
     initial_checker_cap = limits.checker_nodes or _scaled_checker_nodes(target)
     if side == "environment":
         initial_checker_cap = max(initial_checker_cap, 1 << 26)
-    for node_cap in (initial_checker_cap, 2 * initial_checker_cap):
+    node_cap = initial_checker_cap
+    for attempt_index in range(2):
+        attempt_started = time.monotonic()
+        json_out.unlink(missing_ok=True)
+        checker_timeout = absolute.timeout_s(
+            limits.checker_timeout_s, "target_check", reserve_s=0.05)
         command = [
             str(CHECKER), "--method", "certificate", "--timeout",
-            str(limits.checker_timeout_s), "--node-cap", str(node_cap),
+            str(checker_timeout), "--node-cap", str(node_cap),
             "--json-out", str(json_out), "--certificate", str(certificate),
             "--certificate-json", str(certificate) + ".json",
         ]
@@ -4323,14 +5044,24 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
                 mode_count = _diagnostic_record_checker_attempt(
                     diagnostic_instance, side, f"target-{target}", node_cap)
         command.extend([str(game), str(policy)])
-        check = _run(command, limits.checker_timeout_s + 10)
+        check = _run(command, absolute.timeout_s(
+            checker_timeout + 10, "target_check"))
         if _DIAGNOSTICS_ENABLED:
             _record_checker_stats(
                 stats_path, check, f"target-{target}", node_cap, side,
                 mode_count)
-        attempts.append({"node_cap": node_cap, "returncode": check.returncode})
-        if check.returncode != 3:
+        attempt = {"node_cap": node_cap, "returncode": check.returncode,
+                   "retry": False, "retry_reason": None}
+        attempts.append(attempt)
+        if attempt_index or not _recoverable_checker_capacity_failure(check):
             break
+        allowed, reason = _checker_retry_allowed(
+            absolute, time.monotonic() - attempt_started)
+        attempt["retry"] = allowed
+        attempt["retry_reason"] = reason
+        if not allowed:
+            break
+        node_cap *= 2
     if (check is not None and check.returncode == 124 and
             _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None):
         _DIAGNOSTICS.censor_active("subprocess_timeout")
@@ -4478,6 +5209,14 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--seeds", help="comma-separated stable seed sizes")
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument(
+        "--absolute-deadline-monotonic", type=float,
+        help="host monotonic deadline shared by the campaign and all children",
+    )
+    parser.add_argument("--candidate-builder", action="store_true",
+                        help=argparse.SUPPRESS)
+    parser.add_argument("--candidate-bundle-out", type=pathlib.Path,
+                        help=argparse.SUPPRESS)
+    parser.add_argument(
         "--node-cap", type=int,
         help="checker node cap (default: 2^24, doubled every five clients to 2^26)")
     parser.add_argument(
@@ -4533,10 +5272,16 @@ def main(argv: list[str] | None = None) -> int:
     monitor = (args.monitor or config.monitor).resolve()
     solver = (args.solver or config.solver).resolve()
     checker = (args.checker or config.checker).resolve()
+    started = time.monotonic()
+    deadline = (
+        AbsoluteDeadline(args.absolute_deadline_monotonic)
+        if args.absolute_deadline_monotonic is not None
+        else AbsoluteDeadline.after(args.timeout)
+    )
     if args.probe:
-        if args.diagnostics is not None:
+        if args.diagnostics is not None and deadline.remaining_s() > 0:
             _apply_tool_configuration(config, args)
-            _diagnostic_initialize(args.diagnostics)
+            _diagnostic_initialize(args.diagnostics, deadline)
         probe_result = print_probe(
             config, monitor=monitor, solver=solver, checker=checker
         )
@@ -4555,8 +5300,11 @@ def main(argv: list[str] | None = None) -> int:
             [str(config.bindings_python), __file__, *arguments],
         )
     _apply_tool_configuration(config, args)
-    if args.diagnostics is not None:
-        _diagnostic_initialize(args.diagnostics)
+    # Diagnostics are optional and may never extend the proof budget.  In
+    # particular, do not start their checker capability probe after an outer
+    # campaign has already exhausted the shared absolute deadline.
+    if args.diagnostics is not None and deadline.remaining_s() > 0:
+        _diagnostic_initialize(args.diagnostics, deadline)
     default = REAL_FAMILIES.get(args.family) or EXACT_FAMILIES.get(args.family)
     seeds = (tuple(int(item) for item in args.seeds.split(",") if item)
              if args.seeds is not None else (default.default_seeds if default else ()))
@@ -4566,7 +5314,6 @@ def main(argv: list[str] | None = None) -> int:
                             solver_nodes=args.solver_nodes,
                             solver_cache=args.solver_cache,
                             checker_nodes=args.node_cap)
-    started = time.monotonic()
     previous_handlers: dict[int, object] = {}
     was_cancelled = False
 
@@ -4580,11 +5327,40 @@ def main(argv: list[str] | None = None) -> int:
             _diagnostic_finish("cancelled")
         raise DiagnosticCancelled(signal.Signals(signum).name)
 
-    if _DIAGNOSTICS_ENABLED:
-        for handled in (signal.SIGINT, signal.SIGTERM):
-            previous_handlers[handled] = signal.getsignal(handled)
-            signal.signal(handled, diagnostic_cancel)
+    for handled in (signal.SIGINT, signal.SIGTERM):
+        previous_handlers[handled] = signal.getsignal(handled)
+        signal.signal(handled, diagnostic_cancel)
     try:
+        if args.candidate_builder:
+            if args.family not in REAL_FAMILIES:
+                raise Decline(
+                    "candidate_builder", "route", args.target,
+                    "candidate builder is only valid for lifted REAL routes",
+                )
+            request_identity = _candidate_request_identity(
+                args.family, args.target, seeds, out,
+                family_source=args.family_source,
+                target_source=args.target_source,
+                reduction_semantics=args.reduction_semantics,
+            )
+            bundle = _build_lifted_candidate(
+                args.family, args.target, seeds, out, limits, deadline,
+                family_source=args.family_source,
+                target_source=args.target_source,
+                reduction_semantics=args.reduction_semantics,
+            )
+            bundle_out = (
+                args.candidate_bundle_out or out / "candidate-bundle.json"
+            ).resolve()
+            _write_candidate_bundle(
+                bundle_out, bundle, out, request_identity)
+            if _DIAGNOSTICS_ENABLED:
+                _diagnostic_finish("completed", {
+                    "family": args.family, "target": args.target,
+                    "verdict": "CANDIDATE_BUILT",
+                })
+            print(f"candidate_bundle: {bundle_out}")
+            return 0
         if args.family in EXACT_FAMILIES:
             if args.reduction_semantics != "exact":
                 raise Decline(
@@ -4594,12 +5370,53 @@ def main(argv: list[str] | None = None) -> int:
             result = run_exact_direct(
                 args.family, args.target, out, limits,
                 target_source=args.target_source,
+                deadline=deadline,
             )
         else:
-            result = run(args.family, args.target, seeds, out, limits,
-                         args.check_method, family_source=args.family_source,
-                         target_source=args.target_source,
-                         reduction_semantics=args.reduction_semantics)
+            _validate_lift_parameters(args.family, args.target, seeds)
+            command = _candidate_builder_command(
+                args.family, args.target, seeds, out, limits, deadline,
+                args.check_method, args.family_source, args.target_source,
+                args.reduction_semantics,
+            )
+            expected_identity = _candidate_request_identity(
+                args.family, args.target, seeds, out,
+                family_source=args.family_source,
+                target_source=args.target_source,
+                reduction_semantics=args.reduction_semantics,
+            )
+            child_diagnostics = None
+            if args.diagnostics is not None:
+                child_diagnostics = out / "candidate-builder-diagnostics.json"
+                command.extend(("--diagnostics", str(child_diagnostics)))
+            builder_token = (
+                _diagnostic_begin("candidate_builder")
+                if _DIAGNOSTICS_ENABLED else None
+            )
+            try:
+                bundle, builder_evidence = _launch_candidate_builder(
+                    command, out / "candidate-bundle.json", out, deadline,
+                    expected_identity)
+            finally:
+                if builder_token is not None:
+                    _diagnostic_end(builder_token)
+            if child_diagnostics is not None and child_diagnostics.is_file():
+                try:
+                    child_payload = json.loads(
+                        child_diagnostics.read_text(encoding="utf-8"))
+                    if isinstance(child_payload, dict):
+                        _diagnostic_merge_candidate_builder(child_payload)
+                finally:
+                    child_diagnostics.unlink(missing_ok=True)
+            result = run(
+                args.family, args.target, seeds, out, limits,
+                args.check_method, family_source=args.family_source,
+                target_source=args.target_source,
+                reduction_semantics=args.reduction_semantics,
+                deadline=deadline, prepared_bundle=bundle,
+                builder_evidence=builder_evidence,
+                orchestration_started=started,
+            )
     except Decline as exc:
         result = _decline_result(args.family, args.target, seeds, exc, limits,
                                  time.monotonic() - started)

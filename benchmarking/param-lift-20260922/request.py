@@ -18,9 +18,12 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+import os
 import pathlib
 import re
+import signal
 import subprocess
+import time
 from collections.abc import Mapping
 
 
@@ -298,25 +301,74 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _run_tool(
-    command: list[pathlib.Path | str], source: str, timeout_s: float = 5.0
-) -> str:
+def _kill_tool_group(proc: subprocess.Popen[str]) -> None:
+    # The direct tool may have exited while one of its descendants still owns
+    # the captured pipes, so target the process group even after poll().
     try:
-        proc = subprocess.run(
-            [str(item) for item in command], input=source, text=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
-            timeout=timeout_s,
+        os.killpg(proc.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    proc.communicate()
+
+
+def _run_tool(
+    command: list[pathlib.Path | str],
+    source: str,
+    timeout_s: float = 5.0,
+    *,
+    absolute_deadline_monotonic: float | None = None,
+) -> str:
+    effective_timeout = timeout_s
+    deadline_limited = False
+    if absolute_deadline_monotonic is not None:
+        remaining = absolute_deadline_monotonic - time.monotonic()
+        if remaining <= 0:
+            raise BindingDeclined("absolute_deadline_exhausted")
+        deadline_limited = remaining <= timeout_s
+        effective_timeout = min(timeout_s, remaining)
+    try:
+        proc = subprocess.Popen(
+            [str(item) for item in command], text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE, start_new_session=True,
         )
-    except (OSError, subprocess.TimeoutExpired) as error:
+    except OSError as error:
         raise BindingDeclined("lowering_tool_failed", str(error)) from error
+    if absolute_deadline_monotonic is not None:
+        remaining = absolute_deadline_monotonic - time.monotonic()
+        if remaining <= 0:
+            _kill_tool_group(proc)
+            raise BindingDeclined("absolute_deadline_exhausted")
+        deadline_limited = remaining <= timeout_s
+        effective_timeout = min(timeout_s, remaining)
+    try:
+        stdout, stderr = proc.communicate(source, timeout=effective_timeout)
+    except subprocess.TimeoutExpired as error:
+        _kill_tool_group(proc)
+        code = (
+            "absolute_deadline_exhausted"
+            if deadline_limited else "lowering_tool_failed"
+        )
+        raise BindingDeclined(code, str(error)) from error
+    except BaseException:
+        _kill_tool_group(proc)
+        raise
     if proc.returncode != 0:
-        detail = (proc.stderr or proc.stdout).strip()[-300:]
+        detail = (stderr or stdout).strip()[-300:]
         raise BindingDeclined("source_parse_or_lowering_failed", detail)
-    return proc.stdout.strip()
+    return stdout.strip()
 
 
-def _metadata(tools: LoweringTools, selection: str, basic: str) -> str:
-    return _run_tool([tools.tlsfinfo, selection], basic)
+def _metadata(
+    tools: LoweringTools,
+    selection: str,
+    basic: str,
+    absolute_deadline_monotonic: float | None,
+) -> str:
+    return _run_tool(
+        [tools.tlsfinfo, selection], basic,
+        absolute_deadline_monotonic=absolute_deadline_monotonic,
+    )
 
 
 def _signals(value: str, owner: str) -> tuple[str, ...]:
@@ -326,8 +378,15 @@ def _signals(value: str, owner: str) -> tuple[str, ...]:
     return result
 
 
-def _parameter_names(tools: LoweringTools, source: str) -> tuple[str, ...]:
-    raw = _run_tool([tools.tlsfinfo, "--parameters"], source)
+def _parameter_names(
+    tools: LoweringTools,
+    source: str,
+    absolute_deadline_monotonic: float | None,
+) -> tuple[str, ...]:
+    raw = _run_tool(
+        [tools.tlsfinfo, "--parameters"], source,
+        absolute_deadline_monotonic=absolute_deadline_monotonic,
+    )
     names = tuple(item for item in re.split(r"[\s,]+", raw) if item)
     if len(names) != len(set(names)):
         raise BindingDeclined("duplicate_parameter")
@@ -335,9 +394,15 @@ def _parameter_names(tools: LoweringTools, source: str) -> tuple[str, ...]:
 
 
 def _parameter_values(
-    tools: LoweringTools, source: str, names: tuple[str, ...]
+    tools: LoweringTools,
+    source: str,
+    names: tuple[str, ...],
+    absolute_deadline_monotonic: float | None,
 ) -> tuple[tuple[str, int], ...]:
-    normalized = _run_tool([tools.tlsf2tlsf], source)
+    normalized = _run_tool(
+        [tools.tlsf2tlsf], source,
+        absolute_deadline_monotonic=absolute_deadline_monotonic,
+    )
     values = []
     for name in names:
         matches = re.findall(
@@ -353,23 +418,40 @@ def _identity(
     tools: LoweringTools,
     source: str,
     parameters: tuple[tuple[str, int], ...],
+    absolute_deadline_monotonic: float | None,
 ) -> SourceIdentity:
     overrides = [
         item
         for name, value in parameters
         for item in ("--param", f"{name}={value}")
     ]
-    basic = _run_tool([tools.tlsf2tlsf, "--basic", *overrides], source)
-    semantics = _metadata(tools, "--semantics", basic).lower()
-    target = _metadata(tools, "--target", basic).lower()
-    inputs = _signals(_metadata(tools, "--expanded-ins", basic), "inputs")
-    outputs = _signals(_metadata(tools, "--expanded-outs", basic), "outputs")
+    basic = _run_tool(
+        [tools.tlsf2tlsf, "--basic", *overrides], source,
+        absolute_deadline_monotonic=absolute_deadline_monotonic,
+    )
+    semantics = _metadata(
+        tools, "--semantics", basic, absolute_deadline_monotonic).lower()
+    target = _metadata(
+        tools, "--target", basic, absolute_deadline_monotonic).lower()
+    inputs = _signals(
+        _metadata(tools, "--expanded-ins", basic,
+                  absolute_deadline_monotonic),
+        "inputs",
+    )
+    outputs = _signals(
+        _metadata(tools, "--expanded-outs", basic,
+                  absolute_deadline_monotonic),
+        "outputs",
+    )
     overlap = set(inputs) & set(outputs)
     if overlap:
         raise BindingDeclined(
             "atomic_proposition_has_two_owners", ",".join(sorted(overlap))
         )
-    lowered = _run_tool([tools.tlsf2ltl, "--format", "ltl", *overrides], source)
+    lowered = _run_tool(
+        [tools.tlsf2ltl, "--format", "ltl", *overrides], source,
+        absolute_deadline_monotonic=absolute_deadline_monotonic,
+    )
     return SourceIdentity(
         semantics=semantics,
         target=target,
@@ -389,6 +471,7 @@ def bind_source_request(
     family_hint: str | None = None,
     target_hint: int | None = None,
     capabilities: Mapping[str, Capability] = CAPABILITIES,
+    absolute_deadline_monotonic: float | None = None,
 ) -> SourceRequest:
     """Bind actual TLSF bytes to exactly one content-verified capability."""
     if reduction_semantics not in ("exact", "strict"):
@@ -400,36 +483,85 @@ def bind_source_request(
     except (OSError, UnicodeDecodeError) as error:
         raise BindingDeclined("source_unreadable", str(error)) from error
 
-    names = _parameter_names(tools, source)
-    parameters = _parameter_values(tools, source, names)
-    actual = _identity(tools, source, parameters)
-    parameter_map = actual.parameter_map()
+    # A named capability is cheap to reject and its pin can be checked before
+    # invoking SYFCO.  With no hint, defer template I/O until the parameter
+    # signature has selected a small capability bucket.
+    hinted: Capability | None = None
+    hinted_template: tuple[bytes, str] | None = None
+    if family_hint is not None:
+        hinted = capabilities.get(family_hint)
+        if hinted is None:
+            raise BindingDeclined("unknown_capability", family_hint)
+        try:
+            template_bytes = hinted.source_path.read_bytes()
+            template_bytes.decode("utf-8")
+        except (OSError, UnicodeDecodeError) as error:
+            raise BindingDeclined(
+                "capability_template_unreadable", str(error)
+            ) from error
+        template_hash = _sha256(template_bytes)
+        if template_hash != hinted.template_sha256:
+            raise BindingDeclined("stale_capability_template", hinted.family)
+        hinted_template = (template_bytes, template_hash)
+
+    # This must remain the first lowering-tool call.  In particular, an
+    # ordinary non-parametric TLSF declines without normalization, metadata,
+    # formula lowering, or instantiating any registered template.
+    names = _parameter_names(tools, source, absolute_deadline_monotonic)
+    if hinted is not None:
+        candidates = (hinted,) if names == hinted.parameters else ()
+    else:
+        candidates = tuple(
+            capability for capability in capabilities.values()
+            if capability.parameters == names
+        )
+    if not candidates:
+        raise BindingDeclined("unsupported_parameter_signature")
+
+    # Only a shortlisted parameter signature is normalized to discover its
+    # concrete assignment.  Route compatibility and cheap target constraints
+    # precede the expensive per-template identity checks below.
+    parameters = _parameter_values(
+        tools, source, names, absolute_deadline_monotonic)
+    parameter_map = dict(parameters)
     if target_hint is not None and parameter_map.get("n") != target_hint:
         raise BindingDeclined("target_parameter_mismatch")
+    if any(not isinstance(value, int) or value <= 0
+           for _name, value in parameters):
+        raise BindingDeclined("parameter_out_of_bounds")
+    candidates = tuple(
+        capability for capability in candidates
+        if not (capability.route_kind == EXACT_GAME and
+                reduction_semantics != "exact")
+    )
+    if not candidates:
+        raise BindingDeclined("route_incompatible_with_reduction")
 
-    if family_hint is not None:
-        capability = capabilities.get(family_hint)
-        if capability is None:
-            raise BindingDeclined("unknown_capability", family_hint)
-        candidates = (capability,)
-    else:
-        candidates = tuple(capabilities.values())
+    # Compute the actual identity once.  _identity deliberately obtains the
+    # cheap basic metadata before invoking tlsf2ltl for the final equality.
+    actual = _identity(
+        tools, source, parameters, absolute_deadline_monotonic)
 
     matches: list[tuple[Capability, bytes, SourceIdentity]] = []
     stale: list[str] = []
     for capability in candidates:
-        if names != capability.parameters:
-            continue
-        try:
-            template_bytes = capability.source_path.read_bytes()
-            template = template_bytes.decode("utf-8")
-        except (OSError, UnicodeDecodeError) as error:
-            raise BindingDeclined("capability_template_unreadable", str(error)) from error
-        template_hash = _sha256(template_bytes)
-        if template_hash != capability.template_sha256:
-            stale.append(capability.family)
-            continue
-        expected = _identity(tools, template, parameters)
+        if hinted_template is not None:
+            template_bytes, template_hash = hinted_template
+        else:
+            try:
+                template_bytes = capability.source_path.read_bytes()
+                template_bytes.decode("utf-8")
+            except (OSError, UnicodeDecodeError) as error:
+                raise BindingDeclined(
+                    "capability_template_unreadable", str(error)
+                ) from error
+            template_hash = _sha256(template_bytes)
+            if template_hash != capability.template_sha256:
+                stale.append(capability.family)
+                continue
+        template = template_bytes.decode("utf-8")
+        expected = _identity(
+            tools, template, parameters, absolute_deadline_monotonic)
         if actual == expected:
             matches.append((capability, template_bytes, expected))
 

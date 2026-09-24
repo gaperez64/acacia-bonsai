@@ -7,11 +7,14 @@ import dataclasses
 import hashlib
 import importlib.util
 import json
+import os
 import pathlib
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
+from unittest import mock
 
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -19,6 +22,7 @@ ROOT = HERE.parents[1]
 BUILD = ROOT / "subprojects" / "tlsf-tools" / "build-oxidd"
 CAMPAIGN = HERE / "param-lift-campaign.py"
 sys.path.insert(0, str(HERE))
+import request as request_module  # noqa: E402
 from request import (  # noqa: E402
     CAPABILITIES,
     BindingDeclined,
@@ -90,6 +94,73 @@ class SourceRequestTest(unittest.TestCase):
                     len(request.io_mapping),
                     len(request.identity.inputs) + len(request.identity.outputs),
                 )
+
+    def test_non_parametric_source_declines_after_one_tool_call(self) -> None:
+        source = self.root / "plain.tlsf"
+        source.write_text("INFO { TITLE: plain }\n", encoding="utf-8")
+        with mock.patch.object(
+            request_module, "_run_tool", return_value=""
+        ) as run_tool:
+            with self.assertRaisesRegex(
+                BindingDeclined, "unsupported_parameter_signature"
+            ):
+                bind_source_request(source, self.tools, "exact")
+        self.assertEqual(run_tool.call_count, 1)
+        self.assertEqual(run_tool.call_args.args[0][1:], ["--parameters"])
+
+    def test_parameter_bucket_skips_other_template_signatures(self) -> None:
+        unrelated = dataclasses.replace(
+            CAPABILITIES["arbiter"],
+            family="unrelated_m",
+            source=str(self.root / "must-not-be-read.tlsf"),
+            parameters=("m",),
+        )
+        request = self.bind(
+            self.arbiter,
+            family=None,
+            capabilities={
+                "arbiter": CAPABILITIES["arbiter"],
+                "unrelated_m": unrelated,
+            },
+        )
+        self.assertEqual(request.family, "arbiter")
+
+    def test_unrelated_n_parametric_source_instantiates_only_n_bucket(self) -> None:
+        unrelated_source = self.mutated(
+            "every_req_is_granted(r[i], g[i])", "G g[i]"
+        )
+        unrelated_m = dataclasses.replace(
+            CAPABILITIES["arbiter"],
+            family="unrelated_m",
+            source=str(self.root / "must-not-be-read.tlsf"),
+            parameters=("m",),
+        )
+        arbiter_template = CAPABILITIES["arbiter"].source_path.read_text(
+            encoding="utf-8")
+        instantiated: list[str] = []
+        identity = request_module._identity
+
+        def record_identity(tools, source, parameters, deadline):
+            if source == arbiter_template:
+                instantiated.append("arbiter")
+            return identity(tools, source, parameters, deadline)
+
+        with mock.patch.object(
+            request_module, "_identity", side_effect=record_identity
+        ):
+            with self.assertRaisesRegex(
+                BindingDeclined, "source_not_content_verified_for_capability"
+            ):
+                bind_source_request(
+                    unrelated_source,
+                    self.tools,
+                    "exact",
+                    capabilities={
+                        "arbiter": CAPABILITIES["arbiter"],
+                        "unrelated_m": unrelated_m,
+                    },
+                )
+        self.assertEqual(instantiated, ["arbiter"])
 
     def test_same_filename_with_modified_guarantee_declines(self) -> None:
         path = self.mutated(
@@ -236,6 +307,87 @@ class SourceRequestTest(unittest.TestCase):
             payload["source_binding"]["match"]["how"],
             "content-verified-template-instantiation",
         )
+
+    def test_source_mode_deadline_covers_lowering_and_reaps_descendants(self) -> None:
+        real_build = self.tools.tlsfinfo.parent
+        fake_build = self.root / "slow-lowering-build"
+        fake_build.mkdir()
+        wrapper = """#!/usr/bin/env python3
+import os
+import pathlib
+import subprocess
+import sys
+import time
+
+name = pathlib.Path(sys.argv[0]).name
+mode = os.environ["SLOW_LOWERING_MODE"]
+first = name == "tlsfinfo" and sys.argv[1:] == ["--parameters"]
+later = name == "tlsf2tlsf" and "--basic" not in sys.argv[1:]
+if (mode == "first" and first) or (mode == "later" and later):
+    child = subprocess.Popen([
+        sys.executable, "-c", "import time; time.sleep(30)"
+    ])
+    pathlib.Path(os.environ["SLOW_CHILD_PID"]).write_text(
+        str(child.pid), encoding="utf-8"
+    )
+    time.sleep(30)
+real = pathlib.Path(os.environ["REAL_LOWERING_BUILD"]) / name
+os.execv(str(real), [str(real), *sys.argv[1:]])
+"""
+        for name in ("tlsfinfo", "tlsf2tlsf", "tlsf2ltl"):
+            tool = fake_build / name
+            tool.write_text(wrapper, encoding="utf-8")
+            tool.chmod(0o755)
+
+        for mode in ("first", "later"):
+            with self.subTest(mode=mode):
+                child_pid = self.root / f"{mode}-child.pid"
+                evidence = self.root / f"{mode}-deadline-evidence.json"
+                env = dict(os.environ)
+                env.update({
+                    "REAL_LOWERING_BUILD": str(real_build),
+                    "SLOW_LOWERING_MODE": mode,
+                    "SLOW_CHILD_PID": str(child_pid),
+                })
+                started = time.monotonic()
+                proc = subprocess.run(
+                    [
+                        sys.executable,
+                        str(CAMPAIGN),
+                        "--request-mode", "source",
+                        "--family", "arbiter",
+                        "--target", "6",
+                        "-T", str(self.arbiter),
+                        "--tlsf-tools-build", str(fake_build),
+                        "--generalizer", str(self.root / "must-not-run"),
+                        "--evidence-out", str(evidence),
+                        "--budget", "0.35",
+                    ],
+                    cwd=ROOT,
+                    env=env,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=False,
+                    timeout=4,
+                )
+                elapsed = time.monotonic() - started
+                self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+                self.assertLess(elapsed, 1.5, proc.stdout + proc.stderr)
+                self.assertIn(
+                    "UNKNOWN source_binding absolute_deadline_exhausted",
+                    proc.stdout,
+                )
+                self.assertTrue(child_pid.is_file(), proc.stdout + proc.stderr)
+                pid = int(child_pid.read_text(encoding="utf-8"))
+                process_path = pathlib.Path(f"/proc/{pid}")
+                cleanup_deadline = time.monotonic() + 1.0
+                while process_path.exists() and time.monotonic() < cleanup_deadline:
+                    time.sleep(0.01)
+                self.assertFalse(
+                    process_path.exists(),
+                    f"lowering descendant {pid} survived {mode} timeout",
+                )
 
     def test_default_mode_keeps_historical_basename_reproducer(self) -> None:
         evidence = self.root / "reproducer-evidence.json"

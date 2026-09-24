@@ -18,7 +18,7 @@ PARAM_LIFT = HERE.parent
 ROOT = PARAM_LIFT.parents[1]
 SOURCE = HERE / "buddy_veccompose_adapter.cc"
 DEFAULT_OUTPUT_DIR = ROOT / "build_scratch" / "buddy-adapter"
-SCHEMA = "acacia-buddy-veccompose-adapter-v1"
+SCHEMA = "acacia-buddy-veccompose-adapter-v2"
 DEFAULT_BINDINGS_PYTHON = pathlib.Path(
     os.environ.get(
         "ACACIA_BINDINGS_PYTHON",
@@ -167,17 +167,14 @@ def main(argv: list[str] | None = None) -> int:
     payload = {
         "schema": SCHEMA,
         "adapter_sha256": sha256(output),
-        "source_path": str(SOURCE.resolve()),
         "source_sha256": sha256(SOURCE),
-        "compiler": str(compiler_path),
+        "compiler": compiler_path.name,
         "compiler_version": compiler_version(result.stderr, result.stdout),
         "flags": flags,
-        "libbddx_path": str(library),
         "libbddx_sha256": sha256(library),
+        "binding_extension_sha256": sha256(_extension),
         # This installation names its bdd.h-equivalent bddx.h.
-        "bdd_header_path": str(header.resolve()),
         "bdd_header_sha256": sha256(header),
-        "binding_interpreter": str(interpreter),
     }
     sidecar = output.with_suffix(output.suffix + ".json")
     temporary_sidecar = sidecar.with_name(f".{sidecar.name}.{os.getpid()}.tmp")

@@ -7,12 +7,12 @@ import hashlib
 import json
 import pathlib
 import subprocess
-import sys
+import time
 
 
 HERE = pathlib.Path(__file__).resolve().parent
 SOURCE = HERE / "native" / "buddy_veccompose_adapter.cc"
-SIDECAR_SCHEMA = "acacia-buddy-veccompose-adapter-v1"
+SIDECAR_SCHEMA = "acacia-buddy-veccompose-adapter-v2"
 BUDDY_MAX_VARIABLE_COUNT = 2_097_150
 # BuDDy does not publish its variable ceiling through the C API or installed
 # header.  Keep the measured ceiling tied to the exact library image that was
@@ -27,12 +27,48 @@ class BuddyAdapterError(RuntimeError):
     """The native adapter could not safely complete a BuDDy operation."""
 
 
+_HASH_CACHE: dict[pathlib.Path, tuple[tuple[int, int, int, int, int], str]] = {}
+_HASH_CACHE_STATS: dict[str, float | int] = {
+    "hits": 0,
+    "misses": 0,
+    "wall_s": 0.0,
+}
+
+
 def _sha256(path: pathlib.Path) -> str:
+    """Hash a stable file once per process, invalidating on metadata change."""
+    resolved = path.resolve()
+    stat = resolved.stat()
+    signature = (
+        stat.st_dev,
+        stat.st_ino,
+        stat.st_size,
+        stat.st_mtime_ns,
+        stat.st_ctime_ns,
+    )
+    cached = _HASH_CACHE.get(resolved)
+    if cached is not None and cached[0] == signature:
+        _HASH_CACHE_STATS["hits"] += 1
+        return cached[1]
+    started = time.monotonic()
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
+    with resolved.open("rb") as stream:
         for block in iter(lambda: stream.read(1 << 20), b""):
             digest.update(block)
-    return digest.hexdigest()
+    value = digest.hexdigest()
+    _HASH_CACHE[resolved] = (signature, value)
+    _HASH_CACHE_STATS["misses"] += 1
+    _HASH_CACHE_STATS["wall_s"] += time.monotonic() - started
+    return value
+
+
+def hash_cache_diagnostics() -> dict[str, float | int]:
+    return dict(_HASH_CACHE_STATS)
+
+
+def _clear_hash_cache_for_testing() -> None:
+    _HASH_CACHE.clear()
+    _HASH_CACHE_STATS.update({"hits": 0, "misses": 0, "wall_s": 0.0})
 
 
 def adapter_sidecar_path(adapter: pathlib.Path) -> pathlib.Path:
@@ -110,13 +146,6 @@ def _load_sidecar(adapter: pathlib.Path) -> dict[str, object]:
     return payload
 
 
-def _sidecar_path(payload: dict[str, object], key: str) -> pathlib.Path:
-    value = payload.get(key)
-    if not isinstance(value, str) or not value:
-        raise BuddyAdapterError(f"adapter sidecar has invalid {key}")
-    return pathlib.Path(value).resolve()
-
-
 def _sidecar_text(payload: dict[str, object], key: str) -> str:
     value = payload.get(key)
     if not isinstance(value, str) or not value:
@@ -136,7 +165,9 @@ def _require_hash(payload: dict[str, object], key: str, path: pathlib.Path) -> N
 
 
 def _validate_sidecar(
-    adapter: pathlib.Path, loaded_bddx: pathlib.Path
+    adapter: pathlib.Path,
+    loaded_bddx: pathlib.Path,
+    binding_extension: pathlib.Path,
 ) -> dict[str, object]:
     payload = _load_sidecar(adapter)
     if not isinstance(payload.get("flags"), list) or not all(
@@ -145,28 +176,14 @@ def _validate_sidecar(
         raise BuddyAdapterError("adapter sidecar has invalid flags")
     _sidecar_text(payload, "compiler")
     _sidecar_text(payload, "compiler_version")
-    binding_interpreter = _sidecar_path(payload, "binding_interpreter")
-    current_interpreter = pathlib.Path(sys.executable).resolve()
-    if not binding_interpreter.samefile(current_interpreter):
-        raise BuddyAdapterError(
-            f"adapter was built for binding interpreter {binding_interpreter}, "
-            f"but is loaded by {current_interpreter}"
-        )
-    source = _sidecar_path(payload, "source_path")
-    if not source.samefile(SOURCE):
-        raise BuddyAdapterError(
-            f"adapter source path {source} does not match runtime source {SOURCE}"
-        )
-    _require_hash(payload, "source_sha256", source)
+    # Build and runtime checkouts may differ.  Bind the compiled adapter to
+    # exact source/dependency bytes, never to their absolute installation
+    # paths.  The extension hash also subsumes the old interpreter-path check.
+    _require_hash(payload, "source_sha256", SOURCE)
     _require_hash(payload, "adapter_sha256", adapter)
-    header = _sidecar_path(payload, "bdd_header_path")
-    _require_hash(payload, "bdd_header_sha256", header)
-    recorded_bddx = _sidecar_path(payload, "libbddx_path")
-    if not recorded_bddx.samefile(loaded_bddx):
-        raise BuddyAdapterError(
-            f"adapter sidecar binds {recorded_bddx}, but buddy mapped {loaded_bddx}"
-        )
     _require_hash(payload, "libbddx_sha256", loaded_bddx)
+    _require_hash(payload, "binding_extension_sha256", binding_extension)
+    _sidecar_text(payload, "bdd_header_sha256")
     return payload
 
 
@@ -253,7 +270,7 @@ class BuddyVeccomposeAdapter:
         if not path.is_file():
             raise BuddyAdapterError(f"configured adapter does not exist: {path}")
         loaded_before = _one_loaded_bddx()
-        sidecar = _validate_sidecar(path, loaded_before)
+        sidecar = _validate_sidecar(path, loaded_before, extension_path)
         linked = _linked_bddx(path)
         if not linked.samefile(loaded_before):
             raise BuddyAdapterError(
@@ -326,6 +343,7 @@ class BuddyVeccomposeAdapter:
             "symbol_address": self.symbol_address,
             "sidecar_schema": self.sidecar["schema"],
             "max_variable_count": self.max_variable_count,
+            "hash_cache": hash_cache_diagnostics(),
         }
 
     def _raise_status(self, operation: str, status: int) -> None:

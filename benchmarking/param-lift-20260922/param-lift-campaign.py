@@ -292,7 +292,7 @@ def _resolve_reproducer_request(args: argparse.Namespace) -> Request:
 
 
 def _resolve_source_request(
-    args: argparse.Namespace, config: Any
+    args: argparse.Namespace, config: Any, deadline: Deadline
 ) -> Request:
     if args.tlsf is None:
         raise PipelineFailure("source_binding", "source_mode_requires_tlsf")
@@ -304,6 +304,7 @@ def _resolve_source_request(
             args.semantics,
             family_hint=args.family,
             target_hint=args.target,
+            absolute_deadline_monotonic=deadline.expires,
         )
     except BindingDeclined as error:
         raise PipelineFailure("source_binding", error.code) from error
@@ -323,11 +324,17 @@ def _resolve_source_request(
     )
 
 
-def _resolve_request(args: argparse.Namespace, config: Any | None = None) -> Request:
+def _resolve_request(
+    args: argparse.Namespace,
+    config: Any | None = None,
+    deadline: Deadline | None = None,
+) -> Request:
     if getattr(args, "request_mode", "reproducer") == "source":
         if config is None:
             config = configuration_from_args(args)
-        return _resolve_source_request(args, config)
+        if deadline is None:
+            raise PipelineFailure("source_binding", "absolute_deadline_missing")
+        return _resolve_source_request(args, config, deadline)
     return _resolve_reproducer_request(args)
 
 
@@ -409,6 +416,14 @@ def _active_stage_elapsed_lower_bound(evidence: dict[str, Any]) -> float:
         elapsed = sampled - started
         if math.isfinite(elapsed) and elapsed >= 0:
             values.append(elapsed)
+        # The progress record may have been written only at stage entry and
+        # then remained untouched inside one long native call.  Monotonic
+        # timestamps share the host clock across parent and child processes,
+        # so the supervisor's observation time supplies the useful censored
+        # lower bound required at cancellation.
+        elapsed_now = time.monotonic() - started
+        if math.isfinite(elapsed_now) and elapsed_now >= 0:
+            values.append(elapsed_now)
     except (TypeError, ValueError):
         pass
     stage = _progress_stage(evidence, "generalize_gr1")
@@ -502,6 +517,7 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         str(args.generalizer.resolve()), "--family", request.family,
         "--target", str(request.target), "--seeds", ",".join(map(str, request.seeds)),
         "--timeout", f"{internal_timeout:.6f}", "--check-method", "auto",
+        "--absolute-deadline-monotonic", repr(deadline.expires),
         "--reduction-semantics", args.semantics,
         "--out", str(output),
         "--tlsf-tools-build", str(args.tlsf_tools_build.resolve()),
@@ -806,7 +822,7 @@ def main(argv: list[str] | None = None) -> int:
         previous[handled] = signal.getsignal(handled)
         signal.signal(handled, cancel)
     try:
-        request = _resolve_request(args, config)
+        request = _resolve_request(args, config, deadline)
         invocation, workspace = _create_workspace(output_root, request.family, request.target)
         evidence["invocation_id"] = invocation
         evidence["workspace"] = str(workspace)

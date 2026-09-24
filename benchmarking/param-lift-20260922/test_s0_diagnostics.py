@@ -274,6 +274,20 @@ class S0DiagnosticsTest(unittest.TestCase):
         self.assertGreaterEqual(record["elapsed_lower_bound_s"], 0.19)
         self.assertLess(record["elapsed_lower_bound_s"], 2.0)
 
+    def test_stale_progress_sample_uses_supervisor_observation_time(self) -> None:
+        now = time.monotonic()
+        evidence = {
+            "generalizer_progress": {
+                "active_stage": "policy_construction_skolemization",
+                "active_stage_started_monotonic_s": now - 12.0,
+                "sampled_monotonic_s": now - 11.99,
+                "active_stage_elapsed_s": 0.01,
+            }
+        }
+        lower_bound = campaign._active_stage_elapsed_lower_bound(evidence)
+        self.assertGreaterEqual(lower_bound, 11.9)
+        self.assertLess(lower_bound, 13.0)
+
     def test_unwritable_diagnostics_path_preserves_verdict_and_exit(self) -> None:
         result = {
             "family": "arbiter",
@@ -291,6 +305,10 @@ class S0DiagnosticsTest(unittest.TestCase):
         ]
         stdout = io.StringIO()
         with (
+            mock.patch.object(
+                generalize_gr1, "_launch_candidate_builder",
+                return_value=(mock.sentinel.bundle, {}),
+            ),
             mock.patch.object(generalize_gr1, "run", return_value=result),
             mock.patch.object(
                 generalize_gr1, "_probe_checker_stats", return_value=None),

@@ -7,6 +7,7 @@ takes a few minutes.  Run it directly; no pytest-only fixtures are required.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import itertools
 import os
@@ -16,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from types import SimpleNamespace
 from unittest import mock
@@ -32,6 +34,7 @@ TLSF_TOOLS_BUILD = pathlib.Path(os.environ.get(
 CHECKER = TLSF_TOOLS_BUILD / "tlsfcertcheck"
 PYTHON = pathlib.Path(os.environ.get("ACACIA_BINDINGS_PYTHON", "/usr/bin/python3.13"))
 sys.path.insert(0, str(HERE))
+import buddy_veccompose as adapter_module  # noqa: E402
 import generalize_gr1 as generalizer  # noqa: E402  pylint: disable=wrong-import-position
 
 ROUND_TRIPS = {
@@ -145,6 +148,19 @@ class GeneralizeGr1Test(unittest.TestCase):
                                         encoding="utf-8"))
                 self.assertEqual(check["requested_method"], "both")
                 self.assertEqual(check["verdict"], "VERIFIED", check)
+                evidence = json.loads((self.artifacts[family] /
+                                       "evidence.json").read_text(
+                                           encoding="utf-8"))
+                lifetime = evidence["manager_lifetime"]
+                self.assertFalse(lifetime["supervisor_holds_bdd_manager"])
+                self.assertTrue(lifetime["builder_exited_before_checker"])
+                self.assertEqual(
+                    lifetime["handoff"],
+                    "validated_paths_hashes_and_schema_bundle",
+                )
+                self.assertTrue(evidence["target_verified"])
+                self.assertFalse(evidence["schema_validated_on_probes"])
+                self.assertEqual(evidence["claim_scope"], "requested_target_only")
 
     def test_out_of_scope_declines_name_arity_measurement(self) -> None:
         for family in ("round_robin_arbiter", "lift",
@@ -283,8 +299,67 @@ class GeneralizeGr1Test(unittest.TestCase):
             payload = json.loads((output / "evidence.json").read_text(encoding="utf-8"))
             self.assertIn("cost_accounting", payload)
             del payload["cost_accounting"]
+            del payload["manager_lifetime"]
             evidence.append(payload)
         self.assertEqual(evidence[0], evidence[1])
+
+    def test_candidate_bundle_for_other_target_declines_before_checker(self) -> None:
+        family = "arbiter"
+        seeds, built_target = ROUND_TRIPS[family]
+        out = self.artifacts[family]
+        expected = generalizer._candidate_request_identity(
+            family, built_target - 1, seeds, out,
+            family_source=None, target_source=None,
+            reduction_semantics="exact",
+        )
+        with mock.patch.object(generalizer, "check_candidate") as checker:
+            with self.assertRaisesRegex(
+                generalizer.Decline, "does not match the parent request"
+            ):
+                bundle, builder_evidence = generalizer._launch_candidate_builder(
+                    ["/bin/true"], out / "candidate-bundle.json", out,
+                    generalizer.AbsoluteDeadline.after(10), expected,
+                )
+                generalizer.run(
+                    family, built_target - 1, seeds, out,
+                    generalizer.ProposerLimits(),
+                    prepared_bundle=bundle,
+                    builder_evidence=builder_evidence,
+                )
+        checker.assert_not_called()
+
+    def test_candidate_bundle_for_other_source_declines_before_checker(self) -> None:
+        family = "arbiter"
+        seeds, target = ROUND_TRIPS[family]
+        out = self.artifacts[family]
+        other_source = ROOT / "tlsf-corpus" / f"arbiter_pb_{target}_pe_.tlsf"
+        expected = generalizer._candidate_request_identity(
+            family, target, seeds, out,
+            family_source=None, target_source=other_source,
+            reduction_semantics="exact",
+        )
+        payload = json.loads(
+            (out / "candidate-bundle.json").read_text(encoding="utf-8"))
+        self.assertNotEqual(
+            payload["request_identity"]["target_source_sha256"],
+            expected.target_source_sha256,
+        )
+        with mock.patch.object(generalizer, "check_candidate") as checker:
+            with self.assertRaisesRegex(
+                generalizer.Decline, "does not match the parent request"
+            ):
+                bundle, builder_evidence = generalizer._launch_candidate_builder(
+                    ["/bin/true"], out / "candidate-bundle.json", out,
+                    generalizer.AbsoluteDeadline.after(10), expected,
+                )
+                generalizer.run(
+                    family, target, seeds, out,
+                    generalizer.ProposerLimits(),
+                    target_source=other_source,
+                    prepared_bundle=bundle,
+                    builder_evidence=builder_evidence,
+                )
+        checker.assert_not_called()
 
     def test_artifacts_match_uncached_reference_semantically(self) -> None:
         pairs = []
@@ -402,14 +477,195 @@ class GeneralizerUnitTest(unittest.TestCase):
         policy = self.root / "policy.aag"
         limits = generalizer.ProposerLimits(checker_nodes=1024)
         responses = [
-            subprocess.CompletedProcess([], 3, "", "capacity"),
+            subprocess.CompletedProcess(
+                [], 3, "", "OxiDD capacity while compiling certificate"
+            ),
             subprocess.CompletedProcess([], 6, "", "proof failed"),
         ]
-        with mock.patch.object(generalizer, "_run", side_effect=responses):
+        with (
+            mock.patch.object(generalizer, "_run", side_effect=responses),
+            mock.patch.object(
+                generalizer, "_memory_headroom_bytes", return_value=2 << 30
+            ),
+        ):
             result = generalizer.check_candidate(
                 target, cert, policy, "auto", limits, "retry")
         self.assertEqual(result["verdict"], "CERT_FAILED")
         self.assertEqual(result["node_caps"], [1024, 2048])
+        self.assertTrue(result["attempts"][0]["retry"])
+
+    def test_checker_does_not_retry_generic_unknown_or_timeout(self) -> None:
+        target = SimpleNamespace(n=5, game_path=self.root / "game.aag")
+        cert = self.root / "candidate.aag"
+        policy = self.root / "policy.aag"
+        limits = generalizer.ProposerLimits(checker_nodes=1024)
+        for response in (
+            subprocess.CompletedProcess([], 3, "", "inconclusive"),
+            subprocess.CompletedProcess([], 124, "", "timeout"),
+        ):
+            with self.subTest(returncode=response.returncode):
+                with mock.patch.object(
+                    generalizer, "_run", return_value=response
+                ) as run:
+                    result = generalizer.check_candidate(
+                        target, cert, policy, "auto", limits, "no-retry"
+                    )
+                self.assertEqual(run.call_count, 1)
+                self.assertEqual(result["node_caps"], [1024])
+
+    def test_checker_capacity_retry_requires_deadline_and_memory(self) -> None:
+        deadline = generalizer.AbsoluteDeadline.after(30)
+        with mock.patch.object(
+            generalizer, "_memory_headroom_bytes", return_value=(1 << 30) - 1
+        ):
+            allowed, reason = generalizer._checker_retry_allowed(deadline, 0.1)
+        self.assertFalse(allowed)
+        self.assertEqual(reason, "insufficient_memory_headroom")
+        expired = generalizer.AbsoluteDeadline(time.monotonic() - 1)
+        with mock.patch.object(
+            generalizer, "_memory_headroom_bytes", return_value=2 << 30
+        ):
+            allowed, reason = generalizer._checker_retry_allowed(expired, 0.1)
+        self.assertFalse(allowed)
+        self.assertEqual(reason, "insufficient_absolute_deadline")
+
+    def test_cegis_seed_bundle_solves_only_new_sizes(self) -> None:
+        old = SimpleNamespace(n=2)
+        new = SimpleNamespace(n=3)
+        existing = generalizer.SeedBundle("arbiter", {2: old}, (), 1.0)
+        limits = generalizer.ProposerLimits(checker_timeout_s=30)
+        with mock.patch.object(
+            generalizer, "solve_seed", return_value=new
+        ) as solve:
+            bundle = generalizer.acquire_small_instances(
+                "arbiter", (2, 3), self.root, limits,
+                generalizer.AbsoluteDeadline.after(30), existing=existing,
+            )
+        solve.assert_called_once()
+        self.assertEqual(solve.call_args.args[1], 3)
+        self.assertEqual(bundle.newly_solved, (3,))
+        self.assertIs(bundle.instances[2], old)
+        self.assertIs(bundle.instances[3], new)
+
+    def test_target_can_never_enter_seed_bundle(self) -> None:
+        seed = SimpleNamespace(n=5)
+        seeds = generalizer.SeedBundle("arbiter", {5: seed}, (), 0.0)
+        schema = generalizer.SchemaBundle(
+            "arbiter", seeds, 2, 1, (frozenset(),)
+        )
+        with self.assertRaisesRegex(generalizer.Decline, "never be used as a seed"):
+            generalizer.instantiate(
+                schema, 5, self.root, generalizer.ProposerLimits(),
+                generalizer.AbsoluteDeadline.after(30),
+            )
+
+    def test_expired_deadline_stops_between_orchestration_stages(self) -> None:
+        seeds = generalizer.SeedBundle(
+            "arbiter", {3: SimpleNamespace(n=3)}, (), 0.0
+        )
+        with self.assertRaisesRegex(generalizer.Decline, "absolute deadline"):
+            generalizer.learn_schema(
+                seeds,
+                generalizer.ProposerLimits(),
+                generalizer.AbsoluteDeadline(time.monotonic() - 1),
+            )
+
+    def test_diagnostic_checker_probe_is_skipped_or_deadline_clamped(self) -> None:
+        expired = generalizer.AbsoluteDeadline(time.monotonic() - 1)
+        with mock.patch.object(generalizer.subprocess, "run") as run:
+            self.assertIsNone(generalizer._probe_checker_stats(expired))
+        run.assert_not_called()
+
+        live = generalizer.AbsoluteDeadline.after(0.2)
+        response = subprocess.CompletedProcess([], 0, "--stats FILE\n", "")
+        with mock.patch.object(
+            generalizer.subprocess, "run", return_value=response
+        ) as run:
+            self.assertEqual(
+                generalizer._probe_checker_stats(live), "file_separate")
+        timeout = run.call_args.kwargs["timeout"]
+        self.assertGreater(timeout, 0)
+        self.assertLessEqual(timeout, 0.2)
+
+    def test_adapter_hash_cache_reuses_and_invalidates_by_file_identity(self) -> None:
+        payload = self.root / "payload.bin"
+        payload.write_bytes(b"first")
+        adapter_module._clear_hash_cache_for_testing()
+        first = adapter_module._sha256(payload)
+        self.assertEqual(adapter_module._sha256(payload), first)
+        stats = adapter_module.hash_cache_diagnostics()
+        self.assertEqual((stats["misses"], stats["hits"]), (1, 1))
+        original = payload.stat()
+        payload.write_bytes(b"other")
+        os.utime(
+            payload,
+            ns=(original.st_atime_ns, original.st_mtime_ns),
+        )
+        self.assertEqual(payload.stat().st_size, original.st_size)
+        self.assertEqual(payload.stat().st_mtime_ns, original.st_mtime_ns)
+        self.assertNotEqual(adapter_module._sha256(payload), first)
+        self.assertEqual(adapter_module.hash_cache_diagnostics()["misses"], 2)
+
+    def test_adapter_sidecar_is_content_bound_across_checkouts(self) -> None:
+        adapter = self.root / "adapter.so"
+        library = self.root / "libbddx.so"
+        extension = self.root / "_buddy.so"
+        runtime_source = self.root / "other-checkout" / "adapter.cc"
+        runtime_source.parent.mkdir()
+        runtime_source.write_bytes(adapter_module.SOURCE.read_bytes())
+        adapter.write_bytes(b"adapter")
+        library.write_bytes(b"library")
+        extension.write_bytes(b"extension")
+
+        def digest(path: pathlib.Path) -> str:
+            return hashlib.sha256(path.read_bytes()).hexdigest()
+
+        sidecar = {
+            "schema": adapter_module.SIDECAR_SCHEMA,
+            "adapter_sha256": digest(adapter),
+            "source_sha256": digest(runtime_source),
+            "compiler": "g++",
+            "compiler_version": "test compiler",
+            "flags": ["-shared"],
+            "libbddx_sha256": digest(library),
+            "binding_extension_sha256": digest(extension),
+            "bdd_header_sha256": "1" * 64,
+        }
+        adapter_module.adapter_sidecar_path(adapter).write_text(
+            json.dumps(sidecar), encoding="utf-8"
+        )
+        adapter_module._clear_hash_cache_for_testing()
+        with mock.patch.object(adapter_module, "SOURCE", runtime_source):
+            validated = adapter_module._validate_sidecar(
+                adapter, library, extension
+            )
+        self.assertEqual(validated, sidecar)
+        self.assertFalse(any(key.endswith("_path") for key in sidecar))
+
+        def replace_preserving_mtime(path: pathlib.Path, content: bytes) -> None:
+            original = path.stat()
+            self.assertEqual(len(content), original.st_size)
+            path.write_bytes(content)
+            os.utime(path, ns=(original.st_atime_ns, original.st_mtime_ns))
+
+        replace_preserving_mtime(adapter, b"ADAPTER")
+        with (
+            mock.patch.object(adapter_module, "SOURCE", runtime_source),
+            self.assertRaisesRegex(
+                adapter_module.BuddyAdapterError, "adapter_sha256 mismatch"
+            ),
+        ):
+            adapter_module._validate_sidecar(adapter, library, extension)
+
+        replace_preserving_mtime(adapter, b"adapter")
+        replace_preserving_mtime(library, b"LIBRARY")
+        with (
+            mock.patch.object(adapter_module, "SOURCE", runtime_source),
+            self.assertRaisesRegex(
+                adapter_module.BuddyAdapterError, "libbddx_sha256 mismatch"
+            ),
+        ):
+            adapter_module._validate_sidecar(adapter, library, extension)
 
     def test_native_substitution_is_simultaneous_and_errors_are_safe(self) -> None:
         script = r"""
