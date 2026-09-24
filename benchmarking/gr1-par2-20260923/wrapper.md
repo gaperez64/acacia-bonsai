@@ -31,6 +31,10 @@ the outer cap is reserved for B. `ACACIA_OUTER_DEADLINE_MONOTONIC` should contai
 deadline relative to wrapper entry; that mode is less exact because launcher and `systemd-run`
 startup are outside the wrapper's clock. When an outer deadline is present and `--cap` is omitted,
 the wrapper uses the time remaining at its own entry as the effective cap.
+`--eligibility-budget-seconds` defaults to 1.0; the wrapper limits it further
+to 5% of the effective cap (0.85 s at 17 s) and passes that limit to source
+binding. If binding reaches it, the lifting evidence and route record report
+`eligibility_budget_exhausted`, and B receives the remaining time.
 
 The lift entry is invoked in `--request-mode source` with its own output directory and evidence
 path. `--tlsf-tools-build`, `--bindings-python`, `--bindings-site`, `--buddy-adapter`, and
@@ -69,7 +73,7 @@ python3 benchmarking/run-syntcomp26-coverage.py \
 
 With the hook enabled, `winner`, `lift_elapsed`, and `fallback_start` are appended to the raw TSV.
 The route JSON also contains the input SHA-256, capability/binding reason, complete lift argv and
-exit, evidence path/hash, stage censoring, fallback remaining time, and the winner. A timed-out
+exit, eligibility budget, evidence path/hash, stage censoring, fallback remaining time, and the winner. A timed-out
 outer invocation may have blank TSV route fields because the wrapper was killed before its atomic
 record write. Without `--route-records`, command construction, environment, and the raw TSV schema
 remain the historical default; `export-cactus` is unchanged in both modes.

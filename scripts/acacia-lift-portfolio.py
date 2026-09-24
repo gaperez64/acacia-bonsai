@@ -98,6 +98,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--buddy-adapter", type=pathlib.Path)
     parser.add_argument("--real-check", choices=("policy", "region"))
     parser.add_argument(
+        "--eligibility-budget-seconds", type=positive_finite, default=1.0,
+        metavar="S", help="maximum source-binding time (default: 1 s, capped at 5%% of cap)",
+    )
+    parser.add_argument(
         "--route-record",
         type=pathlib.Path,
         default=os.environ.get(ROUTE_RECORD_ENV),
@@ -221,6 +225,8 @@ def lift_command(
         str(source),
         "--budget",
         f"{timeout:.6f}",
+        "--eligibility-budget-seconds",
+        repr(args.eligibility_budget_seconds),
         "--output-dir",
         str(output),
         "--evidence-out",
@@ -507,6 +513,9 @@ def run(argv: list[str], started: float) -> int:
             else cap * args.lift_budget_fraction
         )
         fallback_reserve = max(0.0, cap - lift_budget)
+        args.eligibility_budget_seconds = min(
+            args.eligibility_budget_seconds, 0.05 * cap
+        )
         route_record = args.route_record.resolve() if args.route_record is not None else None
 
         scratch = tempfile.TemporaryDirectory(prefix="acacia-lift-portfolio-")
@@ -545,6 +554,7 @@ def run(argv: list[str], started: float) -> int:
             "input_sha256": input_hash,
             "capability": capability,
             "binding_reason": reason,
+            "eligibility_budget_s": args.eligibility_budget_seconds,
             "real_check": evidence.get("real_check") if evidence else None,
             "real_check_selection": (evidence.get("real_check_selection")
                                      if evidence else None),

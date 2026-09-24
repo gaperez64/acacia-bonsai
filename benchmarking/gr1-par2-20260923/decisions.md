@@ -261,3 +261,20 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   every report that uses these series says so.
 - The 120 s evidence already committed (M6, P0 replay, S0/e2e runs) stays as recorded; those runs
   used the 120 s budget and are development observations.
+
+## 2026-09-24 — Source eligibility receives a structural gate and fixed time budget
+
+- The 14 pinned capability signatures now include semantics, target, and declared input/output
+  signal shapes, verified against the vendored templates when the registry loads. For a literal
+  source `n`, `tlsfinfo` metadata can rule out all candidates before normalization or formula
+  lowering. The existing basic TLSF and lowered LTL equality checks remain the admission rule.
+- The wrapper passes `min(--eligibility-budget-seconds, 0.05 × cap)` to the source binder; its
+  default is 1.0 s, so the 17 s and 60 s caps give 0.85 s and 1.0 s, respectively. A timeout
+  kills the active tool process group and declines with `eligibility_budget_exhausted`.
+- The serial SYNTCOMP26 rerun preserved the 91 eligible IDs and 33 guard declines. All 1,433
+  declines were below 0.85 s in this run; P99 was 0.0172 s and the maximum 0.4055 s. See
+  `campaign/eligibility-v2-summary.md` and `campaign/eligibility-v2.tsv`.
+- Codex review ACCEPT-WITH-NITS; the reviewer also recomputed the censored 60 s B/ltlsynt scores
+  independently and they match. Open nit (reporting only): when the outer deadline is tighter than
+  the eligibility budget, the decline reason reads `absolute_deadline_exhausted` and the route
+  record stores the configured rather than the effective budget. No admission is affected.

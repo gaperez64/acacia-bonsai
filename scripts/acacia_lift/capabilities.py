@@ -61,6 +61,8 @@ class Capability:
     move_arities: tuple[int, ...] = ()
     real_check: str = "policy"
     corpus_source: str = ""
+    signature: tuple[str, str, tuple[tuple[str, str | None], ...],
+                     tuple[tuple[str, str | None], ...]] | None = None
 
     def __post_init__(self) -> None:
         if self.route_kind not in ROUTE_KINDS:
@@ -100,6 +102,87 @@ def _positive(value: object, field: str, *, optional: bool = False) -> int | Non
     return value
 
 
+def _template_signature(source: str) -> tuple[str, str, tuple[tuple[str, str | None], ...],
+                                               tuple[tuple[str, str | None], ...]]:
+    """Extract the narrow, checked declaration grammar used by pinned templates."""
+    clean = re.sub(r"/\*.*?\*/|//[^\n]*", "", source, flags=re.S)
+    info = clean.split("GLOBAL", 1)[0]
+    metadata = []
+    for field in ("SEMANTICS", "TARGET"):
+        matches = re.findall(rf"\b{field}\s*:\s*(\w+)", info)
+        if len(matches) != 1:
+            raise ValueError(f"invalid template {field}")
+        metadata.append(matches[0].lower())
+    main = clean.split("MAIN", 1)
+    if len(main) != 2:
+        raise ValueError("invalid template MAIN")
+    enum_widths = {}
+    for enum_name, enum_body in re.findall(r"\benum\s+(\w+)\s*=\s*([^;]+);", clean):
+        widths = {len(bits) for bits in re.findall(r"\b\w+\s*:\s*([01]+)", enum_body)}
+        if len(widths) != 1:
+            raise ValueError("invalid template enum width")
+        enum_widths[enum_name] = widths.pop()
+    declarations = []
+    for owner in ("INPUTS", "OUTPUTS"):
+        match = re.search(rf"\b{owner}\s*\{{([^}}]*)\}}", main[1])
+        if match is None:
+            raise ValueError(f"invalid template {owner}")
+        body = match[1]
+        items = []
+        for statement in body.split(";"):
+            if not statement.strip():
+                continue
+            normal = re.fullmatch(
+                r"\s*([A-Za-z_]\w*)\s*(?:\[\s*(n|nbits\(n\))\s*\])?\s*",
+                statement,
+            )
+            typed = re.fullmatch(r"\s*([A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*", statement)
+            if normal:
+                items.append((normal[1], normal[2]))
+            elif typed and typed[1] in enum_widths:
+                items.append((typed[2], f"enum:{enum_widths[typed[1]]}"))
+            else:
+                raise ValueError(f"unsupported template {owner} declaration")
+        if not items:
+            raise ValueError(f"empty template {owner}")
+        declarations.append(tuple(items))
+    return metadata[0], metadata[1], declarations[0], declarations[1]
+
+
+def _expanded_signature(capability: Capability, n: int) -> tuple[str, str, tuple[str, ...], tuple[str, ...]]:
+    assert capability.signature is not None
+    semantics, target, inputs, outputs = capability.signature
+
+    def expand(items: tuple[tuple[str, str | None], ...]) -> tuple[str, ...]:
+        result = []
+        for name, size in items:
+            width = (n if size == "n" else max(1, (n - 1).bit_length())
+                     if size == "nbits(n)" else int(size[5:]) if size else None)
+            if width is None:
+                result.append(name)
+            else:
+                result.extend(f"{name}_{index}" for index in range(width))
+        return tuple(result)
+
+    return semantics, target, expand(inputs), expand(outputs)
+
+
+def _inferred_n(source: str) -> int | None:
+    """Recognize only a literal, unambiguous parameter declaration."""
+    clean = re.sub(r"/\*.*?\*/|//[^\n]*", "", source, flags=re.S)
+    blocks = re.findall(r"\bPARAMETERS\s*\{([^{}]*)\}", clean)
+    if len(blocks) != 1:
+        return None
+    match = re.fullmatch(r"\s*n\s*=\s*([0-9]+)\s*;\s*", blocks[0])
+    if match is None:
+        return None
+    try:
+        value = int(match[1])
+    except ValueError:
+        return None
+    return value if value > 0 else None
+
+
 def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
     """Validate the complete versioned registry and bind every template hash."""
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -118,7 +201,7 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
     result: dict[str, Capability] = {}
     required = {"family", "source", "corpus_source", "template_sha256", "parameters", "route_kind",
                 "arity", "default_seeds", "stable_from", "role_class_count",
-                "invariant_arities", "move_arities", "real_check"}
+                "invariant_arities", "move_arities", "real_check", "signature"}
     for row in payload["capabilities"]:
         if not isinstance(row, dict) or set(row) != required:
             raise ValueError("invalid capability fields")
@@ -146,6 +229,14 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
             raise ValueError(f"missing capability template for {family}: {source}") from error
         if hashlib.sha256(template_bytes).hexdigest() != digest:
             raise ValueError(f"stale capability template for {family}")
+        signature = _template_signature(template_bytes.decode("utf-8"))
+        expected_signature = {
+            "semantics": signature[0], "target": signature[1],
+            "inputs": [list(item) for item in signature[2]],
+            "outputs": [list(item) for item in signature[3]],
+        }
+        if row["signature"] != expected_signature:
+            raise ValueError(f"stale capability signature for {family}")
         parameters = row["parameters"]
         if parameters != ["n"]:
             raise ValueError(f"unsupported parameters for {family}")
@@ -177,7 +268,7 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
         result[family] = Capability(family, source, digest, tuple(parameters),
                                     row["route_kind"], arity, tuple(seeds), stable,
                                     roles, measured[0], measured[1], real_check,
-                                    corpus_source)
+                                    corpus_source, signature)
     if result.keys() & declined.keys():
         raise ValueError("declined-family stable regime overlaps a capability")
     return result
@@ -484,7 +575,7 @@ def _identity(
     )
 
 
-def bind_source_request(
+def _bind_source_request_unchecked(
     source_path: pathlib.Path,
     tools: LoweringTools,
     reduction_semantics: str,
@@ -539,8 +630,37 @@ def bind_source_request(
     if not candidates:
         raise BindingDeclined("unsupported_parameter_signature")
 
-    # Only a shortlisted parameter signature is normalized to discover its
-    # concrete assignment.  Route compatibility and cheap target constraints
+    # The source's concrete n and basic metadata are available without either
+    # normalization or LTL lowering.  A missing or ambiguous raw assignment
+    # disables this optimization; the exact comparison below still decides.
+    n = _inferred_n(source)
+    if n is not None:
+        semantics = _run_tool(
+            [tools.tlsfinfo, "--semantics"], source,
+            absolute_deadline_monotonic=absolute_deadline_monotonic,
+        ).lower()
+        target = _run_tool(
+            [tools.tlsfinfo, "--target"], source,
+            absolute_deadline_monotonic=absolute_deadline_monotonic,
+        ).lower()
+        inputs = _signals(_run_tool(
+            [tools.tlsfinfo, "--expanded-ins"], source,
+            absolute_deadline_monotonic=absolute_deadline_monotonic,
+        ), "inputs")
+        outputs = _signals(_run_tool(
+            [tools.tlsfinfo, "--expanded-outs"], source,
+            absolute_deadline_monotonic=absolute_deadline_monotonic,
+        ), "outputs")
+        signature = semantics, target, inputs, outputs
+        candidates = tuple(
+            capability for capability in candidates
+            if capability.signature is None or _expanded_signature(capability, n) == signature
+        )
+        if not candidates:
+            raise BindingDeclined("source_not_content_verified_for_capability")
+
+    # Only a structurally possible source is normalized to discover its
+    # concrete assignment. Route compatibility and cheap target constraints
     # precede the expensive per-template identity checks below.
     parameters = _parameter_values(
         tools, source, names, absolute_deadline_monotonic)
@@ -614,3 +734,41 @@ def bind_source_request(
         match_method="content-verified-template-instantiation",
         io_mapping=mapping,
     )
+
+
+def bind_source_request(
+    source_path: pathlib.Path,
+    tools: LoweringTools,
+    reduction_semantics: str,
+    *,
+    family_hint: str | None = None,
+    target_hint: int | None = None,
+    capabilities: Mapping[str, Capability] = CAPABILITIES,
+    absolute_deadline_monotonic: float | None = None,
+    eligibility_budget_seconds: float = 1.0,
+) -> SourceRequest:
+    """Bind a source under a hard eligibility deadline, failing closed."""
+    if not 0 < eligibility_budget_seconds < float("inf"):
+        raise ValueError("eligibility budget must be finite and positive")
+    budget_deadline = time.monotonic() + eligibility_budget_seconds
+    deadline = min(budget_deadline, absolute_deadline_monotonic or budget_deadline)
+    try:
+        result = _bind_source_request_unchecked(
+            source_path, tools, reduction_semantics,
+            family_hint=family_hint, target_hint=target_hint,
+            capabilities=capabilities,
+            absolute_deadline_monotonic=deadline,
+        )
+    except BindingDeclined as error:
+        if time.monotonic() >= deadline:
+            code = ("eligibility_budget_exhausted" if
+                    budget_deadline <= (absolute_deadline_monotonic or float("inf"))
+                    else "absolute_deadline_exhausted")
+            raise BindingDeclined(code) from error
+        raise
+    if time.monotonic() >= deadline:
+        code = ("eligibility_budget_exhausted" if
+                budget_deadline <= (absolute_deadline_monotonic or float("inf"))
+                else "absolute_deadline_exhausted")
+        raise BindingDeclined(code)
+    return result

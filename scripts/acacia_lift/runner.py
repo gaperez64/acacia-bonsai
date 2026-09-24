@@ -327,6 +327,7 @@ def _resolve_source_request(
             family_hint=args.family,
             target_hint=args.target,
             absolute_deadline_monotonic=deadline.expires,
+            eligibility_budget_seconds=getattr(args, "eligibility_budget_seconds", 1.0),
         )
     except BindingDeclined as error:
         raise PipelineFailure("source_binding", error.code) from error
@@ -782,6 +783,7 @@ def _parser() -> argparse.ArgumentParser:
         help="explicitly override the source capability's REAL proof method",
     )
     parser.add_argument("--budget", type=float, default=120.0)
+    parser.add_argument("--eligibility-budget-seconds", type=float, default=1.0)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--evidence-out", type=Path)
     parser.add_argument(
@@ -876,6 +878,7 @@ def main(argv: list[str] | None = None) -> int:
         "semantics": args.semantics, "stages": [],
         "real_check": args.real_check or "policy",
         "request_mode": args.request_mode,
+        "eligibility_budget_s": args.eligibility_budget_seconds,
         "target_check_ran": False, "target_verified": False,
         "compose_route": _compose_route(args),
     }

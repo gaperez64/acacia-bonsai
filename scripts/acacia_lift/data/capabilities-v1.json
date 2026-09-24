@@ -36,7 +36,23 @@
         2
       ],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "r",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "g",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "prioritized_arbiter",
@@ -60,7 +76,31 @@
         1
       ],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "r",
+            "n"
+          ],
+          [
+            "r_m",
+            null
+          ]
+        ],
+        "outputs": [
+          [
+            "g",
+            "n"
+          ],
+          [
+            "g_m",
+            null
+          ]
+        ]
+      }
     },
     {
       "family": "load_balancer",
@@ -85,7 +125,27 @@
         2
       ],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/load_balancer/parametric/load_balancer.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/load_balancer/parametric/load_balancer.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "idle",
+            null
+          ],
+          [
+            "request",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "grant",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "arbiter_with_cancel",
@@ -110,7 +170,27 @@
         2
       ],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "r",
+            "n"
+          ],
+          [
+            "c",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "g",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "collector_v1",
@@ -131,7 +211,23 @@
       ],
       "move_arities": [],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/collector/parametric/collector_v1.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/collector/parametric/collector_v1.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "finished",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "allFinished",
+            null
+          ]
+        ]
+      }
     },
     {
       "family": "arbiter_with_buffer",
@@ -154,7 +250,31 @@
       ],
       "move_arities": [],
       "real_check": "region",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "r",
+            "n"
+          ],
+          [
+            "try",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "g",
+            "n"
+          ],
+          [
+            "ack",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "simple_arbiter_with_hints",
@@ -177,7 +297,23 @@
       ],
       "move_arities": [],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "r",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "g",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "amba_decomposed_lock",
@@ -200,7 +336,31 @@
       ],
       "move_arities": [],
       "real_check": "region",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "DECIDE",
+            null
+          ],
+          [
+            "HGRANT",
+            "n"
+          ],
+          [
+            "HLOCK",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "LOCKED",
+            null
+          ]
+        ]
+      }
     },
     {
       "family": "abcg_arbiter",
@@ -222,7 +382,35 @@
       ],
       "move_arities": [],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "r",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "a",
+            "n"
+          ],
+          [
+            "b",
+            "n"
+          ],
+          [
+            "c",
+            "n"
+          ],
+          [
+            "g",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "arbiter_on_inpchange",
@@ -245,7 +433,23 @@
       ],
       "move_arities": [],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "s",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "g",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "round_robin_arbiter_unreal2",
@@ -262,7 +466,23 @@
       "invariant_arities": [],
       "move_arities": [],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "r",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "g",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "prioritized_arbiter_unreal2",
@@ -279,7 +499,31 @@
       "invariant_arities": [],
       "move_arities": [],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "r",
+            "n"
+          ],
+          [
+            "r_m",
+            null
+          ]
+        ],
+        "outputs": [
+          [
+            "g",
+            "n"
+          ],
+          [
+            "g_m",
+            null
+          ]
+        ]
+      }
     },
     {
       "family": "load_balancer_unreal2",
@@ -296,7 +540,27 @@
       "invariant_arities": [],
       "move_arities": [],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "idle",
+            null
+          ],
+          [
+            "request",
+            "n"
+          ]
+        ],
+        "outputs": [
+          [
+            "grant",
+            "n"
+          ]
+        ]
+      }
     },
     {
       "family": "amba_case_study_unreal",
@@ -313,7 +577,59 @@
       "invariant_arities": [],
       "move_arities": [],
       "real_check": "policy",
-      "corpus_source": "tests/syntcomp-benchmarks/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf"
+      "corpus_source": "tests/syntcomp-benchmarks/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf",
+      "signature": {
+        "semantics": "mealy",
+        "target": "mealy",
+        "inputs": [
+          [
+            "HBUSREQ",
+            "n"
+          ],
+          [
+            "HLOCK",
+            "n"
+          ],
+          [
+            "HREADY",
+            null
+          ],
+          [
+            "HBURST",
+            "enum:2"
+          ]
+        ],
+        "outputs": [
+          [
+            "HMASTER",
+            "nbits(n)"
+          ],
+          [
+            "HGRANT",
+            "n"
+          ],
+          [
+            "HMASTLOCK",
+            null
+          ],
+          [
+            "START",
+            null
+          ],
+          [
+            "LOCKED",
+            null
+          ],
+          [
+            "DECIDE",
+            null
+          ],
+          [
+            "BUSREQ",
+            null
+          ]
+        ]
+      }
     }
   ]
 }

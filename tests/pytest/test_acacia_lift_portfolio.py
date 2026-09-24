@@ -117,7 +117,9 @@ if mode != "lying":
         "result": {
             "verdict": verdict,
             "stage": "target_check" if verified else "source_binding",
-            "reason": "target_verified" if verified else "declined",
+            "reason": "target_verified" if verified else (
+                "eligibility_budget_exhausted" if mode == "eligibility_budget" else "declined"
+            ),
         },
     }
     if mode == "missing_input_hash":
@@ -424,6 +426,20 @@ os.close(ready_read)
         self.assertEqual(result.returncode, 1)
         self.assertTrue(self.b_record.exists())
         self.assertEqual(json.loads(self.route.read_text())["binding_reason"], "evidence_missing")
+
+    def test_eligibility_budget_is_fraction_capped_and_recorded(self):
+        result = self.invoke("eligibility_budget")
+        self.assertEqual(result.returncode, 1)
+        route = json.loads(self.route.read_text())
+        self.assertEqual(route["binding_reason"], "eligibility_budget_exhausted")
+        self.assertTrue(self.b_record.exists())
+        self.assertGreater(route["eligibility_budget_s"], 0)
+        self.assertLessEqual(route["eligibility_budget_s"], 0.15)
+        index = route["lift_argv"].index("--eligibility-budget-seconds")
+        self.assertAlmostEqual(
+            float(route["lift_argv"][index + 1]), route["eligibility_budget_s"],
+            places=5,
+        )
 
     def test_expired_outer_deadline_skips_lift_and_execs_b(self):
         result = self.invoke("win", deadline=time.monotonic() - 1)

@@ -100,6 +100,15 @@ def test_capability_schema_rejects_stale_template_and_invalid_fields(tmp_path: p
         load_capabilities(path)
 
 
+def test_capability_signature_is_checked_against_vendored_template(tmp_path: pathlib.Path) -> None:
+    payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+    payload["capabilities"][0]["signature"]["inputs"][0][0] = "wrong_signal"
+    path = tmp_path / "capabilities.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="stale capability signature"):
+        load_capabilities(path)
+
+
 def test_vendored_templates_match_pins_and_corpus_provenance() -> None:
     payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
     assert len(payload["capabilities"]) == 14
