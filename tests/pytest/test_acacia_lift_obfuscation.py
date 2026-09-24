@@ -13,9 +13,13 @@ import sys
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from acacia_lift.tools import configuration_defaults  # noqa: E402
+
 WRAPPER = ROOT / "scripts/acacia-lift-portfolio.py"
 OBFUSCATOR = ROOT / "benchmarking/gr1-par2-20260923/obfuscate-tlsf.py"
-BUILD = ROOT / "subprojects/tlsf-tools/build-oxidd"
+BUILD = configuration_defaults().tlsf_tools_build
 VERIFY = ROOT / "benchmarking/gr1-par2-20260923/verify-obfuscation.py"
 
 CASES = (
@@ -126,15 +130,11 @@ def test_ten_obfuscated_pairs_keep_direct_and_decline_decisions(tmp_path: pathli
 
 
 @pytest.mark.parametrize(("input_name", "output_name", "formula"), [
-    pytest.param("monitor_0_state_0", "assumption_safety_violated",
-                 "G (monitor_0_state_0 -> assumption_safety_violated);",
-                 marks=pytest.mark.xfail(
-                     strict=True, reason="pending tlsf-tools disjoint monitor/latch symbols")),
+    ("monitor_0_state_0", "assumption_safety_violated",
+     "G (monitor_0_state_0 -> assumption_safety_violated);"),
     ("monitor_1_state_0", "controllable_b",
      "G (monitor_1_state_0 -> controllable_b);"),
-    pytest.param("controllable_a", "b", "G !controllable_a;",
-                 marks=pytest.mark.xfail(
-                     strict=True, reason="pending tlsf-tools injective ownership encoding")),
+    ("controllable_a", "b", "G !controllable_a;"),
 ])
 def test_adversarial_signal_names(tmp_path: pathlib.Path, input_name: str,
                                   output_name: str, formula: str) -> None:
