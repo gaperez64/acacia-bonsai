@@ -113,3 +113,17 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Unchanged where the generalizer dominates (load_balancer, amba_lock, buffer) — P2's targets —
   and collector_v1 (monitor construction, P4). inpchange n=7 remains UNKNOWN: its check alone
   needs ~126 s.
+
+## 2026-09-24 — P2a end to end (P1.4 tools + native compose + compiled-AIG contexts)
+
+- Generalizer `112eb7fe` with the frozen adapter (sha256 `980aa651…5e5f`, built deterministically:
+  identical hash from both trees; frozen in `build_gr1par2-adapter-112eb7fe/` of the timing tree)
+  and `build-P14-dbe8c2b`. Evidence `s0/raw-P2a-e2e/`, `s0/s0-summary-P2a-e2e.md`; runs frozen in
+  `_bm-logs.gr1-par2-e2e-P2a/`. One observation per target.
+- Versus P14 alone: load_balancer n=8 18.21 → 10.42 s (under 17 s), n=9 56.51 → 23.49 s;
+  amba_lock n=15 41.66 → 35.90 s; buffer n=9 UNKNOWN → REALIZABLE at 117.73 s — too close to the
+  cap to count as robust without repeats. Checker-dominated rows unchanged, as expected.
+- Watch item: prioritized_arbiter n=7 1.02 → 1.17 s. A ~0.15 s fixed per-invocation cost (adapter
+  load/validation?) would be charged on every routed input in the full corpus; investigate.
+- The adapter sidecar binds the absolute source path, so an adapter built in one checkout fails
+  validation in another even with identical bytes. Should bind content hashes only (cleanup item).
