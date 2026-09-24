@@ -21,3 +21,19 @@ build-native1-ref/) and the refactored ones AND direct C-API calls (a small C te
 one, both linked against the static library), on positive, negative, malformed and OOM/allocation-
 failure cases; full meson test serially; clang-format; ASan/UBSan build of the API tests if feasible
 with one job. Write patches + notes in build-native1/ and a VERDICT at the end.
+
+## Correction (owner): reuse the existing public API
+tlsf-tools ALREADY has a public API that Acacia links and uses: `tlsf_pipeline_load` (pipeline.h:
+parse/expand), `tlsf_ast_from_file/_string(_ex)` (ast_api.h), `tlsf::decompose` (decompose.hpp, used
+by acacia-bonsai's src/tlsf_frontend.cc for -T), and `solve_gr1_oxidd(_ex)_with_certificate`
+(gr1_oxidd.h: GR(1) solve on an Aig with certificate). Do NOT create a parallel parse/info/solve
+layer. Extend these existing headers and functions; add new public entry points ONLY for what is
+genuinely missing as a library: (a) parameter overrides + the frontend provenance output (today in
+tlsf2tlsf's main), (b) the independent certificate/policy checker (today all in
+main_tlsfcertcheck.c) as library functions, (c) deadline/cancellation and memory-cap parameters for
+the existing GR(1) solve entry points, (d) whatever versioning/error-model glue the design needs,
+kept minimal. If a small umbrella header is still useful (e.g. to version the ABI), it must only
+include/declare the existing API plus these additions, not wrap parse/solve again. Keep the CLIs as
+thin callers of the same library functions. A previous attempt was stopped mid-way and left partial
+edits (include/tlsf/native.h, src/native/, test/native_api.c, main_tlsfcertcheck_legacy.c, changes to
+gr1_oxidd.*, meson): keep what fits this correction, remove what duplicates existing API.
