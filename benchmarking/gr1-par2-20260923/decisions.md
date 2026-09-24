@@ -278,3 +278,20 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   independently and they match. Open nit (reporting only): when the outer deadline is tighter than
   the eligibility budget, the decline reason reads `absolute_deadline_exhausted` and the route
   record stores the configured rather than the effective budget. No admission is affected.
+
+## 2026-09-24 — P−1 executed (owner-approved)
+
+- After the owner approved, the eight audited trees were removed with `git worktree remove`, each
+  re-audited immediately before removal (`/home/gperez/acacia-worktree-retirement-20260923/`:
+  `execute-removals.sh`, `removal-log.txt`, per-tree `audit-before-*.log`, before/after porcelain
+  listings). Removed: acacia-wt-{a2b-profile, b1-lean-verifier, b2-d1, candidate, ds-record,
+  report, step4-cleanup, step4-v2}; 881 MiB reclaimed. No `--force`, no branch or tag deleted.
+- Every removed tree's branch still resolves to its recorded HEAD; the one detached HEAD
+  (`acacia-wt-candidate`, `fe249294`) is preserved by
+  `refs/archive/worktree-retirement/20260923/acacia-wt-candidate`.
+- The first run deferred everything after the first tree because the audit fails closed when a
+  pinned identity moves: tlsf-tools `main` had advanced to `c956847` when #37 merged. The pin was
+  refreshed (recorded in `PROTECTED-SET-REFRESH.txt`) and the rest re-run.
+- Kept: 10 evidence-bearing trees; deferred: 4 over an unclassified `.pytest_cache` and the two
+  stale `/tmp` metadata entries (dry-run prune only, not executed). The retained timing worktree
+  `/home/gperez/GIT-repos/acacia-gr1-par2-timing` was never a candidate.
