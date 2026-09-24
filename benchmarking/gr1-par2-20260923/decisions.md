@@ -409,3 +409,17 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   independent checker decides either way.
 - P2: route label `direct-certified` on UNKNOWN rows; guard misses branches keyed on a signal name,
   a signal count or a formula string; global cost knobs split across modules. All sent back.
+
+## 2026-09-24 — Owner decision: run lifting as a concurrent arm, not a sequential slice
+
+- The informal Stage C sample showed failed lifting attempts do not fail fast (17/20 non-old-72
+  inputs UNKNOWN, median wall 53.8 s of a 59 s slice), and the generic route now attempts every
+  parametric TLSF (734 of 1,524), so a sequential lift slice would take substantial time from B.
+- **Decision (owner):** the wrapper runs B and the lifting/direct route **concurrently** in the same
+  cgroup, each with the full deadline; first acceptable answer wins (B's as B reports it; the
+  route's only when independently verified and hash-bound); the loser's process group is killed
+  and reaped. This removes the lift-budget knob. The route's memory is bounded by global knobs;
+  B losses to contention (esp. MEMOUT) are measured. Optimising the arm (fail-fast stages, memory
+  split) is deferred to a future sprint.
+- Campaign: dev check of the concurrent N on original names at 17 s over the full corpus (losses
+  vs B), then the final run on the obfuscated corpus at 60 s and 17 s, TACAS23 at 60 s, three-way.
