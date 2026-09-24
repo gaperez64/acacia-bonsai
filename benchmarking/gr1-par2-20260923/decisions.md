@@ -454,3 +454,19 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Cost note: each standalone 60 s leg is roughly (unsolved inputs × 60 s), about 6-12 h per arm; the
   per-arm stage alone is on the order of 2-3 days of serial compute. Existing per-arm data from
   earlier sprints may be reused only where binary, flags, corpus and host regime match exactly.
+
+## 2026-09-24 — Native port plan approved (milestone 1 first)
+
+- `native-design.md` (committed): three opt-in arms `real:gr1:oxidd`, `unreal:gr1:oxidd`,
+  `real:param-lift:oxidd`; one tlsf-tools C ABI (`include/tlsf/native.h`) for source snapshot,
+  parse/provenance, GR(1) reduction (C++ port of gr1_monitor_game.py), solve, certificate export and
+  independent check, and lifting (C++ port of Stage C); Acacia dispatches arms by kind in its
+  existing fork/race/kill loop; Python only as a test oracle. `unreal:param-lift` is not in scope
+  (lifting environment certificates is new research).
+- Owner-approved order: **milestone 1** = C ABI (step 1), native reduction (step 2), Acacia gr1 arms
+  (step 3). Then the 60 s standalone legs for B's four default arms and the two gr1 arms — all from
+  the milestone-1 binary, because the sprint branch's legacy arms include #190/#191 changes and so
+  may differ from the frozen B — while the lifting port (steps 4-5) proceeds; then the param-lift
+  leg, the 4-5-arm portfolio choice, its real run, and the three-way. Per-arm legs follow the owner's
+  plan (60 s, SYNTCOMP26), not the design's 28-leg matrix.
+- Step 1 started on tlsf-tools branch `native-api` (stacked on `generic-provenance`, PR #38).
