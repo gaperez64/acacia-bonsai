@@ -212,3 +212,13 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   It is keyed to the verified capability, never to a filename or to a known answer. It was chosen
   on these development observations; the confirmation and closing campaigns are fresh runs and the
   final report discloses this choice as learned. No per-instance or per-n thresholds.
+
+## 2026-09-24 — Correction: source binding uses tlsf-tools, not SyFCo
+
+- The P0b commit message (`b970cbf1`), `integration-survey.md` §4 and earlier notes here describe
+  the source-binding check as "SyFCo's expanded basic TLSF and lowered LTL". That is wrong. The
+  binding code calls only tlsf-tools utilities from the configured build: `tlsfinfo --parameters`
+  and `tlsfinfo` metadata queries, `tlsf2tlsf` / `tlsf2tlsf --basic`, and `tlsf2ltl --format ltl`
+  (`benchmarking/param-lift-20260922/request.py`). No SyFCo binary is on the lifting route or in the
+  wrapper. SyFCo appears only in the benchmark harness's external legs (TACAS23 and ltlsynt read
+  SyFCo-converted `.ltl/.part` pairs). Earlier text is left as written; this entry supersedes it.
