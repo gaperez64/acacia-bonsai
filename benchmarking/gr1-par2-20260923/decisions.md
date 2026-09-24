@@ -81,3 +81,22 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   relabel second (P2 §5.1, S1); Skolemization dominates arbiter_with_buffer; monitor construction
   dominates collector_v1 (P4, conditional). Run 1 is frozen at `_bm-logs.gr1-par2-s0-run1/` with its
   known flaws (mode count; censored bounds) and is not committed as evidence.
+
+## 2026-09-24 — P1.4 removes the many-mode regressions; S0 run 2
+
+- tlsf-tools `dbe8c2b`: counter-independent policy cones compiled once across modes, bounded cache
+  for counter-dependent-heavy policies. Codex review ACCEPT-WITH-NITS (two test-coverage nits,
+  batched for the tlsf-tools PR). Frozen build `tlsf-tools/build-P14-dbe8c2b/` (same command line
+  as L0; tlsfcertcheck sha256 `2b2464a2…37a6`, tlsfsolve `512a0521…5502`; the solver changes too
+  because it shares `oxidd_build_roots`).
+- Formal attribution L0 vs P14, same protocol as P1 (`p1-attribution/l0-vs-p14-20260924.*`): **no
+  status disagreement; every target L0 decides is equal or faster under P14.** rru2 n=7 18.18 →
+  15.83 s; amba n=15 7.66 → 7.06 s; prioritized n=12 0.46 → 0.32 s; cancel n=9 50.23 → 6.14 s;
+  cancel n=10 UNKNOWN → VERIFIED 20.62 s (P1: 51.68 s); lbu2 n=7 UNKNOWN → VERIFIED 1.35 s;
+  inpchange n=7 UNKNOWN → VERIFIED 125.66 s (check alone still exceeds the 120 s budget).
+- S0 run 2 (L0 tools, instrument at `3ac18759`, timing worktree
+  `/home/gperez/GIT-repos/acacia-gr1-par2-timing`, the single retained measurement workspace)
+  repeats run 1 within ~1-2% per target. Committed under `s0/raw-L0-run2/` with
+  `s0/s0-summary-L0-run2.md`; run directories frozen in `_bm-logs.gr1-par2-s0-run2-L0/`.
+  Known wart: a stage censored inside one long native call (buffer n=9 Skolemization) reports
+  `≥ 0.000 s` because its persisted elapsed only updates between calls; valid but uninformative.
