@@ -27,3 +27,17 @@ line); both fail -> B's non-answer relayed; B output byte-identical to B-alone f
 outputs incl. large stdout and stderr; stdin spooled once and given to both; deadline respected;
 no orphan processes (grandchildren ignoring SIGTERM). Update wrapper.md. Run tests/pytest serially;
 ruff. VERDICT at end.
+
+## Addendum (owner): arm selection, including lifting only
+Structure the wrapper around a small set of named ARMS instead of special cases: `b` (the frozen
+Acacia with its original argv), `direct` (exact GR(1) solve + certificate check of the actual input,
+Stage A) and `lift` (parametric lifting, Stage C; only for inputs with PARAMETERS). Add
+`--arms LIST` (comma-separated; default `b,direct,lift`) so that, e.g., `--arms lift` tries ONLY
+parameter lifting (no B, no direct: a declined/failed lift reports UNKNOWN in Acacia's format and
+exit code), `--arms direct,lift` runs the certified routes without B, and `--arms b` is B alone.
+Run the selected arms concurrently under the rules above (first acceptable answer wins; B's answer
+as-is; certified arms only on verified, hash-bound, side-licensed evidence). If `direct` and `lift`
+share a process today, split them into separately selectable arms (they may still share the input
+snapshot/binding), or explain why a shared process with internal selection is cleaner. Record the
+selected arms and per-arm outcomes in the route record. Tests cover `--arms lift`, `--arms b`,
+`--arms direct,lift`, the default, and an invalid list.
