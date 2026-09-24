@@ -2,7 +2,7 @@
 """Source-bound requests and the GR(1) lifting capability registry.
 
 Production matching deliberately does not inspect a filename or a benchmark
-result table.  It asks the same SYFCO tools used by ``gr1_monitor_game.py`` to
+result table. It asks the configured tlsf-tools used by ``gr1_monitor_game.py`` to
 fully expand and lower both the supplied bytes and a fresh instantiation of a
 pinned family template.  A capability matches only when the basic TLSF,
 lowered LTL formula, semantics, target, and ordered input/output ownership are
@@ -17,6 +17,7 @@ make a stale or substituted capability manifest fail closed.
 from __future__ import annotations
 
 import dataclasses
+import json
 import hashlib
 import os
 import pathlib
@@ -28,6 +29,7 @@ from collections.abc import Mapping
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+DATA_FILE = pathlib.Path(__file__).resolve().parent / "data" / "capabilities-v1.json"
 
 REAL_PROPOSAL = "real-proposal"
 EXACT_GAME = "exact-game-both-sides"
@@ -53,6 +55,11 @@ class Capability:
     route_kind: str
     arity: int | None
     default_seeds: tuple[int, ...]
+    stable_from: int | None = None
+    role_class_count: int | None = None
+    invariant_arities: tuple[int, ...] = ()
+    move_arities: tuple[int, ...] = ()
+    real_check: str = "policy"
 
     def __post_init__(self) -> None:
         if self.route_kind not in ROUTE_KINDS:
@@ -61,6 +68,14 @@ class Capability:
     @property
     def source_path(self) -> pathlib.Path:
         return ROOT / self.source
+
+    @property
+    def measured_arity(self) -> int | None:
+        if len(self.invariant_arities) != 1:
+            return None
+        invariant = self.invariant_arities[0]
+        return (invariant if not self.move_arities or
+                self.move_arities == (invariant,) else None)
 
 
 def _capability(
@@ -76,97 +91,89 @@ def _capability(
     )
 
 
-# This is the sole family/capability registry used by the campaign and the
-# generalizer.  A route describes a proof method, never a cached answer.
-CAPABILITIES: dict[str, Capability] = {
-    item.family: item
-    for item in (
-        _capability(
-            "arbiter",
-            "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter.tlsf",
-            "a9839c448b1b56bb43ac2073afc07f2dde8af8af408a13f553e78b97ef280420",
-            REAL_PROPOSAL, 2, (3, 4),
-        ),
-        _capability(
-            "prioritized_arbiter",
-            "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf",
-            "026c8fd27461aa313f60c66b9c46d23b03bbf1150ebf0b4575b81b65c59074fd",
-            REAL_PROPOSAL, 1, (3, 4),
-        ),
-        _capability(
-            "load_balancer",
-            "tests/syntcomp-benchmarks/tlsf/load_balancer/parametric/load_balancer.tlsf",
-            "7d99413d91924379be7d1701b9803267ce1d8b2afccfbe8ff3538e7d4295bef4",
-            REAL_PROPOSAL, 2, (2, 3, 4),
-        ),
-        _capability(
-            "arbiter_with_cancel",
-            "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf",
-            "faa4ddb14e7a0caaa4214af55f6f9c33bf709c242cdff7e88fc99b4ef41684a3",
-            REAL_PROPOSAL, 2, (2, 3, 4),
-        ),
-        _capability(
-            "collector_v1",
-            "tests/syntcomp-benchmarks/tlsf/collector/parametric/collector_v1.tlsf",
-            "ec5e47ec5ab0c8e8db0a36810268a7bb4e7e566e067e0114aa2d43597d3c7518",
-            REAL_PROPOSAL, 1, (3,),
-        ),
-        _capability(
-            "arbiter_with_buffer",
-            "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_with_buffer.tlsf",
-            "9377a68b62951eaac73a3c0c55c841113e97bd17855506fefc50d1f9f891bf9e",
-            REAL_PROPOSAL, 1, (2, 3, 4),
-        ),
-        _capability(
-            "simple_arbiter_with_hints",
-            "tests/syntcomp-benchmarks/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf",
-            "5a107f96609e84c73b5ffc59a24f3cd285422419efb7af92f477d75bb89154cf",
-            REAL_PROPOSAL, 1, (2, 4, 6),
-        ),
-        _capability(
-            "amba_decomposed_lock",
-            "tests/syntcomp-benchmarks/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf",
-            "ce9497a013a4d93d94c330a8ec7322ce0efe4dafca6c9bf5237ca265beb7843b",
-            REAL_PROPOSAL, 1, (2, 3, 4),
-        ),
-        _capability(
-            "abcg_arbiter",
-            "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/abcg_arbiter.tlsf",
-            "c6d71e54800c141404de00a9ac52bdbaa61e459f614d97afdda196ab0455dfef",
-            REAL_PROPOSAL, 2, (2, 3),
-        ),
-        _capability(
-            "arbiter_on_inpchange",
-            "tests/syntcomp-benchmarks/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf",
-            "fb63b0d2e20ab1d3eeb6fc763009926229006f07ae9405247d29d215fd23af93",
-            REAL_PROPOSAL, 2, (2, 3, 4),
-        ),
-        _capability(
-            "round_robin_arbiter_unreal2",
-            "tests/syntcomp-benchmarks/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
-            "c479b842361509f6877bab34307d6d1de6e60284b5506e121ddd9ffc1df01db0",
-            EXACT_GAME, None, (),
-        ),
-        _capability(
-            "prioritized_arbiter_unreal2",
-            "tests/syntcomp-benchmarks/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf",
-            "7134e5f7e62c30e71a5b65640038840d24f418a78a3df7228731288105d2ebe6",
-            EXACT_GAME, None, (),
-        ),
-        _capability(
-            "load_balancer_unreal2",
-            "tests/syntcomp-benchmarks/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf",
-            "42667ce7756e1e62d457f884ff8702be95f1cf3c000d3b8b2037bb635cef6f93",
-            EXACT_GAME, None, (),
-        ),
-        _capability(
-            "amba_case_study_unreal",
-            "tests/syntcomp-benchmarks/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf",
-            "4eb061890a918d6c0114965d00bbf0ee661dc63a4b050c4dd9314d87e1d1d83d",
-            EXACT_GAME, None, (),
-        ),
-    )
-}
+def _positive(value: object, field: str, *, optional: bool = False) -> int | None:
+    if value is None and optional:
+        return None
+    if type(value) is not int or value <= 0:
+        raise ValueError(f"{field} must be a positive integer")
+    return value
+
+
+def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
+    """Validate the complete versioned registry and bind every template hash."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if set(payload) != {"schema", "capabilities", "declined_family_stable_from"} or payload["schema"] != "acacia.lift.capabilities.v1":
+        raise ValueError("unsupported capability schema")
+    if not isinstance(payload["capabilities"], list) or not payload["capabilities"]:
+        raise ValueError("capabilities must be a nonempty list")
+    declined = payload["declined_family_stable_from"]
+    if not isinstance(declined, dict) or any(
+        not isinstance(family, str) or
+        not re.fullmatch(r"[a-z][a-z0-9_]*", family) or
+        type(stable) is not int or stable <= 0
+        for family, stable in declined.items()
+    ):
+        raise ValueError("invalid declined-family stable regimes")
+    result: dict[str, Capability] = {}
+    required = {"family", "source", "template_sha256", "parameters", "route_kind",
+                "arity", "default_seeds", "stable_from", "role_class_count",
+                "invariant_arities", "move_arities"}
+    for row in payload["capabilities"]:
+        if not isinstance(row, dict) or set(row) not in (required, required | {"real_check"}):
+            raise ValueError("invalid capability fields")
+        family, source, digest = row["family"], row["source"], row["template_sha256"]
+        if not isinstance(family, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", family):
+            raise ValueError("invalid capability family")
+        if family in result:
+            raise ValueError(f"duplicate capability {family}")
+        if not isinstance(source, str) or pathlib.PurePath(source).is_absolute() or ".." in pathlib.PurePath(source).parts:
+            raise ValueError(f"invalid source path for {family}")
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            raise ValueError(f"invalid template hash for {family}")
+        template = ROOT / source
+        if not template.is_file() or hashlib.sha256(template.read_bytes()).hexdigest() != digest:
+            raise ValueError(f"stale capability template for {family}")
+        parameters = row["parameters"]
+        if parameters != ["n"]:
+            raise ValueError(f"unsupported parameters for {family}")
+        if row["route_kind"] not in ROUTE_KINDS:
+            raise ValueError(f"unsupported route kind for {family}")
+        arity = _positive(row["arity"], "arity", optional=True)
+        seeds = row["default_seeds"]
+        if not isinstance(seeds, list) or any(_positive(n, "seed") is None for n in seeds):
+            raise ValueError(f"invalid seeds for {family}")
+        if len(set(seeds)) != len(seeds) or seeds != sorted(seeds):
+            raise ValueError(f"invalid seed order for {family}")
+        if row["route_kind"] == EXACT_GAME and (arity is not None or seeds):
+            raise ValueError(f"invalid exact-game seeds for {family}")
+        if row["route_kind"] != EXACT_GAME and (arity is None or not seeds):
+            raise ValueError(f"missing proposal seeds for {family}")
+        stable = _positive(row["stable_from"], "stable_from", optional=True)
+        roles = _positive(row["role_class_count"], "role_class_count", optional=True)
+        measured = []
+        for field in ("invariant_arities", "move_arities"):
+            values = row[field]
+            if not isinstance(values, list) or any(_positive(n, field) is None for n in values):
+                raise ValueError(f"invalid {field} for {family}")
+            if values != sorted(set(values)):
+                raise ValueError(f"invalid {field} order for {family}")
+            measured.append(tuple(values))
+        real_check = row.get("real_check", "policy")
+        if real_check not in ("policy", "region"):
+            raise ValueError(f"invalid real_check for {family}")
+        result[family] = Capability(family, source, digest, tuple(parameters),
+                                    row["route_kind"], arity, tuple(seeds), stable,
+                                    roles, measured[0], measured[1], real_check)
+    if result.keys() & declined.keys():
+        raise ValueError("declined-family stable regime overlaps a capability")
+    return result
+
+
+CAPABILITIES = load_capabilities()
+# These historical families can only decline; their stable-regime values
+# preserve the dated CLI's validation order without consulting M4 TSVs.
+DECLINED_FAMILY_STABLE_FROM = json.loads(DATA_FILE.read_text(encoding="utf-8"))[
+    "declined_family_stable_from"]
 
 
 @dataclasses.dataclass(frozen=True)

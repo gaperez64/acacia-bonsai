@@ -41,6 +41,8 @@ from acacia_lift.buddy_veccompose import (
 )
 from acacia_lift.capabilities import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL
 from acacia_lift.diagnostics import Diagnostics, sha256
+from acacia_lift import schema as capability_schema
+from acacia_lift.evidence import write_result
 from acacia_lift.artifact import (Aag, AagBuilder, _certificate_sidecar,
                                   _policy_sidecar, _aag_vector_evaluate)
 from acacia_lift.bdd_kernel import (VarInfo, OwnerIndex,
@@ -71,11 +73,8 @@ SOLVER = TOOL_CONFIG.solver
 CHECKER = TOOL_CONFIG.checker
 BINDINGS_PYTHON = TOOL_CONFIG.bindings_python
 BINDINGS_SITE = TOOL_CONFIG.bindings_site
-ALIGNMENT = HERE / "m4-alignment.tsv"
-SEPARABILITY = HERE / "m4-invariant-separability.tsv"
-MOVE_SEPARABILITY = HERE / "m4-move-separability.tsv"
-RESULTS = pathlib.Path(os.environ.get(
-    "GENERALIZE_GR1_RESULTS", HERE / "m4-results.tsv"))
+RESULTS = (pathlib.Path(os.environ["GENERALIZE_GR1_RESULTS"])
+           if "GENERALIZE_GR1_RESULTS" in os.environ else None)
 MAX_CANDIDATES_PER_TARGET = 32
 MAX_CEGIS_ROUNDS = 3
 # These schemas are an in-invocation parent/child handoff, not a persisted
@@ -769,39 +768,19 @@ def _read_tsv(path: pathlib.Path) -> list[dict[str, str]]:
 
 
 def stable_from(family: str) -> int:
-    for row in _read_tsv(ALIGNMENT):
-        if row["family"] == family and row["stable_from"]:
-            return int(row["stable_from"])
-    # The explicit regression is not in the fixed-arity scope, but seed
-    # validation is intentionally available before the scope decline.
-    if family == "round_robin_arbiter_unreal2":
-        return 3
+    value = capability_schema.stable_from(family)
+    if value is not None:
+        return value
     raise Decline("seed", "stable_from", None,
                   f"family {family!r} has no measured stable regime")
 
 
 def measured_arity(family: str) -> int | None:
-    invariant_values = {int(row["min_k"]) for row in _read_tsv(SEPARABILITY)
-                        if row["family"] == family and row["min_k"]}
-    if len(invariant_values) != 1:
-        return None
-    invariant = next(iter(invariant_values))
-    move_values = {int(row["min_k"]) for row in _read_tsv(MOVE_SEPARABILITY)
-                   if row["family"] == family and row["min_k"]}
-    # collector_v1 has only its n=3 invariant measurement; its move relation
-    # is reconstructed semantically below.  Wherever a move measurement is
-    # present it must agree with the invariant measurement.
-    return invariant if not move_values or move_values == {invariant} else None
+    return capability_schema.measured_arity(family)
 
 
 def measured_role_class_count(family: str) -> int | None:
-    for row in _read_tsv(ALIGNMENT):
-        if row["family"] != family:
-            continue
-        values = {int(value) for value in row["role_classes"].split(",")
-                  if value}
-        return next(iter(values)) if len(values) == 1 else None
-    return None
+    return capability_schema.measured_role_class_count(family)
 
 
 def _provenance_role_class_count(instance: "Instance") -> int:
@@ -3960,28 +3939,8 @@ def _next_small(target: int, seeds: tuple[int, ...], stable: int) -> int:
 
 
 def _write_result(row: dict[str, object]) -> None:
-    columns = ["family", "target", "seeds", "arity", "role_classes",
-               "predicate_arities", "stage_reached", "stages_passed",
-               "cegis_rounds", "verdict",
-               "seed_s", "canonicalize_s", "anti_unify_s", "bus_schemas_s",
-               "ranks_s", "instantiate_s", "cegis_s", "wall_s",
-               "seed_monitor_s", "seed_solve_s", "target_monitor_s",
-               "target_solve_s", "target_check_s", "probe_check_s",
-               "driver_overhead_s",
-               "peak_rss_kib", "solver_nodes", "solver_cache",
-               "checker_node_caps", "reason"]
-    rows = []
-    if RESULTS.exists():
-        rows = _read_tsv(RESULTS)
-    key = (str(row["family"]), str(row["target"]))
-    rows = [old for old in rows if (old["family"], old["target"]) != key]
-    rows.append({column: row.get(column, "") for column in columns})
-    rows.sort(key=lambda item: (item["family"], int(item["target"])))
-    with RESULTS.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=columns, delimiter="\t",
-                                lineterminator="\n")
-        writer.writeheader()
-        writer.writerows(rows)
+    if RESULTS is not None:
+        write_result(RESULTS, row)
 
 
 def _format_predicate_arities(family: str,
@@ -4856,6 +4815,8 @@ def _parser() -> argparse.ArgumentParser:
         "--solver-cache", type=int,
         help="seed-solver cache capacity (default: one quarter of solver nodes)")
     parser.add_argument("--out", type=pathlib.Path)
+    parser.add_argument("--results-out", type=pathlib.Path,
+                        help="write this invocation's result TSV")
     parser.add_argument(
         "--diagnostics", type=pathlib.Path, metavar="PATH",
         help="write one opt-in S0 diagnostic JSON document",
@@ -4900,9 +4861,13 @@ def _apply_tool_configuration(
 
 
 def main(argv: list[str] | None = None) -> int:
+    global RESULTS
     arguments = argv if argv is not None else sys.argv[1:]
     parser = _parser()
     args = parser.parse_args(arguments)
+    RESULTS = args.results_out
+    if RESULTS is None and "GENERALIZE_GR1_RESULTS" in os.environ:
+        RESULTS = pathlib.Path(os.environ["GENERALIZE_GR1_RESULTS"])
     config = configuration_from_args(args)
     monitor = (args.monitor or config.monitor).resolve()
     solver = (args.solver or config.solver).resolve()

@@ -32,11 +32,12 @@ from typing import Any
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from acacia_lift.capabilities import CAPABILITIES  # noqa: E402
+
 Z3_PYTHON = ROOT / "build_scratch" / "smt" / "bin" / "python"
 GENERALIZER = HERE / "generalize_gr1.py"
 RESULTS = HERE / "m7-all-n.tsv"
-INVARIANT_ARITY = HERE / "m4-invariant-separability.tsv"
-MOVE_ARITY = HERE / "m4-move-separability.tsv"
 
 TSV_FIELDS = (
     "family",
@@ -252,18 +253,10 @@ def _source_matches(plan: FamilyPlan) -> tuple[bool, str]:
     return True, ""
 
 
-def _measured_arities(family: str, path: pathlib.Path) -> tuple[int, ...]:
-    if not path.is_file():
-        return ()
-    with path.open(encoding="utf-8", newline="") as stream:
-        rows = csv.DictReader(stream, delimiter="\t")
-        return tuple(sorted({int(row["min_k"]) for row in rows
-                             if row.get("family") == family and row.get("min_k")}))
-
-
 def _bounded_ir_obstacle(family: str) -> tuple[str, ...]:
-    inv = _measured_arities(family, INVARIANT_ARITY)
-    move = _measured_arities(family, MOVE_ARITY)
+    capability = CAPABILITIES[family]
+    inv = capability.invariant_arities
+    move = capability.move_arities
     measurements = (
         f"concrete projection measurements: invariant arities={inv or 'none'}, "
         f"move arities={move or 'none'}; measurements are evidence, not an all-n lemma"
