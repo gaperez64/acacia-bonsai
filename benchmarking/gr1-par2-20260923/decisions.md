@@ -352,3 +352,16 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   per-family data and no per-family switches — the parametric input is its own template; seeds,
   stable size, arity and proof method are chosen online inside the charged deadline by global
   rules; anything else declines. Benchmark names must be irrelevant (obfuscation-proof).
+
+## 2026-09-24 — Owner decisions for the generic route
+
+- Order: **Stage A** (strip every family dependency from the production route; ship the generic
+  direct-certified exact GR(1) route; obfuscation-invariance test; measure) → **Stage B**
+  (tlsf-tools source-origin provenance) → **Stage C** (generic online lifting). Design:
+  `generic-design.md` (committed audit; where it says "SyFCo" it means tlsf-tools' `tlsfinfo` /
+  `tlsf2tlsf`).
+- Evaluation: SYNTCOMP26 is development data. The final evaluation is the full corpus with
+  **randomized basenames and alpha-renamed signal identifiers**; outcomes must be invariant under
+  the renaming. No separate family holdout.
+- Until Stage C lands, the production route makes no REAL lifting attempt at all; REAL answers come
+  only from the direct exact route or B.
