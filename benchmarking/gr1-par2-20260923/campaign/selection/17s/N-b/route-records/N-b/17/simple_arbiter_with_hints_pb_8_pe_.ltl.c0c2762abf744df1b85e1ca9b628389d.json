@@ -1,0 +1,60 @@
+{
+  "binding_reason": "candidate_builder_predicate_child_process_builder_exited_3_UNKNOWN_family_simple_arbiter_with_hints_target_8_seeds_2_4_6_reason_anti-unify_predicate_inv_at_n_4_requires_arity_n_4_no_bounded_arity_through_k_4_reconstructs_it",
+  "capability": {
+    "arity": 1,
+    "family": "simple_arbiter_with_hints",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "real-proposal",
+    "template": "scripts/acacia_lift/data/templates/tlsf/ltl_with_hints/parametric/simple_arbiter_with_hints.tlsf",
+    "template_sha256": "5a107f96609e84c73b5ffc59a24f3cd285422419efb7af92f477d75bb89154cf"
+  },
+  "eligibility_budget_s": 0.8500000000000001,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-b/route-records/N-b/17/simple_arbiter_with_hints_pb_8_pe_.ltl.c0c2762abf744df1b85e1ca9b628389d.json.lift-evidence.json",
+  "evidence_sha256": "2fc5d26891c84caebe1ff5cd557996f4aa21a23756e7b5fc3f36782929a42ebf",
+  "fallback_remaining": 15.97248140804004,
+  "fallback_start": 537865.476392266,
+  "input_sha256": "1a65482a253c1051a6a58fa981e09bbf522b060cda3f5cf55e7e79beff271c1c",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/simple_arbiter_with_hints_pb_8_pe_.tlsf",
+    "--budget",
+    "11.257454",
+    "--eligibility-budget-seconds",
+    "0.8500000000000001",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-vke7k_19/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-b/route-records/N-b/17/simple_arbiter_with_hints_pb_8_pe_.ltl.c0c2762abf744df1b85e1ca9b628389d.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 0.9513844179455191,
+  "lift_exit": 2,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "simple_arbiter_with_hints",
+    "reason": "source-verified capability simple_arbiter_with_hints",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "anti_unify",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "fallback-pending"
+}

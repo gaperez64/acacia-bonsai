@@ -1,0 +1,1130 @@
+{
+  "budget_s": 5.58845,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 342073344,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1888369-b58bc11a7e15.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1888369-b58bc11a7e15.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 5.253182340064086,
+    "driver_overhead_s": 0.13985933498606062,
+    "generalization_s": 0.0,
+    "instantiation_s": 0.0,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.0,
+    "seed_solve_s": 0.0,
+    "target_check_s": 0.0,
+    "target_monitor_s": 5.061485,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.05183800507802516
+  },
+  "elapsed_s": 5.253182340064086,
+  "eligibility_budget_s": 0.8500000000000001,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-a/route-records/N-a/17/prioritized_arbiter_unreal2_pb_60_pe_.ltl.d1bc6d68e4b748119654104d9f89859d.json.lift-evidence.json",
+  "generalizer_evidence": {
+    "capacities": {
+      "checker_initial_node_cap": 67108864,
+      "solver": []
+    },
+    "compose_route": "native_veccompose",
+    "decline": {
+      "n": 60,
+      "predicate": "monitor_game",
+      "reason": "timed out after 5.03711s",
+      "stage": "canonicalize"
+    },
+    "family": "prioritized_arbiter_unreal2",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "real_check": "policy",
+    "seeds": [],
+    "target": 60,
+    "verdict": "UNKNOWN"
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "target_monitor_game": 5.0614851110149175
+    },
+    "last_stage_times": {},
+    "sampled_monotonic_s": 537051.129079752
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.000000",
+    "arity": "",
+    "bus_schemas_s": "0.000000",
+    "canonicalize_s": "0.000000",
+    "cegis_rounds": "0",
+    "cegis_s": "0.000000",
+    "checker_node_caps": "",
+    "driver_overhead_s": "0.000568",
+    "family": "prioritized_arbiter_unreal2",
+    "instantiate_s": "0.000000",
+    "peak_rss_kib": "302464",
+    "predicate_arities": "",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.000000",
+    "reason": "canonicalize: predicate 'monitor_game' at n=60: timed out after 5.03711s",
+    "role_classes": "",
+    "seed_monitor_s": "0.000000",
+    "seed_s": "0.000000",
+    "seed_solve_s": "0.000000",
+    "seeds": "",
+    "solver_cache": "",
+    "solver_nodes": "",
+    "stage_reached": "canonicalize",
+    "stages_passed": "",
+    "target": "60",
+    "target_check_s": "0.000000",
+    "target_monitor_s": "5.061485",
+    "target_solve_s": "0.000000",
+    "verdict": "UNKNOWN",
+    "wall_s": "5.062053"
+  },
+  "invocation_id": "d3e8355de7c3449c9c36cff04303ab43",
+  "path_kind": "direct-certified",
+  "peak_rss_kib": 302464,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "prioritized_arbiter_unreal2",
+    "reason": "source-verified capability prioritized_arbiter_unreal2",
+    "value": "policy"
+  },
+  "request": {
+    "family": "prioritized_arbiter_unreal2",
+    "measured_arity": null,
+    "request_mode": "source",
+    "route_kind": "exact-game-both-sides",
+    "seeds": [],
+    "target": 60
+  },
+  "request_mode": "source",
+  "result": {
+    "certificate": null,
+    "policy": null,
+    "proof_method": "none",
+    "reason": "canonicalize_predicate_monitor_game_at_n_60_timed_out_after_5.03711s",
+    "stage": "canonicalize",
+    "stdout_line": "UNKNOWN canonicalize canonicalize_predicate_monitor_game_at_n_60_timed_out_after_5.03711s",
+    "verdict": "UNKNOWN"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "artifact_binding": {
+      "family": "prioritized_arbiter_unreal2",
+      "inputs": [
+        "r_0",
+        "r_1",
+        "r_2",
+        "r_3",
+        "r_4",
+        "r_5",
+        "r_6",
+        "r_7",
+        "r_8",
+        "r_9",
+        "r_10",
+        "r_11",
+        "r_12",
+        "r_13",
+        "r_14",
+        "r_15",
+        "r_16",
+        "r_17",
+        "r_18",
+        "r_19",
+        "r_20",
+        "r_21",
+        "r_22",
+        "r_23",
+        "r_24",
+        "r_25",
+        "r_26",
+        "r_27",
+        "r_28",
+        "r_29",
+        "r_30",
+        "r_31",
+        "r_32",
+        "r_33",
+        "r_34",
+        "r_35",
+        "r_36",
+        "r_37",
+        "r_38",
+        "r_39",
+        "r_40",
+        "r_41",
+        "r_42",
+        "r_43",
+        "r_44",
+        "r_45",
+        "r_46",
+        "r_47",
+        "r_48",
+        "r_49",
+        "r_50",
+        "r_51",
+        "r_52",
+        "r_53",
+        "r_54",
+        "r_55",
+        "r_56",
+        "r_57",
+        "r_58",
+        "r_59",
+        "r_m"
+      ],
+      "lowered_formula_sha256": "4db816e041ea5469ca1d7ee12b0efa41062160133d95212e7745f269d9305c74",
+      "outputs": [
+        "g_0",
+        "g_1",
+        "g_2",
+        "g_3",
+        "g_4",
+        "g_5",
+        "g_6",
+        "g_7",
+        "g_8",
+        "g_9",
+        "g_10",
+        "g_11",
+        "g_12",
+        "g_13",
+        "g_14",
+        "g_15",
+        "g_16",
+        "g_17",
+        "g_18",
+        "g_19",
+        "g_20",
+        "g_21",
+        "g_22",
+        "g_23",
+        "g_24",
+        "g_25",
+        "g_26",
+        "g_27",
+        "g_28",
+        "g_29",
+        "g_30",
+        "g_31",
+        "g_32",
+        "g_33",
+        "g_34",
+        "g_35",
+        "g_36",
+        "g_37",
+        "g_38",
+        "g_39",
+        "g_40",
+        "g_41",
+        "g_42",
+        "g_43",
+        "g_44",
+        "g_45",
+        "g_46",
+        "g_47",
+        "g_48",
+        "g_49",
+        "g_50",
+        "g_51",
+        "g_52",
+        "g_53",
+        "g_54",
+        "g_55",
+        "g_56",
+        "g_57",
+        "g_58",
+        "g_59",
+        "g_m"
+      ],
+      "parameters": {
+        "n": 60
+      },
+      "reduction_semantics": "exact",
+      "route_kind": "exact-game-both-sides",
+      "source_semantics": "mealy",
+      "source_sha256": "a328420c13cd3ad19d37904ae1bf19a3e066ef1e12ab8548371ce773c4cba605",
+      "target_semantics": "mealy",
+      "template_sha256": "7134e5f7e62c30e71a5b65640038840d24f418a78a3df7228731288105d2ebe6"
+    },
+    "capability": {
+      "arity": null,
+      "family": "prioritized_arbiter_unreal2",
+      "parameters": [
+        "n"
+      ],
+      "route_kind": "exact-game-both-sides",
+      "template": "scripts/acacia_lift/data/templates/tlsf/prioritized_arbiter_unreal/parametric/prioritized_arbiter_unreal2.tlsf",
+      "template_sha256": "7134e5f7e62c30e71a5b65640038840d24f418a78a3df7228731288105d2ebe6"
+    },
+    "input": {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/prioritized_arbiter_unreal2_pb_60_pe_.tlsf",
+      "sha256": "a328420c13cd3ad19d37904ae1bf19a3e066ef1e12ab8548371ce773c4cba605",
+      "size_bytes": 2075
+    },
+    "io_mapping": [
+      {
+        "owner": "input",
+        "source": "r_0",
+        "template": "r_0"
+      },
+      {
+        "owner": "input",
+        "source": "r_1",
+        "template": "r_1"
+      },
+      {
+        "owner": "input",
+        "source": "r_2",
+        "template": "r_2"
+      },
+      {
+        "owner": "input",
+        "source": "r_3",
+        "template": "r_3"
+      },
+      {
+        "owner": "input",
+        "source": "r_4",
+        "template": "r_4"
+      },
+      {
+        "owner": "input",
+        "source": "r_5",
+        "template": "r_5"
+      },
+      {
+        "owner": "input",
+        "source": "r_6",
+        "template": "r_6"
+      },
+      {
+        "owner": "input",
+        "source": "r_7",
+        "template": "r_7"
+      },
+      {
+        "owner": "input",
+        "source": "r_8",
+        "template": "r_8"
+      },
+      {
+        "owner": "input",
+        "source": "r_9",
+        "template": "r_9"
+      },
+      {
+        "owner": "input",
+        "source": "r_10",
+        "template": "r_10"
+      },
+      {
+        "owner": "input",
+        "source": "r_11",
+        "template": "r_11"
+      },
+      {
+        "owner": "input",
+        "source": "r_12",
+        "template": "r_12"
+      },
+      {
+        "owner": "input",
+        "source": "r_13",
+        "template": "r_13"
+      },
+      {
+        "owner": "input",
+        "source": "r_14",
+        "template": "r_14"
+      },
+      {
+        "owner": "input",
+        "source": "r_15",
+        "template": "r_15"
+      },
+      {
+        "owner": "input",
+        "source": "r_16",
+        "template": "r_16"
+      },
+      {
+        "owner": "input",
+        "source": "r_17",
+        "template": "r_17"
+      },
+      {
+        "owner": "input",
+        "source": "r_18",
+        "template": "r_18"
+      },
+      {
+        "owner": "input",
+        "source": "r_19",
+        "template": "r_19"
+      },
+      {
+        "owner": "input",
+        "source": "r_20",
+        "template": "r_20"
+      },
+      {
+        "owner": "input",
+        "source": "r_21",
+        "template": "r_21"
+      },
+      {
+        "owner": "input",
+        "source": "r_22",
+        "template": "r_22"
+      },
+      {
+        "owner": "input",
+        "source": "r_23",
+        "template": "r_23"
+      },
+      {
+        "owner": "input",
+        "source": "r_24",
+        "template": "r_24"
+      },
+      {
+        "owner": "input",
+        "source": "r_25",
+        "template": "r_25"
+      },
+      {
+        "owner": "input",
+        "source": "r_26",
+        "template": "r_26"
+      },
+      {
+        "owner": "input",
+        "source": "r_27",
+        "template": "r_27"
+      },
+      {
+        "owner": "input",
+        "source": "r_28",
+        "template": "r_28"
+      },
+      {
+        "owner": "input",
+        "source": "r_29",
+        "template": "r_29"
+      },
+      {
+        "owner": "input",
+        "source": "r_30",
+        "template": "r_30"
+      },
+      {
+        "owner": "input",
+        "source": "r_31",
+        "template": "r_31"
+      },
+      {
+        "owner": "input",
+        "source": "r_32",
+        "template": "r_32"
+      },
+      {
+        "owner": "input",
+        "source": "r_33",
+        "template": "r_33"
+      },
+      {
+        "owner": "input",
+        "source": "r_34",
+        "template": "r_34"
+      },
+      {
+        "owner": "input",
+        "source": "r_35",
+        "template": "r_35"
+      },
+      {
+        "owner": "input",
+        "source": "r_36",
+        "template": "r_36"
+      },
+      {
+        "owner": "input",
+        "source": "r_37",
+        "template": "r_37"
+      },
+      {
+        "owner": "input",
+        "source": "r_38",
+        "template": "r_38"
+      },
+      {
+        "owner": "input",
+        "source": "r_39",
+        "template": "r_39"
+      },
+      {
+        "owner": "input",
+        "source": "r_40",
+        "template": "r_40"
+      },
+      {
+        "owner": "input",
+        "source": "r_41",
+        "template": "r_41"
+      },
+      {
+        "owner": "input",
+        "source": "r_42",
+        "template": "r_42"
+      },
+      {
+        "owner": "input",
+        "source": "r_43",
+        "template": "r_43"
+      },
+      {
+        "owner": "input",
+        "source": "r_44",
+        "template": "r_44"
+      },
+      {
+        "owner": "input",
+        "source": "r_45",
+        "template": "r_45"
+      },
+      {
+        "owner": "input",
+        "source": "r_46",
+        "template": "r_46"
+      },
+      {
+        "owner": "input",
+        "source": "r_47",
+        "template": "r_47"
+      },
+      {
+        "owner": "input",
+        "source": "r_48",
+        "template": "r_48"
+      },
+      {
+        "owner": "input",
+        "source": "r_49",
+        "template": "r_49"
+      },
+      {
+        "owner": "input",
+        "source": "r_50",
+        "template": "r_50"
+      },
+      {
+        "owner": "input",
+        "source": "r_51",
+        "template": "r_51"
+      },
+      {
+        "owner": "input",
+        "source": "r_52",
+        "template": "r_52"
+      },
+      {
+        "owner": "input",
+        "source": "r_53",
+        "template": "r_53"
+      },
+      {
+        "owner": "input",
+        "source": "r_54",
+        "template": "r_54"
+      },
+      {
+        "owner": "input",
+        "source": "r_55",
+        "template": "r_55"
+      },
+      {
+        "owner": "input",
+        "source": "r_56",
+        "template": "r_56"
+      },
+      {
+        "owner": "input",
+        "source": "r_57",
+        "template": "r_57"
+      },
+      {
+        "owner": "input",
+        "source": "r_58",
+        "template": "r_58"
+      },
+      {
+        "owner": "input",
+        "source": "r_59",
+        "template": "r_59"
+      },
+      {
+        "owner": "input",
+        "source": "r_m",
+        "template": "r_m"
+      },
+      {
+        "owner": "output",
+        "source": "g_0",
+        "template": "g_0"
+      },
+      {
+        "owner": "output",
+        "source": "g_1",
+        "template": "g_1"
+      },
+      {
+        "owner": "output",
+        "source": "g_2",
+        "template": "g_2"
+      },
+      {
+        "owner": "output",
+        "source": "g_3",
+        "template": "g_3"
+      },
+      {
+        "owner": "output",
+        "source": "g_4",
+        "template": "g_4"
+      },
+      {
+        "owner": "output",
+        "source": "g_5",
+        "template": "g_5"
+      },
+      {
+        "owner": "output",
+        "source": "g_6",
+        "template": "g_6"
+      },
+      {
+        "owner": "output",
+        "source": "g_7",
+        "template": "g_7"
+      },
+      {
+        "owner": "output",
+        "source": "g_8",
+        "template": "g_8"
+      },
+      {
+        "owner": "output",
+        "source": "g_9",
+        "template": "g_9"
+      },
+      {
+        "owner": "output",
+        "source": "g_10",
+        "template": "g_10"
+      },
+      {
+        "owner": "output",
+        "source": "g_11",
+        "template": "g_11"
+      },
+      {
+        "owner": "output",
+        "source": "g_12",
+        "template": "g_12"
+      },
+      {
+        "owner": "output",
+        "source": "g_13",
+        "template": "g_13"
+      },
+      {
+        "owner": "output",
+        "source": "g_14",
+        "template": "g_14"
+      },
+      {
+        "owner": "output",
+        "source": "g_15",
+        "template": "g_15"
+      },
+      {
+        "owner": "output",
+        "source": "g_16",
+        "template": "g_16"
+      },
+      {
+        "owner": "output",
+        "source": "g_17",
+        "template": "g_17"
+      },
+      {
+        "owner": "output",
+        "source": "g_18",
+        "template": "g_18"
+      },
+      {
+        "owner": "output",
+        "source": "g_19",
+        "template": "g_19"
+      },
+      {
+        "owner": "output",
+        "source": "g_20",
+        "template": "g_20"
+      },
+      {
+        "owner": "output",
+        "source": "g_21",
+        "template": "g_21"
+      },
+      {
+        "owner": "output",
+        "source": "g_22",
+        "template": "g_22"
+      },
+      {
+        "owner": "output",
+        "source": "g_23",
+        "template": "g_23"
+      },
+      {
+        "owner": "output",
+        "source": "g_24",
+        "template": "g_24"
+      },
+      {
+        "owner": "output",
+        "source": "g_25",
+        "template": "g_25"
+      },
+      {
+        "owner": "output",
+        "source": "g_26",
+        "template": "g_26"
+      },
+      {
+        "owner": "output",
+        "source": "g_27",
+        "template": "g_27"
+      },
+      {
+        "owner": "output",
+        "source": "g_28",
+        "template": "g_28"
+      },
+      {
+        "owner": "output",
+        "source": "g_29",
+        "template": "g_29"
+      },
+      {
+        "owner": "output",
+        "source": "g_30",
+        "template": "g_30"
+      },
+      {
+        "owner": "output",
+        "source": "g_31",
+        "template": "g_31"
+      },
+      {
+        "owner": "output",
+        "source": "g_32",
+        "template": "g_32"
+      },
+      {
+        "owner": "output",
+        "source": "g_33",
+        "template": "g_33"
+      },
+      {
+        "owner": "output",
+        "source": "g_34",
+        "template": "g_34"
+      },
+      {
+        "owner": "output",
+        "source": "g_35",
+        "template": "g_35"
+      },
+      {
+        "owner": "output",
+        "source": "g_36",
+        "template": "g_36"
+      },
+      {
+        "owner": "output",
+        "source": "g_37",
+        "template": "g_37"
+      },
+      {
+        "owner": "output",
+        "source": "g_38",
+        "template": "g_38"
+      },
+      {
+        "owner": "output",
+        "source": "g_39",
+        "template": "g_39"
+      },
+      {
+        "owner": "output",
+        "source": "g_40",
+        "template": "g_40"
+      },
+      {
+        "owner": "output",
+        "source": "g_41",
+        "template": "g_41"
+      },
+      {
+        "owner": "output",
+        "source": "g_42",
+        "template": "g_42"
+      },
+      {
+        "owner": "output",
+        "source": "g_43",
+        "template": "g_43"
+      },
+      {
+        "owner": "output",
+        "source": "g_44",
+        "template": "g_44"
+      },
+      {
+        "owner": "output",
+        "source": "g_45",
+        "template": "g_45"
+      },
+      {
+        "owner": "output",
+        "source": "g_46",
+        "template": "g_46"
+      },
+      {
+        "owner": "output",
+        "source": "g_47",
+        "template": "g_47"
+      },
+      {
+        "owner": "output",
+        "source": "g_48",
+        "template": "g_48"
+      },
+      {
+        "owner": "output",
+        "source": "g_49",
+        "template": "g_49"
+      },
+      {
+        "owner": "output",
+        "source": "g_50",
+        "template": "g_50"
+      },
+      {
+        "owner": "output",
+        "source": "g_51",
+        "template": "g_51"
+      },
+      {
+        "owner": "output",
+        "source": "g_52",
+        "template": "g_52"
+      },
+      {
+        "owner": "output",
+        "source": "g_53",
+        "template": "g_53"
+      },
+      {
+        "owner": "output",
+        "source": "g_54",
+        "template": "g_54"
+      },
+      {
+        "owner": "output",
+        "source": "g_55",
+        "template": "g_55"
+      },
+      {
+        "owner": "output",
+        "source": "g_56",
+        "template": "g_56"
+      },
+      {
+        "owner": "output",
+        "source": "g_57",
+        "template": "g_57"
+      },
+      {
+        "owner": "output",
+        "source": "g_58",
+        "template": "g_58"
+      },
+      {
+        "owner": "output",
+        "source": "g_59",
+        "template": "g_59"
+      },
+      {
+        "owner": "output",
+        "source": "g_m",
+        "template": "g_m"
+      }
+    ],
+    "match": {
+      "check": "SYFCO basic-TLSF and normalized lowered-LTL equality, plus exact semantics/target and ordered I/O equality",
+      "how": "content-verified-template-instantiation"
+    },
+    "reduction_semantics": "exact",
+    "schema": "acacia.gr1-source-binding.v1",
+    "source_identity": {
+      "basic_tlsf_sha256": "f49169d2c32294fdb62766a475c4ba7d850affb773c504979abc9ef2fa014e77",
+      "inputs": [
+        "r_0",
+        "r_1",
+        "r_2",
+        "r_3",
+        "r_4",
+        "r_5",
+        "r_6",
+        "r_7",
+        "r_8",
+        "r_9",
+        "r_10",
+        "r_11",
+        "r_12",
+        "r_13",
+        "r_14",
+        "r_15",
+        "r_16",
+        "r_17",
+        "r_18",
+        "r_19",
+        "r_20",
+        "r_21",
+        "r_22",
+        "r_23",
+        "r_24",
+        "r_25",
+        "r_26",
+        "r_27",
+        "r_28",
+        "r_29",
+        "r_30",
+        "r_31",
+        "r_32",
+        "r_33",
+        "r_34",
+        "r_35",
+        "r_36",
+        "r_37",
+        "r_38",
+        "r_39",
+        "r_40",
+        "r_41",
+        "r_42",
+        "r_43",
+        "r_44",
+        "r_45",
+        "r_46",
+        "r_47",
+        "r_48",
+        "r_49",
+        "r_50",
+        "r_51",
+        "r_52",
+        "r_53",
+        "r_54",
+        "r_55",
+        "r_56",
+        "r_57",
+        "r_58",
+        "r_59",
+        "r_m"
+      ],
+      "lowered_formula_sha256": "4db816e041ea5469ca1d7ee12b0efa41062160133d95212e7745f269d9305c74",
+      "outputs": [
+        "g_0",
+        "g_1",
+        "g_2",
+        "g_3",
+        "g_4",
+        "g_5",
+        "g_6",
+        "g_7",
+        "g_8",
+        "g_9",
+        "g_10",
+        "g_11",
+        "g_12",
+        "g_13",
+        "g_14",
+        "g_15",
+        "g_16",
+        "g_17",
+        "g_18",
+        "g_19",
+        "g_20",
+        "g_21",
+        "g_22",
+        "g_23",
+        "g_24",
+        "g_25",
+        "g_26",
+        "g_27",
+        "g_28",
+        "g_29",
+        "g_30",
+        "g_31",
+        "g_32",
+        "g_33",
+        "g_34",
+        "g_35",
+        "g_36",
+        "g_37",
+        "g_38",
+        "g_39",
+        "g_40",
+        "g_41",
+        "g_42",
+        "g_43",
+        "g_44",
+        "g_45",
+        "g_46",
+        "g_47",
+        "g_48",
+        "g_49",
+        "g_50",
+        "g_51",
+        "g_52",
+        "g_53",
+        "g_54",
+        "g_55",
+        "g_56",
+        "g_57",
+        "g_58",
+        "g_59",
+        "g_m"
+      ],
+      "parameters": {
+        "n": 60
+      },
+      "semantics": "mealy",
+      "target": "mealy"
+    }
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "prioritized_arbiter_unreal2",
+        "--target",
+        "60",
+        "--seeds",
+        "",
+        "--timeout",
+        "5.037113",
+        "--check-method",
+        "auto",
+        "--real-check",
+        "policy",
+        "--absolute-deadline-monotonic",
+        "537051.47268131",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/tmp/acacia-lift-portfolio-e0z_idxi/lift-output/prioritized_arbiter_unreal2-n60-d3e8355de7c3-7exqaj7k/generalizer",
+        "--results-out",
+        "/tmp/acacia-lift-portfolio-e0z_idxi/lift-output/prioritized_arbiter_unreal2-n60-d3e8355de7c3-7exqaj7k/generalizer-result.tsv",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+        "--target-source",
+        "/tmp/acacia-lift-portfolio-e0z_idxi/lift-output/prioritized_arbiter_unreal2-n60-d3e8355de7c3-7exqaj7k/requested-source.tlsf",
+        "--family-source",
+        "/tmp/acacia-lift-portfolio-e0z_idxi/lift-output/prioritized_arbiter_unreal2-n60-d3e8355de7c3-7exqaj7k/capability-template.tlsf"
+      ],
+      "elapsed_s": 5.201344334986061,
+      "pid": 1895511,
+      "returncode": 3,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "UNKNOWN family=prioritized_arbiter_unreal2 target=60 seeds=-\nreason: canonicalize: predicate 'monitor_game' at n=60: timed out after 5.03711s\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "prioritized_arbiter_unreal2",
+    "--target",
+    "60",
+    "--seeds",
+    "",
+    "--reduction-semantics",
+    "exact",
+    "--real-check",
+    "policy",
+    "--timeout",
+    "5.58845",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "--target-source",
+    "CONTENT_BOUND_REQUEST_SOURCE.tlsf",
+    "--family-source",
+    "CONTENT_BOUND_CAPABILITY_TEMPLATE.tlsf"
+  ],
+  "target_check_ran": false,
+  "target_verified": false,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "real_check": "policy",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/tmp/acacia-lift-portfolio-e0z_idxi/lift-output/prioritized_arbiter_unreal2-n60-d3e8355de7c3-7exqaj7k"
+}

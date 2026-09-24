@@ -1,0 +1,472 @@
+{
+  "budget_s": 39.937287,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 343609344,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1881795-3838be1452da.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1881795-3838be1452da.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 39.91702871909365,
+    "driver_overhead_s": 39.902499429066665,
+    "generalization_s": 0.0,
+    "instantiation_s": 0.0,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.0,
+    "seed_solve_s": 0.0,
+    "target_check_s": 0.0,
+    "target_monitor_s": 0.0,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.014529290026985109
+  },
+  "elapsed_s": 39.91702871909365,
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/load_balancer_pb_11_pe_.ltl.cb081fc8d06845c9b60ea0cc3f1ed653.json.lift-evidence.json",
+  "generalizer_evidence": {
+    "capacities": {
+      "checker_initial_node_cap": 67108864,
+      "solver": [
+        {
+          "cache": 8388608,
+          "n": 2,
+          "nodes": 33554432
+        },
+        {
+          "cache": 8388608,
+          "n": 3,
+          "nodes": 33554432
+        },
+        {
+          "cache": 8388608,
+          "n": 4,
+          "nodes": 33554432
+        }
+      ]
+    },
+    "compose_route": "native_veccompose",
+    "decline": {
+      "n": null,
+      "predicate": "absolute deadline",
+      "reason": "candidate builder timed out and was reaped",
+      "stage": "candidate_builder"
+    },
+    "family": "load_balancer",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "real_check": "policy",
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "target": 11,
+    "verdict": "UNKNOWN"
+  },
+  "generalizer_progress": {
+    "active_stage": "ranks",
+    "active_stage_elapsed_s": 1.598196104168892e-05,
+    "active_stage_started_monotonic_s": 535797.747130933,
+    "cost_times": {
+      "seed_monitor_game": 0.19962960295379162,
+      "seed_solve": 0.08263336692471057,
+      "stage_anti_unify": 0.007643182063475251,
+      "stage_bus_schemas": 8.764793165028095e-05,
+      "stage_canonicalize": 0.15933239494916052,
+      "stage_seed": 0.2897681890754029,
+      "target_monitor_game": 0.0804039390059188
+    },
+    "last_stage_times": {
+      "anti_unify": 0.007643182063475251,
+      "bus_schemas": 8.764793165028095e-05,
+      "canonicalize": 0.15933239494916052,
+      "seed": 0.2897681890754029
+    },
+    "sampled_monotonic_s": 535797.747146915
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.000000",
+    "arity": "2",
+    "bus_schemas_s": "0.000000",
+    "canonicalize_s": "0.000000",
+    "cegis_rounds": "0",
+    "cegis_s": "0.000000",
+    "checker_node_caps": "",
+    "driver_overhead_s": "39.763661",
+    "family": "load_balancer",
+    "instantiate_s": "0.000000",
+    "peak_rss_kib": "299244",
+    "predicate_arities": "",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.000000",
+    "reason": "candidate_builder: predicate 'absolute deadline': candidate builder timed out and was reaped",
+    "role_classes": "",
+    "seed_monitor_s": "0.000000",
+    "seed_s": "0.000000",
+    "seed_solve_s": "0.000000",
+    "seeds": "2,3,4",
+    "solver_cache": "8388608,8388608,8388608",
+    "solver_nodes": "33554432,33554432,33554432",
+    "stage_reached": "candidate_builder",
+    "stages_passed": "",
+    "target": "11",
+    "target_check_s": "0.000000",
+    "target_monitor_s": "0.000000",
+    "target_solve_s": "0.000000",
+    "verdict": "UNKNOWN",
+    "wall_s": "39.763661"
+  },
+  "invocation_id": "0d9ed53516574463aaec9b9839e44936",
+  "path_kind": "lifted",
+  "peak_rss_kib": 299244,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "load_balancer",
+    "reason": "source-verified capability load_balancer",
+    "value": "policy"
+  },
+  "request": {
+    "family": "load_balancer",
+    "measured_arity": 2,
+    "request_mode": "source",
+    "route_kind": "real-proposal",
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "target": 11
+  },
+  "request_mode": "source",
+  "result": {
+    "certificate": null,
+    "policy": null,
+    "proof_method": "none",
+    "reason": "candidate_builder_predicate_absolute_deadline_candidate_builder_timed_out_and_was_reaped",
+    "stage": "candidate_builder",
+    "stdout_line": "UNKNOWN candidate_builder candidate_builder_predicate_absolute_deadline_candidate_builder_timed_out_and_was_reaped",
+    "verdict": "UNKNOWN"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "artifact_binding": {
+      "family": "load_balancer",
+      "inputs": [
+        "idle",
+        "request_0",
+        "request_1",
+        "request_2",
+        "request_3",
+        "request_4",
+        "request_5",
+        "request_6",
+        "request_7",
+        "request_8",
+        "request_9",
+        "request_10"
+      ],
+      "lowered_formula_sha256": "4a8c628e04320aeabcf4f9d195625fd057ddde8c63d3b93dc0b0b131b620c512",
+      "outputs": [
+        "grant_0",
+        "grant_1",
+        "grant_2",
+        "grant_3",
+        "grant_4",
+        "grant_5",
+        "grant_6",
+        "grant_7",
+        "grant_8",
+        "grant_9",
+        "grant_10"
+      ],
+      "parameters": {
+        "n": 11
+      },
+      "reduction_semantics": "exact",
+      "route_kind": "real-proposal",
+      "source_semantics": "mealy",
+      "source_sha256": "53503684efa5aac74b2aa9fab20f046a3032e2fd76c3383f0726398b8b2bb9a1",
+      "target_semantics": "mealy",
+      "template_sha256": "7d99413d91924379be7d1701b9803267ce1d8b2afccfbe8ff3538e7d4295bef4"
+    },
+    "capability": {
+      "arity": 2,
+      "family": "load_balancer",
+      "parameters": [
+        "n"
+      ],
+      "route_kind": "real-proposal",
+      "template": "scripts/acacia_lift/data/templates/tlsf/load_balancer/parametric/load_balancer.tlsf",
+      "template_sha256": "7d99413d91924379be7d1701b9803267ce1d8b2afccfbe8ff3538e7d4295bef4"
+    },
+    "input": {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/load_balancer_pb_11_pe_.tlsf",
+      "sha256": "53503684efa5aac74b2aa9fab20f046a3032e2fd76c3383f0726398b8b2bb9a1",
+      "size_bytes": 1609
+    },
+    "io_mapping": [
+      {
+        "owner": "input",
+        "source": "idle",
+        "template": "idle"
+      },
+      {
+        "owner": "input",
+        "source": "request_0",
+        "template": "request_0"
+      },
+      {
+        "owner": "input",
+        "source": "request_1",
+        "template": "request_1"
+      },
+      {
+        "owner": "input",
+        "source": "request_2",
+        "template": "request_2"
+      },
+      {
+        "owner": "input",
+        "source": "request_3",
+        "template": "request_3"
+      },
+      {
+        "owner": "input",
+        "source": "request_4",
+        "template": "request_4"
+      },
+      {
+        "owner": "input",
+        "source": "request_5",
+        "template": "request_5"
+      },
+      {
+        "owner": "input",
+        "source": "request_6",
+        "template": "request_6"
+      },
+      {
+        "owner": "input",
+        "source": "request_7",
+        "template": "request_7"
+      },
+      {
+        "owner": "input",
+        "source": "request_8",
+        "template": "request_8"
+      },
+      {
+        "owner": "input",
+        "source": "request_9",
+        "template": "request_9"
+      },
+      {
+        "owner": "input",
+        "source": "request_10",
+        "template": "request_10"
+      },
+      {
+        "owner": "output",
+        "source": "grant_0",
+        "template": "grant_0"
+      },
+      {
+        "owner": "output",
+        "source": "grant_1",
+        "template": "grant_1"
+      },
+      {
+        "owner": "output",
+        "source": "grant_2",
+        "template": "grant_2"
+      },
+      {
+        "owner": "output",
+        "source": "grant_3",
+        "template": "grant_3"
+      },
+      {
+        "owner": "output",
+        "source": "grant_4",
+        "template": "grant_4"
+      },
+      {
+        "owner": "output",
+        "source": "grant_5",
+        "template": "grant_5"
+      },
+      {
+        "owner": "output",
+        "source": "grant_6",
+        "template": "grant_6"
+      },
+      {
+        "owner": "output",
+        "source": "grant_7",
+        "template": "grant_7"
+      },
+      {
+        "owner": "output",
+        "source": "grant_8",
+        "template": "grant_8"
+      },
+      {
+        "owner": "output",
+        "source": "grant_9",
+        "template": "grant_9"
+      },
+      {
+        "owner": "output",
+        "source": "grant_10",
+        "template": "grant_10"
+      }
+    ],
+    "match": {
+      "check": "SYFCO basic-TLSF and normalized lowered-LTL equality, plus exact semantics/target and ordered I/O equality",
+      "how": "content-verified-template-instantiation"
+    },
+    "reduction_semantics": "exact",
+    "schema": "acacia.gr1-source-binding.v1",
+    "source_identity": {
+      "basic_tlsf_sha256": "95b70146d6d5b9b1caabc7c996feb3305426406ee75ab1cd6e603228133b3bbf",
+      "inputs": [
+        "idle",
+        "request_0",
+        "request_1",
+        "request_2",
+        "request_3",
+        "request_4",
+        "request_5",
+        "request_6",
+        "request_7",
+        "request_8",
+        "request_9",
+        "request_10"
+      ],
+      "lowered_formula_sha256": "4a8c628e04320aeabcf4f9d195625fd057ddde8c63d3b93dc0b0b131b620c512",
+      "outputs": [
+        "grant_0",
+        "grant_1",
+        "grant_2",
+        "grant_3",
+        "grant_4",
+        "grant_5",
+        "grant_6",
+        "grant_7",
+        "grant_8",
+        "grant_9",
+        "grant_10"
+      ],
+      "parameters": {
+        "n": 11
+      },
+      "semantics": "mealy",
+      "target": "mealy"
+    }
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "load_balancer",
+        "--target",
+        "11",
+        "--seeds",
+        "2,3,4",
+        "--timeout",
+        "39.423293",
+        "--check-method",
+        "auto",
+        "--real-check",
+        "policy",
+        "--absolute-deadline-monotonic",
+        "535837.008196043",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/tmp/acacia-lift-portfolio-hnpwjkrh/lift-output/load_balancer-n11-0d9ed5351657-x5n46j6j/generalizer",
+        "--results-out",
+        "/tmp/acacia-lift-portfolio-hnpwjkrh/lift-output/load_balancer-n11-0d9ed5351657-x5n46j6j/generalizer-result.tsv",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+        "--target-source",
+        "/tmp/acacia-lift-portfolio-hnpwjkrh/lift-output/load_balancer-n11-0d9ed5351657-x5n46j6j/requested-source.tlsf",
+        "--family-source",
+        "/tmp/acacia-lift-portfolio-hnpwjkrh/lift-output/load_balancer-n11-0d9ed5351657-x5n46j6j/capability-template.tlsf"
+      ],
+      "elapsed_s": 39.902499429066665,
+      "pid": 1885696,
+      "returncode": 3,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "UNKNOWN family=load_balancer target=11 seeds=2,3,4\nreason: candidate_builder: predicate 'absolute deadline': candidate builder timed out and was reaped\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "load_balancer",
+    "--target",
+    "11",
+    "--seeds",
+    "2,3,4",
+    "--reduction-semantics",
+    "exact",
+    "--real-check",
+    "policy",
+    "--timeout",
+    "39.937287",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "--target-source",
+    "CONTENT_BOUND_REQUEST_SOURCE.tlsf",
+    "--family-source",
+    "CONTENT_BOUND_CAPABILITY_TEMPLATE.tlsf"
+  ],
+  "target_check_ran": false,
+  "target_verified": false,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "real_check": "policy",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/tmp/acacia-lift-portfolio-hnpwjkrh/lift-output/load_balancer-n11-0d9ed5351657-x5n46j6j"
+}

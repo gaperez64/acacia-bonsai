@@ -1,0 +1,60 @@
+{
+  "binding_reason": "candidate_builder_predicate_child_process_builder_exited_3_UNKNOWN_family_collector_v1_target_11_seeds_3_reason_canonicalize_predicate_monitor_game_at_n_11_timed_out_after_39.4184s",
+  "capability": {
+    "arity": 1,
+    "family": "collector_v1",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "real-proposal",
+    "template": "scripts/acacia_lift/data/templates/tlsf/collector/parametric/collector_v1.tlsf",
+    "template_sha256": "ec5e47ec5ab0c8e8db0a36810268a7bb4e7e566e067e0114aa2d43597d3c7518"
+  },
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/collector_v1_pb_11_pe_.ltl.0ef67da9ed324cb38c717b115c5677b6.json.lift-evidence.json",
+  "evidence_sha256": "2cb12372ef0ba852c120f565630d90d0713b305dfc5d5fdcad2fe4e091f31776",
+  "fallback_remaining": 20.043452900019474,
+  "fallback_start": 535524.656300208,
+  "input_sha256": "6735c4ac0cca92f2a2e91c8bd0d716dc7418a751258f29e0fcb1f428ebb2892a",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/collector_v1_pb_11_pe_.tlsf",
+    "--budget",
+    "39.928235",
+    "--eligibility-budget-seconds",
+    "1.0",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-fn2_y_u5/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/collector_v1_pb_11_pe_.ltl.0ef67da9ed324cb38c717b115c5677b6.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 39.884529821923934,
+  "lift_exit": 2,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "collector_v1",
+    "reason": "source-verified capability collector_v1",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "canonicalize",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "fallback-pending"
+}

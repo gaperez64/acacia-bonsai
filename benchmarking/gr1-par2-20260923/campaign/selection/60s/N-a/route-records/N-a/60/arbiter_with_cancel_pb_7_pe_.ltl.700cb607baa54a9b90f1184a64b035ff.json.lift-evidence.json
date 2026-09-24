@@ -1,0 +1,947 @@
+{
+  "budget_s": 19.926912,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 830185472,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1874651-47b124160ce3.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1874651-47b124160ce3.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 2.8858393039554358,
+    "driver_overhead_s": 0.2633222070402059,
+    "generalization_s": 0.53752,
+    "instantiation_s": 0.382072,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.224565,
+    "seed_solve_s": 0.289449,
+    "target_check_s": 1.08903,
+    "target_monitor_s": 0.087245,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.012636096915230155
+  },
+  "elapsed_s": 2.8858393039554358,
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-a/route-records/N-a/60/arbiter_with_cancel_pb_7_pe_.ltl.700cb607baa54a9b90f1184a64b035ff.json.lift-evidence.json",
+  "generalizer_evidence": {
+    "arity": 2,
+    "bus_schemas": [
+      "AtMostOne(g)"
+    ],
+    "canonical_variable": "(template,index_tuple,state_bit)",
+    "claim_scope": "requested_target_only",
+    "compose_route": "native_veccompose",
+    "cost_accounting": {
+      "driver_overhead_s": 0.20541049784515053,
+      "generalization_s": 0.45726284000556916,
+      "instantiate_s": 0.3820723609533161,
+      "probe_check_s": 0.0,
+      "seed_monitor_s": 0.22456476115621626,
+      "seed_solve_s": 0.2894485630095005,
+      "target_check_s": 1.0890304750064388,
+      "target_monitor_s": 0.0872450009919703,
+      "wall_s": 2.7350344989681616
+    },
+    "family": "arbiter_with_cancel",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "manager_lifetime": {
+      "builder_exited_before_checker": true,
+      "candidate_builder_exit_monotonic_s": 533742.994086852,
+      "candidate_builder_pid": 1877834,
+      "checker_started_monotonic_s": 533742.994284517,
+      "handoff": "validated_paths_hashes_and_schema_bundle",
+      "supervisor_holds_bdd_manager": false
+    },
+    "predicate_arities": {
+      "inv": 2,
+      "x_0_0_0": 2,
+      "x_0_1_0": 2,
+      "x_10_0_0": 2,
+      "x_10_1_0": 2,
+      "x_10_2_0": 2,
+      "x_11_0_0": 2,
+      "x_11_1_0": 2,
+      "x_12_0_0": 2,
+      "x_12_1_0": 2,
+      "x_13_0_0": 2,
+      "x_13_1_0": 2,
+      "x_14_0_0": 2,
+      "x_14_1_0": 2,
+      "x_15_0_0": 2,
+      "x_15_1_0": 2,
+      "x_15_2_0": 2,
+      "x_16_0_0": 2,
+      "x_16_1_0": 2,
+      "x_16_2_0": 2,
+      "x_17_0_0": 2,
+      "x_17_1_0": 2,
+      "x_18_0_0": 2,
+      "x_18_1_0": 2,
+      "x_19_0_0": 2,
+      "x_19_1_0": 2,
+      "x_1_0_0": 2,
+      "x_1_1_0": 2,
+      "x_20_0_0": 2,
+      "x_20_1_0": 2,
+      "x_21_0_0": 2,
+      "x_21_1_0": 2,
+      "x_21_2_0": 2,
+      "x_22_0_0": 2,
+      "x_22_1_0": 2,
+      "x_22_2_0": 2,
+      "x_23_0_0": 2,
+      "x_23_1_0": 2,
+      "x_24_0_0": 2,
+      "x_24_1_0": 2,
+      "x_25_0_0": 2,
+      "x_25_1_0": 2,
+      "x_26_0_0": 2,
+      "x_26_1_0": 2,
+      "x_27_0_0": 2,
+      "x_27_1_0": 2,
+      "x_27_2_0": 2,
+      "x_28_0_0": 2,
+      "x_28_1_0": 2,
+      "x_28_2_0": 2,
+      "x_29_0_0": 2,
+      "x_29_1_0": 2,
+      "x_2_0_0": 2,
+      "x_2_1_0": 2,
+      "x_30_0_0": 2,
+      "x_30_1_0": 2,
+      "x_31_0_0": 2,
+      "x_31_1_0": 2,
+      "x_32_0_0": 2,
+      "x_32_1_0": 2,
+      "x_33_0_0": 2,
+      "x_33_1_0": 2,
+      "x_33_2_0": 2,
+      "x_34_0_0": 2,
+      "x_34_1_0": 2,
+      "x_34_2_0": 2,
+      "x_35_0_0": 2,
+      "x_35_1_0": 2,
+      "x_36_0_0": 2,
+      "x_36_1_0": 2,
+      "x_37_0_0": 2,
+      "x_37_1_0": 2,
+      "x_38_0_0": 2,
+      "x_38_1_0": 2,
+      "x_39_0_0": 2,
+      "x_39_1_0": 2,
+      "x_39_2_0": 2,
+      "x_3_0_0": 2,
+      "x_3_1_0": 2,
+      "x_3_2_0": 2,
+      "x_40_0_0": 2,
+      "x_40_1_0": 2,
+      "x_40_2_0": 2,
+      "x_41_0_0": 2,
+      "x_41_1_0": 2,
+      "x_42_0_0": 2,
+      "x_42_1_0": 2,
+      "x_4_0_0": 2,
+      "x_4_1_0": 2,
+      "x_4_2_0": 2,
+      "x_5_0_0": 2,
+      "x_5_1_0": 2,
+      "x_6_0_0": 2,
+      "x_6_1_0": 2,
+      "x_7_0_0": 2,
+      "x_7_1_0": 2,
+      "x_8_0_0": 2,
+      "x_8_1_0": 2,
+      "x_9_0_0": 2,
+      "x_9_1_0": 2,
+      "x_9_2_0": 2
+    },
+    "rank_depths": [
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2
+    ],
+    "real_check": "policy",
+    "role_classes": [
+      "role_0"
+    ],
+    "schema_validated_on_probes": false,
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "skolem_rule": "game controllable order; true/lowest index first",
+    "stage_evidence": {
+      "CEGIS": {
+        "checks": [
+          {
+            "counterexample": false,
+            "exit_code": 0,
+            "method": "auto",
+            "n": 7,
+            "node_caps": [
+              33554432
+            ],
+            "result": "VERIFIED",
+            "verdict": "VERIFIED"
+          }
+        ],
+        "claim_scope": "requested_target_only",
+        "final_verdict": "VERIFIED",
+        "round_cap": 3,
+        "rounds": 0,
+        "schema_validated_on_probes": false,
+        "target_verified": true
+      },
+      "anti-unify": {
+        "arity": 2,
+        "predicate_arities": {
+          "inv": 2,
+          "x_0_0_0": 2,
+          "x_0_1_0": 2,
+          "x_10_0_0": 2,
+          "x_10_1_0": 2,
+          "x_10_2_0": 2,
+          "x_11_0_0": 2,
+          "x_11_1_0": 2,
+          "x_12_0_0": 2,
+          "x_12_1_0": 2,
+          "x_13_0_0": 2,
+          "x_13_1_0": 2,
+          "x_14_0_0": 2,
+          "x_14_1_0": 2,
+          "x_15_0_0": 2,
+          "x_15_1_0": 2,
+          "x_15_2_0": 2,
+          "x_16_0_0": 2,
+          "x_16_1_0": 2,
+          "x_16_2_0": 2,
+          "x_17_0_0": 2,
+          "x_17_1_0": 2,
+          "x_18_0_0": 2,
+          "x_18_1_0": 2,
+          "x_19_0_0": 2,
+          "x_19_1_0": 2,
+          "x_1_0_0": 2,
+          "x_1_1_0": 2,
+          "x_20_0_0": 2,
+          "x_20_1_0": 2,
+          "x_21_0_0": 2,
+          "x_21_1_0": 2,
+          "x_21_2_0": 2,
+          "x_22_0_0": 2,
+          "x_22_1_0": 2,
+          "x_22_2_0": 2,
+          "x_23_0_0": 2,
+          "x_23_1_0": 2,
+          "x_24_0_0": 2,
+          "x_24_1_0": 2,
+          "x_25_0_0": 2,
+          "x_25_1_0": 2,
+          "x_26_0_0": 2,
+          "x_26_1_0": 2,
+          "x_27_0_0": 2,
+          "x_27_1_0": 2,
+          "x_27_2_0": 2,
+          "x_28_0_0": 2,
+          "x_28_1_0": 2,
+          "x_28_2_0": 2,
+          "x_29_0_0": 2,
+          "x_29_1_0": 2,
+          "x_2_0_0": 2,
+          "x_2_1_0": 2,
+          "x_30_0_0": 2,
+          "x_30_1_0": 2,
+          "x_31_0_0": 2,
+          "x_31_1_0": 2,
+          "x_32_0_0": 2,
+          "x_32_1_0": 2,
+          "x_33_0_0": 2,
+          "x_33_1_0": 2,
+          "x_33_2_0": 2,
+          "x_34_0_0": 2,
+          "x_34_1_0": 2,
+          "x_34_2_0": 2,
+          "x_35_0_0": 2,
+          "x_35_1_0": 2,
+          "x_36_0_0": 2,
+          "x_36_1_0": 2,
+          "x_37_0_0": 2,
+          "x_37_1_0": 2,
+          "x_38_0_0": 2,
+          "x_38_1_0": 2,
+          "x_39_0_0": 2,
+          "x_39_1_0": 2,
+          "x_39_2_0": 2,
+          "x_3_0_0": 2,
+          "x_3_1_0": 2,
+          "x_3_2_0": 2,
+          "x_40_0_0": 2,
+          "x_40_1_0": 2,
+          "x_40_2_0": 2,
+          "x_41_0_0": 2,
+          "x_41_1_0": 2,
+          "x_42_0_0": 2,
+          "x_42_1_0": 2,
+          "x_4_0_0": 2,
+          "x_4_1_0": 2,
+          "x_4_2_0": 2,
+          "x_5_0_0": 2,
+          "x_5_1_0": 2,
+          "x_6_0_0": 2,
+          "x_6_1_0": 2,
+          "x_7_0_0": 2,
+          "x_7_1_0": 2,
+          "x_8_0_0": 2,
+          "x_8_1_0": 2,
+          "x_9_0_0": 2,
+          "x_9_1_0": 2,
+          "x_9_2_0": 2
+        },
+        "role_classes": [
+          "role_0"
+        ],
+        "template_counts": {
+          "inv": 2,
+          "move_reconstructed": 43,
+          "rank": 368
+        }
+      },
+      "bus-wide schemas": {
+        "matched": [
+          "AtMostOne(g)"
+        ]
+      },
+      "canonicalize": {
+        "variable_abi": "(template,index_tuple,state_bit)"
+      },
+      "instantiate": {
+        "certificate": "arbiter_with_cancel_7.certificate.aag",
+        "exports": [
+          "certificate",
+          "policy"
+        ],
+        "policy": "arbiter_with_cancel_7.policy.aag",
+        "policy_omitted": false
+      },
+      "ranks": {
+        "depths": [
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2
+        ],
+        "y": "union_i x_j_k_i"
+      },
+      "seed": {
+        "exports": [
+          "policy",
+          "certificate",
+          "provenance"
+        ],
+        "sizes": [
+          2,
+          3,
+          4
+        ]
+      },
+      "target_check": {
+        "certificate": "arbiter_with_cancel_7.certificate.aag",
+        "game": "arbiter_with_cancel_7.game.aag",
+        "method": "auto",
+        "policy": "arbiter_with_cancel_7.policy.aag",
+        "result": "VERIFIED"
+      }
+    },
+    "stages": [
+      "seed",
+      "canonicalize",
+      "anti-unify",
+      "bus-wide schemas",
+      "ranks",
+      "instantiate",
+      "CEGIS"
+    ],
+    "target": 7,
+    "target_check_method": "auto",
+    "target_check_result": "VERIFIED",
+    "target_verified": true,
+    "template_counts": {
+      "inv": 2,
+      "move_reconstructed": 43,
+      "rank": 368
+    },
+    "variable_layout": {
+      "blocks": {
+        "canonical_templates": {
+          "size": 78,
+          "start": 562
+        },
+        "composition": {
+          "size": 249,
+          "start": 135
+        },
+        "policy_counter": {
+          "size": 43,
+          "start": 384
+        },
+        "policy_game": {
+          "size": 135,
+          "start": 427
+        },
+        "public": {
+          "size": 135,
+          "start": 0
+        }
+      },
+      "public_letter_count": 21,
+      "public_state_count": 114,
+      "required_variables": 640,
+      "sha256": "9beeb0d4d4c558f221c7f04e43a9c572189f305cdcd8b429aed3d8ca8975138d",
+      "variable_limit": null
+    },
+    "y_reconstruction": "union_i x_j_k_i"
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "seed_monitor_game": 0.22456476115621626,
+      "seed_solve": 0.2894485630095005,
+      "stage_anti_unify": 0.01054924598429352,
+      "stage_bus_schemas": 9.45159699767828e-05,
+      "stage_canonicalize": 0.16750222898554057,
+      "stage_instantiate": 0.3820723609533161,
+      "stage_ranks": 0.44661907805129886,
+      "stage_seed": 0.5267729359911755,
+      "target_check": 1.0890304750064388,
+      "target_monitor_game": 0.0872450009919703
+    },
+    "last_stage_times": {},
+    "sampled_monotonic_s": 533744.083371932
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.010549",
+    "arity": "2",
+    "bus_schemas_s": "0.000095",
+    "canonicalize_s": "0.167502",
+    "cegis_rounds": "0",
+    "cegis_s": "1.089258",
+    "checker_node_caps": "7:33554432",
+    "driver_overhead_s": "0.205410",
+    "family": "arbiter_with_cancel",
+    "instantiate_s": "0.382072",
+    "peak_rss_kib": "761340",
+    "predicate_arities": "default=2",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.446619",
+    "reason": "-",
+    "role_classes": "role_0",
+    "seed_monitor_s": "0.224565",
+    "seed_s": "0.526773",
+    "seed_solve_s": "0.289449",
+    "seeds": "2,3,4",
+    "solver_cache": "8388608,8388608,8388608",
+    "solver_nodes": "33554432,33554432,33554432",
+    "stage_reached": "CEGIS",
+    "stages_passed": "seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS",
+    "target": "7",
+    "target_check_s": "1.089030",
+    "target_monitor_s": "0.087245",
+    "target_solve_s": "0.000000",
+    "verdict": "VERIFIED",
+    "wall_s": "2.735034"
+  },
+  "invocation_id": "28e88d889d454c878fc0c2dff3dc8da0",
+  "path_kind": "lifted",
+  "peak_rss_kib": 761340,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "arbiter_with_cancel",
+    "reason": "source-verified capability arbiter_with_cancel",
+    "value": "policy"
+  },
+  "request": {
+    "family": "arbiter_with_cancel",
+    "measured_arity": 2,
+    "request_mode": "source",
+    "route_kind": "real-proposal",
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "target": 7
+  },
+  "request_mode": "source",
+  "result": {
+    "certificate": "/tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/generalizer/arbiter_with_cancel_7.certificate.aag",
+    "policy": "/tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/generalizer/arbiter_with_cancel_7.policy.aag",
+    "proof_method": "policy",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "REALIZABLE /tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/generalizer/arbiter_with_cancel_7.certificate.aag",
+    "verdict": "REALIZABLE"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "artifact_binding": {
+      "family": "arbiter_with_cancel",
+      "inputs": [
+        "r_0",
+        "r_1",
+        "r_2",
+        "r_3",
+        "r_4",
+        "r_5",
+        "r_6",
+        "c_0",
+        "c_1",
+        "c_2",
+        "c_3",
+        "c_4",
+        "c_5",
+        "c_6"
+      ],
+      "lowered_formula_sha256": "b1204dc3bc4b6ad775ae54b8d3d7a893ec9fdcf5971953e61daf5f93ede782c7",
+      "outputs": [
+        "g_0",
+        "g_1",
+        "g_2",
+        "g_3",
+        "g_4",
+        "g_5",
+        "g_6"
+      ],
+      "parameters": {
+        "n": 7
+      },
+      "reduction_semantics": "exact",
+      "route_kind": "real-proposal",
+      "source_semantics": "mealy",
+      "source_sha256": "da67dd08eee2c5ec4e68db5486771f5962606b63b094e979442a974605a121e1",
+      "target_semantics": "mealy",
+      "template_sha256": "faa4ddb14e7a0caaa4214af55f6f9c33bf709c242cdff7e88fc99b4ef41684a3"
+    },
+    "capability": {
+      "arity": 2,
+      "family": "arbiter_with_cancel",
+      "parameters": [
+        "n"
+      ],
+      "route_kind": "real-proposal",
+      "template": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/arbiter_with_cancel.tlsf",
+      "template_sha256": "faa4ddb14e7a0caaa4214af55f6f9c33bf709c242cdff7e88fc99b4ef41684a3"
+    },
+    "input": {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/arbiter_with_cancel_pb_7_pe_.tlsf",
+      "sha256": "da67dd08eee2c5ec4e68db5486771f5962606b63b094e979442a974605a121e1",
+      "size_bytes": 1848
+    },
+    "io_mapping": [
+      {
+        "owner": "input",
+        "source": "r_0",
+        "template": "r_0"
+      },
+      {
+        "owner": "input",
+        "source": "r_1",
+        "template": "r_1"
+      },
+      {
+        "owner": "input",
+        "source": "r_2",
+        "template": "r_2"
+      },
+      {
+        "owner": "input",
+        "source": "r_3",
+        "template": "r_3"
+      },
+      {
+        "owner": "input",
+        "source": "r_4",
+        "template": "r_4"
+      },
+      {
+        "owner": "input",
+        "source": "r_5",
+        "template": "r_5"
+      },
+      {
+        "owner": "input",
+        "source": "r_6",
+        "template": "r_6"
+      },
+      {
+        "owner": "input",
+        "source": "c_0",
+        "template": "c_0"
+      },
+      {
+        "owner": "input",
+        "source": "c_1",
+        "template": "c_1"
+      },
+      {
+        "owner": "input",
+        "source": "c_2",
+        "template": "c_2"
+      },
+      {
+        "owner": "input",
+        "source": "c_3",
+        "template": "c_3"
+      },
+      {
+        "owner": "input",
+        "source": "c_4",
+        "template": "c_4"
+      },
+      {
+        "owner": "input",
+        "source": "c_5",
+        "template": "c_5"
+      },
+      {
+        "owner": "input",
+        "source": "c_6",
+        "template": "c_6"
+      },
+      {
+        "owner": "output",
+        "source": "g_0",
+        "template": "g_0"
+      },
+      {
+        "owner": "output",
+        "source": "g_1",
+        "template": "g_1"
+      },
+      {
+        "owner": "output",
+        "source": "g_2",
+        "template": "g_2"
+      },
+      {
+        "owner": "output",
+        "source": "g_3",
+        "template": "g_3"
+      },
+      {
+        "owner": "output",
+        "source": "g_4",
+        "template": "g_4"
+      },
+      {
+        "owner": "output",
+        "source": "g_5",
+        "template": "g_5"
+      },
+      {
+        "owner": "output",
+        "source": "g_6",
+        "template": "g_6"
+      }
+    ],
+    "match": {
+      "check": "SYFCO basic-TLSF and normalized lowered-LTL equality, plus exact semantics/target and ordered I/O equality",
+      "how": "content-verified-template-instantiation"
+    },
+    "reduction_semantics": "exact",
+    "schema": "acacia.gr1-source-binding.v1",
+    "source_identity": {
+      "basic_tlsf_sha256": "158f49e925e66df263b7a3f8735366ad2a65fd8b6b2c0829cdb8b9307b6da701",
+      "inputs": [
+        "r_0",
+        "r_1",
+        "r_2",
+        "r_3",
+        "r_4",
+        "r_5",
+        "r_6",
+        "c_0",
+        "c_1",
+        "c_2",
+        "c_3",
+        "c_4",
+        "c_5",
+        "c_6"
+      ],
+      "lowered_formula_sha256": "b1204dc3bc4b6ad775ae54b8d3d7a893ec9fdcf5971953e61daf5f93ede782c7",
+      "outputs": [
+        "g_0",
+        "g_1",
+        "g_2",
+        "g_3",
+        "g_4",
+        "g_5",
+        "g_6"
+      ],
+      "parameters": {
+        "n": 7
+      },
+      "semantics": "mealy",
+      "target": "mealy"
+    }
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "arbiter_with_cancel",
+        "--target",
+        "7",
+        "--seeds",
+        "2,3,4",
+        "--timeout",
+        "19.416097",
+        "--check-method",
+        "auto",
+        "--real-check",
+        "policy",
+        "--absolute-deadline-monotonic",
+        "533761.1348312281",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/generalizer",
+        "--results-out",
+        "/tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/generalizer-result.tsv",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+        "--target-source",
+        "/tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/requested-source.tlsf",
+        "--family-source",
+        "/tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/capability-template.tlsf"
+      ],
+      "elapsed_s": 2.8732032070402056,
+      "pid": 1877833,
+      "returncode": 0,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "VERIFIED family=arbiter_with_cancel target=7 seeds=2,3,4\ncertificate: /tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/generalizer/arbiter_with_cancel_7.certificate.aag\npolicy: /tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/generalizer/arbiter_with_cancel_7.policy.aag\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "arbiter_with_cancel",
+    "--target",
+    "7",
+    "--seeds",
+    "2,3,4",
+    "--reduction-semantics",
+    "exact",
+    "--real-check",
+    "policy",
+    "--timeout",
+    "19.926912",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "--target-source",
+    "CONTENT_BOUND_REQUEST_SOURCE.tlsf",
+    "--family-source",
+    "CONTENT_BOUND_CAPABILITY_TEMPLATE.tlsf"
+  ],
+  "target_certificate": {
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "method": "policy",
+    "path": "/tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3/generalizer/arbiter_with_cancel_7.certificate.aag",
+    "sha256": "30032631e07f15bbcfb4a2c855c59b63ce72d28eaf63e1a57867b71d68cedbfa",
+    "side": "system",
+    "source_binding": {
+      "family": "arbiter_with_cancel",
+      "inputs": [
+        "r_0",
+        "r_1",
+        "r_2",
+        "r_3",
+        "r_4",
+        "r_5",
+        "r_6",
+        "c_0",
+        "c_1",
+        "c_2",
+        "c_3",
+        "c_4",
+        "c_5",
+        "c_6"
+      ],
+      "lowered_formula_sha256": "b1204dc3bc4b6ad775ae54b8d3d7a893ec9fdcf5971953e61daf5f93ede782c7",
+      "outputs": [
+        "g_0",
+        "g_1",
+        "g_2",
+        "g_3",
+        "g_4",
+        "g_5",
+        "g_6"
+      ],
+      "parameters": {
+        "n": 7
+      },
+      "reduction_semantics": "exact",
+      "route_kind": "real-proposal",
+      "source_semantics": "mealy",
+      "source_sha256": "da67dd08eee2c5ec4e68db5486771f5962606b63b094e979442a974605a121e1",
+      "target_semantics": "mealy",
+      "template_sha256": "faa4ddb14e7a0caaa4214af55f6f9c33bf709c242cdff7e88fc99b4ef41684a3"
+    },
+    "verdict": "VERIFIED"
+  },
+  "target_check": {
+    "counterexample": null,
+    "counterexample_method": null,
+    "elapsed_seconds": 1.079378278,
+    "exit_code": 0,
+    "format": "tlsf-gr1-checkresult-v1",
+    "methods": {
+      "certificate": {
+        "counterexample": null,
+        "peak_bdd_nodes": 3276801,
+        "time_seconds": 0.995914934,
+        "verdict": "VERIFIED"
+      },
+      "closed_loop": {
+        "counterexample": null,
+        "peak_bdd_nodes": 0,
+        "time_seconds": 0.0,
+        "verdict": "SKIPPED"
+      }
+    },
+    "peak_bdd_nodes": 3276801,
+    "requested_method": "auto",
+    "verdict": "VERIFIED"
+  },
+  "target_check_method": "policy",
+  "target_check_ran": true,
+  "target_check_result": "VERIFIED",
+  "target_verified": true,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "real_check": "policy",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/tmp/acacia-lift-portfolio-07s1zrk1/lift-output/arbiter_with_cancel-n7-28e88d889d45-r_jksyd3"
+}

@@ -314,3 +314,18 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   this selection — get `route_enabled: false` and decline immediately to B: `collector_v1`,
   `abcg_arbiter`, `simple_arbiter_with_hints`, `amba_case_study_unreal`. Keyed to the verified
   capability, disclosed in the final report. The variant choice waits for the 17 s legs.
+
+## 2026-09-24 — Selection complete: N uses the 2·cap/3 lift budget
+
+- 17 s legs (same protocol; B is the archived uniform 17 s leg, two epochs):
+  - N-a (lift 5.67 s): **55/91**, PAR-2 1,324.74 s; +21 / −0 vs B epoch 1 (34/91, 1,973.06 s).
+  - N-b (lift 11.33 s): **60/91**, PAR-2 1,211.90 s; +26 / −0 vs B epoch 1.
+  - N-b's extra 17 s closures over N-a: arbiter_with_cancel n=9, load_balancer n=9,
+    arbiter_with_buffer n=9, arbiter_on_inpchange n=5, round_robin_arbiter_unreal2 n=6. Its extra
+    cost is on collector_v1 (lift budget spent before B), removed by `route_enabled: false`.
+- **Decision: N = N-b** — lift budget 2·cap/3 at both caps (40 s at 60 s, 11.33 s at 17 s), with the
+  four route-disabled capabilities declining to B. Chosen on the preregistered comparison: N-b has
+  more solved and lower PAR-2 than N-a at both caps, and neither variant loses any instance to B on
+  the eligible subset. No per-cap or per-family fraction; no combination of the two variants.
+- Selection evidence (raw coverage rows, route records, comparison tables, driver) is under
+  `campaign/selection/`.
