@@ -75,6 +75,13 @@ _DIAGNOSTICS_ENABLED = False
 _DIAGNOSTICS: Diagnostics | None = None
 
 
+def _compose_route(args: argparse.Namespace) -> str:
+    if (os.environ.get("GENERALIZE_GR1_REFERENCE_COMPOSE") or
+            args.buddy_adapter is None):
+        return "two_pass"
+    return "native_veccompose"
+
+
 class InvocationCancelled(RuntimeError):
     pass
 
@@ -504,6 +511,8 @@ def _generalizer_pipeline(request: Request, workspace: Path, deadline: Deadline,
         "--solver", str(args.solver.resolve()),
         "--checker", str(args.checker.resolve()),
     ]
+    if args.buddy_adapter is not None:
+        command.extend(("--buddy-adapter", str(args.buddy_adapter.resolve())))
     if child_diagnostics is not None:
         command.extend(("--diagnostics", str(child_diagnostics)))
     if request.source_request is not None:
@@ -718,6 +727,9 @@ def main(argv: list[str] | None = None) -> int:
                                 "version": sys.version},
                 "bindings_python": str(args.bindings_python.resolve()),
                 "bindings_site": str(args.bindings_site.resolve()),
+                "buddy_adapter": (str(args.buddy_adapter.resolve())
+                                  if args.buddy_adapter is not None else None),
+                "compose_route": _compose_route(args),
                 "tlsf_tools_build": str(args.tlsf_tools_build.resolve()),
                 "binaries": {
                     "tlsfsolve": {"path": str(args.solver),
@@ -772,6 +784,7 @@ def main(argv: list[str] | None = None) -> int:
         "semantics": args.semantics, "stages": [],
         "request_mode": args.request_mode,
         "target_check_ran": False, "target_verified": False,
+        "compose_route": _compose_route(args),
     }
     result = PipelineResult.unknown("configuration", "uninitialized")
     previous: dict[int, Any] = {}
@@ -831,6 +844,10 @@ def main(argv: list[str] | None = None) -> int:
             "--monitor", str(args.monitor), "--solver", str(args.solver),
             "--checker", str(args.checker),
         ]
+        if args.buddy_adapter is not None:
+            evidence["standalone_command"].extend(
+                ("--buddy-adapter", str(args.buddy_adapter.resolve()))
+            )
         if request.source_request is not None:
             evidence["standalone_command"].extend(
                 (
@@ -842,6 +859,9 @@ def main(argv: list[str] | None = None) -> int:
             "tlsf_tools_build": str(args.tlsf_tools_build.resolve()),
             "bindings_python": str(args.bindings_python.resolve()),
             "bindings_site": str(args.bindings_site.resolve()),
+            "buddy_adapter": (str(args.buddy_adapter.resolve())
+                              if args.buddy_adapter is not None else None),
+            "compose_route": evidence["compose_route"],
             "monitor": str(args.monitor), "solver": str(args.solver),
             "checker": str(args.checker),
         }

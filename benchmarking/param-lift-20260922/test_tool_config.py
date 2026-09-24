@@ -36,22 +36,28 @@ class ToolConfigurationTest(unittest.TestCase):
             config.bindings_site,
             pathlib.Path("/usr/local/lib64/python3.13/site-packages"),
         )
+        self.assertIsNone(config.buddy_adapter)
 
     def test_environment_fallbacks_are_used(self) -> None:
         config = tool_config.configuration_defaults({
             tool_config.ENV_TLSF_TOOLS_BUILD: "/configured/build",
             tool_config.ENV_BINDINGS_PYTHON: "/configured/python",
             tool_config.ENV_BINDINGS_SITE: "/configured/site",
+            tool_config.ENV_BUDDY_ADAPTER: "/configured/adapter.so",
         })
         self.assertEqual(config.tlsf_tools_build, pathlib.Path("/configured/build"))
         self.assertEqual(config.bindings_python, pathlib.Path("/configured/python"))
         self.assertEqual(config.bindings_site, pathlib.Path("/configured/site"))
+        self.assertEqual(
+            config.buddy_adapter, pathlib.Path("/configured/adapter.so")
+        )
 
     def test_flags_override_environment(self) -> None:
         with mock.patch.dict(os.environ, {
             tool_config.ENV_TLSF_TOOLS_BUILD: "/environment/build",
             tool_config.ENV_BINDINGS_PYTHON: "/environment/python",
             tool_config.ENV_BINDINGS_SITE: "/environment/site",
+            tool_config.ENV_BUDDY_ADAPTER: "/environment/adapter.so",
         }, clear=False):
             parser = argparse.ArgumentParser()
             tool_config.add_configuration_arguments(parser)
@@ -59,11 +65,13 @@ class ToolConfigurationTest(unittest.TestCase):
                 "--tlsf-tools-build", "/flag/build",
                 "--bindings-python", "/flag/python",
                 "--bindings-site", "/flag/site",
+                "--buddy-adapter", "/flag/adapter.so",
             ])
         config = tool_config.configuration_from_args(args)
         self.assertEqual(config.tlsf_tools_build, pathlib.Path("/flag/build"))
         self.assertEqual(config.bindings_python, pathlib.Path("/flag/python"))
         self.assertEqual(config.bindings_site, pathlib.Path("/flag/site"))
+        self.assertEqual(config.buddy_adapter, pathlib.Path("/flag/adapter.so"))
 
     def test_missing_binary_has_precise_error(self) -> None:
         with tempfile.TemporaryDirectory(prefix="tool-config-missing-") as temporary:
@@ -106,6 +114,35 @@ class ToolConfigurationTest(unittest.TestCase):
                 [(config.solver, "tlsfsolve"), (config.checker, "tlsfcertcheck")],
             )
             self.assertEqual(result["bindings"], {"api": "ok"})
+            self.assertIsNone(result["buddy_adapter"])
+
+    def test_probe_passes_configured_adapter_to_binding_probe(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="tool-config-adapter-") as temporary:
+            root = pathlib.Path(temporary)
+            build = root / "tlsf-tools" / "build-L0"
+            scripts = build.parent / "scripts"
+            site = root / "site"
+            adapter = root / "adapter.so"
+            build.mkdir(parents=True)
+            scripts.mkdir()
+            site.mkdir()
+            config = tool_config.ToolConfiguration(
+                build, pathlib.Path(sys.executable), site, adapter
+            )
+            with (
+                mock.patch.object(tool_config, "_binary_version", return_value="v1"),
+                mock.patch.object(
+                    tool_config,
+                    "_probe_bindings",
+                    return_value={"adapter": {"path": str(adapter)}},
+                ) as probe,
+                mock.patch.object(pathlib.Path, "is_file", return_value=True),
+                mock.patch.object(os, "access", return_value=True),
+            ):
+                result = tool_config.probe_configuration(config)
+            probe.assert_called_once_with(config)
+            self.assertEqual(result["buddy_adapter"], str(adapter))
+            self.assertEqual(result["bindings"]["adapter"]["path"], str(adapter))
 
     def test_probe_rejects_bindings_outside_configured_site(self) -> None:
         with tempfile.TemporaryDirectory(prefix="tool-config-bindings-") as temporary:

@@ -21,9 +21,10 @@ import signal
 import subprocess
 import sys
 import time
-from collections import Counter, defaultdict
+from collections import Counter, OrderedDict, defaultdict
 from collections.abc import Iterable
 
+from buddy_veccompose import BuddyVeccomposeAdapter
 from request import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL
 from s0_diagnostics import Diagnostics, sha256
 from tool_config import (
@@ -54,6 +55,8 @@ RESULTS = pathlib.Path(os.environ.get(
 MAX_CANDIDATES_PER_TARGET = 32
 MAX_CEGIS_ROUNDS = 3
 MAX_PREDICATE_ARITY = 4
+TEMPLATE_CACHE_MAX_ENTRIES = 64
+SUBSET_METADATA_MAX_ENTRIES = 256
 HINT_VALIDITY_GROUP = (("global-schema",), ("hint-one-hot",), ())
 VERDICTS = {0: "VERIFIED", 1: "REFUTED", 2: "ERROR",
             3: "UNKNOWN", 4: "INVALID", 5: "INTERNAL_ERROR",
@@ -73,6 +76,7 @@ _DIAGNOSTIC_AAG_CONES: list[dict[str, object]] = []
 _DIAGNOSTIC_MASK_WORDS: Counter[int] = Counter()
 _DIAGNOSTIC_MODES: Counter[int] = Counter()
 _CHECKER_STATS_MODE: str | None = None
+_BUDDY_MANAGER_LIFETIME: object | None = None
 
 _DIAGNOSTIC_PHASES = (
     "seed_monitor_construction",
@@ -91,6 +95,20 @@ _DIAGNOSTIC_PHASES = (
     "export",
     "target_check",
 )
+
+
+def _reference_compose_enabled() -> bool:
+    return bool(os.environ.get("GENERALIZE_GR1_REFERENCE_COMPOSE"))
+
+
+def _compose_route() -> str:
+    if _reference_compose_enabled() or TOOL_CONFIG.buddy_adapter is None:
+        return "two_pass"
+    return "native_veccompose"
+
+
+def _reference_aag_context_enabled() -> bool:
+    return bool(os.environ.get("GENERALIZE_GR1_REFERENCE_AAG_CONTEXT"))
 
 
 class DiagnosticCancelled(RuntimeError):
@@ -272,6 +290,10 @@ def _diagnostic_initialize(path: pathlib.Path) -> None:
                 "interpreter": {"executable": sys.executable,
                                 "version": sys.version},
                 "bindings_site": str(BINDINGS_SITE),
+                "compose_route": _compose_route(),
+                "buddy_adapter": (str(TOOL_CONFIG.buddy_adapter)
+                                  if TOOL_CONFIG.buddy_adapter is not None
+                                  else None),
                 "binding_module_candidates": [str(path0)
                                               for path0 in binding_modules],
                 "extension_module_candidates": [str(path0)
@@ -1026,9 +1048,406 @@ class Instance:
         return len(self.game.fairness)
 
 
+def _instance_identity(instance: Instance) -> tuple:
+    cached = getattr(instance, "_p2a_identity", None)
+    if cached is not None:
+        return cached
+    identity = (
+        instance.family,
+        instance.n,
+        sha256(instance.game_path),
+        sha256(instance.prov_path),
+        sha256(instance.cert_path) if instance.cert_path is not None else None,
+    )
+    instance._p2a_identity = identity
+    return identity
+
+
+class CompiledAagContext:
+    """Manager-local compiled AAG structure with one shared traversal memo."""
+
+    def __init__(self, bdds: "Bdds", aag: Aag, source_identity: tuple,
+                 variable_abi: tuple[tuple[str, int, str], ...],
+                 variable_map: dict[int, int],
+                 selected_roots: Iterable[int] = ()):
+        self.bdds = bdds
+        self.manager_lifetime = bdds.manager_lifetime
+        self.aag = aag
+        self.source_identity = source_identity
+        self.variable_abi = variable_abi
+        self.gates = {
+            lhs // 2: (left, right) for lhs, left, right in aag.gates
+        }
+        self.variable_map = dict(variable_map)
+        self.selected_roots = tuple(dict.fromkeys(selected_roots))
+        self.memo: dict[int, object] = {}
+        self.roots: dict[int, object] = {}
+        self._game_functions: tuple[
+            list[object], object, list[object], list[object]
+        ] | None = None
+        self._released = False
+        if self.selected_roots:
+            self.decode_roots(self.selected_roots)
+
+    def _check_live(self) -> None:
+        if self._released:
+            raise RuntimeError("compiled AAG context has been released")
+        if self.manager_lifetime is not self.bdds.manager_lifetime:
+            raise RuntimeError("compiled AAG context belongs to another BDD manager")
+
+    def decode_roots(self, literals: Iterable[int]) -> list[object]:
+        self._check_live()
+        requested = tuple(literals)
+        diagnostic_token = (
+            _diagnostic_begin("from_aag") if _DIAGNOSTICS_ENABLED else None
+        )
+        memo_size = len(self.memo)
+
+        def visit(literal: int):
+            if literal == 0:
+                return self.bdds.buddy.bddfalse
+            if literal == 1:
+                return self.bdds.buddy.bddtrue
+            if literal in self.memo:
+                return self.memo[literal]
+            if literal & 1:
+                result = self.bdds.buddy.bdd_not(visit(literal ^ 1))
+            elif literal // 2 in self.variable_map:
+                result = self.bdds.buddy.bdd_ithvar(
+                    self.variable_map[literal // 2])
+            else:
+                try:
+                    left, right = self.gates[literal // 2]
+                except KeyError as error:
+                    raise ValueError(
+                        f"AAG literal {literal} is absent from the public ABI and gate map"
+                    ) from error
+                result = visit(left) & visit(right)
+            self.memo[literal] = result
+            return result
+
+        try:
+            result = []
+            for literal in requested:
+                if literal not in self.roots:
+                    self.roots[literal] = visit(literal)
+                result.append(self.roots[literal])
+            return result
+        finally:
+            if diagnostic_token is not None:
+                try:
+                    if _DIAGNOSTICS is None:
+                        raise RuntimeError("diagnostics enabled without collector")
+                    traversed = sum(
+                        not (literal & 1) and literal // 2 in self.gates
+                        for literal in tuple(self.memo)[memo_size:]
+                    )
+                    _DIAGNOSTICS.counters["from_aag_calls"] += 1
+                    _DIAGNOSTICS.counters["from_aag_roots"] += len(requested)
+                    _DIAGNOSTICS.counters[
+                        "from_aag_gates_traversed"] += traversed
+                    _DIAGNOSTIC_AAG_CONES.append({
+                        "aag": str(self.aag.path),
+                        "root_literals": list(requested),
+                        "gates_traversed": traversed,
+                        "shared_memo": True,
+                    })
+                except Exception as error:
+                    if _DIAGNOSTICS is not None:
+                        _DIAGNOSTICS.record_error("record_from_aag", error)
+                _diagnostic_end(diagnostic_token)
+
+    def root(self, literal: int):
+        self._check_live()
+        if literal in self.roots:
+            return self.roots[literal]
+        return self.decode_roots((literal,))[0]
+
+    def game_functions(self) -> tuple[
+            list[object], object, list[object], list[object]]:
+        self._check_live()
+        if self._game_functions is None:
+            if _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.counters["game_functions_cache_misses"] += 1
+            roots = [row[1] for row in self.aag.latches]
+            roots.extend(self.aag.bad[:1])
+            roots.extend(record[0] for record in self.aag.justice)
+            roots.extend(self.aag.fairness)
+            decoded = iter(self.decode_roots(roots))
+            next_state = [next(decoded) for _row in self.aag.latches]
+            bad = (next(decoded) if self.aag.bad
+                   else self.bdds.buddy.bddfalse)
+            goals = [next(decoded) for _record in self.aag.justice]
+            fairness = [next(decoded) for _literal in self.aag.fairness]
+            self._game_functions = (next_state, bad, goals, fairness)
+        elif _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.counters["game_functions_cache_hits"] += 1
+        return self._game_functions
+
+    def release(self) -> None:
+        if self._released:
+            return
+        self._game_functions = None
+        self.roots.clear()
+        self.memo.clear()
+        self.gates.clear()
+        self.variable_map.clear()
+        self._released = True
+
+
+class TemplateSet(dict[tuple, object]):
+    """Predicate templates plus their semantic-keyed support metadata."""
+
+    def __init__(self, *args, supports: dict[tuple, frozenset[int]] | None = None,
+                 cache_key: tuple | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.supports = supports or {}
+        self.cache_key = cache_key
+
+
+class GeneralizationAttemptContext:
+    """Bounded caches owned by one seed-to-target generalization attempt."""
+
+    def __init__(self, bdds: "Bdds", seeds: list[Instance], target: Instance):
+        self.bdds = bdds
+        self.manager_lifetime = bdds.manager_lifetime
+        self.enabled = not _reference_aag_context_enabled()
+        self.seeds = tuple(seeds)
+        self.target = target
+        self._released = False
+        self._compiled: dict[tuple, CompiledAagContext] = {}
+        self.template_cache: OrderedDict[
+            tuple, tuple[TemplateSet, int]
+        ] = OrderedDict()
+        self.template_cache_limit = TEMPLATE_CACHE_MAX_ENTRIES
+        self._owner_groups: dict[tuple, dict[frozenset[int], tuple[VarInfo, ...]]] = {}
+        self._subset_metadata: OrderedDict[
+            tuple, dict[str, object]
+        ] = OrderedDict()
+        self.subset_metadata_limit = SUBSET_METADATA_MAX_ENTRIES
+        self.inverse_normal: dict[int, tuple] = {}
+        self.normalization_mapping: tuple[tuple[str, int], ...] = ()
+        if self.enabled:
+            self._freeze_normalization()
+            for seed in self.seeds:
+                if seed.cert is not None:
+                    self.certificate_context(seed)
+
+    def _check_live(self) -> None:
+        if self._released:
+            raise RuntimeError("generalization attempt context has been released")
+        if self.manager_lifetime is not self.bdds.manager_lifetime:
+            raise RuntimeError("generalization context belongs to another BDD manager")
+
+    def _freeze_normalization(self) -> None:
+        keys = set()
+        for seed in self.seeds:
+            upper = min(MAX_PREDICATE_ARITY, seed.n)
+            for arity in range(1, upper + 1):
+                for subset0 in itertools.combinations(range(seed.n), arity):
+                    orderings = {_ordered_subset(seed, subset0, None)}
+                    orderings.update(
+                        _ordered_subset(seed, subset0, goal)
+                        for goal in seed.goals if goal.owner in subset0
+                    )
+                    for subset in orderings:
+                        selected = frozenset(subset)
+                        slots = {
+                            client: position
+                            for position, client in enumerate(subset)
+                        }
+                        keys.update(
+                            _normal_key(item.key, slots)
+                            for item in seed.variables
+                            if not item.owners or item.owners <= selected
+                        )
+        for key in sorted(keys, key=repr):
+            self.bdds.normal_var(key)
+        self.inverse_normal = {
+            value: key for key, value in self.bdds.normal.items()
+        }
+        self.normalization_mapping = tuple(sorted(
+            ((repr(key), value) for key, value in self.bdds.normal.items())
+        ))
+
+    def _certificate_identity(self, instance: Instance) -> tuple:
+        assert instance.cert is not None
+        return ("seed-certificate", _instance_identity(instance),
+                tuple(instance.cert.input_names),
+                tuple(instance.cert.output_names))
+
+    def certificate_context(self, instance: Instance) -> CompiledAagContext:
+        self._check_live()
+        if not self.enabled:
+            raise RuntimeError("compiled AAG contexts are disabled for the reference path")
+        assert instance.cert is not None
+        identity = self._certificate_identity(instance)
+        if identity not in self._compiled:
+            variable_map = {
+                literal // 2: index
+                for index, literal in enumerate(instance.cert.inputs)
+            }
+            abi = tuple(
+                ("certificate_input", index, name)
+                for index, name in enumerate(instance.cert.input_names)
+            )
+            required_roots = [
+                literal
+                for name, literal in zip(
+                    instance.cert.output_names, instance.cert.outputs,
+                    strict=True)
+                if name == "inv" or name.startswith("x_")
+            ]
+            self._compiled[identity] = CompiledAagContext(
+                self.bdds, instance.cert, identity, abi, variable_map,
+                required_roots,
+            )
+        return self._compiled[identity]
+
+    def game_context(self, game: Aag) -> CompiledAagContext:
+        self._check_live()
+        digest = sha256(game.path)
+        identity = (
+            "game", str(game.path.resolve()), digest,
+            tuple(game.latch_names), tuple(game.input_names),
+        )
+        if identity not in self._compiled:
+            nstate = len(game.latches)
+            variable_map = {
+                row[0] // 2: index for index, row in enumerate(game.latches)
+            }
+            variable_map.update({
+                literal // 2: nstate + index
+                for index, literal in enumerate(game.inputs)
+            })
+            abi = tuple(
+                [("state", index, name)
+                 for index, name in enumerate(game.latch_names)]
+                + [("letter", index, name)
+                   for index, name in enumerate(game.input_names)]
+            )
+            self._compiled[identity] = CompiledAagContext(
+                self.bdds, game, identity, abi, variable_map)
+        return self._compiled[identity]
+
+    def predicate_cache_key(
+            self, seeds: list[Instance], name: str, arity: int,
+            goals: list[GoalInfo | None], seed_names: list[str]) -> tuple:
+        self._check_live()
+        relations = []
+        for seed, goal in zip(seeds, goals, strict=True):
+            relations.append(None if goal is None else (
+                goal.key,
+                seed.role_by_client.get(goal.owner) if goal.owner is not None else None,
+                goal.owner == 0,
+            ))
+        return (
+            self.manager_lifetime,
+            tuple(self._certificate_identity(seed) for seed in seeds),
+            name,
+            tuple(seed_names),
+            tuple(relations),
+            arity,
+            self.normalization_mapping,
+        )
+
+    def template_cache_get(
+            self, key: tuple) -> tuple[TemplateSet, int] | None:
+        self._check_live()
+        try:
+            value = self.template_cache.pop(key)
+        except KeyError:
+            return None
+        self.template_cache[key] = value
+        return value
+
+    def template_cache_put(
+            self, key: tuple, value: tuple[TemplateSet, int]) -> None:
+        self._check_live()
+        self.template_cache.pop(key, None)
+        self.template_cache[key] = value
+        while len(self.template_cache) > self.template_cache_limit:
+            self.template_cache.popitem(last=False)
+
+    def _subset_cache_put(self, key: tuple, value: dict[str, object]) -> None:
+        self._subset_metadata.pop(key, None)
+        self._subset_metadata[key] = value
+        while len(self._subset_metadata) > self.subset_metadata_limit:
+            self._subset_metadata.popitem(last=False)
+
+    def _groups(self, instance: Instance) -> dict[
+            frozenset[int], tuple[VarInfo, ...]]:
+        identity = _instance_identity(instance)
+        if identity not in self._owner_groups:
+            grouped: dict[frozenset[int], list[VarInfo]] = defaultdict(list)
+            for item in instance.variables:
+                grouped[item.owners].append(item)
+            self._owner_groups[identity] = {
+                owners: tuple(items) for owners, items in grouped.items()
+            }
+        return self._owner_groups[identity]
+
+    def subset_metadata(self, instance: Instance,
+                        subset: tuple[int, ...]) -> dict[str, object]:
+        self._check_live()
+        key = (_instance_identity(instance), subset, self.normalization_mapping)
+        try:
+            metadata = self._subset_metadata.pop(key)
+        except KeyError:
+            if _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.counters["subset_metadata_cache_misses"] += 1
+            selected = frozenset(subset)
+            slots = {client: position for position, client in enumerate(subset)}
+            keep_items = tuple(
+                item
+                for owners, items in self._groups(instance).items()
+                if not owners or owners <= selected
+                for item in items
+            )
+            keep = {item.index for item in keep_items}
+            all_variables = {item.index for item in instance.variables}
+            drop = all_variables - keep
+            mapping = {
+                item.index: self.bdds.normal_var(_normal_key(item.key, slots))
+                for item in keep_items
+            }
+            reverse = {normal: concrete for concrete, normal in mapping.items()}
+            concrete = {
+                _normal_key(item.key, slots): item.index for item in keep_items
+            }
+            metadata = {
+                "keep": keep,
+                "drop": drop,
+                "drop_cube": self.bdds.cube(drop) if drop else None,
+                "mapping": mapping,
+                "reverse": reverse,
+                "concrete": concrete,
+            }
+        else:
+            if _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.counters["subset_metadata_cache_hits"] += 1
+        self._subset_cache_put(key, metadata)
+        return metadata
+
+    def release(self) -> None:
+        if self._released:
+            return
+        for context in self._compiled.values():
+            context.release()
+        self._compiled.clear()
+        self.template_cache.clear()
+        self._owner_groups.clear()
+        self._subset_metadata.clear()
+        self.inverse_normal.clear()
+        self.normalization_mapping = ()
+        self._released = True
+        if self.bdds.attempt_context is self:
+            self.bdds.attempt_context = None
+
+
 class Bdds:
     def __init__(self, var_count: int = 8192):
-        global _DIAGNOSTIC_BUDDY
+        global _BUDDY_MANAGER_LIFETIME, _DIAGNOSTIC_BUDDY
         buddy, _extension, binding_path, extension_path = load_buddy_bindings(
             BINDINGS_SITE
         )
@@ -1040,10 +1459,23 @@ class Bdds:
             # destructors may still hold references and crash after teardown.
             buddy.bdd_setvarnum(var_count)
             buddy.bdd_setmaxincrease(2_000_000)
+            _BUDDY_MANAGER_LIFETIME = object()
+        elif _BUDDY_MANAGER_LIFETIME is None:
+            _BUDDY_MANAGER_LIFETIME = object()
+        self.manager_lifetime = _BUDDY_MANAGER_LIFETIME
         self.var_count = var_count
         self.next_base = var_count // 4
         self.normal_base = var_count // 2
         self.normal: dict[tuple, int] = {}
+        # Select the fallback before constructing any adapter.  Runtime code
+        # never builds an adapter and leaves this as None on the two-pass path.
+        self.compose_route = _compose_route()
+        self._veccompose = None
+        if self.compose_route == "native_veccompose":
+            assert TOOL_CONFIG.buddy_adapter is not None
+            self._veccompose = BuddyVeccomposeAdapter(
+                buddy, extension_path, TOOL_CONFIG.buddy_adapter)
+        self.attempt_context: GeneralizationAttemptContext | None = None
         if _DIAGNOSTICS_ENABLED:
             try:
                 _DIAGNOSTIC_BUDDY = buddy
@@ -1068,6 +1500,11 @@ class Bdds:
                     "version_number": buddy.bdd_versionnum(),
                     "version_string": buddy.bdd_versionstr(),
                 }
+                environment["compose_route"] = self.compose_route
+                environment["buddy_adapter"] = (
+                    self._veccompose.description()
+                    if self._veccompose is not None else None
+                )
                 _diagnostic_buddy_boundary("bdd_manager:ready")
             except Exception as error:
                 if _DIAGNOSTICS is not None:
@@ -1075,7 +1512,15 @@ class Bdds:
 
     def close(self) -> None:
         # The manager is intentionally process-wide; see __init__.
-        pass
+        if self.attempt_context is not None:
+            self.attempt_context.release()
+
+    def begin_attempt(self, seeds: list[Instance],
+                      target: Instance) -> GeneralizationAttemptContext:
+        if self.attempt_context is not None:
+            raise RuntimeError("a generalization attempt context is already active")
+        self.attempt_context = GeneralizationAttemptContext(self, seeds, target)
+        return self.attempt_context
 
     def cube(self, variables: Iterable[int]):
         diagnostic_token = (
@@ -1091,7 +1536,8 @@ class Bdds:
             if diagnostic_token is not None:
                 _diagnostic_end(diagnostic_token)
 
-    def from_aag(self, aag: Aag, literal: int):
+    def from_aag_uncached(self, aag: Aag, literal: int):
+        """HEAD-compatible single-root importer retained as a test oracle."""
         diagnostic_token = (
             _diagnostic_begin("from_aag") if _DIAGNOSTICS_ENABLED else None
         )
@@ -1138,8 +1584,58 @@ class Bdds:
                         _DIAGNOSTICS.record_error("record_from_aag", error)
                 _diagnostic_end(diagnostic_token)
 
+    def from_aag(self, aag: Aag, literal: int):
+        """Compile one standalone root; attempt code uses shared contexts."""
+        if _reference_aag_context_enabled():
+            return self.from_aag_uncached(aag, literal)
+        variable_map = {
+            input_literal // 2: index
+            for index, input_literal in enumerate(aag.inputs)
+        }
+        abi = tuple(
+            ("input", index, name)
+            for index, name in enumerate(aag.input_names)
+        )
+        identity = (
+            "standalone", str(aag.path.resolve()), sha256(aag.path), abi,
+            self.manager_lifetime,
+        )
+        context = CompiledAagContext(
+            self, aag, identity, abi, variable_map, (literal,))
+        try:
+            return context.root(literal)
+        finally:
+            context.release()
+
     def game_functions(self, game: Aag):
         """Compile game literals over public certificate variable indices."""
+        if self.attempt_context is not None and self.attempt_context.enabled:
+            return self.attempt_context.game_context(game).game_functions()
+        if not _reference_aag_context_enabled():
+            nstate = len(game.latches)
+            variable_map = {
+                row[0] // 2: index for index, row in enumerate(game.latches)
+            }
+            variable_map.update({
+                literal // 2: nstate + index
+                for index, literal in enumerate(game.inputs)
+            })
+            abi = tuple(
+                [("state", index, name)
+                 for index, name in enumerate(game.latch_names)]
+                + [("letter", index, name)
+                   for index, name in enumerate(game.input_names)]
+            )
+            identity = (
+                "standalone-game", str(game.path.resolve()), sha256(game.path),
+                abi, self.manager_lifetime,
+            )
+            context = CompiledAagContext(
+                self, game, identity, abi, variable_map)
+            try:
+                return context.game_functions()
+            finally:
+                context.release()
         nstate = len(game.latches)
         gate = {lhs // 2: (left, right) for lhs, left, right in game.gates}
         input_var = {lit // 2: nstate + i for i, lit in enumerate(game.inputs)}
@@ -1174,13 +1670,8 @@ class Bdds:
     def substitute_state(self, function, next_state: list[object]):
         """Simultaneously substitute the game's next-state functions.
 
-        The installed Python BuDDy wrapper accidentally exposes ``bdd_pair``
-        as ``std::pair<bdd,bdd>`` rather than ``bddPair``, so veccompose cannot
-        be used.  Sequentially composing state variables directly is wrong:
-        a later composition would rewrite variables occurring inside an
-        earlier replacement.  Route through a disjoint auxiliary block to
-        retain simultaneous-substitution semantics while keeping both passes
-        in BuDDy's native compose operation.
+        The native adapter uses ``bdd_veccompose``.  The temporary block stays
+        in this API only for the retained two-pass test/reference oracle.
         """
         if self.next_base + len(next_state) >= self.normal_base:
             raise OverflowError("next-state auxiliary BDD budget exhausted")
@@ -1194,27 +1685,24 @@ class Bdds:
                              temporaries: list[int]):
         if not (len(variables) == len(replacements) == len(temporaries)):
             raise ValueError("substitution vectors have different lengths")
-        if not _DIAGNOSTICS_ENABLED:
-            result = function
-            for variable, temporary in zip(variables, temporaries, strict=True):
-                result = self.buddy.bdd_compose(
-                    result, self.buddy.bdd_ithvar(temporary), variable)
-            for temporary, replacement in zip(
-                    temporaries, replacements, strict=True):
-                result = self.buddy.bdd_compose(result, replacement, temporary)
-            return result
-        diagnostic_token = _diagnostic_begin("substitute_variables")
-        compose_calls = 0
+        if not variables:
+            return function
+        diagnostic_token = (
+            _diagnostic_begin("substitute_variables")
+            if _DIAGNOSTICS_ENABLED else None
+        )
         try:
-            result = function
-            for variable, temporary in zip(variables, temporaries, strict=True):
-                result = self.buddy.bdd_compose(
-                    result, self.buddy.bdd_ithvar(temporary), variable)
-                compose_calls += 1
-            for temporary, replacement in zip(
-                    temporaries, replacements, strict=True):
-                result = self.buddy.bdd_compose(result, replacement, temporary)
-                compose_calls += 1
+            if self.compose_route == "two_pass":
+                result = self.substitute_variables_two_pass(
+                    function, variables, replacements, temporaries)
+                if diagnostic_token is not None and _DIAGNOSTICS is not None:
+                    _DIAGNOSTICS.counters["bdd_compose_calls"] += 2 * len(variables)
+                return result
+            if self._veccompose is None:
+                raise RuntimeError("native compose route has no adapter")
+            result = self._veccompose.compose(function, variables, replacements)
+            if diagnostic_token is not None and _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.counters["bdd_veccompose_calls"] += 1
             return result
         finally:
             if diagnostic_token is not None:
@@ -1222,12 +1710,32 @@ class Bdds:
                     if _DIAGNOSTICS is None:
                         raise RuntimeError("diagnostics enabled without collector")
                     _DIAGNOSTICS.counters["substitute_variables_calls"] += 1
-                    _DIAGNOSTICS.counters["bdd_compose_calls"] += compose_calls
                 except Exception as error:
                     if _DIAGNOSTICS is not None:
                         _DIAGNOSTICS.record_error(
                             "record_substitute_variables", error)
                 _diagnostic_end(diagnostic_token)
+
+    def substitute_variables_two_pass(
+            self, function, variables: list[int], replacements: list[object],
+            temporaries: list[int]):
+        """Legacy simultaneous-substitution oracle for tiny regression tests."""
+        if not (len(variables) == len(replacements) == len(temporaries)):
+            raise ValueError("substitution vectors have different lengths")
+        result = function
+        for variable, temporary in zip(variables, temporaries, strict=True):
+            result = self.buddy.bdd_compose(
+                result, self.buddy.bdd_ithvar(temporary), variable)
+        for temporary, replacement in zip(
+                temporaries, replacements, strict=True):
+            result = self.buddy.bdd_compose(result, replacement, temporary)
+        return result
+
+    def collect_garbage_for_testing(self) -> None:
+        """Force native BuDDy collection; the installed SWIG API omits it."""
+        if self._veccompose is None:
+            raise RuntimeError("native compose adapter is not configured")
+        self._veccompose.collect_garbage()
 
     def cpre(self, target, next_state: list[object], bad,
              controls: list[int], uncontrollable: list[int]):
@@ -1355,16 +1863,23 @@ def _ordered_subset(instance: Instance, subset: tuple[int, ...],
 
 
 def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
-                         goal: GoalInfo | None = None) -> dict[tuple, object]:
+                         goal: GoalInfo | None = None,
+                         context: GeneralizationAttemptContext | None = None,
+                         cache_key: tuple | None = None) -> TemplateSet:
     assert instance.cert is not None
-    function = bdds.from_aag(instance.cert, instance.cert.output(name))
+    if context is not None and context.enabled:
+        function = context.certificate_context(instance).root(
+            instance.cert.output(name))
+    else:
+        function = bdds.from_aag_uncached(
+            instance.cert, instance.cert.output(name))
     metadata_token = (
         _diagnostic_begin("projection_metadata")
         if _DIAGNOSTICS_ENABLED else None
     )
     try:
         all_vars = {item.index for item in instance.variables}
-        templates: dict[tuple, object] = {}
+        templates = TemplateSet(cache_key=cache_key)
         rebuilt = bdds.buddy.bddtrue
     finally:
         if metadata_token is not None:
@@ -1376,22 +1891,34 @@ def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
         )
         try:
             subset = _ordered_subset(instance, subset0, goal)
-            selected = frozenset(subset)
-            keep = {item.index for item in instance.variables
-                    if not item.owners or item.owners <= selected}
-            drop = all_vars - keep
-            slots = {client: pos for pos, client in enumerate(subset)}
-            mapping = {
-                item.index: bdds.normal_var(_normal_key(item.key, slots))
-                for item in instance.variables if item.index in keep
-            }
+            if context is not None and context.enabled:
+                metadata = context.subset_metadata(instance, subset)
+                keep = metadata["keep"]
+                drop = metadata["drop"]
+                drop_cube = metadata["drop_cube"]
+                mapping = metadata["mapping"]
+                reverse = metadata["reverse"]
+            else:
+                selected = frozenset(subset)
+                keep = {item.index for item in instance.variables
+                        if not item.owners or item.owners <= selected}
+                drop = all_vars - keep
+                slots = {client: pos for pos, client in enumerate(subset)}
+                mapping = {
+                    item.index: bdds.normal_var(_normal_key(item.key, slots))
+                    for item in instance.variables if item.index in keep
+                }
+                reverse = {
+                    bdds.normal_var(_normal_key(item.key, slots)): item.index
+                    for item in instance.variables if item.index in keep
+                }
+                drop_cube = bdds.cube(drop) if drop else None
             if _DIAGNOSTICS_ENABLED:
                 _diagnostic_record_subset(instance.n, subset, "projection")
         finally:
             if metadata_token is not None:
                 _diagnostic_end(metadata_token)
         if drop:
-            drop_cube = bdds.cube(drop)
             project_token = (
                 _diagnostic_begin("bdd_projection_relabel")
                 if _DIAGNOSTICS_ENABLED else None
@@ -1432,13 +1959,10 @@ def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
                 raise Decline("anti-unify", name, instance.n,
                               f"projections disagree within role class {group}")
             templates[group] = normalized
+            templates.supports[group] = frozenset(_support(bdds, normalized))
 
             # Rebuild in the seed's concrete variable space for the exact
             # separability check.  Each projection is a conjunct.
-            reverse = {
-                bdds.normal_var(_normal_key(item.key, slots)): item.index
-                for item in instance.variables if item.index in keep
-            }
         finally:
             if metadata_token is not None:
                 _diagnostic_end(metadata_token)
@@ -1494,7 +2018,8 @@ def _one_hot_validity(bdds: Bdds, instance: Instance):
 
 def _instantiate_templates_impl(bdds: Bdds, target: Instance,
                                 templates: dict[tuple, object], arity: int,
-                                goal: GoalInfo | None = None):
+                                goal: GoalInfo | None = None,
+                                context: GeneralizationAttemptContext | None = None):
     result = bdds.buddy.bddtrue
     add_hint_validity = HINT_VALIDITY_GROUP in templates
     for subset0 in itertools.combinations(range(target.n), arity):
@@ -1509,13 +2034,21 @@ def _instantiate_templates_impl(bdds: Bdds, target: Instance,
         if group not in templates:
             raise Decline("instantiate", goal.key if goal else "inv", target.n,
                           f"no template for role class {group}")
-        slots = {client: pos for pos, client in enumerate(subset)}
-        concrete = {_normal_key(item.key, slots): item.index
-                    for item in target.variables
-                    if not item.owners or item.owners <= frozenset(subset)}
-        support = _support(bdds, templates[group])
+        if context is not None and context.enabled:
+            metadata = context.subset_metadata(target, subset)
+            concrete = metadata["concrete"]
+            inverse_normal = context.inverse_normal
+        else:
+            slots = {client: pos for pos, client in enumerate(subset)}
+            concrete = {_normal_key(item.key, slots): item.index
+                        for item in target.variables
+                        if not item.owners or item.owners <= frozenset(subset)}
+            inverse_normal = {value: key for key, value in bdds.normal.items()}
+        if isinstance(templates, TemplateSet) and group in templates.supports:
+            support = templates.supports[group]
+        else:
+            support = _support(bdds, templates[group])
         mapping = {}
-        inverse_normal = {value: key for key, value in bdds.normal.items()}
         for variable in support:
             key = inverse_normal[variable]
             if key not in concrete:
@@ -1530,14 +2063,15 @@ def _instantiate_templates_impl(bdds: Bdds, target: Instance,
 
 def instantiate_templates(bdds: Bdds, target: Instance,
                           templates: dict[tuple, object], arity: int,
-                          goal: GoalInfo | None = None):
+                          goal: GoalInfo | None = None,
+                          context: GeneralizationAttemptContext | None = None):
     if not _DIAGNOSTICS_ENABLED:
         return _instantiate_templates_impl(
-            bdds, target, templates, arity, goal)
+            bdds, target, templates, arity, goal, context)
     token = _diagnostic_begin("instantiate_templates")
     try:
         return _instantiate_templates_impl(
-            bdds, target, templates, arity, goal)
+            bdds, target, templates, arity, goal, context)
     finally:
         _diagnostic_end(token)
 
@@ -1560,8 +2094,9 @@ def _support(bdds: Bdds, function) -> set[int]:
 
 
 def _merge_seed_templates(stage: str, predicate: str,
-                          by_seed: list[tuple[int, dict[tuple, object]]]) -> dict[tuple, object]:
-    result: dict[tuple, object] = {}
+                          by_seed: list[tuple[int, dict[tuple, object]]],
+                          cache_key: tuple | None = None) -> TemplateSet:
+    result = TemplateSet(cache_key=cache_key)
     for n, templates in by_seed:
         for key, function in templates.items():
             # Existential projections at a larger seed can strengthen the
@@ -1571,13 +2106,16 @@ def _merge_seed_templates(stage: str, predicate: str,
             # every retained seed is independently reconstructed above and
             # the instantiated candidate remains untrusted until checked.
             result[key] = function
+            if isinstance(templates, TemplateSet) and key in templates.supports:
+                result.supports[key] = templates.supports[key]
     return result
 
 
 def _predicate_templates(bdds: Bdds, seeds: list["Instance"], name: str,
                          base_arity: int,
                          goals: list[GoalInfo | None] | None = None,
-                         seed_names: list[str] | None = None
+                         seed_names: list[str] | None = None,
+                         context: GeneralizationAttemptContext | None = None,
                          ) -> tuple[dict[tuple, object], int]:
     """Measure one predicate, raising its arity without globalizing the family.
 
@@ -1590,6 +2128,21 @@ def _predicate_templates(bdds: Bdds, seeds: list["Instance"], name: str,
     first_failure: Decline | None = None
     upper = min(MAX_PREDICATE_ARITY, max(seed.n for seed in seeds))
     for arity in range(base_arity, upper + 1):
+        cache_key = (
+            context.predicate_cache_key(
+                seeds, name, arity, goals, seed_names)
+            if context is not None and context.enabled else None
+        )
+        cached = (
+            context.template_cache_get(cache_key)
+            if cache_key is not None else None
+        )
+        if cached is not None:
+            if _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.counters["predicate_template_cache_hits"] += 1
+            return cached
+        if cache_key is not None and _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.counters["predicate_template_cache_misses"] += 1
         eligible = [(seed, goal, seed_name)
                     for seed, goal, seed_name in zip(
                         seeds, goals, seed_names, strict=True)
@@ -1602,14 +2155,19 @@ def _predicate_templates(bdds: Bdds, seeds: list["Instance"], name: str,
         for seed, goal, seed_name in eligible:
             try:
                 by_seed.append((seed.n, projection_templates(
-                    bdds, seed, seed_name, arity, goal)))
+                    bdds, seed, seed_name, arity, goal, context, cache_key)))
             except Decline as exc:
                 failed = exc
                 if first_failure is None:
                     first_failure = exc
                 break
         if failed is None:
-            return _merge_seed_templates("anti-unify", name, by_seed), arity
+            merged = _merge_seed_templates(
+                "anti-unify", name, by_seed, cache_key)
+            result = (merged, arity)
+            if cache_key is not None:
+                context.template_cache_put(cache_key, result)
+            return result
     failing_n = first_failure.n if first_failure is not None else max(seed.n for seed in seeds)
     detail = (f"requires arity n={failing_n}; no bounded arity through "
               f"k={upper} reconstructs it")
@@ -2033,14 +2591,17 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
                   for j, (p, _name) in enumerate(uncontrollable)})
     policy_builder = AagBuilder(policy_inputs)
     policy_outputs = []
+    policy_memo: dict[int, int] | None = (
+        None if _reference_aag_context_enabled() else {}
+    )
     control_names = [name for name in target.game.input_names
                      if name.startswith("controllable_")]
     for name, function in zip(control_names, functions, strict=True):
         policy_outputs.append((name, bdds.to_aag(
-            policy_builder, function, remap)))
+            policy_builder, function, remap, policy_memo)))
     for j, function in enumerate(next_curr):
         policy_outputs.append((f"curr_next_{j}", bdds.to_aag(
-            policy_builder, function, remap)))
+            policy_builder, function, remap, policy_memo)))
     policy_path.write_text(policy_builder.render(
         policy_outputs, "canonical lowest-index Skolemization"), encoding="utf-8")
     _trace("policy emitted")
@@ -2374,6 +2935,7 @@ def _collector_candidate(
          ("winning_semantic_states", len(winning))))
     evidence = {
         "format": "acacia-param-lift-gr1-evidence-v1",
+        "compose_route": _compose_route(),
         "family": target.family, "target": target.n,
         "seeds": [seed.n for seed in seeds], "arity": candidate.arity,
         "role_classes": list(candidate.role_classes),
@@ -2444,12 +3006,15 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
     if family == "collector_v1":
         stage["canonicalize"] = time.monotonic() - started
         bdds = Bdds()
+        context = bdds.begin_attempt([], target)
         try:
             return _collector_candidate(bdds, seeds, target, out, stage)
         finally:
+            context.release()
             bdds.close()
 
     bdds = Bdds()
+    context = bdds.begin_attempt(seeds, target)
     try:
         arity = REAL_FAMILIES[family].arity
         stage["canonicalize"] = time.monotonic() - started
@@ -2476,9 +3041,10 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
         started = stage.begin("anti_unify")
         predicate_arities: dict[str, int] = {}
         inv_templates, inv_arity = _predicate_templates(
-            bdds, seeds, "inv", arity)
+            bdds, seeds, "inv", arity, context=context)
         predicate_arities["inv"] = inv_arity
-        inv = instantiate_templates(bdds, target, inv_templates, inv_arity)
+        inv = instantiate_templates(
+            bdds, target, inv_templates, inv_arity, context=context)
         stage["anti_unify"] = time.monotonic() - started
 
         # Each target goal is matched by its monitor template.  Depth and all
@@ -2532,10 +3098,11 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
                     templates, predicate_arity = _predicate_templates(
                         bdds, seeds, predicate_name, arity, seed_goals,
                         [f"x_{seed_goal.goal}_{level}_{fair}"
-                         for seed_goal in seed_goals])
+                         for seed_goal in seed_goals], context)
                     predicate_arities[predicate_name] = predicate_arity
                     x = instantiate_templates(
-                        bdds, target, templates, predicate_arity, target_goal)
+                        bdds, target, templates, predicate_arity, target_goal,
+                        context)
                     predicates[predicate_name] = x
                     row.append(x)
                     template_tally["rank"] += len(templates)
@@ -2626,6 +3193,7 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
             target.bus_schemas, tuple(sorted(template_tally.items())),
             tuple(sorted(predicate_arities.items())))
         evidence = {"format": "acacia-param-lift-gr1-evidence-v1",
+                    "compose_route": _compose_route(),
                     "family": family, "target": target_n,
                     "seeds": list(seed_ns), "arity": candidate.arity,
                     "predicate_arities": dict(candidate.predicate_arities),
@@ -2664,6 +3232,7 @@ def generalize_once(family: str, target_n: int, seed_ns: tuple[int, ...],
             json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return candidate, target, cert, policy, {"times": stage, "evidence": evidence}
     finally:
+        context.release()
         bdds.close()
 
 
@@ -3194,6 +3763,7 @@ def run_exact_direct(family: str, target: int, out: pathlib.Path,
     driver_overhead = max(0.0, wall_s - target_monitor - target_solve - target_check)
     evidence = {
         "format": "acacia-param-lift-gr1-evidence-v1",
+        "compose_route": _compose_route(),
         "family": family, "target": target, "seeds": [],
         "path_kind": "direct-certified", "measured_arity": None,
         "semantics": "exact", "certificate_side": side,
@@ -3439,6 +4009,7 @@ def main(argv: list[str] | None = None) -> int:
         out.mkdir(parents=True, exist_ok=True)
         (out / "evidence.json").write_text(json.dumps({
             "format": "acacia-param-lift-gr1-evidence-v1",
+            "compose_route": _compose_route(),
             "family": args.family, "target": args.target,
             "seeds": list(seeds), "verdict": "UNKNOWN",
             "decline": {"stage": exc.stage, "predicate": exc.predicate,

@@ -28,6 +28,7 @@ DEFAULT_BINDINGS_SITE = pathlib.Path("/usr/local/lib64/python3.13/site-packages"
 ENV_TLSF_TOOLS_BUILD = "ACACIA_TLSF_TOOLS_BUILD"
 ENV_BINDINGS_PYTHON = "ACACIA_BINDINGS_PYTHON"
 ENV_BINDINGS_SITE = "ACACIA_BINDINGS_SITE"
+ENV_BUDDY_ADAPTER = "ACACIA_BUDDY_ADAPTER"
 
 REQUIRED_BINDING_FUNCTIONS = (
     "bdd_compose",
@@ -60,6 +61,7 @@ class ToolConfiguration:
     tlsf_tools_build: pathlib.Path
     bindings_python: pathlib.Path
     bindings_site: pathlib.Path
+    buddy_adapter: pathlib.Path | None = None
 
     @property
     def tlsf_tools_root(self) -> pathlib.Path:
@@ -94,10 +96,12 @@ def configuration_defaults(
     environ: Mapping[str, str] | None = None,
 ) -> ToolConfiguration:
     env = os.environ if environ is None else environ
+    adapter = env.get(ENV_BUDDY_ADAPTER)
     return ToolConfiguration(
         pathlib.Path(env.get(ENV_TLSF_TOOLS_BUILD, DEFAULT_TLSF_TOOLS_BUILD)),
         pathlib.Path(env.get(ENV_BINDINGS_PYTHON, DEFAULT_BINDINGS_PYTHON)),
         pathlib.Path(env.get(ENV_BINDINGS_SITE, DEFAULT_BINDINGS_SITE)),
+        pathlib.Path(adapter) if adapter else None,
     )
 
 
@@ -125,6 +129,14 @@ def add_configuration_arguments(parser: argparse.ArgumentParser) -> None:
         help=f"site-packages directory containing buddy (env: {ENV_BINDINGS_SITE})",
     )
     parser.add_argument(
+        "--buddy-adapter",
+        type=pathlib.Path,
+        default=defaults.buddy_adapter,
+        metavar="PATH",
+        help=("prebuilt simultaneous-compose adapter; unset selects the "
+              f"two-pass route (env: {ENV_BUDDY_ADAPTER})"),
+    )
+    parser.add_argument(
         "--probe",
         action="store_true",
         help="validate and describe configured tools/bindings without benchmark work",
@@ -136,6 +148,8 @@ def configuration_from_args(args: argparse.Namespace) -> ToolConfiguration:
         args.tlsf_tools_build.expanduser().resolve(),
         args.bindings_python.expanduser().resolve(),
         args.bindings_site.expanduser().resolve(),
+        (args.buddy_adapter.expanduser().resolve()
+         if args.buddy_adapter is not None else None),
     )
 
 
@@ -254,11 +268,25 @@ def _probe_bindings(config: ToolConfiguration) -> dict[str, object]:
         import sys
 
         sys.path.insert(0, sys.argv[1])
-        from tool_config import ProbeError, inspect_buddy_bindings
+        from buddy_veccompose import BuddyAdapterError, validate_buddy_adapter
+        from tool_config import (
+            ProbeError,
+            inspect_buddy_bindings,
+            load_buddy_bindings,
+        )
 
         try:
             payload = inspect_buddy_bindings(pathlib.Path(sys.argv[2]))
-        except ProbeError as error:
+            if sys.argv[3]:
+                buddy, _extension, _binding_path, extension_path = (
+                    load_buddy_bindings(pathlib.Path(sys.argv[2]))
+                )
+                payload["adapter"] = validate_buddy_adapter(
+                    buddy, extension_path, pathlib.Path(sys.argv[3])
+                )
+            else:
+                payload["adapter"] = None
+        except (ProbeError, BuddyAdapterError) as error:
             print(error, file=sys.stderr)
             raise SystemExit(2) from error
         print(json.dumps(payload, sort_keys=True))
@@ -273,6 +301,7 @@ def _probe_bindings(config: ToolConfiguration) -> dict[str, object]:
                 script,
                 str(HERE),
                 str(config.bindings_site),
+                str(config.buddy_adapter) if config.buddy_adapter else "",
             ],
             env=bindings_environment(config),
             text=True,
@@ -325,6 +354,8 @@ def probe_configuration(
             },
         },
         "bindings_site": str(config.bindings_site),
+        "buddy_adapter": (str(config.buddy_adapter)
+                          if config.buddy_adapter is not None else None),
         "bindings": _probe_bindings(config),
     }
 
