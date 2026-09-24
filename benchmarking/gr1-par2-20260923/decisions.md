@@ -371,3 +371,19 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Owner rule: **a TLSF input without parameters never enters parametric lifting** (Stage C gates on
   the input's own `PARAMETERS` block and nothing else); such inputs can only take the direct
   exact route or go straight to B.
+
+## 2026-09-24 — Stage A review: a pre-existing ownership bug in the tlsf-tools GR(1) game ABI
+
+- Codex review REJECT. **P0 (soundness, pre-existing in tlsf-tools):** `gr1_monitor_game.py` emits
+  input names verbatim and prefixes outputs with `controllable_`, and the solver/checker classify
+  every game input carrying that prefix as system-controlled. A TLSF input named `controllable_a`
+  therefore flips ownership: `G !a` is certified UNREALIZABLE, its alpha-renamed twin REALIZABLE,
+  both "VERIFIED". No corpus signal uses the prefix, so no previous result is affected, but this is
+  exactly the name dependence the owner's obfuscation rule targets. Fix in tlsf-tools with an
+  injective, disjoint encoding (or typed ownership metadata), separately from Stage B.
+- P1: the obfuscator misses `TYPE name;` enum-bus declarations (9 corpus files). P1: the static
+  anti-hardcoding guard misses concatenated names and hash- or signature-keyed tables; add
+  metamorphic tests (random basenames, adversarial names incl. `controllable_*`, generated unseen
+  instances) and runtime file-open tracing. P2: the census used an 11.33 s lowering bound while
+  admission is capped at the 0.85 s eligibility gate at 17 s (45 of the 572 would decline).
+- No Stage A measurement until P0 is fixed.
