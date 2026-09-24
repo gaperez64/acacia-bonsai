@@ -61,24 +61,46 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--request-mode", choices=("source",), default="source")
     parser.add_argument("-T", "--tlsf", required=True, type=pathlib.Path)
-    parser.add_argument("--budget", type=float, default=120.0)
-    parser.add_argument("--eligibility-budget-seconds", type=float, default=1.0)
+    parser.add_argument("--budget", type=float,
+                        default=settings.DEFAULT_RUNNER_BUDGET_SECONDS)
+    parser.add_argument("--eligibility-budget-seconds", type=float,
+                        default=settings.DEFAULT_ELIGIBILITY_BUDGET_SECONDS)
     parser.add_argument("--output-dir", required=True, type=pathlib.Path)
     parser.add_argument("--evidence-out", required=True, type=pathlib.Path)
     add_configuration_arguments(parser)
     args = parser.parse_args(argv)
     started = time.monotonic()
     deadline = started + args.budget
-    evidence: dict = {"schema_version": 3, "path_kind": "direct-certified",
-                      "route": "direct-certified", "target_verified": False,
+    evidence: dict = {"schema_version": 3, "path_kind": "attempted-declined",
+                      "route": "attempted-declined", "target_verified": False,
                       "eligibility_budget_s": args.eligibility_budget_seconds,
                       "global_knobs": {
                           "max_sizes_per_axis": settings.MAX_SIZES_PER_AXIS,
                           "max_predicate_arity": settings.MAX_PREDICATE_ARITY,
                           "max_subsets_per_predicate": settings.MAX_SUBSETS_PER_PREDICATE,
+                          "seed_confirmation": settings.SEED_CONFIRMATION,
+                          "learn_move_schemas": settings.LEARN_MOVE_SCHEMAS,
                           "move_schema_seconds": settings.MOVE_SCHEMA_SECONDS,
                           "discovery_share": settings.DISCOVERY_SHARE,
                           "policy_proof_fraction": settings.POLICY_PROOF_FRACTION,
+                          "solver_node_cap": settings.SOLVER_NODE_CAP,
+                          "solver_cache_cap": settings.SOLVER_CACHE_CAP,
+                          "checker_node_cap": settings.CHECKER_NODE_CAP,
+                          "buddy_initial_nodes": settings.BUDDY_INITIAL_NODES,
+                          "buddy_initial_cache": settings.BUDDY_INITIAL_CACHE,
+                          "buddy_max_increase": settings.BUDDY_MAX_INCREASE,
+                          "default_lift_fraction": settings.DEFAULT_LIFT_FRACTION,
+                          "default_runner_budget_seconds":
+                              settings.DEFAULT_RUNNER_BUDGET_SECONDS,
+                          "default_eligibility_budget_seconds":
+                              settings.DEFAULT_ELIGIBILITY_BUDGET_SECONDS,
+                          "eligibility_cap_fraction": settings.ELIGIBILITY_CAP_FRACTION,
+                          "checker_timeout_floor_seconds":
+                              settings.CHECKER_TIMEOUT_FLOOR_SECONDS,
+                          "process_group_cleanup_seconds":
+                              settings.PROCESS_GROUP_CLEANUP_SECONDS,
+                          "process_poll_interval_seconds":
+                              settings.PROCESS_POLL_INTERVAL_SECONDS,
                           "route_order": settings.ROUTE_ORDER},
                       "stages": {}}
     code = 2
@@ -162,6 +184,8 @@ def main(argv: list[str] | None = None) -> int:
                                                [*seeds, target_instance]))
                 predicates, depths, arities = schema.learn_certificate(
                     bdds, seeds, target_instance, discovery_deadline)
+                evidence["move_source"] = ("learned_schema" if settings.LEARN_MOVE_SCHEMAS
+                                           else "target_transition")
                 evidence["stages"]["schema"] = {
                     "elapsed_s": time.monotonic() - stage_started,
                     "rank_depths": depths}
@@ -194,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
                 stage_started = time.monotonic()
                 checkpoint("direct")
                 direct = run_exact_direct(snapshot, output / "direct", config,
-                                          deadline, max(0.001, min(
+                                          deadline, max(settings.CHECKER_TIMEOUT_FLOOR_SECONDS, min(
                                               args.eligibility_budget_seconds,
                                               deadline - time.monotonic())))
                 evidence["stages"]["direct"] = {"elapsed_s": time.monotonic() - stage_started}

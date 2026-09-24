@@ -23,10 +23,15 @@ target lowers exactly or strictly to GR(1):
 2. Roles and indices from provenance only: index tuples and declaration ids, never names/suffixes;
    special positions by structural incidence, not index==0; encoded-width buses as representation
    bits of one element.
-3. Schema: per predicate (invariant, each rank layer, moves) try arity k=0..K (global K=4) with at
+3. Schema: per invariant and rank predicate try arity k=0..K (global K=4) with at
    least one seed larger than k, exact reconstruction on every seed and equal normalized templates
    across seeds; bus-wide cardinality/temporal schemas derived semantically (symbolic equivalence /
    count signatures), never from signal names; decline if unproven.
+   Owner decision of 2026-09-24: derive moves from these lifted predicates and
+   the exact target game's transition relation, then Skolemize the policy.
+   Learned move schemas are optional behind one global knob (off by default);
+   an enabled move attempt must pass exact reconstruction and instantiation or
+   decline. Record `move_source` in evidence.
 4. Instantiate at the target and prove it: policy route first; if Skolemization/policy check fails
    on capacity/deadline and time remains, region check (tlsfcertcheck --method region) of the same
    certificate — one global order, no per-input switch. Only an independently VERIFIED target
@@ -37,7 +42,8 @@ target lowers exactly or strictly to GR(1):
    ONE global rule now, document it, and measure later on the development corpus); a non-parametric
    input only gets the direct route. Global knobs (max sizes per axis, K, discovery share of the
    slice, direct/lift order) are declared in one place, documented, and not per-family.
-6. Evidence: route "lifted-certified" vs "direct-certified", seeds used (override vectors),
+6. Evidence: route "attempted-declined" until independent verification, then
+   "lifted-certified" or "direct-certified"; seeds used (override vectors),
    arities chosen, method, all stage timings, and the provenance format version.
 Tests: unseen generated parametric specs (write a small generator of parametric GR(1) TLSF families
 with random names — cardinality/mutex/request-grant style — that are NOT copies of any corpus

@@ -265,6 +265,7 @@ class WrapperTests(unittest.TestCase):
                 self.assertTrue(self.b_record.exists())
                 route = json.loads(self.route.read_text())
                 self.assertEqual(route["winner"], "fallback-pending")
+                self.assertEqual(route["route"], "attempted-declined")
                 self.b_record.unlink()
 
     def test_missing_input_binding_hash_falls_back(self):

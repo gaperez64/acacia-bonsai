@@ -70,6 +70,40 @@ def named_targets(node: ast.AST) -> set[str]:
     return set()
 
 
+def _branch_keyed_to_source(test: ast.AST) -> list[str]:
+    """Reject literal gates on spelling, size, or a particular formula."""
+    errors = []
+    for branch in (node for node in ast.walk(test)
+                   if isinstance(node, (ast.Compare, ast.Call))):
+        operands = ([branch.left, *branch.comparators]
+                    if isinstance(branch, ast.Compare) else [branch])
+        literals = [node.value for operand in operands for node in ast.walk(operand)
+                    if isinstance(node, ast.Constant)]
+        if not literals:
+            continue
+        names = {node.id.lower() for operand in operands for node in ast.walk(operand)
+                 if isinstance(node, ast.Name)}
+        keys = {folded_string(node.slice) for operand in operands for node in ast.walk(operand)
+                if isinstance(node, ast.Subscript)}
+        fields = names | {key.lower() for key in keys if key is not None}
+        if any(isinstance(value, str) for value in literals):
+            if fields & {"source_name", "signal_name", "input_name", "output_name",
+                         "formula", "formula_text", "spec_formula"}:
+                errors.append("signal or formula literal decision")
+        if any(isinstance(value, int) and not isinstance(value, bool) and abs(value) > 1
+               for value in literals):
+            counted = any(isinstance(node, ast.Call) and
+                          isinstance(node.func, ast.Name) and node.func.id == "len" and
+                          node.args and any(isinstance(part, ast.Name) and
+                                            part.id.lower() in {"inputs", "outputs", "signals"}
+                                            for part in ast.walk(node.args[0]))
+                          for operand in operands for node in ast.walk(operand))
+            if counted or fields & {"signal_count", "input_count", "output_count",
+                                    "source_size", "instance_size", "size", "n"}:
+                errors.append("fixed signal count or size decision")
+    return errors
+
+
 def violations(source: str, *, check_source_flow: bool = True) -> list[str]:
     tree = ast.parse(source)
     errors: list[str] = []
@@ -85,6 +119,9 @@ def violations(source: str, *, check_source_flow: bool = True) -> list[str]:
                      name.id, re.IGNORECASE) for name in ast.walk(tree)
            if isinstance(name, ast.Name)):
         errors.append("runtime family/corpus registry")
+    for branch in ast.walk(tree):
+        if isinstance(branch, (ast.If, ast.IfExp, ast.While)):
+            errors.extend(_branch_keyed_to_source(branch.test))
     if not check_source_flow:
         return sorted(set(errors))
 
@@ -165,6 +202,12 @@ def test_no_family_labels_or_runtime_corpus_reads() -> None:
     'key = (len(inputs), len(outputs))\ndecision = {(1, 2): "REALIZABLE"}.get(key)',
     'p = Path(source)\nkey = sha256_file(p)\ndecision = verdicts[key]',
     'rows = Path("benchmarking/" + "param-lift-20260922/x.tsv").read_text()',
+    'if row["source_name"] == "g":\n    decision = True',
+    'if len(inputs) == 7:\n    decision = True',
+    'if formula == "G (g -> F r);":\n    decision = True',
+    'if row["source_name"].startswith("g"):\n    decision = True',
+    'if size == 7:\n    decision = True',
+    'if formula in {"G (g -> F r);"}:\n    decision = True',
 ])
 def test_guard_rejects_registry_mutations(mutant: str) -> None:
     assert violations(mutant)

@@ -26,6 +26,8 @@ import uuid
 from dataclasses import dataclass
 from typing import Any
 
+from acacia_lift.lifting import settings
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEFAULT_LIFT_ENTRY = "python -m acacia_lift.runner"
@@ -33,7 +35,6 @@ DEADLINE_ENV = "ACACIA_OUTER_DEADLINE_MONOTONIC"
 ROUTE_RECORD_ENV = "ACACIA_ROUTE_RECORD"
 DECISIVE_EXITS = {"REALIZABLE": 0, "UNREALIZABLE": 1}
 ERROR_EXIT = 3
-PROCESS_GROUP_CLEANUP_SECONDS = 1.0
 PR_SET_CHILD_SUBREAPER = 36
 PR_GET_CHILD_SUBREAPER = 37
 
@@ -73,7 +74,7 @@ def build_parser() -> argparse.ArgumentParser:
     budget.add_argument(
         "--lift-budget-fraction",
         type=fraction,
-        default=1 / 3,
+        default=settings.DEFAULT_LIFT_FRACTION,
         metavar="F",
         help="fraction of the outer cap assigned to lifting (default: 1/3)",
     )
@@ -95,7 +96,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--bindings-site", type=pathlib.Path)
     parser.add_argument("--buddy-adapter", type=pathlib.Path)
     parser.add_argument(
-        "--eligibility-budget-seconds", type=positive_finite, default=1.0,
+        "--eligibility-budget-seconds", type=positive_finite,
+        default=settings.DEFAULT_ELIGIBILITY_BUDGET_SECONDS,
         metavar="S", help="maximum source-binding time (default: 1 s, capped at 5%% of cap)",
     )
     parser.add_argument(
@@ -299,7 +301,7 @@ def process_group_exists(pgid: int) -> bool:
 
 def terminate_group(proc: subprocess.Popen[bytes]) -> None:
     pgid = proc.pid
-    deadline = time.monotonic() + PROCESS_GROUP_CLEANUP_SECONDS
+    deadline = time.monotonic() + settings.PROCESS_GROUP_CLEANUP_SECONDS
     try:
         os.killpg(pgid, signal.SIGKILL)
     except ProcessLookupError:
@@ -326,7 +328,7 @@ def terminate_group(proc: subprocess.Popen[bytes]) -> None:
             os.killpg(pgid, signal.SIGKILL)
         except ProcessLookupError:
             continue
-        time.sleep(0.005)
+        time.sleep(settings.PROCESS_POLL_INTERVAL_SECONDS)
 
 
 def run_lift(command: list[str], timeout: float) -> LiftOutcome:
@@ -509,7 +511,7 @@ def run(argv: list[str], started: float) -> int:
         )
         fallback_reserve = max(0.0, cap - lift_budget)
         args.eligibility_budget_seconds = min(
-            args.eligibility_budget_seconds, 0.05 * cap
+            args.eligibility_budget_seconds, settings.ELIGIBILITY_CAP_FRACTION * cap
         )
         route_record = args.route_record.resolve() if args.route_record is not None else None
 
@@ -556,7 +558,7 @@ def run(argv: list[str], started: float) -> int:
             "binding_reason": reason,
             "eligibility_budget_s": args.eligibility_budget_seconds,
             "route": (evidence.get("route") if verdict is not None
-                      else "direct-certified"),
+                      else "attempted-declined"),
             "lift_argv": command,
             "lift_exit": outcome.returncode,
             "lift_elapsed": outcome.elapsed,

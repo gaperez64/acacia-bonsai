@@ -12,6 +12,8 @@ import time
 from dataclasses import dataclass
 
 from acacia_lift.tools import ToolConfiguration, bindings_environment
+from acacia_lift.lifting.settings import (CHECKER_NODE_CAP, SOLVER_CACHE_CAP,
+                                          SOLVER_NODE_CAP, CHECKER_TIMEOUT_FLOOR_SECONDS)
 
 
 class Decline(RuntimeError):
@@ -106,7 +108,7 @@ def run_exact_direct(source: pathlib.Path, output: pathlib.Path,
         str(config.solver), "--semantics", "exact", "--game-profile", "gr1",
         "--certificate", str(certificate), "--certificate-json", str(cert_json),
         "--policy", str(policy), "--policy-json", str(policy_json),
-        "--oxidd-nodes", str(1 << 25), "--oxidd-cache", str(1 << 23), str(game),
+        "--oxidd-nodes", str(SOLVER_NODE_CAP), "--oxidd-cache", str(SOLVER_CACHE_CAP), str(game),
     ], deadline, "target_solve")
     stages["target_solve"] = {"elapsed_s": time.monotonic() - started,
                               "exit_code": solve.returncode}
@@ -131,7 +133,8 @@ def run_exact_direct(source: pathlib.Path, output: pathlib.Path,
     started = time.monotonic()
     check = run_command([
         str(config.checker), "--method", "certificate", "--timeout",
-        str(max(0.001, deadline - time.monotonic())), "--node-cap", str(1 << 26),
+        str(max(CHECKER_TIMEOUT_FLOOR_SECONDS, deadline - time.monotonic())),
+        "--node-cap", str(CHECKER_NODE_CAP),
         "--json-out", str(check_json), "--certificate", str(certificate),
         "--certificate-json", str(cert_json), str(game), str(policy),
     ], deadline, "target_check")

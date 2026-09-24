@@ -10,7 +10,8 @@ from acacia_lift.artifact import Aag, AagBuilder, _certificate_sidecar, _policy_
 from acacia_lift.direct import Decline, run_command, sha256_file
 from acacia_lift.tools import ToolConfiguration
 from .schema import Bdds, GameInstance
-from .settings import CHECKER_NODE_CAP, POLICY_PROOF_FRACTION
+from .settings import (CHECKER_NODE_CAP, CHECKER_TIMEOUT_FLOOR_SECONDS,
+                       POLICY_PROOF_FRACTION)
 
 
 @dataclass(frozen=True)
@@ -87,7 +88,13 @@ def emit_certificate(bdds: Bdds, target: GameInstance, predicates: dict,
     builder = AagBuilder(names)
     current = {index: 2 * (index + 1) for index in range(len(names))}
     memo = {}
-    moves = _move_literals(bdds, target, builder, predicates, depths, current, memo)
+    # The default relation uses the actual target transitions and lifted
+    # invariant/ranks. Optional learned moves are an all-goal alternative.
+    learned = [f"move_{j}" in predicates for j in range(len(target.goals))]
+    if any(learned) and not all(learned):
+        raise Decline("candidate", "incomplete_move_schema")
+    moves = ({} if all(learned) else
+             _move_literals(bdds, target, builder, predicates, depths, current, memo))
     order = ["inv"]
     order.extend(f"goal_{j}" for j in range(len(target.goals)))
     order.extend(f"y_{j}_{k}" for j, depth in enumerate(depths)
@@ -185,7 +192,7 @@ def _check(config: ToolConfiguration, method: str, target: GameInstance,
            output: pathlib.Path, deadline: float) -> tuple[bool, dict, int]:
     path = output / f"check-{method}.json"
     command = [str(config.checker), "--method", method, "--timeout",
-               str(max(0.001, deadline - time.monotonic())),
+               str(max(CHECKER_TIMEOUT_FLOOR_SECONDS, deadline - time.monotonic())),
                "--node-cap", str(CHECKER_NODE_CAP), "--json-out", str(path),
                "--certificate", str(certificate), "--certificate-json",
                str(certificate) + ".json", str(target.files.game)]

@@ -8,6 +8,7 @@ import random
 import subprocess
 import sys
 import time
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -19,7 +20,7 @@ from acacia_lift.artifact import Aag, AagBuilder  # noqa: E402
 from acacia_lift import runner  # noqa: E402
 from acacia_lift.bdd_kernel import VarInfo  # noqa: E402
 from acacia_lift.direct import Decline  # noqa: E402
-from acacia_lift.lifting.schema import Bdds, GameInstance, learn_predicate  # noqa: E402
+from acacia_lift.lifting.schema import Bdds, GameInstance, Goal, learn_predicate  # noqa: E402
 from acacia_lift.lifting.schema import learn_certificate, prepare  # noqa: E402
 from acacia_lift.lifting.proof import prove  # noqa: E402
 from acacia_lift.lifting.provenance import discover  # noqa: E402
@@ -48,15 +49,17 @@ def _spec(kind: str, size: int, seed: int, *, extra_parameter: bool = False) -> 
 
 
 def _run(tmp_path: pathlib.Path, kind: str, size: int, seed: int,
-         *, extra_parameter: bool = False) -> tuple[dict, pathlib.Path]:
+         *, extra_parameter: bool = False,
+         spec_text: str | None = None) -> tuple[dict, pathlib.Path]:
     tmp_path.mkdir(parents=True, exist_ok=True)
     config = configuration_defaults()
     if not all(path.is_file() for path in
                (config.solver, config.checker, config.tlsf2tlsf, config.monitor)):
         pytest.skip("tlsf-tools build unavailable")
     source = tmp_path / f"{random.Random(seed ^ 991).getrandbits(128):032x}.tlsf"
-    source.write_text(_spec(kind, size, seed,
-                            extra_parameter=extra_parameter), encoding="utf-8")
+    source.write_text(spec_text if spec_text is not None else
+                      _spec(kind, size, seed, extra_parameter=extra_parameter),
+                      encoding="utf-8")
     output = tmp_path / "output"
     evidence_path = tmp_path / "evidence.json"
     proc = subprocess.run([sys.executable, "-m", "acacia_lift.runner",
@@ -81,6 +84,51 @@ def test_generated_unseen_families_lift_and_verify(tmp_path: pathlib.Path,
     assert evidence["provenance_format_version"] == 1
     assert all(vector["n"] < 4 for vector in evidence["seeds"])
     assert evidence["predicate_arities"]
+    assert evidence["move_source"] == "target_transition"
+    assert not any(key.startswith("move_") for key in evidence["predicate_arities"])
+    assert evidence["global_knobs"]["learn_move_schemas"] is False
+
+
+@pytest.mark.parametrize("failure", ["learning", "instantiation"])
+def test_enabled_move_schema_failure_declines(failure: str) -> None:
+    goal = Goal(0, ("structural_goal",), None)
+    seed = SimpleNamespace(goals=[goal], levels=lambda _goal: 0)
+    target = SimpleNamespace(goals=[goal], game=SimpleNamespace(justice=[[1]]),
+                             fairness=0)
+    bdds = mock.Mock()
+    bdds.game_literal.return_value = object()
+    def learn(_bdds, _seeds, names, _goals, _deadline):
+        if names[0].startswith("move_") and failure == "learning":
+            raise Decline("schema_capacity", "subset_count_limit")
+        return {}, 0
+    calls = []
+    def instantiate(_bdds, _target, _templates, _arity, _goal, _deadline):
+        calls.append(True)
+        if len(calls) == 2 and failure == "instantiation":
+            raise Decline("instantiate", "missing_target_variable")
+        return object()
+    with (mock.patch.object(runner.settings, "LEARN_MOVE_SCHEMAS", True),
+          mock.patch.object(runner.schema, "learn_predicate", side_effect=learn),
+          mock.patch.object(runner.schema, "instantiate", side_effect=instantiate)):
+        with pytest.raises(Decline, match=("subset_count_limit" if failure == "learning"
+                                           else "missing_target_variable")):
+            learn_certificate(bdds, [seed, seed], target, time.monotonic() + 1)
+
+
+def test_default_moves_skip_learning() -> None:
+    goal = Goal(0, ("structural_goal",), None)
+    seed = SimpleNamespace(goals=[goal], levels=lambda _goal: 0)
+    target = SimpleNamespace(goals=[goal], game=SimpleNamespace(justice=[[1]]),
+                             fairness=0)
+    bdds = mock.Mock()
+    with (mock.patch.object(runner.settings, "LEARN_MOVE_SCHEMAS", False),
+          mock.patch.object(runner.schema, "learn_predicate", return_value=({}, 0)) as learn,
+          mock.patch.object(runner.schema, "instantiate", return_value=object())):
+        predicates, _depths, arities = learn_certificate(
+            bdds, [seed, seed], target, time.monotonic() + 1)
+    assert set(predicates) == {"inv", "goal_0"}
+    assert arities == {"inv": 0}
+    assert learn.call_count == 1
 
 
 def test_smallest_and_hidden_pairwise_do_not_lift(tmp_path: pathlib.Path) -> None:
@@ -98,6 +146,25 @@ def test_alpha_renamed_and_random_basename_twins_agree(tmp_path: pathlib.Path) -
             first["predicate_arities"]) == (
                 second["route"], second["result"]["verdict"],
                 second["predicate_arities"])
+
+
+def test_name_size_and_formula_format_metamorphs(tmp_path: pathlib.Path) -> None:
+    base = _spec("request", 5, 145)
+    req = f"p{random.Random(145).getrandbits(48):012x}"
+    rng = random.Random(145)
+    rng.getrandbits(48)
+    grant = f"q{rng.getrandbits(48):012x}"
+    named = base.replace(req, "g").replace(grant, "r")
+    spaced = base.replace("G (", "G (   ").replace(" -> F ", "  ->  F  ")
+    variants = [
+        _run(tmp_path / "base", "request", 5, 145, spec_text=base)[0],
+        _run(tmp_path / "names", "request", 5, 145, spec_text=named)[0],
+        _run(tmp_path / "formula", "request", 5, 145, spec_text=spaced)[0],
+        _run(tmp_path / "size", "request", 7, 145)[0],
+    ]
+    assert {(item["route"], item["result"]["verdict"], item.get("move_source"))
+            for item in variants} == {("lifted-certified", "REALIZABLE",
+                                      "target_transition")}
 
 
 def test_wrapper_accepts_only_checked_lifted_result(tmp_path: pathlib.Path) -> None:
@@ -174,6 +241,7 @@ def test_source_mutation_after_binding_cannot_return_verdict(tmp_path: pathlib.P
                             "--tlsf-tools-build", str(config.tlsf_tools_build)])
     evidence = json.loads(evidence_path.read_text())
     assert code == 2
+    assert evidence["route"] == "attempted-declined"
     assert evidence["target_verified"] is False
     assert evidence["result"]["reason"] == "input_changed"
 

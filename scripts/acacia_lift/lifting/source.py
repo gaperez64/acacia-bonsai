@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from acacia_lift.direct import Decline, run_command, sha256_file
 from acacia_lift.tools import ToolConfiguration, bindings_environment
-from .settings import SOLVER_NODE_CAP
+from .settings import SOLVER_CACHE_CAP, SOLVER_NODE_CAP
 
 MONITOR_SCHEMA = "tlsf-tools.gr1-monitor-game.provenance.v3"
 
@@ -102,7 +102,7 @@ def solve_seed(instance: InstanceFiles, output: pathlib.Path,
         "--game-profile", "gr1",
         "--certificate", str(cert), "--certificate-json", str(cert) + ".json",
         "--oxidd-nodes", str(SOLVER_NODE_CAP),
-        "--oxidd-cache", str(SOLVER_NODE_CAP // 4), str(instance.game),
+        "--oxidd-cache", str(SOLVER_CACHE_CAP), str(instance.game),
     ], deadline, "seed_solve")
     if proc.returncode != 0 or not cert.is_file() or not pathlib.Path(str(cert) + ".json").is_file():
         raise Decline("seed_solve", "no_system_certificate")

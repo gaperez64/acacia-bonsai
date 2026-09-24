@@ -16,8 +16,10 @@ from acacia_lift.direct import Decline
 from acacia_lift.tools import ToolConfiguration, load_buddy_bindings
 from .provenance import (SeedWindow, axis_members, monitor_indices, monitor_key,
                          role_signatures)
-from .settings import (MAX_PREDICATE_ARITY, MAX_SUBSETS_PER_PREDICATE,
-                       MOVE_SCHEMA_SECONDS)
+from . import settings
+from .settings import (BUDDY_INITIAL_CACHE, BUDDY_INITIAL_NODES,
+                       BUDDY_MAX_INCREASE, MAX_PREDICATE_ARITY,
+                       MAX_SUBSETS_PER_PREDICATE, MOVE_SCHEMA_SECONDS)
 from .source import InstanceFiles
 
 _STATE_RE = re.compile(r"monitor_(\d+)_state_(\d+)\Z")
@@ -149,8 +151,8 @@ class Bdds:
         self.buddy = buddy
         self.variables = BuddyVariableAdapter(buddy, extension_path)
         if not buddy.bdd_isrunning():
-            buddy.bdd_init(4_000_000, 400_000)
-            buddy.bdd_setmaxincrease(1_000_000)
+            buddy.bdd_init(BUDDY_INITIAL_NODES, BUDDY_INITIAL_CACHE)
+            buddy.bdd_setmaxincrease(BUDDY_MAX_INCREASE)
         self.width = self.variables.variable_count()
         self._grow(public_width)
         self.normal: dict[tuple, int] = {}
@@ -419,17 +421,12 @@ def learn_certificate(bdds: Bdds, seeds: list[GameInstance],
                 arities[name] = arity
                 union |= predicates[name]
             predicates[f"y_{goal.number}_{level}"] = union
-        move_name = f"move_{goal.number}"
-        try:
+        if settings.LEARN_MOVE_SCHEMAS:
+            move_name = f"move_{goal.number}"
             move_templates, move_arity = learn_predicate(
                 bdds, seeds, [f"move_{item.number}" for item in aligned],
                 aligned, min(deadline, time.monotonic() + MOVE_SCHEMA_SECONDS))
             predicates[move_name] = instantiate(bdds, target, move_templates,
                                                 move_arity, goal, deadline)
             arities[move_name] = move_arity
-        except Decline:
-            # The exact target transition relation gives a semantic move
-            # construction when a bounded seed move has no stable template.
-            # The target checker must still verify the whole certificate.
-            arities[move_name] = "exact_target_transition"
     return predicates, depths, arities
