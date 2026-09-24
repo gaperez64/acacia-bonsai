@@ -16,6 +16,7 @@ if __package__ in (None, ""):
     import pathlib as _pathlib
     import sys as _sys
     _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
+    _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[3] / "scripts"))
 
 import argparse
 import csv
@@ -39,15 +40,15 @@ from acacia_lift.buddy_veccompose import (
     BuddyVariableAdapter,
     BuddyVeccomposeAdapter,
 )
-from acacia_lift.capabilities import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL
+from legacy_lift.capabilities import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL, legacy_source
 from acacia_lift.diagnostics import Diagnostics, sha256
-from acacia_lift import schema as capability_schema
-from acacia_lift.evidence import write_result
+from legacy_lift import schema as capability_schema
+from legacy_lift.evidence import write_result
 from acacia_lift.artifact import (Aag, AagBuilder, _certificate_sidecar,
                                   _policy_sidecar, _aag_vector_evaluate)
 from acacia_lift.bdd_kernel import (VarInfo, OwnerIndex,
                                     VariableBlock as VariableBlock, VariableLayout)
-from acacia_lift.instantiate import (
+from legacy_lift.instantiate import (
     _normal_key, _ordered_subset, _structured_move_literals as _structured_move_literals,
     _structured_arbiter_policy_literals, _structured_arbiter_certificate_moves,
 )
@@ -64,7 +65,7 @@ from acacia_lift.tools import (
 )
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+ROOT = pathlib.Path(__file__).resolve().parents[3]
 HERE = ROOT / "benchmarking" / "param-lift-20260922"
 TOOL_CONFIG = configuration_defaults()
 TT = TOOL_CONFIG.tlsf_tools_root
@@ -809,7 +810,7 @@ def build_game(family: str, n: int, directory: pathlib.Path,
     spec = REAL_FAMILIES.get(family) or EXACT_FAMILIES[family]
     game = directory / f"{family}_{n}.game.aag"
     prov = directory / f"{family}_{n}.prov.json"
-    tlsf = source.resolve() if source is not None else ROOT / spec.source
+    tlsf = source.resolve() if source is not None else legacy_source(spec.source)
     command = [str(BINDINGS_PYTHON), str(MONITOR), str(tlsf),
                "--param", f"n={n}", "--semantics", reduction_semantics, "--output",
                str(game), "--provenance-out", str(prov)]
@@ -4027,7 +4028,7 @@ def _candidate_request_identity(
     real_check: str = "policy",
 ) -> CandidateRequestIdentity:
     source = (
-        target_source or family_source or ROOT / REAL_FAMILIES[family].source
+        target_source or family_source or legacy_source(REAL_FAMILIES[family].source)
     ).resolve()
     return CandidateRequestIdentity(
         family=family,

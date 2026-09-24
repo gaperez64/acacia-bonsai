@@ -1,1 +1,1 @@
-"""Source-bound GR(1) certificate lifting for Acacia-Bonsai."""
+"""Generic, source-bound exact GR(1) certificate route for Acacia-Bonsai."""

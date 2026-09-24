@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .artifact import AagBuilder
+from acacia_lift.artifact import AagBuilder
 
 if TYPE_CHECKING:
     from .generalizer import Bdds, GoalInfo, Instance

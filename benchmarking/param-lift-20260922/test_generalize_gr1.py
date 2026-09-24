@@ -55,6 +55,24 @@ REGION_ROUND_TRIPS = {
 }
 
 
+def _relocated_head_source(source: str) -> str:
+    """Run HEAD's archived algorithm with only imports and template paths relocated."""
+    source = source.replace(
+        "from acacia_lift.capabilities import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL",
+        "from legacy_lift.capabilities import CAPABILITIES, EXACT_GAME, REAL_PROPOSAL, legacy_source",
+    )
+    source = source.replace("from acacia_lift import schema as capability_schema",
+                            "from legacy_lift import schema as capability_schema")
+    source = source.replace("from acacia_lift.evidence import write_result",
+                            "from legacy_lift.evidence import write_result")
+    source = source.replace("from acacia_lift.instantiate import (",
+                            "from legacy_lift.instantiate import (")
+    source = source.replace("ROOT / spec.source", "legacy_source(spec.source)")
+    source = source.replace("ROOT / REAL_FAMILIES[family].source",
+                            "legacy_source(REAL_FAMILIES[family].source)")
+    return source
+
+
 def _run(command: list[str], env: dict[str, str], timeout: float = 600.0):
     return subprocess.run(command, cwd=ROOT, env=env, text=True,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -483,7 +501,7 @@ os.execv(real, [real, *sys.argv[1:]])
         head_source = subprocess.run(
             [
                 "git", "show",
-                "HEAD:benchmarking/param-lift-20260922/generalize_gr1.py",
+                "HEAD:scripts/acacia_lift/generalizer.py",
             ],
             cwd=ROOT,
             text=True,
@@ -511,7 +529,7 @@ os.execv(real, [real, *sys.argv[1:]])
             suffix=".py",
             delete=False,
         ) as stream:
-            stream.write(head_source.stdout)
+            stream.write(_relocated_head_source(head_source.stdout))
             head_driver = pathlib.Path(stream.name)
         try:
             head_run = _run([
@@ -631,7 +649,7 @@ os.execv(real, [real, *sys.argv[1:]])
         head_source = subprocess.run(
             [
                 "git", "show",
-                "HEAD:benchmarking/param-lift-20260922/generalize_gr1.py",
+                "HEAD:scripts/acacia_lift/generalizer.py",
             ],
             cwd=ROOT,
             text=True,
@@ -655,7 +673,7 @@ os.execv(real, [real, *sys.argv[1:]])
             suffix=".py",
             delete=False,
         ) as stream:
-            stream.write(head_source.stdout)
+            stream.write(_relocated_head_source(head_source.stdout))
             head_driver = pathlib.Path(stream.name)
         try:
             for family, (seeds, target) in ROUND_TRIPS.items():

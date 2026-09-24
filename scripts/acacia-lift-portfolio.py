@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the checked GR(1) lifting route before an unchanged Acacia fallback.
+"""Run the checked direct GR(1) route before an unchanged Acacia fallback.
 
 Wrapper options precede ``--``.  Everything after it is the fallback argv and
 is passed to :func:`os.execv` unchanged.  An outer runner should provide
@@ -33,8 +33,6 @@ DEADLINE_ENV = "ACACIA_OUTER_DEADLINE_MONOTONIC"
 ROUTE_RECORD_ENV = "ACACIA_ROUTE_RECORD"
 DECISIVE_EXITS = {"REALIZABLE": 0, "UNREALIZABLE": 1}
 ERROR_EXIT = 3
-EXACT_GAME = "exact-game-both-sides"
-ONE_SIDED_ROUTES = frozenset(("real-proposal", "sound-one-sided"))
 PROCESS_GROUP_CLEANUP_SECONDS = 1.0
 PR_SET_CHILD_SUBREAPER = 36
 PR_GET_CHILD_SUBREAPER = 37
@@ -96,7 +94,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--bindings-python", type=pathlib.Path)
     parser.add_argument("--bindings-site", type=pathlib.Path)
     parser.add_argument("--buddy-adapter", type=pathlib.Path)
-    parser.add_argument("--real-check", choices=("policy", "region"))
     parser.add_argument(
         "--eligibility-budget-seconds", type=positive_finite, default=1.0,
         metavar="S", help="maximum source-binding time (default: 1 s, capped at 5%% of cap)",
@@ -232,8 +229,6 @@ def lift_command(
         "--evidence-out",
         str(evidence),
     ]
-    if args.real_check is not None:
-        command.extend(("--real-check", args.real_check))
     for option, value in (
         ("--tlsf-tools-build", args.tlsf_tools_build),
         ("--bindings-python", args.bindings_python),
@@ -409,30 +404,25 @@ def verified_verdict(
     if verdict not in DECISIVE_EXITS or returncode != DECISIVE_EXITS[verdict]:
         return None
 
+    if evidence.get("route") != "direct-certified":
+        return None
     source_binding = evidence.get("source_binding")
     target_certificate = evidence.get("target_certificate")
     if not isinstance(source_binding, dict) or not isinstance(target_certificate, dict):
         return None
-    hashes = (
-        nested_value(source_binding, "input", "sha256"),
-        nested_value(source_binding, "artifact_binding", "source_sha256"),
-        nested_value(target_certificate, "source_binding", "source_sha256"),
-    )
+    hashes = (nested_value(source_binding, "input", "sha256"),
+              target_certificate.get("source_sha256"))
     if any(value != input_hash for value in hashes):
         return None
-
-    route_kind = nested_value(source_binding, "capability", "route_kind")
-    bound_route_kinds = (
-        nested_value(source_binding, "artifact_binding", "route_kind"),
-        nested_value(target_certificate, "source_binding", "route_kind"),
-    )
-    if any(value != route_kind for value in bound_route_kinds):
+    expected_side = "system" if verdict == "REALIZABLE" else "environment"
+    if (target_certificate.get("certificate_side") != expected_side or
+            target_certificate.get("reduction_semantics") != "exact" or
+            target_certificate.get("checker_verdict") != "VERIFIED" or
+            not all(isinstance(target_certificate.get(key), str) and
+                    len(target_certificate[key]) == 64 for key in
+                    ("game_sha256", "certificate_sha256", "policy_sha256"))):
         return None
-    if route_kind == EXACT_GAME:
-        return verdict
-    if route_kind in ONE_SIDED_ROUTES and verdict == "REALIZABLE":
-        return verdict
-    return None
+    return verdict
 
 
 def stage_censoring(evidence: dict[str, Any] | None, timed_out: bool) -> dict[str, Any]:
@@ -457,11 +447,11 @@ def stage_censoring(evidence: dict[str, Any] | None, timed_out: bool) -> dict[st
     return result
 
 
-def binding_fields(
+def decline_reason(
     evidence: dict[str, Any] | None, evidence_error: str | None, outcome: LiftOutcome
-) -> tuple[dict[str, Any] | None, str]:
+) -> str:
     if outcome.spawn_error is not None:
-        return None, "lift_spawn_failed"
+        return "lift_spawn_failed"
     if outcome.timed_out:
         reason = "lift_timeout"
     elif evidence_error is not None:
@@ -470,16 +460,7 @@ def binding_fields(
         result = evidence.get("result") if evidence is not None else None
         candidate = result.get("reason") if isinstance(result, dict) else None
         reason = candidate if isinstance(candidate, str) and candidate else "lift_not_verified"
-    source_binding = evidence.get("source_binding") if evidence is not None else None
-    capability = source_binding.get("capability") if isinstance(source_binding, dict) else None
-    if not isinstance(capability, dict):
-        request = evidence.get("request") if evidence is not None else None
-        capability = (
-            {key: request[key] for key in ("family", "route_kind") if key in request}
-            if isinstance(request, dict)
-            else None
-        )
-    return capability, reason
+    return reason
 
 
 def record_route(path: pathlib.Path | None, payload: dict[str, Any]) -> None:
@@ -522,13 +503,19 @@ def run(argv: list[str], started: float) -> int:
         scratch_path = pathlib.Path(scratch.name)
         scratch_path.chmod(0o700)
         spool: pathlib.Path | None = None
+        spool = scratch_path / "input.tlsf"
         if source_argument in {"-", "/dev/stdin"}:
-            spool = scratch_path / "stdin.tlsf"
             input_hash = spool_stdin(spool)
             lift_source = spool
         else:
-            lift_source = pathlib.Path(source_argument)
-            input_hash = sha256_file(lift_source)
+            digest = hashlib.sha256()
+            with pathlib.Path(source_argument).open("rb") as original, spool.open("wb") as target:
+                for chunk in iter(lambda: original.read(1 << 20), b""):
+                    digest.update(chunk)
+                    target.write(chunk)
+            input_hash = digest.hexdigest()
+            lift_source = spool
+            spool = None
 
         evidence_file = evidence_path(route_record, scratch_path)
         try:
@@ -548,16 +535,13 @@ def run(argv: list[str], started: float) -> int:
             evidence, evidence_hash, evidence_error = None, None, "lift_budget_exhausted"
 
         verdict = verified_verdict(evidence, outcome.returncode, input_hash)
-        capability, reason = binding_fields(evidence, evidence_error, outcome)
+        reason = decline_reason(evidence, evidence_error, outcome)
         base_record: dict[str, Any] = {
             "schema_version": 1,
             "input_sha256": input_hash,
-            "capability": capability,
             "binding_reason": reason,
             "eligibility_budget_s": args.eligibility_budget_seconds,
-            "real_check": evidence.get("real_check") if evidence else None,
-            "real_check_selection": (evidence.get("real_check_selection")
-                                     if evidence else None),
+            "route": "direct-certified",
             "lift_argv": command,
             "lift_exit": outcome.returncode,
             "lift_elapsed": outcome.elapsed,

@@ -88,31 +88,22 @@ if mode != "lying":
         verdict = "UNREALIZABLE"
     else:
         verdict = "REALIZABLE" if verified or mode == "unverified_claim" else "UNKNOWN"
-    if mode in {"win_unreal", "exact_real"}:
-        route_kind = "exact-game-both-sides"
-    elif mode == "one_sided_unreal":
-        route_kind = "sound-one-sided"
-    else:
-        route_kind = "real-proposal"
+    route = "direct-certified" if mode not in {"real_route_unreal", "one_sided_unreal"} else "unsupported"
     digest = hashlib.sha256(data).hexdigest()
     if mode == "stdin_mismatch":
         digest = hashlib.sha256(b"different spooled input").hexdigest()
     evidence = {
+        "route": route,
         "target_verified": verified,
-        "request": {"family": "fake", "route_kind": route_kind},
-        "source_binding": {
-            "input": {"sha256": digest},
-            "capability": {"family": "fake", "route_kind": route_kind},
-            "artifact_binding": {
-                "source_sha256": digest,
-                "route_kind": route_kind,
-            },
-        },
+        "source_binding": {"input": {"sha256": digest}},
         "target_certificate": {
-            "source_binding": {
-                "source_sha256": digest,
-                "route_kind": route_kind,
-            },
+            "source_sha256": digest,
+            "game_sha256": "1" * 64,
+            "certificate_sha256": "2" * 64,
+            "policy_sha256": "3" * 64,
+            "certificate_side": "environment" if verdict == "UNREALIZABLE" else "system",
+            "reduction_semantics": "exact",
+            "checker_verdict": "VERIFIED",
         },
         "result": {
             "verdict": verdict,
@@ -125,11 +116,11 @@ if mode != "lying":
     if mode == "missing_input_hash":
         del evidence["source_binding"]["input"]["sha256"]
     elif mode == "missing_artifact_hash":
-        del evidence["source_binding"]["artifact_binding"]["source_sha256"]
+        del evidence["target_certificate"]["certificate_sha256"]
     elif mode == "missing_target_hash":
-        del evidence["target_certificate"]["source_binding"]["source_sha256"]
+        del evidence["target_certificate"]["source_sha256"]
     elif mode == "wrong_hash":
-        evidence["target_certificate"]["source_binding"]["source_sha256"] = "0" * 64
+        evidence["target_certificate"]["source_sha256"] = "0" * 64
     path = pathlib.Path(args.evidence_out)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(evidence), encoding="utf-8")
@@ -254,7 +245,7 @@ class WrapperTests(unittest.TestCase):
                 self.assertTrue(route["evidence_sha256"])
                 self.assertTrue({
                     "input_sha256",
-                    "capability",
+                    "route",
                     "binding_reason",
                     "lift_argv",
                     "lift_elapsed",

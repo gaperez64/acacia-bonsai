@@ -28,7 +28,14 @@ import time
 from collections.abc import Mapping
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+ROOT = pathlib.Path(__file__).resolve().parents[3]
+
+
+def legacy_source(source: str) -> pathlib.Path:
+    prefix = "scripts/acacia_lift/data/"
+    if source.startswith(prefix):
+        return pathlib.Path(__file__).resolve().parent / "data" / source[len(prefix):]
+    return ROOT / source
 DATA_FILE = pathlib.Path(__file__).resolve().parent / "data" / "capabilities-v1.json"
 
 REAL_PROPOSAL = "real-proposal"
@@ -73,7 +80,7 @@ class Capability:
 
     @property
     def source_path(self) -> pathlib.Path:
-        return ROOT / self.source
+        return legacy_source(self.source)
 
     @property
     def measured_arity(self) -> int | None:
@@ -225,7 +232,7 @@ def load_capabilities(path: pathlib.Path = DATA_FILE) -> dict[str, Capability]:
             raise ValueError(f"invalid corpus source path for {family}")
         if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
             raise ValueError(f"invalid template hash for {family}")
-        template = ROOT / source
+        template = legacy_source(source)
         try:
             template_bytes = template.read_bytes()
         except FileNotFoundError as error:
