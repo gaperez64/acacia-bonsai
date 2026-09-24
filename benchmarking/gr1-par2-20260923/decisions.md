@@ -334,3 +334,21 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   already declines now carry the disabled family's name with reason `capability_route_disabled`
   before exact membership is proven — fail-closed, but reporting treats their family as a
   structural candidate, not a verified member.
+
+## 2026-09-24 — Owner stop: the family-registry route is withdrawn; lifting must be generic
+
+- The owner stopped all work after confirming that N routes by a **fixed 14-family registry**
+  (pinned templates, per-family arity/stable-size/role-class tables from the previous sprint's m4
+  measurements) plus two per-family switches added in this sprint (`real_check`,
+  `route_enabled`), all developed on the SYNTCOMP26 instances that form the evaluation corpus.
+  Owner: "No hardcoding ever." As competition organiser he would obfuscate benchmark names to make
+  such routing fail. This is correct and should have been raised when the per-family switches went
+  in, not after the selection campaign.
+- The full-corpus campaign (`85e14f84`) was killed at 429/1,524 rows of the N 60 s leg; the
+  partial rows, route records and driver are frozen in `_bm-logs.gr1-par2-full-aborted-20260924/`
+  and are not results. The selection-campaign results above measured the withdrawn design and
+  stand only as evidence about it.
+- New direction (plan option 3): a generic lifting route with no registry, no templates, no
+  per-family data and no per-family switches — the parametric input is its own template; seeds,
+  stable size, arity and proof method are chosen online inside the charged deadline by global
+  rules; anything else declines. Benchmark names must be irrelevant (obfuscation-proof).
