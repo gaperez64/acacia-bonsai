@@ -397,3 +397,15 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   rounds on provenance and one on naming; 287/287 serial.
 - Frozen build `tlsf-tools/build-SB-8b158d7/` (tlsfcertcheck `e70c3432…`, tlsfsolve `6b10c326…`,
   tlsf2tlsf `9b122d8b…`). Acacia's submodule now pins `8b158d7`.
+
+## 2026-09-24 — Stage C review; moves come from the target game by design
+
+- Codex review REJECT (no unsound verdict found). P1: every lifted success learns invariant and
+  rank predicates from seeds but takes its move relation from the exact target game's transition
+  relation, through a catch-all fallback rather than a learned move schema. **Decision:** keep
+  target-derived moves as the design, not as a fallback — the policy is Skolemized from the lifted
+  invariant/ranks and the actual target game's transitions (the principle of plan §8), learned move
+  schemas become optional, and evidence records `move_source`. This is more generic, not less; the
+  independent checker decides either way.
+- P2: route label `direct-certified` on UNKNOWN rows; guard misses branches keyed on a signal name,
+  a signal count or a formula string; global cost knobs split across modules. All sent back.
