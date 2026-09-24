@@ -27,6 +27,20 @@ class BuddyAdapterError(RuntimeError):
     """The native adapter could not safely complete a BuDDy operation."""
 
 
+class _NativeBddStats(ctypes.Structure):
+    _fields_ = [
+        ("produced", ctypes.c_int64),
+        ("nodenum", ctypes.c_int),
+        ("maxnodenum", ctypes.c_int),
+        ("freenodes", ctypes.c_int),
+        ("minfreenodes", ctypes.c_int),
+        ("varnum", ctypes.c_int),
+        ("cachesize", ctypes.c_int),
+        ("hashsize", ctypes.c_int),
+        ("gbcnum", ctypes.c_int),
+    ]
+
+
 _HASH_CACHE: dict[pathlib.Path, tuple[tuple[int, int, int, int, int], str]] = {}
 _HASH_CACHE_STATS: dict[str, float | int] = {
     "hits": 0,
@@ -289,6 +303,24 @@ class BuddyVeccomposeAdapter:
             ctypes.c_size_t,
         ]
         library.p2a_bdd_veccompose.restype = ctypes.c_int
+        library.p2a_bdd_relabel.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.POINTER(ctypes.c_int),
+            ctypes.c_size_t,
+            ctypes.c_int,
+        ]
+        library.p2a_bdd_relabel.restype = ctypes.c_int
+        library.p2a_bdd_appex_and.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        library.p2a_bdd_appex_and.restype = ctypes.c_int
+        library.p2a_bdd_stats.argtypes = [ctypes.POINTER(_NativeBddStats)]
+        library.p2a_bdd_stats.restype = ctypes.c_int
         library.p2a_bdd_gbc.argtypes = []
         library.p2a_bdd_gbc.restype = ctypes.c_int
         library.p2a_bdd_setvarorder_for_testing.argtypes = [
@@ -380,6 +412,48 @@ class BuddyVeccomposeAdapter:
             self._raise_status("bdd_veccompose", status)
         return output
 
+    def relabel_variables(
+        self,
+        function: object,
+        variables: list[int],
+        targets: list[int],
+        *,
+        use_replace: bool,
+    ) -> object:
+        if len(variables) != len(targets):
+            raise ValueError("relabel vectors have different lengths")
+        if len(set(variables)) != len(variables):
+            raise ValueError("relabel source variables must be unique")
+        if use_replace and len(set(targets)) != len(targets):
+            raise ValueError("bdd_replace targets must be injective")
+        var_count = self.variable_count()
+        if any(
+            variable < 0 or variable >= var_count
+            for variable in (*variables, *targets)
+        ):
+            raise ValueError(f"relabel variables must be in [0, {var_count})")
+        output = self._buddy.bdd()
+        native_variables = (ctypes.c_int * len(variables))(*variables)
+        native_targets = (ctypes.c_int * len(targets))(*targets)
+        status = self._library.p2a_bdd_relabel(
+            int(output.this), int(function.this), native_variables,
+            native_targets, len(variables), int(use_replace),
+        )
+        if status != 0:
+            operation = "bdd_replace" if use_replace else "bdd_veccompose"
+            self._raise_status(operation, status)
+        return output
+
+    def and_exist(self, left: object, right: object, variables: object) -> object:
+        output = self._buddy.bdd()
+        status = self._library.p2a_bdd_appex_and(
+            int(output.this), int(left.this), int(right.this),
+            int(variables.this),
+        )
+        if status != 0:
+            self._raise_status("bdd_appex", status)
+        return output
+
     def variable_count(self) -> int:
         count = int(self._library.p2a_bdd_varnum())
         if count < 0:
@@ -400,6 +474,16 @@ class BuddyVeccomposeAdapter:
         status = self._library.p2a_bdd_gbc()
         if status != 0:
             self._raise_status("bdd_gbc", status)
+
+    def stats(self) -> dict[str, int]:
+        stats = _NativeBddStats()
+        status = self._library.p2a_bdd_stats(ctypes.byref(stats))
+        if status != 0:
+            self._raise_status("bdd_stats", status)
+        return {
+            name: int(getattr(stats, name))
+            for name, _field_type in stats._fields_
+        }
 
     def set_variable_order_for_testing(self, variables: list[int]) -> None:
         """Install a complete semantic-variable order for regression tests."""

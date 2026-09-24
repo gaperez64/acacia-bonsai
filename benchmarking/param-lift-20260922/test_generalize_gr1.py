@@ -605,7 +605,9 @@ os.execv(real, [real, *sys.argv[1:]])
                 )
         checker.assert_not_called()
 
-    def test_artifacts_match_uncached_reference_semantically(self) -> None:
+    def test_five_round_trip_families_match_uncached_and_head_semantically(
+            self) -> None:
+        """Compare the five ROUND_TRIPS families with uncached and HEAD roots."""
         pairs = []
         reference_env = dict(self.env)
         reference_env["GENERALIZE_GR1_REFERENCE_COMPOSE"] = "1"
@@ -623,6 +625,54 @@ os.execv(real, [real, *sys.argv[1:]])
             for suffix in (".certificate.aag", ".policy.aag"):
                 pairs.append((self.artifacts[family] / f"{stem}{suffix}",
                               out / f"{stem}{suffix}"))
+
+        head_source = subprocess.run(
+            [
+                "git", "show",
+                "HEAD:benchmarking/param-lift-20260922/generalize_gr1.py",
+            ],
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=30,
+        )
+        self.assertEqual(
+            head_source.returncode, 0, head_source.stderr + head_source.stdout
+        )
+        head_env = dict(self.env)
+        head_env["GENERALIZE_GR1_RESULTS"] = str(
+            self.root / "head-semantic-results.tsv"
+        )
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=HERE,
+            prefix=".head-semantic-generalize-gr1-",
+            suffix=".py",
+            delete=False,
+        ) as stream:
+            stream.write(head_source.stdout)
+            head_driver = pathlib.Path(stream.name)
+        try:
+            for family, (seeds, target) in ROUND_TRIPS.items():
+                out = self.root / f"head-reference-{family}-{target}"
+                proc = _run([
+                    str(PYTHON), str(head_driver), "--family", family,
+                    "--target", str(target), "--seeds",
+                    ",".join(map(str, seeds)), "--timeout", "180",
+                    "--check-method", "both", "--out", str(out),
+                ], head_env)
+                self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+                stem = f"{family}_{target}"
+                for suffix in (".certificate.aag", ".policy.aag"):
+                    pairs.append((
+                        self.artifacts[family] / f"{stem}{suffix}",
+                        out / f"{stem}{suffix}",
+                    ))
+        finally:
+            head_driver.unlink(missing_ok=True)
 
         script = r"""
 import pathlib
@@ -1138,6 +1188,162 @@ print("native substitution checks passed")
         self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
         self.assertIn("native substitution checks passed", proc.stdout)
 
+    def test_native_relabel_routes_and_appex_are_exact(self) -> None:
+        script = r"""
+import random
+import sys
+sys.path.insert(0, sys.argv[1])
+import buddy_veccompose as adapter_module
+import generalize_gr1 as generalizer
+
+bdds = generalizer.Bdds(var_count=128)
+buddy = bdds.buddy
+adapter = bdds._veccompose
+assert adapter is not None
+rng = random.Random(20260924)
+variables = [buddy.bdd_ithvar(index) for index in range(8)]
+routes = []
+native_relabel = adapter.relabel_variables
+
+def record_route(function, sources, targets, *, use_replace):
+    routes.append("bdd_replace" if use_replace else "bdd_veccompose")
+    return native_relabel(
+        function, sources, targets, use_replace=use_replace)
+
+adapter.relabel_variables = record_route
+
+def random_function():
+    result = buddy.bddfalse
+    for _iteration in range(16):
+        left, right = rng.sample(variables, 2)
+        term = left & buddy.bdd_not(right)
+        result = (result ^ term) | (left & right)
+    return result
+
+permutations = [
+    [1, 0, 2, 3, 4, 5, 6, 7],
+    [1, 2, 0, 3, 4, 5, 6, 7],
+    [7, 2, 3, 4, 5, 6, 0, 1],
+]
+for _iteration in range(32):
+    permutation = list(range(8))
+    rng.shuffle(permutation)
+    permutations.append(permutation)
+
+for iteration, permutation in enumerate(permutations):
+    function = random_function()
+    sources = list(range(8))
+    replace = adapter.relabel_variables(
+        function, sources, permutation, use_replace=True)
+    composed = adapter.relabel_variables(
+        function, sources, permutation, use_replace=False)
+    assert replace == composed, (iteration, permutation)
+    before = len(routes)
+    production = bdds.relabel(
+        function, dict(zip(sources, permutation, strict=True)))
+    assert production == composed, (iteration, permutation)
+    assert routes[before:] == ["bdd_replace"]
+    if iteration % 7 == 0:
+        bdds.collect_garbage_for_testing()
+
+x, y, z = variables[:3]
+collision_function = x ^ y
+collision_mapping = {0: 2, 1: 2}
+fallback = adapter.relabel_variables(
+    collision_function, [0, 1], [2, 2], use_replace=False)
+before = len(routes)
+production = bdds.relabel(collision_function, collision_mapping)
+assert production == fallback == buddy.bddfalse
+assert routes[before:] == ["bdd_veccompose"]
+
+# A caller hint can be empty, partial, or stale; only the root's actual
+# support determines coverage and the replace route.
+for hint in ([], {0}, {0, 1, 2}):
+    before = len(routes)
+    production = bdds.relabel(
+        collision_function, {0: 1, 1: 0}, support=hint)
+    reference = native_relabel(
+        collision_function, [0, 1], [1, 0], use_replace=False)
+    assert production == reference
+    assert routes[before:] == ["bdd_replace"]
+
+for hint in ([], {0}, {0, 1, 2}):
+    before = len(routes)
+    try:
+        bdds.relabel(collision_function, {0: 1}, support=hint)
+    except KeyError as error:
+        assert "no relabelling" in str(error)
+    else:
+        raise AssertionError("an unmapped support variable was accepted")
+    assert len(routes) == before
+
+# The map 0->1 is injective, but variable 1 is still in the root.
+# Simultaneous substitution makes x ^ y false. Native replace must reject
+# the omitted source cleanly, and the high-level route maps 1 explicitly.
+reference = native_relabel(
+    collision_function, [0], [1], use_replace=False)
+assert reference == buddy.bddfalse
+try:
+    native_relabel(collision_function, [0], [1], use_replace=True)
+except adapter_module.BuddyAdapterError as error:
+    assert "every root support variable" in str(error)
+else:
+    raise AssertionError("native replace accepted an untouched support variable")
+before = len(routes)
+production = bdds.relabel(
+    collision_function, {0: 1, 1: 1}, support={0})
+assert production == reference
+assert routes[before:] == ["bdd_veccompose"]
+assert bdds.relabel_route_counts == {}
+
+# The support cube has variable indices, independent of current BDD levels.
+adapter.set_variable_order_for_testing(list(reversed(range(128))))
+reordered = variables[0] ^ variables[1]
+before = len(routes)
+production = bdds.relabel(reordered, {0: 1, 1: 0}, support=[])
+reference = native_relabel(
+    reordered, [0, 1], [1, 0], use_replace=False)
+assert production == reference
+assert routes[before:] == ["bdd_replace"]
+before = len(routes)
+production = bdds.relabel(reordered, {0: 1, 1: 1}, support={0})
+reference = native_relabel(reordered, [0, 1], [1, 1], use_replace=False)
+assert production == reference == buddy.bddfalse
+assert routes[before:] == ["bdd_veccompose"]
+
+try:
+    bdds.relabel(x & y, {0: 2})
+except KeyError as error:
+    assert "no relabelling" in str(error)
+else:
+    raise AssertionError("an incomplete relabel map was accepted")
+
+for _iteration in range(40):
+    left = random_function()
+    right = random_function()
+    quantified = sorted(rng.sample(range(8), rng.randrange(0, 6)))
+    cube = bdds.cube(quantified)
+    fused = bdds.and_exist(left, right, cube)
+    reference = buddy.bdd_exist(left & right, cube)
+    assert fused == reference, quantified
+
+def forbidden_snapshot(_bdds):
+    raise AssertionError("diagnostic snapshot ran with diagnostics disabled")
+
+generalizer._diagnostic_bdd_snapshot = forbidden_snapshot
+assert bdds.relabel(reordered, {0: 1, 1: 0}) == reordered
+assert bdds.cube([0, 1]) == variables[0] & variables[1]
+assert generalizer._support(bdds, reordered) == {0, 1}
+
+print("native relabel and appex checks passed")
+"""
+        env = dict(os.environ)
+        env["ACACIA_BUDDY_ADAPTER"] = str(self._native_adapter())
+        proc = _run(
+            [str(PYTHON), "-s", "-c", script, str(HERE)], env, 120)
+        self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+        self.assertIn("native relabel and appex checks passed", proc.stdout)
+
     def test_owner_index_matches_reference_at_client_boundaries(self) -> None:
         rng = random.Random(20260923)
         for client_count in (0, 1, 63, 64, 65):
@@ -1248,6 +1454,15 @@ with tempfile.TemporaryDirectory(prefix="p2b-support-") as temporary:
         list(reversed(range(bdds._veccompose.variable_count()))))
     support = context.exact_public_support(root, public_to_bdd)
     assert support.public_variables == frozenset((7, 91, 1_000_003))
+    assert context.cached_bdd_support(root) == frozenset((5, 9, 12))
+    extract = generalizer._support
+    def forbidden_extraction(_bdds, _root):
+        raise AssertionError("root-bound support cache was bypassed")
+    generalizer._support = forbidden_extraction
+    try:
+        assert bdds.relabel(root, {5: 5, 9: 9, 12: 12}, support=[]) == root
+    finally:
+        generalizer._support = extract
 
     for subset in ((), (0,), (1,), (1, 0)):
         metadata = context.subset_metadata(instance, subset)

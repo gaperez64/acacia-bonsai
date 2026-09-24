@@ -1,9 +1,11 @@
 #include <bddx.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <exception>
 #include <memory>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -74,6 +76,173 @@ void sentinel_error_handler(int) noexcept { ++sentinel_calls; }
 }  // namespace
 
 extern "C" {
+
+struct P2aBddStats {
+  std::int64_t produced;
+  int nodenum;
+  int maxnodenum;
+  int freenodes;
+  int minfreenodes;
+  int varnum;
+  int cachesize;
+  int hashsize;
+  int gbcnum;
+};
+
+P2A_EXPORT int p2a_bdd_stats(P2aBddStats* output) noexcept {
+  last_error[0] = '\0';
+  ErrorHookScope errors;
+  if (output == nullptr) {
+    return fail(-1000, "null BDD statistics output");
+  }
+  try {
+    bddStat stats{};
+    bdd_stats(stats);
+    if (errors.status() != 0) {
+      return fail_buddy(errors.status(), "bdd_stats");
+    }
+    output->produced = stats.produced;
+    output->nodenum = stats.nodenum;
+    output->maxnodenum = stats.maxnodenum;
+    output->freenodes = stats.freenodes;
+    output->minfreenodes = stats.minfreenodes;
+    output->varnum = stats.varnum;
+    output->cachesize = stats.cachesize;
+    output->hashsize = stats.hashsize;
+    output->gbcnum = stats.gbcnum;
+    return 0;
+  } catch (const std::exception& error) {
+    return fail(-1001, error.what());
+  } catch (...) {
+    return fail(-1001, "unknown BDD statistics failure");
+  }
+}
+
+P2A_EXPORT int p2a_bdd_relabel(
+    bdd* output,
+    const bdd* function,
+    const int* variables,
+    const int* targets,
+    std::size_t count,
+    int use_replace) noexcept {
+  last_error[0] = '\0';
+  ErrorHookScope errors;
+  if (output == nullptr || function == nullptr ||
+      (count != 0 && (variables == nullptr || targets == nullptr)) ||
+      (use_replace != 0 && use_replace != 1)) {
+    return fail(-1000, "invalid native relabel arguments");
+  }
+  try {
+    const int variable_count = bdd_varnum();
+    if (errors.status() != 0) {
+      return fail_buddy(errors.status(), "bdd_varnum");
+    }
+    for (std::size_t index = 0; index < count; ++index) {
+      if (variables[index] < 0 || variables[index] >= variable_count ||
+          targets[index] < 0 || targets[index] >= variable_count) {
+        return fail(-1002, "relabel variable is outside bdd_varnum");
+      }
+      for (std::size_t previous = 0; previous < index; ++previous) {
+        if (variables[previous] == variables[index]) {
+          return fail(-1002, "relabel source variables must be unique");
+        }
+        if (use_replace != 0 && targets[previous] == targets[index]) {
+          return fail(-1002, "bdd_replace targets must be injective");
+        }
+      }
+    }
+    if (use_replace != 0) {
+      // BuDDy replace can fail inside the library when an omitted support
+      // variable is the target of another source.  Require the complete
+      // support explicitly here, even for variables mapped to themselves.
+      std::unordered_set<int> sources;
+      for (std::size_t index = 0; index < count; ++index) {
+        sources.insert(variables[index]);
+      }
+      bdd support = bdd_support(*function);
+      if (errors.status() != 0) {
+        return fail_buddy(errors.status(), "bdd_support");
+      }
+      while (support != bddtrue && support != bddfalse) {
+        const int variable = bdd_var(support);
+        if (errors.status() != 0) {
+          return fail_buddy(errors.status(), "bdd_var of root support");
+        }
+        if (sources.find(variable) == sources.end()) {
+          return fail(-1002,
+                      "bdd_replace requires every root support variable to be "
+                      "explicitly mapped (identity mappings are allowed)");
+        }
+        support = bdd_high(support);
+        if (errors.status() != 0) {
+          return fail_buddy(errors.status(), "bdd_high of root support");
+        }
+      }
+    }
+
+    bdd result;
+    {
+      std::unique_ptr<bddPair, PairDeleter> pair(bdd_newpair());
+      if (errors.status() != 0) {
+        return fail_buddy(errors.status(), "bdd_newpair");
+      }
+      if (pair == nullptr) {
+        return fail(BDD_MEMORY, "bdd_newpair returned null");
+      }
+      for (std::size_t index = 0; index < count; ++index) {
+        const int status = bdd_setpair(
+            pair.get(), variables[index], targets[index]);
+        if (errors.status() != 0) {
+          return fail_buddy(errors.status(), "bdd_setpair");
+        }
+        if (status < 0) {
+          return fail(status, "bdd_setpair failed without an error hook call");
+        }
+      }
+      result = use_replace != 0
+          ? bdd_replace(*function, pair.get())
+          : bdd_veccompose(*function, pair.get());
+      if (errors.status() != 0) {
+        return fail_buddy(
+            errors.status(), use_replace != 0 ? "bdd_replace" : "bdd_veccompose");
+      }
+    }
+    if (errors.status() != 0) {
+      return fail_buddy(errors.status(), "bdd_freepair");
+    }
+    *output = std::move(result);
+    return 0;
+  } catch (const std::exception& error) {
+    return fail(-1001, error.what());
+  } catch (...) {
+    return fail(-1001, "unknown native relabel failure");
+  }
+}
+
+P2A_EXPORT int p2a_bdd_appex_and(
+    bdd* output,
+    const bdd* left,
+    const bdd* right,
+    const bdd* variables) noexcept {
+  last_error[0] = '\0';
+  ErrorHookScope errors;
+  if (output == nullptr || left == nullptr || right == nullptr ||
+      variables == nullptr) {
+    return fail(-1000, "invalid native and-exist arguments");
+  }
+  try {
+    bdd result = bdd_appex(*left, *right, bddop_and, *variables);
+    if (errors.status() != 0) {
+      return fail_buddy(errors.status(), "bdd_appex");
+    }
+    *output = std::move(result);
+    return 0;
+  } catch (const std::exception& error) {
+    return fail(-1001, error.what());
+  } catch (...) {
+    return fail(-1001, "unknown native and-exist failure");
+  }
+}
 
 P2A_EXPORT int p2a_bdd_veccompose(
     bdd* output,

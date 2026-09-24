@@ -97,6 +97,7 @@ _DIAGNOSTICS: Diagnostics | None = None
 _DIAGNOSTIC_STAGE_TOKENS: dict[str, int | None] = {}
 _DIAGNOSTIC_BUDDY: object | None = None
 _DIAGNOSTIC_BUDDY_SAMPLES: list[dict[str, object]] = []
+_DIAGNOSTIC_BDD_OPERATIONS: dict[str, Counter[str]] = {}
 _DIAGNOSTIC_INSTANCES: set[str] = set()
 _DIAGNOSTIC_CLIENT_COUNTS: Counter[int] = Counter()
 _DIAGNOSTIC_OWNER_ARITIES: Counter[int] = Counter()
@@ -116,6 +117,8 @@ _DIAGNOSTIC_PHASES = (
     "target_solve",
     "projection_metadata",
     "bdd_projection_relabel",
+    "bdd_existential_quantification",
+    "bdd_relabel_rename",
     "support_extraction",
     "variable_cube_construction",
     "substitute_variables",
@@ -183,6 +186,50 @@ def _diagnostic_buddy_boundary(boundary: str) -> None:
     except Exception as error:
         if _DIAGNOSTICS is not None:
             _DIAGNOSTICS.record_error(f"buddy_boundary:{boundary}", error)
+
+
+def _diagnostic_bdd_snapshot(bdds: "Bdds") -> dict[str, int] | None:
+    if not _DIAGNOSTICS_ENABLED:
+        return None
+    try:
+        if bdds._veccompose is None:
+            return None
+        stats = bdds._veccompose.stats()
+        return {
+            "allocated_nodes": stats["nodenum"],
+            "used_nodes": stats["nodenum"] - stats["freenodes"],
+            "produced_nodes": stats["produced"],
+            "gbc_count": stats["gbcnum"],
+        }
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.record_error("bdd_operation_snapshot", error)
+        return None
+
+
+def _diagnostic_record_bdd_operation(
+    name: str,
+    before: dict[str, int] | None,
+    after: dict[str, int] | None,
+) -> None:
+    if before is None or after is None:
+        return
+    try:
+        totals = _DIAGNOSTIC_BDD_OPERATIONS.setdefault(name, Counter())
+        totals["calls"] += 1
+        for field in (
+            "allocated_nodes", "used_nodes", "produced_nodes", "gbc_count"
+        ):
+            delta = after[field] - before[field]
+            totals[f"{field}_net"] += delta
+            if delta > 0:
+                totals[f"{field}_growth"] += delta
+            totals[f"{field}_max_delta"] = max(
+                totals[f"{field}_max_delta"], delta
+            )
+    except Exception as error:
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.record_error(f"bdd_operation_delta:{name}", error)
 
 
 def _diagnostic_register_instance(instance: "Instance", role: str) -> None:
@@ -309,6 +356,7 @@ def _diagnostic_initialize(
     _DIAGNOSTIC_STAGE_TOKENS.clear()
     _DIAGNOSTIC_BUDDY = None
     _DIAGNOSTIC_BUDDY_SAMPLES.clear()
+    _DIAGNOSTIC_BDD_OPERATIONS.clear()
     _DIAGNOSTIC_INSTANCES.clear()
     _DIAGNOSTIC_CLIENT_COUNTS.clear()
     _DIAGNOSTIC_OWNER_ARITIES.clear()
@@ -366,6 +414,12 @@ def _diagnostic_finish(status: str, result: dict | None = None) -> None:
             "bdd_stats": {
                 "available": bool(_DIAGNOSTIC_BUDDY_SAMPLES),
                 "samples": _DIAGNOSTIC_BUDDY_SAMPLES,
+                "operations": {
+                    name: dict(values)
+                    for name, values in sorted(
+                        _DIAGNOSTIC_BDD_OPERATIONS.items()
+                    )
+                },
             },
             "distributions": {
                 "projected_root_support_widths": _DIAGNOSTIC_SUPPORTS,
@@ -2007,6 +2061,14 @@ class GeneralizationAttemptContext:
         )
         return entry
 
+    def cached_bdd_support(self, function: object) -> frozenset[int] | None:
+        """Use only support retained with this exact root by the attempt cache."""
+        self._check_live()
+        for (root_id, _mapping), entry in self._support_cache.items():
+            if root_id == id(function) and entry.root is function:
+                return entry.bdd_variables
+        return None
+
     def projection_drop(
             self, instance: Instance, subset: tuple[int, ...], function: object,
             public_to_bdd: dict[int, int], keep: frozenset[int],
@@ -2138,6 +2200,7 @@ class Bdds:
         if var_count is not None:
             self._ensure_variables(var_count)
         self.attempt_context: GeneralizationAttemptContext | None = None
+        self.relabel_route_counts: Counter[str] = Counter()
         if _DIAGNOSTICS_ENABLED:
             try:
                 _DIAGNOSTIC_BUDDY = buddy
@@ -2232,6 +2295,8 @@ class Bdds:
         self.layout = None
 
     def cube(self, variables: Iterable[int]):
+        stats_before = (
+            _diagnostic_bdd_snapshot(self) if _DIAGNOSTICS_ENABLED else None)
         diagnostic_token = (
             _diagnostic_begin("variable_cube_construction")
             if _DIAGNOSTICS_ENABLED else None
@@ -2247,6 +2312,10 @@ class Bdds:
         finally:
             if diagnostic_token is not None:
                 _diagnostic_end(diagnostic_token)
+                _diagnostic_record_bdd_operation(
+                    "variable_cube_construction", stats_before,
+                    _diagnostic_bdd_snapshot(self),
+                )
 
     def from_aag_uncached(self, aag: Aag, literal: int):
         """HEAD-compatible single-root importer retained as a test oracle."""
@@ -2460,41 +2529,87 @@ class Bdds:
 
     def cpre(self, target, next_state: list[object], bad,
              controls: list[int], uncontrollable: list[int]):
-        step = self.buddy.bdd_not(bad) & self.substitute_state(target, next_state)
+        safe = self.buddy.bdd_not(bad)
+        successor = self.substitute_state(target, next_state)
         if controls:
-            step = self.buddy.bdd_exist(step, self.cube(controls))
+            step = self.and_exist(safe, successor, self.cube(controls))
+        else:
+            step = safe & successor
         if uncontrollable:
             step = self.buddy.bdd_forall(step, self.cube(uncontrollable))
         return step
 
-    def relabel(self, function, mapping: dict[int, int]):
+    def and_exist(self, left, right, variables):
+        """Compute ``exists variables: left & right`` in one BuDDy pass."""
+        if self._veccompose is None:
+            return self.buddy.bdd_appex(
+                left, right, self.buddy.bddop_and, variables)
+        result = self._veccompose.and_exist(left, right, variables)
+        if _DIAGNOSTICS is not None:
+            _DIAGNOSTICS.counters["bdd_appex_and_calls"] += 1
+        return result
+
+    def relabel(
+            self, function, mapping: dict[int, int],
+            support: Iterable[int] | None = None):
+        """Relabel the root; a caller's support hint is never the safety proof."""
+        cached = (self.attempt_context.cached_bdd_support(function)
+                  if self.attempt_context is not None else None)
+        exact_support = set(cached if cached is not None else _support(self, function))
+        missing = exact_support - mapping.keys()
+        if missing:
+            raise KeyError(f"BDD variables {sorted(missing)} have no relabelling")
+        variables = sorted(exact_support)
+        targets = [mapping[variable] for variable in variables]
+        replace = len(targets) == len(set(targets))
+        stats_before = (
+            _diagnostic_bdd_snapshot(self) if _DIAGNOSTICS_ENABLED else None)
         diagnostic_token = (
             _diagnostic_begin("bdd_projection_relabel")
             if _DIAGNOSTICS_ENABLED else None
         )
-        memo = {}
-
-        def visit(node):
+        relabel_token = (
+            _diagnostic_begin("bdd_relabel_rename")
+            if _DIAGNOSTICS_ENABLED else None
+        )
+        def recursive_relabel(node, memo: dict[int, object]):
             if node == self.buddy.bddtrue or node == self.buddy.bddfalse:
                 return node
             key = node.id()
-            if key in memo:
-                return memo[key]
-            old = self.buddy.bdd_var(node)
-            if old not in mapping:
-                raise KeyError(f"BDD variable {old} has no relabelling")
-            high = visit(self.buddy.bdd_high(node))
-            low = visit(self.buddy.bdd_low(node))
-            result = self.buddy.bdd_ite(
-                self.buddy.bdd_ithvar(mapping[old]), high, low)
-            memo[key] = result
-            return result
+            if key not in memo:
+                high = recursive_relabel(self.buddy.bdd_high(node), memo)
+                low = recursive_relabel(self.buddy.bdd_low(node), memo)
+                old = self.buddy.bdd_var(node)
+                memo[key] = self.buddy.bdd_ite(
+                    self.buddy.bdd_ithvar(mapping[old]), high, low)
+            return memo[key]
 
         try:
-            return visit(function)
+            if not variables:
+                result = function
+                route = "identity"
+            elif self._veccompose is None:
+                result = recursive_relabel(function, {})
+                route = "recursive_reference"
+            else:
+                result = self._veccompose.relabel_variables(
+                    function, variables, targets, use_replace=replace)
+                route = "bdd_replace" if replace else "bdd_veccompose"
+            if _DIAGNOSTICS_ENABLED:
+                self.relabel_route_counts[route] += 1
+            if _DIAGNOSTICS_ENABLED and _DIAGNOSTICS is not None:
+                _DIAGNOSTICS.counters[f"relabel_{route}_calls"] += 1
+            return result
         finally:
+            if relabel_token is not None:
+                _diagnostic_end(relabel_token)
             if diagnostic_token is not None:
                 _diagnostic_end(diagnostic_token)
+            if relabel_token is not None:
+                _diagnostic_record_bdd_operation(
+                    "bdd_relabel_rename", stats_before,
+                    _diagnostic_bdd_snapshot(self),
+                )
 
     def normal_var(self, key: tuple) -> int:
         if self.layout is None:
@@ -2660,27 +2775,41 @@ def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
             if metadata_token is not None:
                 _diagnostic_end(metadata_token)
         if drop:
+            stats_before = (
+                _diagnostic_bdd_snapshot(bdds)
+                if _DIAGNOSTICS_ENABLED else None)
             project_token = (
                 _diagnostic_begin("bdd_projection_relabel")
+                if _DIAGNOSTICS_ENABLED else None
+            )
+            exist_token = (
+                _diagnostic_begin("bdd_existential_quantification")
                 if _DIAGNOSTICS_ENABLED else None
             )
             try:
                 projected = bdds.buddy.bdd_exist(function, drop_cube)
             finally:
+                if exist_token is not None:
+                    _diagnostic_end(exist_token)
                 if project_token is not None:
                     _diagnostic_end(project_token)
+                if exist_token is not None:
+                    _diagnostic_record_bdd_operation(
+                        "bdd_existential_quantification", stats_before,
+                        _diagnostic_bdd_snapshot(bdds),
+                    )
         else:
             projected = function
+        projected_support = _support(bdds, projected)
         if _DIAGNOSTICS_ENABLED:
             try:
-                projected_support = _support(bdds, projected)
                 _diagnostic_record_support(
                     name, instance.n, subset, projected_support)
             except Exception as error:
                 if _DIAGNOSTICS is not None:
                     _DIAGNOSTICS.record_error(
                         "measure_projected_support", error)
-        normalized = bdds.relabel(projected, mapping)
+        normalized = bdds.relabel(projected, mapping, projected_support)
         metadata_token = (
             _diagnostic_begin("projection_metadata")
             if _DIAGNOSTICS_ENABLED else None
@@ -2700,14 +2829,15 @@ def projection_templates(bdds: Bdds, instance: Instance, name: str, arity: int,
                 raise Decline("anti-unify", name, instance.n,
                               f"projections disagree within role class {group}")
             templates[group] = normalized
-            templates.supports[group] = frozenset(_support(bdds, normalized))
+            normalized_support = frozenset(_support(bdds, normalized))
+            templates.supports[group] = normalized_support
 
             # Rebuild in the seed's concrete variable space for the exact
             # separability check.  Each projection is a conjunct.
         finally:
             if metadata_token is not None:
                 _diagnostic_end(metadata_token)
-        rebuilt &= bdds.relabel(normalized, reverse)
+        rebuilt &= bdds.relabel(normalized, reverse, normalized_support)
     if rebuilt != function:
         hint_validity = _hint_one_hot_validity(bdds, instance)
         false = bdds.buddy.bddfalse
@@ -2796,7 +2926,7 @@ def _instantiate_templates_impl(bdds: Bdds, target: Instance,
                 raise Decline("instantiate", goal.key if goal else "inv", target.n,
                               f"canonical variable {key!r} is absent at target")
             mapping[variable] = concrete[key]
-        result &= bdds.relabel(templates[group], mapping)
+        result &= bdds.relabel(templates[group], mapping, support)
     if add_hint_validity:
         result &= _hint_one_hot_validity(bdds, target)
     return result
@@ -2818,6 +2948,8 @@ def instantiate_templates(bdds: Bdds, target: Instance,
 
 
 def _support(bdds: Bdds, function) -> set[int]:
+    stats_before = (
+        _diagnostic_bdd_snapshot(bdds) if _DIAGNOSTICS_ENABLED else None)
     diagnostic_token = (
         _diagnostic_begin("support_extraction")
         if _DIAGNOSTICS_ENABLED else None
@@ -2832,6 +2964,10 @@ def _support(bdds: Bdds, function) -> set[int]:
     finally:
         if diagnostic_token is not None:
             _diagnostic_end(diagnostic_token)
+            _diagnostic_record_bdd_operation(
+                "support_extraction", stats_before,
+                _diagnostic_bdd_snapshot(bdds),
+            )
 
 
 def _merge_seed_templates(stage: str, predicate: str,
@@ -3290,14 +3426,14 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
     policy_moves = []
     policy_goals = []
     for j in range(ngoals):
+        move_support = _support(bdds, predicates[f"move_{j}"])
         policy_moves.append(bdds.relabel(
             predicates[f"move_{j}"],
-            {v: policy_game_map[v]
-             for v in _support(bdds, predicates[f"move_{j}"])}))
+            {v: policy_game_map[v] for v in move_support}, move_support))
+        goal_support = _support(bdds, predicates[f"goal_{j}"])
         policy_goals.append(bdds.relabel(
             predicates[f"goal_{j}"],
-            {v: policy_game_map[v]
-             for v in _support(bdds, predicates[f"goal_{j}"])}))
+            {v: policy_game_map[v] for v in goal_support}, goal_support))
         _trace(f"policy relation relabelled goal {j + 1}/{ngoals}")
     any_curr = bdds.buddy.bddfalse
     curr = []
@@ -3318,8 +3454,9 @@ def emit_candidate(bdds: Bdds, target: Instance, out: pathlib.Path,
     chosen = bdds.buddy.bddtrue
     control_cube = bdds.cube(controls)
     for pos, control in enumerate(controls):
-        positive = relation & chosen & bdds.buddy.bdd_ithvar(control)
-        function = bdds.buddy.bdd_exist(positive, control_cube)
+        allowed = relation & chosen
+        function = bdds.and_exist(
+            allowed, bdds.buddy.bdd_ithvar(control), control_cube)
         functions.append(function)
         bit = bdds.buddy.bdd_ithvar(control)
         chosen &= ((bit & function) |
@@ -3992,9 +4129,9 @@ def instantiate(
             public_map = {value: key for key, value in internal_map.items()}
 
             def internal(function):
+                support = _support(bdds, function)
                 return bdds.relabel(
-                    function, {v: internal_map[v]
-                               for v in _support(bdds, function)})
+                    function, {v: internal_map[v] for v in support}, support)
 
             internal_next = [internal(function) for function in next_state]
             internal_inv = internal(inv)
@@ -4034,8 +4171,10 @@ def instantiate(
                             internal_temp)
                         move |= layer & step
                         covered |= x
+                move_support = _support(bdds, move)
                 predicates[f"move_{j}"] = bdds.relabel(
-                    move, {v: public_map[v] for v in _support(bdds, move)})
+                    move, {v: public_map[v] for v in move_support},
+                    move_support)
             template_tally["move_reconstructed"] += 1
             _trace(f"target goal {j + 1}/{len(target.goals)} move instantiated")
         stage["ranks"] = time.monotonic() - started
