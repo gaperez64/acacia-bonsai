@@ -158,3 +158,19 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   same host regime) are reusable as B; ltlsynt's 120/17 legs are reusable only after re-hashing
   `/usr/local/sbin/ltlsynt` against the committed pin; TACAS23 has only a 17 s leg, so a fresh 120 s
   leg is required; N needs both caps.
+
+## 2026-09-24 — P2b end to end: neutral, kept; where the time is now
+
+- `ef2b6393` (owner index, support-restricted projection, checked layout; adapter rebuilt from the
+  changed source, sha256 `0043e97b…`) with `build-P14-dbe8c2b`: every target within ~±3% of P2a
+  (`s0/raw-P2b-e2e/`, `s0/s0-summary-P2b-e2e.md`, runs in `_bm-logs.gr1-par2-e2e-P2b/`). This is
+  the outcome §5A S1 anticipates: once P2a removed the compose/import work the metadata scan was
+  not a cost. Kept for the layout's soundness (explicit backend limit, no fixed coordinates).
+  **No SIMD or word-mask variant added:** measured supports are 4–39 variables and sorted sparse
+  lists were 2.4× faster than masks in the micro-measure; S2/S3 preconditions are not met.
+- Remaining dominant phases (P2b): `bdd_projection_relabel` ~60% on load_balancer n=8/9 and amba
+  n=15 — BuDDy operation cost, not Python; Skolemization 85% on buffer n=9 and ~32-37% on lb/amba;
+  target check 80% on cancel n=10 and ≥89% on inpchange n=7; rru2 n=7 splits target solve/check.
+- Next: P2d — split projection/relabel into exist/relabel/cube and use a permutation replace
+  (sound only for pure renamings) where the relabel is one. P5 (relational region check instead of
+  global Skolemization) meets its §8 trigger on arbiter_with_buffer; decide after P2d.

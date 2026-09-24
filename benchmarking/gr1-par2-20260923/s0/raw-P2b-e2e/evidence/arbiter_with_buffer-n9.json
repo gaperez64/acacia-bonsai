@@ -1,0 +1,452 @@
+{
+  "budget_s": 120.0,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 2012950528,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_buffer-n9.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_buffer-n9.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 118.21182123600738,
+    "driver_overhead_s": 0.5957520660131621,
+    "generalization_s": 10.949776,
+    "instantiation_s": 105.603572,
+    "probe_check_s": 0.043941,
+    "seed_monitor_s": 0.387568,
+    "seed_solve_s": 0.131403,
+    "target_check_s": 0.305299,
+    "target_monitor_s": 0.142502,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.05200816999422386
+  },
+  "elapsed_s": 118.21182123600738,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/evidence/arbiter_with_buffer-n9.json",
+  "generalizer_evidence": {
+    "arity": 1,
+    "bus_schemas": [
+      "AtMostOne(g)"
+    ],
+    "canonical_variable": "(template,index_tuple,state_bit)",
+    "compose_route": "native_veccompose",
+    "cost_accounting": {
+      "driver_overhead_s": 0.09549090400105342,
+      "generalization_s": 11.007551878981758,
+      "instantiate_s": 105.69702259998303,
+      "probe_check_s": 0.043940695002675056,
+      "seed_monitor_s": 0.38756797899259254,
+      "seed_solve_s": 0.13140278996434063,
+      "target_check_s": 0.3052989370189607,
+      "target_monitor_s": 0.14250179601367563,
+      "wall_s": 117.81077757995808
+    },
+    "family": "arbiter_with_buffer",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "predicate_arities": {
+      "inv": 1,
+      "x_0_0_0": 1,
+      "x_0_1_0": 1,
+      "x_1_0_0": 1,
+      "x_1_1_0": 1,
+      "x_2_0_0": 1,
+      "x_2_1_0": 1,
+      "x_3_0_0": 1,
+      "x_3_1_0": 1,
+      "x_4_0_0": 1,
+      "x_4_1_0": 1,
+      "x_5_0_0": 1,
+      "x_5_1_0": 1,
+      "x_6_0_0": 1,
+      "x_6_1_0": 1,
+      "x_7_0_0": 1,
+      "x_7_1_0": 1,
+      "x_8_0_0": 1,
+      "x_8_1_0": 1,
+      "x_9_0_0": 1,
+      "x_9_1_0": 1
+    },
+    "rank_depths": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "role_classes": [
+      "role_0"
+    ],
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "skolem_rule": "game controllable order; true/lowest index first",
+    "stage_evidence": {
+      "CEGIS": {
+        "checks": [
+          {
+            "counterexample": false,
+            "exit_code": 0,
+            "n": 5,
+            "node_caps": [
+              16777216
+            ],
+            "verdict": "VERIFIED"
+          },
+          {
+            "counterexample": false,
+            "exit_code": 0,
+            "n": 9,
+            "node_caps": [
+              33554432
+            ],
+            "verdict": "VERIFIED"
+          }
+        ],
+        "final_verdict": "VERIFIED",
+        "round_cap": 3,
+        "rounds": 0
+      },
+      "anti-unify": {
+        "arity": 1,
+        "predicate_arities": {
+          "inv": 1,
+          "x_0_0_0": 1,
+          "x_0_1_0": 1,
+          "x_1_0_0": 1,
+          "x_1_1_0": 1,
+          "x_2_0_0": 1,
+          "x_2_1_0": 1,
+          "x_3_0_0": 1,
+          "x_3_1_0": 1,
+          "x_4_0_0": 1,
+          "x_4_1_0": 1,
+          "x_5_0_0": 1,
+          "x_5_1_0": 1,
+          "x_6_0_0": 1,
+          "x_6_1_0": 1,
+          "x_7_0_0": 1,
+          "x_7_1_0": 1,
+          "x_8_0_0": 1,
+          "x_8_1_0": 1,
+          "x_9_0_0": 1,
+          "x_9_1_0": 1
+        },
+        "role_classes": [
+          "role_0"
+        ],
+        "template_counts": {
+          "inv": 2,
+          "move_reconstructed": 10,
+          "rank": 56
+        }
+      },
+      "bus-wide schemas": {
+        "matched": [
+          "AtMostOne(g)"
+        ]
+      },
+      "canonicalize": {
+        "variable_abi": "(template,index_tuple,state_bit)"
+      },
+      "instantiate": {
+        "certificate": "arbiter_with_buffer_9.certificate.aag",
+        "policy": "arbiter_with_buffer_9.policy.aag"
+      },
+      "ranks": {
+        "depths": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "y": "union_i x_j_k_i"
+      },
+      "seed": {
+        "exports": [
+          "policy",
+          "certificate",
+          "provenance"
+        ],
+        "sizes": [
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "stages": [
+      "seed",
+      "canonicalize",
+      "anti-unify",
+      "bus-wide schemas",
+      "ranks",
+      "instantiate",
+      "CEGIS"
+    ],
+    "target": 9,
+    "template_counts": {
+      "inv": 2,
+      "move_reconstructed": 10,
+      "rank": 56
+    },
+    "variable_layout": {
+      "blocks": {
+        "canonical_templates": {
+          "size": 34,
+          "start": 270
+        },
+        "composition": {
+          "size": 112,
+          "start": 74
+        },
+        "policy_counter": {
+          "size": 10,
+          "start": 186
+        },
+        "policy_game": {
+          "size": 74,
+          "start": 196
+        },
+        "public": {
+          "size": 74,
+          "start": 0
+        }
+      },
+      "public_letter_count": 36,
+      "public_state_count": 38,
+      "required_variables": 304,
+      "sha256": "e5636266fab47aa18da49dc9187a981429888335a698d2870ae33dff274049c8",
+      "variable_limit": null
+    },
+    "y_reconstruction": "union_i x_j_k_i"
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "probe_check": 0.043940695002675056,
+      "seed_monitor_game": 0.38756797899259254,
+      "seed_solve": 0.13140278996434063,
+      "stage_anti_unify": 0.004475208988878876,
+      "stage_bus_schemas": 0.0003363960422575474,
+      "stage_canonicalize": 0.22076848498545587,
+      "stage_cegis": 117.81024140299996,
+      "stage_instantiate": 105.69702259998303,
+      "stage_ranks": 11.002740273950621,
+      "stage_seed": 0.5307335839606822,
+      "target_check": 0.3052989370189607,
+      "target_monitor_game": 0.14250179601367563
+    },
+    "last_stage_times": {
+      "anti_unify": 0.0020140749984420836,
+      "bus_schemas": 0.0001690530334599316,
+      "canonicalize": 0.07720125198829919,
+      "cegis": 117.81024140299996,
+      "instantiate": 0.09345067600952461,
+      "ranks": 0.05665714998031035,
+      "seed": 0.26687294099247083
+    },
+    "sampled_monotonic_s": 502710.07657719
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.002461",
+    "arity": "1",
+    "bus_schemas_s": "0.000167",
+    "canonicalize_s": "0.143567",
+    "cegis_rounds": "0",
+    "cegis_s": "117.810241",
+    "checker_node_caps": "5:16777216,9:33554432",
+    "driver_overhead_s": "0.095491",
+    "family": "arbiter_with_buffer",
+    "instantiate_s": "105.603572",
+    "peak_rss_kib": "1809644",
+    "predicate_arities": "default=1",
+    "probe_check_s": "0.043941",
+    "ranks_s": "10.946083",
+    "reason": "-",
+    "role_classes": "role_0",
+    "seed_monitor_s": "0.387568",
+    "seed_s": "0.263861",
+    "seed_solve_s": "0.131403",
+    "seeds": "2,3,4",
+    "solver_cache": "8388608,8388608,8388608",
+    "solver_nodes": "33554432,33554432,33554432",
+    "stage_reached": "CEGIS",
+    "stages_passed": "seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS",
+    "target": "9",
+    "target_check_s": "0.305299",
+    "target_monitor_s": "0.142502",
+    "target_solve_s": "0.000000",
+    "verdict": "VERIFIED",
+    "wall_s": "117.810778"
+  },
+  "invocation_id": "e4f7857126df4ccf82b32343097fe776",
+  "path_kind": "lifted",
+  "peak_rss_kib": 1809644,
+  "request": {
+    "census_class": "-/R",
+    "family": "arbiter_with_buffer",
+    "logical_instance": "arbiter_with_buffer_pb_9_pe_.ltl",
+    "measured_arity": 1,
+    "request_mode": "reproducer",
+    "route_kind": "real-proposal",
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "status_120s": "unsolved",
+    "target": 9
+  },
+  "request_mode": "reproducer",
+  "result": {
+    "certificate": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s/generalizer/arbiter_with_buffer_9.certificate.aag",
+    "policy": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s/generalizer/arbiter_with_buffer_9.policy.aag",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "REALIZABLE /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s/generalizer/arbiter_with_buffer_9.certificate.aag",
+    "verdict": "REALIZABLE"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "census": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-census.tsv",
+    "instances": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-instances.tsv",
+    "kind": "historical-dataset-reproducer",
+    "match": "basename-to-m0-instances-row"
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "arbiter_with_buffer",
+        "--target",
+        "9",
+        "--seeds",
+        "2,3,4",
+        "--timeout",
+        "119.479640",
+        "--check-method",
+        "auto",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s/generalizer",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ef2b6393/libbuddy_veccompose_adapter.so",
+        "--diagnostics",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s/generalizer-diagnostics.json"
+      ],
+      "elapsed_s": 118.15981306601316,
+      "pid": 1435346,
+      "returncode": 0,
+      "stage": "generalize_gr1",
+      "stderr": "generalize_gr1: target goal 1/10 ranks instantiated\ngeneralize_gr1: target goal 2/10 ranks instantiated\ngeneralize_gr1: target goal 3/10 ranks instantiated\ngeneralize_gr1: target goal 4/10 ranks instantiated\ngeneralize_gr1: target goal 5/10 ranks instantiated\ngeneralize_gr1: target goal 6/10 ranks instantiated\ngeneralize_gr1: target goal 7/10 ranks instantiated\ngeneralize_gr1: target goal 8/10 ranks instantiated\ngeneralize_gr1: target goal 9/10 ranks instantiated\ngeneralize_gr1: target goal 10/10 ranks instantiated\ngeneralize_gr1: target invariant transition composed\ngeneralize_gr1: target goal 1/10 move instantiated\ngeneralize_gr1: target goal 2/10 move instantiated\ngeneralize_gr1: target goal 3/10 move instantiated\ngeneralize_gr1: target goal 4/10 move instantiated\ngeneralize_gr1: target goal 5/10 move instantiated\ngeneralize_gr1: target goal 6/10 move instantiated\ngeneralize_gr1: target goal 7/10 move instantiated\ngeneralize_gr1: target goal 8/10 move instantiated\ngeneralize_gr1: target goal 9/10 move instantiated\ngeneralize_gr1: target goal 10/10 move instantiated\ngeneralize_gr1: certificate emitted\nGarbage collection #1: 8000000 nodes / 5757523 free / 0.1s / 0.1s total\ngeneralize_gr1: policy relation relabelled goal 1/10\ngeneralize_gr1: policy relation relabelled goal 2/10\ngeneralize_gr1: policy relation relabelled goal 3/10\ngeneralize_gr1: policy relation relabelled goal 4/10\ngeneralize_gr1: policy relation relabelled goal 5/10\ngeneralize_gr1: policy relation relabelled goal 6/10\ngeneralize_gr1: policy relation relabelled goal 7/10\ngeneralize_gr1: policy relation relabelled goal 8/10\ngeneralize_gr1: policy relation relabelled goal 9/10\ngeneralize_gr1: policy relation relabelled goal 10/10\nGarbage collection #2: 8000000 nodes / 114 free / 0.2s / 0.2s total\nGarbage collection #3: 10000000 nodes / 34 free / 0.2s / 0.4s total\nGarbage collection #4: 12000000 nodes / 0 free / 0.3s / 0.7s total\nGarbage collection #5: 14000000 nodes / 66 free / 0.3s / 1.0s total\nGarbage collection #6: 16000000 nodes / 0 free / 0.3s / 1.3s total\nGarbage collection #7: 18000000 nodes / 0 free / 0.4s / 1.8s total\nGarbage collection #8: 20000000 nodes / 0 free / 0.5s / 2.3s total\nGarbage collection #9: 22000000 nodes / 0 free / 0.5s / 2.8s total\nGarbage collection #10: 24000000 nodes / 130 free / 0.6s / 3.4s total\nGarbage collection #11: 26000000 nodes / 0 free / 0.6s / 4.0s total\nGarbage collection #12: 28000000 nodes / 0 free / 0.7s / 4.7s total\nGarbage collection #13: 30000000 nodes / 0 free / 0.7s / 5.5s total\nGarbage collection #14: 32000000 nodes / 0 free / 0.8s / 6.3s total\nGarbage collection #15: 34000000 nodes / 0 free / 0.9s / 7.2s total\nGarbage collection #16: 36000000 nodes / 0 free / 1.0s / 8.1s total\nGarbage collection #17: 38000000 nodes / 0 free / 1.0s / 9.1s total\nGarbage collection #18: 40000000 nodes / 0 free / 1.1s / 10.2s total\nGarbage collection #19: 42000000 nodes / 0 free / 1.1s / 11.3s total\ngeneralize_gr1: policy goal relation muxed\ngeneralize_gr1: policy control 1/18 Skolemized\nGarbage collection #20: 44000000 nodes / 7259 free / 1.2s / 12.5s total\ngeneralize_gr1: policy control 2/18 Skolemized\ngeneralize_gr1: policy control 3/18 Skolemized\nGarbage collection #21: 46000000 nodes / 2394586 free / 1.2s / 13.6s total\ngeneralize_gr1: policy control 4/18 Skolemized\ngeneralize_gr1: policy control 5/18 Skolemized\ngeneralize_gr1: policy control 6/18 Skolemized\ngeneralize_gr1: policy control 7/18 Skolemized\ngeneralize_gr1: policy control 8/18 Skolemized\ngeneralize_gr1: policy control 9/18 Skolemized\ngeneralize_gr1: policy control 10/18 Skolemized\ngeneralize_gr1: policy control 11/18 Skolemized\ngeneralize_gr1: policy control 12/18 Skolemized\ngeneralize_gr1: policy control 13/18 Skolemized\ngeneralize_gr1: policy control 14/18 Skolemized\ngeneralize_gr1: policy control 15/18 Skolemized\ngeneralize_gr1: policy control 16/18 Skolemized\ngeneralize_gr1: policy control 17/18 Skolemized\ngeneralize_gr1: policy control 18/18 Skolemized\ngeneralize_gr1: policy emitted\ngeneralize_gr1: target goal 1/6 ranks instantiated\ngeneralize_gr1: target goal 2/6 ranks instantiated\ngeneralize_gr1: target goal 3/6 ranks instantiated\ngeneralize_gr1: target goal 4/6 ranks instantiated\ngeneralize_gr1: target goal 5/6 ranks instantiated\ngeneralize_gr1: target goal 6/6 ranks instantiated\ngeneralize_gr1: target invariant transition composed\ngeneralize_gr1: target goal 1/6 move instantiated\ngeneralize_gr1: target goal 2/6 move instantiated\ngeneralize_gr1: target goal 3/6 move instantiated\ngeneralize_gr1: target goal 4/6 move instantiated\ngeneralize_gr1: target goal 5/6 move instantiated\ngeneralize_gr1: target goal 6/6 move instantiated\ngeneralize_gr1: certificate emitted\ngeneralize_gr1: policy relation relabelled goal 1/6\ngeneralize_gr1: policy relation relabelled goal 2/6\ngeneralize_gr1: policy relation relabelled goal 3/6\ngeneralize_gr1: policy relation relabelled goal 4/6\ngeneralize_gr1: policy relation relabelled goal 5/6\ngeneralize_gr1: policy relation relabelled goal 6/6\ngeneralize_gr1: policy goal relation muxed\ngeneralize_gr1: policy control 1/10 Skolemized\ngeneralize_gr1: policy control 2/10 Skolemized\ngeneralize_gr1: policy control 3/10 Skolemized\ngeneralize_gr1: policy control 4/10 Skolemized\ngeneralize_gr1: policy control 5/10 Skolemized\ngeneralize_gr1: policy control 6/10 Skolemized\ngeneralize_gr1: policy control 7/10 Skolemized\ngeneralize_gr1: policy control 8/10 Skolemized\ngeneralize_gr1: policy control 9/10 Skolemized\ngeneralize_gr1: policy control 10/10 Skolemized\ngeneralize_gr1: policy emitted\n",
+      "stdout": "VERIFIED family=arbiter_with_buffer target=9 seeds=2,3,4\ncertificate: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s/generalizer/arbiter_with_buffer_9.certificate.aag\npolicy: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s/generalizer/arbiter_with_buffer_9.policy.aag\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "arbiter_with_buffer",
+    "--target",
+    "9",
+    "--seeds",
+    "2,3,4",
+    "--reduction-semantics",
+    "exact",
+    "--timeout",
+    "120.0",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ef2b6393/libbuddy_veccompose_adapter.so"
+  ],
+  "target_certificate": {
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s/generalizer/arbiter_with_buffer_9.certificate.aag",
+    "sha256": "951e7e8a973d9bceef8ea4fc11cb8604308628204dddc15dd4750baa81f8c58d",
+    "side": "system",
+    "verdict": "VERIFIED"
+  },
+  "target_check": {
+    "counterexample": null,
+    "counterexample_method": null,
+    "elapsed_seconds": 0.295262179,
+    "exit_code": 0,
+    "format": "tlsf-gr1-checkresult-v1",
+    "methods": {
+      "certificate": {
+        "counterexample": null,
+        "peak_bdd_nodes": 1,
+        "time_seconds": 0.00993576,
+        "verdict": "VERIFIED"
+      },
+      "closed_loop": {
+        "counterexample": null,
+        "peak_bdd_nodes": 0,
+        "time_seconds": 0.0,
+        "verdict": "SKIPPED"
+      }
+    },
+    "peak_bdd_nodes": 1,
+    "requested_method": "auto",
+    "verdict": "VERIFIED"
+  },
+  "target_check_ran": true,
+  "target_verified": true,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ef2b6393/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-e4f7857126df-exjbsr0s"
+}
