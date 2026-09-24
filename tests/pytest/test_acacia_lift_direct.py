@@ -15,12 +15,12 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from acacia_lift import direct  # noqa: E402
 from acacia_lift.tools import configuration_defaults  # noqa: E402
+from _lift_requirements import require_lift_tools  # noqa: E402
 
 
 def test_checker_zero_without_verified_payload_declines(tmp_path: pathlib.Path) -> None:
     config = configuration_defaults()
-    if not config.solver.is_file() or not config.monitor.is_file():
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(config)
     source = tmp_path / "input.tlsf"
     source.write_text('INFO { TITLE: "case" SEMANTICS: Mealy TARGET: Mealy }\n'
                       'MAIN { INPUTS { a; } OUTPUTS { b; } GUARANTEES { G b; } }\n')

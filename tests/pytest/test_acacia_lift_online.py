@@ -26,6 +26,7 @@ from acacia_lift.lifting.proof import prove  # noqa: E402
 from acacia_lift.lifting.provenance import discover  # noqa: E402
 from acacia_lift.lifting.source import lower, solve_seed  # noqa: E402
 from acacia_lift.tools import configuration_defaults  # noqa: E402
+from _lift_requirements import require_buddy, require_lift_tools  # noqa: E402
 
 
 def _spec(kind: str, size: int, seed: int, *, extra_parameter: bool = False) -> str:
@@ -53,9 +54,7 @@ def _run(tmp_path: pathlib.Path, kind: str, size: int, seed: int,
          spec_text: str | None = None) -> tuple[dict, pathlib.Path]:
     tmp_path.mkdir(parents=True, exist_ok=True)
     config = configuration_defaults()
-    if not all(path.is_file() for path in
-               (config.solver, config.checker, config.tlsf2tlsf, config.monitor)):
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(config)
     source = tmp_path / f"{random.Random(seed ^ 991).getrandbits(128):032x}.tlsf"
     source.write_text(spec_text if spec_text is not None else
                       _spec(kind, size, seed, extra_parameter=extra_parameter),
@@ -169,8 +168,7 @@ def test_name_size_and_formula_format_metamorphs(tmp_path: pathlib.Path) -> None
 
 def test_wrapper_accepts_only_checked_lifted_result(tmp_path: pathlib.Path) -> None:
     config = configuration_defaults()
-    if not config.solver.is_file():
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(config)
     source = tmp_path / "parametric.tlsf"
     source.write_text(_spec("request", 4, 701), encoding="utf-8")
     fallback = tmp_path / "fallback"
@@ -197,8 +195,7 @@ def test_other_parameter_stays_at_target_value(tmp_path: pathlib.Path) -> None:
 
 def test_without_parameters_uses_only_direct_route(tmp_path: pathlib.Path) -> None:
     config = configuration_defaults()
-    if not config.solver.is_file():
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(config)
     source = tmp_path / "plain.tlsf"
     source.write_text('INFO { TITLE: "plain" SEMANTICS: Mealy TARGET: Mealy }\n'
                       'MAIN { INPUTS { ask; } OUTPUTS { answer; } '
@@ -219,8 +216,7 @@ def test_without_parameters_uses_only_direct_route(tmp_path: pathlib.Path) -> No
 
 def test_source_mutation_after_binding_cannot_return_verdict(tmp_path: pathlib.Path) -> None:
     config = configuration_defaults()
-    if not config.solver.is_file():
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(config)
     tlsf = tmp_path / "mutable.tlsf"
     tlsf.write_text(_spec("request", 4, 604), encoding="utf-8")
     original_lower = lower
@@ -270,8 +266,7 @@ def test_mutated_lifted_certificate_is_rejected(tmp_path: pathlib.Path) -> None:
 
 def test_strict_reduction_candidate_is_independently_verified(tmp_path: pathlib.Path) -> None:
     config = configuration_defaults()
-    if not config.monitor.is_file():
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(config)
     tlsf = tmp_path / "strict.tlsf"
     tlsf.write_text(_spec("request", 4, 887), encoding="utf-8")
     deadline = time.monotonic() + 10
@@ -300,8 +295,7 @@ def test_strict_reduction_candidate_is_independently_verified(tmp_path: pathlib.
 
 def test_k_equals_n_predicate_declines_without_larger_witness(tmp_path: pathlib.Path) -> None:
     config = configuration_defaults()
-    if not config.bindings_site.is_dir():
-        pytest.skip("BuDDy bindings unavailable")
+    require_buddy(config)
     seeds = []
     for n in (2, 3):
         builder = AagBuilder([f"bit_{i}" for i in range(n)])

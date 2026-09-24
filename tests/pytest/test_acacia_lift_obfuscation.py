@@ -16,6 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from acacia_lift.tools import configuration_defaults  # noqa: E402
+from _lift_requirements import require_lift_tools  # noqa: E402
 
 WRAPPER = ROOT / "scripts/acacia-lift-portfolio.py"
 OBFUSCATOR = ROOT / "benchmarking/gr1-par2-20260923/obfuscate-tlsf.py"
@@ -104,9 +105,7 @@ def _run(source: pathlib.Path, route: pathlib.Path, fallback: pathlib.Path) -> t
 
 
 def test_ten_obfuscated_pairs_keep_direct_and_decline_decisions(tmp_path: pathlib.Path) -> None:
-    if not all((BUILD / name).is_file() for name in
-               ("tlsfsolve", "tlsfcertcheck", "tlsf2ltl")):
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(configuration_defaults())
     fallback = tmp_path / "fallback"
     fallback.write_text("#!/usr/bin/env python3\nprint('UNKNOWN')\nraise SystemExit(2)\n")
     fallback.chmod(0o755)
@@ -138,9 +137,7 @@ def test_ten_obfuscated_pairs_keep_direct_and_decline_decisions(tmp_path: pathli
 ])
 def test_adversarial_signal_names(tmp_path: pathlib.Path, input_name: str,
                                   output_name: str, formula: str) -> None:
-    if not all((BUILD / name).is_file() for name in
-               ("tlsfsolve", "tlsfcertcheck", "tlsf2ltl")):
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(configuration_defaults())
     source = tmp_path / "unseen_name.tlsf"
     source.write_text(
         'INFO { TITLE: "adversarial" SEMANTICS: Mealy TARGET: Mealy }\n'
@@ -157,9 +154,7 @@ def test_adversarial_signal_names(tmp_path: pathlib.Path, input_name: str,
 
 
 def test_generated_unseen_specs_and_random_basenames(tmp_path: pathlib.Path) -> None:
-    if not all((BUILD / name).is_file() for name in
-               ("tlsfsolve", "tlsfcertcheck", "tlsf2ltl")):
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(configuration_defaults())
     rng = random.Random(20260924)
     fallback = tmp_path / "fallback"
     fallback.write_text("#!/usr/bin/env python3\nprint('UNKNOWN')\nraise SystemExit(2)\n")
@@ -187,9 +182,7 @@ def test_generated_unseen_specs_and_random_basenames(tmp_path: pathlib.Path) -> 
 
 
 def test_random_basename_only_keeps_verdict(tmp_path: pathlib.Path) -> None:
-    if not all((BUILD / name).is_file() for name in
-               ("tlsfsolve", "tlsfcertcheck", "tlsf2ltl")):
-        pytest.skip("tlsf-tools build unavailable")
+    require_lift_tools(configuration_defaults())
     fallback = tmp_path / "fallback"
     fallback.write_text("#!/usr/bin/env python3\nprint('UNKNOWN')\nraise SystemExit(2)\n")
     fallback.chmod(0o755)
