@@ -38,7 +38,7 @@ def lower(source: pathlib.Path, output: pathlib.Path, config: ToolConfiguration,
     output.mkdir(parents=True, exist_ok=True)
     game = output / "game.aag"
     provenance = output / "provenance.json"
-    command = [str(config.bindings_python), str(config.monitor), str(source),
+    command = [str(config.bindings_python), "-s", str(config.monitor), str(source),
                "--semantics", semantics, "--output", str(game),
                "--provenance-out", str(provenance),
                "--tlsf2ltl", str(config.tlsf2ltl),

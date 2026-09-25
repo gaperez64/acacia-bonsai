@@ -811,7 +811,7 @@ def build_game(family: str, n: int, directory: pathlib.Path,
     game = directory / f"{family}_{n}.game.aag"
     prov = directory / f"{family}_{n}.prov.json"
     tlsf = source.resolve() if source is not None else legacy_source(spec.source)
-    command = [str(BINDINGS_PYTHON), str(MONITOR), str(tlsf),
+    command = [str(BINDINGS_PYTHON), "-s", str(MONITOR), str(tlsf),
                "--param", f"n={n}", "--semantics", reduction_semantics, "--output",
                str(game), "--provenance-out", str(prov)]
     env = bindings_environment(TOOL_CONFIG)
@@ -4903,10 +4903,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"configuration: {error}", file=sys.stderr)
             return 4
     # Spot and BuDDy are native modules tied to the configured CPython ABI.
-    if pathlib.Path(sys.executable).resolve() != config.bindings_python:
-        os.execv(
+    if (pathlib.Path(sys.executable).resolve() != config.bindings_python or
+            not sys.flags.no_user_site or
+            os.environ.get("PYTHONNOUSERSITE") != "1"):
+        os.execve(
             str(config.bindings_python),
-            [str(config.bindings_python), __file__, *arguments],
+            [str(config.bindings_python), "-s", __file__, *arguments],
+            bindings_environment(config),
         )
     _apply_tool_configuration(config, args)
     # Diagnostics are optional and may never extend the proof budget.  In

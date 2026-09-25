@@ -7,6 +7,7 @@ import pathlib
 import random
 import subprocess
 import sys
+import tempfile
 import time
 from types import SimpleNamespace
 from unittest import mock
@@ -16,16 +17,13 @@ import pytest
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from acacia_lift.artifact import Aag, AagBuilder  # noqa: E402
 from acacia_lift import runner  # noqa: E402
-from acacia_lift.bdd_kernel import VarInfo  # noqa: E402
 from acacia_lift.direct import Decline  # noqa: E402
-from acacia_lift.lifting.schema import Bdds, GameInstance, Goal, learn_predicate  # noqa: E402
-from acacia_lift.lifting.schema import learn_certificate, prepare  # noqa: E402
-from acacia_lift.lifting.proof import prove  # noqa: E402
-from acacia_lift.lifting.provenance import discover  # noqa: E402
-from acacia_lift.lifting.source import lower, solve_seed  # noqa: E402
-from acacia_lift.tools import configuration_defaults  # noqa: E402
+from acacia_lift.lifting.schema import Goal, learn_certificate  # noqa: E402
+from acacia_lift.lifting.source import lower  # noqa: E402
+from acacia_lift.tools import (  # noqa: E402
+    _probe_bindings, bindings_environment, configuration_defaults,
+)
 from _lift_requirements import require_buddy, require_lift_tools  # noqa: E402
 
 
@@ -72,6 +70,17 @@ def _run(tmp_path: pathlib.Path, kind: str, size: int, seed: int,
     return json.loads(evidence_path.read_text()), output
 
 
+def _run_bindings_case(config, case: str, path: pathlib.Path) -> None:
+    environment = bindings_environment(config)
+    environment["PYTHONPATH"] = str(ROOT / "scripts") + os.pathsep + environment["PYTHONPATH"]
+    proc = subprocess.run(
+        [str(config.bindings_python), "-s",
+         str(ROOT / "tests/pytest/_lift_bindings_cases.py"), case, str(path)],
+        env=environment, capture_output=True, text=True, timeout=18, check=False,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 @pytest.mark.parametrize("kind", ["request", "mutex", "cardinality"])
 def test_generated_unseen_families_lift_and_verify(tmp_path: pathlib.Path,
                                                     kind: str) -> None:
@@ -86,6 +95,44 @@ def test_generated_unseen_families_lift_and_verify(tmp_path: pathlib.Path,
     assert evidence["move_source"] == "target_transition"
     assert not any(key.startswith("move_") for key in evidence["predicate_arities"])
     assert evidence["global_knobs"]["learn_move_schemas"] is False
+
+
+def test_user_site_decoy_does_not_shadow_configured_buddy(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = configuration_defaults()
+    require_lift_tools(config)
+    scratch = ROOT / "build_scratch" / "usersite-fix"
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=scratch) as temporary:
+        userbase = pathlib.Path(temporary)
+        unprotected = dict(os.environ)
+        unprotected["PYTHONUSERBASE"] = str(userbase)
+        unprotected.pop("PYTHONNOUSERSITE", None)
+        unprotected.pop("PYTHONPATH", None)
+        site = subprocess.run(
+            [str(config.bindings_python), "-c",
+             "import site; print(site.getusersitepackages())"],
+            env=unprotected, capture_output=True, text=True, timeout=5, check=True,
+        )
+        decoy = pathlib.Path(site.stdout.strip()) / "buddy.py"
+        decoy.parent.mkdir(parents=True)
+        decoy.write_text('raise RuntimeError("decoy BuDDy imported")\n',
+                         encoding="utf-8")
+        origin = subprocess.run(
+            [str(config.bindings_python), "-c",
+             "import importlib.util; print(importlib.util.find_spec('buddy').origin)"],
+            env=unprotected, capture_output=True, text=True, timeout=5, check=True,
+        )
+        assert pathlib.Path(origin.stdout.strip()).resolve() == decoy.resolve()
+
+        monkeypatch.setenv("PYTHONUSERBASE", str(userbase))
+        probe = _probe_bindings(config)
+        assert pathlib.Path(probe["binding_module"]).resolve() == (
+            config.bindings_site / "buddy.py").resolve()
+        evidence, _ = _run(tmp_path, "request", 4, 342 + len("request"))
+        assert evidence["route"] == "lifted-certified"
+        assert evidence["target_verified"] is True
 
 
 @pytest.mark.parametrize("failure", ["learning", "instantiation"])
@@ -269,47 +316,10 @@ def test_strict_reduction_candidate_is_independently_verified(tmp_path: pathlib.
     require_lift_tools(config)
     tlsf = tmp_path / "strict.tlsf"
     tlsf.write_text(_spec("request", 4, 887), encoding="utf-8")
-    deadline = time.monotonic() + 10
-    target = lower(tlsf, tmp_path / "target", config, deadline,
-                   semantics="strict")
-    window = discover(tlsf, target, tmp_path / "seeds", config, deadline)
-    certificates = [solve_seed(instance, tmp_path / f"solve_{i}", config, deadline)
-                    for i, instance in enumerate(window.instances)]
-    seeds, target_instance = prepare(window, target, certificates)
-    bdds = Bdds(config, max(len(item.variables) for item in [*seeds, target_instance]))
-    predicates, depths, _arities = learn_certificate(bdds, seeds, target_instance,
-                                                      deadline)
-    result = prove(bdds, target_instance, predicates, depths, tmp_path, config,
-                   deadline)
-    assert result.reduction_semantics == "strict"
-    assert result.proof_method in {"certificate", "gr1-region-v1"}
-    region_output = tmp_path / "region"
-    region_output.mkdir()
-    with mock.patch("acacia_lift.lifting.proof.emit_policy",
-                    side_effect=Decline("policy", "budget_exhausted")):
-        region = prove(bdds, target_instance, predicates, depths, region_output,
-                       config, deadline)
-    assert region.proof_method == "gr1-region-v1"
-    assert region.policy is None
+    _run_bindings_case(config, "strict", tlsf)
 
 
 def test_k_equals_n_predicate_declines_without_larger_witness(tmp_path: pathlib.Path) -> None:
     config = configuration_defaults()
     require_buddy(config)
-    seeds = []
-    for n in (2, 3):
-        builder = AagBuilder([f"bit_{i}" for i in range(n)])
-        expression = 0
-        for i in range(n):
-            expression = builder.lor(expression, 2 * (i + 1))
-        path = tmp_path / f"or_{n}.aag"
-        path.write_text(builder.render([("inv", expression)], "synthetic predicate"))
-        circuit = Aag.read(path)
-        seeds.append(GameInstance(
-            None, tuple(range(n)), circuit, circuit, None,
-            [VarInfo(i, ("letter", "input", "input:1", (i,)), frozenset({i}))
-             for i in range(n)], [], {i: () for i in range(n)}))
-    bdds = Bdds(config, 3)
-    with pytest.raises(Decline, match="no_bounded_exact_template"):
-        learn_predicate(bdds, seeds, ["inv", "inv"], [None, None],
-                        time.monotonic() + 5)
+    _run_bindings_case(config, "k_equals_n", tmp_path)

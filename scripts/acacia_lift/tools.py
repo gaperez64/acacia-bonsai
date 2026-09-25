@@ -181,7 +181,7 @@ def _binding_module_path(
     except ValueError as error:
         raise ProbeError(
             f"{name} resolved outside configured bindings site "
-            f"{bindings_site}: {path}"
+            f"{bindings_site}; offending import origin: {path}"
         ) from error
     return path
 

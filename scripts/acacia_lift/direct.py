@@ -66,7 +66,7 @@ def lower_exact(source: pathlib.Path, output: pathlib.Path, config: ToolConfigur
     """Lower the actual TLSF bytes, with no parameter overrides."""
     game = output / "target.game.aag"
     provenance = output / "target.provenance.json"
-    command = [str(config.bindings_python), str(config.monitor), str(source),
+    command = [str(config.bindings_python), "-s", str(config.monitor), str(source),
                "--semantics", "exact", "--output", str(game),
                "--provenance-out", str(provenance),
                "--tlsf2ltl", str(config.tlsf2ltl),

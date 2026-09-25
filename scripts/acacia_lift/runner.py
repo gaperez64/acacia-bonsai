@@ -12,7 +12,8 @@ import time
 from acacia_lift.direct import Decline, run_exact_direct, sha256_file
 from acacia_lift.lifting import provenance, schema, source
 from acacia_lift.lifting import settings
-from acacia_lift.tools import add_configuration_arguments, configuration_from_args
+from acacia_lift.tools import (add_configuration_arguments, bindings_environment,
+                               configuration_from_args)
 
 
 def _reason(value: str) -> str:
@@ -69,6 +70,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--evidence-out", required=True, type=pathlib.Path)
     add_configuration_arguments(parser)
     args = parser.parse_args(argv)
+    config = configuration_from_args(args)
+    if argv is None and (pathlib.Path(os.sys.executable).resolve() !=
+                         config.bindings_python.resolve() or
+                         not os.sys.flags.no_user_site or
+                         os.environ.get("PYTHONNOUSERSITE") != "1"):
+        os.execve(str(config.bindings_python),
+                  [str(config.bindings_python), "-s", "-m", "acacia_lift.runner",
+                   *os.sys.argv[1:]], bindings_environment(config))
     started = time.monotonic()
     deadline = started + args.budget
     evidence: dict = {"schema_version": 3, "path_kind": "attempted-declined",
@@ -120,7 +129,6 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.budget <= 0 or args.eligibility_budget_seconds <= 0:
             raise Decline("configuration", "invalid_budget")
-        config = configuration_from_args(args)
         original = args.tlsf.resolve()
         checkpoint("source_binding")
         original_hash = sha256_file(original)

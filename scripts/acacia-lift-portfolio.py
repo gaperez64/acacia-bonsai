@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from acacia_lift.lifting import settings
+from acacia_lift.tools import configuration_defaults
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -214,7 +215,8 @@ def lift_command(
     output: pathlib.Path,
     timeout: float,
 ) -> list[str]:
-    entry = ([sys.executable, "-m", "acacia_lift.runner"]
+    entry = ([str(args.bindings_python or configuration_defaults().bindings_python),
+              "-s", "-m", "acacia_lift.runner"]
              if args.lift_entry == DEFAULT_LIFT_ENTRY else [str(args.lift_entry)])
     command = [
         *entry,
@@ -331,16 +333,23 @@ def terminate_group(proc: subprocess.Popen[bytes]) -> None:
         time.sleep(settings.PROCESS_POLL_INTERVAL_SECONDS)
 
 
-def run_lift(command: list[str], timeout: float) -> LiftOutcome:
+def run_lift(command: list[str], timeout: float, *,
+             bindings_site: pathlib.Path | None = None) -> LiftOutcome:
     started = time.monotonic()
     restore_subreaper = enable_child_subreaper()
     try:
         try:
+            python_path = str(ROOT / "scripts")
+            if bindings_site is not None:
+                python_path = str(bindings_site) + os.pathsep + python_path
+            if os.environ.get("PYTHONPATH"):
+                python_path += os.pathsep + os.environ["PYTHONPATH"]
+            environment = {**os.environ, "PYTHONPATH": python_path}
+            if bindings_site is not None:
+                environment["PYTHONNOUSERSITE"] = "1"
             proc = subprocess.Popen(
                 command,
-                env={**os.environ, "PYTHONPATH": str(ROOT / "scripts") +
-                     (os.pathsep + os.environ["PYTHONPATH"]
-                      if os.environ.get("PYTHONPATH") else "")},
+                env=environment,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=True,
@@ -544,7 +553,9 @@ def run(argv: list[str], started: float) -> int:
         stage_timeout = min(lift_budget, deadline - fallback_reserve - now)
         command = lift_command(args, lift_source, evidence_file, output, max(0.0, stage_timeout))
         if stage_timeout > 0:
-            outcome = run_lift(command, stage_timeout)
+            site = ((args.bindings_site or configuration_defaults().bindings_site)
+                    if args.lift_entry == DEFAULT_LIFT_ENTRY else None)
+            outcome = run_lift(command, stage_timeout, bindings_site=site)
             evidence, evidence_hash, evidence_error = load_evidence(evidence_file)
         else:
             outcome = LiftOutcome(None, 0.0, False)
