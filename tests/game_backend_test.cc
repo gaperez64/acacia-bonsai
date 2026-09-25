@@ -66,7 +66,7 @@ int main () {
     for (const auto* arm : {"real:small", "real:any", "unreal:formula"}) {
       const auto parsed = parse_portfolio_arms (std::string (arm) + ":spot-guarded-sparse:" +
                                                acacia::automaton_provider_name (provider));
-      if (parsed.error != portfolio_arm_parse_error::none || parsed.arms[0].provider != provider)
+      if (parsed.error != portfolio_arm_parse_error::none || parsed.arms[0].legacy->provider != provider)
         return 1;
     }
   }
@@ -107,10 +107,10 @@ int main () {
     return 1;
   }
   for (const auto& arm : parsed.arms)
-    if (arm.provider != automaton_provider::frozen_graph) return 1;
+    if (arm.legacy->provider != automaton_provider::frozen_graph) return 1;
   auto lazy_arm = parsed.arms.front ();
-  lazy_arm.provider = automaton_provider::spot_lazy;
-  if (lazy_arm == parsed.arms.front () or lazy_arm.backend != parsed.arms.front ().backend)
+  lazy_arm.legacy->provider = automaton_provider::spot_lazy;
+  if (lazy_arm == parsed.arms.front () or lazy_arm.legacy->backend != parsed.arms.front ().legacy->backend)
     return 1;
 
   const auto backend_pair =
@@ -124,8 +124,8 @@ int main () {
   const auto mixed = parse_portfolio_arms (
       "real:small:backward,real:small:spot-guarded:spot-lazy,unreal:formula:spot-guarded:spot-eager");
   if (mixed.error != portfolio_arm_parse_error::none || mixed.arms.size () != 3 ||
-      mixed.arms[1].provider != automaton_provider::spot_lazy ||
-      mixed.arms[2].provider != automaton_provider::spot_eager) return 1;
+      mixed.arms[1].legacy->provider != automaton_provider::spot_lazy ||
+      mixed.arms[2].legacy->provider != automaton_provider::spot_eager) return 1;
   if (parse_portfolio_arms ("real:small:backward,real:small:backward:frozen-graph").error !=
       portfolio_arm_parse_error::duplicate) return 1;
   if (parse_portfolio_arms ("real:small:spot-guarded:bad").error !=
@@ -138,6 +138,21 @@ int main () {
     std::cerr << "duplicate arm was not identified\n";
     return 1;
   }
+
+  const auto native = parse_portfolio_arms (
+      "real:gr1:oxidd,unreal:gr1:oxidd,real:param-lift:oxidd");
+  if (native.error != portfolio_arm_parse_error::none || native.arms.size () != 3 ||
+      native.arms[0].kind != portfolio_arm_kind::gr1 || native.arms[0].unreal ||
+      native.arms[1].kind != portfolio_arm_kind::gr1 || !native.arms[1].unreal ||
+      native.arms[2].kind != portfolio_arm_kind::param_lift) return 1;
+  if (parse_portfolio_arms ("real:gr1:oxidd,real:gr1:oxidd").error !=
+      portfolio_arm_parse_error::duplicate) return 1;
+  if (parse_portfolio_arms ("real:gr1:oxidd:frozen-graph").error !=
+      portfolio_arm_parse_error::native_provider) return 1;
+  if (parse_portfolio_arms ("unreal:param-lift:oxidd").error !=
+      portfolio_arm_parse_error::native_transform) return 1;
+  if (parse_portfolio_arms ("real:gr1:backward").error !=
+      portfolio_arm_parse_error::native_backend) return 1;
 
   return 0;
 }

@@ -1804,20 +1804,24 @@ void cli_flags () {
                      "--closure-row-expansion", "enumerative"}),
           "--closure-row-expansion is rejected for --provider taa");
   {
-    char path[] = "/tmp/replay-formula-file-test-XXXXXX";
-    const int fd = mkstemp (path);
+    const char* temp_dir = std::getenv ("TMPDIR");
+    const std::string path_template = std::string (temp_dir && *temp_dir ? temp_dir : ".") +
+                                      "/replay-formula-file-test-XXXXXX";
+    std::vector<char> path (path_template.begin (), path_template.end ());
+    path.push_back ('\0');
+    const int fd = mkstemp (path.data ());
     expect (fd >= 0, "temp file for --formula-file");
     const std::string text = "p & X q\n";
     expect (write (fd, text.data (), text.size ()) == ssize_t (text.size ()),
             "wrote formula file");
     close (fd);
-    expect (parse ({"--arm", "c5", "--formula-file", path, "--k", "1"}).formula == "p & X q",
+    expect (parse ({"--arm", "c5", "--formula-file", path.data (), "--k", "1"}).formula == "p & X q",
             "--formula-file reads the file and strips the trailing newline");
-    expect (rejected ({"--arm", "c5", "--formula", "p", "--formula-file", path, "--k", "1"}),
+    expect (rejected ({"--arm", "c5", "--formula", "p", "--formula-file", path.data (), "--k", "1"}),
             "--formula and --formula-file are mutually exclusive");
     expect (rejected ({"--arm", "c5", "--formula-file", "/nonexistent/path", "--k", "1"}),
             "an unreadable --formula-file is rejected");
-    unlink (path);
+    unlink (path.data ());
   }
   std::cout << "cli_flags: PASS\n";
 }

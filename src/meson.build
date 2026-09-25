@@ -14,7 +14,7 @@ ab_sources = [
   'solver/solve_game.cc',
   'solver/solve_game_vector.cc',
 ]
-if get_option ('acacia_enable_tlsf_frontend')
+if enable_tlsf_frontend
   ab_sources += 'tlsf_frontend.cc'
 endif
 
@@ -73,7 +73,7 @@ if get_option('build_research_tools')
     install: false,
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
   )
-  if get_option ('acacia_enable_tlsf_frontend')
+  if enable_tlsf_frontend
     acacia_forced_contradiction_scan_exe = executable(
       'acacia-forced-contradiction-scan',
       [

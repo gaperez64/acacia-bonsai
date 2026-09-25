@@ -83,6 +83,20 @@ test ('config-transition-acceptance',
       args : [files ('check-transition-acceptance-config.py'), meson.project_source_root ()],
       suite : ['unit', 'config-frontends'])
 
+if get_option ('acacia_native_arms')
+  native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe, meson.project_build_root ()]
+  if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
+    native_gr1_cli_args += ['--debug-proof-hook']
+  endif
+  test ('native-gr1-cli', py,
+        args : native_gr1_cli_args,
+        suite : ['unit', 'native-gr1'], depends : [ab_exe])
+  test ('native-gr1-same-thread', py,
+        args : [files ('check-native-gr1-same-thread.py'), ab_exe,
+                meson.project_build_root ()],
+        suite : ['unit', 'native-gr1'], timeout : 1200, depends : [ab_exe])
+endif
+
 if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')
   cpre_replay_smoke = find_program ('check-cpre-replay.sh')
   test ('cpre-replay-smoke',
@@ -361,19 +375,30 @@ game_backend_integration_sources = [
   '../src/solver/solve_game.cc',
   '../src/solver/solve_game_vector.cc',
 ]
-if get_option ('acacia_enable_tlsf_frontend')
+if enable_tlsf_frontend
   game_backend_integration_sources += '../src/tlsf_frontend.cc'
 endif
 game_backend_integration = executable (
   'game-backend-integration', game_backend_integration_sources, version_h,
   link_with : closure_buchi_provider_lib,
   include_directories : inc,
-  cpp_args : ['-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1',
+  cpp_args : ['-DACACIA_PORTFOLIO_TEST_HOOKS=1',
+              '-DACACIA_SPOT_GUARDED_BACKEND=1', '-DACACIA_SPOT_LAZY_PROVIDER=1',
               '-DACACIA_REAL_BACKEND_SELECTOR=1',
               '-DACACIA_REAL_BACKEND_SELECTOR_MAX_BOOLEAN_PERCENT=30'],
   dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps,
   install : false,
 )
+if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
+  portfolio_deadline_args = [files ('check-portfolio-deadline.py'), game_backend_integration,
+                             meson.project_build_root ()]
+  if get_option ('acacia_native_arms')
+    portfolio_deadline_args += ['--native']
+  endif
+  test ('portfolio-deadline', py,
+        args : portfolio_deadline_args,
+        suite : ['unit', 'portfolio'], depends : [game_backend_integration])
+endif
 test ('game-backend-integration', game_backend_cli,
       args : [game_backend_integration,
               get_option ('acacia_forward_safety_solver').to_string (), 'true', 'true',
@@ -382,7 +407,7 @@ test ('game-backend-integration', game_backend_cli,
               get_option ('acacia_spot_taa_max_rank_nodes').to_string (),
               'true'],  # ACACIA_REAL_BACKEND_SELECTOR=1 above
       suite : ['unit', 'game-backend'], depends : [game_backend_integration])
-if get_option ('acacia_enable_tlsf_frontend')
+if enable_tlsf_frontend
   test ('spot-worker-boundary', py,
         args : [files ('check-spot-worker.py'), game_backend_integration],
         suite : ['unit', 'tlsf', 'game-backend'], depends : [game_backend_integration])
@@ -469,7 +494,7 @@ push_aps_test = executable ('push-aps-test',
                             dependencies : [spot_dep, bddx_dep])
 test ('push-aps', push_aps_test, suite : ['unit', 'push-aps'])
 
-if get_option ('acacia_enable_tlsf_frontend')
+if enable_tlsf_frontend
   tlsf_frontend_test = executable (
     'tlsf-frontend-test',
     '../src/tlsf_frontend.cc',
