@@ -545,3 +545,15 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   a selection aid only — the chosen portfolio is then run for real.
 - Disclosure: the lifting port (native step 4) is developed concurrently in tlsf-tools, capped at
   one core, while these legs run.
+
+## 2026-09-25 — CI and host-environment fixes during the per-arm legs
+
+- CI red on #192 after milestone 1: the config test's pinned preprocessor-flag list lacked the new
+  `-DACACIA_NATIVE_ARMS` flag (`3ab8510c`).
+- Locally, 11 Python lifting tests (the step-4 oracle) failed outside codex's sandbox: a stale
+  `~/.local/lib/python3.13/site-packages/buddy.py` (June) shadowed the configured BuDDy site and only
+  the probe disabled the user site, so lifting declined with `probeerror`. Every launch of the
+  bindings interpreter now uses `-s` / `PYTHONNOUSERSITE=1`, with a decoy regression (`efa50c2c`).
+- Host issue left to the owner: `/usr/lib64/python3.13/site-packages/numpy` is an empty
+  root-owned directory (8 Aug, no owning package) that shadows NumPy for Python 3.13 and breaks three
+  local tests (`numpy.isscalar`). Not touched.
