@@ -525,3 +525,23 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   deadline, and a verdict reaped after the deadline could still be published. Fix: per-child process
   groups, SIGKILL at the deadline or on a winner, non-blocking reaping, deadline re-check before
   accepting a verdict.
+
+## 2026-09-25 — Milestone 1 complete; per-arm legs start
+
+- Acacia `3dc9fdf3`: `real:gr1:oxidd` / `unreal:gr1:oxidd` arms in-process through the tlsf-tools
+  library, and portfolio deadline fixes for all arms (process groups, SIGKILL, non-blocking reaping,
+  no verdict after the deadline). tlsf-tools `33555ba` with the OxiDD same-thread patch. Final
+  review ACCEPT (same-thread regression 200 REAL + 100 UNREAL runs clean).
+- Frozen measurement binary `build_perarm_m1/src/acacia-bonsai` sha256 `22455c94…9584`
+  (read-only; release profile of `otf_sparse_formula` plus `acacia_native_arms=true`; manifest in
+  `campaign/perarm-m1/binary-manifest.json`). Default portfolio = B's four arms. Known cosmetic bug:
+  `--help` prints the arm list but also "unrecognized option" and exits 3.
+- Per-arm legs: six standalone legs, full 1,524 original-name inputs, uniform 60 s, 8 GiB, no swap,
+  serial, from the timing worktree at the committed campaign revision. **Order: the two native arms
+  first** (`real:gr1:oxidd`, `unreal:gr1:oxidd`) so any fault in the new arms surfaces before the
+  ~30 h of legacy legs; then `real:small:backward`, `real:small:forward`,
+  `unreal:formula:spot-guarded-sparse`, `unreal:automaton:forward`. Selection rule fixed in
+  `campaign/perarm-select.py`: maximise solved, tie-break by PAR-2, over all 4- and 5-arm subsets;
+  a selection aid only — the chosen portfolio is then run for real.
+- Disclosure: the lifting port (native step 4) is developed concurrently in tlsf-tools, capped at
+  one core, while these legs run.
