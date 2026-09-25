@@ -90,6 +90,11 @@ test ('config-transition-acceptance',
       suite : ['unit', 'config-frontends'])
 
 if get_option ('acacia_native_arms')
+  native_json_binding_test = executable (
+    'native-json-binding-test', 'native_json_binding_test.cc',
+    dependencies : tlsf_deps)
+  test ('native-json-binding', native_json_binding_test,
+        suite : ['unit', 'native-gr1', 'native-param-lift'])
   native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe, meson.project_build_root ()]
   native_lift_cli_args = [files ('check-native-param-lift-cli.py'), ab_exe,
                           meson.project_build_root ()]

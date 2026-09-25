@@ -15,9 +15,9 @@ ORACLE_FILES = [ORACLE / "acacia-lift-portfolio.py",
                 *(ORACLE / "acacia_lift").rglob("*.py"), MONITOR]
 NATIVE_ROUTE = [ROOT / "src/acacia-bonsai.cc", ROOT / "src/arg_parser.hh",
                 ROOT / "src/portfolio_arm.hh", *(ROOT / "src").glob("native_*.hh"),
-                *(ROOT / "subprojects/tlsf-tools/src/native").glob("*.c"),
-                *(ROOT / "subprojects/tlsf-tools/src/native").glob("*.cc"),
                 *(ROOT / "subprojects/tlsf-tools" / path for path in (
+    "src/gr1_check.c", "src/gr1_reduction.cc", "src/gr1_lift.cc",
+    "src/gr1_service.c", "src/pipeline_source.c",
     "src/main_tlsfsolve.c", "src/main_tlsfcertcheck.c", "src/gr1_oxidd.c",
     "include/tlsf/oxidd_common.h"))]
 FAMILY_LABELS = (
