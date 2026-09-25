@@ -580,3 +580,11 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Changelog work (owner request): `CHANGELOG.md` with the latest released three-way on top, measured
   milestones fact-checked twice, and `doc/changelog/sparse-otfur.md` (v2.4.2 sparse loss-set example,
   pinned to v2.4.2 sources).
+
+## 2026-09-25 — tlsf-tools #38 merged; native work opened as #39
+
+- The owner merged tlsf-tools #38 (provenance, disjoint namespaces, canonical names) into `main`
+  (`0e22383`). The Acacia submodule stays on `native-api` (`85e3a31`), which contains #38 plus the five
+  native commits (library API, C++ reduction, OxiDD patch, lifting, policy hash); bumping to `main`
+  would drop the API the native arms call. `native-api` is now open as tlsf-tools #39; bump the
+  submodule to `main` once #39 merges.
