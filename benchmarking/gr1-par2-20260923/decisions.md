@@ -484,3 +484,19 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Owner correction applied: tlsf-tools already had a public parse/AST/decompose/solve API, so step 1
   extends it rather than adding a parallel layer.
 - Step 2 (C++ port of the GR(1) reduction) started.
+
+## 2026-09-25 — Step 2 review: a wrong-game bug in the Python reduction; cancellation contract
+
+- The step-2 review found that the **Python reference reduction** (`gr1_monitor_game.py`, tlsf-tools
+  `8b158d7`, which the committed Python route still uses) builds a wrong game when an input and an
+  output carry crossed canonical-looking names (input `controllable_o0`, output
+  `uncontrollable_i0`): its raw-alias table overwrites canonical entries. The C++ port was correct
+  (Spot confirmed its game equivalent to the lowered LTL). The Python script is being fixed with a
+  family of crossed/prefix-colliding names added to the differential and a Spot language check. No
+  corpus signal uses such names, so no recorded result is affected.
+- **Decision on limits:** Spot's translation and equivalence calls cannot be interrupted
+  in-process. The native API checks deadline/cancellation cooperatively between Spot calls and
+  passes Spot's state aborter where accepted; hard time and memory bounds come from running inside
+  a killable process — which is how Acacia's forked arms run (the parent kills a child at the
+  deadline, inside the row's cgroup). The header documents this contract instead of promising
+  in-call cancellation.
