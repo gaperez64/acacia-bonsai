@@ -1,5 +1,8 @@
 # Brief G0 — audit every family-specific dependency; design a generic lifting route (READ-ONLY)
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Owner rule (decisions.md, last entry): **no hardcoding ever.** The route must work unchanged if every
 benchmark name were obfuscated and no family were ever seen before. No family registry, no pinned
 templates, no per-family data (arities, stable sizes, role classes, seeds, bus schemas), no
@@ -8,7 +11,7 @@ parameters are allowed only if they are few, documented, and not per-family.
 Write ONLY benchmarking/gr1-par2-20260923/generic-design.md. Edit nothing else; never stage or
 commit by any path; no compiling; no solver runs except tiny read-only probes (tlsfinfo/tlsf2tlsf on
 a handful of corpus files, serial, <5 s each).
-Scope to audit: scripts/acacia_lift/ (all modules + data/), scripts/acacia-lift-portfolio.py,
+Scope to audit (historical): benchmarking/param-lift-20260922/legacy_lift/ (the withdrawn registry, modules and data/) and `scripts/acacia-lift-portfolio.py` at commit `3ee43ec8`,
 benchmarking/param-lift-20260922/ (dated CLIs, prove_all_n.py), and tlsf-tools
 (/home/gperez/GIT-repos/tlsf-tools at main c956847: scripts/gr1_monitor_game.py and anything it
 imports, src/main_tlsfsolve.c GR(1) paths, src/main_tlsfcertcheck.c).

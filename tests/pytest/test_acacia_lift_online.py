@@ -15,7 +15,7 @@ from unittest import mock
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "benchmarking/gr1-par2-20260923/oracle"))
 
 from acacia_lift import runner  # noqa: E402
 from acacia_lift.direct import Decline  # noqa: E402
@@ -64,7 +64,7 @@ def _run(tmp_path: pathlib.Path, kind: str, size: int, seed: int,
                            "--eligibility-budget-seconds", "1",
                            "--output-dir", str(output),
                            "--evidence-out", str(evidence_path)],
-                          env={**os.environ, "PYTHONPATH": str(ROOT / "scripts")},
+                          env={**os.environ, "PYTHONPATH": str(ROOT / "benchmarking/gr1-par2-20260923/oracle")},
                           capture_output=True, text=True, timeout=17, check=False)
     assert proc.returncode in (0, 1, 2), proc.stderr
     return json.loads(evidence_path.read_text()), output
@@ -72,7 +72,7 @@ def _run(tmp_path: pathlib.Path, kind: str, size: int, seed: int,
 
 def _run_bindings_case(config, case: str, path: pathlib.Path) -> None:
     environment = bindings_environment(config)
-    environment["PYTHONPATH"] = str(ROOT / "scripts") + os.pathsep + environment["PYTHONPATH"]
+    environment["PYTHONPATH"] = str(ROOT / "benchmarking/gr1-par2-20260923/oracle") + os.pathsep + environment["PYTHONPATH"]
     proc = subprocess.run(
         [str(config.bindings_python), "-s",
          str(ROOT / "tests/pytest/_lift_bindings_cases.py"), case, str(path)],
@@ -222,11 +222,11 @@ def test_wrapper_accepts_only_checked_lifted_result(tmp_path: pathlib.Path) -> N
     fallback.write_text("#!/usr/bin/env python3\nprint('UNKNOWN')\nraise SystemExit(2)\n")
     fallback.chmod(0o755)
     record_path = tmp_path / "route.json"
-    proc = subprocess.run([sys.executable, str(ROOT / "scripts/acacia-lift-portfolio.py"),
+    proc = subprocess.run([sys.executable, str(ROOT / "benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py"),
                            "--cap", "10", "--lift-budget-seconds", "8",
                            "--route-record", str(record_path), "--",
                            str(fallback), "-T", str(source)],
-                          env={**os.environ, "PYTHONPATH": str(ROOT / "scripts")},
+                          env={**os.environ, "PYTHONPATH": str(ROOT / "benchmarking/gr1-par2-20260923/oracle")},
                           capture_output=True, text=True, timeout=12, check=False)
     assert (proc.returncode, proc.stdout.strip()) == (0, "REALIZABLE")
     record = json.loads(record_path.read_text())
@@ -253,7 +253,7 @@ def test_without_parameters_uses_only_direct_route(tmp_path: pathlib.Path) -> No
                            "--eligibility-budget-seconds", "1",
                            "--output-dir", str(tmp_path / "out"),
                            "--evidence-out", str(evidence_path)],
-                          env={**os.environ, "PYTHONPATH": str(ROOT / "scripts")},
+                          env={**os.environ, "PYTHONPATH": str(ROOT / "benchmarking/gr1-par2-20260923/oracle")},
                           capture_output=True, text=True, timeout=7, check=False)
     assert proc.returncode == 0, proc.stderr
     evidence = json.loads(evidence_path.read_text())

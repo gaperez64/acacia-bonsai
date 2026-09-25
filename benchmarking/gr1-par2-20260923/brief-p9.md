@@ -1,5 +1,8 @@
 # Brief P9 — extract the maintained lifting package; capability data replaces runtime m4 reads
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Read plan.md §10 (all), §2; decisions.md (2026-09-24 entries, esp. "Integration design decided" and
 "the proof method becomes a capability attribute"); integration-survey.md §6 (proposed layout and
 the exact runtime TSV dependencies); CLAUDE.md. NEVER stage or commit by any path. One job; scratch
@@ -7,7 +10,7 @@ build_scratch/p9/. This is a REFACTOR-ONLY change plus one data move: generated 
 decisions must be identical before/after (except the new per-capability real_check attribute,
 which is new behaviour — do that as a separate final step/patch).
 Steps (separate patch + note each in build_scratch/p9/):
-1. Create scripts/acacia_lift/ as in integration-survey.md §6 (capabilities, tools, artifact,
+1. Create benchmarking/gr1-par2-20260923/oracle/acacia_lift/ as in integration-survey.md §6 (capabilities, tools, artifact,
    bdd_kernel, schema, instantiate, runner, evidence, diagnostics, buddy_veccompose, native/). Move
    code from benchmarking/param-lift-20260922/{generalize_gr1.py, request.py, tool_config.py,
    s0_diagnostics.py, buddy_veccompose.py, native/} with `git mv`-friendly structure (keep history
@@ -26,7 +29,7 @@ Steps (separate patch + note each in build_scratch/p9/):
    classes) identical to what the TSVs produced. Teach prove_all_n.py to read the package data.
    Do NOT delete or move any m4-*.tsv (they stay as dated evidence). m4-results.tsv becomes an
    explicit --results-out artifact, never an input.
-3. The wrapper scripts/acacia-lift-portfolio.py keeps working (its --lift-entry may point at the
+3. The wrapper benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py keeps working (its --lift-entry may point at the
    dated campaign CLI or a new package entry `python -m acacia_lift.runner`; add the package entry
    and make it the documented default; keep evidence JSON identical in fields).
 4. (separate patch, new behaviour) Add `real_check` per capability in capabilities-v1.json:

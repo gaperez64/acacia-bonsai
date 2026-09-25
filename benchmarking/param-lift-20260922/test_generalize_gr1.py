@@ -501,7 +501,7 @@ os.execv(real, [real, *sys.argv[1:]])
         head_source = subprocess.run(
             [
                 "git", "show",
-                "HEAD:scripts/acacia_lift/generalizer.py",
+                "HEAD:benchmarking/param-lift-20260922/legacy_lift/generalizer.py",
             ],
             cwd=ROOT,
             text=True,
@@ -518,13 +518,13 @@ os.execv(real, [real, *sys.argv[1:]])
         head_env["GENERALIZE_GR1_RESULTS"] = str(
             self.root / "head-default-policy-results.tsv"
         )
-        # Keep the temporary HEAD driver beside the worktree driver so its
+        # Keep the temporary HEAD driver beside the archived implementation so its
         # __file__-relative repository paths and its parent/child self-launch
         # are both authentic.  The file is removed even when the run fails.
         with tempfile.NamedTemporaryFile(
             mode="w",
             encoding="utf-8",
-            dir=HERE,
+            dir=HERE / "legacy_lift",
             prefix=".head-generalize-gr1-",
             suffix=".py",
             delete=False,
@@ -649,7 +649,7 @@ os.execv(real, [real, *sys.argv[1:]])
         head_source = subprocess.run(
             [
                 "git", "show",
-                "HEAD:scripts/acacia_lift/generalizer.py",
+                "HEAD:benchmarking/param-lift-20260922/legacy_lift/generalizer.py",
             ],
             cwd=ROOT,
             text=True,
@@ -668,7 +668,7 @@ os.execv(real, [real, *sys.argv[1:]])
         with tempfile.NamedTemporaryFile(
             mode="w",
             encoding="utf-8",
-            dir=HERE,
+            dir=HERE / "legacy_lift",
             prefix=".head-semantic-generalize-gr1-",
             suffix=".py",
             delete=False,

@@ -1,12 +1,15 @@
 # Brief W — the N wrapper executable and the coverage-runner hook
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Read benchmarking/gr1-par2-20260923/decisions.md ("Integration design decided") and
 integration-survey.md §1, §3 (design B, "Minimal runtime protocol") — they are the spec; plan.md §2,
 §9.2, §11.2-11.4; CLAUDE.md. Another codex is editing benchmarking/param-lift-20260922/
 generalize_gr1.py right now: do NOT touch any file in benchmarking/param-lift-20260922/. NEVER
 stage or commit by any path (including /usr/bin/git). One job; scratch build_scratch/wrapper/.
 Deliver:
-1. scripts/acacia-lift-portfolio.py (stdlib only, ruff clean): Acacia-compatible CLI —
+1. benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py (stdlib only, ruff clean): Acacia-compatible CLI —
    `acacia-lift-portfolio.py [wrapper options] -- <B executable> [B args] -T <tlsf>` (or a design
    that keeps B's argv verbatim; justify). Wrapper options: --lift-budget-fraction F (default 1/3)
    or --lift-budget-seconds S; --lift-entry PATH (the lifting route entry point, today

@@ -1,5 +1,8 @@
 # GR(1) lifting integration survey
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Snapshot: 2026-09-24. This is a design/provenance survey; no solver was run. `B` below means the
 frozen benchmark baseline, not a virtual best over Docker images.
 
@@ -112,7 +115,7 @@ same 8 GiB/no-swap scope. A stage timeout is not the row timeout unless no later
 | Design | Measurement and classification | Attribution/files | Main risks |
 |---|---|---|---|
 | **A. Logic in the coverage adapter** | Today the coverage runner can scope only one argv. If it runs stages itself, they become separate scopes/peaks; keeping one scope requires refactoring `benchlib.run_systemd_scope` to run an orchestration callback inside the scope or launching a helper, which collapses into B. Final REAL/UNREAL/UNKNOWN still must obey Acacia 0/1/2; outer expiry is TIMEOUT and OOM is MEMOUT. | Change `benchmarking/run-syntcomp26-coverage.py`, `benchmarking/benchlib.py`, their tests and output schema; duplicate equivalent adapter work in `run-subset.py`. Add route/stage fields to raw TSV. | Large benchmark-harness change, easy nested scopes, split memory peaks, different teardown behavior, and a harness that now owns solver policy. |
-| **B. Acacia-compatible wrapper executable** | The coverage runner invokes `scripts/acacia-lift-portfolio.py ... -T source` as its one scoped command. The wrapper sequentially runs preregistered cheap single-arm B probes, source binding/lifting under a cutoff, then `exec`s the unchanged frozen B with the original `-T` and remaining outer time. Children inherit the existing scope; the wrapper creates/kills/reaps only process groups, never another cgroup. Whole wall and `MemoryPeak` are already measured correctly. | New wrapper plus maintained package in section 6. A small coverage-runner addition supplies an absolute monotonic deadline and a unique route-record path in the child environment, and copies selected JSON fields into raw TSV. `run-subset.py` needs no new solver semantics because the wrapper preserves Acacia's CLI/exit contract. After admission, `scripts/acacia-bonsai.sh` may select the wrapper for deployment; do not change it for discovery. | Re-reading native TLSF and rerunning an isolated Acacia arm in B duplicates frontend/translation work; this is charged and must be measured. Buffer/suppress losing-stage output. Kill a timed-out route completely before B. A wrapper-local deadline based only on its own start would omit `systemd-run` startup; pass a conservative deadline computed immediately before the outer launch. |
+| **B. Acacia-compatible wrapper executable** | The coverage runner invokes `benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py ... -T source` as its one scoped command. The wrapper sequentially runs preregistered cheap single-arm B probes, source binding/lifting under a cutoff, then `exec`s the unchanged frozen B with the original `-T` and remaining outer time. Children inherit the existing scope; the wrapper creates/kills/reaps only process groups, never another cgroup. Whole wall and `MemoryPeak` are already measured correctly. | New wrapper plus maintained package in section 6. A small coverage-runner addition supplies an absolute monotonic deadline and a unique route-record path in the child environment, and copies selected JSON fields into raw TSV. `run-subset.py` needs no new solver semantics because the wrapper preserves Acacia's CLI/exit contract. After admission, `scripts/acacia-bonsai.sh` may select the wrapper for deployment; do not change it for discovery. | Re-reading native TLSF and rerunning an isolated Acacia arm in B duplicates frontend/translation work; this is charged and must be measured. Buffer/suppress losing-stage output. Kill a timed-out route completely before B. A wrapper-local deadline based only on its own start would omit `systemd-run` startup; pass a conservative deadline computed immediately before the outer launch. |
 | **C. Native C++ portfolio route** | Extend the parent from a concurrent arm race to staged external-route/fallback scheduling. It naturally remains in one scope and can emit the same exit contract. | Change `src/portfolio_arm.hh`, `src/arg_parser.hh`, `src/acacia-bonsai.cc`, build/install rules and diagnostics. Add a Python/executable arm ABI and route records. | Much larger semantic surface: current arms are homogeneous concurrent C++ children, while lifting is a sequential Python/native-helper pipeline. It couples Python/tool paths to B, risks overlapping BDD managers, and still needs absolute sub-deadlines and child cleanup. |
 
 ### Recommendation: B, with one thin campaign hook
@@ -226,7 +229,7 @@ following `benchmarking/gr1-par2-20260923/plan.md:547-565`.
 Proposed Acacia-owned layout:
 
 ```text
-scripts/acacia_lift/
+benchmarking/gr1-par2-20260923/oracle/acacia_lift/
     __init__.py
     capabilities.py       # Capability/SourceRequest and fail-closed source binding
     tools.py              # explicit ToolConfiguration, probes, child environments
@@ -242,7 +245,7 @@ scripts/acacia_lift/
         buddy_veccompose_adapter.cc
     data/
         capabilities-v1.json
-scripts/acacia-lift-portfolio.py   # production Acacia-compatible scheduler from section 3
+benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py   # production Acacia-compatible scheduler from section 3
 ```
 
 Map `request.py` to `capabilities.py`, `tool_config.py` to `tools.py`, and `s0_diagnostics.py` to

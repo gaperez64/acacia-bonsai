@@ -1,7 +1,10 @@
 # Brief CG — campaign preparation for the generic N (no timed runs by you)
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Read decisions.md (from "Owner stop" on), campaign/README.md (structure to reuse), the wrapper,
-scripts/acacia_lift/lifting/settings.py. NEVER stage or commit by any path. No compiling, no timed
+benchmarking/gr1-par2-20260923/oracle/acacia_lift/lifting/settings.py. NEVER stage or commit by any path. No compiling, no timed
 solver runs; the obfuscation step and admission census are fine (serial).
 Tools: /home/gperez/GIT-repos/tlsf-tools/build-SB-8b158d7. B, TACAS23, ltlsynt as in campaign/README.md.
 1. **Obfuscated corpus.** Using benchmarking/gr1-par2-20260923/obfuscate-tlsf.py with ONE recorded

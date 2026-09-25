@@ -1,4 +1,7 @@
-# Source-bound GR(1) portfolio route
+# Research oracle: source-bound GR(1) portfolio route
+
+This package is retained for differential tests and archived experiments.
+The shipped solver entry point is `acacia-bonsai` with native arms.
 
 `python -m acacia_lift.runner --request-mode source` hashes and snapshots the
 actual TLSF bytes. It first lowers that snapshot in exact mode and, if the

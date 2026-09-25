@@ -1,6 +1,9 @@
 # Checked-lifting portfolio wrapper
 
-`scripts/acacia-lift-portfolio.py` is an Acacia-compatible sequential wrapper. It gives the
+This is an archived research wrapper protocol. The shipped solver entry point
+is `acacia-bonsai`; this Python wrapper is retained only as a test oracle.
+
+`benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py` is an Acacia-compatible sequential wrapper. It gives the
 source-bound checked GR(1) route a bounded first attempt and, unless that attempt produces evidence
 with `target_verified: true` and a decisive verdict, replaces itself with the unchanged fallback
 Acacia process. Both stages therefore remain in the caller's one cgroup and wall-clock budget.
@@ -8,7 +11,7 @@ Acacia process. Both stages therefore remain in the caller's one cgroup and wall
 The `--` separator is mandatory:
 
 ```sh
-scripts/acacia-lift-portfolio.py \
+benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py \
   --lift-budget-fraction 0.3333333333333333 \
   --lift-entry benchmarking/param-lift-20260922/param-lift-campaign.py \
   --tlsf-tools-build subprojects/tlsf-tools/build-P14-dbe8c2b \
@@ -64,7 +67,7 @@ existing `--flags` value:
 
 ```sh
 python3 benchmarking/run-syntcomp26-coverage.py \
-  --bin scripts/acacia-lift-portfolio.py \
+  --bin benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py \
   --flags '--lift-budget-fraction 0.3333333333333333 -- build_w1_B/src/acacia-bonsai' \
   --route-records /absolute/path/to/route-records \
   --caps 120 --memory-max 8G --memory-swap-max 0 \

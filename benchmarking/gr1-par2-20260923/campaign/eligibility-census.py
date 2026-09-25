@@ -14,7 +14,8 @@ from types import SimpleNamespace
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "scripts"))
+# Archived census: this ran against the pre-generic package with capabilities.
+sys.path.insert(0, str(ROOT / "benchmarking/gr1-par2-20260923/oracle"))
 sys.path.insert(0, str(ROOT / "benchmarking"))
 from acacia_lift import capabilities as binding  # noqa: E402
 from acacia_lift import runner  # noqa: E402

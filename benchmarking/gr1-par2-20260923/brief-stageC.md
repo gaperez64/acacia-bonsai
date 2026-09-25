@@ -1,9 +1,12 @@
 # Brief Stage C — generic online parametric lifting (no family knowledge whatsoever)
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Read decisions.md (every entry from "Owner stop" on), generic-design.md §3-§6, the owner rules:
 **no hardcoding ever** (no family lists/names/templates/per-family data or switches; outcomes
 invariant under random basenames and alpha-renamed signals), **a TLSF input without PARAMETERS never
-enters lifting**, competition input is TLSF. Code: scripts/acacia_lift/ (Stage A: direct.py, runner,
+enters lifting**, competition input is TLSF. Code: benchmarking/gr1-par2-20260923/oracle/acacia_lift/ (Stage A: direct.py, runner,
 wrapper), the historical algorithm in benchmarking/param-lift-20260922/legacy_lift/generalizer.py
 (REUSE its generic algebra — projection, per-predicate exact reconstruction, rank/invariant schema,
 Skolemization/region export — but NONE of its family tables, name recognisers, collector or named
@@ -11,7 +14,7 @@ arbiter branches), and tlsf-tools frontend provenance (tlsf2tlsf --provenance-ou
 tlsf-tools docs/frontend-provenance.md; gr1_monitor_game.py source_origin_metadata with
 provenance_source "frontend"). NEVER stage or commit by any path. One job; scratch
 build_scratch/stageC/; never /tmp.
-Build scripts/acacia_lift/lifting/ (new modules) implementing, for a parametric TLSF input whose
+Build benchmarking/gr1-par2-20260923/oracle/acacia_lift/lifting/ (new modules) implementing, for a parametric TLSF input whose
 target lowers exactly or strictly to GR(1):
 1. Seeds from the input itself: instantiate the SAME bytes at smaller values of one index-bearing
    parameter at a time (others at target values), via tlsf2tlsf overrides; never the target size.

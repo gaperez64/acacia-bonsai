@@ -30,7 +30,7 @@ from acacia_lift.lifting import settings
 from acacia_lift.tools import configuration_defaults
 
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[3]
 DEFAULT_LIFT_ENTRY = "python -m acacia_lift.runner"
 DEADLINE_ENV = "ACACIA_OUTER_DEADLINE_MONOTONIC"
 ROUTE_RECORD_ENV = "ACACIA_ROUTE_RECORD"
@@ -339,7 +339,7 @@ def run_lift(command: list[str], timeout: float, *,
     restore_subreaper = enable_child_subreaper()
     try:
         try:
-            python_path = str(ROOT / "scripts")
+            python_path = str(ROOT / "benchmarking/gr1-par2-20260923/oracle")
             if bindings_site is not None:
                 python_path = str(bindings_site) + os.pathsep + python_path
             if os.environ.get("PYTHONPATH"):

@@ -11,7 +11,7 @@ from unittest import mock
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "benchmarking/gr1-par2-20260923/oracle"))
 
 from acacia_lift import direct  # noqa: E402
 from acacia_lift.tools import configuration_defaults  # noqa: E402

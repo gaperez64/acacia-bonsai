@@ -72,6 +72,12 @@ test ('version-output',
       suite : 'version',
       depends : [ab_exe])
 
+test ('help-output',
+      py,
+      args : [files ('check-help.py'), ab_exe],
+      suite : ['unit', 'cli'],
+      depends : [ab_exe])
+
 # Pure source inspection: no binary, so it runs even when nothing is built yet.
 test ('config-frontends-agree',
       py,

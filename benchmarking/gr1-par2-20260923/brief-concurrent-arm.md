@@ -1,8 +1,11 @@
 # Brief CA — run the lifting/direct route as a concurrent arm beside B
 
-Read the last decisions.md entry, scripts/acacia-lift-portfolio.py (current sequential design:
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
+Read the last decisions.md entry, benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py (current sequential design:
 lift slice then execv B), wrapper.md, benchmarking/benchlib.py normalisation of Acacia output and
-exit codes, and scripts/acacia_lift/lifting/settings.py. NEVER stage or commit by any path. Do not
+exit codes, and benchmarking/gr1-par2-20260923/oracle/acacia_lift/lifting/settings.py. NEVER stage or commit by any path. Do not
 edit benchmarking/gr1-par2-20260923/campaign/ (another task works there). One job; scratch
 build_scratch/concurrent/; never /tmp.
 Change the wrapper so that, after the (unchanged, bounded) eligibility step, it starts TWO children

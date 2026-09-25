@@ -1,5 +1,8 @@
 # Brief N3 — Acacia gr1 arms (native-design.md step 3)
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Workspace /home/gperez/GIT-repos/acacia-bonsai (branch sprint/gr1-par2-20260923; I commit; NEVER stage
 or commit by any path). tlsf-tools submodule will be pinned to the native-api commit that contains
 steps 1-2 (I bump it before you start; check `git submodule status`). One job for every compile
@@ -31,6 +34,6 @@ of each native arm on small REAL and UNREAL TLSF inputs (right polarity answers,
 UNKNOWN); a mixed list with a legacy arm (first verified answer wins; loser killed and reaped); failed
 verification -> UNKNOWN; deadline expiry -> UNKNOWN and children reaped; renamed/obfuscated inputs
 (benchmarking/gr1-par2-20260923/obfuscate-tlsf.py) give identical outcomes; differential vs
-scripts/acacia_lift/direct.py (Python oracle, test-only) on ~50 corpus inputs: same verdict or
+benchmarking/gr1-par2-20260923/oracle/acacia_lift/direct.py (Python oracle, test-only) on ~50 corpus inputs: same verdict or
 native UNKNOWN only where Python also fails/declines, report any disagreement. Existing unit suite
 (`meson test -C <build> --suite unit`) green in both option states. VERDICT at end.

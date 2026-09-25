@@ -50,6 +50,26 @@ def test_committed_registry_is_valid():
     module.command_validate(options, presets)
 
 
+def test_docker_launcher_uses_registry_group_without_python():
+    module = load_module()
+    _options, presets = module.load_registry()
+    names = (ROOT / "config/docker-default.list").read_text().splitlines()
+    assert names == presets["groups"]["docker_default"]
+    launcher = (ROOT / "scripts/acacia-bonsai.sh").read_text()
+    assert 'mapfile -t CONFIGS < "$REPO_ROOT/config/docker-default.list"' in launcher
+    assert "python" not in launcher.lower()
+
+
+def test_config_validation_rejects_stale_docker_list(tmp_path, monkeypatch):
+    module = load_module()
+    options, presets = module.load_registry()
+    stale = tmp_path / "docker-default.list"
+    stale.write_text("base\n")
+    monkeypatch.setattr(module, "DOCKER_DEFAULT_LIST", stale)
+    with pytest.raises(SystemExit, match="docker-default.list must match"):
+        module.command_validate(options, presets)
+
+
 def test_candidate_mode_default_and_bounded_taa_presets():
     module = load_module()
     options, presets = module.load_registry()

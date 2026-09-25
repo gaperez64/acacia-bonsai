@@ -1,5 +1,8 @@
 # Brief N0 — design the native gr1 and param-lift arms (READ-ONLY; write only the design)
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Owner rules (decisions.md, last entries): acacia-bonsai is the single entry point; new techniques
 are portfolio arms named in the existing `--arms` style that says whether the arm is for the
 realizability or the unrealizability check; tlsf-tools is called through a C API from acacia-bonsai —
@@ -12,7 +15,7 @@ calls Acacia already makes, meson.build linkage of tlsf-tools/Spot/BuDDy); tlsf-
 generic-provenance 8b158d7 (/home/gperez/GIT-repos/tlsf-tools: include/tlsf/*.h public headers,
 libtlsf, src/main_tlsfsolve.c GR(1) path, src/main_tlsfcertcheck.c, src/oxidd_common.c, provenance
 C code, scripts/gr1_monitor_game.py — Python+Spot reduction to port); the Python route to port
-(scripts/acacia_lift/direct.py and scripts/acacia_lift/lifting/*: seeds, provenance use, schema
+(benchmarking/gr1-par2-20260923/oracle/acacia_lift/direct.py and benchmarking/gr1-par2-20260923/oracle/acacia_lift/lifting/*: seeds, provenance use, schema
 learning with BuDDy, instantiation, policy/region proof, settings.py knobs).
 Design, concretely, with file-level plans and interface signatures:
 1. Arm grammar: exact spellings for the new arms consistent with polarity:transform:backend[:provider]

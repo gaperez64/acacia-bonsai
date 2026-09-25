@@ -7,7 +7,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "benchmarking/gr1-par2-20260923/oracle"))
 from legacy_lift import generalizer as _implementation  # noqa: E402
 
 if __name__ == "__main__":

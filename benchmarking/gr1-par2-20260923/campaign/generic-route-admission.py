@@ -14,7 +14,7 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 HERE = pathlib.Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "benchmarking/gr1-par2-20260923/oracle"))
 from acacia_lift.direct import Decline  # noqa: E402
 from acacia_lift.lifting import settings, source as lowering  # noqa: E402
 from acacia_lift.tools import ToolConfiguration, configuration_defaults  # noqa: E402

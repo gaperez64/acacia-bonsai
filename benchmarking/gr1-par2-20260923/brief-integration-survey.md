@@ -1,5 +1,8 @@
 # Brief — integration design survey (READ-ONLY; write only the report)
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Write benchmarking/gr1-par2-20260923/integration-survey.md. Edit nothing else; no compiling, no
 solver runs (another codex is editing generalize_gr1.py — don't touch it).
 Read plan.md §0, §1.3, §9.2, §10.1, §11 (all), CLAUDE.md, benchmarking/README.md, and the witness-
@@ -17,7 +20,7 @@ Answer with file:line evidence:
 3. Integration options for N = "sound cheap existing routes → source-bound GR(1) lifting route
    under its own sub-budget → original Acacia portfolio (B) fallback": (a) a new route arm inside
    the existing coverage runner's tool-adapter layer; (b) a wrapper executable that the runner
-   invokes like any Acacia binary (e.g. scripts/acacia-lift-portfolio.py) that does eligibility,
+   invokes like any Acacia binary (e.g. benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py) that does eligibility,
    runs lifting under a sub-budget, then execs B with the remaining absolute deadline, all inside
    the same cgroup; (c) other. For each: how charged time/memory are measured (whole invocation
    incl. children), how UNKNOWN/timeouts/errors map to row categories, how per-route attribution

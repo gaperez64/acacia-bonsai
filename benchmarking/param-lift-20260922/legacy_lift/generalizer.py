@@ -16,7 +16,7 @@ if __package__ in (None, ""):
     import pathlib as _pathlib
     import sys as _sys
     _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
-    _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[3] / "scripts"))
+    _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[3] / "benchmarking/gr1-par2-20260923/oracle"))
 
 import argparse
 import csv

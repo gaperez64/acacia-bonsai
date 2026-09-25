@@ -1,8 +1,12 @@
 # Brief E — bound the eligibility tax on inputs that will decline
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Read benchmarking/gr1-par2-20260923/campaign/eligibility-summary.md and eligibility.tsv (census),
-decisions.md (integration entries), scripts/acacia_lift/capabilities.py and the wrapper
-scripts/acacia-lift-portfolio.py. NEVER stage or commit by any path. No solver campaigns.
+decisions.md (integration entries), the withdrawn registry at
+benchmarking/param-lift-20260922/legacy_lift/capabilities.py and the historical wrapper
+`scripts/acacia-lift-portfolio.py` at commit `3ee43ec8`. NEVER stage or commit by any path. No solver campaigns.
 Problem: 360 non-family n-parametric inputs make 92 tool calls before declining (P99 0.87 s,
 max 7.08 s), and 3 inputs hit the 5 s lowering-tool timeout (~7 s total). At a 17 s cap that time
 is taken from B. A decline is always sound.

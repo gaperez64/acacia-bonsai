@@ -1,5 +1,8 @@
 # Brief N4 — native parametric lifting in tlsf-tools (native-design.md step 4)
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Workspace /home/gperez/GIT-repos/tlsf-tools, branch native-api at 33555ba (steps 1-2 + OxiDD patch).
 NEVER stage or commit by any path. One job for every build (meson compile -j 1, cargo -j 1); never
 /tmp; PKG_CONFIG_PATH=/usr/local/lib/pkgconfig. TIMED BENCHMARKS ARE RUNNING on this machine for the
@@ -8,7 +11,7 @@ next ~2 days: keep to one core, do not run anything heavy in parallel, and keep 
 Spec: /home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/native-design.md (step 4
 row and the C ABI section), decisions.md there (owner rules: no hardcoding, lifting only with
 PARAMETERS, renaming invariance, target-derived moves by design, global knobs in one place), and
-the Python reference to port: /home/gperez/GIT-repos/acacia-bonsai/scripts/acacia_lift/lifting/*
+the Python reference to port: /home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/oracle/acacia_lift/lifting/*
 and direct.py (Stage C, reviewed; test oracle only). Use the step-1/2 library pieces (pipeline byte
 loading + parameter overrides, provenance, tlsf_gr1_reduce_v1, versioned solve with deadlines, the
 independent checker incl. --method region). Choose OxiDD or Spot's BuDDy for schema BDD work as the

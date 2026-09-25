@@ -72,7 +72,7 @@ It selects the smallest available TLSF input from each family with a file
 under 20 KiB, then fills the remainder by file size, for 50 inputs under
 20 KiB. Results are in `build_native3_on/differential_final/results.tsv`.
 Each native and Python oracle invocation has 10 seconds.
-The Python route is `scripts/acacia_lift/direct.py` and is test-only.
+The Python route is `benchmarking/gr1-par2-20260923/oracle/acacia_lift/direct.py` and is test-only.
 
 | Native result | Python oracle result | Inputs |
 | --- | --- | ---: |

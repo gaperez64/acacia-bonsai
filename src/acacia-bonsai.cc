@@ -146,9 +146,9 @@ namespace {
 }
 
 int main (int argc, char** argv) {
-  const uint64_t deadline_mono_ns = outer_deadline_ns ();
   // parse all arguments that were passed
   auto arg_values = arg_parser (argc, argv);
+  const uint64_t deadline_mono_ns = outer_deadline_ns ();
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;
 

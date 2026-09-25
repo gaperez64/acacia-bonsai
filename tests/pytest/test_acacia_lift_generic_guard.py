@@ -1,4 +1,4 @@
-"""Keep source identities and historical registries out of production decisions."""
+"""Keep source identities and historical registries out of native solver code."""
 
 from __future__ import annotations
 
@@ -9,12 +9,17 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-PRODUCTION = [ROOT / "scripts/acacia-lift-portfolio.py", *
-              (ROOT / "scripts/acacia_lift").rglob("*.py"),
-              ROOT / "subprojects/tlsf-tools/scripts/gr1_monitor_game.py"]
-NATIVE_ROUTE = [ROOT / "subprojects/tlsf-tools" / path for path in (
+ORACLE = ROOT / "benchmarking/gr1-par2-20260923/oracle"
+MONITOR = ROOT / "subprojects/tlsf-tools/scripts/gr1_monitor_game.py"
+ORACLE_FILES = [ORACLE / "acacia-lift-portfolio.py",
+                *(ORACLE / "acacia_lift").rglob("*.py"), MONITOR]
+NATIVE_ROUTE = [ROOT / "src/acacia-bonsai.cc", ROOT / "src/arg_parser.hh",
+                ROOT / "src/portfolio_arm.hh", *(ROOT / "src").glob("native_*.hh"),
+                *(ROOT / "subprojects/tlsf-tools/src/native").glob("*.c"),
+                *(ROOT / "subprojects/tlsf-tools/src/native").glob("*.cc"),
+                *(ROOT / "subprojects/tlsf-tools" / path for path in (
     "src/main_tlsfsolve.c", "src/main_tlsfcertcheck.c", "src/gr1_oxidd.c",
-    "include/tlsf/oxidd_common.h")]
+    "include/tlsf/oxidd_common.h"))]
 FAMILY_LABELS = (
     "abcg_arbiter", "amba_case_study", "amba_case_study_unreal",
     "amba_decomposed_arbiter", "amba_decomposed_encode", "amba_decomposed_lock",
@@ -33,6 +38,24 @@ FORBIDDEN_PATHS = ("syntcomp-benchmarks", "tests/suites/benchmarks", "tlsf-corpu
                    "generic-census.tsv", "m4-analysis",
                    "eligibility-v3.tsv")
 VERDICTS = {"REALIZABLE", "UNREALIZABLE", "UNKNOWN"}
+
+
+def cxx_strings(source: str) -> list[str]:
+    """Include adjacent and `+`-joined literals in the native source scan."""
+    tokens = list(re.finditer(r'"(?:\\.|[^"\\])*"', source))
+    values = []
+    for index, token in enumerate(tokens):
+        value = token.group()[1:-1]
+        values.append(value)
+        previous_end = token.end()
+        for follower in tokens[index + 1:]:
+            gap = source[previous_end:follower.start()]
+            if not re.fullmatch(r'\s*(?:\+\s*)?', gap):
+                break
+            value += follower.group()[1:-1]
+            values.append(value)
+            previous_end = follower.end()
+    return values
 
 
 def folded_string(node: ast.AST) -> str | None:
@@ -183,16 +206,38 @@ def violations(source: str, *, check_source_flow: bool = True) -> list[str]:
 
 def test_no_family_labels_or_runtime_corpus_reads() -> None:
     assert len(FAMILY_LABELS) == 29
-    for path in PRODUCTION:
+    assert (ORACLE / "acacia-lift-portfolio.py").is_file()
+    assert (ORACLE / "acacia_lift/runner.py").is_file()
+    assert len(ORACLE_FILES) > 2
+    for path in ORACLE_FILES:
+        assert path.is_file(), path
         assert not violations(path.read_text(encoding="utf-8"),
-                              check_source_flow=path.parent !=
-                              ROOT / "subprojects/tlsf-tools/scripts"), path
+                              check_source_flow=path != MONITOR), path
+    assert not (ROOT / "scripts/acacia-lift-portfolio.py").exists()
+    assert not (ROOT / "scripts/acacia_lift").exists()
+    assert "benchmarking/gr1-par2-20260923/oracle/" in (ROOT / ".dockerignore").read_text()
+    assert NATIVE_ROUTE
     for path in NATIVE_ROUTE:
+        assert path.is_file(), path
         source = path.read_text(encoding="utf-8")
         assert not any(fragment in source for fragment in FORBIDDEN_PATHS), path
-        assert not any((label == token if label == "lift" else label in token)
-                       for token in re.findall(r'"(?:\\.|[^"\\])*"', source)
-                       for label in FAMILY_LABELS), path
+        # `lift` is the public transform/stage name in the native API.
+        assert not any(label in token
+                       for token in cxx_strings(source)
+                       for label in FAMILY_LABELS if label != "lift"), path
+
+
+def test_native_guard_folds_split_family_literals() -> None:
+    assert "arbiter" in cxx_strings('"arb" "iter"')
+    assert "arbiter" in cxx_strings('"arb" + "iter"')
+
+
+def test_live_oracle_guard_rejects_mutated_copy(tmp_path: Path) -> None:
+    mutant = tmp_path / "runner.py"
+    mutant.write_text((ORACLE / "acacia_lift/runner.py").read_text(encoding="utf-8") +
+                      '\nfamily_results = {"arbiter": "REALIZABLE"}\n', encoding="utf-8")
+    with pytest.raises(AssertionError):
+        assert not violations(mutant.read_text(encoding="utf-8")), mutant
 
 
 @pytest.mark.parametrize("mutant", [

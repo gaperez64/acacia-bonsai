@@ -14,7 +14,7 @@ import time
 from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "benchmarking/gr1-par2-20260923/oracle"))
 from acacia_lift.direct import Decline, run_exact_direct  # noqa: E402
 
 

@@ -1,5 +1,8 @@
 # SYNTCOMP26 source-binding census
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Run serially on 2026-09-24 with `eligibility-census.py`, the production
 `acacia_lift.runner._resolve_source_request` in exact mode (which calls the
 production source binder and the default-seed route guard), and
@@ -10,7 +13,7 @@ source SHA-256, decision, binding metadata, attempted lowering-tool calls, and
 elapsed binding time. `eligible.list` preserves the corpus order.
 
 During prep, separate working-tree edits relocated the 14 pinned capability
-templates into `scripts/acacia_lift/data/templates/`. Every relocated template
+templates, now in `benchmarking/param-lift-20260922/legacy_lift/data/templates/`. Every relocated template
 has the same SHA-256 and the registry's other capability fields match HEAD;
 the source binder and route guard are unchanged. The census decisions therefore
 apply to the committed package at HEAD 3ee43ec8 as well. Those separate edits

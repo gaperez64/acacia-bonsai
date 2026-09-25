@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 
 HERE = pathlib.Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
+ROOT = HERE.parents[3]
 TLSF_TOOLS = ROOT / "subprojects" / "tlsf-tools"
 DEFAULT_TLSF_TOOLS_BUILD = TLSF_TOOLS / "build-oxidd"
 DEFAULT_BINDINGS_PYTHON = (

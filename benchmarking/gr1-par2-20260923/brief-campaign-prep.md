@@ -1,8 +1,11 @@
 # Brief C — eligibility census and campaign commands (no timed runs by you)
 
+> Historical research note: the Python wrapper and lifting package below are retained
+> only as differential oracles. Current solver runs use native `acacia-bonsai` arms.
+
 Read decisions.md (all 2026-09-24 entries), integration-survey.md §1-3, wrapper.md,
-plan.md §9.2, §11 (all). The lifting package is scripts/acacia_lift/ (P9, just committed); the
-wrapper is scripts/acacia-lift-portfolio.py; the coverage runner is
+plan.md §9.2, §11 (all). The lifting package is benchmarking/gr1-par2-20260923/oracle/acacia_lift/ (P9, just committed); the
+wrapper is benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py; the coverage runner is
 benchmarking/run-syntcomp26-coverage.py (with --route-records). NEVER stage or commit by any path.
 No compiling; no solver campaigns; you may run the eligibility step itself (it only calls
 tlsfinfo/tlsf2tlsf/tlsf2ltl) serially.

@@ -162,7 +162,7 @@ def main() -> None:
                3, "require -T")
         expect(binary, ["-T", str(paths[0]), "--arms", ARM,
                         "-s", str(directory / "controller")], 3, "do not support -s")
-        expect(binary, ["-h"], 2, ARM)
+        expect(binary, ["-h"], 0, ARM)
         if "--hook-binary" in sys.argv[3:]:
             hook_binary = Path(sys.argv[sys.argv.index("--hook-binary") + 1])
             expect(hook_binary, ["-T", str(paths[0]), "--arms", ARM],

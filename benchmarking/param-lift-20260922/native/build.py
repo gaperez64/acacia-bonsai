@@ -6,7 +6,7 @@ from __future__ import annotations
 import pathlib
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[3] / "scripts"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[3] / "benchmarking/gr1-par2-20260923/oracle"))
 from acacia_lift.native.build import main  # noqa: E402
 
 if __name__ == "__main__":

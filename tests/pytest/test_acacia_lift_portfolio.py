@@ -20,7 +20,7 @@ from unittest import mock
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-WRAPPER = ROOT / "scripts" / "acacia-lift-portfolio.py"
+WRAPPER = ROOT / "benchmarking/gr1-par2-20260923/oracle" / "acacia-lift-portfolio.py"
 COVERAGE = ROOT / "benchmarking" / "run-syntcomp26-coverage.py"
 BENCHMARKING = ROOT / "benchmarking"
 

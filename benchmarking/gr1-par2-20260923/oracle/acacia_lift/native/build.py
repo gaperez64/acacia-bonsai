@@ -15,7 +15,7 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 PARAM_LIFT = HERE.parent
-ROOT = PARAM_LIFT.parents[1]
+ROOT = PARAM_LIFT.parents[3]
 SOURCE = HERE / "buddy_veccompose_adapter.cc"
 DEFAULT_OUTPUT_DIR = ROOT / "build_scratch" / "buddy-adapter"
 SCHEMA = "acacia-buddy-veccompose-adapter-v2"

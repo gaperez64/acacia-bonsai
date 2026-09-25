@@ -32,7 +32,7 @@ from typing import Any
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "benchmarking/gr1-par2-20260923/oracle"))
 from legacy_lift.capabilities import CAPABILITIES  # noqa: E402
 
 Z3_PYTHON = ROOT / "build_scratch" / "smt" / "bin" / "python"

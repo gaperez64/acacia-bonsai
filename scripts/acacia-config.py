@@ -22,6 +22,7 @@ from typing import Any
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OPTIONS_PATH = ROOT / "config" / "acacia-options.json"
 PRESETS_PATH = ROOT / "config" / "acacia-presets.json"
+DOCKER_DEFAULT_LIST = ROOT / "config" / "docker-default.list"
 PRESET_METADATA_KEYS = {"description", "role"}
 PRESET_ROLES = {"shipping", "reference", "sweep", "diagnostic", "legacy"}
 
@@ -337,6 +338,10 @@ def command_validate(options: dict[str, Any], presets: dict[str, Any]) -> None:
     for name, data in presets["presets"].items():
         if (data["role"] == "shipping") != (name in shipping):
             raise SystemExit(f"{name}: role shipping must match docker_default membership")
+    if (not DOCKER_DEFAULT_LIST.is_file() or
+            DOCKER_DEFAULT_LIST.read_text().splitlines() !=
+            presets["groups"]["docker_default"]):
+        raise SystemExit("config/docker-default.list must match docker_default membership and order")
 
 
 def tool_env_lines(data: dict[str, Any]) -> list[str]:

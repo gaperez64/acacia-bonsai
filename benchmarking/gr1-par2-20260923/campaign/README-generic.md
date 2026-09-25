@@ -1,4 +1,7 @@
-# Generic N campaign: preparation and execution
+# Archived generic N campaign: preparation and execution
+
+These commands document the withdrawn Python route. Current solver runs use
+native arms in `acacia-bonsai`.
 
 Run commands from the repository root, serially on the quiet timing host. Stage C
 is the frozen generic route. This preparation generated the corpus and ran the
@@ -90,7 +93,7 @@ for cap in 60 17; do
     mkdir -p "$out"
     flags="--lift-budget-fraction $fraction --cap $cap --tlsf-tools-build $TOOLS --bindings-python /usr/bin/python3.13 --bindings-site /usr/local/lib64/python3.13/site-packages --buddy-adapter $ADAPTER -- $B"
     python3 benchmarking/run-syntcomp26-coverage.py \
-      --bin "$ROOT/scripts/acacia-lift-portfolio.py" --flags "$flags" \
+      --bin "$ROOT/benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py" --flags "$flags" \
       --solver-label "$variant" --preset otf_sparse_formula \
       --list "$GENERIC/admitted-$cap.list" \
       --tlsf-map "$ORIG_MAP" --tlsf-corpus "$ROOT/tlsf-corpus" \
@@ -117,7 +120,7 @@ for cap in 60 17; do
   mkdir -p "$out"
   flags="--lift-budget-fraction $fraction --cap $cap --tlsf-tools-build $TOOLS --bindings-python /usr/bin/python3.13 --bindings-site /usr/local/lib64/python3.13/site-packages --buddy-adapter $ADAPTER -- $B"
   python3 benchmarking/run-syntcomp26-coverage.py \
-    --bin "$ROOT/scripts/acacia-lift-portfolio.py" --flags "$flags" \
+    --bin "$ROOT/benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py" --flags "$flags" \
     --solver-label "$CHOSEN" --preset otf_sparse_formula \
     --list "$OBF_LIST" --tlsf-map "$OBF_MAP" --tlsf-corpus "$OBF_CORPUS" \
     --caps "$cap" --memory-max 8G --memory-swap-max 0 --collect-rusage \

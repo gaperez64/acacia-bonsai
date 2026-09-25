@@ -110,7 +110,7 @@ void show_help (const char* program_name) {
       << "Usage: " << program_name << " [OPTIONS]\n"
       << "Check realizability for LTL specifications.\n\n"
       << "Allowed options:\n"
-      << "  -h                print this help message\n"
+      << "  -h, --help        print this help message\n"
       << "  -s FILE           synthesize controller and store in FILE\n"
       << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
@@ -469,6 +469,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   bool unreal_backend_specified = false;
   static option long_options[] = {
       {"version", no_argument, nullptr, 'V'},
+      {"help", no_argument, nullptr, 'h'},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"unreal-translation-pref", required_argument, nullptr,
        OPT_UNREAL_TRANSLATION_PREF},
@@ -493,7 +494,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   // this goes over all provided arguments and returns the argument value.
   while ((opt = getopt_long (argc, argv, short_options, long_options, nullptr)) != -1) {
     switch (opt) {
-      case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
+      case 'h': show_help (argv[0]); exit (0);
       case 'V': print_version (std::cout); exit (EXIT_CODE_UNKNOWN);
       case 'f':
         if (retval.tlsf_specified)

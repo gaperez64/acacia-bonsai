@@ -13,12 +13,12 @@ import sys
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "benchmarking/gr1-par2-20260923/oracle"))
 
 from acacia_lift.tools import configuration_defaults  # noqa: E402
 from _lift_requirements import require_lift_tools  # noqa: E402
 
-WRAPPER = ROOT / "scripts/acacia-lift-portfolio.py"
+WRAPPER = ROOT / "benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py"
 OBFUSCATOR = ROOT / "benchmarking/gr1-par2-20260923/obfuscate-tlsf.py"
 BUILD = configuration_defaults().tlsf_tools_build
 VERIFY = ROOT / "benchmarking/gr1-par2-20260923/verify-obfuscation.py"
@@ -97,7 +97,7 @@ def _run(source: pathlib.Path, route: pathlib.Path, fallback: pathlib.Path) -> t
                "--lift-budget-seconds", "3", "--route-record", str(route),
                "--", str(fallback), "-T", str(source)]
     completed = subprocess.run(command, capture_output=True, text=True, timeout=7,
-                               env={**os.environ, "PYTHONPATH": str(ROOT / "scripts")},
+                               env={**os.environ, "PYTHONPATH": str(ROOT / "benchmarking/gr1-par2-20260923/oracle")},
                                check=False)
     assert completed.returncode in (0, 1, 2), completed.stderr
     record = json.loads(route.read_text(encoding="utf-8"))

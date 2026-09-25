@@ -32,6 +32,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[3]
 
 
 def legacy_source(source: str) -> pathlib.Path:
+    # Archived manifests retain the path used when they were written.
     prefix = "scripts/acacia_lift/data/"
     if source.startswith(prefix):
         return pathlib.Path(__file__).resolve().parent / "data" / source[len(prefix):]

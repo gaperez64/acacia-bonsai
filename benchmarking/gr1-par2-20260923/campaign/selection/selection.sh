@@ -20,7 +20,7 @@ for cap in 60 17; do
     mkdir -p "$out"
     flags="--lift-budget-fraction $fraction --cap $cap --tlsf-tools-build $TOOLS --bindings-python /usr/bin/python3.13 --bindings-site /usr/local/lib64/python3.13/site-packages --buddy-adapter $ADAPTER -- $B"
     python3 benchmarking/run-syntcomp26-coverage.py \
-      --bin "$ROOT/scripts/acacia-lift-portfolio.py" --flags "$flags" \
+      --bin "$ROOT/benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py" --flags "$flags" \
       --solver-label "$variant" --preset otf_sparse_formula \
       --acacia-sha ee37c727 --list "$LIST" \
       --tlsf-map "$MAP" --tlsf-corpus "$CORPUS" \

@@ -1,4 +1,7 @@
-# GR(1) lifting campaign commands
+# Archived GR(1) lifting campaign commands
+
+These commands document the withdrawn Python route and are retained for
+reproduction. Current solver runs use native arms in `acacia-bonsai`.
 
 Run these commands from the repository root, **serially** on the quiet timing
 host. The commands below prepare observations; this prep did not run a timed
@@ -50,7 +53,7 @@ for cap in 60 17; do
     mkdir -p "$out"
     flags="--lift-budget-fraction $fraction --cap $cap --tlsf-tools-build $TOOLS --bindings-python /usr/bin/python3.13 --bindings-site /usr/local/lib64/python3.13/site-packages --buddy-adapter $ADAPTER -- $B"
     python3 benchmarking/run-syntcomp26-coverage.py \
-      --bin "$ROOT/scripts/acacia-lift-portfolio.py" --flags "$flags" \
+      --bin "$ROOT/benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py" --flags "$flags" \
       --solver-label "$variant" --preset otf_sparse_formula \
       --acacia-sha 3ee43ec8 --list "$CAMPAIGN/eligible.list" \
       --tlsf-map "$MAP" --tlsf-corpus "$CORPUS" \
@@ -119,7 +122,7 @@ for cap in 60 17; do
   mkdir -p "$out"
   flags="--lift-budget-fraction $fraction --cap $cap --tlsf-tools-build $TOOLS --bindings-python /usr/bin/python3.13 --bindings-site /usr/local/lib64/python3.13/site-packages --buddy-adapter $ADAPTER -- $B"
   python3 benchmarking/run-syntcomp26-coverage.py \
-    --bin "$ROOT/scripts/acacia-lift-portfolio.py" --flags "$flags" \
+    --bin "$ROOT/benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py" --flags "$flags" \
     --solver-label "$CHOSEN" --preset otf_sparse_formula \
     --acacia-sha 3ee43ec8 --list "$LIST" --tlsf-map "$MAP" --tlsf-corpus "$CORPUS" \
     --caps "$cap" --memory-max 8G --memory-swap-max 0 --collect-rusage \
