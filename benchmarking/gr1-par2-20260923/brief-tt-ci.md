@@ -38,3 +38,18 @@ Validation: `meson setup` with the local Meson (1.11.2; no network for pip) for 
 configurations; full meson test serially for the oxidd+native_gr1 build; the exact CI clang-format
 command; `python3 -c 'import yaml,sys; [yaml.safe_load(open(f)) for f in sys.argv[1:]]' .github/workflows/*.yml`.
 Report per root cause what changed. VERDICT at end.
+
+## Addendum (after cleanup A–C)
+
+- I have fetched the crates for upstream OxiDD `be2f69b`'s exact `Cargo.lock` into the cargo
+  registry cache (`cargo fetch --locked`). Before patch D, rebuild OxiDD with the exact upstream
+  lockfile, offline and locked with `-j 1`, through `scripts/build_oxidd.sh`, without the
+  validation-only substitutions from patch C. Then rerun, on that build:
+  - `test/oxidd_manager_lifetime.c` in manager and checker modes, 10 repetitions each;
+  - the Rust `repeated_manager_lifetimes_on_one_thread` test;
+  - the full serial `meson test`.
+
+  If `scripts/build_oxidd.sh` does not pass `--locked`, make it do so, because CI must build
+  exactly the committed lockfile.
+- Move the scratch directory `external/oxidd/build-oxidd-review/` out of the submodule into
+  `build-cleanup/`, so the submodule shows only the patch.

@@ -638,3 +638,43 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Follow-up: the native guard globs `subprojects/tlsf-tools/src/native/*.c`, which the tlsf-tools
   cleanup flattens away. Update that glob together with the submodule bump, or the guard will
   silently scan fewer files.
+
+## 2026-09-25 — tlsf-tools cleanup on #39, and the OxiDD upstream miss
+
+- **Cleanup pushed to `native-api` (`030902b..c1bebaf`), with the tree identical to the one
+  tested.**
+  - The ABI compatibility layer is gone, and the full option structs are the only public types.
+  - `src/native/` is flattened into `src/`. A structural split is proposed in tlsf-tools #40.
+  - OxiDD moves to upstream main `be2f69b`.
+  - The #39 CI is repaired: Meson 1.7 pinned from pip, a complete OxiDD artifact with a
+    patch-aware cache key, `--locked`, formatting across all sources, and actions at their latest
+    majors.
+  - Review `review-tt-cleanup.md`: ACCEPT WITH FIXES, fixed per `brief-tt-cleanup-fix.md`.
+
+  Results: 300/300 serial tests after each patch; 299/299 in the native build; 20/20 C lifetime
+  runs with the exact upstream lockfile.
+- **OxiDD: a third-party bug patched locally that upstream had already mostly fixed.** The
+  same-thread crash (stale thread-local store address) was fixed upstream by OxiDD PR #47
+  (`9fd1ed0`), merged 2026-08-12 but not in any release. We patched it on 2026-09-25 against the
+  2026-02 pin without checking `git log <pin>..origin/main` first. The "upstream-ready write-up"
+  was recorded here and never raised with the owner.
+
+  What remains on upstream main is GC-thread retirement:
+  - a Quit sent before the GC thread first waits is lost;
+  - the last drop does not join the thread;
+  - two concurrent final drops can both miss retirement.
+
+  That is now the only content of `patches/oxidd-gc-thread-retirement.patch`. **Owner decision:**
+  keep that local fix for now, and submit an upstream issue and PR once it checks out. Drafts will
+  be shown to the owner before posting.
+- **Arm-7 binary pinned.** The old seq11 would have built from whatever HEAD was current when the
+  legs finish, with the bumped OxiDD. `build-m2.sh` instead builds from code identical to
+  `cd69aaa4`, with the tlsf-tools and OxiDD that arms 5 and 6 used, and freezes the result.
+  `leg-m2.sh` waits for seq10 and for the frozen binary. Acacia's native arms and submodule move to
+  the new tlsf-tools API only after that build.
+- **arm-5 leg done** (12:34): 219 REALIZABLE, 1,027 UNKNOWN, 278 TIMEOUT. There are no conflicts
+  with any 60 s reference verdict: 214 of its REALIZABLE instances are also solved by ltlsynt or B,
+  and all agree. Five are solved by neither:
+  - `arbiter_with_buffer_pb_{8,9,10}_pe_`
+  - `load_balancer_pb_8_pe_`
+  - `arbiter_on_inpchange_pb_5_pe_`
