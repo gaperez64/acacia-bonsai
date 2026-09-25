@@ -4,6 +4,29 @@ From the Acacia 1.x `TACAS23` snapshot (`5ffd8f99`, 2022-11-11) through
 2026-09-25. Release dates below follow the release record; other dates follow
 the commits and PRs. PAR-2 charges every unanswered case twice the time cap.
 
+## Latest released three-way comparison
+
+Released with **v2.4.2** (2026-09-09) and still the latest checked comparison
+against the baselines; v2.4.3 shipped no new comparison. Full **1,524-case
+SYNTCOMP26** selection, **17 s** cap, **8 GiB**, zero swap.
+
+![SYNTCOMP26 full selection: ltlsynt, Acacia 2.4.2 configurations and Acacia 1.x](benchmarking/plots/spot-otf-threeway-20260909/syntcomp26-full.png)
+
+| series | solved / 1,524 | PAR-2 (s) |
+|---|---:|---:|
+| `ltlsynt` 2.15.1.dev | **1,257** | **9,515.826** |
+| Acacia VB(arriving + departing) | 1,173 | 12,684.211 |
+| `otf_sparse_formula` (arriving) | 1,171 | 12,736.344 |
+| `best_four_arm_contradiction` (departing) | 1,123 | 14,254.294 |
+| Acacia 1.x | 811 | 24,785.471 |
+
+The virtual best (VB) is a synthetic per-instance best of the two Acacia
+presets, not a runnable configuration. The Acacia 1.x row uses a binary that
+can misreport a crashed worker as REALIZABLE (see below), so it may be
+flattering. [Report](benchmarking/plots/spot-otf-threeway-20260909/README.md),
+[PAR-2 table](benchmarking/plots/spot-otf-threeway-20260909/syntcomp26-full-par2.md),
+[provenance](benchmarking/plots/spot-otf-threeway-20260909/PROVENANCE.txt).
+
 ## Measured performance milestones
 
 - **v2.1 precursor:** [PR #115](https://github.com/gaperez64/acacia-bonsai/pull/115)
