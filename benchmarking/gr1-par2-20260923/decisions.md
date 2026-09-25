@@ -736,3 +736,25 @@ every judgment call and measurement in order. Numbers are carried forward verbat
     detection works on decoded keys, so mixing both spellings is rejected; tests pin this down.
   - **Other fixes:** RAII for the yyjson write buffer on `bad_alloc`; `Requires.private` for yyjson
     in `tlsf.pc`; `native_param_lift_arm.hh` added to the Acacia follow-up.
+
+## 2026-09-25 — Acacia native arms on tlsf-tools bf3e7e7, with yyjson
+
+- **The submodule moves `85e3a31` → `bf3e7e7`** (the head of tlsf-tools #39, green CI). The
+  native arms are updated to the new API:
+  - no `native.h`;
+  - the plain option types, with their defaults preserved (e.g. `oxidd_solve_options_default()`);
+  - renamed entry points.
+- **Boost.JSON leaves Acacia.** yyjson arrives through `tlsf_dep`, one copy, with no top-level
+  wrap. The reader rejects duplicate decoded keys at every depth, and field and hash comparisons
+  stay length-aware.
+- **The family-hardcoding guard names the five flat tlsf-tools files** that replaced
+  `src/native/*` and asserts that every listed path exists.
+- **Results.** Unit 56/56 (native) and 50/50 (non-native); pytest 1,003 passed, 2 skipped; the
+  release LTO build and the no-hooks check pass. Smoke on `arbiter_with_buffer_pb_8_pe_`:
+  `real:gr1:oxidd` and `real:param-lift:oxidd` give REALIZABLE; param-lift gives UNKNOWN without
+  parameters.
+- **Review (`review-acacia-native-update.md`): ACCEPT, no findings.** No binding check was dropped
+  or loosened; the only new rejection is duplicate-key JSON.
+- **The frozen leg binaries are unaffected.** `build_perarm_m1` and `build_perarm_m2` stay at their
+  recorded revisions and hashes; arms 5 to 7 are measured on tlsf-tools `85e3a31` and OxiDD
+  `9158645` + the old patch.
