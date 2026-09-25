@@ -588,3 +588,53 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   native commits (library API, C++ reduction, OxiDD patch, lifting, policy hash); bumping to `main`
   would drop the API the native arms call. `native-api` is now open as tlsf-tools #39; bump the
   submodule to `main` once #39 merges.
+
+## 2026-09-25 — Side work during the legs: thermal throttling and memory
+
+- **Finding (owner asked whether load was watched; it was not, actively).** Load was low (2.5–3 of
+  16 threads), but the host (i7-11850H laptop, 15 GiB, zram) is thermally throttling during the
+  legs:
+  - package temperature 93–100 °C (limit 100 °C);
+  - about 2,500 package throttle events in a 30 s sample;
+  - fan at 3,045 of 5,300 RPM, turbo on.
+
+  Memory was also tight. At 11:58, 3.9 GiB was available while legs allow 8 GiB per instance: the
+  current arm-5 instance held 3.5 GiB, Chrome about 3 GiB, and zram already held 3.5 GiB. Side
+  work therefore affects leg timings through clock speed and memory pressure, even without CPU
+  contention. The step-6 fix codex had been launched without any cap.
+- **Owner decision: option 1, keep side work going.**
+  - Every codex task, together with its builds and tests, runs in its own
+    `systemd-run --user --scope -p MemoryMax=3G -p CPUQuota=100%`.
+  - Only one side task runs at a time.
+  - `build_scratch/thermal/sample.sh` writes a sample every 30 s to
+    `build_scratch/thermal/samples.tsv`: package temperature, load, available memory, cumulative
+    throttle counters, and the current leg and row count.
+  - After the legs, compare each leg's throttle rate. In any leg that ran noticeably hotter,
+    re-run the instances that finished within about 10% of the 60 s cap or hit it. The same
+    applies to the final three-way.
+  - Turbo stays on. The derived 60 s ltlsynt and B baselines come from 120 s legs measured with
+    turbo on, and a changed clock regime would break comparability with them.
+
+## 2026-09-25 — Native step 6: the Python lifting route leaves the shipped path
+
+- The Python wrapper and lifting package (`scripts/acacia-lift-portfolio.py`,
+  `scripts/acacia_lift/`) moved to `benchmarking/gr1-par2-20260923/oracle/`. They survive only as
+  the research and differential oracle for the native arms. `.dockerignore` excludes that
+  directory, and Meson installs nothing from it.
+- The Docker launcher no longer calls Python to read the `docker_default` group. It reads a
+  committed `config/docker-default.list` instead. `acacia-config.py validate` (the CI `registry`
+  job) and `tests/pytest` fail if that list drifts from the registry. The reviewer found generating
+  the list at image-build time not strictly better, because the local shell launcher needs it too.
+- `--help`/`-h` print usage and exit 0. Help is handled before the outer-deadline environment
+  check (`tests/check-help.py`).
+- Review (`review-native-6.md`): ACCEPT WITH FIXES. It found three problems, fixed in
+  `brief-native-6-fix.md` (re-verdict ACCEPT):
+  - the live family-hardcoding guard over the oracle had been deleted in the move rather than
+    moved, and is now restored with a mutant test;
+  - help could fail on an invalid deadline variable;
+  - several historical paths pointed at oracle files that do not exist.
+
+  Results: pytest 1,003 passed / 2 skipped; unit suites 55/55 with native arms, 52/52 without.
+- Follow-up: the native guard globs `subprojects/tlsf-tools/src/native/*.c`, which the tlsf-tools
+  cleanup flattens away. Update that glob together with the submodule bump, or the guard will
+  silently scan fewer files.
