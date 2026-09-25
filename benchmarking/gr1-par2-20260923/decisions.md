@@ -507,3 +507,21 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   66 regenerated files); byte-level formatting (compact vs indented) is not part of the contract.
   Nit left open: `atomic_prop_collect` / `str_psl` calls are not individually wrapped by the
   cooperative limit check (cheap calls; hard bounds come from the killable arm process).
+
+## 2026-09-25 — Step 3 review: an OxiDD manager-lifetime crash and a portfolio deadline bug
+
+- Codex review REJECT on the Acacia gr1 arms. **P1, root cause upstream in OxiDD:** its thread-local
+  local-store allocation state (`LOCAL_STORE_STATE`, keyed by store address,
+  `oxidd-manager-index/src/manager.rs`) survives a manager's destruction while its GC thread retires
+  asynchronously; a second manager on the same thread (the arm's solve, then its check) can reuse
+  stale state and crash — 19/200 same-thread runs on the round_robin_arbiter certificate,
+  reproduced in a standalone checker (no fork, no solver), 0/200 with that fast path disabled. The
+  implementer's fresh-thread checker only avoids the trigger (a 5 ms delay also hides it). Every
+  crash mapped to UNKNOWN, never a verdict. Fix: a generation-safe local store in OxiDD, shipped as a
+  build-time patch against the pinned upstream 9158645 in tlsf-tools with same-thread regression
+  tests; an upstream-ready issue write-up for the owner to file with OxiDD.
+- **P1/P2 in Acacia's portfolio parent (affects all arms):** children were SIGTERMed by PID and
+  reaped with a blocking `wait()`, so a child ignoring SIGTERM could hold the parent past the
+  deadline, and a verdict reaped after the deadline could still be published. Fix: per-child process
+  groups, SIGKILL at the deadline or on a winner, non-blocking reaping, deadline re-check before
+  accepting a verdict.
