@@ -557,3 +557,26 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - Host issue left to the owner: `/usr/lib64/python3.13/site-packages/numpy` is an empty
   root-owned directory (8 Aug, no owning package) that shadows NumPy for Python 3.13 and breaks three
   local tests (`numpy.isscalar`). Not touched.
+
+## 2026-09-25 — Native steps 4-5 landed: all three native arms exist
+
+- tlsf-tools `native-api`: `2be5915` native generic lifting (`tlsf_gr1_lift_v1`; two review rounds:
+  rank-depth guard now reached by a rank-chain fixture, seed-corruption seam test-only and not
+  exported, roles by typed provenance ids, PARAMETERS gate before reduction, differential on four
+  generated families and three obfuscated twins); `85e3a31` policy hash in lifting evidence.
+- Acacia `c9142817`: `real:param-lift:oxidd` (REALIZABLE only, no fallback). Review found the native
+  arms — including the gr1 arms used by the running per-arm legs — trusted the checker's verdict
+  without binding source, game, certificate and policy hashes to the snapshot; now required, and the
+  lift arm re-reduces the snapshot and requires identical game bytes. In the gr1 arms the game is
+  built from the snapshot and checked in the same child, so the missing cross-check was
+  defence-in-depth, not a route to a wrong verdict; the milestone-1 gr1 legs stand. The final
+  portfolio binary includes the binding. Test hooks are compiled only into debug test executables
+  (a test asserts a release build has none).
+- The param-lift leg needs a binary with the arm: after the six milestone-1 legs finish, a new
+  release binary (`otf_sparse_formula` profile + native arms, from `c9142817`) is built on the quiet
+  host, frozen, and used for the `real:param-lift:oxidd` 60 s leg. Legacy and gr1 arm code is
+  unchanged in behaviour between the two binaries (gr1 gained only the binding checks); the chosen
+  portfolio's real run uses the newer binary.
+- Changelog work (owner request): `CHANGELOG.md` with the latest released three-way on top, measured
+  milestones fact-checked twice, and `doc/changelog/sparse-otfur.md` (v2.4.2 sparse loss-set example,
+  pinned to v2.4.2 sources).
