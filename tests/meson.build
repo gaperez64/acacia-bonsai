@@ -85,16 +85,34 @@ test ('config-transition-acceptance',
 
 if get_option ('acacia_native_arms')
   native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe, meson.project_build_root ()]
-  if get_option ('b_ndebug') == 'false' or (get_option ('b_ndebug') == 'if-release' and get_option ('buildtype') != 'release')
-    native_gr1_cli_args += ['--debug-proof-hook']
+  native_lift_cli_args = [files ('check-native-param-lift-cli.py'), ab_exe,
+                          meson.project_build_root ()]
+  native_cli_depends = [ab_exe]
+  if native_test_hooks
+    spot_pause_hook = shared_library ('spot-translation-pause',
+                                     'spot_translation_pause.cc',
+                                     dependencies : [spot_dep], install : false)
+    native_gr1_cli_args += ['--hook-binary', native_test_exe.full_path ()]
+    native_lift_cli_args += ['--hook-binary', native_test_exe.full_path (),
+                             '--spot-hook', spot_pause_hook.full_path ()]
+    native_cli_depends += [native_test_exe, spot_pause_hook]
   endif
   test ('native-gr1-cli', py,
         args : native_gr1_cli_args,
-        suite : ['unit', 'native-gr1'], depends : [ab_exe])
+        suite : ['unit', 'native-gr1'], depends : native_cli_depends)
   test ('native-gr1-same-thread', py,
         args : [files ('check-native-gr1-same-thread.py'), ab_exe,
                 meson.project_build_root ()],
         suite : ['unit', 'native-gr1'], timeout : 1200, depends : [ab_exe])
+  test ('native-param-lift-cli', py,
+        args : native_lift_cli_args,
+        suite : ['unit', 'native-param-lift'], timeout : 180,
+        depends : native_cli_depends)
+  if get_option ('buildtype') == 'release'
+    test ('native-release-no-hooks', py,
+          args : [files ('check-native-release-no-hooks.py'), ab_exe],
+          suite : ['unit', 'native-gr1', 'native-param-lift'], depends : [ab_exe])
+  endif
 endif
 
 if get_option ('build_research_tools') and get_option ('acacia_enable_diagnostics')

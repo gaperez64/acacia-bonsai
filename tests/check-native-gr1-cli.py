@@ -117,8 +117,9 @@ def main() -> None:
                         "real:small:backward,real:gr1:oxidd"], 2, "UNKNOWN")
         expect(binary, ["-T", str(real), "--arms", "real:gr1:oxidd"],
                2, "deadline", time.monotonic() - 1)
-        if "--debug-proof-hook" in sys.argv[3:]:
-            expect(binary, ["-T", str(real), "--arms", "real:gr1:oxidd"],
+        if "--hook-binary" in sys.argv[3:]:
+            hook_binary = Path(sys.argv[sys.argv.index("--hook-binary") + 1])
+            expect(hook_binary, ["-T", str(real), "--arms", "real:gr1:oxidd"],
                    2, "proof not verified", corrupt_proof=True)
         # A previously intermittent OxiDD checker crash appeared only after
         # the solver had used the same thread on this larger certificate.

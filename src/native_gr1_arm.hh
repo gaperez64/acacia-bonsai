@@ -2,6 +2,7 @@
 
 #include "arg_parser.hh"
 #include "error_msg.hh"
+#include "native_proof_binding.hh"
 
 #if ACACIA_NATIVE_ARMS
 # include <tlsf/native.h>
@@ -18,8 +19,8 @@
 # include <string_view>
 
 namespace acacia {
-  inline void native_diagnostic (bool unreal, std::string_view stage, int status,
-                                 std::string_view message) {
+  inline void native_arm_diagnostic (std::string_view arm, std::string_view stage, int status,
+                                     std::string_view message) {
     const auto quote = [] (std::string_view value) {
       std::string out = "\"";
       for (unsigned char ch : value) {
@@ -34,11 +35,17 @@ namespace acacia {
       }
       return out + '"';
     };
-    const std::string line = std::string ("{\"arm\":\"") + (unreal ? "unreal" : "real") +
-        ":gr1:oxidd\",\"stage\":" + quote (stage) + ",\"status\":" +
+    const std::string line = std::string ("{\"arm\":") + quote (arm) +
+        ",\"stage\":" + quote (stage) + ",\"status\":" +
         std::to_string (status) + ",\"message\":" + quote (message) + "}\n";
     // One write keeps concurrent children's JSON records intact on stderr.
     (void) ::write (STDERR_FILENO, line.data (), line.size ());
+  }
+
+  inline void native_diagnostic (bool unreal, std::string_view stage, int status,
+                                 std::string_view message) {
+    native_arm_diagnostic (unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd",
+                           stage, status, message);
   }
 
   inline int run_native_gr1_arm (const arg_parse_result& args, bool unreal,
@@ -109,6 +116,17 @@ namespace acacia {
       native_diagnostic (unreal, "reduction", -1, "missing exact game");
       return EXIT_CODE_UNKNOWN;
     }
+    boost::json::value parsed_reduction;
+    const auto* metadata = native_json_object (reduction.value.metadata_json,
+                                               reduction.value.metadata_size,
+                                               parsed_reduction);
+    if (!metadata || !native_json_field (*metadata, "semantics", "exact") ||
+        !native_json_field (*metadata, "source_sha256", args.tlsf_sha256) ||
+        !native_sha256_matches (*metadata, "game_sha256", reduction.value.aag,
+                                reduction.value.aag_size)) {
+      native_diagnostic (unreal, "reduction", -1, "source or game hash mismatch");
+      return EXIT_CODE_UNKNOWN;
+    }
 
     OxiddFailure failure{};
     auto solve_options = oxidd_solve_options_default_v2 ();
@@ -161,11 +179,17 @@ namespace acacia {
     std::array<std::string, 4> stable_artifacts;
     for (size_t i = 0; i < bytes.size (); ++i)
       stable_artifacts[i].assign (bytes[i], sizes[i]);
-#ifndef NDEBUG
-    // Debug-only fault injection exercises Acacia's verifier-failure mapping.
+#ifdef ACACIA_NATIVE_TEST_HOOKS
+    // This definition is set only on the debug test executable.
     if (std::getenv ("ACACIA_NATIVE_TEST_CORRUPT_PROOF"))
       stable_artifacts[0][0] = 'X';
 #endif
+    if (!native_proof_sidecars (stable_artifacts[1].data (), stable_artifacts[1].size (),
+                                stable_artifacts[3].data (), stable_artifacts[3].size (),
+                                "exact", true, unreal)) {
+      native_diagnostic (unreal, "metadata", -1, "proof side or semantics mismatch");
+      return EXIT_CODE_UNKNOWN;
+    }
     const std::string stable_game (reduction.value.aag, reduction.value.aag_size);
     strategy.reset ();
     for (char*& p : bytes) {

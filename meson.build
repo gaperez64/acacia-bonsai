@@ -17,6 +17,9 @@ bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 posets_dep = dependency ('posets')
 tlsf_deps = []
 enable_tlsf_frontend = get_option ('acacia_enable_tlsf_frontend') or get_option ('acacia_native_arms')
+native_test_hooks = get_option ('acacia_native_arms') and \
+  get_option ('buildtype') in ['debug', 'debugoptimized'] and \
+  get_option ('acacia_compiler_profile') == 'debug'
 if get_option ('acacia_native_arms')
   tlsf_native = subproject ('tlsf-tools', default_options : [
     'cpp_std=c++23', 'native_gr1=enabled', 'oxidd=enabled',

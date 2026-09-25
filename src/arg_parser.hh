@@ -153,10 +153,10 @@ void show_help (const char* program_name) {
       << "                    with -r, -u, and per-polarity backend/translation options\n"
       << "                    provider options apply to arms without an explicit provider\n"
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, decision only\n"
-      << "                    native -T arms: real:gr1:oxidd and unreal:gr1:oxidd\n"
-      << "                    (one exact GR(1) arm per answer polarity);\n"
+      << "                    native -T arms: real:gr1:oxidd, unreal:gr1:oxidd\n"
+      << "                    (one exact GR(1) arm per answer polarity), and\n"
+      << "                    real:param-lift:oxidd (realizability only);\n"
       << "                    require -Dacacia_native_arms=true and -T FILE;\n"
-      << "                    real:param-lift:oxidd is reserved for a later milestone\n"
       << "                    native arms have no provider and do not support -s\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
@@ -350,7 +350,7 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       error (EXIT_CODE_ERROR,
              "Error: invalid field count in --arms spec %s; expected "
              "polarity:transform:backend[:provider]; native forms are "
-             "real:gr1:oxidd and unreal:gr1:oxidd without a provider.\n",
+             "real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::polarity:
@@ -361,7 +361,7 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
     case portfolio_arm_parse_error::real_transform:
       error (EXIT_CODE_ERROR,
              "Error: invalid transform %s in --arms spec %s; real arms accept small or any "
-             "(or gr1 with oxidd).\n",
+             "(or gr1 or param-lift with oxidd).\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::unreal_transform:
@@ -709,12 +709,10 @@ arg_parse_result arg_parser (int argc, char** argv) {
   for (auto& arm : *retval.arms) {
     if (arm.kind != portfolio_arm_kind::legacy) {
 #if !ACACIA_NATIVE_ARMS
-      error (EXIT_CODE_ERROR, "Error: native GR(1) arms require -Dacacia_native_arms=true.\n");
+      error (EXIT_CODE_ERROR, "Error: native arms require -Dacacia_native_arms=true.\n");
 #endif
-      if (arm.kind == portfolio_arm_kind::param_lift)
-        error (EXIT_CODE_ERROR, "Error: parameter lifting is not available in this milestone.\n");
       if (not retval.tlsf_specified)
-        error (EXIT_CODE_ERROR, "Error: native GR(1) arms require -T FILE.\n");
+        error (EXIT_CODE_ERROR, "Error: native arms require -T FILE.\n");
       continue;
     }
     // Validate default arms too, using the same compile-gate errors as explicit

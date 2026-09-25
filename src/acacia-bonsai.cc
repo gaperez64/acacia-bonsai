@@ -2,6 +2,7 @@
 #include "configuration.hh"
 #include "error_msg.hh"
 #include "native_gr1_arm.hh"
+#include "native_param_lift_arm.hh"
 #include "solver/solver_invoker.hh"
 #include <unordered_map>
 
@@ -184,16 +185,26 @@ int main (int argc, char** argv) {
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
         test_child_behavior (g_child_count, deadline_mono_ns);
 #endif
-        if (arm.kind == portfolio_arm_kind::gr1) {
+        if (arm.kind != portfolio_arm_kind::legacy) {
 #if ACACIA_NATIVE_ARMS
           try {
-            _exit (acacia::run_native_gr1_arm (arg_values, arm.unreal, deadline_mono_ns));
+            _exit (arm.kind == portfolio_arm_kind::gr1
+                       ? acacia::run_native_gr1_arm (arg_values, arm.unreal, deadline_mono_ns)
+                       : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns));
           }
           catch (const std::exception& exception) {
-            acacia::native_diagnostic (arm.unreal, "native_exception", -1, exception.what ());
+            acacia::native_arm_diagnostic (
+                arm.kind == portfolio_arm_kind::gr1
+                    ? (arm.unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd")
+                    : "real:param-lift:oxidd",
+                "native_exception", -1, exception.what ());
           }
           catch (...) {
-            acacia::native_diagnostic (arm.unreal, "native_exception", -1, "unknown exception");
+            acacia::native_arm_diagnostic (
+                arm.kind == portfolio_arm_kind::gr1
+                    ? (arm.unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd")
+                    : "real:param-lift:oxidd",
+                "native_exception", -1, "unknown exception");
           }
           _exit (EXIT_CODE_UNKNOWN);
 #else
