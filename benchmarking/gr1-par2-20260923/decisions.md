@@ -500,3 +500,10 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   a killable process — which is how Acacia's forked arms run (the parent kills a child at the
   deadline, inside the row's cgroup). The header documents this contract instead of promising
   in-call cancellation.
+- Step 2 committed as tlsf-tools `native-api` `17ffec9`. Re-review: all substantive
+  findings fixed; the Python crossed-name bug is gone (both implementations pass Spot language
+  equivalence on the reviewer's pair and 20 random crossed/prefix-colliding pairs). **Provenance
+  contract clarified:** parsed JSON content must be identical between implementations (it is, on all
+  66 regenerated files); byte-level formatting (compact vs indented) is not part of the contract.
+  Nit left open: `atomic_prop_collect` / `str_psl` calls are not individually wrapped by the
+  cooperative limit check (cheap calls; hard bounds come from the killable arm process).
