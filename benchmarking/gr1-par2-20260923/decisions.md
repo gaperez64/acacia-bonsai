@@ -678,3 +678,61 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   - `arbiter_with_buffer_pb_{8,9,10}_pe_`
   - `load_balancer_pb_8_pe_`
   - `arbiter_on_inpchange_pb_5_pe_`
+
+## 2026-09-25 — Boost.JSON replaced by yyjson; hand-written JSON code goes too
+
+- **How Boost got in.** The C++ port brought Boost.JSON in (tlsf-tools 17ffec9, 2be5915) to
+  parse nested provenance and write evidence. Acacia's native arms use it too
+  (`native_proof_binding.hh`, `native_gr1_arm.hh`). No brief or review surfaced it as a new
+  dependency; the owner found out when #39 CI failed for lack of it. The standing rule now covers
+  new third-party dependencies as well as upstream bugs.
+- **Owner decision: yyjson for both sides.**
+  - yyjson is MIT and written in C, so the same library serves tlsf-tools' C and C++ code. It keeps
+    64-bit integers exact, parses strictly, and is on WrapDB (0.12.0) and in Fedora and Ubuntu.
+  - It replaces Boost.JSON everywhere.
+  - It also replaces our own small JSON readers and writers: the checker's flat-key helpers and the
+    `gr1_oxidd.c` / `tlsfsolve` / provenance writers.
+  - Brief `brief-tt-yyjson.md` sets two invariants: hashed and golden outputs stay byte-identical
+    unless an explicit reason is reported, and the checker stays at least as strict as today,
+    including rejecting duplicate keys in certificate, policy and provenance inputs.
+  - Acacia's native arms switch in the same update that moves them to the new tlsf-tools API.
+- **Option not taken.** nlohmann/json was considered and rejected: it is C++-only, like Boost.
+- **Acacia side (owner: "yyjson for acacia too, if required").** It is required. Proof binding
+  deliberately reads about ten string fields from the artifact bytes that were hashed and certified
+  (certificate/policy `side`, `status`, `reduction_semantics`; metadata `semantics`,
+  `source_sha256`; evidence `format`, `source_sha256`, `game_sha256`, `policy_sha256`, `method`),
+  not typed fields reported by the library, which could drift from the bytes. Acacia uses yyjson
+  as a reader through the same `dependency('yyjson')` and wrap as tlsf-tools, so there is no second
+  copy. The debug-only evidence-rewriting test hooks move to it as well.
+
+## 2026-09-25 — OxiDD fix submitted upstream
+
+- **Posted with owner approval.**
+  - [OxiDD PR #49](https://github.com/OxiDD/oxidd/pull/49): "Retire the index manager's GC
+    worker when the last external handle is dropped". Branch
+    `gaperez64/oxidd:gc-thread-retirement` at `d174f65`, on upstream `be2f69b`; it fixes #37 for
+    the unused-manager pattern it reports.
+  - A [comment on #37](https://github.com/OxiDD/oxidd/issues/37#issuecomment-5833045167) gives
+    the mechanism and the probe numbers.
+- **What came out of preparing it.** Two codex reviews shaped the upstream version beyond our
+  local patch. It handles revival of the count by GC callbacks, tests its own worker identity
+  without `/proc`, runs a deterministic held-collection test, and avoids a second panic. Upstream
+  CI has not run yet; fork PRs from new contributors need a maintainer to approve workflows.
+- **Follow-up.** Replace `tlsf-tools/patches/oxidd-gc-thread-retirement.patch` with exactly the
+  `d174f65` diff, so what we ship equals what we submitted, and add the #49 and #37 links to its
+  `.md`. This waits for the yyjson task to leave the native-api tree. Drop the patch once upstream
+  releases the fix.
+- **yyjson review (`review-tt-yyjson.md`): ACCEPT WITH FIXES.**
+  - **Hashed outputs.** The native reduction and lift outputs are byte-identical, which the
+    reviewer confirmed by rerunning the old and new builds. The certificate/policy sidecars, the
+    frontend provenance and the checker results change whitespace only (yyjson writes compact
+    JSON). No proof binding hashes JSON sidecar bytes: lift evidence and Acacia's binding hash the
+    source and AAG bytes.
+  - **Escaped key spellings (decided).** The checker now accepts an escaped spelling of a required
+    key or value, e.g. `"format"`, which the old byte-matching reader rejected. We keep
+    decoded-JSON semantics as the contract. Every reader in the chain decodes: the checker,
+    Acacia's binding after its switch, and the Python oracle. The old lexical rejection was an
+    artefact of the hand-written reader, and a mismatch between readers is the real risk. Duplicate
+    detection works on decoded keys, so mixing both spellings is rejected; tests pin this down.
+  - **Other fixes:** RAII for the yyjson write buffer on `bad_alloc`; `Requires.private` for yyjson
+    in `tlsf.pc`; `native_param_lift_arm.hh` added to the Acacia follow-up.
