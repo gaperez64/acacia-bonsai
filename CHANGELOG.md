@@ -94,6 +94,7 @@ See [the panels](benchmarking/plots/final-v1-current-20260825/README.md) and
 ### v2.4.2 (2026-09-09)
 
 - [PR #142](https://github.com/gaperez64/acacia-bonsai/pull/142) added guarded symbolic-letter Spot solving and replaced one shipping unrealizability configuration; the full-corpus **net +48 UNREALIZABLE** and PAR-2 change are above. [Sprint record](benchmarking/OTF-AND-SPOT.md).
+- [Worked example of the sparse losing upset](doc/changelog/sparse-otfur.md).
 
 ### v2.4 / v2.4.1 (2026-09-06)
 
