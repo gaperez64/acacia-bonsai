@@ -787,3 +787,23 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - **arm-2 leg done** (Sep 26, 08:47, about 5.6 h): 524 REALIZABLE, 732 UNKNOWN, 265 TIMEOUT,
   2 MEMOUT, and 1 ERROR (the same `bad_alloc` on `amba_decomposed_lock_pb_30_pe_`). There are no
   conflicts with the 120 s references.
+
+## 2026-09-26 — tlsf-tools source reorganisation (#41) adopted; final binary rebuilt
+
+- **The owner merged tlsf-tools #41** (`a294419`), which resolves #40. The layout is now public
+  `include/tlsf/`, `src/lib/`, `src/tools/<tool>/` and split tests. A static check found every
+  header and identifier Acacia's native arms use still public, with `tlsf_dep` still carrying
+  yyjson and Spot.
+- **Acacia bump.**
+  - The submodule moves to `a294419`.
+  - The family-hardcoding guard follows the moved files (17 tlsf-tools files, up from 9, now
+    including the split-out parser, pipeline and OxiDD sources).
+  - Meson's generated yyjson redirect wrap is gitignored.
+  - Results: unit 56/56 (native) and 50/50 (non-native); pytest 1,003 passed; the release LTO
+    smoke passes. #41's stricter bus-bound checks change nothing on the corpus: all 1,524 inputs
+    expand to identical LTL under `a453adb` and `a294419`.
+- **Final evaluation binary.**
+  - It is rebuilt from the bumped HEAD, so the three-way measures the shipped code.
+  - `build_final_a3c38777` (tlsf-tools `a453adb`) stays frozen on disk as a record and is not
+    used for the evaluation.
+  - The per-arm legs remain on their recorded M1/M2 binaries.
