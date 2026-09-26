@@ -1,0 +1,6829 @@
+{
+  "censored": [],
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1666240512,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-amba_decomposed_lock-n15.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-amba_decomposed_lock-n15.scope/memory.peak"
+  },
+  "counters": {},
+  "diagnostic_errors": [],
+  "elapsed_s": 12.852103943994734,
+  "environment": {
+    "binaries": {
+      "tlsfcertcheck": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "sha256": "65fd3dd9fc9ad3c1a203662fa4c4def3cce68fce5504f6033dd850077d416f84"
+      },
+      "tlsfsolve": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "sha256": "80892fef82fc5a1297c785e5a16c52e88ed849fa13f5cdbcf5ec30bc1f4d210e"
+      }
+    },
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so",
+    "compose_route": "native_veccompose",
+    "interpreter": {
+      "executable": "/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python",
+      "version": "3.14.7 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+    },
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "generalizer": {
+    "bdd_stats": {
+      "available": false,
+      "operations": {},
+      "samples": []
+    },
+    "candidate_builder": {
+      "bdd_stats": {
+        "available": true,
+        "operations": {
+          "bdd_existential_quantification": {
+            "allocated_nodes_max_delta": 0,
+            "allocated_nodes_net": 0,
+            "calls": 585,
+            "gbc_count_max_delta": 0,
+            "gbc_count_net": 0,
+            "produced_nodes_growth": 78,
+            "produced_nodes_max_delta": 5,
+            "produced_nodes_net": 78,
+            "used_nodes_growth": 78,
+            "used_nodes_max_delta": 5,
+            "used_nodes_net": 78
+          },
+          "bdd_relabel_rename": {
+            "allocated_nodes_max_delta": 0,
+            "allocated_nodes_net": 0,
+            "calls": 2376,
+            "gbc_count_max_delta": 0,
+            "gbc_count_net": 0,
+            "produced_nodes_growth": 230170,
+            "produced_nodes_max_delta": 229522,
+            "produced_nodes_net": 230170,
+            "used_nodes_growth": 230170,
+            "used_nodes_max_delta": 229522,
+            "used_nodes_net": 230170
+          },
+          "support_extraction": {
+            "allocated_nodes_max_delta": 0,
+            "allocated_nodes_net": 0,
+            "calls": 3798,
+            "gbc_count_max_delta": 0,
+            "gbc_count_net": 0,
+            "produced_nodes_growth": 273,
+            "produced_nodes_max_delta": 50,
+            "produced_nodes_net": 273,
+            "used_nodes_growth": 273,
+            "used_nodes_max_delta": 50,
+            "used_nodes_net": 273
+          },
+          "variable_cube_construction": {
+            "allocated_nodes_max_delta": 0,
+            "allocated_nodes_net": 0,
+            "calls": 9,
+            "gbc_count_max_delta": 0,
+            "gbc_count_net": 0,
+            "produced_nodes_growth": 40,
+            "produced_nodes_max_delta": 9,
+            "produced_nodes_net": 40,
+            "used_nodes_growth": 40,
+            "used_nodes_max_delta": 9,
+            "used_nodes_net": 40
+          }
+        },
+        "samples": [
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "bdd_manager:ready",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 2
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:canonicalize:end",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 1040
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:bus_schemas:begin",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 1040
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:bus_schemas:end",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 1040
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:anti_unify:begin",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 1040
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:anti_unify:end",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 1630
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:ranks:begin",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 1630
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:ranks:end",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 6349400
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:instantiate:begin",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 6349400
+          },
+          {
+            "allocated_nodes": 8000000,
+            "boundary": "stage:instantiate:end",
+            "gbc_count": null,
+            "gbc_count_exposed": false,
+            "used_nodes": 6349400
+          }
+        ]
+      },
+      "censored": [],
+      "checker_stats": {
+        "attempts": [],
+        "mode": "stream",
+        "supported": true
+      },
+      "counters": {
+        "bdd_to_aig_nodes_visited": 229685,
+        "bdd_to_aig_walks": 129,
+        "bdd_veccompose_calls": 65,
+        "from_aag_calls": 4,
+        "from_aag_gates_traversed": 1013,
+        "from_aag_roots": 98,
+        "game_functions_cache_misses": 1,
+        "predicate_template_cache_misses": 65,
+        "relabel_bdd_replace_calls": 2375,
+        "relabel_identity_calls": 1,
+        "subset_metadata_cache_hits": 1536,
+        "subset_metadata_cache_misses": 24,
+        "substitute_variables_calls": 65,
+        "support_cache_hits": 174,
+        "support_cache_misses": 21
+      },
+      "diagnostic_errors": [],
+      "distributions": {
+        "client_count_histogram": {
+          "15": 1,
+          "2": 1,
+          "3": 1,
+          "4": 1
+        },
+        "distinct_subset_count": 24,
+        "mode_count_basis": "actual_checker_attempts",
+        "mode_count_histogram": {},
+        "ownership_tuple_arity_histogram": {
+          "0": 40,
+          "1": 120
+        },
+        "projected_root_support_widths": [
+          {
+            "clients": 2,
+            "predicate": "inv",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "inv",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "inv",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "inv",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "inv",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "inv",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "inv",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "inv",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "inv",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_0_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_0_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_0_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_0_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_0_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_0_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_0_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_0_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_0_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_0_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_1_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_2_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_2_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_0_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_0_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_0_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_0_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_2_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_2_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_0_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_0_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_0_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_0_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_2_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_2_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_1_0",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_1_0",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_1_0",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_1_0",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_2_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 2,
+            "predicate": "x_2_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 3,
+            "predicate": "x_3_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_1_1",
+            "subset": [
+              0
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_1_1",
+            "subset": [
+              1
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_1_1",
+            "subset": [
+              2
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          },
+          {
+            "clients": 4,
+            "predicate": "x_4_1_1",
+            "subset": [
+              3
+            ],
+            "uint64_mask_bytes": 8,
+            "uint64_words": 1,
+            "width": 7
+          }
+        ],
+        "selected_aig_cones": [
+          {
+            "aag": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_2.cert.aag",
+            "gates_traversed": 56,
+            "root_literals": [
+              85,
+              103,
+              113,
+              123,
+              133,
+              143,
+              153
+            ],
+            "shared_memo": true
+          },
+          {
+            "aag": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_3.cert.aag",
+            "gates_traversed": 75,
+            "root_literals": [
+              109,
+              131,
+              141,
+              151,
+              161,
+              171,
+              181,
+              191,
+              201
+            ],
+            "shared_memo": true
+          },
+          {
+            "aag": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_4.cert.aag",
+            "gates_traversed": 94,
+            "root_literals": [
+              133,
+              159,
+              169,
+              179,
+              189,
+              199,
+              209,
+              219,
+              229,
+              239,
+              249
+            ],
+            "shared_memo": true
+          },
+          {
+            "aag": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_15.game.aag",
+            "gates_traversed": 788,
+            "root_literals": [
+              854,
+              857,
+              862,
+              865,
+              915,
+              917,
+              919,
+              969,
+              971,
+              973,
+              1023,
+              1025,
+              1027,
+              1077,
+              1079,
+              1081,
+              1131,
+              1133,
+              1135,
+              1185,
+              1187,
+              1189,
+              1239,
+              1241,
+              1243,
+              1293,
+              1295,
+              1297,
+              1347,
+              1349,
+              1351,
+              1401,
+              1403,
+              1405,
+              1455,
+              1457,
+              1459,
+              1509,
+              1511,
+              1513,
+              1563,
+              1565,
+              1567,
+              1617,
+              1619,
+              1621,
+              1671,
+              1673,
+              1675,
+              1705,
+              1707,
+              1709,
+              1713,
+              1715,
+              1717,
+              1719,
+              1721,
+              1723,
+              1725,
+              1727,
+              1729,
+              1731,
+              1733,
+              1735,
+              1737,
+              1739,
+              1741,
+              1743,
+              1747,
+              66,
+              70
+            ],
+            "shared_memo": true
+          }
+        ],
+        "subset_reuse": [
+          {
+            "clients": 2,
+            "subset": [
+              0
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 2,
+            "subset": [
+              1
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 3,
+            "subset": [
+              0
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 3,
+            "subset": [
+              1
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 3,
+            "subset": [
+              2
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 4,
+            "subset": [
+              0
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 4,
+            "subset": [
+              1
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 4,
+            "subset": [
+              2
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 4,
+            "subset": [
+              3
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "projection": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              0
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              1
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              2
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              3
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              4
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              5
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              6
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              7
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              8
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              9
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              10
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              11
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              12
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              13
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          },
+          {
+            "clients": 15,
+            "subset": [
+              14
+            ],
+            "uses": 65,
+            "uses_by_operation": {
+              "instantiation": 65
+            }
+          }
+        ],
+        "uint64_variable_mask_word_length_histogram": {
+          "1": 585
+        }
+      },
+      "elapsed_s": 5.889994841010775,
+      "environment": {
+        "binaries": {
+          "tlsfcertcheck": {
+            "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+            "sha256": "65fd3dd9fc9ad3c1a203662fa4c4def3cce68fce5504f6033dd850077d416f84"
+          },
+          "tlsfsolve": {
+            "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+            "sha256": "80892fef82fc5a1297c785e5a16c52e88ed849fa13f5cdbcf5ec30bc1f4d210e"
+          }
+        },
+        "binding_module_candidates": [
+          "/usr/local/lib64/python3.13/site-packages/buddy.py"
+        ],
+        "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+        "buddy_adapter": {
+          "hash_cache": {
+            "hits": 1,
+            "misses": 4,
+            "wall_s": 0.0016008589882403612
+          },
+          "libbddx": "/usr/local/lib/libbddx.so.0.0.0",
+          "max_variable_count": 2097150,
+          "path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so",
+          "sidecar": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so.json",
+          "sidecar_schema": "acacia-buddy-veccompose-adapter-v2",
+          "symbol_address": 140463277267251
+        },
+        "buddy_binding": {
+          "extension": "/usr/local/lib64/python3.13/site-packages/_buddy.cpython-313-x86_64-linux-gnu.so",
+          "loaded_shared_objects": [
+            "/usr/local/lib/libbddx.so.0.0.0"
+          ],
+          "module": "/usr/local/lib64/python3.13/site-packages/buddy.py",
+          "version_number": 23,
+          "version_string": "BuDDy -  release 2.3"
+        },
+        "compose_route": "native_veccompose",
+        "extension_module_candidates": [
+          "/usr/local/lib64/python3.13/site-packages/_buddy.cpython-313-x86_64-linux-gnu.so"
+        ],
+        "interpreter": {
+          "executable": "/usr/bin/python3.13",
+          "version": "3.13.15 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+        },
+        "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+      },
+      "instances": [
+        {
+          "clients": 2,
+          "family": "amba_decomposed_lock",
+          "game": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_2.game.aag",
+          "role": "seed"
+        },
+        {
+          "clients": 3,
+          "family": "amba_decomposed_lock",
+          "game": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_3.game.aag",
+          "role": "seed"
+        },
+        {
+          "clients": 4,
+          "family": "amba_decomposed_lock",
+          "game": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_4.game.aag",
+          "role": "seed"
+        },
+        {
+          "clients": 15,
+          "family": "amba_decomposed_lock",
+          "game": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_15.game.aag",
+          "role": "target"
+        }
+      ],
+      "outcome": {
+        "family": "amba_decomposed_lock",
+        "target": 15,
+        "verdict": "CANDIDATE_BUILT"
+      },
+      "phases": {
+        "bdd_existential_quantification": {
+          "calls": 585,
+          "wall_s": 0.0007325166370719671
+        },
+        "bdd_projection_relabel": {
+          "calls": 2961,
+          "wall_s": 0.30618219496682286
+        },
+        "bdd_relabel_rename": {
+          "calls": 2376,
+          "wall_s": 0.3025983376428485
+        },
+        "export": {
+          "calls": 129,
+          "wall_s": 0.7464409079402685
+        },
+        "from_aag": {
+          "calls": 4,
+          "wall_s": 0.0021527959615923464
+        },
+        "instantiate_templates": {
+          "calls": 65,
+          "wall_s": 0.0529596260166727
+        },
+        "mode_specialization": {
+          "calls": 0,
+          "wall_s": 0.0
+        },
+        "policy_construction_skolemization": {
+          "calls": 0,
+          "wall_s": 0.0
+        },
+        "projection_metadata": {
+          "calls": 1365,
+          "wall_s": 0.020031683379784226
+        },
+        "seed_monitor_construction": {
+          "calls": 3,
+          "wall_s": 0.19801046699285507
+        },
+        "seed_solves": {
+          "calls": 3,
+          "wall_s": 0.06862448190804571
+        },
+        "substitute_variables": {
+          "calls": 65,
+          "wall_s": 4.104235773032997
+        },
+        "support_extraction": {
+          "calls": 3798,
+          "wall_s": 0.03266452340176329
+        },
+        "target_check": {
+          "calls": 0,
+          "wall_s": 0.0
+        },
+        "target_monitor_construction": {
+          "calls": 1,
+          "wall_s": 0.10547071596374735
+        },
+        "target_solve": {
+          "calls": 0,
+          "wall_s": 0.0
+        },
+        "variable_cube_construction": {
+          "calls": 9,
+          "wall_s": 0.0001255980459973216
+        }
+      },
+      "schema": "acacia-gr1-s0-diagnostics-v1",
+      "schema_version": 1,
+      "status": "completed",
+      "tool": "generalize_gr1",
+      "variable_layout": {
+        "blocks": {
+          "canonical_templates": {
+            "size": 30,
+            "start": 324
+          },
+          "composition": {
+            "size": 138,
+            "start": 85
+          },
+          "policy_counter": {
+            "size": 16,
+            "start": 223
+          },
+          "policy_game": {
+            "size": 85,
+            "start": 239
+          },
+          "public": {
+            "size": 85,
+            "start": 0
+          }
+        },
+        "public_letter_count": 32,
+        "public_state_count": 53,
+        "required_variables": 354,
+        "sha256": "bda6b590c2794923e197a5fd2d6f83b4ed4352683f0a44da727938e1e1603102",
+        "variable_limit": null
+      }
+    },
+    "censored": [],
+    "checker_mode_attempts": [
+      {
+        "label": "target-15",
+        "mode_count": 17,
+        "node_cap": 67108864,
+        "side": "system"
+      }
+    ],
+    "checker_stats": {
+      "attempts": [
+        {
+          "certificate_side": "system",
+          "error": null,
+          "label": "target-15",
+          "mode_count": 17,
+          "node_cap": 67108864,
+          "returncode": 0,
+          "stats": {
+            "aig_gates_visited": 1045,
+            "cache_cap": 67108864,
+            "final_status": "REGION_VERIFIED",
+            "node_cap": 67108864,
+            "peak_live_nodes_sample": 8192001,
+            "policy_counter_constants": 0,
+            "policy_cross_mode_root_reuses": 0,
+            "policy_dependent_gates_per_mode": 0,
+            "policy_full_cache_modes": 0,
+            "policy_independent_gates": 0,
+            "policy_independent_roots": 0,
+            "policy_mode_builds": 0,
+            "policy_specialized_gates": 0,
+            "policy_unspecialized_gates": 0,
+            "proof_seconds": 6.356277346,
+            "region_certificate_roots": 113,
+            "region_game_roots": 72,
+            "region_layer_seconds": 0.817557195,
+            "region_layers": 85,
+            "region_mode_seconds": 6.356185961,
+            "region_modes": 17,
+            "requested_roots": 185,
+            "setup_seconds": 0.175759455,
+            "successor_applications": 153,
+            "successor_substitutions": 17
+          }
+        }
+      ],
+      "mode": "stream",
+      "supported": true
+    },
+    "counters": {
+      "bdd_to_aig_nodes_visited": 229685,
+      "bdd_to_aig_walks": 129,
+      "bdd_veccompose_calls": 65,
+      "from_aag_calls": 4,
+      "from_aag_gates_traversed": 1013,
+      "from_aag_roots": 98,
+      "game_functions_cache_misses": 1,
+      "predicate_template_cache_misses": 65,
+      "relabel_bdd_replace_calls": 2375,
+      "relabel_identity_calls": 1,
+      "subset_metadata_cache_hits": 1536,
+      "subset_metadata_cache_misses": 24,
+      "substitute_variables_calls": 65,
+      "support_cache_hits": 174,
+      "support_cache_misses": 21
+    },
+    "diagnostic_errors": [],
+    "distributions": {
+      "client_count_histogram": {},
+      "distinct_subset_count": 0,
+      "mode_count_basis": "actual_checker_attempts",
+      "mode_count_histogram": {
+        "17": 1
+      },
+      "ownership_tuple_arity_histogram": {},
+      "projected_root_support_widths": [],
+      "selected_aig_cones": [],
+      "subset_reuse": [],
+      "uint64_variable_mask_word_length_histogram": {}
+    },
+    "elapsed_s": 12.650957791949622,
+    "environment": {
+      "binaries": {
+        "tlsfcertcheck": {
+          "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+          "sha256": "65fd3dd9fc9ad3c1a203662fa4c4def3cce68fce5504f6033dd850077d416f84"
+        },
+        "tlsfsolve": {
+          "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+          "sha256": "80892fef82fc5a1297c785e5a16c52e88ed849fa13f5cdbcf5ec30bc1f4d210e"
+        }
+      },
+      "binding_module_candidates": [
+        "/usr/local/lib64/python3.13/site-packages/buddy.py"
+      ],
+      "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+      "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so",
+      "compose_route": "native_veccompose",
+      "extension_module_candidates": [
+        "/usr/local/lib64/python3.13/site-packages/_buddy.cpython-313-x86_64-linux-gnu.so"
+      ],
+      "interpreter": {
+        "executable": "/usr/bin/python3.13",
+        "version": "3.13.15 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+      },
+      "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+    },
+    "outcome": {
+      "family": "amba_decomposed_lock",
+      "reason": "",
+      "target": 15,
+      "verdict": "VERIFIED"
+    },
+    "phases": {
+      "bdd_existential_quantification": {
+        "calls": 585,
+        "wall_s": 0.0007325166370719671
+      },
+      "bdd_projection_relabel": {
+        "calls": 2961,
+        "wall_s": 0.30618219496682286
+      },
+      "bdd_relabel_rename": {
+        "calls": 2376,
+        "wall_s": 0.3025983376428485
+      },
+      "candidate_builder": {
+        "calls": 1,
+        "wall_s": 6.053754061984364
+      },
+      "export": {
+        "calls": 129,
+        "wall_s": 0.7464409079402685
+      },
+      "from_aag": {
+        "calls": 4,
+        "wall_s": 0.0021527959615923464
+      },
+      "instantiate_templates": {
+        "calls": 65,
+        "wall_s": 0.0529596260166727
+      },
+      "mode_specialization": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "policy_construction_skolemization": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "projection_metadata": {
+        "calls": 1365,
+        "wall_s": 0.020031683379784226
+      },
+      "seed_monitor_construction": {
+        "calls": 3,
+        "wall_s": 0.19801046699285507
+      },
+      "seed_solves": {
+        "calls": 3,
+        "wall_s": 0.06862448190804571
+      },
+      "substitute_variables": {
+        "calls": 65,
+        "wall_s": 4.104235773032997
+      },
+      "support_extraction": {
+        "calls": 3798,
+        "wall_s": 0.03266452340176329
+      },
+      "target_check": {
+        "calls": 1,
+        "wall_s": 6.574347158020828
+      },
+      "target_monitor_construction": {
+        "calls": 1,
+        "wall_s": 0.10547071596374735
+      },
+      "target_solve": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "variable_cube_construction": {
+        "calls": 9,
+        "wall_s": 0.0001255980459973216
+      }
+    },
+    "schema": "acacia-gr1-s0-diagnostics-v1",
+    "schema_version": 1,
+    "status": "completed",
+    "tool": "generalize_gr1"
+  },
+  "outcome": {
+    "certificate": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_15.certificate.aag",
+    "policy": null,
+    "proof_method": "gr1-region-v1",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "REALIZABLE /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-d747fe9355dc-f8zc11xa/generalizer/amba_decomposed_lock_15.certificate.aag",
+    "verdict": "REALIZABLE"
+  },
+  "phases": {
+    "generalize_gr1": {
+      "calls": 1,
+      "wall_s": 12.825152528996114
+    }
+  },
+  "schema": "acacia-gr1-s0-diagnostics-v1",
+  "schema_version": 1,
+  "status": "completed",
+  "tool": "param-lift-campaign"
+}

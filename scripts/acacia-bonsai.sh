@@ -9,7 +9,8 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
-mapfile -t CONFIGS < <(python3 "$REPO_ROOT/scripts/acacia-config.py" list-group docker_default)
+# Checked against docker_default in the registry by test_acacia_config.py.
+mapfile -t CONFIGS < "$REPO_ROOT/config/docker-default.list"
 
 usage() {
     cat <<EOF

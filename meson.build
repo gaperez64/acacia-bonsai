@@ -16,7 +16,17 @@ spot_dep = dependency ('libspot')
 bddx_dep = dependency ('libbddx')  # Spot's copy of BuDDy
 posets_dep = dependency ('posets')
 tlsf_deps = []
-if get_option ('acacia_enable_tlsf_frontend')
+enable_tlsf_frontend = get_option ('acacia_enable_tlsf_frontend') or get_option ('acacia_native_arms')
+native_test_hooks = get_option ('acacia_native_arms') and \
+  get_option ('buildtype') in ['debug', 'debugoptimized'] and \
+  get_option ('acacia_compiler_profile') == 'debug'
+if get_option ('acacia_native_arms')
+  tlsf_native = subproject ('tlsf-tools', default_options : [
+    'cpp_std=c++23', 'native_gr1=enabled', 'oxidd=enabled',
+    'research_tools=false',
+  ])
+  tlsf_deps += tlsf_native.get_variable ('tlsf_dep')
+elif enable_tlsf_frontend
   tlsf_deps += dependency (
     'tlsf',
     fallback : ['tlsf-tools', 'tlsf_dep'],
@@ -174,11 +184,12 @@ else
 endif
 build_conf.set ('ACACIA_K_SCHEDULE',
                 'acacia::k_schedule::kind::' + get_option ('acacia_k_schedule'))
-if get_option ('acacia_enable_tlsf_frontend')
+if enable_tlsf_frontend
   build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 1)
 else
   build_conf.set ('ACACIA_ENABLE_TLSF_FRONTEND', 0)
 endif
+build_conf.set ('ACACIA_NATIVE_ARMS', get_option ('acacia_native_arms') ? 1 : 0)
 
 if get_option ('acacia_simd_is_max')
   build_conf.set ('SIMD_IS_MAX', 'true')

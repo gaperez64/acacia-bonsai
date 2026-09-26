@@ -14,7 +14,7 @@ ab_sources = [
   'solver/solve_game.cc',
   'solver/solve_game_vector.cc',
 ]
-if get_option ('acacia_enable_tlsf_frontend')
+if enable_tlsf_frontend
   ab_sources += 'tlsf_frontend.cc'
 endif
 
@@ -29,6 +29,15 @@ ab_exe = executable ('acacia-bonsai', ab_sources, version_h,
                      install: true,
                      install_tag: 'cli',
                      dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+
+if native_test_hooks
+  native_test_exe = executable ('acacia-bonsai-native-test', ab_sources, version_h,
+    link_with : closure_buchi_provider_lib,
+    include_directories : inc,
+    cpp_args : ['-DACACIA_NATIVE_TEST_HOOKS=1'],
+    install : false,
+    dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep] + tlsf_deps)
+endif
 
 if get_option('build_research_tools')
   acacia_spot_provider_replay_exe = executable(
@@ -73,7 +82,7 @@ if get_option('build_research_tools')
     install: false,
     dependencies: [posets_dep, spot_dep, bddx_dep, stdsimd_dep],
   )
-  if get_option ('acacia_enable_tlsf_frontend')
+  if enable_tlsf_frontend
     acacia_forced_contradiction_scan_exe = executable(
       'acacia-forced-contradiction-scan',
       [

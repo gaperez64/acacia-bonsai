@@ -14,6 +14,7 @@ import sys
 import threading
 import time
 import uuid
+from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Callable
@@ -520,6 +521,7 @@ def run_systemd_scope(
     capture_consumer: Callable[[str], None] | None = None,
     allowed_cpus: str | None = None,
     cpu_quota: str | None = None,
+    scope_env: Mapping[str, str] | None = None,
 ) -> RunResult:
     """Run cmd in a resource-limited user scope and stop the scope on timeout.
 
@@ -572,6 +574,15 @@ def run_systemd_scope(
         scoped_cmd.append(f"--property=AllowedCPUs={allowed_cpus}")
     if cpu_quota is not None:
         scoped_cmd.append(f"--property=CPUQuota={cpu_quota}")
+    # A transient scope receives the user manager's environment, not arbitrary
+    # additions made to the systemd-run client's environment.  Keep this
+    # opt-in so every existing campaign argv stays unchanged, while callers
+    # which need child-only metadata can explicitly propagate it through the
+    # manager boundary.
+    if scope_env is not None:
+        scoped_cmd.extend(
+            f"--setenv={name}={value}" for name, value in sorted(scope_env.items())
+        )
     scoped_cmd += [*cmd]
     started = time.monotonic()
     proc = subprocess.Popen(

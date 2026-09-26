@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_verified",
+  "capability": {
+    "arity": 2,
+    "family": "arbiter_on_inpchange",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "real-proposal",
+    "template": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/arbiter_on_inpchange.tlsf",
+    "template_sha256": "fb63b0d2e20ab1d3eeb6fc763009926229006f07ae9405247d29d215fd23af93"
+  },
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/arbiter_on_inpchange_pb_6_pe_.ltl.5bd24466f29244569bbe7ed70f8342df.json.lift-evidence.json",
+  "evidence_sha256": "1d3f493ff5bd3824554a7c9c595eb147ada66cac02c90344d162448c58c0db41",
+  "fallback_remaining": null,
+  "fallback_start": null,
+  "input_sha256": "0db85b1ec966e69814725edea217a4dff7ee47a05f124c39d05408e5cd780373",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/arbiter_on_inpchange_pb_6_pe_.tlsf",
+    "--budget",
+    "39.926239",
+    "--eligibility-budget-seconds",
+    "1.0",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-nfq9sl_c/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/arbiter_on_inpchange_pb_6_pe_.ltl.5bd24466f29244569bbe7ed70f8342df.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 15.903868581051938,
+  "lift_exit": 0,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "arbiter_on_inpchange",
+    "reason": "source-verified capability arbiter_on_inpchange",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_check",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "lifting"
+}

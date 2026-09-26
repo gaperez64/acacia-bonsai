@@ -1,0 +1,92 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+N-a	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT	17
+N-a	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT	17
+N-a	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT	17
+N-a	amba_case_study_unreal_pb_2_pe_.ltl				true	TIMEOUT	17
+N-a	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT	17
+N-a	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	17
+N-a	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT	17
+N-a	amba_decomposed_lock_pb_10_pe_.ltl	17	REALIZABLE	1.0987696490483359	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_11_pe_.ltl	17	REALIZABLE	1.3576480329502374	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_12_pe_.ltl	17	REALIZABLE	1.718321023043245	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_13_pe_.ltl	17	REALIZABLE	2.617430943995714	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_14_pe_.ltl	17	REALIZABLE	4.98800965200644	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT	17
+N-a	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT	17
+N-a	amba_decomposed_lock_pb_30_pe_.ltl				true	TIMEOUT	17
+N-a	amba_decomposed_lock_pb_5_pe_.ltl	17	REALIZABLE	0.8881681780330837	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_6_pe_.ltl	17	REALIZABLE	0.9445888359332457	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_7_pe_.ltl	17	REALIZABLE	0.9491449829656631	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_8_pe_.ltl	17	REALIZABLE	0.9862446470651776	false	REALIZABLE	17
+N-a	amba_decomposed_lock_pb_9_pe_.ltl	17	REALIZABLE	1.0278194639831781	false	REALIZABLE	17
+N-a	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT	17
+N-a	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT	17
+N-a	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT	17
+N-a	arbiter_pb_10_pe_.ltl	17	REALIZABLE	2.654034601058811	false	REALIZABLE	17
+N-a	arbiter_pb_5_pe_.ltl	17	REALIZABLE	1.1147261259611696	false	REALIZABLE	17
+N-a	arbiter_pb_6_pe_.ltl	17	REALIZABLE	1.2816598009085283	false	REALIZABLE	17
+N-a	arbiter_pb_7_pe_.ltl	17	REALIZABLE	1.4656008000019938	false	REALIZABLE	17
+N-a	arbiter_pb_8_pe_.ltl	17	REALIZABLE	1.7242418269161135	false	REALIZABLE	17
+N-a	arbiter_pb_9_pe_.ltl	17	REALIZABLE	2.0955074049998075	false	REALIZABLE	17
+N-a	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT	17
+N-a	arbiter_with_buffer_pb_5_pe_.ltl	17	REALIZABLE	0.9008931389544159	false	REALIZABLE	17
+N-a	arbiter_with_buffer_pb_6_pe_.ltl	17	REALIZABLE	1.0527182458899915	false	REALIZABLE	17
+N-a	arbiter_with_buffer_pb_7_pe_.ltl	17	REALIZABLE	1.4921104710083455	false	REALIZABLE	17
+N-a	arbiter_with_buffer_pb_8_pe_.ltl	17	REALIZABLE	3.0255430770339444	false	REALIZABLE	17
+N-a	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT	17
+N-a	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT	17
+N-a	arbiter_with_cancel_pb_5_pe_.ltl	17	REALIZABLE	1.6666030168998986	false	REALIZABLE	17
+N-a	arbiter_with_cancel_pb_6_pe_.ltl	17	REALIZABLE	2.083312971983105	false	REALIZABLE	17
+N-a	arbiter_with_cancel_pb_7_pe_.ltl	17	REALIZABLE	2.911383601021953	false	REALIZABLE	17
+N-a	arbiter_with_cancel_pb_8_pe_.ltl	17	REALIZABLE	4.718740315060131	false	REALIZABLE	17
+N-a	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT	17
+N-a	collector_v1_pb_11_pe_.ltl				true	TIMEOUT	17
+N-a	collector_v1_pb_12_pe_.ltl				true	TIMEOUT	17
+N-a	collector_v1_pb_13_pe_.ltl				true	TIMEOUT	17
+N-a	collector_v1_pb_14_pe_.ltl				true	TIMEOUT	17
+N-a	collector_v1_pb_15_pe_.ltl				true	TIMEOUT	17
+N-a	collector_v1_pb_5_pe_.ltl	17	REALIZABLE	5.699613312957808	false	REALIZABLE	17
+N-a	collector_v1_pb_7_pe_.ltl	17	REALIZABLE	5.6681878180243075	false	REALIZABLE	17
+N-a	collector_v1_pb_9_pe_.ltl	17	REALIZABLE	8.408575444016606	false	REALIZABLE	17
+N-a	load_balancer_pb_10_pe_.ltl				true	TIMEOUT	17
+N-a	load_balancer_pb_11_pe_.ltl				true	TIMEOUT	17
+N-a	load_balancer_pb_5_pe_.ltl	17	REALIZABLE	1.3360466288868338	false	REALIZABLE	17
+N-a	load_balancer_pb_6_pe_.ltl	17	REALIZABLE	1.6511833450058475	false	REALIZABLE	17
+N-a	load_balancer_pb_7_pe_.ltl	17	REALIZABLE	2.36755731201265	false	REALIZABLE	17
+N-a	load_balancer_pb_8_pe_.ltl	17	REALIZABLE	4.23990154301282	false	REALIZABLE	17
+N-a	load_balancer_pb_9_pe_.ltl				true	TIMEOUT	17
+N-a	load_balancer_unreal2_pb_2_pe_.ltl	17	REALIZABLE	0.4341462349984795	false	REALIZABLE	17
+N-a	load_balancer_unreal2_pb_3_pe_.ltl	17	UNREALIZABLE	0.5825221439590678	false	UNREALIZABLE	17
+N-a	load_balancer_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.6357835429953411	false	UNREALIZABLE	17
+N-a	load_balancer_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	0.9014234560308978	false	UNREALIZABLE	17
+N-a	load_balancer_unreal2_pb_6_pe_.ltl	17	UNREALIZABLE	2.2481586209032685	false	UNREALIZABLE	17
+N-a	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT	17
+N-a	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT	17
+N-a	prioritized_arbiter_pb_10_pe_.ltl	17	REALIZABLE	1.0451651299372315	false	REALIZABLE	17
+N-a	prioritized_arbiter_pb_12_pe_.ltl	17	REALIZABLE	1.9053449069615453	false	REALIZABLE	17
+N-a	prioritized_arbiter_pb_5_pe_.ltl	17	REALIZABLE	0.8056361200287938	false	REALIZABLE	17
+N-a	prioritized_arbiter_pb_6_pe_.ltl	17	REALIZABLE	0.8475985010154545	false	REALIZABLE	17
+N-a	prioritized_arbiter_pb_7_pe_.ltl	17	REALIZABLE	0.8842271829489619	false	REALIZABLE	17
+N-a	prioritized_arbiter_pb_8_pe_.ltl	17	REALIZABLE	0.9112347760237753	false	REALIZABLE	17
+N-a	prioritized_arbiter_pb_9_pe_.ltl	17	REALIZABLE	0.9509225779911503	false	REALIZABLE	17
+N-a	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT	17
+N-a	prioritized_arbiter_unreal2_pb_10_pe_.ltl	17	UNREALIZABLE	5.521306907059625	false	UNREALIZABLE	17
+N-a	prioritized_arbiter_unreal2_pb_2_pe_.ltl	17	UNREALIZABLE	0.538166927988641	false	UNREALIZABLE	17
+N-a	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT	17
+N-a	prioritized_arbiter_unreal2_pb_3_pe_.ltl	17	UNREALIZABLE	0.5367811669129878	false	UNREALIZABLE	17
+N-a	prioritized_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.5521207950077951	false	UNREALIZABLE	17
+N-a	prioritized_arbiter_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	0.6010360340587795	false	UNREALIZABLE	17
+N-a	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT	17
+N-a	prioritized_arbiter_unreal2_pb_6_pe_.ltl	17	UNREALIZABLE	0.6200974339153618	false	UNREALIZABLE	17
+N-a	prioritized_arbiter_unreal2_pb_7_pe_.ltl	17	UNREALIZABLE	0.7458270159550011	false	UNREALIZABLE	17
+N-a	prioritized_arbiter_unreal2_pb_8_pe_.ltl	17	UNREALIZABLE	1.0845499739516526	false	UNREALIZABLE	17
+N-a	round_robin_arbiter_unreal2_pb_2_pe_.ltl	17	UNREALIZABLE	0.5780616520205513	false	UNREALIZABLE	17
+N-a	round_robin_arbiter_unreal2_pb_3_pe_.ltl	17	UNREALIZABLE	0.6358923229854554	false	UNREALIZABLE	17
+N-a	round_robin_arbiter_unreal2_pb_4_pe_.ltl	17	UNREALIZABLE	0.9211436670739204	false	UNREALIZABLE	17
+N-a	round_robin_arbiter_unreal2_pb_5_pe_.ltl	17	UNREALIZABLE	2.117202085093595	false	UNREALIZABLE	17
+N-a	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT	17
+N-a	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT	17
+N-a	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT	17
+N-a	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT	17
+N-a	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT	17
+N-a	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT	17

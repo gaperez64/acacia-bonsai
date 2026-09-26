@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://acacia-bonsai.invalid/schemas/gr1-s0-diagnostics-v1.json",
+  "title": "Acacia GR(1) S0 diagnostics",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "tool",
+    "status",
+    "elapsed_s",
+    "phases",
+    "counters",
+    "censored",
+    "environment"
+  ],
+  "properties": {
+    "schema": {
+      "const": "acacia-gr1-s0-diagnostics-v1"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "tool": {
+      "enum": [
+        "generalize_gr1",
+        "param-lift-campaign"
+      ]
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "unknown",
+        "cancelled"
+      ]
+    },
+    "elapsed_s": {
+      "type": "number",
+      "minimum": 0
+    },
+    "phases": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/phase"
+      }
+    },
+    "counters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "censored": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/censored"
+      }
+    },
+    "diagnostic_errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "operation",
+          "type",
+          "message"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "interpreter"
+      ],
+      "properties": {
+        "interpreter": {
+          "type": "object",
+          "required": [
+            "executable",
+            "version"
+          ],
+          "properties": {
+            "executable": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          }
+        },
+        "bindings_site": {
+          "type": "string"
+        },
+        "tlsf_tools_build": {
+          "type": "string"
+        },
+        "binaries": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "checker_stats": {
+      "type": "object"
+    },
+    "bdd_stats": {
+      "type": "object"
+    },
+    "distributions": {
+      "type": "object"
+    },
+    "cgroup_memory_peak": {
+      "$ref": "#/$defs/cgroupMemoryPeak"
+    },
+    "generalizer": {
+      "type": "object"
+    },
+    "instances": {
+      "type": "array"
+    },
+    "outcome": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "phase": {
+      "type": "object",
+      "required": [
+        "calls",
+        "wall_s"
+      ],
+      "properties": {
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wall_s": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "censored": {
+      "type": "object",
+      "required": [
+        "stage",
+        "kind",
+        "elapsed_lower_bound_s",
+        "reason"
+      ],
+      "properties": {
+        "stage": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "phase",
+            "stage"
+          ]
+        },
+        "elapsed_lower_bound_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cgroupMemoryPeak": {
+      "type": "object",
+      "required": [
+        "available",
+        "bytes",
+        "cgroup_path",
+        "source",
+        "sample_point"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "cgroup_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sample_point": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

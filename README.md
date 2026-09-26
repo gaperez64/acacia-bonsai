@@ -34,7 +34,9 @@ it with `docker start -ai acacia`.
 
 The wrappers name no configuration and follow the `docker_default` group. Pass
 a name as the first argument to choose a different shipped configuration, or run
-a wrapper without arguments to list the ones it accepts.
+a wrapper without arguments to list the ones it accepts. The CLI launcher reads
+`config/docker-default.list`, which tests keep aligned with the registry group;
+Python is only needed when compiling configurations.
 
 # Dependencies
 
@@ -52,8 +54,8 @@ Initialize the vendored Posets and TLSF-tools dependencies after cloning:
 ```
 git submodule update --init
 ```
-This is deliberately non-recursive; Acacia disables TLSF-tools' optional
-OxiDD backend.
+This is deliberately non-recursive for the default build. Native GR(1) arms
+require TLSF-tools' OxiDD dependency as well.
 
 The corpus test driver (`tests/check-real-correct.sh`) can optionally run the
 solver under Valgrind (`-V`) or Callgrind (`-c`); no test does so by default,
@@ -108,6 +110,13 @@ build_$preset/src/acacia-bonsai -T spec.tlsf
 `-T/--tlsf FILE` parses TLSF natively and the wrapper accepts TLSF on standard
 input with `--tlsf`. No external TLSF converter is needed at runtime, and
 Moore-target controller conversion happens inside Acacia.
+
+With `-Dacacia_native_arms=true`, the same `acacia-bonsai` binary accepts
+`--arms real:gr1:oxidd`, `--arms unreal:gr1:oxidd`, and
+`--arms real:param-lift:oxidd` with `-T spec.tlsf`. These arms run in process
+and are opt in. The former Python lifting route lives only in
+[the research oracle](benchmarking/gr1-par2-20260923/oracle/README.md) for
+differential tests.
 
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).

@@ -1,0 +1,4 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+arm-5	01.ltl	17	REALIZABLE	0.17063359508756548	false	REALIZABLE	17
+arm-5	CheckAlarm_6bea956e.ltl				true	UNKNOWN	17
+arm-5	AlarmMin_efe2feaf.ltl				true	UNKNOWN	17
