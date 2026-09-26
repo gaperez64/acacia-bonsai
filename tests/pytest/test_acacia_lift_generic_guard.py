@@ -16,10 +16,15 @@ ORACLE_FILES = [ORACLE / "acacia-lift-portfolio.py",
 NATIVE_ROUTE = [ROOT / "src/acacia-bonsai.cc", ROOT / "src/arg_parser.hh",
                 ROOT / "src/portfolio_arm.hh", *(ROOT / "src").glob("native_*.hh"),
                 *(ROOT / "subprojects/tlsf-tools" / path for path in (
-    "src/gr1_check.c", "src/gr1_reduction.cc", "src/gr1_lift.cc",
-    "src/gr1_service.c", "src/pipeline_source.c",
-    "src/main_tlsfsolve.c", "src/main_tlsfcertcheck.c", "src/gr1_oxidd.c",
-    "include/tlsf/oxidd_common.h"))]
+    "src/lib/gr1_check.c", "src/lib/gr1_check_internal.h",
+    "src/lib/gr1_reduction.cc", "src/lib/gr1_lift.cc",
+    "src/lib/gr1_service.c", "src/lib/pipeline.c",
+    "src/lib/pipeline_source.c", "src/lib/pipeline_source_internal.h",
+    "src/lib/spec_parse.c", "src/tools/common/cli.c",
+    "src/lib/gr1_oxidd.c", "src/lib/oxidd_common.c",
+    "src/lib/oxidd_common.h", "src/lib/oxidd_order.c",
+    "include/tlsf/oxidd_options.h",
+    "src/tools/tlsfsolve/main.c", "src/tools/tlsfcertcheck/main.c"))]
 FAMILY_LABELS = (
     "abcg_arbiter", "amba_case_study", "amba_case_study_unreal",
     "amba_decomposed_arbiter", "amba_decomposed_encode", "amba_decomposed_lock",
