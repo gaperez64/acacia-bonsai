@@ -758,3 +758,32 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 - **The frozen leg binaries are unaffected.** `build_perarm_m1` and `build_perarm_m2` stay at their
   recorded revisions and hashes; arms 5 to 7 are measured on tlsf-tools `85e3a31` and OxiDD
   `9158645` + the old patch.
+- **arm-6 leg done** (18:13): 207 UNREALIZABLE, 1,032 UNKNOWN, 285 TIMEOUT. There are no
+  conflicts with any 60 s reference verdict: 200 of its UNREALIZABLE instances are also solved by
+  ltlsynt or B, and all agree. Seven are solved by neither:
+  - `load_balancer_unreal2_pb_6_pe_`
+  - `round_robin_arbiter_unreal1_pb_3_9_pe_`
+  - `round_robin_arbiter_unreal1_pb_4_{6,7,8}_pe_`
+  - `round_robin_arbiter_unreal2_pb_{5,6}_pe_`
+- **arm-1 leg done** (Sep 26, 03:10, about 8.9 h): 525 REALIZABLE, 478 UNKNOWN, 518 TIMEOUT,
+  2 MEMOUT, 1 ERROR. There are no conflicts with the 120 s ltlsynt or B verdicts. The ERROR is
+  `std::bad_alloc` within 0.03 s on `amba_decomposed_lock_pb_30_pe_` (n = 30), an oversized
+  allocation request. It counts as unsolved, never as a verdict; B and ltlsynt time out there
+  anyway. It is a robustness follow-up, not a campaign issue.
+
+## 2026-09-26 — The separate plain-corpus portfolio run is dropped
+
+- **Owner decision:** save the roughly 6 h full 60 s run of the chosen portfolio on the plain
+  corpus. The chosen portfolio's 60 s run on the obfuscated corpus serves two purposes: it checks
+  the virtual-best selection, and it is the Acacia series of the three-way.
+- **Why it is safe.** Selection uses only the plain-corpus per-arm legs, so the obfuscated run
+  stays an independent test. Renaming is verified formula-preserving on all 1,524 inputs
+  (`obfuscation-invariance-summary.md`).
+- **What is lost, and how it is covered.** A shortfall against the virtual best on the obfuscated
+  run could not be attributed to arm interference versus renaming. To keep that distinction
+  cheaply, a stratified plain-corpus smoke run of the chosen portfolio comes first, before the long
+  runs, at 60 s: about 50 instances covering those the virtual best credits to each arm, about
+  30–50 min. A mismatch there points to interference, not renaming.
+- **arm-2 leg done** (Sep 26, 08:47, about 5.6 h): 524 REALIZABLE, 732 UNKNOWN, 265 TIMEOUT,
+  2 MEMOUT, and 1 ERROR (the same `bad_alloc` on `amba_decomposed_lock_pb_30_pe_`). There are no
+  conflicts with the 120 s references.
