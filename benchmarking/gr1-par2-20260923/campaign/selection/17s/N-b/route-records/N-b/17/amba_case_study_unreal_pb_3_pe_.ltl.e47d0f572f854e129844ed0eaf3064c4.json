@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_solve_predicate_tlsfsolve_at_n_3_exact_target_had_no_decisive_export_exit_124_timeout",
+  "capability": {
+    "arity": null,
+    "family": "amba_case_study_unreal",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "exact-game-both-sides",
+    "template": "scripts/acacia_lift/data/templates/tlsf/amba/amba/parametric/amba_case_study_unreal.tlsf",
+    "template_sha256": "4eb061890a918d6c0114965d00bbf0ee661dc63a4b050c4dd9314d87e1d1d83d"
+  },
+  "eligibility_budget_s": 0.8500000000000001,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-b/route-records/N-b/17/amba_case_study_unreal_pb_3_pe_.ltl.e47d0f572f854e129844ed0eaf3064c4.json.lift-evidence.json",
+  "evidence_sha256": "26a44f69124b03089fe4692438ba4499cb8b832ceec996fe7efd3741f687db65",
+  "fallback_remaining": 5.8416154810693115,
+  "fallback_start": 537272.172517077,
+  "input_sha256": "7cd7ef94f50523fee3ac57a3691d0211b0ef26379d618a355485f5c01f390122",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/amba_case_study_unreal_pb_3_pe_.tlsf",
+    "--budget",
+    "11.279996",
+    "--eligibility-budget-seconds",
+    "0.8500000000000001",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-x8c3w7ms/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-b/route-records/N-b/17/amba_case_study_unreal_pb_3_pe_.ltl.e47d0f572f854e129844ed0eaf3064c4.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 11.104796187020838,
+  "lift_exit": 2,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "amba_case_study_unreal",
+    "reason": "source-verified capability amba_case_study_unreal",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_solve",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "fallback-pending"
+}

@@ -1,0 +1,1979 @@
+{
+  "binaries": {
+    "build-L0": {
+      "directory": "subprojects/tlsf-tools/build-L0",
+      "tlsfcertcheck": {
+        "path": "subprojects/tlsf-tools/build-L0/tlsfcertcheck",
+        "sha256": "a7fffaa32b77cb5a13938ccfb02f7d93b6a31ec350d5f2da3e838a1574630d9d",
+        "version": "tlsfcertcheck 1.7 oxidd=yes research=yes simd=scalar"
+      },
+      "tlsfsolve": {
+        "path": "subprojects/tlsf-tools/build-L0/tlsfsolve",
+        "sha256": "afa00abda2afde0a157dd242c080125bcbc222929dcc08d346c088c9c8812bde",
+        "version": "tlsfsolve 1.7 oxidd=yes research=yes simd=scalar diagnostics=no"
+      }
+    },
+    "build-oxidd": {
+      "directory": "subprojects/tlsf-tools/build-oxidd",
+      "tlsfcertcheck": {
+        "path": "subprojects/tlsf-tools/build-oxidd/tlsfcertcheck",
+        "sha256": "6129b071156b9ed530325a48d7ad101b98ca53f75918a5c75c741415160b6f67",
+        "version": "tlsfcertcheck f213093-dirty oxidd=yes research=yes simd=scalar"
+      },
+      "tlsfsolve": {
+        "path": "subprojects/tlsf-tools/build-oxidd/tlsfsolve",
+        "sha256": "9268adb7dfb50503897fd93c85e1fc90fa2e78bb2e615219ec2bdbc8836824f6",
+        "version": "tlsfsolve f213093-dirty oxidd=yes research=yes simd=scalar diagnostics=no"
+      }
+    }
+  },
+  "bindings": {
+    "abi_library": {
+      "resolved_path": "/usr/local/lib/libbddx.so.0.0.0",
+      "sha256": "a991f2049c44e3f3cf9102b7d40d9efc2c5bb2b8a3a1af7d120f7c23c9caf44d",
+      "soname": "libbddx.so.0"
+    },
+    "binding_module": {
+      "path": "/usr/local/lib64/python3.13/site-packages/buddy.py",
+      "sha256": "ab29835895d205e69da2452d1ca4e7413cc03d62755edccadfd056f0a1f9072a"
+    },
+    "extension_module": {
+      "path": "/usr/local/lib64/python3.13/site-packages/_buddy.cpython-313-x86_64-linux-gnu.so",
+      "sha256": "f7da07844f94932b2e3c9ca643d42971f512616a54ee0dba6c40b1bc7090a51f"
+    },
+    "identity": "BuDDy 2.3 SWIG Python binding",
+    "required_constants": [
+      "bddfalse",
+      "bddtrue"
+    ],
+    "required_functions": [
+      "bdd_compose",
+      "bdd_exist",
+      "bdd_forall",
+      "bdd_high",
+      "bdd_init",
+      "bdd_isrunning",
+      "bdd_ite",
+      "bdd_ithvar",
+      "bdd_low",
+      "bdd_nithvar",
+      "bdd_nodecount",
+      "bdd_not",
+      "bdd_setmaxincrease",
+      "bdd_setvarnum",
+      "bdd_simplify",
+      "bdd_support",
+      "bdd_var"
+    ],
+    "version_number": 23,
+    "version_string": "BuDDy -  release 2.3"
+  },
+  "builds": {
+    "build-L0_buildoptions": [
+      {
+        "choices": [
+          "enabled",
+          "disabled",
+          "auto"
+        ],
+        "description": "Override value of all 'auto' features",
+        "machine": "any",
+        "name": "auto_features",
+        "section": "core",
+        "type": "combo",
+        "value": "auto"
+      },
+      {
+        "choices": [
+          "ninja",
+          "vs",
+          "vs2010",
+          "vs2012",
+          "vs2013",
+          "vs2015",
+          "vs2017",
+          "vs2019",
+          "vs2022",
+          "vs2026",
+          "xcode",
+          "none"
+        ],
+        "description": "Backend to use",
+        "machine": "any",
+        "name": "backend",
+        "section": "core",
+        "type": "combo",
+        "value": "ninja"
+      },
+      {
+        "choices": [
+          "vs2022",
+          "vs2026"
+        ],
+        "description": "Setup multiple buildtype-suffixed ninja-backend build directories, and a [builddir]_vs containing a Visual Studio meta-backend with multiple configurations that calls into them",
+        "machine": "any",
+        "name": "genvslite",
+        "section": "core",
+        "type": "combo",
+        "value": "vs2022"
+      },
+      {
+        "choices": [
+          "plain",
+          "debug",
+          "debugoptimized",
+          "release",
+          "minsize",
+          "custom"
+        ],
+        "description": "Build type to use",
+        "machine": "any",
+        "name": "buildtype",
+        "section": "core",
+        "type": "combo",
+        "value": "release"
+      },
+      {
+        "description": "Enable debug symbols and other information",
+        "machine": "any",
+        "name": "debug",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "shared",
+          "static",
+          "both"
+        ],
+        "description": "Default library type",
+        "machine": "any",
+        "name": "default_library",
+        "section": "core",
+        "type": "combo",
+        "value": "shared"
+      },
+      {
+        "choices": [
+          "shared",
+          "static",
+          "auto"
+        ],
+        "description": "Default library type for both_libraries",
+        "machine": "any",
+        "name": "default_both_libraries",
+        "section": "core",
+        "type": "combo",
+        "value": "shared"
+      },
+      {
+        "description": "Default umask to apply on permissions of installed files",
+        "machine": "any",
+        "name": "install_umask",
+        "section": "core",
+        "type": "integer",
+        "value": 18
+      },
+      {
+        "choices": [
+          "mirror",
+          "flat"
+        ],
+        "description": "Build directory layout",
+        "machine": "any",
+        "name": "layout",
+        "section": "core",
+        "type": "combo",
+        "value": "mirror"
+      },
+      {
+        "choices": [
+          "plain",
+          "0",
+          "g",
+          "1",
+          "2",
+          "3",
+          "s"
+        ],
+        "description": "Optimization level",
+        "machine": "any",
+        "name": "optimization",
+        "section": "core",
+        "type": "combo",
+        "value": "3"
+      },
+      {
+        "description": "Whether to try static linking before shared linking",
+        "machine": "any",
+        "name": "prefer_static",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Strip targets on install",
+        "machine": "any",
+        "name": "strip",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "on",
+          "off",
+          "subprojects"
+        ],
+        "description": "Unity build",
+        "machine": "any",
+        "name": "unity",
+        "section": "core",
+        "type": "combo",
+        "value": "off"
+      },
+      {
+        "description": "Unity block size",
+        "machine": "any",
+        "name": "unity_size",
+        "section": "core",
+        "type": "integer",
+        "value": 4
+      },
+      {
+        "choices": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "everything"
+        ],
+        "description": "Compiler warning level to use",
+        "machine": "any",
+        "name": "warning_level",
+        "section": "core",
+        "type": "combo",
+        "value": "3"
+      },
+      {
+        "description": "Treat warnings as errors",
+        "machine": "any",
+        "name": "werror",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "default",
+          "nofallback",
+          "nodownload",
+          "forcefallback",
+          "nopromote"
+        ],
+        "description": "Wrap mode",
+        "machine": "any",
+        "name": "wrap_mode",
+        "section": "core",
+        "type": "combo",
+        "value": "default"
+      },
+      {
+        "description": "Force fallback for those subprojects",
+        "machine": "any",
+        "name": "force_fallback_for",
+        "section": "core",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Activate Visual Studio environment",
+        "machine": "any",
+        "name": "vsenv",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Use OMF format on OS/2",
+        "machine": "any",
+        "name": "os2_emxomf",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Generate pkgconfig files as relocatable",
+        "machine": "any",
+        "name": "pkgconfig.relocatable",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Whether to compile bytecode",
+        "machine": "any",
+        "name": "python.bytecompile",
+        "section": "core",
+        "type": "integer",
+        "value": 0
+      },
+      {
+        "choices": [
+          "auto",
+          "prefix",
+          "system",
+          "venv"
+        ],
+        "description": "Which python environment to install to",
+        "machine": "any",
+        "name": "python.install_env",
+        "section": "core",
+        "type": "combo",
+        "value": "prefix"
+      },
+      {
+        "description": "Directory for site-specific, platform-specific files.",
+        "machine": "any",
+        "name": "python.platlibdir",
+        "section": "core",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Directory for site-specific, non-platform-specific files.",
+        "machine": "any",
+        "name": "python.purelibdir",
+        "section": "core",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Whether to allow use of the Python Limited API",
+        "machine": "any",
+        "name": "python.allow_limited_api",
+        "section": "core",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Config file containing the build details for the target Python installation.",
+        "machine": "any",
+        "name": "python.build_config",
+        "section": "core",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "List of additional paths for pkg-config to search",
+        "machine": "host",
+        "name": "pkg_config_path",
+        "section": "core",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "List of additional prefixes for cmake to search",
+        "machine": "host",
+        "name": "cmake_prefix_path",
+        "section": "core",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Maximum number of linker processes to run or 0 for no limit",
+        "machine": "any",
+        "name": "backend_max_links",
+        "section": "backend",
+        "type": "integer",
+        "value": 0
+      },
+      {
+        "description": "Directory to store ThinLTO cache objects",
+        "machine": "any",
+        "name": "b_thinlto_cache_dir",
+        "section": "base",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "choices": [
+          "true",
+          "false",
+          "if-release"
+        ],
+        "description": "Disable asserts",
+        "machine": "any",
+        "name": "b_ndebug",
+        "section": "base",
+        "type": "combo",
+        "value": "if-release"
+      },
+      {
+        "choices": [
+          "off",
+          "generate",
+          "use"
+        ],
+        "description": "Use profile guided optimization",
+        "machine": "any",
+        "name": "b_pgo",
+        "section": "base",
+        "type": "combo",
+        "value": "off"
+      },
+      {
+        "description": "Use -Wl,--no-undefined when linking",
+        "machine": "any",
+        "name": "b_lundef",
+        "section": "base",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "choices": [
+          "auto",
+          "always",
+          "never"
+        ],
+        "description": "Use colored output",
+        "machine": "any",
+        "name": "b_colorout",
+        "section": "base",
+        "type": "combo",
+        "value": "always"
+      },
+      {
+        "description": "Build executables as position independent",
+        "machine": "any",
+        "name": "b_pie",
+        "section": "base",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Enable coverage tracking.",
+        "machine": "any",
+        "name": "b_coverage",
+        "section": "base",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Use -Wl,--as-needed when linking",
+        "machine": "any",
+        "name": "b_asneeded",
+        "section": "base",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Code sanitizer to use",
+        "machine": "any",
+        "name": "b_sanitize",
+        "section": "base",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Use LLVM ThinLTO caching for faster incremental builds",
+        "machine": "any",
+        "name": "b_thinlto_cache",
+        "section": "base",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Use link time optimization",
+        "machine": "any",
+        "name": "b_lto",
+        "section": "base",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Build static libraries as position independent",
+        "machine": "any",
+        "name": "b_staticpic",
+        "section": "base",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Use precompiled headers",
+        "machine": "any",
+        "name": "b_pch",
+        "section": "base",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Use multiple threads for Link Time Optimization",
+        "machine": "any",
+        "name": "b_lto_threads",
+        "section": "base",
+        "type": "integer",
+        "value": 0
+      },
+      {
+        "description": "Extra arguments passed to the c compiler",
+        "machine": "host",
+        "name": "c_args",
+        "section": "compiler",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Extra arguments passed to the c linker",
+        "machine": "host",
+        "name": "c_link_args",
+        "section": "compiler",
+        "type": "array",
+        "value": []
+      },
+      {
+        "choices": [
+          "none",
+          "c89",
+          "c99",
+          "c11",
+          "c17",
+          "c18",
+          "c2x",
+          "c23",
+          "c2y",
+          "gnu89",
+          "gnu99",
+          "gnu11",
+          "gnu17",
+          "gnu18",
+          "gnu2x",
+          "gnu23",
+          "gnu2y"
+        ],
+        "description": "c language standard to use",
+        "machine": "host",
+        "name": "c_std",
+        "section": "compiler",
+        "type": "combo",
+        "value": "none"
+      },
+      {
+        "description": "Extra arguments passed to the cpp compiler",
+        "machine": "host",
+        "name": "cpp_args",
+        "section": "compiler",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Extra arguments passed to the cpp linker",
+        "machine": "host",
+        "name": "cpp_link_args",
+        "section": "compiler",
+        "type": "array",
+        "value": []
+      },
+      {
+        "choices": [
+          "none",
+          "c++98",
+          "c++03",
+          "c++11",
+          "c++14",
+          "c++17",
+          "c++1z",
+          "c++2a",
+          "c++20",
+          "c++23",
+          "c++26",
+          "gnu++98",
+          "gnu++03",
+          "gnu++11",
+          "gnu++14",
+          "gnu++17",
+          "gnu++1z",
+          "gnu++2a",
+          "gnu++20",
+          "gnu++23",
+          "gnu++26"
+        ],
+        "description": "cpp language standard to use",
+        "machine": "host",
+        "name": "cpp_std",
+        "section": "compiler",
+        "type": "combo",
+        "value": "c++17"
+      },
+      {
+        "choices": [
+          "none",
+          "default",
+          "a",
+          "s",
+          "sc"
+        ],
+        "description": "C++ exception handling type.",
+        "machine": "host",
+        "name": "cpp_eh",
+        "section": "compiler",
+        "type": "combo",
+        "value": "default"
+      },
+      {
+        "description": "Enable RTTI",
+        "machine": "host",
+        "name": "cpp_rtti",
+        "section": "compiler",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "STL debug mode",
+        "machine": "host",
+        "name": "cpp_debugstl",
+        "section": "compiler",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "false",
+          "true"
+        ],
+        "description": "Use #import std.",
+        "machine": "host",
+        "name": "cpp_importstd",
+        "section": "compiler",
+        "type": "combo",
+        "value": "false"
+      },
+      {
+        "description": "Installation prefix",
+        "machine": "any",
+        "name": "prefix",
+        "section": "directory",
+        "type": "string",
+        "value": "/usr/local"
+      },
+      {
+        "description": "Executable directory",
+        "machine": "any",
+        "name": "bindir",
+        "section": "directory",
+        "type": "string",
+        "value": "bin"
+      },
+      {
+        "description": "Data file directory",
+        "machine": "any",
+        "name": "datadir",
+        "section": "directory",
+        "type": "string",
+        "value": "share"
+      },
+      {
+        "description": "Header file directory",
+        "machine": "any",
+        "name": "includedir",
+        "section": "directory",
+        "type": "string",
+        "value": "include"
+      },
+      {
+        "description": "Info page directory",
+        "machine": "any",
+        "name": "infodir",
+        "section": "directory",
+        "type": "string",
+        "value": "share/info"
+      },
+      {
+        "description": "Library directory",
+        "machine": "any",
+        "name": "libdir",
+        "section": "directory",
+        "type": "string",
+        "value": "lib64"
+      },
+      {
+        "description": "Licenses directory",
+        "machine": "any",
+        "name": "licensedir",
+        "section": "directory",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Library executable directory",
+        "machine": "any",
+        "name": "libexecdir",
+        "section": "directory",
+        "type": "string",
+        "value": "libexec"
+      },
+      {
+        "description": "Locale data directory",
+        "machine": "any",
+        "name": "localedir",
+        "section": "directory",
+        "type": "string",
+        "value": "share/locale"
+      },
+      {
+        "description": "Localstate data directory",
+        "machine": "any",
+        "name": "localstatedir",
+        "section": "directory",
+        "type": "string",
+        "value": "/var/local"
+      },
+      {
+        "description": "Manual page directory",
+        "machine": "any",
+        "name": "mandir",
+        "section": "directory",
+        "type": "string",
+        "value": "share/man"
+      },
+      {
+        "description": "System executable directory",
+        "machine": "any",
+        "name": "sbindir",
+        "section": "directory",
+        "type": "string",
+        "value": "sbin"
+      },
+      {
+        "description": "Architecture-independent data directory",
+        "machine": "any",
+        "name": "sharedstatedir",
+        "section": "directory",
+        "type": "string",
+        "value": "/var/local/lib"
+      },
+      {
+        "description": "Sysconf data directory",
+        "machine": "any",
+        "name": "sysconfdir",
+        "section": "directory",
+        "type": "string",
+        "value": "etc"
+      },
+      {
+        "choices": [
+          "none",
+          "address",
+          "undefined",
+          "address,undefined"
+        ],
+        "description": "Enable sanitizers (for development builds)",
+        "machine": "any",
+        "name": "sanitize",
+        "section": "user",
+        "type": "combo",
+        "value": "none"
+      },
+      {
+        "choices": [
+          "enabled",
+          "disabled",
+          "auto"
+        ],
+        "description": "Build OxiDD-backed research solver tools; use -Doxidd=enabled with -Dresearch_tools=true after building external/oxidd artifacts",
+        "machine": "any",
+        "name": "oxidd",
+        "section": "user",
+        "type": "combo",
+        "value": "enabled"
+      },
+      {
+        "choices": [
+          "baseline",
+          "x86-64-v2",
+          "avx2",
+          "avx512",
+          "neon",
+          "native"
+        ],
+        "description": "Target CPU ISA for the compile-time SIMD kernels (include/tlsf/simd.h) and compiler auto-vectorization. baseline = portable scalar; x86-64-v2/avx2/avx512 = x86 SIMD; neon = AArch64 NEON; native = -march=native for this machine.",
+        "machine": "any",
+        "name": "cpu",
+        "section": "user",
+        "type": "combo",
+        "value": "baseline"
+      },
+      {
+        "description": "Build decomposition, solver, bench, and template research CLIs",
+        "machine": "any",
+        "name": "research_tools",
+        "section": "user",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Offline directory containing the five pinned issue-24 AAG files; enables serial corpus suites",
+        "machine": "any",
+        "name": "issue24_corpus",
+        "section": "user",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Whether to print the logs from failing tests",
+        "machine": "any",
+        "name": "errorlogs",
+        "section": "test",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Split stdout and stderr in test logs",
+        "machine": "any",
+        "name": "stdsplit",
+        "section": "test",
+        "type": "boolean",
+        "value": true
+      }
+    ],
+    "build-L0_setup_command": [
+      "meson",
+      "setup",
+      "build-L0",
+      "--buildtype=release",
+      "-Doxidd=enabled",
+      "-Dresearch_tools=true"
+    ],
+    "build-oxidd_buildoptions": [
+      {
+        "choices": [
+          "enabled",
+          "disabled",
+          "auto"
+        ],
+        "description": "Override value of all 'auto' features",
+        "machine": "any",
+        "name": "auto_features",
+        "section": "core",
+        "type": "combo",
+        "value": "auto"
+      },
+      {
+        "choices": [
+          "ninja",
+          "vs",
+          "vs2010",
+          "vs2012",
+          "vs2013",
+          "vs2015",
+          "vs2017",
+          "vs2019",
+          "vs2022",
+          "vs2026",
+          "xcode",
+          "none"
+        ],
+        "description": "Backend to use",
+        "machine": "any",
+        "name": "backend",
+        "section": "core",
+        "type": "combo",
+        "value": "ninja"
+      },
+      {
+        "choices": [
+          "vs2022",
+          "vs2026"
+        ],
+        "description": "Setup multiple buildtype-suffixed ninja-backend build directories, and a [builddir]_vs containing a Visual Studio meta-backend with multiple configurations that calls into them",
+        "machine": "any",
+        "name": "genvslite",
+        "section": "core",
+        "type": "combo",
+        "value": "vs2022"
+      },
+      {
+        "choices": [
+          "plain",
+          "debug",
+          "debugoptimized",
+          "release",
+          "minsize",
+          "custom"
+        ],
+        "description": "Build type to use",
+        "machine": "any",
+        "name": "buildtype",
+        "section": "core",
+        "type": "combo",
+        "value": "release"
+      },
+      {
+        "description": "Enable debug symbols and other information",
+        "machine": "any",
+        "name": "debug",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "shared",
+          "static",
+          "both"
+        ],
+        "description": "Default library type",
+        "machine": "any",
+        "name": "default_library",
+        "section": "core",
+        "type": "combo",
+        "value": "shared"
+      },
+      {
+        "choices": [
+          "shared",
+          "static",
+          "auto"
+        ],
+        "description": "Default library type for both_libraries",
+        "machine": "any",
+        "name": "default_both_libraries",
+        "section": "core",
+        "type": "combo",
+        "value": "shared"
+      },
+      {
+        "description": "Default umask to apply on permissions of installed files",
+        "machine": "any",
+        "name": "install_umask",
+        "section": "core",
+        "type": "integer",
+        "value": 18
+      },
+      {
+        "choices": [
+          "mirror",
+          "flat"
+        ],
+        "description": "Build directory layout",
+        "machine": "any",
+        "name": "layout",
+        "section": "core",
+        "type": "combo",
+        "value": "mirror"
+      },
+      {
+        "choices": [
+          "plain",
+          "0",
+          "g",
+          "1",
+          "2",
+          "3",
+          "s"
+        ],
+        "description": "Optimization level",
+        "machine": "any",
+        "name": "optimization",
+        "section": "core",
+        "type": "combo",
+        "value": "3"
+      },
+      {
+        "description": "Whether to try static linking before shared linking",
+        "machine": "any",
+        "name": "prefer_static",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Strip targets on install",
+        "machine": "any",
+        "name": "strip",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "on",
+          "off",
+          "subprojects"
+        ],
+        "description": "Unity build",
+        "machine": "any",
+        "name": "unity",
+        "section": "core",
+        "type": "combo",
+        "value": "off"
+      },
+      {
+        "description": "Unity block size",
+        "machine": "any",
+        "name": "unity_size",
+        "section": "core",
+        "type": "integer",
+        "value": 4
+      },
+      {
+        "choices": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "everything"
+        ],
+        "description": "Compiler warning level to use",
+        "machine": "any",
+        "name": "warning_level",
+        "section": "core",
+        "type": "combo",
+        "value": "3"
+      },
+      {
+        "description": "Treat warnings as errors",
+        "machine": "any",
+        "name": "werror",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "default",
+          "nofallback",
+          "nodownload",
+          "forcefallback",
+          "nopromote"
+        ],
+        "description": "Wrap mode",
+        "machine": "any",
+        "name": "wrap_mode",
+        "section": "core",
+        "type": "combo",
+        "value": "default"
+      },
+      {
+        "description": "Force fallback for those subprojects",
+        "machine": "any",
+        "name": "force_fallback_for",
+        "section": "core",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Activate Visual Studio environment",
+        "machine": "any",
+        "name": "vsenv",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Use OMF format on OS/2",
+        "machine": "any",
+        "name": "os2_emxomf",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Generate pkgconfig files as relocatable",
+        "machine": "any",
+        "name": "pkgconfig.relocatable",
+        "section": "core",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Whether to compile bytecode",
+        "machine": "any",
+        "name": "python.bytecompile",
+        "section": "core",
+        "type": "integer",
+        "value": 0
+      },
+      {
+        "choices": [
+          "auto",
+          "prefix",
+          "system",
+          "venv"
+        ],
+        "description": "Which python environment to install to",
+        "machine": "any",
+        "name": "python.install_env",
+        "section": "core",
+        "type": "combo",
+        "value": "prefix"
+      },
+      {
+        "description": "Directory for site-specific, platform-specific files.",
+        "machine": "any",
+        "name": "python.platlibdir",
+        "section": "core",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Directory for site-specific, non-platform-specific files.",
+        "machine": "any",
+        "name": "python.purelibdir",
+        "section": "core",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Whether to allow use of the Python Limited API",
+        "machine": "any",
+        "name": "python.allow_limited_api",
+        "section": "core",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Config file containing the build details for the target Python installation.",
+        "machine": "any",
+        "name": "python.build_config",
+        "section": "core",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "List of additional paths for pkg-config to search",
+        "machine": "host",
+        "name": "pkg_config_path",
+        "section": "core",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "List of additional prefixes for cmake to search",
+        "machine": "host",
+        "name": "cmake_prefix_path",
+        "section": "core",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Maximum number of linker processes to run or 0 for no limit",
+        "machine": "any",
+        "name": "backend_max_links",
+        "section": "backend",
+        "type": "integer",
+        "value": 0
+      },
+      {
+        "description": "Use link time optimization",
+        "machine": "any",
+        "name": "b_lto",
+        "section": "base",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Enable coverage tracking.",
+        "machine": "any",
+        "name": "b_coverage",
+        "section": "base",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "true",
+          "false",
+          "if-release"
+        ],
+        "description": "Disable asserts",
+        "machine": "any",
+        "name": "b_ndebug",
+        "section": "base",
+        "type": "combo",
+        "value": "if-release"
+      },
+      {
+        "description": "Use -Wl,--no-undefined when linking",
+        "machine": "any",
+        "name": "b_lundef",
+        "section": "base",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Code sanitizer to use",
+        "machine": "any",
+        "name": "b_sanitize",
+        "section": "base",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Use -Wl,--as-needed when linking",
+        "machine": "any",
+        "name": "b_asneeded",
+        "section": "base",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Use LLVM ThinLTO caching for faster incremental builds",
+        "machine": "any",
+        "name": "b_thinlto_cache",
+        "section": "base",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "description": "Use multiple threads for Link Time Optimization",
+        "machine": "any",
+        "name": "b_lto_threads",
+        "section": "base",
+        "type": "integer",
+        "value": 0
+      },
+      {
+        "description": "Directory to store ThinLTO cache objects",
+        "machine": "any",
+        "name": "b_thinlto_cache_dir",
+        "section": "base",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Use precompiled headers",
+        "machine": "any",
+        "name": "b_pch",
+        "section": "base",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "choices": [
+          "off",
+          "generate",
+          "use"
+        ],
+        "description": "Use profile guided optimization",
+        "machine": "any",
+        "name": "b_pgo",
+        "section": "base",
+        "type": "combo",
+        "value": "off"
+      },
+      {
+        "description": "Build static libraries as position independent",
+        "machine": "any",
+        "name": "b_staticpic",
+        "section": "base",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Build executables as position independent",
+        "machine": "any",
+        "name": "b_pie",
+        "section": "base",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "auto",
+          "always",
+          "never"
+        ],
+        "description": "Use colored output",
+        "machine": "any",
+        "name": "b_colorout",
+        "section": "base",
+        "type": "combo",
+        "value": "always"
+      },
+      {
+        "description": "Extra arguments passed to the c compiler",
+        "machine": "host",
+        "name": "c_args",
+        "section": "compiler",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Extra arguments passed to the c linker",
+        "machine": "host",
+        "name": "c_link_args",
+        "section": "compiler",
+        "type": "array",
+        "value": []
+      },
+      {
+        "choices": [
+          "none",
+          "c89",
+          "c99",
+          "c11",
+          "c17",
+          "c18",
+          "c2x",
+          "c23",
+          "c2y",
+          "gnu89",
+          "gnu99",
+          "gnu11",
+          "gnu17",
+          "gnu18",
+          "gnu2x",
+          "gnu23",
+          "gnu2y"
+        ],
+        "description": "c language standard to use",
+        "machine": "host",
+        "name": "c_std",
+        "section": "compiler",
+        "type": "combo",
+        "value": "none"
+      },
+      {
+        "description": "Extra arguments passed to the cpp compiler",
+        "machine": "host",
+        "name": "cpp_args",
+        "section": "compiler",
+        "type": "array",
+        "value": []
+      },
+      {
+        "description": "Extra arguments passed to the cpp linker",
+        "machine": "host",
+        "name": "cpp_link_args",
+        "section": "compiler",
+        "type": "array",
+        "value": []
+      },
+      {
+        "choices": [
+          "none",
+          "c++98",
+          "c++03",
+          "c++11",
+          "c++14",
+          "c++17",
+          "c++1z",
+          "c++2a",
+          "c++20",
+          "c++23",
+          "c++26",
+          "gnu++98",
+          "gnu++03",
+          "gnu++11",
+          "gnu++14",
+          "gnu++17",
+          "gnu++1z",
+          "gnu++2a",
+          "gnu++20",
+          "gnu++23",
+          "gnu++26"
+        ],
+        "description": "cpp language standard to use",
+        "machine": "host",
+        "name": "cpp_std",
+        "section": "compiler",
+        "type": "combo",
+        "value": "c++17"
+      },
+      {
+        "choices": [
+          "none",
+          "default",
+          "a",
+          "s",
+          "sc"
+        ],
+        "description": "C++ exception handling type.",
+        "machine": "host",
+        "name": "cpp_eh",
+        "section": "compiler",
+        "type": "combo",
+        "value": "default"
+      },
+      {
+        "description": "Enable RTTI",
+        "machine": "host",
+        "name": "cpp_rtti",
+        "section": "compiler",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "STL debug mode",
+        "machine": "host",
+        "name": "cpp_debugstl",
+        "section": "compiler",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "choices": [
+          "false",
+          "true"
+        ],
+        "description": "Use #import std.",
+        "machine": "host",
+        "name": "cpp_importstd",
+        "section": "compiler",
+        "type": "combo",
+        "value": "false"
+      },
+      {
+        "description": "Installation prefix",
+        "machine": "any",
+        "name": "prefix",
+        "section": "directory",
+        "type": "string",
+        "value": "/usr/local"
+      },
+      {
+        "description": "Executable directory",
+        "machine": "any",
+        "name": "bindir",
+        "section": "directory",
+        "type": "string",
+        "value": "bin"
+      },
+      {
+        "description": "Data file directory",
+        "machine": "any",
+        "name": "datadir",
+        "section": "directory",
+        "type": "string",
+        "value": "share"
+      },
+      {
+        "description": "Header file directory",
+        "machine": "any",
+        "name": "includedir",
+        "section": "directory",
+        "type": "string",
+        "value": "include"
+      },
+      {
+        "description": "Info page directory",
+        "machine": "any",
+        "name": "infodir",
+        "section": "directory",
+        "type": "string",
+        "value": "share/info"
+      },
+      {
+        "description": "Library directory",
+        "machine": "any",
+        "name": "libdir",
+        "section": "directory",
+        "type": "string",
+        "value": "lib64"
+      },
+      {
+        "description": "Licenses directory",
+        "machine": "any",
+        "name": "licensedir",
+        "section": "directory",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Library executable directory",
+        "machine": "any",
+        "name": "libexecdir",
+        "section": "directory",
+        "type": "string",
+        "value": "libexec"
+      },
+      {
+        "description": "Locale data directory",
+        "machine": "any",
+        "name": "localedir",
+        "section": "directory",
+        "type": "string",
+        "value": "share/locale"
+      },
+      {
+        "description": "Localstate data directory",
+        "machine": "any",
+        "name": "localstatedir",
+        "section": "directory",
+        "type": "string",
+        "value": "/var/local"
+      },
+      {
+        "description": "Manual page directory",
+        "machine": "any",
+        "name": "mandir",
+        "section": "directory",
+        "type": "string",
+        "value": "share/man"
+      },
+      {
+        "description": "System executable directory",
+        "machine": "any",
+        "name": "sbindir",
+        "section": "directory",
+        "type": "string",
+        "value": "sbin"
+      },
+      {
+        "description": "Architecture-independent data directory",
+        "machine": "any",
+        "name": "sharedstatedir",
+        "section": "directory",
+        "type": "string",
+        "value": "/var/local/lib"
+      },
+      {
+        "description": "Sysconf data directory",
+        "machine": "any",
+        "name": "sysconfdir",
+        "section": "directory",
+        "type": "string",
+        "value": "etc"
+      },
+      {
+        "choices": [
+          "none",
+          "address",
+          "undefined",
+          "address,undefined"
+        ],
+        "description": "Enable sanitizers (for development builds)",
+        "machine": "any",
+        "name": "sanitize",
+        "section": "user",
+        "type": "combo",
+        "value": "none"
+      },
+      {
+        "choices": [
+          "enabled",
+          "disabled",
+          "auto"
+        ],
+        "description": "Build OxiDD-backed research solver tools; use -Doxidd=enabled with -Dresearch_tools=true after building external/oxidd artifacts",
+        "machine": "any",
+        "name": "oxidd",
+        "section": "user",
+        "type": "combo",
+        "value": "enabled"
+      },
+      {
+        "choices": [
+          "baseline",
+          "x86-64-v2",
+          "avx2",
+          "avx512",
+          "neon",
+          "native"
+        ],
+        "description": "Target CPU ISA for the compile-time SIMD kernels (include/tlsf/simd.h) and compiler auto-vectorization. baseline = portable scalar; x86-64-v2/avx2/avx512 = x86 SIMD; neon = AArch64 NEON; native = -march=native for this machine.",
+        "machine": "any",
+        "name": "cpu",
+        "section": "user",
+        "type": "combo",
+        "value": "baseline"
+      },
+      {
+        "description": "Build decomposition, solver, bench, and template research CLIs",
+        "machine": "any",
+        "name": "research_tools",
+        "section": "user",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Offline directory containing the five pinned issue-24 AAG files; enables serial corpus suites",
+        "machine": "any",
+        "name": "issue24_corpus",
+        "section": "user",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "description": "Whether to print the logs from failing tests",
+        "machine": "any",
+        "name": "errorlogs",
+        "section": "test",
+        "type": "boolean",
+        "value": true
+      },
+      {
+        "description": "Split stdout and stderr in test logs",
+        "machine": "any",
+        "name": "stdsplit",
+        "section": "test",
+        "type": "boolean",
+        "value": true
+      }
+    ],
+    "compatibility_note": "The installed Spot 2.15.1.dev headers require C++20 (std::set::contains), while the unchanged tlsf-tools tlsf2spot example target requests C++17. The solver/checker and all other targets built with the recorded Meson options. For the full test suite only, tlsf2spot.cpp was compiled manually with -std=c++20 and linked with Meson's link line; no source file or solver/checker build option was changed.",
+    "tlsf2spot_cxx20_exception": {
+      "compile_command": "c++ -Itlsf2spot.p -I. -I.. -I../include -I../external/oxidd/build/include -I/usr/local/include -fdiagnostics-color=always -DNDEBUG -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wextra -Wpedantic -std=c++20 -O3 -MD -MQ tlsf2spot.p/examples_tlsf2spot.cpp.o -MF tlsf2spot.p/examples_tlsf2spot.cpp.o.d -o tlsf2spot.p/examples_tlsf2spot.cpp.o -c ../examples/tlsf2spot.cpp",
+      "link_command": "c++ -o tlsf2spot tlsf2spot.p/examples_tlsf2spot.cpp.o -Wl,--as-needed -Wl,--no-undefined -Wl,-O1 -Wl,-rpath,/usr/local/lib -Wl,--start-group libtlsf.a /usr/local/lib/libspot.so /usr/local/lib/libbddx.so /home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/external/oxidd/target/release/liboxidd_ffi_c.a -lpthread -lm -ldl -Wl,--end-group",
+      "reason": "The installed Spot 2.15.1.dev headers use std::set::contains and therefore require C++20, but the unchanged tlsf2spot Meson example target emits -std=c++17.",
+      "route_verification": {
+        "files_checked": [
+          "benchmarking/param-lift-20260922/param-lift-campaign.py",
+          "benchmarking/param-lift-20260922/generalize_gr1.py",
+          "subprojects/tlsf-tools/scripts/gr1_monitor_game.py"
+        ],
+        "invoked_route_programs": [
+          "benchmarking/param-lift-20260922/generalize_gr1.py",
+          "configured bindings Python running subprojects/tlsf-tools/scripts/gr1_monitor_game.py",
+          "subprojects/tlsf-tools/build-oxidd/tlsf2tlsf",
+          "subprojects/tlsf-tools/build-oxidd/tlsf2ltl",
+          "subprojects/tlsf-tools/build-oxidd/tlsfinfo",
+          "configured tlsfsolve",
+          "configured tlsfcertcheck"
+        ],
+        "statement": "tlsf2spot is a test-only example target and is not invoked anywhere on the GR(1) lifting route.",
+        "tlsf2spot_invoked": false
+      },
+      "scope": "One-off test prerequisite only; neither tlsf-tools sources nor Meson configuration were changed.",
+      "working_directory": "subprojects/tlsf-tools/build-L0"
+    },
+    "compile_jobs": 1,
+    "compiler_versions": {
+      "build-L0": {
+        "build": {
+          "c": {
+            "default_suffix": "c",
+            "exelist": [
+              "cc"
+            ],
+            "file_suffixes": [
+              "c"
+            ],
+            "full_version": "cc (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+            "id": "gcc",
+            "linker_exelist": [
+              "cc"
+            ],
+            "linker_id": "ld.bfd",
+            "version": "16.2.1"
+          },
+          "cpp": {
+            "default_suffix": "cpp",
+            "exelist": [
+              "c++"
+            ],
+            "file_suffixes": [
+              "cpp",
+              "cppm",
+              "cc",
+              "cp",
+              "cxx",
+              "c++",
+              "hh",
+              "hp",
+              "hpp",
+              "ipp",
+              "hxx",
+              "h++",
+              "ino",
+              "ixx",
+              "CPP",
+              "C",
+              "HPP",
+              "H"
+            ],
+            "full_version": "c++ (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+            "id": "gcc",
+            "linker_exelist": [
+              "c++"
+            ],
+            "linker_id": "ld.bfd",
+            "version": "16.2.1"
+          }
+        },
+        "host": {
+          "c": {
+            "default_suffix": "c",
+            "exelist": [
+              "cc"
+            ],
+            "file_suffixes": [
+              "c"
+            ],
+            "full_version": "cc (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+            "id": "gcc",
+            "linker_exelist": [
+              "cc"
+            ],
+            "linker_id": "ld.bfd",
+            "version": "16.2.1"
+          },
+          "cpp": {
+            "default_suffix": "cpp",
+            "exelist": [
+              "c++"
+            ],
+            "file_suffixes": [
+              "cpp",
+              "cppm",
+              "cc",
+              "cp",
+              "cxx",
+              "c++",
+              "hh",
+              "hp",
+              "hpp",
+              "ipp",
+              "hxx",
+              "h++",
+              "ino",
+              "ixx",
+              "CPP",
+              "C",
+              "HPP",
+              "H"
+            ],
+            "full_version": "c++ (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+            "id": "gcc",
+            "linker_exelist": [
+              "c++"
+            ],
+            "linker_id": "ld.bfd",
+            "version": "16.2.1"
+          }
+        }
+      },
+      "build-oxidd": {
+        "build": {
+          "c": {
+            "default_suffix": "c",
+            "exelist": [
+              "cc"
+            ],
+            "file_suffixes": [
+              "c"
+            ],
+            "full_version": "cc (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+            "id": "gcc",
+            "linker_exelist": [
+              "cc"
+            ],
+            "linker_id": "ld.bfd",
+            "version": "16.2.1"
+          },
+          "cpp": {
+            "default_suffix": "cpp",
+            "exelist": [
+              "c++"
+            ],
+            "file_suffixes": [
+              "cpp",
+              "cppm",
+              "cc",
+              "cp",
+              "cxx",
+              "c++",
+              "hh",
+              "hp",
+              "hpp",
+              "ipp",
+              "hxx",
+              "h++",
+              "ino",
+              "ixx",
+              "CPP",
+              "C",
+              "HPP",
+              "H"
+            ],
+            "full_version": "c++ (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+            "id": "gcc",
+            "linker_exelist": [
+              "c++"
+            ],
+            "linker_id": "ld.bfd",
+            "version": "16.2.1"
+          }
+        },
+        "host": {
+          "c": {
+            "default_suffix": "c",
+            "exelist": [
+              "cc"
+            ],
+            "file_suffixes": [
+              "c"
+            ],
+            "full_version": "cc (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+            "id": "gcc",
+            "linker_exelist": [
+              "cc"
+            ],
+            "linker_id": "ld.bfd",
+            "version": "16.2.1"
+          },
+          "cpp": {
+            "default_suffix": "cpp",
+            "exelist": [
+              "c++"
+            ],
+            "file_suffixes": [
+              "cpp",
+              "cppm",
+              "cc",
+              "cp",
+              "cxx",
+              "c++",
+              "hh",
+              "hp",
+              "hpp",
+              "ipp",
+              "hxx",
+              "h++",
+              "ino",
+              "ixx",
+              "CPP",
+              "C",
+              "HPP",
+              "H"
+            ],
+            "full_version": "c++ (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)",
+            "id": "gcc",
+            "linker_exelist": [
+              "c++"
+            ],
+            "linker_id": "ld.bfd",
+            "version": "16.2.1"
+          }
+        }
+      }
+    },
+    "meson_introspect_buildoptions_command": "meson introspect --buildoptions BUILD_DIR",
+    "options_equivalent_by_name_and_value": true,
+    "setup_environment": {
+      "PKG_CONFIG_PATH": "/usr/local/lib/pkgconfig"
+    }
+  },
+  "created_utc": "2026-09-23T19:14:29.968953+00:00",
+  "dependency": {
+    "commits_between": [
+      {
+        "commit": "4793added1b0da65156893b0ff9a9a063b4a451a",
+        "subject": "Export and check an environment certificate for unrealizable GR(1) games"
+      },
+      {
+        "commit": "2f123f933e679266592fd90898315d25f2881232",
+        "subject": "Merge pull request #35 from gaperez64/param-lift-m5"
+      },
+      {
+        "commit": "ff5789430e5f095a81d34064d7c24ceed3afafa0",
+        "subject": "Support bad-state properties in GR(1) games"
+      },
+      {
+        "commit": "6b2507f65b7897281ba06ba470998d773c1fb459",
+        "subject": "Merge pull request #36 from gaperez64/fix/aiger-bad-justice-gr1"
+      }
+    ],
+    "name": "tlsf-tools",
+    "new_gitlink": "6b2507f65b7897281ba06ba470998d773c1fb459",
+    "old_gitlink": "f2130939d6b85eadd48f95c785441e74cb5bd5de"
+  },
+  "python": {
+    "bindings_interpreter": {
+      "path": "/usr/bin/python3.13",
+      "site": "/usr/local/lib64/python3.13/site-packages",
+      "version": "3.13.15 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+    },
+    "campaign_venv": {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python",
+      "version": "Python 3.14.7"
+    }
+  },
+  "replay": {
+    "acacia_head": "b970cbf16ae53ad8b40a7532b75260bd53fe7ad1",
+    "artifacts_relocated": true,
+    "artifacts_root": "_bm-logs.gr1-par2-p0-replay-L0",
+    "artifacts_state": "frozen",
+    "commands": "benchmarking/gr1-par2-20260923/p0-replay/README.md",
+    "decisive_m6_expected_rows": {
+      "real": 22,
+      "total": 26,
+      "unreal": 4
+    },
+    "evidence_root": "benchmarking/gr1-par2-20260923/p0-replay/evidence",
+    "results": [
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/amba_decomposed_lock-n15/amba_decomposed_lock-n15-8ce79bbbd57f-pbyegix9", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/amba_decomposed_lock-n15.json", "family": "amba_decomposed_lock", "group": "m6", "n": 15, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 40.290538608},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n6/arbiter-n6-3b5f69197f7b-53so173f", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter-n6.json", "family": "arbiter", "group": "m6", "n": 6, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 2.234839467},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n7/arbiter-n7-8523516d46e6-x1hkzfo4", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter-n7.json", "family": "arbiter", "group": "m6", "n": 7, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 2.503491774},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n8/arbiter-n8-c0e08180ff71-l78vulc1", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter-n8.json", "family": "arbiter", "group": "m6", "n": 8, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 3.085537869},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n9/arbiter-n9-f5d027112e99-zdagxpkh", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter-n9.json", "family": "arbiter", "group": "m6", "n": 9, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 4.098662321},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n10/arbiter-n10-828d51ba853f-zapkrpv7", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter-n10.json", "family": "arbiter", "group": "m6", "n": 10, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 5.763136751},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_on_inpchange-n5/arbiter_on_inpchange-n5-5df9b1c23485-lgc4p1yl", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_on_inpchange-n5.json", "family": "arbiter_on_inpchange", "group": "m6", "n": 5, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 10.266938399},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-22d7e27e902d-sgo65rpf", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_on_inpchange-n6.json", "family": "arbiter_on_inpchange", "group": "m6", "n": 6, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 51.547166585},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_buffer-n6/arbiter_with_buffer-n6-43382c2455eb-rhwebrt5", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_with_buffer-n6.json", "family": "arbiter_with_buffer", "group": "m6", "n": 6, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 1.844359387},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_with_buffer-n7.json", "family": "arbiter_with_buffer", "group": "m6", "n": 7, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 3.930399394},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_buffer-n8/arbiter_with_buffer-n8-7adaabf6a1b2-u4bd94a_", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_with_buffer-n8.json", "family": "arbiter_with_buffer", "group": "m6", "n": 8, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 16.095285671},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_cancel-n6/arbiter_with_cancel-n6-c0a75252de54-df1dx8f9", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_with_cancel-n6.json", "family": "arbiter_with_cancel", "group": "m6", "n": 6, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 4.718134884},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_cancel-n7/arbiter_with_cancel-n7-7f5619354677-a9vmd9m9", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_with_cancel-n7.json", "family": "arbiter_with_cancel", "group": "m6", "n": 7, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 7.611939238},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_cancel-n8/arbiter_with_cancel-n8-2245874924dd-k6a0pyzk", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_with_cancel-n8.json", "family": "arbiter_with_cancel", "group": "m6", "n": 8, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 16.881950739},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_cancel-n9/arbiter_with_cancel-n9-163ced9f3fea-bolb6cur", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_with_cancel-n9.json", "family": "arbiter_with_cancel", "group": "m6", "n": 9, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 55.170733917},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/load_balancer-n8/load_balancer-n8-9740ee0dfb15-ilwgus37", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/load_balancer-n8.json", "family": "load_balancer", "group": "m6", "n": 8, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 18.350830557},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/load_balancer-n9/load_balancer-n9-0f9db7b00d62-nuju8xzq", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/load_balancer-n9.json", "family": "load_balancer", "group": "m6", "n": 9, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 55.874432378},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/load_balancer_unreal2-n6/load_balancer_unreal2-n6-093d954886c1-m14rntll", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/load_balancer_unreal2-n6.json", "family": "load_balancer_unreal2", "group": "m6", "n": 6, "side": "UNREAL", "target_verified": true, "verdict": "UNREALIZABLE", "wall_seconds": 5.722151159},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n7/prioritized_arbiter-n7-5271d318e871-hco1hoyh", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/prioritized_arbiter-n7.json", "family": "prioritized_arbiter", "group": "m6", "n": 7, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 1.057794101},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n8/prioritized_arbiter-n8-9247229ccfc2-mqxlgdca", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/prioritized_arbiter-n8.json", "family": "prioritized_arbiter", "group": "m6", "n": 8, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 1.082677150},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n9/prioritized_arbiter-n9-6cf538f3a372-oncl3amq", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/prioritized_arbiter-n9.json", "family": "prioritized_arbiter", "group": "m6", "n": 9, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 1.168738696},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n10/prioritized_arbiter-n10-0ec6ae1645d7-y9_d20j7", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/prioritized_arbiter-n10.json", "family": "prioritized_arbiter", "group": "m6", "n": 10, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 1.270722409},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n12/prioritized_arbiter-n12-7a4e0b2280c4-sbsmty3i", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/prioritized_arbiter-n12.json", "family": "prioritized_arbiter", "group": "m6", "n": 12, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 2.406839762},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/round_robin_arbiter_unreal2-n5/round_robin_arbiter_unreal2-n5-5cbbde05b72d-vnyrdh4m", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/round_robin_arbiter_unreal2-n5.json", "family": "round_robin_arbiter_unreal2", "group": "m6", "n": 5, "side": "UNREAL", "target_verified": true, "verdict": "UNREALIZABLE", "wall_seconds": 2.379242887},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/round_robin_arbiter_unreal2-n6/round_robin_arbiter_unreal2-n6-3c89055d9f25-0imn9p3l", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/round_robin_arbiter_unreal2-n6.json", "family": "round_robin_arbiter_unreal2", "group": "m6", "n": 6, "side": "UNREAL", "target_verified": true, "verdict": "UNREALIZABLE", "wall_seconds": 7.973925305},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/m6/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-4a8dd5ddc20c-1g8f5r5o", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/round_robin_arbiter_unreal2-n7.json", "family": "round_robin_arbiter_unreal2", "group": "m6", "n": 7, "side": "UNREAL", "target_verified": true, "verdict": "UNREALIZABLE", "wall_seconds": 33.713489304},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/controls/arbiter-n5/arbiter-n5-4279f0a2c499-81od1v40", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/controls/arbiter-n5.json", "family": "arbiter", "group": "controls", "n": 5, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 1.129974695},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/controls/prioritized_arbiter-n5/prioritized_arbiter-n5-c7b51fc52500-ome6h37z", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/controls/prioritized_arbiter-n5.json", "family": "prioritized_arbiter", "group": "controls", "n": 5, "side": "REAL", "target_verified": true, "verdict": "REALIZABLE", "wall_seconds": 0.637137068},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/controls/round_robin_arbiter_unreal2-n3/round_robin_arbiter_unreal2-n3-8097944faf56-u8tdh1im", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/controls/round_robin_arbiter_unreal2-n3.json", "family": "round_robin_arbiter_unreal2", "group": "controls", "n": 3, "side": "UNREAL", "target_verified": true, "verdict": "UNREALIZABLE", "wall_seconds": 0.782609139},
+      {"artifacts": "_bm-logs.gr1-par2-p0-replay-L0/controls/prioritized_arbiter_unreal2-n3/prioritized_arbiter_unreal2-n3-d5e385f8c0e7-3s_f8qal", "evidence": "benchmarking/gr1-par2-20260923/p0-replay/evidence/controls/prioritized_arbiter_unreal2-n3.json", "family": "prioritized_arbiter_unreal2", "group": "controls", "n": 3, "side": "UNREAL", "target_verified": true, "verdict": "UNREALIZABLE", "wall_seconds": 0.729580549}
+    ],
+    "status": "verified",
+    "tsv": "benchmarking/gr1-par2-20260923/p0-replay/replay-L0.tsv",
+    "verified": {
+      "controls": {"expected": 4, "verified": 4},
+      "m6": {"expected": 26, "verified": 26}
+    }
+  },
+  "schema_version": 1,
+  "tests": {
+    "configuration_probe_unit_tests": {
+      "command": ".venv/bin/python benchmarking/param-lift-20260922/test_tool_config.py",
+      "elapsed_seconds": 0.172,
+      "failed": 0,
+      "passed": 7,
+      "status": "passed"
+    },
+    "generalize_gr1": {
+      "command": "ACACIA_TLSF_TOOLS_BUILD=subprojects/tlsf-tools/build-L0 .venv/bin/python benchmarking/param-lift-20260922/test_generalize_gr1.py",
+      "elapsed_seconds": 227.01,
+      "failed": 0,
+      "passed": 11,
+      "status": "passed"
+    },
+    "tlsf_tools": {
+      "command": "MESON_TESTTHREADS=1 meson test -C build-L0 --num-processes 1 --no-rebuild",
+      "failed": 0,
+      "includes": [
+        "gr1_certificate",
+        "gr1_certcheck",
+        "gr1_unreal_certificate",
+        "gr1_monitor_game"
+      ],
+      "passed": 285,
+      "status": "passed with --no-rebuild after that exception",
+      "requested_command_attempt": {
+        "command": "MESON_TESTTHREADS=1 meson test -C build-L0 --num-processes 1",
+        "failure": "tlsf2spot C++17 compile failed against Spot 2.15.1.dev headers using std::set::contains",
+        "status": "build failed before tests"
+      }
+    }
+  }
+}

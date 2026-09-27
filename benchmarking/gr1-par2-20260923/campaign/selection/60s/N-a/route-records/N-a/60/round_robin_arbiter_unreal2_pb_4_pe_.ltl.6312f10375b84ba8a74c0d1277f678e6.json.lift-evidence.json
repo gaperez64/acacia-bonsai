@@ -1,0 +1,424 @@
+{
+  "budget_s": 19.926097,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1407856640,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1874651-e908903fb775.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1874651-e908903fb775.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 0.7722919640364125,
+    "driver_overhead_s": 0.1378336590870619,
+    "generalization_s": 0.0,
+    "instantiation_s": 0.0,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.0,
+    "seed_solve_s": 0.0,
+    "target_check_s": 0.343407,
+    "target_monitor_s": 0.073675,
+    "target_solve_s": 0.200979,
+    "wrapper_overhead_s": 0.016397304949350655
+  },
+  "elapsed_s": 0.7722919640364125,
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-a/route-records/N-a/60/round_robin_arbiter_unreal2_pb_4_pe_.ltl.6312f10375b84ba8a74c0d1277f678e6.json.lift-evidence.json",
+  "generalizer_evidence": {
+    "answer": "UNREALIZABLE",
+    "certificate_side": "environment",
+    "compose_route": "native_veccompose",
+    "cost_accounting": {
+      "driver_overhead_s": 0.0009441509610041976,
+      "generalization_s": 0.0,
+      "instantiate_s": 0.0,
+      "probe_check_s": 0.0,
+      "seed_monitor_s": 0.0,
+      "seed_solve_s": 0.0,
+      "target_check_s": 0.3434073399985209,
+      "target_monitor_s": 0.07367502199485898,
+      "target_solve_s": 0.20097877003718168,
+      "wall_s": 0.6190052829915658
+    },
+    "family": "round_robin_arbiter_unreal2",
+    "final_verdict": "VERIFIED",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "measured_arity": null,
+    "path_kind": "direct-certified",
+    "real_check": "policy",
+    "seeds": [],
+    "semantics": "exact",
+    "stage_evidence": {
+      "target_check": {
+        "attempts": [
+          {
+            "node_cap": 67108864,
+            "retry": false,
+            "retry_reason": null,
+            "returncode": 0
+          }
+        ],
+        "verdict": "VERIFIED"
+      },
+      "target_monitor_game": {
+        "game": "round_robin_arbiter_unreal2_4.game.aag",
+        "provenance": "round_robin_arbiter_unreal2_4.prov.json"
+      },
+      "target_solve": {
+        "certificate": "round_robin_arbiter_unreal2_4.certificate.aag",
+        "exit_code": 1,
+        "policy": "round_robin_arbiter_unreal2_4.policy.aag"
+      }
+    },
+    "target": 4,
+    "target_check_method": "certificate",
+    "target_check_result": "VERIFIED"
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "target_check": 0.3434073399985209,
+      "target_monitor_game": 0.07367502199485898,
+      "target_solve": 0.20097877003718168
+    },
+    "last_stage_times": {},
+    "sampled_monotonic_s": 534395.484761152
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.000000",
+    "arity": "",
+    "bus_schemas_s": "0.000000",
+    "canonicalize_s": "0.000000",
+    "cegis_rounds": "0",
+    "cegis_s": "0.000000",
+    "checker_node_caps": "67108864",
+    "driver_overhead_s": "0.000944",
+    "family": "round_robin_arbiter_unreal2",
+    "instantiate_s": "0.000000",
+    "peak_rss_kib": "1326924",
+    "predicate_arities": "",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.000000",
+    "reason": "-",
+    "role_classes": "",
+    "seed_monitor_s": "0.000000",
+    "seed_s": "0.000000",
+    "seed_solve_s": "0.000000",
+    "seeds": "",
+    "solver_cache": "8388608",
+    "solver_nodes": "33554432",
+    "stage_reached": "target_check",
+    "stages_passed": "target_monitor_game,target_solve,target_check",
+    "target": "4",
+    "target_check_s": "0.343407",
+    "target_monitor_s": "0.073675",
+    "target_solve_s": "0.200979",
+    "verdict": "VERIFIED",
+    "wall_s": "0.619005"
+  },
+  "invocation_id": "454504c7fdd841f593077e32cbad36c9",
+  "path_kind": "direct-certified",
+  "peak_rss_kib": 1326924,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "round_robin_arbiter_unreal2",
+    "reason": "source-verified capability round_robin_arbiter_unreal2",
+    "value": "policy"
+  },
+  "request": {
+    "family": "round_robin_arbiter_unreal2",
+    "measured_arity": null,
+    "request_mode": "source",
+    "route_kind": "exact-game-both-sides",
+    "seeds": [],
+    "target": 4
+  },
+  "request_mode": "source",
+  "result": {
+    "certificate": "/tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/generalizer/round_robin_arbiter_unreal2_4.certificate.aag",
+    "policy": "/tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/generalizer/round_robin_arbiter_unreal2_4.policy.aag",
+    "proof_method": "policy",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "UNREALIZABLE /tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/generalizer/round_robin_arbiter_unreal2_4.certificate.aag",
+    "verdict": "UNREALIZABLE"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "artifact_binding": {
+      "family": "round_robin_arbiter_unreal2",
+      "inputs": [
+        "r_0",
+        "r_1",
+        "r_2",
+        "r_3"
+      ],
+      "lowered_formula_sha256": "f9684e952c5fb2c850cae41b01eaa6d933a99af38e3543e31f74dfcc020d6224",
+      "outputs": [
+        "g_0",
+        "g_1",
+        "g_2",
+        "g_3"
+      ],
+      "parameters": {
+        "n": 4
+      },
+      "reduction_semantics": "exact",
+      "route_kind": "exact-game-both-sides",
+      "source_semantics": "mealy",
+      "source_sha256": "2d4939672260cd86a72cd6d16551ecd1d8eccea5a2b91011047f3183f62fad66",
+      "target_semantics": "mealy",
+      "template_sha256": "c479b842361509f6877bab34307d6d1de6e60284b5506e121ddd9ffc1df01db0"
+    },
+    "capability": {
+      "arity": null,
+      "family": "round_robin_arbiter_unreal2",
+      "parameters": [
+        "n"
+      ],
+      "route_kind": "exact-game-both-sides",
+      "template": "scripts/acacia_lift/data/templates/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
+      "template_sha256": "c479b842361509f6877bab34307d6d1de6e60284b5506e121ddd9ffc1df01db0"
+    },
+    "input": {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/round_robin_arbiter_unreal2_pb_4_pe_.tlsf",
+      "sha256": "2d4939672260cd86a72cd6d16551ecd1d8eccea5a2b91011047f3183f62fad66",
+      "size_bytes": 1976
+    },
+    "io_mapping": [
+      {
+        "owner": "input",
+        "source": "r_0",
+        "template": "r_0"
+      },
+      {
+        "owner": "input",
+        "source": "r_1",
+        "template": "r_1"
+      },
+      {
+        "owner": "input",
+        "source": "r_2",
+        "template": "r_2"
+      },
+      {
+        "owner": "input",
+        "source": "r_3",
+        "template": "r_3"
+      },
+      {
+        "owner": "output",
+        "source": "g_0",
+        "template": "g_0"
+      },
+      {
+        "owner": "output",
+        "source": "g_1",
+        "template": "g_1"
+      },
+      {
+        "owner": "output",
+        "source": "g_2",
+        "template": "g_2"
+      },
+      {
+        "owner": "output",
+        "source": "g_3",
+        "template": "g_3"
+      }
+    ],
+    "match": {
+      "check": "SYFCO basic-TLSF and normalized lowered-LTL equality, plus exact semantics/target and ordered I/O equality",
+      "how": "content-verified-template-instantiation"
+    },
+    "reduction_semantics": "exact",
+    "schema": "acacia.gr1-source-binding.v1",
+    "source_identity": {
+      "basic_tlsf_sha256": "1fe51ea4c1f1bcee7863565bc266d04e981e9a04d68a7eed76c00d06659d6b2d",
+      "inputs": [
+        "r_0",
+        "r_1",
+        "r_2",
+        "r_3"
+      ],
+      "lowered_formula_sha256": "f9684e952c5fb2c850cae41b01eaa6d933a99af38e3543e31f74dfcc020d6224",
+      "outputs": [
+        "g_0",
+        "g_1",
+        "g_2",
+        "g_3"
+      ],
+      "parameters": {
+        "n": 4
+      },
+      "semantics": "mealy",
+      "target": "mealy"
+    }
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "round_robin_arbiter_unreal2",
+        "--target",
+        "4",
+        "--seeds",
+        "",
+        "--timeout",
+        "19.410773",
+        "--check-method",
+        "auto",
+        "--real-check",
+        "policy",
+        "--absolute-deadline-monotonic",
+        "534414.647884632",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/generalizer",
+        "--results-out",
+        "/tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/generalizer-result.tsv",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+        "--target-source",
+        "/tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/requested-source.tlsf",
+        "--family-source",
+        "/tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/capability-template.tlsf"
+      ],
+      "elapsed_s": 0.7558946590870619,
+      "pid": 1881035,
+      "returncode": 0,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "VERIFIED family=round_robin_arbiter_unreal2 target=4 seeds=-\ncertificate: /tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/generalizer/round_robin_arbiter_unreal2_4.certificate.aag\npolicy: /tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/generalizer/round_robin_arbiter_unreal2_4.policy.aag\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "round_robin_arbiter_unreal2",
+    "--target",
+    "4",
+    "--seeds",
+    "",
+    "--reduction-semantics",
+    "exact",
+    "--real-check",
+    "policy",
+    "--timeout",
+    "19.926097",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "--target-source",
+    "CONTENT_BOUND_REQUEST_SOURCE.tlsf",
+    "--family-source",
+    "CONTENT_BOUND_CAPABILITY_TEMPLATE.tlsf"
+  ],
+  "target_certificate": {
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "method": "policy",
+    "path": "/tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny/generalizer/round_robin_arbiter_unreal2_4.certificate.aag",
+    "sha256": "5143f4e4e5c209695264ed036f39edc8753f6b0cecc1d3dd34c04f366dd54b6a",
+    "side": "environment",
+    "source_binding": {
+      "family": "round_robin_arbiter_unreal2",
+      "inputs": [
+        "r_0",
+        "r_1",
+        "r_2",
+        "r_3"
+      ],
+      "lowered_formula_sha256": "f9684e952c5fb2c850cae41b01eaa6d933a99af38e3543e31f74dfcc020d6224",
+      "outputs": [
+        "g_0",
+        "g_1",
+        "g_2",
+        "g_3"
+      ],
+      "parameters": {
+        "n": 4
+      },
+      "reduction_semantics": "exact",
+      "route_kind": "exact-game-both-sides",
+      "source_semantics": "mealy",
+      "source_sha256": "2d4939672260cd86a72cd6d16551ecd1d8eccea5a2b91011047f3183f62fad66",
+      "target_semantics": "mealy",
+      "template_sha256": "c479b842361509f6877bab34307d6d1de6e60284b5506e121ddd9ffc1df01db0"
+    },
+    "verdict": "VERIFIED"
+  },
+  "target_check": {
+    "counterexample": null,
+    "counterexample_method": null,
+    "elapsed_seconds": 0.338141414,
+    "exit_code": 0,
+    "format": "tlsf-gr1-checkresult-v1",
+    "methods": {
+      "certificate": {
+        "counterexample": null,
+        "peak_bdd_nodes": 1,
+        "time_seconds": 0.098595521,
+        "verdict": "VERIFIED"
+      },
+      "closed_loop": {
+        "counterexample": null,
+        "peak_bdd_nodes": 0,
+        "time_seconds": 0.0,
+        "verdict": "SKIPPED"
+      }
+    },
+    "peak_bdd_nodes": 1,
+    "requested_method": "certificate",
+    "verdict": "VERIFIED"
+  },
+  "target_check_method": "policy",
+  "target_check_ran": true,
+  "target_check_result": "VERIFIED",
+  "target_verified": true,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "real_check": "policy",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/tmp/acacia-lift-portfolio-sbettdso/lift-output/round_robin_arbiter_unreal2-n4-454504c7fdd8-w2mlz4ny"
+}

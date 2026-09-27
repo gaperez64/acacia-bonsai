@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_verified",
+  "capability": {
+    "arity": 1,
+    "family": "prioritized_arbiter",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "real-proposal",
+    "template": "scripts/acacia_lift/data/templates/tlsf/prioritized_arbiter/parametric/prioritized_arbiter.tlsf",
+    "template_sha256": "026c8fd27461aa313f60c66b9c46d23b03bbf1150ebf0b4575b81b65c59074fd"
+  },
+  "eligibility_budget_s": 0.8500000000000001,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-a/route-records/N-a/17/prioritized_arbiter_pb_10_pe_.ltl.27221a84666c44bf972e2db2ca2f88d8.json.lift-evidence.json",
+  "evidence_sha256": "0e5f5454d45a1d01414ed74bb101a8fe48f8bdaf8813d9248bbe5900f516c856",
+  "fallback_remaining": null,
+  "fallback_start": null,
+  "input_sha256": "c4e0104d44491dfdd2c291db7dde4de7a46a70e7f0c03cc29e4cf9794ebeb195",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/prioritized_arbiter_pb_10_pe_.tlsf",
+    "--budget",
+    "5.605438",
+    "--eligibility-budget-seconds",
+    "0.8500000000000001",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-l3si624q/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-a/route-records/N-a/17/prioritized_arbiter_pb_10_pe_.ltl.27221a84666c44bf972e2db2ca2f88d8.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 0.9668166079791263,
+  "lift_exit": 0,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "prioritized_arbiter",
+    "reason": "source-verified capability prioritized_arbiter",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_check",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "lifting"
+}

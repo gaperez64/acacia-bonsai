@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_verified",
+  "capability": {
+    "arity": 2,
+    "family": "arbiter",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "real-proposal",
+    "template": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/arbiter.tlsf",
+    "template_sha256": "a9839c448b1b56bb43ac2073afc07f2dde8af8af408a13f553e78b97ef280420"
+  },
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/arbiter_pb_6_pe_.ltl.dd321216921a4973a84a9969e887d814.json.lift-evidence.json",
+  "evidence_sha256": "257ec0046dd2c7db6a18db5269f13ad4e75be90f04103fb8da3b734da18785ab",
+  "fallback_remaining": null,
+  "fallback_start": null,
+  "input_sha256": "0a52db34c1299888dfec022d8e8bcc97fd7c9cf4ec5574c2ba575771f00434a9",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/arbiter_pb_6_pe_.tlsf",
+    "--budget",
+    "39.925270",
+    "--eligibility-budget-seconds",
+    "1.0",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-dt1k6ay_/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/arbiter_pb_6_pe_.ltl.dd321216921a4973a84a9969e887d814.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 1.1742004180559888,
+  "lift_exit": 0,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "arbiter",
+    "reason": "source-verified capability arbiter",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_check",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "lifting"
+}

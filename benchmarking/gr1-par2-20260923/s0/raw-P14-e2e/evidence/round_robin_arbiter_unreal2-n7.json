@@ -1,0 +1,258 @@
+{
+  "budget_s": 120.0,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 2665676800,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-round_robin_arbiter_unreal2-n7.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-round_robin_arbiter_unreal2-n7.scope/memory.peak"
+  },
+  "cost_accounting": {
+    "cold_total_s": 31.202005826984532,
+    "driver_overhead_s": 0.15715252700359628,
+    "generalization_s": 0.0,
+    "instantiation_s": 0.0,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.0,
+    "seed_solve_s": 0.0,
+    "target_check_s": 15.827729,
+    "target_monitor_s": 0.093656,
+    "target_solve_s": 15.099567,
+    "wrapper_overhead_s": 0.02390129998093471
+  },
+  "elapsed_s": 31.202005826984532,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/evidence/round_robin_arbiter_unreal2-n7.json",
+  "generalizer_evidence": {
+    "answer": "UNREALIZABLE",
+    "certificate_side": "environment",
+    "cost_accounting": {
+      "driver_overhead_s": 0.005621816962957382,
+      "generalization_s": 0.0,
+      "instantiate_s": 0.0,
+      "probe_check_s": 0.0,
+      "seed_monitor_s": 0.0,
+      "seed_solve_s": 0.0,
+      "target_check_s": 15.82772926200414,
+      "target_monitor_s": 0.09365607803920284,
+      "target_solve_s": 15.099566799995955,
+      "wall_s": 31.026573957002256
+    },
+    "family": "round_robin_arbiter_unreal2",
+    "final_verdict": "VERIFIED",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "measured_arity": null,
+    "path_kind": "direct-certified",
+    "seeds": [],
+    "semantics": "exact",
+    "stage_evidence": {
+      "target_check": {
+        "attempts": [
+          {
+            "node_cap": 67108864,
+            "returncode": 0
+          }
+        ],
+        "verdict": "VERIFIED"
+      },
+      "target_monitor_game": {
+        "game": "round_robin_arbiter_unreal2_7.game.aag",
+        "provenance": "round_robin_arbiter_unreal2_7.prov.json"
+      },
+      "target_solve": {
+        "certificate": "round_robin_arbiter_unreal2_7.certificate.aag",
+        "exit_code": 1,
+        "policy": "round_robin_arbiter_unreal2_7.policy.aag"
+      }
+    },
+    "target": 7
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "target_check": 15.82772926200414,
+      "target_monitor_game": 0.09365607803920284,
+      "target_solve": 15.099566799995955
+    },
+    "last_stage_times": {},
+    "sampled_monotonic_s": 495032.642585283
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.000000",
+    "arity": "",
+    "bus_schemas_s": "0.000000",
+    "canonicalize_s": "0.000000",
+    "cegis_rounds": "0",
+    "cegis_s": "0.000000",
+    "checker_node_caps": "67108864",
+    "driver_overhead_s": "0.005622",
+    "family": "round_robin_arbiter_unreal2",
+    "instantiate_s": "0.000000",
+    "peak_rss_kib": "2491420",
+    "predicate_arities": "",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.000000",
+    "reason": "-",
+    "role_classes": "",
+    "seed_monitor_s": "0.000000",
+    "seed_s": "0.000000",
+    "seed_solve_s": "0.000000",
+    "seeds": "",
+    "solver_cache": "16777216",
+    "solver_nodes": "67108864",
+    "stage_reached": "target_check",
+    "stages_passed": "target_monitor_game,target_solve,target_check",
+    "target": "7",
+    "target_check_s": "15.827729",
+    "target_monitor_s": "0.093656",
+    "target_solve_s": "15.099567",
+    "verdict": "VERIFIED",
+    "wall_s": "31.026574"
+  },
+  "invocation_id": "e14c752708a941f4900e8a29681e627e",
+  "path_kind": "direct-certified",
+  "peak_rss_kib": 2491420,
+  "request": {
+    "census_class": "R/R",
+    "family": "round_robin_arbiter_unreal2",
+    "logical_instance": "round_robin_arbiter_unreal2_pb_7_pe_.ltl",
+    "measured_arity": null,
+    "request_mode": "reproducer",
+    "route_kind": "exact-game-both-sides",
+    "seeds": [],
+    "status_120s": "unsolved",
+    "target": 7
+  },
+  "request_mode": "reproducer",
+  "result": {
+    "certificate": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui/generalizer/round_robin_arbiter_unreal2_7.certificate.aag",
+    "policy": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui/generalizer/round_robin_arbiter_unreal2_7.policy.aag",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "UNREALIZABLE /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui/generalizer/round_robin_arbiter_unreal2_7.certificate.aag",
+    "verdict": "UNREALIZABLE"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "census": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-census.tsv",
+    "instances": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-instances.tsv",
+    "kind": "historical-dataset-reproducer",
+    "match": "basename-to-m0-instances-row"
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "round_robin_arbiter_unreal2",
+        "--target",
+        "7",
+        "--seeds",
+        "",
+        "--timeout",
+        "119.479108",
+        "--check-method",
+        "auto",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui/generalizer",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+        "--diagnostics",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui/generalizer-diagnostics.json"
+      ],
+      "elapsed_s": 31.178104527003597,
+      "pid": 1363827,
+      "returncode": 0,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "VERIFIED family=round_robin_arbiter_unreal2 target=7 seeds=-\ncertificate: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui/generalizer/round_robin_arbiter_unreal2_7.certificate.aag\npolicy: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui/generalizer/round_robin_arbiter_unreal2_7.policy.aag\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "round_robin_arbiter_unreal2",
+    "--target",
+    "7",
+    "--seeds",
+    "",
+    "--reduction-semantics",
+    "exact",
+    "--timeout",
+    "120.0",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck"
+  ],
+  "target_certificate": {
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui/generalizer/round_robin_arbiter_unreal2_7.certificate.aag",
+    "sha256": "ce9447265983e76b473418768c1c4c97c124564351f62377f726d08d93ae02d2",
+    "side": "environment",
+    "verdict": "VERIFIED"
+  },
+  "target_check": {
+    "counterexample": null,
+    "counterexample_method": null,
+    "elapsed_seconds": 15.762919453,
+    "exit_code": 0,
+    "format": "tlsf-gr1-checkresult-v1",
+    "methods": {
+      "certificate": {
+        "counterexample": null,
+        "peak_bdd_nodes": 6553601,
+        "time_seconds": 13.670556087,
+        "verdict": "VERIFIED"
+      },
+      "closed_loop": {
+        "counterexample": null,
+        "peak_bdd_nodes": 0,
+        "time_seconds": 0.0,
+        "verdict": "SKIPPED"
+      }
+    },
+    "peak_bdd_nodes": 6553601,
+    "requested_method": "certificate",
+    "verdict": "VERIFIED"
+  },
+  "target_check_ran": true,
+  "target_verified": true,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-e14c752708a9-q5y0wrui"
+}

@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_verified",
+  "capability": {
+    "arity": 2,
+    "family": "load_balancer",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "real-proposal",
+    "template": "scripts/acacia_lift/data/templates/tlsf/load_balancer/parametric/load_balancer.tlsf",
+    "template_sha256": "7d99413d91924379be7d1701b9803267ce1d8b2afccfbe8ff3538e7d4295bef4"
+  },
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-a/route-records/N-a/60/load_balancer_pb_6_pe_.ltl.ca2f7517f031458b8ddddf87c8f0e195.json.lift-evidence.json",
+  "evidence_sha256": "198804001c0f3918f403a3b8998558092a7705d977297932f1a7328c7b78d1be",
+  "fallback_remaining": null,
+  "fallback_start": null,
+  "input_sha256": "c35e9239722f353d3000f44cbedbfa7e05ec53f7d9178962ac4df63752a30955",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/load_balancer_pb_6_pe_.tlsf",
+    "--budget",
+    "19.928323",
+    "--eligibility-budget-seconds",
+    "1.0",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-uzp35apa/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-a/route-records/N-a/60/load_balancer_pb_6_pe_.ltl.ca2f7517f031458b8ddddf87c8f0e195.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 1.546556323999539,
+  "lift_exit": 0,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "load_balancer",
+    "reason": "source-verified capability load_balancer",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_check",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "lifting"
+}

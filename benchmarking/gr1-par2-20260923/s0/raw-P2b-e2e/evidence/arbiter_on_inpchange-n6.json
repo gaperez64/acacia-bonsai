@@ -1,0 +1,566 @@
+{
+  "budget_s": 120.0,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1814515712,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_on_inpchange-n6.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_on_inpchange-n6.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 23.762250163999852,
+    "driver_overhead_s": 3.0881469689741117,
+    "generalization_s": 2.923686,
+    "instantiation_s": 0.958624,
+    "probe_check_s": 3.006215,
+    "seed_monitor_s": 0.441748,
+    "seed_solve_s": 1.159814,
+    "target_check_s": 11.983783,
+    "target_monitor_s": 0.175041,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.02519219502573833
+  },
+  "elapsed_s": 23.762250163999852,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/evidence/arbiter_on_inpchange-n6.json",
+  "generalizer_evidence": {
+    "arity": 2,
+    "bus_schemas": [
+      "AtMostOne(g)"
+    ],
+    "canonical_variable": "(template,index_tuple,state_bit)",
+    "compose_route": "native_veccompose",
+    "cost_accounting": {
+      "driver_overhead_s": 0.32544764125486836,
+      "generalization_s": 4.904144424886908,
+      "instantiate_s": 1.5313677259837277,
+      "probe_check_s": 3.006214912980795,
+      "seed_monitor_s": 0.4417475059744902,
+      "seed_solve_s": 1.1598141738795675,
+      "target_check_s": 11.983782915980555,
+      "target_monitor_s": 0.17504060204373673,
+      "wall_s": 23.52755990298465
+    },
+    "family": "arbiter_on_inpchange",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "predicate_arities": {
+      "inv": 2,
+      "x_0_0_0": 2,
+      "x_0_1_0": 2,
+      "x_10_0_0": 2,
+      "x_10_1_0": 2,
+      "x_11_0_0": 2,
+      "x_11_1_0": 2,
+      "x_11_2_0": 2,
+      "x_12_0_0": 2,
+      "x_12_1_0": 2,
+      "x_12_2_0": 2,
+      "x_13_0_0": 2,
+      "x_13_1_0": 2,
+      "x_14_0_0": 2,
+      "x_14_1_0": 2,
+      "x_15_0_0": 2,
+      "x_15_1_0": 2,
+      "x_15_2_0": 2,
+      "x_16_0_0": 2,
+      "x_16_1_0": 2,
+      "x_16_2_0": 2,
+      "x_17_0_0": 2,
+      "x_17_1_0": 2,
+      "x_18_0_0": 2,
+      "x_18_1_0": 2,
+      "x_19_0_0": 2,
+      "x_19_1_0": 2,
+      "x_19_2_0": 2,
+      "x_1_0_0": 2,
+      "x_1_1_0": 2,
+      "x_20_0_0": 2,
+      "x_20_1_0": 2,
+      "x_20_2_0": 2,
+      "x_21_0_0": 2,
+      "x_21_1_0": 2,
+      "x_22_0_0": 2,
+      "x_22_1_0": 2,
+      "x_23_0_0": 2,
+      "x_23_1_0": 2,
+      "x_23_2_0": 2,
+      "x_24_0_0": 2,
+      "x_24_1_0": 2,
+      "x_24_2_0": 2,
+      "x_2_0_0": 2,
+      "x_2_1_0": 2,
+      "x_3_0_0": 2,
+      "x_3_1_0": 2,
+      "x_3_2_0": 2,
+      "x_4_0_0": 2,
+      "x_4_1_0": 2,
+      "x_4_2_0": 2,
+      "x_5_0_0": 2,
+      "x_5_1_0": 2,
+      "x_6_0_0": 2,
+      "x_6_1_0": 2,
+      "x_7_0_0": 2,
+      "x_7_1_0": 2,
+      "x_7_2_0": 2,
+      "x_8_0_0": 2,
+      "x_8_1_0": 2,
+      "x_8_2_0": 2,
+      "x_9_0_0": 2,
+      "x_9_1_0": 2
+    },
+    "rank_depths": [
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      3,
+      3
+    ],
+    "role_classes": [
+      "role_0"
+    ],
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "skolem_rule": "game controllable order; true/lowest index first",
+    "stage_evidence": {
+      "CEGIS": {
+        "checks": [
+          {
+            "counterexample": false,
+            "exit_code": 0,
+            "n": 5,
+            "node_caps": [
+              16777216
+            ],
+            "verdict": "VERIFIED"
+          },
+          {
+            "counterexample": false,
+            "exit_code": 0,
+            "n": 6,
+            "node_caps": [
+              33554432
+            ],
+            "verdict": "VERIFIED"
+          }
+        ],
+        "final_verdict": "VERIFIED",
+        "round_cap": 3,
+        "rounds": 0
+      },
+      "anti-unify": {
+        "arity": 2,
+        "predicate_arities": {
+          "inv": 2,
+          "x_0_0_0": 2,
+          "x_0_1_0": 2,
+          "x_10_0_0": 2,
+          "x_10_1_0": 2,
+          "x_11_0_0": 2,
+          "x_11_1_0": 2,
+          "x_11_2_0": 2,
+          "x_12_0_0": 2,
+          "x_12_1_0": 2,
+          "x_12_2_0": 2,
+          "x_13_0_0": 2,
+          "x_13_1_0": 2,
+          "x_14_0_0": 2,
+          "x_14_1_0": 2,
+          "x_15_0_0": 2,
+          "x_15_1_0": 2,
+          "x_15_2_0": 2,
+          "x_16_0_0": 2,
+          "x_16_1_0": 2,
+          "x_16_2_0": 2,
+          "x_17_0_0": 2,
+          "x_17_1_0": 2,
+          "x_18_0_0": 2,
+          "x_18_1_0": 2,
+          "x_19_0_0": 2,
+          "x_19_1_0": 2,
+          "x_19_2_0": 2,
+          "x_1_0_0": 2,
+          "x_1_1_0": 2,
+          "x_20_0_0": 2,
+          "x_20_1_0": 2,
+          "x_20_2_0": 2,
+          "x_21_0_0": 2,
+          "x_21_1_0": 2,
+          "x_22_0_0": 2,
+          "x_22_1_0": 2,
+          "x_23_0_0": 2,
+          "x_23_1_0": 2,
+          "x_23_2_0": 2,
+          "x_24_0_0": 2,
+          "x_24_1_0": 2,
+          "x_24_2_0": 2,
+          "x_2_0_0": 2,
+          "x_2_1_0": 2,
+          "x_3_0_0": 2,
+          "x_3_1_0": 2,
+          "x_3_2_0": 2,
+          "x_4_0_0": 2,
+          "x_4_1_0": 2,
+          "x_4_2_0": 2,
+          "x_5_0_0": 2,
+          "x_5_1_0": 2,
+          "x_6_0_0": 2,
+          "x_6_1_0": 2,
+          "x_7_0_0": 2,
+          "x_7_1_0": 2,
+          "x_7_2_0": 2,
+          "x_8_0_0": 2,
+          "x_8_1_0": 2,
+          "x_8_2_0": 2,
+          "x_9_0_0": 2,
+          "x_9_1_0": 2
+        },
+        "role_classes": [
+          "role_0"
+        ],
+        "template_counts": {
+          "inv": 2,
+          "move_reconstructed": 25,
+          "rank": 224
+        }
+      },
+      "bus-wide schemas": {
+        "matched": [
+          "AtMostOne(g)"
+        ]
+      },
+      "canonicalize": {
+        "variable_abi": "(template,index_tuple,state_bit)"
+      },
+      "instantiate": {
+        "certificate": "arbiter_on_inpchange_6.certificate.aag",
+        "policy": "arbiter_on_inpchange_6.policy.aag"
+      },
+      "ranks": {
+        "depths": [
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          3,
+          3,
+          2,
+          2,
+          3,
+          3
+        ],
+        "y": "union_i x_j_k_i"
+      },
+      "seed": {
+        "exports": [
+          "policy",
+          "certificate",
+          "provenance"
+        ],
+        "sizes": [
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "stages": [
+      "seed",
+      "canonicalize",
+      "anti-unify",
+      "bus-wide schemas",
+      "ranks",
+      "instantiate",
+      "CEGIS"
+    ],
+    "target": 6,
+    "template_counts": {
+      "inv": 2,
+      "move_reconstructed": 25,
+      "rank": 224
+    },
+    "variable_layout": {
+      "blocks": {
+        "canonical_templates": {
+          "size": 94,
+          "start": 573
+        },
+        "composition": {
+          "size": 268,
+          "start": 140
+        },
+        "policy_counter": {
+          "size": 25,
+          "start": 408
+        },
+        "policy_game": {
+          "size": 140,
+          "start": 433
+        },
+        "public": {
+          "size": 140,
+          "start": 0
+        }
+      },
+      "public_letter_count": 12,
+      "public_state_count": 128,
+      "required_variables": 667,
+      "sha256": "2331b3b1ae0d6e33ee68bf76536c6bbe06ffa81bb7e2c3bfe9e5fb33bf40b8b5",
+      "variable_limit": null
+    },
+    "y_reconstruction": "union_i x_j_k_i"
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "probe_check": 3.006214912980795,
+      "seed_monitor_game": 0.4417475059744902,
+      "seed_solve": 1.1598141738795675,
+      "stage_anti_unify": 0.09904328396078199,
+      "stage_bus_schemas": 0.00044543296098709106,
+      "stage_canonicalize": 0.34599571296712384,
+      "stage_cegis": 23.526860291021876,
+      "stage_instantiate": 1.5313677259837277,
+      "stage_ranks": 4.804655707965139,
+      "stage_seed": 1.7286623400286771,
+      "target_check": 11.983782915980555,
+      "target_monitor_game": 0.17504060204373673
+    },
+    "last_stage_times": {
+      "anti_unify": 0.042620432970579714,
+      "bus_schemas": 0.00022901996271684766,
+      "canonicalize": 0.14531699899816886,
+      "cegis": 23.526860291021876,
+      "instantiate": 0.5727438819594681,
+      "ranks": 1.9632467209594324,
+      "seed": 0.8599829340237193
+    },
+    "sampled_monotonic_s": 502734.082257726
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.056423",
+    "arity": "2",
+    "bus_schemas_s": "0.000216",
+    "canonicalize_s": "0.200679",
+    "cegis_rounds": "0",
+    "cegis_s": "23.526860",
+    "checker_node_caps": "5:16777216,6:33554432",
+    "driver_overhead_s": "0.325448",
+    "family": "arbiter_on_inpchange",
+    "instantiate_s": "0.958624",
+    "peak_rss_kib": "1399440",
+    "predicate_arities": "default=2",
+    "probe_check_s": "3.006215",
+    "ranks_s": "2.841409",
+    "reason": "-",
+    "role_classes": "role_0",
+    "seed_monitor_s": "0.441748",
+    "seed_s": "0.868679",
+    "seed_solve_s": "1.159814",
+    "seeds": "2,3,4",
+    "solver_cache": "8388608,8388608,8388608",
+    "solver_nodes": "33554432,33554432,33554432",
+    "stage_reached": "CEGIS",
+    "stages_passed": "seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS",
+    "target": "6",
+    "target_check_s": "11.983783",
+    "target_monitor_s": "0.175041",
+    "target_solve_s": "0.000000",
+    "verdict": "VERIFIED",
+    "wall_s": "23.527560"
+  },
+  "invocation_id": "226d7ee48fea41b191d9854dbe6eb798",
+  "path_kind": "lifted",
+  "peak_rss_kib": 1399440,
+  "request": {
+    "census_class": "-/R",
+    "family": "arbiter_on_inpchange",
+    "logical_instance": "arbiter_on_inpchange_pb_6_pe_.ltl",
+    "measured_arity": 2,
+    "request_mode": "reproducer",
+    "route_kind": "real-proposal",
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "status_120s": "unsolved",
+    "target": 6
+  },
+  "request_mode": "reproducer",
+  "result": {
+    "certificate": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk/generalizer/arbiter_on_inpchange_6.certificate.aag",
+    "policy": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk/generalizer/arbiter_on_inpchange_6.policy.aag",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "REALIZABLE /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk/generalizer/arbiter_on_inpchange_6.certificate.aag",
+    "verdict": "REALIZABLE"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "census": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-census.tsv",
+    "instances": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-instances.tsv",
+    "kind": "historical-dataset-reproducer",
+    "match": "basename-to-m0-instances-row"
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "arbiter_on_inpchange",
+        "--target",
+        "6",
+        "--seeds",
+        "2,3,4",
+        "--timeout",
+        "119.478316",
+        "--check-method",
+        "auto",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk/generalizer",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ef2b6393/libbuddy_veccompose_adapter.so",
+        "--diagnostics",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk/generalizer-diagnostics.json"
+      ],
+      "elapsed_s": 23.737057968974113,
+      "pid": 1435894,
+      "returncode": 0,
+      "stage": "generalize_gr1",
+      "stderr": "generalize_gr1: target goal 1/25 ranks instantiated\ngeneralize_gr1: target goal 2/25 ranks instantiated\ngeneralize_gr1: target goal 3/25 ranks instantiated\ngeneralize_gr1: target goal 4/25 ranks instantiated\ngeneralize_gr1: target goal 5/25 ranks instantiated\ngeneralize_gr1: target goal 6/25 ranks instantiated\ngeneralize_gr1: target goal 7/25 ranks instantiated\ngeneralize_gr1: target goal 8/25 ranks instantiated\ngeneralize_gr1: target goal 9/25 ranks instantiated\ngeneralize_gr1: target goal 10/25 ranks instantiated\ngeneralize_gr1: target goal 11/25 ranks instantiated\ngeneralize_gr1: target goal 12/25 ranks instantiated\ngeneralize_gr1: target goal 13/25 ranks instantiated\ngeneralize_gr1: target goal 14/25 ranks instantiated\ngeneralize_gr1: target goal 15/25 ranks instantiated\ngeneralize_gr1: target goal 16/25 ranks instantiated\ngeneralize_gr1: target goal 17/25 ranks instantiated\ngeneralize_gr1: target goal 18/25 ranks instantiated\ngeneralize_gr1: target goal 19/25 ranks instantiated\ngeneralize_gr1: target goal 20/25 ranks instantiated\ngeneralize_gr1: target goal 21/25 ranks instantiated\ngeneralize_gr1: target goal 22/25 ranks instantiated\ngeneralize_gr1: target goal 23/25 ranks instantiated\ngeneralize_gr1: target goal 24/25 ranks instantiated\ngeneralize_gr1: target goal 25/25 ranks instantiated\ngeneralize_gr1: target goal 1/25 move instantiated\ngeneralize_gr1: target goal 2/25 move instantiated\ngeneralize_gr1: target goal 3/25 move instantiated\ngeneralize_gr1: target goal 4/25 move instantiated\ngeneralize_gr1: target goal 5/25 move instantiated\ngeneralize_gr1: target goal 6/25 move instantiated\ngeneralize_gr1: target goal 7/25 move instantiated\ngeneralize_gr1: target goal 8/25 move instantiated\ngeneralize_gr1: target goal 9/25 move instantiated\ngeneralize_gr1: target goal 10/25 move instantiated\ngeneralize_gr1: target goal 11/25 move instantiated\ngeneralize_gr1: target goal 12/25 move instantiated\ngeneralize_gr1: target goal 13/25 move instantiated\ngeneralize_gr1: target goal 14/25 move instantiated\ngeneralize_gr1: target goal 15/25 move instantiated\ngeneralize_gr1: target goal 16/25 move instantiated\ngeneralize_gr1: target goal 17/25 move instantiated\ngeneralize_gr1: target goal 18/25 move instantiated\ngeneralize_gr1: target goal 19/25 move instantiated\ngeneralize_gr1: target goal 20/25 move instantiated\ngeneralize_gr1: target goal 21/25 move instantiated\ngeneralize_gr1: target goal 22/25 move instantiated\ngeneralize_gr1: target goal 23/25 move instantiated\ngeneralize_gr1: target goal 24/25 move instantiated\ngeneralize_gr1: target goal 25/25 move instantiated\ngeneralize_gr1: certificate emitted\ngeneralize_gr1: structured arbiter policy emitted\ngeneralize_gr1: target goal 1/21 ranks instantiated\ngeneralize_gr1: target goal 2/21 ranks instantiated\ngeneralize_gr1: target goal 3/21 ranks instantiated\ngeneralize_gr1: target goal 4/21 ranks instantiated\ngeneralize_gr1: target goal 5/21 ranks instantiated\ngeneralize_gr1: target goal 6/21 ranks instantiated\ngeneralize_gr1: target goal 7/21 ranks instantiated\ngeneralize_gr1: target goal 8/21 ranks instantiated\ngeneralize_gr1: target goal 9/21 ranks instantiated\ngeneralize_gr1: target goal 10/21 ranks instantiated\ngeneralize_gr1: target goal 11/21 ranks instantiated\ngeneralize_gr1: target goal 12/21 ranks instantiated\ngeneralize_gr1: target goal 13/21 ranks instantiated\ngeneralize_gr1: target goal 14/21 ranks instantiated\ngeneralize_gr1: target goal 15/21 ranks instantiated\ngeneralize_gr1: target goal 16/21 ranks instantiated\ngeneralize_gr1: target goal 17/21 ranks instantiated\ngeneralize_gr1: target goal 18/21 ranks instantiated\ngeneralize_gr1: target goal 19/21 ranks instantiated\ngeneralize_gr1: target goal 20/21 ranks instantiated\ngeneralize_gr1: target goal 21/21 ranks instantiated\ngeneralize_gr1: target goal 1/21 move instantiated\ngeneralize_gr1: target goal 2/21 move instantiated\ngeneralize_gr1: target goal 3/21 move instantiated\ngeneralize_gr1: target goal 4/21 move instantiated\ngeneralize_gr1: target goal 5/21 move instantiated\ngeneralize_gr1: target goal 6/21 move instantiated\ngeneralize_gr1: target goal 7/21 move instantiated\ngeneralize_gr1: target goal 8/21 move instantiated\ngeneralize_gr1: target goal 9/21 move instantiated\ngeneralize_gr1: target goal 10/21 move instantiated\ngeneralize_gr1: target goal 11/21 move instantiated\ngeneralize_gr1: target goal 12/21 move instantiated\ngeneralize_gr1: target goal 13/21 move instantiated\ngeneralize_gr1: target goal 14/21 move instantiated\ngeneralize_gr1: target goal 15/21 move instantiated\ngeneralize_gr1: target goal 16/21 move instantiated\ngeneralize_gr1: target goal 17/21 move instantiated\ngeneralize_gr1: target goal 18/21 move instantiated\ngeneralize_gr1: target goal 19/21 move instantiated\ngeneralize_gr1: target goal 20/21 move instantiated\ngeneralize_gr1: target goal 21/21 move instantiated\ngeneralize_gr1: certificate emitted\ngeneralize_gr1: structured arbiter policy emitted\n",
+      "stdout": "VERIFIED family=arbiter_on_inpchange target=6 seeds=2,3,4\ncertificate: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk/generalizer/arbiter_on_inpchange_6.certificate.aag\npolicy: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk/generalizer/arbiter_on_inpchange_6.policy.aag\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "arbiter_on_inpchange",
+    "--target",
+    "6",
+    "--seeds",
+    "2,3,4",
+    "--reduction-semantics",
+    "exact",
+    "--timeout",
+    "120.0",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ef2b6393/libbuddy_veccompose_adapter.so"
+  ],
+  "target_certificate": {
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk/generalizer/arbiter_on_inpchange_6.certificate.aag",
+    "sha256": "b5ec1c1b67c4223ac0fcf52699f045214696325d6e1c6741cb73a9cfbe5bb131",
+    "side": "system",
+    "verdict": "VERIFIED"
+  },
+  "target_check": {
+    "counterexample": null,
+    "counterexample_method": null,
+    "elapsed_seconds": 11.955066018,
+    "exit_code": 0,
+    "format": "tlsf-gr1-checkresult-v1",
+    "methods": {
+      "certificate": {
+        "counterexample": null,
+        "peak_bdd_nodes": 22675457,
+        "time_seconds": 11.864911406,
+        "verdict": "VERIFIED"
+      },
+      "closed_loop": {
+        "counterexample": null,
+        "peak_bdd_nodes": 0,
+        "time_seconds": 0.0,
+        "verdict": "SKIPPED"
+      }
+    },
+    "peak_bdd_nodes": 22675457,
+    "requested_method": "auto",
+    "verdict": "VERIFIED"
+  },
+  "target_check_ran": true,
+  "target_verified": true,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ef2b6393/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2b/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-226d7ee48fea-8iwkidvk"
+}

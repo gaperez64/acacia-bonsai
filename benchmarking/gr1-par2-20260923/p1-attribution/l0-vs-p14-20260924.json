@@ -1,0 +1,1964 @@
+{
+  "artifact_roots": [
+    "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0",
+    "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+  ],
+  "checker_order": [
+    "L0",
+    "P14"
+  ],
+  "checkers": {
+    "L0": {
+      "binary_sha256": "a7fffaa32b77cb5a13938ccfb02f7d93b6a31ec350d5f2da3e838a1574630d9d",
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck"
+    },
+    "P14": {
+      "binary_sha256": "2b2464a2f87537a0c7b159e11c134c23ce190da9345139b9e7b98455777437a6",
+      "path": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck"
+    }
+  },
+  "disagreements": [],
+  "format": "acacia-p1-checker-attribution-v1",
+  "measurement_errors": {
+    "missing_memory_peak": [],
+    "missing_status_word": []
+  },
+  "rounds": 2,
+  "stats_for": [],
+  "targets": {
+    "amba_decomposed_lock-n15": {
+      "artifact_sha256": {
+        "certificate": "c4660604b8f7eb0b6c2662e6c8ac5c35d0c9e32b6ec8da9857171066fe3b77d2",
+        "game": "6228ef59e7b2ff058133f13d9ff2d2e62701876f5ac111c6dbf9fbb5f96ed25f",
+        "policy": "2bfd8f7b9e61614247384fa54e1470b96ea58aaf41f5854730fdeaa622cb5db1"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1933295616,
+          "median_wall_seconds": 7.658320629008813,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1917816832,
+          "median_wall_seconds": 7.06462529298733,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "amba_decomposed_lock",
+      "method": "auto",
+      "n": 15,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/amba_decomposed_lock-n15/amba_decomposed_lock-n15-8ce79bbbd57f-pbyegix9/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/amba_decomposed_lock-n15/amba_decomposed_lock-n15-bd68a5800616-ou6gt3t8/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "433570385d3a6711ed86ea55c060986a462bf5daab324ec570946c06573c3865"
+    },
+    "arbiter-n10": {
+      "artifact_sha256": {
+        "certificate": "9409e6631c089561cd8cffeb84ce211be9691217e4957ad956d28a27ccbdddd1",
+        "game": "2e96cd6a21e8fad77675694b4166bcb7fbe43f18aaa4def9d783be9d503888f8",
+        "policy": "bd43561eb3620aa764ee129f376f08aa4ad43e8f5b5f01f7551bf77bf27aa899"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 941928448,
+          "median_wall_seconds": 2.4992384424840566,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 731914240,
+          "median_wall_seconds": 0.6137225205020513,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter",
+      "method": "auto",
+      "n": 10,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n10/arbiter-n10-828d51ba853f-zapkrpv7/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "ef86378746c400134764206af3e53e3e5e0602b6ee375e7f625d7e4cb031c56a"
+    },
+    "arbiter-n5": {
+      "artifact_sha256": {
+        "certificate": "4337043d3e102756609507d16b8200d92d7bc32bfbe170d5ec85338c876128aa",
+        "game": "ebf5c2e386cf3f17d507d56940fed4e783050c35c1defd1cd4639614ef7a247d",
+        "policy": "eab12d374539ffb28d918643cf1660de3f994d4a03c580e1d5e408c54ea9296a"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 347869184,
+          "median_wall_seconds": 0.1185956065019127,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 342470656,
+          "median_wall_seconds": 0.08778081499622203,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter",
+      "method": "auto",
+      "n": 5,
+      "node_cap": 16777216,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/controls/arbiter-n5/arbiter-n5-4279f0a2c499-81od1v40/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "78635e589bc19b989ede5d2c3345779b7398834f19bc8e7878c7d5f0d81eac3d"
+    },
+    "arbiter-n6": {
+      "artifact_sha256": {
+        "certificate": "aa5b4a8b4380bbececc9893719adeef2ed2499d9981214b4aeb30bbd1094324f",
+        "game": "57ffd076a764a687e984e683652b59bed0211256862dd70c65eff8b4662b94a9",
+        "policy": "dbd5c7e6f4ba4c55e157ed5688f066ca345f3988253366821f32f1f1feb581cf"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 693383168,
+          "median_wall_seconds": 0.2214964010345284,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 681078784,
+          "median_wall_seconds": 0.1569252774643246,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter",
+      "method": "auto",
+      "n": 6,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n6/arbiter-n6-3b5f69197f7b-53so173f/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/arbiter-n6/arbiter-n6-2ef6a949e3c4-5au8vi5o/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "983cae5f72a43d710e83e4e2802d48bdc0f6c400773d0ae6533e6ae91b36d9df"
+    },
+    "arbiter-n7": {
+      "artifact_sha256": {
+        "certificate": "40f48ccfb1b0a8097375759dc8f960ebf15d5006e4f83c122191cb91b433e26c",
+        "game": "d1a8a808521c4abb22570ebe0ff31339a8a73e967cf7f915f65ae5537d0e602f",
+        "policy": "9ace1fa3d5720ddb650cb75fe581a4d0634a2e5d7ecaba9fd9b4e789e026d95c"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 710205440,
+          "median_wall_seconds": 0.35134136147098616,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 686698496,
+          "median_wall_seconds": 0.1937347810016945,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter",
+      "method": "auto",
+      "n": 7,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n7/arbiter-n7-8523516d46e6-x1hkzfo4/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "f408535a56a8361bed7d352fc6af85301be4af1fb2d128af3e03f443a72bdbf7"
+    },
+    "arbiter-n8": {
+      "artifact_sha256": {
+        "certificate": "ff6e5b0ef9849409e35a3cc21747f51d73fd5e9e98905958812538f6afa8b2aa",
+        "game": "2b7839c9d367a640ce479c0ae8074501713876f856280e536861aed55369a049",
+        "policy": "d51236e2cfcec6a116bafd7941d82f62719c4f55dcb00fea1ed04e1b9187d8e9"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 744878080,
+          "median_wall_seconds": 0.6402950415213127,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 693305344,
+          "median_wall_seconds": 0.2618232704990078,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter",
+      "method": "auto",
+      "n": 8,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n8/arbiter-n8-c0e08180ff71-l78vulc1/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "0c5398deae5cc348352a138a4362fd6bf95e785fef29edfe3a5345bff8587465"
+    },
+    "arbiter-n9": {
+      "artifact_sha256": {
+        "certificate": "8c9c0e91c9c96a661153461a97610a7a751bf3fc9866e75b57c86e1f344bdb08",
+        "game": "5bdc2f90b826c4bbfa437418293487ede78e9efc237573a755f10acc51c71ad0",
+        "policy": "1949ff2b52ea496c53fa4ac9d9fbaaa8c87b0d44e634260ba8eaf76cd872b2ec"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 808849408,
+          "median_wall_seconds": 1.1912163925007917,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 707411968,
+          "median_wall_seconds": 0.3878903134900611,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter",
+      "method": "auto",
+      "n": 9,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter-n9/arbiter-n9-f5d027112e99-zdagxpkh/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "9a709f0af94bc116d439303b811b7ab133065b6e65f623fdd78792738ebd034a"
+    },
+    "arbiter_on_inpchange-n5": {
+      "artifact_sha256": {
+        "certificate": "fe8e6c7758eac0674951419c34af037558e74bc379e09532863f58bc7b31491e",
+        "game": "887fed5a23fa242caf85f301f22e50010e8c5132cf173ecce2f3761d695857a6",
+        "policy": "748b9c3e8ffcd148147dfc610162876c78997f38eacbb7838243c5550a8b6bbf"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 696418304,
+          "median_wall_seconds": 6.299242353969021,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 574349312,
+          "median_wall_seconds": 3.0446797480399255,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_on_inpchange",
+      "method": "auto",
+      "n": 5,
+      "node_cap": 16777216,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_on_inpchange-n5/arbiter_on_inpchange-n5-5df9b1c23485-lgc4p1yl/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "a1793110d71f27550c3b7187600117e89e4b05832683cdd3604e5b7973be1191"
+    },
+    "arbiter_on_inpchange-n6": {
+      "artifact_sha256": {
+        "certificate": "b5ec1c1b67c4223ac0fcf52699f045214696325d6e1c6741cb73a9cfbe5bb131",
+        "game": "b17e68c28662451184dba510880a57e64f3353183174e86c82e09699e21837bd",
+        "policy": "aec5da9af4a126e67237db9b4f3e06bc5b7f826a2a84f647eb507432791c6e6d"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1748844544,
+          "median_wall_seconds": 36.41733381495578,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1434013696,
+          "median_wall_seconds": 12.175825211481424,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_on_inpchange",
+      "method": "auto",
+      "n": 6,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-22d7e27e902d-sgo65rpf/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/arbiter_on_inpchange-n6/arbiter_on_inpchange-n6-312c3cc4b437-lfk5sy9q/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "8cb3ef05a153a3e29b4a454cfd9c4dc43dde6b8a8eddcf7fbcbd8c5eb9ee115a"
+    },
+    "arbiter_on_inpchange-n7": {
+      "artifact_sha256": {
+        "certificate": "21b0351c66bc3ac78592b53a1529c6d96a5a09282b6da24eae4b551157041612",
+        "game": "db77f7f7b46becf095c04e5847c05035cf4f52a2a4b55eb4467c896b6eae445f",
+        "policy": "b3a6c4013bb21d24f6bb3625721cce6544fc31b891303715b977c8c6fdb654b3"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            3,
+            3
+          ],
+          "max_memory_peak_bytes": 1763352576,
+          "median_wall_seconds": 13.161954042006982,
+          "status_counts": {
+            "UNKNOWN": 2
+          },
+          "statuses": [
+            "UNKNOWN",
+            "UNKNOWN"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1842835456,
+          "median_wall_seconds": 125.65825105048134,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_on_inpchange",
+      "method": "auto",
+      "n": 7,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/arbiter_on_inpchange-n7/arbiter_on_inpchange-n7-2552fd1b7fd4-7lfoqu7s/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "138d35c926ef63f4d9ce9f7685db569af0220f0c57a8c0a36aa81fc9898870e7"
+    },
+    "arbiter_with_buffer-n6": {
+      "artifact_sha256": {
+        "certificate": "a2c67ffa901d7104e5612bf32e0723a85b55f7ad0493a430b8e7be532d3b2614",
+        "game": "84816b0ad1b33bedd23a1e01dad948b479b5f72fe38dbd911cad85eca6f8f3e1",
+        "policy": "a14bc76701cf1e613395e54b3f530766ea08e03e17ecb906e10118997ea3bb2d"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 679383040,
+          "median_wall_seconds": 0.12553470802959055,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 676077568,
+          "median_wall_seconds": 0.10158508401946165,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_with_buffer",
+      "method": "auto",
+      "n": 6,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_buffer-n6/arbiter_with_buffer-n6-43382c2455eb-rhwebrt5/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "a6e89a8b3bfcd76a4ea6c7e4201c50d00628de1b2f444058e5baf49ba09fcce9"
+    },
+    "arbiter_with_buffer-n7": {
+      "artifact_sha256": {
+        "certificate": "ffb526f8728750addb45a6e0284ab2280d3f957d937aecfa4e11ed2deffb1334",
+        "game": "2a71657c56353be3bddf7b2e35c47e4e38ea7eaa95fae7f514d257f5a90958d4",
+        "policy": "7d313721c6a62e7cf105fc3889e8634ac95e1d970d013ce86069964ceb98961f"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 691965952,
+          "median_wall_seconds": 0.18864227749872953,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 681168896,
+          "median_wall_seconds": 0.11293009549262933,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_with_buffer",
+      "method": "auto",
+      "n": 7,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "2e25ea2586edab1c273569ee3cb1106aec796c8490ca903306396b247edba2b4"
+    },
+    "arbiter_with_buffer-n8": {
+      "artifact_sha256": {
+        "certificate": "34a37aa7ba16192627c81908dc79955b365e54aeb0d1f00fb851ea3de1e5c3e0",
+        "game": "78a4686233b0fe4fb289cc1b30d50f358d7db18f2b4b25bcc5d6840fbbaa6ba9",
+        "policy": "a58bb87cf278125d5d5aa31d5ad5c44104fcaecec720720f0dca42c2914a87b5"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 738684928,
+          "median_wall_seconds": 0.4347482410084922,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 698912768,
+          "median_wall_seconds": 0.14862331602489576,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_with_buffer",
+      "method": "auto",
+      "n": 8,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_buffer-n8/arbiter_with_buffer-n8-7adaabf6a1b2-u4bd94a_/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/arbiter_with_buffer-n8/arbiter_with_buffer-n8-c1d4dffa1a9d-wlmes1bh/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "e9df5a8c8865ebb6ff647c354c5c35b4bf9c128a11f65bdd2778daa11d88d32f"
+    },
+    "arbiter_with_cancel-n10": {
+      "artifact_sha256": {
+        "certificate": "8d65303d954347cbe0e1501a6aa5bf1f185f03e80edd9675f13a9d48f1bc307a",
+        "game": "db5269ad1c64cbf5a20d607e3d431832de8c4e0e1bdcbe1bf1b3ad5eb55f41b0",
+        "policy": "4f60aa63aab7803aed976a99de1da9217d071c8d932bd3ea6e9525870dabb664"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            3,
+            3
+          ],
+          "max_memory_peak_bytes": 1784483840,
+          "median_wall_seconds": 10.794618518470088,
+          "status_counts": {
+            "UNKNOWN": 2
+          },
+          "statuses": [
+            "UNKNOWN",
+            "UNKNOWN"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1748418560,
+          "median_wall_seconds": 20.622952476493083,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_with_cancel",
+      "method": "auto",
+      "n": 10,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/arbiter_with_cancel-n10/arbiter_with_cancel-n10-8d6498fd9714-ysvcnjfw/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "f0dfec71074187b2e0f57896c97ab10b8ff1aefcd1b94e0d2a22cfb630309d92"
+    },
+    "arbiter_with_cancel-n6": {
+      "artifact_sha256": {
+        "certificate": "83c4e80ca70cac53040d34722c7b1f9c81a31955d954fa26fb3cf386cb1e3ab0",
+        "game": "13077af75cc33d54d86d0d681eed19b62ff26843534be03d672c93e7d8cf5b89",
+        "policy": "1d73a1368af83f674c4a0cee52a85647a45c3b2118fca8b22f10657db9785030"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 771944448,
+          "median_wall_seconds": 1.117499402957037,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 719716352,
+          "median_wall_seconds": 0.5133597529784311,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_with_cancel",
+      "method": "auto",
+      "n": 6,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_cancel-n6/arbiter_with_cancel-n6-c0a75252de54-df1dx8f9/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "afb4c7b12b8639d9a454a2975575d12c086456394a7783f20bd43e9c39d22cf4"
+    },
+    "arbiter_with_cancel-n7": {
+      "artifact_sha256": {
+        "certificate": "30032631e07f15bbcfb4a2c855c59b63ce72d28eaf63e1a57867b71d68cedbfa",
+        "game": "51e629da3e2070bfe3a145a0b3482a88af8ca46ad8ae96e737477993a00c5ac0",
+        "policy": "7c63d70116c3ecf1523a9a2d5bb7fdfcd3abd6750b0090d0abf6857939425dc9"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 914755584,
+          "median_wall_seconds": 3.6340870864805765,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 779444224,
+          "median_wall_seconds": 1.0207116745004896,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_with_cancel",
+      "method": "auto",
+      "n": 7,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_cancel-n7/arbiter_with_cancel-n7-7f5619354677-a9vmd9m9/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "204ea5abb966f32cf54c8fe9980f5197fe61dbed98eda6c8a3f9de0efdb40a69"
+    },
+    "arbiter_with_cancel-n8": {
+      "artifact_sha256": {
+        "certificate": "39f3eb0c2d13af5eeedffd5368e1d9e5ef5c0c36ae546d50c697d1654c2a24f8",
+        "game": "4ce6e85d981555b98aa6e92d65412634d0b52fdef8a77cfa8f286be755e6d56e",
+        "policy": "5e8e3be06b3405f1600483e4464716bb603160933dad2b67cdd795cb9f0f8a68"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1239040000,
+          "median_wall_seconds": 12.51292808901053,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 939003904,
+          "median_wall_seconds": 2.432292230485473,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_with_cancel",
+      "method": "auto",
+      "n": 8,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_cancel-n8/arbiter_with_cancel-n8-2245874924dd-k6a0pyzk/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/arbiter_with_cancel-n8/arbiter_with_cancel-n8-efcfec4889fe-xuo88tsm/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "4bdc9ca2d270646e1d24b68074e49cc2a46c340c84320016d682d03ec6ce9feb"
+    },
+    "arbiter_with_cancel-n9": {
+      "artifact_sha256": {
+        "certificate": "21d1d3158c06ccfda8e3bf93cf491d8223373ea586c47cb3c8dc4c3efea9c175",
+        "game": "8fb67ab1dce098c1430807413830d51356126e5ea4ea549c4797658e00d724c7",
+        "policy": "a6c2f728ad76944be3b586d26a1f3c2a6420a2e0add3195073631b4fc34cc7a5"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1724747776,
+          "median_wall_seconds": 50.229291721538175,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1259974656,
+          "median_wall_seconds": 6.144983301521279,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "arbiter_with_cancel",
+      "method": "auto",
+      "n": 9,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/arbiter_with_cancel-n9/arbiter_with_cancel-n9-163ced9f3fea-bolb6cur/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/arbiter_with_cancel-n9/arbiter_with_cancel-n9-1d17c82ff2ff-gnt0upor/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "f6908e497732232207515771e959e980a2af8884f537469572f17ddd0cac4863"
+    },
+    "load_balancer-n8": {
+      "artifact_sha256": {
+        "certificate": "7fdfb48edc005ee54db73e3459c8cf668d94ee5fe97ae3b0414c292bbde5cc2e",
+        "game": "0e6aa588fbd24406578fee9efe4f054646288e68f2a2b780293c6b7ccce77ad2",
+        "policy": "578008175b25c7c508e2db04ab0091c30f1d0d4a5ee6e1c5bd8e8b2792495604"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 729751552,
+          "median_wall_seconds": 0.42822820498258807,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 689434624,
+          "median_wall_seconds": 0.19123939401470125,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "load_balancer",
+      "method": "auto",
+      "n": 8,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/load_balancer-n8/load_balancer-n8-9740ee0dfb15-ilwgus37/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/load_balancer-n8/load_balancer-n8-e41b8d4fbbb2-auh9vwef/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "06dcbd00296b686f84f36216d73472c4e741bf8d3cd1ff187f88d29cad589f2d"
+    },
+    "load_balancer-n9": {
+      "artifact_sha256": {
+        "certificate": "b35bad12ac55caa13305bc0d6a34693445fc31e8cf818a22c88fc80d2aa5ac90",
+        "game": "95d7a0c0b4306ff639ddb186634491167afb6e2e124ae054d74d132b72669be3",
+        "policy": "4a4ea8a9eadb98fa2b5b3dc81e3e411cb263172838abd82baaefbc9e917a9fd4"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 811884544,
+          "median_wall_seconds": 0.8814783295092639,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 710627328,
+          "median_wall_seconds": 0.27561295649502426,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "load_balancer",
+      "method": "auto",
+      "n": 9,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/load_balancer-n9/load_balancer-n9-0f9db7b00d62-nuju8xzq/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/load_balancer-n9/load_balancer-n9-13abc759bd39-cqwcvhfb/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "5f9c86104c5f42f2ebb6b43b64c981ea6f690a02a710ed528362c5f81a9cde4f"
+    },
+    "load_balancer_unreal2-n6": {
+      "artifact_sha256": {
+        "certificate": "2b7785aaeff3980afa2795abd7e507d107b7cfebea0e210b88c795a911b7b866",
+        "game": "1b35e403d861ecc6fb984bc488cc07ba0263c8f0c089101ec2245dd50d7c61e1",
+        "policy": "82f57b50f2b559eb09b61410329870c69ed3334d02a401ba1a021f0ffd53782b"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1930534912,
+          "median_wall_seconds": 3.507936031499412,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1378070528,
+          "median_wall_seconds": 0.43803605349967256,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "load_balancer_unreal2",
+      "method": "certificate",
+      "n": 6,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/load_balancer_unreal2-n6/load_balancer_unreal2-n6-093d954886c1-m14rntll/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/load_balancer_unreal2-n6/load_balancer_unreal2-n6-ab7e71018962-xf78vvk4/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "environment",
+      "triple_sha256": "ef127b53881c54c358b3bb529a94f3dd07af181d91651788445b415cbad6de79"
+    },
+    "load_balancer_unreal2-n7": {
+      "artifact_sha256": {
+        "certificate": "f12b030c28c39a5086bd416a7225c257319c2b6e84ddfa21c7a3b885cd8421a4",
+        "game": "c5f524362790c48d62f71a8a7124f89a283af4f67797c07393738c1be7a78efb",
+        "policy": "59f7d366c54ee92543b90c0b2d7b9513dc6820a43077fe85a398c7f43b1b9efc"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            3,
+            3
+          ],
+          "max_memory_peak_bytes": 3496050688,
+          "median_wall_seconds": 28.455245533492416,
+          "status_counts": {
+            "UNKNOWN": 2
+          },
+          "statuses": [
+            "UNKNOWN",
+            "UNKNOWN"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1485164544,
+          "median_wall_seconds": 1.3543328424857464,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "load_balancer_unreal2",
+      "method": "certificate",
+      "n": 7,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-3955760a13cd-fgih248r/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "environment",
+      "triple_sha256": "03e0f21c802437fafcef3bd0a10294a441f9305313d9656443afdc6770943e1e"
+    },
+    "prioritized_arbiter-n10": {
+      "artifact_sha256": {
+        "certificate": "1016ac9b5cc2c1da4caf7751d0c1d4574c9499d243dd31b5091d375841413d0b",
+        "game": "4a89ad353d03ab061c40df8b3e6f332f98993271a7ac4dae65464f0431b0a334",
+        "policy": "ea8b4a7427cd601d5a4d7f9ff772c2d41772b8710dbf36632d4f5edf35337901"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 687570944,
+          "median_wall_seconds": 0.15949483949225396,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 677859328,
+          "median_wall_seconds": 0.1397805860324297,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "prioritized_arbiter",
+      "method": "auto",
+      "n": 10,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n10/prioritized_arbiter-n10-0ec6ae1645d7-y9_d20j7/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "5d0e8250300a023c71b7557b0c7848978fd2b27168aa7799b85c2daa27da7829"
+    },
+    "prioritized_arbiter-n12": {
+      "artifact_sha256": {
+        "certificate": "5dee326bb069bc60b3e0189c1dbd652b4a4c045498625b74f864525061a33a1d",
+        "game": "c598feef70e5b4a27caf6a236010b92249c1b717fb0b0a4d5cd98ded7398fd02",
+        "policy": "df17bb0ae7329c437364393a695e13dfaaaee1f0a99b6819c104c38a6901307d"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1409839104,
+          "median_wall_seconds": 0.4555612534750253,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1359814656,
+          "median_wall_seconds": 0.31991281651426107,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "prioritized_arbiter",
+      "method": "auto",
+      "n": 12,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n12/prioritized_arbiter-n12-7a4e0b2280c4-sbsmty3i/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "4dfbb8b72fa892f62da7cd5538efbb8ec14f75f6d8ed0133c3bc30ec8ad653fd"
+    },
+    "prioritized_arbiter-n5": {
+      "artifact_sha256": {
+        "certificate": "420de99f183875ffbec6f82253467b03c6accaf7e57078315c5f5a7e9565f1e9",
+        "game": "8605bcb2e9263eca0af26d5f131fc097f16d246006a1d45440590d58f4ad3e37",
+        "policy": "07dc69e4243b6835fca2c1c2d14bf101e51e80a26d2e318e548764146816e63e"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 338530304,
+          "median_wall_seconds": 0.07130898701143451,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 338440192,
+          "median_wall_seconds": 0.05689289950532839,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "prioritized_arbiter",
+      "method": "auto",
+      "n": 5,
+      "node_cap": 16777216,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/controls/prioritized_arbiter-n5/prioritized_arbiter-n5-c7b51fc52500-ome6h37z/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "f019b2950eff2c97df306f09bb671a9590442f9f5269c5caa25267ecc64258ad"
+    },
+    "prioritized_arbiter-n7": {
+      "artifact_sha256": {
+        "certificate": "2f9fc99cbe773b5fa84c8294f1d7aafa67e41af80204ef6fdf2caa5a876189be",
+        "game": "6f4ec7ed8fea7e4da733a8a125a916be34ca803dc7b4e612d8c71536bc2e9a5e",
+        "policy": "3145508392e10a03cd8ced22871bf0110ca9c135fe752f0f4998c6910c02a3d1"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 676270080,
+          "median_wall_seconds": 0.10825130200828426,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 675004416,
+          "median_wall_seconds": 0.10688185249455273,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "prioritized_arbiter",
+      "method": "auto",
+      "n": 7,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n7/prioritized_arbiter-n7-5271d318e871-hco1hoyh/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/prioritized_arbiter-n7/prioritized_arbiter-n7-d378185c9dbf-chybo7cw/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "f68f1ed34083cd708cca7e2414d0a8ebdf14c7ad1f2aca57b1f640726251dcad"
+    },
+    "prioritized_arbiter-n8": {
+      "artifact_sha256": {
+        "certificate": "2aecf82ab0970775e9a9187968f83f028f221221d0656da2b2425a46f3127702",
+        "game": "a0f14cf56e96296402a4758a1424e6571cac9c9a8c7cf438d1cf462ecd3f87e7",
+        "policy": "3337b5729c307e1d41d0dc894539d0244bee8969f30f4b9d0a0112ba013ba9a2"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 677896192,
+          "median_wall_seconds": 0.1156147419824265,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 675221504,
+          "median_wall_seconds": 0.10726391049684025,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "prioritized_arbiter",
+      "method": "auto",
+      "n": 8,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n8/prioritized_arbiter-n8-9247229ccfc2-mqxlgdca/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "bac283c49de98b26eb4771b63125213bfc3bf5f02a6fd1e9d629b13897906150"
+    },
+    "prioritized_arbiter-n9": {
+      "artifact_sha256": {
+        "certificate": "a18705333a04f61a3bc69c65722649c774d560091dd9b25a6e0597c83c934176",
+        "game": "be051149e05425cc3f7b0a1fe086fa870e1339cb81338a876b6fc80d567cbf53",
+        "policy": "f241cf19ed29fc01176417fa225105054cb8cb6bf9974bb74c11fd481aa9f7a8"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 681549824,
+          "median_wall_seconds": 0.1293837289849762,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 676012032,
+          "median_wall_seconds": 0.12330578450928442,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "prioritized_arbiter",
+      "method": "auto",
+      "n": 9,
+      "node_cap": 33554432,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/prioritized_arbiter-n9/prioritized_arbiter-n9-6cf538f3a372-oncl3amq/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "system",
+      "triple_sha256": "6f86d36a3042d7a76f7bd6783a81c27e2e8acb2bb7ad0cd51f1d7b6c190ef3ef"
+    },
+    "prioritized_arbiter_unreal2-n3": {
+      "artifact_sha256": {
+        "certificate": "114e3e81410a14c52674e979966f2c6e6b576ff553dfbf5db03deb2e582bc978",
+        "game": "faefc642a71fd6c4227314c53041a6ac0c5f5144818462afe96740245abf44fb",
+        "policy": "7bb1dfc68b4419f2f192a9cc75003ee3b878d75d6c39245037dfcb5602979b85"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1346883584,
+          "median_wall_seconds": 0.18328389950329438,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1346699264,
+          "median_wall_seconds": 0.17764062649803236,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "prioritized_arbiter_unreal2",
+      "method": "certificate",
+      "n": 3,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/controls/prioritized_arbiter_unreal2-n3/prioritized_arbiter_unreal2-n3-d5e385f8c0e7-3s_f8qal/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "environment",
+      "triple_sha256": "6630cc3297ee8ce913368cebb323346d61b4fff12a91204c9df5752a6b895333"
+    },
+    "round_robin_arbiter_unreal2-n3": {
+      "artifact_sha256": {
+        "certificate": "4d3459a485053b04762e1f5adf7406cc5a84cfd4907bc96bfa55a0a6b9f1fd28",
+        "game": "bac9a42b7298ab379e26955656699bad147f3be36076cc95b84a9d575a559ce6",
+        "policy": "71aec54586aa33d00d6039af7d11e9288a984e67859b2b48c6b0f01d82600d10"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1350463488,
+          "median_wall_seconds": 0.23009559800266288,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1349804032,
+          "median_wall_seconds": 0.2208647634834051,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "round_robin_arbiter_unreal2",
+      "method": "certificate",
+      "n": 3,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/controls/round_robin_arbiter_unreal2-n3/round_robin_arbiter_unreal2-n3-8097944faf56-u8tdh1im/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "environment",
+      "triple_sha256": "9df3e92514d825d8d3bd0719de14e51413aeea3a58859826137ba07507986c26"
+    },
+    "round_robin_arbiter_unreal2-n5": {
+      "artifact_sha256": {
+        "certificate": "28b4586bd16f738c4d20ea980c9118a35654a308838aa1407abf3f8e652892cb",
+        "game": "ee6ba99406d359f3c719ca2276aef60455b72b9f2df0b77512f2eb73145c40ec",
+        "policy": "472b4709a03b994f4d230b594bd8ebca9cf3075d648636bb840183ec1ae84c7d"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1417637888,
+          "median_wall_seconds": 1.0251462360029109,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1404276736,
+          "median_wall_seconds": 0.9323414454993326,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "round_robin_arbiter_unreal2",
+      "method": "certificate",
+      "n": 5,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/round_robin_arbiter_unreal2-n5/round_robin_arbiter_unreal2-n5-5cbbde05b72d-vnyrdh4m/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/round_robin_arbiter_unreal2-n5/round_robin_arbiter_unreal2-n5-2f0010f3faed-5tlc2oxb/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "environment",
+      "triple_sha256": "e1944b70276e4fa4df70f9f88b253f36be89f027208d526fc590bf9f086f1643"
+    },
+    "round_robin_arbiter_unreal2-n6": {
+      "artifact_sha256": {
+        "certificate": "5799baa300748823bded855e6fcbba901ddc5e91092a3ed9a17f09d4c13c11b3",
+        "game": "3f25f0f8edd082149a5832acd6b82773c04085663bb5d8eaebdf95963e5959c8",
+        "policy": "b31105e538562bc8fa35fc3c2661f197b29edd9dfcf308b6547e02b40abf84fc"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1679286272,
+          "median_wall_seconds": 3.9218944080057554,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 1608290304,
+          "median_wall_seconds": 3.474619675485883,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "round_robin_arbiter_unreal2",
+      "method": "certificate",
+      "n": 6,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/round_robin_arbiter_unreal2-n6/round_robin_arbiter_unreal2-n6-3c89055d9f25-0imn9p3l/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/round_robin_arbiter_unreal2-n6/round_robin_arbiter_unreal2-n6-a9b3703bdde0-90jaj88g/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "environment",
+      "triple_sha256": "0824027abf703d87ffbe1c1c8bd25b36b09affa4f438645986c2cb6a808d9e7e"
+    },
+    "round_robin_arbiter_unreal2-n7": {
+      "artifact_sha256": {
+        "certificate": "ce9447265983e76b473418768c1c4c97c124564351f62377f726d08d93ae02d2",
+        "game": "be1b4be4fd7c133f3e36a6b605d6e89fb56b5c4f383beeee6077082fe3df58fc",
+        "policy": "5cd2183f50069c799230effb09c065d93ea44c3bd0d7be91e7ca416798c68671"
+      },
+      "checkers": {
+        "L0": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 2832138240,
+          "median_wall_seconds": 18.177869589504553,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        },
+        "P14": {
+          "exit_codes": [
+            0,
+            0
+          ],
+          "max_memory_peak_bytes": 2554376192,
+          "median_wall_seconds": 15.830633861507522,
+          "status_counts": {
+            "VERIFIED": 2
+          },
+          "statuses": [
+            "VERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "family": "round_robin_arbiter_unreal2",
+      "method": "certificate",
+      "n": 7,
+      "node_cap": 67108864,
+      "provenance": [
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0/m6/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-4a8dd5ddc20c-1g8f5r5o/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-p0-replay-L0"
+        },
+        {
+          "artifact_dir": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs/round_robin_arbiter_unreal2-n7/round_robin_arbiter_unreal2-n7-89593f03bc02-adwxifc_/generalizer",
+          "root": "/home/gperez/GIT-repos/acacia-bonsai/_bm-logs.gr1-par2-s0-run1/runs"
+        }
+      ],
+      "ratios": {
+        "P1/L0": {
+          "max_memory_peak_bytes": null,
+          "median_wall_seconds": null
+        }
+      },
+      "side": "environment",
+      "triple_sha256": "7c73c640680d99569b3e334286f34a993961accbd66d92b240064c422f0d5ebf"
+    }
+  },
+  "timeout_seconds": 300.0
+}

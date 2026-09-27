@@ -1,0 +1,8 @@
+{
+  "statement": "derived by censoring a C_high s observation; not a C_low s run",
+  "source_file": "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/witness-lifting-20260918/opening/120s/epoch-2/B-cap120-epoch2.tsv",
+  "source_file_sha256": "40dbf922b18b62a9b036f6838e137bb48f3d3131d2ac43b7cbab512fbff39fb6",
+  "C_high_s": 120,
+  "C_low_s": 60,
+  "rows": 1524
+}

@@ -50,6 +50,26 @@ def test_committed_registry_is_valid():
     module.command_validate(options, presets)
 
 
+def test_docker_launcher_uses_registry_group_without_python():
+    module = load_module()
+    _options, presets = module.load_registry()
+    names = (ROOT / "config/docker-default.list").read_text().splitlines()
+    assert names == presets["groups"]["docker_default"]
+    launcher = (ROOT / "scripts/acacia-bonsai.sh").read_text()
+    assert 'mapfile -t CONFIGS < "$REPO_ROOT/config/docker-default.list"' in launcher
+    assert "python" not in launcher.lower()
+
+
+def test_config_validation_rejects_stale_docker_list(tmp_path, monkeypatch):
+    module = load_module()
+    options, presets = module.load_registry()
+    stale = tmp_path / "docker-default.list"
+    stale.write_text("base\n")
+    monkeypatch.setattr(module, "DOCKER_DEFAULT_LIST", stale)
+    with pytest.raises(SystemExit, match="docker-default.list must match"):
+        module.command_validate(options, presets)
+
+
 def test_candidate_mode_default_and_bounded_taa_presets():
     module = load_module()
     options, presets = module.load_registry()
@@ -624,6 +644,7 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
         "-DACACIA_FORWARD_EAGER_MINIMAL_SUCCESSORS=0",
         "-DACACIA_K_SCHEDULE=acacia::k_schedule::kind::geometric",
         "-DACACIA_ENABLE_TLSF_FRONTEND=1",
+        "-DACACIA_NATIVE_ARMS=0",
         "-DACACIA_EQUIVARIANT_MAX_STATES=512",
         "-DACACIA_SYMMETRY_PROFILE=0",
         "-DACACIA_EQUIVARIANT_MAX_OUTPUT_LETTERS=4096",
@@ -656,6 +677,19 @@ def test_preprocessor_flags_preserve_encodings_and_emission_order():
 
     assert flags[:len(expected)] == expected
     assert flags[len(expected)] == "-DAUT_PREPROCESSOR=aut_preprocessors::surely_losing"
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_native_arms_preprocessor_flag_follows_option(enabled):
+    module = load_module()
+    options, _ = module.load_registry()
+    values = module.defaults(options)
+    values["native_arms"] = enabled
+
+    flags = module.preprocessor_flags(options, values)
+    assert [flag for flag in flags if flag.startswith("-DACACIA_NATIVE_ARMS=")] == [
+        f"-DACACIA_NATIVE_ARMS={int(enabled)}"
+    ]
 
 
 def test_preprocessor_flags_omit_disabled_conditional_macros():

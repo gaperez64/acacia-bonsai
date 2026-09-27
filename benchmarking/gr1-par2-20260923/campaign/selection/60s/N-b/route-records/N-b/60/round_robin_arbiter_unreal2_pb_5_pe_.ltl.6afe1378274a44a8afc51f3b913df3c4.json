@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_verified",
+  "capability": {
+    "arity": null,
+    "family": "round_robin_arbiter_unreal2",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "exact-game-both-sides",
+    "template": "scripts/acacia_lift/data/templates/tlsf/round_robin_arbiter_unreal/parametric/round_robin_arbiter_unreal2.tlsf",
+    "template_sha256": "c479b842361509f6877bab34307d6d1de6e60284b5506e121ddd9ffc1df01db0"
+  },
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/round_robin_arbiter_unreal2_pb_5_pe_.ltl.6afe1378274a44a8afc51f3b913df3c4.json.lift-evidence.json",
+  "evidence_sha256": "b2b9306c330c178d84eea88ffa6120d12feaf35d704d9baf29e13dd5c6b1bbaf",
+  "fallback_remaining": null,
+  "fallback_start": null,
+  "input_sha256": "889039f65db9237d8f0d0b65ab85aeb542762feebb0af7cbe27eb067888c83fd",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/round_robin_arbiter_unreal2_pb_5_pe_.tlsf",
+    "--budget",
+    "39.934348",
+    "--eligibility-budget-seconds",
+    "1.0",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-1fnfcoei/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-b/route-records/N-b/60/round_robin_arbiter_unreal2_pb_5_pe_.ltl.6afe1378274a44a8afc51f3b913df3c4.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 1.9940036749467254,
+  "lift_exit": 1,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "round_robin_arbiter_unreal2",
+    "reason": "source-verified capability round_robin_arbiter_unreal2",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_check",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "lifting"
+}

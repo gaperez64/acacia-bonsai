@@ -1,0 +1,92 @@
+instance	n_result	n_seconds	b_epoch1_result	b_epoch1_seconds	b_epoch2_result	b_epoch2_seconds	change_vs_b_epoch1	b_epoch2_vs_epoch1	seconds_delta_vs_b_epoch1	memory_peak_delta_bytes	winner
+abcg_arbiter_pb_4_pe_.ltl	TIMEOUT	60.12939350900706	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+abcg_arbiter_pb_5_pe_.ltl	TIMEOUT	60.13024377101101	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+abcg_arbiter_pb_6_pe_.ltl	TIMEOUT	60.12862578895874	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+amba_case_study_unreal_pb_2_pe_.ltl	TIMEOUT	60.09708499896806	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+amba_case_study_unreal_pb_3_pe_.ltl	TIMEOUT	60.12846664106473	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+amba_case_study_unreal_pb_4_pe_.ltl	TIMEOUT	60.136845653061755	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+amba_case_study_unreal_pb_5_pe_.ltl	TIMEOUT	60.13074920501094	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+amba_decomposed_lock_pb_10_pe_.ltl	REALIZABLE	1.464012466953136	REALIZABLE	0.47215671700178063	REALIZABLE	0.4776400809932966	same	same	0.991856		lifting
+amba_decomposed_lock_pb_11_pe_.ltl	REALIZABLE	1.6482301809592173	REALIZABLE	1.8930920210041222	REALIZABLE	1.8466349630034529	same	same	-0.244862		lifting
+amba_decomposed_lock_pb_12_pe_.ltl	REALIZABLE	1.9589400730328634	REALIZABLE	7.084361741002795	REALIZABLE	7.236327463993803	same	same	-5.125422		lifting
+amba_decomposed_lock_pb_13_pe_.ltl	REALIZABLE	2.6690414970507845	REALIZABLE	24.294208625000465	REALIZABLE	23.597639886997058	same	same	-21.625167		lifting
+amba_decomposed_lock_pb_14_pe_.ltl	REALIZABLE	5.021745502948761	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+amba_decomposed_lock_pb_15_pe_.ltl	REALIZABLE	12.859149312018417	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+amba_decomposed_lock_pb_16_pe_.ltl	TIMEOUT	60.082949790987186	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+amba_decomposed_lock_pb_30_pe_.ltl	TIMEOUT	60.09305092692375	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+amba_decomposed_lock_pb_5_pe_.ltl	REALIZABLE	0.9153361009666696	REALIZABLE	0.018871278000005987	REALIZABLE	0.023189369007013738	same	same	0.896465		lifting
+amba_decomposed_lock_pb_6_pe_.ltl	REALIZABLE	0.9156536789378151	REALIZABLE	0.023491975000069942	REALIZABLE	0.02255314600188285	same	same	0.892162		lifting
+amba_decomposed_lock_pb_7_pe_.ltl	REALIZABLE	0.9334851199528202	REALIZABLE	0.05076355000346666	REALIZABLE	0.048264188997563906	same	same	0.882722		lifting
+amba_decomposed_lock_pb_8_pe_.ltl	REALIZABLE	0.9690160809550434	REALIZABLE	0.057455502999800956	REALIZABLE	0.062104301003273576	same	same	0.911561		lifting
+amba_decomposed_lock_pb_9_pe_.ltl	REALIZABLE	0.9963212839793414	REALIZABLE	0.13729652599431574	REALIZABLE	0.15309313999023288	same	same	0.859025		lifting
+arbiter_on_inpchange_pb_5_pe_.ltl	REALIZABLE	6.30429932102561	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_on_inpchange_pb_6_pe_.ltl	REALIZABLE	15.89198173803743	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_on_inpchange_pb_7_pe_.ltl	TIMEOUT	60.132519918028265	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+arbiter_pb_10_pe_.ltl	REALIZABLE	2.605935542960651	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_pb_5_pe_.ltl	REALIZABLE	1.0665782709838822	REALIZABLE	0.36535575200105086	REALIZABLE	0.3935468639974715	same	same	0.701223		lifting
+arbiter_pb_6_pe_.ltl	REALIZABLE	1.2328726999694481	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_pb_7_pe_.ltl	REALIZABLE	1.4434728079941124	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_pb_8_pe_.ltl	REALIZABLE	1.6756448410451412	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_pb_9_pe_.ltl	REALIZABLE	2.0736782220192254	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_with_buffer_pb_10_pe_.ltl	TIMEOUT	60.12906482000835	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+arbiter_with_buffer_pb_5_pe_.ltl	REALIZABLE	0.915737283998169	REALIZABLE	0.9198862979974365	REALIZABLE	0.9445107460196596	same	same	-0.004149		lifting
+arbiter_with_buffer_pb_6_pe_.ltl	REALIZABLE	1.0487789080943912	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_with_buffer_pb_7_pe_.ltl	REALIZABLE	1.4862630410352722	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_with_buffer_pb_8_pe_.ltl	REALIZABLE	3.014809582964517	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_with_buffer_pb_9_pe_.ltl	REALIZABLE	9.086003495962359	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_with_cancel_pb_10_pe_.ltl	TIMEOUT	60.13081208697986	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+arbiter_with_cancel_pb_5_pe_.ltl	REALIZABLE	1.6581248070579022	REALIZABLE	1.1821713109966367	REALIZABLE	1.2049452219798695	same	same	0.475953		lifting
+arbiter_with_cancel_pb_6_pe_.ltl	REALIZABLE	2.1304756480967626	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_with_cancel_pb_7_pe_.ltl	REALIZABLE	3.0292717919219285	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_with_cancel_pb_8_pe_.ltl	REALIZABLE	4.696999788051471	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+arbiter_with_cancel_pb_9_pe_.ltl	REALIZABLE	8.693051123991609	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+collector_v1_pb_11_pe_.ltl	TIMEOUT	60.08062293904368	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+collector_v1_pb_12_pe_.ltl	TIMEOUT	60.096634636982344	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+collector_v1_pb_13_pe_.ltl	MEMOUT	12.31385851604864	TIMEOUT	60	TIMEOUT	60	same	same			missing-record
+collector_v1_pb_14_pe_.ltl	MEMOUT	12.475828198017552	TIMEOUT	60	TIMEOUT	60	same	same			missing-record
+collector_v1_pb_15_pe_.ltl	MEMOUT	12.813399282982573	TIMEOUT	60	TIMEOUT	60	same	same			missing-record
+collector_v1_pb_5_pe_.ltl	REALIZABLE	20.050218380987644	REALIZABLE	0.02459158999408828	REALIZABLE	0.03395411498786416	same	same	20.025627		B
+collector_v1_pb_7_pe_.ltl	REALIZABLE	20.006701005040668	REALIZABLE	0.09464061399921775	REALIZABLE	0.08990480600914452	same	same	19.912060		B
+collector_v1_pb_9_pe_.ltl	REALIZABLE	22.534192775958218	REALIZABLE	2.710101297998335	REALIZABLE	2.914912706997711	same	same	19.824091		B
+load_balancer_pb_10_pe_.ltl	TIMEOUT	60.12874916696455	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+load_balancer_pb_11_pe_.ltl	TIMEOUT	60.12841996806674	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+load_balancer_pb_5_pe_.ltl	REALIZABLE	1.3177888289792463	REALIZABLE	0.13432374499825528	REALIZABLE	0.1408606030017836	same	same	1.183465		lifting
+load_balancer_pb_6_pe_.ltl	REALIZABLE	1.6330987709807232	REALIZABLE	0.523581938999996	REALIZABLE	0.5345041870023124	same	same	1.109517		lifting
+load_balancer_pb_7_pe_.ltl	REALIZABLE	2.3191552829230204	REALIZABLE	4.820411847998912	REALIZABLE	4.863846884996747	same	same	-2.501257		lifting
+load_balancer_pb_8_pe_.ltl	REALIZABLE	4.2672881139442325	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+load_balancer_pb_9_pe_.ltl	REALIZABLE	9.622194895055145	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+load_balancer_unreal2_pb_2_pe_.ltl	REALIZABLE	0.43925871199462563	REALIZABLE	0.027419370999268722	REALIZABLE	0.026346782004111446	same	same	0.411839		lifting
+load_balancer_unreal2_pb_3_pe_.ltl	UNREALIZABLE	0.5737771010026336	UNREALIZABLE	0.03528258399455808	UNREALIZABLE	0.03781776299001649	same	same	0.538495		lifting
+load_balancer_unreal2_pb_4_pe_.ltl	UNREALIZABLE	0.6403714059852064	UNREALIZABLE	0.12230289700528374	UNREALIZABLE	0.13274793099844828	same	same	0.518069		lifting
+load_balancer_unreal2_pb_5_pe_.ltl	UNREALIZABLE	0.8876882820622995	UNREALIZABLE	11.968711349996738	UNREALIZABLE	12.245557172020199	same	same	-11.081023		lifting
+load_balancer_unreal2_pb_6_pe_.ltl	UNREALIZABLE	2.2244973570341244	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+load_balancer_unreal2_pb_7_pe_.ltl	UNREALIZABLE	11.279759867931716	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+load_balancer_unreal2_pb_8_pe_.ltl	TIMEOUT	60.12938179995399	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+prioritized_arbiter_pb_10_pe_.ltl	REALIZABLE	1.0450235629687086	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+prioritized_arbiter_pb_12_pe_.ltl	REALIZABLE	1.874814840964973	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+prioritized_arbiter_pb_5_pe_.ltl	REALIZABLE	0.7944086500210688	REALIZABLE	0.02731024600143428	REALIZABLE	0.04639033599232789	same	same	0.767098		lifting
+prioritized_arbiter_pb_6_pe_.ltl	REALIZABLE	0.8624593389686197	REALIZABLE	0.35263035599928116	REALIZABLE	0.3695996859896695	same	same	0.509829		lifting
+prioritized_arbiter_pb_7_pe_.ltl	REALIZABLE	0.8697512249927968	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+prioritized_arbiter_pb_8_pe_.ltl	REALIZABLE	0.8916624330449849	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+prioritized_arbiter_pb_9_pe_.ltl	REALIZABLE	0.9609701109584421	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+prioritized_arbiter_unreal2_pb_100_pe_.ltl	TIMEOUT	60.109938684036024	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+prioritized_arbiter_unreal2_pb_10_pe_.ltl	UNREALIZABLE	5.551923902938142	UNREALIZABLE	0.01396371599912527	UNREALIZABLE	0.049526349001098424	same	same	5.537960		lifting
+prioritized_arbiter_unreal2_pb_2_pe_.ltl	UNREALIZABLE	0.542671586968936	UNREALIZABLE	0.030798317999142455	UNREALIZABLE	0.03483610300463624	same	same	0.511873		lifting
+prioritized_arbiter_unreal2_pb_30_pe_.ltl	TIMEOUT	60.11029540700838	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+prioritized_arbiter_unreal2_pb_3_pe_.ltl	UNREALIZABLE	0.5466128909029067	UNREALIZABLE	0.015143846001592465	UNREALIZABLE	0.035156691999873146	same	same	0.531469		lifting
+prioritized_arbiter_unreal2_pb_4_pe_.ltl	UNREALIZABLE	0.5519474789034575	UNREALIZABLE	0.02972848100034753	UNREALIZABLE	0.021651083006872796	same	same	0.522219		lifting
+prioritized_arbiter_unreal2_pb_5_pe_.ltl	UNREALIZABLE	0.5820225299103186	UNREALIZABLE	0.03406921100395266	UNREALIZABLE	0.017618395009776577	same	same	0.547953		lifting
+prioritized_arbiter_unreal2_pb_60_pe_.ltl	TIMEOUT	60.10989310196601	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+prioritized_arbiter_unreal2_pb_6_pe_.ltl	UNREALIZABLE	0.616718307021074	UNREALIZABLE	0.02159050299815135	UNREALIZABLE	0.044588294986169785	same	same	0.595128		lifting
+prioritized_arbiter_unreal2_pb_7_pe_.ltl	UNREALIZABLE	0.7440277899149805	UNREALIZABLE	0.03404482600308256	UNREALIZABLE	0.04184213299595285	same	same	0.709983		lifting
+prioritized_arbiter_unreal2_pb_8_pe_.ltl	UNREALIZABLE	1.071445228997618	UNREALIZABLE	0.03024634900066303	UNREALIZABLE	0.04103290499188006	same	same	1.041199		lifting
+round_robin_arbiter_unreal2_pb_2_pe_.ltl	UNREALIZABLE	0.5606912289513275	UNREALIZABLE	0.026993928993761074	UNREALIZABLE	0.01852324999345001	same	same	0.533697		lifting
+round_robin_arbiter_unreal2_pb_3_pe_.ltl	UNREALIZABLE	0.6275194049812853	UNREALIZABLE	0.04947443900164217	UNREALIZABLE	0.03393541800323874	same	same	0.578045		lifting
+round_robin_arbiter_unreal2_pb_4_pe_.ltl	UNREALIZABLE	0.9165385590167716	UNREALIZABLE	0.49932729700230993	UNREALIZABLE	0.5265735420107376	same	same	0.417211		lifting
+round_robin_arbiter_unreal2_pb_5_pe_.ltl	UNREALIZABLE	2.0696407050127164	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+round_robin_arbiter_unreal2_pb_6_pe_.ltl	UNREALIZABLE	7.1894398420117795	TIMEOUT	60	TIMEOUT	60	gain	same			lifting
+round_robin_arbiter_unreal2_pb_7_pe_.ltl	TIMEOUT	60.128225445980206	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+simple_arbiter_with_hints_pb_10_pe_.ltl	TIMEOUT	60.185071952990256	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+simple_arbiter_with_hints_pb_12_pe_.ltl	TIMEOUT	60.185989682911895	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+simple_arbiter_with_hints_pb_15_pe_.ltl	TIMEOUT	60.1262905979529	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer
+simple_arbiter_with_hints_pb_8_pe_.ltl	TIMEOUT	60.079666655976325	TIMEOUT	60	TIMEOUT	60	same	same			fallback-nonanswer

@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_verified",
+  "capability": {
+    "arity": 1,
+    "family": "amba_decomposed_lock",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "real-proposal",
+    "template": "scripts/acacia_lift/data/templates/tlsf/amba/amba_decomposed/parametric/amba_decomposed_lock.tlsf",
+    "template_sha256": "ce9497a013a4d93d94c330a8ec7322ce0efe4dafca6c9bf5237ca265beb7843b"
+  },
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-a/route-records/N-a/60/amba_decomposed_lock_pb_7_pe_.ltl.e9d5f2c8b7f04654af9bf208cdea011a.json.lift-evidence.json",
+  "evidence_sha256": "fe5627f67d4d8a7ab2f42c4a074f3b66d93b8826179e7925c2c212bfe75f7f2e",
+  "fallback_remaining": null,
+  "fallback_start": null,
+  "input_sha256": "b04fb001a76c6a251bedff93c92f6c9b327bc192347883835c47a7afa19a6ca5",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/amba_decomposed_lock_pb_7_pe_.tlsf",
+    "--budget",
+    "19.935033",
+    "--eligibility-budget-seconds",
+    "1.0",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-95pjlxg9/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-a/route-records/N-a/60/amba_decomposed_lock_pb_7_pe_.ltl.e9d5f2c8b7f04654af9bf208cdea011a.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 0.8541290870634839,
+  "lift_exit": 0,
+  "lift_timed_out": false,
+  "real_check": "region",
+  "real_check_selection": {
+    "capability": "amba_decomposed_lock",
+    "reason": "source-verified capability amba_decomposed_lock",
+    "value": "region"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_check",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "lifting"
+}

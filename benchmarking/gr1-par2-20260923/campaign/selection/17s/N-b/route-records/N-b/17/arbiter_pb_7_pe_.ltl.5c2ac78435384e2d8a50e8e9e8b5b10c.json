@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_verified",
+  "capability": {
+    "arity": 2,
+    "family": "arbiter",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "real-proposal",
+    "template": "scripts/acacia_lift/data/templates/tlsf/arbiters_zoo/parametric/arbiter.tlsf",
+    "template_sha256": "a9839c448b1b56bb43ac2073afc07f2dde8af8af408a13f553e78b97ef280420"
+  },
+  "eligibility_budget_s": 0.8500000000000001,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-b/route-records/N-b/17/arbiter_pb_7_pe_.ltl.5c2ac78435384e2d8a50e8e9e8b5b10c.json.lift-evidence.json",
+  "evidence_sha256": "0db49091efdcd4e6176e57ae5276ce2572be9c6929ea3db3b58354d8fffdac4b",
+  "fallback_remaining": null,
+  "fallback_start": null,
+  "input_sha256": "1ce3431df8125a88ad353e654f0841d56ceff46ba1ee3999d6b0179b869d4ae6",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/arbiter_pb_7_pe_.tlsf",
+    "--budget",
+    "11.265873",
+    "--eligibility-budget-seconds",
+    "0.8500000000000001",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-texiflqv/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-b/route-records/N-b/17/arbiter_pb_7_pe_.ltl.5c2ac78435384e2d8a50e8e9e8b5b10c.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 1.3585466609802097,
+  "lift_exit": 0,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "arbiter",
+    "reason": "source-verified capability arbiter",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_check",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "lifting"
+}

@@ -1,0 +1,258 @@
+{
+  "budget_s": 120.0,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1697751040,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-load_balancer_unreal2-n7.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-load_balancer_unreal2-n7.scope/memory.peak"
+  },
+  "cost_accounting": {
+    "cold_total_s": 11.242560276994482,
+    "driver_overhead_s": 0.15643753895691326,
+    "generalization_s": 0.0,
+    "instantiation_s": 0.0,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.0,
+    "seed_solve_s": 0.0,
+    "target_check_s": 1.326153,
+    "target_monitor_s": 0.090474,
+    "target_solve_s": 9.632891,
+    "wrapper_overhead_s": 0.036604738037567586
+  },
+  "elapsed_s": 11.242560276994482,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/evidence/load_balancer_unreal2-n7.json",
+  "generalizer_evidence": {
+    "answer": "UNREALIZABLE",
+    "certificate_side": "environment",
+    "cost_accounting": {
+      "driver_overhead_s": 0.005507280060555786,
+      "generalization_s": 0.0,
+      "instantiate_s": 0.0,
+      "probe_check_s": 0.0,
+      "seed_monitor_s": 0.0,
+      "seed_solve_s": 0.0,
+      "target_check_s": 1.3261530890013091,
+      "target_monitor_s": 0.09047383395954967,
+      "target_solve_s": 9.632890819979366,
+      "wall_s": 11.05502502300078
+    },
+    "family": "load_balancer_unreal2",
+    "final_verdict": "VERIFIED",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "measured_arity": null,
+    "path_kind": "direct-certified",
+    "seeds": [],
+    "semantics": "exact",
+    "stage_evidence": {
+      "target_check": {
+        "attempts": [
+          {
+            "node_cap": 67108864,
+            "returncode": 0
+          }
+        ],
+        "verdict": "VERIFIED"
+      },
+      "target_monitor_game": {
+        "game": "load_balancer_unreal2_7.game.aag",
+        "provenance": "load_balancer_unreal2_7.prov.json"
+      },
+      "target_solve": {
+        "certificate": "load_balancer_unreal2_7.certificate.aag",
+        "exit_code": 1,
+        "policy": "load_balancer_unreal2_7.policy.aag"
+      }
+    },
+    "target": 7
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "target_check": 1.3261530890013091,
+      "target_monitor_game": 0.09047383395954967,
+      "target_solve": 9.632890819979366
+    },
+    "last_stage_times": {},
+    "sampled_monotonic_s": 494594.869344885
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.000000",
+    "arity": "",
+    "bus_schemas_s": "0.000000",
+    "canonicalize_s": "0.000000",
+    "cegis_rounds": "0",
+    "cegis_s": "0.000000",
+    "checker_node_caps": "67108864",
+    "driver_overhead_s": "0.005507",
+    "family": "load_balancer_unreal2",
+    "instantiate_s": "0.000000",
+    "peak_rss_kib": "1624136",
+    "predicate_arities": "",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.000000",
+    "reason": "-",
+    "role_classes": "",
+    "seed_monitor_s": "0.000000",
+    "seed_s": "0.000000",
+    "seed_solve_s": "0.000000",
+    "seeds": "",
+    "solver_cache": "16777216",
+    "solver_nodes": "67108864",
+    "stage_reached": "target_check",
+    "stages_passed": "target_monitor_game,target_solve,target_check",
+    "target": "7",
+    "target_check_s": "1.326153",
+    "target_monitor_s": "0.090474",
+    "target_solve_s": "9.632891",
+    "verdict": "VERIFIED",
+    "wall_s": "11.055025"
+  },
+  "invocation_id": "153351548f42418695fc3dbb90b2adf6",
+  "path_kind": "direct-certified",
+  "peak_rss_kib": 1624136,
+  "request": {
+    "census_class": "R/R",
+    "family": "load_balancer_unreal2",
+    "logical_instance": "load_balancer_unreal2_pb_7_pe_.ltl",
+    "measured_arity": null,
+    "request_mode": "reproducer",
+    "route_kind": "exact-game-both-sides",
+    "seeds": [],
+    "status_120s": "unsolved",
+    "target": 7
+  },
+  "request_mode": "reproducer",
+  "result": {
+    "certificate": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1/generalizer/load_balancer_unreal2_7.certificate.aag",
+    "policy": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1/generalizer/load_balancer_unreal2_7.policy.aag",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "UNREALIZABLE /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1/generalizer/load_balancer_unreal2_7.certificate.aag",
+    "verdict": "UNREALIZABLE"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "census": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-census.tsv",
+    "instances": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-instances.tsv",
+    "kind": "historical-dataset-reproducer",
+    "match": "basename-to-m0-instances-row"
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "load_balancer_unreal2",
+        "--target",
+        "7",
+        "--seeds",
+        "",
+        "--timeout",
+        "119.479432",
+        "--check-method",
+        "auto",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1/generalizer",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+        "--diagnostics",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1/generalizer-diagnostics.json"
+      ],
+      "elapsed_s": 11.205955538956914,
+      "pid": 1362692,
+      "returncode": 0,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "VERIFIED family=load_balancer_unreal2 target=7 seeds=-\ncertificate: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1/generalizer/load_balancer_unreal2_7.certificate.aag\npolicy: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1/generalizer/load_balancer_unreal2_7.policy.aag\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "load_balancer_unreal2",
+    "--target",
+    "7",
+    "--seeds",
+    "",
+    "--reduction-semantics",
+    "exact",
+    "--timeout",
+    "120.0",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck"
+  ],
+  "target_certificate": {
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1/generalizer/load_balancer_unreal2_7.certificate.aag",
+    "sha256": "f12b030c28c39a5086bd416a7225c257319c2b6e84ddfa21c7a3b885cd8421a4",
+    "side": "environment",
+    "verdict": "VERIFIED"
+  },
+  "target_check": {
+    "counterexample": null,
+    "counterexample_method": null,
+    "elapsed_seconds": 1.31285552,
+    "exit_code": 0,
+    "format": "tlsf-gr1-checkresult-v1",
+    "methods": {
+      "certificate": {
+        "counterexample": null,
+        "peak_bdd_nodes": 3670017,
+        "time_seconds": 0.996134895,
+        "verdict": "VERIFIED"
+      },
+      "closed_loop": {
+        "counterexample": null,
+        "peak_bdd_nodes": 0,
+        "time_seconds": 0.0,
+        "verdict": "SKIPPED"
+      }
+    },
+    "peak_bdd_nodes": 3670017,
+    "requested_method": "certificate",
+    "verdict": "VERIFIED"
+  },
+  "target_check_ran": true,
+  "target_verified": true,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p14/runs/load_balancer_unreal2-n7/load_balancer_unreal2-n7-153351548f42-5iv2yfp1"
+}

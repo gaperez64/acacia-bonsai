@@ -7,6 +7,7 @@
 #include "solver/solver_invoker.hh"
 #if ACACIA_ENABLE_TLSF_FRONTEND
 # include "tlsf_frontend.hh"
+# include <tlsf/pipeline.h>
 #endif
 #include "utils/verbose.hh"
 #include "version.hh"
@@ -60,6 +61,9 @@ struct arg_parse_result {
     bool inputs_specified = false;
     bool outputs_specified = false;
     bool tlsf_specified = false;
+    std::string tlsf_source;
+    std::string tlsf_sha256;
+    bool legacy_available = true;
 };
 
 /**
@@ -106,7 +110,7 @@ void show_help (const char* program_name) {
       << "Usage: " << program_name << " [OPTIONS]\n"
       << "Check realizability for LTL specifications.\n\n"
       << "Allowed options:\n"
-      << "  -h                print this help message\n"
+      << "  -h, --help        print this help message\n"
       << "  -s FILE           synthesize controller and store in FILE\n"
       << "  -V, --version     print program version and configuration\n"
       << "  -f STRING         process the formula STRING\n"
@@ -149,6 +153,11 @@ void show_help (const char* program_name) {
       << "                    with -r, -u, and per-polarity backend/translation options\n"
       << "                    provider options apply to arms without an explicit provider\n"
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, decision only\n"
+      << "                    native -T arms: real:gr1:oxidd, unreal:gr1:oxidd\n"
+      << "                    (one exact GR(1) arm per answer polarity), and\n"
+      << "                    real:param-lift:oxidd (realizability only);\n"
+      << "                    require -Dacacia_native_arms=true and -T FILE;\n"
+      << "                    native arms have no provider and do not support -s\n"
       << "  --spot-fast VAL   use Spot NBA fast path from [off|det|det-and-gfg]\n"
       << "  -v                verbose mode, can be repeated for more verbosity\n"
       << "Exit status:\n"
@@ -340,8 +349,8 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
     case portfolio_arm_parse_error::malformed_spec:
       error (EXIT_CODE_ERROR,
              "Error: invalid field count in --arms spec %s; expected "
-             "polarity:transform:backend[:provider] (real|unreal, small|any or "
-             "formula|automaton, backward|forward|spot-guarded).\n",
+             "polarity:transform:backend[:provider]; native forms are "
+             "real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::polarity:
@@ -351,13 +360,14 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       break;
     case portfolio_arm_parse_error::real_transform:
       error (EXIT_CODE_ERROR,
-             "Error: invalid transform %s in --arms spec %s; real arms accept small or any.\n",
+             "Error: invalid transform %s in --arms spec %s; real arms accept small or any "
+             "(or gr1 or param-lift with oxidd).\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::unreal_transform:
       error (EXIT_CODE_ERROR,
-             "Error: invalid transform %s in --arms spec %s; unreal arms accept formula or "
-             "automaton.\n",
+             "Error: invalid transform %s in --arms spec %s; unreal arms accept formula, "
+             "automaton, or gr1.\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::backend:
@@ -369,6 +379,17 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       error (EXIT_CODE_ERROR, "Error: invalid provider %s in --arms spec %s.\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
+    case portfolio_arm_parse_error::native_provider:
+      error (EXIT_CODE_ERROR, "Error: native arm %s does not accept a provider.\n",
+             parsed.spec.c_str ());
+      break;
+    case portfolio_arm_parse_error::native_transform:
+      error (EXIT_CODE_ERROR, "Error: parameter lifting is realizability only.\n");
+      break;
+    case portfolio_arm_parse_error::native_backend:
+      error (EXIT_CODE_ERROR, "Error: native arm %s requires the oxidd backend.\n",
+             parsed.spec.c_str ());
+      break;
     case portfolio_arm_parse_error::duplicate:
       error (EXIT_CODE_ERROR, "Error: duplicate arm %s in --arms list.\n",
              parsed.spec.c_str ());
@@ -377,7 +398,7 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
 
 #if !ACACIA_FORWARD_SAFETY_SOLVER
   for (const auto& arm : parsed.arms)
-    if (arm.backend == acacia::game_backend::forward)
+    if (arm.kind == portfolio_arm_kind::legacy && arm.legacy->backend == acacia::game_backend::forward)
       error (EXIT_CODE_ERROR,
              "Error: --arms requests the forward backend, but this binary was built "
              "without the forward safety solver (ACACIA_FORWARD_SAFETY_SOLVER); "
@@ -385,7 +406,7 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
 #endif
 #if !ACACIA_SPOT_GUARDED_BACKEND
   for (const auto& arm : parsed.arms)
-    if (acacia::is_guarded_backend (arm.backend))
+    if (arm.kind == portfolio_arm_kind::legacy && acacia::is_guarded_backend (arm.legacy->backend))
       error (EXIT_CODE_ERROR,
              "Error: --arms requests spot-guarded, but this binary was built without the "
              "Spot guarded backend (ACACIA_SPOT_GUARDED_BACKEND); configure with "
@@ -405,20 +426,20 @@ void process_formula_file (const std::string& arg, arg_parse_result& result) {
 
 #if ACACIA_ENABLE_TLSF_FRONTEND
 void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
-  try {
-    auto spec = acacia::tlsf_frontend::load (arg);
-    result.formula = std::move (spec.formula);
-    result.inputs = std::move (spec.inputs);
-    result.outputs = std::move (spec.outputs);
-    result.metadata = std::move (spec.metadata);
-    result.formula_specified = true;
-    result.inputs_specified = true;
-    result.outputs_specified = true;
-    result.tlsf_specified = true;
-  }
-  catch (const std::exception& exception) {
-    error (EXIT_CODE_ERROR, "Error: %s\n", exception.what ());
-  }
+  std::ifstream file (arg, std::ios::binary);
+  if (not file)
+    error (EXIT_CODE_ERROR, "Error: unable to open TLSF file %s\n", arg.c_str ());
+  std::ostringstream buffer;
+  buffer << file.rdbuf ();
+  if (file.bad ())
+    error (EXIT_CODE_ERROR, "Error: unable to read TLSF file %s\n", arg.c_str ());
+  result.tlsf_source = buffer.str ();
+  char sha256[65];
+  if (tlsf_pipeline_source_sha256 (result.tlsf_source.data (), result.tlsf_source.size (), sha256))
+    result.tlsf_sha256 = sha256;
+  // An invalid byte span is still handed to the native API, which reports a
+  // structured decline. Legacy conversion retains its historical CLI error.
+  result.tlsf_specified = true;
 }
 #endif
 
@@ -448,6 +469,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   bool unreal_backend_specified = false;
   static option long_options[] = {
       {"version", no_argument, nullptr, 'V'},
+      {"help", no_argument, nullptr, 'h'},
       {"spot-fast", required_argument, nullptr, OPT_SPOT_FAST},
       {"unreal-translation-pref", required_argument, nullptr,
        OPT_UNREAL_TRANSLATION_PREF},
@@ -472,7 +494,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   // this goes over all provided arguments and returns the argument value.
   while ((opt = getopt_long (argc, argv, short_options, long_options, nullptr)) != -1) {
     switch (opt) {
-      case 'h': show_help (argv[0]); exit (EXIT_CODE_UNKNOWN);
+      case 'h': show_help (argv[0]); exit (0);
       case 'V': print_version (std::cout); exit (EXIT_CODE_UNKNOWN);
       case 'f':
         if (retval.tlsf_specified)
@@ -614,18 +636,6 @@ arg_parse_result arg_parser (int argc, char** argv) {
     }
   }
 
-  if (retval.formula.empty ())
-#if ACACIA_ENABLE_TLSF_FRONTEND
-    error (EXIT_CODE_ERROR,
-           "Error: a formula or TLSF specification must be specified (-f, -F, or -T).\n");
-#else
-    error (EXIT_CODE_ERROR, "Error: a formula must be specified (-f or -F).\n");
-#endif
-  if (not retval.inputs_specified)
-    error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
-  if (not retval.outputs_specified)
-    error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
-
   // --unreal-translation-pref selects no arms by itself: it only overrides
   // primary_translation_pref, and has an effect only when -u also runs an
   // unreal child.  Given without -u it must not suppress the default
@@ -655,10 +665,14 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   if (retval.synth_fname.has_value ()) {
+    if (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+          return arm.kind != portfolio_arm_kind::legacy;
+        }))
+      error (EXIT_CODE_ERROR, "Error: native arms do not support -s controller synthesis.\n");
     const bool closure = acacia::is_closure_provider (retval.real_provider) ||
                          acacia::is_closure_provider (retval.unreal_provider) ||
         (retval.arms && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
-          return acacia::is_closure_provider (arm.provider);
+          return arm.legacy && acacia::is_closure_provider (arm.legacy->provider);
         }));
     if (closure)
       error (EXIT_CODE_ERROR, "Error: closure-buchi does not support controller synthesis.\n");
@@ -694,27 +708,68 @@ arg_parse_result arg_parser (int argc, char** argv) {
   }
 
   for (auto& arm : *retval.arms) {
+    if (arm.kind != portfolio_arm_kind::legacy) {
+#if !ACACIA_NATIVE_ARMS
+      error (EXIT_CODE_ERROR, "Error: native arms require -Dacacia_native_arms=true.\n");
+#endif
+      if (not retval.tlsf_specified)
+        error (EXIT_CODE_ERROR, "Error: native arms require -T FILE.\n");
+      continue;
+    }
     // Validate default arms too, using the same compile-gate errors as explicit
     // backend requests. A provider selection never changes the backend.
-    process_arg_game_backend (acacia::game_backend_name (arm.backend), arm.backend, "arms");
-    if (!arm.provider_explicit)
-      arm.provider = arm.unreal ? retval.unreal_provider : retval.real_provider;
-    process_arg_provider (acacia::automaton_provider_name (arm.provider), arm.provider, "arms");
-    if (arm.provider != acacia::automaton_provider::frozen_graph) {
-      if (arm.unreal && arm.unreal_x == UNREAL_X_AUTOMATON)
+    auto& legacy = *arm.legacy;
+    process_arg_game_backend (acacia::game_backend_name (legacy.backend), legacy.backend, "arms");
+    if (!legacy.provider_explicit)
+      legacy.provider = arm.unreal ? retval.unreal_provider : retval.real_provider;
+    process_arg_provider (acacia::automaton_provider_name (legacy.provider), legacy.provider, "arms");
+    if (legacy.provider != acacia::automaton_provider::frozen_graph) {
+      if (arm.unreal && legacy.unreal_x == UNREAL_X_AUTOMATON)
         error (EXIT_CODE_ERROR,
                "Error: unsupported configuration: the automaton-unreal route must remain eager; "
                "use frozen-graph or the formula-unreal route.\n");
-      if (acacia::is_closure_provider (arm.provider)) {
-        if (arm.backend != acacia::game_backend::spot_guarded_sparse)
+      if (acacia::is_closure_provider (legacy.provider)) {
+        if (legacy.backend != acacia::game_backend::spot_guarded_sparse)
           error (EXIT_CODE_ERROR, "Error: closure-buchi requires spot-guarded-sparse.\n");
       }
-      else if (arm.backend != acacia::game_backend::spot_guarded)
+      else if (legacy.backend != acacia::game_backend::spot_guarded)
         error (EXIT_CODE_ERROR,
                "Error: unsupported configuration: a Spot TAA provider requires --real-backend spot-guarded "
                "or the corresponding unreal/--arms selection.\n");
     }
   }
+
+#if ACACIA_ENABLE_TLSF_FRONTEND
+  if (retval.tlsf_specified && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+        return arm.kind == portfolio_arm_kind::legacy;
+      })) {
+    try {
+      auto spec = acacia::tlsf_frontend::parse (retval.tlsf_source);
+      retval.formula = std::move (spec.formula);
+      retval.inputs = std::move (spec.inputs);
+      retval.outputs = std::move (spec.outputs);
+      retval.metadata = std::move (spec.metadata);
+      retval.formula_specified = true;
+      retval.inputs_specified = true;
+      retval.outputs_specified = true;
+    }
+    catch (const std::exception& exception) {
+      const bool has_native = std::ranges::any_of (*retval.arms, [] (const auto& arm) {
+        return arm.kind != portfolio_arm_kind::legacy;
+      });
+      if (not has_native)
+        error (EXIT_CODE_ERROR, "Error: TLSF conversion failed: %s\n", exception.what ());
+      retval.legacy_available = false;
+      std::cerr << "{\"arm\":\"legacy\",\"stage\":\"tlsf_conversion\",\"status\":\"unavailable\"}\n";
+    }
+  }
+#endif
+  if (not retval.tlsf_specified && retval.formula.empty ())
+    error (EXIT_CODE_ERROR, "Error: a formula or TLSF specification must be specified (-f, -F, or -T).\n");
+  if (not retval.tlsf_specified && not retval.inputs_specified)
+    error (EXIT_CODE_ERROR, "Error: inputs must be specified (-i).\n");
+  if (not retval.tlsf_specified && not retval.outputs_specified)
+    error (EXIT_CODE_ERROR, "Error: outputs must be specified (-o).\n");
 
   for (size_t i = 0; i < retval.arms->size (); ++i)
     for (size_t j = 0; j < i; ++j)

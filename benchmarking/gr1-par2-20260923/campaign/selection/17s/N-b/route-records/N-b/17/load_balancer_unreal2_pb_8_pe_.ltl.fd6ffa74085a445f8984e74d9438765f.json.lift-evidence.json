@@ -1,0 +1,396 @@
+{
+  "budget_s": 11.270326,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1868259328,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1896505-ea2837b6746f.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-syntcomp26-coverage-1896505-ea2837b6746f.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 11.112162054982036,
+    "driver_overhead_s": 0.1405484760757325,
+    "generalization_s": 0.0,
+    "instantiation_s": 0.0,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.0,
+    "seed_solve_s": 0.0,
+    "target_check_s": 0.0,
+    "target_monitor_s": 0.099521,
+    "target_solve_s": 10.85803,
+    "wrapper_overhead_s": 0.014062578906305134
+  },
+  "elapsed_s": 11.112162054982036,
+  "eligibility_budget_s": 0.8500000000000001,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/17s/N-b/route-records/N-b/17/load_balancer_unreal2_pb_8_pe_.ltl.fd6ffa74085a445f8984e74d9438765f.json.lift-evidence.json",
+  "generalizer_evidence": {
+    "capacities": {
+      "checker_initial_node_cap": 33554432,
+      "solver": []
+    },
+    "compose_route": "native_veccompose",
+    "decline": {
+      "n": 8,
+      "predicate": "tlsfsolve",
+      "reason": "exact target had no decisive export (exit 124): timeout",
+      "stage": "target_solve"
+    },
+    "family": "load_balancer_unreal2",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "real_check": "policy",
+    "seeds": [],
+    "target": 8,
+    "verdict": "UNKNOWN"
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "target_monitor_game": 0.09952051599975675,
+      "target_solve": 10.858029999071732
+    },
+    "last_stage_times": {},
+    "sampled_monotonic_s": 537709.424720212
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.000000",
+    "arity": "",
+    "bus_schemas_s": "0.000000",
+    "canonicalize_s": "0.000000",
+    "cegis_rounds": "0",
+    "cegis_s": "0.000000",
+    "checker_node_caps": "",
+    "driver_overhead_s": "10.858809",
+    "family": "load_balancer_unreal2",
+    "instantiate_s": "0.000000",
+    "peak_rss_kib": "1776008",
+    "predicate_arities": "",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.000000",
+    "reason": "target_solve: predicate 'tlsfsolve' at n=8: exact target had no decisive export (exit 124): timeout",
+    "role_classes": "",
+    "seed_monitor_s": "0.000000",
+    "seed_s": "0.000000",
+    "seed_solve_s": "0.000000",
+    "seeds": "",
+    "solver_cache": "",
+    "solver_nodes": "",
+    "stage_reached": "target_solve",
+    "stages_passed": "",
+    "target": "8",
+    "target_check_s": "0.000000",
+    "target_monitor_s": "0.099521",
+    "target_solve_s": "10.858030",
+    "verdict": "UNKNOWN",
+    "wall_s": "10.958329"
+  },
+  "invocation_id": "a29287a59b204219aeba1f2a6335acd0",
+  "path_kind": "direct-certified",
+  "peak_rss_kib": 1776008,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "load_balancer_unreal2",
+    "reason": "source-verified capability load_balancer_unreal2",
+    "value": "policy"
+  },
+  "request": {
+    "family": "load_balancer_unreal2",
+    "measured_arity": null,
+    "request_mode": "source",
+    "route_kind": "exact-game-both-sides",
+    "seeds": [],
+    "target": 8
+  },
+  "request_mode": "source",
+  "result": {
+    "certificate": null,
+    "policy": null,
+    "proof_method": "none",
+    "reason": "target_solve_predicate_tlsfsolve_at_n_8_exact_target_had_no_decisive_export_exit_124_timeout",
+    "stage": "target_solve",
+    "stdout_line": "UNKNOWN target_solve target_solve_predicate_tlsfsolve_at_n_8_exact_target_had_no_decisive_export_exit_124_timeout",
+    "verdict": "UNKNOWN"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "artifact_binding": {
+      "family": "load_balancer_unreal2",
+      "inputs": [
+        "idle",
+        "request_0",
+        "request_1",
+        "request_2",
+        "request_3",
+        "request_4",
+        "request_5",
+        "request_6",
+        "request_7"
+      ],
+      "lowered_formula_sha256": "b2961e641e9bd61c91abba35a411e0aa82914982dd759e541bf16af319de6058",
+      "outputs": [
+        "grant_0",
+        "grant_1",
+        "grant_2",
+        "grant_3",
+        "grant_4",
+        "grant_5",
+        "grant_6",
+        "grant_7"
+      ],
+      "parameters": {
+        "n": 8
+      },
+      "reduction_semantics": "exact",
+      "route_kind": "exact-game-both-sides",
+      "source_semantics": "mealy",
+      "source_sha256": "6155a2adfc15832d844aa61da6d107b4293e555b115bba57208e3a93c104701f",
+      "target_semantics": "mealy",
+      "template_sha256": "42667ce7756e1e62d457f884ff8702be95f1cf3c000d3b8b2037bb635cef6f93"
+    },
+    "capability": {
+      "arity": null,
+      "family": "load_balancer_unreal2",
+      "parameters": [
+        "n"
+      ],
+      "route_kind": "exact-game-both-sides",
+      "template": "scripts/acacia_lift/data/templates/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf",
+      "template_sha256": "42667ce7756e1e62d457f884ff8702be95f1cf3c000d3b8b2037bb635cef6f93"
+    },
+    "input": {
+      "path": "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/load_balancer_unreal2_pb_8_pe_.tlsf",
+      "sha256": "6155a2adfc15832d844aa61da6d107b4293e555b115bba57208e3a93c104701f",
+      "size_bytes": 1852
+    },
+    "io_mapping": [
+      {
+        "owner": "input",
+        "source": "idle",
+        "template": "idle"
+      },
+      {
+        "owner": "input",
+        "source": "request_0",
+        "template": "request_0"
+      },
+      {
+        "owner": "input",
+        "source": "request_1",
+        "template": "request_1"
+      },
+      {
+        "owner": "input",
+        "source": "request_2",
+        "template": "request_2"
+      },
+      {
+        "owner": "input",
+        "source": "request_3",
+        "template": "request_3"
+      },
+      {
+        "owner": "input",
+        "source": "request_4",
+        "template": "request_4"
+      },
+      {
+        "owner": "input",
+        "source": "request_5",
+        "template": "request_5"
+      },
+      {
+        "owner": "input",
+        "source": "request_6",
+        "template": "request_6"
+      },
+      {
+        "owner": "input",
+        "source": "request_7",
+        "template": "request_7"
+      },
+      {
+        "owner": "output",
+        "source": "grant_0",
+        "template": "grant_0"
+      },
+      {
+        "owner": "output",
+        "source": "grant_1",
+        "template": "grant_1"
+      },
+      {
+        "owner": "output",
+        "source": "grant_2",
+        "template": "grant_2"
+      },
+      {
+        "owner": "output",
+        "source": "grant_3",
+        "template": "grant_3"
+      },
+      {
+        "owner": "output",
+        "source": "grant_4",
+        "template": "grant_4"
+      },
+      {
+        "owner": "output",
+        "source": "grant_5",
+        "template": "grant_5"
+      },
+      {
+        "owner": "output",
+        "source": "grant_6",
+        "template": "grant_6"
+      },
+      {
+        "owner": "output",
+        "source": "grant_7",
+        "template": "grant_7"
+      }
+    ],
+    "match": {
+      "check": "SYFCO basic-TLSF and normalized lowered-LTL equality, plus exact semantics/target and ordered I/O equality",
+      "how": "content-verified-template-instantiation"
+    },
+    "reduction_semantics": "exact",
+    "schema": "acacia.gr1-source-binding.v1",
+    "source_identity": {
+      "basic_tlsf_sha256": "5ee8605ed59b17df2ed3ba1ab714fd2f2de3a240ae0307dab5554776b8b91503",
+      "inputs": [
+        "idle",
+        "request_0",
+        "request_1",
+        "request_2",
+        "request_3",
+        "request_4",
+        "request_5",
+        "request_6",
+        "request_7"
+      ],
+      "lowered_formula_sha256": "b2961e641e9bd61c91abba35a411e0aa82914982dd759e541bf16af319de6058",
+      "outputs": [
+        "grant_0",
+        "grant_1",
+        "grant_2",
+        "grant_3",
+        "grant_4",
+        "grant_5",
+        "grant_6",
+        "grant_7"
+      ],
+      "parameters": {
+        "n": 8
+      },
+      "semantics": "mealy",
+      "target": "mealy"
+    }
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "load_balancer_unreal2",
+        "--target",
+        "8",
+        "--seeds",
+        "",
+        "--timeout",
+        "10.756777",
+        "--check-method",
+        "auto",
+        "--real-check",
+        "policy",
+        "--absolute-deadline-monotonic",
+        "537709.591990023",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/tmp/acacia-lift-portfolio-p_w4to80/lift-output/load_balancer_unreal2-n8-a29287a59b20-qgwxwu3o/generalizer",
+        "--results-out",
+        "/tmp/acacia-lift-portfolio-p_w4to80/lift-output/load_balancer_unreal2-n8-a29287a59b20-qgwxwu3o/generalizer-result.tsv",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+        "--target-source",
+        "/tmp/acacia-lift-portfolio-p_w4to80/lift-output/load_balancer_unreal2-n8-a29287a59b20-qgwxwu3o/requested-source.tlsf",
+        "--family-source",
+        "/tmp/acacia-lift-portfolio-p_w4to80/lift-output/load_balancer_unreal2-n8-a29287a59b20-qgwxwu3o/capability-template.tlsf"
+      ],
+      "elapsed_s": 11.098099476075731,
+      "pid": 1901197,
+      "returncode": 3,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "UNKNOWN family=load_balancer_unreal2 target=8 seeds=-\nreason: target_solve: predicate 'tlsfsolve' at n=8: exact target had no decisive export (exit 124): timeout\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "load_balancer_unreal2",
+    "--target",
+    "8",
+    "--seeds",
+    "",
+    "--reduction-semantics",
+    "exact",
+    "--real-check",
+    "policy",
+    "--timeout",
+    "11.270326",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "--target-source",
+    "CONTENT_BOUND_REQUEST_SOURCE.tlsf",
+    "--family-source",
+    "CONTENT_BOUND_CAPABILITY_TEMPLATE.tlsf"
+  ],
+  "target_check_ran": false,
+  "target_verified": false,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "real_check": "policy",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/tmp/acacia-lift-portfolio-p_w4to80/lift-output/load_balancer_unreal2-n8-a29287a59b20-qgwxwu3o"
+}

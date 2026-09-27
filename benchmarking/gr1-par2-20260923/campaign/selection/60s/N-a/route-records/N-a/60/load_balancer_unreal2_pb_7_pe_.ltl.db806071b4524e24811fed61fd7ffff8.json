@@ -1,0 +1,60 @@
+{
+  "binding_reason": "target_verified",
+  "capability": {
+    "arity": null,
+    "family": "load_balancer_unreal2",
+    "parameters": [
+      "n"
+    ],
+    "route_kind": "exact-game-both-sides",
+    "template": "scripts/acacia_lift/data/templates/tlsf/load_balancer_unreal/parametric/load_balancer_unreal2.tlsf",
+    "template_sha256": "42667ce7756e1e62d457f884ff8702be95f1cf3c000d3b8b2037bb635cef6f93"
+  },
+  "eligibility_budget_s": 1.0,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-a/route-records/N-a/60/load_balancer_unreal2_pb_7_pe_.ltl.db806071b4524e24811fed61fd7ffff8.json.lift-evidence.json",
+  "evidence_sha256": "96f6ae6d28b063ffcf5e2f3fdcdc4b2a1d8ebf82483dc19457a5cae96ba776b6",
+  "fallback_remaining": null,
+  "fallback_start": null,
+  "input_sha256": "dbcc725f07ab75840444e64f5aa7e351b4e28c28bd109e3ec11e999a2fb51319",
+  "lift_argv": [
+    "/usr/bin/python3",
+    "-m",
+    "acacia_lift.runner",
+    "--request-mode",
+    "source",
+    "-T",
+    "/home/gperez/GIT-repos/acacia-bonsai/tlsf-corpus/load_balancer_unreal2_pb_7_pe_.tlsf",
+    "--budget",
+    "19.926217",
+    "--eligibility-budget-seconds",
+    "1.0",
+    "--output-dir",
+    "/tmp/acacia-lift-portfolio-7yo0z3q9/lift-output",
+    "--evidence-out",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/campaign/selection/60s/N-a/route-records/N-a/60/load_balancer_unreal2_pb_7_pe_.ltl.db806071b4524e24811fed61fd7ffff8.json.lift-evidence.json",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-ee37c727/libbuddy_veccompose_adapter.so"
+  ],
+  "lift_elapsed": 11.192548103979789,
+  "lift_exit": 1,
+  "lift_timed_out": false,
+  "real_check": "policy",
+  "real_check_selection": {
+    "capability": "load_balancer_unreal2",
+    "reason": "source-verified capability load_balancer_unreal2",
+    "value": "policy"
+  },
+  "schema_version": 1,
+  "stage_censoring": {
+    "last_stage": "target_check",
+    "records": [],
+    "wrapper_timeout": false
+  },
+  "winner": "lifting"
+}

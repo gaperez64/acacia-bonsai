@@ -1,0 +1,1525 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+arm-1	01.ltl	60	REALIZABLE	0.035364974988624454	false	REALIZABLE	60
+arm-1	02.ltl	60	REALIZABLE	0.042587836971506476	false	REALIZABLE	60
+arm-1	03.ltl	60	REALIZABLE	2.397310880944133	false	REALIZABLE	60
+arm-1	05.ltl	60	REALIZABLE	10.394963801954873	false	REALIZABLE	60
+arm-1	06.ltl	60	REALIZABLE	13.392695990973152	false	REALIZABLE	60
+arm-1	07.ltl	60	REALIZABLE	12.977565648965538	false	REALIZABLE	60
+arm-1	08.ltl	60	REALIZABLE	20.71084063698072	false	REALIZABLE	60
+arm-1	09.ltl	60	REALIZABLE	6.308396842912771	false	REALIZABLE	60
+arm-1	10.ltl	60	REALIZABLE	2.7400997820077464	false	REALIZABLE	60
+arm-1	11.ltl	60	REALIZABLE	2.7756940580438823	false	REALIZABLE	60
+arm-1	12.ltl	60	REALIZABLE	4.400174938025884	false	REALIZABLE	60
+arm-1	13.ltl	60	REALIZABLE	4.254498451948166	false	REALIZABLE	60
+arm-1	ActionConverter.ltl	60	REALIZABLE	0.023441598983481526	false	REALIZABLE	60
+arm-1	AlarmMin_efe2feaf.ltl	60	REALIZABLE	0.02170445304363966	false	REALIZABLE	60
+arm-1	Alarm_06e9cad4.ltl	60	REALIZABLE	1.3603795630624518	false	REALIZABLE	60
+arm-1	Alarm_2d1010f8.ltl	60	REALIZABLE	0.023624666035175323	false	REALIZABLE	60
+arm-1	Alarm_68c86764.ltl	60	REALIZABLE	1.4074902479769662	false	REALIZABLE	60
+arm-1	Alarm_70523fbe.ltl	60	REALIZABLE	0.738236328936182	false	REALIZABLE	60
+arm-1	Alarm_88c5c1c3.ltl	60	REALIZABLE	0.0309087170753628	false	REALIZABLE	60
+arm-1	Alarm_9cac58d3.ltl	60	REALIZABLE	0.04543623200152069	false	REALIZABLE	60
+arm-1	Alarm_a5f99bc6.ltl	60	REALIZABLE	14.109576517017558	false	REALIZABLE	60
+arm-1	Alarm_f2774e0b.ltl	60	REALIZABLE	0.7255545239895582	false	REALIZABLE	60
+arm-1	AllHeating_d6376bf9.ltl	60	REALIZABLE	0.026152723003178835	false	REALIZABLE	60
+arm-1	AllLights_06e9cad4.ltl				true	TIMEOUT	60
+arm-1	AllLights_2c5b09da.ltl				true	TIMEOUT	60
+arm-1	AllLights_63831f8c.ltl				true	TIMEOUT	60
+arm-1	AllLights_aeb1d897.ltl				true	TIMEOUT	60
+arm-1	AllLights_b209ff21.ltl				true	TIMEOUT	60
+arm-1	AllLights_d6c5ac79.ltl				true	TIMEOUT	60
+arm-1	AllShades_66f450a4.ltl				true	TIMEOUT	60
+arm-1	Assumptions_a50cadd7.ltl				true	UNKNOWN	60
+arm-1	Automata.ltl	60	REALIZABLE	0.07627020601648837	false	REALIZABLE	60
+arm-1	Automata16S.ltl	60	REALIZABLE	40.6978033069754	false	REALIZABLE	60
+arm-1	Automata32S.ltl				true	TIMEOUT	60
+arm-1	Button.ltl	60	REALIZABLE	0.0417114261072129	false	REALIZABLE	60
+arm-1	CheckAlarmBroken1_1a2942e3.ltl	60	REALIZABLE	0.042712131049484015	false	REALIZABLE	60
+arm-1	CheckAlarm_6bea956e.ltl				true	UNKNOWN	60
+arm-1	CheckCoffeMachineBroken1_a5f99bc6.ltl	60	REALIZABLE	0.048813801957294345	false	REALIZABLE	60
+arm-1	CheckCoffeMachine_3461125b.ltl				true	UNKNOWN	60
+arm-1	CheckCoffeMachine_f3987563.ltl				true	UNKNOWN	60
+arm-1	CheckDoor_c2b9e44d.ltl				true	UNKNOWN	60
+arm-1	CheckHeating_2418b67e.ltl				true	UNKNOWN	60
+arm-1	CheckHeating_3461125b.ltl				true	UNKNOWN	60
+arm-1	CheckLight_007df645.ltl				true	UNKNOWN	60
+arm-1	CheckLight_aeb1d897.ltl				true	UNKNOWN	60
+arm-1	CheckRoom_06e9cad4.ltl				true	UNKNOWN	60
+arm-1	CheckRoom_2c5b09da.ltl				true	UNKNOWN	60
+arm-1	CheckRoom_3916ec59.ltl				true	UNKNOWN	60
+arm-1	CheckRoom_70523fbe.ltl				true	UNKNOWN	60
+arm-1	CheckShades_1a2942e3.ltl				true	UNKNOWN	60
+arm-1	CheckShades_3461125b.ltl				true	UNKNOWN	60
+arm-1	CheckShades_4d4ca5c4.ltl				true	UNKNOWN	60
+arm-1	CheckShades_aeb1d897.ltl				true	UNKNOWN	60
+arm-1	CheckTime_3916ec59.ltl				true	UNKNOWN	60
+arm-1	CheckTime_4b5e6eaa.ltl				true	UNKNOWN	60
+arm-1	CheckTime_54e1f7d2.ltl				true	UNKNOWN	60
+arm-1	CheckTimer_54e1f7d2.ltl				true	UNKNOWN	60
+arm-1	CheckTimer_fa8592c8.ltl				true	UNKNOWN	60
+arm-1	CheckWarnlightBroken1_70523fbe.ltl	60	REALIZABLE	0.04241351003292948	false	REALIZABLE	60
+arm-1	CheckWarnlight_1cf58fc1.ltl				true	UNKNOWN	60
+arm-1	CheckWarnlight_4b5a2bad.ltl				true	UNKNOWN	60
+arm-1	CheckWarnlight_54e1f7d2.ltl				true	UNKNOWN	60
+arm-1	CheckWarnlight_6bea956e.ltl				true	UNKNOWN	60
+arm-1	CheckWindows_54e1f7d2.ltl				true	UNKNOWN	60
+arm-1	Cockpitboard.ltl	60	REALIZABLE	0.04512337502092123	false	REALIZABLE	60
+arm-1	Cockpitboard_efe2feaf.ltl	60	REALIZABLE	0.03304346103686839	false	REALIZABLE	60
+arm-1	CoffeMachine_974f4a68.ltl	60	REALIZABLE	0.039993128972128034	false	REALIZABLE	60
+arm-1	CoffeMachine_a50cadd7.ltl				true	UNKNOWN	60
+arm-1	CoffeeMin_88f351a6.ltl	60	REALIZABLE	0.047635562950745225	false	REALIZABLE	60
+arm-1	Coffee_06e9cad4.ltl	60	REALIZABLE	0.058018181938678026	false	REALIZABLE	60
+arm-1	Coffee_235467da.ltl	60	REALIZABLE	0.055821900023147464	false	REALIZABLE	60
+arm-1	Coffee_2c5b09da.ltl	60	REALIZABLE	0.046312309917993844	false	REALIZABLE	60
+arm-1	Coffee_6479ef9a.ltl	60	REALIZABLE	0.04329302301630378	false	REALIZABLE	60
+arm-1	Coffee_d6376bf9.ltl	60	REALIZABLE	0.055700351018458605	false	REALIZABLE	60
+arm-1	Coffee_efe2feaf.ltl	60	REALIZABLE	0.05449463299009949	false	REALIZABLE	60
+arm-1	Coffee_f1477cc5.ltl				true	UNKNOWN	60
+arm-1	Core_4b5a2bad.ltl				true	UNKNOWN	60
+arm-1	Core_66f450a4.ltl				true	UNKNOWN	60
+arm-1	Core_fa4d4ce3.ltl				true	UNKNOWN	60
+arm-1	Core_solved_974f4a68.ltl	60	REALIZABLE	0.05032297607976943	false	REALIZABLE	60
+arm-1	Demo1_06e9cad4.ltl				true	TIMEOUT	60
+arm-1	Demo1_2c5b09da.ltl				true	TIMEOUT	60
+arm-1	Demo1_63831f8c.ltl				true	TIMEOUT	60
+arm-1	Demo1_c2b9e44d.ltl				true	TIMEOUT	60
+arm-1	Demo1_d65ed84e.ltl				true	TIMEOUT	60
+arm-1	DeviceBehaviorChec_fa8592c8.ltl				true	TIMEOUT	60
+arm-1	Door_2d1010f8.ltl	60	REALIZABLE	0.027497594943270087	false	REALIZABLE	60
+arm-1	EnemeyModule.ltl	60	REALIZABLE	0.035318239009939134	false	REALIZABLE	60
+arm-1	EscalatorBidirectional.ltl	60	REALIZABLE	0.041916077956557274	false	REALIZABLE	60
+arm-1	EscalatorBidirectionalInit.ltl	60	REALIZABLE	0.034744083997793496	false	REALIZABLE	60
+arm-1	EscalatorCounting.ltl	60	REALIZABLE	0.054551009088754654	false	REALIZABLE	60
+arm-1	EscalatorCountingInit.ltl	60	REALIZABLE	0.04453637695405632	false	REALIZABLE	60
+arm-1	EscalatorNonCounting.ltl	60	REALIZABLE	0.03787532006390393	false	REALIZABLE	60
+arm-1	EscalatorNonReactive.ltl	60	REALIZABLE	0.03345149091910571	false	REALIZABLE	60
+arm-1	EscalatorSmart.ltl	60	REALIZABLE	0.050485274055972695	false	REALIZABLE	60
+arm-1	Example1_d6376bf9.ltl	60	REALIZABLE	0.049250809010118246	false	REALIZABLE	60
+arm-1	F-G-contradiction-10.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-11.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-110.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-111.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-112.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-113.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-114.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-12.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-13.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-14.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-15.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-16.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-17.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-18.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-19.ltl				true	TIMEOUT	60
+arm-1	F-G-contradiction-2-unreal.ltl				true	UNKNOWN	60
+arm-1	FelixSpecFixed2.2.core_fa8592c8.ltl				true	UNKNOWN	60
+arm-1	FelixSpecFixed2_fa4d4ce3.ltl				true	TIMEOUT	60
+arm-1	FelixSpecFixed3.core_b209ff21.ltl				true	TIMEOUT	60
+arm-1	FelixSpecFixed3_b0840146.ltl				true	TIMEOUT	60
+arm-1	FelixSpecFixed4GuaranteesOnly_88f351a6.ltl				true	UNKNOWN	60
+arm-1	FelixSpecFixed4_3916ec59.ltl				true	TIMEOUT	60
+arm-1	FelixSpecFixed5_f82794da.ltl				true	TIMEOUT	60
+arm-1	FelixSpecFixed_2418b67e.ltl				true	TIMEOUT	60
+arm-1	Full_f1477cc5.ltl				true	TIMEOUT	60
+arm-1	GF-G-contradiction0.ltl				true	TIMEOUT	60
+arm-1	GF-G-contradiction1.ltl				true	TIMEOUT	60
+arm-1	GF-G-contradiction2.ltl				true	TIMEOUT	60
+arm-1	GF-G-contradiction3.ltl				true	TIMEOUT	60
+arm-1	GF-G-contradiction4.ltl				true	TIMEOUT	60
+arm-1	GF-G-contradiction5.ltl				true	TIMEOUT	60
+arm-1	GF-G-contradiction6.ltl				true	TIMEOUT	60
+arm-1	GF-G-contradiction7.ltl				true	TIMEOUT	60
+arm-1	Gamelogic.ltl	60	REALIZABLE	0.04583428706973791	false	REALIZABLE	60
+arm-1	GamemodeChooser.ltl	60	REALIZABLE	0.04387814796064049	false	REALIZABLE	60
+arm-1	Gamemodule.ltl	60	REALIZABLE	0.030874232994392514	false	REALIZABLE	60
+arm-1	HeatingMin_d6c5ac79.ltl	60	REALIZABLE	0.031343255075626075	false	REALIZABLE	60
+arm-1	Heating_235467da.ltl	60	REALIZABLE	0.041692502913065255	false	REALIZABLE	60
+arm-1	Heating_974f4a68.ltl	60	REALIZABLE	0.04389537300448865	false	REALIZABLE	60
+arm-1	Heating_b02056d6.ltl	60	REALIZABLE	0.04303416796028614	false	REALIZABLE	60
+arm-1	Heating_b209ff21.ltl	60	REALIZABLE	0.04994588310364634	false	REALIZABLE	60
+arm-1	Increment.ltl	60	REALIZABLE	0.03613683907315135	false	REALIZABLE	60
+arm-1	IntendDemo_42dc4fff.ltl				true	UNKNOWN	60
+arm-1	KitchenTimerV0.ltl	60	REALIZABLE	0.025818157009780407	false	REALIZABLE	60
+arm-1	KitchenTimerV1.ltl	60	REALIZABLE	0.049965655081905425	false	REALIZABLE	60
+arm-1	KitchenTimerV10.ltl	60	REALIZABLE	0.10551379097159952	false	REALIZABLE	60
+arm-1	KitchenTimerV2.ltl	60	REALIZABLE	0.04011622897814959	false	REALIZABLE	60
+arm-1	KitchenTimerV3.ltl	60	REALIZABLE	0.045263828011229634	false	REALIZABLE	60
+arm-1	KitchenTimerV4.ltl	60	REALIZABLE	0.036645840969868004	false	REALIZABLE	60
+arm-1	KitchenTimerV5.ltl	60	REALIZABLE	0.0572470820043236	false	REALIZABLE	60
+arm-1	KitchenTimerV6.ltl	60	REALIZABLE	0.09579333395231515	false	REALIZABLE	60
+arm-1	KitchenTimerV7.ltl	60	REALIZABLE	0.08756572601851076	false	REALIZABLE	60
+arm-1	KitchenTimerV8.ltl	60	REALIZABLE	0.0971596121089533	false	REALIZABLE	60
+arm-1	KitchenTimerV9.ltl	60	REALIZABLE	0.8179192109964788	false	REALIZABLE	60
+arm-1	LampController_974f4a68.ltl	60	REALIZABLE	0.036034290911629796	false	REALIZABLE	60
+arm-1	LedMatrix.ltl				true	TIMEOUT	60
+arm-1	Light_a50cadd7.ltl				true	UNKNOWN	60
+arm-1	Light_aeb1d897.ltl				true	UNKNOWN	60
+arm-1	Light_d65ed84e.ltl	60	REALIZABLE	0.03848532203119248	false	REALIZABLE	60
+arm-1	Lights2Min_9cbf2546.ltl	60	REALIZABLE	0.044553525978699327	false	REALIZABLE	60
+arm-1	Lights2_06e9cad4.ltl	60	REALIZABLE	0.16561335499864072	false	REALIZABLE	60
+arm-1	Lights2_0f5381e9.ltl	60	REALIZABLE	0.24537989008240402	false	REALIZABLE	60
+arm-1	Lights2_2c5b09da.ltl	60	REALIZABLE	0.0591856490354985	false	REALIZABLE	60
+arm-1	Lights2_9cac58d3.ltl	60	REALIZABLE	0.1771348249167204	false	REALIZABLE	60
+arm-1	Lights2_b02056d6.ltl	60	REALIZABLE	0.16352672199718654	false	REALIZABLE	60
+arm-1	Lights2_f1477cc5.ltl				true	UNKNOWN	60
+arm-1	Lights2_f3987563.ltl	60	REALIZABLE	0.16862125706393272	false	REALIZABLE	60
+arm-1	Lights3Min_6479ef9a.ltl	60	REALIZABLE	0.0285342070274055	false	REALIZABLE	60
+arm-1	Lights3_06e9cad4.ltl	60	REALIZABLE	0.04869266599416733	false	REALIZABLE	60
+arm-1	Lights3_235467da.ltl	60	REALIZABLE	0.04176455095876008	false	REALIZABLE	60
+arm-1	Lights3_2c5b09da.ltl	60	REALIZABLE	0.04635152209084481	false	REALIZABLE	60
+arm-1	Lights3_3916ec59.ltl	60	REALIZABLE	0.049924612045288086	false	REALIZABLE	60
+arm-1	Lights3_6bea956e.ltl	60	REALIZABLE	0.05562629806809127	false	REALIZABLE	60
+arm-1	Lights3_f1477cc5.ltl	60	REALIZABLE	0.04327575897332281	false	REALIZABLE	60
+arm-1	LightsMin_6bea956e.ltl	60	REALIZABLE	0.030716925975866616	false	REALIZABLE	60
+arm-1	LightsTotal_06e9cad4.ltl	60	REALIZABLE	0.3580034599872306	false	REALIZABLE	60
+arm-1	LightsTotal_2c5b09da.ltl				true	UNKNOWN	60
+arm-1	LightsTotal_9cbf2546.ltl	60	REALIZABLE	0.3473000800004229	false	REALIZABLE	60
+arm-1	LightsTotal_d65ed84e.ltl	60	REALIZABLE	0.3407466009957716	false	REALIZABLE	60
+arm-1	Lights_06e9cad4.ltl	60	REALIZABLE	0.031270530074834824	false	REALIZABLE	60
+arm-1	Lights_2c5b09da.ltl	60	REALIZABLE	0.04406043596100062	false	REALIZABLE	60
+arm-1	Lights_3461125b.ltl	60	REALIZABLE	0.04524611309170723	false	REALIZABLE	60
+arm-1	Lights_9cac58d3.ltl	60	REALIZABLE	0.03821296396199614	false	REALIZABLE	60
+arm-1	Lights_b0840146.ltl	60	REALIZABLE	0.04783123603556305	false	REALIZABLE	60
+arm-1	Lights_f3987563.ltl	60	REALIZABLE	0.05054110405035317	false	REALIZABLE	60
+arm-1	ModdifiedLedMatrix4X.ltl				true	UNKNOWN	60
+arm-1	ModdifiedLedMatrix5X.ltl	60	REALIZABLE	0.14057822700124234	false	REALIZABLE	60
+arm-1	Morning2Min_6cbc6174.ltl	60	REALIZABLE	0.024684238014742732	false	REALIZABLE	60
+arm-1	Morning2_06e9cad4.ltl				true	TIMEOUT	60
+arm-1	Morning2_1cf58fc1.ltl				true	TIMEOUT	60
+arm-1	Morning2_2c5b09da.ltl				true	TIMEOUT	60
+arm-1	Morning2_407db2cc.ltl				true	TIMEOUT	60
+arm-1	Morning2_4d4ca5c4.ltl	60	REALIZABLE	0.04674616106785834	false	REALIZABLE	60
+arm-1	Morning2_63831f8c.ltl				true	TIMEOUT	60
+arm-1	Morning2_68c86764.ltl				true	TIMEOUT	60
+arm-1	Morning2_9cac58d3.ltl	60	REALIZABLE	0.03445440297946334	false	REALIZABLE	60
+arm-1	Morning2_d65ed84e.ltl				true	TIMEOUT	60
+arm-1	Morning2s_06cf2373.ltl				true	TIMEOUT	60
+arm-1	Morning2s_06e9cad4.ltl				true	TIMEOUT	60
+arm-1	Morning2s_2c5b09da.ltl				true	TIMEOUT	60
+arm-1	Morning2s_42dc4fff.ltl				true	TIMEOUT	60
+arm-1	Morning2s_9cbf2546.ltl				true	TIMEOUT	60
+arm-1	Morning2s_d6c5ac79.ltl				true	TIMEOUT	60
+arm-1	MorningMin_d6c5ac79.ltl	60	REALIZABLE	0.061557542998343706	false	REALIZABLE	60
+arm-1	Morning_14a3b3a2.ltl				true	TIMEOUT	60
+arm-1	Morning_4b5e6eaa.ltl				true	TIMEOUT	60
+arm-1	Morning_88c5c1c3.ltl	60	REALIZABLE	58.18971435108688	false	REALIZABLE	60
+arm-1	Morning_9cac58d3.ltl	60	REALIZABLE	58.45958140597213	false	REALIZABLE	60
+arm-1	Morning_c92eb242.ltl				true	TIMEOUT	60
+arm-1	Morning_f1477cc5.ltl				true	TIMEOUT	60
+arm-1	Morning_f2774e0b.ltl				true	TIMEOUT	60
+arm-1	MusicAppFeedback.ltl	60	REALIZABLE	0.030774818966165185	false	REALIZABLE	60
+arm-1	MusicAppMotivating.ltl	60	REALIZABLE	0.04696361091919243	false	REALIZABLE	60
+arm-1	MusicAppSimple.ltl	60	REALIZABLE	0.0340833798982203	false	REALIZABLE	60
+arm-1	OneCounter.ltl	60	REALIZABLE	2.246289371047169	false	REALIZABLE	60
+arm-1	OneCounterGui.ltl				true	UNKNOWN	60
+arm-1	OneCounterGuiA1.ltl				true	UNKNOWN	60
+arm-1	OneCounterGuiA2.ltl				true	UNKNOWN	60
+arm-1	OneCounterGuiA3.ltl				true	UNKNOWN	60
+arm-1	OneCounterGuiA4.ltl				true	UNKNOWN	60
+arm-1	OneCounterGuiA5.ltl				true	UNKNOWN	60
+arm-1	OneCounterGuiA6.ltl				true	UNKNOWN	60
+arm-1	OneCounterGuiA7.ltl				true	UNKNOWN	60
+arm-1	OneCounterGuiA8.ltl				true	UNKNOWN	60
+arm-1	OneCounterInRange.ltl				true	UNKNOWN	60
+arm-1	OneCounterInRangeA1.ltl				true	UNKNOWN	60
+arm-1	OneCounterInRangeA2.ltl				true	UNKNOWN	60
+arm-1	OneCounterInRangeA3.ltl	60	REALIZABLE	0.04114327800925821	false	REALIZABLE	60
+arm-1	PlugController_fa4d4ce3.ltl	60	REALIZABLE	0.044771560933440924	false	REALIZABLE	60
+arm-1	Radarboard.ltl	60	REALIZABLE	0.034444206045009196	false	REALIZABLE	60
+arm-1	RegManager.ltl	60	REALIZABLE	0.03378401498775929	false	REALIZABLE	60
+arm-1	Room_a50cadd7.ltl				true	UNKNOWN	60
+arm-1	RotationCalculator.ltl	60	REALIZABLE	0.03443188196979463	false	REALIZABLE	60
+arm-1	SPI.ltl	60	REALIZABLE	0.2761608270229772	false	REALIZABLE	60
+arm-1	SPIPureNext.ltl				true	TIMEOUT	60
+arm-1	SPIReadClk.ltl	60	REALIZABLE	0.03425395500380546	false	REALIZABLE	60
+arm-1	SPIReadManag.ltl	60	REALIZABLE	0.04748433502390981	false	REALIZABLE	60
+arm-1	SPIReadSdi.ltl	60	REALIZABLE	0.04399214300792664	false	REALIZABLE	60
+arm-1	SPIWriteClk.ltl	60	REALIZABLE	0.046167078078724444	false	REALIZABLE	60
+arm-1	SPIWriteManag.ltl	60	REALIZABLE	0.04243083903566003	false	REALIZABLE	60
+arm-1	SPIWriteSdi.ltl	60	REALIZABLE	0.04343190707731992	false	REALIZABLE	60
+arm-1	Scoreboard.ltl	60	REALIZABLE	0.036826672963798046	false	REALIZABLE	60
+arm-1	Sensor.ltl	60	REALIZABLE	0.13681820896454155	false	REALIZABLE	60
+arm-1	SensorInit.ltl	60	REALIZABLE	0.1483547929674387	false	REALIZABLE	60
+arm-1	SensorPart.ltl	60	REALIZABLE	0.04513638000935316	false	REALIZABLE	60
+arm-1	SensorRegister.ltl	60	REALIZABLE	0.033050699974410236	false	REALIZABLE	60
+arm-1	SensorSelector.ltl	60	REALIZABLE	0.022494171978905797	false	REALIZABLE	60
+arm-1	SensorSubmodulChooser.ltl	60	REALIZABLE	0.032160356058739126	false	REALIZABLE	60
+arm-1	Shades2Min_63831f8c.ltl	60	REALIZABLE	0.0248364950530231	false	REALIZABLE	60
+arm-1	Shades2_235467da.ltl	60	REALIZABLE	0.03309249703306705	false	REALIZABLE	60
+arm-1	Shades2_42dc4fff.ltl	60	REALIZABLE	0.026230099028907716	false	REALIZABLE	60
+arm-1	Shades2_70523fbe.ltl	60	REALIZABLE	0.020603445009328425	false	REALIZABLE	60
+arm-1	Shades2_a5f99bc6.ltl	60	REALIZABLE	0.028086191974580288	false	REALIZABLE	60
+arm-1	ShadesMin_aeb1d897.ltl	60	REALIZABLE	0.030392143060453236	false	REALIZABLE	60
+arm-1	Shades_6479ef9a.ltl	60	REALIZABLE	0.027701567974872887	false	REALIZABLE	60
+arm-1	Shades_974f4a68.ltl	60	REALIZABLE	0.028287042980082333	false	REALIZABLE	60
+arm-1	Shades_9cac58d3.ltl	60	REALIZABLE	0.026295126997865736	false	REALIZABLE	60
+arm-1	Shades_a02758ea.ltl	60	REALIZABLE	0.026451589073985815	false	REALIZABLE	60
+arm-1	SingleContoller_d65ed84e.ltl				true	TIMEOUT	60
+arm-1	SliderDefault.ltl	60	REALIZABLE	0.02873947494663298	false	REALIZABLE	60
+arm-1	SliderDelayed.ltl	60	REALIZABLE	0.041480169049464166	false	REALIZABLE	60
+arm-1	SliderScored.ltl	60	REALIZABLE	0.04090045194607228	false	REALIZABLE	60
+arm-1	System_b0840146.ltl				true	UNKNOWN	60
+arm-1	Time_a50cadd7.ltl				true	UNKNOWN	60
+arm-1	Timer_a50cadd7.ltl	60	REALIZABLE	0.036083801998756826	false	REALIZABLE	60
+arm-1	TorcsAccelerating.ltl	60	REALIZABLE	0.04510898899752647	false	REALIZABLE	60
+arm-1	TorcsGearing.ltl	60	REALIZABLE	0.044853860046714544	false	REALIZABLE	60
+arm-1	TorcsSimple.ltl	60	REALIZABLE	0.04564298992045224	false	REALIZABLE	60
+arm-1	TorcsSteeringImproved.ltl	60	REALIZABLE	0.044334837002679706	false	REALIZABLE	60
+arm-1	TorcsSteeringSimple.ltl	60	REALIZABLE	0.04590869601815939	false	REALIZABLE	60
+arm-1	TorcsSteeringSmart.ltl	60	REALIZABLE	0.04549710999708623	false	REALIZABLE	60
+arm-1	TwoCounters.ltl				true	UNKNOWN	60
+arm-1	TwoCounters2.ltl				true	UNKNOWN	60
+arm-1	TwoCounters3.ltl	60	REALIZABLE	0.9026248840382323	false	REALIZABLE	60
+arm-1	TwoCounters4.ltl	60	REALIZABLE	0.0466567900730297	false	REALIZABLE	60
+arm-1	TwoCounters5.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA0.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA1.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA2.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA3.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA4.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA5.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA6.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA7.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA8.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButA9.ltl				true	UNKNOWN	60
+arm-1	TwoCountersDisButAC.ltl				true	UNKNOWN	60
+arm-1	TwoCountersGui.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRange.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeA1.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeA2.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeA3.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeA4.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeA5.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeM0.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeM1.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeM2.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeM3.ltl				true	UNKNOWN	60
+arm-1	TwoCountersInRangeM4.ltl				true	UNKNOWN	60
+arm-1	TwoCountersRefined.ltl				true	UNKNOWN	60
+arm-1	TwoCountersRefinedRefined.ltl	60	REALIZABLE	0.04373525897972286	false	REALIZABLE	60
+arm-1	UnderapproxDemo2.ltl				true	UNKNOWN	60
+arm-1	UnderapproxStrengthenedDemo.ltl	60	REALIZABLE	0.046967713977210224	false	REALIZABLE	60
+arm-1	Warnlight_2d1010f8.ltl	60	REALIZABLE	0.044657562975771725	false	REALIZABLE	60
+arm-1	Warnlight_a50cadd7.ltl				true	UNKNOWN	60
+arm-1	Window2Min_88c5c1c3.ltl	60	REALIZABLE	0.04904983390588313	false	REALIZABLE	60
+arm-1	Window2_54e1f7d2.ltl	60	REALIZABLE	0.05676857102662325	false	REALIZABLE	60
+arm-1	Window2_6479ef9a.ltl	60	REALIZABLE	0.04429430502932519	false	REALIZABLE	60
+arm-1	Window2_9cac58d3.ltl	60	REALIZABLE	0.06018653302453458	false	REALIZABLE	60
+arm-1	Window2_aeb1d897.ltl	60	REALIZABLE	0.057443508063443005	false	REALIZABLE	60
+arm-1	Window2_f1477cc5.ltl				true	UNKNOWN	60
+arm-1	WindowMin_a5f99bc6.ltl	60	REALIZABLE	0.034556893981061876	false	REALIZABLE	60
+arm-1	Window_235467da.ltl	60	REALIZABLE	0.03404607204720378	false	REALIZABLE	60
+arm-1	Window_42dc4fff.ltl	60	REALIZABLE	0.04338547890074551	false	REALIZABLE	60
+arm-1	Window_54e1f7d2.ltl	60	REALIZABLE	0.044461681973189116	false	REALIZABLE	60
+arm-1	Zoo0.ltl	60	REALIZABLE	0.04821810300927609	false	REALIZABLE	60
+arm-1	Zoo10.ltl	60	REALIZABLE	0.024507650989107788	false	REALIZABLE	60
+arm-1	Zoo5.ltl	60	REALIZABLE	0.04307537502609193	false	REALIZABLE	60
+arm-1	abcg_arbiter_pb_1_pe_.ltl	60	REALIZABLE	0.04254950408358127	false	REALIZABLE	60
+arm-1	abcg_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.10452479601372033	false	REALIZABLE	60
+arm-1	abcg_arbiter_pb_3_pe_.ltl	60	REALIZABLE	27.50846874702256	false	REALIZABLE	60
+arm-1	abcg_arbiter_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	abcg_arbiter_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	abcg_arbiter_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_case_study_pb_2_pe_.ltl	60	REALIZABLE	0.8674677959643304	false	REALIZABLE	60
+arm-1	amba_case_study_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_case_study_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_case_study_unreal_pb_2_pe_.ltl				true	UNKNOWN	60
+arm-1	amba_case_study_unreal_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_case_study_unreal_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_case_study_unreal_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_arbiter_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_arbiter_pb_11_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_arbiter_pb_13_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.035142611945047975	false	REALIZABLE	60
+arm-1	amba_decomposed_arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.042723493068479	false	REALIZABLE	60
+arm-1	amba_decomposed_arbiter_pb_4_pe_.ltl	60	REALIZABLE	0.05052603594958782	false	REALIZABLE	60
+arm-1	amba_decomposed_arbiter_pb_5_pe_.ltl	60	REALIZABLE	0.12051757599692792	false	REALIZABLE	60
+arm-1	amba_decomposed_arbiter_pb_6_pe_.ltl	60	REALIZABLE	0.9528636010363698	false	REALIZABLE	60
+arm-1	amba_decomposed_arbiter_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_arbiter_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_decode.ltl	60	REALIZABLE	0.026111913030035794	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_10_pe_.ltl	60	REALIZABLE	0.061452909954823554	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_11_pe_.ltl	60	REALIZABLE	0.05186871893238276	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_12_pe_.ltl	60	REALIZABLE	0.057302449946291745	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_13_pe_.ltl	60	REALIZABLE	0.0688354930607602	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_14_pe_.ltl	60	REALIZABLE	0.1098456090549007	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_15_pe_.ltl	60	REALIZABLE	0.19201702496502548	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_16_pe_.ltl	60	REALIZABLE	0.5063022609101608	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_20_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_encode_pb_25_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_encode_pb_2_pe_.ltl	60	REALIZABLE	0.02530326193664223	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_3_pe_.ltl	60	REALIZABLE	0.027668049093335867	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_4_pe_.ltl	60	REALIZABLE	0.04760417598299682	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_5_pe_.ltl	60	REALIZABLE	0.0501120500266552	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_6_pe_.ltl	60	REALIZABLE	0.05497640499379486	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_7_pe_.ltl	60	REALIZABLE	0.05685064604040235	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_8_pe_.ltl	60	REALIZABLE	0.0567876169225201	false	REALIZABLE	60
+arm-1	amba_decomposed_encode_pb_9_pe_.ltl	60	REALIZABLE	0.051972343935631216	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_10_pe_.ltl	60	REALIZABLE	0.3181236570235342	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_11_pe_.ltl	60	REALIZABLE	1.0108892360003665	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_12_pe_.ltl	60	REALIZABLE	3.764421256026253	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_13_pe_.ltl	60	REALIZABLE	13.404354028985836	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_14_pe_.ltl	60	REALIZABLE	39.53254637902137	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_15_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_lock_pb_16_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_decomposed_lock_pb_2_pe_.ltl	60	REALIZABLE	0.040432307054288685	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_30_pe_.ltl				true	ERROR	60
+arm-1	amba_decomposed_lock_pb_3_pe_.ltl	60	REALIZABLE	0.04257668403442949	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_4_pe_.ltl	60	REALIZABLE	0.045901571051217616	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_5_pe_.ltl	60	REALIZABLE	0.04279789607971907	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_6_pe_.ltl	60	REALIZABLE	0.04759137309156358	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_7_pe_.ltl	60	REALIZABLE	0.05295075196772814	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_8_pe_.ltl	60	REALIZABLE	0.06320559699088335	false	REALIZABLE	60
+arm-1	amba_decomposed_lock_pb_9_pe_.ltl	60	REALIZABLE	0.11375967995263636	false	REALIZABLE	60
+arm-1	amba_decomposed_shift.ltl	60	REALIZABLE	0.029934974969364703	false	REALIZABLE	60
+arm-1	amba_decomposed_tburst4.ltl	60	REALIZABLE	0.04013226099777967	false	REALIZABLE	60
+arm-1	amba_decomposed_tincr.ltl	60	REALIZABLE	0.03869637590833008	false	REALIZABLE	60
+arm-1	amba_decomposed_tsingle.ltl	60	REALIZABLE	0.0255861229961738	false	REALIZABLE	60
+arm-1	amba_gr+_pb_2_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_gr+_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_gr_pb_2_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_gr_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	amba_gr_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter-paper-unreal-unreal.ltl				true	UNKNOWN	60
+arm-1	arbiter-with-failure-real.ltl	60	REALIZABLE	0.05238164495676756	false	REALIZABLE	60
+arm-1	arbiter_on_inpchange_pb_1_pe_.ltl	60	REALIZABLE	0.037375092040747404	false	REALIZABLE	60
+arm-1	arbiter_on_inpchange_pb_2_pe_.ltl	60	REALIZABLE	0.036857484956271946	false	REALIZABLE	60
+arm-1	arbiter_on_inpchange_pb_3_pe_.ltl	60	REALIZABLE	0.07066398207098246	false	REALIZABLE	60
+arm-1	arbiter_on_inpchange_pb_4_pe_.ltl	60	REALIZABLE	1.0979128909530118	false	REALIZABLE	60
+arm-1	arbiter_on_inpchange_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_on_inpchange_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_on_inpchange_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_pb_1_pe_.ltl	60	REALIZABLE	0.029680951964110136	false	REALIZABLE	60
+arm-1	arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.0307697260286659	false	REALIZABLE	60
+arm-1	arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.04567790194414556	false	REALIZABLE	60
+arm-1	arbiter_pb_4_pe_.ltl	60	REALIZABLE	0.05651847005356103	false	REALIZABLE	60
+arm-1	arbiter_pb_5_pe_.ltl	60	REALIZABLE	0.33541608205996454	false	REALIZABLE	60
+arm-1	arbiter_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_buffer_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_buffer_pb_1_pe_.ltl	60	REALIZABLE	0.03277677798178047	false	REALIZABLE	60
+arm-1	arbiter_with_buffer_pb_2_pe_.ltl	60	REALIZABLE	0.03406783798709512	false	REALIZABLE	60
+arm-1	arbiter_with_buffer_pb_3_pe_.ltl	60	REALIZABLE	0.05095757101662457	false	REALIZABLE	60
+arm-1	arbiter_with_buffer_pb_4_pe_.ltl	60	REALIZABLE	0.11683662899304181	false	REALIZABLE	60
+arm-1	arbiter_with_buffer_pb_5_pe_.ltl	60	REALIZABLE	3.903634494054131	false	REALIZABLE	60
+arm-1	arbiter_with_buffer_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_buffer_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_buffer_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_buffer_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_cancel_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_cancel_pb_1_pe_.ltl	60	REALIZABLE	0.02152711700182408	false	REALIZABLE	60
+arm-1	arbiter_with_cancel_pb_2_pe_.ltl	60	REALIZABLE	0.03337604703847319	false	REALIZABLE	60
+arm-1	arbiter_with_cancel_pb_3_pe_.ltl	60	REALIZABLE	0.05786656297277659	false	REALIZABLE	60
+arm-1	arbiter_with_cancel_pb_4_pe_.ltl	60	REALIZABLE	0.09834178001619875	false	REALIZABLE	60
+arm-1	arbiter_with_cancel_pb_5_pe_.ltl	60	REALIZABLE	1.0062415399588645	false	REALIZABLE	60
+arm-1	arbiter_with_cancel_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_cancel_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_cancel_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	arbiter_with_cancel_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	batch-arbiter-real.ltl	60	REALIZABLE	0.040704900049604475	false	REALIZABLE	60
+arm-1	box-limited-real.ltl	60	REALIZABLE	0.06346036598552018	false	REALIZABLE	60
+arm-1	box-real.ltl				true	TIMEOUT	60
+arm-1	box0.ltl				true	UNKNOWN	60
+arm-1	box1.ltl				true	UNKNOWN	60
+arm-1	buffer-storage-real.ltl	60	REALIZABLE	0.5284386029234156	false	REALIZABLE	60
+arm-1	chain-4-real.ltl				true	TIMEOUT	60
+arm-1	chain-5-real.ltl				true	TIMEOUT	60
+arm-1	chain-60.ltl				true	TIMEOUT	60
+arm-1	chain-70.ltl				true	TIMEOUT	60
+arm-1	chain-simple-10-real.ltl	60	REALIZABLE	0.12982461508363485	false	REALIZABLE	60
+arm-1	chain-simple-20-real.ltl	60	REALIZABLE	0.2083564419299364	false	REALIZABLE	60
+arm-1	chain-simple-30-real.ltl	60	REALIZABLE	0.3507116020191461	false	REALIZABLE	60
+arm-1	chain-simple-40-real.ltl	60	REALIZABLE	0.4562855149852112	false	REALIZABLE	60
+arm-1	chain-simple-5-real.ltl	60	REALIZABLE	0.08199026505462825	false	REALIZABLE	60
+arm-1	chain-simple-50-real.ltl	60	REALIZABLE	0.5694479970261455	false	REALIZABLE	60
+arm-1	chain-simple-60-real.ltl	60	REALIZABLE	0.7069961189990863	false	REALIZABLE	60
+arm-1	chain-simple-70-real.ltl	60	REALIZABLE	0.877494900021702	false	REALIZABLE	60
+arm-1	chain-simple-param-70-real.ltl	60	REALIZABLE	0.8637088719988242	false	REALIZABLE	60
+arm-1	chomp_pb_2_2_pe_.ltl	60	REALIZABLE	0.07568810100201517	false	REALIZABLE	60
+arm-1	chomp_pb_2_3_pe_.ltl	60	REALIZABLE	3.054921549046412	false	REALIZABLE	60
+arm-1	chomp_pb_2_4_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_2_5_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_2_6_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_3_2_pe_.ltl	60	REALIZABLE	3.0120109440758824	false	REALIZABLE	60
+arm-1	chomp_pb_3_3_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_3_4_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_3_5_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_3_6_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_4_2_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_4_3_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_4_4_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_4_5_pe_.ltl				true	TIMEOUT	60
+arm-1	chomp_pb_4_6_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v1_pb_11_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v1_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v1_pb_13_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v1_pb_14_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v1_pb_15_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v1_pb_3_pe_.ltl	60	REALIZABLE	0.02914391306694597	false	REALIZABLE	60
+arm-1	collector_v1_pb_5_pe_.ltl	60	REALIZABLE	0.03808201604988426	false	REALIZABLE	60
+arm-1	collector_v1_pb_7_pe_.ltl	60	REALIZABLE	0.09425435110460967	false	REALIZABLE	60
+arm-1	collector_v1_pb_9_pe_.ltl	60	REALIZABLE	2.408048680983484	false	REALIZABLE	60
+arm-1	collector_v2_pb_10_pe_.ltl	60	REALIZABLE	0.1291848480468616	false	REALIZABLE	60
+arm-1	collector_v2_pb_11_pe_.ltl	60	REALIZABLE	0.2590759509475902	false	REALIZABLE	60
+arm-1	collector_v2_pb_12_pe_.ltl	60	REALIZABLE	0.5841014169855043	false	REALIZABLE	60
+arm-1	collector_v2_pb_13_pe_.ltl	60	REALIZABLE	1.37747954193037	false	REALIZABLE	60
+arm-1	collector_v2_pb_15_pe_.ltl	60	REALIZABLE	9.22749462001957	false	REALIZABLE	60
+arm-1	collector_v2_pb_27_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v2_pb_3_pe_.ltl	60	REALIZABLE	0.029199664015322924	false	REALIZABLE	60
+arm-1	collector_v2_pb_5_pe_.ltl	60	REALIZABLE	0.04755850206129253	false	REALIZABLE	60
+arm-1	collector_v2_pb_7_pe_.ltl	60	REALIZABLE	0.03970855905208737	false	REALIZABLE	60
+arm-1	collector_v2_pb_9_pe_.ltl	60	REALIZABLE	0.08959741005674005	false	REALIZABLE	60
+arm-1	collector_v3_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v3_pb_11_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v3_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v3_pb_13_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v3_pb_15_pe_.ltl				true	TIMEOUT	60
+arm-1	collector_v3_pb_3_pe_.ltl	60	REALIZABLE	0.03705464501399547	false	REALIZABLE	60
+arm-1	collector_v3_pb_5_pe_.ltl	60	REALIZABLE	0.06719002907630056	false	REALIZABLE	60
+arm-1	collector_v3_pb_7_pe_.ltl	60	REALIZABLE	0.8981545550050214	false	REALIZABLE	60
+arm-1	collector_v3_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	diagonal-real.ltl	60	REALIZABLE	0.06467792496550828	false	REALIZABLE	60
+arm-1	door_locking_problem_d6c5ac79.ltl	60	REALIZABLE	0.04263071995228529	false	REALIZABLE	60
+arm-1	elevator-paper-real.ltl				true	TIMEOUT	60
+arm-1	evasion-real.ltl				true	TIMEOUT	60
+arm-1	evasion0.ltl				true	TIMEOUT	60
+arm-1	example10_pb_1_pe_.ltl	60	REALIZABLE	0.03436353406868875	false	REALIZABLE	60
+arm-1	example10_pb_2_pe_.ltl	60	REALIZABLE	0.032562770997174084	false	REALIZABLE	60
+arm-1	example10a_pb_1_pe_.ltl	60	REALIZABLE	0.0459405779838562	false	REALIZABLE	60
+arm-1	example10a_pb_2_pe_.ltl	60	REALIZABLE	0.043765265960246325	false	REALIZABLE	60
+arm-1	example7_pb_1_pe_.ltl	60	REALIZABLE	0.036389518994838	false	REALIZABLE	60
+arm-1	example7_pb_2_pe_.ltl	60	REALIZABLE	0.04584716004319489	false	REALIZABLE	60
+arm-1	example7a_pb_1_pe_.ltl	60	REALIZABLE	0.03673791291657835	false	REALIZABLE	60
+arm-1	example7a_pb_2_pe_.ltl	60	REALIZABLE	0.047305573942139745	false	REALIZABLE	60
+arm-1	example8_pb_1_pe_.ltl	60	REALIZABLE	0.04810331098269671	false	REALIZABLE	60
+arm-1	example8_pb_2_pe_.ltl	60	REALIZABLE	0.045564176980406046	false	REALIZABLE	60
+arm-1	example9_pb_1_pe_.ltl	60	REALIZABLE	0.04984955198597163	false	REALIZABLE	60
+arm-1	example9_pb_2_pe_.ltl	60	REALIZABLE	0.04181587405037135	false	REALIZABLE	60
+arm-1	f-real-real.ltl				true	TIMEOUT	60
+arm-1	f-unreal-unreal.ltl				true	UNKNOWN	60
+arm-1	finding_nemo_pb_1_pe_.ltl				true	TIMEOUT	60
+arm-1	finding_nemo_pb_2_pe_.ltl				true	TIMEOUT	60
+arm-1	finding_nemo_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	finding_nemo_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	finding_nemo_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	finding_nemo_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	finding_nemo_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	follow0.ltl				true	TIMEOUT	60
+arm-1	follow1.ltl				true	TIMEOUT	60
+arm-1	follow2.ltl				true	TIMEOUT	60
+arm-1	follow3.ltl				true	TIMEOUT	60
+arm-1	full_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	full_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	full_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	full_arbiter_unreal1_pb_2_10_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_11_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_12_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_13_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_16_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_18_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_1_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_20_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_21_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_22_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_24_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_26_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_2_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_3_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_4_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_5_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_6_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_7_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_8_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_2_9_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_10_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_11_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_12_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_13_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_14_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_15_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_1_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_2_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_3_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_4_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_5_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_7_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_3_9_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_4_1_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_4_2_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_4_3_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_4_4_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_4_5_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_4_7_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_4_8_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal1_pb_6_8_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal2_pb_2_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal2_pb_3_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal2_pb_4_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal2_pb_5_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal2_pb_6_pe_.ltl				true	UNKNOWN	60
+arm-1	full_arbiter_unreal2_pb_7_pe_.ltl				true	UNKNOWN	60
+arm-1	g-real-real.ltl				true	TIMEOUT	60
+arm-1	g-real0.ltl				true	UNKNOWN	60
+arm-1	g-unreal-1-unreal.ltl				true	UNKNOWN	60
+arm-1	g-unreal-10.ltl				true	UNKNOWN	60
+arm-1	g-unreal-11.ltl				true	UNKNOWN	60
+arm-1	g-unreal-110.ltl				true	UNKNOWN	60
+arm-1	g-unreal-111.ltl				true	UNKNOWN	60
+arm-1	g-unreal-112.ltl				true	UNKNOWN	60
+arm-1	g-unreal-113.ltl				true	UNKNOWN	60
+arm-1	g-unreal-114.ltl				true	UNKNOWN	60
+arm-1	g-unreal-115.ltl				true	UNKNOWN	60
+arm-1	g-unreal-116.ltl				true	UNKNOWN	60
+arm-1	g-unreal-117.ltl				true	UNKNOWN	60
+arm-1	g-unreal-118.ltl				true	UNKNOWN	60
+arm-1	g-unreal-119.ltl				true	UNKNOWN	60
+arm-1	g-unreal-12.ltl				true	UNKNOWN	60
+arm-1	g-unreal-120.ltl				true	UNKNOWN	60
+arm-1	g-unreal-13.ltl				true	UNKNOWN	60
+arm-1	g-unreal-14.ltl				true	UNKNOWN	60
+arm-1	g-unreal-15.ltl				true	UNKNOWN	60
+arm-1	g-unreal-16.ltl				true	UNKNOWN	60
+arm-1	g-unreal-17.ltl				true	UNKNOWN	60
+arm-1	g-unreal-18.ltl				true	UNKNOWN	60
+arm-1	g-unreal-19.ltl				true	UNKNOWN	60
+arm-1	g-unreal-20.ltl				true	TIMEOUT	60
+arm-1	g-unreal-21.ltl				true	TIMEOUT	60
+arm-1	g-unreal-30.ltl				true	TIMEOUT	60
+arm-1	g-unreal-31.ltl				true	TIMEOUT	60
+arm-1	g-unreal-310.ltl				true	TIMEOUT	60
+arm-1	g-unreal-311.ltl				true	TIMEOUT	60
+arm-1	g-unreal-312.ltl				true	TIMEOUT	60
+arm-1	g-unreal-313.ltl				true	TIMEOUT	60
+arm-1	g-unreal-314.ltl				true	TIMEOUT	60
+arm-1	g-unreal-32.ltl				true	TIMEOUT	60
+arm-1	g-unreal-33.ltl				true	TIMEOUT	60
+arm-1	g-unreal-34.ltl				true	TIMEOUT	60
+arm-1	g-unreal-35.ltl				true	TIMEOUT	60
+arm-1	g-unreal-36.ltl				true	TIMEOUT	60
+arm-1	g-unreal-37.ltl				true	TIMEOUT	60
+arm-1	g-unreal-38.ltl				true	TIMEOUT	60
+arm-1	g-unreal-39.ltl				true	TIMEOUT	60
+arm-1	generalized_buffer_pb_2_pe_.ltl	60	REALIZABLE	0.04379395896103233	false	REALIZABLE	60
+arm-1	generalized_buffer_pb_3_pe_.ltl	60	REALIZABLE	0.1179657009197399	false	REALIZABLE	60
+arm-1	generalized_buffer_pb_4_pe_.ltl	60	REALIZABLE	9.781417966005392	false	REALIZABLE	60
+arm-1	generalized_buffer_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	generalized_buffer_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	gf-real-real.ltl	60	REALIZABLE	0.039175662910565734	false	REALIZABLE	60
+arm-1	gf-unreal0.ltl				true	UNKNOWN	60
+arm-1	gf-unreal1.ltl				true	UNKNOWN	60
+arm-1	gf-unreal10.ltl				true	UNKNOWN	60
+arm-1	gf-unreal11.ltl				true	UNKNOWN	60
+arm-1	gf-unreal12.ltl				true	UNKNOWN	60
+arm-1	gf-unreal13.ltl				true	UNKNOWN	60
+arm-1	gf-unreal14.ltl				true	UNKNOWN	60
+arm-1	gf-unreal15.ltl				true	UNKNOWN	60
+arm-1	gf-unreal16.ltl				true	UNKNOWN	60
+arm-1	gf-unreal17.ltl				true	UNKNOWN	60
+arm-1	gf-unreal18.ltl				true	UNKNOWN	60
+arm-1	gf-unreal19.ltl				true	UNKNOWN	60
+arm-1	gf-unreal2.ltl				true	UNKNOWN	60
+arm-1	gf-unreal20.ltl				true	UNKNOWN	60
+arm-1	gf-unreal21.ltl				true	UNKNOWN	60
+arm-1	gf-unreal22.ltl				true	UNKNOWN	60
+arm-1	gf-unreal23.ltl				true	UNKNOWN	60
+arm-1	gf-unreal24.ltl				true	UNKNOWN	60
+arm-1	gf-unreal25.ltl				true	UNKNOWN	60
+arm-1	gf-unreal26.ltl				true	UNKNOWN	60
+arm-1	gf-unreal27.ltl				true	UNKNOWN	60
+arm-1	gf-unreal28.ltl				true	UNKNOWN	60
+arm-1	gf-unreal29.ltl				true	UNKNOWN	60
+arm-1	gf-unreal3.ltl				true	UNKNOWN	60
+arm-1	gf-unreal30.ltl				true	UNKNOWN	60
+arm-1	gf-unreal31.ltl				true	UNKNOWN	60
+arm-1	gf-unreal32.ltl				true	UNKNOWN	60
+arm-1	gf-unreal33.ltl				true	UNKNOWN	60
+arm-1	gf-unreal34.ltl				true	UNKNOWN	60
+arm-1	gf-unreal35.ltl				true	UNKNOWN	60
+arm-1	gf-unreal36.ltl				true	UNKNOWN	60
+arm-1	gf-unreal37.ltl				true	UNKNOWN	60
+arm-1	gf-unreal38.ltl				true	UNKNOWN	60
+arm-1	gf-unreal39.ltl				true	UNKNOWN	60
+arm-1	gf-unreal4.ltl				true	UNKNOWN	60
+arm-1	gf-unreal40.ltl				true	UNKNOWN	60
+arm-1	gf-unreal41.ltl				true	UNKNOWN	60
+arm-1	gf-unreal42.ltl				true	UNKNOWN	60
+arm-1	gf-unreal43.ltl				true	UNKNOWN	60
+arm-1	gf-unreal44.ltl				true	UNKNOWN	60
+arm-1	gf-unreal45.ltl				true	UNKNOWN	60
+arm-1	gf-unreal46.ltl				true	UNKNOWN	60
+arm-1	gf-unreal47.ltl				true	UNKNOWN	60
+arm-1	gf-unreal5.ltl				true	UNKNOWN	60
+arm-1	gf-unreal6.ltl				true	UNKNOWN	60
+arm-1	gf-unreal7.ltl				true	UNKNOWN	60
+arm-1	gf-unreal8.ltl				true	UNKNOWN	60
+arm-1	gf-unreal9.ltl				true	UNKNOWN	60
+arm-1	heim-buechi-real.ltl	60	REALIZABLE	1.6882725360337645	false	REALIZABLE	60
+arm-1	heim-double-x-real.ltl				true	UNKNOWN	60
+arm-1	heim-double-x0.ltl				true	UNKNOWN	60
+arm-1	heim-double-x1.ltl				true	UNKNOWN	60
+arm-1	heim-double-x10.ltl				true	UNKNOWN	60
+arm-1	heim-double-x11.ltl				true	UNKNOWN	60
+arm-1	heim-double-x12.ltl				true	UNKNOWN	60
+arm-1	heim-double-x13.ltl				true	UNKNOWN	60
+arm-1	heim-double-x2.ltl				true	UNKNOWN	60
+arm-1	heim-double-x3.ltl				true	UNKNOWN	60
+arm-1	heim-double-x4.ltl				true	UNKNOWN	60
+arm-1	heim-double-x5.ltl				true	UNKNOWN	60
+arm-1	heim-double-x6.ltl				true	UNKNOWN	60
+arm-1	heim-double-x7.ltl				true	UNKNOWN	60
+arm-1	heim-double-x8.ltl				true	UNKNOWN	60
+arm-1	heim-double-x9.ltl				true	UNKNOWN	60
+arm-1	heim-fig7-unreal.ltl				true	UNKNOWN	60
+arm-1	helipad-contradict0.ltl				true	TIMEOUT	60
+arm-1	helipad-contradict1.ltl				true	TIMEOUT	60
+arm-1	helipad-real.ltl				true	TIMEOUT	60
+arm-1	infinite-race-real.ltl	60	REALIZABLE	0.03806119703222066	false	REALIZABLE	60
+arm-1	infinite-race-u0.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u1.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u10.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u11.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u12.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u13.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u14.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u15.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u16.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u17.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u18.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u19.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u2.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u20.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u21.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u22.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u23.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u24.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u25.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u3.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u4.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u5.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u6.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u7.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u8.ltl				true	TIMEOUT	60
+arm-1	infinite-race-u9.ltl				true	TIMEOUT	60
+arm-1	infinite-race-unequal-1-real.ltl	60	REALIZABLE	0.15379624301567674	false	REALIZABLE	60
+arm-1	infinite-race-unequal-10.ltl				true	UNKNOWN	60
+arm-1	infinite-race-unequal-20.ltl				true	UNKNOWN	60
+arm-1	infinite-race-unequal-21.ltl				true	UNKNOWN	60
+arm-1	infinite-race-unequal-22.ltl				true	TIMEOUT	60
+arm-1	infinite-race-unequal-23.ltl				true	TIMEOUT	60
+arm-1	infinite-race-unequal-24.ltl				true	TIMEOUT	60
+arm-1	infinite-race-unequal-25.ltl				true	TIMEOUT	60
+arm-1	infinite-race-unequal-26.ltl				true	TIMEOUT	60
+arm-1	items_processing-real.ltl				true	TIMEOUT	60
+arm-1	jarvis_gideon_a02758ea.ltl				true	UNKNOWN	60
+arm-1	jarvis_philippe_484face8.ltl				true	UNKNOWN	60
+arm-1	lazy_shades_problem_d6376bf9.ltl	60	REALIZABLE	0.049721912015229464	false	REALIZABLE	60
+arm-1	lift_gr1+_pb_2_pe_.ltl	60	REALIZABLE	0.06475549202878028	false	REALIZABLE	60
+arm-1	lift_gr1+_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1+_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1+_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1+_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1+_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1_pb_2_pe_.ltl	60	REALIZABLE	0.03344025509431958	false	REALIZABLE	60
+arm-1	lift_gr1_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_gr1_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_pb_2_pe_.ltl	60	REALIZABLE	0.03536750399507582	false	REALIZABLE	60
+arm-1	lift_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_unary_enc_pb_2_pe_.ltl	60	REALIZABLE	0.036592558957636356	false	REALIZABLE	60
+arm-1	lift_unary_enc_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_unary_enc_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_unary_enc_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_unary_enc_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_unary_enc_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_wrong_physics_unreal_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_wrong_physics_unreal_pb_2_pe_.ltl	60	REALIZABLE	0.03395688603632152	false	REALIZABLE	60
+arm-1	lift_wrong_physics_unreal_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_wrong_physics_unreal_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_wrong_physics_unreal_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_wrong_physics_unreal_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_wrong_physics_unreal_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_wrong_physics_unreal_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	lift_wrong_physics_unreal_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	lilydemo01.ltl				true	UNKNOWN	60
+arm-1	lilydemo02.ltl				true	UNKNOWN	60
+arm-1	lilydemo03.ltl	60	REALIZABLE	0.037888573948293924	false	REALIZABLE	60
+arm-1	lilydemo04.ltl	60	REALIZABLE	0.03627742000389844	false	REALIZABLE	60
+arm-1	lilydemo04_modified.ltl				true	UNKNOWN	60
+arm-1	lilydemo05.ltl	60	REALIZABLE	0.04331031104084104	false	REALIZABLE	60
+arm-1	lilydemo06.ltl	60	REALIZABLE	0.04606986092403531	false	REALIZABLE	60
+arm-1	lilydemo07.ltl	60	REALIZABLE	0.04494726599659771	false	REALIZABLE	60
+arm-1	lilydemo08.ltl	60	REALIZABLE	0.034000447019934654	false	REALIZABLE	60
+arm-1	lilydemo09.ltl	60	REALIZABLE	0.030721383984200656	false	REALIZABLE	60
+arm-1	lilydemo10.ltl	60	REALIZABLE	0.04063624399714172	false	REALIZABLE	60
+arm-1	lilydemo11.ltl				true	UNKNOWN	60
+arm-1	lilydemo12.ltl	60	REALIZABLE	0.03513803507667035	false	REALIZABLE	60
+arm-1	lilydemo13.ltl	60	REALIZABLE	0.05055305699352175	false	REALIZABLE	60
+arm-1	lilydemo14.ltl	60	REALIZABLE	0.04746805096510798	false	REALIZABLE	60
+arm-1	lilydemo15.ltl	60	REALIZABLE	0.04539476300124079	false	REALIZABLE	60
+arm-1	lilydemo16.ltl	60	REALIZABLE	0.046402096981182694	false	REALIZABLE	60
+arm-1	lilydemo17.ltl	60	REALIZABLE	0.04493817605543882	false	REALIZABLE	60
+arm-1	lilydemo18.ltl	60	REALIZABLE	0.054120743996463716	false	REALIZABLE	60
+arm-1	lilydemo19.ltl	60	REALIZABLE	0.04554998595267534	false	REALIZABLE	60
+arm-1	lilydemo20.ltl	60	REALIZABLE	0.04498403810430318	false	REALIZABLE	60
+arm-1	lilydemo21.ltl	60	REALIZABLE	0.060663428041152656	false	REALIZABLE	60
+arm-1	lilydemo22.ltl	60	REALIZABLE	0.04649463691748679	false	REALIZABLE	60
+arm-1	lilydemo23.ltl	60	REALIZABLE	0.04732989997137338	false	REALIZABLE	60
+arm-1	load_balancer_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	load_balancer_pb_11_pe_.ltl				true	TIMEOUT	60
+arm-1	load_balancer_pb_2_pe_.ltl	60	REALIZABLE	0.04138250497635454	false	REALIZABLE	60
+arm-1	load_balancer_pb_3_pe_.ltl	60	REALIZABLE	0.046874589985236526	false	REALIZABLE	60
+arm-1	load_balancer_pb_4_pe_.ltl	60	REALIZABLE	0.06328505603596568	false	REALIZABLE	60
+arm-1	load_balancer_pb_5_pe_.ltl	60	REALIZABLE	0.1330012190155685	false	REALIZABLE	60
+arm-1	load_balancer_pb_6_pe_.ltl	60	REALIZABLE	0.4256905879592523	false	REALIZABLE	60
+arm-1	load_balancer_pb_7_pe_.ltl	60	REALIZABLE	4.288589706062339	false	REALIZABLE	60
+arm-1	load_balancer_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	load_balancer_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	load_balancer_unreal1_pb_2_10_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_11_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_12_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_13_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_16_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_1_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_2_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_3_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_4_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_5_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_6_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_7_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_8_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_2_9_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_10_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_11_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_12_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_1_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_2_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_3_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_4_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_5_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_7_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_3_9_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_10_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_11_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_12_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_1_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_2_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_3_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_4_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_5_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_7_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_8_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_4_9_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_5_2_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_5_3_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_5_4_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_5_5_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_5_6_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_5_7_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_6_1_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_6_2_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_6_3_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_6_4_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal1_pb_6_5_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal2_pb_2_pe_.ltl	60	REALIZABLE	0.03147496492601931	false	REALIZABLE	60
+arm-1	load_balancer_unreal2_pb_3_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal2_pb_4_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal2_pb_5_pe_.ltl				true	UNKNOWN	60
+arm-1	load_balancer_unreal2_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	load_balancer_unreal2_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	load_balancer_unreal2_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba01.ltl	60	REALIZABLE	0.039208614034578204	false	REALIZABLE	60
+arm-1	ltl2dba02.ltl	60	REALIZABLE	0.034114505047909915	false	REALIZABLE	60
+arm-1	ltl2dba03.ltl	60	REALIZABLE	0.03998796397354454	false	REALIZABLE	60
+arm-1	ltl2dba04.ltl	60	REALIZABLE	0.03494200203567743	false	REALIZABLE	60
+arm-1	ltl2dba05.ltl	60	REALIZABLE	0.035826822044327855	false	REALIZABLE	60
+arm-1	ltl2dba06.ltl	60	REALIZABLE	0.03729633195325732	false	REALIZABLE	60
+arm-1	ltl2dba07.ltl	60	REALIZABLE	0.035542401019483805	false	REALIZABLE	60
+arm-1	ltl2dba08.ltl	60	REALIZABLE	0.03366191394161433	false	REALIZABLE	60
+arm-1	ltl2dba09.ltl	60	REALIZABLE	0.04493808397091925	false	REALIZABLE	60
+arm-1	ltl2dba10.ltl	60	REALIZABLE	0.03603266703430563	false	REALIZABLE	60
+arm-1	ltl2dba11.ltl	60	REALIZABLE	0.03480723802931607	false	REALIZABLE	60
+arm-1	ltl2dba12.ltl	60	REALIZABLE	0.03416695399209857	false	REALIZABLE	60
+arm-1	ltl2dba13.ltl	60	REALIZABLE	0.03285760502330959	false	REALIZABLE	60
+arm-1	ltl2dba14.ltl	60	REALIZABLE	0.034689594991505146	false	REALIZABLE	60
+arm-1	ltl2dba15.ltl	60	REALIZABLE	0.0285641320515424	false	REALIZABLE	60
+arm-1	ltl2dba16.ltl	60	REALIZABLE	0.032224192982539535	false	REALIZABLE	60
+arm-1	ltl2dba17.ltl	60	REALIZABLE	0.03179979498963803	false	REALIZABLE	60
+arm-1	ltl2dba18.ltl	60	REALIZABLE	0.04781214310787618	false	REALIZABLE	60
+arm-1	ltl2dba19.ltl	60	REALIZABLE	0.03646437299903482	false	REALIZABLE	60
+arm-1	ltl2dba20.ltl	60	REALIZABLE	0.044808018021285534	false	REALIZABLE	60
+arm-1	ltl2dba21.ltl	60	REALIZABLE	0.04510670201852918	false	REALIZABLE	60
+arm-1	ltl2dba22.ltl	60	REALIZABLE	0.034207163960672915	false	REALIZABLE	60
+arm-1	ltl2dba23.ltl	60	REALIZABLE	0.0339794980827719	false	REALIZABLE	60
+arm-1	ltl2dba25.ltl	60	REALIZABLE	0.03627327096182853	false	REALIZABLE	60
+arm-1	ltl2dba26.ltl	60	REALIZABLE	0.03359827701933682	false	REALIZABLE	60
+arm-1	ltl2dba27.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_pb_100_pe_.ltl	60	REALIZABLE	0.03644275397527963	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_10_pe_.ltl	60	REALIZABLE	0.047343567945063114	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_12_pe_.ltl	60	REALIZABLE	0.032387131941504776	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_14_pe_.ltl	60	REALIZABLE	0.036920715938322246	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_16_pe_.ltl	60	REALIZABLE	0.03243518096860498	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_1_pe_.ltl	60	REALIZABLE	0.032669435953721404	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_25_pe_.ltl	60	REALIZABLE	0.038915995974093676	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_2_pe_.ltl	60	REALIZABLE	0.03449454496148974	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_3_pe_.ltl	60	REALIZABLE	0.037861924967728555	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_4_pe_.ltl	60	REALIZABLE	0.03516703296918422	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_50_pe_.ltl	60	REALIZABLE	0.03465015406254679	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_5_pe_.ltl	60	REALIZABLE	0.03183594404254109	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_60_pe_.ltl	60	REALIZABLE	0.04530240397434682	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_6_pe_.ltl	60	REALIZABLE	0.04880385007709265	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_70_pe_.ltl	60	REALIZABLE	0.03611553204245865	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_7_pe_.ltl	60	REALIZABLE	0.057728925021365285	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_80_pe_.ltl	60	REALIZABLE	0.04824838298372924	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_8_pe_.ltl	60	REALIZABLE	0.03344106499571353	false	REALIZABLE	60
+arm-1	ltl2dba_C2_pb_9_pe_.ltl	60	REALIZABLE	0.03085694496985525	false	REALIZABLE	60
+arm-1	ltl2dba_C2_unreal_pb_100_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_C2_unreal_pb_10_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_11_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_12_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_13_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_14_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_15_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_16_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_25_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_C2_unreal_pb_2_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_3_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_4_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_50_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_C2_unreal_pb_5_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_60_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_C2_unreal_pb_6_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_70_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_C2_unreal_pb_7_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_80_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_C2_unreal_pb_8_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_C2_unreal_pb_9_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_E_pb_10_pe_.ltl	60	REALIZABLE	0.030199585016816854	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_12_pe_.ltl	60	REALIZABLE	0.03304715396370739	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_14_pe_.ltl	60	REALIZABLE	0.03161989897489548	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_15_pe_.ltl	60	REALIZABLE	0.03400825604330748	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_16_pe_.ltl	60	REALIZABLE	0.034686324070207775	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_1_pe_.ltl	60	REALIZABLE	0.04647882399149239	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_2_pe_.ltl	60	REALIZABLE	0.034791016951203346	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_3_pe_.ltl	60	REALIZABLE	0.037202593055553734	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_4_pe_.ltl	60	REALIZABLE	0.035305368015542626	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_5_pe_.ltl	60	REALIZABLE	0.045434980071149766	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_6_pe_.ltl	60	REALIZABLE	0.03312678902875632	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_7_pe_.ltl	60	REALIZABLE	0.03426252899225801	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_8_pe_.ltl	60	REALIZABLE	0.031047131051309407	false	REALIZABLE	60
+arm-1	ltl2dba_E_pb_9_pe_.ltl	60	REALIZABLE	0.02246771997306496	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_100_pe_.ltl	60	REALIZABLE	0.04661967896390706	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_10_pe_.ltl	60	REALIZABLE	0.047878312994726	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_12_pe_.ltl	60	REALIZABLE	0.03383749397471547	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_15_pe_.ltl	60	REALIZABLE	0.029709083028137684	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_18_pe_.ltl	60	REALIZABLE	0.037316184025257826	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_1_pe_.ltl	60	REALIZABLE	0.03734658705070615	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_25_pe_.ltl	60	REALIZABLE	0.0357445600675419	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_2_pe_.ltl	60	REALIZABLE	0.03426137601491064	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_3_pe_.ltl	60	REALIZABLE	0.032978898962028325	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_4_pe_.ltl	60	REALIZABLE	0.03808284108527005	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_50_pe_.ltl	60	REALIZABLE	0.04886675102170557	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_5_pe_.ltl	60	REALIZABLE	0.03290374402422458	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_6_pe_.ltl	60	REALIZABLE	0.03220382193103433	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_7_pe_.ltl	60	REALIZABLE	0.032653222093358636	false	REALIZABLE	60
+arm-1	ltl2dba_Q_pb_8_pe_.ltl	60	REALIZABLE	0.03426015900913626	false	REALIZABLE	60
+arm-1	ltl2dba_R_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_R_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_R_pb_14_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_R_pb_1_pe_.ltl	60	REALIZABLE	0.02496766799595207	false	REALIZABLE	60
+arm-1	ltl2dba_R_pb_2_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_R_pb_3_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_R_pb_4_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_R_pb_5_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_R_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_R_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_R_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_U1_pb_100_pe_.ltl	60	REALIZABLE	0.025036539998836815	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_10_pe_.ltl	60	REALIZABLE	0.03993876196909696	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_12_pe_.ltl	60	REALIZABLE	0.031713765929453075	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_15_pe_.ltl	60	REALIZABLE	0.03339346405118704	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_18_pe_.ltl	60	REALIZABLE	0.03167340997606516	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_1_pe_.ltl	60	REALIZABLE	0.03262258996255696	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_25_pe_.ltl	60	REALIZABLE	0.03162952302955091	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_2_pe_.ltl	60	REALIZABLE	0.035079519962891936	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_3_pe_.ltl	60	REALIZABLE	0.03524627990555018	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_4_pe_.ltl	60	REALIZABLE	0.04739257204346359	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_50_pe_.ltl	60	REALIZABLE	0.03461202897597104	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_5_pe_.ltl	60	REALIZABLE	0.03234532009810209	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_6_pe_.ltl	60	REALIZABLE	0.04073768004309386	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_7_pe_.ltl	60	REALIZABLE	0.03655206598341465	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_8_pe_.ltl	60	REALIZABLE	0.0357569589978084	false	REALIZABLE	60
+arm-1	ltl2dba_U1_pb_9_pe_.ltl	60	REALIZABLE	0.048540528980083764	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_100_pe_.ltl	60	REALIZABLE	0.040539612993597984	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_10_pe_.ltl	60	REALIZABLE	0.03246628097258508	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_12_pe_.ltl	60	REALIZABLE	0.03648716502357274	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_14_pe_.ltl	60	REALIZABLE	0.03750094899442047	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_16_pe_.ltl	60	REALIZABLE	0.03248436201829463	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_17_pe_.ltl	60	REALIZABLE	0.03570968296844512	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_18_pe_.ltl	60	REALIZABLE	0.034320887993089855	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_1_pe_.ltl	60	REALIZABLE	0.03211454302072525	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_20_pe_.ltl	60	REALIZABLE	0.03650220995768905	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_25_pe_.ltl	60	REALIZABLE	0.03722940792795271	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_2_pe_.ltl	60	REALIZABLE	0.03461014409549534	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_3_pe_.ltl	60	REALIZABLE	0.03771837800741196	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_4_pe_.ltl	60	REALIZABLE	0.04843004804570228	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_50_pe_.ltl	60	REALIZABLE	0.034018612932413816	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_5_pe_.ltl	60	REALIZABLE	0.03734899603296071	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_6_pe_.ltl	60	REALIZABLE	0.03218338394071907	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_7_pe_.ltl	60	REALIZABLE	0.0307655829237774	false	REALIZABLE	60
+arm-1	ltl2dba_alpha_pb_8_pe_.ltl	60	REALIZABLE	0.03683788701891899	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_100_pe_.ltl	60	REALIZABLE	0.047588602057658136	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_10_pe_.ltl	60	REALIZABLE	0.03391380398534238	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_15_pe_.ltl	60	REALIZABLE	0.03753927198704332	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_18_pe_.ltl	60	REALIZABLE	0.04024247103370726	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_1_pe_.ltl	60	REALIZABLE	0.031596058048307896	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_20_pe_.ltl	60	REALIZABLE	0.052979634958319366	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_25_pe_.ltl	60	REALIZABLE	0.048612733953632414	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_2_pe_.ltl	60	REALIZABLE	0.03254946507513523	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_30_pe_.ltl	60	REALIZABLE	0.03301142994314432	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_3_pe_.ltl	60	REALIZABLE	0.03481612098403275	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_4_pe_.ltl	60	REALIZABLE	0.03586901701055467	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_5_pe_.ltl	60	REALIZABLE	0.04416706203483045	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_6_pe_.ltl	60	REALIZABLE	0.035484643070958555	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_7_pe_.ltl	60	REALIZABLE	0.04707898001652211	false	REALIZABLE	60
+arm-1	ltl2dba_beta_pb_8_pe_.ltl	60	REALIZABLE	0.03459117701277137	false	REALIZABLE	60
+arm-1	ltl2dba_theta_pb_100_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_14_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_16_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_1_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_2_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_theta_pb_300_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_3_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_theta_pb_4_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_theta_pb_500_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_50_pe_.ltl				true	TIMEOUT	60
+arm-1	ltl2dba_theta_pb_5_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_theta_pb_6_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_theta_pb_7_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dba_theta_pb_8_pe_.ltl				true	UNKNOWN	60
+arm-1	ltl2dpa01.ltl	60	REALIZABLE	0.024036646937020123	false	REALIZABLE	60
+arm-1	ltl2dpa02.ltl	60	REALIZABLE	0.03340330102946609	false	REALIZABLE	60
+arm-1	ltl2dpa03.ltl	60	REALIZABLE	0.04162384103983641	false	REALIZABLE	60
+arm-1	ltl2dpa04.ltl	60	REALIZABLE	0.03444506099913269	false	REALIZABLE	60
+arm-1	ltl2dpa05.ltl	60	REALIZABLE	0.03612740396056324	false	REALIZABLE	60
+arm-1	ltl2dpa06.ltl	60	REALIZABLE	0.03464743902441114	false	REALIZABLE	60
+arm-1	ltl2dpa07.ltl	60	REALIZABLE	0.03184264001902193	false	REALIZABLE	60
+arm-1	ltl2dpa08.ltl	60	REALIZABLE	0.033656634972430766	false	REALIZABLE	60
+arm-1	ltl2dpa09.ltl	60	REALIZABLE	0.034253829973749816	false	REALIZABLE	60
+arm-1	ltl2dpa10.ltl	60	REALIZABLE	0.049343248014338315	false	REALIZABLE	60
+arm-1	ltl2dpa11.ltl	60	REALIZABLE	0.034789795987308025	false	REALIZABLE	60
+arm-1	ltl2dpa12.ltl	60	REALIZABLE	0.04441306204535067	false	REALIZABLE	60
+arm-1	ltl2dpa13.ltl	60	REALIZABLE	0.351209296961315	false	REALIZABLE	60
+arm-1	ltl2dpa14.ltl	60	REALIZABLE	0.023746296064928174	false	REALIZABLE	60
+arm-1	ltl2dpa15.ltl	60	REALIZABLE	0.03139058803208172	false	REALIZABLE	60
+arm-1	ltl2dpa16.ltl	60	REALIZABLE	0.03441289800684899	false	REALIZABLE	60
+arm-1	ltl2dpa17.ltl	60	REALIZABLE	0.025353197939693928	false	REALIZABLE	60
+arm-1	ltl2dpa18.ltl	60	REALIZABLE	0.04376505094114691	false	REALIZABLE	60
+arm-1	ltl2dpa19.ltl	60	REALIZABLE	0.6921286690048873	false	REALIZABLE	60
+arm-1	ltl2dpa20.ltl	60	REALIZABLE	0.03317767393309623	false	REALIZABLE	60
+arm-1	ltl2dpa22.ltl	60	REALIZABLE	0.104660325916484	false	REALIZABLE	60
+arm-1	ltl2dpa23.ltl	60	REALIZABLE	0.032700974959880114	false	REALIZABLE	60
+arm-1	ltl2dpa24.ltl	60	REALIZABLE	0.02722493198234588	false	REALIZABLE	60
+arm-1	mux_pb_100_pe_.ltl	60	REALIZABLE	0.05071963893715292	false	REALIZABLE	60
+arm-1	mux_pb_10_pe_.ltl	60	REALIZABLE	0.030235441052354872	false	REALIZABLE	60
+arm-1	mux_pb_125_pe_.ltl	60	REALIZABLE	0.04883396299555898	false	REALIZABLE	60
+arm-1	mux_pb_12_pe_.ltl	60	REALIZABLE	0.06299479899462312	false	REALIZABLE	60
+arm-1	mux_pb_132_pe_.ltl	60	REALIZABLE	0.06951140600722283	false	REALIZABLE	60
+arm-1	mux_pb_150_pe_.ltl	60	REALIZABLE	0.0757699350360781	false	REALIZABLE	60
+arm-1	mux_pb_16_pe_.ltl	60	REALIZABLE	0.06465062208008021	false	REALIZABLE	60
+arm-1	mux_pb_175_pe_.ltl	60	REALIZABLE	0.06933038297574967	false	REALIZABLE	60
+arm-1	mux_pb_200_pe_.ltl	60	REALIZABLE	0.06945823202840984	false	REALIZABLE	60
+arm-1	mux_pb_32_pe_.ltl	60	REALIZABLE	0.050660399021580815	false	REALIZABLE	60
+arm-1	mux_pb_64_pe_.ltl	60	REALIZABLE	0.06570174801163375	false	REALIZABLE	60
+arm-1	mux_pb_8_pe_.ltl	60	REALIZABLE	0.037909930921159685	false	REALIZABLE	60
+arm-1	narylatch_pb_10_pe_.ltl	60	REALIZABLE	0.04564119700808078	false	REALIZABLE	60
+arm-1	narylatch_pb_11_pe_.ltl	60	REALIZABLE	0.0450663830852136	false	REALIZABLE	60
+arm-1	narylatch_pb_12_pe_.ltl	60	REALIZABLE	0.04338647297117859	false	REALIZABLE	60
+arm-1	narylatch_pb_16_pe_.ltl	60	REALIZABLE	0.048886661999858916	false	REALIZABLE	60
+arm-1	narylatch_pb_32_pe_.ltl	60	REALIZABLE	0.05567708099260926	false	REALIZABLE	60
+arm-1	narylatch_pb_64_pe_.ltl	60	REALIZABLE	0.052540600998327136	false	REALIZABLE	60
+arm-1	narylatch_pb_8_pe_.ltl	60	REALIZABLE	0.03769645094871521	false	REALIZABLE	60
+arm-1	ordered-visits-choice-real.ltl				true	UNKNOWN	60
+arm-1	ordered-visits-real.ltl	60	REALIZABLE	0.05249519506469369	false	REALIZABLE	60
+arm-1	package-delivery-real.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm0.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm1.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm10.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm11.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm12.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm13.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm14.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm15.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm16.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm17.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm18.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm19.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm2.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm20.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm21.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm22.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm23.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm24.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm25.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm26.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm3.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm4.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm5.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm6.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm7.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm8.ltl				true	TIMEOUT	60
+arm-1	patrolling-alarm9.ltl				true	TIMEOUT	60
+arm-1	patrolling0.ltl				true	TIMEOUT	60
+arm-1	patrolling1.ltl				true	TIMEOUT	60
+arm-1	patrolling10.ltl				true	TIMEOUT	60
+arm-1	patrolling11.ltl				true	TIMEOUT	60
+arm-1	patrolling12.ltl				true	TIMEOUT	60
+arm-1	patrolling13.ltl				true	TIMEOUT	60
+arm-1	patrolling14.ltl				true	TIMEOUT	60
+arm-1	patrolling15.ltl				true	TIMEOUT	60
+arm-1	patrolling16.ltl				true	TIMEOUT	60
+arm-1	patrolling17.ltl				true	TIMEOUT	60
+arm-1	patrolling18.ltl				true	TIMEOUT	60
+arm-1	patrolling19.ltl				true	TIMEOUT	60
+arm-1	patrolling2.ltl				true	TIMEOUT	60
+arm-1	patrolling20.ltl				true	TIMEOUT	60
+arm-1	patrolling21.ltl				true	TIMEOUT	60
+arm-1	patrolling22.ltl				true	TIMEOUT	60
+arm-1	patrolling23.ltl				true	TIMEOUT	60
+arm-1	patrolling24.ltl				true	TIMEOUT	60
+arm-1	patrolling25.ltl				true	TIMEOUT	60
+arm-1	patrolling3.ltl				true	TIMEOUT	60
+arm-1	patrolling4.ltl				true	TIMEOUT	60
+arm-1	patrolling5.ltl				true	TIMEOUT	60
+arm-1	patrolling6.ltl				true	TIMEOUT	60
+arm-1	patrolling7.ltl				true	TIMEOUT	60
+arm-1	patrolling8.ltl				true	TIMEOUT	60
+arm-1	patrolling9.ltl				true	TIMEOUT	60
+arm-1	precise-reachability-real.ltl	60	REALIZABLE	0.12979603908024728	false	REALIZABLE	60
+arm-1	precise-reachability0.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_pb_1_pe_.ltl	60	REALIZABLE	0.04391632799524814	false	REALIZABLE	60
+arm-1	prioritized_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.046281426097266376	false	REALIZABLE	60
+arm-1	prioritized_arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.052101304987445474	false	REALIZABLE	60
+arm-1	prioritized_arbiter_pb_4_pe_.ltl	60	REALIZABLE	0.04402991593815386	false	REALIZABLE	60
+arm-1	prioritized_arbiter_pb_5_pe_.ltl	60	REALIZABLE	0.05895678803790361	false	REALIZABLE	60
+arm-1	prioritized_arbiter_pb_6_pe_.ltl	60	REALIZABLE	0.33788082702085376	false	REALIZABLE	60
+arm-1	prioritized_arbiter_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_pb_9_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_unreal1_pb_2_10_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_11_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_12_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_13_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_16_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_1_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_2_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_3_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_4_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_5_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_6_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_7_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_8_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_2_9_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_10_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_11_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_12_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_13_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_14_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_15_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_16_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_1_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_2_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_3_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_4_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_5_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_7_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_3_9_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_11_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_12_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_13_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_14_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_15_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_16_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_1_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_2_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_3_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_4_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_5_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_7_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_8_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_4_9_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_5_16_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_5_2_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_5_32_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_5_4_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_6_16_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_6_2_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_6_32_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal1_pb_6_4_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal2_pb_100_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_unreal2_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_unreal2_pb_2_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal2_pb_30_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_unreal2_pb_3_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal2_pb_4_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal2_pb_5_pe_.ltl				true	UNKNOWN	60
+arm-1	prioritized_arbiter_unreal2_pb_60_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	prioritized_arbiter_unreal2_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	reversible-lane-r-real.ltl				true	TIMEOUT	60
+arm-1	reversible-lane-u-unreal.ltl				true	TIMEOUT	60
+arm-1	reversible-lane-u0.ltl				true	TIMEOUT	60
+arm-1	reversible-lane-u1.ltl				true	TIMEOUT	60
+arm-1	robot-cat-real-1d-real.ltl	60	REALIZABLE	2.892065436928533	false	REALIZABLE	60
+arm-1	robot-cat-real-2d-real.ltl				true	TIMEOUT	60
+arm-1	robot-cat-unreal-1d-unreal.ltl				true	UNKNOWN	60
+arm-1	robot-cat-unreal-2d-unreal.ltl				true	TIMEOUT	60
+arm-1	robot-grid-commute-1d-real.ltl	60	REALIZABLE	1.581971827079542	false	REALIZABLE	60
+arm-1	robot-grid-commute-2d-real.ltl				true	TIMEOUT	60
+arm-1	robot-grid-reach-1d-real.ltl	60	REALIZABLE	0.05281690403353423	false	REALIZABLE	60
+arm-1	robot-grid-reach-2d-real.ltl	60	REALIZABLE	2.328913204022683	false	REALIZABLE	60
+arm-1	robot-grid-reach-repeated-with-obstacles-1d-real.ltl	60	REALIZABLE	0.04303218994755298	false	REALIZABLE	60
+arm-1	robot-grid-reach-repeated-with-obstacles-2d-real.ltl	60	REALIZABLE	22.316116107976995	false	REALIZABLE	60
+arm-1	robot-grid-reach-repeated-with-obstacles-6d-real.ltl				true	TIMEOUT	60
+arm-1	robot-resource-1d-unreal.ltl				true	UNKNOWN	60
+arm-1	robot-resource-1d0.ltl				true	UNKNOWN	60
+arm-1	robot-resource-1d1.ltl				true	UNKNOWN	60
+arm-1	robot-resource-2d0.ltl				true	UNKNOWN	60
+arm-1	robot-resource-2d1.ltl				true	UNKNOWN	60
+arm-1	robot-resource-2d10.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d11.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d12.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d13.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d14.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d15.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d16.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d17.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d18.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d19.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d2.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d20.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d21.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d22.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d23.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d3.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d4.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d5.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d6.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d7.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d8.ltl				true	TIMEOUT	60
+arm-1	robot-resource-2d9.ltl				true	TIMEOUT	60
+arm-1	robot-tasks-real.ltl	60	REALIZABLE	0.06087029003538191	false	REALIZABLE	60
+arm-1	robot-to-target-charging-real.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal0.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal1.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal2.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal3.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal4.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal5.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal6.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal7.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging-unreal8.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging0.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging1.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging10.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging11.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging12.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging13.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging14.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging15.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging16.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging17.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging18.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging19.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging2.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging20.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging21.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging22.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging23.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging24.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging25.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging3.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging4.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging5.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging6.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging7.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging8.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-charging9.ltl				true	TIMEOUT	60
+arm-1	robot-to-target-unreal0.ltl	60	REALIZABLE	5.979189243982546	false	REALIZABLE	60
+arm-1	robot-to-target0.ltl				true	TIMEOUT	60
+arm-1	robot_analyze_samples_v1-real.ltl				true	TIMEOUT	60
+arm-1	robot_collect_samples_v1-real.ltl				true	TIMEOUT	60
+arm-1	robot_collect_samples_v2-real.ltl	60	REALIZABLE	46.386998516041785	false	REALIZABLE	60
+arm-1	robot_collect_samples_v3-real.ltl				true	TIMEOUT	60
+arm-1	robot_collect_samples_v4-real.ltl				true	TIMEOUT	60
+arm-1	robot_deliver_products_1-real.ltl				true	TIMEOUT	60
+arm-1	robot_deliver_products_20.ltl				true	TIMEOUT	60
+arm-1	robot_deliver_products_30.ltl				true	TIMEOUT	60
+arm-1	robot_deliver_products_40.ltl				true	TIMEOUT	60
+arm-1	robot_deliver_products_50.ltl				true	TIMEOUT	60
+arm-1	robot_grid_pb_2_2_pe_.ltl	60	REALIZABLE	0.22360094310715795	false	REALIZABLE	60
+arm-1	robot_grid_pb_3_3_pe_.ltl				true	TIMEOUT	60
+arm-1	robot_grid_pb_4_4_pe_.ltl				true	TIMEOUT	60
+arm-1	robot_grid_pb_5_1_pe_.ltl				true	TIMEOUT	60
+arm-1	robot_grid_pb_5_5_pe_.ltl				true	TIMEOUT	60
+arm-1	robot_grid_pb_6_1_pe_.ltl				true	TIMEOUT	60
+arm-1	robot_grid_pb_6_6_pe_.ltl				true	TIMEOUT	60
+arm-1	robot_grid_pb_7_7_pe_.ltl				true	MEMOUT	60
+arm-1	robot_grid_pb_8_8_pe_.ltl				true	MEMOUT	60
+arm-1	robot_repair0.ltl				true	TIMEOUT	60
+arm-1	robot_repair1.ltl				true	TIMEOUT	60
+arm-1	robot_repair2.ltl				true	TIMEOUT	60
+arm-1	robot_repair3.ltl				true	TIMEOUT	60
+arm-1	robot_repair4.ltl				true	TIMEOUT	60
+arm-1	robot_repair5.ltl				true	TIMEOUT	60
+arm-1	robot_running-real.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.023261485970579088	false	REALIZABLE	60
+arm-1	round_robin_arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.0362625279230997	false	REALIZABLE	60
+arm-1	round_robin_arbiter_pb_4_pe_.ltl	60	REALIZABLE	11.220920450985432	false	REALIZABLE	60
+arm-1	round_robin_arbiter_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_2_10_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_11_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_12_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_13_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_14_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_15_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_16_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_1_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_2_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_3_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_4_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_5_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_6_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_7_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_8_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_2_9_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_3_10_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_11_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_12_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_13_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_14_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_15_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_16_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_1_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal1_pb_3_20_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_22_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_2_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_3_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_4_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_50_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_5_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_6_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_7_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_8_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_3_9_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_10_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_11_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_12_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_13_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_14_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_15_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_1_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_2_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_3_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_4_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_5_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_6_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_7_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_8_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal2_pb_2_pe_.ltl				true	UNKNOWN	60
+arm-1	round_robin_arbiter_unreal2_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal2_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal2_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal2_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	round_robin_arbiter_unreal2_pb_7_pe_.ltl				true	TIMEOUT	60
+arm-1	rw_arbiter_pb_1_pe_.ltl	60	REALIZABLE	0.03516722097992897	false	REALIZABLE	60
+arm-1	rw_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.057818806963041425	false	REALIZABLE	60
+arm-1	rw_arbiter_pb_3_pe_.ltl	60	REALIZABLE	0.6539273430826142	false	REALIZABLE	60
+arm-1	rw_arbiter_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	rw_arbiter_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	scheduler-real.ltl				true	TIMEOUT	60
+arm-1	shift_pb_100_pe_.ltl	60	REALIZABLE	2.7492749500088394	false	REALIZABLE	60
+arm-1	shift_pb_10_pe_.ltl	60	REALIZABLE	0.04827963490970433	false	REALIZABLE	60
+arm-1	shift_pb_125_pe_.ltl	60	REALIZABLE	2.6881826639873907	false	REALIZABLE	60
+arm-1	shift_pb_12_pe_.ltl	60	REALIZABLE	0.05293997400440276	false	REALIZABLE	60
+arm-1	shift_pb_132_pe_.ltl	60	REALIZABLE	2.6941471790196374	false	REALIZABLE	60
+arm-1	shift_pb_16_pe_.ltl	60	REALIZABLE	0.17053291201591492	false	REALIZABLE	60
+arm-1	shift_pb_250_pe_.ltl	60	REALIZABLE	2.692899886984378	false	REALIZABLE	60
+arm-1	shift_pb_32_pe_.ltl	60	REALIZABLE	2.7003322530072182	false	REALIZABLE	60
+arm-1	shift_pb_500_pe_.ltl	60	REALIZABLE	2.7148803629679605	false	REALIZABLE	60
+arm-1	shift_pb_64_pe_.ltl	60	REALIZABLE	2.773898154962808	false	REALIZABLE	60
+arm-1	shift_pb_8_pe_.ltl	60	REALIZABLE	0.058023854973725975	false	REALIZABLE	60
+arm-1	simple_arbiter_enc_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_enc_pb_11_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_enc_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_enc_pb_14_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_enc_pb_15_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_enc_pb_16_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_enc_pb_32_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_enc_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_unreal1_pb_16_1_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_16_2_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_16_3_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_16_4_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_16_5_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_10_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_12_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_1_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_2_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_3_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_4_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_5_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_6_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_7_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_8_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_2_9_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_11_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_1_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_2_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_3_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_4_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_5_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_6_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_7_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_8_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_3_9_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_10_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_12_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_1_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_2_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_3_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_4_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_5_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_6_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_7_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_8_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_4_9_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_10_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_1_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_2_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_3_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_4_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_5_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_6_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_7_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_8_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_5_9_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_6_1_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_6_2_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_6_3_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_6_4_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_6_5_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal1_pb_8_8_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_10_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_25_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_2_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_3_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_4_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_50_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_5_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_60_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_6_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_75_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_7_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_unreal2_pb_8_pe_.ltl				true	UNKNOWN	60
+arm-1	simple_arbiter_with_hints_pb_10_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_with_hints_pb_12_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_with_hints_pb_15_pe_.ltl				true	TIMEOUT	60
+arm-1	simple_arbiter_with_hints_pb_2_pe_.ltl	60	REALIZABLE	0.038231372949667275	false	REALIZABLE	60
+arm-1	simple_arbiter_with_hints_pb_4_pe_.ltl	60	REALIZABLE	0.051442136988043785	false	REALIZABLE	60
+arm-1	simple_arbiter_with_hints_pb_6_pe_.ltl	60	REALIZABLE	1.789816734031774	false	REALIZABLE	60
+arm-1	simple_arbiter_with_hints_pb_8_pe_.ltl				true	TIMEOUT	60
+arm-1	solitary-real.ltl	60	REALIZABLE	0.046993840020149946	false	REALIZABLE	60
+arm-1	solitary0.ltl				true	UNKNOWN	60
+arm-1	sort4-real.ltl				true	TIMEOUT	60
+arm-1	sort40.ltl				true	TIMEOUT	60
+arm-1	sort41.ltl				true	TIMEOUT	60
+arm-1	sort42.ltl				true	TIMEOUT	60
+arm-1	sort50.ltl				true	TIMEOUT	60
+arm-1	sort51.ltl				true	TIMEOUT	60
+arm-1	sort52.ltl				true	TIMEOUT	60
+arm-1	sort53.ltl				true	TIMEOUT	60
+arm-1	square5x5-real.ltl				true	TIMEOUT	60
+arm-1	square5x50.ltl				true	TIMEOUT	60
+arm-1	square5x51.ltl				true	TIMEOUT	60
+arm-1	square5x52.ltl				true	TIMEOUT	60
+arm-1	square5x53.ltl				true	TIMEOUT	60
+arm-1	square5x54.ltl				true	TIMEOUT	60
+arm-1	storage-GF-64-real.ltl	60	REALIZABLE	0.046860313042998314	false	REALIZABLE	60
+arm-1	tasks-real.ltl	60	REALIZABLE	0.07778617599979043	false	REALIZABLE	60
+arm-1	tasks-unreal0.ltl				true	TIMEOUT	60
+arm-1	tasks-unreal1.ltl				true	TIMEOUT	60
+arm-1	tasks-unreal2.ltl				true	TIMEOUT	60
+arm-1	taxi-service-real.ltl	60	REALIZABLE	33.31320345099084	false	REALIZABLE	60
+arm-1	taxi-service-u-unreal.ltl				true	UNKNOWN	60
+arm-1	test2_f2774e0b.ltl	60	REALIZABLE	0.038360422011464834	false	REALIZABLE	60
+arm-1	test3_efe2feaf.ltl	60	REALIZABLE	0.04409082292113453	false	REALIZABLE	60
+arm-1	test4_4b82b1f4.ltl				true	UNKNOWN	60
+arm-1	test5_6cbc6174.ltl	60	REALIZABLE	0.030961198965087533	false	REALIZABLE	60
+arm-1	test6_0f5381e9.ltl	60	REALIZABLE	0.04335083102341741	false	REALIZABLE	60
+arm-1	test7_2c5b09da.ltl	60	REALIZABLE	0.04425524699036032	false	REALIZABLE	60
+arm-1	test8_88f351a6.ltl				true	UNKNOWN	60
+arm-1	test9_dd3a27e1.ltl				true	UNKNOWN	60
+arm-1	test_f3987563.ltl	60	REALIZABLE	0.042300153989344835	false	REALIZABLE	60
+arm-1	thermostat-F-real.ltl				true	UNKNOWN	60
+arm-1	thermostat-GF-real.ltl				true	TIMEOUT	60
+arm-1	thermostat-GF-unreal0.ltl				true	TIMEOUT	60
+arm-1	thermostat-GF-unreal1.ltl				true	TIMEOUT	60
+arm-1	thermostat-GF-unreal2.ltl				true	TIMEOUT	60
+arm-1	tmp_13cfc6f2.ltl				true	TIMEOUT	60
+arm-1	unordered-visits-charging0.ltl				true	TIMEOUT	60
+arm-1	unordered-visits-real.ltl				true	TIMEOUT	60
+arm-1	workstation_resupply_pb_1_pe_.ltl	60	REALIZABLE	0.04910547495819628	false	REALIZABLE	60
+arm-1	workstation_resupply_pb_2_pe_.ltl	60	REALIZABLE	0.2996469890931621	false	REALIZABLE	60
+arm-1	workstation_resupply_pb_3_pe_.ltl				true	TIMEOUT	60
+arm-1	workstation_resupply_pb_4_pe_.ltl				true	TIMEOUT	60
+arm-1	workstation_resupply_pb_5_pe_.ltl				true	TIMEOUT	60
+arm-1	workstation_resupply_pb_6_pe_.ltl				true	TIMEOUT	60
+arm-1	workstation_resupply_pb_7_pe_.ltl				true	TIMEOUT	60

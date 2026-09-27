@@ -1,0 +1,241 @@
+{
+  "censored": [],
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1446264832,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-round_robin_arbiter_unreal2-n5.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-round_robin_arbiter_unreal2-n5.scope/memory.peak"
+  },
+  "counters": {},
+  "diagnostic_errors": [],
+  "elapsed_s": 2.038327576010488,
+  "environment": {
+    "binaries": {
+      "tlsfcertcheck": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "sha256": "65fd3dd9fc9ad3c1a203662fa4c4def3cce68fce5504f6033dd850077d416f84"
+      },
+      "tlsfsolve": {
+        "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "sha256": "80892fef82fc5a1297c785e5a16c52e88ed849fa13f5cdbcf5ec30bc1f4d210e"
+      }
+    },
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so",
+    "compose_route": "native_veccompose",
+    "interpreter": {
+      "executable": "/home/gperez/GIT-repos/acacia-bonsai/.venv/bin/python",
+      "version": "3.14.7 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+    },
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "generalizer": {
+    "bdd_stats": {
+      "available": false,
+      "operations": {},
+      "samples": []
+    },
+    "censored": [],
+    "checker_mode_attempts": [
+      {
+        "label": "target-5",
+        "mode_count": 16,
+        "node_cap": 67108864,
+        "side": "environment"
+      }
+    ],
+    "checker_stats": {
+      "attempts": [
+        {
+          "certificate_side": "environment",
+          "error": null,
+          "label": "target-5",
+          "mode_count": 16,
+          "node_cap": 67108864,
+          "returncode": 0,
+          "stats": {
+            "aig_gates_visited": 141862,
+            "cache_cap": 67108864,
+            "final_status": "VERIFIED",
+            "node_cap": 67108864,
+            "peak_live_nodes_sample": 196609,
+            "policy_counter_constants": 240,
+            "policy_cross_mode_root_reuses": 270,
+            "policy_dependent_gates_per_mode": 132039,
+            "policy_full_cache_modes": 16,
+            "policy_independent_gates": 326,
+            "policy_independent_roots": 270,
+            "policy_mode_builds": 16,
+            "policy_specialized_gates": 0,
+            "policy_unspecialized_gates": 132039,
+            "proof_seconds": 0.482444249,
+            "requested_roots": 2754,
+            "setup_seconds": 0.176244116,
+            "successor_applications": 4736,
+            "successor_substitutions": 16
+          }
+        }
+      ],
+      "mode": "stream",
+      "supported": true
+    },
+    "counters": {},
+    "diagnostic_errors": [],
+    "distributions": {
+      "client_count_histogram": {
+        "5": 1
+      },
+      "distinct_subset_count": 0,
+      "mode_count_basis": "actual_checker_attempts",
+      "mode_count_histogram": {
+        "16": 1
+      },
+      "ownership_tuple_arity_histogram": {
+        "0": 2,
+        "1": 60,
+        "2": 40
+      },
+      "projected_root_support_widths": [],
+      "selected_aig_cones": [],
+      "subset_reuse": [],
+      "uint64_variable_mask_word_length_histogram": {}
+    },
+    "elapsed_s": 1.8437551399692893,
+    "environment": {
+      "binaries": {
+        "tlsfcertcheck": {
+          "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+          "sha256": "65fd3dd9fc9ad3c1a203662fa4c4def3cce68fce5504f6033dd850077d416f84"
+        },
+        "tlsfsolve": {
+          "path": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+          "sha256": "80892fef82fc5a1297c785e5a16c52e88ed849fa13f5cdbcf5ec30bc1f4d210e"
+        }
+      },
+      "binding_module_candidates": [
+        "/usr/local/lib64/python3.13/site-packages/buddy.py"
+      ],
+      "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+      "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so",
+      "compose_route": "native_veccompose",
+      "extension_module_candidates": [
+        "/usr/local/lib64/python3.13/site-packages/_buddy.cpython-313-x86_64-linux-gnu.so"
+      ],
+      "interpreter": {
+        "executable": "/usr/bin/python3.13",
+        "version": "3.13.15 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]"
+      },
+      "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+    },
+    "instances": [
+      {
+        "clients": 5,
+        "family": "round_robin_arbiter_unreal2",
+        "game": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/round_robin_arbiter_unreal2-n5/round_robin_arbiter_unreal2-n5-10c5ed46fd2d-37mpu1nv/generalizer/round_robin_arbiter_unreal2_5.game.aag",
+        "role": "target"
+      }
+    ],
+    "outcome": {
+      "answer": "UNREALIZABLE",
+      "family": "round_robin_arbiter_unreal2",
+      "reason": "",
+      "target": 5,
+      "verdict": "VERIFIED"
+    },
+    "phases": {
+      "bdd_existential_quantification": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "bdd_projection_relabel": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "bdd_relabel_rename": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "export": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "from_aag": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "instantiate_templates": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "mode_specialization": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "policy_construction_skolemization": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "projection_metadata": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "seed_monitor_construction": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "seed_solves": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "substitute_variables": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "support_extraction": {
+        "calls": 0,
+        "wall_s": 0.0
+      },
+      "target_check": {
+        "calls": 1,
+        "wall_s": 0.9148732280009426
+      },
+      "target_monitor_construction": {
+        "calls": 1,
+        "wall_s": 0.08004205400357023
+      },
+      "target_solve": {
+        "calls": 1,
+        "wall_s": 0.8255415390012786
+      },
+      "variable_cube_construction": {
+        "calls": 0,
+        "wall_s": 0.0
+      }
+    },
+    "schema": "acacia-gr1-s0-diagnostics-v1",
+    "schema_version": 1,
+    "status": "completed",
+    "tool": "generalize_gr1"
+  },
+  "outcome": {
+    "certificate": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/round_robin_arbiter_unreal2-n5/round_robin_arbiter_unreal2-n5-10c5ed46fd2d-37mpu1nv/generalizer/round_robin_arbiter_unreal2_5.certificate.aag",
+    "policy": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/round_robin_arbiter_unreal2-n5/round_robin_arbiter_unreal2-n5-10c5ed46fd2d-37mpu1nv/generalizer/round_robin_arbiter_unreal2_5.policy.aag",
+    "proof_method": "policy",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "UNREALIZABLE /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-region/runs/round_robin_arbiter_unreal2-n5/round_robin_arbiter_unreal2-n5-10c5ed46fd2d-37mpu1nv/generalizer/round_robin_arbiter_unreal2_5.certificate.aag",
+    "verdict": "UNREALIZABLE"
+  },
+  "phases": {
+    "generalize_gr1": {
+      "calls": 1,
+      "wall_s": 2.0174044329905882
+    }
+  },
+  "schema": "acacia-gr1-s0-diagnostics-v1",
+  "schema_version": 1,
+  "status": "completed",
+  "tool": "param-lift-campaign"
+}

@@ -1,0 +1,476 @@
+{
+  "budget_s": 120.0,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 1852919808,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_buffer-n9.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-arbiter_with_buffer-n9.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 97.10252362099709,
+    "driver_overhead_s": 0.7448327469663809,
+    "generalization_s": 1.3610099999999998,
+    "instantiation_s": 94.332448,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.195096,
+    "seed_solve_s": 0.066259,
+    "target_check_s": 0.277755,
+    "target_monitor_s": 0.073586,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.051536874030702506
+  },
+  "elapsed_s": 97.10252362099709,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/evidence/arbiter_with_buffer-n9.json",
+  "generalizer_evidence": {
+    "arity": 1,
+    "bus_schemas": [
+      "AtMostOne(g)"
+    ],
+    "canonical_variable": "(template,index_tuple,state_bit)",
+    "claim_scope": "requested_target_only",
+    "compose_route": "native_veccompose",
+    "cost_accounting": {
+      "driver_overhead_s": 0.6425207150168717,
+      "generalization_s": 1.2888442249386571,
+      "instantiate_s": 94.33244841301348,
+      "probe_check_s": 0.0,
+      "seed_monitor_s": 0.19509643397759646,
+      "seed_solve_s": 0.06625929800793529,
+      "target_check_s": 0.2777545370045118,
+      "target_monitor_s": 0.0735856750397943,
+      "wall_s": 96.87650929699885
+    },
+    "family": "arbiter_with_buffer",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "manager_lifetime": {
+      "builder_exited_before_checker": true,
+      "candidate_builder_exit_monotonic_s": 521532.348877788,
+      "candidate_builder_pid": 1674144,
+      "checker_started_monotonic_s": 521532.349816757,
+      "handoff": "validated_paths_hashes_and_schema_bundle",
+      "supervisor_holds_bdd_manager": false
+    },
+    "predicate_arities": {
+      "inv": 1,
+      "x_0_0_0": 1,
+      "x_0_1_0": 1,
+      "x_1_0_0": 1,
+      "x_1_1_0": 1,
+      "x_2_0_0": 1,
+      "x_2_1_0": 1,
+      "x_3_0_0": 1,
+      "x_3_1_0": 1,
+      "x_4_0_0": 1,
+      "x_4_1_0": 1,
+      "x_5_0_0": 1,
+      "x_5_1_0": 1,
+      "x_6_0_0": 1,
+      "x_6_1_0": 1,
+      "x_7_0_0": 1,
+      "x_7_1_0": 1,
+      "x_8_0_0": 1,
+      "x_8_1_0": 1,
+      "x_9_0_0": 1,
+      "x_9_1_0": 1
+    },
+    "rank_depths": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "real_check": "policy",
+    "role_classes": [
+      "role_0"
+    ],
+    "schema_validated_on_probes": false,
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "skolem_rule": "game controllable order; true/lowest index first",
+    "stage_evidence": {
+      "CEGIS": {
+        "checks": [
+          {
+            "counterexample": false,
+            "exit_code": 0,
+            "method": "auto",
+            "n": 9,
+            "node_caps": [
+              33554432
+            ],
+            "result": "VERIFIED",
+            "verdict": "VERIFIED"
+          }
+        ],
+        "claim_scope": "requested_target_only",
+        "final_verdict": "VERIFIED",
+        "round_cap": 3,
+        "rounds": 0,
+        "schema_validated_on_probes": false,
+        "target_verified": true
+      },
+      "anti-unify": {
+        "arity": 1,
+        "predicate_arities": {
+          "inv": 1,
+          "x_0_0_0": 1,
+          "x_0_1_0": 1,
+          "x_1_0_0": 1,
+          "x_1_1_0": 1,
+          "x_2_0_0": 1,
+          "x_2_1_0": 1,
+          "x_3_0_0": 1,
+          "x_3_1_0": 1,
+          "x_4_0_0": 1,
+          "x_4_1_0": 1,
+          "x_5_0_0": 1,
+          "x_5_1_0": 1,
+          "x_6_0_0": 1,
+          "x_6_1_0": 1,
+          "x_7_0_0": 1,
+          "x_7_1_0": 1,
+          "x_8_0_0": 1,
+          "x_8_1_0": 1,
+          "x_9_0_0": 1,
+          "x_9_1_0": 1
+        },
+        "role_classes": [
+          "role_0"
+        ],
+        "template_counts": {
+          "inv": 2,
+          "move_reconstructed": 10,
+          "rank": 56
+        }
+      },
+      "bus-wide schemas": {
+        "matched": [
+          "AtMostOne(g)"
+        ]
+      },
+      "canonicalize": {
+        "variable_abi": "(template,index_tuple,state_bit)"
+      },
+      "instantiate": {
+        "certificate": "arbiter_with_buffer_9.certificate.aag",
+        "exports": [
+          "certificate",
+          "policy"
+        ],
+        "policy": "arbiter_with_buffer_9.policy.aag",
+        "policy_omitted": false
+      },
+      "ranks": {
+        "depths": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "y": "union_i x_j_k_i"
+      },
+      "seed": {
+        "exports": [
+          "policy",
+          "certificate",
+          "provenance"
+        ],
+        "sizes": [
+          2,
+          3,
+          4
+        ]
+      },
+      "target_check": {
+        "certificate": "arbiter_with_buffer_9.certificate.aag",
+        "game": "arbiter_with_buffer_9.game.aag",
+        "method": "auto",
+        "policy": "arbiter_with_buffer_9.policy.aag",
+        "result": "VERIFIED"
+      }
+    },
+    "stages": [
+      "seed",
+      "canonicalize",
+      "anti-unify",
+      "bus-wide schemas",
+      "ranks",
+      "instantiate",
+      "CEGIS"
+    ],
+    "target": 9,
+    "target_check_method": "auto",
+    "target_check_result": "VERIFIED",
+    "target_verified": true,
+    "template_counts": {
+      "inv": 2,
+      "move_reconstructed": 10,
+      "rank": 56
+    },
+    "variable_layout": {
+      "blocks": {
+        "canonical_templates": {
+          "size": 34,
+          "start": 270
+        },
+        "composition": {
+          "size": 112,
+          "start": 74
+        },
+        "policy_counter": {
+          "size": 10,
+          "start": 186
+        },
+        "policy_game": {
+          "size": 74,
+          "start": 196
+        },
+        "public": {
+          "size": 74,
+          "start": 0
+        }
+      },
+      "public_letter_count": 36,
+      "public_state_count": 38,
+      "required_variables": 304,
+      "sha256": "e5636266fab47aa18da49dc9187a981429888335a698d2870ae33dff274049c8",
+      "variable_limit": null
+    },
+    "y_reconstruction": "union_i x_j_k_i"
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "active_stage_elapsed_s": null,
+    "active_stage_started_monotonic_s": null,
+    "cost_times": {
+      "seed_monitor_game": 0.19509643397759646,
+      "seed_solve": 0.06625929800793529,
+      "stage_anti_unify": 0.0034781619906425476,
+      "stage_bus_schemas": 0.00016861199401319027,
+      "stage_canonicalize": 0.14575230499031022,
+      "stage_instantiate": 94.33244841301348,
+      "stage_ranks": 1.2851974509540014,
+      "stage_seed": 0.2662721610395238,
+      "target_check": 0.2777545370045118,
+      "target_monitor_game": 0.0735856750397943
+    },
+    "last_stage_times": {},
+    "sampled_monotonic_s": 521532.62763369
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.003478",
+    "arity": "1",
+    "bus_schemas_s": "0.000169",
+    "canonicalize_s": "0.145752",
+    "cegis_rounds": "0",
+    "cegis_s": "0.278071",
+    "checker_node_caps": "9:33554432",
+    "driver_overhead_s": "0.642521",
+    "family": "arbiter_with_buffer",
+    "instantiate_s": "94.332448",
+    "peak_rss_kib": "1734340",
+    "predicate_arities": "default=1",
+    "probe_check_s": "0.000000",
+    "ranks_s": "1.285197",
+    "reason": "-",
+    "role_classes": "role_0",
+    "seed_monitor_s": "0.195096",
+    "seed_s": "0.266272",
+    "seed_solve_s": "0.066259",
+    "seeds": "2,3,4",
+    "solver_cache": "8388608,8388608,8388608",
+    "solver_nodes": "33554432,33554432,33554432",
+    "stage_reached": "CEGIS",
+    "stages_passed": "seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS",
+    "target": "9",
+    "target_check_s": "0.277755",
+    "target_monitor_s": "0.073586",
+    "target_solve_s": "0.000000",
+    "verdict": "VERIFIED",
+    "wall_s": "96.876509"
+  },
+  "invocation_id": "21e83f6bcf224781b33df40e71ecbba3",
+  "path_kind": "lifted",
+  "peak_rss_kib": 1734340,
+  "real_check": "policy",
+  "request": {
+    "census_class": "-/R",
+    "family": "arbiter_with_buffer",
+    "logical_instance": "arbiter_with_buffer_pb_9_pe_.ltl",
+    "measured_arity": 1,
+    "request_mode": "reproducer",
+    "route_kind": "real-proposal",
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "status_120s": "unsolved",
+    "target": 9
+  },
+  "request_mode": "reproducer",
+  "result": {
+    "certificate": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3/generalizer/arbiter_with_buffer_9.certificate.aag",
+    "policy": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3/generalizer/arbiter_with_buffer_9.policy.aag",
+    "proof_method": "policy",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "REALIZABLE /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3/generalizer/arbiter_with_buffer_9.certificate.aag",
+    "verdict": "REALIZABLE"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "census": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-census.tsv",
+    "instances": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-instances.tsv",
+    "kind": "historical-dataset-reproducer",
+    "match": "basename-to-m0-instances-row"
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "arbiter_with_buffer",
+        "--target",
+        "9",
+        "--seeds",
+        "2,3,4",
+        "--timeout",
+        "119.479399",
+        "--check-method",
+        "auto",
+        "--real-check",
+        "policy",
+        "--absolute-deadline-monotonic",
+        "521555.566660827",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3/generalizer",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so",
+        "--diagnostics",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3/generalizer-diagnostics.json"
+      ],
+      "elapsed_s": 97.05098674696637,
+      "pid": 1674142,
+      "returncode": 0,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "VERIFIED family=arbiter_with_buffer target=9 seeds=2,3,4\ncertificate: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3/generalizer/arbiter_with_buffer_9.certificate.aag\npolicy: /home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3/generalizer/arbiter_with_buffer_9.policy.aag\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "arbiter_with_buffer",
+    "--target",
+    "9",
+    "--seeds",
+    "2,3,4",
+    "--reduction-semantics",
+    "exact",
+    "--real-check",
+    "policy",
+    "--timeout",
+    "120.0",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so"
+  ],
+  "target_certificate": {
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "method": "policy",
+    "path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3/generalizer/arbiter_with_buffer_9.certificate.aag",
+    "sha256": "951e7e8a973d9bceef8ea4fc11cb8604308628204dddc15dd4750baa81f8c58d",
+    "side": "system",
+    "verdict": "VERIFIED"
+  },
+  "target_check": {
+    "counterexample": null,
+    "counterexample_method": null,
+    "elapsed_seconds": 0.273132892,
+    "exit_code": 0,
+    "format": "tlsf-gr1-checkresult-v1",
+    "methods": {
+      "certificate": {
+        "counterexample": null,
+        "peak_bdd_nodes": 1,
+        "time_seconds": 0.009755301,
+        "verdict": "VERIFIED"
+      },
+      "closed_loop": {
+        "counterexample": null,
+        "peak_bdd_nodes": 0,
+        "time_seconds": 0.0,
+        "verdict": "SKIPPED"
+      }
+    },
+    "peak_bdd_nodes": 1,
+    "requested_method": "auto",
+    "verdict": "VERIFIED"
+  },
+  "target_check_method": "policy",
+  "target_check_ran": true,
+  "target_check_result": "VERIFIED",
+  "target_verified": true,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-17b2b209/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "real_check": "policy",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P5-9212e2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2d-policy/runs/arbiter_with_buffer-n9/arbiter_with_buffer-n9-21e83f6bcf22-621my9w3"
+}

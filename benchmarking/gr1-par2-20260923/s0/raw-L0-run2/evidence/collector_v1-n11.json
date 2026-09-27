@@ -1,0 +1,213 @@
+{
+  "budget_s": 120.0,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 2252640256,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-collector_v1-n11.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-collector_v1-n11.scope/memory.peak"
+  },
+  "cost_accounting": {
+    "cold_total_s": 119.97580804099562,
+    "driver_overhead_s": 0.16165438497296236,
+    "generalization_s": 0.0005609999999904858,
+    "instantiation_s": 0.0,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.073941,
+    "seed_solve_s": 0.043884,
+    "target_check_s": 0.0,
+    "target_monitor_s": 119.674574,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.021193656022660434
+  },
+  "elapsed_s": 119.97580804099562,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw/evidence/collector_v1-n11.json",
+  "generalizer_evidence": {
+    "capacities": {
+      "checker_initial_node_cap": 67108864,
+      "solver": [
+        {
+          "cache": 8388608,
+          "n": 3,
+          "nodes": 33554432
+        }
+      ]
+    },
+    "decline": {
+      "n": 11,
+      "predicate": "monitor_game",
+      "reason": "timed out after 119.479s",
+      "stage": "canonicalize"
+    },
+    "family": "collector_v1",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "seeds": [
+      3
+    ],
+    "target": 11,
+    "verdict": "UNKNOWN"
+  },
+  "generalizer_progress": {
+    "active_stage": "canonicalize",
+    "active_stage_elapsed_s": 119.67487286002142,
+    "active_stage_started_monotonic_s": 493515.814543465,
+    "cost_times": {
+      "seed_monitor_game": 0.07394130196189508,
+      "seed_solve": 0.043883550039026886,
+      "stage_seed": 0.1253353690262884,
+      "target_monitor_game": 119.67457366600865
+    },
+    "last_stage_times": {
+      "seed": 0.1253353690262884
+    },
+    "sampled_monotonic_s": 493635.489416325
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.000000",
+    "arity": "1",
+    "bus_schemas_s": "0.000000",
+    "canonicalize_s": "119.675135",
+    "cegis_rounds": "0",
+    "cegis_s": "0.000000",
+    "checker_node_caps": "",
+    "driver_overhead_s": "0.008748",
+    "family": "collector_v1",
+    "instantiate_s": "0.000000",
+    "peak_rss_kib": "2175148",
+    "predicate_arities": "",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.000000",
+    "reason": "canonicalize: predicate 'monitor_game' at n=11: timed out after 119.479s",
+    "role_classes": "",
+    "seed_monitor_s": "0.073941",
+    "seed_s": "0.125335",
+    "seed_solve_s": "0.043884",
+    "seeds": "3",
+    "solver_cache": "8388608",
+    "solver_nodes": "33554432",
+    "stage_reached": "canonicalize",
+    "stages_passed": "seed,canonicalize",
+    "target": "11",
+    "target_check_s": "0.000000",
+    "target_monitor_s": "119.674574",
+    "target_solve_s": "0.000000",
+    "verdict": "UNKNOWN",
+    "wall_s": "119.801146"
+  },
+  "invocation_id": "330e6052630440469e3000fc4093dbe4",
+  "path_kind": "lifted",
+  "peak_rss_kib": 2175148,
+  "request": {
+    "census_class": "-/R",
+    "family": "collector_v1",
+    "logical_instance": "collector_v1_pb_11_pe_.ltl",
+    "measured_arity": 1,
+    "request_mode": "reproducer",
+    "route_kind": "real-proposal",
+    "seeds": [
+      3
+    ],
+    "status_120s": "unsolved",
+    "target": 11
+  },
+  "request_mode": "reproducer",
+  "result": {
+    "certificate": null,
+    "policy": null,
+    "reason": "canonicalize_predicate_monitor_game_at_n_11_timed_out_after_119.479s",
+    "stage": "canonicalize",
+    "stdout_line": "UNKNOWN canonicalize canonicalize_predicate_monitor_game_at_n_11_timed_out_after_119.479s",
+    "verdict": "UNKNOWN"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "census": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-census.tsv",
+    "instances": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-instances.tsv",
+    "kind": "historical-dataset-reproducer",
+    "match": "basename-to-m0-instances-row"
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "collector_v1",
+        "--target",
+        "11",
+        "--seeds",
+        "3",
+        "--timeout",
+        "119.479307",
+        "--check-method",
+        "auto",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw/runs/collector_v1-n11/collector_v1-n11-330e60526304-l8_ilhbz/generalizer",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck",
+        "--diagnostics",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw/runs/collector_v1-n11/collector_v1-n11-330e60526304-l8_ilhbz/generalizer-diagnostics.json"
+      ],
+      "elapsed_s": 119.95461438497296,
+      "pid": 1357672,
+      "returncode": 3,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "UNKNOWN family=collector_v1 target=11 seeds=3\nreason: canonicalize: predicate 'monitor_game' at n=11: timed out after 119.479s\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "collector_v1",
+    "--target",
+    "11",
+    "--seeds",
+    "3",
+    "--reduction-semantics",
+    "exact",
+    "--timeout",
+    "120.0",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck"
+  ],
+  "target_check_ran": false,
+  "target_verified": false,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "checker": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck",
+    "monitor": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/scripts/gr1_monitor_game.py",
+    "solver": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw/runs/collector_v1-n11/collector_v1-n11-330e60526304-l8_ilhbz"
+}

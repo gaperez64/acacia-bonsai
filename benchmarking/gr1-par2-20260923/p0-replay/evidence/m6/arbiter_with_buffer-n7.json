@@ -1,0 +1,391 @@
+{
+  "budget_s": 120.0,
+  "cache_mode": "cold",
+  "cost_accounting": {
+    "cold_total_s": 3.843041351006832,
+    "driver_overhead_s": 0.389251844005309,
+    "generalization_s": 0.75891,
+    "instantiation_s": 1.806284,
+    "probe_check_s": 0.049127,
+    "seed_monitor_s": 0.390868,
+    "seed_solve_s": 0.132115,
+    "target_check_s": 0.170342,
+    "target_monitor_s": 0.138153,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.007990507001523373
+  },
+  "elapsed_s": 3.843041351006832,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/evidence/m6/arbiter_with_buffer-n7.json",
+  "generalizer_evidence": {
+    "arity": 1,
+    "bus_schemas": [
+      "AtMostOne(g)"
+    ],
+    "canonical_variable": "(template,index_tuple,state_bit)",
+    "cost_accounting": {
+      "driver_overhead_s": 0.0920585750718601,
+      "generalization_s": 0.8074869730626233,
+      "instantiate_s": 1.8879248530138284,
+      "probe_check_s": 0.049126826983410865,
+      "seed_monitor_s": 0.3908684369525872,
+      "seed_solve_s": 0.1321153909084387,
+      "target_check_s": 0.1703419599798508,
+      "target_monitor_s": 0.13815349602373317,
+      "wall_s": 3.6680765119963326
+    },
+    "family": "arbiter_with_buffer",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "predicate_arities": {
+      "inv": 1,
+      "x_0_0_0": 1,
+      "x_0_1_0": 1,
+      "x_1_0_0": 1,
+      "x_1_1_0": 1,
+      "x_2_0_0": 1,
+      "x_2_1_0": 1,
+      "x_3_0_0": 1,
+      "x_3_1_0": 1,
+      "x_4_0_0": 1,
+      "x_4_1_0": 1,
+      "x_5_0_0": 1,
+      "x_5_1_0": 1,
+      "x_6_0_0": 1,
+      "x_6_1_0": 1,
+      "x_7_0_0": 1,
+      "x_7_1_0": 1
+    },
+    "rank_depths": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "role_classes": [
+      "role_0"
+    ],
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "skolem_rule": "game controllable order; true/lowest index first",
+    "stage_evidence": {
+      "CEGIS": {
+        "checks": [
+          {
+            "counterexample": false,
+            "exit_code": 0,
+            "n": 5,
+            "node_caps": [
+              16777216
+            ],
+            "verdict": "VERIFIED"
+          },
+          {
+            "counterexample": false,
+            "exit_code": 0,
+            "n": 7,
+            "node_caps": [
+              33554432
+            ],
+            "verdict": "VERIFIED"
+          }
+        ],
+        "final_verdict": "VERIFIED",
+        "round_cap": 3,
+        "rounds": 0
+      },
+      "anti-unify": {
+        "arity": 1,
+        "predicate_arities": {
+          "inv": 1,
+          "x_0_0_0": 1,
+          "x_0_1_0": 1,
+          "x_1_0_0": 1,
+          "x_1_1_0": 1,
+          "x_2_0_0": 1,
+          "x_2_1_0": 1,
+          "x_3_0_0": 1,
+          "x_3_1_0": 1,
+          "x_4_0_0": 1,
+          "x_4_1_0": 1,
+          "x_5_0_0": 1,
+          "x_5_1_0": 1,
+          "x_6_0_0": 1,
+          "x_6_1_0": 1,
+          "x_7_0_0": 1,
+          "x_7_1_0": 1
+        },
+        "role_classes": [
+          "role_0"
+        ],
+        "template_counts": {
+          "inv": 2,
+          "move_reconstructed": 8,
+          "rank": 44
+        }
+      },
+      "bus-wide schemas": {
+        "matched": [
+          "AtMostOne(g)"
+        ]
+      },
+      "canonicalize": {
+        "variable_abi": "(template,index_tuple,state_bit)"
+      },
+      "instantiate": {
+        "certificate": "arbiter_with_buffer_7.certificate.aag",
+        "policy": "arbiter_with_buffer_7.policy.aag"
+      },
+      "ranks": {
+        "depths": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "y": "union_i x_j_k_i"
+      },
+      "seed": {
+        "exports": [
+          "policy",
+          "certificate",
+          "provenance"
+        ],
+        "sizes": [
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    "stages": [
+      "seed",
+      "canonicalize",
+      "anti-unify",
+      "bus-wide schemas",
+      "ranks",
+      "instantiate",
+      "CEGIS"
+    ],
+    "target": 7,
+    "template_counts": {
+      "inv": 2,
+      "move_reconstructed": 8,
+      "rank": 44
+    },
+    "y_reconstruction": "union_i x_j_k_i"
+  },
+  "generalizer_progress": {
+    "active_stage": null,
+    "cost_times": {
+      "probe_check": 0.049126826983410865,
+      "seed_monitor_game": 0.3908684369525872,
+      "seed_solve": 0.1321153909084387,
+      "stage_anti_unify": 0.002592219039797783,
+      "stage_bus_schemas": 0.0003370210179127753,
+      "stage_canonicalize": 0.2136450579855591,
+      "stage_cegis": 3.667500003008172,
+      "stage_instantiate": 1.8879248530138284,
+      "stage_ranks": 0.8045577330049127,
+      "stage_seed": 0.5345300800399855,
+      "target_check": 0.1703419599798508,
+      "target_monitor_game": 0.13815349602373317
+    },
+    "last_stage_times": {
+      "anti_unify": 0.0011694920249283314,
+      "bus_schemas": 0.00016183900879696012,
+      "canonicalize": 0.06856204802170396,
+      "cegis": 3.667500003008172,
+      "instantiate": 0.08164124400354922,
+      "ranks": 0.05417559901252389,
+      "seed": 0.26741802302422
+    }
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.001423",
+    "arity": "1",
+    "bus_schemas_s": "0.000175",
+    "canonicalize_s": "0.145083",
+    "cegis_rounds": "0",
+    "cegis_s": "3.667500",
+    "checker_node_caps": "5:16777216,7:33554432",
+    "driver_overhead_s": "0.092059",
+    "family": "arbiter_with_buffer",
+    "instantiate_s": "1.806284",
+    "peak_rss_kib": "676168",
+    "predicate_arities": "default=1",
+    "probe_check_s": "0.049127",
+    "ranks_s": "0.750382",
+    "reason": "-",
+    "role_classes": "role_0",
+    "seed_monitor_s": "0.390868",
+    "seed_s": "0.267112",
+    "seed_solve_s": "0.132115",
+    "seeds": "2,3,4",
+    "solver_cache": "8388608,8388608,8388608",
+    "solver_nodes": "33554432,33554432,33554432",
+    "stage_reached": "CEGIS",
+    "stages_passed": "seed,canonicalize,anti-unify,bus-wide schemas,ranks,instantiate,CEGIS",
+    "target": "7",
+    "target_check_s": "0.170342",
+    "target_monitor_s": "0.138153",
+    "target_solve_s": "0.000000",
+    "verdict": "VERIFIED",
+    "wall_s": "3.668077"
+  },
+  "invocation_id": "ae58602cb9164468ab6e69f4afe238dd",
+  "path_kind": "lifted",
+  "peak_rss_kib": 676168,
+  "request": {
+    "census_class": "-/R",
+    "family": "arbiter_with_buffer",
+    "logical_instance": "arbiter_with_buffer_pb_7_pe_.ltl",
+    "measured_arity": 1,
+    "request_mode": "reproducer",
+    "route_kind": "real-proposal",
+    "seeds": [
+      2,
+      3,
+      4
+    ],
+    "status_120s": "unsolved",
+    "target": 7
+  },
+  "request_mode": "reproducer",
+  "result": {
+    "certificate": "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/runs/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1/generalizer/arbiter_with_buffer_7.certificate.aag",
+    "policy": "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/runs/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1/generalizer/arbiter_with_buffer_7.policy.aag",
+    "reason": "target_verified",
+    "stage": "target_check",
+    "stdout_line": "REALIZABLE /home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/runs/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1/generalizer/arbiter_with_buffer_7.certificate.aag",
+    "verdict": "REALIZABLE"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "census": "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/param-lift-20260922/m0-census.tsv",
+    "instances": "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/param-lift-20260922/m0-instances.tsv",
+    "kind": "historical-dataset-reproducer",
+    "match": "basename-to-m0-instances-row"
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "arbiter_with_buffer",
+        "--target",
+        "7",
+        "--seeds",
+        "2,3,4",
+        "--timeout",
+        "119.495887",
+        "--check-method",
+        "auto",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/runs/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1/generalizer",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck"
+      ],
+      "elapsed_s": 3.835050844005309,
+      "pid": 1194239,
+      "returncode": 0,
+      "stage": "generalize_gr1",
+      "stderr": "generalize_gr1: target goal 1/8 ranks instantiated\ngeneralize_gr1: target goal 2/8 ranks instantiated\ngeneralize_gr1: target goal 3/8 ranks instantiated\ngeneralize_gr1: target goal 4/8 ranks instantiated\ngeneralize_gr1: target goal 5/8 ranks instantiated\ngeneralize_gr1: target goal 6/8 ranks instantiated\ngeneralize_gr1: target goal 7/8 ranks instantiated\ngeneralize_gr1: target goal 8/8 ranks instantiated\ngeneralize_gr1: target invariant transition composed\ngeneralize_gr1: target goal 1/8 move instantiated\ngeneralize_gr1: target goal 2/8 move instantiated\ngeneralize_gr1: target goal 3/8 move instantiated\ngeneralize_gr1: target goal 4/8 move instantiated\ngeneralize_gr1: target goal 5/8 move instantiated\ngeneralize_gr1: target goal 6/8 move instantiated\ngeneralize_gr1: target goal 7/8 move instantiated\ngeneralize_gr1: target goal 8/8 move instantiated\ngeneralize_gr1: certificate emitted\ngeneralize_gr1: policy relation relabelled goal 1/8\ngeneralize_gr1: policy relation relabelled goal 2/8\ngeneralize_gr1: policy relation relabelled goal 3/8\ngeneralize_gr1: policy relation relabelled goal 4/8\ngeneralize_gr1: policy relation relabelled goal 5/8\ngeneralize_gr1: policy relation relabelled goal 6/8\ngeneralize_gr1: policy relation relabelled goal 7/8\ngeneralize_gr1: policy relation relabelled goal 8/8\ngeneralize_gr1: policy goal relation muxed\ngeneralize_gr1: policy control 1/14 Skolemized\ngeneralize_gr1: policy control 2/14 Skolemized\ngeneralize_gr1: policy control 3/14 Skolemized\ngeneralize_gr1: policy control 4/14 Skolemized\ngeneralize_gr1: policy control 5/14 Skolemized\ngeneralize_gr1: policy control 6/14 Skolemized\ngeneralize_gr1: policy control 7/14 Skolemized\ngeneralize_gr1: policy control 8/14 Skolemized\ngeneralize_gr1: policy control 9/14 Skolemized\ngeneralize_gr1: policy control 10/14 Skolemized\ngeneralize_gr1: policy control 11/14 Skolemized\ngeneralize_gr1: policy control 12/14 Skolemized\ngeneralize_gr1: policy control 13/14 Skolemized\ngeneralize_gr1: policy control 14/14 Skolemized\ngeneralize_gr1: policy emitted\ngeneralize_gr1: target goal 1/6 ranks instantiated\ngeneralize_gr1: target goal 2/6 ranks instantiated\ngeneralize_gr1: target goal 3/6 ranks instantiated\ngeneralize_gr1: target goal 4/6 ranks instantiated\ngeneralize_gr1: target goal 5/6 ranks instantiated\ngeneralize_gr1: target goal 6/6 ranks instantiated\ngeneralize_gr1: target invariant transition composed\ngeneralize_gr1: target goal 1/6 move instantiated\ngeneralize_gr1: target goal 2/6 move instantiated\ngeneralize_gr1: target goal 3/6 move instantiated\ngeneralize_gr1: target goal 4/6 move instantiated\ngeneralize_gr1: target goal 5/6 move instantiated\ngeneralize_gr1: target goal 6/6 move instantiated\ngeneralize_gr1: certificate emitted\ngeneralize_gr1: policy relation relabelled goal 1/6\ngeneralize_gr1: policy relation relabelled goal 2/6\ngeneralize_gr1: policy relation relabelled goal 3/6\ngeneralize_gr1: policy relation relabelled goal 4/6\ngeneralize_gr1: policy relation relabelled goal 5/6\ngeneralize_gr1: policy relation relabelled goal 6/6\ngeneralize_gr1: policy goal relation muxed\ngeneralize_gr1: policy control 1/10 Skolemized\ngeneralize_gr1: policy control 2/10 Skolemized\ngeneralize_gr1: policy control 3/10 Skolemized\ngeneralize_gr1: policy control 4/10 Skolemized\ngeneralize_gr1: policy control 5/10 Skolemized\ngeneralize_gr1: policy control 6/10 Skolemized\ngeneralize_gr1: policy control 7/10 Skolemized\ngeneralize_gr1: policy control 8/10 Skolemized\ngeneralize_gr1: policy control 9/10 Skolemized\ngeneralize_gr1: policy control 10/10 Skolemized\ngeneralize_gr1: policy emitted\n",
+      "stdout": "VERIFIED family=arbiter_with_buffer target=7 seeds=2,3,4\ncertificate: /home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/runs/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1/generalizer/arbiter_with_buffer_7.certificate.aag\npolicy: /home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/runs/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1/generalizer/arbiter_with_buffer_7.policy.aag\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "arbiter_with_buffer",
+    "--target",
+    "7",
+    "--seeds",
+    "2,3,4",
+    "--reduction-semantics",
+    "exact",
+    "--timeout",
+    "120.0",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck"
+  ],
+  "target_certificate": {
+    "checker": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck",
+    "path": "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/runs/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1/generalizer/arbiter_with_buffer_7.certificate.aag",
+    "sha256": "ffb526f8728750addb45a6e0284ab2280d3f957d937aecfa4e11ed2deffb1334",
+    "side": "system",
+    "verdict": "VERIFIED"
+  },
+  "target_check": {
+    "counterexample": null,
+    "counterexample_method": null,
+    "elapsed_seconds": 0.167155629,
+    "exit_code": 0,
+    "format": "tlsf-gr1-checkresult-v1",
+    "methods": {
+      "certificate": {
+        "counterexample": null,
+        "peak_bdd_nodes": 393217,
+        "time_seconds": 0.002456277,
+        "verdict": "VERIFIED"
+      },
+      "closed_loop": {
+        "counterexample": null,
+        "peak_bdd_nodes": 0,
+        "time_seconds": 0.0,
+        "verdict": "SKIPPED"
+      }
+    },
+    "peak_bdd_nodes": 393217,
+    "requested_method": "auto",
+    "verdict": "VERIFIED"
+  },
+  "target_check_ran": true,
+  "target_verified": true,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "checker": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfcertcheck",
+    "monitor": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/scripts/gr1_monitor_game.py",
+    "solver": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/acacia-bonsai/subprojects/tlsf-tools/build-L0"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/home/gperez/GIT-repos/acacia-bonsai/benchmarking/gr1-par2-20260923/p0-replay/runs/m6/arbiter_with_buffer-n7/arbiter_with_buffer-n7-ae58602cb916-g5sgbjj1"
+}

@@ -1,0 +1,221 @@
+{
+  "budget_s": 120.0,
+  "cache_mode": "cold",
+  "cgroup_memory_peak": {
+    "available": true,
+    "bytes": 2254401536,
+    "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-collector_v1-n11.scope",
+    "sample_point": "campaign-finalization-before-process-exit",
+    "source": "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/acacia-s0-collector_v1-n11.scope/memory.peak"
+  },
+  "compose_route": "native_veccompose",
+  "cost_accounting": {
+    "cold_total_s": 119.94874071102822,
+    "driver_overhead_s": 0.17146131301880985,
+    "generalization_s": 0.0005880000000075825,
+    "instantiation_s": 0.0,
+    "probe_check_s": 0.0,
+    "seed_monitor_s": 0.074764,
+    "seed_solve_s": 0.044244,
+    "target_check_s": 0.0,
+    "target_monitor_s": 119.636556,
+    "target_solve_s": 0.0,
+    "wrapper_overhead_s": 0.02112739800941199
+  },
+  "elapsed_s": 119.94874071102822,
+  "evidence_path": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2a/evidence/collector_v1-n11.json",
+  "generalizer_evidence": {
+    "capacities": {
+      "checker_initial_node_cap": 67108864,
+      "solver": [
+        {
+          "cache": 8388608,
+          "n": 3,
+          "nodes": 33554432
+        }
+      ]
+    },
+    "compose_route": "native_veccompose",
+    "decline": {
+      "n": 11,
+      "predicate": "monitor_game",
+      "reason": "timed out after 119.479s",
+      "stage": "canonicalize"
+    },
+    "family": "collector_v1",
+    "format": "acacia-param-lift-gr1-evidence-v1",
+    "seeds": [
+      3
+    ],
+    "target": 11,
+    "verdict": "UNKNOWN"
+  },
+  "generalizer_progress": {
+    "active_stage": "canonicalize",
+    "active_stage_elapsed_s": 119.6368522470002,
+    "active_stage_started_monotonic_s": 497408.105568836,
+    "cost_times": {
+      "seed_monitor_game": 0.07476418500300497,
+      "seed_solve": 0.04424404597375542,
+      "stage_seed": 0.12431972799822688,
+      "target_monitor_game": 119.63655609899433
+    },
+    "last_stage_times": {
+      "seed": 0.12431972799822688
+    },
+    "sampled_monotonic_s": 497527.742421083
+  },
+  "generalizer_result": {
+    "anti_unify_s": "0.000000",
+    "arity": "1",
+    "bus_schemas_s": "0.000000",
+    "canonicalize_s": "119.637144",
+    "cegis_rounds": "0",
+    "cegis_s": "0.000000",
+    "checker_node_caps": "",
+    "driver_overhead_s": "0.006528",
+    "family": "collector_v1",
+    "instantiate_s": "0.000000",
+    "peak_rss_kib": "2174764",
+    "predicate_arities": "",
+    "probe_check_s": "0.000000",
+    "ranks_s": "0.000000",
+    "reason": "canonicalize: predicate 'monitor_game' at n=11: timed out after 119.479s",
+    "role_classes": "",
+    "seed_monitor_s": "0.074764",
+    "seed_s": "0.124320",
+    "seed_solve_s": "0.044244",
+    "seeds": "3",
+    "solver_cache": "8388608",
+    "solver_nodes": "33554432",
+    "stage_reached": "canonicalize",
+    "stages_passed": "seed,canonicalize",
+    "target": "11",
+    "target_check_s": "0.000000",
+    "target_monitor_s": "119.636556",
+    "target_solve_s": "0.000000",
+    "verdict": "UNKNOWN",
+    "wall_s": "119.762092"
+  },
+  "invocation_id": "e086d8ffacd048fe9ba34a59c8e6fbc2",
+  "path_kind": "lifted",
+  "peak_rss_kib": 2174764,
+  "request": {
+    "census_class": "-/R",
+    "family": "collector_v1",
+    "logical_instance": "collector_v1_pb_11_pe_.ltl",
+    "measured_arity": 1,
+    "request_mode": "reproducer",
+    "route_kind": "real-proposal",
+    "seeds": [
+      3
+    ],
+    "status_120s": "unsolved",
+    "target": 11
+  },
+  "request_mode": "reproducer",
+  "result": {
+    "certificate": null,
+    "policy": null,
+    "reason": "canonicalize_predicate_monitor_game_at_n_11_timed_out_after_119.479s",
+    "stage": "canonicalize",
+    "stdout_line": "UNKNOWN canonicalize canonicalize_predicate_monitor_game_at_n_11_timed_out_after_119.479s",
+    "verdict": "UNKNOWN"
+  },
+  "schema_version": 1,
+  "semantics": "exact",
+  "source_binding": {
+    "census": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-census.tsv",
+    "instances": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/m0-instances.tsv",
+    "kind": "historical-dataset-reproducer",
+    "match": "basename-to-m0-instances-row"
+  },
+  "stages": [
+    {
+      "command": [
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+        "--family",
+        "collector_v1",
+        "--target",
+        "11",
+        "--seeds",
+        "3",
+        "--timeout",
+        "119.479414",
+        "--check-method",
+        "auto",
+        "--reduction-semantics",
+        "exact",
+        "--out",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2a/runs/collector_v1-n11/collector_v1-n11-e086d8ffacd0-st5beszq/generalizer",
+        "--tlsf-tools-build",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+        "--bindings-python",
+        "/usr/bin/python3.13",
+        "--bindings-site",
+        "/usr/local/lib64/python3.13/site-packages",
+        "--monitor",
+        "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+        "--solver",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+        "--checker",
+        "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+        "--buddy-adapter",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-112eb7fe/libbuddy_veccompose_adapter.so",
+        "--diagnostics",
+        "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2a/runs/collector_v1-n11/collector_v1-n11-e086d8ffacd0-st5beszq/generalizer-diagnostics.json"
+      ],
+      "elapsed_s": 119.92761331301881,
+      "pid": 1398265,
+      "returncode": 3,
+      "stage": "generalize_gr1",
+      "stderr": "",
+      "stdout": "UNKNOWN family=collector_v1 target=11 seeds=3\nreason: canonicalize: predicate 'monitor_game' at n=11: timed out after 119.479s\n",
+      "timed_out": false
+    }
+  ],
+  "standalone_command": [
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/param-lift-20260922/generalize_gr1.py",
+    "--family",
+    "collector_v1",
+    "--target",
+    "11",
+    "--seeds",
+    "3",
+    "--reduction-semantics",
+    "exact",
+    "--timeout",
+    "120.0",
+    "--out",
+    "FRESH_OUTPUT_DIRECTORY",
+    "--tlsf-tools-build",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b",
+    "--bindings-python",
+    "/usr/bin/python3.13",
+    "--bindings-site",
+    "/usr/local/lib64/python3.13/site-packages",
+    "--monitor",
+    "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "--solver",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "--checker",
+    "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "--buddy-adapter",
+    "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-112eb7fe/libbuddy_veccompose_adapter.so"
+  ],
+  "target_check_ran": false,
+  "target_verified": false,
+  "tool": "param-lift-campaign",
+  "tool_configuration": {
+    "bindings_python": "/usr/bin/python3.13",
+    "bindings_site": "/usr/local/lib64/python3.13/site-packages",
+    "buddy_adapter": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/build_gr1par2-adapter-112eb7fe/libbuddy_veccompose_adapter.so",
+    "checker": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfcertcheck",
+    "compose_route": "native_veccompose",
+    "monitor": "/home/gperez/GIT-repos/tlsf-tools/scripts/gr1_monitor_game.py",
+    "solver": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b/tlsfsolve",
+    "tlsf_tools_build": "/home/gperez/GIT-repos/tlsf-tools/build-P14-dbe8c2b"
+  },
+  "warm_cache_supported": false,
+  "workspace": "/home/gperez/GIT-repos/acacia-gr1-par2-timing/benchmarking/gr1-par2-20260923/s0/raw-p2a/runs/collector_v1-n11/collector_v1-n11-e086d8ffacd0-st5beszq"
+}

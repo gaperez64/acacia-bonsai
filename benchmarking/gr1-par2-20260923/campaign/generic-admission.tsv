@@ -1,0 +1,1525 @@
+id	admitted_17	elapsed_17_s	reason_17	admitted_60	elapsed_60_s	reason_60
+01.ltl	yes	0.071595		yes	0.071711	
+02.ltl	yes	0.092704		yes	0.091061	
+03.ltl	yes	0.166898		yes	0.158083	
+05.ltl	yes	0.229345		yes	0.240110	
+06.ltl	yes	0.254388		yes	0.255085	
+07.ltl	yes	0.249272		yes	0.254595	
+08.ltl	yes	0.385539		yes	0.386495	
+09.ltl	yes	0.281831		yes	0.272128	
+10.ltl	yes	0.271614		yes	0.276007	
+11.ltl	yes	0.268274		yes	0.267795	
+12.ltl	yes	0.394394		yes	0.393978	
+13.ltl	yes	0.402944		yes	0.405040	
+ActionConverter.ltl	yes	0.063568		yes	0.065232	
+AlarmMin_efe2feaf.ltl	no	0.083798	unsupported_or_failed	no	0.084450	unsupported_or_failed
+Alarm_06e9cad4.ltl	no	0.853542	budget_exhausted	no	1.003711	budget_exhausted
+Alarm_2d1010f8.ltl	no	0.071359	unsupported_or_failed	no	0.070298	unsupported_or_failed
+Alarm_68c86764.ltl	no	0.853669	budget_exhausted	no	1.004242	budget_exhausted
+Alarm_70523fbe.ltl	no	0.853495	budget_exhausted	no	1.004331	budget_exhausted
+Alarm_88c5c1c3.ltl	yes	0.063876		yes	0.065067	
+Alarm_9cac58d3.ltl	yes	0.066716		yes	0.065667	
+Alarm_a5f99bc6.ltl	no	0.853443	budget_exhausted	no	1.004378	budget_exhausted
+Alarm_f2774e0b.ltl	no	0.854242	budget_exhausted	no	1.003619	budget_exhausted
+AllHeating_d6376bf9.ltl	no	0.291407	unsupported_or_failed	no	0.293804	unsupported_or_failed
+AllLights_06e9cad4.ltl	no	0.854071	budget_exhausted	no	1.003570	budget_exhausted
+AllLights_2c5b09da.ltl	no	0.853416	budget_exhausted	no	1.003749	budget_exhausted
+AllLights_63831f8c.ltl	no	0.853847	budget_exhausted	no	1.003785	budget_exhausted
+AllLights_aeb1d897.ltl	no	0.853641	budget_exhausted	no	1.004100	budget_exhausted
+AllLights_b209ff21.ltl	no	0.853455	budget_exhausted	no	1.003600	budget_exhausted
+AllLights_d6c5ac79.ltl	no	0.853976	budget_exhausted	no	1.003787	budget_exhausted
+AllShades_66f450a4.ltl	no	0.853489	budget_exhausted	no	1.004233	budget_exhausted
+Assumptions_a50cadd7.ltl	no	0.069382	unsupported_or_failed	no	0.065599	unsupported_or_failed
+Automata.ltl	yes	0.071495		yes	0.072974	
+Automata16S.ltl	yes	0.078901		yes	0.078884	
+Automata32S.ltl	yes	0.098860		yes	0.103800	
+Button.ltl	yes	0.063890		yes	0.063777	
+CheckAlarmBroken1_1a2942e3.ltl	yes	0.062779		yes	0.062578	
+CheckAlarm_6bea956e.ltl	yes	0.065616		yes	0.063477	
+CheckCoffeMachineBroken1_a5f99bc6.ltl	no	0.081794	unsupported_or_failed	no	0.082789	unsupported_or_failed
+CheckCoffeMachine_3461125b.ltl	no	0.073890	unsupported_or_failed	no	0.071911	unsupported_or_failed
+CheckCoffeMachine_f3987563.ltl	no	0.072101	unsupported_or_failed	no	0.074399	unsupported_or_failed
+CheckDoor_c2b9e44d.ltl	yes	0.066261		yes	0.064246	
+CheckHeating_2418b67e.ltl	no	0.063633	unsupported_or_failed	no	0.063742	unsupported_or_failed
+CheckHeating_3461125b.ltl	no	0.062146	unsupported_or_failed	no	0.065372	unsupported_or_failed
+CheckLight_007df645.ltl	no	0.062852	unsupported_or_failed	no	0.062974	unsupported_or_failed
+CheckLight_aeb1d897.ltl	no	0.062384	unsupported_or_failed	no	0.065225	unsupported_or_failed
+CheckRoom_06e9cad4.ltl	yes	0.063869		yes	0.065726	
+CheckRoom_2c5b09da.ltl	yes	0.065576		yes	0.064895	
+CheckRoom_3916ec59.ltl	yes	0.065595		yes	0.063373	
+CheckRoom_70523fbe.ltl	yes	0.064043		yes	0.063981	
+CheckShades_1a2942e3.ltl	no	0.065439	unsupported_or_failed	no	0.062305	unsupported_or_failed
+CheckShades_3461125b.ltl	no	0.065474	unsupported_or_failed	no	0.064157	unsupported_or_failed
+CheckShades_4d4ca5c4.ltl	yes	0.060163		yes	0.060926	
+CheckShades_aeb1d897.ltl	no	0.068756	unsupported_or_failed	no	0.070909	unsupported_or_failed
+CheckTime_3916ec59.ltl	no	0.278231	unsupported_or_failed	no	0.277307	unsupported_or_failed
+CheckTime_4b5e6eaa.ltl	no	0.066296	unsupported_or_failed	no	0.065022	unsupported_or_failed
+CheckTime_54e1f7d2.ltl	no	0.059429	unsupported_or_failed	no	0.063096	unsupported_or_failed
+CheckTimer_54e1f7d2.ltl	no	0.062125	unsupported_or_failed	no	0.059873	unsupported_or_failed
+CheckTimer_fa8592c8.ltl	no	0.063196	unsupported_or_failed	no	0.062463	unsupported_or_failed
+CheckWarnlightBroken1_70523fbe.ltl	yes	0.063530		yes	0.060986	
+CheckWarnlight_1cf58fc1.ltl	yes	0.064325		yes	0.065484	
+CheckWarnlight_4b5a2bad.ltl	yes	0.068605		yes	0.066409	
+CheckWarnlight_54e1f7d2.ltl	yes	0.065529		yes	0.070531	
+CheckWarnlight_6bea956e.ltl	yes	0.066444		yes	0.067238	
+CheckWindows_54e1f7d2.ltl	yes	0.064818		yes	0.067002	
+Cockpitboard.ltl	yes	0.071033		yes	0.075766	
+Cockpitboard_efe2feaf.ltl	yes	0.075463		yes	0.088998	
+CoffeMachine_974f4a68.ltl	no	0.861471	budget_exhausted	no	1.004923	budget_exhausted
+CoffeMachine_a50cadd7.ltl	no	0.072634	unsupported_or_failed	no	0.068664	unsupported_or_failed
+CoffeeMin_88f351a6.ltl	no	0.074394	unsupported_or_failed	no	0.073734	unsupported_or_failed
+Coffee_06e9cad4.ltl	no	0.867462	budget_exhausted	no	1.019102	budget_exhausted
+Coffee_235467da.ltl	no	0.863928	budget_exhausted	no	1.013819	budget_exhausted
+Coffee_2c5b09da.ltl	no	0.861254	budget_exhausted	no	1.012801	budget_exhausted
+Coffee_6479ef9a.ltl	no	0.859052	budget_exhausted	no	1.013659	budget_exhausted
+Coffee_d6376bf9.ltl	no	0.866667	budget_exhausted	no	1.015444	budget_exhausted
+Coffee_efe2feaf.ltl	no	0.177865	unsupported_or_failed	no	0.176422	unsupported_or_failed
+Coffee_f1477cc5.ltl	no	0.860631	budget_exhausted	no	1.012872	budget_exhausted
+Core_4b5a2bad.ltl	no	0.150528	unsupported_or_failed	no	0.148181	unsupported_or_failed
+Core_66f450a4.ltl	yes	0.067565		yes	0.070564	
+Core_fa4d4ce3.ltl	no	0.288288	unsupported_or_failed	no	0.290546	unsupported_or_failed
+Core_solved_974f4a68.ltl	no	0.146199	unsupported_or_failed	no	0.149313	unsupported_or_failed
+Demo1_06e9cad4.ltl	no	0.858476	budget_exhausted	no	1.010598	budget_exhausted
+Demo1_2c5b09da.ltl	no	0.858866	budget_exhausted	no	1.009354	budget_exhausted
+Demo1_63831f8c.ltl	no	0.858464	budget_exhausted	no	1.008792	budget_exhausted
+Demo1_c2b9e44d.ltl	no	0.858440	budget_exhausted	no	1.010745	budget_exhausted
+Demo1_d65ed84e.ltl	no	0.859251	budget_exhausted	no	1.009381	budget_exhausted
+DeviceBehaviorChec_fa8592c8.ltl	no	0.855517	budget_exhausted	no	1.006381	budget_exhausted
+Door_2d1010f8.ltl	no	0.106778	unsupported_or_failed	no	0.105790	unsupported_or_failed
+EnemeyModule.ltl	yes	0.065032		yes	0.066235	
+EscalatorBidirectional.ltl	yes	0.076133		yes	0.076615	
+EscalatorBidirectionalInit.ltl	yes	0.074937		yes	0.076188	
+EscalatorCounting.ltl	yes	0.067302		yes	0.066193	
+EscalatorCountingInit.ltl	yes	0.067150		yes	0.065261	
+EscalatorNonCounting.ltl	yes	0.063021		yes	0.064905	
+EscalatorNonReactive.ltl	yes	0.065777		yes	0.061011	
+EscalatorSmart.ltl	no	0.095563	unsupported_or_failed	no	0.095458	unsupported_or_failed
+Example1_d6376bf9.ltl	yes	0.068710		yes	0.068001	
+F-G-contradiction-10.ltl	no	0.064171	unsupported_or_failed	no	0.063659	unsupported_or_failed
+F-G-contradiction-11.ltl	no	0.065429	unsupported_or_failed	no	0.064033	unsupported_or_failed
+F-G-contradiction-110.ltl	no	0.094013	unsupported_or_failed	no	0.098249	unsupported_or_failed
+F-G-contradiction-111.ltl	no	0.096405	unsupported_or_failed	no	0.095413	unsupported_or_failed
+F-G-contradiction-112.ltl	no	0.100336	unsupported_or_failed	no	0.103035	unsupported_or_failed
+F-G-contradiction-113.ltl	no	0.103875	unsupported_or_failed	no	0.108698	unsupported_or_failed
+F-G-contradiction-114.ltl	no	0.113807	unsupported_or_failed	no	0.113379	unsupported_or_failed
+F-G-contradiction-12.ltl	no	0.065324	unsupported_or_failed	no	0.066481	unsupported_or_failed
+F-G-contradiction-13.ltl	no	0.064395	unsupported_or_failed	no	0.067543	unsupported_or_failed
+F-G-contradiction-14.ltl	no	0.064963	unsupported_or_failed	no	0.064498	unsupported_or_failed
+F-G-contradiction-15.ltl	no	0.066894	unsupported_or_failed	no	0.066904	unsupported_or_failed
+F-G-contradiction-16.ltl	no	0.081059	unsupported_or_failed	no	0.078200	unsupported_or_failed
+F-G-contradiction-17.ltl	no	0.085104	unsupported_or_failed	no	0.086797	unsupported_or_failed
+F-G-contradiction-18.ltl	no	0.088265	unsupported_or_failed	no	0.090955	unsupported_or_failed
+F-G-contradiction-19.ltl	no	0.093995	unsupported_or_failed	no	0.092408	unsupported_or_failed
+F-G-contradiction-2-unreal.ltl	no	0.062645	unsupported_or_failed	no	0.063222	unsupported_or_failed
+FelixSpecFixed2.2.core_fa8592c8.ltl	no	0.118362	unsupported_or_failed	no	0.117306	unsupported_or_failed
+FelixSpecFixed2_fa4d4ce3.ltl	no	0.854208	budget_exhausted	no	1.004403	budget_exhausted
+FelixSpecFixed3.core_b209ff21.ltl	no	0.854813	budget_exhausted	no	1.007588	budget_exhausted
+FelixSpecFixed3_b0840146.ltl	no	0.855094	budget_exhausted	no	1.004485	budget_exhausted
+FelixSpecFixed4GuaranteesOnly_88f351a6.ltl	no	0.064808	unsupported_or_failed	no	0.062238	unsupported_or_failed
+FelixSpecFixed4_3916ec59.ltl	no	0.854011	budget_exhausted	no	1.004982	budget_exhausted
+FelixSpecFixed5_f82794da.ltl	no	0.854514	budget_exhausted	no	1.005143	budget_exhausted
+FelixSpecFixed_2418b67e.ltl	no	0.854137	budget_exhausted	no	1.004525	budget_exhausted
+Full_f1477cc5.ltl	no	0.192398	unsupported_or_failed	no	0.196543	unsupported_or_failed
+GF-G-contradiction0.ltl	no	0.068051	unsupported_or_failed	no	0.073587	unsupported_or_failed
+GF-G-contradiction1.ltl	no	0.068107	unsupported_or_failed	no	0.071988	unsupported_or_failed
+GF-G-contradiction2.ltl	no	0.071889	unsupported_or_failed	no	0.068362	unsupported_or_failed
+GF-G-contradiction3.ltl	no	0.077734	unsupported_or_failed	no	0.080925	unsupported_or_failed
+GF-G-contradiction4.ltl	no	0.080655	unsupported_or_failed	no	0.083130	unsupported_or_failed
+GF-G-contradiction5.ltl	no	0.081871	unsupported_or_failed	no	0.081469	unsupported_or_failed
+GF-G-contradiction6.ltl	no	0.088230	unsupported_or_failed	no	0.085215	unsupported_or_failed
+GF-G-contradiction7.ltl	no	0.086537	unsupported_or_failed	no	0.092467	unsupported_or_failed
+Gamelogic.ltl	yes	0.079355		yes	0.076360	
+GamemodeChooser.ltl	yes	0.194394		yes	0.234912	
+Gamemodule.ltl	yes	0.124935		yes	0.120824	
+HeatingMin_d6c5ac79.ltl	yes	0.083270		yes	0.069644	
+Heating_235467da.ltl	no	0.068761	unsupported_or_failed	no	0.070670	unsupported_or_failed
+Heating_974f4a68.ltl	no	0.112942	unsupported_or_failed	no	0.110568	unsupported_or_failed
+Heating_b02056d6.ltl	no	0.065850	unsupported_or_failed	no	0.070663	unsupported_or_failed
+Heating_b209ff21.ltl	no	0.067488	unsupported_or_failed	no	0.066849	unsupported_or_failed
+Increment.ltl	yes	0.062025		yes	0.062183	
+IntendDemo_42dc4fff.ltl	no	0.853698	budget_exhausted	no	1.004621	budget_exhausted
+KitchenTimerV0.ltl	yes	0.061980		yes	0.062982	
+KitchenTimerV1.ltl	yes	0.066897		yes	0.066008	
+KitchenTimerV10.ltl	yes	0.147666		yes	0.149154	
+KitchenTimerV2.ltl	yes	0.084307		yes	0.086640	
+KitchenTimerV3.ltl	yes	0.106911		yes	0.109306	
+KitchenTimerV4.ltl	yes	0.114525		yes	0.117487	
+KitchenTimerV5.ltl	yes	0.132989		yes	0.132974	
+KitchenTimerV6.ltl	yes	0.139005		yes	0.138367	
+KitchenTimerV7.ltl	yes	0.139189		yes	0.142702	
+KitchenTimerV8.ltl	yes	0.140965		yes	0.147729	
+KitchenTimerV9.ltl	yes	0.145007		yes	0.147310	
+LampController_974f4a68.ltl	no	0.249824	unsupported_or_failed	no	0.252995	unsupported_or_failed
+LedMatrix.ltl	no	0.855518	budget_exhausted	no	1.032012	budget_exhausted
+Light_a50cadd7.ltl	no	0.122233	unsupported_or_failed	no	0.091615	unsupported_or_failed
+Light_aeb1d897.ltl	no	0.864655	budget_exhausted	no	1.014752	budget_exhausted
+Light_d65ed84e.ltl	no	0.793842	unsupported_or_failed	no	0.837999	unsupported_or_failed
+Lights2Min_9cbf2546.ltl	no	0.092194	unsupported_or_failed	no	0.094560	unsupported_or_failed
+Lights2_06e9cad4.ltl	no	0.853421	budget_exhausted	no	1.003620	budget_exhausted
+Lights2_0f5381e9.ltl	no	0.854143	budget_exhausted	no	1.007141	budget_exhausted
+Lights2_2c5b09da.ltl	no	0.855890	budget_exhausted	no	1.004980	budget_exhausted
+Lights2_9cac58d3.ltl	no	0.856653	budget_exhausted	no	1.011536	budget_exhausted
+Lights2_b02056d6.ltl	no	0.854978	budget_exhausted	no	1.005913	budget_exhausted
+Lights2_f1477cc5.ltl	no	0.854727	budget_exhausted	no	1.007609	budget_exhausted
+Lights2_f3987563.ltl	no	0.858701	budget_exhausted	no	1.011143	budget_exhausted
+Lights3Min_6479ef9a.ltl	no	0.063993	unsupported_or_failed	no	0.068465	unsupported_or_failed
+Lights3_06e9cad4.ltl	no	0.861847	budget_exhausted	no	1.008337	budget_exhausted
+Lights3_235467da.ltl	no	0.787357	unsupported_or_failed	no	0.880488	unsupported_or_failed
+Lights3_2c5b09da.ltl	no	0.859548	budget_exhausted	no	1.010426	budget_exhausted
+Lights3_3916ec59.ltl	no	0.913008	budget_exhausted	no	1.008872	budget_exhausted
+Lights3_6bea956e.ltl	no	0.200626	unsupported_or_failed	no	0.203737	unsupported_or_failed
+Lights3_f1477cc5.ltl	no	0.855013	budget_exhausted	no	0.833885	unsupported_or_failed
+LightsMin_6bea956e.ltl	no	0.076417	unsupported_or_failed	no	0.074541	unsupported_or_failed
+LightsTotal_06e9cad4.ltl	no	0.853764	budget_exhausted	no	1.003140	budget_exhausted
+LightsTotal_2c5b09da.ltl	no	0.853341	budget_exhausted	no	1.004710	budget_exhausted
+LightsTotal_9cbf2546.ltl	no	0.853895	budget_exhausted	no	1.004348	budget_exhausted
+LightsTotal_d65ed84e.ltl	no	0.853068	budget_exhausted	no	1.005072	budget_exhausted
+Lights_06e9cad4.ltl	no	0.857410	budget_exhausted	no	1.005826	budget_exhausted
+Lights_2c5b09da.ltl	no	0.857371	budget_exhausted	no	1.007478	budget_exhausted
+Lights_3461125b.ltl	no	0.148180	unsupported_or_failed	no	0.143974	unsupported_or_failed
+Lights_9cac58d3.ltl	no	0.473396	unsupported_or_failed	no	0.470168	unsupported_or_failed
+Lights_b0840146.ltl	no	0.855782	budget_exhausted	no	1.006239	budget_exhausted
+Lights_f3987563.ltl	no	0.476306	unsupported_or_failed	no	0.493328	unsupported_or_failed
+ModdifiedLedMatrix4X.ltl	no	0.854279	budget_exhausted	no	1.003841	budget_exhausted
+ModdifiedLedMatrix5X.ltl	no	0.855617	budget_exhausted	no	1.004138	budget_exhausted
+Morning2Min_6cbc6174.ltl	yes	0.070907		yes	0.121593	
+Morning2_06e9cad4.ltl	no	0.853612	budget_exhausted	no	1.004592	budget_exhausted
+Morning2_1cf58fc1.ltl	no	0.853839	budget_exhausted	no	1.003709	budget_exhausted
+Morning2_2c5b09da.ltl	no	0.853822	budget_exhausted	no	1.003735	budget_exhausted
+Morning2_407db2cc.ltl	no	0.853544	budget_exhausted	no	1.004028	budget_exhausted
+Morning2_4d4ca5c4.ltl	yes	0.073287		yes	0.073526	
+Morning2_63831f8c.ltl	no	0.853612	budget_exhausted	no	1.006091	budget_exhausted
+Morning2_68c86764.ltl	no	0.853531	budget_exhausted	no	1.004700	budget_exhausted
+Morning2_9cac58d3.ltl	yes	0.072773		yes	0.074763	
+Morning2_d65ed84e.ltl	no	0.852674	budget_exhausted	no	1.003790	budget_exhausted
+Morning2s_06cf2373.ltl	no	0.853075	budget_exhausted	no	1.003660	budget_exhausted
+Morning2s_06e9cad4.ltl	no	0.853437	budget_exhausted	no	1.003073	budget_exhausted
+Morning2s_2c5b09da.ltl	no	0.853469	budget_exhausted	no	1.003597	budget_exhausted
+Morning2s_42dc4fff.ltl	no	0.853883	budget_exhausted	no	1.005922	budget_exhausted
+Morning2s_9cbf2546.ltl	no	0.853628	budget_exhausted	no	1.003858	budget_exhausted
+Morning2s_d6c5ac79.ltl	no	0.853698	budget_exhausted	no	1.003700	budget_exhausted
+MorningMin_d6c5ac79.ltl	no	0.818434	unsupported_or_failed	no	1.021131	budget_exhausted
+Morning_14a3b3a2.ltl	no	0.853564	budget_exhausted	no	1.002992	budget_exhausted
+Morning_4b5e6eaa.ltl	no	0.852722	budget_exhausted	no	1.003699	budget_exhausted
+Morning_88c5c1c3.ltl	no	0.856778	budget_exhausted	no	1.006144	budget_exhausted
+Morning_9cac58d3.ltl	no	0.853359	budget_exhausted	no	1.003589	budget_exhausted
+Morning_c92eb242.ltl	no	0.853282	budget_exhausted	no	1.004277	budget_exhausted
+Morning_f1477cc5.ltl	no	0.854587	budget_exhausted	no	1.004364	budget_exhausted
+Morning_f2774e0b.ltl	no	0.853836	budget_exhausted	no	1.003027	budget_exhausted
+MusicAppFeedback.ltl	yes	0.076344		yes	0.081609	
+MusicAppMotivating.ltl	yes	0.082201		yes	0.081846	
+MusicAppSimple.ltl	yes	0.071498		yes	0.072730	
+OneCounter.ltl	no	0.854907	budget_exhausted	no	1.005243	budget_exhausted
+OneCounterGui.ltl	yes	0.140615		yes	0.132531	
+OneCounterGuiA1.ltl	yes	0.262813		yes	0.256972	
+OneCounterGuiA2.ltl	yes	0.348876		yes	0.347652	
+OneCounterGuiA3.ltl	yes	0.542819		yes	0.545671	
+OneCounterGuiA4.ltl	yes	0.621788		yes	0.608284	
+OneCounterGuiA5.ltl	yes	0.676239		yes	0.676112	
+OneCounterGuiA6.ltl	no	0.854220	budget_exhausted	yes	0.935801	
+OneCounterGuiA7.ltl	no	0.854460	budget_exhausted	no	1.003952	budget_exhausted
+OneCounterGuiA8.ltl	no	0.855045	budget_exhausted	no	1.004279	budget_exhausted
+OneCounterInRange.ltl	yes	0.065785		yes	0.069100	
+OneCounterInRangeA1.ltl	yes	0.071055		yes	0.068432	
+OneCounterInRangeA2.ltl	yes	0.069137		yes	0.074873	
+OneCounterInRangeA3.ltl	yes	0.072608		yes	0.068177	
+PlugController_fa4d4ce3.ltl	no	0.137912	unsupported_or_failed	no	0.142557	unsupported_or_failed
+Radarboard.ltl	yes	0.074340		yes	0.079180	
+RegManager.ltl	yes	0.066574		yes	0.069772	
+Room_a50cadd7.ltl	yes	0.067462		yes	0.067123	
+RotationCalculator.ltl	yes	0.074605		yes	0.075243	
+SPI.ltl	yes	0.144789		yes	0.139921	
+SPIPureNext.ltl	no	0.112687	unsupported_or_failed	no	0.120378	unsupported_or_failed
+SPIReadClk.ltl	yes	0.065813		yes	0.065284	
+SPIReadManag.ltl	no	0.855843	budget_exhausted	no	1.005193	budget_exhausted
+SPIReadSdi.ltl	yes	0.069103		yes	0.069266	
+SPIWriteClk.ltl	yes	0.066726		yes	0.066029	
+SPIWriteManag.ltl	no	0.115566	unsupported_or_failed	no	0.112917	unsupported_or_failed
+SPIWriteSdi.ltl	yes	0.070364		yes	0.069310	
+Scoreboard.ltl	yes	0.070271		yes	0.069471	
+Sensor.ltl	no	0.854258	budget_exhausted	no	1.006531	budget_exhausted
+SensorInit.ltl	yes	0.076535		yes	0.079826	
+SensorPart.ltl	yes	0.077824		yes	0.076963	
+SensorRegister.ltl	yes	0.070035		yes	0.064885	
+SensorSelector.ltl	no	0.855471	budget_exhausted	no	1.005962	budget_exhausted
+SensorSubmodulChooser.ltl	yes	0.265775		yes	0.276387	
+Shades2Min_63831f8c.ltl	yes	0.071299		yes	0.066622	
+Shades2_235467da.ltl	no	0.069526	unsupported_or_failed	no	0.073383	unsupported_or_failed
+Shades2_42dc4fff.ltl	no	0.080052	unsupported_or_failed	no	0.077809	unsupported_or_failed
+Shades2_70523fbe.ltl	no	0.073349	unsupported_or_failed	no	0.068798	unsupported_or_failed
+Shades2_a5f99bc6.ltl	no	0.076161	unsupported_or_failed	no	0.068848	unsupported_or_failed
+ShadesMin_aeb1d897.ltl	yes	0.070724		yes	0.066997	
+Shades_6479ef9a.ltl	no	0.074237	unsupported_or_failed	no	0.068121	unsupported_or_failed
+Shades_974f4a68.ltl	no	0.356351	unsupported_or_failed	no	0.366373	unsupported_or_failed
+Shades_9cac58d3.ltl	no	0.070233	unsupported_or_failed	no	0.077243	unsupported_or_failed
+Shades_a02758ea.ltl	no	0.067407	unsupported_or_failed	no	0.068011	unsupported_or_failed
+SingleContoller_d65ed84e.ltl	no	0.856104	budget_exhausted	no	1.007329	budget_exhausted
+SliderDefault.ltl	yes	0.081245		yes	0.088730	
+SliderDelayed.ltl	yes	0.399061		yes	0.389657	
+SliderScored.ltl	yes	0.170426		yes	0.174135	
+System_b0840146.ltl	no	0.067327	unsupported_or_failed	no	0.067029	unsupported_or_failed
+Time_a50cadd7.ltl	yes	0.067512		yes	0.064526	
+Timer_a50cadd7.ltl	yes	0.067266		yes	0.066943	
+TorcsAccelerating.ltl	yes	0.069546		yes	0.068583	
+TorcsGearing.ltl	yes	0.067247		yes	0.066852	
+TorcsSimple.ltl	yes	0.072041		yes	0.070912	
+TorcsSteeringImproved.ltl	yes	0.196750		yes	0.200691	
+TorcsSteeringSimple.ltl	yes	0.070612		yes	0.064675	
+TorcsSteeringSmart.ltl	yes	0.073342		yes	0.077525	
+TwoCounters.ltl	yes	0.082672		yes	0.078900	
+TwoCounters2.ltl	yes	0.366903		yes	0.356655	
+TwoCounters3.ltl	no	0.854111	budget_exhausted	no	1.006876	budget_exhausted
+TwoCounters4.ltl	no	0.853709	budget_exhausted	no	1.005273	budget_exhausted
+TwoCounters5.ltl	no	0.857178	budget_exhausted	no	1.009027	budget_exhausted
+TwoCountersDisButA0.ltl	no	0.856763	budget_exhausted	no	1.009660	budget_exhausted
+TwoCountersDisButA1.ltl	no	0.856311	budget_exhausted	no	1.006470	budget_exhausted
+TwoCountersDisButA2.ltl	no	0.857687	budget_exhausted	no	1.014230	budget_exhausted
+TwoCountersDisButA3.ltl	no	0.858586	budget_exhausted	no	1.007432	budget_exhausted
+TwoCountersDisButA4.ltl	no	0.857079	budget_exhausted	no	1.008720	budget_exhausted
+TwoCountersDisButA5.ltl	no	0.858765	budget_exhausted	no	1.009521	budget_exhausted
+TwoCountersDisButA6.ltl	no	0.859517	budget_exhausted	no	1.009551	budget_exhausted
+TwoCountersDisButA7.ltl	no	0.858081	budget_exhausted	no	1.014480	budget_exhausted
+TwoCountersDisButA8.ltl	no	0.858775	budget_exhausted	no	1.007699	budget_exhausted
+TwoCountersDisButA9.ltl	no	0.858460	budget_exhausted	no	1.009207	budget_exhausted
+TwoCountersDisButAC.ltl	no	0.859532	budget_exhausted	no	1.009039	budget_exhausted
+TwoCountersGui.ltl	no	0.858707	budget_exhausted	no	1.016273	budget_exhausted
+TwoCountersInRange.ltl	yes	0.152422		yes	0.151310	
+TwoCountersInRangeA1.ltl	yes	0.296718		yes	0.293776	
+TwoCountersInRangeA2.ltl	yes	0.703655		yes	0.679635	
+TwoCountersInRangeA3.ltl	yes	0.757828		yes	0.742123	
+TwoCountersInRangeA4.ltl	yes	0.840934		yes	0.855623	
+TwoCountersInRangeA5.ltl	no	0.855393	budget_exhausted	yes	0.972249	
+TwoCountersInRangeM0.ltl	yes	0.607162		yes	0.609764	
+TwoCountersInRangeM1.ltl	yes	0.593839		yes	0.593053	
+TwoCountersInRangeM2.ltl	no	0.852971	budget_exhausted	yes	0.974920	
+TwoCountersInRangeM3.ltl	no	0.853829	budget_exhausted	yes	0.972939	
+TwoCountersInRangeM4.ltl	no	0.854606	budget_exhausted	yes	0.971918	
+TwoCountersRefined.ltl	yes	0.095496		yes	0.091704	
+TwoCountersRefinedRefined.ltl	yes	0.094482		yes	0.101704	
+UnderapproxDemo2.ltl	yes	0.071333		yes	0.069108	
+UnderapproxStrengthenedDemo.ltl	yes	0.072835		yes	0.070772	
+Warnlight_2d1010f8.ltl	no	0.093175	unsupported_or_failed	no	0.101558	unsupported_or_failed
+Warnlight_a50cadd7.ltl	yes	0.070947		yes	0.066429	
+Window2Min_88c5c1c3.ltl	yes	0.066477		yes	0.072697	
+Window2_54e1f7d2.ltl	yes	0.074032		yes	0.070929	
+Window2_6479ef9a.ltl	no	0.578094	unsupported_or_failed	no	0.591895	unsupported_or_failed
+Window2_9cac58d3.ltl	yes	0.066538		yes	0.073870	
+Window2_aeb1d897.ltl	no	0.695847	unsupported_or_failed	no	0.801919	unsupported_or_failed
+Window2_f1477cc5.ltl	no	0.692251	unsupported_or_failed	no	0.757214	unsupported_or_failed
+WindowMin_a5f99bc6.ltl	no	0.071860	unsupported_or_failed	no	0.065843	unsupported_or_failed
+Window_235467da.ltl	no	0.200521	unsupported_or_failed	no	0.187167	unsupported_or_failed
+Window_42dc4fff.ltl	no	0.195767	unsupported_or_failed	no	0.194773	unsupported_or_failed
+Window_54e1f7d2.ltl	no	0.110461	unsupported_or_failed	no	0.118697	unsupported_or_failed
+Zoo0.ltl	yes	0.078740		yes	0.079872	
+Zoo10.ltl	yes	0.076638		yes	0.076057	
+Zoo5.ltl	yes	0.076012		yes	0.079348	
+abcg_arbiter_pb_1_pe_.ltl	yes	0.067381		yes	0.068101	
+abcg_arbiter_pb_2_pe_.ltl	yes	0.077107		yes	0.077350	
+abcg_arbiter_pb_3_pe_.ltl	yes	0.077034		yes	0.076476	
+abcg_arbiter_pb_4_pe_.ltl	yes	0.080105		yes	0.079416	
+abcg_arbiter_pb_5_pe_.ltl	yes	0.081482		yes	0.084145	
+abcg_arbiter_pb_6_pe_.ltl	yes	0.085352		yes	0.086750	
+amba_case_study_pb_2_pe_.ltl	yes	0.088158		yes	0.080724	
+amba_case_study_pb_3_pe_.ltl	yes	0.092747		yes	0.092702	
+amba_case_study_pb_4_pe_.ltl	yes	0.098727		yes	0.096686	
+amba_case_study_unreal_pb_2_pe_.ltl	yes	0.086279		yes	0.083628	
+amba_case_study_unreal_pb_3_pe_.ltl	yes	0.089865		yes	0.094164	
+amba_case_study_unreal_pb_4_pe_.ltl	yes	0.095399		yes	0.098844	
+amba_case_study_unreal_pb_5_pe_.ltl	yes	0.116263		yes	0.115829	
+amba_decomposed_arbiter_pb_10_pe_.ltl	no	0.862967	budget_exhausted	no	1.013546	budget_exhausted
+amba_decomposed_arbiter_pb_11_pe_.ltl	no	0.880967	budget_exhausted	no	1.032715	budget_exhausted
+amba_decomposed_arbiter_pb_12_pe_.ltl	no	0.862659	budget_exhausted	no	1.026767	budget_exhausted
+amba_decomposed_arbiter_pb_13_pe_.ltl	no	0.853990	budget_exhausted	no	1.005217	budget_exhausted
+amba_decomposed_arbiter_pb_2_pe_.ltl	yes	0.073087		yes	0.073240	
+amba_decomposed_arbiter_pb_3_pe_.ltl	yes	0.076438		yes	0.079331	
+amba_decomposed_arbiter_pb_4_pe_.ltl	yes	0.093002		yes	0.095749	
+amba_decomposed_arbiter_pb_5_pe_.ltl	yes	0.155530		yes	0.150513	
+amba_decomposed_arbiter_pb_6_pe_.ltl	yes	0.406775		yes	0.399466	
+amba_decomposed_arbiter_pb_7_pe_.ltl	no	0.854060	budget_exhausted	no	1.003885	budget_exhausted
+amba_decomposed_arbiter_pb_8_pe_.ltl	no	0.854649	budget_exhausted	no	1.005611	budget_exhausted
+amba_decomposed_arbiter_pb_9_pe_.ltl	no	0.855705	budget_exhausted	no	1.005029	budget_exhausted
+amba_decomposed_decode.ltl	yes	0.065980		yes	0.064888	
+amba_decomposed_encode_pb_10_pe_.ltl	yes	0.089985		yes	0.084794	
+amba_decomposed_encode_pb_11_pe_.ltl	yes	0.085783		yes	0.087149	
+amba_decomposed_encode_pb_12_pe_.ltl	yes	0.091498		yes	0.088808	
+amba_decomposed_encode_pb_13_pe_.ltl	yes	0.095827		yes	0.102073	
+amba_decomposed_encode_pb_14_pe_.ltl	yes	0.111476		yes	0.109989	
+amba_decomposed_encode_pb_15_pe_.ltl	yes	0.130970		yes	0.121561	
+amba_decomposed_encode_pb_16_pe_.ltl	yes	0.149483		yes	0.144057	
+amba_decomposed_encode_pb_20_pe_.ltl	no	0.858630	budget_exhausted	no	1.007904	budget_exhausted
+amba_decomposed_encode_pb_25_pe_.ltl	no	0.858160	budget_exhausted	no	1.012144	budget_exhausted
+amba_decomposed_encode_pb_2_pe_.ltl	yes	0.072258		yes	0.069319	
+amba_decomposed_encode_pb_3_pe_.ltl	yes	0.071523		yes	0.069056	
+amba_decomposed_encode_pb_4_pe_.ltl	yes	0.070168		yes	0.075768	
+amba_decomposed_encode_pb_5_pe_.ltl	yes	0.076432		yes	0.075996	
+amba_decomposed_encode_pb_6_pe_.ltl	yes	0.075518		yes	0.079953	
+amba_decomposed_encode_pb_7_pe_.ltl	yes	0.077783		yes	0.079275	
+amba_decomposed_encode_pb_8_pe_.ltl	yes	0.081883		yes	0.076159	
+amba_decomposed_encode_pb_9_pe_.ltl	yes	0.082942		yes	0.084884	
+amba_decomposed_lock_pb_10_pe_.ltl	yes	0.081389		yes	0.080334	
+amba_decomposed_lock_pb_11_pe_.ltl	yes	0.081169		yes	0.083575	
+amba_decomposed_lock_pb_12_pe_.ltl	yes	0.083375		yes	0.086173	
+amba_decomposed_lock_pb_13_pe_.ltl	yes	0.092775		yes	0.090657	
+amba_decomposed_lock_pb_14_pe_.ltl	yes	0.098156		yes	0.097261	
+amba_decomposed_lock_pb_15_pe_.ltl	yes	0.111251		yes	0.114264	
+amba_decomposed_lock_pb_16_pe_.ltl	yes	0.142208		yes	0.145337	
+amba_decomposed_lock_pb_2_pe_.ltl	yes	0.070498		yes	0.069748	
+amba_decomposed_lock_pb_30_pe_.ltl	no	0.858454	budget_exhausted	no	1.009288	budget_exhausted
+amba_decomposed_lock_pb_3_pe_.ltl	yes	0.073807		yes	0.068040	
+amba_decomposed_lock_pb_4_pe_.ltl	yes	0.069494		yes	0.071518	
+amba_decomposed_lock_pb_5_pe_.ltl	yes	0.073201		yes	0.070150	
+amba_decomposed_lock_pb_6_pe_.ltl	yes	0.077738		yes	0.072304	
+amba_decomposed_lock_pb_7_pe_.ltl	yes	0.075351		yes	0.072491	
+amba_decomposed_lock_pb_8_pe_.ltl	yes	0.077915		yes	0.074104	
+amba_decomposed_lock_pb_9_pe_.ltl	yes	0.079425		yes	0.077432	
+amba_decomposed_shift.ltl	yes	0.066582		yes	0.069836	
+amba_decomposed_tburst4.ltl	no	0.087634	unsupported_or_failed	no	0.086287	unsupported_or_failed
+amba_decomposed_tincr.ltl	yes	0.073577		yes	0.073369	
+amba_decomposed_tsingle.ltl	yes	0.071657		yes	0.073441	
+amba_gr+_pb_2_pe_.ltl	no	0.071157	unsupported_or_failed	no	0.062808	unsupported_or_failed
+amba_gr+_pb_3_pe_.ltl	no	0.068415	unsupported_or_failed	no	0.063938	unsupported_or_failed
+amba_gr_pb_2_pe_.ltl	no	0.069225	unsupported_or_failed	no	0.065436	unsupported_or_failed
+amba_gr_pb_3_pe_.ltl	no	0.065130	unsupported_or_failed	no	0.069544	unsupported_or_failed
+amba_gr_pb_4_pe_.ltl	no	0.068719	unsupported_or_failed	no	0.067714	unsupported_or_failed
+arbiter-paper-unreal-unreal.ltl	no	0.067568	unsupported_or_failed	no	0.067587	unsupported_or_failed
+arbiter-with-failure-real.ltl	no	0.068161	unsupported_or_failed	no	0.070999	unsupported_or_failed
+arbiter_on_inpchange_pb_1_pe_.ltl	yes	0.070104		yes	0.067211	
+arbiter_on_inpchange_pb_2_pe_.ltl	yes	0.082138		yes	0.078543	
+arbiter_on_inpchange_pb_3_pe_.ltl	yes	0.082818		yes	0.082233	
+arbiter_on_inpchange_pb_4_pe_.ltl	yes	0.092681		yes	0.087313	
+arbiter_on_inpchange_pb_5_pe_.ltl	yes	0.086152		yes	0.087227	
+arbiter_on_inpchange_pb_6_pe_.ltl	yes	0.093692		yes	0.088676	
+arbiter_on_inpchange_pb_7_pe_.ltl	yes	0.098598		yes	0.096312	
+arbiter_pb_10_pe_.ltl	yes	0.083765		yes	0.088045	
+arbiter_pb_1_pe_.ltl	yes	0.066206		yes	0.069117	
+arbiter_pb_2_pe_.ltl	yes	0.075238		yes	0.073507	
+arbiter_pb_3_pe_.ltl	yes	0.071311		yes	0.070162	
+arbiter_pb_4_pe_.ltl	yes	0.078218		yes	0.070163	
+arbiter_pb_5_pe_.ltl	yes	0.077079		yes	0.077832	
+arbiter_pb_6_pe_.ltl	yes	0.079378		yes	0.113409	
+arbiter_pb_7_pe_.ltl	yes	0.078801		yes	0.079546	
+arbiter_pb_8_pe_.ltl	yes	0.080169		yes	0.079478	
+arbiter_pb_9_pe_.ltl	yes	0.087371		yes	0.083568	
+arbiter_with_buffer_pb_10_pe_.ltl	yes	0.084492		yes	0.080223	
+arbiter_with_buffer_pb_1_pe_.ltl	yes	0.061476		yes	0.073088	
+arbiter_with_buffer_pb_2_pe_.ltl	yes	0.064365		yes	0.068204	
+arbiter_with_buffer_pb_3_pe_.ltl	yes	0.072403		yes	0.069664	
+arbiter_with_buffer_pb_4_pe_.ltl	yes	0.068411		yes	0.073720	
+arbiter_with_buffer_pb_5_pe_.ltl	yes	0.067599		yes	0.068636	
+arbiter_with_buffer_pb_6_pe_.ltl	yes	0.079990		yes	0.072475	
+arbiter_with_buffer_pb_7_pe_.ltl	yes	0.076389		yes	0.070071	
+arbiter_with_buffer_pb_8_pe_.ltl	yes	0.075702		yes	0.075740	
+arbiter_with_buffer_pb_9_pe_.ltl	yes	0.078880		yes	0.080560	
+arbiter_with_cancel_pb_10_pe_.ltl	yes	0.101245		yes	0.096405	
+arbiter_with_cancel_pb_1_pe_.ltl	yes	0.072746		yes	0.068676	
+arbiter_with_cancel_pb_2_pe_.ltl	yes	0.069989		yes	0.071046	
+arbiter_with_cancel_pb_3_pe_.ltl	yes	0.076098		yes	0.077169	
+arbiter_with_cancel_pb_4_pe_.ltl	yes	0.081603		yes	0.082741	
+arbiter_with_cancel_pb_5_pe_.ltl	yes	0.080063		yes	0.087297	
+arbiter_with_cancel_pb_6_pe_.ltl	yes	0.151499		yes	0.096484	
+arbiter_with_cancel_pb_7_pe_.ltl	yes	0.098851		yes	0.102272	
+arbiter_with_cancel_pb_8_pe_.ltl	yes	0.101782		yes	0.094798	
+arbiter_with_cancel_pb_9_pe_.ltl	yes	0.101811		yes	0.100673	
+batch-arbiter-real.ltl	no	0.066710	unsupported_or_failed	no	0.070433	unsupported_or_failed
+box-limited-real.ltl	no	0.070173	unsupported_or_failed	no	0.068604	unsupported_or_failed
+box-real.ltl	no	0.069183	unsupported_or_failed	no	0.073464	unsupported_or_failed
+box0.ltl	no	0.068781	unsupported_or_failed	no	0.068754	unsupported_or_failed
+box1.ltl	no	0.070803	unsupported_or_failed	no	0.070034	unsupported_or_failed
+buffer-storage-real.ltl	no	0.069587	unsupported_or_failed	no	0.073561	unsupported_or_failed
+chain-4-real.ltl	no	0.069691	unsupported_or_failed	no	0.071812	unsupported_or_failed
+chain-5-real.ltl	no	0.072062	unsupported_or_failed	no	0.077828	unsupported_or_failed
+chain-60.ltl	no	0.076376	unsupported_or_failed	no	0.079770	unsupported_or_failed
+chain-70.ltl	no	0.081529	unsupported_or_failed	no	0.083605	unsupported_or_failed
+chain-simple-10-real.ltl	no	0.072370	unsupported_or_failed	no	0.074952	unsupported_or_failed
+chain-simple-20-real.ltl	no	0.075905	unsupported_or_failed	no	0.080774	unsupported_or_failed
+chain-simple-30-real.ltl	no	0.077966	unsupported_or_failed	no	0.079508	unsupported_or_failed
+chain-simple-40-real.ltl	no	0.084856	unsupported_or_failed	no	0.082631	unsupported_or_failed
+chain-simple-5-real.ltl	no	0.067154	unsupported_or_failed	no	0.067960	unsupported_or_failed
+chain-simple-50-real.ltl	no	0.090068	unsupported_or_failed	no	0.086604	unsupported_or_failed
+chain-simple-60-real.ltl	no	0.092435	unsupported_or_failed	no	0.096352	unsupported_or_failed
+chain-simple-70-real.ltl	no	0.089301	unsupported_or_failed	no	0.092913	unsupported_or_failed
+chain-simple-param-70-real.ltl	no	0.073552	unsupported_or_failed	no	0.072985	unsupported_or_failed
+chomp_pb_2_2_pe_.ltl	yes	0.198973		yes	0.213121	
+chomp_pb_2_3_pe_.ltl	no	0.855128	budget_exhausted	no	1.005036	budget_exhausted
+chomp_pb_2_4_pe_.ltl	no	0.859587	budget_exhausted	no	1.009671	budget_exhausted
+chomp_pb_2_5_pe_.ltl	no	0.861679	budget_exhausted	no	1.008430	budget_exhausted
+chomp_pb_2_6_pe_.ltl	no	0.858640	budget_exhausted	no	1.012272	budget_exhausted
+chomp_pb_3_2_pe_.ltl	no	0.855165	budget_exhausted	no	1.007476	budget_exhausted
+chomp_pb_3_3_pe_.ltl	no	0.858533	budget_exhausted	no	1.008753	budget_exhausted
+chomp_pb_3_4_pe_.ltl	no	0.858895	budget_exhausted	no	1.008737	budget_exhausted
+chomp_pb_3_5_pe_.ltl	no	0.856057	budget_exhausted	no	1.005337	budget_exhausted
+chomp_pb_3_6_pe_.ltl	no	0.855879	budget_exhausted	no	1.006266	budget_exhausted
+chomp_pb_4_2_pe_.ltl	no	0.857586	budget_exhausted	no	1.008481	budget_exhausted
+chomp_pb_4_3_pe_.ltl	no	0.859760	budget_exhausted	no	1.008564	budget_exhausted
+chomp_pb_4_4_pe_.ltl	no	0.855236	budget_exhausted	no	1.005461	budget_exhausted
+chomp_pb_4_5_pe_.ltl	no	0.860584	budget_exhausted	no	1.007903	budget_exhausted
+chomp_pb_4_6_pe_.ltl	no	0.856918	budget_exhausted	no	1.008817	budget_exhausted
+collector_v1_pb_11_pe_.ltl	no	0.887039	budget_exhausted	no	1.022854	budget_exhausted
+collector_v1_pb_12_pe_.ltl	no	0.869971	budget_exhausted	no	1.033554	budget_exhausted
+collector_v1_pb_13_pe_.ltl	no	0.866765	budget_exhausted	no	1.047365	budget_exhausted
+collector_v1_pb_14_pe_.ltl	no	0.870851	budget_exhausted	no	1.017159	budget_exhausted
+collector_v1_pb_15_pe_.ltl	no	0.853357	budget_exhausted	no	1.003455	budget_exhausted
+collector_v1_pb_3_pe_.ltl	yes	0.077960		yes	0.083652	
+collector_v1_pb_5_pe_.ltl	no	0.854693	budget_exhausted	no	1.004221	budget_exhausted
+collector_v1_pb_7_pe_.ltl	no	0.856247	budget_exhausted	no	1.005440	budget_exhausted
+collector_v1_pb_9_pe_.ltl	no	0.857772	budget_exhausted	no	1.006873	budget_exhausted
+collector_v2_pb_10_pe_.ltl	no	0.853866	budget_exhausted	no	1.003521	budget_exhausted
+collector_v2_pb_11_pe_.ltl	no	0.854893	budget_exhausted	no	1.003810	budget_exhausted
+collector_v2_pb_12_pe_.ltl	no	0.853656	budget_exhausted	no	1.003779	budget_exhausted
+collector_v2_pb_13_pe_.ltl	no	0.853705	budget_exhausted	no	1.004493	budget_exhausted
+collector_v2_pb_15_pe_.ltl	no	0.852993	budget_exhausted	no	1.002876	budget_exhausted
+collector_v2_pb_27_pe_.ltl	no	0.855251	budget_exhausted	no	1.005574	budget_exhausted
+collector_v2_pb_3_pe_.ltl	no	0.080231	unsupported_or_failed	no	0.086466	unsupported_or_failed
+collector_v2_pb_5_pe_.ltl	no	0.858549	budget_exhausted	no	0.906527	unsupported_or_failed
+collector_v2_pb_7_pe_.ltl	no	0.854252	budget_exhausted	no	1.006953	budget_exhausted
+collector_v2_pb_9_pe_.ltl	no	0.855466	budget_exhausted	no	1.005370	budget_exhausted
+collector_v3_pb_10_pe_.ltl	no	0.853605	budget_exhausted	no	1.004157	budget_exhausted
+collector_v3_pb_11_pe_.ltl	no	0.853877	budget_exhausted	no	1.005172	budget_exhausted
+collector_v3_pb_12_pe_.ltl	no	0.854154	budget_exhausted	no	1.004718	budget_exhausted
+collector_v3_pb_13_pe_.ltl	no	0.853858	budget_exhausted	no	1.004080	budget_exhausted
+collector_v3_pb_15_pe_.ltl	no	0.855003	budget_exhausted	no	1.005082	budget_exhausted
+collector_v3_pb_3_pe_.ltl	yes	0.098119		yes	0.106019	
+collector_v3_pb_5_pe_.ltl	no	0.854767	budget_exhausted	no	1.003837	budget_exhausted
+collector_v3_pb_7_pe_.ltl	no	0.866376	budget_exhausted	no	1.015766	budget_exhausted
+collector_v3_pb_9_pe_.ltl	no	0.857170	budget_exhausted	no	1.004857	budget_exhausted
+diagonal-real.ltl	no	0.066700	unsupported_or_failed	no	0.067574	unsupported_or_failed
+door_locking_problem_d6c5ac79.ltl	no	0.171254	unsupported_or_failed	no	0.172744	unsupported_or_failed
+elevator-paper-real.ltl	no	0.067700	unsupported_or_failed	no	0.064333	unsupported_or_failed
+evasion-real.ltl	no	0.070910	unsupported_or_failed	no	0.069220	unsupported_or_failed
+evasion0.ltl	no	0.070566	unsupported_or_failed	no	0.068666	unsupported_or_failed
+example10_pb_1_pe_.ltl	yes	0.068880		yes	0.064453	
+example10_pb_2_pe_.ltl	yes	0.066936		yes	0.064530	
+example10a_pb_1_pe_.ltl	yes	0.067795		yes	0.067808	
+example10a_pb_2_pe_.ltl	yes	0.069640		yes	0.072675	
+example7_pb_1_pe_.ltl	yes	0.067080		yes	0.065291	
+example7_pb_2_pe_.ltl	yes	0.068182		yes	0.066607	
+example7a_pb_1_pe_.ltl	yes	0.064511		yes	0.067727	
+example7a_pb_2_pe_.ltl	yes	0.067880		yes	0.069172	
+example8_pb_1_pe_.ltl	yes	0.064055		yes	0.069808	
+example8_pb_2_pe_.ltl	yes	0.072833		yes	0.068338	
+example9_pb_1_pe_.ltl	yes	0.065393		yes	0.068132	
+example9_pb_2_pe_.ltl	yes	0.069189		yes	0.066919	
+f-real-real.ltl	no	0.071173	unsupported_or_failed	no	0.071116	unsupported_or_failed
+f-unreal-unreal.ltl	no	0.066326	unsupported_or_failed	no	0.068075	unsupported_or_failed
+finding_nemo_pb_1_pe_.ltl	no	0.859666	budget_exhausted	no	1.011708	budget_exhausted
+finding_nemo_pb_2_pe_.ltl	no	0.855945	budget_exhausted	no	1.004058	budget_exhausted
+finding_nemo_pb_3_pe_.ltl	no	0.854480	budget_exhausted	no	1.004300	budget_exhausted
+finding_nemo_pb_4_pe_.ltl	no	0.854307	budget_exhausted	no	1.003620	budget_exhausted
+finding_nemo_pb_5_pe_.ltl	no	0.853879	budget_exhausted	no	1.003792	budget_exhausted
+finding_nemo_pb_6_pe_.ltl	no	0.855723	budget_exhausted	no	1.006205	budget_exhausted
+finding_nemo_pb_7_pe_.ltl	no	0.856972	budget_exhausted	no	1.007415	budget_exhausted
+follow0.ltl	no	0.116050	unsupported_or_failed	no	0.115118	unsupported_or_failed
+follow1.ltl	no	0.130996	unsupported_or_failed	no	0.122792	unsupported_or_failed
+follow2.ltl	no	0.142899	unsupported_or_failed	no	0.144366	unsupported_or_failed
+follow3.ltl	no	0.158572	unsupported_or_failed	no	0.164777	unsupported_or_failed
+full_arbiter_enc_pb_10_pe_.ltl	yes	0.130890		yes	0.179039	
+full_arbiter_enc_pb_12_pe_.ltl	yes	0.156659		yes	0.143060	
+full_arbiter_enc_pb_8_pe_.ltl	yes	0.106767		yes	0.110975	
+full_arbiter_unreal1_pb_2_10_pe_.ltl	no	0.061615	unsupported_or_failed	no	0.062071	unsupported_or_failed
+full_arbiter_unreal1_pb_2_11_pe_.ltl	no	0.063078	unsupported_or_failed	no	0.062061	unsupported_or_failed
+full_arbiter_unreal1_pb_2_12_pe_.ltl	no	0.063618	unsupported_or_failed	no	0.062153	unsupported_or_failed
+full_arbiter_unreal1_pb_2_13_pe_.ltl	no	0.064987	unsupported_or_failed	no	0.059826	unsupported_or_failed
+full_arbiter_unreal1_pb_2_14_pe_.ltl	no	0.063834	unsupported_or_failed	no	0.060019	unsupported_or_failed
+full_arbiter_unreal1_pb_2_15_pe_.ltl	no	0.065150	unsupported_or_failed	no	0.064957	unsupported_or_failed
+full_arbiter_unreal1_pb_2_16_pe_.ltl	no	0.061378	unsupported_or_failed	no	0.066139	unsupported_or_failed
+full_arbiter_unreal1_pb_2_18_pe_.ltl	no	0.062701	unsupported_or_failed	no	0.064273	unsupported_or_failed
+full_arbiter_unreal1_pb_2_1_pe_.ltl	no	0.062275	unsupported_or_failed	no	0.062608	unsupported_or_failed
+full_arbiter_unreal1_pb_2_20_pe_.ltl	no	0.063921	unsupported_or_failed	no	0.064687	unsupported_or_failed
+full_arbiter_unreal1_pb_2_21_pe_.ltl	no	0.063423	unsupported_or_failed	no	0.065438	unsupported_or_failed
+full_arbiter_unreal1_pb_2_22_pe_.ltl	no	0.062262	unsupported_or_failed	no	0.062437	unsupported_or_failed
+full_arbiter_unreal1_pb_2_24_pe_.ltl	no	0.060271	unsupported_or_failed	no	0.061746	unsupported_or_failed
+full_arbiter_unreal1_pb_2_26_pe_.ltl	no	0.064133	unsupported_or_failed	no	0.064191	unsupported_or_failed
+full_arbiter_unreal1_pb_2_2_pe_.ltl	no	0.063159	unsupported_or_failed	no	0.062082	unsupported_or_failed
+full_arbiter_unreal1_pb_2_3_pe_.ltl	no	0.066773	unsupported_or_failed	no	0.060721	unsupported_or_failed
+full_arbiter_unreal1_pb_2_4_pe_.ltl	no	0.061828	unsupported_or_failed	no	0.064737	unsupported_or_failed
+full_arbiter_unreal1_pb_2_5_pe_.ltl	no	0.060374	unsupported_or_failed	no	0.062190	unsupported_or_failed
+full_arbiter_unreal1_pb_2_6_pe_.ltl	no	0.068647	unsupported_or_failed	no	0.063917	unsupported_or_failed
+full_arbiter_unreal1_pb_2_7_pe_.ltl	no	0.065467	unsupported_or_failed	no	0.065542	unsupported_or_failed
+full_arbiter_unreal1_pb_2_8_pe_.ltl	no	0.064997	unsupported_or_failed	no	0.061287	unsupported_or_failed
+full_arbiter_unreal1_pb_2_9_pe_.ltl	no	0.063970	unsupported_or_failed	no	0.061236	unsupported_or_failed
+full_arbiter_unreal1_pb_3_10_pe_.ltl	no	0.067772	unsupported_or_failed	no	0.061028	unsupported_or_failed
+full_arbiter_unreal1_pb_3_11_pe_.ltl	no	0.065619	unsupported_or_failed	no	0.064217	unsupported_or_failed
+full_arbiter_unreal1_pb_3_12_pe_.ltl	no	0.062983	unsupported_or_failed	no	0.062538	unsupported_or_failed
+full_arbiter_unreal1_pb_3_13_pe_.ltl	no	0.062329	unsupported_or_failed	no	0.065587	unsupported_or_failed
+full_arbiter_unreal1_pb_3_14_pe_.ltl	no	0.061105	unsupported_or_failed	no	0.064861	unsupported_or_failed
+full_arbiter_unreal1_pb_3_15_pe_.ltl	no	0.060995	unsupported_or_failed	no	0.062033	unsupported_or_failed
+full_arbiter_unreal1_pb_3_1_pe_.ltl	no	0.062414	unsupported_or_failed	no	0.067443	unsupported_or_failed
+full_arbiter_unreal1_pb_3_2_pe_.ltl	no	0.061443	unsupported_or_failed	no	0.062862	unsupported_or_failed
+full_arbiter_unreal1_pb_3_3_pe_.ltl	no	0.060866	unsupported_or_failed	no	0.068868	unsupported_or_failed
+full_arbiter_unreal1_pb_3_4_pe_.ltl	no	0.061065	unsupported_or_failed	no	0.063942	unsupported_or_failed
+full_arbiter_unreal1_pb_3_5_pe_.ltl	no	0.063409	unsupported_or_failed	no	0.066119	unsupported_or_failed
+full_arbiter_unreal1_pb_3_6_pe_.ltl	no	0.063336	unsupported_or_failed	no	0.063327	unsupported_or_failed
+full_arbiter_unreal1_pb_3_7_pe_.ltl	no	0.064798	unsupported_or_failed	no	0.063126	unsupported_or_failed
+full_arbiter_unreal1_pb_3_8_pe_.ltl	no	0.063315	unsupported_or_failed	no	0.064690	unsupported_or_failed
+full_arbiter_unreal1_pb_3_9_pe_.ltl	no	0.063013	unsupported_or_failed	no	0.064494	unsupported_or_failed
+full_arbiter_unreal1_pb_4_1_pe_.ltl	no	0.065427	unsupported_or_failed	no	0.061000	unsupported_or_failed
+full_arbiter_unreal1_pb_4_2_pe_.ltl	no	0.063126	unsupported_or_failed	no	0.064003	unsupported_or_failed
+full_arbiter_unreal1_pb_4_3_pe_.ltl	no	0.063559	unsupported_or_failed	no	0.065397	unsupported_or_failed
+full_arbiter_unreal1_pb_4_4_pe_.ltl	no	0.067109	unsupported_or_failed	no	0.062410	unsupported_or_failed
+full_arbiter_unreal1_pb_4_5_pe_.ltl	no	0.064449	unsupported_or_failed	no	0.065387	unsupported_or_failed
+full_arbiter_unreal1_pb_4_6_pe_.ltl	no	0.061142	unsupported_or_failed	no	0.066476	unsupported_or_failed
+full_arbiter_unreal1_pb_4_7_pe_.ltl	no	0.062774	unsupported_or_failed	no	0.060326	unsupported_or_failed
+full_arbiter_unreal1_pb_4_8_pe_.ltl	no	0.066744	unsupported_or_failed	no	0.061649	unsupported_or_failed
+full_arbiter_unreal1_pb_6_8_pe_.ltl	no	0.065718	unsupported_or_failed	no	0.063635	unsupported_or_failed
+full_arbiter_unreal2_pb_2_pe_.ltl	yes	0.067010		yes	0.069788	
+full_arbiter_unreal2_pb_3_pe_.ltl	yes	0.075792		yes	0.074989	
+full_arbiter_unreal2_pb_4_pe_.ltl	yes	0.076615		yes	0.084743	
+full_arbiter_unreal2_pb_5_pe_.ltl	yes	0.088175		yes	0.085957	
+full_arbiter_unreal2_pb_6_pe_.ltl	yes	0.092371		yes	0.091474	
+full_arbiter_unreal2_pb_7_pe_.ltl	yes	0.098130		yes	0.101684	
+g-real-real.ltl	no	0.070984	unsupported_or_failed	no	0.072221	unsupported_or_failed
+g-real0.ltl	no	0.069114	unsupported_or_failed	no	0.071311	unsupported_or_failed
+g-unreal-1-unreal.ltl	no	0.074135	unsupported_or_failed	no	0.078146	unsupported_or_failed
+g-unreal-10.ltl	no	0.067303	unsupported_or_failed	no	0.071248	unsupported_or_failed
+g-unreal-11.ltl	no	0.065126	unsupported_or_failed	no	0.065442	unsupported_or_failed
+g-unreal-110.ltl	no	0.073085	unsupported_or_failed	no	0.071245	unsupported_or_failed
+g-unreal-111.ltl	no	0.071258	unsupported_or_failed	no	0.070617	unsupported_or_failed
+g-unreal-112.ltl	no	0.078155	unsupported_or_failed	no	0.070028	unsupported_or_failed
+g-unreal-113.ltl	no	0.072007	unsupported_or_failed	no	0.074143	unsupported_or_failed
+g-unreal-114.ltl	no	0.070922	unsupported_or_failed	no	0.075028	unsupported_or_failed
+g-unreal-115.ltl	no	0.075905	unsupported_or_failed	no	0.073258	unsupported_or_failed
+g-unreal-116.ltl	no	0.073239	unsupported_or_failed	no	0.076714	unsupported_or_failed
+g-unreal-117.ltl	no	0.078244	unsupported_or_failed	no	0.073184	unsupported_or_failed
+g-unreal-118.ltl	no	0.075932	unsupported_or_failed	no	0.077772	unsupported_or_failed
+g-unreal-119.ltl	no	0.078504	unsupported_or_failed	no	0.077566	unsupported_or_failed
+g-unreal-12.ltl	no	0.067763	unsupported_or_failed	no	0.067142	unsupported_or_failed
+g-unreal-120.ltl	no	0.082351	unsupported_or_failed	no	0.084884	unsupported_or_failed
+g-unreal-13.ltl	no	0.068989	unsupported_or_failed	no	0.067204	unsupported_or_failed
+g-unreal-14.ltl	no	0.070810	unsupported_or_failed	no	0.067499	unsupported_or_failed
+g-unreal-15.ltl	no	0.067312	unsupported_or_failed	no	0.067297	unsupported_or_failed
+g-unreal-16.ltl	no	0.070008	unsupported_or_failed	no	0.067104	unsupported_or_failed
+g-unreal-17.ltl	no	0.068436	unsupported_or_failed	no	0.074823	unsupported_or_failed
+g-unreal-18.ltl	no	0.069724	unsupported_or_failed	no	0.070115	unsupported_or_failed
+g-unreal-19.ltl	no	0.074650	unsupported_or_failed	no	0.071302	unsupported_or_failed
+g-unreal-20.ltl	no	0.204637	unsupported_or_failed	no	0.200980	unsupported_or_failed
+g-unreal-21.ltl	no	0.683513	unsupported_or_failed	no	0.670924	unsupported_or_failed
+g-unreal-30.ltl	no	0.068055	unsupported_or_failed	no	0.068750	unsupported_or_failed
+g-unreal-31.ltl	no	0.068556	unsupported_or_failed	no	0.069970	unsupported_or_failed
+g-unreal-310.ltl	no	0.099578	unsupported_or_failed	no	0.099873	unsupported_or_failed
+g-unreal-311.ltl	no	0.103881	unsupported_or_failed	no	0.109915	unsupported_or_failed
+g-unreal-312.ltl	no	0.109001	unsupported_or_failed	no	0.108579	unsupported_or_failed
+g-unreal-313.ltl	no	0.111891	unsupported_or_failed	no	0.117978	unsupported_or_failed
+g-unreal-314.ltl	no	0.121568	unsupported_or_failed	no	0.125393	unsupported_or_failed
+g-unreal-32.ltl	no	0.070207	unsupported_or_failed	no	0.069803	unsupported_or_failed
+g-unreal-33.ltl	no	0.073578	unsupported_or_failed	no	0.075963	unsupported_or_failed
+g-unreal-34.ltl	no	0.078567	unsupported_or_failed	no	0.081381	unsupported_or_failed
+g-unreal-35.ltl	no	0.082033	unsupported_or_failed	no	0.080323	unsupported_or_failed
+g-unreal-36.ltl	no	0.081177	unsupported_or_failed	no	0.081139	unsupported_or_failed
+g-unreal-37.ltl	no	0.084871	unsupported_or_failed	no	0.082589	unsupported_or_failed
+g-unreal-38.ltl	no	0.091590	unsupported_or_failed	no	0.089795	unsupported_or_failed
+g-unreal-39.ltl	no	0.096509	unsupported_or_failed	no	0.097940	unsupported_or_failed
+generalized_buffer_pb_2_pe_.ltl	no	0.076596	unsupported_or_failed	no	0.080241	unsupported_or_failed
+generalized_buffer_pb_3_pe_.ltl	no	0.075010	unsupported_or_failed	no	0.071484	unsupported_or_failed
+generalized_buffer_pb_4_pe_.ltl	no	0.074277	unsupported_or_failed	no	0.073048	unsupported_or_failed
+generalized_buffer_pb_5_pe_.ltl	no	0.079155	unsupported_or_failed	no	0.073775	unsupported_or_failed
+generalized_buffer_pb_6_pe_.ltl	no	0.073312	unsupported_or_failed	no	0.079482	unsupported_or_failed
+gf-real-real.ltl	no	0.064071	unsupported_or_failed	no	0.066630	unsupported_or_failed
+gf-unreal0.ltl	no	0.065192	unsupported_or_failed	no	0.066463	unsupported_or_failed
+gf-unreal1.ltl	no	0.065193	unsupported_or_failed	no	0.068379	unsupported_or_failed
+gf-unreal10.ltl	no	0.071770	unsupported_or_failed	no	0.069185	unsupported_or_failed
+gf-unreal11.ltl	no	0.067340	unsupported_or_failed	no	0.067318	unsupported_or_failed
+gf-unreal12.ltl	no	0.071633	unsupported_or_failed	no	0.069596	unsupported_or_failed
+gf-unreal13.ltl	no	0.071368	unsupported_or_failed	no	0.072721	unsupported_or_failed
+gf-unreal14.ltl	no	0.068377	unsupported_or_failed	no	0.073873	unsupported_or_failed
+gf-unreal15.ltl	no	0.073829	unsupported_or_failed	no	0.073508	unsupported_or_failed
+gf-unreal16.ltl	no	0.070960	unsupported_or_failed	no	0.069998	unsupported_or_failed
+gf-unreal17.ltl	no	0.074706	unsupported_or_failed	no	0.069083	unsupported_or_failed
+gf-unreal18.ltl	no	0.071876	unsupported_or_failed	no	0.072694	unsupported_or_failed
+gf-unreal19.ltl	no	0.072513	unsupported_or_failed	no	0.069692	unsupported_or_failed
+gf-unreal2.ltl	no	0.071210	unsupported_or_failed	no	0.065366	unsupported_or_failed
+gf-unreal20.ltl	no	0.070848	unsupported_or_failed	no	0.071972	unsupported_or_failed
+gf-unreal21.ltl	no	0.070229	unsupported_or_failed	no	0.071939	unsupported_or_failed
+gf-unreal22.ltl	no	0.075757	unsupported_or_failed	no	0.072072	unsupported_or_failed
+gf-unreal23.ltl	no	0.113038	unsupported_or_failed	no	0.086134	unsupported_or_failed
+gf-unreal24.ltl	no	0.076119	unsupported_or_failed	no	0.073449	unsupported_or_failed
+gf-unreal25.ltl	no	0.073675	unsupported_or_failed	no	0.069415	unsupported_or_failed
+gf-unreal26.ltl	no	0.070234	unsupported_or_failed	no	0.072161	unsupported_or_failed
+gf-unreal27.ltl	no	0.071315	unsupported_or_failed	no	0.072875	unsupported_or_failed
+gf-unreal28.ltl	no	0.073910	unsupported_or_failed	no	0.072360	unsupported_or_failed
+gf-unreal29.ltl	no	0.072047	unsupported_or_failed	no	0.074439	unsupported_or_failed
+gf-unreal3.ltl	no	0.067979	unsupported_or_failed	no	0.069687	unsupported_or_failed
+gf-unreal30.ltl	no	0.073784	unsupported_or_failed	no	0.069362	unsupported_or_failed
+gf-unreal31.ltl	no	0.072023	unsupported_or_failed	no	0.074557	unsupported_or_failed
+gf-unreal32.ltl	no	0.073919	unsupported_or_failed	no	0.072920	unsupported_or_failed
+gf-unreal33.ltl	no	0.072992	unsupported_or_failed	no	0.075003	unsupported_or_failed
+gf-unreal34.ltl	no	0.072674	unsupported_or_failed	no	0.072051	unsupported_or_failed
+gf-unreal35.ltl	no	0.073744	unsupported_or_failed	no	0.073724	unsupported_or_failed
+gf-unreal36.ltl	no	0.071344	unsupported_or_failed	no	0.076716	unsupported_or_failed
+gf-unreal37.ltl	no	0.072250	unsupported_or_failed	no	0.071968	unsupported_or_failed
+gf-unreal38.ltl	no	0.072335	unsupported_or_failed	no	0.077360	unsupported_or_failed
+gf-unreal39.ltl	no	0.073275	unsupported_or_failed	no	0.072921	unsupported_or_failed
+gf-unreal4.ltl	no	0.069345	unsupported_or_failed	no	0.063920	unsupported_or_failed
+gf-unreal40.ltl	no	0.073894	unsupported_or_failed	no	0.072511	unsupported_or_failed
+gf-unreal41.ltl	no	0.074786	unsupported_or_failed	no	0.077532	unsupported_or_failed
+gf-unreal42.ltl	no	0.074059	unsupported_or_failed	no	0.075145	unsupported_or_failed
+gf-unreal43.ltl	no	0.080898	unsupported_or_failed	no	0.076142	unsupported_or_failed
+gf-unreal44.ltl	no	0.074364	unsupported_or_failed	no	0.074636	unsupported_or_failed
+gf-unreal45.ltl	no	0.078645	unsupported_or_failed	no	0.072095	unsupported_or_failed
+gf-unreal46.ltl	no	0.074805	unsupported_or_failed	no	0.081259	unsupported_or_failed
+gf-unreal47.ltl	no	0.071793	unsupported_or_failed	no	0.080406	unsupported_or_failed
+gf-unreal5.ltl	no	0.069365	unsupported_or_failed	no	0.066508	unsupported_or_failed
+gf-unreal6.ltl	no	0.065063	unsupported_or_failed	no	0.065850	unsupported_or_failed
+gf-unreal7.ltl	no	0.069027	unsupported_or_failed	no	0.066914	unsupported_or_failed
+gf-unreal8.ltl	no	0.068930	unsupported_or_failed	no	0.073479	unsupported_or_failed
+gf-unreal9.ltl	no	0.067853	unsupported_or_failed	no	0.069402	unsupported_or_failed
+heim-buechi-real.ltl	no	0.069479	unsupported_or_failed	no	0.069515	unsupported_or_failed
+heim-double-x-real.ltl	no	0.075304	unsupported_or_failed	no	0.073102	unsupported_or_failed
+heim-double-x0.ltl	no	0.071199	unsupported_or_failed	no	0.065858	unsupported_or_failed
+heim-double-x1.ltl	no	0.076652	unsupported_or_failed	no	0.075932	unsupported_or_failed
+heim-double-x10.ltl	no	0.070603	unsupported_or_failed	no	0.068233	unsupported_or_failed
+heim-double-x11.ltl	no	0.075113	unsupported_or_failed	no	0.068002	unsupported_or_failed
+heim-double-x12.ltl	no	0.070400	unsupported_or_failed	no	0.076484	unsupported_or_failed
+heim-double-x13.ltl	no	0.070857	unsupported_or_failed	no	0.068307	unsupported_or_failed
+heim-double-x2.ltl	no	0.074398	unsupported_or_failed	no	0.080972	unsupported_or_failed
+heim-double-x3.ltl	no	0.105333	unsupported_or_failed	no	0.081832	unsupported_or_failed
+heim-double-x4.ltl	no	0.071223	unsupported_or_failed	no	0.067527	unsupported_or_failed
+heim-double-x5.ltl	no	0.067965	unsupported_or_failed	no	0.072846	unsupported_or_failed
+heim-double-x6.ltl	no	0.067081	unsupported_or_failed	no	0.072168	unsupported_or_failed
+heim-double-x7.ltl	no	0.067917	unsupported_or_failed	no	0.067909	unsupported_or_failed
+heim-double-x8.ltl	no	0.071313	unsupported_or_failed	no	0.068171	unsupported_or_failed
+heim-double-x9.ltl	no	0.069747	unsupported_or_failed	no	0.071519	unsupported_or_failed
+heim-fig7-unreal.ltl	no	0.067253	unsupported_or_failed	no	0.067235	unsupported_or_failed
+helipad-contradict0.ltl	no	0.073368	unsupported_or_failed	no	0.075426	unsupported_or_failed
+helipad-contradict1.ltl	no	0.084921	unsupported_or_failed	no	0.074945	unsupported_or_failed
+helipad-real.ltl	no	0.076496	unsupported_or_failed	no	0.076106	unsupported_or_failed
+infinite-race-real.ltl	no	0.067753	unsupported_or_failed	no	0.066323	unsupported_or_failed
+infinite-race-u0.ltl	no	0.064316	unsupported_or_failed	no	0.064947	unsupported_or_failed
+infinite-race-u1.ltl	no	0.068772	unsupported_or_failed	no	0.064413	unsupported_or_failed
+infinite-race-u10.ltl	no	0.080056	unsupported_or_failed	no	0.083129	unsupported_or_failed
+infinite-race-u11.ltl	no	0.082732	unsupported_or_failed	no	0.088563	unsupported_or_failed
+infinite-race-u12.ltl	no	0.082102	unsupported_or_failed	no	0.081871	unsupported_or_failed
+infinite-race-u13.ltl	no	0.083191	unsupported_or_failed	no	0.086063	unsupported_or_failed
+infinite-race-u14.ltl	no	0.086011	unsupported_or_failed	no	0.086792	unsupported_or_failed
+infinite-race-u15.ltl	no	0.082479	unsupported_or_failed	no	0.092019	unsupported_or_failed
+infinite-race-u16.ltl	no	0.089363	unsupported_or_failed	no	0.090767	unsupported_or_failed
+infinite-race-u17.ltl	no	0.096456	unsupported_or_failed	no	0.091613	unsupported_or_failed
+infinite-race-u18.ltl	no	0.093662	unsupported_or_failed	no	0.094877	unsupported_or_failed
+infinite-race-u19.ltl	no	0.099604	unsupported_or_failed	no	0.097973	unsupported_or_failed
+infinite-race-u2.ltl	no	0.067769	unsupported_or_failed	no	0.070046	unsupported_or_failed
+infinite-race-u20.ltl	no	0.095271	unsupported_or_failed	no	0.097969	unsupported_or_failed
+infinite-race-u21.ltl	no	0.097082	unsupported_or_failed	no	0.103965	unsupported_or_failed
+infinite-race-u22.ltl	no	0.098935	unsupported_or_failed	no	0.097445	unsupported_or_failed
+infinite-race-u23.ltl	no	0.103068	unsupported_or_failed	no	0.096922	unsupported_or_failed
+infinite-race-u24.ltl	no	0.104683	unsupported_or_failed	no	0.098334	unsupported_or_failed
+infinite-race-u25.ltl	no	0.104770	unsupported_or_failed	no	0.099220	unsupported_or_failed
+infinite-race-u3.ltl	no	0.074663	unsupported_or_failed	no	0.068171	unsupported_or_failed
+infinite-race-u4.ltl	no	0.071690	unsupported_or_failed	no	0.077983	unsupported_or_failed
+infinite-race-u5.ltl	no	0.142260	unsupported_or_failed	no	0.086110	unsupported_or_failed
+infinite-race-u6.ltl	no	0.071566	unsupported_or_failed	no	0.077002	unsupported_or_failed
+infinite-race-u7.ltl	no	0.074609	unsupported_or_failed	no	0.079959	unsupported_or_failed
+infinite-race-u8.ltl	no	0.082700	unsupported_or_failed	no	0.076972	unsupported_or_failed
+infinite-race-u9.ltl	no	0.078317	unsupported_or_failed	no	0.080324	unsupported_or_failed
+infinite-race-unequal-1-real.ltl	no	0.072001	unsupported_or_failed	no	0.067805	unsupported_or_failed
+infinite-race-unequal-10.ltl	no	0.070187	unsupported_or_failed	no	0.066715	unsupported_or_failed
+infinite-race-unequal-20.ltl	no	0.065284	unsupported_or_failed	no	0.064925	unsupported_or_failed
+infinite-race-unequal-21.ltl	no	0.070796	unsupported_or_failed	no	0.068583	unsupported_or_failed
+infinite-race-unequal-22.ltl	no	0.078687	unsupported_or_failed	no	0.074325	unsupported_or_failed
+infinite-race-unequal-23.ltl	no	0.074843	unsupported_or_failed	no	0.072932	unsupported_or_failed
+infinite-race-unequal-24.ltl	no	0.086023	unsupported_or_failed	no	0.082916	unsupported_or_failed
+infinite-race-unequal-25.ltl	no	0.091136	unsupported_or_failed	no	0.096725	unsupported_or_failed
+infinite-race-unequal-26.ltl	no	0.099988	unsupported_or_failed	no	0.093678	unsupported_or_failed
+items_processing-real.ltl	no	0.084667	unsupported_or_failed	no	0.086277	unsupported_or_failed
+jarvis_gideon_a02758ea.ltl	yes	0.079560		yes	0.086068	
+jarvis_philippe_484face8.ltl	no	0.859239	budget_exhausted	no	1.011138	budget_exhausted
+lazy_shades_problem_d6376bf9.ltl	no	0.858903	budget_exhausted	no	1.011417	budget_exhausted
+lift_gr1+_pb_2_pe_.ltl	no	0.856352	budget_exhausted	no	1.006840	budget_exhausted
+lift_gr1+_pb_3_pe_.ltl	no	0.854530	budget_exhausted	no	1.007699	budget_exhausted
+lift_gr1+_pb_6_pe_.ltl	no	0.854265	budget_exhausted	no	1.004533	budget_exhausted
+lift_gr1+_pb_7_pe_.ltl	no	0.854021	budget_exhausted	no	1.006732	budget_exhausted
+lift_gr1+_pb_8_pe_.ltl	no	0.854228	budget_exhausted	no	1.003798	budget_exhausted
+lift_gr1+_pb_9_pe_.ltl	no	0.854529	budget_exhausted	no	1.005233	budget_exhausted
+lift_gr1_pb_10_pe_.ltl	no	0.855163	budget_exhausted	no	1.006135	budget_exhausted
+lift_gr1_pb_2_pe_.ltl	no	0.110945	unsupported_or_failed	no	0.113352	unsupported_or_failed
+lift_gr1_pb_3_pe_.ltl	no	0.854905	budget_exhausted	no	1.005800	budget_exhausted
+lift_gr1_pb_7_pe_.ltl	no	0.864980	budget_exhausted	no	1.017456	budget_exhausted
+lift_gr1_pb_8_pe_.ltl	no	0.857089	budget_exhausted	no	1.011395	budget_exhausted
+lift_gr1_pb_9_pe_.ltl	no	0.855875	budget_exhausted	no	1.005337	budget_exhausted
+lift_pb_10_pe_.ltl	yes	0.563257		yes	0.410947	
+lift_pb_2_pe_.ltl	yes	0.074567		yes	0.072753	
+lift_pb_3_pe_.ltl	yes	0.079936		yes	0.078217	
+lift_pb_4_pe_.ltl	yes	0.080719		yes	0.087603	
+lift_pb_5_pe_.ltl	yes	0.098443		yes	0.094101	
+lift_pb_6_pe_.ltl	yes	0.105824		yes	0.109415	
+lift_pb_7_pe_.ltl	yes	0.120772		yes	0.120295	
+lift_pb_8_pe_.ltl	yes	0.138111		yes	0.139879	
+lift_pb_9_pe_.ltl	yes	0.251827		yes	0.245820	
+lift_unary_enc_pb_2_pe_.ltl	yes	0.073892		yes	0.072661	
+lift_unary_enc_pb_3_pe_.ltl	yes	0.076708		yes	0.080500	
+lift_unary_enc_pb_4_pe_.ltl	yes	0.086986		yes	0.091090	
+lift_unary_enc_pb_5_pe_.ltl	yes	0.121783		yes	0.122745	
+lift_unary_enc_pb_6_pe_.ltl	yes	0.248045		yes	0.253180	
+lift_unary_enc_pb_7_pe_.ltl	yes	0.776564		yes	0.773713	
+lift_wrong_physics_unreal_pb_10_pe_.ltl	yes	0.493112		yes	0.420121	
+lift_wrong_physics_unreal_pb_2_pe_.ltl	yes	0.072762		yes	0.074449	
+lift_wrong_physics_unreal_pb_3_pe_.ltl	yes	0.083108		yes	0.081903	
+lift_wrong_physics_unreal_pb_4_pe_.ltl	yes	0.087526		yes	0.088614	
+lift_wrong_physics_unreal_pb_5_pe_.ltl	yes	0.099149		yes	0.101571	
+lift_wrong_physics_unreal_pb_6_pe_.ltl	yes	0.115417		yes	0.110611	
+lift_wrong_physics_unreal_pb_7_pe_.ltl	yes	0.119598		yes	0.123649	
+lift_wrong_physics_unreal_pb_8_pe_.ltl	yes	0.145191		yes	0.145196	
+lift_wrong_physics_unreal_pb_9_pe_.ltl	yes	0.254288		yes	0.256070	
+lilydemo01.ltl	yes	0.066464		yes	0.067147	
+lilydemo02.ltl	yes	0.066108		yes	0.067757	
+lilydemo03.ltl	yes	0.068788		yes	0.064831	
+lilydemo04.ltl	yes	0.066837		yes	0.068145	
+lilydemo04_modified.ltl	yes	0.064922		yes	0.067507	
+lilydemo05.ltl	yes	0.065749		yes	0.068118	
+lilydemo06.ltl	yes	0.066565		yes	0.069153	
+lilydemo07.ltl	yes	0.066963		yes	0.065623	
+lilydemo08.ltl	yes	0.061670		yes	0.066362	
+lilydemo09.ltl	yes	0.064762		yes	0.069714	
+lilydemo10.ltl	yes	0.097870		yes	0.071865	
+lilydemo11.ltl	no	0.088142	unsupported_or_failed	no	0.065339	unsupported_or_failed
+lilydemo12.ltl	yes	0.070088		yes	0.070763	
+lilydemo13.ltl	yes	0.070689		yes	0.066240	
+lilydemo14.ltl	no	0.065332	unsupported_or_failed	no	0.067456	unsupported_or_failed
+lilydemo15.ltl	yes	0.066993		yes	0.067903	
+lilydemo16.ltl	yes	0.067628		yes	0.067630	
+lilydemo17.ltl	no	0.066461	unsupported_or_failed	no	0.068230	unsupported_or_failed
+lilydemo18.ltl	no	0.066405	unsupported_or_failed	no	0.068763	unsupported_or_failed
+lilydemo19.ltl	yes	0.064778		yes	0.068523	
+lilydemo20.ltl	yes	0.069403		yes	0.071419	
+lilydemo21.ltl	yes	0.070268		yes	0.073147	
+lilydemo22.ltl	yes	0.066204		yes	0.073471	
+lilydemo23.ltl	yes	0.065678		yes	0.065063	
+load_balancer_pb_10_pe_.ltl	yes	0.082208		yes	0.087487	
+load_balancer_pb_11_pe_.ltl	yes	0.088126		yes	0.084170	
+load_balancer_pb_2_pe_.ltl	yes	0.073437		yes	0.067616	
+load_balancer_pb_3_pe_.ltl	yes	0.073462		yes	0.071167	
+load_balancer_pb_4_pe_.ltl	yes	0.071986		yes	0.076262	
+load_balancer_pb_5_pe_.ltl	yes	0.077549		yes	0.071104	
+load_balancer_pb_6_pe_.ltl	yes	0.073398		yes	0.071237	
+load_balancer_pb_7_pe_.ltl	yes	0.074220		yes	0.075697	
+load_balancer_pb_8_pe_.ltl	yes	0.079564		yes	0.081531	
+load_balancer_pb_9_pe_.ltl	yes	0.078569		yes	0.080568	
+load_balancer_unreal1_pb_2_10_pe_.ltl	no	0.861005	budget_exhausted	no	1.010282	budget_exhausted
+load_balancer_unreal1_pb_2_11_pe_.ltl	no	0.861132	budget_exhausted	no	1.013276	budget_exhausted
+load_balancer_unreal1_pb_2_12_pe_.ltl	no	0.859540	budget_exhausted	no	1.010939	budget_exhausted
+load_balancer_unreal1_pb_2_13_pe_.ltl	no	0.859273	budget_exhausted	no	1.009427	budget_exhausted
+load_balancer_unreal1_pb_2_14_pe_.ltl	no	0.857739	budget_exhausted	no	1.008507	budget_exhausted
+load_balancer_unreal1_pb_2_15_pe_.ltl	no	0.858074	budget_exhausted	no	1.008524	budget_exhausted
+load_balancer_unreal1_pb_2_16_pe_.ltl	no	0.855517	budget_exhausted	no	1.006202	budget_exhausted
+load_balancer_unreal1_pb_2_1_pe_.ltl	yes	0.065605		yes	0.068985	
+load_balancer_unreal1_pb_2_2_pe_.ltl	yes	0.068124		yes	0.070597	
+load_balancer_unreal1_pb_2_3_pe_.ltl	yes	0.069456		yes	0.071463	
+load_balancer_unreal1_pb_2_4_pe_.ltl	yes	0.070457		yes	0.070367	
+load_balancer_unreal1_pb_2_5_pe_.ltl	yes	0.071336		yes	0.069848	
+load_balancer_unreal1_pb_2_6_pe_.ltl	yes	0.076748		yes	0.080763	
+load_balancer_unreal1_pb_2_7_pe_.ltl	yes	0.092694		yes	0.094132	
+load_balancer_unreal1_pb_2_8_pe_.ltl	yes	0.148533		yes	0.201405	
+load_balancer_unreal1_pb_2_9_pe_.ltl	yes	0.382307		yes	0.383752	
+load_balancer_unreal1_pb_3_10_pe_.ltl	no	0.859888	budget_exhausted	no	1.011844	budget_exhausted
+load_balancer_unreal1_pb_3_11_pe_.ltl	no	0.864394	budget_exhausted	no	1.014990	budget_exhausted
+load_balancer_unreal1_pb_3_12_pe_.ltl	no	0.859971	budget_exhausted	no	1.051071	budget_exhausted
+load_balancer_unreal1_pb_3_1_pe_.ltl	yes	0.132902		yes	0.195954	
+load_balancer_unreal1_pb_3_2_pe_.ltl	yes	0.074630		yes	0.091822	
+load_balancer_unreal1_pb_3_3_pe_.ltl	yes	0.072929		yes	0.072862	
+load_balancer_unreal1_pb_3_4_pe_.ltl	yes	0.072276		yes	0.073050	
+load_balancer_unreal1_pb_3_5_pe_.ltl	yes	0.082348		yes	0.083268	
+load_balancer_unreal1_pb_3_6_pe_.ltl	yes	0.101638		yes	0.102325	
+load_balancer_unreal1_pb_3_7_pe_.ltl	yes	0.149562		yes	0.149541	
+load_balancer_unreal1_pb_3_8_pe_.ltl	yes	0.327048		yes	0.340924	
+load_balancer_unreal1_pb_3_9_pe_.ltl	no	0.857336	budget_exhausted	no	1.004864	budget_exhausted
+load_balancer_unreal1_pb_4_10_pe_.ltl	no	0.859810	budget_exhausted	no	1.011920	budget_exhausted
+load_balancer_unreal1_pb_4_11_pe_.ltl	no	0.863165	budget_exhausted	no	1.015267	budget_exhausted
+load_balancer_unreal1_pb_4_12_pe_.ltl	no	0.860233	budget_exhausted	no	1.011637	budget_exhausted
+load_balancer_unreal1_pb_4_1_pe_.ltl	yes	0.070384		yes	0.071496	
+load_balancer_unreal1_pb_4_2_pe_.ltl	yes	0.075512		yes	0.075123	
+load_balancer_unreal1_pb_4_3_pe_.ltl	yes	0.078837		yes	0.076434	
+load_balancer_unreal1_pb_4_4_pe_.ltl	yes	0.081656		yes	0.080015	
+load_balancer_unreal1_pb_4_5_pe_.ltl	yes	0.095599		yes	0.094074	
+load_balancer_unreal1_pb_4_6_pe_.ltl	yes	0.129747		yes	0.129525	
+load_balancer_unreal1_pb_4_7_pe_.ltl	yes	0.233862		yes	0.221758	
+load_balancer_unreal1_pb_4_8_pe_.ltl	yes	0.565553		yes	0.605125	
+load_balancer_unreal1_pb_4_9_pe_.ltl	no	0.857096	budget_exhausted	no	1.005730	budget_exhausted
+load_balancer_unreal1_pb_5_2_pe_.ltl	yes	0.082833		yes	0.079176	
+load_balancer_unreal1_pb_5_3_pe_.ltl	yes	0.084258		yes	0.081414	
+load_balancer_unreal1_pb_5_4_pe_.ltl	yes	0.089828		yes	0.095305	
+load_balancer_unreal1_pb_5_5_pe_.ltl	yes	0.113674		yes	0.108677	
+load_balancer_unreal1_pb_5_6_pe_.ltl	yes	0.169639		yes	0.172017	
+load_balancer_unreal1_pb_5_7_pe_.ltl	yes	0.401150		yes	0.328905	
+load_balancer_unreal1_pb_6_1_pe_.ltl	yes	0.077756		yes	0.078791	
+load_balancer_unreal1_pb_6_2_pe_.ltl	yes	0.083364		yes	0.084586	
+load_balancer_unreal1_pb_6_3_pe_.ltl	yes	0.094291		yes	0.086504	
+load_balancer_unreal1_pb_6_4_pe_.ltl	yes	0.104505		yes	0.110540	
+load_balancer_unreal1_pb_6_5_pe_.ltl	yes	0.134344		yes	0.138051	
+load_balancer_unreal2_pb_2_pe_.ltl	yes	0.069553		yes	0.065911	
+load_balancer_unreal2_pb_3_pe_.ltl	yes	0.073173		yes	0.069550	
+load_balancer_unreal2_pb_4_pe_.ltl	yes	0.075585		yes	0.076392	
+load_balancer_unreal2_pb_5_pe_.ltl	yes	0.077556		yes	0.080077	
+load_balancer_unreal2_pb_6_pe_.ltl	yes	0.085585		yes	0.083955	
+load_balancer_unreal2_pb_7_pe_.ltl	yes	0.093944		yes	0.094556	
+load_balancer_unreal2_pb_8_pe_.ltl	yes	0.102801		yes	0.100240	
+ltl2dba01.ltl	no	0.065787	unsupported_or_failed	no	0.060608	unsupported_or_failed
+ltl2dba02.ltl	no	0.067800	unsupported_or_failed	no	0.068345	unsupported_or_failed
+ltl2dba03.ltl	no	0.062150	unsupported_or_failed	no	0.063590	unsupported_or_failed
+ltl2dba04.ltl	no	0.064084	unsupported_or_failed	no	0.066159	unsupported_or_failed
+ltl2dba05.ltl	no	0.062314	unsupported_or_failed	no	0.063027	unsupported_or_failed
+ltl2dba06.ltl	no	0.065228	unsupported_or_failed	no	0.065596	unsupported_or_failed
+ltl2dba07.ltl	no	0.106898	unsupported_or_failed	no	0.112936	unsupported_or_failed
+ltl2dba08.ltl	no	0.858886	budget_exhausted	no	0.950444	unsupported_or_failed
+ltl2dba09.ltl	no	0.064284	unsupported_or_failed	no	0.066772	unsupported_or_failed
+ltl2dba10.ltl	no	0.061949	unsupported_or_failed	no	0.063508	unsupported_or_failed
+ltl2dba11.ltl	no	0.061207	unsupported_or_failed	no	0.060580	unsupported_or_failed
+ltl2dba12.ltl	no	0.062290	unsupported_or_failed	no	0.061725	unsupported_or_failed
+ltl2dba13.ltl	no	0.064705	unsupported_or_failed	no	0.065983	unsupported_or_failed
+ltl2dba14.ltl	no	0.062132	unsupported_or_failed	no	0.063896	unsupported_or_failed
+ltl2dba15.ltl	no	0.063282	unsupported_or_failed	no	0.062172	unsupported_or_failed
+ltl2dba16.ltl	no	0.062968	unsupported_or_failed	no	0.064380	unsupported_or_failed
+ltl2dba17.ltl	no	0.068248	unsupported_or_failed	no	0.067243	unsupported_or_failed
+ltl2dba18.ltl	no	0.065123	unsupported_or_failed	no	0.064024	unsupported_or_failed
+ltl2dba19.ltl	no	0.060927	unsupported_or_failed	no	0.060577	unsupported_or_failed
+ltl2dba20.ltl	no	0.066303	unsupported_or_failed	no	0.066086	unsupported_or_failed
+ltl2dba21.ltl	no	0.105698	unsupported_or_failed	no	0.108520	unsupported_or_failed
+ltl2dba22.ltl	no	0.061816	unsupported_or_failed	no	0.059542	unsupported_or_failed
+ltl2dba23.ltl	no	0.061706	unsupported_or_failed	no	0.060733	unsupported_or_failed
+ltl2dba25.ltl	no	0.064944	unsupported_or_failed	no	0.066663	unsupported_or_failed
+ltl2dba26.ltl	no	0.066272	unsupported_or_failed	no	0.069734	unsupported_or_failed
+ltl2dba27.ltl	no	0.065289	unsupported_or_failed	no	0.065378	unsupported_or_failed
+ltl2dba_C2_pb_100_pe_.ltl	no	0.065929	unsupported_or_failed	no	0.067842	unsupported_or_failed
+ltl2dba_C2_pb_10_pe_.ltl	no	0.853599	budget_exhausted	no	1.003249	budget_exhausted
+ltl2dba_C2_pb_12_pe_.ltl	no	0.853558	budget_exhausted	no	1.003407	budget_exhausted
+ltl2dba_C2_pb_14_pe_.ltl	no	0.853194	budget_exhausted	no	1.002951	budget_exhausted
+ltl2dba_C2_pb_16_pe_.ltl	no	0.853396	budget_exhausted	no	1.004053	budget_exhausted
+ltl2dba_C2_pb_1_pe_.ltl	no	0.065843	unsupported_or_failed	no	0.066114	unsupported_or_failed
+ltl2dba_C2_pb_25_pe_.ltl	no	0.855519	budget_exhausted	no	1.005597	budget_exhausted
+ltl2dba_C2_pb_2_pe_.ltl	no	0.065198	unsupported_or_failed	no	0.124437	unsupported_or_failed
+ltl2dba_C2_pb_3_pe_.ltl	no	0.082568	unsupported_or_failed	no	0.077421	unsupported_or_failed
+ltl2dba_C2_pb_4_pe_.ltl	no	0.152497	unsupported_or_failed	no	0.161640	unsupported_or_failed
+ltl2dba_C2_pb_50_pe_.ltl	no	0.064512	unsupported_or_failed	no	0.067293	unsupported_or_failed
+ltl2dba_C2_pb_5_pe_.ltl	no	0.862536	budget_exhausted	no	0.873582	unsupported_or_failed
+ltl2dba_C2_pb_60_pe_.ltl	no	0.068118	unsupported_or_failed	no	0.067583	unsupported_or_failed
+ltl2dba_C2_pb_6_pe_.ltl	no	0.863397	budget_exhausted	no	1.016267	budget_exhausted
+ltl2dba_C2_pb_70_pe_.ltl	no	0.065319	unsupported_or_failed	no	0.066541	unsupported_or_failed
+ltl2dba_C2_pb_7_pe_.ltl	no	0.854953	budget_exhausted	no	1.008081	budget_exhausted
+ltl2dba_C2_pb_80_pe_.ltl	no	0.069253	unsupported_or_failed	no	0.063224	unsupported_or_failed
+ltl2dba_C2_pb_8_pe_.ltl	no	0.853790	budget_exhausted	no	1.004152	budget_exhausted
+ltl2dba_C2_pb_9_pe_.ltl	no	0.855345	budget_exhausted	no	1.005315	budget_exhausted
+ltl2dba_C2_unreal_pb_100_pe_.ltl	no	0.110663	unsupported_or_failed	no	0.111414	unsupported_or_failed
+ltl2dba_C2_unreal_pb_10_pe_.ltl	no	0.852830	budget_exhausted	no	1.004155	budget_exhausted
+ltl2dba_C2_unreal_pb_11_pe_.ltl	no	0.853917	budget_exhausted	no	1.004540	budget_exhausted
+ltl2dba_C2_unreal_pb_12_pe_.ltl	no	0.854131	budget_exhausted	no	1.003571	budget_exhausted
+ltl2dba_C2_unreal_pb_13_pe_.ltl	no	0.853513	budget_exhausted	no	1.004822	budget_exhausted
+ltl2dba_C2_unreal_pb_14_pe_.ltl	no	0.853846	budget_exhausted	no	1.003597	budget_exhausted
+ltl2dba_C2_unreal_pb_15_pe_.ltl	no	0.853672	budget_exhausted	no	1.004267	budget_exhausted
+ltl2dba_C2_unreal_pb_16_pe_.ltl	no	0.853921	budget_exhausted	no	1.004348	budget_exhausted
+ltl2dba_C2_unreal_pb_25_pe_.ltl	no	0.855330	budget_exhausted	no	1.006150	budget_exhausted
+ltl2dba_C2_unreal_pb_2_pe_.ltl	no	0.069458	unsupported_or_failed	no	0.065274	unsupported_or_failed
+ltl2dba_C2_unreal_pb_3_pe_.ltl	no	0.081301	unsupported_or_failed	no	0.082437	unsupported_or_failed
+ltl2dba_C2_unreal_pb_4_pe_.ltl	no	0.164795	unsupported_or_failed	no	0.154810	unsupported_or_failed
+ltl2dba_C2_unreal_pb_50_pe_.ltl	no	0.082912	unsupported_or_failed	no	0.123195	unsupported_or_failed
+ltl2dba_C2_unreal_pb_5_pe_.ltl	no	0.862298	budget_exhausted	no	0.921599	unsupported_or_failed
+ltl2dba_C2_unreal_pb_60_pe_.ltl	no	0.085539	unsupported_or_failed	no	0.081425	unsupported_or_failed
+ltl2dba_C2_unreal_pb_6_pe_.ltl	no	0.859558	budget_exhausted	no	1.011822	budget_exhausted
+ltl2dba_C2_unreal_pb_70_pe_.ltl	no	0.090747	unsupported_or_failed	no	0.090163	unsupported_or_failed
+ltl2dba_C2_unreal_pb_7_pe_.ltl	no	0.855051	budget_exhausted	no	1.006518	budget_exhausted
+ltl2dba_C2_unreal_pb_80_pe_.ltl	no	0.095709	unsupported_or_failed	no	0.099450	unsupported_or_failed
+ltl2dba_C2_unreal_pb_8_pe_.ltl	no	0.854034	budget_exhausted	no	1.004174	budget_exhausted
+ltl2dba_C2_unreal_pb_9_pe_.ltl	no	0.854873	budget_exhausted	no	1.005566	budget_exhausted
+ltl2dba_E_pb_10_pe_.ltl	no	0.865640	budget_exhausted	no	1.018704	budget_exhausted
+ltl2dba_E_pb_12_pe_.ltl	no	0.854644	budget_exhausted	no	1.004265	budget_exhausted
+ltl2dba_E_pb_14_pe_.ltl	no	0.853565	budget_exhausted	no	1.004414	budget_exhausted
+ltl2dba_E_pb_15_pe_.ltl	no	0.854353	budget_exhausted	no	1.005942	budget_exhausted
+ltl2dba_E_pb_16_pe_.ltl	no	0.855828	budget_exhausted	no	1.005048	budget_exhausted
+ltl2dba_E_pb_1_pe_.ltl	no	0.063357	unsupported_or_failed	no	0.060595	unsupported_or_failed
+ltl2dba_E_pb_2_pe_.ltl	no	0.071910	unsupported_or_failed	no	0.066922	unsupported_or_failed
+ltl2dba_E_pb_3_pe_.ltl	no	0.075732	unsupported_or_failed	no	0.065469	unsupported_or_failed
+ltl2dba_E_pb_4_pe_.ltl	no	0.080798	unsupported_or_failed	no	0.084134	unsupported_or_failed
+ltl2dba_E_pb_5_pe_.ltl	no	0.143892	unsupported_or_failed	no	0.145207	unsupported_or_failed
+ltl2dba_E_pb_6_pe_.ltl	no	0.533160	unsupported_or_failed	no	0.527375	unsupported_or_failed
+ltl2dba_E_pb_7_pe_.ltl	no	0.860241	budget_exhausted	no	1.010011	budget_exhausted
+ltl2dba_E_pb_8_pe_.ltl	no	0.857786	budget_exhausted	no	1.005925	budget_exhausted
+ltl2dba_E_pb_9_pe_.ltl	no	0.857541	budget_exhausted	no	1.006324	budget_exhausted
+ltl2dba_Q_pb_100_pe_.ltl	no	0.064424	unsupported_or_failed	no	0.066983	unsupported_or_failed
+ltl2dba_Q_pb_10_pe_.ltl	no	0.895101	budget_exhausted	no	1.040177	budget_exhausted
+ltl2dba_Q_pb_12_pe_.ltl	no	0.854964	budget_exhausted	no	1.003787	budget_exhausted
+ltl2dba_Q_pb_15_pe_.ltl	no	0.854312	budget_exhausted	no	1.004653	budget_exhausted
+ltl2dba_Q_pb_18_pe_.ltl	no	0.855896	budget_exhausted	no	1.008220	budget_exhausted
+ltl2dba_Q_pb_1_pe_.ltl	no	0.067313	unsupported_or_failed	no	0.064566	unsupported_or_failed
+ltl2dba_Q_pb_25_pe_.ltl	no	0.855065	budget_exhausted	no	1.006673	budget_exhausted
+ltl2dba_Q_pb_2_pe_.ltl	no	0.065683	unsupported_or_failed	no	0.063175	unsupported_or_failed
+ltl2dba_Q_pb_3_pe_.ltl	no	0.076185	unsupported_or_failed	no	0.072280	unsupported_or_failed
+ltl2dba_Q_pb_4_pe_.ltl	no	0.116026	unsupported_or_failed	no	0.123582	unsupported_or_failed
+ltl2dba_Q_pb_50_pe_.ltl	no	0.065201	unsupported_or_failed	no	0.066569	unsupported_or_failed
+ltl2dba_Q_pb_5_pe_.ltl	no	0.601655	unsupported_or_failed	no	0.577755	unsupported_or_failed
+ltl2dba_Q_pb_6_pe_.ltl	no	0.859893	budget_exhausted	no	1.009634	budget_exhausted
+ltl2dba_Q_pb_7_pe_.ltl	no	0.856763	budget_exhausted	no	1.006979	budget_exhausted
+ltl2dba_Q_pb_8_pe_.ltl	no	0.864615	budget_exhausted	no	1.010285	budget_exhausted
+ltl2dba_R_pb_10_pe_.ltl	no	0.853722	budget_exhausted	no	1.003245	budget_exhausted
+ltl2dba_R_pb_11_pe_.ltl	no	0.854117	budget_exhausted	no	1.003437	budget_exhausted
+ltl2dba_R_pb_12_pe_.ltl	no	0.853364	budget_exhausted	no	1.003549	budget_exhausted
+ltl2dba_R_pb_14_pe_.ltl	no	0.853425	budget_exhausted	no	1.003796	budget_exhausted
+ltl2dba_R_pb_1_pe_.ltl	no	0.062889	unsupported_or_failed	no	0.064088	unsupported_or_failed
+ltl2dba_R_pb_2_pe_.ltl	no	0.079110	unsupported_or_failed	no	0.072588	unsupported_or_failed
+ltl2dba_R_pb_3_pe_.ltl	no	0.706559	unsupported_or_failed	no	0.718107	unsupported_or_failed
+ltl2dba_R_pb_4_pe_.ltl	no	0.859963	budget_exhausted	no	1.010956	budget_exhausted
+ltl2dba_R_pb_5_pe_.ltl	no	0.853904	budget_exhausted	no	1.004088	budget_exhausted
+ltl2dba_R_pb_6_pe_.ltl	no	0.853352	budget_exhausted	no	1.003487	budget_exhausted
+ltl2dba_R_pb_7_pe_.ltl	no	0.854299	budget_exhausted	no	1.003657	budget_exhausted
+ltl2dba_R_pb_8_pe_.ltl	no	0.853863	budget_exhausted	no	1.003561	budget_exhausted
+ltl2dba_U1_pb_100_pe_.ltl	no	0.062849	unsupported_or_failed	no	0.067945	unsupported_or_failed
+ltl2dba_U1_pb_10_pe_.ltl	no	0.854877	budget_exhausted	no	1.011484	budget_exhausted
+ltl2dba_U1_pb_12_pe_.ltl	no	0.853565	budget_exhausted	no	1.003717	budget_exhausted
+ltl2dba_U1_pb_15_pe_.ltl	no	0.853504	budget_exhausted	no	1.003375	budget_exhausted
+ltl2dba_U1_pb_18_pe_.ltl	no	0.853536	budget_exhausted	no	1.003555	budget_exhausted
+ltl2dba_U1_pb_1_pe_.ltl	no	0.063425	unsupported_or_failed	no	0.063491	unsupported_or_failed
+ltl2dba_U1_pb_25_pe_.ltl	no	0.854978	budget_exhausted	no	1.003869	budget_exhausted
+ltl2dba_U1_pb_2_pe_.ltl	no	0.063845	unsupported_or_failed	no	0.066692	unsupported_or_failed
+ltl2dba_U1_pb_3_pe_.ltl	no	0.065360	unsupported_or_failed	no	0.064956	unsupported_or_failed
+ltl2dba_U1_pb_4_pe_.ltl	no	0.072762	unsupported_or_failed	no	0.075445	unsupported_or_failed
+ltl2dba_U1_pb_50_pe_.ltl	no	0.854460	budget_exhausted	no	1.004858	budget_exhausted
+ltl2dba_U1_pb_5_pe_.ltl	no	0.116993	unsupported_or_failed	no	0.118891	unsupported_or_failed
+ltl2dba_U1_pb_6_pe_.ltl	no	0.437821	unsupported_or_failed	no	0.417356	unsupported_or_failed
+ltl2dba_U1_pb_7_pe_.ltl	no	0.857811	budget_exhausted	no	1.009469	budget_exhausted
+ltl2dba_U1_pb_8_pe_.ltl	no	0.858262	budget_exhausted	no	1.006307	budget_exhausted
+ltl2dba_U1_pb_9_pe_.ltl	no	0.855852	budget_exhausted	no	1.008305	budget_exhausted
+ltl2dba_alpha_pb_100_pe_.ltl	no	0.854619	budget_exhausted	no	1.005355	budget_exhausted
+ltl2dba_alpha_pb_10_pe_.ltl	no	0.855177	budget_exhausted	no	1.006361	budget_exhausted
+ltl2dba_alpha_pb_12_pe_.ltl	no	0.854608	budget_exhausted	no	1.005019	budget_exhausted
+ltl2dba_alpha_pb_14_pe_.ltl	no	0.854876	budget_exhausted	no	1.007207	budget_exhausted
+ltl2dba_alpha_pb_16_pe_.ltl	no	0.854423	budget_exhausted	no	1.005524	budget_exhausted
+ltl2dba_alpha_pb_17_pe_.ltl	no	0.854764	budget_exhausted	no	1.005171	budget_exhausted
+ltl2dba_alpha_pb_18_pe_.ltl	no	0.855933	budget_exhausted	no	1.005046	budget_exhausted
+ltl2dba_alpha_pb_1_pe_.ltl	no	0.065747	unsupported_or_failed	no	0.068987	unsupported_or_failed
+ltl2dba_alpha_pb_20_pe_.ltl	no	0.855282	budget_exhausted	no	1.005576	budget_exhausted
+ltl2dba_alpha_pb_25_pe_.ltl	no	0.855066	budget_exhausted	no	1.005129	budget_exhausted
+ltl2dba_alpha_pb_2_pe_.ltl	no	0.063912	unsupported_or_failed	no	0.067836	unsupported_or_failed
+ltl2dba_alpha_pb_3_pe_.ltl	no	0.070995	unsupported_or_failed	no	0.067907	unsupported_or_failed
+ltl2dba_alpha_pb_4_pe_.ltl	no	0.073948	unsupported_or_failed	no	0.073246	unsupported_or_failed
+ltl2dba_alpha_pb_50_pe_.ltl	no	0.854834	budget_exhausted	no	1.005619	budget_exhausted
+ltl2dba_alpha_pb_5_pe_.ltl	no	0.089424	unsupported_or_failed	no	0.084137	unsupported_or_failed
+ltl2dba_alpha_pb_6_pe_.ltl	no	0.121417	unsupported_or_failed	no	0.125977	unsupported_or_failed
+ltl2dba_alpha_pb_7_pe_.ltl	no	0.247763	unsupported_or_failed	no	0.247098	unsupported_or_failed
+ltl2dba_alpha_pb_8_pe_.ltl	no	0.662813	unsupported_or_failed	no	0.644478	unsupported_or_failed
+ltl2dba_beta_pb_100_pe_.ltl	no	0.069883	unsupported_or_failed	no	0.065238	unsupported_or_failed
+ltl2dba_beta_pb_10_pe_.ltl	no	0.853837	budget_exhausted	no	1.004269	budget_exhausted
+ltl2dba_beta_pb_15_pe_.ltl	no	0.855602	budget_exhausted	no	1.005332	budget_exhausted
+ltl2dba_beta_pb_18_pe_.ltl	no	0.856373	budget_exhausted	no	1.007507	budget_exhausted
+ltl2dba_beta_pb_1_pe_.ltl	no	0.065306	unsupported_or_failed	no	0.065841	unsupported_or_failed
+ltl2dba_beta_pb_20_pe_.ltl	no	0.855653	budget_exhausted	no	1.007943	budget_exhausted
+ltl2dba_beta_pb_25_pe_.ltl	no	0.858085	budget_exhausted	no	1.012614	budget_exhausted
+ltl2dba_beta_pb_2_pe_.ltl	no	0.105930	unsupported_or_failed	no	0.117011	unsupported_or_failed
+ltl2dba_beta_pb_30_pe_.ltl	no	0.857215	budget_exhausted	no	1.007774	budget_exhausted
+ltl2dba_beta_pb_3_pe_.ltl	no	0.747689	unsupported_or_failed	no	0.738138	unsupported_or_failed
+ltl2dba_beta_pb_4_pe_.ltl	no	0.860759	budget_exhausted	no	1.012361	budget_exhausted
+ltl2dba_beta_pb_5_pe_.ltl	no	0.855574	budget_exhausted	no	1.005749	budget_exhausted
+ltl2dba_beta_pb_6_pe_.ltl	no	0.853626	budget_exhausted	no	1.004825	budget_exhausted
+ltl2dba_beta_pb_7_pe_.ltl	no	0.853601	budget_exhausted	no	1.003387	budget_exhausted
+ltl2dba_beta_pb_8_pe_.ltl	no	0.853333	budget_exhausted	no	1.004579	budget_exhausted
+ltl2dba_theta_pb_100_pe_.ltl	no	0.063571	unsupported_or_failed	no	0.063653	unsupported_or_failed
+ltl2dba_theta_pb_10_pe_.ltl	no	0.853146	budget_exhausted	no	1.003706	budget_exhausted
+ltl2dba_theta_pb_12_pe_.ltl	no	0.856090	budget_exhausted	no	1.004177	budget_exhausted
+ltl2dba_theta_pb_14_pe_.ltl	no	0.854938	budget_exhausted	no	1.005978	budget_exhausted
+ltl2dba_theta_pb_16_pe_.ltl	no	0.856515	budget_exhausted	no	1.011292	budget_exhausted
+ltl2dba_theta_pb_1_pe_.ltl	no	0.069696	unsupported_or_failed	no	0.065121	unsupported_or_failed
+ltl2dba_theta_pb_25_pe_.ltl	no	0.855270	budget_exhausted	no	1.006747	budget_exhausted
+ltl2dba_theta_pb_2_pe_.ltl	no	0.084948	unsupported_or_failed	no	0.084310	unsupported_or_failed
+ltl2dba_theta_pb_300_pe_.ltl	no	0.072332	unsupported_or_failed	no	0.070037	unsupported_or_failed
+ltl2dba_theta_pb_3_pe_.ltl	no	0.185981	unsupported_or_failed	no	0.180477	unsupported_or_failed
+ltl2dba_theta_pb_4_pe_.ltl	no	0.858097	budget_exhausted	no	0.982264	unsupported_or_failed
+ltl2dba_theta_pb_500_pe_.ltl	no	0.068122	unsupported_or_failed	no	0.073345	unsupported_or_failed
+ltl2dba_theta_pb_50_pe_.ltl	no	0.065129	unsupported_or_failed	no	0.067727	unsupported_or_failed
+ltl2dba_theta_pb_5_pe_.ltl	no	0.859658	budget_exhausted	no	1.012511	budget_exhausted
+ltl2dba_theta_pb_6_pe_.ltl	no	0.855202	budget_exhausted	no	1.006966	budget_exhausted
+ltl2dba_theta_pb_7_pe_.ltl	no	0.855718	budget_exhausted	no	1.004641	budget_exhausted
+ltl2dba_theta_pb_8_pe_.ltl	no	0.853607	budget_exhausted	no	1.007950	budget_exhausted
+ltl2dpa01.ltl	no	0.124105	unsupported_or_failed	no	0.122262	unsupported_or_failed
+ltl2dpa02.ltl	no	0.066506	unsupported_or_failed	no	0.063310	unsupported_or_failed
+ltl2dpa03.ltl	no	0.874892	budget_exhausted	no	1.016753	budget_exhausted
+ltl2dpa04.ltl	no	0.065600	unsupported_or_failed	no	0.063451	unsupported_or_failed
+ltl2dpa05.ltl	no	0.066476	unsupported_or_failed	no	0.061759	unsupported_or_failed
+ltl2dpa06.ltl	no	0.062758	unsupported_or_failed	no	0.062828	unsupported_or_failed
+ltl2dpa07.ltl	no	0.067654	unsupported_or_failed	no	0.064387	unsupported_or_failed
+ltl2dpa08.ltl	no	0.064876	unsupported_or_failed	no	0.063807	unsupported_or_failed
+ltl2dpa09.ltl	no	0.066775	unsupported_or_failed	no	0.072930	unsupported_or_failed
+ltl2dpa10.ltl	no	0.589116	unsupported_or_failed	no	0.585879	unsupported_or_failed
+ltl2dpa11.ltl	no	0.064099	unsupported_or_failed	no	0.071163	unsupported_or_failed
+ltl2dpa12.ltl	no	0.856650	budget_exhausted	no	0.973414	unsupported_or_failed
+ltl2dpa13.ltl	no	0.866378	budget_exhausted	no	1.019675	budget_exhausted
+ltl2dpa14.ltl	no	0.136334	unsupported_or_failed	no	0.136947	unsupported_or_failed
+ltl2dpa15.ltl	no	0.070630	unsupported_or_failed	no	0.068836	unsupported_or_failed
+ltl2dpa16.ltl	no	0.064159	unsupported_or_failed	no	0.064248	unsupported_or_failed
+ltl2dpa17.ltl	no	0.072883	unsupported_or_failed	no	0.070430	unsupported_or_failed
+ltl2dpa18.ltl	no	0.076619	unsupported_or_failed	no	0.079800	unsupported_or_failed
+ltl2dpa19.ltl	no	0.863406	budget_exhausted	no	1.022118	budget_exhausted
+ltl2dpa20.ltl	no	0.078735	unsupported_or_failed	no	0.081621	unsupported_or_failed
+ltl2dpa22.ltl	no	0.856989	budget_exhausted	no	1.008968	budget_exhausted
+ltl2dpa23.ltl	no	0.065157	unsupported_or_failed	no	0.070565	unsupported_or_failed
+ltl2dpa24.ltl	no	0.071599	unsupported_or_failed	no	0.070068	unsupported_or_failed
+mux_pb_100_pe_.ltl	yes	0.150233		yes	0.149960	
+mux_pb_10_pe_.ltl	yes	0.069346		yes	0.072666	
+mux_pb_125_pe_.ltl	yes	0.166503		yes	0.170891	
+mux_pb_12_pe_.ltl	yes	0.071668		yes	0.071642	
+mux_pb_132_pe_.ltl	yes	0.220973		yes	0.220723	
+mux_pb_150_pe_.ltl	yes	0.238429		yes	0.241412	
+mux_pb_16_pe_.ltl	yes	0.079611		yes	0.074112	
+mux_pb_175_pe_.ltl	yes	0.266006		yes	0.260068	
+mux_pb_200_pe_.ltl	yes	0.310244		yes	0.305668	
+mux_pb_32_pe_.ltl	yes	0.088774		yes	0.082771	
+mux_pb_64_pe_.ltl	yes	0.114753		yes	0.116113	
+mux_pb_8_pe_.ltl	yes	0.070504		yes	0.088699	
+narylatch_pb_10_pe_.ltl	no	0.856664	budget_exhausted	no	1.007125	budget_exhausted
+narylatch_pb_11_pe_.ltl	no	0.857119	budget_exhausted	no	1.007784	budget_exhausted
+narylatch_pb_12_pe_.ltl	no	0.858870	budget_exhausted	no	1.008893	budget_exhausted
+narylatch_pb_16_pe_.ltl	no	0.858615	budget_exhausted	no	1.008653	budget_exhausted
+narylatch_pb_32_pe_.ltl	no	0.856401	budget_exhausted	no	1.008863	budget_exhausted
+narylatch_pb_64_pe_.ltl	no	0.857313	budget_exhausted	no	1.007983	budget_exhausted
+narylatch_pb_8_pe_.ltl	no	0.853482	budget_exhausted	no	1.003715	budget_exhausted
+ordered-visits-choice-real.ltl	no	0.066648	unsupported_or_failed	no	0.065342	unsupported_or_failed
+ordered-visits-real.ltl	no	0.064677	unsupported_or_failed	no	0.070551	unsupported_or_failed
+package-delivery-real.ltl	no	0.117105	unsupported_or_failed	no	0.117691	unsupported_or_failed
+patrolling-alarm0.ltl	no	0.076680	unsupported_or_failed	no	0.065540	unsupported_or_failed
+patrolling-alarm1.ltl	no	0.069862	unsupported_or_failed	no	0.065576	unsupported_or_failed
+patrolling-alarm10.ltl	no	0.073298	unsupported_or_failed	no	0.077301	unsupported_or_failed
+patrolling-alarm11.ltl	no	0.075991	unsupported_or_failed	no	0.082955	unsupported_or_failed
+patrolling-alarm12.ltl	no	0.076569	unsupported_or_failed	no	0.077374	unsupported_or_failed
+patrolling-alarm13.ltl	no	0.077302	unsupported_or_failed	no	0.077118	unsupported_or_failed
+patrolling-alarm14.ltl	no	0.081078	unsupported_or_failed	no	0.075972	unsupported_or_failed
+patrolling-alarm15.ltl	no	0.081217	unsupported_or_failed	no	0.083734	unsupported_or_failed
+patrolling-alarm16.ltl	no	0.092299	unsupported_or_failed	no	0.081352	unsupported_or_failed
+patrolling-alarm17.ltl	no	0.082650	unsupported_or_failed	no	0.084772	unsupported_or_failed
+patrolling-alarm18.ltl	no	0.084329	unsupported_or_failed	no	0.084670	unsupported_or_failed
+patrolling-alarm19.ltl	no	0.089274	unsupported_or_failed	no	0.081598	unsupported_or_failed
+patrolling-alarm2.ltl	no	0.066469	unsupported_or_failed	no	0.070361	unsupported_or_failed
+patrolling-alarm20.ltl	no	0.084450	unsupported_or_failed	no	0.082787	unsupported_or_failed
+patrolling-alarm21.ltl	no	0.087545	unsupported_or_failed	no	0.086539	unsupported_or_failed
+patrolling-alarm22.ltl	no	0.084235	unsupported_or_failed	no	0.086756	unsupported_or_failed
+patrolling-alarm23.ltl	no	0.089630	unsupported_or_failed	no	0.088108	unsupported_or_failed
+patrolling-alarm24.ltl	no	0.087722	unsupported_or_failed	no	0.086805	unsupported_or_failed
+patrolling-alarm25.ltl	no	0.087269	unsupported_or_failed	no	0.088373	unsupported_or_failed
+patrolling-alarm26.ltl	no	0.092470	unsupported_or_failed	no	0.085671	unsupported_or_failed
+patrolling-alarm3.ltl	no	0.069045	unsupported_or_failed	no	0.071200	unsupported_or_failed
+patrolling-alarm4.ltl	no	0.069179	unsupported_or_failed	no	0.070836	unsupported_or_failed
+patrolling-alarm5.ltl	no	0.072191	unsupported_or_failed	no	0.074831	unsupported_or_failed
+patrolling-alarm6.ltl	no	0.073320	unsupported_or_failed	no	0.072339	unsupported_or_failed
+patrolling-alarm7.ltl	no	0.078045	unsupported_or_failed	no	0.073777	unsupported_or_failed
+patrolling-alarm8.ltl	no	0.075651	unsupported_or_failed	no	0.074701	unsupported_or_failed
+patrolling-alarm9.ltl	no	0.077057	unsupported_or_failed	no	0.071843	unsupported_or_failed
+patrolling0.ltl	no	0.068788	unsupported_or_failed	no	0.066579	unsupported_or_failed
+patrolling1.ltl	no	0.070559	unsupported_or_failed	no	0.067202	unsupported_or_failed
+patrolling10.ltl	no	0.077222	unsupported_or_failed	no	0.075621	unsupported_or_failed
+patrolling11.ltl	no	0.075576	unsupported_or_failed	no	0.074140	unsupported_or_failed
+patrolling12.ltl	no	0.076644	unsupported_or_failed	no	0.080488	unsupported_or_failed
+patrolling13.ltl	no	0.079314	unsupported_or_failed	no	0.079402	unsupported_or_failed
+patrolling14.ltl	no	0.081473	unsupported_or_failed	no	0.081002	unsupported_or_failed
+patrolling15.ltl	no	0.082133	unsupported_or_failed	no	0.077479	unsupported_or_failed
+patrolling16.ltl	no	0.085054	unsupported_or_failed	no	0.082644	unsupported_or_failed
+patrolling17.ltl	no	0.082747	unsupported_or_failed	no	0.088439	unsupported_or_failed
+patrolling18.ltl	no	0.082017	unsupported_or_failed	no	0.080922	unsupported_or_failed
+patrolling19.ltl	no	0.084823	unsupported_or_failed	no	0.085906	unsupported_or_failed
+patrolling2.ltl	no	0.068257	unsupported_or_failed	no	0.067779	unsupported_or_failed
+patrolling20.ltl	no	0.086816	unsupported_or_failed	no	0.084024	unsupported_or_failed
+patrolling21.ltl	no	0.083730	unsupported_or_failed	no	0.090086	unsupported_or_failed
+patrolling22.ltl	no	0.084611	unsupported_or_failed	no	0.088077	unsupported_or_failed
+patrolling23.ltl	no	0.092760	unsupported_or_failed	no	0.085790	unsupported_or_failed
+patrolling24.ltl	no	0.086151	unsupported_or_failed	no	0.093875	unsupported_or_failed
+patrolling25.ltl	no	0.087734	unsupported_or_failed	no	0.086459	unsupported_or_failed
+patrolling3.ltl	no	0.073759	unsupported_or_failed	no	0.069794	unsupported_or_failed
+patrolling4.ltl	no	0.069880	unsupported_or_failed	no	0.074131	unsupported_or_failed
+patrolling5.ltl	no	0.069728	unsupported_or_failed	no	0.069185	unsupported_or_failed
+patrolling6.ltl	no	0.077230	unsupported_or_failed	no	0.071256	unsupported_or_failed
+patrolling7.ltl	no	0.076864	unsupported_or_failed	no	0.072165	unsupported_or_failed
+patrolling8.ltl	no	0.071580	unsupported_or_failed	no	0.072392	unsupported_or_failed
+patrolling9.ltl	no	0.071915	unsupported_or_failed	no	0.073230	unsupported_or_failed
+precise-reachability-real.ltl	no	0.066515	unsupported_or_failed	no	0.065152	unsupported_or_failed
+precise-reachability0.ltl	no	0.065399	unsupported_or_failed	no	0.064859	unsupported_or_failed
+prioritized_arbiter_enc_pb_10_pe_.ltl	yes	0.089954		yes	0.088491	
+prioritized_arbiter_enc_pb_12_pe_.ltl	yes	0.091576		yes	0.088746	
+prioritized_arbiter_enc_pb_13_pe_.ltl	yes	0.094672		yes	0.089765	
+prioritized_arbiter_enc_pb_14_pe_.ltl	yes	0.092480		yes	0.096620	
+prioritized_arbiter_enc_pb_15_pe_.ltl	yes	0.091031		yes	0.094408	
+prioritized_arbiter_enc_pb_8_pe_.ltl	yes	0.079691		yes	0.075994	
+prioritized_arbiter_pb_10_pe_.ltl	yes	0.077246		yes	0.079387	
+prioritized_arbiter_pb_12_pe_.ltl	yes	0.080855		yes	0.084661	
+prioritized_arbiter_pb_1_pe_.ltl	yes	0.067356		yes	0.065738	
+prioritized_arbiter_pb_2_pe_.ltl	yes	0.067150		yes	0.069988	
+prioritized_arbiter_pb_3_pe_.ltl	yes	0.071427		yes	0.068610	
+prioritized_arbiter_pb_4_pe_.ltl	yes	0.068984		yes	0.069090	
+prioritized_arbiter_pb_5_pe_.ltl	yes	0.071394		yes	0.068852	
+prioritized_arbiter_pb_6_pe_.ltl	yes	0.070772		yes	0.071291	
+prioritized_arbiter_pb_7_pe_.ltl	yes	0.075058		yes	0.073235	
+prioritized_arbiter_pb_8_pe_.ltl	yes	0.072471		yes	0.072783	
+prioritized_arbiter_pb_9_pe_.ltl	yes	0.079198		yes	0.074136	
+prioritized_arbiter_unreal1_pb_2_10_pe_.ltl	no	0.859074	budget_exhausted	no	1.010631	budget_exhausted
+prioritized_arbiter_unreal1_pb_2_11_pe_.ltl	no	0.862141	budget_exhausted	no	1.016092	budget_exhausted
+prioritized_arbiter_unreal1_pb_2_12_pe_.ltl	no	0.858996	budget_exhausted	no	1.010636	budget_exhausted
+prioritized_arbiter_unreal1_pb_2_13_pe_.ltl	no	0.859082	budget_exhausted	no	1.008547	budget_exhausted
+prioritized_arbiter_unreal1_pb_2_14_pe_.ltl	no	0.856333	budget_exhausted	no	1.009379	budget_exhausted
+prioritized_arbiter_unreal1_pb_2_15_pe_.ltl	no	0.856117	budget_exhausted	no	1.008706	budget_exhausted
+prioritized_arbiter_unreal1_pb_2_16_pe_.ltl	no	0.857678	budget_exhausted	no	1.005842	budget_exhausted
+prioritized_arbiter_unreal1_pb_2_1_pe_.ltl	yes	0.071517		yes	0.069240	
+prioritized_arbiter_unreal1_pb_2_2_pe_.ltl	yes	0.068584		yes	0.074837	
+prioritized_arbiter_unreal1_pb_2_3_pe_.ltl	yes	0.068213		yes	0.067722	
+prioritized_arbiter_unreal1_pb_2_4_pe_.ltl	yes	0.071389		yes	0.071780	
+prioritized_arbiter_unreal1_pb_2_5_pe_.ltl	yes	0.071098		yes	0.073028	
+prioritized_arbiter_unreal1_pb_2_6_pe_.ltl	yes	0.076677		yes	0.079224	
+prioritized_arbiter_unreal1_pb_2_7_pe_.ltl	yes	0.096558		yes	0.095999	
+prioritized_arbiter_unreal1_pb_2_8_pe_.ltl	yes	0.158475		yes	0.151866	
+prioritized_arbiter_unreal1_pb_2_9_pe_.ltl	yes	0.384571		yes	0.385591	
+prioritized_arbiter_unreal1_pb_3_10_pe_.ltl	no	0.859074	budget_exhausted	no	1.010901	budget_exhausted
+prioritized_arbiter_unreal1_pb_3_11_pe_.ltl	no	0.862694	budget_exhausted	no	1.013909	budget_exhausted
+prioritized_arbiter_unreal1_pb_3_12_pe_.ltl	no	0.859202	budget_exhausted	no	1.011084	budget_exhausted
+prioritized_arbiter_unreal1_pb_3_13_pe_.ltl	no	0.858826	budget_exhausted	no	1.008199	budget_exhausted
+prioritized_arbiter_unreal1_pb_3_14_pe_.ltl	no	0.856788	budget_exhausted	no	1.007725	budget_exhausted
+prioritized_arbiter_unreal1_pb_3_15_pe_.ltl	no	0.856959	budget_exhausted	no	1.007817	budget_exhausted
+prioritized_arbiter_unreal1_pb_3_16_pe_.ltl	no	0.855648	budget_exhausted	no	1.008661	budget_exhausted
+prioritized_arbiter_unreal1_pb_3_1_pe_.ltl	yes	0.067781		yes	0.069592	
+prioritized_arbiter_unreal1_pb_3_2_pe_.ltl	yes	0.071646		yes	0.071213	
+prioritized_arbiter_unreal1_pb_3_3_pe_.ltl	yes	0.075434		yes	0.070174	
+prioritized_arbiter_unreal1_pb_3_4_pe_.ltl	yes	0.075562		yes	0.071877	
+prioritized_arbiter_unreal1_pb_3_5_pe_.ltl	yes	0.085986		yes	0.082061	
+prioritized_arbiter_unreal1_pb_3_6_pe_.ltl	yes	0.097628		yes	0.102628	
+prioritized_arbiter_unreal1_pb_3_7_pe_.ltl	yes	0.151754		yes	0.152393	
+prioritized_arbiter_unreal1_pb_3_8_pe_.ltl	yes	0.310878		yes	0.320145	
+prioritized_arbiter_unreal1_pb_3_9_pe_.ltl	no	0.854619	budget_exhausted	no	1.004984	budget_exhausted
+prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	no	0.859352	budget_exhausted	no	1.009581	budget_exhausted
+prioritized_arbiter_unreal1_pb_4_11_pe_.ltl	no	0.866842	budget_exhausted	no	1.014296	budget_exhausted
+prioritized_arbiter_unreal1_pb_4_12_pe_.ltl	no	0.859522	budget_exhausted	no	1.010852	budget_exhausted
+prioritized_arbiter_unreal1_pb_4_13_pe_.ltl	no	0.858008	budget_exhausted	no	1.008922	budget_exhausted
+prioritized_arbiter_unreal1_pb_4_14_pe_.ltl	no	0.857420	budget_exhausted	no	1.007840	budget_exhausted
+prioritized_arbiter_unreal1_pb_4_15_pe_.ltl	no	0.855896	budget_exhausted	no	1.007838	budget_exhausted
+prioritized_arbiter_unreal1_pb_4_16_pe_.ltl	no	0.855194	budget_exhausted	no	1.005843	budget_exhausted
+prioritized_arbiter_unreal1_pb_4_1_pe_.ltl	yes	0.076065		yes	0.074951	
+prioritized_arbiter_unreal1_pb_4_2_pe_.ltl	yes	0.075315		yes	0.081837	
+prioritized_arbiter_unreal1_pb_4_3_pe_.ltl	yes	0.078846		yes	0.076576	
+prioritized_arbiter_unreal1_pb_4_4_pe_.ltl	yes	0.084528		yes	0.083969	
+prioritized_arbiter_unreal1_pb_4_5_pe_.ltl	yes	0.093864		yes	0.096450	
+prioritized_arbiter_unreal1_pb_4_6_pe_.ltl	yes	0.127416		yes	0.129339	
+prioritized_arbiter_unreal1_pb_4_7_pe_.ltl	yes	0.228762		yes	0.232789	
+prioritized_arbiter_unreal1_pb_4_8_pe_.ltl	yes	0.558843		yes	0.585746	
+prioritized_arbiter_unreal1_pb_4_9_pe_.ltl	no	0.857823	budget_exhausted	no	1.011236	budget_exhausted
+prioritized_arbiter_unreal1_pb_5_16_pe_.ltl	no	0.859700	budget_exhausted	no	1.009697	budget_exhausted
+prioritized_arbiter_unreal1_pb_5_2_pe_.ltl	yes	0.085902		yes	0.082613	
+prioritized_arbiter_unreal1_pb_5_32_pe_.ltl	no	0.856194	budget_exhausted	no	1.006257	budget_exhausted
+prioritized_arbiter_unreal1_pb_5_4_pe_.ltl	yes	0.092472		yes	0.092653	
+prioritized_arbiter_unreal1_pb_6_16_pe_.ltl	no	0.857340	budget_exhausted	no	1.005867	budget_exhausted
+prioritized_arbiter_unreal1_pb_6_2_pe_.ltl	yes	0.079091		yes	0.080759	
+prioritized_arbiter_unreal1_pb_6_32_pe_.ltl	no	0.857254	budget_exhausted	no	1.006393	budget_exhausted
+prioritized_arbiter_unreal1_pb_6_4_pe_.ltl	yes	0.108946		yes	0.101014	
+prioritized_arbiter_unreal2_pb_100_pe_.ltl	no	0.854351	budget_exhausted	no	1.003158	budget_exhausted
+prioritized_arbiter_unreal2_pb_10_pe_.ltl	yes	0.186263		yes	0.131179	
+prioritized_arbiter_unreal2_pb_2_pe_.ltl	yes	0.072535		yes	0.073263	
+prioritized_arbiter_unreal2_pb_30_pe_.ltl	no	0.857231	budget_exhausted	no	1.011486	budget_exhausted
+prioritized_arbiter_unreal2_pb_3_pe_.ltl	yes	0.070927		yes	0.072991	
+prioritized_arbiter_unreal2_pb_4_pe_.ltl	yes	0.072878		yes	0.075796	
+prioritized_arbiter_unreal2_pb_5_pe_.ltl	yes	0.084787		yes	0.081393	
+prioritized_arbiter_unreal2_pb_60_pe_.ltl	no	0.854512	budget_exhausted	no	1.004165	budget_exhausted
+prioritized_arbiter_unreal2_pb_6_pe_.ltl	yes	0.087927		yes	0.088072	
+prioritized_arbiter_unreal2_pb_7_pe_.ltl	yes	0.095953		yes	0.094623	
+prioritized_arbiter_unreal2_pb_8_pe_.ltl	yes	0.103813		yes	0.101862	
+reversible-lane-r-real.ltl	no	0.068923	unsupported_or_failed	no	0.071891	unsupported_or_failed
+reversible-lane-u-unreal.ltl	no	0.070197	unsupported_or_failed	no	0.070858	unsupported_or_failed
+reversible-lane-u0.ltl	no	0.068472	unsupported_or_failed	no	0.072510	unsupported_or_failed
+reversible-lane-u1.ltl	no	0.069133	unsupported_or_failed	no	0.069540	unsupported_or_failed
+robot-cat-real-1d-real.ltl	no	0.070280	unsupported_or_failed	no	0.071955	unsupported_or_failed
+robot-cat-real-2d-real.ltl	no	0.081861	unsupported_or_failed	no	0.089182	unsupported_or_failed
+robot-cat-unreal-1d-unreal.ltl	no	0.069778	unsupported_or_failed	no	0.069743	unsupported_or_failed
+robot-cat-unreal-2d-unreal.ltl	no	0.090636	unsupported_or_failed	no	0.083369	unsupported_or_failed
+robot-grid-commute-1d-real.ltl	no	0.070899	unsupported_or_failed	no	0.067756	unsupported_or_failed
+robot-grid-commute-2d-real.ltl	no	0.075119	unsupported_or_failed	no	0.074249	unsupported_or_failed
+robot-grid-reach-1d-real.ltl	no	0.069291	unsupported_or_failed	no	0.063563	unsupported_or_failed
+robot-grid-reach-2d-real.ltl	no	0.070250	unsupported_or_failed	no	0.067387	unsupported_or_failed
+robot-grid-reach-repeated-with-obstacles-1d-real.ltl	no	0.066440	unsupported_or_failed	no	0.065267	unsupported_or_failed
+robot-grid-reach-repeated-with-obstacles-2d-real.ltl	no	0.067261	unsupported_or_failed	no	0.067899	unsupported_or_failed
+robot-grid-reach-repeated-with-obstacles-6d-real.ltl	no	0.081345	unsupported_or_failed	no	0.078106	unsupported_or_failed
+robot-resource-1d-unreal.ltl	no	0.065070	unsupported_or_failed	no	0.073225	unsupported_or_failed
+robot-resource-1d0.ltl	no	0.066216	unsupported_or_failed	no	0.065095	unsupported_or_failed
+robot-resource-1d1.ltl	no	0.065989	unsupported_or_failed	no	0.069947	unsupported_or_failed
+robot-resource-2d0.ltl	no	0.064399	unsupported_or_failed	no	0.067683	unsupported_or_failed
+robot-resource-2d1.ltl	no	0.073540	unsupported_or_failed	no	0.067163	unsupported_or_failed
+robot-resource-2d10.ltl	no	0.069503	unsupported_or_failed	no	0.073100	unsupported_or_failed
+robot-resource-2d11.ltl	no	0.070436	unsupported_or_failed	no	0.069897	unsupported_or_failed
+robot-resource-2d12.ltl	no	0.069943	unsupported_or_failed	no	0.080100	unsupported_or_failed
+robot-resource-2d13.ltl	no	0.076418	unsupported_or_failed	no	0.071451	unsupported_or_failed
+robot-resource-2d14.ltl	no	0.074858	unsupported_or_failed	no	0.069682	unsupported_or_failed
+robot-resource-2d15.ltl	no	0.073061	unsupported_or_failed	no	0.070494	unsupported_or_failed
+robot-resource-2d16.ltl	no	0.076794	unsupported_or_failed	no	0.078321	unsupported_or_failed
+robot-resource-2d17.ltl	no	0.072902	unsupported_or_failed	no	0.072752	unsupported_or_failed
+robot-resource-2d18.ltl	no	0.072679	unsupported_or_failed	no	0.076725	unsupported_or_failed
+robot-resource-2d19.ltl	no	0.070789	unsupported_or_failed	no	0.072714	unsupported_or_failed
+robot-resource-2d2.ltl	no	0.073722	unsupported_or_failed	no	0.072622	unsupported_or_failed
+robot-resource-2d20.ltl	no	0.075476	unsupported_or_failed	no	0.077171	unsupported_or_failed
+robot-resource-2d21.ltl	no	0.075117	unsupported_or_failed	no	0.071859	unsupported_or_failed
+robot-resource-2d22.ltl	no	0.077965	unsupported_or_failed	no	0.071724	unsupported_or_failed
+robot-resource-2d23.ltl	no	0.077194	unsupported_or_failed	no	0.075336	unsupported_or_failed
+robot-resource-2d3.ltl	no	0.067252	unsupported_or_failed	no	0.072558	unsupported_or_failed
+robot-resource-2d4.ltl	no	0.070511	unsupported_or_failed	no	0.069091	unsupported_or_failed
+robot-resource-2d5.ltl	no	0.067662	unsupported_or_failed	no	0.077871	unsupported_or_failed
+robot-resource-2d6.ltl	no	0.068016	unsupported_or_failed	no	0.071001	unsupported_or_failed
+robot-resource-2d7.ltl	no	0.067093	unsupported_or_failed	no	0.073577	unsupported_or_failed
+robot-resource-2d8.ltl	no	0.067898	unsupported_or_failed	no	0.071564	unsupported_or_failed
+robot-resource-2d9.ltl	no	0.071700	unsupported_or_failed	no	0.070342	unsupported_or_failed
+robot-tasks-real.ltl	no	0.068990	unsupported_or_failed	no	0.067519	unsupported_or_failed
+robot-to-target-charging-real.ltl	no	0.081770	unsupported_or_failed	no	0.083496	unsupported_or_failed
+robot-to-target-charging-unreal0.ltl	no	0.096124	unsupported_or_failed	no	0.092568	unsupported_or_failed
+robot-to-target-charging-unreal1.ltl	no	0.105204	unsupported_or_failed	no	0.096857	unsupported_or_failed
+robot-to-target-charging-unreal2.ltl	no	0.104492	unsupported_or_failed	no	0.103791	unsupported_or_failed
+robot-to-target-charging-unreal3.ltl	no	0.112783	unsupported_or_failed	no	0.109007	unsupported_or_failed
+robot-to-target-charging-unreal4.ltl	no	0.150972	unsupported_or_failed	no	0.128252	unsupported_or_failed
+robot-to-target-charging-unreal5.ltl	no	0.144432	unsupported_or_failed	no	0.144395	unsupported_or_failed
+robot-to-target-charging-unreal6.ltl	no	0.149056	unsupported_or_failed	no	0.159664	unsupported_or_failed
+robot-to-target-charging-unreal7.ltl	no	0.163658	unsupported_or_failed	no	0.167080	unsupported_or_failed
+robot-to-target-charging-unreal8.ltl	no	0.209542	unsupported_or_failed	no	0.194108	unsupported_or_failed
+robot-to-target-charging0.ltl	no	0.076447	unsupported_or_failed	no	0.069030	unsupported_or_failed
+robot-to-target-charging1.ltl	no	0.071737	unsupported_or_failed	no	0.070179	unsupported_or_failed
+robot-to-target-charging10.ltl	no	0.080062	unsupported_or_failed	no	0.075134	unsupported_or_failed
+robot-to-target-charging11.ltl	no	0.076349	unsupported_or_failed	no	0.080278	unsupported_or_failed
+robot-to-target-charging12.ltl	no	0.076234	unsupported_or_failed	no	0.074978	unsupported_or_failed
+robot-to-target-charging13.ltl	no	0.077802	unsupported_or_failed	no	0.075449	unsupported_or_failed
+robot-to-target-charging14.ltl	no	0.080128	unsupported_or_failed	no	0.076962	unsupported_or_failed
+robot-to-target-charging15.ltl	no	0.078363	unsupported_or_failed	no	0.076391	unsupported_or_failed
+robot-to-target-charging16.ltl	no	0.078736	unsupported_or_failed	no	0.080324	unsupported_or_failed
+robot-to-target-charging17.ltl	no	0.078082	unsupported_or_failed	no	0.080015	unsupported_or_failed
+robot-to-target-charging18.ltl	no	0.077278	unsupported_or_failed	no	0.083943	unsupported_or_failed
+robot-to-target-charging19.ltl	no	0.078030	unsupported_or_failed	no	0.077528	unsupported_or_failed
+robot-to-target-charging2.ltl	no	0.075847	unsupported_or_failed	no	0.072221	unsupported_or_failed
+robot-to-target-charging20.ltl	no	0.082297	unsupported_or_failed	no	0.082762	unsupported_or_failed
+robot-to-target-charging21.ltl	no	0.079253	unsupported_or_failed	no	0.081198	unsupported_or_failed
+robot-to-target-charging22.ltl	no	0.079559	unsupported_or_failed	no	0.081546	unsupported_or_failed
+robot-to-target-charging23.ltl	no	0.081576	unsupported_or_failed	no	0.087348	unsupported_or_failed
+robot-to-target-charging24.ltl	no	0.084077	unsupported_or_failed	no	0.079429	unsupported_or_failed
+robot-to-target-charging25.ltl	no	0.083839	unsupported_or_failed	no	0.082304	unsupported_or_failed
+robot-to-target-charging3.ltl	no	0.075519	unsupported_or_failed	no	0.072847	unsupported_or_failed
+robot-to-target-charging4.ltl	no	0.073822	unsupported_or_failed	no	0.073563	unsupported_or_failed
+robot-to-target-charging5.ltl	no	0.076368	unsupported_or_failed	no	0.076316	unsupported_or_failed
+robot-to-target-charging6.ltl	no	0.075086	unsupported_or_failed	no	0.075178	unsupported_or_failed
+robot-to-target-charging7.ltl	no	0.071830	unsupported_or_failed	no	0.072070	unsupported_or_failed
+robot-to-target-charging8.ltl	no	0.079069	unsupported_or_failed	no	0.073311	unsupported_or_failed
+robot-to-target-charging9.ltl	no	0.073959	unsupported_or_failed	no	0.082565	unsupported_or_failed
+robot-to-target-unreal0.ltl	no	0.330049	unsupported_or_failed	no	0.319883	unsupported_or_failed
+robot-to-target0.ltl	no	0.331165	unsupported_or_failed	no	0.332674	unsupported_or_failed
+robot_analyze_samples_v1-real.ltl	no	0.072580	unsupported_or_failed	no	0.072927	unsupported_or_failed
+robot_collect_samples_v1-real.ltl	no	0.077909	unsupported_or_failed	no	0.070217	unsupported_or_failed
+robot_collect_samples_v2-real.ltl	no	0.069674	unsupported_or_failed	no	0.074961	unsupported_or_failed
+robot_collect_samples_v3-real.ltl	no	0.075727	unsupported_or_failed	no	0.073800	unsupported_or_failed
+robot_collect_samples_v4-real.ltl	no	0.076324	unsupported_or_failed	no	0.076862	unsupported_or_failed
+robot_deliver_products_1-real.ltl	no	0.074730	unsupported_or_failed	no	0.074788	unsupported_or_failed
+robot_deliver_products_20.ltl	no	0.097883	unsupported_or_failed	no	0.091566	unsupported_or_failed
+robot_deliver_products_30.ltl	no	0.098741	unsupported_or_failed	no	0.097237	unsupported_or_failed
+robot_deliver_products_40.ltl	no	0.105714	unsupported_or_failed	no	0.106601	unsupported_or_failed
+robot_deliver_products_50.ltl	no	0.114547	unsupported_or_failed	no	0.109856	unsupported_or_failed
+robot_grid_pb_2_2_pe_.ltl	yes	0.323527		yes	0.324789	
+robot_grid_pb_3_3_pe_.ltl	no	0.854014	budget_exhausted	no	1.004031	budget_exhausted
+robot_grid_pb_4_4_pe_.ltl	no	0.863867	budget_exhausted	no	1.012560	budget_exhausted
+robot_grid_pb_5_1_pe_.ltl	no	0.853579	budget_exhausted	yes	0.930434	
+robot_grid_pb_5_5_pe_.ltl	no	0.855387	budget_exhausted	no	1.003848	budget_exhausted
+robot_grid_pb_6_1_pe_.ltl	no	0.853819	budget_exhausted	no	1.004124	budget_exhausted
+robot_grid_pb_6_6_pe_.ltl	no	0.854408	budget_exhausted	no	1.004925	budget_exhausted
+robot_grid_pb_7_7_pe_.ltl	no	0.853953	budget_exhausted	no	1.003829	budget_exhausted
+robot_grid_pb_8_8_pe_.ltl	no	0.855253	budget_exhausted	no	1.005289	budget_exhausted
+robot_repair0.ltl	no	0.077064	unsupported_or_failed	no	0.075161	unsupported_or_failed
+robot_repair1.ltl	no	0.074328	unsupported_or_failed	no	0.077969	unsupported_or_failed
+robot_repair2.ltl	no	0.077350	unsupported_or_failed	no	0.082609	unsupported_or_failed
+robot_repair3.ltl	no	0.076523	unsupported_or_failed	no	0.077667	unsupported_or_failed
+robot_repair4.ltl	no	0.081975	unsupported_or_failed	no	0.076304	unsupported_or_failed
+robot_repair5.ltl	no	0.094157	unsupported_or_failed	no	0.098409	unsupported_or_failed
+robot_running-real.ltl	no	0.073008	unsupported_or_failed	no	0.071372	unsupported_or_failed
+round_robin_arbiter_pb_10_pe_.ltl	yes	0.086106		yes	0.080784	
+round_robin_arbiter_pb_2_pe_.ltl	yes	0.073448		yes	0.067044	
+round_robin_arbiter_pb_3_pe_.ltl	yes	0.072138		yes	0.070457	
+round_robin_arbiter_pb_4_pe_.ltl	yes	0.069137		yes	0.069154	
+round_robin_arbiter_pb_5_pe_.ltl	yes	0.075070		yes	0.075189	
+round_robin_arbiter_pb_6_pe_.ltl	yes	0.074309		yes	0.077286	
+round_robin_arbiter_pb_7_pe_.ltl	yes	0.076582		yes	0.076457	
+round_robin_arbiter_pb_8_pe_.ltl	yes	0.080253		yes	0.084946	
+round_robin_arbiter_unreal1_pb_2_10_pe_.ltl	no	0.860453	budget_exhausted	no	1.011129	budget_exhausted
+round_robin_arbiter_unreal1_pb_2_11_pe_.ltl	no	0.862629	budget_exhausted	no	1.013228	budget_exhausted
+round_robin_arbiter_unreal1_pb_2_12_pe_.ltl	no	0.859352	budget_exhausted	no	1.011600	budget_exhausted
+round_robin_arbiter_unreal1_pb_2_13_pe_.ltl	no	0.858411	budget_exhausted	no	1.009284	budget_exhausted
+round_robin_arbiter_unreal1_pb_2_14_pe_.ltl	no	0.859001	budget_exhausted	no	1.007509	budget_exhausted
+round_robin_arbiter_unreal1_pb_2_15_pe_.ltl	no	0.856776	budget_exhausted	no	1.010360	budget_exhausted
+round_robin_arbiter_unreal1_pb_2_16_pe_.ltl	no	0.855876	budget_exhausted	no	1.006162	budget_exhausted
+round_robin_arbiter_unreal1_pb_2_1_pe_.ltl	yes	0.069643		yes	0.067234	
+round_robin_arbiter_unreal1_pb_2_2_pe_.ltl	yes	0.069115		yes	0.067871	
+round_robin_arbiter_unreal1_pb_2_3_pe_.ltl	yes	0.069121		yes	0.068692	
+round_robin_arbiter_unreal1_pb_2_4_pe_.ltl	yes	0.070580		yes	0.072494	
+round_robin_arbiter_unreal1_pb_2_5_pe_.ltl	yes	0.073486		yes	0.072552	
+round_robin_arbiter_unreal1_pb_2_6_pe_.ltl	yes	0.078613		yes	0.076961	
+round_robin_arbiter_unreal1_pb_2_7_pe_.ltl	yes	0.098176		yes	0.096358	
+round_robin_arbiter_unreal1_pb_2_8_pe_.ltl	yes	0.152352		yes	0.146670	
+round_robin_arbiter_unreal1_pb_2_9_pe_.ltl	yes	0.390412		yes	0.383491	
+round_robin_arbiter_unreal1_pb_3_10_pe_.ltl	no	0.859394	budget_exhausted	no	1.011114	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_11_pe_.ltl	no	0.862197	budget_exhausted	no	1.013407	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_12_pe_.ltl	no	0.859115	budget_exhausted	no	1.010403	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_13_pe_.ltl	no	0.857792	budget_exhausted	no	1.009230	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_14_pe_.ltl	no	0.857014	budget_exhausted	no	1.007990	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_15_pe_.ltl	no	0.856338	budget_exhausted	no	1.007343	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_16_pe_.ltl	no	0.855777	budget_exhausted	no	1.006072	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_1_pe_.ltl	yes	0.070047		yes	0.070802	
+round_robin_arbiter_unreal1_pb_3_20_pe_.ltl	no	0.855762	budget_exhausted	no	1.006429	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_22_pe_.ltl	no	0.856823	budget_exhausted	no	1.006372	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_2_pe_.ltl	yes	0.069941		yes	0.072165	
+round_robin_arbiter_unreal1_pb_3_3_pe_.ltl	yes	0.076556		yes	0.073502	
+round_robin_arbiter_unreal1_pb_3_4_pe_.ltl	yes	0.082686		yes	0.082983	
+round_robin_arbiter_unreal1_pb_3_50_pe_.ltl	no	0.856171	budget_exhausted	no	1.005963	budget_exhausted
+round_robin_arbiter_unreal1_pb_3_5_pe_.ltl	yes	0.080613		yes	0.082243	
+round_robin_arbiter_unreal1_pb_3_6_pe_.ltl	yes	0.099159		yes	0.101929	
+round_robin_arbiter_unreal1_pb_3_7_pe_.ltl	yes	0.148212		yes	0.149747	
+round_robin_arbiter_unreal1_pb_3_8_pe_.ltl	yes	0.321394		yes	0.318937	
+round_robin_arbiter_unreal1_pb_3_9_pe_.ltl	no	0.857447	budget_exhausted	no	1.007867	budget_exhausted
+round_robin_arbiter_unreal1_pb_4_10_pe_.ltl	no	0.859013	budget_exhausted	no	1.011400	budget_exhausted
+round_robin_arbiter_unreal1_pb_4_11_pe_.ltl	no	0.864695	budget_exhausted	no	1.013499	budget_exhausted
+round_robin_arbiter_unreal1_pb_4_12_pe_.ltl	no	0.859330	budget_exhausted	no	1.013833	budget_exhausted
+round_robin_arbiter_unreal1_pb_4_13_pe_.ltl	no	0.857823	budget_exhausted	no	1.008974	budget_exhausted
+round_robin_arbiter_unreal1_pb_4_14_pe_.ltl	no	0.857001	budget_exhausted	no	1.008117	budget_exhausted
+round_robin_arbiter_unreal1_pb_4_15_pe_.ltl	no	0.856978	budget_exhausted	no	1.007606	budget_exhausted
+round_robin_arbiter_unreal1_pb_4_1_pe_.ltl	yes	0.071985		yes	0.071419	
+round_robin_arbiter_unreal1_pb_4_2_pe_.ltl	yes	0.076471		yes	0.072397	
+round_robin_arbiter_unreal1_pb_4_3_pe_.ltl	yes	0.076989		yes	0.075433	
+round_robin_arbiter_unreal1_pb_4_4_pe_.ltl	yes	0.080481		yes	0.080092	
+round_robin_arbiter_unreal1_pb_4_5_pe_.ltl	yes	0.093103		yes	0.093831	
+round_robin_arbiter_unreal1_pb_4_6_pe_.ltl	yes	0.127066		yes	0.123362	
+round_robin_arbiter_unreal1_pb_4_7_pe_.ltl	yes	0.222629		yes	0.220176	
+round_robin_arbiter_unreal1_pb_4_8_pe_.ltl	yes	0.549690		yes	0.535409	
+round_robin_arbiter_unreal1_pb_4_9_pe_.ltl	no	0.855227	budget_exhausted	no	1.007262	budget_exhausted
+round_robin_arbiter_unreal2_pb_2_pe_.ltl	yes	0.065495		yes	0.065875	
+round_robin_arbiter_unreal2_pb_3_pe_.ltl	yes	0.071119		yes	0.071567	
+round_robin_arbiter_unreal2_pb_4_pe_.ltl	yes	0.074603		yes	0.075518	
+round_robin_arbiter_unreal2_pb_5_pe_.ltl	yes	0.081172		yes	0.080081	
+round_robin_arbiter_unreal2_pb_6_pe_.ltl	yes	0.089102		yes	0.086920	
+round_robin_arbiter_unreal2_pb_7_pe_.ltl	yes	0.092813		yes	0.092945	
+rw_arbiter_pb_1_pe_.ltl	yes	0.069336		yes	0.067095	
+rw_arbiter_pb_2_pe_.ltl	yes	0.069891		yes	0.070434	
+rw_arbiter_pb_3_pe_.ltl	yes	0.077277		yes	0.077030	
+rw_arbiter_pb_4_pe_.ltl	yes	0.084498		yes	0.082403	
+rw_arbiter_pb_5_pe_.ltl	yes	0.089990		yes	0.089572	
+scheduler-real.ltl	no	0.073606	unsupported_or_failed	no	0.079395	unsupported_or_failed
+shift_pb_100_pe_.ltl	yes	0.103864		yes	0.103024	
+shift_pb_10_pe_.ltl	yes	0.068238		yes	0.071013	
+shift_pb_125_pe_.ltl	yes	0.113677		yes	0.115316	
+shift_pb_12_pe_.ltl	yes	0.071272		yes	0.072021	
+shift_pb_132_pe_.ltl	yes	0.121630		yes	0.122558	
+shift_pb_16_pe_.ltl	yes	0.075181		yes	0.076102	
+shift_pb_250_pe_.ltl	yes	0.179944		yes	0.173896	
+shift_pb_32_pe_.ltl	yes	0.081405		yes	0.080640	
+shift_pb_500_pe_.ltl	yes	0.314304		yes	0.320540	
+shift_pb_64_pe_.ltl	yes	0.091617		yes	0.092425	
+shift_pb_8_pe_.ltl	yes	0.071598		yes	0.071991	
+simple_arbiter_enc_pb_10_pe_.ltl	yes	0.093891		yes	0.088550	
+simple_arbiter_enc_pb_11_pe_.ltl	yes	0.090355		yes	0.090153	
+simple_arbiter_enc_pb_12_pe_.ltl	yes	0.092150		yes	0.091731	
+simple_arbiter_enc_pb_13_pe_.ltl	yes	0.092437		yes	0.095589	
+simple_arbiter_enc_pb_14_pe_.ltl	yes	0.096597		yes	0.097175	
+simple_arbiter_enc_pb_15_pe_.ltl	yes	0.096121		yes	0.095252	
+simple_arbiter_enc_pb_16_pe_.ltl	yes	0.103303		yes	0.100399	
+simple_arbiter_enc_pb_32_pe_.ltl	yes	0.184546		yes	0.166706	
+simple_arbiter_enc_pb_8_pe_.ltl	yes	0.075622		yes	0.082577	
+simple_arbiter_unreal1_pb_16_1_pe_.ltl	yes	0.147143		yes	0.145782	
+simple_arbiter_unreal1_pb_16_2_pe_.ltl	yes	0.181450		yes	0.180353	
+simple_arbiter_unreal1_pb_16_3_pe_.ltl	yes	0.237071		yes	0.233710	
+simple_arbiter_unreal1_pb_16_4_pe_.ltl	yes	0.375959		yes	0.389450	
+simple_arbiter_unreal1_pb_16_5_pe_.ltl	yes	0.737755		yes	0.745220	
+simple_arbiter_unreal1_pb_2_10_pe_.ltl	no	0.859888	budget_exhausted	no	1.011829	budget_exhausted
+simple_arbiter_unreal1_pb_2_12_pe_.ltl	no	0.860838	budget_exhausted	no	1.011822	budget_exhausted
+simple_arbiter_unreal1_pb_2_1_pe_.ltl	yes	0.066741		yes	0.065194	
+simple_arbiter_unreal1_pb_2_2_pe_.ltl	yes	0.069907		yes	0.066781	
+simple_arbiter_unreal1_pb_2_3_pe_.ltl	yes	0.070069		yes	0.064854	
+simple_arbiter_unreal1_pb_2_4_pe_.ltl	yes	0.076185		yes	0.068049	
+simple_arbiter_unreal1_pb_2_5_pe_.ltl	yes	0.070750		yes	0.071238	
+simple_arbiter_unreal1_pb_2_6_pe_.ltl	yes	0.077930		yes	0.075749	
+simple_arbiter_unreal1_pb_2_7_pe_.ltl	yes	0.094113		yes	0.093718	
+simple_arbiter_unreal1_pb_2_8_pe_.ltl	yes	0.159055		yes	0.148419	
+simple_arbiter_unreal1_pb_2_9_pe_.ltl	yes	0.377378		yes	0.380409	
+simple_arbiter_unreal1_pb_3_11_pe_.ltl	no	0.862449	budget_exhausted	no	1.013794	budget_exhausted
+simple_arbiter_unreal1_pb_3_1_pe_.ltl	yes	0.066684		yes	0.071878	
+simple_arbiter_unreal1_pb_3_2_pe_.ltl	yes	0.069357		yes	0.080601	
+simple_arbiter_unreal1_pb_3_3_pe_.ltl	yes	0.075823		yes	0.075651	
+simple_arbiter_unreal1_pb_3_4_pe_.ltl	yes	0.073283		yes	0.075420	
+simple_arbiter_unreal1_pb_3_5_pe_.ltl	yes	0.079874		yes	0.079342	
+simple_arbiter_unreal1_pb_3_6_pe_.ltl	yes	0.099244		yes	0.097502	
+simple_arbiter_unreal1_pb_3_7_pe_.ltl	yes	0.150085		yes	0.151017	
+simple_arbiter_unreal1_pb_3_8_pe_.ltl	yes	0.323073		yes	0.323298	
+simple_arbiter_unreal1_pb_3_9_pe_.ltl	no	0.856292	budget_exhausted	no	1.004993	budget_exhausted
+simple_arbiter_unreal1_pb_4_10_pe_.ltl	no	0.860968	budget_exhausted	no	1.010544	budget_exhausted
+simple_arbiter_unreal1_pb_4_12_pe_.ltl	no	0.860458	budget_exhausted	no	1.016287	budget_exhausted
+simple_arbiter_unreal1_pb_4_1_pe_.ltl	yes	0.069955		yes	0.076246	
+simple_arbiter_unreal1_pb_4_2_pe_.ltl	yes	0.072569		yes	0.075814	
+simple_arbiter_unreal1_pb_4_3_pe_.ltl	yes	0.073572		yes	0.074107	
+simple_arbiter_unreal1_pb_4_4_pe_.ltl	yes	0.081060		yes	0.084859	
+simple_arbiter_unreal1_pb_4_5_pe_.ltl	yes	0.097801		yes	0.097331	
+simple_arbiter_unreal1_pb_4_6_pe_.ltl	yes	0.128773		yes	0.126423	
+simple_arbiter_unreal1_pb_4_7_pe_.ltl	yes	0.236278		yes	0.232410	
+simple_arbiter_unreal1_pb_4_8_pe_.ltl	yes	0.568485		yes	0.572821	
+simple_arbiter_unreal1_pb_4_9_pe_.ltl	no	0.855880	budget_exhausted	no	1.005520	budget_exhausted
+simple_arbiter_unreal1_pb_5_10_pe_.ltl	no	0.862192	budget_exhausted	no	1.009463	budget_exhausted
+simple_arbiter_unreal1_pb_5_1_pe_.ltl	yes	0.072746		yes	0.075329	
+simple_arbiter_unreal1_pb_5_2_pe_.ltl	yes	0.076125		yes	0.075046	
+simple_arbiter_unreal1_pb_5_3_pe_.ltl	yes	0.082143		yes	0.081208	
+simple_arbiter_unreal1_pb_5_4_pe_.ltl	yes	0.092612		yes	0.088594	
+simple_arbiter_unreal1_pb_5_5_pe_.ltl	yes	0.112559		yes	0.110718	
+simple_arbiter_unreal1_pb_5_6_pe_.ltl	yes	0.165997		yes	0.169001	
+simple_arbiter_unreal1_pb_5_7_pe_.ltl	yes	0.334761		yes	0.347095	
+simple_arbiter_unreal1_pb_5_8_pe_.ltl	no	0.855401	budget_exhausted	yes	0.968914	
+simple_arbiter_unreal1_pb_5_9_pe_.ltl	no	0.856951	budget_exhausted	no	1.007784	budget_exhausted
+simple_arbiter_unreal1_pb_6_1_pe_.ltl	yes	0.080034		yes	0.079346	
+simple_arbiter_unreal1_pb_6_2_pe_.ltl	yes	0.080375		yes	0.086199	
+simple_arbiter_unreal1_pb_6_3_pe_.ltl	yes	0.090075		yes	0.091129	
+simple_arbiter_unreal1_pb_6_4_pe_.ltl	yes	0.105693		yes	0.104447	
+simple_arbiter_unreal1_pb_6_5_pe_.ltl	yes	0.184627		yes	0.160701	
+simple_arbiter_unreal1_pb_8_8_pe_.ltl	no	0.855799	budget_exhausted	no	1.004078	budget_exhausted
+simple_arbiter_unreal2_pb_10_pe_.ltl	yes	0.119662		yes	0.117742	
+simple_arbiter_unreal2_pb_25_pe_.ltl	yes	0.440893		yes	0.448676	
+simple_arbiter_unreal2_pb_2_pe_.ltl	yes	0.067371		yes	0.070043	
+simple_arbiter_unreal2_pb_3_pe_.ltl	yes	0.073929		yes	0.069875	
+simple_arbiter_unreal2_pb_4_pe_.ltl	yes	0.078465		yes	0.086520	
+simple_arbiter_unreal2_pb_50_pe_.ltl	no	0.852932	budget_exhausted	no	1.002845	budget_exhausted
+simple_arbiter_unreal2_pb_5_pe_.ltl	yes	0.077352		yes	0.082295	
+simple_arbiter_unreal2_pb_60_pe_.ltl	no	0.852884	budget_exhausted	no	1.003879	budget_exhausted
+simple_arbiter_unreal2_pb_6_pe_.ltl	yes	0.083740		yes	0.082553	
+simple_arbiter_unreal2_pb_75_pe_.ltl	no	0.853046	budget_exhausted	no	1.002976	budget_exhausted
+simple_arbiter_unreal2_pb_7_pe_.ltl	yes	0.091798		yes	0.096030	
+simple_arbiter_unreal2_pb_8_pe_.ltl	yes	0.099594		yes	0.107597	
+simple_arbiter_with_hints_pb_10_pe_.ltl	yes	0.129549		yes	0.133812	
+simple_arbiter_with_hints_pb_12_pe_.ltl	yes	0.188531		yes	0.184927	
+simple_arbiter_with_hints_pb_15_pe_.ltl	yes	0.379356		yes	0.341405	
+simple_arbiter_with_hints_pb_2_pe_.ltl	yes	0.067709		yes	0.068072	
+simple_arbiter_with_hints_pb_4_pe_.ltl	yes	0.074710		yes	0.073939	
+simple_arbiter_with_hints_pb_6_pe_.ltl	yes	0.081995		yes	0.081694	
+simple_arbiter_with_hints_pb_8_pe_.ltl	yes	0.101991		yes	0.101795	
+solitary-real.ltl	no	0.066960	unsupported_or_failed	no	0.075782	unsupported_or_failed
+solitary0.ltl	no	0.069547	unsupported_or_failed	no	0.064276	unsupported_or_failed
+sort4-real.ltl	no	0.095892	unsupported_or_failed	no	0.094669	unsupported_or_failed
+sort40.ltl	no	0.071891	unsupported_or_failed	no	0.073590	unsupported_or_failed
+sort41.ltl	no	0.078426	unsupported_or_failed	no	0.075985	unsupported_or_failed
+sort42.ltl	no	0.090152	unsupported_or_failed	no	0.083111	unsupported_or_failed
+sort50.ltl	no	0.081918	unsupported_or_failed	no	0.086929	unsupported_or_failed
+sort51.ltl	no	0.094018	unsupported_or_failed	no	0.101667	unsupported_or_failed
+sort52.ltl	no	0.119700	unsupported_or_failed	no	0.115998	unsupported_or_failed
+sort53.ltl	no	0.155453	unsupported_or_failed	no	0.157456	unsupported_or_failed
+square5x5-real.ltl	no	0.073826	unsupported_or_failed	no	0.076336	unsupported_or_failed
+square5x50.ltl	no	0.070372	unsupported_or_failed	no	0.067733	unsupported_or_failed
+square5x51.ltl	no	0.070923	unsupported_or_failed	no	0.076545	unsupported_or_failed
+square5x52.ltl	no	0.074249	unsupported_or_failed	no	0.069563	unsupported_or_failed
+square5x53.ltl	no	0.074576	unsupported_or_failed	no	0.073944	unsupported_or_failed
+square5x54.ltl	no	0.071636	unsupported_or_failed	no	0.070137	unsupported_or_failed
+storage-GF-64-real.ltl	no	0.067574	unsupported_or_failed	no	0.069337	unsupported_or_failed
+tasks-real.ltl	no	0.066003	unsupported_or_failed	no	0.066214	unsupported_or_failed
+tasks-unreal0.ltl	no	0.082203	unsupported_or_failed	no	0.084804	unsupported_or_failed
+tasks-unreal1.ltl	no	0.086472	unsupported_or_failed	no	0.076632	unsupported_or_failed
+tasks-unreal2.ltl	no	0.086495	unsupported_or_failed	no	0.088370	unsupported_or_failed
+taxi-service-real.ltl	no	0.069788	unsupported_or_failed	no	0.072306	unsupported_or_failed
+taxi-service-u-unreal.ltl	no	0.069382	unsupported_or_failed	no	0.068613	unsupported_or_failed
+test2_f2774e0b.ltl	yes	0.069212		yes	0.074507	
+test3_efe2feaf.ltl	no	0.096102	unsupported_or_failed	no	0.092622	unsupported_or_failed
+test4_4b82b1f4.ltl	yes	0.080663		yes	0.068554	
+test5_6cbc6174.ltl	no	0.068327	unsupported_or_failed	no	0.069839	unsupported_or_failed
+test6_0f5381e9.ltl	yes	0.080139		yes	0.075154	
+test7_2c5b09da.ltl	no	0.077428	unsupported_or_failed	no	0.082891	unsupported_or_failed
+test8_88f351a6.ltl	yes	0.079566		yes	0.076920	
+test9_dd3a27e1.ltl	no	0.076925	unsupported_or_failed	no	0.084504	unsupported_or_failed
+test_f3987563.ltl	no	0.065750	unsupported_or_failed	no	0.068458	unsupported_or_failed
+thermostat-F-real.ltl	no	0.066980	unsupported_or_failed	no	0.076214	unsupported_or_failed
+thermostat-GF-real.ltl	no	0.070965	unsupported_or_failed	no	0.069578	unsupported_or_failed
+thermostat-GF-unreal0.ltl	no	0.076273	unsupported_or_failed	no	0.071135	unsupported_or_failed
+thermostat-GF-unreal1.ltl	no	0.082098	unsupported_or_failed	no	0.074974	unsupported_or_failed
+thermostat-GF-unreal2.ltl	no	0.092769	unsupported_or_failed	no	0.081496	unsupported_or_failed
+tmp_13cfc6f2.ltl	no	0.854189	budget_exhausted	no	1.003198	budget_exhausted
+unordered-visits-charging0.ltl	no	0.082755	unsupported_or_failed	no	0.081783	unsupported_or_failed
+unordered-visits-real.ltl	no	0.069631	unsupported_or_failed	no	0.068199	unsupported_or_failed
+workstation_resupply_pb_1_pe_.ltl	no	0.120510	unsupported_or_failed	no	0.117848	unsupported_or_failed
+workstation_resupply_pb_2_pe_.ltl	no	0.855332	budget_exhausted	no	1.006141	budget_exhausted
+workstation_resupply_pb_3_pe_.ltl	no	0.853053	budget_exhausted	no	1.003475	budget_exhausted
+workstation_resupply_pb_4_pe_.ltl	no	0.853118	budget_exhausted	no	1.003595	budget_exhausted
+workstation_resupply_pb_5_pe_.ltl	no	0.853891	budget_exhausted	no	1.004653	budget_exhausted
+workstation_resupply_pb_6_pe_.ltl	no	0.854607	budget_exhausted	no	1.003423	budget_exhausted
+workstation_resupply_pb_7_pe_.ltl	no	0.853972	budget_exhausted	no	1.004335	budget_exhausted
