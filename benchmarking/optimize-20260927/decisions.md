@@ -120,3 +120,55 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - The two stale `/tmp` registrations were pruned.
   - Eight are kept: dirty, unmerged, pinned binaries, or the timing tree.
   - No branch was deleted.
+
+## 2026-09-27 — Spot upgrade deferred to the P2b acceptance-limit probe
+
+- **Owner's question.** The owner asked whether rebuilding Spot (newer version, more acceptance
+  sets) would fix the local Python binding gap.
+- **Answer: only in part.** The system Python moved to 3.14. Spot's Python module exists only as
+  the 3.13 build from the owner's fork, and Acacia's own binding was never built for 3.14. A new
+  Spot fixes the first but not the second. CI already runs those modules; the oracle uses the
+  3.13 bindings by explicit path.
+- **Owner decision: carry on with the plan.** The upgrade belongs to P2b §6.5.
+- **Constraint found for P2b.**
+  - Every frozen binary (E5, M1, M2, the others) and the installed `ltlsynt` link `libspot.so.0`
+    and `libbddx.so.0` dynamically from `/usr/local/lib`.
+  - That install is the owner's fork `spot-goodset`: upstream 2.15.1.dev (2026-06-20) plus
+    goodset-splitter commits, configured with `--enable-devel --enable-max-accsets=64`.
+  - Replacing it would silently change every baseline, because a different MAX_ACCSETS changes
+    the acceptance-mark layout (an ABI break).
+  - So the probe uses a separate prefix (`~/opt/spot-2.16-acc<N>`, no sudo) and is measured on
+    its own: C5 rebuilt against it versus C5.
+  - The Spot 2.16 tarball is kept at `~/opt/src/spot-2.16.tar.gz`, SHA-256 `688463cb…ab869`.
+- **Incident.** A build started just before the owner's rejection arrived. It aborted when its
+  source tree was removed. Nothing was installed, and `/usr/local` was untouched.
+
+## 2026-09-27 — P0b source cleanup accepted; C5 frozen
+
+- **Refactor.**
+  - Native arm orchestration moves out of headers into `native_gr1_arm.cc`,
+    `native_param_lift_arm.cc`, `native_proof_binding.cc` and `native_support.{hh,cc}`, with
+    shared RAII result owners and diagnostics.
+  - Test hooks move to `native_test_hooks.cc`, linked only into the debug native test
+    executable.
+  - Portfolio arm parsing, child launch and dispatch are separate functions, with the lifecycle
+    unchanged.
+- **Review (`p0b-src/REVIEW.md`): ACCEPT WITH FIXES.**
+  - It walked the old and new lifecycle side by side: fork and arm order, process groups, the
+    absolute deadline, SIGKILL, non-blocking reaping, late-answer rejection and signalled
+    children are all preserved.
+  - Proof binding and hook isolation are unchanged; release `nm` and `strings` confirm the hooks
+    are absent.
+  - Fixes applied: the four tracked `build_scratch/stageC` files, including two review notes found
+    in no archive, were published as the new asset `gr1-par2-20260923-stagec-scratch` (index row,
+    read back byte-identical) before removal, and the Spot decision is kept out of the source
+    commit.
+- **Measurements, C5 versus pre-cleanup and E5.**
+  - Paired 60 s screen on 70 instances (the stratified 50 plus 20 random, fixed seed), serial,
+    each run in an 8 GiB no-swap scope: all 70 verdict triples identical; median C5/pre 1.0001
+    and C5/E5 1.0000. The two cases over 5% repeat at 0.98 and 1.03.
+  - `.text` −6,944 bytes.
+  - Clean build +8.1% (188.7 → 204.0 s), from 14 compile units instead of 8.
+  - Unit tests 56/56 native and 52/52 non-native; pytest 977 passed.
+- **C5** is frozen from committed source `1b9e4b5f` (E5 build arguments, native arms on) and
+  registered in `benchmarking/baselines.tsv`.
