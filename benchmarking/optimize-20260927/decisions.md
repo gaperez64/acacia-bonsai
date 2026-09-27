@@ -172,3 +172,47 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - Unit tests 56/56 native and 52/52 non-native; pytest 977 passed.
 - **C5** is frozen from committed source `1b9e4b5f` (E5 build arguments, native arms on) and
   registered in `benchmarking/baselines.tsv`.
+
+## 2026-09-28 — P1a: phase records, development panel, baseline attribution
+
+- **Instrumentation.**
+  - Opt-in per-phase records (`ACACIA_PHASE_RECORDS`) in the native arms.
+  - tlsf-tools stage statistics through new entry points (tlsf-tools#43, `a5897d5`, which the
+    submodule now points at). The existing option structs are unchanged, and a guard-page test
+    compiled against the old headers proves it.
+  - Records flow through a non-blocking pipe to one writer process forked before the race, so a
+    stalled or failing destination cannot delay or change a verdict. With records off, nothing is
+    created and every path is identical.
+- **Review took four rounds.** It rejected:
+  - an ABI break (fields appended to public structs);
+  - a behaviour change with records off (early frees, now split out as a separate candidate);
+  - synchronous record I/O that could block or kill a worker;
+  - CPU medians computed with missing values as zeros;
+  - a weak ABI test;
+  - regular-file stalls;
+  - a profile measured on a pre-final binary.
+
+  All were fixed, including a wait-loop regression introduced and caught during the fixes.
+  Final binary `01faa6da`: records-off matches C5 on 10/10 verdicts and exit codes (median 1.006);
+  all 171 profile rows were rerun on it, verdicts and timeouts are unchanged, and the largest
+  category median moved by 0.22 s.
+- **Panels.** `dev-panel.tsv` (57) and `heldout-panel.tsv` (20, disjoint) come from the archived
+  legs by outcome, time and resource rules. The memory-heavy stratum is selected by archived
+  process RSS, which is disclosed. No names.
+- **Attribution** (60 s, standalone and E5):
+  - Direct REAL successes (8): independent check 37.8 s against solve 2.3 s. The checker, not
+    the solver, dominates.
+  - Heavy unsuccessful cases: direct monitor construction 219.5 core-s; lift target reduction
+    173.7 core-s. Peaks reach 4.9 GiB per child, and one E5 case hit the 8 GiB scope.
+  - REAL lift successes (19): policy export 80.8 s (one case 47.0 s), internal check 18.5 s,
+    outer check 18.1 s (7.1 s on the unique success), re-reduction 0.36 s.
+  - Opposite-polarity export (median 0.29 ms) and parent frontend conversion (median 0.61 ms)
+    are negligible.
+- **Ranked P1b packages:**
+  1. generic work and memory budgets for monitor and target-game construction (§5.3/5.5);
+  2. no duplicate final lift check, via a trusted source-bound target context (§5.4);
+  3. profile and streamline the direct checker (§5.2/5.5);
+  4. lift policy export and candidate size (§5.3/5.5);
+  5. copies and owner lifetimes, i.e. the early frees (§5.2).
+
+  Opposite-polarity export and moving the frontend are deprioritised.
