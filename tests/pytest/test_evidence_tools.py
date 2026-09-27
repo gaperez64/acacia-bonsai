@@ -185,19 +185,24 @@ class EvidenceToolTests(unittest.TestCase):
                "--supports", "test", "--source-revisions", "z-rev,a-rev",
                "--binary-sha256s", f"{'b' * 64},{'a' * 64}"]
         run(*add)
-        row = index.read_text().splitlines()[1].split("\t")
+        lines = index.read_text().splitlines()
+        row_index = next(i for i, line in enumerate(lines)
+                         if line.startswith("provenance\t"))
+        row = lines[row_index].split("\t")
         self.assertEqual(row[7], "a-rev,z-rev")
         self.assertEqual(row[8], f"{'a' * 64},{'b' * 64}")
         for column, wrong in ((7, "different-rev"), (8, "c" * 64)):
             with self.subTest(column=column):
                 lines = index.read_text().splitlines()
-                cells = lines[1].split("\t")
+                cells = lines[row_index].split("\t")
                 cells[column] = wrong
-                index.write_text("\n".join((lines[0], "\t".join(cells))) + "\n")
+                lines[row_index] = "\t".join(cells)
+                index.write_text("\n".join(lines) + "\n")
                 result = run("python3", "-s", str(EVIDENCE), "fetch", "--index", str(index),
                              "--campaign", "provenance", "--dest",
                              str(self.work / f"wrong-{column}"), "--from-file", str(archive), ok=False)
                 self.assertIn("provenance", result.stderr)
+                lines[row_index] = "\t".join(row)
                 index.write_text("\n".join(lines) + "\n")
 
     def test_index_add_waits_for_lock_file(self):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.13
-"""Serial informal Stage C route sample; development data only."""
+"""Serial Stage C sample; fetch inputs with scripts/acacia-evidence.py fetch --campaign ID --dest DIR."""
 from __future__ import annotations
 
 import csv
@@ -14,8 +14,9 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRATCH = ROOT / "build_scratch/stageC/informal"
 CORPUS = ROOT / "tlsf-corpus"
-ELIGIBILITY = ROOT / "benchmarking/gr1-par2-20260923/campaign/eligibility-v3.tsv"
-BUILD = pathlib.Path("/home/gperez/GIT-repos/tlsf-tools/build-SB-8b158d7")
+EVIDENCE_ROOT = pathlib.Path(os.environ["ACACIA_EVIDENCE_ROOT"])
+ELIGIBILITY = EVIDENCE_ROOT / "benchmarking/gr1-par2-20260923/campaign/eligibility-v3.tsv"
+BUILD = pathlib.Path(os.environ["ACACIA_TLSF_TOOLS_BUILD"])
 
 
 def main() -> None:

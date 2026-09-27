@@ -502,7 +502,7 @@ def main():
     parser.add_argument("--summary-tsv", type=Path, help="Override the label-based summary TSV path")
     parser.add_argument(
         "--cohort", type=Path,
-        default=Path("benchmarking/coverage-frontier-20260912/diagnostic-cohort.tsv"),
+        required=True, help="fetched diagnostic cohort TSV",
     )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)

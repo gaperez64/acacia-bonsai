@@ -774,25 +774,25 @@ def parser() -> argparse.ArgumentParser:
     argument_parser.add_argument(
         "--summary",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-coverage-summary.tsv"),
+        required=True,
         help="per-instance coverage summary TSV (default: %(default)s)",
     )
     argument_parser.add_argument(
         "--frontiers",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-family-frontiers.tsv"),
+        required=True,
         help="family frontier TSV (default: %(default)s)",
     )
     argument_parser.add_argument(
         "--pairs",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-frontier-pairs.tsv"),
+        required=True,
         help="boundary-pair TSV (default: %(default)s)",
     )
     argument_parser.add_argument(
         "--metadata",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-family-instances.tsv"),
+        required=True,
         help="family instance metadata TSV (default: %(default)s)",
     )
     argument_parser.add_argument(
@@ -818,7 +818,7 @@ def parser() -> argparse.ArgumentParser:
     argument_parser.add_argument(
         "--output",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-frontier-preselection.tsv"),
+        default=pathlib.Path("_bm-logs/frontier/syntcomp26-frontier-preselection.tsv"),
         help="selected target TSV (default: %(default)s)",
     )
     return argument_parser

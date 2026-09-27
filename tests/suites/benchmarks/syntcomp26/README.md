@@ -88,4 +88,4 @@ meson setup build -Dacacia_enable_tlsf_frontend=true \
 `ltlsynt` is no longer fed pairs produced by Acacia's frontend. With `-T`, the
 wrapper converts the TLSF with SyFCo itself and passes an explicit
 `--semantics`; see
-[Comparison basis: each tool converts the TLSF itself](../../../../benchmarking/LTLSYNT-GAP.md#comparison-basis-each-tool-converts-the-tlsf-itself).
+[Comparison basis: each tool converts the TLSF itself](../../../../benchmarking/RESULTS.md).

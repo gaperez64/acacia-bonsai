@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Adjudicate the small-inductive-invariant gates from a probe campaign.
 
-Reads benchmarking/small-invariant-results.tsv, detects whether it contains a
+Reads a fetched or regenerated small-invariant results TSV and detects whether it contains a
 core, kernel, or width probe, and prints the tables the sprint record carries
 plus an explicit gate verdict, so the record's numbers are regenerated rather
 than retyped.
@@ -15,7 +15,7 @@ vector at no more than one eighth of the checkpoint width.
 Example:
 
     benchmarking/small-invariant-report.py \\
-        --results benchmarking/small-invariant-results.tsv
+        --results _bm-logs/small-invariant-results.tsv
 """
 
 from __future__ import annotations
@@ -253,7 +253,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--results", default="benchmarking/small-invariant-results.tsv")
+    parser.add_argument("--results", required=True,
+                        help="fetched or regenerated small-invariant results TSV")
     args = parser.parse_args()
 
     results_path = pathlib.Path(args.results)

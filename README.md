@@ -115,13 +115,13 @@ With `-Dacacia_native_arms=true`, the same `acacia-bonsai` binary accepts
 `--arms real:gr1:oxidd`, `--arms unreal:gr1:oxidd`, and
 `--arms real:param-lift:oxidd` with `-T spec.tlsf`. These arms run in process
 and are opt in. The former Python lifting route lives only in
-[the research oracle](benchmarking/gr1-par2-20260923/oracle/README.md) for
+[the research oracle](benchmarking/gr1-par2-20260923/oracle/acacia-lift-portfolio.py) for
 differential tests.
 
 Correctness and performance gates, including the sequential measurement
 protocol, are documented in [benchmarking/README.md](benchmarking/README.md).
 The comparison with `ltlsynt` is in
-[benchmarking/LTLSYNT-GAP.md](benchmarking/LTLSYNT-GAP.md).
+[benchmarking/RESULTS.md](benchmarking/RESULTS.md).
 
 # Compile-time configurations
 
@@ -154,8 +154,8 @@ The options pick data structures and algorithms, for instance:
 
 Some configurations take Spot's on-the-fly paths instead of the frozen automaton
 graph, gated by `-Dacacia_spot_guarded_backend` and `-Dacacia_spot_lazy_provider`
-and selected per polarity through `--arms`; the providers are described in
-[benchmarking/OTF-AND-SPOT.md](benchmarking/OTF-AND-SPOT.md).
+and selected per polarity through `--arms`; current results and archived
+provider evidence are indexed in [benchmarking/RESULTS.md](benchmarking/RESULTS.md).
 
 Inspect the registry with:
 ```

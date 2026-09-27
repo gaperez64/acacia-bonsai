@@ -39,11 +39,6 @@ FAILURE_PRECEDENCE = {
 KNOWN_RESULTS = DECISIVE_RESULTS | FAILURE_PRECEDENCE.keys()
 ORDERABLE_CONFIDENCE = frozenset(("exact", "override"))
 
-DEFAULT_RUNS = (
-    "B=benchmarking/_coverage26/B-runs.tsv",
-    "S=benchmarking/_coverage26/S-runs.tsv",
-)
-
 METADATA_COLUMNS = frozenset(
     (
         "logical_instance",
@@ -1005,17 +1000,15 @@ def parser() -> argparse.ArgumentParser:
     argument_parser.add_argument(
         "--family-metadata",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-family-instances.tsv"),
-        help="instance/family metadata TSV (default: %(default)s)",
+        required=True,
+        help="fetched or generated instance/family metadata TSV",
     )
     argument_parser.add_argument(
         "--runs",
         action="append",
         metavar="LABEL=PATH",
         help=(
-            "staged-cap run TSV; repeatable (default: "
-            "B=benchmarking/_coverage26/B-runs.tsv and "
-            "S=benchmarking/_coverage26/S-runs.tsv)"
+            "staged-cap run TSV; repeatable, explicit LABEL=PATH required"
         ),
     )
     argument_parser.add_argument(
@@ -1026,28 +1019,31 @@ def parser() -> argparse.ArgumentParser:
     argument_parser.add_argument(
         "--out-summary",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-coverage-summary.tsv"),
+        default=pathlib.Path("_bm-logs/frontier/syntcomp26-coverage-summary.tsv"),
         help="per-instance portfolio TSV (default: %(default)s)",
     )
     argument_parser.add_argument(
         "--out-frontiers",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-family-frontiers.tsv"),
+        default=pathlib.Path("_bm-logs/frontier/syntcomp26-family-frontiers.tsv"),
         help="family frontier TSV (default: %(default)s)",
     )
     argument_parser.add_argument(
         "--out-pairs",
         type=pathlib.Path,
-        default=pathlib.Path("benchmarking/syntcomp26-frontier-pairs.tsv"),
+        default=pathlib.Path("_bm-logs/frontier/syntcomp26-frontier-pairs.tsv"),
         help="solved-to-unsolved boundary pair TSV (default: %(default)s)",
     )
     return argument_parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = parser().parse_args(argv)
+    argument_parser = parser()
+    args = argument_parser.parse_args(argv)
+    if not args.runs:
+        argument_parser.error("at least one --runs LABEL=PATH is required")
     try:
-        specs = [parse_run_spec(text) for text in (args.runs or DEFAULT_RUNS)]
+        specs = [parse_run_spec(text) for text in args.runs]
         labels = [spec.label for spec in specs]
         if len(set(labels)) != len(labels):
             raise ValueError("--runs labels must be unique")

@@ -46,28 +46,27 @@ def sort_key(row: dict):
 
 
 def main(argv=None) -> int:
-    root = pathlib.Path(__file__).resolve().parents[1]
-    bench = root / "benchmarking"
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--targets", type=pathlib.Path,
-                        default=bench / "syntcomp26-frontier-targets.tsv")
+                        required=True)
     parser.add_argument("--summary", type=pathlib.Path,
-                        default=bench / "syntcomp26-coverage-summary.tsv")
+                        required=True)
     parser.add_argument("--forward", type=pathlib.Path,
-                        default=bench / "_coverage26" / "F26-runs.tsv")
+                        help="optional fetched forward-run TSV")
     parser.add_argument("--diagnostics", type=pathlib.Path,
-                        default=bench / "syntcomp26-frontier-diagnostics.tsv")
-    parser.add_argument("--out-dir", type=pathlib.Path, default=bench / "frontiers")
+                        help="optional fetched diagnostics CSV")
+    parser.add_argument("--out-dir", type=pathlib.Path,
+                        default=pathlib.Path("_bm-logs/frontier/dossiers"))
     args = parser.parse_args(argv)
 
     targets = read_tsv(args.targets)
     summary = {r["instance"]: r for r in read_tsv(args.summary)}
     forward = {}
-    if args.forward.is_file():
+    if args.forward is not None and args.forward.is_file():
         for row in read_tsv(args.forward):
             forward[row["instance"]] = (row["result"], row["seconds"])
     diags: dict[str, list[dict]] = collections.defaultdict(list)
-    if args.diagnostics.is_file():
+    if args.diagnostics is not None and args.diagnostics.is_file():
         for row in read_csv(args.diagnostics):
             diags[row.get("instance", "")].append(row)
 

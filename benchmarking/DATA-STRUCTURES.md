@@ -399,7 +399,8 @@ but it should have an immediate kill criterion because sum selectivity is not
 established by the supplied measurements. This is **not** the discarded change
 to the 177-element generator vector: it indexes the 81,470-scale visited-node
 population exemplified by the supplied campaign
-(`benchmarking/p4-forward-expansion-profile.tsv:9`).
+(`p4-forward-expansion-profile.tsv:9`, archived in
+`benchmarking-root-legacy` from `evidence-2026-09-27`).
 
 Early confirmation/kill measurement:
 

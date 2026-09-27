@@ -812,7 +812,8 @@ endif
 #     syntcomp24 crossover records Acacia 1.x solving it in 9.437s, but the 1.x
 #     binary reports REALIZABLE when a worker is killed by a signal, and 9.437s
 #     matches time-to-exhaust-memory; see the section on that in
-#     benchmarking/LTLSYNT-GAP.md. CI did not see this before because at -O0 the
+#     LTLSYNT-GAP.md (archived in benchmarking-root-legacy,
+#     evidence-2026-09-27). CI did not see this before because at -O0 the
 #     solver reached the 51s timeout, which the harness tolerates, before it
 #     reached its memory limit; at -O2 it gets there in ~11s and answers.
 #     It fails the ab/large1 suite for the same reason, which CI does not run.

@@ -36,7 +36,7 @@ Example:
         --build build_sprint_diag \\
         --suite syntcomp24=tests/suites/benchmarks/syntcomp24/regress.list \\
         --source-map syntcomp24=tests/suites/benchmarks/syntcomp24/sources.tsv \\
-        --out benchmarking/semantic-action-census.tsv --timeout 25
+        --out _bm-logs/semantic-action-census.tsv --timeout 25
 """
 
 from __future__ import annotations
