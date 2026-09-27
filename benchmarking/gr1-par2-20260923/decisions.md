@@ -900,7 +900,7 @@ every judgment call and measurement in order. Numbers are carried forward verbat
 
 ## 2026-09-27 — Campaign stopped by the owner; the sprint PR stays open
 
-- **Owner decision (08:0x): stop all runs.**
+- **Owner decision (07:58): stop all runs.**
   - The obfuscated 60 s run was stopped after 80 of 1,524 rows. That partial output is not kept as
     evidence, and the 17 s, TACAS23 and join steps did not run.
   - The sprint PR #192 stays **unmerged**.
@@ -910,8 +910,8 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   isolated 60 s legs. The parametric lifting arm `real:param-lift:oxidd` does not earn a slot:
   19 solves and 1 unique among the seven arms.
 - **Next, on this branch:**
-  - optimise the gr1 and param-lift arms (tracked as an issue opened 2026-09-25);
-  - add a param-lift UNREAL arm (also tracked as an issue).
+  - optimise the gr1 and param-lift arms (#194);
+  - add a param-lift UNREAL arm (#195).
 - **Evidence committed from the timing worktree**, which sits on a detached HEAD at 2e302f53:
   - the seven per-arm legs (`campaign/perarm-m1/legs/`);
   - the final-portfolio smoke run with its phase drivers (`perarm-m1/smoke/final-portfolio/`);
