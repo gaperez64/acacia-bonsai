@@ -84,3 +84,39 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
     - `witness-lifting-20260918` opening gives 1,178 / 12,543.332 s.
 - **Index.** `benchmarking/evidence-index.tsv` holds 33 write-once rows. The next step untracks
   the archived bulk from HEAD.
+
+## 2026-09-27 — Bulk evidence off HEAD; living docs; worktrees retired (P0a done, part of P0b)
+
+- **HEAD shrinks from 100.3 MB to 17.5 MB tracked.** 2,139 files were removed: 2,129 are in
+  indexed, restore-tested archives and 10 are the obfuscation linkage files, deliberately not
+  archived. Ten reusable campaign tools moved to `benchmarking/tools/` and take fetched evidence
+  through explicit arguments.
+  - One-off entrypoints are removed or made to require explicit inputs.
+  - Generated outputs go to ignored directories.
+  - Source comments cite archive IDs.
+- **What this does not do.** It reduces HEAD only. The removed bytes remain reachable in the
+  history of #190–#192; the clean-landing proposal and the owner's later branch retirement deal
+  with that.
+- **Living docs.** One current report, `benchmarking/RESULTS.md`: the latest released three-way,
+  the E5 virtual best, the per-arm legs, and rejected ideas pointing at archive IDs.
+  `CLAUDE.md` and `benchmarking/README.md` now define durable evidence as a verified external
+  archive plus an index row.
+- **Growth guard** on 26cbb45f..HEAD: PASS, after fixing a false positive that classed the tool
+  `thermal-annotate.py` as thermal data. The owner chose CI only, with no git hook.
+- **Oracle regression found and fixed.** 12 failures in `test_acacia_lift_online.py` came from the
+  oracle defaulting to a stale sibling tlsf-tools build (`f213093`) whose `tlsf2tlsf` lacks
+  frontend provenance.
+  - `scripts/build-oracle-toolchain.sh` now builds the oracle's CLIs from Acacia's own
+    submodule, pinned and OxiDD-patch-verified, into ignored `build_oracle_tlsf/`.
+  - The oracle refuses a stale toolchain.
+  - Results: 17/17; pytest 976 passed and 4 skipped (the Python 3.14 binding modules are an
+    environment limit); unit 50/50.
+- **Worktrees: 16 → 9.**
+  - `acacia-wt-candidate2`: its unique commit `f7919b83` was bundled and verified, and its pinned
+    build moved (hash re-checked) to `~/GIT-repos/acacia-worktree-retirement-20260927/`; then it
+    was removed.
+  - Five clean worktrees with uncited caches were removed without force: `c-selector`,
+    `ds-report`, `legacyfix`, `master-c4e0eb80`, `pairs-error-policy`.
+  - The two stale `/tmp` registrations were pruned.
+  - Eight are kept: dirty, unmerged, pinned binaries, or the timing tree.
+  - No branch was deleted.
