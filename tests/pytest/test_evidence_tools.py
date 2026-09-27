@@ -348,6 +348,48 @@ class EvidenceToolTests(unittest.TestCase):
         self.assertNotIn("raw evidence: benchmarking/gr1-par2-20260923/s0/raw-case/config.json",
                          result.stdout)
 
+    def test_guard_ignores_evidence_words_in_source_names(self):
+        repo = self.work / "source-names"
+        (repo / "scripts").mkdir(parents=True)
+        (repo / "benchmarking").mkdir()
+        shutil.copy2(GUARD, repo / "scripts/check-evidence-growth.py")
+        (repo / "benchmarking/evidence-growth-allowlist.tsv").write_text("path\treason\n")
+        run("git", "init", "-q", "-b", "master", cwd=repo)
+        fast_import_commit(repo, "base", {
+            "scripts/check-evidence-growth.py": GUARD.read_bytes(),
+            "benchmarking/evidence-growth-allowlist.tsv": b"path\treason\n",
+        }, first=True)
+        base = run("git", "rev-parse", "HEAD", cwd=repo).stdout.strip()
+        source_names = (
+            "benchmarking/tools/thermal-annotate.py",
+            "benchmarking/tools/thermal-check.sh",
+            "benchmarking/thermal/proof-bundle.cc",
+            "benchmarking/proofs/thermal-helper.hh",
+            "benchmarking/proof/thermal.c",
+            "benchmarking/tools/thermal.cpp",
+            "benchmarking/tools/thermal.rs",
+            "benchmarking/tools/thermal.toml",
+            "benchmarking/tools/thermal.hpp",
+            "benchmarking/tools/thermal.yaml",
+        )
+        fast_import_commit(repo, "source files", {name: b"source\n" for name in source_names})
+        guard = repo / "scripts/check-evidence-growth.py"
+        result = run("python3", "-s", str(guard), "--range", f"{base}..HEAD", ok=False)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("PASS no new evidence growth violations", result.stdout)
+
+        raw_names = (
+            "benchmarking/thermal-samples.tsv",
+            "benchmarking/tools/thermal-annotate.py.log",
+            "benchmarking/thermal/proof-bundle.zip",
+        )
+        fast_import_commit(repo, "raw thermal samples", {name: b"samples\n" for name in raw_names})
+        result = run("python3", "-s", str(guard), "--range", f"{base}..HEAD", ok=False)
+        self.assertNotEqual(result.returncode, 0)
+        for name in raw_names:
+            with self.subTest(path=name):
+                self.assertIn(f"FAIL raw evidence: {name} ", result.stdout)
+
     def test_guard_accepts_complete_tooling_commit(self):
         repo = self.work / "clean-tooling"
         (repo / "scripts").mkdir(parents=True)

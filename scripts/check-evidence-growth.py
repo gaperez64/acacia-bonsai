@@ -9,6 +9,11 @@ import subprocess
 ROOT = Path(__file__).resolve().parent.parent
 RAW_SUFFIXES = (".tsv", ".csv", ".raw", ".log", ".jsonl", ".tar", ".gz",
                 ".zst", ".zip")
+SOURCE_SUFFIXES = (".py", ".sh", ".bash", ".c", ".h", ".cc", ".hh", ".cpp",
+                   ".hpp", ".cxx", ".hxx", ".rs", ".go", ".js", ".jsx",
+                   ".ts", ".tsx", ".java", ".kt", ".swift", ".rb", ".pl",
+                   ".lua", ".m", ".mm", ".php", ".r", ".jl", ".toml",
+                   ".yaml", ".yml", ".cmake", ".mk", ".nix")
 PRESENTATION_SUFFIXES = (".md", ".txt", ".json", ".png", ".pdf", ".svg")
 INDIVIDUAL_LIMIT = 256 * 1024
 PRESENTATION_LIMIT = 2 * 1024 * 1024
@@ -43,6 +48,11 @@ def raw(path):
     if not path.startswith("benchmarking/"):
         return False
     lower = path.lower()
+    if lower.endswith(RAW_SUFFIXES):
+        return True
+    # A source or config file can contain evidence words in its name or parents.
+    if lower.endswith(SOURCE_SUFFIXES):
+        return False
     parts = lower.split("/")
     contract_json = parts[-1] in ("schema.json", "config.json", "configuration.json") or \
         parts[-1].endswith((".schema.json", ".config.json"))
@@ -50,8 +60,7 @@ def raw(path):
         any(part.startswith("raw-") for part in parts[1:-1]) or
         (any(part == "campaign" or part.startswith("campaign-") for part in parts[1:-1])
          and any("trace" in part or "diagnostics" in part for part in parts[1:])))
-    return (lower.endswith(RAW_SUFFIXES) or
-            raw_json or
+    return (raw_json or
             any(word in lower for word in ("thermal-sample", "proof-bundle")) or
             ("thermal" in lower and not lower.endswith(".md")) or
             (("/proof/" in lower or "/proofs/" in lower) and not lower.endswith(".md")))
