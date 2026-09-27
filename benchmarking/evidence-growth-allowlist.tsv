@@ -1,0 +1,5 @@
+path	reason
+benchmarking/evidence-index.tsv	Compact archive locator and digest registry
+benchmarking/baselines.tsv	Compact frozen-binary retention registry
+benchmarking/evidence-growth-allowlist.tsv	Exact guard policy file with justified fixture paths
+benchmarking/evidence-do-not-publish.txt	Exact publication hold policy file

@@ -44,7 +44,8 @@ done
 # the top of the tree. git ls-files also lists paths that are not on disk --
 # tests/syntcomp-benchmarks is a submodule with update = none -- so only the
 # files that actually exist are searched.
-referenced=$(mktemp); trap 'rm -f "$referenced"' EXIT
+mkdir -p build_scratch
+referenced=$(mktemp -p build_scratch); trap 'rm -f "$referenced"' EXIT
 # Manifests from earlier runs list every directory by name, so searching them
 # would make every directory look referenced and the script would never remove
 # anything again.
@@ -58,6 +59,13 @@ haystack \
   | xargs -0 grep -ohE '(build|_bm-logs)[A-Za-z0-9._-]*' 2>/dev/null \
   | sort -u > "$referenced" || true
 
+# The compact registries remain after bulky campaign records leave Git. Read
+# them explicitly so moving evidence never makes its frozen build prunable.
+for registry in benchmarking/evidence-index.tsv benchmarking/baselines.tsv; do
+  [[ -f $registry ]] || continue
+  grep -ohE '(build|_bm-logs)[A-Za-z0-9._-]*' "$registry" >> "$referenced" || true
+done
+
 # The shipped configurations' builds are what the Docker wrappers run.
 while read -r preset; do
   [[ -n $preset ]] && echo "build_$preset"
@@ -68,14 +76,20 @@ sort -u -o "$referenced" "$referenced"
 # the binary inside it. Campaign results carry a binary_sha256 column, and
 # benchmarking/README.md pins the frozen G1 baseline by hash; either way, that
 # is the binary a published measurement came from, so it is not scratch.
-hashes=$(mktemp); trap 'rm -f "$referenced" "$hashes"' EXIT
+hashes=$(mktemp -p build_scratch); trap 'rm -f "$referenced" "$hashes"' EXIT
 haystack \
   | xargs -0 grep -ohE '\b[0-9a-f]{64}\b' 2>/dev/null \
   | sort -u > "$hashes" || true
+for registry in benchmarking/evidence-index.tsv benchmarking/baselines.tsv; do
+  [[ -f $registry ]] || continue
+  grep -ohE '\b[0-9a-f]{64}\b' "$registry" >> "$hashes" || true
+done
+sort -u -o "$hashes" "$hashes"
 
 keep=(); prune=()
 for d in build* _bm-logs*; do
   [[ -d $d ]] || continue
+  [[ $d == build_scratch ]] && continue
   if grep -qxF "$d" "$referenced"; then
     keep+=("$d")
     continue
@@ -105,7 +119,7 @@ for d in "${prune[@]:-}"; do
   total=$(( total + $(size_of "$d") ))
 done
 
-echo "kept:  ${#keep[@]} directories (named by a tracked file, a top-level note, or docker_default)"
+echo "kept:  ${#keep[@]} directories (tracked references, registries, top-level notes, or docker_default)"
 echo "prune: ${#prune[@]} directories, $(human "$total")"
 
 if [[ -n $manifest ]]; then
@@ -113,8 +127,8 @@ if [[ -n $manifest ]]; then
     echo "# Artifact prune manifest"
     echo "# generated $(date -u +%Y-%m-%dT%H:%M:%SZ) at $(git rev-parse --short HEAD)"
     echo "# These directories were removed. They were gitignored build output and"
-    echo "# campaign logs that no tracked file, top-level note, or shipped"
-    echo "# configuration referred to."
+    echo "# campaign logs that no tracked file, registry, top-level note, or"
+    echo "# shipped configuration referred to."
     echo
     echo "## kept"
     printf '%s\n' "${keep[@]:-}" | sed '/^$/d' | sort
