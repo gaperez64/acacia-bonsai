@@ -4,6 +4,7 @@
 #include "error_msg.hh"
 #include "native_proof_binding.hh"
 #include "native_support.hh"
+#include "phase_records.hh"
 #ifdef ACACIA_NATIVE_TEST_HOOKS
 #include "native_test_hooks.hh"
 #endif
@@ -19,14 +20,39 @@
 #include <tlsf/gr1_reduction.h>
 
 namespace acacia {
+  struct reduction_record_context {
+      const char* arm;
+      const TlsfGr1ReductionStats* stats;
+  };
+  static void record_reduction_stage (void* opaque, TlsfGr1ReductionStatsStage stage,
+                                      const TlsfGr1ReductionStageStats* row) noexcept {
+    constexpr const char* stages[] = {
+      "reduce_source", "reduce_monitors", "reduce_encode", "reduce_publish"};
+    auto& context = *static_cast<reduction_record_context*> (opaque);
+    const phase_memory memory {long (row->rss_kb), long (row->peak_rss_kb),
+                               size_t (row->arena), size_t (row->hblkhd),
+                               size_t (row->uordblks), size_t (row->fordblks)};
+    phase_finish (context.arm, stages[stage],
+                  {phase_clock (CLOCK_MONOTONIC) - row->wall_ns,
+                   phase_clock (CLOCK_PROCESS_CPUTIME_ID) - row->cpu_ns},
+                  -1, -1, stage == TLSF_GR1_REDUCE_STATS_MONITORS
+                      ? context.stats->monitor_count : 0,
+                  0, &memory,
+                  stage == TLSF_GR1_REDUCE_STATS_MONITORS
+                      ? context.stats->monitor_count : 0,
+                  stage == TLSF_GR1_REDUCE_STATS_MONITORS
+                      ? context.stats->monitor_states : 0);
+  }
   int run_native_gr1_arm (const arg_parse_result& args, bool unreal,
                                  uint64_t deadline_mono_ns) {
+    const char* arm = unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd";
     constexpr size_t artifact_cap = 64u * 1024u * 1024u;
     constexpr size_t solver_nodes = 1u << 22;
     constexpr size_t checker_nodes = 1u << 22;
     if (!native_limit_address_space (unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd"))
       return EXIT_CODE_UNKNOWN;
 
+    phase_scope pipeline_phase (arm, "pipeline_load_expand");
     TlsfPipelineError pipeline_error {};
     TlsfPipelineOptions pipeline_options {};
     pipeline_options.certify = true;
@@ -43,20 +69,30 @@ namespace acacia {
                          pipeline_error.message);
       return EXIT_CODE_UNKNOWN;
     }
+    pipeline_phase.finish ();
+    phase_scope source_phase (arm, "source_provenance");
     if (args.tlsf_sha256 != pipeline->source_sha256) {
       native_diagnostic (unreal, "source", -1, "snapshot hash mismatch");
       return EXIT_CODE_UNKNOWN;
     }
+    source_phase.finish ();
 
+    phase_scope reduction_phase (arm, "reduction_monitor");
     TlsfGr1ReductionOptions reduction_options {};
     reduction_options.semantics = TLSF_GR1_EXACT;
     reduction_options.deadline_mono_ns = deadline_mono_ns;
     reduction_options.max_artifact_bytes = artifact_cap;
     reduction_options.max_monitor_states = 10000;
+    TlsfGr1ReductionStats reduction_stats {};
+    reduction_record_context reduction_context {arm, &reduction_stats};
     native_reduction_owner reduction;
     TlsfGr1ReductionError reduction_error {};
-    auto reduced =
-        tlsf_gr1_reduce (pipeline.get (), &reduction_options, &reduction.value, &reduction_error);
+    auto reduced = phase_records_enabled ()
+        ? tlsf_gr1_reduce_with_stats (pipeline.get (), &reduction_options, &reduction.value,
+                                      &reduction_error, &reduction_stats,
+                                      record_reduction_stage, &reduction_context)
+        : tlsf_gr1_reduce (pipeline.get (), &reduction_options, &reduction.value,
+                           &reduction_error);
     if (reduced != TLSF_GR1_REDUCE_OK) {
       native_diagnostic (unreal, reduction_error.stage, reduced, reduction_error.message);
       return EXIT_CODE_UNKNOWN;
@@ -75,7 +111,9 @@ namespace acacia {
       native_diagnostic (unreal, "reduction", -1, "source or game hash mismatch");
       return EXIT_CODE_UNKNOWN;
     }
+    reduction_phase.finish ();
 
+    phase_scope solve_phase (arm, "solve_export_total");
     OxiddFailure failure {};
     auto solve_options = oxidd_solve_options_default ();
     solve_options.failure = &failure;
@@ -96,6 +134,7 @@ namespace acacia {
     certificate.policy_aag_size = &sizes[2];
     certificate.policy_json_size = &sizes[3];
     certificate.max_artifact_bytes = artifact_cap;
+    Gr1CertificateStats solver_stats {};
     struct ArtifactOwner {
         std::array<char*, 4>& bytes;
         ~ArtifactOwner () {
@@ -107,8 +146,29 @@ namespace acacia {
     Aig* game = reduction.value.game;
     reduction.value.game = nullptr;  // the solver takes ownership
     std::unique_ptr<Aig, decltype (&aig_free)> strategy (
-        solve_gr1_oxidd_ex_with_certificate (game, &solved_unreal, &solve_options, &certificate),
-        aig_free);
+        phase_records_enabled ()
+            ? solve_gr1_oxidd_ex_with_certificate_and_stats (
+                  game, &solved_unreal, &solve_options, &certificate, &solver_stats)
+            : solve_gr1_oxidd_ex_with_certificate (
+                  game, &solved_unreal, &solve_options, &certificate), aig_free);
+    solve_phase.finish ();
+    if (phase_records_enabled ()) {
+      const auto emit = [&] (const char* phase, uint64_t wall, uint64_t cpu,
+                           size_t nodes, size_t bytes_count) {
+        if (!wall) return;
+        phase_finish (arm, phase,
+                      {phase_clock (CLOCK_MONOTONIC) - wall,
+                       phase_clock (CLOCK_PROCESS_CPUTIME_ID) - cpu},
+                      static_cast<long long> (nodes), -1, 0, bytes_count);
+      };
+      emit ("solve", solver_stats.solve_wall_ns, solver_stats.solve_cpu_ns,
+            solver_stats.nodes_at_export, 0);
+      emit ("certificate_policy_export", solver_stats.export_wall_ns,
+            solver_stats.export_cpu_ns, solver_stats.nodes_before_teardown,
+            sizes[0] + sizes[1] + sizes[2] + sizes[3]);
+      emit ("teardown_bdd_manager", solver_stats.teardown_wall_ns,
+            solver_stats.teardown_cpu_ns, 0, 0);
+    }
     if (failure.kind != OXIDD_FAILURE_NONE || certificate.failed ||
         (!strategy && !solved_unreal)) {
       native_diagnostic (unreal, "solve", int (failure.kind),
@@ -119,6 +179,7 @@ namespace acacia {
       native_diagnostic (unreal, "polarity", 0, "opposite side solved");
       return EXIT_CODE_UNKNOWN;
     }
+    phase_scope proof_phase (arm, "proof_binding");
     for (size_t i = 0; i < bytes.size (); ++i) {
       if (!bytes[i] || !sizes[i]) {
         native_diagnostic (unreal, "certificate", -1, "certificate or policy missing");
@@ -138,11 +199,16 @@ namespace acacia {
       return EXIT_CODE_UNKNOWN;
     }
     const std::string stable_game (reduction.value.aag, reduction.value.aag_size);
+    proof_phase.finish ();
+    phase_scope strategy_teardown (arm, "teardown_strategy");
     strategy.reset ();
+    strategy_teardown.finish ();
+    phase_scope export_teardown (arm, "teardown_export_buffers");
     for (char*& p : bytes) {
       std::free (p);
       p = nullptr;
     }
+    export_teardown.finish ();
     const auto span = [] (const char* data, size_t size) -> TlsfGr1Bytes {
       return {reinterpret_cast<const uint8_t*> (data), size};
     };
@@ -159,7 +225,9 @@ namespace acacia {
     check_options.max_artifact_bytes = artifact_cap;
     check_options.deadline_mono_ns = deadline_mono_ns;
     native_check_owner checked;
+    phase_scope check_phase (arm, "independent_check");
     const TlsfGr1CheckStatus status = tlsf_gr1_check (&input, &check_options, &checked.value);
+    check_phase.finish (static_cast<long long> (checked.value.peak_nodes));
     if (status != TLSF_GR1_CHECK_OK || checked.value.verdict != TLSF_GR1_CHECK_VERIFIED) {
       native_diagnostic (unreal, checked.value.stage[0] ? checked.value.stage : "check",
                          status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status),

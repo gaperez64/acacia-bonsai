@@ -848,6 +848,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="wrap the solver with GNU time inside the existing scope")
     parser.add_argument("--worker-records-dir", type=pathlib.Path,
                         help="diagnostic run: capture transformed workers below this directory")
+    parser.add_argument("--phase-records-dir", type=pathlib.Path,
+                        help="diagnostic run: save opt-in per-process phase JSONL by instance")
     parser.add_argument(
         "--route-records",
         type=pathlib.Path,
@@ -898,6 +900,9 @@ def run(args: argparse.Namespace) -> int:
     records_root = getattr(args, "worker_records_dir", None)
     if records_root is not None:
         records_root = records_root.resolve()
+    phase_records_root = getattr(args, "phase_records_dir", None)
+    if phase_records_root is not None:
+        phase_records_root = phase_records_root.resolve()
     route_records_root = getattr(args, "route_records", None)
     if route_records_root is not None:
         route_records_root = route_records_root.resolve()
@@ -1010,6 +1015,15 @@ def run(args: argparse.Namespace) -> int:
                         "ACACIA_SPOT_CAPTURE_DIR": str(directory),
                         "ACACIA_DIAG_INSTANCE": instance,
                     })
+                if phase_records_root is not None:
+                    safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", args.solver_label)
+                    safe_instance = re.sub(r"[^A-Za-z0-9_.-]", "_", instance)
+                    directory = (phase_records_root / safe_label / str(cap) /
+                                 f"{safe_instance}-{run_index}")
+                    directory.mkdir(parents=True, exist_ok=True)
+                    run_env = dict(os.environ if run_env is None else run_env,
+                                   ACACIA_PHASE_RECORDS=str(directory))
+                    child_env_overrides["ACACIA_PHASE_RECORDS"] = str(directory)
                 route_path = None
                 if route_records_root is None:
                     # Keep the historical launch call exactly unchanged when
@@ -1023,6 +1037,8 @@ def run(args: argparse.Namespace) -> int:
                         cpu_quota=args.cpu_quota,
                         unit_prefix="acacia-syntcomp26-coverage",
                         env=run_env,
+                        **({"scope_env": child_env_overrides}
+                           if phase_records_root is not None else {}),
                     )
                 else:
                     safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", args.solver_label)

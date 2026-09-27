@@ -90,6 +90,9 @@ test ('config-transition-acceptance',
       suite : ['unit', 'config-frontends'])
 
 if get_option ('acacia_native_arms')
+  phase_record_failure_worker = executable (
+    'phase-record-failure-worker', 'phase-record-failure-worker.cc',
+    cpp_args : ['-DACACIA_PHASE_RECORDS_TEST_HOOKS'])
   native_json_binding_test = executable (
     'native-json-binding-test',
     ['native_json_binding_test.cc', '../src/native_proof_binding.cc'],
@@ -97,7 +100,8 @@ if get_option ('acacia_native_arms')
     dependencies : tlsf_deps)
   test ('native-json-binding', native_json_binding_test,
         suite : ['unit', 'native-gr1', 'native-param-lift'])
-  native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe, meson.project_build_root ()]
+  native_gr1_cli_args = [files ('check-native-gr1-cli.py'), ab_exe,
+                         meson.project_build_root (), phase_record_failure_worker]
   native_lift_cli_args = [files ('check-native-param-lift-cli.py'), ab_exe,
                           meson.project_build_root ()]
   native_cli_depends = [ab_exe]

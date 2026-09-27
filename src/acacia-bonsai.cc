@@ -4,6 +4,7 @@
 #include "native_gr1_arm.hh"
 #include "native_param_lift_arm.hh"
 #include "native_support.hh"
+#include "phase_records.hh"
 #include "solver/solver_invoker.hh"
 #include <unordered_map>
 
@@ -150,9 +151,13 @@ namespace {
     if (arm.kind != portfolio_arm_kind::legacy) {
 #if ACACIA_NATIVE_ARMS
       try {
-        _exit (arm.kind == portfolio_arm_kind::gr1
-                   ? acacia::run_native_gr1_arm (arg_values, arm.unreal, deadline_mono_ns)
-                   : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns));
+        const int result = arm.kind == portfolio_arm_kind::gr1
+            ? acacia::run_native_gr1_arm (arg_values, arm.unreal, deadline_mono_ns)
+            : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
+        acacia::phase_records_summary (arm.kind == portfolio_arm_kind::gr1
+            ? (arm.unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd")
+            : "real:param-lift:oxidd");
+        _exit (result);
       }
       catch (const std::exception& exception) {
         acacia::native_arm_diagnostic (
@@ -168,6 +173,7 @@ namespace {
                 : "real:param-lift:oxidd",
             "native_exception", -1, "unknown exception");
       }
+      acacia::phase_records_summary ("native");
       _exit (EXIT_CODE_UNKNOWN);
 #else
       _exit (EXIT_CODE_ERROR);
@@ -208,6 +214,7 @@ namespace {
                               arg_values.metadata, provider, arg_values.candidate);
     verb_do (1, vout << "returning " << res << "\n");
 
+    acacia::phase_records_summary ("legacy");
     if (unreal_x.has_value ())
       exit (res ? EXIT_CODE_UNREAL : EXIT_CODE_UNKNOWN);
     else
@@ -219,10 +226,23 @@ namespace {
     // Publish the child PID before a termination handler can run.
     sigset_t old_mask;
     sigprocmask (SIG_BLOCK, &block_set, &old_mask);
+    const acacia::phase_stamp fork_start = acacia::phase_start ();
     const pid_t pid = fork ();
     if (pid == 0) {
+      acacia::phase_records_init ();
+      const acacia::phase_stamp child_start = fork_start.wall
+          ? acacia::phase_stamp {fork_start.wall,
+                                 acacia::phase_clock (CLOCK_PROCESS_CPUTIME_ID)}
+          : acacia::phase_stamp {};
       if (setpgid (0, 0) != 0) _exit (EXIT_CODE_ERROR);
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
+      if (child_start.wall) {
+        const char* name = arm.kind == portfolio_arm_kind::gr1
+            ? (arm.unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd")
+            : arm.kind == portfolio_arm_kind::param_lift ? "real:param-lift:oxidd"
+            : "legacy";
+        acacia::phase_finish (name, "child_startup", child_start);
+      }
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)
       test_child_behavior (g_child_count, deadline_mono_ns);
 #endif
@@ -269,11 +289,20 @@ namespace {
 
     int status;
     bool child_reported_error = false;
-    while (true) {  // as long as we have children to wait for
+    while (true) {  // wait only for solver arms; the record writer is separate
+      bool live_arm = false;
+      for (sig_atomic_t i = 0; i < g_child_count; ++i)
+        if (g_child_pids[i] > 0) { live_arm = true; break; }
+      if (!live_arm) break;
       siginfo_t finished{};
       const int observed = waitid (P_ALL, 0, &finished, WEXITED | WNOHANG | WNOWAIT);
       pid_t reaped = observed == -1 ? -1 : 0;
       int wait_error = errno;
+      if (observed == 0 && finished.si_pid == acacia::phase_records_writer_pid ()) {
+        waitpid (finished.si_pid, nullptr, WNOHANG);
+        acacia::phase_records_writer_reaped ();
+        continue;
+      }
       if (observed == 0 && finished.si_pid > 0) {
         // WNOWAIT keeps the group leader's PID reserved until descendants in
         // its group have been killed, even if the leader exited earlier.
@@ -357,8 +386,11 @@ namespace {
 }
 
 int main (int argc, char** argv) {
+  acacia::phase_records_start_writer ();
   // parse all arguments that were passed
+  acacia::phase_scope argument_phase ("legacy_parent", "argument_handling_total");
   auto arg_values = arg_parser (argc, argv);
+  argument_phase.finish ();
   const uint64_t deadline_mono_ns = outer_deadline_ns ();
   // set the global verbose level
   utils::verbose = arg_values.verbose_level;

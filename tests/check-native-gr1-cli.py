@@ -7,6 +7,8 @@ from importlib.util import module_from_spec, spec_from_file_location
 import json
 import os
 from pathlib import Path
+import resource
+import signal
 import subprocess
 import sys
 import tempfile
@@ -68,6 +70,7 @@ def expect(binary: Path, args: list[str], code: int, text: str,
 def main() -> None:
     binary = Path(sys.argv[1]).resolve()
     build_dir = Path(sys.argv[2]).resolve()
+    record_worker = Path(sys.argv[3]).resolve()
     with tempfile.TemporaryDirectory(dir=build_dir) as location:
         directory = Path(location)
         real = directory / "real.tlsf"
@@ -146,7 +149,116 @@ def main() -> None:
                         "real:gr1:oxidd"], 3, "cannot be combined")
         expect(binary, ["-T", str(real), "--arms", "real:gr1:oxidd", "-s",
                         str(directory / "controller")], 3, "do not support -s")
+        check_record_failures(record_worker, binary, real, directory)
     print("native GR(1) CLI checks passed")
+
+
+def check_record_failures(worker: Path, binary: Path, real: Path,
+                          root: Path) -> None:
+    def execute(record_dir: Path | None, *, fifo: bool = False,
+                fifo_reader: bool = False, file_limit: bool = False,
+                stall: bool = False, flood: bool = False,
+                kill_writer: bool = False) -> tuple[int, str, float]:
+        env = os.environ.copy()
+        env.pop("ACACIA_PHASE_RECORDS", None)
+        env.pop("ACACIA_TEST_RECORD_WRITER_STALL", None)
+        if record_dir is not None:
+            env["ACACIA_PHASE_RECORDS"] = str(record_dir)
+        if stall:
+            env["ACACIA_TEST_RECORD_WRITER_STALL"] = "1"
+        def limit_file() -> None:
+            resource.setrlimit(resource.RLIMIT_FSIZE, (0, 0))
+        before = time.monotonic()
+        process = subprocess.Popen([str(worker)], stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   text=True, env=env,
+                                   preexec_fn=limit_file if file_limit else None)
+        reader_fd = None
+        if fifo:
+            assert record_dir is not None
+            os.mkfifo(record_dir / f"{process.pid}.jsonl")
+            if fifo_reader:
+                reader_fd = os.open(record_dir / f"{process.pid}.jsonl",
+                                    os.O_RDONLY | os.O_NONBLOCK)
+        # The worker waits on stdin after recorder setup. This checks that
+        # records-off creates no writer child or pipe.
+        children = Path(f"/proc/{process.pid}/task/{process.pid}/children")
+        for _ in range(100):
+            count = len(children.read_text().split())
+            if count or record_dir is None:
+                break
+            time.sleep(.001)
+        assert count == (1 if record_dir is not None else 0), count
+        if kill_writer:
+            assert count == 1
+            os.kill(int(children.read_text().split()[0]), signal.SIGKILL)
+        try:
+            stdout, stderr = process.communicate("f\n" if flood else "\n", timeout=5)
+        finally:
+            if reader_fd is not None:
+                os.close(reader_fd)
+        assert not stderr, stderr
+        return process.returncode, stdout, time.monotonic() - before
+
+    baseline = execute(None)
+    assert baseline[:2] == (0, "REALIZABLE\n")
+    working = root / "records-working"
+    working.mkdir()
+    assert execute(working)[:2] == baseline[:2]
+    written = [json.loads(line) for path in working.glob("*.jsonl")
+               for line in path.read_text().splitlines()]
+    assert any(row.get("phase") == "record_failure_test" for row in written)
+    assert any(row.get("phase") == "record_summary" and
+               row.get("dropped_records") == 0 for row in written)
+    assert execute(working, kill_writer=True)[:2] == baseline[:2]
+    fifo_dir = root / "records-fifo"
+    fifo_dir.mkdir()
+    assert execute(fifo_dir, fifo=True)[:2] == baseline[:2]
+    assert execute(fifo_dir, fifo=True, fifo_reader=True)[:2] == baseline[:2]
+    limit_dir = root / "records-limit"
+    limit_dir.mkdir()
+    assert execute(limit_dir, file_limit=True)[:2] == baseline[:2]
+    assert len(list(limit_dir.iterdir())) == 1
+    assert next(limit_dir.iterdir()).stat().st_size == 0
+    unwritable = root / "records-unwritable"
+    unwritable.mkdir(mode=0o500)
+    try:
+        assert execute(unwritable)[:2] == baseline[:2]
+        if os.geteuid() != 0:
+            assert not list(unwritable.iterdir())
+    finally:
+        unwritable.chmod(0o700)
+    stalled = root / "records-stalled-regular"
+    stalled.mkdir()
+    result = execute(stalled, stall=True)
+    assert result[:2] == baseline[:2] and result[2] < 1, result
+    flood_result = execute(stalled, stall=True, flood=True)
+    assert flood_result[:2] == baseline[:2] and flood_result[2] < 1, flood_result
+    assert not list(stalled.iterdir())
+    # The production single-arm path has the same parent/writer lifecycle.
+    def run_real(record_dir: Path | None, deadline: float,
+                 arm: str = "real:gr1:oxidd") -> tuple[int, str, float]:
+        env = os.environ.copy()
+        env.pop("ACACIA_PHASE_RECORDS", None)
+        if record_dir is not None:
+            env["ACACIA_PHASE_RECORDS"] = str(record_dir)
+        env["ACACIA_OUTER_DEADLINE_MONOTONIC"] = str(deadline)
+        before = time.monotonic()
+        proc = subprocess.run([str(binary), "-T", str(real), "--arms", arm],
+                              capture_output=True, text=True, env=env, timeout=5)
+        return proc.returncode, proc.stdout, time.monotonic() - before
+    baseline_real = run_real(None, time.monotonic() + 2)
+    with_records = run_real(root, time.monotonic() + 2)
+    assert with_records[:2] == baseline_real[:2], (baseline_real, with_records)
+    assert with_records[2] < 2, with_records
+    unknown_off = run_real(None, time.monotonic() + 2, "unreal:gr1:oxidd")
+    unknown_on = run_real(root, time.monotonic() + 2, "unreal:gr1:oxidd")
+    assert unknown_on[:2] == unknown_off[:2] and unknown_on[0] == 2, (unknown_off, unknown_on)
+    assert unknown_on[2] < 2, unknown_on
+    expired_off = run_real(None, time.monotonic() - 1)
+    expired_on = run_real(root, time.monotonic() - 1)
+    assert expired_on[:2] == expired_off[:2] == (2, ""), (expired_off, expired_on)
+    assert expired_on[2] < .5, expired_on
 
 
 if __name__ == "__main__":

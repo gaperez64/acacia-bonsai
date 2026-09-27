@@ -3,3 +3,5 @@ benchmarking/evidence-index.tsv	Compact archive locator and digest registry
 benchmarking/baselines.tsv	Compact frozen-binary retention registry
 benchmarking/evidence-growth-allowlist.tsv	Exact guard policy file with justified fixture paths
 benchmarking/evidence-do-not-publish.txt	Exact publication hold policy file
+benchmarking/optimize-20260927/dev-panel.tsv	Small fixed P1 development selection metadata, no observations
+benchmarking/optimize-20260927/heldout-panel.tsv	Small fixed held-out selection metadata, no observations

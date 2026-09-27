@@ -1,4 +1,5 @@
 #include "arg_parser.hh"
+#include "phase_records.hh"
 
 /**
  * Process the specified input (-i) argument. This is a comma-separated list uncontrollable
@@ -360,6 +361,7 @@ void process_formula_file (const std::string& arg, arg_parse_result& result) {
 
 #if ACACIA_ENABLE_TLSF_FRONTEND
 void process_tlsf_file (const std::string& arg, arg_parse_result& result) {
+  acacia::phase_scope snapshot_phase ("legacy_parent", "source_snapshot");
   std::ifstream file (arg, std::ios::binary);
   if (not file)
     error (EXIT_CODE_ERROR, "Error: unable to open TLSF file %s\n", arg.c_str ());
@@ -677,6 +679,7 @@ arg_parse_result arg_parser (int argc, char** argv) {
   if (retval.tlsf_specified && std::ranges::any_of (*retval.arms, [] (const auto& arm) {
         return arm.kind == portfolio_arm_kind::legacy;
       })) {
+    acacia::phase_scope conversion_phase ("legacy_parent", "frontend_conversion");
     try {
       auto spec = acacia::tlsf_frontend::parse (retval.tlsf_source);
       retval.formula = std::move (spec.formula);
