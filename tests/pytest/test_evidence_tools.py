@@ -1,6 +1,7 @@
 """Offline integration tests for the evidence tools and pruning protection."""
 
 import hashlib
+import importlib.util
 import fcntl
 import io
 from pathlib import Path
@@ -10,6 +11,7 @@ import tarfile
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -55,6 +57,15 @@ class EvidenceToolTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="evidence-test-", dir=SCRATCH)
         self.addCleanup(self.temp.cleanup)
         self.work = Path(self.temp.name)
+
+    def test_growth_guard_skips_submodule_oids_missing_from_parent(self):
+        spec = importlib.util.spec_from_file_location("evidence_growth_guard", GUARD)
+        assert spec and spec.loader
+        guard = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(guard)
+        blob, gitlink = "a" * 40, "b" * 40
+        with mock.patch.object(guard, "git", return_value=f"{blob} blob 5\n{gitlink} missing\n"):
+            self.assertEqual(guard.sizes({blob, gitlink}), {blob: 5})
 
     def test_deterministic_pack_verify_fetch_and_write_once_index(self):
         source = self.work / "report.txt"

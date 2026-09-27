@@ -71,8 +71,14 @@ def sizes(oids):
         return {}
     result = git("cat-file", "--batch-check=%(objectname) %(objecttype) %(objectsize)",
                  input_text="\n".join(sorted(oids)) + "\n")
-    return {oid: int(size) for oid, kind, size in (line.split() for line in result.splitlines())
-            if kind == "blob"}
+    blobs = {}
+    for line in result.splitlines():
+        fields = line.split()
+        # A changed submodule points to an object in the submodule repository,
+        # so the parent repository reports its OID as "missing" here.
+        if len(fields) == 3 and fields[1] == "blob":
+            blobs[fields[0]] = int(fields[2])
+    return blobs
 
 
 def default_range():
