@@ -807,3 +807,121 @@ every judgment call and measurement in order. Numbers are carried forward verbat
   - `build_final_a3c38777` (tlsf-tools `a453adb`) stays frozen on disk as a record and is not
     used for the evaluation.
   - The per-arm legs remain on their recorded M1/M2 binaries.
+- **The owner's pick does not wait for thermal re-runs** (owner decision, Sep 26). With the
+  ranking, `perarm-select.py` reports a robustness bound. If the top portfolio stays first under
+  that bound, the owner picks at once and the selection-relevant re-runs move to the end as
+  confirmation. The pick waits for re-runs only if the bound shows they could change it.
+  - **Worst case for the top subset:** its re-run candidates move against it. Solves in
+    [0.8·cap, cap] become timeouts.
+  - **Best case for each challenger:** its re-run candidates move in its favour. Candidate
+    timeouts become solves at 0.8·cap.
+- **arm-3 leg done** (Sep 26, 17:46, about 9 h): 659 UNREALIZABLE, 376 UNKNOWN, 481 TIMEOUT,
+  2 MEMOUT, 6 ERROR. There are no conflicts with the 120 s references.
+  - Three errors are Spot's compile-time acceptance-set limit ("Too many acceptance sets used.
+    The limit is 64") on `prioritized_arbiter_unreal2_pb_{30,60,100}_pe_`. ltlsynt proves those
+    UNREALIZABLE in 0.04–0.11 s; B times out.
+  - We set that limit ourselves: `--enable-max-accsets=64` in `Dockerfile.boomslang` and both
+    wheel build scripts. Raising it is a candidate experiment for a later sprint, since Spot warns
+    of a general slowdown.
+  - The other errors (`SPI`, `chomp_pb_3_3_pe_`, `robot_grid_pb_8_8_pe_`) exit 3 with a short
+    stderr of the `bad_alloc` kind.
+- **arm-4 leg done** (Sep 27, 00:50, about 7 h): 573 UNREALIZABLE, 605 UNKNOWN, 341 TIMEOUT,
+  5 ERROR. There are no conflicts with the 120 s references. The errors are the same instances:
+  the Spot acceptance-set limit on `prioritized_arbiter_unreal2_pb_{30,60,100}_pe_`, and the
+  `bad_alloc` kind on `amba_decomposed_lock_pb_30_pe_` and `robot_grid_pb_8_8_pe_`. The six M1
+  legs are complete (seq10 DONE 00:51); arm-7 (param-lift) starts from its frozen binary.
+
+## 2026-09-27 — All seven legs done; selection, thermal calibration, deciding re-runs
+
+- **arm-7 leg done** (04:01, 3.2 h): 19 REALIZABLE, 1,354 UNKNOWN, 151 TIMEOUT, with no
+  conflicts. It has 1 unique solve among the seven arms, so param-lift does not earn a slot yet.
+- **Selection** (virtual best of isolated 60 s legs; solved of 1,524, PAR-2):
+
+  | Portfolio | Solved | PAR-2 |
+  |---|---:|---:|
+  | Current default {1,2,3,4} | 1,217 | 38,787 s |
+  | Best 4-arm {1,2,3,5} | 1,225 | 38,006 s |
+  | Best 5-arm {1,2,3,4,5} (default + `real:gr1:oxidd`) | 1,238 | 36,260 s |
+  | 5-arm runner-up {1,2,3,5,6} | 1,235 | 36,789 s |
+
+  Unique solves among all seven arms: arm-3 99, arm-2 17, arm-5 16, arm-1 15, arm-4 10, arm-6 7,
+  arm-7 1.
+- **Robustness bound: NOT ROBUST at either size, and too loose to decide.** It flagged arm-1
+  (anomalous, 741 candidates), arm-5 (thermal unknown, 200) and arm-6 (anomalous, 167). The flags
+  come from throttle-event rates (clean legs 17.6–24.2 events/s; arm-1 36, arm-6 56, arm-5 63);
+  every leg ran at a median of 95–97 °C.
+- **Calibration instead of the full re-runs.** Instances each leg had solved in 1–55 s were re-run
+  on the quiet machine with the same M1 binary. Old/new time ratio, and verdict flips:
+
+  | Leg | Median | IQR | Max | Flips |
+  |---|---:|---|---:|---:|
+  | arm-2 (clean control, n = 15) | 1.003 | [0.975, 1.028] | — | 0 |
+  | arm-1 (n = 25) | 1.002 | — | 1.05 | 0 |
+  | arm-6 (n = 25) | 1.023 | IQR top 1.13 | 1.33 | 0 |
+  | arm-5 (n = 25) | 1.034 | IQR top 1.16 | 1.40 | 0 |
+
+  - **arm-1's flag is a false alarm.** Throttle-event rate is not slowdown.
+  - **The gr1 legs (5, 6) were slowed on part of their instances**, since they ran during daytime
+    side work, so their results are understated.
+- **The one open decision is top versus runner-up 5-arm.** They differ only in arm-4 versus
+  arm-6: 10 solves only the top has, against 7 only the runner-up has. Following the agreed rule,
+  the deciding instances are being re-run on the quiet machine before the pick:
+  - arm-6's 124 timeouts outside the shared base {1,2,3,5};
+  - arm-5's 3 instances where arm-4 and arm-6 differ.
+
+  The runner-up overtakes only if cool arm-6 gains at least 4.
+- **Deciding re-runs done (06:25).** arm-6 gained 0 of 124; three of them now stop at 54–60 s
+  with UNKNOWN instead of TIMEOUT, which is not a solve. arm-5 gained 0 of 3. The ranking is
+  unchanged and the choice is now robust: the best portfolio is {1,2,3,4,5}, the current default
+  plus `real:gr1:oxidd` (1,238 solved, PAR-2 36,260 s), against 1,217 / 38,787 s for today's
+  default. Awaiting the owner's pick.
+
+## 2026-09-27 — Owner pick, smoke run, and the final obfuscated runs
+
+- **Owner pick:** the current default four plus `real:gr1:oxidd`, i.e. `real:small:backward`,
+  `real:small:forward`, `unreal:formula:spot-guarded-sparse`, `unreal:automaton:forward`,
+  `real:gr1:oxidd`. Final binary `build_final_f74ad9d1` (SHA-256 `65530fb4…`).
+- **Stratified smoke run** on the plain corpus at 60 s (50 IDs, seed 20260926): 36 solves
+  predicted, 36 achieved, 0 mismatches, in 16 min. Five arms in parallel in one 8 GiB scope match
+  their isolated legs.
+- **Status exceptions deferred to the join.** The runner's default status-exceptions table is
+  keyed by original file names (e.g. `lilydemo04_modified.tlsf`) and is checked against the
+  corpus. The first obfuscated launch therefore stopped before running anything. Keying the table
+  by obfuscated names would need the sealed mapping before the runs, which the protocol forbids.
+  - The obfuscated runs use an empty (header-only) exceptions table and `--conflict-policy
+    collect`: conflicts with a TLSF `//STATUS` line are recorded, not fatal.
+  - The join applies the 3 known corrections after the runs, once it may open the mapping.
+  - Any collected conflict beyond those three is a real one and gets investigated.
+- **Phase 2**, run serially by `build_scratch/final-runs/phase2-final.sh`:
+  1. the obfuscated corpus at 60 s (started 07:54), then at 17 s;
+  2. TACAS23 fresh at 60 s on the plain SyFCo pairs;
+  3. the sealed-map join with the TACAS23 wrong-answer audit and the three-way tables;
+  4. the thermal annotation.
+
+## 2026-09-27 — Campaign stopped by the owner; the sprint PR stays open
+
+- **Owner decision (08:0x): stop all runs.**
+  - The obfuscated 60 s run was stopped after 80 of 1,524 rows. That partial output is not kept as
+    evidence, and the 17 s, TACAS23 and join steps did not run.
+  - The sprint PR #192 stays **unmerged**.
+- **Outcome in the owner's words:** "We added one arm and not the one I had expected." The
+  selection added `real:gr1:oxidd` (the direct GR(1) reduction) to the default four:
+  1,238 solved and PAR-2 36,260 s, against 1,217 and 38,787 s for the default, as a virtual best of
+  isolated 60 s legs. The parametric lifting arm `real:param-lift:oxidd` does not earn a slot:
+  19 solves and 1 unique among the seven arms.
+- **Next, on this branch:**
+  - optimise the gr1 and param-lift arms (tracked as an issue opened 2026-09-25);
+  - add a param-lift UNREAL arm (also tracked as an issue).
+- **Evidence committed from the timing worktree**, which sits on a detached HEAD at 2e302f53:
+  - the seven per-arm legs (`campaign/perarm-m1/legs/`);
+  - the final-portfolio smoke run with its phase drivers (`perarm-m1/smoke/final-portfolio/`);
+  - the selection with its robustness output (`perarm-m1/selection/`);
+  - the thermal calibration and the deciding re-runs (`perarm-m1/calibration/`);
+  - the thermal samples and annotation (`perarm-m1/thermal/`);
+  - the post-leg scripts: `perarm-select.py`, `smoke-compare.py`, `join-obfuscated-threeway.py`,
+    `thermal-annotate.py`, `verify-obfuscated-corpus.py`.
+- **Frozen binaries stay on disk:** `build_perarm_m1`, `build_perarm_m2`, `build_final_a3c38777`
+  and `build_final_f74ad9d1` (the evaluation binary for the picked portfolio, SHA-256 `65530fb4…`).
+  The final three-way can resume from `phase2-final.sh`.
+- **Default portfolio unchanged in code.** The shipped `docker_default` group is not changed by
+  this sprint; the pick was for evaluation only.

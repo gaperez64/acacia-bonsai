@@ -1,0 +1,51 @@
+solver_label	instance	smallest_cap_solved	decisive_result	decisive_seconds	still_unsolved_at_max_cap	failure_kind_at_max_cap	max_cap_s
+Acacia-smoke	11.ltl	60	REALIZABLE	3.1962245350005105	false	REALIZABLE	60
+Acacia-smoke	CheckShades_aeb1d897.ltl	60	UNREALIZABLE	0.029756929958239198	false	UNREALIZABLE	60
+Acacia-smoke	CoffeMachine_974f4a68.ltl	60	REALIZABLE	0.025388706009835005	false	REALIZABLE	60
+Acacia-smoke	Demo1_2c5b09da.ltl				true	TIMEOUT	60
+Acacia-smoke	F-G-contradiction-15.ltl	60	UNREALIZABLE	0.3456249269656837	false	UNREALIZABLE	60
+Acacia-smoke	Lights2_b02056d6.ltl	60	REALIZABLE	0.20082423894200474	false	REALIZABLE	60
+Acacia-smoke	ModdifiedLedMatrix4X.ltl	60	UNREALIZABLE	0.5830940479645506	false	UNREALIZABLE	60
+Acacia-smoke	SPI.ltl	60	REALIZABLE	0.18072863097768277	false	REALIZABLE	60
+Acacia-smoke	SPIReadSdi.ltl	60	REALIZABLE	0.02662604593206197	false	REALIZABLE	60
+Acacia-smoke	abcg_arbiter_pb_3_pe_.ltl	60	REALIZABLE	11.595936386962421	false	REALIZABLE	60
+Acacia-smoke	amba_decomposed_arbiter_pb_12_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	amba_decomposed_arbiter_pb_9_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	arbiter_with_cancel_pb_3_pe_.ltl	60	REALIZABLE	0.03639228001702577	false	REALIZABLE	60
+Acacia-smoke	chomp_pb_2_2_pe_.ltl	60	REALIZABLE	0.09121848305221647	false	REALIZABLE	60
+Acacia-smoke	chomp_pb_2_4_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	chomp_pb_3_4_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	chomp_pb_4_2_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	chomp_pb_4_4_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	collector_v3_pb_11_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	example10a_pb_1_pe_.ltl	60	REALIZABLE	0.04751243500504643	false	REALIZABLE	60
+Acacia-smoke	g-unreal-117.ltl	60	UNREALIZABLE	47.198828984983265	false	UNREALIZABLE	60
+Acacia-smoke	g-unreal-119.ltl				true	TIMEOUT	60
+Acacia-smoke	gf-unreal40.ltl	60	UNREALIZABLE	0.04934282205067575	false	UNREALIZABLE	60
+Acacia-smoke	heim-double-x6.ltl	60	UNREALIZABLE	0.3650968539295718	false	UNREALIZABLE	60
+Acacia-smoke	helipad-contradict0.ltl	60	UNREALIZABLE	42.69293997401837	false	UNREALIZABLE	60
+Acacia-smoke	infinite-race-unequal-24.ltl	60	UNREALIZABLE	1.1370729620102793	false	UNREALIZABLE	60
+Acacia-smoke	lilydemo03.ltl	60	REALIZABLE	0.025562745984643698	false	REALIZABLE	60
+Acacia-smoke	lilydemo23.ltl	60	REALIZABLE	0.030941137112677097	false	REALIZABLE	60
+Acacia-smoke	load_balancer_unreal1_pb_4_1_pe_.ltl	60	UNREALIZABLE	0.05247029708698392	false	UNREALIZABLE	60
+Acacia-smoke	load_balancer_unreal1_pb_4_9_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	load_balancer_unreal1_pb_5_7_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	ltl2dba04.ltl	60	REALIZABLE	0.03320396807976067	false	REALIZABLE	60
+Acacia-smoke	ltl2dba_Q_pb_18_pe_.ltl	60	REALIZABLE	0.037876434973441064	false	REALIZABLE	60
+Acacia-smoke	ltl2dba_R_pb_11_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	ltl2dba_alpha_pb_25_pe_.ltl	60	REALIZABLE	0.023399860016070306	false	REALIZABLE	60
+Acacia-smoke	ltl2dba_alpha_pb_2_pe_.ltl	60	REALIZABLE	0.02474088699091226	false	REALIZABLE	60
+Acacia-smoke	ltl2dba_theta_pb_25_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	mux_pb_100_pe_.ltl	60	REALIZABLE	0.0479376579169184	false	REALIZABLE	60
+Acacia-smoke	mux_pb_16_pe_.ltl	60	REALIZABLE	0.04534562409389764	false	REALIZABLE	60
+Acacia-smoke	narylatch_pb_10_pe_.ltl	60	REALIZABLE	0.04162719694431871	false	REALIZABLE	60
+Acacia-smoke	patrolling-alarm21.ltl	60	UNREALIZABLE	0.6493280930444598	false	UNREALIZABLE	60
+Acacia-smoke	patrolling8.ltl	60	UNREALIZABLE	0.0995980870211497	false	UNREALIZABLE	60
+Acacia-smoke	prioritized_arbiter_enc_pb_13_pe_.ltl				true	TIMEOUT	60
+Acacia-smoke	prioritized_arbiter_pb_12_pe_.ltl	60	REALIZABLE	0.4912149750161916	false	REALIZABLE	60
+Acacia-smoke	prioritized_arbiter_unreal1_pb_4_10_pe_.ltl	60	UNREALIZABLE	0.026454778970219195	false	UNREALIZABLE	60
+Acacia-smoke	round_robin_arbiter_pb_2_pe_.ltl	60	REALIZABLE	0.025268934085033834	false	REALIZABLE	60
+Acacia-smoke	simple_arbiter_unreal1_pb_4_6_pe_.ltl	60	UNREALIZABLE	0.031002318020910025	false	UNREALIZABLE	60
+Acacia-smoke	simple_arbiter_with_hints_pb_4_pe_.ltl	60	REALIZABLE	0.045407127938233316	false	REALIZABLE	60
+Acacia-smoke	test6_0f5381e9.ltl	60	REALIZABLE	0.023925421060994267	false	REALIZABLE	60
+Acacia-smoke	test8_88f351a6.ltl	60	UNREALIZABLE	0.04145602497737855	false	UNREALIZABLE	60
