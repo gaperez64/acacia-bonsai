@@ -91,7 +91,9 @@ test ('config-transition-acceptance',
 
 if get_option ('acacia_native_arms')
   native_json_binding_test = executable (
-    'native-json-binding-test', 'native_json_binding_test.cc',
+    'native-json-binding-test',
+    ['native_json_binding_test.cc', '../src/native_proof_binding.cc'],
+    include_directories : inc,
     dependencies : tlsf_deps)
   test ('native-json-binding', native_json_binding_test,
         suite : ['unit', 'native-gr1', 'native-param-lift'])
@@ -162,7 +164,7 @@ test ('translator-options',
       suite : ['unit', 'translator-options'])
 
 game_backend_test = executable ('game-backend-test',
-                                'game_backend_test.cc',
+                                ['game_backend_test.cc', '../src/portfolio_arm.cc'],
                                 link_with : closure_buchi_provider_lib,
                                 include_directories : inc,
                                 dependencies : [posets_dep, spot_dep, bddx_dep, stdsimd_dep])
@@ -397,6 +399,8 @@ game_backend_cli = find_program ('check-game-backend-cli.sh')
 # binary uses the same sources; no installed binary, preset or arm is changed.
 game_backend_integration_sources = [
   '../src/acacia-bonsai.cc',
+  '../src/arg_parser.cc',
+  '../src/portfolio_arm.cc',
   '../src/version.cc',
   '../src/solver/mealy_to_moore.cc',
   '../src/solver/real_backend_selector.cc',
@@ -404,6 +408,14 @@ game_backend_integration_sources = [
   '../src/solver/solve_game.cc',
   '../src/solver/solve_game_vector.cc',
 ]
+if get_option ('acacia_native_arms')
+  game_backend_integration_sources += [
+    '../src/native_support.cc',
+    '../src/native_proof_binding.cc',
+    '../src/native_gr1_arm.cc',
+    '../src/native_param_lift_arm.cc',
+  ]
+endif
 if enable_tlsf_frontend
   game_backend_integration_sources += '../src/tlsf_frontend.cc'
 endif
