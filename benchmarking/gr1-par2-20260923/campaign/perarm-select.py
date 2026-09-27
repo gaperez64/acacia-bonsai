@@ -273,6 +273,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--list", type=pathlib.Path, required=True)
     parser.add_argument("--leg", action="append", default=[], metavar="ARM=CSV", help="override standard perarm-m1/legs/arm-N export")
+    parser.add_argument("--legs-root", type=pathlib.Path,
+                        help="directory containing restored arm-N/arm-N-cap60.csv legs")
     parser.add_argument("--smoke-sample", type=int, metavar="N")
     parser.add_argument("--arms", help="chosen comma-separated 4 or 5 arms, for sampling")
     parser.add_argument("--smoke-output", type=pathlib.Path)
@@ -280,7 +282,8 @@ def main() -> int:
     parser.add_argument("--thermal-samples", type=pathlib.Path,
                         help="monitor samples TSV (default: main-root/build_scratch/thermal/samples.tsv)")
     args = parser.parse_args()
-    paths = {arm: HERE / "perarm-m1" / "legs" / f"arm-{i}" / f"arm-{i}-cap60.csv" for i, arm in enumerate(ARMS, 1)}
+    legs_root = args.legs_root or HERE / "perarm-m1" / "legs"
+    paths = {arm: legs_root / f"arm-{i}" / f"arm-{i}-cap60.csv" for i, arm in enumerate(ARMS, 1)}
     seen = set()
     for spec in args.leg:
         arm, separator, path = spec.partition("=")

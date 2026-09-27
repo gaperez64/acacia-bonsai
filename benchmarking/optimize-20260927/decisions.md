@@ -47,3 +47,40 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   2. For P4, a fresh obfuscated corpus is generated with an owner-held seed. Its mapping never
      enters the repository or any agent-readable directory, and the owner supplies it only at the
      join.
+
+## 2026-09-27 — Evidence published, read back and restore-tested (P0a)
+
+- **33 deterministic archives, 122 MB compressed:**
+  - one per campaign directory; each `plots/<dir>`; the loose root files and historical
+    narratives (`benchmarking-root-legacy`, partial); the stopped per-arm campaign
+    (`gr1-par2-20260923-perarm-m1`, status `stopped`); the `s0` diagnostics; the earlier N
+    selection;
+  - five local-only cited supplements (the demand-sparse traces, rows/logs and binaries; the
+    15 Sep closing log; the ltlsynt route directory);
+  - seven frozen binaries (E5, pre-E5, M1, M2, G1, B, TACAS23 v1).
+- **Coverage.** All 2,306 tracked `benchmarking/` files are either in a bundle (2,209) or have a
+  stated keep-in-Git reason (97). Nothing on the do-not-publish list is in any archive. Five
+  tools/briefs tripped the mapping-content guard and stay in Git as tools. The 232 symlinks in
+  the ltlsynt route directory point at third-party corpus bytes and were not copied.
+- **Backup.** An independent copy, verified, is in `~/acacia-evidence-backup/2026-09-27/`
+  outside the repository.
+- **Publication.** Release `evidence-2026-09-27`: a prerelease, not latest (v2.4.3 stays
+  latest).
+  - Its tag points at an orphan README-only commit `40d292e6` with no workflows and no ancestors.
+    Three workflows (docker-deploy, docker-boomslang, wheels→PyPI) fire on
+    `release: published`, prereleases included, and GitHub runs them from the tagged commit's
+    workflow files. A tag at master would have published bogus images and a PyPI version.
+  - Nothing was triggered.
+- **Read-back.**
+  - All 33 assets were fetched from their public URLs with `acacia-evidence.py fetch`, which
+    checks the outer digest, the provenance against the index, and every member before and
+    after a safe extraction: 33/33 verified.
+  - The seven restored binaries hash to their pins.
+  - `restore-test.sh` on the downloaded bytes: 12/12 PASS.
+    - The seven per-arm `export-cactus` outputs are byte-identical.
+    - perarm-select reproduces {1,2,3,4,5} 1,238 / 36,260.1 s, {1,2,3,4} 1,217 / 38,787.2 s
+      and {1,2,3,5} 1,225 / 38,005.8 s.
+    - `plots/three-way-full-20260905` ltlsynt gives 1,257 / 9,515.826 s.
+    - `witness-lifting-20260918` opening gives 1,178 / 12,543.332 s.
+- **Index.** `benchmarking/evidence-index.tsv` holds 33 write-once rows. The next step untracks
+  the archived bulk from HEAD.
