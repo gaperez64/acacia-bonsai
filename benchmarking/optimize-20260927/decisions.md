@@ -342,3 +342,33 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   separate three factors: version, optimization level and acceptance-set limit.
 - **Track B started:** P3 U0 on its own worktree (`trackb/unreal-lift`), coded by a second
   agent. Builds are gated on a timed-run marker; codex reviews its work and the driver commits.
+
+## 2026-09-29 — P2b-1: sparse backward vectors stopped at the census (#196)
+
+- **The go rule was fixed in advance:**
+  - the comparison-work-weighted non-bottom fraction is at most 0.25; and
+  - a modeled sorted-pair read count is at most 0.5× dense.
+- **Measured:**
+  - E5's backward arm on the P2a panel, with a diagnostics-only build and 16 eligible rows;
+  - a non-bottom fraction of 0.67: every eligible row is above 0.25, the lowest at 0.36;
+  - modeled sparse reads at 2.56× dense, with mixed-comparison overhead set optimistically
+    to zero.
+- **STOP, confirmed by a codex review.** Both conditions fail by a wide margin; backward
+  generators start at the safe ceiling and stay dense.
+- **Evidence:** the census counters are reverted and kept as patches in the sprint evidence
+  (`p2b1/census-counters/`). The results are posted on #196, which is left open for the
+  owner.
+- **SIMD gate (one `perf` workload):**
+  - the indexed predecessor loop is about 21% of cycles, which does not fit lane-wise SIMD;
+  - dominance is about 15% and is already compiled to 16-lane `vpcmpleb`;
+  - the scalar rank sum in insertion is about 14%, and ranks are recomputed where they are
+    already known.
+
+  This leads to P2b-3: rank reuse first, SIMD only if residual rank work stays hot.
+  - Gate: at least a 5% aggregate backward-arm CPU reduction, repeatable in reversed order,
+    with exact verdict identity and no E5 regression.
+- **P2b-2 (Spot limit probe) is running in parallel.**
+  - It uses a clean worktree at `36e9b4fb` under `build_scratch/` and Spot 2.16 release
+    builds in `~/opt` with limits of 64 and 256.
+  - Four specs hit the 64-set limit in both UNREAL legacy arms: `robot_grid_pb_8_8_pe_` and
+    `prioritized_arbiter_unreal2_pb_{30,60,100}_pe_`.
