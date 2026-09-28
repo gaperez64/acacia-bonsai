@@ -216,3 +216,30 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   5. copies and owner lifetimes, i.e. the early frees (§5.2).
 
   Opposite-polarity export and moving the frontend are deprioritised.
+
+## 2026-09-28 — P1b package 1: construction budgets (admitted)
+
+- **What it adds.** Budgeted tlsf-tools entry points (tlsf-tools#44 at `7afc490`, stacked on
+  #43) with global limits:
+  - structural precheck: 4,096 formula nodes, 2,048 APs, 1,024 conjuncts, 1,024 nodes per
+    conjunct, depth 16, and an estimate of 2^24 states;
+  - Spot aborter: 10,000 monitor states and 150,000 edges;
+  - soft RSS: half the invocation limit divided by the active arm count, i.e. 4 GiB standalone
+    and 819.2 MiB per arm in E5, sampled in every lifting phase.
+
+  A decline is an UNKNOWN with a stage and work counts, never a verdict. Through the old API,
+  `std::bad_alloc` now reports LIMIT instead of ERROR; this is documented in the PR.
+- **Tuning disclosure.** The limits were chosen on the development panel so that all its
+  successes survive: outcome-informed tuning in aggregate, with no names or instances. The
+  held-out panel triggers no budget decline.
+- **Results.**
+  - Zero lost solves: dev direct 24/24, dev lift 19/19, held-out 4/4 and 0/0, E5 subset 44/44.
+  - Failed-construction CPU (paired observed rows): direct 341.8 → 271.1 core-s (−21%), lift
+    238.4 → 162.8 core-s (−32%), mostly from three early structural declines.
+  - E5 portfolio wall time: unchanged within noise.
+- **Review (`p1b1/REVIEW.md`): ACCEPT WITH FIXES.** The lift RSS budget now covers every phase;
+  aborter stops report budget stages; forced tests exist for both.
+- **Limitation, and the P2 lead.** E5's one MEMOUT (8 GiB, `robot_grid_pb_8_8_pe_`) is
+  unchanged: the GR(1) arm declines there in 17.7 ms at about 28 MiB. Standalone evidence
+  points at `real:small:forward` during solving as the main consumer; `real:small:backward`
+  also reaches the cap alone.
