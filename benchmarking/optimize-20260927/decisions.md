@@ -372,3 +372,18 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
     builds in `~/opt` with limits of 64 and 256.
   - Four specs hit the 64-set limit in both UNREAL legacy arms: `robot_grid_pb_8_8_pe_` and
     `prioritized_arbiter_unreal2_pb_{30,60,100}_pe_`.
+
+## 2026-09-29 — P2b-3: rank reuse stopped at its profile gate; no SIMD package
+
+- **Gate:** rank computation must be at least about 10% of the backward arm's cycles,
+  aggregated over the rows, before any code is written.
+- **Profile:** `perf record`, `cycles:u`, of E5's backward arm on five eligible P2a-panel rows.
+  - The rule took every eligible 1–5 s row that had comparison work, which gave four rows.
+    A fifth was then added, disclosed, as a sensitivity extension: the shortest eligible
+    conclusive row above 5 s.
+  - Rank share per row: 0%, 8.2%, 1.2%, 15.4% and 6.0%.
+  - Cycle-weighted: 5.77%, or 5.0% without the added fifth row.
+- **STOP** for both steps: rank reuse, and the SIMD reduction behind it. The earlier 14% came
+  from a single workload.
+- **Outcome for P2 §6.3 and §6.4:** no sparse and no SIMD change is admitted. Dominance is
+  already vectorized, and the predecessor loop is irregular.
