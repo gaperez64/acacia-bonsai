@@ -1,6 +1,7 @@
 #pragma once
 
 #if ACACIA_NATIVE_ARMS
+# include <string>
 # include <string_view>
 # include <tlsf/gr1_check.h>
 # include <tlsf/gr1_lift.h>
@@ -28,5 +29,11 @@ namespace acacia {
   void native_diagnostic (bool unreal, std::string_view stage, int status,
                           std::string_view message);
   bool native_limit_address_space (std::string_view arm);
+  TlsfGr1ConstructionBudget native_construction_budget (size_t arm_count);
+  std::string native_budget_message (std::string_view stage, std::string_view reason,
+                                     const TlsfGr1ConstructionWork& work);
+  void native_budget_record (std::string_view arm, std::string_view stage,
+                             const TlsfGr1ConstructionWork& work,
+                             uint64_t started_ns) noexcept;
 }
 #endif

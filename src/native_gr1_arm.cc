@@ -51,6 +51,7 @@ namespace acacia {
     constexpr size_t checker_nodes = 1u << 22;
     if (!native_limit_address_space (unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd"))
       return EXIT_CODE_UNKNOWN;
+    const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
 
     phase_scope pipeline_phase (arm, "pipeline_load_expand");
     TlsfPipelineError pipeline_error {};
@@ -83,18 +84,27 @@ namespace acacia {
     reduction_options.deadline_mono_ns = deadline_mono_ns;
     reduction_options.max_artifact_bytes = artifact_cap;
     reduction_options.max_monitor_states = 10000;
+    const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
+    TlsfGr1ConstructionWork work {};
     TlsfGr1ReductionStats reduction_stats {};
     reduction_record_context reduction_context {arm, &reduction_stats};
     native_reduction_owner reduction;
     TlsfGr1ReductionError reduction_error {};
-    auto reduced = phase_records_enabled ()
-        ? tlsf_gr1_reduce_with_stats (pipeline.get (), &reduction_options, &reduction.value,
-                                      &reduction_error, &reduction_stats,
-                                      record_reduction_stage, &reduction_context)
-        : tlsf_gr1_reduce (pipeline.get (), &reduction_options, &reduction.value,
-                           &reduction_error);
+    auto reduced = tlsf_gr1_reduce_with_budget (
+        pipeline.get (), &reduction_options, &reduction.value, &reduction_error,
+        phase_records_enabled () ? &reduction_stats : nullptr,
+        phase_records_enabled () ? record_reduction_stage : nullptr,
+        &reduction_context, &budget, &work);
     if (reduced != TLSF_GR1_REDUCE_OK) {
-      native_diagnostic (unreal, reduction_error.stage, reduced, reduction_error.message);
+      native_budget_record (arm, reduction_error.stage, work, construction_started_ns);
+      if (phase_records_enabled ()) {
+        const std::string stage = std::string ("reduce_decline_") + reduction_error.stage;
+        phase_finish (arm, stage.c_str (), phase_start (), -1, -1,
+                      work.formula_nodes, 0, nullptr, work.monitors_completed, work.states);
+      }
+      native_diagnostic (unreal, reduction_error.stage, reduced,
+                         native_budget_message (reduction_error.stage,
+                                                reduction_error.message, work));
       return EXIT_CODE_UNKNOWN;
     }
     if (!reduction.value.game || !reduction.value.aag || !reduction.value.aag_size) {

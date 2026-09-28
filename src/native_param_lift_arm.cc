@@ -53,9 +53,12 @@ namespace acacia {
     constexpr const char* arm = "real:param-lift:oxidd";
     if (!native_limit_address_space (arm))
       return EXIT_CODE_UNKNOWN;
+    const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
 
     TlsfGr1LiftOptions options {};
     options.deadline_mono_ns = deadline_mono_ns;
+    const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
+    TlsfGr1ConstructionWork work {};
     TlsfGr1LiftStats stats {};
     lift_record_context lift_context {arm, &stats};
 # ifdef ACACIA_NATIVE_TEST_HOOKS
@@ -66,22 +69,26 @@ namespace acacia {
     TlsfGr1LiftError lift_error {};
     phase_scope lift_phase (arm, "lift_call");
     const auto* source = reinterpret_cast<const uint8_t*> (args.tlsf_source.data ());
-    const auto lift_status = phase_records_enabled ()
-        ? tlsf_gr1_lift_with_stats (source, args.tlsf_source.size (), nullptr, 0, &options,
-                                    &lifted.value, &lift_error, &stats,
-                                    record_lift_stage, &lift_context)
-        : tlsf_gr1_lift (source, args.tlsf_source.size (), nullptr, 0, &options,
-                         &lifted.value, &lift_error);
+    const auto lift_status = tlsf_gr1_lift_with_budget (
+        source, args.tlsf_source.size (), nullptr, 0, &options,
+        &lifted.value, &lift_error,
+        phase_records_enabled () ? &stats : nullptr,
+        phase_records_enabled () ? record_lift_stage : nullptr,
+        &lift_context, &budget, &work);
     lift_phase.finish ();
     if (phase_records_enabled ()) {
       if (stats.final_stage[0]) {
         const std::string decline_phase = std::string ("lift_decline_") + stats.final_stage;
         phase_finish (arm, decline_phase.c_str (), phase_start (), -1, -1,
-                      stats.seed_probes + stats.seed_solves, 0);
+                      stats.seed_probes + stats.seed_solves + work.formula_nodes, 0,
+                      nullptr, work.monitors_completed, work.states);
       }
     }
     if (lift_status != TLSF_GR1_LIFT_OK) {
-      native_arm_diagnostic (arm, lift_error.stage, int (lift_status), lift_error.message);
+      native_budget_record (arm, lift_error.stage, work, construction_started_ns);
+      native_arm_diagnostic (arm, lift_error.stage, int (lift_status),
+                             native_budget_message (lift_error.stage,
+                                                    lift_error.message, work));
       return EXIT_CODE_UNKNOWN;
     }
 
