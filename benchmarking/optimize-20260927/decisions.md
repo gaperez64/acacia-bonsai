@@ -276,3 +276,36 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
 - **Provenance slips during integration, both caught.** The codex measured a scratch copy of the
   tree, not the live submodule; revalidated live. A stale `checker-speed` ref briefly made the
   first push a no-op; the commit was pushed by hash as a fast-forward.
+
+## 2026-09-28 — P1b packages 4–6: lift export rejected, fixed lift budgets admitted
+
+- **Packages 4 and 5 (P1b-4/5): rejected.**
+  - Package 4 cut `amba_decomposed_lock_pb_14_pe_`'s policy export from 47.2 to 2.7 s, but it
+    also changed proof selection on `_15` (region 2.75 s → policy 22.2 s) and raised the total.
+  - Package 5, early owner release: no measurable gain.
+  - Tracked in #199.
+- **Regression found in that run.** The #46 checker order cost lifting `_13` and `_14`:
+  1.3 s / 3.5 s before, timeouts after. Both are solved by the default arms, so no portfolio loses
+  them, and the unique `_15` was kept. Accepted per owner option (a), with evidence on
+  tlsf-tools#48. Lesson: P1b-3's validation measured the direct arm only; a shared-checker
+  change must be validated on every arm that uses the checker.
+- **Deferred:** package 2, the duplicate final lift check → #198. P1 status posted on #194.
+- **Owner finding: lifting depended on the competition cap.** It sized its policy proof at 75%
+  of the remaining time and had a discovery share. Owner decision: fixed per-run budgets.
+  - **P1b-6 step A** (tlsf-tools#50, `bb21392`): 24 seed probes; 2 M BDD operations each for
+    discovery and policy export; 12 s for policy export plus the internal proof. The deadline is
+    a hard stop only.
+  - Values are outcome-informed on the dev panel and disclosed. The held-out panel has no
+    lifting success, so it cannot rule out overfitting.
+  - The 17 s/60 s cap-independence check passes on 51 dev and 17 held-out rows, comparing
+    outcome, decision, decline stage and every work count.
+  - Dev lifting 17 → 19 successes, none lost, `_15` kept; `_13` and `_14` return via the bounded
+    region fallback; wall time −122 s.
+  - `benchmarking/tools/check-cap-independence.py` is kept for validating P4's derived 17 s
+    series.
+  - **Step B, the import memo only:** rejected, with a 0.2 s gain once the budgets are fixed.
+- **Also fixed:** a tlsf-tools test read Acacia parent files (`m0-census.py` and corpus files).
+  It now uses vendored fixtures.
+- **Owner: tlsf-tools API changes freely.** It is in A/B testing with Acacia as its only
+  consumer. The accumulated `_with_*`/`_v2` variants and ABI-guard tests are to be collapsed
+  into one API per operation (tlsf-tools#49), scheduled after P3 so the lifting API settles once.
