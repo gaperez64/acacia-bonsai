@@ -243,3 +243,36 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   unchanged: the GR(1) arm declines there in 17.7 ms at about 28 MiB. Standalone evidence
   points at `real:small:forward` during solving as the main consumer; `real:small:backward`
   also reaches the cap alone.
+
+## 2026-09-28 — P1b package 3: faster independent checker (admitted)
+
+- **Change** (tlsf-tools#46, `439c974`, stacked on main `112058b`). For certificate checks whose
+  policy circuit has 4,096–262,144 AND gates, the independent checker orders its BDD variables
+  inputs-first (environment and system inputs, then interleaved current and next state).
+  - It is a pure permutation, chosen from the method and the policy size only, with every
+    obligation computed on the same functions.
+  - If the reordered pass fails, the checker retries on a fresh manager in the old order within
+    the same deadline.
+  - Opt-in phase timers are added.
+- **Soundness evidence.**
+  - Old and new checkers agree on exit code, verdict and every diagnostic line: 59
+    artifacts/mutations (30 in the reordered window), and 1,229 oracle replays, which are all
+    outside the window.
+  - The review added 11 in-window mutations, including padded environment certificates; all
+    were handled identically.
+  - The review confirmed every obligation is unchanged.
+- **Speed.**
+  - Scratch candidate, summed check time over three paired repeats: 8 direct successes
+    115.2 → 9.6 s (12.1×); 11 E5 GR(1) solves 74.5 → 5.5 s (13.5×).
+  - Live tree against frozen C5, whole-invocation wall time: 6.6× (direct successes) and 5.7×
+    (E5 GR(1) solves). All 24 C5 dev solves are kept, and all 57 outcomes match the candidate.
+- **Validation.** Unit 56/56 and 52/52; release native 4/4; pytest 978 passed after committing
+  the new pin (20 failures before were the oracle's provenance guard refusing a pin mismatch,
+  as designed); tlsf-tools CI 11/11 on #46.
+- **Found on tlsf-tools main, not caused by #46.** `native_reduction_differential` fails locally
+  on the fixture `undeclared_at_atom` from tlsf-tools #42: the Python reference throws a Spot
+  parse exception on `ack@1` instead of rejecting it. CI skips the test, lacking Spot Python.
+  A separate fix is in progress on `fix-differential-at-atom`.
+- **Provenance slips during integration, both caught.** The codex measured a scratch copy of the
+  tree, not the live submodule; revalidated live. A stale `checker-speed` ref briefly made the
+  first push a no-op; the commit was pushed by hash as a fast-forward.
