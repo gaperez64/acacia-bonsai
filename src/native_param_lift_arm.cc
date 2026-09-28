@@ -31,6 +31,9 @@ namespace acacia {
                                size_t (row->arena), size_t (row->hblkhd),
                                size_t (row->uordblks), size_t (row->fordblks)};
     const auto work = stage == TLSF_GR1_LIFT_STATS_SEED_WINDOW ? stats.seed_probes
+        : stage == TLSF_GR1_LIFT_STATS_SCHEMA_LEARNING ||
+          stage == TLSF_GR1_LIFT_STATS_CANDIDATE_INSTANTIATION ||
+          stage == TLSF_GR1_LIFT_STATS_POLICY_EXPORT ? row->calls
         : stage == TLSF_GR1_LIFT_STATS_SEED_SOLVE ? 1ULL
         : stage == TLSF_GR1_LIFT_STATS_INTERNAL_CHECK ? 1ULL : 0ULL;
     const auto bytes = stage == TLSF_GR1_LIFT_STATS_CANDIDATE_INSTANTIATION
@@ -60,21 +63,23 @@ namespace acacia {
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
     TlsfGr1ConstructionWork work {};
     TlsfGr1LiftStats stats {};
+    TlsfGr1LiftPhaseBudgetV2 phase_budget {};
+    phase_budget.size = sizeof phase_budget;
     lift_record_context lift_context {arm, &stats};
 # ifdef ACACIA_NATIVE_TEST_HOOKS
-    native_lift_test_options (options);
+    native_lift_test_options (phase_budget);
 # endif
     // All remaining caps are the bounded defaults of the native lifting API.
     native_lift_owner lifted;
     TlsfGr1LiftError lift_error {};
     phase_scope lift_phase (arm, "lift_call");
     const auto* source = reinterpret_cast<const uint8_t*> (args.tlsf_source.data ());
-    const auto lift_status = tlsf_gr1_lift_with_budget (
+    const auto lift_status = tlsf_gr1_lift_with_phase_budget_v2 (
         source, args.tlsf_source.size (), nullptr, 0, &options,
         &lifted.value, &lift_error,
         phase_records_enabled () ? &stats : nullptr,
         phase_records_enabled () ? record_lift_stage : nullptr,
-        &lift_context, &budget, &work);
+        &lift_context, &budget, &work, &phase_budget);
     lift_phase.finish ();
     if (phase_records_enabled ()) {
       if (stats.final_stage[0]) {
@@ -111,6 +116,9 @@ namespace acacia {
       native_arm_diagnostic (arm, "artifact", -1, "incomplete or unverified system proof");
       return EXIT_CODE_UNKNOWN;
     }
+    if (phase_records_enabled ())
+      phase_finish (arm, certificate_method ? "lift_method_certificate" : "lift_method_region",
+                    phase_start ());
     native_json_doc parsed_evidence (nullptr, yyjson_doc_free);
     auto* evidence =
         native_json_object (result.evidence_json, result.evidence_size, parsed_evidence);
