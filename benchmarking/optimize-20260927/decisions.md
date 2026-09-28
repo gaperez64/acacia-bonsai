@@ -309,3 +309,36 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
 - **Owner: tlsf-tools API changes freely.** It is in A/B testing with Acacia as its only
   consumer. The accumulated `_with_*`/`_v2` variants and ABI-guard tests are to be collapsed
   into one API per operation (tlsf-tools#49), scheduled after P3 so the lifting API settles once.
+
+## 2026-09-29 — P2a: action-table borrow admitted, picker scratch rejected, E5 memory lead → #200
+
+- **Package 1, the action-table copy: admitted.**
+  - The backward solver now borrows `actioner.actions ()` instead of copying the nested table;
+    the forward solver already did.
+  - Both actioners own the table for the whole solve. The picker only splices inner lists,
+    and the actioner never rereads its table after construction.
+  - Peak RSS saving: 81.9 MB on `11.ltl` and 71 MB on each `Morning` solve, with 803,077
+    fewer `malloc` calls. Wall time is inside noise.
+  - Verdicts and full solver traces (06/07/09/11.ltl) are identical. There are no opposing
+    conclusive verdicts across 15 panel legs; the three cap transitions were noise in two
+    reversed-order repeats.
+  - The trace identity covers E5's backward configuration, not the other `docker_default`
+    presets. Their actioner contract was audited instead.
+- **Package 2, critical-picker scratch: rejected.** It saved 51 allocations with no change in
+  peak memory. The +8.06 s over five legs (0.12%) is single-pass noise, not a proven
+  regression. No issue.
+- **E5's only MEMOUT, `robot_grid_pb_8_8_pe_`, is unchanged by both packages.**
+  - RSS rises from 136 MB to 8 GiB within 2.5 s during the MONA IO decoded transition-set
+    expansion (`src/ios_precomputers/mona.hh`), before action construction.
+  - Filed as #200: bound or stream the decoded sets. It is separate from #196.
+- **Validation:** debug unit suites 56/56 and 52/52. Synthesis was bounded at 900 s: 117
+  passed, 25 timed out per test, none failed.
+  - The coder's 17 pytest failures were environmental: a stale `build_oracle_tlsf` at
+    `84276bf` and a scratch launcher.
+  - The oracle was rebuilt from the pin with `scripts/build-oracle-toolchain.sh`; full pytest
+    then passed with 1,017.
+- **Found for P2b §6.5: the installed Spot is a developer build.** It is compiled at `-g -O`
+  (`--enable-devel`, automatic for `.dev` versions), so the acceptance-limit probe must
+  separate three factors: version, optimization level and acceptance-set limit.
+- **Track B started:** P3 U0 on its own worktree (`trackb/unreal-lift`), coded by a second
+  agent. Builds are gated on a timed-run marker; codex reviews its work and the driver commits.
