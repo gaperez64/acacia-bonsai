@@ -80,7 +80,7 @@ namespace acacia {
     if (std::getenv ("ACACIA_NATIVE_TEST_CORRUPT_PROOF"))
       artifact[0] = 'X';
   }
-  void native_lift_test_options (TlsfGr1LiftPhaseBudgetV2& budget) {
+  void native_lift_test_options (TlsfGr1LiftPhaseBudget& budget) {
     if (const char* fault = std::getenv ("ACACIA_NATIVE_TEST_LIFT_FAULT"))
       if (std::strcmp (fault, "region-method") == 0 ||
           std::strcmp (fault, "unexpected-region-policy-hash") == 0)

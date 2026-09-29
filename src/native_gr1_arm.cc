@@ -85,16 +85,17 @@ namespace acacia {
     reduction_options.max_artifact_bytes = artifact_cap;
     reduction_options.max_monitor_states = 10000;
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
-    TlsfGr1ConstructionWork work {};
     TlsfGr1ReductionStats reduction_stats {};
+    reduction_options.budget = budget;
+    reduction_options.stats = &reduction_stats;
+    reduction_options.stats_callback = phase_records_enabled () ? record_reduction_stage : nullptr;
     reduction_record_context reduction_context {arm, &reduction_stats};
+    reduction_options.stats_context = &reduction_context;
     native_reduction_owner reduction;
     TlsfGr1ReductionError reduction_error {};
-    auto reduced = tlsf_gr1_reduce_with_budget (
-        pipeline.get (), &reduction_options, &reduction.value, &reduction_error,
-        phase_records_enabled () ? &reduction_stats : nullptr,
-        phase_records_enabled () ? record_reduction_stage : nullptr,
-        &reduction_context, &budget, &work);
+    auto reduced = tlsf_gr1_reduce (
+        pipeline.get (), &reduction_options, &reduction.value, &reduction_error);
+    const auto& work = reduction_stats.work;
     if (reduced != TLSF_GR1_REDUCE_OK) {
       native_budget_record (arm, reduction_error.stage, work, construction_started_ns);
       if (phase_records_enabled ()) {
@@ -125,12 +126,13 @@ namespace acacia {
 
     phase_scope solve_phase (arm, "solve_export_total");
     OxiddFailure failure {};
-    auto solve_options = oxidd_solve_options_default ();
-    solve_options.failure = &failure;
-    solve_options.node_cap = solver_nodes;
-    solve_options.cache_cap = 1u << 20;
-    solve_options.deadline_mono_ns = deadline_mono_ns;
-    solve_options.max_artifact_bytes = artifact_cap;
+    Gr1SolveOptions solve_options {};
+    solve_options.oxidd = oxidd_solve_options_default ();
+    solve_options.oxidd.failure = &failure;
+    solve_options.oxidd.node_cap = solver_nodes;
+    solve_options.oxidd.cache_cap = 1u << 20;
+    solve_options.oxidd.deadline_mono_ns = deadline_mono_ns;
+    solve_options.oxidd.max_artifact_bytes = artifact_cap;
     std::array<char*, 4> bytes {};
     std::array<size_t, 4> sizes {};
     Gr1CertificateOptions certificate {};
@@ -145,6 +147,8 @@ namespace acacia {
     certificate.policy_json_size = &sizes[3];
     certificate.max_artifact_bytes = artifact_cap;
     Gr1CertificateStats solver_stats {};
+    solve_options.certificate = &certificate;
+    solve_options.stats = phase_records_enabled () ? &solver_stats : nullptr;
     struct ArtifactOwner {
         std::array<char*, 4>& bytes;
         ~ArtifactOwner () {
@@ -156,11 +160,7 @@ namespace acacia {
     Aig* game = reduction.value.game;
     reduction.value.game = nullptr;  // the solver takes ownership
     std::unique_ptr<Aig, decltype (&aig_free)> strategy (
-        phase_records_enabled ()
-            ? solve_gr1_oxidd_ex_with_certificate_and_stats (
-                  game, &solved_unreal, &solve_options, &certificate, &solver_stats)
-            : solve_gr1_oxidd_ex_with_certificate (
-                  game, &solved_unreal, &solve_options, &certificate), aig_free);
+        solve_gr1_oxidd (game, &solved_unreal, &solve_options), aig_free);
     solve_phase.finish ();
     if (phase_records_enabled ()) {
       const auto emit = [&] (const char* phase, uint64_t wall, uint64_t cpu,

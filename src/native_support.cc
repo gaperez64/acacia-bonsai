@@ -84,7 +84,6 @@ namespace acacia {
       std::fclose (membership);
     }
     TlsfGr1ConstructionBudget budget {};
-    budget.size = sizeof budget;
     budget.max_formula_nodes = 4096;
     budget.max_ap_count = 2048;
     budget.max_conjuncts = 1024;

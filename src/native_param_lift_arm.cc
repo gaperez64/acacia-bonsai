@@ -61,26 +61,25 @@ namespace acacia {
     TlsfGr1LiftOptions options {};
     options.deadline_mono_ns = deadline_mono_ns;
     const auto budget = native_construction_budget (args.arms ? args.arms->size () : 1);
-    TlsfGr1ConstructionWork work {};
     TlsfGr1LiftStats stats {};
-    TlsfGr1LiftPhaseBudgetV2 phase_budget {};
-    phase_budget.size = sizeof phase_budget;
+    options.budget = budget;
+    options.stats = &stats;
+    options.stats_callback = phase_records_enabled () ? record_lift_stage : nullptr;
     lift_record_context lift_context {arm, &stats};
+    options.stats_context = &lift_context;
 # ifdef ACACIA_NATIVE_TEST_HOOKS
-    native_lift_test_options (phase_budget);
+    native_lift_test_options (options.phase_budget);
 # endif
     // All remaining caps are the bounded defaults of the native lifting API.
     native_lift_owner lifted;
     TlsfGr1LiftError lift_error {};
     phase_scope lift_phase (arm, "lift_call");
     const auto* source = reinterpret_cast<const uint8_t*> (args.tlsf_source.data ());
-    const auto lift_status = tlsf_gr1_lift_with_phase_budget_v2 (
+    const auto lift_status = tlsf_gr1_lift (
         source, args.tlsf_source.size (), nullptr, 0, &options,
-        &lifted.value, &lift_error,
-        phase_records_enabled () ? &stats : nullptr,
-        phase_records_enabled () ? record_lift_stage : nullptr,
-        &lift_context, &budget, &work, &phase_budget);
+        &lifted.value, &lift_error);
     lift_phase.finish ();
+    const auto& work = stats.work;
     if (phase_records_enabled ()) {
       if (stats.final_stage[0]) {
         const std::string decline_phase = std::string ("lift_decline_") + stats.final_stage;

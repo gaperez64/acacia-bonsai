@@ -21,5 +21,5 @@ scripts/build-oracle-toolchain.sh
 The script builds the five required tlsf-tools CLIs from this checkout's
 submodule into ignored `build_oracle_tlsf/`, offline and one job at a time.
 `ACACIA_TLSF_TOOLS_BUILD` can select another build directory, but the oracle
-rejects any build without matching source, OxiDD patch, executable hashes,
+rejects any build without matching source and OxiDD commits, executable hashes,
 and frontend provenance. Use the script to refresh a stale build.

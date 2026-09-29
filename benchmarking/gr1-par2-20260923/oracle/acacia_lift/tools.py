@@ -410,19 +410,22 @@ def probe_frontend_toolchain(config: ToolConfiguration) -> dict[str, str]:
         raise ProbeError(f"oracle toolchain has no source/binary manifest: {manifest_path}; {hint}")
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        pinned = subprocess.check_output(
-            ["git", "-C", str(ROOT), "rev-parse", "HEAD:subprojects/tlsf-tools"],
-            text=True, timeout=10,
-        ).strip()
         current = subprocess.check_output(
             ["git", "-C", str(TLSF_TOOLS), "rev-parse", "HEAD"],
             text=True, timeout=10,
         ).strip()
-        patch = (TLSF_TOOLS / "external/oxidd/build/oxidd-gc-thread-retirement-info.txt").read_text().strip()
-        if manifest.get("source_commit") != pinned or current != pinned:
-            raise ProbeError(f"oracle toolchain does not match pinned tlsf-tools commit {pinned}; {hint}")
-        if manifest.get("oxidd_patch_record") != patch:
-            raise ProbeError(f"oracle OxiDD patch record differs from the submodule; {hint}")
+        oxidd_commit = subprocess.check_output(
+            ["git", "-C", str(TLSF_TOOLS / "external/oxidd"), "rev-parse", "HEAD"],
+            text=True, timeout=10,
+        ).strip()
+        pinned_oxidd = subprocess.check_output(
+            ["git", "-C", str(TLSF_TOOLS), "rev-parse", "HEAD:external/oxidd"],
+            text=True, timeout=10,
+        ).strip()
+        if manifest.get("source_commit") != current:
+            raise ProbeError(f"oracle toolchain does not match tlsf-tools commit {current}; {hint}")
+        if manifest.get("oxidd_commit") != oxidd_commit or oxidd_commit != pinned_oxidd:
+            raise ProbeError(f"oracle OxiDD commit differs from the submodule; {hint}")
         for name in names:
             digest = hashlib.sha256((config.tlsf_tools_build / name).read_bytes()).hexdigest()
             if manifest.get("sha256", {}).get(name) != digest:
@@ -453,7 +456,7 @@ def probe_frontend_toolchain(config: ToolConfiguration) -> dict[str, str]:
         raise
     except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
         raise ProbeError(f"oracle frontend provenance probe failed: {error}; {hint}") from error
-    return {"source_commit": pinned, "provenance_schema": data["schema"]}
+    return {"source_commit": current, "provenance_schema": data["schema"]}
 
 
 def probe_configuration(
