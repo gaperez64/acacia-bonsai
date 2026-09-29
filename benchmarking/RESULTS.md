@@ -51,6 +51,29 @@ partial rows were not retained. There is **no completed full-corpus E5 result**,
 17 s leg, TACAS23 leg, or joined new three-way. Archives:
 `gr1-par2-20260923-perarm-m1`, `gr1-par2-20260923`.
 
+## O5 optimized checkpoint, unreleased
+
+**O5** is the optimization sprint's five-arm development checkpoint. It uses E5's arms and
+order, contains the admitted P1 and P2 packages, and is built against Spot 2.16. It was
+screened with no 17 s full-corpus leg yet, on a 152-case development screen: 60 s, serial,
+8 GiB no-swap.
+
+| Binary | Spot | Solved | PAR-2 total (s) |
+|---|---|---:|---:|
+| E5 (frozen) | 2.15.1.dev fork runtime | 115 | 4,653.542 |
+| C5s216 (C5 source, same Spot as O5) | 2.16 | 116 | 4,589.171 |
+| O5 | 2.16 | 116 | 4,543.499 |
+
+- **Verdicts:** no pair has an opposing verdict.
+- **O5 against C5s216:** the same solved set.
+  - The PAR-2 change comes mostly from two checked-GR(1) rows sped up by the checker-order
+    package.
+  - One 8 GiB MEMOUT became a timeout.
+- **The extra solve over E5 is not credited.** It is cap-sensitive in repeats.
+- **Standalone optimized REAL lifting** keeps its 19 development successes.
+- **Archives:** the binaries are `binary-O5-1b216a40` and `binary-C5s216-1c3b09ff`. The
+  screen rows will be archived with the sprint's evidence.
+
 ## Rejected or deferred ideas
 
 - Sparse forward move compaction: a confirmed near-cap regression defeated the
@@ -71,6 +94,16 @@ partial rows were not retained. There is **no completed full-corpus E5 result**,
   Archive `symbolic-rows-20260917`.
 - Semantic whole-letter quotient: G1 gains were outweighed by a severe G2s
   cycle regression. Archive `benchmarking-root-legacy`.
+
+- Optimization sprint P2 packages stopped at pre-registered gates:
+  - critical-picker scratch reuse, for no useful gain;
+  - sparse backward vectors (#196): 67% of coordinates are non-bottom, and the model reads
+    2.56 times as much;
+  - backward rank reuse and SIMD: rank work is 5.8% of cycles;
+  - raising Spot's acceptance-set limit (#201): the specs need up to 5,052 sets, and
+    translation still times out.
+
+  Record: `optimize-20260927/decisions.md`; the archive follows at sprint close.
 
 The current optimization and UNREAL lifting work is tracked in
 [the active sprint record](optimize-20260927/plan.md). Results from selected

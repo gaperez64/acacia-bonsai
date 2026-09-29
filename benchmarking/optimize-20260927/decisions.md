@@ -493,3 +493,32 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   from tlsf tools while you do the rest".
   - It leaves the sprint's task list.
   - P3's `unreal-lift` branch rebases onto it when it lands.
+
+## 2026-09-29 — O5 accepted; binaries published
+
+- **O5** (`build_o5_4ab02725`, SHA-256 `1b216a40…`) is E5's five arms in order, with the
+  admitted P1/P2 packages, built against Spot 2.16.
+- **C5s216** (`build_c5s216_1b9e4b5f`, `1c3b09ff…`) is C5's source tree rebuilt against Spot
+  2.16, serving as the same-Spot reference.
+- **Gates:**
+  - G0: 56/52 and posets 18.
+  - G1 against C5s216: 40/40, GATE PASS.
+  - G4 on a checked build: 575 OK, 49 permitted timeouts, 0 fail.
+  - tlsf-tools research suite: 313/313.
+  - Config checks pass. Pytest was covered separately (1,017).
+- **Screen:** 152 unique dev, held-out and legacy cases at 60 s, with the leg order rotated
+  across E5 (old runtime, proven via `/proc/<pid>/maps`), C5s216 and O5.
+  - No opposing verdicts.
+  - E5 115 solved (PAR-2 4,653.5 s); C5s216 116 (4,589.2); O5 116 (4,543.5).
+  - O5 against C5s216: identical solved set. The −45.7 s is concentrated in two checked-GR(1)
+    rows (36.3 → 4.2 s and 12.0 → 1.3 s), consistent with P1b-3.
+  - `robot_grid_pb_6_6_pe_` turns from MEMOUT into a timeout, stable in two reversed repeats.
+  - The first-pass solve over E5 (`robot_collect_samples_v2-real`) is cap-sensitive in the
+    repeats and not credited.
+- **Optimized REAL lifting, standalone, frozen outside O5:** the 19 dev successes are kept,
+  `_15` included.
+- **Codex review: ACCEPT.** It independently verified the hashes, write protection, option
+  identity, loader traces, the E5 runtime proof, and the G1, G4 and tlsf-tools recounts.
+- **Published:** `binary-O5-1b216a40` and `binary-C5s216-1c3b09ff` are on
+  `evidence-2026-09-27`, read back and verified, with index rows added. Both are registered in
+  `baselines.tsv`.
