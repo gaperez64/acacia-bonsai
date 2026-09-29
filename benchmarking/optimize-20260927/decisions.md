@@ -547,3 +547,34 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
 - **Found on the way:** after a submodule bump, Meson links whatever `liboxidd_ffi_c.a` is
   present, and nothing records which OxiDD commit built it. The #49 port's first equivalence
   run silently linked the Sep 25 archive, and step B repeats it with the rebuilt archive.
+
+## 2026-09-29 — P3 U1 stopped at its gate; review sends it to one bounded second iteration (U1b)
+
+- **U1 result.** A research-only rank-schema learner using AND/OR projections of at most three
+  typed lanes.
+  - **Worked:** from exact seeds at 2–4, it emits candidates that the independent checker
+    verifies at held-out sizes 5 and 7. This holds for one generated design plus its renamed
+    and two-axis variants, which is one rank regime.
+  - **Failed on:**
+    - three other independent generated UNREAL designs, which decline at the outer `z_0`
+      predicate;
+    - all 12 corpus cases: 5 `exact_reduction`, 5 REAL at the seeds, 1 `rank_shape` and 1
+      `seed_check` cap.
+  - Zero checker misses. Nothing was linked into production.
+- **Codex review: STOP PREMATURE.** STOP is sound for this learner, but not for the route.
+  - The size-spaced corpus sample tried 3 of the 99 known-UNREAL eligible parametric
+    instances, and 4 of the 13 UNREAL-capable eligible templates.
+  - A legal rule that selects on checked UNREAL seeds would reach about 10 of the 13.
+  - The `z_0` failures show a limit of the projection grammar, not impossibility.
+  - Four `exact_reduction` declines are the reducer's `mp-class` limit (Spot class outside
+    BGSOR), and one is its Mealy/Mealy semantics check. That is a separate reducer-coverage
+    project, which would block any exact UNREAL route.
+- **Decision: U1b, the owner's priority being an UNREAL param-lift arm.** One bounded second
+  iteration:
+  - predeclared structural de-duplication plus exact 2–4 seed-polarity selection;
+  - a reducer preflight;
+  - a cross-lane summary learner: per-lane features folded through all/any, saturated counts
+    or an ordered scan, exact on every seed, extended to y/x, moves and policy.
+- **Gate for U2:** checked candidates at sizes 5 and 7 for at least two previously failing
+  generated designs, plus at least one previously untried corpus template, with no checker
+  miss. Otherwise STOP, and P4 proceeds with optimized REAL lifting (R).
