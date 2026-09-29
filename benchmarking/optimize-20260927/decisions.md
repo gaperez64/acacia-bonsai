@@ -464,3 +464,27 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   root-owned Spot 3.13 binding install in `~/.local/lib/python3.13/site-packages`.
 - **Consequence for comparisons.** Pre-switch baselines mix code changes with the Spot change,
   so O5 adds C5s216 (C5's source rebuilt against 2.16) as a same-Spot reference.
+
+## 2026-09-29 — P4 design decisions (owner)
+
+- **No fresh obfuscated corpus.** The owner: "No need for a fresh obfuscation".
+  - P4 runs on the ordinary corpora.
+  - The earlier obfuscated corpus is not reused as a blind test, because its mapping was
+    published.
+  - Genericity stays enforced by the existing guards and renaming tests, not by a blind
+    corpus.
+- **The 60 s series recycles the 17 s run.** The owner: "do recycle data from 17s for 60s".
+  - **Recycled into the 60 s series,** with their 17 s-run times:
+    - every 17 s row that ended conclusively;
+    - every 17 s row that ended for a cap-independent reason: a deterministic ERROR (for
+      example the Spot acceptance limit, #201), a MEMOUT under the same 8 GiB scope, or a
+      decline whose recorded stage is not the deadline.
+  - **Rerun at 60 s:** only the rows that TIMEOUT or end on the deadline.
+  - **Validation:**
+    - Rerun a disclosed, seeded sample of recycled rows at 60 s, together with the
+      cap-independence check (`benchmarking/tools/check-cap-independence.py`).
+    - Any disagreement on outcome, decision or decline stage stops the recycling for the
+      affected arm, which is then rerun in full at 60 s.
+  - **Labelling:** 60 s tables are labelled *derived*, citing both source runs.
+- **`ltlsynt` 2.16** from `/usr/local` is the P4 baseline, following the Spot 2.16 decision. The
+  archived fork-era `ltlsynt` runs stay as history.
