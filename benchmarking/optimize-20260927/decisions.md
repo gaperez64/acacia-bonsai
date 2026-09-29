@@ -591,3 +591,24 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - 160 same-process arm calls leave no lingering GC thread and no memory growth.
 - **The stale-archive hazard found on the way** is fixed upstream in tlsf-tools PR #53 (the
   OxiDD build stamp).
+
+## 2026-09-29 — P3 stopped after U1b; P4 proceeds with optimized REAL lifting (R)
+
+- **U1b** used the pre-registered seed-polarity selection over all 49 eligible structural
+  templates, and a cross-lane summary learner.
+  - **Generated designs.** `z_0` is now exact for all three formerly failing designs. They
+    still fail at `y_1` or `counter_next`, so no candidates.
+  - **Corpus.**
+    - 7 templates have three checked UNREAL seeds, 6 of them new. **All 7 decline at rank
+      shape**: their rank depth grows with the parameter.
+    - 25 are REAL at the seeds.
+    - 15 fail the exact reducer: 13 `mp-class`, 1 semantics, 1 cap.
+  - **The gate got zero of each requirement.** There were zero checker misses, and target
+    solves ran for evaluation only.
+- **P3 is closed** with a measured negative result, posted on #195.
+  - U0 is delivered as tlsf-tools PR #52.
+  - Further progress needs a learner with parametric rank depth, or wider exact-reducer
+    coverage; each is a separate research project.
+  - Nothing experimental is linked into production.
+- **P4:** the lifting candidate is R, `real:param-lift:oxidd`. The slot evidence for "O5 minus
+  r plus R" is being built from existing data for the owner's nomination.
