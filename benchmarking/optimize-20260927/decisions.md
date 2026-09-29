@@ -578,3 +578,16 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
 - **Gate for U2:** checked candidates at sizes 5 and 7 for at least two previously failing
   generated designs, plus at least one previously untried corpus template, with no checker
   miss. Otherwise STOP, and P4 proceeds with optimized REAL lifting (R).
+
+## 2026-09-29 — Acacia ported to tlsf-tools #49 and upstream OxiDD
+
+- **Submodule:** `5dc93b2`, which is tlsf-tools PR #51, with OxiDD at `bc4354c`.
+- **Port:** the native arms, test hooks and oracle toolchain now use the single entry points.
+- **Step A** (equivalence with the stale OxiDD archive) confirmed the API port alone.
+- **Step B** rebuilt fresh with the upstream archive, sha256 `5853e796…`. The upstream
+  `GCSignalSender::drop` symbol is present in the new binaries.
+  - 154/154 rows are identical to frozen O5 for `real:gr1:oxidd` and `real:param-lift:oxidd`.
+  - G1 passes, and the unit suites pass 56/52.
+  - 160 same-process arm calls leave no lingering GC thread and no memory growth.
+- **The stale-archive hazard found on the way** is fixed upstream in tlsf-tools PR #53 (the
+  OxiDD build stamp).
