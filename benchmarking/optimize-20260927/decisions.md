@@ -488,3 +488,8 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - **Labelling:** 60 s tables are labelled *derived*, citing both source runs.
 - **`ltlsynt` 2.16** from `/usr/local` is the P4 baseline, following the Spot 2.16 decision. The
   archived fork-era `ltlsynt` runs stay as history.
+- **`ltlsynt` 2.16 is the comparison baseline.** The owner: "Do compare with ltlsynt 2.16".
+- **tlsf-tools#49, the API collapse, is taken over by the owner.** The owner: "I'll handle #49
+  from tlsf tools while you do the rest".
+  - It leaves the sprint's task list.
+  - P3's `unreal-lift` branch rebases onto it when it lands.
