@@ -387,3 +387,35 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   from a single workload.
 - **Outcome for P2 §6.3 and §6.4:** no sparse and no SIMD change is admitted. Dominance is
   already vectorized, and the predecessor loop is irregular.
+
+## 2026-09-29 — P2b-2: Spot acceptance-limit probe stopped (#201); measurement Spot ≠ shipped Spot
+
+- **The limit.** Four specs fail both UNREAL legacy arms within 0.1 s on the 64-set limit.
+  - It is raised inside Spot's LTL→TGBA translation: one acceptance set per distinct promise.
+  - Needed: 65 promises for `robot_grid_pb_8_8_pe_`; 467, 1,832 and 5,052 for the three
+    `prioritized_arbiter_unreal2` sizes.
+  - With Spot 2.16 release builds in separate prefixes (`~/opt/spot-2.16-acc{64,256}`), acc256
+    turns `robot_grid` into a TIMEOUT, and the arbiters still exceed the limit.
+  - A diagnostic acc5056 build cannot even translate the size-30 arbiter formula in 60 s.
+  - A global increase would widen every acceptance mark (79× at 5,056).
+  - **STOP**, a measured negative result.
+  - Two exact alternatives are filed in #201: a sound UNREAL guarantee-subset prefilter, and
+    bounded-block degeneralization.
+- **Correctness.** Acacia at `36e9b4fb` builds and passes 56/56 against Spot 2.16 at both
+  limits. The 600-row 10 s verdict screen has no conclusive conflict with `one.bin`.
+- **Finding for P4: local measurement links a different Spot than the one shipped.**
+  - The Docker image (`scripts/compile.sh`) builds Spot 2.15.1 from the release tarball, with
+    release optimization and `--enable-max-accsets=64`.
+  - Every local binary and the local `ltlsynt` link `/usr/local`: the owner's
+    `spot-goodset` fork (2.15.1.dev), built as a developer build (`-g -O`, assertions on).
+  - Local numbers therefore understate Spot-heavy work for both Acacia and `ltlsynt`, in a
+    way the competition setting does not.
+  - Separating the factors would take a 2×2 of version × build profile at 64 sets, with
+    2.16 release as one cell. That is left to the owner's P4 baseline decision, together
+    with the `ltlsynt` 2.16 question; `~/opt/spot-2.16-acc64/bin/ltlsynt` reports 2.16.
+- **P2 is closed.**
+  - Admitted: the action-table borrow.
+  - Stopped: picker scratch, sparse backward vectors, rank reuse/SIMD, and the Spot limit
+    increase.
+  - Filed: #200 (MONA decode memory) and #201 (acceptance limit).
+  - Next: the O5 checkpoint.
