@@ -522,3 +522,28 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
 - **Published:** `binary-O5-1b216a40` and `binary-C5s216-1c3b09ff` are on
   `evidence-2026-09-27`, read back and verified, with index rows added. Both are registered in
   `baselines.tsv`.
+
+## 2026-09-29 — P3 U0 accepted: tlsf-tools PR #52
+
+- **The environment-certificate contract** (`docs/gr1-environment-certificate.md`, in
+  tlsf-tools) is written from the exporter and checker, with the enforcement gaps stated.
+- **Exact witness replay.** Two independently designed parametric families, one of which turns
+  from UNREAL to REAL, are replayed through the CLI and the C API.
+- **Typed-provenance alignment** covers two declared-parameter valuations and an
+  alpha-renaming, with nine sibling-swap negative controls.
+- **Mutations** are each rejected for a pinned exit code, verdict and reason.
+- **U0 found a real checker bug**, fixed in the same PR. Unnamed AIG outputs, and unnamed game
+  inputs, reached `strcmp` with a null name and segfaulted `tlsfcertcheck`; the checker now
+  reports INVALID. A revert experiment shows the new regressions crash the unfixed checker.
+- **Validation** on OxiDD `bc4354c`, with the FFI rebuilt and its archive hash verified:
+  - the new tests pass and the formatter is clean;
+  - full serial suite: 314 OK and 1 timeout, `gr1_certcheck`, which takes 168 s alone against
+    its 180 s cap. It takes 48–55 s on CI, so this is a memory-tight-host effect of the
+    checker's default cache cap. Follow-up: give the test an explicit small `--cache-cap`.
+- **Review:** four codex rounds, ending in ACCEPT WITH FIXES, where the fix was to the report
+  only.
+- **Process:** the owner stopped Claude subagents. Sonnet made too much review work, and the
+  subagents hit the owner's session limit. Coding is back on codex only.
+- **Found on the way:** after a submodule bump, Meson links whatever `liboxidd_ffi_c.a` is
+  present, and nothing records which OxiDD commit built it. The #49 port's first equivalence
+  run silently linked the Sep 25 archive, and step B repeats it with the rebuilt archive.
