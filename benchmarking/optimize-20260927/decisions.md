@@ -419,3 +419,40 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
     increase.
   - Filed: #200 (MONA decode memory) and #201 (acceptance limit).
   - Next: the O5 checkpoint.
+
+## 2026-09-29 — Spot 2.16 replaces the 2.15.1.dev fork (owner decision)
+
+- **Owner:** "Use spot 2.16 from now on. Uninstall the dev version 2.15".
+- **Installed.** The owner ran the root step. `/usr/local` now holds Spot 2.16, a release
+  build: `-O3 -ffast-math -DNDEBUG`, 64 acceptance sets as in the shipped image (#201 showed
+  a higher limit gains nothing), and Python 3.14 bindings.
+  - The `spot-goodset` fork (2.15.1.dev, a `-g -O` developer build with assertions and 3.13
+    bindings) is uninstalled.
+  - Build tree: `~/opt/build/spot-2.16-usrlocal`.
+- **Frozen baselines.** Spot 2.16 keeps the soname `libspot.so.0`, and every frozen binary
+  resolves it through `RUNPATH=/usr/local/lib`. Run naively, E5, C5, G1, M1, M2 and pre-E5
+  would silently load 2.16 through an ABI mismatch.
+  - The fork's exact runtime is kept, byte-identical and write-protected, in
+    `~/opt/spot-2.15.1.dev-goodset-runtime`: `libspot`, `libbddx`, `libspotgen`,
+    `libspotltsmin`, plus `ltlsynt`, `ltl2tgba` and `autfilt`, with a README and SHA256SUMS.
+  - Frozen binaries run with `LD_LIBRARY_PATH` pointing there. They are not modified, so their
+    pinned hashes stand.
+- **Repository.** The CI `setup-spot` default, the wheels workflow and scripts, both
+  Dockerfiles and `scripts/compile.sh` move from 2.15.1 to 2.16. The CI cache key includes the
+  version.
+- **Oracle.** The Python lifting oracle defaulted to `/usr/bin/python3.13` and its
+  `/usr/local` site. The defaults now follow the running interpreter.
+  - BuDDy's variable ceiling is pinned per `libbddx` image. The 2.16 image is added with the
+    same 2,097,150 ceiling, because `buddy/src/kernel.{h,c}` are unchanged between the fork and
+    2.16.
+- **Validation on 2.16.**
+  - A fresh debug-native Acacia build passes its 56 unit tests.
+  - Full pytest: 1,010 passed and **7 failed**, all in the Python lifting oracle's obfuscation
+    and online tests. They return `fallback-pending` or `budget_exhausted` where they expect
+    `lifting`. P2a hit the same six; under the fork environment they passed.
+  - Diagnosis is delegated. The oracle is a differential reference, not on the solver path.
+- **Leftovers that need root:** 14 headers from Spot's removed TA module (dated 2025-12, older
+  than the fork install), empty `python3.13` directories under `/usr/local/lib64`, and a
+  root-owned Spot 3.13 binding install in `~/.local/lib/python3.13/site-packages`.
+- **Consequence for comparisons.** Pre-switch baselines mix code changes with the Spot change,
+  so O5 adds C5s216 (C5's source rebuilt against 2.16) as a same-Spot reference.

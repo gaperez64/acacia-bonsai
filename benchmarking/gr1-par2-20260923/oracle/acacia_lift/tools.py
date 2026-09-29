@@ -21,12 +21,12 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 TLSF_TOOLS = ROOT / "subprojects" / "tlsf-tools"
 DEFAULT_TLSF_TOOLS_BUILD = ROOT / "build_oracle_tlsf"
-DEFAULT_BINDINGS_PYTHON = (
-    pathlib.Path("/usr/bin/python3.13")
-    if pathlib.Path("/usr/bin/python3.13").exists()
-    else pathlib.Path(os.sys.executable)
+# Spot's Python bindings are installed for the running interpreter under
+# /usr/local, so the defaults follow it rather than naming one Python version.
+DEFAULT_BINDINGS_PYTHON = pathlib.Path(sys.executable)
+DEFAULT_BINDINGS_SITE = pathlib.Path(
+    f"/usr/local/lib64/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
 )
-DEFAULT_BINDINGS_SITE = pathlib.Path("/usr/local/lib64/python3.13/site-packages")
 
 ENV_TLSF_TOOLS_BUILD = "ACACIA_TLSF_TOOLS_BUILD"
 ENV_BINDINGS_PYTHON = "ACACIA_BINDINGS_PYTHON"

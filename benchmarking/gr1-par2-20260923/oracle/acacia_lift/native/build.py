@@ -20,16 +20,12 @@ SOURCE = HERE / "buddy_veccompose_adapter.cc"
 DEFAULT_OUTPUT_DIR = ROOT / "build_scratch" / "buddy-adapter"
 SCHEMA = "acacia-buddy-veccompose-adapter-v2"
 DEFAULT_BINDINGS_PYTHON = pathlib.Path(
-    os.environ.get(
-        "ACACIA_BINDINGS_PYTHON",
-        "/usr/bin/python3.13" if pathlib.Path("/usr/bin/python3.13").exists()
-        else sys.executable,
-    )
+    os.environ.get("ACACIA_BINDINGS_PYTHON", sys.executable)
 )
 DEFAULT_BINDINGS_SITE = pathlib.Path(
     os.environ.get(
         "ACACIA_BINDINGS_SITE",
-        "/usr/local/lib64/python3.13/site-packages",
+        f"/usr/local/lib64/python{sys.version_info.major}.{sys.version_info.minor}/site-packages",
     )
 )
 
