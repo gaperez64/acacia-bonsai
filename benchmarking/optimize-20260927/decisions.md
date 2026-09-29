@@ -612,3 +612,36 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
   - Nothing experimental is linked into production.
 - **P4:** the lifting candidate is R, `real:param-lift:oxidd`. The slot evidence for "O5 minus
   r plus R" is being built from existing data for the owner's nomination.
+
+## 2026-09-29 — Owner reopens P3 (U1c) and asks for all-arm data before choosing 4–6 arms
+
+- **Owner:**
+  - Add the UNREAL-lifting targets, and some REAL instances that ltlsynt solves and we do
+    not, to the O5 panel.
+  - Run all arms on the extended panel.
+  - Push the new seed window.
+  - Choose a 4–6 arm combination from those numbers. If both parametric-lifting arms miss
+    the combination, explain why with backing data.
+- **U1c: seed window 3–5 instead of 2–4.**
+  - **Rank shape:** all 7 U1b templates now pass the rank-shape audit, because size 2 was
+    the degenerate case. Two more templates gain checked UNREAL seeds, giving 9 of 49.
+  - **New blocker:** all 9 now decline at the learner's typed-lane alignment guard. Their
+    lanes mix typed monitor roles, so there are still 0 corpus candidates.
+  - **Generated designs:** the anchored regime verifies at 7 and 9. `forbidden` hits the
+    300,000-node cap at seed 5. `causal` and `global` still stop at `counter_next`.
+  - Zero checker misses.
+  - **VERDICT: WINDOW-DOES-NOT-HELP** for the corpus gate (0/7). No U2/U3 yet.
+  - A scoped U runner (research prototype, never solving the target directly) is ready to
+    measure U as an arm.
+- **Extended panel** (`p4panel/`): 225 instances.
+  - O5's 152;
+  - 43 instances from the 9 checked-UNREAL templates, capped at 6 each;
+  - a seeded sample of 30 REAL instances that ltlsynt solves at 17 s and no archived arm
+    solves at 60 s.
+- **Legs, running as systemd services:**
+  - the five O5 arms, R (`real:param-lift:oxidd`) and D (`unreal:gr1:oxidd`), each
+    standalone at 60 s from the frozen O5 binary, with phase records and conditions logging;
+  - then the U leg through the runner.
+  - The 17 s view is derived by censoring, after a native-arm cap-independence spot check.
+- **tlsf-tools main `31fd5bb`** (#52 U0, #53 OxiDD build stamp) is pinned in Acacia; CI is
+  green.
