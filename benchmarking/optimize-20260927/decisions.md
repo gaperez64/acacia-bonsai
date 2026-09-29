@@ -451,6 +451,14 @@ follow-up handoffs in `../gr1-par2-20260923/`. Agent briefs and review rounds ar
     and online tests. They return `fallback-pending` or `budget_exhausted` where they expect
     `lifting`. P2a hit the same six; under the fork environment they passed.
   - Diagnosis is delegated. The oracle is a differential reference, not on the solver path.
+  - **Resolved.** The oracle called `tlsfcertcheck` without `--cache-cap`, so the checker
+    sized its cache to the 2^26 node cap. On a tiny certificate that took 2.89 s and 1.3 GB at
+    startup, against under 0.01 s with a 2^20 cache and the same verdict.
+    - Pinned to 2^20; node cap and budgets unchanged. Full pytest: 1,017 passed.
+    - Acacia's native arms already set `cache_cap` explicitly, so the solver path is
+      unaffected.
+    - Why the allocation became slow now is not established. The checker does not link
+      Spot, and the system time points at page zeroing on a long-running host.
 - **Leftovers that need root:** 14 headers from Spot's removed TA module (dated 2025-12, older
   than the fork install), empty `python3.13` directories under `/usr/local/lib64`, and a
   root-owned Spot 3.13 binding install in `~/.local/lib/python3.13/site-packages`.
