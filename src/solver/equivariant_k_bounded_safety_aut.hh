@@ -776,7 +776,7 @@ namespace acacia::solver_detail::equivariant {
     if (inputs_to_ios.empty ())
       return decline ("no precomputed representative inputs");
     auto actioner = actioner_maker.make (aut, inputs_to_ios, k);
-    auto fwd_actions = actioner.actions ();
+    auto& fwd_actions = actioner.actions ();
     acacia::diagnostics::set_support_actions (fwd_actions);
 #if ACACIA_ENABLE_DIAGNOSTICS
     construction_timer.reset ();
