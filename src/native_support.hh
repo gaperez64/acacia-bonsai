@@ -26,7 +26,7 @@ namespace acacia {
 
   void native_arm_diagnostic (std::string_view arm, std::string_view stage, int status,
                               std::string_view message);
-  void native_diagnostic (bool unreal, std::string_view stage, int status,
+  void native_diagnostic (std::string_view arm, std::string_view stage, int status,
                           std::string_view message);
   bool native_limit_address_space (std::string_view arm);
   TlsfGr1ConstructionBudget native_construction_budget (size_t arm_count);

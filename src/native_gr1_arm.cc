@@ -43,13 +43,13 @@ namespace acacia {
                   stage == TLSF_GR1_REDUCE_STATS_MONITORS
                       ? context.stats->monitor_states : 0);
   }
-  int run_native_gr1_arm (const arg_parse_result& args, bool unreal,
-                                 uint64_t deadline_mono_ns) {
-    const char* arm = unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd";
+  int run_native_gr1_arm (const arg_parse_result& args, bool unreal, bool both,
+                          uint64_t deadline_mono_ns) {
+    const char* arm = both ? "both:gr1:oxidd" : unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd";
     constexpr size_t artifact_cap = 64u * 1024u * 1024u;
     constexpr size_t solver_nodes = 1u << 22;
     constexpr size_t checker_nodes = 1u << 22;
-    if (!native_limit_address_space (unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd"))
+    if (!native_limit_address_space (arm))
       return EXIT_CODE_UNKNOWN;
     const uint64_t construction_started_ns = phase_clock (CLOCK_MONOTONIC);
 
@@ -66,14 +66,14 @@ namespace acacia {
                                   args.tlsf_source.size (), &pipeline_options),
         tlsf_pipeline_free);
     if (!pipeline) {
-      native_diagnostic (unreal, pipeline_error.stage, pipeline_error.status,
+      native_diagnostic (arm, pipeline_error.stage, pipeline_error.status,
                          pipeline_error.message);
       return EXIT_CODE_UNKNOWN;
     }
     pipeline_phase.finish ();
     phase_scope source_phase (arm, "source_provenance");
     if (args.tlsf_sha256 != pipeline->source_sha256) {
-      native_diagnostic (unreal, "source", -1, "snapshot hash mismatch");
+      native_diagnostic (arm, "source", -1, "snapshot hash mismatch");
       return EXIT_CODE_UNKNOWN;
     }
     source_phase.finish ();
@@ -103,13 +103,13 @@ namespace acacia {
         phase_finish (arm, stage.c_str (), phase_start (), -1, -1,
                       work.formula_nodes, 0, nullptr, work.monitors_completed, work.states);
       }
-      native_diagnostic (unreal, reduction_error.stage, reduced,
+      native_diagnostic (arm, reduction_error.stage, reduced,
                          native_budget_message (reduction_error.stage,
                                                 reduction_error.message, work));
       return EXIT_CODE_UNKNOWN;
     }
     if (!reduction.value.game || !reduction.value.aag || !reduction.value.aag_size) {
-      native_diagnostic (unreal, "reduction", -1, "missing exact game");
+      native_diagnostic (arm, "reduction", -1, "missing exact game");
       return EXIT_CODE_UNKNOWN;
     }
     native_json_doc parsed_reduction (nullptr, yyjson_doc_free);
@@ -119,7 +119,7 @@ namespace acacia {
         !native_json_field (metadata, "source_sha256", args.tlsf_sha256) ||
         !native_sha256_matches (metadata, "game_sha256", reduction.value.aag,
                                 reduction.value.aag_size)) {
-      native_diagnostic (unreal, "reduction", -1, "source or game hash mismatch");
+      native_diagnostic (arm, "reduction", -1, "source or game hash mismatch");
       return EXIT_CODE_UNKNOWN;
     }
     reduction_phase.finish ();
@@ -181,18 +181,19 @@ namespace acacia {
     }
     if (failure.kind != OXIDD_FAILURE_NONE || certificate.failed ||
         (!strategy && !solved_unreal)) {
-      native_diagnostic (unreal, "solve", int (failure.kind),
+      native_diagnostic (arm, "solve", int (failure.kind),
                          certificate.failed ? certificate.error : "solver gave no decision");
       return EXIT_CODE_UNKNOWN;
     }
-    if (bool (solved_unreal) != unreal) {
-      native_diagnostic (unreal, "polarity", 0, "opposite side solved");
+    const bool proof_unreal = bool (solved_unreal);
+    if (!both && proof_unreal != unreal) {
+      native_diagnostic (arm, "polarity", 0, "opposite side solved");
       return EXIT_CODE_UNKNOWN;
     }
     phase_scope proof_phase (arm, "proof_binding");
     for (size_t i = 0; i < bytes.size (); ++i) {
       if (!bytes[i] || !sizes[i]) {
-        native_diagnostic (unreal, "certificate", -1, "certificate or policy missing");
+        native_diagnostic (arm, "certificate", -1, "certificate or policy missing");
         return EXIT_CODE_UNKNOWN;
       }
     }
@@ -204,8 +205,8 @@ namespace acacia {
 # endif
     if (!native_proof_sidecars (stable_artifacts[1].data (), stable_artifacts[1].size (),
                                 stable_artifacts[3].data (), stable_artifacts[3].size (), "exact",
-                                true, unreal)) {
-      native_diagnostic (unreal, "metadata", -1, "proof side or semantics mismatch");
+                                true, proof_unreal)) {
+      native_diagnostic (arm, "metadata", -1, "proof side or semantics mismatch");
       return EXIT_CODE_UNKNOWN;
     }
     const std::string stable_game (reduction.value.aag, reduction.value.aag_size);
@@ -239,12 +240,12 @@ namespace acacia {
     const TlsfGr1CheckStatus status = tlsf_gr1_check (&input, &check_options, &checked.value);
     check_phase.finish (static_cast<long long> (checked.value.peak_nodes));
     if (status != TLSF_GR1_CHECK_OK || checked.value.verdict != TLSF_GR1_CHECK_VERIFIED) {
-      native_diagnostic (unreal, checked.value.stage[0] ? checked.value.stage : "check",
+      native_diagnostic (arm, checked.value.stage[0] ? checked.value.stage : "check",
                          status == TLSF_GR1_CHECK_OK ? int (checked.value.verdict) : int (status),
                          checked.value.message[0] ? checked.value.message : "proof not verified");
       return EXIT_CODE_UNKNOWN;
     }
-    return unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL;
+    return proof_unreal ? EXIT_CODE_UNREAL : EXIT_CODE_REAL;
   }
 }
 #endif

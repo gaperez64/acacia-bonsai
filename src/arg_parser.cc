@@ -81,15 +81,15 @@ void show_help (const char* program_name) {
       << "  --unreal-backend VAL     use the [backward|forward|spot-guarded|spot-guarded-sparse] game backend for unreal arms\n"
       << "  --arms LIST       run exactly the comma-separated portfolio arms\n"
       << "                    polarity:transform:backend[:provider], where polarity is real or\n"
-      << "                    unreal; real transforms are small or any; unreal\n"
+      << "                    unreal for legacy arms; real transforms are small or any; unreal\n"
       << "                    transforms are formula or automaton; backends are\n"
       << "                    backward, forward, spot-guarded or spot-guarded-sparse; unreal arms use the build's\n"
       << "                    primary translation preference; mutually exclusive\n"
       << "                    with -r, -u, and per-polarity backend/translation options\n"
       << "                    provider options apply to arms without an explicit provider\n"
       << "                    closure-buchi[-eager]: spot-guarded-sparse, real or unreal:formula, decision only\n"
-      << "                    native -T arms: real:gr1:oxidd, unreal:gr1:oxidd\n"
-      << "                    (one exact GR(1) arm per answer polarity), and\n"
+      << "                    native -T arms: both:gr1:oxidd (either checked verdict),\n"
+      << "                    real:gr1:oxidd, unreal:gr1:oxidd, and\n"
       << "                    real:param-lift:oxidd (realizability only);\n"
       << "                    require -Dacacia_native_arms=true and -T FILE;\n"
       << "                    native arms have no provider and do not support -s\n"
@@ -285,12 +285,12 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       error (EXIT_CODE_ERROR,
              "Error: invalid field count in --arms spec %s; expected "
              "polarity:transform:backend[:provider]; native forms are "
-             "real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\n",
+             "both:gr1:oxidd, real:gr1:oxidd, unreal:gr1:oxidd, and real:param-lift:oxidd without a provider.\n",
              parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::polarity:
       error (EXIT_CODE_ERROR,
-             "Error: invalid polarity %s in --arms spec %s; expected real or unreal.\n",
+             "Error: invalid polarity %s in --arms spec %s; expected real, unreal, or both for gr1.\n",
              parsed.value.c_str (), parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::real_transform:
@@ -320,6 +320,10 @@ void process_arg_arms (const std::string& arg, arg_parse_result& result) {
       break;
     case portfolio_arm_parse_error::native_transform:
       error (EXIT_CODE_ERROR, "Error: parameter lifting is realizability only.\n");
+      break;
+    case portfolio_arm_parse_error::both_transform:
+      error (EXIT_CODE_ERROR, "Error: polarity both is supported only for the gr1 transform with oxidd in --arms spec %s.\n",
+             parsed.spec.c_str ());
       break;
     case portfolio_arm_parse_error::native_backend:
       error (EXIT_CODE_ERROR, "Error: native arm %s requires the oxidd backend.\n",

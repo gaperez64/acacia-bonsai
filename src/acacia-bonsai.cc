@@ -152,25 +152,19 @@ namespace {
 #if ACACIA_NATIVE_ARMS
       try {
         const int result = arm.kind == portfolio_arm_kind::gr1
-            ? acacia::run_native_gr1_arm (arg_values, arm.unreal, deadline_mono_ns)
+            ? acacia::run_native_gr1_arm (arg_values, arm.unreal, arm.both, deadline_mono_ns)
             : acacia::run_native_param_lift_arm (arg_values, deadline_mono_ns);
-        acacia::phase_records_summary (arm.kind == portfolio_arm_kind::gr1
-            ? (arm.unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd")
-            : "real:param-lift:oxidd");
+        acacia::phase_records_summary (arm.native_name ());
         _exit (result);
       }
       catch (const std::exception& exception) {
         acacia::native_arm_diagnostic (
-            arm.kind == portfolio_arm_kind::gr1
-                ? (arm.unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd")
-                : "real:param-lift:oxidd",
+            arm.native_name (),
             "native_exception", -1, exception.what ());
       }
       catch (...) {
         acacia::native_arm_diagnostic (
-            arm.kind == portfolio_arm_kind::gr1
-                ? (arm.unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd")
-                : "real:param-lift:oxidd",
+            arm.native_name (),
             "native_exception", -1, "unknown exception");
       }
       acacia::phase_records_summary ("native");
@@ -237,10 +231,7 @@ namespace {
       if (setpgid (0, 0) != 0) _exit (EXIT_CODE_ERROR);
       sigprocmask (SIG_SETMASK, &old_mask, nullptr);
       if (child_start.wall) {
-        const char* name = arm.kind == portfolio_arm_kind::gr1
-            ? (arm.unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd")
-            : arm.kind == portfolio_arm_kind::param_lift ? "real:param-lift:oxidd"
-            : "legacy";
+        const char* name = arm.kind == portfolio_arm_kind::legacy ? "legacy" : arm.native_name ();
         acacia::phase_finish (name, "child_startup", child_start);
       }
 #if defined(ACACIA_PORTFOLIO_TEST_HOOKS) && !defined(NDEBUG)

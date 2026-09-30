@@ -140,11 +140,22 @@ int main () {
   }
 
   const auto native = parse_portfolio_arms (
-      "real:gr1:oxidd,unreal:gr1:oxidd,real:param-lift:oxidd");
-  if (native.error != portfolio_arm_parse_error::none || native.arms.size () != 3 ||
+      "real:gr1:oxidd,unreal:gr1:oxidd,both:gr1:oxidd,real:param-lift:oxidd");
+  if (native.error != portfolio_arm_parse_error::none || native.arms.size () != 4 ||
       native.arms[0].kind != portfolio_arm_kind::gr1 || native.arms[0].unreal ||
       native.arms[1].kind != portfolio_arm_kind::gr1 || !native.arms[1].unreal ||
-      native.arms[2].kind != portfolio_arm_kind::param_lift) return 1;
+      native.arms[2].kind != portfolio_arm_kind::gr1 || !native.arms[2].both ||
+      native.arms[2].unreal ||
+      std::string_view (native.arms[2].native_name ()) != "both:gr1:oxidd" ||
+      native.arms[3].kind != portfolio_arm_kind::param_lift) return 1;
+  if (parse_portfolio_arms ("both:gr1:oxidd,both:gr1:oxidd").error !=
+      portfolio_arm_parse_error::duplicate) return 1;
+  if (parse_portfolio_arms ("neither:gr1:oxidd").error !=
+      portfolio_arm_parse_error::polarity) return 1;
+  for (const char* spec : {"both:param-lift:oxidd", "both:small:backward",
+                           "both:formula:forward"})
+    if (parse_portfolio_arms (spec).error != portfolio_arm_parse_error::both_transform)
+      return 1;
   if (parse_portfolio_arms ("real:gr1:oxidd,real:gr1:oxidd").error !=
       portfolio_arm_parse_error::duplicate) return 1;
   if (parse_portfolio_arms ("real:gr1:oxidd:frozen-graph").error !=

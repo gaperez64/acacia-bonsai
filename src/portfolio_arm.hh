@@ -28,6 +28,7 @@ struct legacy_arm_options {
 
 struct portfolio_arm {
     bool unreal;  // false selects a realizability arm
+    bool both = false;  // exact GR(1) may prove either side
     portfolio_arm_kind kind;
     std::optional<legacy_arm_options> legacy;
 
@@ -39,17 +40,24 @@ struct portfolio_arm {
           legacy (legacy_arm_options {translation_pref, unreal_x, backend,
                                       provider, provider_explicit}) {}
 
-    static portfolio_arm native (bool is_unreal, portfolio_arm_kind native_kind) {
-      return portfolio_arm (is_unreal, native_kind);
+    static portfolio_arm native (bool is_unreal, portfolio_arm_kind native_kind,
+                                 bool is_both = false) {
+      return portfolio_arm (is_unreal, native_kind, is_both);
+    }
+
+    const char* native_name () const {
+      if (kind == portfolio_arm_kind::gr1)
+        return both ? "both:gr1:oxidd" : unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd";
+      return "real:param-lift:oxidd";
     }
 
     bool operator== (const portfolio_arm& rhs) const {
-      return kind == rhs.kind && unreal == rhs.unreal && legacy == rhs.legacy;
+      return kind == rhs.kind && unreal == rhs.unreal && both == rhs.both && legacy == rhs.legacy;
     }
 
   private:
-    portfolio_arm (bool is_unreal, portfolio_arm_kind native_kind)
-        : unreal (is_unreal), kind (native_kind), legacy (std::nullopt) {}
+    portfolio_arm (bool is_unreal, portfolio_arm_kind native_kind, bool is_both)
+        : unreal (is_unreal), both (is_both), kind (native_kind), legacy (std::nullopt) {}
 };
 
 enum class portfolio_arm_parse_error {
@@ -64,6 +72,7 @@ enum class portfolio_arm_parse_error {
   provider,
   native_provider,
   native_transform,
+  both_transform,
   native_backend,
   duplicate,
 };

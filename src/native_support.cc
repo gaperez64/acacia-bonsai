@@ -38,9 +38,9 @@ namespace acacia {
     (void) ::write (STDERR_FILENO, line.data (), line.size ());
   }
 
-  void native_diagnostic (bool unreal, std::string_view stage, int status,
+  void native_diagnostic (std::string_view arm, std::string_view stage, int status,
                                  std::string_view message) {
-    native_arm_diagnostic (unreal ? "unreal:gr1:oxidd" : "real:gr1:oxidd", stage, status, message);
+    native_arm_diagnostic (arm, stage, status, message);
   }
 
   bool native_limit_address_space (std::string_view arm) {

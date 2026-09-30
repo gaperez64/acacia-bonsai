@@ -89,12 +89,16 @@ def main() -> None:
         ):
             expect(binary, ["-T", str(source), "--arms", f"{winner}:gr1:oxidd"],
                    code, verdict)
+            expect(binary, ["-T", str(source), "--arms", "both:gr1:oxidd"],
+                   code, verdict)
             expect(binary, ["--arms", f"{winner}:gr1:oxidd", "-T", str(source)],
                    code, verdict)
             expect(binary, ["-T", str(source), "--arms", f"{loser}:gr1:oxidd"],
                    2, "opposite side solved")
             renamed, _ = obfuscator.write_obfuscated(source, directory, code + 11)
             expect(binary, ["-T", str(renamed), "--arms", f"{winner}:gr1:oxidd"],
+                   code, verdict)
+            expect(binary, ["-T", str(renamed), "--arms", "both:gr1:oxidd"],
                    code, verdict)
         expect(binary, ["-T", str(adversarial), "--arms", "real:gr1:oxidd"],
                0, "REALIZABLE")
@@ -104,8 +108,15 @@ def main() -> None:
         expect(binary, ["-T", str(real), "--arms",
                         "real:gr1:oxidd,unreal:formula:backward"], 0, "REALIZABLE",
                time.monotonic() + 3)
+        expect(binary, ["-T", str(unreal), "--arms",
+                        "real:gr1:oxidd,both:gr1:oxidd"], 1, "UNREALIZABLE",
+               time.monotonic() + 3)
         expect(binary, ["-T", str(malformed), "--arms", "real:gr1:oxidd"],
                2, "UNKNOWN")
+        both_failure = run(binary, ["-T", str(malformed), "--arms", "both:gr1:oxidd"])
+        assert both_failure.returncode == 2 and both_failure.stderr.endswith("UNKNOWN\n")
+        assert any(json.loads(line).get("arm") == "both:gr1:oxidd"
+                   for line in both_failure.stderr.splitlines()[:-1])
         for _ in range(4):
             concurrent = run(binary, ["-T", str(malformed), "--arms",
                                       "real:gr1:oxidd,unreal:gr1:oxidd"])
@@ -120,8 +131,13 @@ def main() -> None:
                         "real:small:backward,real:gr1:oxidd"], 2, "UNKNOWN")
         expect(binary, ["-T", str(real), "--arms", "real:gr1:oxidd"],
                2, "deadline", time.monotonic() - 1)
+        expect(binary, ["-T", str(real), "--arms", "both:gr1:oxidd"],
+               2, "deadline", time.monotonic() - 1)
         if "--hook-binary" in sys.argv[3:]:
             hook_binary = Path(sys.argv[sys.argv.index("--hook-binary") + 1])
+            for source in (real, unreal):
+                expect(hook_binary, ["-T", str(source), "--arms", "both:gr1:oxidd"],
+                       2, "proof not verified", corrupt_proof=True)
             expect(hook_binary, ["-T", str(real), "--arms", "real:gr1:oxidd"],
                    2, "proof not verified", corrupt_proof=True)
         # A previously intermittent OxiDD checker crash appeared only after
@@ -137,6 +153,12 @@ def main() -> None:
             ("real:gr1:oxidd:frozen-graph", "does not accept a provider"),
             ("unreal:param-lift:oxidd", "realizability only"),
             ("real:gr1:backward", "requires the oxidd backend"),
+            ("both:param-lift:oxidd", "both is supported only for the gr1 transform"),
+            ("both:small:backward", "both is supported only for the gr1 transform"),
+            ("both:gr1:backward", "requires the oxidd backend"),
+            ("both:gr1:oxidd:frozen-graph", "does not accept a provider"),
+            ("both:gr1:oxidd,both:gr1:oxidd", "duplicate arm"),
+            ("neither:gr1:oxidd", "invalid polarity"),
         ):
             expect(binary, ["-T", str(real), "--arms", arms], 3, diagnostic)
         expect(binary, ["--arms", "real:gr1:oxidd", "-f", "G o", "-i", "i",
@@ -251,6 +273,16 @@ def check_record_failures(worker: Path, binary: Path, real: Path,
     with_records = run_real(root, time.monotonic() + 2)
     assert with_records[:2] == baseline_real[:2], (baseline_real, with_records)
     assert with_records[2] < 2, with_records
+    both_records_dir = root / "records-both"
+    both_records_dir.mkdir()
+    both_result = run_real(both_records_dir, time.monotonic() + 2, "both:gr1:oxidd")
+    assert both_result[:2] == baseline_real[:2], (baseline_real, both_result)
+    both_records = [json.loads(line) for path in both_records_dir.glob("*.jsonl")
+                    for line in path.read_text().splitlines()]
+    assert any(row.get("phase") == "proof_binding" and
+               row.get("arm") == "both:gr1:oxidd" for row in both_records)
+    assert any(row.get("phase") == "record_summary" and
+               row.get("arm") == "both:gr1:oxidd" for row in both_records)
     unknown_off = run_real(None, time.monotonic() + 2, "unreal:gr1:oxidd")
     unknown_on = run_real(root, time.monotonic() + 2, "unreal:gr1:oxidd")
     assert unknown_on[:2] == unknown_off[:2] and unknown_on[0] == 2, (unknown_off, unknown_on)

@@ -82,7 +82,7 @@ output=$(run 3 "${common[@]}" --arms real:small:sideways)
 [[ $output == *'invalid backend sideways'* && $output == *'backward, forward, spot-guarded or spot-guarded-sparse'* ]]
 
 output=$(run 3 "${common[@]}" --arms sideways:small:forward)
-[[ $output == *'invalid polarity sideways'* && $output == *'real or unreal'* ]]
+[[ $output == *'invalid polarity sideways'* && $output == *'real, unreal, or both for gr1'* ]]
 
 output=$(run 3 "${common[@]}" --arms real:formula:forward)
 [[ $output == *'invalid transform formula'* && $output == *'small or any'* ]]
