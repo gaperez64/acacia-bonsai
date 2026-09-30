@@ -32,7 +32,8 @@ from test_acacia_lift_generic_guard import FAMILY_LABELS, folded_string
 ROOT = Path(__file__).resolve().parents[2]
 BENCHMARKS = ROOT / "tests/suites/benchmarks"
 CORPUS = ROOT / "tlsf-corpus"
-CORPUS_DIRS = (CORPUS, ROOT / "tests/ltl", ROOT / "tests/syntcomp-benchmarks/tlsf")
+TRACKED_CORPUS = ROOT / "tests/ltl"
+OPTIONAL_CORPUS_DIRS = (CORPUS, ROOT / "tests/syntcomp-benchmarks/tlsf")
 INCLUDE_DIRS = (
     "src", "subprojects/tlsf-tools/src/lib", "subprojects/tlsf-tools/include",
     "subprojects/posets/include", "subprojects/posets/lib",
@@ -387,31 +388,43 @@ def family_stem(filename: str) -> str:
     return re.sub(r"[#_-]+", "_", stem).strip("_").lower()
 
 
+def declared_identifiers(files: list[Path]) -> set[str]:
+    """Find signal names used by exactly one family in these TLSF files."""
+    owners: dict[str, set[str]] = defaultdict(set)
+    for path in (path for path in files if path.suffix == ".tlsf"):
+        source = COMMENT.sub("", path.read_text(encoding="utf-8", errors="replace"))
+        for section in TLSF_SECTION.findall(source):
+            for name in DECLARATION.findall(section):
+                owners[name].add(family_stem(path.name))
+    return {name for name, families in owners.items() if len(families) == 1}
+
+
 @lru_cache(maxsize=1)
 def corpus_identities() -> Identities:
     manifests = sorted(path for path in BENCHMARKS.rglob("*")
                        if path.is_file() and path.suffix in {".list", ".tsv"})
     all_lists = sorted(BENCHMARKS.rglob("all.list"))
-    assert all_lists and all(directory.is_dir() for directory in CORPUS_DIRS)
-    names = {Path(line.strip()).name for path in all_lists
-             for line in path.read_text(encoding="utf-8").splitlines()
-             if line.strip() and not line.lstrip().startswith(("#", "@"))
-             and line.strip().endswith((".tlsf", ".ltl"))}
-    corpus_files = sorted(path for directory in CORPUS_DIRS
-                          for path in directory.rglob("*")
-                          if path.is_file() and path.suffix in {".tlsf", ".ltl"})
+    assert all_lists and (BENCHMARKS / "tlsf-manifest.tsv").is_file()
+    assert TRACKED_CORPUS.is_dir(), f"tracked corpus missing: {TRACKED_CORPUS}"
+    tracked_files = sorted(path for path in TRACKED_CORPUS.rglob("*")
+                           if path.is_file() and path.suffix in {".tlsf", ".ltl"})
+    assert tracked_files, f"tracked corpus has no TLSF/LTL files: {TRACKED_CORPUS}"
+    extra_files = sorted(path for directory in OPTIONAL_CORPUS_DIRS if directory.is_dir()
+                         for path in directory.rglob("*")
+                         if path.is_file() and path.suffix in {".tlsf", ".ltl"})
+    corpus_files = tracked_files + extra_files
+    manifest_text = [path.read_text(encoding="utf-8") for path in manifests]
+    names = {match for source in manifest_text for match in FILE_NAME.findall(source)}
     names.update(path.name for path in corpus_files)
     families = {family_stem(name) for name in names} | set(FAMILY_LABELS)
     families.discard("")
-    digests = {hashlib.sha256(path.read_bytes()).hexdigest()
-               for path in [*corpus_files, *manifests]}
-    owners: dict[str, set[str]] = defaultdict(set)
-    for path in (path for path in corpus_files if path.suffix == ".tlsf"):
-        source = COMMENT.sub("", path.read_text(encoding="utf-8", errors="replace"))
-        for section in TLSF_SECTION.findall(source):
-            for name in DECLARATION.findall(section):
-                owners[name].add(family_stem(path.name))
-    distinctive = {name for name, families in owners.items() if len(families) == 1}
+    digests = {match.lower() for source in manifest_text
+               for match in HEX_DIGEST.findall(source)}
+    digests.update(hashlib.sha256(path.read_bytes()).hexdigest()
+                   for path in [*corpus_files, *manifests])
+    # Optional files can only add identities; they cannot make a tracked
+    # declaration cease to be distinctive.
+    distinctive = declared_identifiers(tracked_files) | declared_identifiers(corpus_files)
     instance_stems = {Path(name).stem for name in names
                       if len(Path(name).stem) >= 8
                       and Path(name).stem.lower() not in
@@ -1027,8 +1040,24 @@ def violations(ids: Identities, paths: list[Path] | None = None,
 def test_no_benchmark_hardcoding() -> None:
     ids = corpus_identities()
     assert ids.corpus_files > 0 and ids.manifest_files > 0
+    manifest_digests = HEX_DIGEST.findall(
+        (BENCHMARKS / "tlsf-manifest.tsv").read_text(encoding="utf-8"))
+    assert manifest_digests and set(manifest_digests) <= ids.digests
     assert solver_files()
     assert not violations(ids)
+
+
+@pytest.mark.parametrize("directory", OPTIONAL_CORPUS_DIRS)
+def test_optional_corpus_identities(directory: Path) -> None:
+    if not directory.is_dir():
+        pytest.skip(f"optional corpus absent: {directory.relative_to(ROOT)}")
+    files = sorted(path for path in directory.rglob("*")
+                   if path.is_file() and path.suffix in {".tlsf", ".ltl"})
+    assert files, f"optional corpus has no TLSF/LTL files: {directory}"
+    ids = corpus_identities()
+    assert all(path.name in ids.basenames for path in files)
+    assert all(hashlib.sha256(path.read_bytes()).hexdigest() in ids.digests
+               for path in files)
 
 
 def test_all_compiled_sources_are_scanned() -> None:
@@ -1074,6 +1103,7 @@ def test_new_meson_source_enters_scan(tmp_path: Path,
 
 def test_subdir_source_enters_scan(tmp_path: Path,
                                   monkeypatch: pytest.MonkeyPatch) -> None:
+    ids = corpus_identities()
     for directory in INCLUDE_DIRS:
         (tmp_path / directory).mkdir(parents=True, exist_ok=True)
     (tmp_path / "subprojects/posets/meson.build").write_text(
@@ -1093,7 +1123,7 @@ def test_subdir_source_enters_scan(tmp_path: Path,
     assert added not in compiled_sources()
     assert added in filesystem_code_files()
     assert added in solver_files()
-    assert any(hit.kind == "identity literal" for hit in scan(corpus_identities()))
+    assert any(hit.kind == "identity literal" for hit in scan(ids))
 
 
 def mutation_case(kind: str, ids: Identities) -> tuple[Path, str, str, str]:
