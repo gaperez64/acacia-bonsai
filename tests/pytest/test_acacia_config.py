@@ -76,6 +76,21 @@ def test_p4_final_candidate_inherits_only_native_arms_and_portfolio():
     } == {"native_arms", "default_arms"}
 
 
+def test_gr1_prepass_preset_is_five_arms():
+    module = load_module()
+    options, presets = module.load_registry()
+    candidate = module.normalize_preset(options, presets,
+                                        "otf_sparse_formula_gr1_prepass")
+    assert candidate["native_arms"] is True
+    assert candidate["default_arms"].split(",") == [
+        "real:small:backward",
+        "real:small:forward",
+        "unreal:formula:spot-guarded-sparse",
+        "unreal:automaton:forward",
+        "both:gr1-lift:oxidd",
+    ]
+
+
 def test_docker_launcher_uses_registry_group_without_python():
     module = load_module()
     _options, presets = module.load_registry()
